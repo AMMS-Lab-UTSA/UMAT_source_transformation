@@ -405,7 +405,105 @@ def _expand_compact_project_config(config: dict[str, Any], *, origin_path: str |
     helper_surfaces = _expand_compact_helper_output_surfaces(normalized.get("helper_output_surfaces"))
     if helper_surfaces:
         full_config["helper_output_surfaces"] = helper_surfaces
+    advanced = _expand_advanced(normalized)
+    if advanced:
+        full_config["advanced"] = advanced
     return full_config
+
+
+# Named vocabularies for the optional "advanced" block. See
+# docs/contract_generalization.md. Advanced mode is a single place where the user
+# deposits the extras a Jacobian / second-order term / special case needs (how to
+# build the seed, which derivative orders to read into which targets, and any
+# post-extraction transform) so they are computed automatically. These are the
+# *only* recognised values; an unknown value raises rather than silently
+# degrading, so a typo never produces a wrong UMAT.
+_SEED_BUILDERS = {"identity", "green_lagrange_from_dfgrd1", "invariants_from_dfgrd1"}
+_EXTRACT_LAYOUTS = {"jacobian", "gradient", "hessian_voigt_sym", "third_voigt", "pk2", "material_tangent"}
+_OBJECTIVE_RATES = {"jaumann", "green_naghdi", "none"}
+
+
+def _expand_advanced(normalized: dict[str, Any]) -> dict[str, Any]:
+    """Expand the optional top-level ``advanced`` block.
+
+    Returns an empty dict when the contract has no ``advanced`` block, so the
+    standard ``jacobian`` path is left exactly as it is today and no existing
+    contract is affected. When present, the block fully describes one extra
+    computation: how to build/seed the independent variable(s), which derivative
+    orders to read into which target arrays, and an optional spatial transform.
+    """
+    raw = _dict_or_empty(normalized.get("advanced"))
+    if not raw:
+        return {}
+
+    seed_build = str(raw.get("seed_build") or "identity").strip().lower()
+    if seed_build not in _SEED_BUILDERS:
+        raise ValueError(
+            f"advanced.seed_build='{seed_build}' is not recognised; expected one of {sorted(_SEED_BUILDERS)}"
+        )
+    output_kind = str(raw.get("output_kind") or "tensor").strip().lower()
+    if output_kind not in ("tensor", "scalar"):
+        raise ValueError(f"advanced.output_kind='{output_kind}' must be 'tensor' or 'scalar'")
+
+    seed_value = raw.get("seed")
+    if isinstance(seed_value, list):
+        seed_vars = [str(value).strip().upper() for value in seed_value if str(value).strip()]
+    else:
+        seed_vars = [str(seed_value).strip().upper()] if str(seed_value or "").strip() else []
+
+    default_target = str(raw.get("target") or "").strip().upper()
+    default_order = _as_int(_dict_or_empty(normalized.get("otis")).get("order")) or 1
+    block: dict[str, Any] = {
+        "seed_variables": seed_vars,
+        "seed_build": seed_build,
+        "output": str(raw.get("output") or "").strip().upper(),
+        "output_kind": output_kind,
+        "extract": _expand_advanced_extract(raw.get("extract"), default_target, default_order),
+        "transform": _expand_advanced_transform(raw.get("transform")),
+    }
+    routine = str(raw.get("routine") or normalized.get("routine") or "").strip().upper()
+    if routine:
+        block["routine"] = routine
+    description = str(raw.get("description") or "").strip()
+    if description:
+        block["description"] = description
+    return block
+
+
+def _expand_advanced_extract(raw: Any, default_target: str, default_order: int) -> list[dict[str, Any]]:
+    if not isinstance(raw, list) or not raw:
+        return [{"order": default_order, "target": default_target, "layout": "jacobian"}]
+    plan: list[dict[str, Any]] = []
+    for entry in raw:
+        entry = _dict_or_empty(entry)
+        order = _as_int(entry.get("order")) or 1
+        target = str(entry.get("target") or default_target).strip().upper()
+        layout = str(entry.get("layout") or "jacobian").strip().lower()
+        if layout not in _EXTRACT_LAYOUTS:
+            raise ValueError(
+                f"advanced.extract layout='{layout}' is not recognised; expected one of {sorted(_EXTRACT_LAYOUTS)}"
+            )
+        item = {"order": order, "target": target, "layout": layout}
+        if str(entry.get("post") or "").strip():
+            item["post"] = str(entry.get("post")).strip().lower()
+        plan.append(item)
+    return plan
+
+
+def _expand_advanced_transform(raw: Any) -> dict[str, Any]:
+    if not isinstance(raw, dict) or not raw:
+        return {}
+    push_forward = str(raw.get("push_forward") or "").strip().lower()
+    objective_rate = str(raw.get("objective_rate") or "none").strip().lower()
+    voigt = str(raw.get("voigt") or "engineering_shear").strip().lower()
+    if objective_rate not in _OBJECTIVE_RATES:
+        raise ValueError(
+            f"advanced.transform.objective_rate='{objective_rate}' is not recognised; expected one of {sorted(_OBJECTIVE_RATES)}"
+        )
+    transform: dict[str, Any] = {"objective_rate": objective_rate, "voigt": voigt}
+    if push_forward:
+        transform["push_forward"] = push_forward
+    return transform
 
 
 def _compact_extra_jacobian_contracts(raw: Any) -> list[dict[str, Any]]:
@@ -1000,12 +1098,29 @@ def _validate_required_compact_project_config(config: dict[str, Any]) -> None:
     if not str(source.get("file", "")).strip():
         missing.append("source")
     jacobian = _dict_or_empty(config.get("jacobian"))
-    if not str(jacobian.get("target", "")).strip():
-        missing.append("jacobian.target")
-    if not str(jacobian.get("output", jacobian.get("dependent", ""))).strip():
-        missing.append("jacobian.output")
-    if not str(jacobian.get("seed", jacobian.get("independent", ""))).strip():
-        missing.append("jacobian.seed")
+    # When an `advanced` block is present it fully describes the computation (its
+    # `extract` entries supply the targets, plus its own seed/output), so the
+    # standard single `jacobian.{target,output,seed}` fields are not required.
+    # Contracts without an `advanced` block must define them, exactly as before.
+    advanced = _dict_or_empty(config.get("advanced"))
+    if advanced:
+        adv_extract = advanced.get("extract")
+        adv_has_target = isinstance(adv_extract, list) and any(
+            str(_dict_or_empty(entry).get("target", "")).strip() for entry in adv_extract
+        )
+        if not adv_has_target and not str(advanced.get("target", "")).strip():
+            missing.append("advanced.extract[].target")
+        if not str(advanced.get("output", "")).strip():
+            missing.append("advanced.output")
+        if not advanced.get("seed"):
+            missing.append("advanced.seed")
+    else:
+        if not str(jacobian.get("target", "")).strip():
+            missing.append("jacobian.target")
+        if not str(jacobian.get("output", jacobian.get("dependent", ""))).strip():
+            missing.append("jacobian.output")
+        if not str(jacobian.get("seed", jacobian.get("independent", ""))).strip():
+            missing.append("jacobian.seed")
     # Only `promote` is a required role list. `constant` and `real` are
     # optional overrides: any variable not listed falls back to its
     # auto-suggested role, and Constant vs Keep-real are equivalent in code
@@ -1017,7 +1132,8 @@ def _validate_required_compact_project_config(config: dict[str, Any]) -> None:
                 missing.append(key)
     raw_replace = config.get("replace")
     replace_present = isinstance(raw_replace, list) or (
-        isinstance(raw_replace, dict) and isinstance(raw_replace.get("ddsdde_block"), list)
+        isinstance(raw_replace, dict)
+        and (isinstance(raw_replace.get("ddsdde_block"), list) or isinstance(raw_replace.get("lines"), list))
     )
     if not replace_present:
         missing.append("replace")
@@ -1058,6 +1174,51 @@ def _compact_variables_payload(config: dict[str, Any]) -> dict[str, Any]:
         "constant": [str(value).strip().upper() for value in (config.get("constant") if isinstance(config.get("constant"), list) else variables.get("constant") or []) if str(value).strip()],
         "real": [str(value).strip().upper() for value in (config.get("real") if isinstance(config.get("real"), list) else variables.get("real") or []) if str(value).strip()],
     }
+
+
+def _normalize_replace(raw: Any, entry_file: str) -> dict[str, Any]:
+    """Canonicalise the ``replace`` field into file-aware blocks.
+
+    Accepted user forms:
+      * ["83-87"]                                  -> lines in the entry/UMAT file
+      * {"file": "other.f90", "lines": ["275"]}     -> lines in a named file
+      * [ "83-87", {"file": "x.f90", "lines": [...]} ]  -> a mix
+      * {"ddsdde_block": ["83-87"]}                 -> legacy form (entry file)
+
+    The ``file`` always defaults to the entry (UMAT) file, so every existing
+    single-file contract keeps working. Output carries ``targets`` (the
+    file-qualified list) and ``ddsdde_block`` (entry-file lines only, for the
+    current single-file transform path)."""
+    entry = (entry_file or "").strip()
+    blocks: list[tuple[str, list[str]]] = []
+
+    def add(file_val: Any, lines: Any) -> None:
+        f = Path(str(file_val or "").strip()).name or entry
+        ls = [str(x).strip() for x in (lines or []) if str(x).strip()]
+        if ls:
+            blocks.append((f, ls))
+
+    if isinstance(raw, list):
+        bare: list[str] = []
+        for item in raw:
+            if isinstance(item, dict):
+                add(item.get("file"), item.get("lines"))
+            elif str(item).strip():
+                bare.append(str(item).strip())
+        if bare:
+            add(entry, bare)
+    elif isinstance(raw, dict):
+        if isinstance(raw.get("ddsdde_block"), list):
+            add(entry, raw.get("ddsdde_block"))
+        if isinstance(raw.get("lines"), list):
+            add(raw.get("file"), raw.get("lines"))
+
+    targets = [{"file": f, "lines": ls} for f, ls in blocks]
+    ddsdde = [ln for f, ls in blocks if (not entry or f == entry) for ln in ls]
+    out: dict[str, Any] = {"ddsdde_block": ddsdde}
+    if targets:
+        out["targets"] = targets
+    return out
 
 
 def _compact_replace_payload(config: dict[str, Any]) -> dict[str, Any]:
@@ -1183,11 +1344,9 @@ def _normalize_compact_project_config(config: dict[str, Any]) -> dict[str, Any]:
             values = normalized.get(key)
             variables[key] = list(values) if isinstance(values, list) else []
     normalized["variables"] = variables
-    replace = normalized.get("replace")
-    if isinstance(replace, list):
-        normalized["replace"] = {"ddsdde_block": copy.deepcopy(replace)}
-    elif not isinstance(replace, dict):
-        normalized["replace"] = {}
+    source_payload = _dict_or_empty(normalized.get("source"))
+    entry_file = Path(str(source_payload.get("entry") or source_payload.get("file") or "")).name
+    normalized["replace"] = _normalize_replace(normalized.get("replace"), entry_file)
     otis = _dict_or_empty(normalized.get("otis"))
     if normalized.get("ntens") not in (None, "") and otis.get("ntens") in (None, ""):
         otis["ntens"] = normalized.get("ntens")

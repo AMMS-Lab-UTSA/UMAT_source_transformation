@@ -6,3 +6,6 @@ __pycache__/
 *.o
 # Generated run outputs
 umat_oti_workspace/
+oti_results/
+# Third-party UMATs cloned from public repos (each has its own git history)
+external_umats/
