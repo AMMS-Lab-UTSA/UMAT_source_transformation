@@ -44,6 +44,7 @@ dependencies = [
 	"numpy>=1.26",
 	"pandas>=2.0",
 	"streamlit>=1.30",
+	"sympy>=1.12",
 ]
 
 [project.optional-dependencies]
