@@ -1,4 +1,13 @@
-# UMAT-OTI Standalone Package
+# UMAT-OTI
+
+[![CI](https://github.com/santiagarcia/UMAT_source_transformation/actions/workflows/ci.yml/badge.svg)](https://github.com/santiagarcia/UMAT_source_transformation/actions/workflows/ci.yml)
+[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+
+**UMAT-OTI** transforms Abaqus user-material subroutine (UMAT) Fortran source so
+that the consistent material tangent (`DDSDDE`) is computed by operational-Taylor
+(OTI) automatic differentiation instead of hand-coded or finite-difference
+derivatives. The transformation is driven by a compact JSON contract.
 
 This directory is a standalone source bundle that contains the full UMAT-OTI
 transformation runtime plus the files a new user needs to try the workflow on
@@ -127,3 +136,31 @@ You can also run the bundled script directly:
 - The standalone bundle transforms the current 19 completed benchmark configs successfully.
 - The standalone no-argument runner now also supports original-vs-transformed validation using the bundled pyoti templates and Abaqus validation pipeline.
 - The bundle now includes the pyoti template files needed for complete OTI module generation, so the minimal-template fallback warning should not appear in normal runs.
+
+## Testing
+
+The test suite does not require Abaqus or a Fortran compiler:
+
+```bash
+python -m pip install -e ".[test]"
+python -m pytest
+```
+
+## Citing
+
+If you use UMAT-OTI in academic work, please cite it using the metadata in
+[CITATION.cff](CITATION.cff). Publication details for the accompanying software
+paper will be added here once available.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+
+## License
+
+UMAT-OTI is released under the [BSD-3-Clause license](LICENSE).
+
+Bundled and third-party components are documented in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Note that proprietary Abaqus
+verification-manual UMATs are **not** included in this repository and must be
+obtained from a licensed Abaqus installation.

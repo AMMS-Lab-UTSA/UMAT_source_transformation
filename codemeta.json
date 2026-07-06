@@ -1,0 +1,72 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "identifier": "umat-oti",
+  "name": "UMAT-OTI",
+  "description": "Deterministic operational-Taylor (OTI) tangent generation for Abaqus UMAT Fortran source, driven by a compact JSON contract.",
+  "codeRepository": "https://github.com/santiagarcia/UMAT_source_transformation",
+  "programmingLanguage": [
+    "Python",
+    "Fortran"
+  ],
+  "runtimePlatform": "Python 3.10+",
+  "operatingSystem": [
+    "Linux",
+    "Windows",
+    "macOS"
+  ],
+  "softwareRequirements": [
+    "numpy>=1.26",
+    "pandas>=2.0",
+    "streamlit>=1.30"
+  ],
+  "license": "https://spdx.org/licenses/BSD-3-Clause",
+  "version": "0.1.0",
+  "dateModified": "2026-07-06",
+  "keywords": [
+    "Abaqus",
+    "UMAT",
+    "automatic differentiation",
+    "operational Taylor integration",
+    "consistent tangent",
+    "finite element method"
+  ],
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Santiago",
+      "familyName": "García Botero",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "The University of Texas at San Antonio"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Harry",
+      "familyName": "Millwater",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "The University of Texas at San Antonio"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Arturo",
+      "familyName": "Montoya",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "The University of Texas at San Antonio"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "David",
+      "familyName": "Restrepo",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "The University of Texas at San Antonio"
+      }
+    }
+  ]
+}

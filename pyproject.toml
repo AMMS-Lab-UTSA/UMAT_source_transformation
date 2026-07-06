@@ -3,11 +3,43 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "umat-oti-standalone"
+name = "umat-oti"
 version = "0.1.0"
-description = "Standalone source bundle for deterministic OTIS tangent generation for Abaqus UMATs."
+description = "Deterministic operational-Taylor (OTI) tangent generation for Abaqus UMAT Fortran source."
 readme = "README.md"
 requires-python = ">=3.10"
+license = { text = "BSD-3-Clause" }
+keywords = [
+	"abaqus",
+	"umat",
+	"automatic-differentiation",
+	"operational-taylor-integration",
+	"consistent-tangent",
+	"finite-element",
+	"fortran",
+	"constitutive-models",
+]
+authors = [
+	{ name = "Santiago García Botero" },
+	{ name = "Harry Millwater" },
+	{ name = "Arturo Montoya" },
+	{ name = "David Restrepo" },
+]
+maintainers = [
+	{ name = "Santiago García Botero" },
+]
+classifiers = [
+	"Development Status :: 4 - Beta",
+	"Intended Audience :: Science/Research",
+	"License :: OSI Approved :: BSD License",
+	"Operating System :: OS Independent",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: 3.11",
+	"Programming Language :: Python :: 3.12",
+	"Topic :: Scientific/Engineering",
+	"Topic :: Scientific/Engineering :: Physics",
+]
 dependencies = [
 	"numpy>=1.26",
 	"pandas>=2.0",
@@ -17,6 +49,11 @@ dependencies = [
 [project.optional-dependencies]
 test = ["pytest>=7"]
 
+[project.urls]
+Homepage = "https://github.com/santiagarcia/UMAT_source_transformation"
+Repository = "https://github.com/santiagarcia/UMAT_source_transformation"
+Issues = "https://github.com/santiagarcia/UMAT_source_transformation/issues"
+
 [project.scripts]
 umat-oti = "umat_oti.cli:main"
 umat-oti-config = "umat_oti.cli_json:main"
@@ -24,3 +61,7 @@ umat-oti-batch = "umat_oti.cli_batch:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
