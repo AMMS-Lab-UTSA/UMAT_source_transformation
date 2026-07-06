@@ -69,13 +69,13 @@ requirements **when** `advanced` is present. Verified: all 19 completed configs 
 ## 4. Two examples in `advanced` mode
 
 ### 4a. `UHYPER` hyperelastic — no transform, verifiable without Abaqus
-`umathrt2.f` hand-codes `UI1/UI2` (lines 18–26), so AD output is checked against
-those exact values in a standalone driver.
+A `UHYPER` routine that hand-codes `UI1/UI2` (e.g. lines 18–26) lets the AD
+output be checked against those exact values in a standalone driver.
 
 ```json
 {
-  "name": "umathrt2_uhyper",
-  "source": "../UMATs/UMATs/ICP/umathrt2.f",
+  "name": "my_uhyper",
+  "source": "path/to/your_uhyper.f",
   "promote": ["U"],
   "replace": ["18-26"],
   "ntens": 6,
@@ -114,7 +114,7 @@ those exact values in a standalone driver.
 1. **Loader (done).** Parse the optional `advanced` block into the full config;
    relax the validator only when `advanced` is present. Regression-clean.
 2. **`UHYPER` emitter (next).** Multi-scalar seed, `gradient` + `hessian_voigt_sym`
-   layouts, no transform. Verify AD `UI1/UI2` vs. `umathrt2.f`'s hand-coded values
+   layouts, no transform. Verify AD `UI1/UI2` vs. the routine's hand-coded values
    in a standalone driver — no Abaqus.
 3. **Transform emitter.** `green_lagrange_from_dfgrd1` + push-forward + Jaumann +
    Voigt for the energy UMAT, validated against Ravi's FD reference and Abaqus.

@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "UMAT-OTI: Deterministic operational-Taylor tangent generation for Abaqus UMATs"
+abstract: >-
+  UMAT-OTI transforms Abaqus user-material subroutine (UMAT) Fortran source so
+  that the consistent material tangent (DDSDDE) is computed by operational-Taylor
+  (OTI) automatic differentiation instead of hand-coded or finite-difference
+  derivatives, driven by a compact JSON contract.
+type: software
+license: BSD-3-Clause
+version: 0.1.0
+date-released: "2026-07-06"
+repository-code: "https://github.com/santiagarcia/UMAT_source_transformation"
+url: "https://github.com/santiagarcia/UMAT_source_transformation"
+keywords:
+  - Abaqus
+  - UMAT
+  - automatic differentiation
+  - operational Taylor integration
+  - consistent tangent
+  - finite element method
+  - constitutive models
+authors:
+  - family-names: "García Botero"
+    given-names: "Santiago"
+    affiliation: "The University of Texas at San Antonio"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"  # TODO: add ORCID
+  - family-names: "Millwater"
+    given-names: "Harry"
+    affiliation: "The University of Texas at San Antonio, Department of Mechanical Engineering"
+  - family-names: "Montoya"
+    given-names: "Arturo"
+    affiliation: "The University of Texas at San Antonio, Department of Civil Engineering"
+  - family-names: "Restrepo"
+    given-names: "David"
+    affiliation: "The University of Texas at San Antonio, Department of Mechanical Engineering"
