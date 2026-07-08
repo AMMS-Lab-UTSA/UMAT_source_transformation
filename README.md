@@ -1,7 +1,7 @@
 # UMAT-OTI
 
 [![CI](https://github.com/santiagarcia/UMAT_source_transformation/actions/workflows/ci.yml/badge.svg)](https://github.com/santiagarcia/UMAT_source_transformation/actions/workflows/ci.yml)
-[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-blue.svg)](LICENSE)
+[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-blue.svg)](LICENSE.txt)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 
 **UMAT-OTI** transforms Abaqus user-material subroutine (UMAT) Fortran source so
@@ -18,13 +18,10 @@ It is meant to be copied, zipped, or shared as its own folder.
 The bundled compact-JSON workflow has been smoke-tested inside this directory,
 and the completed 19-case benchmark set transforms successfully from here.
 
-Start with `START_HERE.md` if you are a new user.
-
 ## What Is Included
 
 - `src/umat_oti/`: the full transformation runtime code.
 - `app.py`: Streamlit GUI entry point.
-- `START_HERE.md`: shortest instructions for a new user.
 - `templates/`: root-level JSON templates to copy and edit.
 - `examples/`: root-level example JSON files that already work.
 - `user_jsons/`: suggested place to keep your own JSON contracts.
@@ -66,10 +63,9 @@ They work directly from this folder.
 
 Use the root-level files first:
 
-1. Read `START_HERE.md`.
-2. Copy a JSON template from `templates/` into `user_jsons/` and edit it.
-3. Edit the settings at the top of `run_json_pipeline.py`.
-4. Run `/usr/bin/python3.12 run_json_pipeline.py`.
+1. Copy a JSON template from `templates/` into `user_jsons/` and edit it.
+2. Edit the settings at the top of `run_json_pipeline.py`.
+3. Run `/usr/bin/python3.12 run_json_pipeline.py`.
 
 The runner defaults to `examples/`, so if you run it without edits it executes
 the bundled known-good example JSONs first.
@@ -158,7 +154,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
 ## License
 
-UMAT-OTI is released under the [BSD-3-Clause license](LICENSE).
+UMAT-OTI is released under the [BSD-3-Clause license](LICENSE.txt).
 
 Bundled and third-party components are documented in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Note that proprietary Abaqus
