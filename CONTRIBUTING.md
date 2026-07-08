@@ -52,4 +52,4 @@ https://github.com/santiagarcia/UMAT_source_transformation/issues and include:
 ## License
 
 By contributing, you agree that your contributions will be licensed under the
-project's [BSD-3-Clause license](LICENSE).
+project's [BSD-3-Clause license](LICENSE.txt).

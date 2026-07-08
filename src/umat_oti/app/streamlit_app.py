@@ -7,8 +7,6 @@ Five-tab workflow that drives the same backend the CLI / driver scripts use:
   3. Validate           - build the workspace, run both Abaqus jobs, extract ODB
   4. Constitutive Jac.  - per-contract Original vs OTIS tables + line plots
   5. Report             - status panel, downloadable artifacts, raw JSON browse
-
-The previous monolithic GUI is preserved as ``streamlit_app_legacy.py``.
 """
 
 from __future__ import annotations

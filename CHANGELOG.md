@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- BSD-3-Clause `LICENSE`.
+- BSD-3-Clause `LICENSE.txt`.
 - `CITATION.cff` and `codemeta.json` software metadata.
 - `THIRD_PARTY_NOTICES.md` documenting bundled OTIlib/pyoti templates and UMATs.
 - `CONTRIBUTING.md` and this changelog.
