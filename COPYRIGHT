@@ -1,0 +1,50 @@
+UMAT-OTI
+========
+
+Copyright (C) 2026 Harry Millwater, Arturo Montoya, David Restrepo,
+Santiago García Botero, and The University of Texas at San Antonio.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 3.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+The full license text is in LICENSE.txt (SPDX: GPL-3.0-only).
+
+
+Why this project is licensed under the GPL
+------------------------------------------
+
+UMAT-OTI bundles and builds upon template code from the OTIlib / pyoti
+library, which is licensed under the GNU General Public License v3.
+Because the combined and distributed work incorporates GPL-licensed
+components, the UMAT-OTI project as a whole is released under GPL-3.0-only.
+The original UMAT-OTI source files authored by the UMAT-OTI authors are
+compatible with, and distributed as part of, this GPL-licensed whole.
+
+
+Third-party components and attribution
+--------------------------------------
+
+OTIlib / pyoti (Order Truncated Imaginary numbers library)
+  Author:  Mauricio Aristizabal (The University of Texas at San Antonio;
+           HYPAD group, https://ceid.utsa.edu/HYPAD/)
+  Source:  https://github.com/mauriaristi/otilib
+  License: GNU General Public License v3.0
+  Vendored files:
+    vendor/_otilib_upstream/src/python/pyoti/python/base_derivs_fortran.f90
+    vendor/_otilib_upstream/src/python/pyoti/python/core_functions.f90
+
+  These Fortran template files are used to generate the OTI support modules
+  that back the transformed UMATs. They remain the copyright of their
+  original author and are redistributed here under the GPL-3.0.
+
+See THIRD_PARTY_NOTICES.md for the complete list of bundled and dependent
+third-party components and their licenses.
