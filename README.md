@@ -1,7 +1,7 @@
 # UMAT-OTI
 
 [![CI](https://github.com/santiagarcia/UMAT_source_transformation/actions/workflows/ci.yml/badge.svg)](https://github.com/santiagarcia/UMAT_source_transformation/actions/workflows/ci.yml)
-[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-blue.svg)](LICENSE.txt)
+[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE.txt)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 
 **UMAT-OTI** transforms Abaqus user-material subroutine (UMAT) Fortran source so
@@ -154,7 +154,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
 ## License
 
-UMAT-OTI is released under the [BSD-3-Clause license](LICENSE.txt).
+UMAT-OTI is released under the [GNU General Public License v3.0 (GPL-3.0-only)](LICENSE.txt).
+
+This project bundles and builds upon template code from the GPL-licensed
+OTIlib / pyoti library by Mauricio Aristizabal
+(https://github.com/mauriaristi/otilib). Because the combined work incorporates
+GPL-licensed components, UMAT-OTI as a whole is distributed under the GPL-3.0.
+See [COPYRIGHT](COPYRIGHT) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+for authorship and attribution details.
 
 Bundled and third-party components are documented in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Note that proprietary Abaqus

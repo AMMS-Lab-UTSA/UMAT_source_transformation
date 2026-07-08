@@ -1,9 +1,10 @@
 # Third-Party Notices
 
 This project bundles or depends on third-party components. Their respective
-licenses and attributions are listed below. The bundled files remain under the
-license of their upstream projects, not the BSD-3-Clause license that covers
-the rest of this repository.
+licenses and attributions are listed below. UMAT-OTI as a whole is distributed
+under the GNU General Public License v3.0 (GPL-3.0-only), a choice driven by the
+GPL-licensed OTIlib/pyoti components that the project bundles (see section 1).
+Bundled files remain the copyright of their original authors.
 
 ---
 
@@ -26,27 +27,29 @@ Upstream reference:
 - Project: OTIlib / pyoti
 - Author: Mauricio Aristizabal (UTSA; HYPAD group, https://ceid.utsa.edu/HYPAD/)
 - URL: https://github.com/mauriaristi/otilib
-- Upstream license: **GPL-3.0**
+- Upstream license: **GPL-3.0** (see `vendor/_otilib_upstream/LICENSE`)
 - Version / commit vendored: <TODO: record the exact commit SHA used>
 
-> **LICENSE-COMPATIBILITY DECISION REQUIRED BEFORE PUBLICATION.**
-> OTIlib is licensed under **GPL-3.0**, a copyleft license, while the rest of
-> this repository is proposed under BSD-3-Clause. Because this project bundles
-> OTIlib template code and compiles it into the generated OTI Fortran modules,
-> the distributed/combined work is affected by the GPL. You must choose one of:
+> **LICENSE COMPATIBILITY — RESOLVED.**
+> OTIlib is licensed under **GPL-3.0**, a copyleft license. Because this project
+> bundles OTIlib template code and compiles it into the generated OTI Fortran
+> modules, the distributed/combined work is a derivative governed by the GPL.
+> This project has therefore been **relicensed as GPL-3.0-only** (option 1
+> below), which is the simplest path to compatibility: the UMAT-OTI authors'
+> own files are GPL-compatible and are distributed as part of the GPL-licensed
+> whole. A verbatim copy of the upstream license is included at
+> `vendor/_otilib_upstream/LICENSE`.
 >
-> 1. **Relicense this project as GPL-3.0** (simplest path to compatibility; BSD
->    code is GPL-compatible, so your own files can remain BSD-headed inside a
->    GPL-licensed whole).
+> Alternatives that were considered but not adopted:
+>
+> 1. **Relicense this project as GPL-3.0.** *(Adopted.)*
 > 2. **Obtain written permission / a compatible re-license** for the vendored
 >    OTIlib files from Mauricio Aristizabal. Several authors of this project are
 >    in the same UTSA/HYPAD group, so a permissive grant or dual-license for the
->    vendored templates should be straightforward to arrange in writing.
+>    vendored templates could be arranged in writing if a future permissive
+>    release is desired.
 > 3. **Remove the vendored OTIlib files** and instead require users to install
 >    OTIlib themselves, so it is a runtime dependency rather than bundled code.
->
-> Also add a verbatim copy of the upstream license as
-> `vendor/_otilib_upstream/LICENSE`. Do not publish until this is resolved.
 
 
 ---
@@ -57,7 +60,7 @@ Upstream reference:
 
 The `UMAT_*.for` constitutive models and the files under `elasticity/`,
 `plasticity_exp/`, `plasticity_imp/`, `spin/`, and `visco/` are the authors' own
-UMAT implementations, distributed under this project's BSD-3-Clause license.
+UMAT implementations, distributed as part of this project under GPL-3.0-only.
 
 > **NOTE:** The proprietary Abaqus verification-manual UMATs (`umatmst3.f`,
 > `umathrt2.f`, and their `.inp` files) have been **removed** from this

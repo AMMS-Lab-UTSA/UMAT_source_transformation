@@ -8,17 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- BSD-3-Clause `LICENSE.txt`.
+- GPL-3.0-only `LICENSE.txt` (verbatim GNU General Public License v3).
+- `COPYRIGHT` file recording UMAT-OTI authorship and third-party attribution.
 - `CITATION.cff` and `codemeta.json` software metadata.
 - `THIRD_PARTY_NOTICES.md` documenting bundled OTIlib/pyoti templates and UMATs.
 - `CONTRIBUTING.md` and this changelog.
 - `tests/` suite (package import, CLI, and end-to-end transform smoke test).
 - GitHub Actions CI workflow across Python 3.10–3.12 on Linux and Windows.
-- SoftwareX submission materials under `paper/`.
 
 ### Changed
 - Package renamed from `umat-oti-standalone` to `umat-oti`; expanded
   `pyproject.toml` metadata (authors, license, keywords, classifiers, URLs).
+- Relicensed the combined UMAT-OTI distribution from BSD-3-Clause to
+  **GPL-3.0-only** to preserve compatibility with the GPL-licensed OTIlib/pyoti
+  template components that the project bundles and builds upon.
 
 ### Removed
 - Proprietary Abaqus verification-manual UMATs (`umatmst3.f`, `umathrt2.f`,

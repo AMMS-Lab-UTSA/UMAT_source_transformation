@@ -7,7 +7,7 @@ abstract: >-
   (OTI) automatic differentiation instead of hand-coded or finite-difference
   derivatives, driven by a compact JSON contract.
 type: software
-license: BSD-3-Clause
+license: GPL-3.0-only
 version: 0.1.0
 date-released: "2026-07-06"
 repository-code: "https://github.com/santiagarcia/UMAT_source_transformation"

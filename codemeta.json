@@ -20,7 +20,7 @@
     "pandas>=2.0",
     "streamlit>=1.30"
   ],
-  "license": "https://spdx.org/licenses/BSD-3-Clause",
+  "license": "https://spdx.org/licenses/GPL-3.0-only",
   "version": "0.1.0",
   "dateModified": "2026-07-06",
   "keywords": [
