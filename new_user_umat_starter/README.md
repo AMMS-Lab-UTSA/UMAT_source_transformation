@@ -76,14 +76,14 @@ order
 If you want the shortest command from the bundle root, use:
 
 ```bash
-/usr/bin/python3.12 transform_from_json.py json_files/my_new_umat.json --out umat_oti_workspace/my_new_umat
+/usr/bin/python3.12 scripts/transform_from_json.py json_files/my_new_umat.json --out umat_oti_workspace/my_new_umat
 ```
 
 If you do not want command-line arguments at all, edit `JSON_INPUT_PATH` and
-`OUTPUT_DIRECTORY` at the top of `run_json_pipeline.py`, then run:
+`OUTPUT_DIRECTORY` at the top of `scripts/run_json_pipeline.py`, then run:
 
 ```bash
-/usr/bin/python3.12 run_json_pipeline.py
+/usr/bin/python3.12 scripts/run_json_pipeline.py
 ```
 
 That script only consumes user-authored JSON files. It does not generate JSON
@@ -99,7 +99,7 @@ umat-oti-config --config json_files/my_new_umat.json --out umat_oti_workspace/my
 7. If you prefer the GUI, run Streamlit and load the same JSON file.
 
 ```bash
-streamlit run app.py
+streamlit run scripts/app.py
 ```
 
 If you upload JSON through the browser, use an absolute `source` path on the local machine running the app. Relative paths are safest when the JSON is loaded directly from disk on that same machine.

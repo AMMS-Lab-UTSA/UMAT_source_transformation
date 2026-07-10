@@ -9,7 +9,7 @@
     "  2. python new_user_umat_starter/scripts/show_source_lines.py <your_umat.for> --start 1 --end 220",
     "  3. Fill in the fields below (especially 'replace' and 'promote').",
     "  4. python new_user_umat_starter/scripts/check_config.py --config <this_file>.json",
-    "  5. python transform_from_json.py <this_file>.json --out umat_oti_workspace/<name>",
+    "  5. python scripts/transform_from_json.py <this_file>.json --out umat_oti_workspace/<name>",
     "",
     "Required: name, source, jacobian.{seed,output,target}, promote, replace, ntens, order.",
     "Optional: description, constant, real (see the constitutive template for advanced options)."

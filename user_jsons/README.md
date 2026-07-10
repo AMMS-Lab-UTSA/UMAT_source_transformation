@@ -7,9 +7,9 @@ Recommended flow:
 
 1. Copy a template from `../templates/`
 2. Edit it for your UMAT
-3. Point `JSON_INPUT_PATH` in `../run_json_pipeline.py` to this folder
+3. Point `JSON_INPUT_PATH` in `../scripts/run_json_pipeline.py` to this folder
 
-Example setting in `run_json_pipeline.py`:
+Example setting in `scripts/run_json_pipeline.py`:
 
 ```python
 JSON_INPUT_PATH = ROOT / "user_jsons"

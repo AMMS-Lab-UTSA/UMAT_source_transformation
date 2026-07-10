@@ -113,7 +113,7 @@ Fix:
 - Recheck the `replace` line ranges.
 - If your file contains multiple routines, set `umat` explicitly.
 - Compare against `examples/elastic_minimal.json` and the completed configs
-  under `json_files_completed/`.
+  under `benchmarks/`.
 
 ## Transform Returned Warnings Or Failed Semantic Checks
 

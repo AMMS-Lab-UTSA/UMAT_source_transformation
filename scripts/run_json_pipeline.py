@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
@@ -23,7 +23,7 @@ from umat_oti.validation.job_builder import DEFAULT_ABAQUS_MODULES, DEFAULT_ABAQ
 # 1. Put your JSON files in ROOT / "user_jsons" or another folder.
 # 2. Set JSON_INPUT_PATH to that file or folder.
 # 3. Set OUTPUT_DIRECTORY to where you want the generated results.
-# 4. Run: /usr/bin/python3.12 run_json_pipeline.py
+# 4. Run: /usr/bin/python3.12 scripts/run_json_pipeline.py
 #
 # JSON_INPUT_PATH can point to a single user-authored JSON file or a directory of
 # user-authored JSON files. This script does not create or modify JSON configs.
