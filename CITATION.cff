@@ -1,22 +1,22 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata below."
-title: "UMAT-OTI: Deterministic operational-Taylor tangent generation for Abaqus UMATs"
+title: "UMAT-OTI: Deterministic order-truncated imaginary tangent generation for Abaqus UMATs"
 abstract: >-
   UMAT-OTI transforms Abaqus user-material subroutine (UMAT) Fortran source so
-  that the consistent material tangent (DDSDDE) is computed by operational-Taylor
-  (OTI) automatic differentiation instead of hand-coded or finite-difference
-  derivatives, driven by a compact JSON contract.
+  that the consistent material tangent (DDSDDE) is computed by order-truncated
+  imaginary (OTI) automatic differentiation instead of hand-coded or
+  finite-difference derivatives, driven by a compact JSON contract.
 type: software
 license: GPL-3.0-only
-version: 0.1.0
-date-released: "2026-07-06"
+version: 1.0.0
+date-released: "2026-07-10"
 repository-code: "https://github.com/santiagarcia/UMAT_source_transformation"
 url: "https://github.com/santiagarcia/UMAT_source_transformation"
 keywords:
   - Abaqus
   - UMAT
   - automatic differentiation
-  - operational Taylor integration
+  - order-truncated imaginary numbers
   - consistent tangent
   - finite element method
   - constitutive models

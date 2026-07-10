@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "umat-oti"
-version = "0.1.0"
-description = "Deterministic operational-Taylor (OTI) tangent generation for Abaqus UMAT Fortran source."
+version = "1.0.0"
+description = "Deterministic order-truncated imaginary (OTI) tangent generation for Abaqus UMAT Fortran source."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "GPL-3.0-only" }
@@ -13,7 +13,7 @@ keywords = [
 	"abaqus",
 	"umat",
 	"automatic-differentiation",
-	"operational-taylor-integration",
+	"order-truncated-imaginary",
 	"consistent-tangent",
 	"finite-element",
 	"fortran",

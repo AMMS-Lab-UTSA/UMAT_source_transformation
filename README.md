@@ -5,9 +5,10 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 
 **UMAT-OTI** transforms Abaqus user-material subroutine (UMAT) Fortran source so
-that the consistent material tangent (`DDSDDE`) is computed by operational-Taylor
-(OTI) automatic differentiation instead of hand-coded or finite-difference
-derivatives. The transformation is driven by a compact JSON contract.
+that the consistent material tangent (`DDSDDE`) is computed by order-truncated
+imaginary (OTI) automatic differentiation instead of hand-coded or
+finite-difference derivatives. The transformation is driven by a compact JSON
+contract.
 
 This directory is a standalone source bundle that contains the full UMAT-OTI
 transformation runtime plus the files a new user needs to try the workflow on
@@ -124,7 +125,7 @@ You can also run the bundled script directly:
 - `new_user_umat_starter/README.md`
 - `new_user_umat_starter/JSON_REFERENCE.md`
 - `new_user_umat_starter/TROUBLESHOOTING.md`
-- `new_user_umat_starter/examples/elastic_minimal.json`
+- `examples/elastic_minimal.json`
 
 ## Known Limits
 

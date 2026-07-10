@@ -8,7 +8,7 @@ Bundled files remain the copyright of their original authors.
 
 ---
 
-## 1. OTIlib / pyoti (Operational Taylor Integration library)
+## 1. OTIlib / pyoti (Order Truncated Imaginary numbers library)
 
 **Location in this repository:** `vendor/_otilib_upstream/`
 
@@ -17,9 +17,10 @@ Files:
 - `vendor/_otilib_upstream/src/python/pyoti/python/base_derivs_fortran.f90`
 - `vendor/_otilib_upstream/src/python/pyoti/python/core_functions.f90`
 
-These are Fortran template files taken from the OTIlib / pyoti hyper-dual /
-operational-Taylor automatic differentiation library. This project uses them to
-generate the complete OTI Fortran support modules that back the transformed
+These are Fortran template files taken from the OTIlib / pyoti library, an
+open-source algebra of Order Truncated Imaginary (OTI) numbers for efficient
+arbitrary-order, multivariate automatic differentiation. This project uses them
+to generate the complete OTI Fortran support modules that back the transformed
 UMATs.
 
 Upstream reference:
@@ -28,7 +29,8 @@ Upstream reference:
 - Author: Mauricio Aristizabal (UTSA; HYPAD group, https://ceid.utsa.edu/HYPAD/)
 - URL: https://github.com/mauriaristi/otilib
 - Upstream license: **GPL-3.0** (see `vendor/_otilib_upstream/LICENSE`)
-- Version / commit vendored: <TODO: record the exact commit SHA used>
+- Version vendored: from the upstream `master` branch; a specific commit SHA
+  was not recorded at the time of vendoring.
 
 > **LICENSE COMPATIBILITY — RESOLVED.**
 > OTIlib is licensed under **GPL-3.0**, a copyleft license. Because this project
