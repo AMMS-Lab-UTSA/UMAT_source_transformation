@@ -22,7 +22,7 @@ from umat_oti.validation.job_builder import DEFAULT_ABAQUS_MODULES, DEFAULT_ABAQ
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run transformation/optional validation from completed UMAT JSON contracts.")
-    parser.add_argument("--config-dir", type=Path, default=Path("json_files_completed"))
+    parser.add_argument("--config-dir", type=Path, default=Path("benchmarks"))
     parser.add_argument("--batch-dir", type=Path, default=Path("umat_oti_workspace/completed_json_batch"))
     parser.add_argument("--validate", action="store_true", help="Run Abaqus validation for semantically clean transforms.")
     parser.add_argument("--abaqus-command", default="abaqus")

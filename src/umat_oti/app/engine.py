@@ -9,8 +9,6 @@ Two backends sit behind the one button and are chosen automatically:
                          source scan, so the user never hand-writes it.
   * multi-file UMAT   -> the semantic pipeline, which discovers the dependency
                          files via the USE graph and auto-detects the seed.
-
-Run with:  streamlit run engine_app.py
 """
 from __future__ import annotations
 

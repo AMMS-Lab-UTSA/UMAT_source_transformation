@@ -22,15 +22,16 @@ and the completed 19-case benchmark set transforms successfully from here.
 ## What Is Included
 
 - `src/umat_oti/`: the full transformation runtime code.
-- `app.py`: Streamlit GUI entry point.
-- `templates/`: root-level JSON templates to copy and edit.
-- `examples/`: root-level example JSON files that already work.
+- `scripts/`: convenience entry scripts (`app.py` GUI launcher, `transform_from_json.py`, `run_json_pipeline.py`).
+- `templates/`: JSON contract templates to copy and edit.
+- `examples/`: example JSON contracts that already work.
 - `user_jsons/`: suggested place to keep your own JSON contracts.
 - `UMATs/`: bundled sample UMAT source files used by the example configs.
-- `json_files_completed/`: completed compact JSON contracts in the current simple format.
+- `benchmarks/`: completed compact JSON contracts (the 19-case benchmark set).
 - `json_files/`: general JSON-contract directory for user-authored configs.
 - `new_user_umat_starter/`: starter docs, templates, examples, and helper scripts.
 - `tools/run_completed_json_batch.py`: batch transform runner.
+- `docs/`: user manual and design notes.
 - `vendor/_otilib_upstream/`: bundled pyoti template files used to generate complete OTI Fortran modules inside the standalone package.
 
 ## Intended Usage Model
@@ -45,7 +46,7 @@ That means:
 4. run the GUI, starter scripts, or CLI from this folder.
 
 The runtime currently relies on this source-tree layout for paths such as
-`json_files_completed/`, `UMATs/`, and `umat_oti_workspace/`.
+`benchmarks/`, `UMATs/`, and `umat_oti_workspace/`.
 
 ## Install
 
@@ -65,13 +66,13 @@ They work directly from this folder.
 Use the root-level files first:
 
 1. Copy a JSON template from `templates/` into `user_jsons/` and edit it.
-2. Edit the settings at the top of `run_json_pipeline.py`.
-3. Run `/usr/bin/python3.12 run_json_pipeline.py`.
+2. Edit the settings at the top of `scripts/run_json_pipeline.py`.
+3. Run `/usr/bin/python3.12 scripts/run_json_pipeline.py`.
 
 The runner defaults to `examples/`, so if you run it without edits it executes
 the bundled known-good example JSONs first.
 
-`run_json_pipeline.py` now defaults to `RUN_VALIDATION = False`, so a new user
+`scripts/run_json_pipeline.py` now defaults to `RUN_VALIDATION = False`, so a new user
 can test the transformation path without Abaqus.
 
 Set `RUN_VALIDATION = True` only on a machine where Abaqus is installed and the
@@ -80,7 +81,7 @@ module/load environment is already configured.
 If you want one single JSON from the command line instead, use:
 
 ```bash
-/usr/bin/python3.12 transform_from_json.py user_jsons/my_new_umat.json --out umat_oti_workspace/my_new_umat
+/usr/bin/python3.12 scripts/transform_from_json.py user_jsons/my_new_umat.json --out umat_oti_workspace/my_new_umat
 ```
 
 If you want the deeper helper scripts and reference material, see `new_user_umat_starter/README.md`.
@@ -90,10 +91,10 @@ If you want the deeper helper scripts and reference material, see `new_user_umat
 Run the GUI from this directory with:
 
 ```bash
-streamlit run app.py
+streamlit run scripts/app.py
 ```
 
-The GUI can load bundled contracts from `json_files_completed/` or an uploaded
+The GUI can load bundled contracts from `benchmarks/` or an uploaded
 JSON file.
 
 ## CLI
@@ -103,7 +104,7 @@ The package exposes:
 ```bash
 umat-oti transform path/to/umat.for --out generated/case_name
 umat-oti-config --config json_files/my_new_umat.json --out umat_oti_workspace/my_new_umat
-umat-oti-batch --config-dir json_files_completed --batch-dir umat_oti_workspace/completed_json_batch
+umat-oti-batch --config-dir benchmarks --batch-dir umat_oti_workspace/completed_json_batch
 ```
 
 Without installation, the same JSON-contract path is:
@@ -117,7 +118,7 @@ The top-level wrapper script above is just a simpler front door for the same tra
 You can also run the bundled script directly:
 
 ```bash
-/usr/bin/python3.12 tools/run_completed_json_batch.py --config-dir json_files_completed --batch-dir umat_oti_workspace/completed_json_batch
+/usr/bin/python3.12 tools/run_completed_json_batch.py --config-dir benchmarks --batch-dir umat_oti_workspace/completed_json_batch
 ```
 
 ## Recommended First Files To Read

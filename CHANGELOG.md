@@ -21,10 +21,15 @@ Zenodo.
 - `CONTRIBUTING.md` and this changelog.
 - `tests/` suite (package import, CLI, and end-to-end transform smoke test).
 - GitHub Actions CI workflow across Python 3.10–3.12 on Linux and Windows.
-- Rewritten user manual (`UMAT_Source_transformation_user_manual.docx`) covering
-  the current implementation, utilities, and tutorials.
+- Rewritten user manual (`docs/UMAT_Source_transformation_user_manual.docx`)
+  covering the current implementation, utilities, and tutorials.
 
 ### Changed
+- Reorganized the repository into a conventional layout for publication: the
+  convenience entry scripts (`app.py`, `transform_from_json.py`,
+  `run_json_pipeline.py`) moved under `scripts/`, the completed benchmark
+  contracts moved from `json_files_completed/` to `benchmarks/`, and the user
+  manual moved under `docs/`.
 - Package renamed from `umat-oti-standalone` to `umat-oti`; expanded
   `pyproject.toml` metadata (authors, license, keywords, classifiers, URLs).
 - Relicensed the combined UMAT-OTI distribution from BSD-3-Clause to
@@ -34,6 +39,9 @@ Zenodo.
   metadata, matching the upstream library and the accompanying paper.
 
 ### Removed
+- The internal WIP helper scripts `engine_app.py`, `validate_all_local.py`, and
+  `verify_abaqus_local.py`, which were development aids not needed for the
+  public release.
 - Proprietary Abaqus verification-manual UMATs (`umatmst3.f`, `umathrt2.f`,
   `umathrt2.inp`) and their JSON contracts, which cannot be redistributed under
   an open-source license.
