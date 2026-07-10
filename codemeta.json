@@ -3,7 +3,7 @@
   "@type": "SoftwareSourceCode",
   "identifier": "umat-oti",
   "name": "UMAT-OTI",
-  "description": "Deterministic operational-Taylor (OTI) tangent generation for Abaqus UMAT Fortran source, driven by a compact JSON contract.",
+  "description": "Deterministic order-truncated imaginary (OTI) tangent generation for Abaqus UMAT Fortran source, driven by a compact JSON contract.",
   "codeRepository": "https://github.com/santiagarcia/UMAT_source_transformation",
   "programmingLanguage": [
     "Python",
@@ -18,16 +18,17 @@
   "softwareRequirements": [
     "numpy>=1.26",
     "pandas>=2.0",
-    "streamlit>=1.30"
+    "streamlit>=1.30",
+    "sympy>=1.12"
   ],
   "license": "https://spdx.org/licenses/GPL-3.0-only",
-  "version": "0.1.0",
-  "dateModified": "2026-07-06",
+  "version": "1.0.0",
+  "dateModified": "2026-07-10",
   "keywords": [
     "Abaqus",
     "UMAT",
     "automatic differentiation",
-    "operational Taylor integration",
+    "order-truncated imaginary numbers",
     "consistent tangent",
     "finite element method"
   ],

@@ -1,12 +1,28 @@
 {
+  "_help": [
+    "ADVANCED UMAT-OTI CONTRACT TEMPLATE.",
+    "Use this only when, in addition to the standard DDSDDE tangent, you also need",
+    "internal constitutive Jacobians and/or helper-routine output surfaces.",
+    "Fields prefixed with '_' are comments and are ignored by the loader.",
+    "",
+    "This extends the minimal template with three optional blocks:",
+    "  - validation             : material-point comparison settings.",
+    "  - constitutive_jacobians : extra local derivative contracts inside the UMAT.",
+    "  - helper_surfaces        : map a helper routine's output to a promoted target.",
+    "See docs/contract_generalization.md for the full 'advanced' block reference."
+  ],
+
   "name": "my_new_umat_with_constitutive_jacobians",
   "source": "/absolute/path/to/your_umat.for",
+
   "jacobian": {
     "seed": "DSTRAN",
     "output": "STRESS",
     "target": "DDSDDE"
   },
-  "description": "Advanced template. Edit all variable names and line numbers.",
+
+  "description": "Advanced template. Edit all variable names and line numbers for your UMAT.",
+
   "promote": [
     "STRESS"
   ],
@@ -23,6 +39,7 @@
   ],
   "ntens": 6,
   "order": 1,
+
   "validation": {
     "compare": [
       "STRESS",
@@ -31,10 +48,11 @@
     ],
     "absolute_tolerance": 0.0001
   },
+
   "constitutive_jacobians": [
     {
       "id": "fjac_from_oti",
-      "description": "Example advanced constitutive Jacobian contract.",
+      "description": "Example internal constitutive Jacobian contract.",
       "seed": "G1",
       "seed_shape": "scalar",
       "seed_directions": 1,
@@ -48,6 +66,7 @@
       "replace_variable": "G1JAC"
     }
   ],
+
   "helper_surfaces": [
     {
       "helper": "KCONSTITU",

@@ -1,18 +1,39 @@
 {
+  "_help": [
+    "MINIMAL UMAT-OTI CONTRACT TEMPLATE (order-truncated imaginary tangent).",
+    "Copy this file into user_jsons/ or json_files/, rename it, and edit the",
+    "values below. Fields prefixed with '_' are comments and are ignored.",
+    "",
+    "Workflow:",
+    "  1. python new_user_umat_starter/scripts/scan_source.py <your_umat.for>",
+    "  2. python new_user_umat_starter/scripts/show_source_lines.py <your_umat.for> --start 1 --end 220",
+    "  3. Fill in the fields below (especially 'replace' and 'promote').",
+    "  4. python new_user_umat_starter/scripts/check_config.py --config <this_file>.json",
+    "  5. python transform_from_json.py <this_file>.json --out umat_oti_workspace/<name>",
+    "",
+    "Required: name, source, jacobian.{seed,output,target}, promote, replace, ntens, order.",
+    "Optional: description, constant, real (see the constitutive template for advanced options)."
+  ],
+
   "name": "my_new_umat",
   "source": "/absolute/path/to/your_umat.for",
+
   "jacobian": {
     "seed": "DSTRAN",
     "output": "STRESS",
     "target": "DDSDDE"
   },
-  "description": "Edit this template for your own UMAT.",
+
+  "description": "Standard small-strain consistent tangent: DDSDDE(i,j) = d STRESS(i) / d DSTRAN(j).",
+
   "promote": [
     "STRESS"
   ],
+
   "replace": [
     "START-END"
   ],
+
   "ntens": 6,
   "order": 1
 }

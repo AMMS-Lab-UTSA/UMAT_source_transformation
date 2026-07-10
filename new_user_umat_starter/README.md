@@ -2,17 +2,15 @@
 
 This folder is a self-contained starter pack for running the current UMAT-OTI workflow on a new UMAT.
 
-It is built around the current simple JSON contract, not the older expanded internal schema.
+The reusable JSON templates and worked examples live at the repository root in
+`templates/` and `examples/`. This starter folder holds the docs and helper
+scripts that go with them.
 
 ## What Is In This Folder
 
 - `README.md`: quickest path for a new user.
 - `JSON_REFERENCE.md`: field-by-field explanation of the compact JSON contract.
 - `TROUBLESHOOTING.md`: common failure modes and what to check next.
-- `examples/elastic_minimal.json`: smallest real loadable example in this repository.
-- `examples/hin_reference.json`: larger real loadable example.
-- `templates/new_umat_minimal_template.json`: minimal contract to copy and edit.
-- `templates/new_umat_constitutive_template.json`: advanced template for constitutive jacobians and helper surfaces.
 - `scripts/scan_source.py`: inspect a raw UMAT source before writing JSON.
 - `scripts/show_source_lines.py`: print source with line numbers so you can choose `replace` ranges.
 - `scripts/check_config.py`: load-check a compact JSON contract and optionally write the expanded config.
@@ -34,7 +32,7 @@ Use `/usr/bin/python3.12` on ARC or any machine where the default `python` is ol
 2. Copy the minimal template and edit it.
 
 ```bash
-cp new_user_umat_starter/templates/new_umat_minimal_template.json json_files/my_new_umat.json
+cp templates/new_umat_minimal_template.json json_files/my_new_umat.json
 ```
 
 3. Fill in at least these fields.
@@ -112,7 +110,6 @@ If you upload JSON through the browser, use an absolute `source` path on the loc
 - Start from `templates/new_umat_constitutive_template.json` only if you also need advanced `constitutive_jacobians` or `helper_surfaces` sections.
 - Use `examples/elastic_minimal.json` as the smallest real reference.
 - Use `examples/hin_reference.json` as a larger real reference.
-
 ## What Each Script Is For
 
 `scan_source.py`
@@ -146,4 +143,4 @@ If you upload JSON through the browser, use an absolute `source` path on the loc
 
 - `new_user_umat_starter/JSON_REFERENCE.md`
 - `new_user_umat_starter/TROUBLESHOOTING.md`
-- `new_user_umat_starter/examples/elastic_minimal.json`
+- `examples/elastic_minimal.json`
