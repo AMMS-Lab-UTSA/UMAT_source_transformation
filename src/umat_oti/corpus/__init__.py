@@ -99,40 +99,45 @@ def is_redistributable(spdx_id: Optional[str]) -> bool:
 STAGE_DISCOVERED = "discovered"
 STAGE_CLASSIFIED = "license_classified"
 STAGE_ENTRY_DETECTED = "entry_routine_detected"
+STAGE_DEPENDENCIES_COMPLETE = "dependencies_complete"
 STAGE_CONTRACT_BUILT = "contract_built"
 STAGE_TRANSFORMED = "transformed"
-STAGE_COMPILED = "compiled"
-STAGE_PRIMAL_VERIFIED = "primal_verified"
-STAGE_DERIVATIVE_VERIFIED = "derivative_verified"
+STAGE_COMPILED = "generated_source_compiled"
+STAGE_PRIMAL_VERIFIED = "primal_parity_verified"
+STAGE_DERIVATIVE_VERIFIED = "derivatives_numerically_verified"
+STAGE_ABAQUS_VERIFIED = "abaqus_verified"
 
 _STAGE_ORDER = (
     STAGE_DISCOVERED,
     STAGE_CLASSIFIED,
     STAGE_ENTRY_DETECTED,
+    STAGE_DEPENDENCIES_COMPLETE,
     STAGE_CONTRACT_BUILT,
     STAGE_TRANSFORMED,
     STAGE_COMPILED,
     STAGE_PRIMAL_VERIFIED,
     STAGE_DERIVATIVE_VERIFIED,
+    STAGE_ABAQUS_VERIFIED,
 )
 
 
 FAILURE_CATEGORIES = (
-    "source_incomplete_or_dependency_missing",
+    "not_a_umat",
+    "input_deck_only",
+    "helper_or_dependency_only",
+    "missing_dependency",
+    "incomplete_repository_snapshot",
     "unsupported_license",
-    "entry_routine_not_detected",
-    "parser_gap",
-    "custom_operator_or_generic_resolution_gap",
+    "contract_generation_failure",
+    "dimension_inference_failure",
+    "custom_operator_or_generic_parser_gap",
     "unsupported_fortran_construct",
-    "variable_role_classification_error",
-    "oti_overload_missing",
     "generated_code_compile_failure",
     "original_umat_compile_failure",
     "primal_parity_failure",
-    "finite_difference_validation_problem",
-    "original_umat_derivative_error",
+    "derivative_validation_failure",
     "abaqus_deck_or_environment_failure",
-    "source_transformation_defect",
+    "confirmed_transformation_defect",
 )
 
 

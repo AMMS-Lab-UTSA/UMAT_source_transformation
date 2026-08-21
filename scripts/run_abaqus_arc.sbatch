@@ -5,8 +5,9 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --time=00-01:00:00
-#SBATCH --output=logs/umat-oti-abaqus-%j.out
-#SBATCH --error=logs/umat-oti-abaqus-%j.err
+#SBATCH --chdir=/home/vfn333/softwarex_work/UMAT_source_transformation
+#SBATCH --output=/home/vfn333/softwarex_work/UMAT_source_transformation/logs/umat-oti-abaqus-%j.out
+#SBATCH --error=/home/vfn333/softwarex_work/UMAT_source_transformation/logs/umat-oti-abaqus-%j.err
 
 # ============================================================================
 # ARC Slurm submission script for the UMAT-OTI Abaqus paired validation.
@@ -38,7 +39,9 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
+REPO_ROOT="/home/vfn333/softwarex_work/UMAT_source_transformation"
+VENV="/home/vfn333/softwarex_work/.venv"
+PYTHON="${VENV}/bin/python"
 cd "${REPO_ROOT}"
 
 LOG_DIR="${REPO_ROOT}/logs"
@@ -73,14 +76,14 @@ fi
 } > "${RESULT_DIR}/system.txt"
 
 # --- 2. OTI Fortran material-point verification ------------------------------
-python -m umat_oti.reports.run_softwarex_evidence \
+"${PYTHON}" -m umat_oti.reports.run_softwarex_evidence \
     --output-dir "${RESULT_DIR}/evidence" \
     > "${RESULT_DIR}/evidence.stdout.json" \
     || echo "[$(date -Iseconds)] evidence command exited non-zero"
 
 # --- 3. Abaqus paired batch --------------------------------------------------
 if command -v abaqus >/dev/null 2>&1; then
-    python tools/run_completed_json_batch.py \
+    "${PYTHON}" tools/run_completed_json_batch.py \
         --validate \
         --abaqus-command abaqus \
         --batch-dir "${RESULT_DIR}/paired_batch" \
@@ -93,7 +96,7 @@ else
 fi
 
 # --- 4. Unified validator run_suite ------------------------------------------
-python -m umat_oti.validation.run_suite \
+"${PYTHON}" -m umat_oti.validation.run_suite \
     --abaqus-command "${ABAQUS_CMD:-abaqus}" \
     --report "${RESULT_DIR}/run_suite.json" \
     --repo-root "${REPO_ROOT}" \
