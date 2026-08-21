@@ -12,9 +12,9 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from umat_oti.core.config_loader import load_project_config_json
+from umat_oti.cli_json import run_config_transform
 from umat_oti.core.transformation_anchors import anchor_completion_status
 from umat_oti.core.transformation_anchors import merge_completed_anchors_into_config
-from umat_oti.transform.source_transform import transform_umat_to_oti_from_config
 from umat_oti.validation.abaqus_runner import extract_results, run_both_jobs
 from umat_oti.validation.compare_results import compare_validation_results
 from umat_oti.validation.job_builder import DEFAULT_ABAQUS_MODULES, DEFAULT_ABAQUS_RUN_PREFIX, build_validation_workspace
@@ -65,25 +65,29 @@ def main() -> int:
             results.append(row)
             continue
         transform_dir = transform_root / name
-        transform = transform_umat_to_oti_from_config(source_text, config, transform_dir, ntens)
+        transform_summary, _ = run_config_transform(config_path, transform_dir)
         row.update(
             {
-                "transform_success": transform.success,
-                "transform_report": str(transform.report_path or ""),
-                "transformed_source": str(transform.transformed_source_path or ""),
-                "blockers": transform.blockers,
-                "warnings": transform.warnings,
-                "semantic_checks": transform.report.get("semantic_checks", {}),
+                "transform_success": bool(transform_summary.get("transform_success")),
+                "transform_report": str(transform_summary.get("report_path") or ""),
+                "transformed_source": str(transform_summary.get("transformed_source") or ""),
+                "blockers": transform_summary.get("blockers", []),
+                "warnings": transform_summary.get("warnings", []),
+                "semantic_checks": transform_summary.get("semantic_checks", {}),
+                "derivative_requests": transform_summary.get("derivative_requests", []),
+                "artifacts": transform_summary.get("artifacts", {}),
             }
         )
-        if transform.blockers:
-            row["category"] = "blocked_by_user_marked_unsafe" if any("marked unsafe" in blocker for blocker in transform.blockers) else "needs_json_completion" if any("JSON completion" in blocker for blocker in transform.blockers) else "transformation_generated_invalid_code"
-            row["status"] = "; ".join(transform.blockers)
+        blockers = row["blockers"]
+        blocker_messages = [str(blocker.get("message", blocker)) if isinstance(blocker, dict) else str(blocker) for blocker in blockers]
+        if blockers:
+            row["category"] = "blocked_by_user_marked_unsafe" if any("marked unsafe" in blocker for blocker in blocker_messages) else "needs_json_completion" if any("JSON completion" in blocker for blocker in blocker_messages) else "transformation_generated_invalid_code"
+            row["status"] = "; ".join(blocker_messages)
             results.append(row)
             continue
-        if not transform.success:
+        if not row["transform_success"]:
             row["category"] = "transformation_generated_invalid_code"
-            row["status"] = "; ".join(transform.warnings)
+            row["status"] = "; ".join(str(warning) for warning in row["warnings"])
             results.append(row)
             continue
         row["category"] = "ready_with_json_contract"
@@ -98,7 +102,7 @@ def main() -> int:
                     build_validation_workspace(
                         validation_dir=validation_dir,
                         original_umat=source_path,
-                        transformed_umat=Path(transform.transformed_source_path or ""),
+                        transformed_umat=Path(row["transformed_source"]),
                         generated_dir=transform_dir,
                         ntens=ntens,
                         abaqus_command=args.abaqus_command,

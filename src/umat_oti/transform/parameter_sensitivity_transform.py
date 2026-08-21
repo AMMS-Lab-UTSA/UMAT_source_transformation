@@ -37,6 +37,7 @@ reference fixture that this transformer's output is compared against.
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass, field
@@ -98,6 +99,20 @@ class GenericPSRunResult:
     dstatev_csv: Path
 
 
+class NonDifferentiableParameterPathError(ValueError):
+    code = "non_differentiable_integer_parameter_path"
+
+    def __init__(self, variable: str, props_index: int):
+        self.variable = variable
+        self.props_index = props_index
+        self.suggested_patch = f"Declare {variable} as REAL(8) if integer typing was unintended."
+        super().__init__(
+            f"{self.code}: PROPS({props_index}) flows through INTEGER variable {variable}; "
+            f"integer conversion is non-differentiable. Suggested source preparation (not applied): "
+            f"{self.suggested_patch}"
+        )
+
+
 def transform_umat_for_parameter_sensitivity(
     *, contract: GenericPSContract, output_dir: Path | str
 ) -> GenericPSLayout:
@@ -110,6 +125,9 @@ def transform_umat_for_parameter_sensitivity(
         raise ValueError("contract.parameters must not be empty")
     if len(contract.parameter_values) != n_param:
         raise ValueError("parameter_values length must match parameters length")
+
+    source_text = contract.umat_source_path.read_text(encoding="utf-8", errors="replace")
+    _reject_integer_parameter_paths(source_text, contract.parameters)
 
     module_result = generate_otilib_module(
         output_dir=output_dir, ntens=n_param, order=1
@@ -220,6 +238,38 @@ def _parse_umat_source(path: Path) -> ParsedFortranSource:
         logical_lines=tuple(logical),
         subroutines=tuple(subroutines),
     )
+
+
+def _reject_integer_parameter_paths(source_text: str, parameters: tuple[tuple[str, int], ...]) -> None:
+    selected_indices = {index for _, index in parameters}
+    explicit_real = _declared_names(source_text, r"^\s*(?:REAL(?:\s*\*\s*\d+|\s*\([^)]*\))?|DOUBLE\s+PRECISION)\b")
+    explicit_integer = _declared_names(source_text, r"^\s*INTEGER(?:\s*\*\s*\d+|\s*\([^)]*\))?\b")
+    assignment = re.compile(
+        r"^\s*([A-Z][A-Z0-9_]*)\s*=\s*(?:INT\s*\(\s*)?PROPS\s*\(\s*(\d+)\s*\)",
+        re.IGNORECASE | re.MULTILINE,
+    )
+    for match in assignment.finditer(source_text):
+        variable = match.group(1).upper()
+        props_index = int(match.group(2))
+        if props_index not in selected_indices:
+            continue
+        explicitly_converted = "INT" in match.group(0).upper().split("PROPS", 1)[0]
+        implicitly_integer = variable[0] in "IJKLMN" and variable not in explicit_real
+        if explicitly_converted or variable in explicit_integer or implicitly_integer:
+            raise NonDifferentiableParameterPathError(variable, props_index)
+
+
+def _declared_names(source_text: str, declaration_pattern: str) -> set[str]:
+    declarations = re.compile(declaration_pattern, re.IGNORECASE | re.MULTILINE)
+    names: set[str] = set()
+    for match in declarations.finditer(source_text):
+        line = source_text[match.end():].splitlines()[0].split("!", 1)[0]
+        line = line.split("::", 1)[-1]
+        for token in line.split(","):
+            name_match = re.match(r"\s*([A-Z][A-Z0-9_]*)", token, re.IGNORECASE)
+            if name_match:
+                names.add(name_match.group(1).upper())
+    return names
 
 
 def _closure_including_umat(parsed: ParsedFortranSource) -> tuple[str, ...]:
@@ -457,6 +507,7 @@ __all__ = [
     "GenericPSContract",
     "GenericPSLayout",
     "GenericPSRunResult",
+    "NonDifferentiableParameterPathError",
     "compile_generic_ps",
     "run_generic_ps",
     "transform_umat_for_parameter_sensitivity",

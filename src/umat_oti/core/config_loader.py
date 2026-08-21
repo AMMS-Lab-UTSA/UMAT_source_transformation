@@ -408,6 +408,9 @@ def _expand_compact_project_config(config: dict[str, Any], *, origin_path: str |
     advanced = _expand_advanced(normalized)
     if advanced:
         full_config["advanced"] = advanced
+    for key in ("schema_version", "derivatives", "parameters", "state_variables", "material_point_driver"):
+        if key in normalized:
+            full_config[key] = copy.deepcopy(normalized[key])
     return full_config
 
 

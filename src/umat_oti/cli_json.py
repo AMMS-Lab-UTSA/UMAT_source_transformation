@@ -6,7 +6,18 @@ from pathlib import Path
 from typing import Any
 
 from umat_oti.core.config_loader import load_project_config_json
+from umat_oti.core.derivative_request import (
+    KIND_PARAMETER_SENSITIVITY,
+    KIND_STATE_SENSITIVITY,
+    load_project_derivative_requests,
+    validate_derivative_requests,
+)
 from umat_oti.core.transformation_anchors import anchor_completion_status, merge_completed_anchors_into_config
+from umat_oti.transform.parameter_sensitivity_transform import (
+    GenericPSContract,
+    NonDifferentiableParameterPathError,
+    transform_umat_for_parameter_sensitivity,
+)
 from umat_oti.transform.source_transform import transform_umat_to_oti_from_config
 
 
@@ -26,6 +37,10 @@ def run_config_transform(config_path: Path, out_dir: Path) -> tuple[dict[str, An
 
     source_text = source_path.read_text(encoding="utf-8", errors="replace")
     config = merge_completed_anchors_into_config(config, source_text)
+    derivative_requests = load_project_derivative_requests(config)
+    request_errors = validate_derivative_requests(derivative_requests)
+    if request_errors:
+        return {"config": str(config_path), "errors": request_errors, "status_category": "invalid_derivative_request"}, 1
     completion = anchor_completion_status(config)
     settings = config.get("transformation_settings", {}) if isinstance(config.get("transformation_settings"), dict) else {}
     ntens = int(settings.get("ntens") or 0)
@@ -37,6 +52,7 @@ def run_config_transform(config_path: Path, out_dir: Path) -> tuple[dict[str, An
         "completion_issues": completion.get("completion_issues", []),
         "ntens": ntens,
         "order": settings.get("order"),
+        "derivative_requests": [request.to_dict() for request in derivative_requests],
     }
     if completion.get("status") == "needs_json_completion":
         summary["status_category"] = "needs_json_completion"
@@ -45,6 +61,39 @@ def run_config_transform(config_path: Path, out_dir: Path) -> tuple[dict[str, An
     out_dir.mkdir(parents=True, exist_ok=True)
     result = transform_umat_to_oti_from_config(source_text, config, out_dir, ntens)
     combined = _write_combined_source(out_dir, result.transformed_source_path) if result.success else None
+    parameter_artifact: dict[str, Any] | None = None
+    parameter_requests = [
+        request
+        for request in derivative_requests
+        if request.kind in {KIND_PARAMETER_SENSITIVITY, KIND_STATE_SENSITIVITY}
+    ]
+    if result.success and parameter_requests:
+        try:
+            parameter_artifact = _generate_parameter_sensitivity_artifact(
+                config=config,
+                source_path=source_path,
+                requests=parameter_requests,
+                out_dir=out_dir / "parameter_sensitivity",
+                ntens=ntens,
+            )
+        except NonDifferentiableParameterPathError as exc:
+            summary.update(
+                {
+                    "transform_success": False,
+                    "blockers": [{"code": exc.code, "message": str(exc), "suggested_patch": exc.suggested_patch}],
+                    "status_category": exc.code,
+                }
+            )
+            return summary, 1
+        except (KeyError, TypeError, ValueError) as exc:
+            summary.update(
+                {
+                    "transform_success": False,
+                    "blockers": [{"code": "invalid_parameter_sensitivity_contract", "message": str(exc)}],
+                    "status_category": "invalid_parameter_sensitivity_contract",
+                }
+            )
+            return summary, 1
     summary.update(
         {
             "transform_success": result.success,
@@ -53,11 +102,84 @@ def run_config_transform(config_path: Path, out_dir: Path) -> tuple[dict[str, An
             "report_path": str(result.report_path or ""),
             "transformed_source": str(result.transformed_source_path or ""),
             "combined_source": str(combined or ""),
+            "artifacts": {
+                "abaqus_umat": {
+                    "abi": "standard_real_umat",
+                    "drop_in_abaqus_user_subroutine": True,
+                    "source": str(combined or result.transformed_source_path or ""),
+                },
+                "parameter_sensitivity_driver": parameter_artifact,
+            },
             "semantic_checks": result.report.get("semantic_checks", {}),
             "status_category": _classify_outcome(result),
         }
     )
     return summary, 0 if result.success else 1
+
+
+def _generate_parameter_sensitivity_artifact(
+    *,
+    config: dict[str, Any],
+    source_path: Path,
+    requests: list[Any],
+    out_dir: Path,
+    ntens: int,
+) -> dict[str, Any]:
+    parameters: list[tuple[str, int]] = []
+    for request in requests:
+        for item in request.parameter_map:
+            if item not in parameters:
+                parameters.append(item)
+    if not parameters:
+        raise ValueError("DSIGMA_DP/DSTATEV_DP requires a non-empty parameters mapping")
+    parameter_entries = {
+        str(entry.get("name", "")).upper(): entry
+        for entry in config.get("parameters", [])
+        if isinstance(entry, dict)
+    }
+    parameter_values = tuple(float(parameter_entries[name.upper()]["value"]) for name, _ in parameters)
+    state_variables: list[tuple[str, int]] = []
+    for request in requests:
+        for item in request.state_map:
+            if item not in state_variables:
+                state_variables.append(item)
+    driver = config.get("material_point_driver") if isinstance(config.get("material_point_driver"), dict) else {}
+    nstatv = int(driver.get("nstatv") or max((index for _, index in state_variables), default=1))
+    dstran = tuple(float(value) for value in driver.get("dstran_per_increment", []))
+    if len(dstran) != ntens:
+        raise ValueError(f"material_point_driver.dstran_per_increment must contain ntens={ntens} values")
+    static_props = tuple(float(value) for value in driver.get("static_props", []))
+    contract = GenericPSContract(
+        name=str(config.get("case_name") or config.get("project", {}).get("name") or source_path.stem),
+        umat_source_path=source_path,
+        parameters=tuple(parameters),
+        parameter_values=parameter_values,
+        state_variables=tuple(state_variables),
+        ntens=ntens,
+        nstatv=nstatv,
+        ndi=int(driver.get("ndi") or (3 if ntens >= 4 else ntens)),
+        nshr=int(driver.get("nshr") if driver.get("nshr") is not None else max(ntens - 3, 0)),
+        dstran_per_increment=dstran,
+        n_increments=int(driver.get("n_increments") or 1),
+        static_props=static_props,
+    )
+    layout = transform_umat_for_parameter_sensitivity(contract=contract, output_dir=out_dir)
+    artifact = {
+        "abi": "oti_material_point_driver",
+        "drop_in_abaqus_user_subroutine": False,
+        "root": str(layout.root),
+        "driver": str(layout.driver),
+        "lifted_umat": str(layout.lifted_umat),
+        "makefile": str(layout.makefile),
+        "oti_module": str(layout.otim_module),
+        "parameters": [{"name": name, "props_index": index} for name, index in parameters],
+        "state_variables": [{"name": name, "statev_index": index} for name, index in state_variables],
+        "outputs": [request.target for request in requests],
+    }
+    manifest = out_dir / "artifact_manifest.json"
+    manifest.write_text(json.dumps(artifact, indent=2, sort_keys=True), encoding="utf-8")
+    artifact["manifest"] = str(manifest)
+    return artifact
 
 
 def _write_combined_source(out_dir: Path, transformed_source: Any) -> Path | None:
