@@ -232,9 +232,41 @@ _MASTER_PARAMETERS_USE_RE = re.compile(r"^([ \t]*)USE\s+master_parameters\s*$", 
 _REAL_UTILS_USE_RE = re.compile(r"^([ \t]*)USE\s+real_utils\s*$", re.MULTILINE | re.IGNORECASE)
 _REAL_UTILS_ONLY = "PPRINT, det2x2, det3x3, det4x4, inv2x2, inv3x3, inv4x4"
 
+# Match a FUNCTION body that contains ``INTENT(IN) :: ARRAY(...)`` followed
+# by ``INTEGER :: <NAME>( RANK( ARRAY ) )``. Older gfortran (<= 8) refuses
+# ``RANK(ARRAY)`` in a declaration bound because the intrinsic is not a
+# compile-time constant expression; even gfortran 13 currently rejects it in
+# the shipped otim* templates. We replace ``RANK( ARRAY )`` with the literal
+# rank inferred from the ``ARRAY(:)`` / ``ARRAY(:,:)`` declaration that
+# precedes it in the same function body.
+_ARRAY_DECL_RE = re.compile(
+    r"INTENT\(IN\)\s*::\s*ARRAY\s*\(([^)]*)\)",
+    re.IGNORECASE,
+)
+_RANK_DECL_RE = re.compile(
+    r"(INTEGER\s*::\s*\w+\s*\(\s*)RANK\s*\(\s*ARRAY\s*\)\s*\)",
+    re.IGNORECASE,
+)
+_FUNCTION_BLOCK_RE = re.compile(
+    r"(FUNCTION\s+\w+.*?END\s+FUNCTION\s+\w+)",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _rewrite_rank_of_array_in_decls(source: str) -> str:
+    def _rewrite_body(match: re.Match[str]) -> str:
+        body = match.group(1)
+        decl = _ARRAY_DECL_RE.search(body)
+        if not decl:
+            return body
+        rank = decl.group(1).count(":") or 1
+        return _RANK_DECL_RE.sub(lambda m: f"{m.group(1)}{rank})", body)
+    return _FUNCTION_BLOCK_RE.sub(_rewrite_body, source)
+
 
 def _post_fix_module(source: str, ntens: int, order: int = 1) -> str:
     source = _BACK_KW_RE.sub("", source)
+    source = _rewrite_rank_of_array_in_decls(source)
     source = _MASTER_PARAMETERS_USE_RE.sub(lambda match: f"{match.group(1)}USE master_parameters, ONLY: DP", source, count=1)
     source = _REAL_UTILS_USE_RE.sub(lambda match: f"{match.group(1)}USE real_utils, ONLY: {_REAL_UTILS_ONLY}", source, count=1)
     interface_block, body = _extra_overloads(ntens, order)
