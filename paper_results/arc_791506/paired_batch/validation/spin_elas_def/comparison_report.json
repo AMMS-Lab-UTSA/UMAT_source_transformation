@@ -1,0 +1,183 @@
+{
+  "absolute_tolerance": 0.0001,
+  "activation_check": {
+    "expected_finite_geometry": true,
+    "expected_plasticity": true,
+    "nlgeom": "YES",
+    "original_plasticity_active": true,
+    "original_state_variables": [
+      629.3219604492188,
+      -7.4442027653276455e-06,
+      -7.4442027653276455e-06,
+      -1.0958758746854448e-15,
+      -5.4692540474548645e-15,
+      8.76255499231279e-15
+    ],
+    "otis_plasticity_active": true,
+    "otis_state_variables": [
+      629.3218994140625,
+      -5.961569695500657e-05,
+      -5.961569695500657e-05,
+      -5.476206176248573e-16,
+      -7.659617298066967e-15,
+      4.381461725822423e-15
+    ],
+    "pass": true,
+    "plastic_state_threshold": 1e-12,
+    "status": "passed"
+  },
+  "constitutive_comparison": {
+    "message": "Constitutive Jacobian comparison not requested.",
+    "pass": true,
+    "status": "not_requested"
+  },
+  "convergence_comparison": {
+    "blocking_differences": {},
+    "differences": {},
+    "original": {
+      "analysis_warnings": 0,
+      "completed": true,
+      "cutbacks": 0,
+      "error_messages": 0,
+      "increments": 4,
+      "input_warnings": 0,
+      "iterations": 4,
+      "sta_increment_rows": [
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 1,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        },
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 2,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        },
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 3,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        },
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 4,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        }
+      ],
+      "status": "available"
+    },
+    "otis": {
+      "analysis_warnings": 0,
+      "completed": true,
+      "cutbacks": 0,
+      "error_messages": 0,
+      "increments": 4,
+      "input_warnings": 0,
+      "iterations": 4,
+      "sta_increment_rows": [
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 1,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        },
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 2,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        },
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 3,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        },
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 4,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        }
+      ],
+      "status": "available"
+    },
+    "pass": true,
+    "status": "passed"
+  },
+  "ddsdde_absolute_tolerance": 0.05,
+  "ddsdde_comparison": {
+    "message": "DDSDDE comparison not requested.",
+    "pass": true,
+    "status": "not_requested"
+  },
+  "ddsdde_relative_tolerance": 0.005,
+  "errors": [],
+  "pass": true,
+  "relative_tolerance": 1e-07,
+  "state_variable_comparison": {
+    "max_abs_difference": 6.103515625e-05,
+    "max_rel_difference": 5.2171494189678924e-05,
+    "original_values": [
+      629.3219604492188,
+      -7.4442027653276455e-06,
+      -7.4442027653276455e-06,
+      -1.0958758746854448e-15,
+      -5.4692540474548645e-15,
+      8.76255499231279e-15
+    ],
+    "otis_values": [
+      629.3218994140625,
+      -5.961569695500657e-05,
+      -5.961569695500657e-05,
+      -5.476206176248573e-16,
+      -7.659617298066967e-15,
+      4.381461725822423e-15
+    ],
+    "pass": true,
+    "status": "passed"
+  },
+  "status": "passed",
+  "stress_comparison": {
+    "max_abs_difference": 6.103515625e-05,
+    "max_rel_difference": 5.2171494189678924e-05,
+    "original_final_stress": [
+      629.3219604492188,
+      -7.4442027653276455e-06,
+      -7.4442027653276455e-06,
+      -1.0958758746854448e-15,
+      -5.4692540474548645e-15,
+      8.76255499231279e-15
+    ],
+    "otis_final_stress": [
+      629.3218994140625,
+      -5.961569695500657e-05,
+      -5.961569695500657e-05,
+      -5.476206176248573e-16,
+      -7.659617298066967e-15,
+      4.381461725822423e-15
+    ],
+    "pass": true
+  },
+  "warnings": []
+}
