@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 import re
 from dataclasses import dataclass, field
@@ -93,8 +94,8 @@ def transform_umat_to_oti_from_config(
     order = int(_dict(config.get("transformation_settings")).get("order", 1) or 1)
     directions_required = _directions_required(ntens, config)
     oti_directions = int(directions_required["total_directions"] or ntens)
-    module_name = f"otim{oti_directions}n1" if oti_directions else ""
-    type_name = f"ONUMM{oti_directions}N1" if oti_directions else ""
+    module_name = f"otim{oti_directions}n{order}" if oti_directions else ""
+    type_name = f"ONUMM{oti_directions}N{order}" if oti_directions else ""
     tangent_context = _tangent_region_context(config, regions["old_tangent"], regions["stress"], source_text)
     parsed = _parse_source(source_text, source_file)
     helper_roots = _liftable_helper_roots(config, roles, regions["stress"])
@@ -189,6 +190,7 @@ def transform_umat_to_oti_from_config(
         compile_units.append(helper_source_path.name)
     compile_units.append(transformed_name)
     compile_order.write_text("\n".join(compile_units) + "\n", encoding="utf-8")
+    higher_order_directions = _write_higher_order_directions(output_dir, oti_directions, order)
     compile_hint = output_dir / "compile_hint.sh"
     compile_lines = [
         "#!/usr/bin/env bash",
@@ -228,6 +230,8 @@ def transform_umat_to_oti_from_config(
     ]
     if helper_source_path is not None:
         generated_files.append(helper_source_path)
+    if higher_order_directions is not None:
+        generated_files.append(higher_order_directions)
     generated_files.append(transformed_path)
     report = {
         **report_base,
@@ -1825,6 +1829,28 @@ def _ddsdde_extraction_lines(
     if order and order > 1:
         lines.extend(_higher_order_jacobian_lines(form, mappings, ntens, order, nbases or ntens))
     return lines
+
+
+def _write_higher_order_directions(output_dir: Path, nbases: int, order: int) -> Path | None:
+    if order <= 1:
+        return None
+    from umat_oti.oti.oti_directions import imaginary_directions
+
+    path = output_dir / "higher_order_directions.csv"
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle, lineterminator="\n")
+        writer.writerow(["order", "member_name", "flat_getim_index", "bases_multiindex", "recovery_factor"])
+        for entry in imaginary_directions(nbases, order):
+            writer.writerow(
+                [
+                    entry["order"],
+                    entry["name"],
+                    entry["flat"],
+                    "|".join(str(basis) for basis in entry["bases"]),
+                    entry["factor"],
+                ]
+            )
+    return path
 
 
 def _higher_order_jacobian_lines(
