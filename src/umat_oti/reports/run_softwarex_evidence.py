@@ -538,6 +538,7 @@ def _build_claim_matrix_from_results(
     env,
     oti_j2: dict,
     oti_ho: dict,
+    corpus_metrics: Optional[dict[str, Any]] = None,
 ) -> list[dict[str, Any]]:
     def _status_for(stage: dict, blocked_reason: str) -> str:
         s = stage.get("status")
@@ -548,6 +549,12 @@ def _build_claim_matrix_from_results(
         return blocked_reason
 
     blocked_by_compiler = "blocked_by_missing_compiler"
+    corpus_metrics = corpus_metrics or {}
+    corpus_provenance = corpus_metrics.get("provenance", {})
+    corpus_compile_count = corpus_metrics.get("cumulative_stage_counts", {}).get(
+        "generated_source_compiled", 0
+    )
+    corpus_status = "verified" if corpus_provenance.get("acquired_source_count") else "pending"
     return [
         {
             "id": "focused_J2_DSIGMA_DP_generic_source_transform",
@@ -615,7 +622,9 @@ def _build_claim_matrix_from_results(
             "implementation": "src/umat_oti/corpus/cli.py.",
             "reference": "Compiler exit status only.",
             "test": "python -m umat_oti.corpus.cli run.",
-            "status": "pending",
+            "status": corpus_status,
+            "observed_compile_success": corpus_compile_count,
+            "unique_umat_count": corpus_provenance.get("unique_umat_count"),
         },
         {
             "id": "corpus_primal_parity",
@@ -673,7 +682,8 @@ def _build_claim_matrix_from_results(
             "implementation": "src/umat_oti/corpus/__init__.py + cli.py.",
             "reference": "Real per-round metrics (no hard-coded numbers).",
             "test": "python -m umat_oti.corpus.cli discover --allow-network",
-            "status": "pending",
+            "status": corpus_status,
+            "observed_metrics": corpus_provenance or None,
         },
     ]
 
@@ -702,6 +712,12 @@ def main(argv: Optional[list[str]] = None) -> int:
         action="store_true",
         help="Skip OTI Fortran build/run (useful for smoke testing the FD reference alone).",
     )
+    parser.add_argument(
+        "--corpus-metrics",
+        type=Path,
+        default=None,
+        help="Archived round_metrics.json from a live corpus run.",
+    )
     args = parser.parse_args(argv)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -722,7 +738,16 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     bridge = _emit_manifest_and_bridge(args.output_dir, fd["run"])
     tables = _emit_paper_tables(args.output_dir, oti_j2, oti_ho, fd["files"])
-    claim_matrix = _build_claim_matrix_from_results(env=env, oti_j2=oti_j2, oti_ho=oti_ho)
+    corpus_metrics = None
+    if args.corpus_metrics is not None:
+        corpus_metrics = json.loads(args.corpus_metrics.read_text(encoding="utf-8"))
+        shutil.copyfile(args.corpus_metrics, args.output_dir / "corpus_round_metrics.json")
+    claim_matrix = _build_claim_matrix_from_results(
+        env=env,
+        oti_j2=oti_j2,
+        oti_ho=oti_ho,
+        corpus_metrics=corpus_metrics,
+    )
     claim_path = args.output_dir / "claim_matrix.json"
     claim_path.write_text(json.dumps(claim_matrix, indent=2, sort_keys=True), encoding="utf-8")
 

@@ -63,9 +63,11 @@
     "description": "Corpus candidates compile after transformation; this does not establish primal or derivative parity.",
     "id": "corpus_compile_success",
     "implementation": "src/umat_oti/corpus/cli.py.",
+    "observed_compile_success": 14,
     "reference": "Compiler exit status only.",
-    "status": "pending",
-    "test": "python -m umat_oti.corpus.cli run."
+    "status": "verified",
+    "test": "python -m umat_oti.corpus.cli run.",
+    "unique_umat_count": 46
   },
   {
     "description": "Transformed corpus candidates reproduce original primal outputs.",
@@ -139,8 +141,27 @@
     "description": "Executable GitHub-API corpus discovery + staged pipeline + round metrics from live acquisition.",
     "id": "corpus_regression_round_metrics",
     "implementation": "src/umat_oti/corpus/__init__.py + cli.py.",
+    "observed_metrics": {
+      "acquired_source_count": 148,
+      "index_generated_at": "2026-08-21T17:43:20+00:00",
+      "index_schema": "umat-oti-corpus-index/1",
+      "index_source": "manifest",
+      "processed_source_count": 133,
+      "repositories": [
+        "bibekananda-datta/Abaqus-UEL-Elasticity",
+        "bibekananda-datta/Abaqus-UEL-Hyperelasticity",
+        "jgomezc1/ABAQUS-US",
+        "ngrilli/Oxford_Crystal_Plasticity",
+        "sergiolucarini/UMAT4COMSOL",
+        "thealanjason/umat_finite_viscoelasticity"
+      ],
+      "repository_count": 6,
+      "snapshotted_source_count": 148,
+      "unique_source_count": 133,
+      "unique_umat_count": 46
+    },
     "reference": "Real per-round metrics (no hard-coded numbers).",
-    "status": "pending",
+    "status": "verified",
     "test": "python -m umat_oti.corpus.cli discover --allow-network"
   }
 ]
