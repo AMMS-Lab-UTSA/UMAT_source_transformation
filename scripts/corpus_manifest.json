@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-08-21",
+  "note": "Curated permissive public UMAT/UEL repositories. When 'files' is omitted the corpus CLI walks the repo's top-level (and one nested level) via the GitHub contents API to enumerate all Fortran files (.f, .for, .f90, .F, .F90, .inc, .inp).",
+  "repos": [
+    {"owner": "ngrilli", "repo": "Oxford_Crystal_Plasticity", "ref": "master", "license_spdx": "MIT"},
+    {"owner": "bibekananda-datta", "repo": "Abaqus-UEL-Elasticity", "ref": "main", "license_spdx": "BSD-3-Clause"},
+    {"owner": "bibekananda-datta", "repo": "Abaqus-UEL-Hyperelasticity", "ref": "main", "license_spdx": "BSD-3-Clause"},
+    {"owner": "jgomezc1", "repo": "ABAQUS-US", "ref": "master", "license_spdx": "MIT"},
+    {"owner": "sergiolucarini", "repo": "UMAT4COMSOL", "ref": "main", "license_spdx": "MIT"},
+    {"owner": "thealanjason", "repo": "umat_finite_viscoelasticity", "ref": "main", "license_spdx": "MIT"}
+  ]
+}
