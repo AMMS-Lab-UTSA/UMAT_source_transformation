@@ -1,7 +1,7 @@
 {
   "upload_type": "software",
   "title": "UMAT-OTI: Deterministic order-truncated imaginary tangent generation for Abaqus UMATs",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "UMAT-OTI transforms Abaqus user-material subroutine (UMAT) Fortran source so that the consistent material tangent (DDSDDE), and optional internal constitutive Jacobians, are computed by order-truncated imaginary (OTI) automatic differentiation instead of hand-coded or finite-difference derivatives. The transformation is driven by a compact JSON contract and preserves the external UMAT interface expected by Abaqus. This release accompanies the SoftwareX submission describing the method.",
   "access_right": "open",
   "license": "GPL-3.0-only",
