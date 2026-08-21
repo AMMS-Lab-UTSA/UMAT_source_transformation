@@ -1,0 +1,133 @@
+{
+  "absolute_tolerance": 1e-05,
+  "activation_check": {
+    "expected_finite_geometry": false,
+    "expected_plasticity": false,
+    "nlgeom": "NO",
+    "pass": true,
+    "status": "not_required"
+  },
+  "constitutive_comparison": {
+    "message": "Constitutive Jacobian comparison not requested.",
+    "pass": true,
+    "status": "not_requested"
+  },
+  "convergence_comparison": {
+    "blocking_differences": {},
+    "differences": {},
+    "original": {
+      "analysis_warnings": 0,
+      "completed": true,
+      "cutbacks": 0,
+      "error_messages": 0,
+      "increments": 1,
+      "input_warnings": 0,
+      "iterations": 1,
+      "sta_increment_rows": [
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 1,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        }
+      ],
+      "status": "available"
+    },
+    "otis": {
+      "analysis_warnings": 0,
+      "completed": true,
+      "cutbacks": 0,
+      "error_messages": 0,
+      "increments": 1,
+      "input_warnings": 0,
+      "iterations": 1,
+      "sta_increment_rows": [
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 1,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        }
+      ],
+      "status": "available"
+    },
+    "pass": true,
+    "status": "passed"
+  },
+  "ddsdde_absolute_tolerance": 0.05,
+  "ddsdde_comparison": {
+    "absolute_tolerance": 0.05,
+    "compared_increment_count": 1,
+    "expected": true,
+    "increments": [
+      {
+        "component_count": 16,
+        "max_abs_difference": 0.0,
+        "max_rel_difference": 0.0,
+        "original_frame_index": 1,
+        "original_increment_number": 1,
+        "otis_frame_index": 1,
+        "otis_increment_number": 1,
+        "pair_index": 0,
+        "pass": true
+      }
+    ],
+    "max_abs_difference": 0.0,
+    "max_rel_difference": 0.0,
+    "original_increment_count": 1,
+    "otis_increment_count": 1,
+    "pass": true,
+    "relative_tolerance": 0.005,
+    "status": "passed",
+    "worst_increment": {
+      "component_count": 16,
+      "max_abs_difference": 0.0,
+      "max_rel_difference": 0.0,
+      "original_frame_index": 1,
+      "original_increment_number": 1,
+      "otis_frame_index": 1,
+      "otis_increment_number": 1,
+      "pair_index": 0,
+      "pass": true
+    }
+  },
+  "ddsdde_relative_tolerance": 0.005,
+  "errors": [],
+  "pass": true,
+  "relative_tolerance": 1e-07,
+  "state_variable_comparison": {
+    "max_abs_difference": 0.0,
+    "max_rel_difference": 0.0,
+    "original_values": [
+      0.0
+    ],
+    "otis_values": [
+      0.0
+    ],
+    "pass": true,
+    "status": "passed"
+  },
+  "status": "passed",
+  "stress_comparison": {
+    "max_abs_difference": 0.0,
+    "max_rel_difference": 0.0,
+    "original_final_stress": [
+      23.076923370361328,
+      -8.881784197001252e-16,
+      6.92307710647583,
+      -1.368283920453694e-16
+    ],
+    "otis_final_stress": [
+      23.076923370361328,
+      -8.881784197001252e-16,
+      6.92307710647583,
+      -1.368283920453694e-16
+    ],
+    "pass": true
+  },
+  "warnings": []
+}

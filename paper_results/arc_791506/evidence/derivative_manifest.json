@@ -1,0 +1,186 @@
+{
+  "compiler": {
+    "name": "",
+    "version": ""
+  },
+  "convention": {
+    "coefficient_vs_derivative": "recovered_derivative = OTI_coefficient * product_of_factorials(direction_multiplicities)",
+    "recovery_factors": {
+      "higher_order_2": 2,
+      "higher_order_3": 6,
+      "higher_order_4": 24,
+      "local_return_mapping": 1,
+      "material_tangent": 1,
+      "state_parameter_sensitivity": 1,
+      "stress_parameter_sensitivity": 1
+    }
+  },
+  "derivatives": [
+    {
+      "id": "material_tangent",
+      "kind": "material_tangent",
+      "order": 1,
+      "output_layout": "jacobian",
+      "recovery_factor": 1,
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "compact",
+      "target": "DDSDDE"
+    },
+    {
+      "id": "local_return_mapping",
+      "kind": "local_jacobian",
+      "order": 1,
+      "output_layout": "jacobian",
+      "recovery_factor": 1,
+      "response": "RESID",
+      "scope": "NEWTON",
+      "seed": [
+        "DGAMMA"
+      ],
+      "source_contract": "compact",
+      "target": "FJAC"
+    },
+    {
+      "id": "higher_order_2",
+      "kind": "higher_order",
+      "order": 2,
+      "output_layout": "jacobian",
+      "recovery_factor": 2,
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "compact",
+      "target": "DDSDDE2"
+    },
+    {
+      "id": "higher_order_3",
+      "kind": "higher_order",
+      "order": 3,
+      "output_layout": "jacobian",
+      "recovery_factor": 6,
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "compact",
+      "target": "DDSDDE3"
+    },
+    {
+      "id": "higher_order_4",
+      "kind": "higher_order",
+      "order": 4,
+      "output_layout": "jacobian",
+      "recovery_factor": 24,
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "compact",
+      "target": "DDSDDE4"
+    },
+    {
+      "id": "stress_parameter_sensitivity",
+      "kind": "parameter_sensitivity",
+      "order": 1,
+      "output_layout": "jacobian",
+      "parameters": [
+        {
+          "name": "E",
+          "props_index": 1
+        },
+        {
+          "name": "NU",
+          "props_index": 2
+        },
+        {
+          "name": "SIGY0",
+          "props_index": 3
+        },
+        {
+          "name": "H",
+          "props_index": 4
+        }
+      ],
+      "recovery_factor": 1,
+      "response": "STRESS",
+      "seed": [
+        "E",
+        "NU",
+        "SIGY0",
+        "H"
+      ],
+      "source_contract": "compact",
+      "target": "DSIGMA_DP"
+    },
+    {
+      "id": "state_parameter_sensitivity",
+      "kind": "state_sensitivity",
+      "order": 1,
+      "output_layout": "jacobian",
+      "recovery_factor": 1,
+      "response": "STATEV",
+      "seed": [
+        "E",
+        "NU",
+        "SIGY0",
+        "H"
+      ],
+      "source_contract": "compact",
+      "state_variables": [
+        {
+          "name": "EQPLAS",
+          "statev_index": 1
+        }
+      ],
+      "target": "DSTATEV_DP"
+    }
+  ],
+  "dimensions": {
+    "nprops": 4,
+    "nstatv": 1,
+    "ntens": 6
+  },
+  "direction_order": {
+    "convention": "canonical_graded_lex",
+    "direction_count": 4,
+    "reference": "umat_oti.oti.oti_directions"
+  },
+  "generated_at": "2026-08-21T15:57:01+00:00",
+  "parameters": [
+    {
+      "name": "E",
+      "props_index": 1
+    },
+    {
+      "name": "NU",
+      "props_index": 2
+    },
+    {
+      "name": "SIGY0",
+      "props_index": 3
+    },
+    {
+      "name": "H",
+      "props_index": 4
+    }
+  ],
+  "schema": "umat-oti-derivative-manifest/1",
+  "source": {
+    "entry_routine": "UMAT",
+    "git_commit": "968d97cd1722cf6d403fbf202f05d9235b45e20f",
+    "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
+    "sha256": "82defecdce46a577087674977be175b3b9881be8afafaa1d88545c8534563672"
+  },
+  "state_variables": [
+    {
+      "name": "EQPLAS",
+      "statev_index": 1
+    }
+  ],
+  "umat_oti_version": "1.1.0",
+  "warnings": []
+}

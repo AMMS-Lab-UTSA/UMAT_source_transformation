@@ -1,0 +1,251 @@
+{
+  "absolute_tolerance": 1e-05,
+  "activation_check": {
+    "expected_finite_geometry": false,
+    "expected_plasticity": true,
+    "message": "Plasticity was requested, but one or both jobs ended with zero plastic state variables.",
+    "nlgeom": "NO",
+    "original_plasticity_active": true,
+    "original_state_variables": [
+      0.000750000006519258,
+      0.000375000003259629,
+      0.000375000003259629,
+      3.3881317890172014e-21,
+      -3.7269449679189215e-20,
+      -1.6263032587282567e-19,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.2247449159622192,
+      0.0
+    ],
+    "otis_plasticity_active": false,
+    "otis_state_variables": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "pass": false,
+    "plastic_state_threshold": 1e-12,
+    "status": "failed"
+  },
+  "constitutive_comparison": {
+    "message": "Constitutive Jacobian comparison not requested.",
+    "pass": true,
+    "status": "not_requested"
+  },
+  "convergence_comparison": {
+    "blocking_differences": {
+      "analysis_warnings": {
+        "original": 0,
+        "otis": null
+      },
+      "cutbacks": {
+        "original": 0,
+        "otis": null
+      },
+      "error_messages": {
+        "original": 1,
+        "otis": null
+      },
+      "increments": {
+        "original": 2,
+        "otis": null
+      },
+      "input_warnings": {
+        "original": 0,
+        "otis": null
+      }
+    },
+    "differences": {
+      "analysis_warnings": {
+        "original": 0,
+        "otis": null
+      },
+      "cutbacks": {
+        "original": 0,
+        "otis": null
+      },
+      "error_messages": {
+        "original": 1,
+        "otis": null
+      },
+      "increments": {
+        "original": 2,
+        "otis": null
+      },
+      "input_warnings": {
+        "original": 0,
+        "otis": null
+      },
+      "iterations": {
+        "original": 1,
+        "otis": null
+      }
+    },
+    "original": {
+      "analysis_warnings": 0,
+      "completed": false,
+      "cutbacks": 0,
+      "error_messages": 1,
+      "increments": 2,
+      "input_warnings": 0,
+      "iterations": 1,
+      "sta_increment_rows": [
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 1,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        }
+      ],
+      "status": "available"
+    },
+    "otis": {
+      "analysis_warnings": null,
+      "completed": false,
+      "cutbacks": null,
+      "error_messages": null,
+      "increments": null,
+      "input_warnings": null,
+      "iterations": null,
+      "sta_increment_rows": [],
+      "status": "available"
+    },
+    "pass": false,
+    "status": "failed"
+  },
+  "ddsdde_absolute_tolerance": 0.05,
+  "ddsdde_comparison": {
+    "absolute_tolerance": 0.05,
+    "compared_increment_count": 1,
+    "expected": true,
+    "increments": [
+      {
+        "component_count": 36,
+        "max_abs_difference": 3000.0,
+        "max_rel_difference": 1.0,
+        "original_frame_index": 1,
+        "original_increment_number": 1,
+        "otis_frame_index": 0,
+        "otis_increment_number": 0,
+        "pair_index": 0,
+        "pass": false
+      }
+    ],
+    "max_abs_difference": 3000.0,
+    "max_rel_difference": 1.0,
+    "original_increment_count": 1,
+    "otis_increment_count": 1,
+    "pass": false,
+    "relative_tolerance": 0.005,
+    "status": "failed",
+    "worst_increment": {
+      "component_count": 36,
+      "max_abs_difference": 3000.0,
+      "max_rel_difference": 1.0,
+      "original_frame_index": 1,
+      "original_increment_number": 1,
+      "otis_frame_index": 0,
+      "otis_increment_number": 0,
+      "pair_index": 0,
+      "pass": false
+    }
+  },
+  "ddsdde_relative_tolerance": 0.005,
+  "errors": [
+    "Original Abaqus validation job did not complete successfully (status=failed, returncode=1).",
+    "Transformed Abaqus validation job did not complete successfully (status=failed, returncode=1)."
+  ],
+  "pass": false,
+  "relative_tolerance": 1e-07,
+  "state_variable_comparison": {
+    "max_abs_difference": 1.2247449159622192,
+    "max_rel_difference": 1.0,
+    "original_values": [
+      0.000750000006519258,
+      0.000375000003259629,
+      0.000375000003259629,
+      3.3881317890172014e-21,
+      -3.7269449679189215e-20,
+      -1.6263032587282567e-19,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.2247449159622192,
+      0.0
+    ],
+    "otis_values": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "pass": false,
+    "status": "failed"
+  },
+  "status": "failed_execution",
+  "stress_comparison": {
+    "max_abs_difference": 1.5,
+    "max_rel_difference": 1.0,
+    "original_final_stress": [
+      1.5,
+      -2.220446049250313e-16,
+      -2.220446049250313e-16,
+      6.776263578034403e-18,
+      0.0,
+      0.0
+    ],
+    "otis_final_stress": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "pass": false
+  },
+  "warnings": []
+}

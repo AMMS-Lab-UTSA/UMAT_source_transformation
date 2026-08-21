@@ -1,0 +1,40 @@
+{
+  "backend": "centered_fd",
+  "fd_step_relative": 1e-06,
+  "method": "centered_fd",
+  "n_increments": 20,
+  "nparam": 4,
+  "nstatev": 1,
+  "ntens": 6,
+  "outputs": {
+    "DSIGMA_DP_FD": "DSIGMA_DP_FD.csv",
+    "DSTATEV_DP_FD": "DSTATEV_DP_FD.csv",
+    "primal_stress_state_FD": "primal_stress_state_FD.csv"
+  },
+  "parameters": [
+    {
+      "name": "E",
+      "props_index": 1
+    },
+    {
+      "name": "NU",
+      "props_index": 2
+    },
+    {
+      "name": "SIGY0",
+      "props_index": 3
+    },
+    {
+      "name": "H",
+      "props_index": 4
+    }
+  ],
+  "path_name": "uniaxial_tension_softwarex",
+  "state_variables": [
+    {
+      "name": "EQPLAS",
+      "statev_index": 1
+    }
+  ],
+  "warnings": []
+}

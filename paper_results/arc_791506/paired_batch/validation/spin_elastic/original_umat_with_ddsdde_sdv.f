@@ -1,0 +1,129 @@
+***********************************************************************
+**  UMAT, FOR ABAQUS/STANDARD INCORPORATING ELASTIC BEHAVIOUR FOR    **
+**  PLANE STRAIN, AXI-SYMMETRIC AND 3D ELEMENTS.                     **
+***********************************************************************
+***********************************************************************
+**
+**
+**
+*USER SUBROUTINE
+      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,
+     1 RPL,DDSDDT,DRPLDE,DRPLDT,
+     2 STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,CMNAME,
+     3 NDI,NSHR,NTENS,NSTATV,PROPS,NPROPS,COORDS,DROT,PNEWDT,
+     4 CELENT,DFGRD0,DFGRD1,NOEL,NPT,LAYER,KSPT,KSTEP,KINC)
+C
+      INCLUDE 'ABA_PARAM.INC'
+C
+      CHARACTER*80 CMNAME
+C
+C
+      DIMENSION STRESS(NTENS),STATEV(NSTATV),
+     1 DDSDDE(NTENS,NTENS),DDSDDT(NTENS),DRPLDE(NTENS),
+     2 STRAN(NTENS),DSTRAN(NTENS),TIME(2),PREDEF(1),DPRED(1),
+     3 PROPS(NPROPS),COORDS(3),DROT(3,3),DFGRD0(3,3),DFGRD1(3,3)
+C
+C
+      PARAMETER (M=3,N=3,ID=3,ZERO=0.D0,ONE=1.D0,TWO=2.D0,THREE=3.D0,
+     +          SIX=6.D0, NINE=9.D0, TOLER=0.D-6)
+C
+      DIMENSION DSTRESS(6)
+C
+C
+C
+C
+C
+C--------------------------------------------------------------------
+C
+C     SPECIFY MATERIAL PROPERTIES
+C
+C
+      E = 210000.0
+      XNUE = 0.3
+C
+C 
+C    SET UP ELASTICITY MATRIX
+C   
+      EBULK3 = E/(ONE-TWO*XNUE)
+      EG2 = E/(ONE+XNUE)
+      EG = EG2/TWO
+      ELAM = (EBULK3-EG2)/THREE 
+C
+C
+      DO K1 = 1, 3
+         DO K2 = 1, 3
+           DDSDDE(K2,K1) = ELAM
+         END DO
+        DDSDDE(K1,K1) = EG2 + ELAM
+      END DO
+C
+        DDSDDE(4,4) = EG
+        IF(NTENS.GT.4) THEN
+        DDSDDE(5,5) = EG
+        DDSDDE(6,6) = EG
+        END IF
+C
+C
+C     DETERMINE STRESS INCREMENT
+C
+C
+       TRVAL = DSTRAN(1)+DSTRAN(2)+DSTRAN(3)
+       DO K=1,3
+       DSTRESS(K) = 2*EG*DSTRAN(K)+ELAM*TRVAL
+       END DO
+       DSTRESS(4) = EG*DSTRAN(4)
+       IF(NTENS.GT.4) THEN
+       DSTRESS(5) = EG*DSTRAN(5)
+       DSTRESS(6) = EG*DSTRAN(6)
+       END IF
+C
+C      UPDATE STRESS
+C
+       DO K = 1,NTENS
+       STRESS(K) = STRESS(K) + DSTRESS(K)
+       END DO
+C
+C
+      ! OTIS-VALIDATION-DDSDDE-STATEV-BEGIN
+      STATEV(2) = DDSDDE(1,1)
+      STATEV(3) = DDSDDE(1,2)
+      STATEV(4) = DDSDDE(1,3)
+      STATEV(5) = DDSDDE(1,4)
+      STATEV(6) = DDSDDE(1,5)
+      STATEV(7) = DDSDDE(1,6)
+      STATEV(8) = DDSDDE(2,1)
+      STATEV(9) = DDSDDE(2,2)
+      STATEV(10) = DDSDDE(2,3)
+      STATEV(11) = DDSDDE(2,4)
+      STATEV(12) = DDSDDE(2,5)
+      STATEV(13) = DDSDDE(2,6)
+      STATEV(14) = DDSDDE(3,1)
+      STATEV(15) = DDSDDE(3,2)
+      STATEV(16) = DDSDDE(3,3)
+      STATEV(17) = DDSDDE(3,4)
+      STATEV(18) = DDSDDE(3,5)
+      STATEV(19) = DDSDDE(3,6)
+      STATEV(20) = DDSDDE(4,1)
+      STATEV(21) = DDSDDE(4,2)
+      STATEV(22) = DDSDDE(4,3)
+      STATEV(23) = DDSDDE(4,4)
+      STATEV(24) = DDSDDE(4,5)
+      STATEV(25) = DDSDDE(4,6)
+      STATEV(26) = DDSDDE(5,1)
+      STATEV(27) = DDSDDE(5,2)
+      STATEV(28) = DDSDDE(5,3)
+      STATEV(29) = DDSDDE(5,4)
+      STATEV(30) = DDSDDE(5,5)
+      STATEV(31) = DDSDDE(5,6)
+      STATEV(32) = DDSDDE(6,1)
+      STATEV(33) = DDSDDE(6,2)
+      STATEV(34) = DDSDDE(6,3)
+      STATEV(35) = DDSDDE(6,4)
+      STATEV(36) = DDSDDE(6,5)
+      STATEV(37) = DDSDDE(6,6)
+      ! OTIS-VALIDATION-DDSDDE-STATEV-END
+      RETURN
+      END
+**
+
+

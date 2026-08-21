@@ -1,0 +1,279 @@
+{
+  "absolute_tolerance": 1e-05,
+  "activation_check": {
+    "expected_finite_geometry": false,
+    "expected_plasticity": true,
+    "nlgeom": "NO",
+    "original_plasticity_active": true,
+    "original_state_variables": [
+      0.003000000026077032,
+      -0.001499700010754168,
+      -0.001499700010754168,
+      -3.4643647542700884e-18,
+      -3.956321490035386e-17,
+      -2.0796352920987582e-17,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.003000000026077032
+    ],
+    "otis_plasticity_active": true,
+    "otis_state_variables": [
+      0.003000000026077032,
+      -0.001499700010754168,
+      -0.001499700010754168,
+      -3.4643647542700884e-18,
+      -3.956321490035386e-17,
+      -2.0796352920987582e-17,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.003000000026077032
+    ],
+    "pass": true,
+    "plastic_state_threshold": 1e-12,
+    "status": "passed"
+  },
+  "constitutive_comparison": {
+    "message": "Constitutive Jacobian comparison not requested.",
+    "pass": true,
+    "status": "not_requested"
+  },
+  "convergence_comparison": {
+    "blocking_differences": {},
+    "differences": {},
+    "original": {
+      "analysis_warnings": 0,
+      "completed": true,
+      "cutbacks": 0,
+      "error_messages": 0,
+      "increments": 4,
+      "input_warnings": 0,
+      "iterations": 4,
+      "sta_increment_rows": [
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 1,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        },
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 2,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        },
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 3,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        },
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 4,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        }
+      ],
+      "status": "available"
+    },
+    "otis": {
+      "analysis_warnings": 0,
+      "completed": true,
+      "cutbacks": 0,
+      "error_messages": 0,
+      "increments": 4,
+      "input_warnings": 0,
+      "iterations": 4,
+      "sta_increment_rows": [
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 1,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        },
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 2,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        },
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 3,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        },
+        {
+          "attempt": 1,
+          "equilibrium_iterations": 1,
+          "increment": 4,
+          "severe_discontinuity_iterations": 0,
+          "step": 1,
+          "total_iterations": 1
+        }
+      ],
+      "status": "available"
+    },
+    "pass": true,
+    "status": "passed"
+  },
+  "ddsdde_absolute_tolerance": 0.05,
+  "ddsdde_comparison": {
+    "absolute_tolerance": 0.05,
+    "compared_increment_count": 4,
+    "expected": true,
+    "increments": [
+      {
+        "component_count": 36,
+        "max_abs_difference": 0.0,
+        "max_rel_difference": 0.0,
+        "original_frame_index": 1,
+        "original_increment_number": 1,
+        "otis_frame_index": 1,
+        "otis_increment_number": 1,
+        "pair_index": 0,
+        "pass": true
+      },
+      {
+        "component_count": 36,
+        "max_abs_difference": 0.0,
+        "max_rel_difference": 0.0,
+        "original_frame_index": 2,
+        "original_increment_number": 2,
+        "otis_frame_index": 2,
+        "otis_increment_number": 2,
+        "pair_index": 1,
+        "pass": true
+      },
+      {
+        "component_count": 36,
+        "max_abs_difference": 0.0,
+        "max_rel_difference": 0.0,
+        "original_frame_index": 3,
+        "original_increment_number": 3,
+        "otis_frame_index": 3,
+        "otis_increment_number": 3,
+        "pair_index": 2,
+        "pass": true
+      },
+      {
+        "component_count": 36,
+        "max_abs_difference": 0.0,
+        "max_rel_difference": 0.0,
+        "original_frame_index": 4,
+        "original_increment_number": 4,
+        "otis_frame_index": 4,
+        "otis_increment_number": 4,
+        "pair_index": 3,
+        "pass": true
+      }
+    ],
+    "max_abs_difference": 0.0,
+    "max_rel_difference": 0.0,
+    "original_increment_count": 4,
+    "otis_increment_count": 4,
+    "pass": true,
+    "relative_tolerance": 0.005,
+    "status": "passed",
+    "worst_increment": {
+      "component_count": 36,
+      "max_abs_difference": 0.0,
+      "max_rel_difference": 0.0,
+      "original_frame_index": 4,
+      "original_increment_number": 4,
+      "otis_frame_index": 4,
+      "otis_increment_number": 4,
+      "pair_index": 3,
+      "pass": true
+    }
+  },
+  "ddsdde_relative_tolerance": 0.005,
+  "errors": [],
+  "pass": true,
+  "relative_tolerance": 1e-07,
+  "state_variable_comparison": {
+    "max_abs_difference": 0.0,
+    "max_rel_difference": 0.0,
+    "original_values": [
+      0.003000000026077032,
+      -0.001499700010754168,
+      -0.001499700010754168,
+      -3.4643647542700884e-18,
+      -3.956321490035386e-17,
+      -2.0796352920987582e-17,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.003000000026077032
+    ],
+    "otis_values": [
+      0.003000000026077032,
+      -0.001499700010754168,
+      -0.001499700010754168,
+      -3.4643647542700884e-18,
+      -3.956321490035386e-17,
+      -2.0796352920987582e-17,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.003000000026077032
+    ],
+    "pass": true,
+    "status": "passed"
+  },
+  "status": "passed",
+  "stress_comparison": {
+    "max_abs_difference": 0.0,
+    "max_rel_difference": 0.0,
+    "original_final_stress": [
+      0.003000000026077032,
+      -4.996003610813204e-16,
+      -6.661338147750939e-16,
+      -1.154865213686189e-18,
+      0.0,
+      0.0
+    ],
+    "otis_final_stress": [
+      0.003000000026077032,
+      -4.996003610813204e-16,
+      -6.661338147750939e-16,
+      -1.154865213686189e-18,
+      0.0,
+      0.0
+    ],
+    "pass": true
+  },
+  "warnings": []
+}

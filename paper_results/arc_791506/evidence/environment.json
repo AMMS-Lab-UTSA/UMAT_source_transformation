@@ -1,0 +1,9 @@
+{
+  "abaqus_command": "abaqus",
+  "abaqus_message": "Abaqus JOB abaqus",
+  "abaqus_ok": true,
+  "fortran_compiler": "/apps/gcc/13.3.0/bin/gfortran",
+  "fortran_compiler_version": "GNU Fortran (GCC) 13.3.0",
+  "generated_at": "2026-08-21T15:57:01+00:00",
+  "umat_oti_version": "1.1.0"
+}
