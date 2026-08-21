@@ -184,13 +184,31 @@ def test_export_csv_deterministic(tmp_path: Path):
         params=PARAMS, path=PATH, fd_step_relative=1.0e-6
     )
     files = export_sensitivity_csv(run, tmp_path)
-    for key in ("DSIGMA_DP", "DSTATEV_DP", "primal", "summary"):
+    for key in ("DSIGMA_DP_FD", "DSTATEV_DP_FD", "primal_FD", "summary_FD"):
         assert files[key].is_file()
     # Determinism: writing twice should give bit-identical files.
     other = tmp_path / "second"
     export_sensitivity_csv(run, other)
-    for name in ("DSIGMA_DP.csv", "DSTATEV_DP.csv", "primal_stress_state.csv"):
+    for name in ("DSIGMA_DP_FD.csv", "DSTATEV_DP_FD.csv", "primal_stress_state_FD.csv"):
         assert (tmp_path / name).read_bytes() == (other / name).read_bytes()
+
+
+def test_export_csv_files_carry_method_column(tmp_path: Path):
+    """FD-generated CSVs must self-identify as method='centered_fd'.
+
+    This guarantees a reader cannot mistake an FD reference for an OTI
+    result even if the filename is stripped off.
+    """
+    run = compute_j2_parameter_sensitivities(
+        params=PARAMS, path=PATH, fd_step_relative=1.0e-6
+    )
+    files = export_sensitivity_csv(run, tmp_path)
+    text = files["DSIGMA_DP_FD"].read_text(encoding="utf-8").splitlines()
+    header = text[0].split(",")
+    assert "method" in header
+    method_col = header.index("method")
+    for row in text[1:5]:
+        assert row.split(",")[method_col] == "centered_fd"
 
 
 def test_fd_step_convergence():

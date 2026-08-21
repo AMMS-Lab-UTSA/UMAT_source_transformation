@@ -58,91 +58,148 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 def build_claim_matrix() -> list[dict[str, Any]]:
     """Machine-readable claim-to-test map used by the SoftwareX paper.
 
-    Each entry contains the claim id, a one-line description, the intended
-    test / artefact that supports it, and a status:
+    Every entry carries five fields so nothing is fabricated:
 
-    * ``verified``  — one or more executed tests exercise this claim.
-    * ``pending``   — code path exists but no local numerical verification yet.
-    * ``blocked``   — requires Abaqus or OTIlib to verify.
+    * ``implementation``  — the actual code path that produces the result.
+    * ``reference``       — the independent reference used to verify it.
+    * ``status``          — one of ``verified``, ``reference_ready``,
+                            ``pending_oti_verification``, ``pending``,
+                            ``blocked_by_missing_abaqus``,
+                            ``blocked_by_missing_otilib``,
+                            ``blocked_by_missing_compiler``.
+    * ``test``            — the pytest node id or CLI command that exercises it.
+    * ``description``     — one-line human-readable summary.
+
+    A claim can only become ``verified`` when the ``implementation`` produced
+    a real result AND that result agrees with an independent ``reference``.
+    A finite-difference reference on its own is ``reference_ready``, never
+    ``verified``.
     """
     return [
         {
-            "id": "material_tangent_DDSDDE",
-            "description": "Consistent Abaqus tangent DDSDDE produced by the transform.",
-            "test": "tests/test_j2_parameter_sensitivity.py::test_consistent_tangent_reduces_to_elastic_stiffness_at_zero_plastic_strain",
-            "status": "verified",
+            "id": "material_tangent_DDSDDE_generated_from_source",
+            "description": "DDSDDE is emitted by the source transformer via OTI GETIM extraction on all 19 benchmark UMATs.",
+            "implementation": "src/umat_oti/transform/source_transform.py + oti/module_generator.py",
+            "reference": "None (transformation success only; numerical parity requires Abaqus).",
+            "test": "tools/run_completed_json_batch.py (transform + write generated .f90/.f); primal parity blocked without Abaqus.",
+            "status": "pending_oti_verification",
         },
         {
-            "id": "plastic_branch_DDSDDE_matches_FD",
-            "description": "Plastic-branch DDSDDE matches centered-FD baseline.",
-            "test": "tests/test_j2_parameter_sensitivity.py::test_consistent_tangent_matches_finite_difference_on_plastic_branch",
+            "id": "material_tangent_python_reference_consistent_tangent",
+            "description": "The Python J2 reference reproduces the closed-form Simo-Hughes consistent tangent at zero plastic strain (elastic) and matches its own centered-FD baseline on the plastic branch.",
+            "implementation": "src/umat_oti/validation/j2_reference.py (Python reference).",
+            "reference": "Analytical closed-form + centered FD of the same reference.",
+            "test": "tests/test_j2_parameter_sensitivity.py::test_consistent_tangent_reduces_to_elastic_stiffness_at_zero_plastic_strain, ::test_consistent_tangent_matches_finite_difference_on_plastic_branch",
             "status": "verified",
+            "notes": "This proves the Python reference is self-consistent; it does NOT prove the source transformer emits a correct tangent.",
         },
         {
-            "id": "focused_J2_DSIGMA_DP",
-            "description": "DSIGMA_DP shape and analytical elastic sensitivity for the SoftwareX J2 case.",
-            "test": "tests/test_j2_parameter_sensitivity.py::test_elastic_branch_dsigma_dE_matches_analytical",
-            "status": "verified",
+            "id": "focused_J2_DSIGMA_DP_from_source",
+            "description": "OTI-generated Fortran J2 material-point driver emits DSIGMA_DP that matches full-history centered FD.",
+            "implementation": "src/umat_oti/fortran_emit/parameter_sensitivity_j2.py (compiled J2 OTI driver).",
+            "reference": "Python centered FD (src/umat_oti/validation/parameter_sensitivity.py backend='centered_fd').",
+            "test": "tests/test_j2_oti_fortran_driver.py (requires gfortran on PATH).",
+            "status": "pending_oti_verification",
         },
         {
-            "id": "focused_J2_DSTATEV_DP_history_dependent",
-            "description": "DSTATEV_DP is history-dependent across the full loading path.",
-            "test": "tests/test_j2_parameter_sensitivity.py::test_sensitivities_history_dependent",
-            "status": "verified",
+            "id": "focused_J2_DSTATEV_DP_from_source",
+            "description": "OTI-generated Fortran J2 material-point driver emits DSTATEV_DP that matches full-history centered FD.",
+            "implementation": "src/umat_oti/fortran_emit/parameter_sensitivity_j2.py (compiled J2 OTI driver).",
+            "reference": "Python centered FD.",
+            "test": "tests/test_j2_oti_fortran_driver.py (requires gfortran).",
+            "status": "pending_oti_verification",
+        },
+        {
+            "id": "finite_difference_reference_available",
+            "description": "Python centered-FD reference for DSIGMA_DP / DSTATEV_DP replays the full loading history for every ± perturbation.",
+            "implementation": "src/umat_oti/validation/parameter_sensitivity.py backend='centered_fd'.",
+            "reference": "Not applicable (this IS the reference).",
+            "test": "tests/test_j2_parameter_sensitivity.py",
+            "status": "reference_ready",
+            "notes": "Reference values only; these do not implement DSIGMA_DP as an OTI product.",
         },
         {
             "id": "unified_derivative_model_normalization",
             "description": "Every legacy contract shape normalizes into one canonical DerivativeRequest model.",
-            "test": "tests/test_derivative_request.py::test_every_benchmark_contract_normalizes_to_material_tangent",
+            "implementation": "src/umat_oti/core/derivative_request.py.",
+            "reference": "The 19 completed benchmark contracts + hand-crafted unified example.",
+            "test": "tests/test_derivative_request.py",
             "status": "verified",
         },
         {
-            "id": "benchmark_batch_no_regression",
-            "description": "All 19 completed benchmark contracts transform successfully.",
+            "id": "benchmark_batch_transformation_success",
+            "description": "All 19 completed benchmark contracts transform without error.",
+            "implementation": "src/umat_oti/transform/source_transform.py.",
+            "reference": "None (transformation success only).",
             "test": "tools/run_completed_json_batch.py",
             "status": "verified",
+            "notes": "Numerical STRESS/STATEV/DDSDDE parity vs. the original UMAT requires Abaqus.",
         },
         {
             "id": "derivative_manifest_schema",
-            "description": "A schema-versioned derivative manifest records source hash, PROPS/STATEV maps, direction convention, and recovery factors.",
+            "description": "Schema-versioned manifest records source hash, PROPS/STATEV maps, direction convention, recovery factors.",
+            "implementation": "src/umat_oti/reports/manifest.py.",
+            "reference": "None (schema only).",
             "test": "tests/test_manifest_contract_corpus.py::test_manifest_records_all_required_fields",
             "status": "verified",
         },
         {
             "id": "abaqus_validator_honest_env_detection",
             "description": "The unified Abaqus validator never reports a passed run when Abaqus is missing.",
+            "implementation": "src/umat_oti/validation/run_suite.py.",
+            "reference": "N/A (behaviour claim).",
             "test": "tests/test_run_suite.py::test_run_suite_marks_abaqus_blocked_when_command_missing",
             "status": "verified",
         },
         {
-            "id": "corpus_license_and_dedup",
-            "description": "Corpus tool classifies SPDX licenses, deduplicates by normalized hash, and refuses implicit network calls.",
-            "test": "tests/test_manifest_contract_corpus.py::test_classify_license, test_deduplicate_removes_hash_dupes_preserving_order, test_discover_via_github_api_refuses_implicit_network",
+            "id": "corpus_license_dedup_and_offline_safety",
+            "description": "Corpus tool classifies SPDX licenses, deduplicates by normalized hash, refuses implicit network.",
+            "implementation": "src/umat_oti/corpus/__init__.py.",
+            "reference": "N/A (behaviour claim).",
+            "test": "tests/test_manifest_contract_corpus.py::test_classify_license, ::test_deduplicate_removes_hash_dupes_preserving_order, ::test_discover_via_github_api_refuses_implicit_network",
             "status": "verified",
         },
         {
-            "id": "residual_assembler_bridge_contract",
-            "description": "UMAT-OTI driver contract and JSONL stream load into the Residual Assembler bridge and produce a dR/dp assembly.",
-            "test": "Residual_Assembler/tests/framework/test_umat_oti_bridge.py, tests/framework/test_umat_oti_end_to_end.py",
+            "id": "residual_assembler_driver_contract_and_dRdp_assembly",
+            "description": "UMAT-OTI driver contract and JSONL stream load into the Residual Assembler bridge and drive a hand-verified dR/dp assembly on a 1D truss.",
+            "implementation": "Residual_Assembler/residual_core/materials/umat_oti_driver.py + core/umat_oti_sensitivity.py.",
+            "reference": "Hand-derived analytical truss dR/dp.",
+            "test": "Residual_Assembler/tests/framework/test_umat_oti_bridge.py, ::test_umat_oti_end_to_end.py",
             "status": "verified",
+            "notes": "The bridge is verified for serialization + assembly logic. A full C3D8 J2 sensitivity vs. 2N+1 Abaqus reruns remains blocked without Abaqus.",
         },
         {
-            "id": "higher_order_DDSDDE2_DDSDDE3_DDSDDE4",
-            "description": "Higher-order tangent extraction (orders 2, 3, 4).",
-            "test": "loader accepts advanced.extract[] entries; codegen path not implemented in this session.",
+            "id": "higher_order_DDSDDE2_DDSDDE3_DDSDDE4_from_source",
+            "description": "Compiled OTI Fortran drivers emit DDSDDE2/3/4 for uniaxial-tension DSTRAN seeding, verified against SymPy derivatives.",
+            "implementation": "src/umat_oti/fortran_emit/higher_order_strain.py.",
+            "reference": "SymPy analytical derivatives of the same reference model.",
+            "test": "tests/test_higher_order_fortran_driver.py (requires gfortran).",
+            "status": "pending_oti_verification",
+        },
+        {
+            "id": "abaqus_paired_stress_state_ddsdde_j2",
+            "description": "Original vs transformed J2 UMAT paired STRESS/STATEV/DDSDDE comparison inside Abaqus.",
+            "implementation": "tools/run_completed_json_batch.py --validate + scripts/run_abaqus_arc.sbatch.",
+            "reference": "The original hand-coded UMAT run in Abaqus.",
+            "test": "python -m umat_oti.validation.run_suite --abaqus-command abaqus",
+            "status": "blocked_by_missing_abaqus",
+        },
+        {
+            "id": "residual_assembler_c3d8_j2_structural_sensitivity",
+            "description": "Structural du/dp for a small C3D8 J2 model vs. 2N+1 Abaqus reruns (E, nu, SIGY0, H).",
+            "implementation": "Residual_Assembler/residual_core/core/umat_oti_sensitivity.py + compiled OTI J2 driver + C3D8 integration path.",
+            "reference": "2N+1 Abaqus centered-FD reruns.",
+            "test": "N/A yet (Abaqus required).",
+            "status": "blocked_by_missing_abaqus",
+        },
+        {
+            "id": "corpus_regression_round_metrics",
+            "description": "Executable web-corpus discovery + staged pipeline + round metrics from live GitHub API.",
+            "implementation": "src/umat_oti/corpus/__init__.py + cli.py.",
+            "reference": "Real per-round metrics (no hard-coded numbers).",
+            "test": "python -m umat_oti.corpus.cli discover --allow-network (needs internet + optional token).",
             "status": "pending",
-        },
-        {
-            "id": "abaqus_paired_stress_state_ddsdde",
-            "description": "Original vs transformed UMAT paired STRESS/STATEV/DDSDDE comparison via Abaqus.",
-            "test": "tools/run_completed_json_batch.py --validate --abaqus-command abaqus",
-            "status": "blocked",
-        },
-        {
-            "id": "oti_backend_dsigma_dp_from_compiled_umat",
-            "description": "OTI-seeded compiled UMAT delivering DSIGMA_DP.",
-            "test": "compute_j2_parameter_sensitivities(backend='oti'); requires OTIlib runtime.",
-            "status": "blocked",
+            "notes": "Discovery, snapshot, dedup, and metrics implemented; live end-to-end run needs outbound network and a token, which are not guaranteed on ARC login nodes.",
         },
     ]
 
@@ -269,17 +326,21 @@ def main(argv: list[str] | None = None) -> int:
     )
     summary = {
         "output_dir": str(args.output_dir),
-        "artefacts": {
-            "DSIGMA_DP.csv": str(j2["csv_files"]["DSIGMA_DP"]),
-            "DSTATEV_DP.csv": str(j2["csv_files"]["DSTATEV_DP"]),
-            "primal_stress_state.csv": str(j2["csv_files"]["primal"]),
-            "sensitivity_summary.json": str(j2["csv_files"]["summary"]),
+        "artefacts": {name: str(path) for name, path in j2["csv_files"].items()}
+        | {
             "derivative_manifest.json": str(manifest_path),
             "driver_contract.json": str(contract_path),
             "j2_stream.jsonl": str(stream_path),
             "claim_matrix.json": str(args.output_dir / "claim_matrix.json"),
             "environment.json": str(args.output_dir / "environment.json"),
         },
+        "note": (
+            "The DSIGMA_DP_FD / DSTATEV_DP_FD files are the CENTERED-FINITE-"
+            "DIFFERENCE REFERENCE, not OTI-generated results. Unsuffixed "
+            "paper-facing DSIGMA_DP / DSTATEV_DP files are produced only "
+            "after an OTI Fortran run exists and agrees with this reference "
+            "(see umat_oti.fortran_emit.parameter_sensitivity_j2)."
+        ),
     }
     print(json.dumps(summary, indent=2, sort_keys=True))
     return 0
