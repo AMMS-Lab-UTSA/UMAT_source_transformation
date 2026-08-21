@@ -80,6 +80,32 @@ def _iso_now() -> str:
     return _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
 
 
+def _abaqus_paired_status(env) -> str:
+    """Read the most recent paper_results/arc_<jobid>/table2_abaqus_paired.json
+    (if any) and derive the paired-Abaqus verification status.
+    """
+    summary = _abaqus_paired_summary_json()
+    if not summary:
+        return "blocked_by_missing_abaqus" if not env.abaqus_ok else "pending"
+    if summary.get("summary", {}).get("failed", 0) > 0:
+        return "failed"
+    if summary.get("summary", {}).get("passed", 0) > 0:
+        return "verified_from_transformed_source"
+    return "pending"
+
+
+def _abaqus_paired_summary_json() -> dict[str, Any]:
+    arc_dirs = sorted((REPO_ROOT / "paper_results").glob("arc_*"))
+    for arc_dir in reversed(arc_dirs):
+        candidate = arc_dir / "table2_abaqus_paired.json"
+        if candidate.is_file():
+            try:
+                return json.loads(candidate.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                continue
+    return {}
+
+
 # ---------------------------------------------------------------------------
 # Stage 1: FD reference
 # ---------------------------------------------------------------------------
@@ -582,9 +608,8 @@ def _build_claim_matrix_from_results(
             "implementation": "tools/run_completed_json_batch.py --validate + scripts/run_abaqus_arc.sbatch.",
             "reference": "Original hand-coded UMAT in Abaqus.",
             "test": "python -m umat_oti.validation.run_suite --abaqus-command abaqus",
-            "status": "blocked_by_missing_abaqus"
-            if not env.abaqus_ok
-            else "pending",
+            "status": _abaqus_paired_status(env),
+            "abaqus_paired_summary": _abaqus_paired_summary_json(),
         },
         {
             "id": "residual_assembler_c3d8_j2_structural_sensitivity",
