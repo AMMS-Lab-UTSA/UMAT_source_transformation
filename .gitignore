@@ -16,3 +16,37 @@ umat_oti_workspace/
 oti_results/
 # Third-party UMATs cloned from public repos (each has its own git history)
 external_umats/
+
+# Abaqus job artefacts (binary, regenerable). Keep small comparison_report.* only.
+paper_results/arc_*/paired_batch/validation/*/original_umat_validation.*
+paper_results/arc_*/paired_batch/validation/*/otis_umat_validation.*
+paper_results/arc_*/paired_batch/validation/*/*.odb
+paper_results/arc_*/paired_batch/validation/*/*.msg
+paper_results/arc_*/paired_batch/validation/*/*.prt
+paper_results/arc_*/paired_batch/validation/*/*.sta
+paper_results/arc_*/paired_batch/validation/*/*.dat
+paper_results/arc_*/paired_batch/validation/*/*.com
+paper_results/arc_*/paired_batch/validation/*/*.simlog
+paper_results/arc_*/paired_batch/validation/*/*.lck
+paper_results/arc_*/paired_batch/validation/*/*.cid
+paper_results/arc_*/paired_batch/validation/*/original_abaqus_stdout.log
+paper_results/arc_*/paired_batch/validation/*/original_abaqus_stderr.log
+paper_results/arc_*/paired_batch/validation/*/otis_abaqus_stdout.log
+paper_results/arc_*/paired_batch/validation/*/otis_abaqus_stderr.log
+paper_results/arc_*/paired_batch/validation/*/extract_results_*.log
+paper_results/arc_*/paired_batch/oti_transform/
+paper_results/arc_*/paired_batch/validation/*/combined_oti_user.f90
+paper_results/arc_*/paired_batch/validation/*/original_umat_with_ddsdde_sdv.for
+paper_results/arc_*/paired_batch/validation/*/extract_results.py
+paper_results/arc_*/paired_batch/validation/*/compile_generated_umat.sh
+paper_results/arc_*/paired_batch/validation/*/run_*.sh
+paper_results/arc_*/paired_batch/validation/*/original_results.json
+paper_results/arc_*/paired_batch/validation/*/otis_results.json
+paper_results/arc_*/paired_batch/validation/*/validation_report.json
+paper_results/arc_*/paired_batch/*.stdout.txt
+paper_results/arc_*/paired_batch/*.stderr.txt
+paper_results/arc_*/evidence/oti_j2_build/
+paper_results/arc_*/evidence/oti_higher_order_build/
+paper_results/arc_*/evidence.stdout.json
+paper_results/arc_*/system.txt
+logs/

@@ -66,14 +66,17 @@ from umat_oti.corpus import (
     FAILURE_CATEGORIES,
     GITHUB_SEARCH_TERMS,
     RELEVANT_EXTENSIONS,
+    STAGE_ABAQUS_VERIFIED,
     STAGE_CLASSIFIED,
     STAGE_COMPILED,
     STAGE_CONTRACT_BUILT,
+    STAGE_DEPENDENCIES_COMPLETE,
     STAGE_DERIVATIVE_VERIFIED,
     STAGE_DISCOVERED,
     STAGE_ENTRY_DETECTED,
     STAGE_PRIMAL_VERIFIED,
     STAGE_TRANSFORMED,
+    _STAGE_ORDER,
     CorpusCandidate,
     CorpusRecord,
     build_github_search_urls,
@@ -442,22 +445,52 @@ def _process_one(cand: dict[str, Any], out: Path, args: argparse.Namespace) -> d
         "repository": cand.get("repository"),
         "path": cand.get("path"),
         "license_category": cand.get("license_category"),
-        "stage": STAGE_CLASSIFIED,
+        "highest_stage": STAGE_DISCOVERED,
         "outcome": "pending",
     }
-    if cand.get("license_category") != "permissive":
-        record["stage"] = STAGE_CLASSIFIED
+    if cand.get("license_category") == "permissive":
+        record["highest_stage"] = STAGE_CLASSIFIED
+    else:
         record["outcome"] = "failed"
         record["failure_category"] = "unsupported_license"
-        record["message"] = f"license={cand.get('license_spdx')}; category={cand.get('license_category')}"
+        record["message"] = (
+            f"license={cand.get('license_spdx')}; category={cand.get('license_category')}"
+        )
         return record
-    entries = cand.get("entry_routines") or []
-    if not any(e.upper() == "UMAT" for e in entries):
+
+    # Classify what kind of file this is before running the transformer.
+    ext = Path(cand.get("path", "")).suffix.lower()
+    entries = [e.upper() for e in (cand.get("entry_routines") or [])]
+
+    if ext == ".inp":
         record["outcome"] = "failed"
-        record["failure_category"] = "entry_routine_not_detected"
-        record["message"] = f"detected entry routines: {entries}"
+        record["failure_category"] = "input_deck_only"
+        record["message"] = "file is an Abaqus .inp deck, not a UMAT source"
         return record
-    record["stage"] = STAGE_ENTRY_DETECTED
+    if not entries:
+        record["outcome"] = "failed"
+        record["failure_category"] = "not_a_umat"
+        record["message"] = "no SUBROUTINE UMAT / VUMAT / UHYPER / UEL detected"
+        return record
+    if "UMAT" not in entries:
+        record["outcome"] = "failed"
+        record["failure_category"] = "helper_or_dependency_only"
+        record["message"] = (
+            f"detected entry routines {entries} do not include UMAT"
+        )
+        return record
+    record["highest_stage"] = STAGE_ENTRY_DETECTED
+
+    # Rudimentary dependency check: reject sources that INCLUDE files we do
+    # not have in the snapshot cache.
+    source_text = cache_path.read_text(encoding="utf-8", errors="replace")
+    missing_includes = _missing_includes(source_text, cache_path.parent)
+    if missing_includes:
+        record["outcome"] = "failed"
+        record["failure_category"] = "missing_dependency"
+        record["message"] = f"missing INCLUDE files: {missing_includes[:3]}"
+        return record
+    record["highest_stage"] = STAGE_DEPENDENCIES_COMPLETE
 
     # Build a minimal compact contract on the fly.
     contract = {
@@ -474,39 +507,156 @@ def _process_one(cand: dict[str, Any], out: Path, args: argparse.Namespace) -> d
     contract_path = out / f"{record['id'][:12]}.json"
     contract_path.write_text(json.dumps(contract, indent=2), encoding="utf-8")
     record["contract_path"] = str(contract_path)
-    record["stage"] = STAGE_CONTRACT_BUILT
+    record["highest_stage"] = STAGE_CONTRACT_BUILT
 
     # Try to load and transform.
     try:
         config = load_project_config_json(contract_path.read_bytes(), origin_path=contract_path)
     except Exception as exc:  # noqa: BLE001
         record["outcome"] = "failed"
-        record["failure_category"] = "parser_gap"
+        record["failure_category"] = "contract_generation_failure"
         record["message"] = f"config_loader: {exc}"
         return record
     transform_out = out / f"transform_{record['id'][:12]}"
     transform_out.mkdir(parents=True, exist_ok=True)
     try:
-        source_text = cache_path.read_text(encoding="utf-8", errors="replace")
         result = transform_umat_to_oti_from_config(
             source_text, config, transform_out, ntens=int(contract["ntens"])
         )
         if not getattr(result, "success", False):
             record["outcome"] = "failed"
-            record["failure_category"] = "source_transformation_defect"
+            record["failure_category"] = _classify_transform_failure(result)
             blockers = getattr(result, "blockers", []) or []
             record["message"] = "; ".join(str(b) for b in blockers[:3])
-            record["stage"] = STAGE_CONTRACT_BUILT
             return record
     except Exception as exc:  # noqa: BLE001
         record["outcome"] = "failed"
-        record["failure_category"] = "source_transformation_defect"
+        record["failure_category"] = "confirmed_transformation_defect"
         record["message"] = f"transform raised: {exc.__class__.__name__}: {exc}"
         return record
-    record["stage"] = STAGE_TRANSFORMED
-    record["outcome"] = "passed"
+    record["highest_stage"] = STAGE_TRANSFORMED
     record["transform_output"] = str(transform_out)
+
+    # Optional compilation of the emitted source.
+    if getattr(args, "compile", False):
+        compile_stage = _compile_transformed(transform_out)
+        record["compile"] = compile_stage
+        if compile_stage["ok"]:
+            record["highest_stage"] = STAGE_COMPILED
+        else:
+            record["outcome"] = "failed"
+            record["failure_category"] = "generated_code_compile_failure"
+            record["message"] = compile_stage.get("stderr_tail", "")[-400:]
+            return record
+
+    record["outcome"] = "passed"
     return record
+
+
+def _missing_includes(source: str, base_dir: Path) -> list[str]:
+    """Return unresolved INCLUDE files referenced in the source.
+
+    Ignores ``ABA_PARAM.INC`` which is provided by Abaqus at build time.
+    """
+    import re
+    pattern = re.compile(r"(?:^|\n)\s*INCLUDE\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
+    missing: list[str] = []
+    for match in pattern.finditer(source):
+        include_name = match.group(1).strip()
+        if include_name.upper().endswith("ABA_PARAM.INC"):
+            continue
+        if (base_dir / include_name).is_file():
+            continue
+        missing.append(include_name)
+    return missing
+
+
+def _classify_transform_failure(result: Any) -> str:
+    """Best-effort mapping from transform-report blockers to a taxonomy."""
+    blockers = getattr(result, "blockers", []) or []
+    text = " ; ".join(str(b) for b in blockers).lower()
+    if "dimension" in text or "shape" in text or "dimensioning" in text:
+        return "dimension_inference_failure"
+    if "operator" in text or "generic" in text:
+        return "custom_operator_or_generic_parser_gap"
+    if "intrinsic" in text or "unsupported" in text:
+        return "unsupported_fortran_construct"
+    return "confirmed_transformation_defect"
+
+
+def _compile_transformed(transform_dir: Path) -> dict[str, Any]:
+    """Attempt to compile the emitted OTI Fortran with gfortran.
+
+    Runs gfortran on the compile order recorded in ``compile_order.txt``.
+    Provides a local stub of ``ABA_PARAM.INC`` so standalone compilation
+    outside Abaqus succeeds; Abaqus ships the real header at
+    ``/apps/abaqus/2024/SIMULIA/EstProducts/2024/SMAUsubs/PublicInterfaces/aba_param.inc``.
+    """
+    order_file = transform_dir / "compile_order.txt"
+    if not order_file.is_file():
+        return {"ok": False, "reason": "compile_order.txt not emitted"}
+    gfortran = os.environ.get("UMAT_OTI_GFORTRAN", "gfortran")
+    if not _which(gfortran):
+        return {"ok": False, "reason": f"{gfortran} not on PATH"}
+    # Stub the Abaqus-provided header so standalone gfortran can compile.
+    _write_aba_param_stub(transform_dir)
+    lines = [ln.strip() for ln in order_file.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    outputs: list[str] = []
+    for name in lines:
+        source = transform_dir / name
+        if not source.is_file():
+            return {"ok": False, "reason": f"missing generated file: {name}"}
+        cmd = [
+            gfortran,
+            "-O1",
+            "-std=legacy",
+            "-ffree-line-length-none",
+            "-fno-align-commons",
+            "-c",
+            "-I", str(transform_dir),
+            str(source),
+        ]
+        proc = subprocess.run(
+            cmd,
+            check=False,
+            cwd=str(transform_dir),
+            capture_output=True,
+            text=True,
+            timeout=180,
+        )
+        outputs.append(f"{name}: rc={proc.returncode}")
+        if proc.returncode != 0:
+            return {
+                "ok": False,
+                "step": name,
+                "stderr_tail": (proc.stderr or "")[-800:],
+                "log": "\n".join(outputs),
+            }
+    return {"ok": True, "log": "\n".join(outputs)}
+
+
+def _write_aba_param_stub(directory: Path) -> None:
+    """Minimum ABA_PARAM.INC stub for standalone compilation.
+
+    The Abaqus-shipped header primarily sets the default kind for implicit
+    typing to REAL*8 (double precision). We reproduce that so the UMAT's
+    ``INCLUDE 'ABA_PARAM.INC'`` line resolves under standalone gfortran.
+    Both the uppercase and mixed-case filenames are provided because
+    different UMATs quote the include with different casing.
+    """
+    stub = (
+        "! Standalone stub for ABA_PARAM.INC (real Abaqus header at\n"
+        "! /apps/abaqus/2024/SIMULIA/EstProducts/2024/SMAUsubs/PublicInterfaces/aba_param.inc).\n"
+        "! Under gfortran we only need to reproduce the implicit REAL*8 default.\n"
+        "      IMPLICIT REAL*8(A-H,O-Z)\n"
+    )
+    for name in ("ABA_PARAM.INC", "aba_param.inc", "ABA_PARAM.inc", "aba_param.INC"):
+        (directory / name).write_text(stub, encoding="utf-8")
+
+
+def _which(binary: str) -> str | None:
+    import shutil
+    return shutil.which(binary)
 
 
 def _slug(text: str) -> str:
@@ -536,6 +686,18 @@ def report_command(args: argparse.Namespace) -> int:
             counter[r["failure_category"]] += 1
     metrics["failure_counts"] = dict(counter)
     metrics["failure_categories_expected"] = list(FAILURE_CATEGORIES)
+
+    # Per-stage counts (highest_stage reached, regardless of outcome).
+    stage_counter: Counter[str] = Counter()
+    for r in records:
+        stage_counter[r.get("highest_stage", "discovered")] += 1
+    metrics["highest_stage_counts"] = {stage: stage_counter.get(stage, 0) for stage in _STAGE_ORDER}
+    metrics["cumulative_stage_counts"] = {}
+    running = 0
+    for stage in reversed(_STAGE_ORDER):
+        running += stage_counter.get(stage, 0)
+        metrics["cumulative_stage_counts"][stage] = running
+
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     _write_json(out / "round_metrics.json", metrics)
@@ -545,8 +707,15 @@ def report_command(args: argparse.Namespace) -> int:
         f"- passed:      {metrics['passed']}",
         f"- failed:      {metrics['failed']}",
         "",
-        "## Failure counts by category",
+        "## Per-stage counts (cumulative: candidates that reached at least this stage)",
     ]
+    for stage in _STAGE_ORDER:
+        md.append(
+            f"- {stage}: highest={metrics['highest_stage_counts'][stage]}"
+            f" cumulative={metrics['cumulative_stage_counts'][stage]}"
+        )
+    md.append("")
+    md.append("## Failure counts by category")
     for cat in FAILURE_CATEGORIES:
         md.append(f"- {cat}: {metrics['failure_counts'].get(cat, 0)}")
     (out / "round_metrics.md").write_text("\n".join(md) + "\n", encoding="utf-8")
@@ -600,6 +769,11 @@ def main(argv: list[str] | None = None) -> int:
     p_run.add_argument("--index", required=True)
     p_run.add_argument("--out", required=True)
     p_run.add_argument("--limit", type=int, default=200)
+    p_run.add_argument(
+        "--compile",
+        action="store_true",
+        help="Also invoke gfortran on the emitted OTI Fortran per candidate (Priority 4 sub-item).",
+    )
     p_run.set_defaults(func=run_command)
 
     p_rep = sub.add_parser("report", help="write per-round metrics")
