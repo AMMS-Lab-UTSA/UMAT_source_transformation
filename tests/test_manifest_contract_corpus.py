@@ -35,6 +35,7 @@ from umat_oti.corpus import (
     discover_via_github_api,
     round_metrics,
 )
+from umat_oti.corpus.cli import _build_run_provenance
 
 
 # --- Manifest ---------------------------------------------------------------
@@ -284,3 +285,40 @@ def test_round_metrics_counts_only_actual_states():
     assert metrics.numerical_validation_success == 1
     assert metrics.failure_counts == {"unsupported_license": 1}
     assert set(FAILURE_CATEGORIES).issuperset(metrics.failure_counts.keys())
+
+
+def test_corpus_run_provenance_preserves_all_denominators():
+    index = {
+        "schema": "umat-oti-corpus-index/1",
+        "generated_at": "2026-08-21T00:00:00+00:00",
+        "source": "manifest",
+        "candidates": [
+            {
+                "repository": "owner/a",
+                "cache_path": "/cache/a.for",
+                "content_hash": "same",
+                "entry_routines": ["UMAT"],
+            },
+            {
+                "repository": "owner/a",
+                "cache_path": "/cache/a-copy.for",
+                "content_hash": "same",
+                "entry_routines": ["UMAT"],
+            },
+            {
+                "repository": "owner/b",
+                "cache_path": "/cache/helper.f90",
+                "content_hash": "helper",
+                "entry_routines": [],
+            },
+        ],
+    }
+
+    provenance = _build_run_provenance(index, [{"id": "same"}, {"id": "helper"}])
+
+    assert provenance["acquired_source_count"] == 3
+    assert provenance["snapshotted_source_count"] == 3
+    assert provenance["unique_source_count"] == 2
+    assert provenance["unique_umat_count"] == 1
+    assert provenance["processed_source_count"] == 2
+    assert provenance["repositories"] == ["owner/a", "owner/b"]

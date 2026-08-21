@@ -1,0 +1,75 @@
+{
+  "corpus_size": 133,
+  "cumulative_stage_counts": {
+    "abaqus_verified": 0,
+    "contract_built": 45,
+    "dependencies_complete": 45,
+    "derivatives_numerically_verified": 0,
+    "discovered": 133,
+    "entry_routine_detected": 46,
+    "generated_source_compiled": 14,
+    "license_classified": 133,
+    "primal_parity_verified": 0,
+    "transformed": 14
+  },
+  "failed": 119,
+  "failure_categories_expected": [
+    "not_a_umat",
+    "input_deck_only",
+    "helper_or_dependency_only",
+    "missing_dependency",
+    "incomplete_repository_snapshot",
+    "unsupported_license",
+    "contract_generation_failure",
+    "dimension_inference_failure",
+    "custom_operator_or_generic_parser_gap",
+    "unsupported_fortran_construct",
+    "generated_code_compile_failure",
+    "original_umat_compile_failure",
+    "primal_parity_failure",
+    "derivative_validation_failure",
+    "abaqus_deck_or_environment_failure",
+    "confirmed_transformation_defect"
+  ],
+  "failure_counts": {
+    "confirmed_transformation_defect": 22,
+    "dimension_inference_failure": 8,
+    "helper_or_dependency_only": 4,
+    "input_deck_only": 33,
+    "missing_dependency": 1,
+    "not_a_umat": 50,
+    "unsupported_fortran_construct": 1
+  },
+  "highest_stage_counts": {
+    "abaqus_verified": 0,
+    "contract_built": 31,
+    "dependencies_complete": 0,
+    "derivatives_numerically_verified": 0,
+    "discovered": 0,
+    "entry_routine_detected": 1,
+    "generated_source_compiled": 14,
+    "license_classified": 87,
+    "primal_parity_verified": 0,
+    "transformed": 0
+  },
+  "passed": 14,
+  "provenance": {
+    "acquired_source_count": 148,
+    "index_generated_at": "2026-08-21T17:43:20+00:00",
+    "index_schema": "umat-oti-corpus-index/1",
+    "index_source": "manifest",
+    "processed_source_count": 133,
+    "repositories": [
+      "bibekananda-datta/Abaqus-UEL-Elasticity",
+      "bibekananda-datta/Abaqus-UEL-Hyperelasticity",
+      "jgomezc1/ABAQUS-US",
+      "ngrilli/Oxford_Crystal_Plasticity",
+      "sergiolucarini/UMAT4COMSOL",
+      "thealanjason/umat_finite_viscoelasticity"
+    ],
+    "repository_count": 6,
+    "snapshotted_source_count": 148,
+    "unique_source_count": 133,
+    "unique_umat_count": 46
+  }
+}

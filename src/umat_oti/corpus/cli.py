@@ -429,7 +429,8 @@ def run_command(args: argparse.Namespace) -> int:
         results.append(result)
         if len(results) >= args.limit:
             break
-    _write_json(out / "run_results.json", {"results": results})
+    provenance = _build_run_provenance(index, results)
+    _write_json(out / "run_results.json", {"provenance": provenance, "results": results})
     passed = sum(1 for r in results if r["outcome"] == "passed")
     failed = sum(1 for r in results if r["outcome"] == "failed")
     print(f"run: processed={len(results)} passed={passed} failed={failed}")
@@ -444,6 +445,9 @@ def _process_one(cand: dict[str, Any], out: Path, args: argparse.Namespace) -> d
         "id": cand.get("sha"),
         "repository": cand.get("repository"),
         "path": cand.get("path"),
+        "raw_url": cand.get("raw_url"),
+        "blob_sha": cand.get("sha"),
+        "content_hash": cand.get("content_hash"),
         "license_category": cand.get("license_category"),
         "highest_stage": STAGE_DISCOVERED,
         "outcome": "pending",
@@ -551,6 +555,30 @@ def _process_one(cand: dict[str, Any], out: Path, args: argparse.Namespace) -> d
 
     record["outcome"] = "passed"
     return record
+
+
+def _build_run_provenance(index: dict[str, Any], results: list[dict[str, Any]]) -> dict[str, Any]:
+    candidates = index.get("candidates", [])
+    unique_hashes = {cand.get("content_hash") for cand in candidates if cand.get("content_hash")}
+    unique_umat_hashes = {
+        cand.get("content_hash")
+        for cand in candidates
+        if cand.get("content_hash")
+        and "UMAT" in {str(entry).upper() for entry in cand.get("entry_routines", [])}
+    }
+    repositories = sorted({str(cand.get("repository")) for cand in candidates if cand.get("repository")})
+    return {
+        "index_schema": index.get("schema"),
+        "index_generated_at": index.get("generated_at"),
+        "index_source": index.get("source"),
+        "acquired_source_count": len(candidates),
+        "snapshotted_source_count": sum(bool(cand.get("cache_path")) for cand in candidates),
+        "unique_source_count": len(unique_hashes),
+        "unique_umat_count": len(unique_umat_hashes),
+        "processed_source_count": len(results),
+        "repository_count": len(repositories),
+        "repositories": repositories,
+    }
 
 
 def _missing_includes(source: str, base_dir: Path) -> list[str]:
@@ -673,11 +701,13 @@ def report_command(args: argparse.Namespace) -> int:
     results_path = Path(args.results) / "run_results.json"
     data = json.loads(results_path.read_text(encoding="utf-8"))
     records = data.get("results", [])
+    provenance = data.get("provenance", {})
     metrics: dict[str, Any] = {
         "corpus_size": len(records),
         "passed": sum(1 for r in records if r["outcome"] == "passed"),
         "failed": sum(1 for r in records if r["outcome"] == "failed"),
         "failure_counts": {},
+        "provenance": provenance,
     }
     from collections import Counter
     counter: Counter[str] = Counter()
@@ -703,7 +733,10 @@ def report_command(args: argparse.Namespace) -> int:
     _write_json(out / "round_metrics.json", metrics)
     md = [
         "# UMAT-OTI Corpus round metrics",
-        f"- corpus_size: {metrics['corpus_size']}",
+        f"- acquired sources: {provenance.get('acquired_source_count', 'unknown')}",
+        f"- unique sources:   {provenance.get('unique_source_count', 'unknown')}",
+        f"- unique UMATs:     {provenance.get('unique_umat_count', 'unknown')}",
+        f"- processed:        {metrics['corpus_size']}",
         f"- passed:      {metrics['passed']}",
         f"- failed:      {metrics['failed']}",
         "",

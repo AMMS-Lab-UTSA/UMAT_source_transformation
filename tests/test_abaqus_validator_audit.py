@@ -78,3 +78,26 @@ def test_claim_matrix_does_not_promote_reference_fixtures():
     assert by_id["residual_assembler_synthetic_B_bridge"]["status"] == "verified"
     assert by_id["residual_assembler_C3D8_structural_sensitivity"]["status"] == "not_implemented"
     assert by_id["abaqus_paired_18_case_collection"]["status"] == "18_pass_1_original_case_execution_failure"
+
+
+def test_claim_matrix_promotes_only_observed_corpus_stages():
+    claims = _build_claim_matrix_from_results(
+        env=SimpleNamespace(abaqus_ok=False),
+        oti_j2={"status": "verified"},
+        oti_ho={"status": "verified"},
+        corpus_metrics={
+            "cumulative_stage_counts": {"generated_source_compiled": 14},
+            "provenance": {
+                "acquired_source_count": 148,
+                "unique_source_count": 133,
+                "unique_umat_count": 46,
+            },
+        },
+    )
+    by_id = {claim["id"]: claim for claim in claims}
+
+    assert by_id["corpus_compile_success"]["status"] == "verified"
+    assert by_id["corpus_compile_success"]["observed_compile_success"] == 14
+    assert by_id["corpus_regression_round_metrics"]["status"] == "verified"
+    assert by_id["corpus_primal_parity"]["status"] == "pending"
+    assert by_id["corpus_derivative_verification"]["status"] == "pending"
