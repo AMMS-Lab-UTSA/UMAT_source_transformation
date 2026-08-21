@@ -246,11 +246,15 @@ def _vector_comparison(left: list[float], right: list[float], abs_tolerance: flo
     rel_differences = [diff / max(abs(left_value), abs(right_value), 1.0) for diff, left_value, right_value in zip(differences, left, right)]
     max_abs = max(differences, default=0.0)
     max_rel = max(rel_differences, default=0.0)
+    worst_component_index = differences.index(max_abs) if differences else None
     return {
         "original_values": left,
         "otis_values": right,
         "max_abs_difference": max_abs,
         "max_rel_difference": max_rel,
+        "worst_component_index": worst_component_index,
+        "worst_original_value": left[worst_component_index] if worst_component_index is not None else None,
+        "worst_otis_value": right[worst_component_index] if worst_component_index is not None else None,
         "pass": len(left) == len(right) and (max_abs <= abs_tolerance or max_rel <= rel_tolerance),
     }
 
@@ -456,6 +460,10 @@ def _ddsdde_comparison(
             "component_count": len(original_record["values"]),
             "max_abs_difference": comparison["max_abs_difference"],
             "max_rel_difference": comparison["max_rel_difference"],
+            "worst_component_index": comparison["worst_component_index"],
+            "worst_component": _matrix_component_label(comparison["worst_component_index"], len(original_record["values"])),
+            "worst_original_value": comparison["worst_original_value"],
+            "worst_otis_value": comparison["worst_otis_value"],
             "pass": comparison["pass"],
         }
         increment_results.append(increment_result)
@@ -483,6 +491,15 @@ def _ddsdde_comparison(
     elif not component_lengths_match:
         result["message"] = "Original and OTIS DDSDDE vectors have different component counts."
     return result
+
+
+def _matrix_component_label(flat_index: int | None, component_count: int) -> str | None:
+    if flat_index is None:
+        return None
+    dimension = int(component_count ** 0.5)
+    if dimension * dimension != component_count:
+        return str(flat_index)
+    return f"({flat_index // dimension + 1},{flat_index % dimension + 1})"
 
 
 def _ddsdde_series(result: dict[str, Any]) -> list[dict[str, Any]]:

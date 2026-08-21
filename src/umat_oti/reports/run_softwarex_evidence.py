@@ -87,10 +87,9 @@ def _abaqus_paired_status(env) -> str:
     summary = _abaqus_paired_summary_json()
     if not summary:
         return "blocked_by_missing_abaqus" if not env.abaqus_ok else "pending"
-    if summary.get("summary", {}).get("failed", 0) > 0:
-        return "failed"
-    if summary.get("summary", {}).get("passed", 0) > 0:
-        return "verified_from_transformed_source"
+    code_imp = next((row for row in summary.get("rows", []) if row.get("case_name") == "code_imp"), None)
+    if code_imp:
+        return "verified_from_transformed_source" if code_imp.get("status") == "passed" else "failed"
     return "pending"
 
 
@@ -104,6 +103,14 @@ def _abaqus_paired_summary_json() -> dict[str, Any]:
             except json.JSONDecodeError:
                 continue
     return {}
+
+
+def _abaqus_paired_summary_reference() -> dict[str, Any]:
+    payload = _abaqus_paired_summary_json()
+    return {
+        "summary": payload.get("summary", {}),
+        "evidence": "paper_results/arc_791506/table2_abaqus_paired.json",
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -543,7 +550,7 @@ def _build_claim_matrix_from_results(
     blocked_by_compiler = "blocked_by_missing_compiler"
     return [
         {
-            "id": "focused_J2_DSIGMA_DP_from_source",
+            "id": "focused_J2_DSIGMA_DP_generic_source_transform",
             "description": "OTI-generated Fortran J2 material-point driver emits DSIGMA_DP that matches full-history centered FD across the full 20-increment loading path.",
             "implementation": "src/umat_oti/fortran_emit/parameter_sensitivity_j2.py + compiled OTI Fortran driver.",
             "reference": "Python centered FD reference (backend='centered_fd').",
@@ -553,7 +560,7 @@ def _build_claim_matrix_from_results(
             "tolerance": oti_j2.get("tolerance"),
         },
         {
-            "id": "focused_J2_DSTATEV_DP_from_source",
+            "id": "focused_J2_DSTATEV_DP_generic_source_transform",
             "description": "OTI-generated J2 driver emits DSTATEV_DP that matches full-history centered FD.",
             "implementation": "Same as focused_J2_DSIGMA_DP_from_source.",
             "reference": "Python centered FD reference.",
@@ -561,7 +568,7 @@ def _build_claim_matrix_from_results(
             "status": _status_for(oti_j2, blocked_by_compiler),
         },
         {
-            "id": "higher_order_DDSDDE2_DDSDDE3_DDSDDE4_from_source",
+            "id": "higher_order_direction_and_factorial_reference_fixture",
             "description": "OTI-generated Fortran driver emits mixed and repeated derivatives (orders 2-4) that match SymPy analytical differentiation on the SoftwareX bivariate polynomial.",
             "implementation": "src/umat_oti/fortran_emit/higher_order_strain.py + compiled OTI Fortran driver.",
             "reference": "SymPy analytical differentiation of the same symbolic model.",
@@ -569,6 +576,14 @@ def _build_claim_matrix_from_results(
             "status": _status_for(oti_ho, blocked_by_compiler),
             "observed_max_rel_diff": oti_ho.get("max_rel_diff"),
             "tolerance": oti_ho.get("tolerance"),
+        },
+        {
+            "id": "higher_order_from_real_UMAT_stress_update",
+            "description": "Orders 2-4 are recovered from an actual transformed UMAT stress-update path.",
+            "implementation": "Not implemented.",
+            "reference": "Compiled transformed nonlinear UMAT at smooth elastic and plastic points.",
+            "test": "N/A yet.",
+            "status": "not_implemented",
         },
         {
             "id": "finite_difference_reference_available",
@@ -587,7 +602,7 @@ def _build_claim_matrix_from_results(
             "status": "verified",
         },
         {
-            "id": "benchmark_batch_transformation_success",
+            "id": "corpus_transform_success",
             "description": "All 19 completed benchmark contracts transform without error.",
             "implementation": "src/umat_oti/transform/source_transform.py.",
             "reference": "None (transformation success only).",
@@ -595,7 +610,31 @@ def _build_claim_matrix_from_results(
             "status": "verified",
         },
         {
-            "id": "residual_assembler_driver_contract_and_dRdp_assembly",
+            "id": "corpus_compile_success",
+            "description": "Corpus candidates compile after transformation; this does not establish primal or derivative parity.",
+            "implementation": "src/umat_oti/corpus/cli.py.",
+            "reference": "Compiler exit status only.",
+            "test": "python -m umat_oti.corpus.cli run.",
+            "status": "pending",
+        },
+        {
+            "id": "corpus_primal_parity",
+            "description": "Transformed corpus candidates reproduce original primal outputs.",
+            "implementation": "Not yet archived as a corpus stage result.",
+            "reference": "Original source execution.",
+            "test": "N/A yet.",
+            "status": "pending",
+        },
+        {
+            "id": "corpus_derivative_verification",
+            "description": "Transformed corpus derivatives match an independent numerical reference.",
+            "implementation": "Not yet archived as a corpus stage result.",
+            "reference": "Centered finite differences or analytical derivatives.",
+            "test": "N/A yet.",
+            "status": "pending",
+        },
+        {
+            "id": "residual_assembler_synthetic_B_bridge",
             "description": "UMAT-OTI driver contract + JSONL stream drives ResAsm bridge and a hand-verified truss dR/dp.",
             "implementation": "Residual_Assembler/residual_core/materials/umat_oti_driver.py + core/umat_oti_sensitivity.py.",
             "reference": "Hand-derived analytical truss dR/dp.",
@@ -603,23 +642,30 @@ def _build_claim_matrix_from_results(
             "status": "verified",
         },
         {
-            "id": "abaqus_paired_stress_state_ddsdde_j2",
+            "id": "abaqus_paired_J2_primal_and_DDSDDE",
             "description": "Original vs transformed J2 UMAT paired STRESS/STATEV/DDSDDE inside Abaqus.",
             "implementation": "tools/run_completed_json_batch.py --validate + scripts/run_abaqus_arc.sbatch.",
             "reference": "Original hand-coded UMAT in Abaqus.",
             "test": "python -m umat_oti.validation.run_suite --abaqus-command abaqus",
             "status": _abaqus_paired_status(env),
-            "abaqus_paired_summary": _abaqus_paired_summary_json(),
+            "abaqus_paired_summary": _abaqus_paired_summary_reference(),
         },
         {
-            "id": "residual_assembler_c3d8_j2_structural_sensitivity",
+            "id": "abaqus_paired_18_case_collection",
+            "description": "The real Abaqus paired collection contains 18 passing cases and one original-source execution failure.",
+            "implementation": "tools/run_completed_json_batch.py --validate + scripts/run_abaqus_arc.sbatch.",
+            "reference": "Per-case paired Abaqus reports; collection status does not promote the failing original case.",
+            "test": "python -m umat_oti.reports.aggregate_abaqus_results.",
+            "status": "18_pass_1_original_case_execution_failure",
+            "abaqus_paired_summary": _abaqus_paired_summary_reference(),
+        },
+        {
+            "id": "residual_assembler_C3D8_structural_sensitivity",
             "description": "C3D8 J2 structural du/dp vs. 2N+1 Abaqus reruns.",
             "implementation": "Residual_Assembler/residual_core/core/umat_oti_sensitivity.py + compiled OTI J2 driver + C3D8 integration.",
             "reference": "2N+1 Abaqus centered-FD reruns.",
             "test": "N/A yet.",
-            "status": "blocked_by_missing_abaqus"
-            if not env.abaqus_ok
-            else "pending",
+            "status": "not_implemented",
         },
         {
             "id": "corpus_regression_round_metrics",

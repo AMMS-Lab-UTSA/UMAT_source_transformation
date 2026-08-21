@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "method": "real Abaqus paired-validator sentinel",
+  "purpose": "Prove a known post-extraction DDSDDE perturbation is exported from the ODB and rejected by the production comparator.",
+  "base_case": "code_imp",
+  "perturbation": {
+    "component": "DDSDDE(1,1)",
+    "location": "after GETIM(STRESS_OTI(OTI_I),OTI_J), before validation STATEV export",
+    "value_added": 1000.0,
+    "temporary_source_committed": false
+  },
+  "execution": {
+    "slurm_job_id": "791553",
+    "failed_path_probe_job_id": "791552",
+    "partition": "compute1",
+    "node": "c021",
+    "abaqus": "2024",
+    "fortran_compiler": "Intel Fortran Classic 2021.13.0",
+    "status": "completed"
+  },
+  "artifact_sha256": {
+    "temporary_transformed_user": "640a5a799985fbd86ce6eb2fdb4777a5c8e5eca5b3305b16ec9f794d2dfb3cc5",
+    "input_deck": "bda878d510ca7afc636ae9c254becf1cf64c729c4624753165417dccb3dc30be",
+    "extracted_results": "c600b0983af077cf653072c2bee5f02f4d93891e1c6cbf2777d9a600ce294e66",
+    "comparison_report": "05f93d269bffce8ea46be318d5c6d9f9f64bfce4b1ecec20d99f2d44c990ffe5"
+  },
+  "comparison": {
+    "status": "failed_as_expected",
+    "identified_component": "(1,1)",
+    "max_abs_difference": 1000.0,
+    "max_rel_difference": 0.005403708987642984,
+    "original_value": 184058.078125,
+    "perturbed_value": 185058.078125
+  }
+}
