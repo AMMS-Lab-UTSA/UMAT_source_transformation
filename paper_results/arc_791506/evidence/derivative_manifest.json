@@ -149,7 +149,7 @@
     "direction_count": 4,
     "reference": "umat_oti.oti.oti_directions"
   },
-  "generated_at": "2026-08-21T15:57:01+00:00",
+  "generated_at": "2026-08-21T16:39:49+00:00",
   "parameters": [
     {
       "name": "E",
@@ -171,7 +171,7 @@
   "schema": "umat-oti-derivative-manifest/1",
   "source": {
     "entry_routine": "UMAT",
-    "git_commit": "968d97cd1722cf6d403fbf202f05d9235b45e20f",
+    "git_commit": "13e98cafe38c30242a6139cec0bb6c27e477a40a",
     "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
     "sha256": "82defecdce46a577087674977be175b3b9881be8afafaa1d88545c8534563672"
   },
