@@ -19,8 +19,15 @@ from typing import Any
 import numpy as np
 import streamlit as st
 
+from umat_oti.app.derivative_editor import (
+    DERIVATIVE_KINDS,
+    build_unified_config,
+    mapping_editor_rows,
+    request_editor_rows,
+)
+from umat_oti.cli_json import run_config_transform
 from umat_oti.core.config_loader import load_project_config_json
-from umat_oti.transform.source_transform import transform_umat_to_oti_from_config
+from umat_oti.core.derivative_request import DerivativeRequestError
 from umat_oti.validation.abaqus_runner import (
     extract_results,
     run_both_jobs,
@@ -247,6 +254,54 @@ def _tab_load_config() -> None:
             )
         st.dataframe(rows, use_container_width=True, hide_index=True)
 
+    st.markdown("### Derivative requests")
+    derivative_rows = st.data_editor(
+        request_editor_rows(cfg),
+        num_rows="dynamic",
+        hide_index=True,
+        width="stretch",
+        column_config={
+            "kind": st.column_config.SelectboxColumn("kind", options=list(DERIVATIVE_KINDS), required=True),
+            "order": st.column_config.NumberColumn("order", min_value=1, max_value=4, step=1, required=True),
+        },
+        key=f"derivative_requests_{st.session_state.config_label}",
+    )
+    map_left, map_right = st.columns(2)
+    with map_left:
+        parameter_rows = st.data_editor(
+            mapping_editor_rows(cfg, "parameters"),
+            num_rows="dynamic",
+            hide_index=True,
+            width="stretch",
+            key=f"parameter_map_{st.session_state.config_label}",
+        )
+    with map_right:
+        state_rows = st.data_editor(
+            mapping_editor_rows(cfg, "state_variables"),
+            num_rows="dynamic",
+            hide_index=True,
+            width="stretch",
+            key=f"state_map_{st.session_state.config_label}",
+        )
+    try:
+        authored_config = build_unified_config(cfg, derivative_rows, parameter_rows, state_rows)
+    except DerivativeRequestError as exc:
+        authored_config = None
+        st.error(str(exc))
+    apply_col, download_col = st.columns(2)
+    with apply_col:
+        if st.button("Apply derivative requests", type="primary", disabled=authored_config is None):
+            st.session_state.config = authored_config
+            st.success("Derivative requests applied.")
+    with download_col:
+        if authored_config is not None:
+            st.download_button(
+                "Download unified config",
+                data=json.dumps(authored_config, indent=2),
+                file_name=f"{st.session_state.config_label or 'umat'}_unified.json",
+                mime="application/json",
+            )
+
     with st.expander("Raw JSON"):
         st.json(cfg, expanded=False)
 
@@ -282,21 +337,19 @@ def _tab_transform() -> None:
                 with st.spinner("Transforming..."):
                     out_dir = Path(out_dir_str).resolve()
                     out_dir.mkdir(parents=True, exist_ok=True)
-                    result = transform_umat_to_oti_from_config(
-                        source_text=src_path.read_text(encoding="utf-8", errors="replace"),
-                        config=cfg,
-                        output_dir=out_dir,
-                        ntens=summary.ntens,
-                    )
+                    config_path = out_dir / "gui_unified_config.json"
+                    config_path.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+                    transform_summary, exit_code = run_config_transform(config_path, out_dir)
                 st.session_state.transform_dir = str(out_dir)
-                st.session_state.transform_report = result.report
+                st.session_state.transform_report = _read_json(transform_summary.get("report_path", ""))
                 # locate transformed file (named like <Name>_oti.for or umat_<name>_oti.for)
                 produced = sorted(out_dir.glob("*_oti.for"))
                 if produced:
                     st.session_state.transformed_umat = str(produced[0])
-                if result.success:
+                if exit_code == 0:
                     st.success("Transformation succeeded.")
                 else:
+                    st.session_state.transform_report = st.session_state.transform_report or transform_summary
                     st.error("Transformation reported blockers (see below).")
 
     with col_b:
