@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-21
+
+Adds the SoftwareX unified-derivative model on top of the 1.0.0 tangent pipeline.
+
+### Added
+- Unified `DerivativeRequest` canonical model (`umat_oti.core.derivative_request`)
+  with a normalizer that maps the compact `jacobian` contract, legacy
+  `extra_jacobian_contracts` / `constitutive_jacobians` lists, and the `advanced`
+  higher-order block onto one internal representation.
+- Parameter-sensitivity material-point driver
+  (`umat_oti.validation.parameter_sensitivity`) for `DSIGMA_DP` and
+  `DSTATEV_DP` on the focused J2 SoftwareX case, with centered finite-difference
+  verification that replays the full loading path per perturbation.
+- Derivative manifest emitter (`umat_oti.reports.manifest`) writing a
+  machine-readable JSON that records schema version, source SHA-256, entry
+  routine, `NTENS`/`NSTATV`/`NPROPS`, parameter/state maps, direction ordering,
+  recovery-factor convention, and array shapes.
+- Corpus discovery/regression tool (`umat_oti.corpus`) with a GitHub-API
+  candidate discovery step, deterministic content hashing, license
+  classification, and a per-round metrics report. Offline-safe: network is
+  gated behind an explicit `--allow-network` flag.
+- Unified Abaqus validator entry point
+  `python -m umat_oti.validation.run_suite --abaqus-command abaqus` that
+  detects the environment and produces an explicit "skipped: reason" report
+  when Abaqus or a Fortran compiler is missing.
+- Shared UMAT-OTI / Residual Assembler material-driver contract
+  (`umat_oti.reports.driver_contract`, schema
+  `umat-oti-driver-contract/1.1`).
+
+### Changed
+- Version bumped to 1.1.0 across `pyproject.toml`, `src/umat_oti/__init__.py`,
+  `CITATION.cff`, `codemeta.json`, `.zenodo.json` (previously inconsistent:
+  `__init__.py` said 0.1.0, everything else said 1.0.0).
+- Repository URLs updated from the stale personal fork
+  `santiagarcia/UMAT_source_transformation` to the canonical organization
+  repository `AMMS-Lab-UTSA/UMAT_source_transformation` in
+  `pyproject.toml`, `CITATION.cff`, `codemeta.json`, and the README badge.
+
 ## [1.0.0] - 2026-07-10
 
 First public release accompanying the SoftwareX submission and archived on

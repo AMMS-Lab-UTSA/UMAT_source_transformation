@@ -1,6 +1,6 @@
 # UMAT-OTI
 
-[![CI](https://github.com/santiagarcia/UMAT_source_transformation/actions/workflows/ci.yml/badge.svg)](https://github.com/santiagarcia/UMAT_source_transformation/actions/workflows/ci.yml)
+[![CI](https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation/actions/workflows/ci.yml/badge.svg)](https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation/actions/workflows/ci.yml)
 [![License: GPL-3.0-only](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE.txt)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 
