@@ -1,10 +1,4 @@
 {
-  "schema": "umat-oti-softwarex-claims/1",
-  "manuscript": {
-    "expected_file": "UMAT_OTI_SoftwareX_V4.docx",
-    "available_during_audit": false,
-    "blocker": "The named V4 manuscript is absent from the workspace, home directory, fetched Git history, and remote feature tree. Locations below use the table and figure identifiers supplied in the delivery requirements; prose-section mapping requires the manuscript file."
-  },
   "allowed_statuses": [
     "verified_from_generic_transformed_source",
     "verified_from_real_abaqus_execution",
@@ -17,202 +11,250 @@
   ],
   "claims": [
     {
+      "blocker": null,
+      "evidence": "paper_results/arc_791506/table2_abaqus_paired.json; per-case validation_report.json files",
+      "executable_test": "tests/test_abaqus_validator_audit.py; python -m umat_oti.reports.aggregate_abaqus_results",
       "id": "abaqus_paired_18_manuscript_cases",
+      "implementation": "src/umat_oti/validation/compare_results.py; src/umat_oti/reports/aggregate_abaqus_results.py",
       "manuscript_location": "Table 2 - Abaqus DDSDDE validation",
       "required_capability": "Transform and execute the paired original/transformed Abaqus cases and report independent STRESS, STATEV, DDSDDE, and convergence denominators.",
-      "implementation": "src/umat_oti/validation/compare_results.py; src/umat_oti/reports/aggregate_abaqus_results.py",
       "source_case": "The 18 successful cases in paper_results/arc_791506/paired_batch/validation",
-      "executable_test": "tests/test_abaqus_validator_audit.py; python -m umat_oti.reports.aggregate_abaqus_results",
-      "evidence": "paper_results/arc_791506/table2_abaqus_paired.json; per-case validation_report.json files",
-      "status": "verified_from_real_abaqus_execution",
-      "blocker": null
+      "status": "verified_from_real_abaqus_execution"
     },
     {
+      "blocker": null,
+      "evidence": "paper_results/arc_791506/ddsdde_sentinel_audit.json",
+      "executable_test": "tests/test_abaqus_validator_audit.py",
       "id": "abaqus_ddsdde_adversarial_sentinel",
+      "implementation": "src/umat_oti/validation/compare_results.py",
       "manuscript_location": "Table 2 validation method",
       "required_capability": "Reject a deliberately changed transformed DDSDDE component and identify the exact matrix entry.",
-      "implementation": "src/umat_oti/validation/compare_results.py",
       "source_case": "Temporary transformed sentinel; incorrect source is not committed",
-      "executable_test": "tests/test_abaqus_validator_audit.py",
-      "evidence": "paper_results/arc_791506/ddsdde_sentinel_audit.json",
-      "status": "verified_from_real_abaqus_execution",
-      "blocker": null
+      "status": "verified_from_real_abaqus_execution"
     },
     {
+      "blocker": "Both original and transformed executions fail; this case is not promoted into the 18-case manuscript set.",
+      "evidence": "paper_results/arc_791506/paired_batch/validation/UMAT_VPDCL_R/validation_report.json",
+      "executable_test": "Paired Abaqus batch",
       "id": "nineteenth_VPDCL_R_case",
+      "implementation": "src/umat_oti/validation/abaqus_runner.py",
       "manuscript_location": "Additional case outside the 18-case Table 2 set",
       "required_capability": "Execute original and transformed UMAT_VPDCL_R jobs.",
-      "implementation": "src/umat_oti/validation/abaqus_runner.py",
       "source_case": "UMAT_VPDCL_R",
-      "executable_test": "Paired Abaqus batch",
-      "evidence": "paper_results/arc_791506/paired_batch/validation/UMAT_VPDCL_R/validation_report.json",
-      "status": "failed",
-      "blocker": "Both original and transformed executions fail; this case is not promoted into the 18-case manuscript set."
+      "status": "failed"
     },
     {
+      "blocker": "The generated Table 3 artifact is header-only; current transformations and independent reference methods have not been archived for all 19 entries.",
+      "evidence": "paper_results/arc_791506/evidence/table3_internal_jacobians.csv",
+      "executable_test": "No complete executed Table 3 suite",
       "id": "internal_constitutive_jacobians_19_entries",
+      "implementation": "src/umat_oti/transform/source_transform.py",
       "manuscript_location": "Table 3 - internal Jacobians",
       "required_capability": "Regenerate 19 FJAC/DETDG/GDIA/ANP1P/BNP1P/CEVPI entries from ten current source transformations and independent references.",
-      "implementation": "src/umat_oti/transform/source_transform.py",
       "source_case": "Ten manuscript UMAT models",
-      "executable_test": "No complete executed Table 3 suite",
-      "evidence": "paper_results/arc_791506/evidence/table3_internal_jacobians.csv",
-      "status": "partially_implemented",
-      "blocker": "The generated Table 3 artifact is header-only; current transformations and independent reference methods have not been archived for all 19 entries."
+      "status": "partially_implemented"
     },
     {
+      "blocker": "This fixture does not establish higher derivatives from an arbitrary supplied UMAT.",
+      "evidence": "paper_results/arc_791506/evidence/table4_higher_order.csv",
+      "executable_test": "tests/test_higher_order_fortran_driver.py",
       "id": "higher_order_direction_factorial_fixture",
+      "implementation": "src/umat_oti/fortran_emit/higher_order_strain.py",
       "manuscript_location": "Table 4 and Figure 4 indexing/factorial subclaim",
       "required_capability": "Recover mixed and repeated OTI directions with factorial correction.",
-      "implementation": "src/umat_oti/fortran_emit/higher_order_strain.py",
       "source_case": "Bivariate SymPy polynomial fixture",
-      "executable_test": "tests/test_higher_order_fortran_driver.py",
-      "evidence": "paper_results/arc_791506/evidence/table4_higher_order.csv",
-      "status": "verified_reference_fixture_only",
-      "blocker": "This fixture does not establish higher derivatives from an arbitrary supplied UMAT."
+      "status": "verified_reference_fixture_only"
     },
     {
+      "blocker": "Controlled J2 (108/108 rows) and code_imp (96/96 rows) are independently verified on elastic and plastic histories against a step-size-converged reference, with no row resting on an absolute tolerance. Independent checks for UMAT_PCL, UMAT_PCLK and visco_imp are still missing, so the manuscript claim over all actual UMAT models remains partial.",
+      "evidence": "paper_results/actual_umat_higher_order/j2/actual_umat_higher_order_evidence.json; paper_results/actual_umat_higher_order/code_imp/actual_umat_higher_order_evidence.json; paper_results/actual_umat_higher_order/table4_higher_order_actual_umats.csv; paper_results/higher_order_convergence/j2/convergence_evidence.json; paper_results/higher_order_convergence/code_imp/convergence_evidence.json; paper_results/higher_order_convergence/table4_higher_order_convergence.csv",
+      "executable_test": "tests/test_actual_umat_higher_order.py; tests/test_higher_order_convergence.py; tests/test_transform_smoke.py",
       "id": "higher_orders_from_actual_umat_models",
+      "implementation": "src/umat_oti/transform/source_transform.py::_higher_order_jacobian_lines; src/umat_oti/validation/actual_umat_higher_order.py; src/umat_oti/validation/actual_legacy_higher_order.py; src/umat_oti/validation/higher_order_convergence.py; src/umat_oti/validation/higher_order_convergence_study.py",
       "manuscript_location": "Table 4 and Figure 4 - derivatives through orders 1-4",
       "required_capability": "Generate and independently verify orders 2-4 from code_imp, UMAT_PCL, UMAT_PCLK, and visco_imp stress updates.",
-      "implementation": "src/umat_oti/transform/source_transform.py::_higher_order_jacobian_lines; src/umat_oti/validation/actual_umat_higher_order.py; src/umat_oti/validation/actual_legacy_higher_order.py",
       "source_case": "controlled J2 actual UMAT and legacy code_imp completed; UMAT_PCL, UMAT_PCLK, and visco_imp remain required",
-      "executable_test": "tests/test_actual_umat_higher_order.py; tests/test_transform_smoke.py",
-      "evidence": "paper_results/actual_umat_higher_order/j2/actual_umat_higher_order_evidence.json; paper_results/actual_umat_higher_order/code_imp/actual_umat_higher_order_evidence.json; paper_results/actual_umat_higher_order/table4_higher_order_actual_umats.csv",
-      "status": "partially_implemented",
-      "blocker": "Controlled J2 and code_imp are independently verified on elastic and plastic histories. Independent checks for UMAT_PCL, UMAT_PCLK, and visco_imp are still missing."
+      "status": "partially_implemented"
     },
     {
+      "blocker": "The measured result comes from the J2-specific emitter, not the generic supplied-source parameter-sensitivity transformer.",
+      "evidence": "paper_results/arc_791506/evidence/table5_j2_parameter_sensitivities.csv",
+      "executable_test": "tests/test_j2_oti_fortran_driver.py",
       "id": "focused_j2_parameter_sensitivity",
+      "implementation": "src/umat_oti/fortran_emit/parameter_sensitivity_j2.py",
       "manuscript_location": "Table 5, Figure 3, and Figure 6",
       "required_capability": "Compute 6x4 DSIGMA_DP and 1x4 DSTATEV_DP over the full elastic-yield-hardening history and compare with full-history centered FD.",
-      "implementation": "src/umat_oti/fortran_emit/parameter_sensitivity_j2.py",
       "source_case": "J2-specific generated material-point driver",
-      "executable_test": "tests/test_j2_oti_fortran_driver.py",
-      "evidence": "paper_results/arc_791506/evidence/table5_j2_parameter_sensitivities.csv",
-      "status": "verified_reference_fixture_only",
-      "blocker": "The measured result comes from the J2-specific emitter, not the generic supplied-source parameter-sensitivity transformer."
+      "status": "verified_reference_fixture_only"
     },
     {
+      "blocker": "Mature benchmark and permissively licensed third-party source cases have not passed generic OTI-vs-FD history verification.",
+      "evidence": "Controlled-fixture test outputs only",
+      "executable_test": "tests/test_generic_parameter_sensitivity_transform.py",
       "id": "generic_source_parameter_sensitivity",
+      "implementation": "src/umat_oti/transform/parameter_sensitivity_transform.py; src/umat_oti/cli_json.py",
       "manuscript_location": "Generic UMAT-OTI capability and Table 6",
       "required_capability": "Trace selected PROPS through an arbitrary supplied UMAT, preserve OTI STATEV history, and extract DSIGMA_DP/DSTATEV_DP through canonical entry points.",
-      "implementation": "src/umat_oti/transform/parameter_sensitivity_transform.py; src/umat_oti/cli_json.py",
       "source_case": "Controlled elastic/J2/Perzyna fixtures plus mature and third-party UMATs required",
-      "executable_test": "tests/test_generic_parameter_sensitivity_transform.py",
-      "evidence": "Controlled-fixture test outputs only",
-      "status": "partially_implemented",
-      "blocker": "Mature benchmark and permissively licensed third-party source cases have not passed generic OTI-vs-FD history verification."
+      "status": "partially_implemented"
     },
     {
+      "blocker": "Table 6 is header-only.",
+      "evidence": "paper_results/arc_791506/evidence/table6_parameter_sensitivity_sweep.csv",
+      "executable_test": "No parameter-sweep suite",
       "id": "parameter_sensitivity_18_model_76_direction_sweep",
+      "implementation": "No complete implementation",
       "manuscript_location": "Table 6",
       "required_capability": "Execute and verify the 18-model, 76-direction parameter sweep with row-level provenance.",
-      "implementation": "No complete implementation",
       "source_case": "18 manuscript models",
-      "executable_test": "No parameter-sweep suite",
-      "evidence": "paper_results/arc_791506/evidence/table6_parameter_sensitivity_sweep.csv",
-      "status": "not_implemented",
-      "blocker": "Table 6 is header-only."
+      "status": "not_implemented"
     },
     {
+      "blocker": "End-to-end umat-oti, umat-oti-config, umat-oti-batch, and combined-request dispatch coverage is incomplete.",
+      "evidence": "Test reports; no end-to-end test currently covers every named CLI/batch entry point with a combined request",
+      "executable_test": "tests/test_derivative_request.py; tests/test_derivative_editor.py; tests/test_transform_smoke.py",
       "id": "unified_derivative_request_program",
+      "implementation": "src/umat_oti/core/derivative_request.py; src/umat_oti/cli_json.py; src/umat_oti/app/derivative_editor.py",
       "manuscript_location": "Program architecture and public interface claims",
       "required_capability": "Normalize DDSDDE, internal Jacobian, higher-order, DSIGMA_DP, DSTATEV_DP, and combined requests through every public entry point.",
-      "implementation": "src/umat_oti/core/derivative_request.py; src/umat_oti/cli_json.py; src/umat_oti/app/derivative_editor.py",
       "source_case": "Unified schema 1.1 and 19 legacy contracts",
-      "executable_test": "tests/test_derivative_request.py; tests/test_derivative_editor.py; tests/test_transform_smoke.py",
-      "evidence": "Test reports; no end-to-end test currently covers every named CLI/batch entry point with a combined request",
-      "status": "partially_implemented",
-      "blocker": "End-to-end umat-oti, umat-oti-config, umat-oti-batch, and combined-request dispatch coverage is incomplete."
+      "status": "partially_implemented"
     },
     {
+      "blocker": "Generic OTI-valued material-driver artifacts are not claimed as direct Abaqus user subroutines.",
+      "evidence": "ABI-labelled CLI artifact manifests",
+      "executable_test": "tests/test_derivative_request.py; tests/test_generic_parameter_sensitivity_transform.py",
       "id": "standard_umat_and_oti_driver_abi_separation",
+      "implementation": "src/umat_oti/cli_json.py",
       "manuscript_location": "Software architecture and availability documentation",
       "required_capability": "Label the REAL Abaqus UMAT artifact separately from the OTI-valued material-point driver artifact.",
-      "implementation": "src/umat_oti/cli_json.py",
       "source_case": "Canonical transform manifests",
-      "executable_test": "tests/test_derivative_request.py; tests/test_generic_parameter_sensitivity_transform.py",
-      "evidence": "ABI-labelled CLI artifact manifests",
-      "status": "implemented_offline_not_abaqus_verified",
-      "blocker": "Generic OTI-valued material-driver artifacts are not claimed as direct Abaqus user subroutines."
+      "status": "implemented_offline_not_abaqus_verified"
     },
     {
+      "blocker": "Tables 2, 3, and 6 are header-only in the evidence directory; Table 4 is fixture-only; row-level provenance and completeness failure are incomplete.",
+      "evidence": "paper_results/arc_791506/evidence",
+      "executable_test": "Partial report tests only",
       "id": "softwarex_tables_and_figures_one_command",
+      "implementation": "src/umat_oti/reports/run_softwarex_evidence.py",
       "manuscript_location": "Tables 2-6 and Figures 3-6",
       "required_capability": "Regenerate every row from executed evidence with hashes, environment, command, method, error, and status; fail on incomplete claimed tables.",
-      "implementation": "src/umat_oti/reports/run_softwarex_evidence.py",
       "source_case": "All manuscript evidence cases",
-      "executable_test": "Partial report tests only",
-      "evidence": "paper_results/arc_791506/evidence",
-      "status": "partially_implemented",
-      "blocker": "Tables 2, 3, and 6 are header-only in the evidence directory; Table 4 is fixture-only; row-level provenance and completeness failure are incomplete."
+      "status": "partially_implemented"
     },
     {
+      "blocker": "Required measured scaling experiments have not run.",
+      "evidence": "No complete measured timing/memory artifact",
+      "executable_test": "No scaling suite",
       "id": "performance_memory_scaling_200_directions",
+      "implementation": "No complete benchmark harness",
       "manuscript_location": "Figure 5 and Annual Meeting scaling requirements",
       "required_capability": "Measure repeated runtime stages and peak RSS for 1,4,10,25,50,100,150,200 directions and orders 1-4 against actual 2N+1 FD workload.",
-      "implementation": "No complete benchmark harness",
       "source_case": "Representative generic transformed UMATs",
-      "executable_test": "No scaling suite",
-      "evidence": "No complete measured timing/memory artifact",
-      "status": "not_implemented",
-      "blocker": "Required measured scaling experiments have not run."
+      "status": "not_implemented"
     },
     {
+      "blocker": "Compilation establishes neither primal parity nor derivative accuracy; the archived counts also require reconciliation with the requested preserved 110/95/45/14 snapshot.",
+      "evidence": "paper_results/arc_791506/evidence/corpus_round_metrics.json",
+      "executable_test": "tests/test_manifest_contract_corpus.py",
       "id": "public_corpus_round_1",
+      "implementation": "src/umat_oti/corpus/cli.py",
       "manuscript_location": "Corpus/generalization claim and presentation requirements",
       "required_capability": "Discover, license-classify, deduplicate, transform, and compile public UMAT candidates with provenance.",
-      "implementation": "src/umat_oti/corpus/cli.py",
       "source_case": "Six curated permissive repositories",
-      "executable_test": "tests/test_manifest_contract_corpus.py",
-      "evidence": "paper_results/arc_791506/evidence/corpus_round_metrics.json",
-      "status": "implemented_offline_not_abaqus_verified",
-      "blocker": "Compilation establishes neither primal parity nor derivative accuracy; the archived counts also require reconciliation with the requested preserved 110/95/45/14 snapshot."
+      "status": "implemented_offline_not_abaqus_verified"
     },
     {
+      "blocker": "No candidate has archived primal parity or derivative verification and no Round 2 comparison exists.",
+      "evidence": "Round 1 metrics report zero at primal and derivative verification stages",
+      "executable_test": "No corpus numerical-regression suite",
       "id": "public_corpus_numerical_ladder_and_round_2",
+      "implementation": "Stage names exist; execution orchestration is incomplete",
       "manuscript_location": "Corpus/generalization claim and presentation requirements",
       "required_capability": "Run primal parity, numerical derivative verification, reviewed Abaqus cases, and regression-aware Round 2.",
-      "implementation": "Stage names exist; execution orchestration is incomplete",
       "source_case": "The 14 Round 1 compiled candidates",
-      "executable_test": "No corpus numerical-regression suite",
-      "evidence": "Round 1 metrics report zero at primal and derivative verification stages",
-      "status": "not_implemented",
-      "blocker": "No candidate has archived primal parity or derivative verification and no Round 2 comparison exists."
+      "status": "not_implemented"
     },
     {
+      "blocker": "Multi-file controls, direction/algebra preview, explicit transformation-only/compile/Abaqus modes, evidence status, and per-request Streamlit automation are incomplete.",
+      "evidence": "Live smoke at commit 5fd370c",
+      "executable_test": "tests/test_derivative_editor.py plus manual browser smoke",
       "id": "streamlit_unified_workflow",
+      "implementation": "src/umat_oti/app/streamlit_app.py; src/umat_oti/app/derivative_editor.py",
       "manuscript_location": "User interface and availability claims",
       "required_capability": "Expose all derivative requests, mappings, multi-file inputs, direction preview, transform/compile/Abaqus modes, downloads, and evidence status through the same core APIs.",
-      "implementation": "src/umat_oti/app/streamlit_app.py; src/umat_oti/app/derivative_editor.py",
       "source_case": "Unified and legacy configs",
-      "executable_test": "tests/test_derivative_editor.py plus manual browser smoke",
-      "evidence": "Live smoke at commit 5fd370c",
-      "status": "partially_implemented",
-      "blocker": "Multi-file controls, direction/algebra preview, explicit transformation-only/compile/Abaqus modes, evidence status, and per-request Streamlit automation are incomplete."
+      "status": "partially_implemented"
     },
     {
+      "blocker": "Distorted/J2/constrained du/dp cases and one nominal plus eight perturbed Abaqus jobs are missing.",
+      "evidence": "A real elastic C3D8 Abaqus reaction comparison exists; structural 2N+1 sensitivities do not",
+      "executable_test": "Residual_Assembler/tests/framework/test_compiled_umat_oti_to_resasm.py",
       "id": "residual_assembler_structural_sensitivity_companion",
+      "implementation": "Residual_Assembler residual_core/core/umat_oti_sensitivity.py and C3D8 kernel",
       "manuscript_location": "Excluded from the SoftwareX UMAT-OTI paper; downstream companion only",
       "required_capability": "Assemble C3D8 dR/dp and solve constrained du/dp, then compare E, nu, SIGY0, H against 2N+1 Abaqus reruns.",
-      "implementation": "Residual_Assembler residual_core/core/umat_oti_sensitivity.py and C3D8 kernel",
       "source_case": "C3D8 J2 elastic/plastic element cases",
-      "executable_test": "Residual_Assembler/tests/framework/test_compiled_umat_oti_to_resasm.py",
-      "evidence": "A real elastic C3D8 Abaqus reaction comparison exists; structural 2N+1 sensitivities do not",
-      "status": "partially_implemented",
-      "blocker": "Distorted/J2/constrained du/dp cases and one nominal plus eight perturbed Abaqus jobs are missing."
+      "status": "partially_implemented"
     },
     {
+      "blocker": "UMAT_OTI_SoftwareX_V4.docx is not available on this filesystem or in fetched Git refs.",
+      "evidence": "This registry",
+      "executable_test": "tests/test_softwarex_compliance_matrix.py validates schema and anti-promotion rules",
       "id": "v4_manuscript_complete_claim_audit",
+      "implementation": "paper_results/softwarex_claim_matrix.json and docs/SOFTWAREX_COMPLIANCE_MATRIX.md",
       "manuscript_location": "Entire UMAT_OTI_SoftwareX_V4.docx",
       "required_capability": "Map every substantive manuscript sentence, number, table, and figure to executable evidence.",
-      "implementation": "paper_results/softwarex_claim_matrix.json and docs/SOFTWAREX_COMPLIANCE_MATRIX.md",
       "source_case": "UMAT_OTI_SoftwareX_V4.docx",
-      "executable_test": "tests/test_softwarex_compliance_matrix.py validates schema and anti-promotion rules",
-      "evidence": "This registry",
-      "status": "blocked_by_external_environment",
-      "blocker": "UMAT_OTI_SoftwareX_V4.docx is not available on this filesystem or in fetched Git refs."
+      "status": "blocked_by_external_environment"
     }
-  ]
+  ],
+  "manuscript": {
+    "available_during_audit": false,
+    "blocker": "The named V4 manuscript is absent from the workspace, home directory, fetched Git history, and remote feature tree. Locations below use the table and figure identifiers supplied in the delivery requirements; prose-section mapping requires the manuscript file.",
+    "expected_file": "UMAT_OTI_SoftwareX_V4.docx"
+  },
+  "reference_quality": {
+    "applies_to_claim": "higher_orders_from_actual_umat_models",
+    "classifications": [
+      "resolved",
+      "expected_zero_independently_supported",
+      "cancellation_limited",
+      "reference_unresolved"
+    ],
+    "dataset": "paper_results/higher_order_convergence/table4_reference_quality_summary.json",
+    "method": "multi-step finite-difference convergence study with row-level classification",
+    "models": {
+      "code_imp_legacy_umat": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 42,
+        "max_relative_error_on_resolved_rows": 9.635403610829512e-06,
+        "reference_precision": "IEEE double precision (compiled Fortran, gfortran)",
+        "reference_unresolved": 0,
+        "resolved": 54,
+        "rows": 96
+      },
+      "controlled_j2_actual_umat": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 77,
+        "max_relative_error_on_resolved_rows": 3.018419325837293e-11,
+        "reference_precision": "mpmath, 80 decimal digits",
+        "reference_unresolved": 0,
+        "resolved": 31,
+        "rows": 108
+      }
+    },
+    "models_not_yet_studied": [
+      "UMAT_PCL",
+      "UMAT_PCLK",
+      "visco_imp"
+    ],
+    "policy": "A row counts only when a plateau across at least three consecutive step sizes resolves the reference and the OTI value lies inside it, or when the derivative is zero with support independent of the OTI result. No row is passed for falling below a large absolute tolerance.",
+    "supersedes": "The earlier single-step comparison passed rows against absolute tolerances as large as 4.0e4 at order 4. Those tolerances no longer carry any row: every controlled J2 and code_imp row is now carried by a resolved plateau or by independent zero support.",
+    "supporting_classifications": [
+      "resolved",
+      "expected_zero_independently_supported"
+    ]
+  },
+  "schema": "umat-oti-softwarex-claims/1"
 }

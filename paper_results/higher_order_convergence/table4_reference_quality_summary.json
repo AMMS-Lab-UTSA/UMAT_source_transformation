@@ -1,0 +1,118 @@
+{
+  "all_models_defensible": true,
+  "artifact_sha256": {
+    "TABLE4_REFERENCE_QUALITY.md": "96891e091bd030383cc2b9947d1cfe01a2e579e1c4b82ac98655b1ad870108c0",
+    "table4_higher_order_convergence.csv": "4617403d50150ab802fb90df50b3922ad7bb0ebbfc19d6b72b9701ed9059a955"
+  },
+  "models": {
+    "code_imp": {
+      "classification_counts": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 42,
+        "reference_unresolved": 0,
+        "resolved": 54
+      },
+      "defensible": true,
+      "model": "code_imp_legacy_umat",
+      "normalization": {
+        "normalized_quantity": "D_hat_n = (d^n sigma / d eps^n) * strain_scale**n / stress_scale",
+        "normalized_units": "dimensionless",
+        "strain_scale": 0.001,
+        "strain_scale_meaning": "characteristic strain-increment magnitude of the four code_imp load steps",
+        "strain_units": "dimensionless",
+        "stress_scale": 240.0,
+        "stress_scale_meaning": "initial yield stress SIGY0 hard-coded in code_imp.f",
+        "stress_units": "MPa"
+      },
+      "reference": {
+        "method": "independently compiled original code_imp UMAT replayed for each tensor-product centred finite-difference stencil node",
+        "precision": "IEEE double precision (compiled Fortran, gfortran)",
+        "published_step": 4e-05,
+        "stencil": "9-point centred per active strain component",
+        "step_factors": [
+          16.0,
+          8.0,
+          4.0,
+          2.0,
+          1.0,
+          0.5,
+          0.25,
+          0.125,
+          0.0625
+        ],
+        "steps": [
+          0.00064,
+          0.00032,
+          0.00016,
+          8e-05,
+          4e-05,
+          2e-05,
+          1e-05,
+          5e-06,
+          2.5e-06
+        ],
+        "zero_support": "structural stencil invariance and exact local affineness (bitwise-zero second and mixed differences at amplitudes 1.600e-04, 8.000e-05, 4.000e-05); the reference is a double-precision executable, so no higher-precision recomputation is available for this model"
+      },
+      "rows": 96,
+      "rows_admitted_to_table4": 96,
+      "rows_withheld_from_table4": 0,
+      "withheld_rows": []
+    },
+    "j2": {
+      "classification_counts": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 77,
+        "reference_unresolved": 0,
+        "resolved": 31
+      },
+      "defensible": true,
+      "model": "controlled_j2_actual_umat",
+      "normalization": {
+        "normalized_quantity": "D_hat_n = (d^n sigma / d eps^n) * strain_scale**n / stress_scale",
+        "normalized_units": "dimensionless",
+        "strain_scale": 0.001,
+        "strain_scale_meaning": "characteristic strain-increment magnitude of the three J2 load steps",
+        "strain_units": "dimensionless",
+        "stress_scale": 250.0,
+        "stress_scale_meaning": "initial yield stress SIGY0 of the controlled J2 model",
+        "stress_units": "MPa"
+      },
+      "reference": {
+        "method": "independent tensor-product finite differences of validation.j2_reference.integrate_increment evaluated in mpmath at 80 decimal digits",
+        "precision": "mpmath, 80 decimal digits",
+        "published_step": 2e-05,
+        "stencil": "9-point centred per active strain component",
+        "step_factors": [
+          16.0,
+          8.0,
+          4.0,
+          2.0,
+          1.0,
+          0.5,
+          0.25,
+          0.125,
+          0.0625
+        ],
+        "steps": [
+          0.00032,
+          0.00016,
+          8e-05,
+          4e-05,
+          2e-05,
+          1e-05,
+          5e-06,
+          2.5e-06,
+          1.25e-06
+        ],
+        "zero_support": "structural stencil invariance, exact local affineness, and an independent recomputation at 200 decimal digits with step 2.000e-08"
+      },
+      "rows": 108,
+      "rows_admitted_to_table4": 108,
+      "rows_withheld_from_table4": 0,
+      "withheld_rows": []
+    }
+  },
+  "policy": "A row enters Table 4 only when an independent reference resolves it, or when it is zero with support that does not come from the OTI result. Rows below a large absolute tolerance are never admitted on that basis.",
+  "schema": "umat-oti-table4-reference-quality/1",
+  "table_csv": "paper_results/higher_order_convergence/table4_higher_order_convergence.csv"
+}

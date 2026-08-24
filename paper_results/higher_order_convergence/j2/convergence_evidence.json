@@ -1,0 +1,217 @@
+{
+  "artifact_sha256": {
+    "convergence_evidence.json": "9b3973ba865111d573130eb6ae63002d00b531e89e92e03f69419ab8cd73fcde",
+    "convergence_rows.csv": "b37e254951103ec97c6f71e0ad851411adb09cf38f36997c2b70b8aa8b95784b",
+    "convergence_sweep.csv": "19f5a61910c9a8b0f535ff5fba41b0886079880d1d77aa93aa6115a6990d0504"
+  },
+  "artifacts": {
+    "rows_csv": "paper_results/higher_order_convergence/j2/convergence_rows.csv",
+    "sweep_csv": "paper_results/higher_order_convergence/j2/convergence_sweep.csv"
+  },
+  "classification_policy": {
+    "agreement_relative_floor": 1e-06,
+    "agreement_uncertainty_multiple": 4.0,
+    "cancellation_relative_spread": 0.1,
+    "classifications": [
+      "resolved",
+      "expected_zero_independently_supported",
+      "cancellation_limited",
+      "reference_unresolved"
+    ],
+    "note": "A row is never passed for being below a large absolute tolerance. Only resolved rows agreeing with their plateau, and zero rows with independent support, count as verification evidence.",
+    "plateau_min_points": 3,
+    "resolved_relative_spread": 0.001,
+    "supporting": [
+      "expected_zero_independently_supported",
+      "resolved"
+    ],
+    "zero_normalized_threshold": 1e-09
+  },
+  "model": "controlled_j2_actual_umat",
+  "normalization": {
+    "normalized_quantity": "D_hat_n = (d^n sigma / d eps^n) * strain_scale**n / stress_scale",
+    "normalized_units": "dimensionless",
+    "strain_scale": 0.001,
+    "strain_scale_meaning": "characteristic strain-increment magnitude of the three J2 load steps",
+    "strain_units": "dimensionless",
+    "stress_scale": 250.0,
+    "stress_scale_meaning": "initial yield stress SIGY0 of the controlled J2 model",
+    "stress_units": "MPa"
+  },
+  "reference": {
+    "method": "independent tensor-product finite differences of validation.j2_reference.integrate_increment evaluated in mpmath at 80 decimal digits",
+    "precision": "mpmath, 80 decimal digits",
+    "published_step": 2e-05,
+    "stencil": "9-point centred per active strain component",
+    "step_factors": [
+      16.0,
+      8.0,
+      4.0,
+      2.0,
+      1.0,
+      0.5,
+      0.25,
+      0.125,
+      0.0625
+    ],
+    "steps": [
+      0.00032,
+      0.00016,
+      8e-05,
+      4e-05,
+      2e-05,
+      1e-05,
+      5e-06,
+      2.5e-06,
+      1.25e-06
+    ],
+    "zero_support": "structural stencil invariance, exact local affineness, and an independent recomputation at 200 decimal digits with step 2.000e-08"
+  },
+  "schema": "umat-oti-higher-order-convergence/1",
+  "source": {
+    "path": "UMATs/UMATs/generic_ps/j2_props.f",
+    "sha256": "4362e759c4642cb2f74e20c50b86a9472b1e80d6a7fef663bf8faa3dfa8de1c8"
+  },
+  "summary": {
+    "classification_counts": {
+      "cancellation_limited": 0,
+      "expected_zero_independently_supported": 77,
+      "reference_unresolved": 0,
+      "resolved": 31
+    },
+    "classification_counts_by_order": {
+      "2": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 26,
+        "reference_unresolved": 0,
+        "resolved": 10
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 26,
+        "reference_unresolved": 0,
+        "resolved": 10
+      },
+      "4": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 25,
+        "reference_unresolved": 0,
+        "resolved": 11
+      }
+    },
+    "max_relative_error_on_resolved_rows": 3.018419325837293e-11,
+    "rows": 108,
+    "rows_supporting_verification": 108,
+    "rows_with_reference_but_disagreeing": 0,
+    "rows_without_usable_reference": 0,
+    "verified": true
+  },
+  "summary_views": {
+    "by_branch": {
+      "elastic": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 36,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "plastic": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 41,
+        "reference_unresolved": 0,
+        "resolved": 31
+      }
+    },
+    "by_direction_pattern": {
+      "mixed": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 35,
+        "reference_unresolved": 0,
+        "resolved": 19
+      },
+      "repeated": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 42,
+        "reference_unresolved": 0,
+        "resolved": 12
+      }
+    },
+    "by_increment": {
+      "1": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 36,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "2": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 29,
+        "reference_unresolved": 0,
+        "resolved": 7
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 12,
+        "reference_unresolved": 0,
+        "resolved": 24
+      }
+    },
+    "by_order": {
+      "2": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 26,
+        "reference_unresolved": 0,
+        "resolved": 10
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 26,
+        "reference_unresolved": 0,
+        "resolved": 10
+      },
+      "4": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 25,
+        "reference_unresolved": 0,
+        "resolved": 11
+      }
+    },
+    "by_stress_component": {
+      "1": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 11,
+        "reference_unresolved": 0,
+        "resolved": 7
+      },
+      "2": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 9,
+        "reference_unresolved": 0,
+        "resolved": 9
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 9,
+        "reference_unresolved": 0,
+        "resolved": 9
+      },
+      "4": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 12,
+        "reference_unresolved": 0,
+        "resolved": 6
+      },
+      "5": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 18,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "6": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 18,
+        "reference_unresolved": 0,
+        "resolved": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "artifact_sha256": {
+    "convergence_evidence.json": "42f1bd419a18d5520d9fdedbd4608a0dc55ae63e541873f5d8fbe2b82e962002",
+    "convergence_rows.csv": "4fab807d459291859cc430092c29ff2a6c946b1f9cf924acccc870920fc09223",
+    "convergence_sweep.csv": "f37eb0b0f73ca3f804b56099f013078cafb0e55e2ccceb4628801ecf0a820c76"
+  },
+  "artifacts": {
+    "rows_csv": "paper_results/higher_order_convergence/code_imp/convergence_rows.csv",
+    "sweep_csv": "paper_results/higher_order_convergence/code_imp/convergence_sweep.csv"
+  },
+  "classification_policy": {
+    "agreement_relative_floor": 1e-06,
+    "agreement_uncertainty_multiple": 4.0,
+    "cancellation_relative_spread": 0.1,
+    "classifications": [
+      "resolved",
+      "expected_zero_independently_supported",
+      "cancellation_limited",
+      "reference_unresolved"
+    ],
+    "note": "A row is never passed for being below a large absolute tolerance. Only resolved rows agreeing with their plateau, and zero rows with independent support, count as verification evidence.",
+    "plateau_min_points": 3,
+    "resolved_relative_spread": 0.001,
+    "supporting": [
+      "expected_zero_independently_supported",
+      "resolved"
+    ],
+    "zero_normalized_threshold": 1e-09
+  },
+  "model": "code_imp_legacy_umat",
+  "normalization": {
+    "normalized_quantity": "D_hat_n = (d^n sigma / d eps^n) * strain_scale**n / stress_scale",
+    "normalized_units": "dimensionless",
+    "strain_scale": 0.001,
+    "strain_scale_meaning": "characteristic strain-increment magnitude of the four code_imp load steps",
+    "strain_units": "dimensionless",
+    "stress_scale": 240.0,
+    "stress_scale_meaning": "initial yield stress SIGY0 hard-coded in code_imp.f",
+    "stress_units": "MPa"
+  },
+  "reference": {
+    "method": "independently compiled original code_imp UMAT replayed for each tensor-product centred finite-difference stencil node",
+    "precision": "IEEE double precision (compiled Fortran, gfortran)",
+    "published_step": 4e-05,
+    "stencil": "9-point centred per active strain component",
+    "step_factors": [
+      16.0,
+      8.0,
+      4.0,
+      2.0,
+      1.0,
+      0.5,
+      0.25,
+      0.125,
+      0.0625
+    ],
+    "steps": [
+      0.00064,
+      0.00032,
+      0.00016,
+      8e-05,
+      4e-05,
+      2e-05,
+      1e-05,
+      5e-06,
+      2.5e-06
+    ],
+    "zero_support": "structural stencil invariance and exact local affineness (bitwise-zero second and mixed differences at amplitudes 1.600e-04, 8.000e-05, 4.000e-05); the reference is a double-precision executable, so no higher-precision recomputation is available for this model"
+  },
+  "schema": "umat-oti-higher-order-convergence/1",
+  "source": {
+    "path": "UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
+    "sha256": "82defecdce46a577087674977be175b3b9881be8afafaa1d88545c8534563672"
+  },
+  "summary": {
+    "classification_counts": {
+      "cancellation_limited": 0,
+      "expected_zero_independently_supported": 42,
+      "reference_unresolved": 0,
+      "resolved": 54
+    },
+    "classification_counts_by_order": {
+      "2": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 14,
+        "reference_unresolved": 0,
+        "resolved": 18
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 14,
+        "reference_unresolved": 0,
+        "resolved": 18
+      },
+      "4": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 14,
+        "reference_unresolved": 0,
+        "resolved": 18
+      }
+    },
+    "max_relative_error_on_resolved_rows": 9.635403610829512e-06,
+    "rows": 96,
+    "rows_supporting_verification": 96,
+    "rows_with_reference_but_disagreeing": 0,
+    "rows_without_usable_reference": 0,
+    "verified": true
+  },
+  "summary_views": {
+    "by_branch": {
+      "elastic": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 24,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "plastic": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 18,
+        "reference_unresolved": 0,
+        "resolved": 54
+      }
+    },
+    "by_direction_pattern": {
+      "mixed": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 21,
+        "reference_unresolved": 0,
+        "resolved": 27
+      },
+      "repeated": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 21,
+        "reference_unresolved": 0,
+        "resolved": 27
+      }
+    },
+    "by_increment": {
+      "1": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 24,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "2": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 6,
+        "reference_unresolved": 0,
+        "resolved": 18
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 6,
+        "reference_unresolved": 0,
+        "resolved": 18
+      },
+      "4": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 6,
+        "reference_unresolved": 0,
+        "resolved": 18
+      }
+    },
+    "by_order": {
+      "2": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 14,
+        "reference_unresolved": 0,
+        "resolved": 18
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 14,
+        "reference_unresolved": 0,
+        "resolved": 18
+      },
+      "4": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 14,
+        "reference_unresolved": 0,
+        "resolved": 18
+      }
+    },
+    "by_stress_component": {
+      "1": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 6,
+        "reference_unresolved": 0,
+        "resolved": 18
+      },
+      "2": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 6,
+        "reference_unresolved": 0,
+        "resolved": 18
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 6,
+        "reference_unresolved": 0,
+        "resolved": 18
+      },
+      "4": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 24,
+        "reference_unresolved": 0,
+        "resolved": 0
+      }
+    }
+  }
+}
