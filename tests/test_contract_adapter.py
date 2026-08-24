@@ -177,3 +177,65 @@ def test_properties_that_are_not_parameters_are_still_supplied():
     static = contract["material_point_driver"]["static_props"]
     assert len(static) == 8, "the full PROPS vector must be supplied, not just the seeded ones"
     assert static[0] == 200000.0 and static[1] == 0.3, "E and nu must not default to zero"
+
+
+# --------------------------------------------------------------------------- #
+# Regressions for three defects found by running the adapter against the corpus
+# --------------------------------------------------------------------------- #
+@pytest.mark.skipif(not MODELS.is_dir(), reason="model set not imported")
+def test_a_list_valued_history_state_does_not_become_its_repr():
+    """history.state is a list in three contracts.
+
+    Interpolating it directly produced names like "['EQPLAS']_1", which reached
+    the generated driver's CSV headers and the derivative manifest.
+    """
+    assert [s["name"] for s in _adapt("m3_j2").contract["state_variables"]] == ["EQPLAS"]
+    names = [s["name"] for s in _adapt("m6_fcc").contract["state_variables"]]
+    assert names[:2] == ["g_alpha_1", "g_alpha_2"] and len(names) == 12
+    for name in names:
+        assert "[" not in name and "'" not in name
+
+
+@pytest.mark.skipif(not MODELS.is_dir(), reason="model set not imported")
+def test_a_single_state_slot_keeps_its_bare_name():
+    """Suffixing a lone slot would invent a component index the model lacks."""
+    assert [s["name"] for s in _adapt("m5_cpflow").contract["state_variables"]] == ["EQPLAS"]
+
+
+@pytest.mark.skipif(not MODELS.is_dir(), reason="model set not imported")
+def test_nested_v2_keys_are_reported_not_only_top_level_ones():
+    """The 'nothing is silently dropped' claim has to hold for nested keys too.
+
+    history.propagate appears in 17 contracts and history.path_dependent in 3;
+    both vanished while only top-level keys were compared.
+    """
+    unmapped = _adapt("m1_elastic").unmapped
+    assert "history.propagate" in unmapped
+    assert "dimensions.nprops" in unmapped
+    assert "output.object" in unmapped and "output.contract" in unmapped
+    # the dotted deliberate-drop reasons must actually match now
+    assert "another run" in unmapped["output.object"]["reason"]
+
+    path_dependent = _adapt("m3_j2").unmapped
+    assert "history.path_dependent" in path_dependent
+
+
+@pytest.mark.skipif(not MODELS.is_dir(), reason="model set not imported")
+def test_the_adapter_itself_carries_the_full_props_vector():
+    """Not only the sweep runner: any caller of the adapter must get this."""
+    contract = _adapt("m5_cpflow").contract
+    static = contract["material_point_driver"]["static_props"]
+    assert len(static) == 8
+    assert static[0] == 200000.0 and static[1] == 0.3
+    assert any("not differentiated" in n for n in _adapt("m5_cpflow").notes)
+
+
+@pytest.mark.skipif(not MODELS.is_dir(), reason="model set not imported")
+def test_oti_direction_is_recorded_so_columns_are_unambiguous():
+    """Direction is list position, not PROPS order; m5_cpflow's list is not monotonic."""
+    params = _adapt("m5_cpflow").contract["parameters"]
+    assert [p["oti_direction"] for p in params] == [1, 2, 3, 4, 5, 6]
+    by_direction = {p["oti_direction"]: (p["name"], p["props_index"]) for p in params}
+    # direction 3 is q at PROPS(6): sorting by props_index would mislabel the column
+    assert by_direction[3] == ("q", 6)
+    assert by_direction[4] == ("p", 5)

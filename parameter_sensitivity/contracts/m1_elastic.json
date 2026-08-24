@@ -4,7 +4,10 @@
   ],
   "_generated_by": "tools/run_parameter_sensitivity_sweep.py via umat_oti.services.contract_adapter; edit contract_v2.json, not this file",
   "_unmapped_v2_keys": [
-    "output"
+    "dimensions.nprops",
+    "history.propagate",
+    "output.contract",
+    "output.object"
   ],
   "derivatives": [
     {
@@ -45,11 +48,13 @@
   "parameters": [
     {
       "name": "E",
+      "oti_direction": 1,
       "props_index": 1,
       "value": 210000.0
     },
     {
       "name": "nu",
+      "oti_direction": 2,
       "props_index": 2,
       "value": 0.3
     }
