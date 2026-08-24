@@ -246,6 +246,8 @@ def _observable_record(
             "unavailable_reason": reason,
         }
     status = str(comparison.get("status", ""))
+    if not status and isinstance(comparison.get("pass"), bool):
+        status = "passed" if comparison["pass"] else "failed"
     compared = status in {"passed", "failed"}
     return {
         "status": status or "unavailable",
