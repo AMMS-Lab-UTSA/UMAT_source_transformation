@@ -19,7 +19,7 @@
     {
       "id": "abaqus_paired_18_manuscript_cases",
       "manuscript_location": "Table 2 - Abaqus DDSDDE validation",
-      "required_capability": "Transform and execute the 18 manuscript UMAT cases in paired original/transformed Abaqus jobs and compare DDSDDE.",
+      "required_capability": "Transform and execute the paired original/transformed Abaqus cases and report independent STRESS, STATEV, DDSDDE, and convergence denominators.",
       "implementation": "src/umat_oti/validation/compare_results.py; src/umat_oti/reports/aggregate_abaqus_results.py",
       "source_case": "The 18 successful cases in paper_results/arc_791506/paired_batch/validation",
       "executable_test": "tests/test_abaqus_validator_audit.py; python -m umat_oti.reports.aggregate_abaqus_results",
