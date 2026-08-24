@@ -1,0 +1,26 @@
+{
+  "_comment": [
+    "Material-point loading paths for the parameter-sensitivity sweep.",
+    "",
+    "These are NOT imported. The v2 contracts in the source copy define parameters",
+    "and dimensions but never a loading history, so a path had to be chosen here.",
+    "Choosing one is a scientific decision, so it is declared as reviewable data",
+    "rather than hidden in code, and every run records that the path is a pipeline",
+    "default rather than something the model's author specified.",
+    "",
+    "The default is uniaxial strain along component 1: 20 increments of 1.0e-4,",
+    "reaching 2.0e-3 total axial strain. For a steel-like model (E ~ 2.1e5 MPa,",
+    "yield ~ 2.4e2 MPa) that predicts first yield near increment 12, so the path",
+    "exercises both the elastic and the inelastic branch. A model whose stiffness",
+    "or yield differs substantially will not reach yield under this path; that",
+    "shows up in the results as elastic-only coverage and must be read as a",
+    "limitation of the path, not as evidence that the model has no plastic branch."
+  ],
+  "default": {
+    "dstran_per_increment": [1.0e-4, 0.0, 0.0, 0.0, 0.0, 0.0],
+    "n_increments": 20,
+    "rationale": "uniaxial strain along component 1 to 2.0e-3 total, spanning elastic and inelastic response for steel-like moduli",
+    "chosen_by": "pipeline default, not imported from the model contract"
+  },
+  "overrides": {}
+}

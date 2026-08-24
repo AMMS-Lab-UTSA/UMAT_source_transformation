@@ -145,3 +145,35 @@ def test_a_contract_with_no_derivative_is_refused():
           "dimensions": {"ntens": 6}, "parameters": []}
     with pytest.raises(ContractAdaptationError, match="neither"):
         adapt_v2_contract(v2, model="x", source_path="s")
+
+
+@pytest.mark.skipif(not MODELS.is_dir(), reason="model set not imported")
+def test_props_values_are_indexed_by_props_index_not_list_position():
+    """m5_cpflow lists its parameters out of PROPS order; the trap is real.
+
+    Its `parameters` array is [tau0@3, dG@4, q@6, p@5, gam0@7, H@8]: `q` is third
+    in the list but PROPS(6). Assigning values by list position would give `q` the
+    value of PROPS(3) and silently mis-parameterise the model.
+    """
+    adapted = _adapt("m5_cpflow")
+    by_name = {p["name"]: p for p in adapted.contract["parameters"]}
+    # cross-checked against umat.for: TAU0=PROPS(3), PEXP=PROPS(5), QEXP=PROPS(6)
+    assert by_name["tau0"]["props_index"] == 3 and by_name["tau0"]["value"] == 1500.0
+    assert by_name["p"]["props_index"] == 5 and by_name["p"]["value"] == 0.4
+    assert by_name["q"]["props_index"] == 6 and by_name["q"]["value"] == 1.6
+    assert by_name["H"]["props_index"] == 8 and by_name["H"]["value"] == 60000.0
+
+
+@pytest.mark.skipif(not MODELS.is_dir(), reason="model set not imported")
+def test_properties_that_are_not_parameters_are_still_supplied():
+    """A model may declare more PROPS than it differentiates.
+
+    m5_cpflow seeds PROPS(3..8) and leaves E and nu fixed at PROPS(1..2). Without
+    the full static vector the driver would run with E = 0.
+    """
+    from tools.run_parameter_sensitivity_sweep import generate_contract
+
+    _path, contract = generate_contract("m5_cpflow")
+    static = contract["material_point_driver"]["static_props"]
+    assert len(static) == 8, "the full PROPS vector must be supplied, not just the seeded ones"
+    assert static[0] == 200000.0 and static[1] == 0.3, "E and nu must not default to zero"

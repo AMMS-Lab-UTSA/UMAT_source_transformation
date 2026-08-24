@@ -24,8 +24,8 @@ every required part of it.
 | Claim status | Requirements |
 |---|---:|
 | `verified` | 2 |
-| `partially_implemented` | 11 |
-| `unimplemented` | 6 |
+| `partially_implemented` | 12 |
+| `unimplemented` | 5 |
 | `failed` | 1 |
 | `blocked_by_external_dependency` | 1 |
 | **total** | **21** |
@@ -110,7 +110,7 @@ every required part of it.
 
 | ID | Requirement | Repo | Stage | Implementation | Test | Evidence | Execution | Claim |
 |---|---|---|---|---|---|---|---|---|
-| `SWEEP-18-MODELS` | Contracts for the 18 named parameter-sensitivity models | UMAT_source_transformation | contract inference | -- | -- | -- | `unimplemented` | `unimplemented` |
+| `SWEEP-18-MODELS` | Contracts for the 18 named parameter-sensitivity models | UMAT_source_transformation | contract inference | -- | -- | -- | `partially_implemented` | `partially_implemented` |
 | `TABLE-2` | Table 2 paired original/transformed Abaqus validation (18 + 1 failed) | UMAT_source_transformation | evidence generation | `src/umat_oti/reports/run_softwarex_evidence.py` | -- | `paper_results/arc_791506/table2_abaqus_paired.csv` | `implemented` | `partially_implemented` |
 | `TABLE-3` | Table 3 internal Jacobians, 19 entries across 10 models | UMAT_source_transformation | evidence generation | `src/umat_oti/reports/run_softwarex_evidence.py` | -- | `paper_results/arc_791506/evidence/table3_internal_jacobians.csv` | `unimplemented` | `unimplemented` |
 | `TABLE-4` | Table 4 actual-UMAT higher order for code_imp, UMAT_PCL, UMAT_PCLK, visco_imp | UMAT_source_transformation | evidence generation | `src/umat_oti/reports/run_softwarex_evidence.py` | -- | `paper_results/higher_order_convergence/table4_higher_order_convergence.csv` | `implemented` | `partially_implemented` |
@@ -118,9 +118,9 @@ every required part of it.
 | `TABLE-6` | Table 6 parameter sensitivities across 18 models and all directions | UMAT_source_transformation | evidence generation | `src/umat_oti/reports/run_softwarex_evidence.py` | -- | `paper_results/arc_791506/evidence/table6_parameter_sensitivity_sweep.csv` | `unimplemented` | `unimplemented` |
 
 **`SWEEP-18-MODELS`**
-- blocker: 18 of 18 named models have no contract or source in the repository
-- measured `present`: []
-- measured `absent`: ["m1_elastic", "m2_cubic", "m3_j2", "m5_cpflow", "m6_fcc", "sweep_aniso_ortho", "sweep_damage_elastic", "sweep_eco", "sweep_j2_bilinear", "sweep_j2_combined", "sweep_j2_kinematic", "sweep_lame_elastic", "sweep_maxwell_ve", "sweep_mooney_small", "sweep_real_ECL_TEMP", "sweep_real_PCO", "sweep_thermoelastic", "sweep_transiso"]
+- blocker: 0 of 18 named models have no contract or source in the repository
+- measured `present`: ["m1_elastic", "m2_cubic", "m3_j2", "m5_cpflow", "m6_fcc", "sweep_aniso_ortho", "sweep_damage_elastic", "sweep_eco", "sweep_j2_bilinear", "sweep_j2_combined", "sweep_j2_kinematic", "sweep_lame_elastic", "sweep_maxwell_ve", "sweep_mooney_small", "sweep_real_ECL_TEMP", "sweep_real_PCO", "sweep_thermoelastic", "sweep_transiso"]
+- measured `absent`: []
 
 **`TABLE-2`**
 - blocker: row-level reference quality decides the claim; see the claim matrix
@@ -169,7 +169,7 @@ every required part of it.
 
 **`PIPE-ONE-BOUNDARY`**
 - blocker: 4 distinct transform entry points are still in use
-- measured `distinct_transform_entry_points`: {"cli_json.run_config_transform": 4, "core.pipeline.transform_umat": 1, "semantic.transform_pipeline.transform_umat": 1, "transform.source_transform.transform_umat_to_oti_from_config": 8}
+- measured `distinct_transform_entry_points`: {"cli_json.run_config_transform": 5, "core.pipeline.transform_umat": 1, "semantic.transform_pipeline.transform_umat": 1, "transform.source_transform.transform_umat_to_oti_from_config": 11}
 
 ## Release metadata
 
