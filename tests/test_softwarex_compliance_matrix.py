@@ -56,34 +56,58 @@ def test_reference_quality_section_never_counts_an_unsupported_row():
         "resolved",
         "expected_zero_independently_supported",
     }
-    # cancellation-limited and unresolved rows must never be treated as support
+    # Everything else is reported but never counted. In particular a zero that
+    # rests only on sampled equality is not evidence.
     assert set(section["classifications"]) - set(section["supporting_classifications"]) == {
+        "empirically_zero_over_stencil",
         "cancellation_limited",
         "reference_unresolved",
     }
     for name, model in section["models"].items():
         assert name in section["models_verified"], name
-        supported = model["resolved"] + model["expected_zero_independently_supported"]
-        withheld = model["cancellation_limited"] + model["reference_unresolved"]
-        assert supported + withheld == model["rows"], name
-        # a model listed here is only listed because every row is carried
+        counted = model["resolved"] + model["expected_zero_independently_supported"]
+        withheld = (
+            model["empirically_zero_over_stencil"]
+            + model["cancellation_limited"]
+            + model["reference_unresolved"]
+        )
+        assert counted + withheld == model["rows"], name
         assert withheld == 0, f"{name} still has {withheld} rows without a usable reference"
+        assert model["rows_disagreeing_with_resolved_reference"] == 0, name
+        assert model["rows_supporting_verification"] == model["rows"], name
         assert model["max_relative_error_on_resolved_rows"] < 1.0e-4, name
-    # models that were studied and did NOT verify must never be counted as verified
+
+
+def test_sampled_equality_is_never_recorded_as_proof_of_an_exact_zero():
+    section = _matrix()["reference_quality"]
+    policy = section["zero_support_policy"]
+    assert set(policy["weak"]) == {
+        "empirical_stencil_invariance", "empirical_affine_probe",
+    }
+    assert "high_precision" in policy["strong"]
+    # the two must not overlap: a support cannot be both proof and sampling
+    assert not set(policy["strong"]) & set(policy["weak"])
+    assert "empirically_zero_over_stencil" not in section["supporting_classifications"]
+
+
+def test_models_that_did_not_verify_are_never_listed_as_verified():
+    section = _matrix()["reference_quality"]
     unverified = section["models_studied_not_verified"]
-    assert set(unverified) == {"UMAT_PCL", "UMAT_PCLK", "visco_imp"}
+    assert set(unverified) == {
+        "UMAT_PCL", "UMAT_PCLK", "visco_imp", "code_imp_legacy_umat",
+    }
     assert not set(section["models_verified"]) & set(unverified)
     assert not set(section["models"]) & set(unverified)
     for name, entry in unverified.items():
         assert entry["outcome"] != "verified", name
-        # a model that disagrees with a RESOLVED reference is a discrepancy, not a
-        # reference-quality gap, and must not be filed as one
         if entry.get("rows_disagreeing_with_resolved_reference"):
+            # a disagreement with a resolved reference is a discrepancy, never a
+            # reference-quality gap
             assert entry["outcome"] != "reference_quality_limited", name
-        # partial support must never be rounded up to full support
         if "rows_supporting_verification" in entry:
             assert entry["rows_supporting_verification"] < entry["rows"], name
     assert section["primal_consistency_gate"]
+    assert section["branch_admissibility"]
 
 
 def test_narrow_evidence_does_not_promote_broad_claims():

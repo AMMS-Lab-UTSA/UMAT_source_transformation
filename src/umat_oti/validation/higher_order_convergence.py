@@ -13,65 +13,69 @@ large enough to absorb that floor will absorb almost any wrong answer too, so
 This module replaces the single-step comparison with a step sweep and asks the
 only question that actually matters:
 
-    does the FD estimate sit on a plateau -- a run of consecutive step sizes
-    that agree with each other -- and is the OTI value inside it?
+    does the FD estimate sit on a plateau -- a run of consecutive *admissible*
+    step sizes that agree with each other -- and is the OTI value inside it?
 
-A plateau means truncation has decayed but cancellation has not yet taken over,
-so the FD value is a genuine estimate of the derivative rather than an artifact
-of one lucky step. Every row is classified by what the reference can actually
-support:
+Three things decide whether a row counts.
 
-``resolved``
-    At least ``PLATEAU_MIN_POINTS`` consecutive steps agree to within
-    ``RESOLVED_REL_SPREAD``. The plateau value is a real reference and the
-    OTI value is checked against it with the plateau's own spread as the
-    uncertainty.
+**Branch admissibility.** These are elasto-plastic models: the response is only
+piecewise smooth. A stencil whose nodes straddle a yield or unloading boundary
+is differencing across a kink, so its value is not an estimate of the nominal
+branch's derivative at all -- however stable it looks. Every step records the
+nominal branch, the branch at each stencil node, and whether they agree. Steps
+that cross a boundary are marked inadmissible with a reason and are excluded
+from plateau detection entirely.
 
-``expected_zero_independently_supported``
-    The derivative is zero, established *without* consulting the OTI result --
-    see `structural invariance`_ below and, where available, an independent
-    high-precision evaluation.
+**Plateau.** Among admissible steps, at least ``PLATEAU_MIN_POINTS``
+consecutive ones must agree to ``RESOLVED_REL_SPREAD``. A plateau means
+truncation has decayed but cancellation has not yet taken over, so the FD value
+is a genuine estimate rather than an artifact of one lucky step. The plateau's
+own spread then sets the tolerance the OTI value is judged against.
 
-``cancellation_limited``
-    The estimate is stable only to within ``CANCELLATION_REL_SPREAD``. The
-    reference constrains the magnitude but cannot verify the value to a useful
-    relative accuracy.
+**Zero support.** A derivative that is zero cannot be verified by a plateau --
+there is nothing to plateau onto -- so it needs a separate argument, and that
+argument must not come from the OTI result. Crucially it must also not come
+from *sampled equality alone*: bit-identical responses at finitely many stencil
+nodes show the response did not vary over the points that were tried, which is
+empirical local invariance, not proof of exact structural independence.
+Supports are therefore split.
 
-``reference_unresolved``
-    No usable plateau. The reference says nothing about this row.
+*Strong* (sufficient on their own):
 
-Only the first two count as verification support. ``cancellation_limited`` and
-``reference_unresolved`` rows are reported, never silently passed, and never
-promoted by being smaller than a generous absolute tolerance.
+``high_precision``
+    The reference re-evaluated in extended precision, where cancellation cannot
+    manufacture a spurious zero, resolves the value as zero.
+``analytic``
+    A symbolic or closed-form derivation that the derivative vanishes.
+``source_affine_branch`` / ``source_independent``
+    A stated, citable fact about the model source -- the active branch is affine
+    in the seeded directions, or the response component does not depend on them
+    at all. Because such a fact is a property *of one branch*, it is accepted
+    only when branch consistency has been verified at every stencil node of
+    every admissible step; otherwise the cited branch is not the branch that was
+    sampled.
 
-.. _structural invariance:
+*Weak* (never sufficient alone):
 
-**Independent zero support.** A zero derivative must not be justified by "OTI
-returned 0". Two independent supports are used here:
+``empirical_stencil_invariance``
+    The component was bit-identical across the stencil nodes that were sampled.
+``empirical_affine_probe``
+    Second and mixed differences sat at the arithmetic rounding floor at the
+    probed amplitudes.
 
-*Structural invariance* -- if the response component is bit-identical across
-every stencil node at every step, it does not depend on the perturbed strain
-components at all, so every derivative in those directions is exactly zero.
-This is a property of the model source, established by running it, and is
-available even for a double-precision compiled reference.
+A row whose zero rests only on weak support is classified
+``empirically_zero_over_stencil``. That is an honest description of what was
+observed and it does **not** count as verification evidence.
 
-*Exact local affineness* -- if the second difference
-``f(x+A) + f(x-A) - 2 f(x)`` and the mixed difference
-``f(x+A_i+A_j) - f(x+A_i) - f(x+A_j) + f(x)`` sit at the arithmetic's own
-rounding level at several amplitudes ``A`` spanning the stencil the plateau
-uses, the response is affine in those directions over that neighbourhood, so
-every derivative of order two and above vanishes there. This test is well
-conditioned exactly where finite differencing is not: it uses *large*
-amplitudes, so a real second derivative ``D`` would show up as ``D*A**2`` --
-at ``A ~ 1e-4`` and ``D ~ 1e7`` that is ``~1e-1``, thirteen orders of magnitude
-clear of a ``~1e-14`` rounding floor. There is no tuned tolerance in that gap.
-It is what rescues the elastic branch of a double-precision reference, where no
-higher-precision recomputation is available.
+Classifications, and whether they support a verification claim:
 
-*High-precision agreement* -- where the reference can be evaluated in extended
-precision (the controlled J2 model runs in ``mpmath``), the derivative is
-recomputed with far more digits and a far smaller step, where cancellation is
-negligible. A value that is zero there is zero.
+===========================================  =========
+``resolved`` (and agreeing with OTI)         supports
+``expected_zero_independently_supported``    supports
+``empirically_zero_over_stencil``            does not
+``cancellation_limited``                     does not
+``reference_unresolved``                     does not
+===========================================  =========
 
 **Scale-aware normalization.** Derivative magnitudes grow by roughly
 ``1 / strain_scale`` per order, so a threshold in raw units means something
@@ -87,14 +91,14 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Any, Callable, Sequence
+from typing import Any, Sequence
 
 # Step multipliers applied to each model's previously published step, spanning
 # two decades either side of it so both the truncation-dominated and the
 # cancellation-dominated regimes appear in the sweep.
 STEP_FACTORS: tuple[float, ...] = (16.0, 8.0, 4.0, 2.0, 1.0, 0.5, 0.25, 0.125, 0.0625)
 
-# A plateau needs at least this many consecutive steps agreeing.
+# A plateau needs at least this many consecutive admissible steps agreeing.
 PLATEAU_MIN_POINTS = 3
 # Relative spread across the plateau window for the reference to count as resolved.
 RESOLVED_REL_SPREAD = 1.0e-3
@@ -109,13 +113,27 @@ AGREEMENT_UNCERTAINTY_MULTIPLE = 4.0
 
 RESOLVED = "resolved"
 EXPECTED_ZERO = "expected_zero_independently_supported"
+EMPIRICALLY_ZERO = "empirically_zero_over_stencil"
 CANCELLATION_LIMITED = "cancellation_limited"
 UNRESOLVED = "reference_unresolved"
 
 #: Classifications whose reference is strong enough to support a verification claim.
 SUPPORTING_CLASSIFICATIONS = frozenset({RESOLVED, EXPECTED_ZERO})
 
-CLASSIFICATIONS = (RESOLVED, EXPECTED_ZERO, CANCELLATION_LIMITED, UNRESOLVED)
+CLASSIFICATIONS = (
+    RESOLVED, EXPECTED_ZERO, EMPIRICALLY_ZERO, CANCELLATION_LIMITED, UNRESOLVED,
+)
+
+#: Zero-support kinds that are sufficient on their own.
+STRONG_ZERO_SUPPORTS = frozenset({
+    "high_precision", "analytic", "source_affine_branch", "source_independent",
+})
+#: Zero-support kinds that describe sampling, not proof.
+WEAK_ZERO_SUPPORTS = frozenset({
+    "empirical_stencil_invariance", "empirical_affine_probe",
+})
+#: Source-level proofs are branch-local: they apply only where the branch held.
+BRANCH_DEPENDENT_SUPPORTS = frozenset({"source_affine_branch", "source_independent"})
 
 
 @dataclass(frozen=True)
@@ -148,19 +166,65 @@ class NormalizationScale:
         }
 
 
+@dataclass(frozen=True)
+class ZeroSupport:
+    """One argument that a derivative is zero, and how much weight it carries."""
+
+    kind: str
+    detail: str
+
+    @property
+    def strong(self) -> bool:
+        return self.kind in STRONG_ZERO_SUPPORTS
+
+    def as_dict(self) -> dict[str, Any]:
+        return {"kind": self.kind, "strong": self.strong, "detail": self.detail}
+
+
 @dataclass
 class SweepPoint:
-    """One finite-difference evaluation of one row at one step size."""
+    """One finite-difference evaluation of one row at one step size.
+
+    ``admissible`` is False when the stencil left the nominal constitutive
+    branch. Such a point differences across a kink and is excluded from plateau
+    detection; ``rejection_reason`` records why.
+    """
 
     step: float
     step_factor: float
     value: float
     invariant: bool = False
+    nominal_branch: str | None = None
+    node_branches: tuple[str, ...] = ()
+    branch_consistent: bool = True
+    #: Smallest distance to the branch surface over the stencil, when the model
+    #: exposes one. ``None`` means the model provides no such measure.
+    min_branch_margin: float | None = None
+    min_branch_margin_unavailable_reason: str | None = None
+    admissible: bool = True
+    rejection_reason: str | None = None
+
+    def as_dict(self, scale: NormalizationScale, order: int) -> dict[str, Any]:
+        return {
+            "step": self.step,
+            "step_factor": self.step_factor,
+            "value": self.value,
+            "normalized": scale.normalize(self.value, order),
+            "invariant_across_stencil": self.invariant,
+            "nominal_branch": self.nominal_branch,
+            "node_branches": list(self.node_branches),
+            "branch_consistent": self.branch_consistent,
+            "min_branch_margin": self.min_branch_margin,
+            "min_branch_margin_unavailable_reason":
+                self.min_branch_margin_unavailable_reason,
+            "admissible": self.admissible,
+            "rejection_reason": self.rejection_reason,
+        }
 
 
 @dataclass
 class Plateau:
-    """The most stable run of consecutive steps found for a row."""
+    """The most stable run of consecutive admissible steps found for a row."""
 
     value: float
     absolute_uncertainty: float
@@ -168,7 +232,6 @@ class Plateau:
     points: int
     step_low: float
     step_high: float
-    window_start: int = 0
     all_windows_rejected: bool = False
 
 
@@ -185,13 +248,20 @@ class RowInputs:
     recovery_factor: float
     oti_value: float
     sweep: list[SweepPoint]
-    structurally_invariant: bool
+    #: Empirical: component was bit-identical across the sampled stencil nodes.
+    structurally_invariant: bool = False
+    #: Empirical: second/mixed differences at the rounding floor over amplitudes.
     affine_in_directions: bool = False
     affine_amplitudes: tuple[float, ...] = ()
     affine_margin: float | None = None
+    #: Strong: independent extended-precision evaluation of the same derivative.
     high_precision_value: float | None = None
     high_precision_step: float | None = None
     high_precision_digits: int | None = None
+    #: Strong: a stated, citable source-level fact. Accepted only together with
+    #: verified branch consistency, because it is a property of one branch.
+    source_proof_kind: str | None = None
+    source_proof_detail: str | None = None
     extra: dict[str, Any] = field(default_factory=dict)
 
 
@@ -200,98 +270,156 @@ def direction_pattern(directions: Sequence[int]) -> str:
     return "repeated" if len(set(directions)) == 1 else "mixed"
 
 
-def find_plateau(sweep: Sequence[SweepPoint]) -> Plateau:
-    """Longest run of >= PLATEAU_MIN_POINTS steps agreeing to RESOLVED_REL_SPREAD.
+def admissible_points(sweep: Sequence[SweepPoint]) -> list[SweepPoint]:
+    """Steps whose whole stencil stayed on the nominal constitutive branch."""
+    return [point for point in sweep if point.admissible]
 
-    Falls back to the minimum-spread window of the minimum length so that a row
-    without a plateau still reports how unstable it actually is.
+
+def find_plateau(sweep: Sequence[SweepPoint]) -> Plateau | None:
+    """Longest run of >= PLATEAU_MIN_POINTS admissible steps agreeing to spec.
+
+    Only admissible steps count, and only *consecutive* ones: a run interrupted
+    by a branch-crossing step is not a plateau, because the excluded step gives
+    no reason to believe the two sides belong together.
+
+    Returns ``None`` when there are not enough consecutive admissible steps to
+    judge. Otherwise falls back to the minimum-spread window of the minimum
+    length so a row without a plateau still reports how unstable it is.
     """
-    values = [point.value for point in sweep]
-    n = len(values)
-    if n < PLATEAU_MIN_POINTS:
-        raise ValueError(f"need at least {PLATEAU_MIN_POINTS} sweep points, got {n}")
+    runs: list[list[SweepPoint]] = []
+    current: list[SweepPoint] = []
+    for point in sweep:
+        if point.admissible:
+            current.append(point)
+        else:
+            if current:
+                runs.append(current)
+            current = []
+    if current:
+        runs.append(current)
 
-    def window_stats(start: int, width: int) -> tuple[float, float, float]:
-        window = values[start : start + width]
-        low, high = min(window), max(window)
-        centre = sorted(window)[width // 2]
+    usable = [run for run in runs if len(run) >= PLATEAU_MIN_POINTS]
+    if not usable:
+        return None
+
+    def window_stats(values: Sequence[float]) -> tuple[float, float, float]:
+        low, high = min(values), max(values)
+        centre = sorted(values)[len(values) // 2]
         half_spread = (high - low) / 2.0
         denominator = max(abs(centre), 1.0e-300)
         return centre, half_spread, (high - low) / denominator
 
-    # Prefer the longest window that actually meets the resolved criterion.
-    for width in range(n, PLATEAU_MIN_POINTS - 1, -1):
-        for start in range(0, n - width + 1):
-            centre, half_spread, relative = window_stats(start, width)
-            if relative <= RESOLVED_REL_SPREAD:
-                return Plateau(
-                    value=centre,
-                    absolute_uncertainty=half_spread,
-                    relative_uncertainty=relative,
-                    points=width,
-                    step_low=min(sweep[start + width - 1].step, sweep[start].step),
-                    step_high=max(sweep[start + width - 1].step, sweep[start].step),
-                    window_start=start,
-                )
+    widest = max(len(run) for run in usable)
+    for width in range(widest, PLATEAU_MIN_POINTS - 1, -1):
+        for run in usable:
+            for start in range(0, len(run) - width + 1):
+                window = run[start : start + width]
+                centre, half_spread, relative = window_stats([p.value for p in window])
+                if relative <= RESOLVED_REL_SPREAD:
+                    steps = [p.step for p in window]
+                    return Plateau(
+                        value=centre,
+                        absolute_uncertainty=half_spread,
+                        relative_uncertainty=relative,
+                        points=width,
+                        step_low=min(steps),
+                        step_high=max(steps),
+                    )
 
-    # No resolved plateau: report the steadiest short window we did find.
-    best: tuple[float, int, float, float] | None = None
-    for start in range(0, n - PLATEAU_MIN_POINTS + 1):
-        centre, half_spread, relative = window_stats(start, PLATEAU_MIN_POINTS)
-        if best is None or relative < best[0]:
-            best = (relative, start, centre, half_spread)
+    best: tuple[float, float, float, list[SweepPoint]] | None = None
+    for run in usable:
+        for start in range(0, len(run) - PLATEAU_MIN_POINTS + 1):
+            window = run[start : start + PLATEAU_MIN_POINTS]
+            centre, half_spread, relative = window_stats([p.value for p in window])
+            if best is None or relative < best[0]:
+                best = (relative, centre, half_spread, window)
     assert best is not None
-    relative, start, centre, half_spread = best
+    relative, centre, half_spread, window = best
+    steps = [p.step for p in window]
     return Plateau(
         value=centre,
         absolute_uncertainty=half_spread,
         relative_uncertainty=relative,
         points=PLATEAU_MIN_POINTS,
-        step_low=min(sweep[start + PLATEAU_MIN_POINTS - 1].step, sweep[start].step),
-        step_high=max(sweep[start + PLATEAU_MIN_POINTS - 1].step, sweep[start].step),
-        window_start=start,
+        step_low=min(steps),
+        step_high=max(steps),
         all_windows_rejected=True,
     )
 
 
-def classify_row(row: RowInputs, scale: NormalizationScale) -> dict[str, Any]:
-    """Classify one row by what its independent reference can actually support.
+def collect_zero_supports(row: RowInputs, scale: NormalizationScale,
+                          branch_consistent: bool) -> list[ZeroSupport]:
+    """Every argument available that this derivative is exactly zero.
 
-    Returns a record carrying the raw OTI value, every swept FD value, the
-    plateau, the classification and its justification. ``relative_error`` is
-    populated only when the reference magnitude is resolved (requirement: do not
-    quote a relative error against a reference that is itself noise).
+    Never consults ``row.oti_value``: a zero must be established independently
+    of the result being checked.
     """
-    plateau = find_plateau(row.sweep)
-    normalized_plateau = abs(scale.normalize(plateau.value, row.order))
-    normalized_oti = abs(scale.normalize(row.oti_value, row.order))
+    supports: list[ZeroSupport] = []
 
-    zero_supports: list[str] = []
-    if row.structurally_invariant:
-        zero_supports.append(
-            "structural invariance: the response component is bit-identical at every "
-            "stencil node and every step, so it does not depend on the perturbed "
-            "strain components and all derivatives in these directions are exactly zero"
-        )
-    if row.affine_in_directions:
-        zero_supports.append(
-            "exact local affineness: second and mixed differences of the independent "
-            "reference stay at the arithmetic rounding floor (largest observed "
-            "residual %.3g of that floor) at amplitudes %s spanning the plateau "
-            "stencil, so the response is affine in these directions and every "
-            "derivative of order two or above vanishes"
-            % (row.affine_margin if row.affine_margin is not None else float("nan"),
-               ", ".join("%.3e" % a for a in row.affine_amplitudes))
-        )
     if row.high_precision_value is not None:
-        normalized_hp = abs(scale.normalize(row.high_precision_value, row.order))
-        if normalized_hp <= ZERO_NORMALIZED_THRESHOLD:
-            zero_supports.append(
-                "high-precision evaluation: recomputed at %d decimal digits with step "
-                "%.3e, where cancellation is negligible, giving normalized magnitude "
-                "%.3e" % (row.high_precision_digits or 0, row.high_precision_step or 0.0,
-                          normalized_hp)
-            )
+        normalized = abs(scale.normalize(row.high_precision_value, row.order))
+        if normalized <= ZERO_NORMALIZED_THRESHOLD:
+            supports.append(ZeroSupport(
+                "high_precision",
+                "recomputed at %d decimal digits with step %.3e, where cancellation "
+                "cannot manufacture a zero, giving normalized magnitude %.3e"
+                % (row.high_precision_digits or 0, row.high_precision_step or 0.0,
+                   normalized),
+            ))
+
+    if row.source_proof_kind:
+        if branch_consistent:
+            supports.append(ZeroSupport(
+                row.source_proof_kind,
+                (row.source_proof_detail or "")
+                + " Branch consistency was verified at every stencil node of every "
+                  "admissible step, so the cited branch is the branch that was sampled.",
+            ))
+        else:
+            supports.append(ZeroSupport(
+                "empirical_stencil_invariance",
+                "a source-level proof (%s) was offered but the stencil did not stay "
+                "on one branch, so the cited branch is not the branch that was "
+                "sampled and the proof does not apply here" % row.source_proof_kind,
+            ))
+
+    if row.structurally_invariant:
+        supports.append(ZeroSupport(
+            "empirical_stencil_invariance",
+            "the component was bit-identical at every sampled stencil node, which "
+            "shows only that it did not vary over the points tried -- empirical "
+            "local invariance, not a proof of exact independence",
+        ))
+
+    if row.affine_in_directions:
+        supports.append(ZeroSupport(
+            "empirical_affine_probe",
+            "second and mixed differences stayed at the arithmetic rounding floor "
+            "(largest residual %.3g of that floor) at amplitudes %s -- sampled "
+            "equality at finitely many amplitudes, not a proof"
+            % (row.affine_margin if row.affine_margin is not None else float("nan"),
+               ", ".join("%.3e" % a for a in row.affine_amplitudes)),
+        ))
+
+    return supports
+
+
+def classify_row(row: RowInputs, scale: NormalizationScale) -> dict[str, Any]:
+    """Classify one row by what its independent reference can actually support."""
+    usable = admissible_points(row.sweep)
+    inadmissible = [point for point in row.sweep if not point.admissible]
+    branch_consistent = bool(usable) and all(point.branch_consistent for point in usable)
+
+    supports = collect_zero_supports(row, scale, branch_consistent)
+    strong = [support for support in supports if support.strong]
+    weak = [support for support in supports if not support.strong]
+    normalized_oti = abs(scale.normalize(row.oti_value, row.order))
+    oti_is_at_zero = normalized_oti <= ZERO_NORMALIZED_THRESHOLD
+
+    plateau = find_plateau(row.sweep)
+    normalized_plateau = (
+        None if plateau is None else abs(scale.normalize(plateau.value, row.order))
+    )
 
     classification: str
     justification: str
@@ -301,33 +429,52 @@ def classify_row(row: RowInputs, scale: NormalizationScale) -> dict[str, Any]:
     reference_value: float | None = None
     agrees: bool | None = None
 
-    if zero_supports and normalized_oti <= ZERO_NORMALIZED_THRESHOLD:
-        classification = EXPECTED_ZERO
-        reference_value = 0.0
-        absolute_error = abs(row.oti_value)
-        justification = (
-            "Derivative is zero and independently supported without reference to the "
-            "OTI result. " + " Also: ".join(zero_supports)
-        )
-    elif zero_supports and normalized_oti > ZERO_NORMALIZED_THRESHOLD:
+    if (strong or weak) and not oti_is_at_zero:
         classification = UNRESOLVED
         reference_value = 0.0
         absolute_error = abs(row.oti_value)
         justification = (
-            "Independent support says this derivative is exactly zero, but OTI "
-            "returned normalized magnitude %.3e above the %.1e zero threshold. This "
-            "is a genuine disagreement, not a reference-quality problem."
+            "Independent evidence points to a zero derivative, but OTI returned "
+            "normalized magnitude %.3e above the %.1e zero threshold. This is a "
+            "genuine disagreement, not a reference-quality problem."
             % (normalized_oti, ZERO_NORMALIZED_THRESHOLD)
         )
-    elif normalized_plateau <= ZERO_NORMALIZED_THRESHOLD:
-        # The sweep collapses to zero but nothing independent supports that.
+    elif strong and oti_is_at_zero:
+        classification = EXPECTED_ZERO
+        reference_value = 0.0
+        absolute_error = abs(row.oti_value)
+        agrees = True
+        justification = (
+            "Derivative is zero on evidence independent of the OTI result: "
+            + "; ".join("%s -- %s" % (s.kind, s.detail) for s in strong)
+        )
+    elif weak and oti_is_at_zero:
+        classification = EMPIRICALLY_ZERO
+        reference_value = 0.0
+        absolute_error = abs(row.oti_value)
+        justification = (
+            "The reference was zero over every point sampled, but only by sampled "
+            "equality: " + "; ".join("%s -- %s" % (s.kind, s.detail) for s in weak)
+            + ". Finitely many equal samples do not prove exact structural "
+              "independence, so this row is reported, not counted as verification."
+        )
+    elif plateau is None:
+        reasons = sorted({p.rejection_reason for p in inadmissible if p.rejection_reason})
+        classification = UNRESOLVED
+        justification = (
+            "Fewer than %d consecutive admissible steps: %d of %d swept steps left "
+            "the nominal branch (%s), so no plateau can be formed on the branch "
+            "whose derivative is being verified."
+            % (PLATEAU_MIN_POINTS, len(inadmissible), len(row.sweep),
+               "; ".join(reasons) or "branch crossing")
+        )
+    elif normalized_plateau is not None and normalized_plateau <= ZERO_NORMALIZED_THRESHOLD:
         classification = UNRESOLVED
         reference_value = plateau.value
         justification = (
             "The finite-difference sweep is at the zero threshold (normalized %.3e) "
-            "but no independent structural or high-precision support establishes the "
-            "derivative as zero, so the reference cannot verify this row."
-            % normalized_plateau
+            "but nothing independent establishes the derivative as zero, so the "
+            "reference cannot verify this row." % normalized_plateau
         )
     elif plateau.relative_uncertainty <= RESOLVED_REL_SPREAD and not plateau.all_windows_rejected:
         classification = RESOLVED
@@ -340,21 +487,24 @@ def classify_row(row: RowInputs, scale: NormalizationScale) -> dict[str, Any]:
         )
         agrees = absolute_error <= agreement_tolerance
         justification = (
-            "%d consecutive steps from %.3e to %.3e agree to %.2e relative; the "
-            "plateau is a genuine independent estimate and its own spread sets the "
-            "agreement tolerance."
+            "%d consecutive admissible steps from %.3e to %.3e agree to %.2e "
+            "relative; the plateau is a genuine independent estimate and its own "
+            "spread sets the agreement tolerance.%s"
             % (plateau.points, plateau.step_low, plateau.step_high,
-               plateau.relative_uncertainty)
+               plateau.relative_uncertainty,
+               "" if not inadmissible else
+               " %d step(s) were excluded for leaving the nominal branch."
+               % len(inadmissible))
         )
     elif plateau.relative_uncertainty <= CANCELLATION_REL_SPREAD:
         classification = CANCELLATION_LIMITED
         reference_value = plateau.value
         absolute_error = abs(row.oti_value - plateau.value)
         justification = (
-            "The steadiest %d-step window still spreads by %.2e relative, above the "
-            "%.1e resolved threshold. Round-off cancellation dominates the order-%d "
-            "reference at every step tried, so it bounds the magnitude but cannot "
-            "verify the value."
+            "The steadiest %d-step admissible window still spreads by %.2e relative, "
+            "above the %.1e resolved threshold. Round-off cancellation dominates the "
+            "order-%d reference at every admissible step, so it bounds the magnitude "
+            "but cannot verify the value."
             % (plateau.points, plateau.relative_uncertainty, RESOLVED_REL_SPREAD,
                row.order)
         )
@@ -363,14 +513,12 @@ def classify_row(row: RowInputs, scale: NormalizationScale) -> dict[str, Any]:
         reference_value = plateau.value
         absolute_error = abs(row.oti_value - plateau.value)
         justification = (
-            "No window of %d consecutive steps agrees better than %.2e relative. The "
-            "finite-difference reference does not resolve this derivative at all."
-            % (PLATEAU_MIN_POINTS, plateau.relative_uncertainty)
+            "No window of %d consecutive admissible steps agrees better than %.2e "
+            "relative. The finite-difference reference does not resolve this "
+            "derivative at all." % (PLATEAU_MIN_POINTS, plateau.relative_uncertainty)
         )
 
-    if classification == EXPECTED_ZERO:
-        agrees = True
-    passed = classification in SUPPORTING_CLASSIFICATIONS and bool(agrees)
+    supports_verification = classification in SUPPORTING_CLASSIFICATIONS and bool(agrees)
 
     return {
         "increment": row.increment,
@@ -388,36 +536,44 @@ def classify_row(row: RowInputs, scale: NormalizationScale) -> dict[str, Any]:
         ),
         "reference_classification": classification,
         "reference_justification": justification,
-        "plateau_points": plateau.points,
-        "plateau_step_low": plateau.step_low,
-        "plateau_step_high": plateau.step_high,
-        "plateau_absolute_uncertainty": plateau.absolute_uncertainty,
-        "plateau_relative_uncertainty": plateau.relative_uncertainty,
+        "plateau_points": None if plateau is None else plateau.points,
+        "plateau_step_low": None if plateau is None else plateau.step_low,
+        "plateau_step_high": None if plateau is None else plateau.step_high,
+        "plateau_absolute_uncertainty": (
+            None if plateau is None else plateau.absolute_uncertainty
+        ),
+        "plateau_relative_uncertainty": (
+            None if plateau is None else plateau.relative_uncertainty
+        ),
+        "steps_swept": len(row.sweep),
+        "steps_admissible": len(usable),
+        "steps_rejected_for_branch_crossing": len(inadmissible),
+        "branch_consistent_over_admissible_steps": branch_consistent,
+        "zero_supports": [support.as_dict() for support in supports],
+        "zero_support_strength": "strong" if strong else ("weak" if weak else "none"),
         "structurally_invariant": row.structurally_invariant,
         "affine_in_directions": row.affine_in_directions,
         "affine_residual_over_rounding_floor": row.affine_margin,
         "high_precision_value": row.high_precision_value,
+        "source_proof_kind": row.source_proof_kind,
         "absolute_error": absolute_error,
         "relative_error": relative_error,
         "agreement_tolerance": agreement_tolerance,
         "agrees_with_reference": agrees,
-        "supports_verification": passed,
-        "sweep": [
-            {
-                "step": point.step,
-                "step_factor": point.step_factor,
-                "value": point.value,
-                "normalized": scale.normalize(point.value, row.order),
-                "invariant_across_stencil": point.invariant,
-            }
-            for point in row.sweep
-        ],
+        "supports_verification": supports_verification,
+        "sweep": [point.as_dict(scale, row.order) for point in row.sweep],
         **row.extra,
     }
 
 
 def summarize(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
-    """Aggregate classified rows into the counts a claim matrix can consume."""
+    """Aggregate classified rows into the counts a claim matrix can consume.
+
+    ``verified`` is deliberately strict: every row must carry usable supporting
+    evidence *and* agree. Any row that is cancellation-limited, unresolved,
+    empirically-zero-only, or that disagrees with a reference which did resolve
+    it, blocks the whole study.
+    """
     counts = {name: 0 for name in CLASSIFICATIONS}
     for row in rows:
         counts[row["reference_classification"]] += 1
@@ -432,23 +588,44 @@ def summarize(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
         row["relative_error"] for row in rows
         if row["reference_classification"] == RESOLVED and row["relative_error"] is not None
     ]
+    without_usable_reference = (
+        counts[CANCELLATION_LIMITED] + counts[UNRESOLVED] + counts[EMPIRICALLY_ZERO]
+    )
+    branch_rejected = sum(
+        int(row.get("steps_rejected_for_branch_crossing") or 0) for row in rows
+    )
 
     by_order: dict[int, dict[str, int]] = {}
     for row in rows:
         bucket = by_order.setdefault(row["order"], {name: 0 for name in CLASSIFICATIONS})
         bucket[row["reference_classification"]] += 1
 
+    verified = (
+        bool(rows)
+        and len(supporting) == len(rows)
+        and not disagreeing
+        and without_usable_reference == 0
+    )
+
     return {
         "rows": len(rows),
         "classification_counts": counts,
         "rows_supporting_verification": len(supporting),
         "rows_with_reference_but_disagreeing": len(disagreeing),
-        "rows_without_usable_reference": counts[CANCELLATION_LIMITED] + counts[UNRESOLVED],
+        "rows_without_usable_reference": without_usable_reference,
+        "rows_empirically_zero_only": counts[EMPIRICALLY_ZERO],
+        "steps_rejected_for_branch_crossing": branch_rejected,
         "max_relative_error_on_resolved_rows": max(resolved_rel, default=None),
         "classification_counts_by_order": {
             str(order): value for order, value in sorted(by_order.items())
         },
-        "verified": bool(rows) and not disagreeing and counts[UNRESOLVED] == 0,
+        "verification_condition": (
+            "every row supports verification (resolved and agreeing, or zero with "
+            "strong independent support); no row is cancellation-limited, "
+            "unresolved, or empirically-zero-only; no row disagrees with a "
+            "reference that resolved it"
+        ),
+        "verified": verified,
     }
 
 

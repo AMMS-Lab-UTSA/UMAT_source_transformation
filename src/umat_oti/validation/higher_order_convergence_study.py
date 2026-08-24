@@ -23,6 +23,7 @@ import math
 import subprocess
 import sys
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Sequence
 
@@ -81,11 +82,38 @@ CODE_IMP_SCALE = hoc.NormalizationScale(
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
+def _models_local_tolerance() -> dict[str, float | None]:
+    from umat_oti.validation import actual_umat_higher_order_generic as generic
+    return {key: spec.local_solver_tolerance for key, spec in generic.MODELS.items()}
+
+
+class _LazyToleranceMap(dict):
+    def get(self, key, default=None):  # type: ignore[override]
+        return _models_local_tolerance().get(key, default)
+
+
+MODELS_LOCAL_TOLERANCE = _LazyToleranceMap()
+
+
 # --------------------------------------------------------------------------- #
 # Shared sweep machinery
 # --------------------------------------------------------------------------- #
+@dataclass
+class Evaluation:
+    """One evaluation of the reference model at one perturbed strain point.
+
+    Carries the constitutive branch that was active, so the sweep can tell
+    whether a stencil stayed on the branch whose derivative is being verified.
+    """
+
+    values: tuple
+    branch: str
+    margin: float | None = None
+    margin_unavailable_reason: str | None = None
+
+
 def _sweep_one_direction_set(
-    evaluate: Callable[[Sequence[Any]], Sequence[Any]],
+    evaluate: Callable[[Sequence[Any]], Evaluation],
     base_increment: Sequence[float],
     directions: tuple[int, ...],
     step: float,
@@ -93,12 +121,9 @@ def _sweep_one_direction_set(
     *,
     weight_digits: int = 60,
     extended: bool = False,
-) -> tuple[tuple[float, ...], tuple[bool, ...]]:
-    """One tensor-product FD estimate plus per-component stencil invariance.
-
-    ``invariant[c]`` is True when component ``c`` took the same value at every
-    stencil node, which means the component does not depend on the perturbed
-    strain components at all.
+) -> tuple[tuple[float, ...], tuple[bool, ...], tuple[str, ...], float | None, str | None]:
+    """One tensor-product FD estimate, with per-component stencil invariance and
+    the constitutive branch observed at every stencil node.
 
     With ``extended=True`` the stencil nodes, weights and accumulation all stay
     in ``mpmath`` at the ambient working precision; only the final value is
@@ -126,23 +151,32 @@ def _sweep_one_direction_set(
 
     terms: list[list[Any]] = [[] for _ in range(n_components)]
     observed: list[list[Any]] = [[] for _ in range(n_components)]
+    branches: list[str] = []
+    margins: list[float] = []
+    margin_reason: str | None = None
     for node_indices in itertools.product(range(len(STENCIL_NODES)), repeat=len(weighted)):
         perturbed = list(base)
         coefficient = one
         for (direction, weights), node_index in zip(weighted, node_indices):
             perturbed[direction - 1] += node_values[node_index] * step_value
             coefficient = coefficient * weights[node_index]
-        response = evaluate(perturbed)
+        evaluation = evaluate(perturbed)
+        branches.append(evaluation.branch)
+        if evaluation.margin is None:
+            margin_reason = evaluation.margin_unavailable_reason
+        else:
+            margins.append(evaluation.margin)
         for component in range(n_components):
-            terms[component].append(coefficient * response[component])
-            observed[component].append(response[component])
+            terms[component].append(coefficient * evaluation.values[component])
+            observed[component].append(evaluation.values[component])
 
     summation = mp.fsum if extended else math.fsum
     values = tuple(float(summation(column)) for column in terms)
     invariant = tuple(
         all(sample == column[0] for sample in column) for column in observed
     )
-    return values, invariant
+    min_margin = min(margins) if margins else None
+    return values, invariant, tuple(branches), min_margin, margin_reason
 
 
 def _affine_probe(
@@ -186,7 +220,7 @@ def _affine_probe(
             point[direction - 1] += delta
         return evaluate(point)
 
-    centre = at({})
+    centre = at({}).values
     affine = [True] * n_components
     margin = [0.0] * n_components
     magnitude = [abs(float(value)) for value in centre]
@@ -206,7 +240,8 @@ def _affine_probe(
         step = cast(amplitude)
         singles: dict[int, tuple[Sequence[Any], Sequence[Any]]] = {}
         for direction in involved:
-            plus, minus = at({direction: step}), at({direction: -step})
+            plus = at({direction: step}).values
+            minus = at({direction: -step}).values
             singles[direction] = (plus, minus)
             for component in range(n_components):
                 check(component,
@@ -214,7 +249,7 @@ def _affine_probe(
                       (plus[component], minus[component], centre[component]))
         for first_index, first in enumerate(involved):
             for second in involved[first_index + 1:]:
-                both = at({first: step, second: step})
+                both = at({first: step, second: step}).values
                 for component in range(n_components):
                     residual = (both[component] - singles[first][0][component]
                                 - singles[second][0][component] + centre[component])
@@ -227,7 +262,7 @@ def _affine_probe(
 
 
 def _collect_sweep(
-    evaluate_for_increment: Callable[[int], Callable[[Sequence[float]], Sequence[float]]],
+    evaluate_for_increment: Callable[[int], Callable[[Sequence[Any]], Evaluation]],
     increments: Sequence[Sequence[float]],
     base_step: float,
     n_components: int,
@@ -235,11 +270,14 @@ def _collect_sweep(
     extended: bool = False,
 ) -> tuple[dict[tuple[int, tuple[int, ...]], list[Any]],
            dict[tuple[int, tuple[int, ...]], tuple[bool, ...]],
+           dict[tuple[int, tuple[int, ...]], tuple[float, ...]],
            tuple[float, ...]]:
     """FD values for every (increment, direction set) at every swept step.
 
-    Also returns, per row group, whether the reference is exactly affine in the
-    involved directions over amplitudes spanning the plateau stencil.
+    Each step also records the branch observed at every stencil node and whether
+    the whole stencil stayed on the nominal branch. A step that crossed a yield
+    or unloading boundary is marked inadmissible: it differences across a kink,
+    so it is not an estimate of the nominal branch's derivative at all.
     """
     collected: dict[tuple[int, tuple[int, ...]], list[Any]] = {}
     affine: dict[tuple[int, tuple[int, ...]], tuple[bool, ...]] = {}
@@ -252,15 +290,35 @@ def _collect_sweep(
     for increment_index in range(len(increments)):
         evaluate = evaluate_for_increment(increment_index)
         base_increment = increments[increment_index]
+        nominal = evaluate(base_increment)
         for directions in SELECTED_DIRECTIONS:
             entries = []
             for factor, step in steps:
-                values, invariant = _sweep_one_direction_set(
+                values, invariant, branches, margin, margin_reason = _sweep_one_direction_set(
                     evaluate, base_increment, directions, step, n_components,
                     weight_digits=mp.mp.dps if extended else 60,
                     extended=extended,
                 )
-                entries.append((factor, step, values, invariant))
+                off = sorted({b for b in branches if b != nominal.branch})
+                consistent = not off
+                rejection = None if consistent else (
+                    "stencil left the nominal '%s' branch (nodes reached %s), so the "
+                    "difference spans a non-smooth branch boundary"
+                    % (nominal.branch, ", ".join("'%s'" % b for b in off))
+                )
+                entries.append({
+                    "factor": factor,
+                    "step": step,
+                    "values": values,
+                    "invariant": invariant,
+                    "nominal_branch": nominal.branch,
+                    "node_branches": branches,
+                    "branch_consistent": consistent,
+                    "min_branch_margin": margin,
+                    "min_branch_margin_unavailable_reason": margin_reason,
+                    "admissible": consistent,
+                    "rejection_reason": rejection,
+                })
             collected[(increment_index + 1, directions)] = entries
             verdict, ratios = _affine_probe(
                 evaluate, base_increment, directions, amplitudes, n_components,
@@ -268,9 +326,11 @@ def _collect_sweep(
             )
             affine[(increment_index + 1, directions)] = verdict
             affine_margin[(increment_index + 1, directions)] = ratios
+            rejected = sum(1 for e in entries if not e["admissible"])
             progress(
-                "    increment %d directions %s: %d steps"
-                % (increment_index + 1, "|".join(map(str, directions)), len(steps))
+                "    increment %d directions %s: %d steps, %d admissible"
+                % (increment_index + 1, "|".join(map(str, directions)),
+                   len(steps), len(steps) - rejected)
             )
     return collected, affine, affine_margin, amplitudes
 
@@ -287,34 +347,48 @@ def _build_rows(
     affine: dict[tuple[int, tuple[int, ...]], tuple[bool, ...]],
     affine_margin: dict[tuple[int, tuple[int, ...]], tuple[float, ...]],
     affine_amplitudes: tuple[float, ...],
+    source_proof: Callable[[str, int, tuple[int, ...]], tuple[str, str] | None] | None = None,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for (increment, directions), entries in sorted(collected.items()):
+        branch = branch_of(increment)
         for component in range(1, n_components + 1):
             sweep = [
                 hoc.SweepPoint(
-                    step=step,
-                    step_factor=factor,
-                    value=values[component - 1],
-                    invariant=invariant[component - 1],
+                    step=entry["step"],
+                    step_factor=entry["factor"],
+                    value=entry["values"][component - 1],
+                    invariant=entry["invariant"][component - 1],
+                    nominal_branch=entry["nominal_branch"],
+                    node_branches=entry["node_branches"],
+                    branch_consistent=entry["branch_consistent"],
+                    min_branch_margin=entry["min_branch_margin"],
+                    min_branch_margin_unavailable_reason=(
+                        entry["min_branch_margin_unavailable_reason"]
+                    ),
+                    admissible=entry["admissible"],
+                    rejection_reason=entry["rejection_reason"],
                 )
-                for factor, step, values, invariant in entries
+                for entry in entries
             ]
             structurally_invariant = all(point.invariant for point in sweep)
             hp_value = None
             if high_precision is not None:
                 hp_value = high_precision[(increment, directions)][component - 1]
+            proof = source_proof(branch, component, directions) if source_proof else None
             rows.append(
                 hoc.classify_row(
                     hoc.RowInputs(
                         increment=increment,
-                        branch=branch_of(increment),
+                        branch=branch,
                         stress_component=component,
                         order=len(directions),
                         directions=directions,
                         direction_pattern=hoc.direction_pattern(directions),
                         recovery_factor=deriv_factor(directions),
-                        oti_value=oti_values[(increment, len(directions), directions, component)],
+                        oti_value=oti_values[
+                            (increment, len(directions), directions, component)
+                        ],
                         sweep=sweep,
                         structurally_invariant=structurally_invariant,
                         affine_in_directions=affine[(increment, directions)][component - 1],
@@ -323,6 +397,8 @@ def _build_rows(
                         high_precision_value=hp_value,
                         high_precision_step=high_precision_step,
                         high_precision_digits=high_precision_digits,
+                        source_proof_kind=proof[0] if proof else None,
+                        source_proof_detail=proof[1] if proof else None,
                     ),
                     scale,
                 )
@@ -345,11 +421,20 @@ def _j2_state_before(increment_index: int) -> tuple[tuple[Any, ...], Any]:
 def _j2_evaluator(increment_index: int) -> Callable[[Sequence[float]], Sequence[float]]:
     stress, eqplas = _j2_state_before(increment_index)
 
-    def evaluate(perturbed: Sequence[Any]) -> Sequence[Any]:
-        # Returned as mpmath numbers: narrowing here would defeat the whole
+    def evaluate(perturbed: Sequence[Any]) -> Evaluation:
+        # Values stay as mpmath numbers: narrowing here would defeat the whole
         # point of an extended-precision reference.
-        updated, _, _, _ = _integrate_increment_mp(stress, eqplas, perturbed)
-        return updated
+        updated, _, yielded, _ = _integrate_increment_mp(stress, eqplas, perturbed)
+        return Evaluation(
+            values=updated,
+            branch="plastic" if yielded else "elastic",
+            margin=None,
+            margin_unavailable_reason=(
+                "the J2 reference returns the branch flag and plastic multiplier but "
+                "not the signed yield-function value, so no distance to the yield "
+                "surface is available"
+            ),
+        )
 
     return evaluate
 
@@ -374,7 +459,7 @@ def _j2_high_precision(progress: Callable[[str], None]) -> tuple[dict[Any, tuple
         for increment_index in range(len(J2_INCREMENTS)):
             evaluate = _j2_evaluator(increment_index)
             for directions in SELECTED_DIRECTIONS:
-                values, _ = _sweep_one_direction_set(
+                values, _, _, _, _ = _sweep_one_direction_set(
                     evaluate,
                     J2_INCREMENTS[increment_index],
                     directions,
@@ -462,56 +547,14 @@ def _code_imp_evaluator(executable: Path, increment_index: int):
 
 
 def run_code_imp_convergence(output_dir: Path, progress: Callable[[str], None]) -> dict[str, Any]:
-    output_dir = output_dir.resolve()
-    output_dir.mkdir(parents=True, exist_ok=True)
+    """Legacy code_imp study, routed through the generic model path.
 
-    progress("  regenerating OTI output and original-UMAT reference for code_imp")
-    # The compiled reference executable has to outlive the transform step, so the
-    # scratch tree is kept for the whole sweep and removed on the way out --
-    # build products must never be left behind, let alone committed.
-    with tempfile.TemporaryDirectory(prefix="code_imp_convergence_") as scratch_name:
-        scratch = Path(scratch_name)
-        evidence = run_code_imp_higher_order_evidence(
-            REPO_ROOT / "examples" / "code_imp_actual_higher_order.json", scratch / "evidence"
-        )
-        oti_values = _read_oti_from_csv(Path(evidence["comparison"]["csv"]))
-        executable = scratch / "evidence" / "code_imp_reference_driver"
-        if not executable.exists():
-            raise RuntimeError(f"independent original-UMAT executable missing: {executable}")
-
-        branch_history = {row["increment"]: row["branch"] for row in evidence["branch_history"]}
-        progress("  sweeping %d finite-difference steps (compiled double-precision reference)"
-                 % len(hoc.STEP_FACTORS))
-        collected, affine, affine_margin, affine_amplitudes = _collect_sweep(
-            lambda index: _code_imp_evaluator(executable, index),
-            CODE_IMP_INCREMENTS, CODE_IMP_BASE_STEP, 4, progress,
-        )
-
-        rows = _build_rows(
-            collected, oti_values, lambda i: branch_history[i], 4, CODE_IMP_SCALE,
-            None, None, None, affine, affine_margin, affine_amplitudes,
-        )
-    return _write_outputs(
-        output_dir=output_dir,
-        model="code_imp_legacy_umat",
-        rows=rows,
-        scale=CODE_IMP_SCALE,
-        base_step=CODE_IMP_BASE_STEP,
-        reference_method=(
-            "independently compiled original code_imp UMAT replayed for each "
-            "tensor-product centred finite-difference stencil node"
-        ),
-        reference_precision="IEEE double precision (compiled Fortran, gfortran)",
-        zero_support=(
-            "structural stencil invariance and exact local affineness (bitwise-zero "
-            "second and mixed differences at amplitudes "
-            + ", ".join("%.3e" % a for a in affine_amplitudes)
-            + "); the reference is a double-precision executable, so no "
-            "higher-precision recomputation is available for this model"
-        ),
-        source_path=evidence["source"]["path"],
-        source_sha256=evidence["source"]["sha256"],
-    )
+    The generic path is what carries branch instrumentation and declared
+    source-level zero proofs, both of which code_imp needs: its double-precision
+    compiled reference admits no higher-precision recomputation, so sampled
+    equality alone could never establish its zeros.
+    """
+    return run_generic_convergence("code_imp", output_dir, progress)
 
 
 # --------------------------------------------------------------------------- #
@@ -557,6 +600,7 @@ def run_generic_convergence(model_key: str, output_dir: Path,
         rows = _build_rows(
             collected, artifacts["oti_values"], lambda i: branch_of[i], spec.ntens, scale,
             None, None, None, affine, affine_margin, affine_amplitudes,
+            source_proof=spec.source_proof_for,
         )
         hashes = dict(artifacts["hashes"])
         primal_check = artifacts["primal_check"]
@@ -584,7 +628,29 @@ def run_generic_convergence(model_key: str, output_dir: Path,
         source_path=manifest_source,
         source_sha256=hashes["original_source"],
     )
+    dataset["source_zero_proofs"] = [
+        {
+            "kind": proof.kind,
+            "branches": list(proof.branches) or "all",
+            "components": list(proof.components) or "all",
+            "seed_directions": list(proof.seed_directions) or "any",
+            "detail": proof.detail,
+        }
+        for proof in spec.source_zero_proofs
+    ]
+    dataset["branch_margin"] = {
+        "statev_index": spec.branch_margin_statev_index,
+        "meaning": spec.branch_margin_meaning or None,
+        "unavailable_reason": (
+            None if spec.branch_margin_statev_index is not None
+            else f"{spec.key} stores no signed yield-function value in STATEV"
+        ),
+    }
     dataset["artifact_hashes"] = hashes
+    solver_tolerance = MODELS_LOCAL_TOLERANCE.get(spec.key)
+    within_solver = all(
+        entry.get("within_model_solver_tolerance") is not False for entry in primal_check
+    )
     dataset["primal_consistency"] = {
         "policy": (
             "The transformed build must reproduce the original build's stress along "
@@ -594,6 +660,28 @@ def run_generic_convergence(model_key: str, output_dir: Path,
         ),
         "relative_tolerance": 1.0e-9,
         "agrees": primal_agrees,
+        "model_solver_tolerance": solver_tolerance,
+        "model_solver_tolerance_citation": spec.local_solver_tolerance_citation or None,
+        "divergence_within_model_solver_tolerance": (
+            None if solver_tolerance is None else within_solver
+        ),
+        "divergence_over_model_solver_tolerance": max(
+            [e.get("divergence_over_model_solver_tolerance") or 0.0 for e in primal_check]
+        ) or None,
+        "interpretation": (
+            "primal responses agree" if primal_agrees else (
+                "the transformed and original builds stop at different points, by an "
+                "amount of the same order as the model's own local Newton tolerance. "
+                "The two builds are not solving to the same state, which bounds what "
+                "any verification of this model can resolve. That is a property of "
+                "the model: it is not evidence that the transformation is wrong, and "
+                "it is not evidence that it is right"
+                if solver_tolerance is not None and within_solver else
+                "the transformed build's primal stress differs by more than the "
+                "model's own solver tolerance can explain, which points to a "
+                "transformation defect rather than a convergence artefact"
+            )
+        ),
         "per_increment": primal_check,
     }
     if not primal_agrees:
@@ -635,7 +723,9 @@ _ROW_COLUMNS = (
     "reference_value", "reference_normalized", "reference_classification",
     "plateau_points", "plateau_step_low", "plateau_step_high",
     "plateau_absolute_uncertainty", "plateau_relative_uncertainty",
-    "structurally_invariant", "affine_in_directions",
+    "steps_swept", "steps_admissible", "steps_rejected_for_branch_crossing",
+    "branch_consistent_over_admissible_steps", "zero_support_strength",
+    "source_proof_kind", "structurally_invariant", "affine_in_directions",
     "affine_residual_over_rounding_floor", "high_precision_value",
     "absolute_error",
     "relative_error", "agreement_tolerance", "agrees_with_reference",
@@ -661,7 +751,9 @@ def _write_outputs(*, output_dir: Path, model: str, rows: list[dict[str, Any]],
             "increment", "branch", "stress_component", "order", "directions",
             "direction_pattern", "step_factor", "step", "fd_value",
             "fd_value_normalized", "invariant_across_stencil", "oti_derivative",
-            "reference_classification",
+            "reference_classification", "nominal_branch", "node_branches",
+            "branch_consistent", "min_branch_margin",
+            "min_branch_margin_unavailable_reason", "admissible", "rejection_reason",
         ])
         for row in rows:
             for point in row["sweep"]:
@@ -671,6 +763,11 @@ def _write_outputs(*, output_dir: Path, model: str, rows: list[dict[str, Any]],
                     point["step_factor"], point["step"], point["value"],
                     point["normalized"], point["invariant_across_stencil"],
                     row["oti_derivative"], row["reference_classification"],
+                    point["nominal_branch"],
+                    "|".join(sorted(set(point["node_branches"]))),
+                    point["branch_consistent"], point["min_branch_margin"],
+                    point["min_branch_margin_unavailable_reason"],
+                    point["admissible"], point["rejection_reason"],
                 ])
 
     summary = hoc.summarize(rows)
