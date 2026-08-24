@@ -3,14 +3,14 @@
     "generated_module": "e598124363fd6b2aae47fd5b7db48e07fb569b4bf0ce256ba865614fac374d6c",
     "original_source": "6aa1b393f13b99d8f8680684f7b998e4cc566ffcd8bedad58469bfc3690d9050",
     "oti_higher_order_output": "1c8757e6c29ae3e05d6eeed051c2231eea1bc324251bbdf2459503df78da8e71",
-    "reference_driver": "9987071d42b4150b89b464c015fc96d158f3856dc3a59da3e5dae2e85617b0b3",
+    "reference_driver": "ea1c3049bfcc2fcc95f427a22becba038bdc46925961b97fe4c97cd0eb82dc0b",
     "transformed_driver": "e8bb3ccefeebebec9a25e2ca60b3580bb67588a8bf20f5c4acd6b4633c8d7f7d",
     "transformed_source": "b158c9abb9c9ebfae9e22fb2b51f54972bce25d1ed129dce5d5ee65e926605c5"
   },
   "artifact_sha256": {
-    "convergence_evidence.json": "d569599d1f1fd6e84af97ad1039cf20d8ea6aef66735fb1d74534314f467bbdb",
-    "convergence_rows.csv": "0cc9d92ac5157ce486d802eea0663c2f105d537a223d31d0369f66c8f5669b38",
-    "convergence_sweep.csv": "5a38f4b012a85c241b6a0e4452ace75a9a29d118865dc9f8b42df4a16e165699"
+    "convergence_evidence.json": "b1407f6ac14da62b9d9c5ccde6fe69c3016e08f661abf4820779ccc63ad48ebf",
+    "convergence_rows.csv": "292042571928e0b28001b9bbabba21ce4a6f9df690978201e3217f1c6da29d85",
+    "convergence_sweep.csv": "b471d5e61f605d3187cadfe9a71942a2f3c09b0cedb80c04f7b39d5d2ce3afab"
   },
   "artifacts": {
     "rows_csv": "paper_results/higher_order_convergence/UMAT_PCLK/convergence_rows.csv",
@@ -126,6 +126,11 @@
       ]
     }
   ],
+  "branch_margin": {
+    "meaning": null,
+    "statev_index": null,
+    "unavailable_reason": "UMAT_PCLK stores no signed yield-function value in STATEV"
+  },
   "classification_policy": {
     "agreement_relative_floor": 1e-06,
     "agreement_uncertainty_multiple": 4.0,
@@ -133,6 +138,7 @@
     "classifications": [
       "resolved",
       "expected_zero_independently_supported",
+      "empirically_zero_over_stencil",
       "cancellation_limited",
       "reference_unresolved"
     ],
@@ -218,13 +224,20 @@
   },
   "primal_consistency": {
     "agrees": false,
+    "divergence_over_model_solver_tolerance": 5911645.132433439,
+    "divergence_within_model_solver_tolerance": false,
+    "interpretation": "the transformed build's primal stress differs by more than the model's own solver tolerance can explain, which points to a transformation defect rather than a convergence artefact",
+    "model_solver_tolerance": 1e-07,
+    "model_solver_tolerance_citation": "UMAT_PCLK.for line 62: TOLER=1.0D-7, tested as ABS(FGAM/FJAC).LT.TOLER at line 172",
     "per_increment": [
       {
         "agrees": true,
         "branch": "elastic",
+        "divergence_over_model_solver_tolerance": 0.0,
         "increment": 1,
         "max_absolute_difference": 0.0,
         "max_relative_difference": 0.0,
+        "model_solver_tolerance": 1e-07,
         "original_stress": [
           173.07675,
           -0.0004038461538300453,
@@ -236,14 +249,17 @@
           -0.0004038461538300453,
           51.92290384615385,
           0.0
-        ]
+        ],
+        "within_model_solver_tolerance": true
       },
       {
         "agrees": true,
         "branch": "inelastic",
+        "divergence_over_model_solver_tolerance": 8.881784197001252e-09,
         "increment": 2,
         "max_absolute_difference": 8.881784197001252e-16,
         "max_relative_difference": 3.2301175722790324e-18,
+        "model_solver_tolerance": 1e-07,
         "original_stress": [
           274.9678300636793,
           -1.2206365677007227,
@@ -255,14 +271,17 @@
           -1.2206365677007227,
           94.70305650402149,
           6.008825785321929
-        ]
+        ],
+        "within_model_solver_tolerance": true
       },
       {
         "agrees": true,
         "branch": "inelastic",
+        "divergence_over_model_solver_tolerance": 5.586642259913788e-06,
         "increment": 3,
         "max_absolute_difference": 5.586642259913788e-13,
         "max_relative_difference": 1.957076565130907e-15,
+        "model_solver_tolerance": 1e-07,
         "original_stress": [
           285.4585435976595,
           -6.356457372643263,
@@ -274,14 +293,17 @@
           -6.356457372643206,
           118.01316377498372,
           5.937453553265766
-        ]
+        ],
+        "within_model_solver_tolerance": true
       },
       {
         "agrees": false,
         "branch": "inelastic",
+        "divergence_over_model_solver_tolerance": 5911645.132433439,
         "increment": 4,
         "max_absolute_difference": 0.5911645132433438,
         "max_relative_difference": 0.002050593402286182,
+        "model_solver_tolerance": 1e-07,
         "original_stress": [
           288.2894837095748,
           -8.072286685316897,
@@ -293,7 +315,8 @@
           -8.096971014832718,
           123.79389475998359,
           5.8649364327542095
-        ]
+        ],
+        "within_model_solver_tolerance": false
       }
     ],
     "policy": "The transformed build must reproduce the original build's stress along the same path before any of its derivatives are believed. Where the primal responses differ, a derivative disagreement is not evidence about differentiation -- the two builds are not the same model there.",
@@ -341,9 +364,21 @@
     "path": "UMATs/UMATs/ICP/UMAT_PCLK.for",
     "sha256": "6aa1b393f13b99d8f8680684f7b998e4cc566ffcd8bedad58469bfc3690d9050"
   },
+  "source_zero_proofs": [
+    {
+      "branches": [
+        "elastic"
+      ],
+      "components": "all",
+      "detail": "In the elastic branch the update is STRESS = STRESS + DDSDDE . DSTRAN with a\nDDSDDE assembled only from the constant moduli, before any yield test. The\nresponse is therefore exactly affine in DSTRAN on this branch, so every\nderivative of order two and above vanishes identically -- not merely at the\npoints that were sampled. UMAT_PCLK.for lines 92-112: DDSDDE is built from EMOD=PROPS(1) and ENU=PROPS(2), then STRESS(K2)=STRESS(K2)+DDSDDE(K2,K1)*DSTRAN(K1) is applied before SMISES and the yield test.",
+      "kind": "source_affine_branch",
+      "seed_directions": "any"
+    }
+  ],
   "summary": {
     "classification_counts": {
       "cancellation_limited": 0,
+      "empirically_zero_over_stencil": 0,
       "expected_zero_independently_supported": 24,
       "reference_unresolved": 0,
       "resolved": 72
@@ -351,18 +386,21 @@
     "classification_counts_by_order": {
       "2": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 8,
         "reference_unresolved": 0,
         "resolved": 24
       },
       "3": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 8,
         "reference_unresolved": 0,
         "resolved": 24
       },
       "4": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 8,
         "reference_unresolved": 0,
         "resolved": 24
@@ -371,21 +409,26 @@
     "max_relative_error_on_resolved_rows": 0.34356799446358743,
     "primal_divergence": true,
     "rows": 96,
+    "rows_empirically_zero_only": 0,
     "rows_supporting_verification": 72,
     "rows_with_reference_but_disagreeing": 24,
     "rows_without_usable_reference": 0,
+    "steps_rejected_for_branch_crossing": 252,
+    "verification_condition": "every row supports verification (resolved and agreeing, or zero with strong independent support); no row is cancellation-limited, unresolved, or empirically-zero-only; no row disagrees with a reference that resolved it",
     "verified": false
   },
   "summary_views": {
     "by_branch": {
       "elastic": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 24,
         "reference_unresolved": 0,
         "resolved": 0
       },
       "inelastic": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 0,
         "reference_unresolved": 0,
         "resolved": 72
@@ -394,12 +437,14 @@
     "by_direction_pattern": {
       "mixed": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 12,
         "reference_unresolved": 0,
         "resolved": 36
       },
       "repeated": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 12,
         "reference_unresolved": 0,
         "resolved": 36
@@ -408,24 +453,28 @@
     "by_increment": {
       "1": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 24,
         "reference_unresolved": 0,
         "resolved": 0
       },
       "2": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 0,
         "reference_unresolved": 0,
         "resolved": 24
       },
       "3": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 0,
         "reference_unresolved": 0,
         "resolved": 24
       },
       "4": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 0,
         "reference_unresolved": 0,
         "resolved": 24
@@ -434,18 +483,21 @@
     "by_order": {
       "2": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 8,
         "reference_unresolved": 0,
         "resolved": 24
       },
       "3": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 8,
         "reference_unresolved": 0,
         "resolved": 24
       },
       "4": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 8,
         "reference_unresolved": 0,
         "resolved": 24
@@ -454,24 +506,28 @@
     "by_stress_component": {
       "1": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 6,
         "reference_unresolved": 0,
         "resolved": 18
       },
       "2": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 6,
         "reference_unresolved": 0,
         "resolved": 18
       },
       "3": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 6,
         "reference_unresolved": 0,
         "resolved": 18
       },
       "4": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 6,
         "reference_unresolved": 0,
         "resolved": 18

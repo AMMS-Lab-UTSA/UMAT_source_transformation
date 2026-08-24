@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from umat_oti.cli_json import run_config_transform
+from umat_oti.validation.actual_legacy_higher_order import CODE_IMP_INCREMENTS
 from umat_oti.validation.actual_umat_higher_order import _read_oti_higher_order
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -39,6 +40,13 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 #: Relative stress agreement required between the transformed and original builds
 #: before any derivative from the transformed build is treated as meaningful.
 PRIMAL_RELATIVE_TOLERANCE = 1.0e-9
+
+#: How many times the model's own local-solver tolerance a primal divergence may
+#: reach and still be attributed to that solver rather than to the transformation.
+#: The stated tolerance bounds the Newton *residual*, not the stress difference it
+#: leaves behind, so the two are only comparable to within an order of magnitude.
+#: Anything beyond this band is too large for the solver to explain.
+SOLVER_TOLERANCE_MARGIN = 10.0
 
 SELECTED_DIRECTIONS = (
     (1, 1),
@@ -48,6 +56,34 @@ SELECTED_DIRECTIONS = (
     (1, 1, 1, 1),
     (1, 1, 2, 2),
 )
+
+
+@dataclass(frozen=True)
+class SourceZeroProof:
+    """A citable source-level reason a derivative is exactly zero.
+
+    This is the only kind of zero argument available for a double-precision
+    compiled reference, where no higher-precision recomputation exists. It is a
+    statement about the model *source*, checkable by reading the cited lines --
+    not an observation that some samples happened to be equal. Because it is a
+    property of one constitutive branch, the classifier accepts it only when
+    branch consistency has been verified across the whole stencil.
+    """
+
+    kind: str          # 'source_affine_branch' or 'source_independent'
+    detail: str        # must cite the source lines that make it checkable
+    branches: tuple[str, ...] = ()          # empty = every branch
+    components: tuple[int, ...] = ()        # empty = every component
+    seed_directions: tuple[int, ...] = ()   # empty = any seeded directions
+
+    def applies(self, branch: str, component: int, directions: tuple[int, ...]) -> bool:
+        if self.branches and branch not in self.branches:
+            return False
+        if self.components and component not in self.components:
+            return False
+        if self.seed_directions and not set(directions) <= set(self.seed_directions):
+            return False
+        return True
 
 
 @dataclass(frozen=True)
@@ -74,6 +110,23 @@ class ModelSpec:
     fixed_form: bool = True
     ntens: int = 4
     order: int = 4
+    #: 1-based STATEV slot holding a signed yield-function value, when the model
+    #: exposes one. ``None`` means no distance-to-branch-surface is available.
+    branch_margin_statev_index: int | None = None
+    branch_margin_meaning: str = ""
+    #: Convergence tolerance of the model's own local Newton solve, with a
+    #: citation. Two builds of the same source may stop at different points
+    #: within this tolerance, which bounds what any verification can resolve.
+    local_solver_tolerance: float | None = None
+    local_solver_tolerance_citation: str = ""
+    source_zero_proofs: tuple[SourceZeroProof, ...] = ()
+
+    def source_proof_for(self, branch: str, component: int,
+                         directions: tuple[int, ...]) -> tuple[str, str] | None:
+        for proof in self.source_zero_proofs:
+            if proof.applies(branch, component, directions):
+                return proof.kind, proof.detail
+        return None
 
     @property
     def oti_object(self) -> str:
@@ -83,6 +136,14 @@ class ModelSpec:
     def config_path(self) -> Path:
         return REPO_ROOT / self.config
 
+
+_ELASTIC_AFFINE = (
+    'In the elastic branch the update is STRESS = STRESS + DDSDDE . DSTRAN with a\n'
+    'DDSDDE assembled only from the constant moduli, before any yield test. The\n'
+    'response is therefore exactly affine in DSTRAN on this branch, so every\n'
+    'derivative of order two and above vanishes identically -- not merely at the\n'
+    'points that were sampled. '
+)
 
 MODELS: dict[str, ModelSpec] = {
     "UMAT_PCL": ModelSpec(
@@ -105,6 +166,18 @@ MODELS: dict[str, ModelSpec] = {
         strain_scale=1.0e-3,
         strain_scale_meaning="characteristic strain-increment magnitude of the load path",
         base_step=4.0e-5,
+        local_solver_tolerance=1e-07,
+        local_solver_tolerance_citation="UMAT_PCL.for line 49: TOLER=1.0D-7, tested as ABS(FGAM/FJAC).LT.TOLER at line 162",
+        source_zero_proofs=(
+            SourceZeroProof(
+                kind="source_affine_branch",
+                branches=("elastic",),
+                detail=_ELASTIC_AFFINE + (
+                    "UMAT_PCL.for lines 78-95 build DDSDDE from EMOD=PROPS(1) and "
+                    "ENU=PROPS(2) only; the elastic update precedes the yield test."
+                ),
+            ),
+        ),
     ),
     "UMAT_PCLK": ModelSpec(
         key="UMAT_PCLK",
@@ -126,6 +199,19 @@ MODELS: dict[str, ModelSpec] = {
         strain_scale=1.0e-3,
         strain_scale_meaning="characteristic strain-increment magnitude of the load path",
         base_step=4.0e-5,
+        local_solver_tolerance=1e-07,
+        local_solver_tolerance_citation="UMAT_PCLK.for line 62: TOLER=1.0D-7, tested as ABS(FGAM/FJAC).LT.TOLER at line 172",
+        source_zero_proofs=(
+            SourceZeroProof(
+                kind="source_affine_branch",
+                branches=("elastic",),
+                detail=_ELASTIC_AFFINE + (
+                    "UMAT_PCLK.for lines 92-112: DDSDDE is built from EMOD=PROPS(1) "
+                    "and ENU=PROPS(2), then STRESS(K2)=STRESS(K2)+DDSDDE(K2,K1)*"
+                    "DSTRAN(K1) is applied before SMISES and the yield test."
+                ),
+            ),
+        ),
     ),
     "visco_imp": ModelSpec(
         key="visco_imp",
@@ -150,6 +236,79 @@ MODELS: dict[str, ModelSpec] = {
         strain_scale_meaning="characteristic strain-increment magnitude of the load path",
         base_step=4.0e-4,
         fixed_form=False,
+        local_solver_tolerance=1.0e-12,
+        local_solver_tolerance_citation=(
+            "visco_imp.f line 121: IF(ABS(XRES).LT.1.E-12) GOTO 10"
+        ),
+        branch_margin_statev_index=3,
+        branch_margin_meaning=(
+            "STATEV(3) = FLOW = PJ - R - YIELD, the signed trial yield function "
+            "stored at visco_imp.f line 104; negative is elastic, positive yields"
+        ),
+        source_zero_proofs=(
+            SourceZeroProof(
+                kind="source_affine_branch",
+                branches=("elastic",),
+                detail=_ELASTIC_AFFINE + (
+                    "visco_imp.f lines 88-92: CALL KMLT1(DDSDDE,DSTRAN,DSTRESS) then "
+                    "STRESS(K)=STRESS(K)+DSTRESS(K), with DDSDDE from the constant "
+                    "E=1000, XNUE=0.3 set at lines 42-43. The plastic correction is "
+                    "reached only under IF(FLOW.GT.0.) at line 106."
+                ),
+            ),
+        ),
+    ),
+    "code_imp": ModelSpec(
+        key="code_imp",
+        config="examples/code_imp_actual_higher_order.json",
+        source="UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
+        nstatv=2,
+        nprops=2,
+        props=(0.0, 0.0),
+        increments=CODE_IMP_INCREMENTS,
+        inelastic_statev_index=1,
+        inelastic_threshold=1.0e-12,
+        stress_scale=240.0,
+        stress_scale_meaning="initial yield stress SIGY0 = 240 hard-coded at code_imp.f line 46",
+        strain_scale=1.0e-3,
+        strain_scale_meaning="characteristic strain-increment magnitude of the load path",
+        base_step=4.0e-5,
+        local_solver_tolerance=1.0e-5,
+        local_solver_tolerance_citation=(
+            "code_imp.f line 29: TOLER=1.D-5, tested as IF(DABS(RES).LT.TOLER) at "
+            "line 151. RES has stress units, so two builds may stop up to ~1e-5 MPa "
+            "apart on the same increment."
+        ),
+        source_zero_proofs=(
+            SourceZeroProof(
+                kind="source_affine_branch",
+                branches=("elastic",),
+                detail=_ELASTIC_AFFINE + (
+                    "code_imp.f lines 66-104: DDSDDE is built from E=210000 and "
+                    "XNUE=0.3 (lines 44-45), CALL KMLT1(DDSDDE,DSTRAN,DSTRESS) then "
+                    "STRESS(K)=STRESS(K)+DSTRESS(K); the plastic correction is "
+                    "reached only under IF(ZY.GT.0.) at line 141."
+                ),
+            ),
+            SourceZeroProof(
+                kind="source_independent",
+                components=(4,),
+                seed_directions=(1, 2),
+                detail=(
+                    "The in-plane shear stress is identically zero on this load path, "
+                    "in both branches, independently of the seeded directions. "
+                    "code_imp.f line 81 sets DDSDDE(4,4)=EG as the only non-zero "
+                    "entry in row 4, so DSTRESS(4)=EG*DSTRAN(4); every increment of "
+                    "this path has DSTRAN(4)=0 and the seeds are directions 1 and 2 "
+                    "only, so STRESS(4) never leaves its initial zero. The deviator "
+                    "of a tensor with zero off-diagonal keeps a zero off-diagonal "
+                    "(line 114), so the plastic correction DPSTRN(1,2) (line 158) is "
+                    "also zero. STRESS(4) is therefore exactly zero for all "
+                    "perturbations in directions 1 and 2, and all its derivatives "
+                    "with respect to them vanish."
+                ),
+            ),
+        ),
     ),
 }
 
@@ -267,12 +426,15 @@ def _reference_driver_source(spec: ModelSpec) -> str:
     return f"""PROGRAM reference_driver
   IMPLICIT NONE
 {_declarations(spec)}  INTEGER :: INC,NINC_RUN
-{_initialization(spec)}  READ(*,*) NINC_RUN
+  REAL(8) :: STATEV_PREV(NSTATV)
+{_initialization(spec)}  STATEV_PREV=0.0_8
+  READ(*,*) NINC_RUN
   DO INC=1,NINC_RUN
     READ(*,*) DSTRAN;KINC=INC
+    IF (INC == NINC_RUN) STATEV_PREV=STATEV
 {_umat_call()}    STRAN=STRAN+DSTRAN;TIME=TIME+DTIME
   END DO
-  WRITE(*,'({spec.ntens}(ES25.17,1X))') STRESS
+  WRITE(*,'({spec.ntens + 2 * spec.nstatv}(ES25.17,1X))') STRESS,STATEV,STATEV_PREV
 END PROGRAM reference_driver
 {_abaqus_utility_stubs()}"""
 
@@ -381,18 +543,32 @@ def build_model_artifacts(spec: ModelSpec, work_dir: Path) -> dict[str, Any]:
     # about differentiation -- the two builds are simply not the same model there.
     primal_check = []
     for index, row in enumerate(branch_history):
-        original = evaluator(reference_executable, spec, index)(spec.increments[index])
+        original = evaluator(reference_executable, spec, index)(spec.increments[index]).values
         transformed = row["stress"]
         deltas = [abs(t - o) for t, o in zip(transformed, original)]
         scale = max([abs(o) for o in original] + [spec.stress_scale])
+        largest = max(deltas)
+        if spec.local_solver_tolerance is None:
+            ratio = None
+            within_solver = None
+        else:
+            ratio = largest / spec.local_solver_tolerance
+            within_solver = ratio <= SOLVER_TOLERANCE_MARGIN
         primal_check.append({
             "increment": row["increment"],
             "branch": row["branch"],
             "transformed_stress": list(transformed),
             "original_stress": list(original),
-            "max_absolute_difference": max(deltas),
-            "max_relative_difference": max(deltas) / scale,
-            "agrees": max(deltas) / scale <= PRIMAL_RELATIVE_TOLERANCE,
+            "max_absolute_difference": largest,
+            "max_relative_difference": largest / scale,
+            "agrees": largest / scale <= PRIMAL_RELATIVE_TOLERANCE,
+            # A divergence no larger than the model's own local Newton tolerance
+            # means the two builds simply stopped at different admissible points,
+            # which bounds what any verification of this model can resolve. A
+            # divergence LARGER than that tolerance is a transformation defect.
+            "within_model_solver_tolerance": within_solver,
+            "divergence_over_model_solver_tolerance": ratio,
+            "model_solver_tolerance": spec.local_solver_tolerance,
         })
 
     return {
@@ -423,10 +599,21 @@ def build_model_artifacts(spec: ModelSpec, work_dir: Path) -> dict[str, Any]:
 
 
 def evaluator(reference_executable: Path, spec: ModelSpec, increment_index: int):
-    """Replay the original UMAT to the given increment with a perturbed final step."""
-    history = [list(values) for values in spec.increments[: increment_index + 1]]
+    """Replay the original UMAT to the given increment with a perturbed final step.
 
-    def evaluate(perturbed: Sequence[float]) -> tuple[float, ...]:
+    Returns the stress components together with the constitutive branch the
+    final increment actually took, so the sweep can reject stencils that
+    straddle a yield or unloading boundary. The branch is decided by whether the
+    inelasticity marker *grew during this increment* -- not by its absolute
+    value, which stays positive once the material has yielded earlier on the
+    path and would otherwise mislabel a later elastic step.
+    """
+    from umat_oti.validation.higher_order_convergence_study import Evaluation
+
+    history = [list(values) for values in spec.increments[: increment_index + 1]]
+    ntens, nstatv = spec.ntens, spec.nstatv
+
+    def evaluate(perturbed: Sequence[float]) -> "Evaluation":
         increments = [list(row) for row in history]
         increments[increment_index] = list(perturbed)
         text = str(len(increments)) + "\n" + "\n".join(
@@ -438,7 +625,29 @@ def evaluator(reference_executable: Path, spec: ModelSpec, increment_index: int)
         )
         if result.returncode != 0:
             raise RuntimeError(f"{spec.key} reference execution failed: {result.stderr}")
-        return tuple(float(value) for value in result.stdout.split())
+        numbers = [float(value) for value in result.stdout.split()]
+        expected = ntens + 2 * nstatv
+        if len(numbers) != expected:
+            raise RuntimeError(
+                f"{spec.key} reference returned {len(numbers)} values, expected {expected}"
+            )
+        stress = tuple(numbers[:ntens])
+        after = numbers[ntens : ntens + nstatv]
+        before = numbers[ntens + nstatv :]
+        index = spec.inelastic_statev_index - 1
+        grew = after[index] - before[index]
+        branch = "inelastic" if grew > spec.inelastic_threshold else "elastic"
+        if spec.branch_margin_statev_index is not None:
+            margin = after[spec.branch_margin_statev_index - 1]
+            reason = None
+        else:
+            margin = None
+            reason = (
+                f"{spec.key} does not store a signed yield-function value in STATEV, "
+                "so no distance to the branch surface is available"
+            )
+        return Evaluation(values=stress, branch=branch, margin=margin,
+                          margin_unavailable_reason=reason)
 
     return evaluate
 

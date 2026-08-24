@@ -1,13 +1,14 @@
 {
   "all_models_defensible": false,
   "artifact_sha256": {
-    "TABLE4_REFERENCE_QUALITY.md": "18fa4a7f1b0318d0a9637ccb362ff771af6be8740b65d82dcd9be91786f86ffc",
-    "table4_higher_order_convergence.csv": "3181753244062eef09ae83e192c1e71fec277a91fbbb61dd82fe108baf420295"
+    "TABLE4_REFERENCE_QUALITY.md": "c9329ecdc21018ff4c9ffb1f728b1d17d9ba1734a094a78418d0bf6ca8fdd58d",
+    "table4_higher_order_convergence.csv": "437154addebadbdfdca5fc88c175ba968d91505fe2e3821fa18dcc4386d7cf4c"
   },
   "models": {
     "UMAT_PCL": {
       "classification_counts": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 0,
         "reference_unresolved": 0,
         "resolved": 0
@@ -39,6 +40,7 @@
     "UMAT_PCLK": {
       "classification_counts": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 24,
         "reference_unresolved": 0,
         "resolved": 72
@@ -98,7 +100,7 @@
           "directions": "1|1",
           "increment": 4,
           "order": 2,
-          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 2.92e-07 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "7 consecutive admissible steps from 2.500e-06 to 1.600e-04 agree to 2.92e-07 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 2 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 1
         },
         {
@@ -109,7 +111,7 @@
           "directions": "1|1",
           "increment": 4,
           "order": 2,
-          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 3.00e-08 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "7 consecutive admissible steps from 2.500e-06 to 1.600e-04 agree to 3.00e-08 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 2 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 2
         },
         {
@@ -120,7 +122,7 @@
           "directions": "1|1",
           "increment": 4,
           "order": 2,
-          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 1.84e-07 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "7 consecutive admissible steps from 2.500e-06 to 1.600e-04 agree to 1.84e-07 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 2 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 3
         },
         {
@@ -131,7 +133,7 @@
           "directions": "1|1",
           "increment": 4,
           "order": 2,
-          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 1.46e-07 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "7 consecutive admissible steps from 2.500e-06 to 1.600e-04 agree to 1.46e-07 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 2 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 4
         },
         {
@@ -142,7 +144,7 @@
           "directions": "1|1|1",
           "increment": 4,
           "order": 3,
-          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 5.09e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "7 consecutive admissible steps from 2.500e-06 to 1.600e-04 agree to 5.09e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 2 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 1
         },
         {
@@ -153,7 +155,7 @@
           "directions": "1|1|1",
           "increment": 4,
           "order": 3,
-          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 4.11e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "7 consecutive admissible steps from 2.500e-06 to 1.600e-04 agree to 4.11e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 2 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 2
         },
         {
@@ -164,7 +166,7 @@
           "directions": "1|1|1",
           "increment": 4,
           "order": 3,
-          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 7.49e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "7 consecutive admissible steps from 2.500e-06 to 1.600e-04 agree to 7.49e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 2 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 3
         },
         {
@@ -175,7 +177,7 @@
           "directions": "1|1|1",
           "increment": 4,
           "order": 3,
-          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 8.90e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "7 consecutive admissible steps from 2.500e-06 to 1.600e-04 agree to 8.90e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 2 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 4
         },
         {
@@ -186,7 +188,7 @@
           "directions": "1|1|1|1",
           "increment": 4,
           "order": 4,
-          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 2.35e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "7 consecutive admissible steps from 2.500e-06 to 1.600e-04 agree to 2.35e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 2 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 1
         },
         {
@@ -197,7 +199,7 @@
           "directions": "1|1|1|1",
           "increment": 4,
           "order": 4,
-          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 5.56e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "7 consecutive admissible steps from 2.500e-06 to 1.600e-04 agree to 5.56e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 2 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 2
         },
         {
@@ -208,7 +210,7 @@
           "directions": "1|1|1|1",
           "increment": 4,
           "order": 4,
-          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 1.18e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "7 consecutive admissible steps from 2.500e-06 to 1.600e-04 agree to 1.18e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 2 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 3
         },
         {
@@ -219,7 +221,7 @@
           "directions": "1|1|1|1",
           "increment": 4,
           "order": 4,
-          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 1.37e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "7 consecutive admissible steps from 2.500e-06 to 1.600e-04 agree to 1.37e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 2 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 4
         },
         {
@@ -230,7 +232,7 @@
           "directions": "1|1|2",
           "increment": 4,
           "order": 3,
-          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 1.83e-06 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "6 consecutive admissible steps from 2.500e-06 to 8.000e-05 agree to 1.83e-06 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 3 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 1
         },
         {
@@ -241,7 +243,7 @@
           "directions": "1|1|2",
           "increment": 4,
           "order": 3,
-          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 8.70e-08 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "6 consecutive admissible steps from 2.500e-06 to 8.000e-05 agree to 8.70e-08 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 3 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 2
         },
         {
@@ -252,7 +254,7 @@
           "directions": "1|1|2",
           "increment": 4,
           "order": 3,
-          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 1.31e-07 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "6 consecutive admissible steps from 2.500e-06 to 8.000e-05 agree to 1.31e-07 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 3 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 3
         },
         {
@@ -263,7 +265,7 @@
           "directions": "1|1|2",
           "increment": 4,
           "order": 3,
-          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 1.37e-08 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "6 consecutive admissible steps from 2.500e-06 to 8.000e-05 agree to 1.37e-08 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 3 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 4
         },
         {
@@ -274,7 +276,7 @@
           "directions": "1|1|2|2",
           "increment": 4,
           "order": 4,
-          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 2.64e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "6 consecutive admissible steps from 2.500e-06 to 8.000e-05 agree to 2.64e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 3 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 1
         },
         {
@@ -285,7 +287,7 @@
           "directions": "1|1|2|2",
           "increment": 4,
           "order": 4,
-          "reason": "5 consecutive steps from 5.000e-06 to 8.000e-05 agree to 1.66e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "5 consecutive admissible steps from 5.000e-06 to 8.000e-05 agree to 1.66e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 3 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 2
         },
         {
@@ -296,7 +298,7 @@
           "directions": "1|1|2|2",
           "increment": 4,
           "order": 4,
-          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 5.43e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "6 consecutive admissible steps from 2.500e-06 to 8.000e-05 agree to 5.43e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 3 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 3
         },
         {
@@ -307,7 +309,7 @@
           "directions": "1|1|2|2",
           "increment": 4,
           "order": 4,
-          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 9.20e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "6 consecutive admissible steps from 2.500e-06 to 8.000e-05 agree to 9.20e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 3 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 4
         },
         {
@@ -318,7 +320,7 @@
           "directions": "1|2",
           "increment": 4,
           "order": 2,
-          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 2.29e-09 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "6 consecutive admissible steps from 2.500e-06 to 8.000e-05 agree to 2.29e-09 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 3 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 1
         },
         {
@@ -329,7 +331,7 @@
           "directions": "1|2",
           "increment": 4,
           "order": 2,
-          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 6.00e-09 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "6 consecutive admissible steps from 2.500e-06 to 8.000e-05 agree to 6.00e-09 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 3 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 2
         },
         {
@@ -340,7 +342,7 @@
           "directions": "1|2",
           "increment": 4,
           "order": 2,
-          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 2.02e-09 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "6 consecutive admissible steps from 2.500e-06 to 8.000e-05 agree to 2.02e-09 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 3 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 3
         },
         {
@@ -351,7 +353,7 @@
           "directions": "1|2",
           "increment": 4,
           "order": 2,
-          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 5.57e-09 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "reason": "6 consecutive admissible steps from 2.500e-06 to 8.000e-05 agree to 5.57e-09 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 3 step(s) were excluded for leaving the nominal branch.",
           "stress_component": 4
         }
       ]
@@ -359,23 +361,24 @@
     "code_imp": {
       "classification_counts": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 42,
         "reference_unresolved": 0,
         "resolved": 54
       },
-      "defensible": true,
-      "model": "code_imp_legacy_umat",
+      "defensible": false,
+      "model": "code_imp",
       "normalization": {
         "normalized_quantity": "D_hat_n = (d^n sigma / d eps^n) * strain_scale**n / stress_scale",
         "normalized_units": "dimensionless",
         "strain_scale": 0.001,
-        "strain_scale_meaning": "characteristic strain-increment magnitude of the four code_imp load steps",
+        "strain_scale_meaning": "characteristic strain-increment magnitude of the load path",
         "strain_units": "dimensionless",
         "stress_scale": 240.0,
-        "stress_scale_meaning": "initial yield stress SIGY0 hard-coded in code_imp.f",
+        "stress_scale_meaning": "initial yield stress SIGY0 = 240 hard-coded at code_imp.f line 46",
         "stress_units": "MPa"
       },
-      "primal_consistency": null,
+      "primal_consistency": false,
       "reference": {
         "method": "independently compiled original code_imp UMAT replayed for each tensor-product centred finite-difference stencil node",
         "precision": "IEEE double precision (compiled Fortran, gfortran)",
@@ -403,17 +406,30 @@
           5e-06,
           2.5e-06
         ],
-        "zero_support": "structural stencil invariance and exact local affineness (bitwise-zero second and mixed differences at amplitudes 1.600e-04, 8.000e-05, 4.000e-05); the reference is a double-precision executable, so no higher-precision recomputation is available for this model"
+        "zero_support": "structural stencil invariance and exact local affineness at amplitudes 1.600e-04, 8.000e-05, 4.000e-05; the reference is a double-precision executable, so no higher-precision recomputation is available for this model"
       },
       "rows": 96,
-      "rows_admitted_to_table4": 96,
-      "rows_disagreeing_with_reference": 0,
-      "rows_withheld_from_table4": 0,
-      "withheld_rows": []
+      "rows_admitted_to_table4": 95,
+      "rows_disagreeing_with_reference": 1,
+      "rows_withheld_from_table4": 1,
+      "withheld_rows": [
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "mixed",
+          "directions": "1|2",
+          "increment": 2,
+          "order": 2,
+          "reason": "5 consecutive admissible steps from 2.500e-06 to 4.000e-05 agree to 9.66e-10 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance. 4 step(s) were excluded for leaving the nominal branch.",
+          "stress_component": 2
+        }
+      ]
     },
     "j2": {
       "classification_counts": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 77,
         "reference_unresolved": 0,
         "resolved": 31
@@ -469,6 +485,7 @@
     "visco_imp": {
       "classification_counts": {
         "cancellation_limited": 4,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 24,
         "reference_unresolved": 2,
         "resolved": 66
@@ -528,7 +545,7 @@
           "directions": "1|1",
           "increment": 2,
           "order": 2,
-          "reason": "The finite-difference sweep is at the zero threshold (normalized 7.335e-10) but no independent structural or high-precision support establishes the derivative as zero, so the reference cannot verify this row.",
+          "reason": "The finite-difference sweep is at the zero threshold (normalized 7.335e-10) but nothing independent establishes the derivative as zero, so the reference cannot verify this row.",
           "stress_component": 2
         },
         {
@@ -539,7 +556,7 @@
           "directions": "1|1|1|1",
           "increment": 2,
           "order": 4,
-          "reason": "The steadiest 3-step window still spreads by 1.58e-03 relative, above the 1.0e-03 resolved threshold. Round-off cancellation dominates the order-4 reference at every step tried, so it bounds the magnitude but cannot verify the value.",
+          "reason": "The steadiest 3-step admissible window still spreads by 1.58e-03 relative, above the 1.0e-03 resolved threshold. Round-off cancellation dominates the order-4 reference at every admissible step, so it bounds the magnitude but cannot verify the value.",
           "stress_component": 2
         },
         {
@@ -550,7 +567,7 @@
           "directions": "1|1|2|2",
           "increment": 2,
           "order": 4,
-          "reason": "The steadiest 3-step window still spreads by 1.67e-02 relative, above the 1.0e-03 resolved threshold. Round-off cancellation dominates the order-4 reference at every step tried, so it bounds the magnitude but cannot verify the value.",
+          "reason": "The steadiest 3-step admissible window still spreads by 1.67e-02 relative, above the 1.0e-03 resolved threshold. Round-off cancellation dominates the order-4 reference at every admissible step, so it bounds the magnitude but cannot verify the value.",
           "stress_component": 1
         },
         {
@@ -561,7 +578,7 @@
           "directions": "1|1|2|2",
           "increment": 2,
           "order": 4,
-          "reason": "The steadiest 3-step window still spreads by 8.60e-03 relative, above the 1.0e-03 resolved threshold. Round-off cancellation dominates the order-4 reference at every step tried, so it bounds the magnitude but cannot verify the value.",
+          "reason": "The steadiest 3-step admissible window still spreads by 8.60e-03 relative, above the 1.0e-03 resolved threshold. Round-off cancellation dominates the order-4 reference at every admissible step, so it bounds the magnitude but cannot verify the value.",
           "stress_component": 2
         },
         {
@@ -572,7 +589,7 @@
           "directions": "1|1|2|2",
           "increment": 2,
           "order": 4,
-          "reason": "The steadiest 3-step window still spreads by 6.25e-03 relative, above the 1.0e-03 resolved threshold. Round-off cancellation dominates the order-4 reference at every step tried, so it bounds the magnitude but cannot verify the value.",
+          "reason": "The steadiest 3-step admissible window still spreads by 6.25e-03 relative, above the 1.0e-03 resolved threshold. Round-off cancellation dominates the order-4 reference at every admissible step, so it bounds the magnitude but cannot verify the value.",
           "stress_component": 3
         },
         {
@@ -583,7 +600,7 @@
           "directions": "1|2",
           "increment": 2,
           "order": 2,
-          "reason": "The finite-difference sweep is at the zero threshold (normalized 7.334e-10) but no independent structural or high-precision support establishes the derivative as zero, so the reference cannot verify this row.",
+          "reason": "The finite-difference sweep is at the zero threshold (normalized 7.334e-10) but nothing independent establishes the derivative as zero, so the reference cannot verify this row.",
           "stress_component": 1
         }
       ]

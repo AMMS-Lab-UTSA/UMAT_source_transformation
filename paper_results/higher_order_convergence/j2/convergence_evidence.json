@@ -1,8 +1,8 @@
 {
   "artifact_sha256": {
-    "convergence_evidence.json": "9b3973ba865111d573130eb6ae63002d00b531e89e92e03f69419ab8cd73fcde",
-    "convergence_rows.csv": "b37e254951103ec97c6f71e0ad851411adb09cf38f36997c2b70b8aa8b95784b",
-    "convergence_sweep.csv": "19f5a61910c9a8b0f535ff5fba41b0886079880d1d77aa93aa6115a6990d0504"
+    "convergence_evidence.json": "26e644c10f4c32955bd6fe9f3f073ce77f681b8a901490de993f8123c8f66c16",
+    "convergence_rows.csv": "13f0431bbf977837858e03f92b2931ab1ecfc3d722a69798b97316bc207ce51c",
+    "convergence_sweep.csv": "88636f2e7c83d6affebe4acbabfc7f8cc2ab2923996f6207359e443297a3c390"
   },
   "artifacts": {
     "rows_csv": "paper_results/higher_order_convergence/j2/convergence_rows.csv",
@@ -15,6 +15,7 @@
     "classifications": [
       "resolved",
       "expected_zero_independently_supported",
+      "empirically_zero_over_stencil",
       "cancellation_limited",
       "reference_unresolved"
     ],
@@ -75,6 +76,7 @@
   "summary": {
     "classification_counts": {
       "cancellation_limited": 0,
+      "empirically_zero_over_stencil": 0,
       "expected_zero_independently_supported": 77,
       "reference_unresolved": 0,
       "resolved": 31
@@ -82,18 +84,21 @@
     "classification_counts_by_order": {
       "2": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 26,
         "reference_unresolved": 0,
         "resolved": 10
       },
       "3": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 26,
         "reference_unresolved": 0,
         "resolved": 10
       },
       "4": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 25,
         "reference_unresolved": 0,
         "resolved": 11
@@ -101,21 +106,26 @@
     },
     "max_relative_error_on_resolved_rows": 3.018419325837293e-11,
     "rows": 108,
+    "rows_empirically_zero_only": 0,
     "rows_supporting_verification": 108,
     "rows_with_reference_but_disagreeing": 0,
     "rows_without_usable_reference": 0,
+    "steps_rejected_for_branch_crossing": 180,
+    "verification_condition": "every row supports verification (resolved and agreeing, or zero with strong independent support); no row is cancellation-limited, unresolved, or empirically-zero-only; no row disagrees with a reference that resolved it",
     "verified": true
   },
   "summary_views": {
     "by_branch": {
       "elastic": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 36,
         "reference_unresolved": 0,
         "resolved": 0
       },
       "plastic": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 41,
         "reference_unresolved": 0,
         "resolved": 31
@@ -124,12 +134,14 @@
     "by_direction_pattern": {
       "mixed": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 35,
         "reference_unresolved": 0,
         "resolved": 19
       },
       "repeated": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 42,
         "reference_unresolved": 0,
         "resolved": 12
@@ -138,18 +150,21 @@
     "by_increment": {
       "1": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 36,
         "reference_unresolved": 0,
         "resolved": 0
       },
       "2": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 29,
         "reference_unresolved": 0,
         "resolved": 7
       },
       "3": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 12,
         "reference_unresolved": 0,
         "resolved": 24
@@ -158,18 +173,21 @@
     "by_order": {
       "2": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 26,
         "reference_unresolved": 0,
         "resolved": 10
       },
       "3": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 26,
         "reference_unresolved": 0,
         "resolved": 10
       },
       "4": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 25,
         "reference_unresolved": 0,
         "resolved": 11
@@ -178,36 +196,42 @@
     "by_stress_component": {
       "1": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 11,
         "reference_unresolved": 0,
         "resolved": 7
       },
       "2": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 9,
         "reference_unresolved": 0,
         "resolved": 9
       },
       "3": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 9,
         "reference_unresolved": 0,
         "resolved": 9
       },
       "4": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 12,
         "reference_unresolved": 0,
         "resolved": 6
       },
       "5": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 18,
         "reference_unresolved": 0,
         "resolved": 0
       },
       "6": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 18,
         "reference_unresolved": 0,
         "resolved": 0

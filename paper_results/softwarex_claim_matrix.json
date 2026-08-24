@@ -66,14 +66,14 @@
       "status": "verified_reference_fixture_only"
     },
     {
-      "blocker": "Controlled J2 (108/108 rows) and code_imp (96/96 rows) are verified against a step-size-converged reference with no row resting on an absolute tolerance. The three remaining models were attempted offline with gfortran 9.4 and none verified: UMAT_PCL's transformed build aborts at run time while the original runs; UMAT_PCLK's transformed primal stress diverges from the original at increment 4 and 24 of 96 derivative rows disagree with a fully resolved reference; visco_imp disagrees nowhere but leaves 6 of 96 rows unresolvable by a double-precision reference. The manuscript claim over all actual UMAT models therefore stays partial.",
+      "blocker": "Only controlled J2 carries every row (108/108) against a step-size-converged, branch-audited reference, with all zeros proved at 200 decimal digits. code_imp reaches 95/96: one row disagrees with a resolved reference by 2.30e-6 relative, and the primal check shows the transformed and original builds stopping apart at the scale of the model's own Newton tolerance (TOLER=1.D-5), which bounds what can be resolved for it. UMAT_PCL's transformed build aborts at run time; UMAT_PCLK's transformed primal stress diverges from the original at increment 4 beyond what its solver tolerance explains; visco_imp leaves rows the double-precision reference cannot resolve. The manuscript claim over all actual UMAT models therefore stays partial.",
       "evidence": "paper_results/actual_umat_higher_order/j2/actual_umat_higher_order_evidence.json; paper_results/actual_umat_higher_order/code_imp/actual_umat_higher_order_evidence.json; paper_results/actual_umat_higher_order/table4_higher_order_actual_umats.csv; paper_results/higher_order_convergence/j2/convergence_evidence.json; paper_results/higher_order_convergence/code_imp/convergence_evidence.json; paper_results/higher_order_convergence/table4_higher_order_convergence.csv; paper_results/higher_order_convergence/UMAT_PCL/convergence_evidence.json; paper_results/higher_order_convergence/UMAT_PCLK/convergence_evidence.json; paper_results/higher_order_convergence/visco_imp/convergence_evidence.json",
       "executable_test": "tests/test_actual_umat_higher_order.py; tests/test_higher_order_convergence.py; tests/test_transform_smoke.py",
       "id": "higher_orders_from_actual_umat_models",
       "implementation": "src/umat_oti/transform/source_transform.py::_higher_order_jacobian_lines; src/umat_oti/validation/actual_umat_higher_order.py; src/umat_oti/validation/actual_legacy_higher_order.py; src/umat_oti/validation/higher_order_convergence.py; src/umat_oti/validation/higher_order_convergence_study.py; src/umat_oti/validation/actual_umat_higher_order_generic.py",
       "manuscript_location": "Table 4 and Figure 4 - derivatives through orders 1-4",
       "required_capability": "Generate and independently verify orders 2-4 from code_imp, UMAT_PCL, UMAT_PCLK, and visco_imp stress updates.",
-      "source_case": "controlled J2 and legacy code_imp completed; UMAT_PCL, UMAT_PCLK and visco_imp attempted offline and each failed to verify",
+      "source_case": "controlled J2 verified; code_imp, UMAT_PCL, UMAT_PCLK and visco_imp attempted offline and none verified",
       "status": "partially_implemented"
     },
     {
@@ -216,70 +216,99 @@
   },
   "reference_quality": {
     "applies_to_claim": "higher_orders_from_actual_umat_models",
+    "branch_admissibility": "Every increment, direction set, order and step records the nominal branch, the branch at each stencil node, the distance to the branch surface where the model exposes one (null with a reason otherwise), whether the step is admissible, and the rejection reason. Plateau detection uses admissible steps only.",
     "classifications": [
       "resolved",
       "expected_zero_independently_supported",
+      "empirically_zero_over_stencil",
       "cancellation_limited",
       "reference_unresolved"
     ],
     "dataset": "paper_results/higher_order_convergence/table4_reference_quality_summary.json",
-    "method": "multi-step finite-difference convergence study with row-level classification",
+    "method": "multi-step finite-difference convergence study with branch-admissibility auditing and row-level reference-quality classification",
     "models": {
-      "code_imp_legacy_umat": {
-        "cancellation_limited": 0,
-        "expected_zero_independently_supported": 42,
-        "max_relative_error_on_resolved_rows": 9.635403610829512e-06,
-        "reference_precision": "IEEE double precision (compiled Fortran, gfortran)",
-        "reference_unresolved": 0,
-        "resolved": 54,
-        "rows": 96
-      },
       "controlled_j2_actual_umat": {
         "cancellation_limited": 0,
+        "empirically_zero_over_stencil": 0,
         "expected_zero_independently_supported": 77,
         "max_relative_error_on_resolved_rows": 3.018419325837293e-11,
         "reference_precision": "mpmath, 80 decimal digits",
         "reference_unresolved": 0,
         "resolved": 31,
-        "rows": 108
+        "rows": 108,
+        "rows_disagreeing_with_resolved_reference": 0,
+        "rows_supporting_verification": 108,
+        "steps_rejected_for_branch_crossing": 180,
+        "zero_support": "high_precision at 200 decimal digits (strong) for every zero row"
       }
     },
     "models_studied_not_verified": {
       "UMAT_PCL": {
         "detail": "Transforms and compiles at order 4, but the transformed executable aborts with glibc 'double free or corruption (out)' during the UMAT call. The original source, compiled independently with the same driver and load path, runs to completion. No rows exist to classify.",
         "outcome": "failed_transformed_execution",
+        "primal_divergence_over_model_solver_tolerance": null,
+        "primal_divergence_unavailable_reason": "the transformed build aborts before producing a primal stress to compare",
         "rows": 0
       },
       "UMAT_PCLK": {
-        "detail": "The reference resolves every row, so this is not a reference-quality gap. The transformed build's primal stress diverges from the independently compiled original at increment 4 (shear 5.8649 vs 6.4561 MPa) while increments 1-3 agree to 1e-13, and all 24 disagreeing derivative rows are in that same increment.",
+        "detail": "The reference resolves every row, so this is not a reference-quality gap. The transformed build's primal stress diverges from the independently compiled original at increment 4 (shear 5.8649 vs 6.4561 MPa) while increments 1-3 agree to 1e-13, and all 24 disagreeing derivative rows sit in that increment, up to 34% relative. The divergence is about 5.9e6 times the model's own Newton tolerance (TOLER=1.0D-7, UMAT_PCLK.for line 62), far too large for convergence to explain, so this is a transformation defect.",
+        "empirically_zero_over_stencil": 0,
         "max_relative_error_on_resolved_rows": 0.34356799446358743,
         "outcome": "primal_divergence_and_derivative_disagreement",
+        "primal_divergence_over_model_solver_tolerance": 5911645.1,
         "rows": 96,
         "rows_disagreeing_with_resolved_reference": 24,
-        "rows_supporting_verification": 72
+        "rows_supporting_verification": 72,
+        "steps_rejected_for_branch_crossing": 252
+      },
+      "code_imp_legacy_umat": {
+        "detail": "Previously reported as 96/96. Excluding branch-crossing steps tightened the plateau to ~1e-9 relative, and one row -- increment 2, inelastic, component 2, order 2, directions 1|2 -- then sits 2.30e-6 relative outside a reference that resolved it. The same 2.3e-6 appears in the archived single-step evidence, where a 2e-5 relative tolerance accepted it. The primal check explains it: the transformed and original builds stop up to 1.4e-5 MPa apart on the inelastic increments, which is the scale of code_imp's own Newton tolerance TOLER=1.D-5 (code_imp.f line 29). The two builds are not solving to the same state, so this bounds what any verification of this model can resolve. It is a property of the model, not evidence that the transformation is wrong -- and not evidence that it is right either.",
+        "empirically_zero_over_stencil": 0,
+        "max_relative_error_on_resolved_rows": 9.635403610829512e-06,
+        "outcome": "limited_by_model_local_solver_tolerance",
+        "primal_divergence_over_model_solver_tolerance": 1.4,
+        "rows": 96,
+        "rows_disagreeing_with_resolved_reference": 1,
+        "rows_supporting_verification": 95,
+        "steps_rejected_for_branch_crossing": 252
       },
       "visco_imp": {
         "cancellation_limited": 4,
-        "detail": "No row disagrees with its reference. Six rows cannot be carried because the double-precision reference does not resolve them; no higher-precision recomputation is available for a compiled reference.",
+        "detail": "Primal responses agree and no row disagrees with its reference. Six rows cannot be carried because the double-precision reference does not resolve them (4 cancellation-limited, 2 unresolved); a compiled reference admits no higher-precision recomputation.",
+        "empirically_zero_over_stencil": 0,
         "max_relative_error_on_resolved_rows": 8.67363263347962e-05,
         "outcome": "reference_quality_limited",
+        "primal_divergence_over_model_solver_tolerance": 0.0,
         "reference_unresolved": 2,
         "rows": 96,
         "rows_disagreeing_with_resolved_reference": 0,
-        "rows_supporting_verification": 90
+        "rows_supporting_verification": 90,
+        "steps_rejected_for_branch_crossing": 204
       }
     },
     "models_verified": [
-      "controlled_j2_actual_umat",
-      "code_imp_legacy_umat"
+      "controlled_j2_actual_umat"
     ],
-    "policy": "A row counts only when a plateau across at least three consecutive step sizes resolves the reference and the OTI value lies inside it, or when the derivative is zero with support independent of the OTI result. No row is passed for falling below a large absolute tolerance.",
-    "primal_consistency_gate": "The transformed build must reproduce the original build's stress along the same path before any of its derivatives are treated as evidence. Where the primal responses differ, a derivative disagreement is not a statement about differentiation.",
-    "supersedes": "The earlier single-step comparison passed rows against absolute tolerances as large as 4.0e4 at order 4. Those tolerances no longer carry any row: every controlled J2 and code_imp row is now carried by a resolved plateau or by independent zero support.",
+    "policy": "A row counts only when a plateau across at least three consecutive *admissible* step sizes resolves the reference and the OTI value lies inside it, or when the derivative is zero and something other than the OTI result proves it. A step is admissible only if every stencil node stayed on the nominal constitutive branch. No row is passed for falling below an absolute tolerance.",
+    "primal_consistency_gate": "The transformed build must reproduce the original build's stress along the same path before any of its derivatives are treated as evidence. A divergence within an order of magnitude of the model's own local Newton tolerance means the two builds merely stopped at different admissible points, which bounds what can be resolved; a divergence far above it is a transformation defect. The ratio is recorded per model so the two cases are never conflated.",
+    "supersedes": "The earlier single-step comparison passed rows against absolute tolerances as large as 4.0e4 at order 4. Those tolerances no longer carry any row. The first convergence study still over-counted: it omitted cancellation-limited rows from its verification predicate, treated sampled equality as proof of exact zeros, and formed plateaus from steps whose stencils crossed the yield surface. Correcting all three moved code_imp from 96/96 to 95/96.",
     "supporting_classifications": [
       "resolved",
       "expected_zero_independently_supported"
-    ]
+    ],
+    "zero_support_policy": {
+      "rule": "Bit-identical responses at finitely many stencil nodes establish empirical local invariance, not exact structural independence. Weak support alone classifies a row as empirically_zero_over_stencil, which is reported and never counted as verification evidence. Source-level proofs are accepted only when branch consistency was verified across the stencil, because such a proof is a property of one branch.",
+      "strong": [
+        "high_precision",
+        "analytic",
+        "source_affine_branch",
+        "source_independent"
+      ],
+      "weak": [
+        "empirical_stencil_invariance",
+        "empirical_affine_probe"
+      ]
+    }
   },
   "schema": "umat-oti-softwarex-claims/1"
 }

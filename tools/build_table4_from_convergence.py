@@ -37,15 +37,18 @@ CONVERGENCE_ROOT = REPO_ROOT / "paper_results" / "higher_order_convergence"
 
 RESOLVED = "resolved"
 EXPECTED_ZERO = "expected_zero_independently_supported"
+EMPIRICALLY_ZERO = "empirically_zero_over_stencil"
 CANCELLATION_LIMITED = "cancellation_limited"
 UNRESOLVED = "reference_unresolved"
 SUPPORTING = (RESOLVED, EXPECTED_ZERO)
-ALL_CLASSIFICATIONS = (RESOLVED, EXPECTED_ZERO, CANCELLATION_LIMITED, UNRESOLVED)
+ALL_CLASSIFICATIONS = (
+    RESOLVED, EXPECTED_ZERO, EMPIRICALLY_ZERO, CANCELLATION_LIMITED, UNRESOLVED,
+)
 
 TABLE_COLUMNS = (
     "model", "branch", "order", "rows",
     "resolved", "expected_zero_independently_supported",
-    "cancellation_limited", "reference_unresolved",
+    "empirically_zero_over_stencil", "cancellation_limited", "reference_unresolved",
     "rows_admitted", "rows_withheld",
     "max_relative_error_on_resolved_rows",
     "reference_precision", "reference_method", "defensible",
@@ -195,19 +198,30 @@ def _write_markdown(path: Path, table: list[dict[str, Any]], per_model: dict[str
         "Every row below is admitted only on the strength of an independent",
         "reference. A derivative is **not** counted as verified because its error",
         "fell under a large absolute tolerance; it is counted when the",
-        "finite-difference estimate plateaus across consecutive step sizes and the",
-        "OTI value lies inside that plateau, or when the derivative is zero and",
-        "something other than the OTI result establishes that.",
+        "finite-difference estimate plateaus across consecutive *admissible* step",
+        "sizes and the OTI value lies inside that plateau, or when the derivative",
+        "is zero and something other than the OTI result *proves* it.",
         "",
-        "| Model | Branch | Order | Rows | Resolved | Zero (supported) | Cancellation-limited | Unresolved | Admitted | Max rel. err. (resolved) |",
-        "|---|---|---|---:|---:|---:|---:|---:|---:|---:|",
+        "A step is admissible only if every stencil node stayed on the nominal",
+        "constitutive branch. A stencil that straddles a yield or unloading",
+        "boundary differences across a kink and cannot verify the derivative of",
+        "either branch, however stable its value looks.",
+        "",
+        "\"Zero (sampled only)\" counts rows where the reference was zero at every",
+        "point tried but nothing proved it exactly zero. Finitely many equal",
+        "samples are empirical local invariance, not structural independence, so",
+        "those rows are reported and **not** counted as evidence.",
+        "",
+        "| Model | Branch | Order | Rows | Resolved | Zero (proved) | Zero (sampled only) | Cancellation-limited | Unresolved | Admitted | Max rel. err. (resolved) |",
+        "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in table:
         max_rel = row["max_relative_error_on_resolved_rows"]
         lines.append(
-            "| {model} | {branch} | {order} | {rows} | {resolved} | {zero} | {canc} | {unres} | {adm} | {rel} |".format(
+            "| {model} | {branch} | {order} | {rows} | {resolved} | {zero} | {emp} | {canc} | {unres} | {adm} | {rel} |".format(
                 model=row["model"], branch=row["branch"], order=row["order"],
                 rows=row["rows"], resolved=row[RESOLVED], zero=row[EXPECTED_ZERO],
+                emp=row[EMPIRICALLY_ZERO],
                 canc=row[CANCELLATION_LIMITED], unres=row[UNRESOLVED],
                 adm=row["rows_admitted"],
                 rel="-" if max_rel is None else f"{max_rel:.2e}",
