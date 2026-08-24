@@ -1,0 +1,108 @@
+{
+  "_adapter_notes": [
+    "a DSTATEV_DP request is present but nstatev is 0: the model carries no state, so that request has nothing to differentiate and will produce no rows"
+  ],
+  "_generated_by": "tools/run_parameter_sensitivity_sweep.py via umat_oti.services.contract_adapter; edit contract_v2.json, not this file",
+  "_unmapped_v2_keys": [
+    "output"
+  ],
+  "derivatives": [
+    {
+      "id": "stress_parameter_sensitivity",
+      "order": 1,
+      "response": "STRESS",
+      "seed": "PROPS",
+      "target": "DSIGMA_DP"
+    },
+    {
+      "id": "state_parameter_sensitivity",
+      "order": 1,
+      "response": "STATEV",
+      "seed": "PROPS",
+      "target": "DSTATEV_DP"
+    }
+  ],
+  "entry_routine": "UMAT",
+  "material_point_driver": {
+    "_rationale": "uniaxial strain along component 1 to 2.0e-3 total, spanning elastic and inelastic response for steel-like moduli",
+    "_source": "declared in parameter_sensitivity/loading_paths.json; pipeline default, not imported from the model contract",
+    "dstran_per_increment": [
+      0.0001,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "n_increments": 20,
+    "static_props": [
+      168000.0,
+      80000.0,
+      80000.0,
+      168000.0,
+      80000.0,
+      168000.0,
+      44000.0,
+      44000.0,
+      44000.0
+    ]
+  },
+  "name": "sweep_aniso_ortho",
+  "ntens": 6,
+  "parameters": [
+    {
+      "name": "C11",
+      "props_index": 1,
+      "value": 168000.0
+    },
+    {
+      "name": "C12",
+      "props_index": 2,
+      "value": 80000.0
+    },
+    {
+      "name": "C13",
+      "props_index": 3,
+      "value": 80000.0
+    },
+    {
+      "name": "C22",
+      "props_index": 4,
+      "value": 168000.0
+    },
+    {
+      "name": "C23",
+      "props_index": 5,
+      "value": 80000.0
+    },
+    {
+      "name": "C33",
+      "props_index": 6,
+      "value": 168000.0
+    },
+    {
+      "name": "C44",
+      "props_index": 7,
+      "value": 44000.0
+    },
+    {
+      "name": "C55",
+      "props_index": 8,
+      "value": 44000.0
+    },
+    {
+      "name": "C66",
+      "props_index": 9,
+      "value": 44000.0
+    }
+  ],
+  "provenance": {
+    "adapted_from": "resasm_umat_transform_v2",
+    "kinematics": "small_strain",
+    "seed_rationale": "small-strain parameter derivative: the seed is PROPS, not DSTRAN",
+    "seed_selected": "PROPS"
+  },
+  "schema_version": "1.1",
+  "source": "../models/sweep_aniso_ortho/umat.for",
+  "state_variables": []
+}
