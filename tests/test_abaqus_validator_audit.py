@@ -73,6 +73,54 @@ def test_aggregate_preserves_nonzero_ddsdde_metrics(tmp_path: Path):
     assert row["audit_commit_sha"] == "audit-sha"
 
 
+def test_aggregate_uses_independent_observable_denominators(tmp_path: Path):
+    arc_dir = tmp_path / "arc_123"
+    validation_dir = arc_dir / "paired_batch" / "validation"
+    for name, compare_outputs, final_pass, run_status, ddsdde_status in (
+        ("regular", ["STRESS", "STATEV", "DDSDDE", "CONVERGENCE"], True, "completed", "passed"),
+        ("spin_elas_def", ["STRESS", "STATEV", "CONVERGENCE"], True, "completed", "not_requested"),
+        ("failed_case", ["STRESS", "STATEV", "DDSDDE", "CONVERGENCE"], False, "failed", "failed"),
+    ):
+        case_dir = validation_dir / name
+        case_dir.mkdir(parents=True)
+        _write_json(
+            case_dir / "validation_report.json",
+            {
+                "status": "passed" if final_pass else "failed_execution",
+                "final_pass": final_pass,
+                "comparison_settings": {"compare_outputs": compare_outputs},
+                "original_run_status": {"status": run_status},
+                "transformed_run_status": {"status": run_status},
+                "stress_comparison": {"status": "passed" if final_pass else "failed", "max_abs_difference": 0.0},
+                "state_variable_comparison": {"status": "passed" if final_pass else "failed"},
+                "ddsdde_comparison": {"status": ddsdde_status, "max_abs_difference": 3000.0 if not final_pass else 0.0},
+                "convergence_comparison": {"status": "passed" if final_pass else "failed"},
+            },
+        )
+
+    output_json = tmp_path / "aggregate.json"
+    aggregate_abaqus_results(arc_dir, output_csv=tmp_path / "aggregate.csv", output_json=output_json)
+    aggregate = json.loads(output_json.read_text(encoding="utf-8"))
+    ddsdde = aggregate["summary"]["observables"]["DDSDDE"]
+
+    assert ddsdde == {
+        "requested": 2,
+        "available": 1,
+        "compared": 1,
+        "passed": 1,
+        "failed": 0,
+        "not_requested": 1,
+        "unavailable": 1,
+    }
+    failed = next(row for row in aggregate["rows"] if row["case_name"] == "failed_case")
+    assert failed["ddsdde_status"] == "unavailable"
+    assert failed["ddsdde_max_abs_diff"] is None
+    assert failed["audit"]["original_final_ddsdde"] is None
+    assert failed["audit"]["transformed_final_ddsdde"] is None
+    assert failed["audit"]["increments"] == []
+    assert not (ddsdde["passed"] == 2 and aggregate["summary"]["total"] == 3)
+
+
 def test_aggregate_archives_source_and_increment_provenance(tmp_path: Path):
     arc_dir = tmp_path / "arc_123"
     case_dir = arc_dir / "paired_batch" / "validation" / "code_imp"

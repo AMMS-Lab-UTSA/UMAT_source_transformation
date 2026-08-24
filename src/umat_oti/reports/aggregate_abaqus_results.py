@@ -116,6 +116,11 @@ def aggregate_abaqus_results(
         "ddsdde_max_rel_diff",
         "convergence_status",
     ]
+    for observable in ("stress", "statev", "ddsdde", "convergence"):
+        field_order.extend(
+            f"{observable}_{field}"
+            for field in ("requested", "available", "compared", "passed", "failed", "not_requested", "unavailable_reason")
+        )
     with output_csv.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=field_order, extrasaction="ignore", lineterminator="\n")
         writer.writeheader()
@@ -128,6 +133,7 @@ def aggregate_abaqus_results(
         "failed": sum(1 for r in rows if r.get("status") == "failed"),
         "failed_execution": sum(1 for r in rows if r.get("status") == "failed_execution"),
         "no_report": sum(1 for r in rows if r.get("status") == "no_report"),
+        "observables": _observable_counts(rows),
     }
     output_json.write_text(
         json.dumps({"summary": summary, "rows": rows}, indent=2, sort_keys=True),
@@ -151,8 +157,35 @@ def _flatten_report(
     convergence = data.get("convergence_comparison", {}) or {}
     comparison_status = data.get("comparison_status", {}) or {}
     overall_status = "passed" if data.get("final_pass") else comparison_status.get("status", data.get("status", "failed"))
-    audit = _audit_record(data, case_dir)
-    return {
+    run_records = [data.get(key, {}) or {} for key in ("original_run_status", "transformed_run_status")]
+    execution_complete = (
+        all(record.get("status") == "completed" for record in run_records)
+        if any(run_records)
+        else bool(data.get("final_pass"))
+    )
+    requested_outputs = {
+        str(value).upper()
+        for value in (data.get("comparison_settings", {}) or {}).get("compare_outputs", [])
+    }
+    if not requested_outputs:
+        requested_outputs = {
+            name
+            for name, comparison in (
+                ("STRESS", stress),
+                ("STATEV", statev),
+                ("DDSDDE", ddsdde),
+                ("CONVERGENCE", convergence),
+            )
+            if comparison and comparison.get("status") != "not_requested"
+        }
+    comparisons = {
+        "stress": _observable_record("STRESS", stress, requested_outputs, execution_complete, data),
+        "statev": _observable_record("STATEV", statev, requested_outputs, execution_complete, data),
+        "ddsdde": _observable_record("DDSDDE", ddsdde, requested_outputs, execution_complete, data),
+        "convergence": _observable_record("CONVERGENCE", convergence, requested_outputs, execution_complete, data),
+    }
+    audit = _audit_record(data, case_dir, results_available=execution_complete)
+    row = {
         "case_name": case_dir.name,
         "slurm_job_id": slurm_job_id,
         "hostname": hostname,
@@ -162,19 +195,85 @@ def _flatten_report(
         "generated_at": data.get("generated_at", ""),
         "abaqus_command": data.get("abaqus_command", "abaqus"),
         "status": overall_status,
-        "stress_status": stress.get("status", ""),
-        "stress_max_abs_diff": stress.get("max_abs_difference"),
-        "stress_max_rel_diff": stress.get("max_rel_difference"),
-        "statev_status": statev.get("status", ""),
-        "ddsdde_status": ddsdde.get("status", ""),
-        "ddsdde_max_abs_diff": ddsdde.get("max_abs_difference"),
-        "ddsdde_max_rel_diff": ddsdde.get("max_rel_difference"),
-        "convergence_status": convergence.get("status", ""),
+        "stress_status": comparisons["stress"]["status"],
+        "stress_max_abs_diff": stress.get("max_abs_difference") if comparisons["stress"]["compared"] else None,
+        "stress_max_rel_diff": stress.get("max_rel_difference") if comparisons["stress"]["compared"] else None,
+        "statev_status": comparisons["statev"]["status"],
+        "ddsdde_status": comparisons["ddsdde"]["status"],
+        "ddsdde_max_abs_diff": ddsdde.get("max_abs_difference") if comparisons["ddsdde"]["compared"] else None,
+        "ddsdde_max_rel_diff": ddsdde.get("max_rel_difference") if comparisons["ddsdde"]["compared"] else None,
+        "convergence_status": comparisons["convergence"]["status"],
+        "observables": comparisons,
         "audit": audit,
+    }
+    for observable, record in comparisons.items():
+        for field in ("requested", "available", "compared", "passed", "failed", "not_requested", "unavailable_reason"):
+            row[f"{observable}_{field}"] = record[field]
+    return row
+
+
+def _observable_record(
+    name: str,
+    comparison: dict[str, Any],
+    requested_outputs: set[str],
+    execution_complete: bool,
+    data: dict[str, Any],
+) -> dict[str, Any]:
+    requested = name in requested_outputs
+    if not requested:
+        return {
+            "status": "not_requested",
+            "requested": False,
+            "available": False,
+            "compared": False,
+            "passed": False,
+            "failed": False,
+            "not_requested": True,
+            "unavailable_reason": "",
+        }
+    if not execution_complete:
+        original_status = str((data.get("original_run_status", {}) or {}).get("status", "unknown"))
+        transformed_status = str((data.get("transformed_run_status", {}) or {}).get("status", "unknown"))
+        reason = f"Abaqus execution incomplete: original={original_status}, transformed={transformed_status}"
+        return {
+            "status": "unavailable",
+            "requested": True,
+            "available": False,
+            "compared": False,
+            "passed": False,
+            "failed": False,
+            "not_requested": False,
+            "unavailable_reason": reason,
+        }
+    status = str(comparison.get("status", ""))
+    compared = status in {"passed", "failed"}
+    return {
+        "status": status or "unavailable",
+        "requested": True,
+        "available": bool(compared),
+        "compared": bool(compared),
+        "passed": status == "passed",
+        "failed": status == "failed",
+        "not_requested": False,
+        "unavailable_reason": "" if compared else f"Comparison status was {status or 'missing'}." ,
     }
 
 
-def _audit_record(data: dict[str, Any], case_dir: Path) -> dict[str, Any]:
+def _observable_counts(rows: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
+    result: dict[str, dict[str, int]] = {}
+    for observable in ("stress", "statev", "ddsdde", "convergence"):
+        records = [row.get("observables", {}).get(observable, {}) for row in rows]
+        result[observable.upper()] = {
+            field: sum(1 for record in records if record.get(field))
+            for field in ("requested", "available", "compared", "passed", "failed", "not_requested")
+        }
+        result[observable.upper()]["unavailable"] = sum(
+            1 for record in records if record.get("status") == "unavailable"
+        )
+    return result
+
+
+def _audit_record(data: dict[str, Any], case_dir: Path, *, results_available: bool = True) -> dict[str, Any]:
     generated = data.get("generated_files", {}) or {}
     original_source = _file_identity(_optional_path(data.get("original_umat_path")))
     transformed_source = _file_identity(_optional_path(data.get("transformed_umat_path")))
@@ -188,8 +287,8 @@ def _audit_record(data: dict[str, Any], case_dir: Path) -> dict[str, Any]:
     transformed_results_path = _optional_path(generated.get("otis_results_json")) or case_dir / "otis_results.json"
     original_results = _load_json(original_results_path)
     transformed_results = _load_json(transformed_results_path)
-    original_matrix = _final_matrix(original_results)
-    transformed_matrix = _final_matrix(transformed_results)
+    original_matrix = _final_matrix(original_results) if results_available else None
+    transformed_matrix = _final_matrix(transformed_results) if results_available else None
     original_assignments = _matching_lines(original_text, r"^\s*DDSDDE\s*\([^)]*\)\s*=")
     bypassed_assignments = _matching_lines(transformed_text, r"OTIS-SKIP:.*DDSDDE\s*\([^)]*\)\s*=")
     seeding_lines = _matching_lines(
@@ -253,9 +352,9 @@ def _audit_record(data: dict[str, Any], case_dir: Path) -> dict[str, Any]:
         "transformed_results": _file_identity(transformed_results_path),
         "original_final_ddsdde": original_matrix,
         "transformed_final_ddsdde": transformed_matrix,
-        "absolute_difference": _matrix_difference(original_matrix, transformed_matrix, relative=False),
-        "relative_difference": _matrix_difference(original_matrix, transformed_matrix, relative=True),
-        "increments": _increment_ddsdde_audit(original_results, transformed_results),
+        "absolute_difference": _matrix_difference(original_matrix, transformed_matrix, relative=False) if results_available else None,
+        "relative_difference": _matrix_difference(original_matrix, transformed_matrix, relative=True) if results_available else None,
+        "increments": _increment_ddsdde_audit(original_results, transformed_results) if results_available else [],
     }
 
 
