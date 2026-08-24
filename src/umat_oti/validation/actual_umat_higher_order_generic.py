@@ -121,6 +121,69 @@ class ModelSpec:
     local_solver_tolerance_citation: str = ""
     source_zero_proofs: tuple[SourceZeroProof, ...] = ()
 
+    @classmethod
+    def from_contract(cls, contract: dict, *, key: str, config: str,
+                      source: str) -> "ModelSpec":
+        """Build a spec from a contract's ``validation`` block.
+
+        The registry below is a set of known-good specs, not the mechanism. A
+        contract that carries its own validation block drives the same stages
+        without appearing in any registry, which is what keeps the pipeline
+        generic rather than a switch over model names.
+        """
+        block = contract.get("validation")
+        if not isinstance(block, dict):
+            raise ValueError(
+                f"{key}: the contract has no 'validation' block, so no material-point "
+                f"history is defined. Add one, or run only the stages up to compilation.")
+        missing = [name for name in ("increments", "inelastic_statev_index")
+                   if block.get(name) is None]
+        if missing:
+            raise ValueError(
+                f"{key}: the validation block is missing {', '.join(missing)}. These "
+                f"have no defensible default: a load path cannot be guessed and a "
+                f"branch marker cannot be inferred.")
+        state_variables = contract.get("state_variables") or []
+        nstatv = block.get("nstatv") or max(
+            (int(v.get("statev_index", 0)) for v in state_variables), default=0)
+        parameters = contract.get("parameters") or []
+        props = block.get("props")
+        if props is None:
+            ordered = sorted(parameters, key=lambda p: int(p.get("props_index", 0)))
+            props = [float(p.get("value", 0.0)) for p in ordered]
+        nprops = block.get("nprops") or max(len(props), 1)
+        if not props:
+            props = [0.0] * nprops
+        return cls(
+            key=key, config=config, source=source,
+            nstatv=int(nstatv), nprops=int(nprops), props=tuple(float(v) for v in props),
+            increments=tuple(tuple(float(v) for v in row) for row in block["increments"]),
+            inelastic_statev_index=int(block["inelastic_statev_index"]),
+            inelastic_threshold=float(block.get("inelastic_threshold", 1.0e-12)),
+            stress_scale=float(block["stress_scale"]),
+            stress_scale_meaning=str(block.get("stress_scale_meaning", "")),
+            strain_scale=float(block["strain_scale"]),
+            strain_scale_meaning=str(block.get("strain_scale_meaning", "")),
+            base_step=float(block["base_step"]),
+            fixed_form=bool(block.get("fixed_form", True)),
+            ntens=int(contract.get("ntens", 4)),
+            order=int(block.get("order", 4)),
+            branch_margin_statev_index=block.get("branch_margin_statev_index"),
+            branch_margin_meaning=str(block.get("branch_margin_meaning", "")),
+            local_solver_tolerance=block.get("local_solver_tolerance"),
+            local_solver_tolerance_citation=str(
+                block.get("local_solver_tolerance_citation", "")),
+            source_zero_proofs=tuple(
+                SourceZeroProof(
+                    kind=str(proof["kind"]), detail=str(proof["detail"]),
+                    branches=tuple(proof.get("branches", ())),
+                    components=tuple(int(c) for c in proof.get("components", ())),
+                    seed_directions=tuple(int(d) for d in proof.get("seed_directions", ())),
+                )
+                for proof in block.get("source_zero_proofs", [])
+            ),
+        )
+
     def source_proof_for(self, branch: str, component: int,
                          directions: tuple[int, ...]) -> tuple[str, str] | None:
         for proof in self.source_zero_proofs:

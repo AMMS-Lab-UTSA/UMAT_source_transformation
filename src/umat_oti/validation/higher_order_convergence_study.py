@@ -560,7 +560,7 @@ def run_code_imp_convergence(output_dir: Path, progress: Callable[[str], None]) 
 # --------------------------------------------------------------------------- #
 # Generic actual-UMAT models (UMAT_PCL, UMAT_PCLK, visco_imp)
 # --------------------------------------------------------------------------- #
-def run_generic_convergence(model_key: str, output_dir: Path,
+def run_generic_convergence(model_key, output_dir: Path,
                             progress: Callable[[str], None]) -> dict[str, Any]:
     """Convergence study for a model described by a
     :class:`~umat_oti.validation.actual_umat_higher_order_generic.ModelSpec`.
@@ -572,7 +572,10 @@ def run_generic_convergence(model_key: str, output_dir: Path,
     """
     from umat_oti.validation import actual_umat_higher_order_generic as generic
 
-    spec = generic.MODELS[model_key]
+    # Accept either a registry key or a spec built straight from a contract, so
+    # the study is not gated on a model appearing in a hard-coded registry.
+    spec = (model_key if isinstance(model_key, generic.ModelSpec)
+            else generic.MODELS[model_key])
     output_dir = output_dir.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     scale = hoc.NormalizationScale(

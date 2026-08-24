@@ -16,6 +16,7 @@ complete; naming them makes the gap legible in every run manifest.
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 from pathlib import Path
@@ -23,7 +24,7 @@ from typing import Any
 
 from umat_oti.pipeline.engine import FunctionStage, RunContext, StageOutcome
 from umat_oti.pipeline.manifest import Artifact, sha256_file
-from umat_oti.pipeline.status import require
+from umat_oti.pipeline.status import StageStatus, require
 
 def _resolve_declared_sources(ctx: RunContext) -> list[Path]:
     """Resolve the contract's declared sources without running the stage.
@@ -119,6 +120,29 @@ def _compilation_cache_inputs(ctx: RunContext) -> dict:
         "compiler_flags": list(ctx.options.get("compiler_flags", ()) or ()),
         "compile_requested": bool(ctx.options.get("compile", False)),
     }
+
+
+def _derivative_verification_cache_inputs(ctx: RunContext) -> dict:
+    """Parity is not a declared dependency, so it must enter the key explicitly.
+
+    Without this, changing the parity verdict would leave a cached derivative
+    result standing and the parity gate would never be applied.
+    """
+    record = ctx.manifest.stages.get("primal_parity")
+    block = ctx.contract.get("validation") or {}
+    return {
+        "primal_parity_status": record.status.value if record else None,
+        "primal_parity_cache_key": record.cache_key if record else None,
+        "reference_kind": str(block.get("reference_kind", "compiled_original")),
+        "base_step": block.get("base_step"),
+        "order": block.get("order"),
+    }
+
+
+def _material_point_cache_inputs(ctx: RunContext) -> dict:
+    """The load path and driver settings decide the execution."""
+    block = ctx.contract.get("validation")
+    return {"validation": block, "compiler": str(ctx.options.get("compiler", "gfortran"))}
 
 
 def transformation_options(ctx: RunContext):
@@ -522,8 +546,289 @@ def _compilation(ctx: RunContext) -> StageOutcome:
     )
 
 
+
 # --------------------------------------------------------------------------- #
-# 11-16. registered, not yet implemented
+# 11-13. material-point execution, primal parity, derivative verification
+# --------------------------------------------------------------------------- #
+def _model_spec(ctx: RunContext):
+    """Build the validation spec from the contract, or say why we cannot."""
+    from umat_oti.validation.actual_umat_higher_order_generic import ModelSpec
+
+    config_path = Path(ctx.options.get("config_path") or "")
+    key = str(ctx.contract.get("name") or config_path.stem or "model")
+    sources = ctx.output_of("source_acquisition")["sources"]
+    return ModelSpec.from_contract(
+        ctx.contract, key=key,
+        config=str(config_path), source=str(sources[0]) if sources else "")
+
+
+def _reference_kind(ctx: RunContext) -> str:
+    """How the contract says its independent reference is obtained."""
+    block = ctx.contract.get("validation")
+    if not isinstance(block, dict):
+        return "none"
+    return str(block.get("reference_kind", "compiled_original"))
+
+
+def _material_point_execution(ctx: RunContext) -> StageOutcome:
+    """Build and run the material-point driver over the contract's load path.
+
+    Executes the *actual transformed source*, carrying OTI-valued STRESS and
+    STATEV between increments. A Python re-implementation is never substituted
+    here: the claim this stage supports is about compiled transformed Fortran,
+    so only compiled transformed Fortran can support it.
+    """
+    from umat_oti.validation import actual_umat_higher_order_generic as generic
+
+    if not shutil.which(str(ctx.options.get("compiler", "gfortran"))):
+        return StageOutcome.blocked("no Fortran compiler on PATH")
+    kind = _reference_kind(ctx)
+    if kind == "extended_precision_model":
+        return _extended_precision_execution(ctx)
+    try:
+        spec = _model_spec(ctx)
+    except ValueError as exc:
+        return StageOutcome.not_requested(str(exc))
+
+    work = ctx.stage_dir("material_point_execution") / "build"
+    try:
+        artifacts = generic.build_model_artifacts(spec, work)
+    except RuntimeError as exc:
+        return StageOutcome.failed(str(exc))
+
+    history_path = ctx.stage_dir("material_point_execution") / "loading_history.json"
+    history_path.write_text(json.dumps({
+        "increments": [list(v) for v in spec.increments],
+        "props": list(spec.props),
+        "nstatv": spec.nstatv,
+        "branch_history": artifacts["branch_history"],
+        "primal_check": artifacts["primal_check"],
+    }, indent=2, sort_keys=True), encoding="utf-8")
+
+    recorded = []
+    for role, path in (("transformed_driver", work / f"{spec.key}_higher_order_driver.f90"),
+                       ("reference_driver", work / f"{spec.key}_reference_driver.f90"),
+                       ("oti_output", work / "oti_hjac.dat")):
+        if Path(path).exists():
+            recorded.append(Artifact.of(Path(path), role, root=ctx.work_dir))
+    recorded.append(Artifact.of(history_path, "loading_history", root=ctx.work_dir))
+
+    return StageOutcome(
+        status=StageOutcome.ok().status,
+        outputs={
+            "model_key": spec.key,
+            "build_dir": str(work),
+            "increments": [list(v) for v in spec.increments],
+            "branch_history": artifacts["branch_history"],
+            "primal_check": artifacts["primal_check"],
+            "primal_agrees": artifacts["primal_agrees"],
+            "hashes": artifacts["hashes"],
+            "oti_value_count": len(artifacts["oti_values"]),
+            "compiler": str(ctx.options.get("compiler", "gfortran")),
+        },
+        artifacts=recorded,
+    )
+
+
+def _extended_precision_execution(ctx: RunContext) -> StageOutcome:
+    """Run the transformed source against an extended-precision reference model.
+
+    The transformed Fortran is still compiled and executed here; what differs is
+    that the reference is an independent high-precision implementation rather
+    than a second build of the same file.
+    """
+    from umat_oti.validation.actual_umat_higher_order import (
+        run_actual_j2_higher_order_evidence,
+    )
+
+    config_path = Path(ctx.options.get("config_path") or "")
+    out = ctx.stage_dir("material_point_execution") / "evidence"
+    try:
+        evidence = run_actual_j2_higher_order_evidence(config_path, out)
+    except RuntimeError as exc:
+        return StageOutcome.failed(str(exc))
+    artifacts = []
+    for record in evidence.get("artifacts", []):
+        path = Path(record["path"])
+        if path.exists() and path.suffix in (".f90", ".csv", ".dat", ".json"):
+            artifacts.append(Artifact.of(path, "material_point_output", root=ctx.work_dir))
+    return StageOutcome(
+        status=StageOutcome.ok().status,
+        outputs={
+            "model_key": str(ctx.contract.get("validation", {}).get("study") or "j2"),
+            "reference_kind": "extended_precision_model",
+            "branch_history": evidence.get("branch_history", []),
+            "source_sha256": evidence.get("source", {}).get("sha256"),
+            "compiler": str(ctx.options.get("compiler", "gfortran")),
+        },
+        artifacts=artifacts,
+    )
+
+
+def _primal_parity(ctx: RunContext) -> StageOutcome:
+    """Compare original and transformed primal responses before any derivative.
+
+    Two kinds of divergence must not be conflated.
+
+    A divergence within an order of magnitude of the model's *own* local Newton
+    tolerance means the two builds stopped at different admissible points. That
+    is a property of the model, not a defect in the transformation -- but it
+    still bounds what can be verified on the affected branch, so those branches
+    are named and carried forward rather than waved through.
+
+    A divergence far beyond that tolerance cannot be explained by convergence.
+    That is a transformation defect, and it fails the stage: derivatives from a
+    build that computes a different stress are not statements about
+    differentiation.
+    """
+    from umat_oti.validation.actual_umat_higher_order_generic import (
+        SOLVER_TOLERANCE_MARGIN,
+    )
+
+    if _reference_kind(ctx) == "extended_precision_model":
+        return StageOutcome.not_requested(
+            "this contract's reference is an independent extended-precision model "
+            "rather than a second compiled build of the same source, so build-to-build "
+            "primal parity does not apply. The reference's independence comes from "
+            "being a different implementation, not a different build.")
+
+    execution = ctx.output_of("material_point_execution")
+    checks = execution["primal_check"]
+    diverging = [c for c in checks if not c["agrees"]]
+    ratios = [c.get("divergence_over_model_solver_tolerance") for c in diverging]
+    known = [r for r in ratios if r is not None]
+    worst = max(known) if known else None
+    unexplained = [c for c in diverging
+                   if c.get("divergence_over_model_solver_tolerance") is None
+                   or c["divergence_over_model_solver_tolerance"] > SOLVER_TOLERANCE_MARGIN]
+    limited_branches = sorted({c["branch"] for c in diverging})
+
+    outputs = {
+        "agrees": not diverging,
+        "per_increment": checks,
+        "diverging_increments": [c["increment"] for c in diverging],
+        "worst_divergence_over_solver_tolerance": worst,
+        "solver_tolerance_margin": SOLVER_TOLERANCE_MARGIN,
+        "model_solver_tolerance": (checks[0].get("model_solver_tolerance")
+                                   if checks else None),
+        # Branches whose derivatives cannot be verified, even when the stage
+        # succeeds, because the two builds do not agree there.
+        "parity_limited_branches": limited_branches,
+        "unexplained_increments": [c["increment"] for c in unexplained],
+    }
+
+    if not diverging:
+        return StageOutcome(status=StageOutcome.ok().status, outputs=outputs)
+
+    if unexplained:
+        return StageOutcome(
+            status=StageOutcome.failed("x").status,
+            reason=(
+                f"primal divergence on increment(s) {[c['increment'] for c in unexplained]} "
+                f"is beyond what the model's own local Newton tolerance can explain"
+                + (f" (worst {worst:.3g}x that tolerance)" if worst is not None else "")
+                + ". This is a transformation defect: derivatives from a build that "
+                  "computes a different stress are not statements about differentiation."),
+            outputs=outputs)
+
+    return StageOutcome(
+        status=StageOutcome.ok().status,
+        outputs=outputs,
+        diagnostics=[
+            f"the transformed and original builds differ on increment(s) "
+            f"{[c['increment'] for c in diverging]} by up to {worst:.3g} times the "
+            f"model's own local Newton tolerance. They are not solving to the same "
+            f"state, so derivatives on branch(es) {limited_branches} are bounded by "
+            f"that and cannot be verified beyond it."],
+    )
+
+
+def _derivative_verification(ctx: RunContext) -> StageOutcome:
+    """Run the convergence study behind the stage, on the parity-checked build."""
+    from umat_oti.validation.higher_order_convergence_study import (
+        run_generic_convergence, run_j2_convergence,
+    )
+
+    limited: list[str] = []
+    if _reference_kind(ctx) == "extended_precision_model":
+        out_dir = ctx.stage_dir("derivative_verification")
+        dataset = run_j2_convergence(out_dir, lambda message: None)
+        summary = dataset["summary"]
+        return StageOutcome(
+            status=StageOutcome.ok().status,
+            outputs={
+                "rows": summary["rows"],
+                "rows_supporting_verification": summary["rows_supporting_verification"],
+                "classification_counts": summary["classification_counts"],
+                "verified": summary["verified"],
+                "reference_kind": "extended_precision_model",
+                "parity_limited_branches": [],
+            },
+            artifacts=[Artifact.of(Path(dataset["dataset_path"]),
+                                   "convergence_evidence", root=ctx.work_dir)],
+        )
+
+    # Consult parity from the manifest rather than as a hard dependency: a
+    # contract whose reference is an independent implementation has no
+    # build-to-build parity, but where parity DID run and fail, no row here may
+    # count. The study still runs, because knowing how the rows classify is
+    # useful; what it may not do is call any of them verified.
+    parity_record = ctx.manifest.stages.get("primal_parity")
+    parity = ctx.results.get("primal_parity") or (
+        parity_record.outputs if parity_record else {})
+    limited = parity.get("parity_limited_branches") or []
+    parity_failed = (parity_record is not None
+                     and parity_record.status is not StageStatus.SUCCEEDED
+                     and parity_record.status is not StageStatus.NOT_REQUESTED)
+    try:
+        spec = _model_spec(ctx)
+    except ValueError as exc:
+        return StageOutcome.not_requested(str(exc))
+    out_dir = ctx.stage_dir("derivative_verification")
+    dataset = run_generic_convergence(spec, out_dir, lambda message: None)
+    summary = dataset["summary"]
+    artifacts = [
+        Artifact.of(Path(dataset["dataset_path"]), "convergence_evidence", root=ctx.work_dir)
+    ]
+    for name in ("convergence_rows.csv", "convergence_sweep.csv"):
+        path = out_dir / name
+        if path.exists():
+            artifacts.append(Artifact.of(path, "derivative_rows", root=ctx.work_dir))
+    return StageOutcome(
+        status=StageOutcome.ok().status,
+        outputs={
+            "rows": summary["rows"],
+            "rows_supporting_verification": (
+                0 if parity_failed else summary["rows_supporting_verification"]),
+            "rows_supporting_verification_before_parity_gate": (
+                summary["rows_supporting_verification"] if parity_failed else None),
+            "classification_counts": summary["classification_counts"],
+            # Parity failing overrides every row-level result: the two builds do
+            # not compute the same stress, so their derivatives are not
+            # comparable no matter how cleanly the reference resolved them.
+            "verified": False if parity_failed else summary["verified"],
+            "parity_failed": parity_failed,
+            "parity_gate": (
+                None if not parity_failed else
+                "primal parity failed, so no row counts as verified regardless of its "
+                "own classification: " + (parity_record.reason or "")),
+            "parity_limited_branches": limited,
+            "parity_limitation": (
+                None if not limited else
+                f"the primal responses differ on branch(es) {limited}; rows there are "
+                f"bounded by that disagreement regardless of their own classification"),
+            # Executing is not verifying. This stage succeeding means the study
+            # ran; whether the model is verified is the 'verified' flag above.
+            "stage_success_is_not_verification": (
+                "this stage succeeded because the study executed; the scientific "
+                "outcome is the 'verified' field and the per-row classifications"),
+        },
+        artifacts=artifacts,
+    )
+
+
+# --------------------------------------------------------------------------- #
+# 14-16. registered, not yet implemented
 # --------------------------------------------------------------------------- #
 def _unsupported(reason: str):
     def run(ctx: RunContext) -> StageOutcome:
@@ -552,20 +857,15 @@ CANONICAL_STAGES: tuple[FunctionStage, ...] = (
     FunctionStage("compilation", _compilation,
                   ("oti_support_generation",),
                   cache_inputs_fn=_compilation_cache_inputs),
-    FunctionStage("material_point_execution",
-                  _unsupported("the engine does not yet build and run the material-point "
-                               "driver; umat_oti.validation drives that today"),
-                  ("compilation",)),
-    FunctionStage("primal_parity",
-                  _unsupported("primal parity is implemented in "
-                               "validation.actual_umat_higher_order_generic and is not "
-                               "yet routed through the engine"),
-                  ("material_point_execution",)),
-    FunctionStage("derivative_verification",
-                  _unsupported("derivative verification is implemented in "
-                               "validation.higher_order_convergence and is not yet "
-                               "routed through the engine"),
-                  ("primal_parity",)),
+    FunctionStage("material_point_execution", _material_point_execution,
+                  ("compilation",), cache_inputs_fn=_material_point_cache_inputs),
+    FunctionStage("primal_parity", _primal_parity, ("material_point_execution",)),
+    # Depends on the *execution*, not on parity: a contract whose reference is an
+    # independent implementation has no build-to-build parity to wait for. Parity,
+    # where it applies, is consulted inside the stage and carried into its result.
+    FunctionStage("derivative_verification", _derivative_verification,
+                  ("material_point_execution",), version="2",
+                  cache_inputs_fn=_derivative_verification_cache_inputs),
     FunctionStage("abaqus_validation",
                   _unsupported("Abaqus validation is not yet routed through the engine"),
                   ("compilation",)),

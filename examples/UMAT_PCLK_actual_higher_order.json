@@ -5,21 +5,129 @@
   "entry_routine": "UMAT",
   "ntens": 4,
   "parameters": [
-    {"name": "EMOD", "props_index": 1, "value": 210000.0},
-    {"name": "ENU", "props_index": 2, "value": 0.3},
-    {"name": "SIG0", "props_index": 3, "value": 240.0},
-    {"name": "SIGSAT", "props_index": 4, "value": 400.0},
-    {"name": "HRDRATE", "props_index": 5, "value": 20.0},
-    {"name": "HMOD", "props_index": 6, "value": 1000.0}
+    {
+      "name": "EMOD",
+      "props_index": 1,
+      "value": 210000.0
+    },
+    {
+      "name": "ENU",
+      "props_index": 2,
+      "value": 0.3
+    },
+    {
+      "name": "SIG0",
+      "props_index": 3,
+      "value": 240.0
+    },
+    {
+      "name": "SIGSAT",
+      "props_index": 4,
+      "value": 400.0
+    },
+    {
+      "name": "HRDRATE",
+      "props_index": 5,
+      "value": 20.0
+    },
+    {
+      "name": "HMOD",
+      "props_index": 6,
+      "value": 1000.0
+    }
   ],
   "state_variables": [
-    {"name": "EELAS", "statev_index": 1},
-    {"name": "EPLAS", "statev_index": 5},
-    {"name": "XBACK", "statev_index": 9},
-    {"name": "EQPLAS", "statev_index": 13},
-    {"name": "SMISES", "statev_index": 14}
+    {
+      "name": "EELAS",
+      "statev_index": 1
+    },
+    {
+      "name": "EPLAS",
+      "statev_index": 5
+    },
+    {
+      "name": "XBACK",
+      "statev_index": 9
+    },
+    {
+      "name": "EQPLAS",
+      "statev_index": 13
+    },
+    {
+      "name": "SMISES",
+      "statev_index": 14
+    }
   ],
   "derivatives": [
-    {"id": "stress_strain_order_four", "target": "DDSDDE4", "seed": "DSTRAN", "response": "STRESS", "order": 4}
-  ]
+    {
+      "id": "stress_strain_order_four",
+      "target": "DDSDDE4",
+      "seed": "DSTRAN",
+      "response": "STRESS",
+      "order": 4
+    }
+  ],
+  "validation": {
+    "_comment": "Material-point history for pipeline stages 11-13. Kept in the contract rather than a code registry so the stages stay generic.",
+    "increments": [
+      [
+        0.00075,
+        -0.00032143,
+        0.0,
+        0.0
+      ],
+      [
+        0.00075,
+        -0.00047676,
+        0.0,
+        0.0001
+      ],
+      [
+        0.001125,
+        -0.0010704,
+        0.0,
+        0.00015
+      ],
+      [
+        0.000375,
+        -0.00036187,
+        0.0,
+        5e-05
+      ]
+    ],
+    "props": [
+      210000.0,
+      0.3,
+      240.0,
+      400.0,
+      20.0,
+      1000.0
+    ],
+    "nstatv": 14,
+    "nprops": 6,
+    "inelastic_statev_index": 13,
+    "inelastic_threshold": 1e-12,
+    "branch_margin_statev_index": null,
+    "branch_margin_meaning": null,
+    "stress_scale": 240.0,
+    "stress_scale_meaning": "initial yield stress SIG0 = PROPS(3)",
+    "strain_scale": 0.001,
+    "strain_scale_meaning": "characteristic strain-increment magnitude of the load path",
+    "base_step": 4e-05,
+    "order": 4,
+    "fixed_form": true,
+    "local_solver_tolerance": 1e-07,
+    "local_solver_tolerance_citation": "UMAT_PCLK.for line 62: TOLER=1.0D-7, tested as ABS(FGAM/FJAC).LT.TOLER at line 172",
+    "source_zero_proofs": [
+      {
+        "kind": "source_affine_branch",
+        "detail": "In the elastic branch the update is STRESS = STRESS + DDSDDE . DSTRAN with a\nDDSDDE assembled only from the constant moduli, before any yield test. The\nresponse is therefore exactly affine in DSTRAN on this branch, so every\nderivative of order two and above vanishes identically -- not merely at the\npoints that were sampled. UMAT_PCLK.for lines 92-112: DDSDDE is built from EMOD=PROPS(1) and ENU=PROPS(2), then STRESS(K2)=STRESS(K2)+DDSDDE(K2,K1)*DSTRAN(K1) is applied before SMISES and the yield test.",
+        "branches": [
+          "elastic"
+        ],
+        "components": [],
+        "seed_directions": []
+      }
+    ]
+  }
 }
