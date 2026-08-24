@@ -40,12 +40,14 @@ Status vocabulary: `verified`, `partially_implemented`, `unimplemented`,
 | Higher order, `visco_imp` | expected to verify | **96 rows, 90 supporting, not verified**; 6 rows unresolvable in double precision | `…/higher_order_convergence/visco_imp/` | `partially_implemented` | Report 90/96 and the reference limitation |
 | Worst relative error, higher order | not stated to us | J2 **3.02e-11**; `code_imp` **9.64e-6**; `visco_imp` **8.67e-5**; `UMAT_PCLK` 0.344 (not counted) | convergence datasets | `verified` | quote per model, on resolved rows only |
 | Table 4 covering 4 actual UMATs | `code_imp`, `UMAT_PCL`, `UMAT_PCLK`, `visco_imp` | **none of the four verifies.** Only controlled J2 does | `…/table4_higher_order_convergence.csv` | `partially_implemented` | **The four-model Table 4 claim cannot stand.** Either restrict Table 4 to J2 + the partial `code_imp`/`visco_imp` rows, or defer |
-| J2 `DSIGMA_DP` 6×4, `DSTATEV_DP` 1×4 | 6×4 and 1×4 | **560 data rows present** | `…/evidence/table5_j2_parameter_sensitivities.csv` | `partially_implemented` | verify the row set actually reduces to 6×4 and 1×4 before publishing |
-| Parameter sensitivities, 18 models | 18 models, 76 of 84 directions | **0 data rows**; the 18 model contracts exist only in `~/Documents/…/oti_provider/materials/` and have never been run through this pipeline | `…/evidence/table6_parameter_sensitivity_sweep.csv` | `unimplemented` | **Do not publish 18/76/84 until measured.** The models exist; the run does not |
+| J2 `DSIGMA_DP` 6×4, `DSTATEV_DP` 1×4 | 6×4 and 1×4 | **560 rows = 20 increments × (6+1) × 4 parameters**, structurally complete: 0 duplicates, 0 missing, 0 unexpected, worst substantive relative error **1.965e-10**, near-zero rows exact to 0.0, 10 elastic + 10 plastic increments, path-dependent | `…/table5_j2_parameter_sensitivities.csv` + `tools/validate_table5.py` + `tests/test_table5_dataset.py` | `verified` | **Quote the 6×4 and 1×4 as one increment of a 20-increment path**, and cite the full path as the archive. Views generated at `table5_view_dsigma_dp_6x4_increment20.csv` and `table5_view_dstatev_dp_1x4_increment20.csv` |
+| SoftwareX Table 6: parameter sensitivities across 18 models | 18 models; direction count to be measured | **0 data rows**; the 18 model contracts exist only in `~/Documents/…/oti_provider/materials/` and have never been run through this pipeline | `…/evidence/table6_parameter_sensitivity_sweep.csv` | `unimplemented` | **Do not publish a direction count until measured.** The models exist; the run does not |
+| Poster/deck benchmark: 20 models, 84 parameters, 168 comparisons | 20 / 84 / 168 | **not measured** | — | `unimplemented` | mark `not_yet_verified`. **A separate study from SoftwareX Table 6** — different model count and scope; the two must not be merged into a single "18 models, 76 of 84 directions" statement |
 | Web corpus, discovered | "8 → 30 UMATs" | **133 discovered, 133 licence-classified, 46 entry routines detected, 45 contracts built, 14 transformed, 14 compiled** | `…/evidence/corpus_round_metrics.json` | `partially_implemented` | Replace "8 → 30". The measured funnel is 133 → 46 → 45 → 14 |
 | Web corpus, verified | implied verified | **0 primal-parity verified, 0 derivatives numerically verified, 0 Abaqus verified** | same | `unimplemented` | **14 compiled is not 14 verified.** The manuscript must not describe compilation as verification |
 | Web corpus, "17 fixes" | 17 | **not reproducible** — no fix ledger found in any local copy | — | `blocked_by_external_dependency` | mark historical unless a ledger is produced |
-| "1.4 nominal-run equivalents" | 1.4 | **measured 1.42 as a cost *ratio*** for one routine: analytical 2.29–2.34 µs/call vs OTI 3.33–3.43 µs/call | `~/Downloads/driver_utsa/benchmark_runs.csv` (10 rows) | `partially_implemented` | The 1.4 appears to be OTI costing **1.42× an analytical call**, i.e. OTI is *slower per call* on this routine. That is not a "nominal-run equivalent" and not a speedup. Restate or withdraw |
+| Local microbenchmark: OTI call time ÷ analytical call time, one routine | *not a document claim* | **1.42** (analytical 2.29–2.34 µs/call, OTI 3.33–3.43 µs/call) | `~/Downloads/driver_utsa/benchmark_runs.csv` (10 rows, `computeFlowRule` vs `computeFlowRule_otis`) | `verified` (as a microbenchmark) | may be reported as a per-call cost ratio for one routine, nothing more |
+| "≈1.4 nominal-run equivalents" for a multi-parameter workflow | ≈1.4 | **not measured** | — | `unimplemented` | mark `not_yet_verified`. **Do not reinterpret this from the microbenchmark above.** They are different quantities that happen to be numerically close: one is a per-call cost ratio for a single routine, the other is an end-to-end workflow cost expressed in nominal analyses. Reproducing it requires the same workload, baseline, direction count and cost definition |
 | "8× faster" | 8× | **not reproduced.** No end-to-end benchmark exists | — | `unimplemented` | mark `not_yet_verified`; do not publish |
 | "49 vs 210 updates" | 49 / 210 | **not measured** | — | `unimplemented` | mark `not_yet_verified` |
 | "400 avoided analyses" | 400 | **not measured** | — | `unimplemented` | mark `not_yet_verified` |
@@ -53,6 +55,23 @@ Status vocabulary: `verified`, `partially_implemented`, `unimplemented`,
 | Residual Assembler C3D8 `du/dp`, `dσ/dp`, `dq/dp` | claimed | **not validated against 2N+1 Abaqus reruns.** Implementation exists in a divergent local copy, not on the active branch | `LOCAL_IMPLEMENTATION_INVENTORY.md` | `blocked_by_external_dependency` | needs Abaqus; this host has 2021.HF5 while the archived evidence is 2024 |
 | Sentinel job `791553` | detects component-level DDSDDE differences | **reproduced**: +1000 on `DDSDDE(1,1)`, `failed_as_expected`, component `(1,1)` identified | `…/arc_791506/ddsdde_sentinel_audit.json` | `verified` | none |
 | Version metadata | 1.1.0 | **1.1.0 in all five sources** | pyproject, `__init__`, CITATION.cff, codemeta.json, .zenodo.json | `verified` | none |
+
+## Two pairs that must not be merged
+
+Numerical similarity is not identity. Two pairs of quantities in this project
+are close enough to be conflated by accident, and each pair is kept apart above:
+
+**1.42 vs "≈1.4".** The local microbenchmark measures one routine's per-call
+cost ratio, OTI against analytical, and OTI is *slower* there. The presentation
+claim is an end-to-end multi-parameter workflow cost in nominal-analysis
+equivalents. Nothing establishes that the second follows from the first, and a
+coincidence of two digits is not evidence. The workflow claim stays unmeasured.
+
+**SoftwareX Table 6 vs the poster benchmark.** Table 6 is 18 models with a
+direction count we have not yet measured. The poster/deck benchmark is a
+separate study of 20 models, 84 parameters and 168 comparisons. Reporting them
+as one "18 models, 76 of 84 directions" line would invent a study that was never
+run.
 
 ## The three revisions that matter most
 
