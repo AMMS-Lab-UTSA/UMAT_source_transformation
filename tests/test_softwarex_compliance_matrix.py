@@ -62,15 +62,28 @@ def test_reference_quality_section_never_counts_an_unsupported_row():
         "reference_unresolved",
     }
     for name, model in section["models"].items():
+        assert name in section["models_verified"], name
         supported = model["resolved"] + model["expected_zero_independently_supported"]
         withheld = model["cancellation_limited"] + model["reference_unresolved"]
         assert supported + withheld == model["rows"], name
         # a model listed here is only listed because every row is carried
         assert withheld == 0, f"{name} still has {withheld} rows without a usable reference"
         assert model["max_relative_error_on_resolved_rows"] < 1.0e-4, name
-    # the models still awaiting a study must not appear as if they were done
-    assert set(section["models_not_yet_studied"]) == {"UMAT_PCL", "UMAT_PCLK", "visco_imp"}
-    assert not set(section["models"]) & set(section["models_not_yet_studied"])
+    # models that were studied and did NOT verify must never be counted as verified
+    unverified = section["models_studied_not_verified"]
+    assert set(unverified) == {"UMAT_PCL", "UMAT_PCLK", "visco_imp"}
+    assert not set(section["models_verified"]) & set(unverified)
+    assert not set(section["models"]) & set(unverified)
+    for name, entry in unverified.items():
+        assert entry["outcome"] != "verified", name
+        # a model that disagrees with a RESOLVED reference is a discrepancy, not a
+        # reference-quality gap, and must not be filed as one
+        if entry.get("rows_disagreeing_with_resolved_reference"):
+            assert entry["outcome"] != "reference_quality_limited", name
+        # partial support must never be rounded up to full support
+        if "rows_supporting_verification" in entry:
+            assert entry["rows_supporting_verification"] < entry["rows"], name
+    assert section["primal_consistency_gate"]
 
 
 def test_narrow_evidence_does_not_promote_broad_claims():

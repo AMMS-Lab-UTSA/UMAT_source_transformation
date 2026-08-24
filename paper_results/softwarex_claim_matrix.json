@@ -66,14 +66,14 @@
       "status": "verified_reference_fixture_only"
     },
     {
-      "blocker": "Controlled J2 (108/108 rows) and code_imp (96/96 rows) are independently verified on elastic and plastic histories against a step-size-converged reference, with no row resting on an absolute tolerance. Independent checks for UMAT_PCL, UMAT_PCLK and visco_imp are still missing, so the manuscript claim over all actual UMAT models remains partial.",
-      "evidence": "paper_results/actual_umat_higher_order/j2/actual_umat_higher_order_evidence.json; paper_results/actual_umat_higher_order/code_imp/actual_umat_higher_order_evidence.json; paper_results/actual_umat_higher_order/table4_higher_order_actual_umats.csv; paper_results/higher_order_convergence/j2/convergence_evidence.json; paper_results/higher_order_convergence/code_imp/convergence_evidence.json; paper_results/higher_order_convergence/table4_higher_order_convergence.csv",
+      "blocker": "Controlled J2 (108/108 rows) and code_imp (96/96 rows) are verified against a step-size-converged reference with no row resting on an absolute tolerance. The three remaining models were attempted offline with gfortran 9.4 and none verified: UMAT_PCL's transformed build aborts at run time while the original runs; UMAT_PCLK's transformed primal stress diverges from the original at increment 4 and 24 of 96 derivative rows disagree with a fully resolved reference; visco_imp disagrees nowhere but leaves 6 of 96 rows unresolvable by a double-precision reference. The manuscript claim over all actual UMAT models therefore stays partial.",
+      "evidence": "paper_results/actual_umat_higher_order/j2/actual_umat_higher_order_evidence.json; paper_results/actual_umat_higher_order/code_imp/actual_umat_higher_order_evidence.json; paper_results/actual_umat_higher_order/table4_higher_order_actual_umats.csv; paper_results/higher_order_convergence/j2/convergence_evidence.json; paper_results/higher_order_convergence/code_imp/convergence_evidence.json; paper_results/higher_order_convergence/table4_higher_order_convergence.csv; paper_results/higher_order_convergence/UMAT_PCL/convergence_evidence.json; paper_results/higher_order_convergence/UMAT_PCLK/convergence_evidence.json; paper_results/higher_order_convergence/visco_imp/convergence_evidence.json",
       "executable_test": "tests/test_actual_umat_higher_order.py; tests/test_higher_order_convergence.py; tests/test_transform_smoke.py",
       "id": "higher_orders_from_actual_umat_models",
-      "implementation": "src/umat_oti/transform/source_transform.py::_higher_order_jacobian_lines; src/umat_oti/validation/actual_umat_higher_order.py; src/umat_oti/validation/actual_legacy_higher_order.py; src/umat_oti/validation/higher_order_convergence.py; src/umat_oti/validation/higher_order_convergence_study.py",
+      "implementation": "src/umat_oti/transform/source_transform.py::_higher_order_jacobian_lines; src/umat_oti/validation/actual_umat_higher_order.py; src/umat_oti/validation/actual_legacy_higher_order.py; src/umat_oti/validation/higher_order_convergence.py; src/umat_oti/validation/higher_order_convergence_study.py; src/umat_oti/validation/actual_umat_higher_order_generic.py",
       "manuscript_location": "Table 4 and Figure 4 - derivatives through orders 1-4",
       "required_capability": "Generate and independently verify orders 2-4 from code_imp, UMAT_PCL, UMAT_PCLK, and visco_imp stress updates.",
-      "source_case": "controlled J2 actual UMAT and legacy code_imp completed; UMAT_PCL, UMAT_PCLK, and visco_imp remain required",
+      "source_case": "controlled J2 and legacy code_imp completed; UMAT_PCL, UMAT_PCLK and visco_imp attempted offline and each failed to verify",
       "status": "partially_implemented"
     },
     {
@@ -244,12 +244,37 @@
         "rows": 108
       }
     },
-    "models_not_yet_studied": [
-      "UMAT_PCL",
-      "UMAT_PCLK",
-      "visco_imp"
+    "models_studied_not_verified": {
+      "UMAT_PCL": {
+        "detail": "Transforms and compiles at order 4, but the transformed executable aborts with glibc 'double free or corruption (out)' during the UMAT call. The original source, compiled independently with the same driver and load path, runs to completion. No rows exist to classify.",
+        "outcome": "failed_transformed_execution",
+        "rows": 0
+      },
+      "UMAT_PCLK": {
+        "detail": "The reference resolves every row, so this is not a reference-quality gap. The transformed build's primal stress diverges from the independently compiled original at increment 4 (shear 5.8649 vs 6.4561 MPa) while increments 1-3 agree to 1e-13, and all 24 disagreeing derivative rows are in that same increment.",
+        "max_relative_error_on_resolved_rows": 0.34356799446358743,
+        "outcome": "primal_divergence_and_derivative_disagreement",
+        "rows": 96,
+        "rows_disagreeing_with_resolved_reference": 24,
+        "rows_supporting_verification": 72
+      },
+      "visco_imp": {
+        "cancellation_limited": 4,
+        "detail": "No row disagrees with its reference. Six rows cannot be carried because the double-precision reference does not resolve them; no higher-precision recomputation is available for a compiled reference.",
+        "max_relative_error_on_resolved_rows": 8.67363263347962e-05,
+        "outcome": "reference_quality_limited",
+        "reference_unresolved": 2,
+        "rows": 96,
+        "rows_disagreeing_with_resolved_reference": 0,
+        "rows_supporting_verification": 90
+      }
+    },
+    "models_verified": [
+      "controlled_j2_actual_umat",
+      "code_imp_legacy_umat"
     ],
     "policy": "A row counts only when a plateau across at least three consecutive step sizes resolves the reference and the OTI value lies inside it, or when the derivative is zero with support independent of the OTI result. No row is passed for falling below a large absolute tolerance.",
+    "primal_consistency_gate": "The transformed build must reproduce the original build's stress along the same path before any of its derivatives are treated as evidence. Where the primal responses differ, a derivative disagreement is not a statement about differentiation.",
     "supersedes": "The earlier single-step comparison passed rows against absolute tolerances as large as 4.0e4 at order 4. Those tolerances no longer carry any row: every controlled J2 and code_imp row is now carried by a resolved plateau or by independent zero support.",
     "supporting_classifications": [
       "resolved",

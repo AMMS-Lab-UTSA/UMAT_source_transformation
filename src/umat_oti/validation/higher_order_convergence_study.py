@@ -515,6 +515,106 @@ def run_code_imp_convergence(output_dir: Path, progress: Callable[[str], None]) 
 
 
 # --------------------------------------------------------------------------- #
+# Generic actual-UMAT models (UMAT_PCL, UMAT_PCLK, visco_imp)
+# --------------------------------------------------------------------------- #
+def run_generic_convergence(model_key: str, output_dir: Path,
+                            progress: Callable[[str], None]) -> dict[str, Any]:
+    """Convergence study for a model described by a
+    :class:`~umat_oti.validation.actual_umat_higher_order_generic.ModelSpec`.
+
+    Same instrument as the J2 and code_imp studies: the reference is an
+    independently compiled build of the *original* source, swept over step
+    sizes and classified by what it can actually resolve. Compiling is not
+    verification; the classification decides.
+    """
+    from umat_oti.validation import actual_umat_higher_order_generic as generic
+
+    spec = generic.MODELS[model_key]
+    output_dir = output_dir.resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    scale = hoc.NormalizationScale(
+        stress_scale=spec.stress_scale,
+        strain_scale=spec.strain_scale,
+        stress_units="MPa",
+        strain_units="dimensionless",
+        stress_scale_meaning=spec.stress_scale_meaning,
+        strain_scale_meaning=spec.strain_scale_meaning,
+    )
+
+    with tempfile.TemporaryDirectory(prefix=f"{spec.key}_convergence_") as scratch_name:
+        scratch = Path(scratch_name)
+        progress(f"  building {spec.key}: transform, OTI driver, independent reference")
+        artifacts = generic.build_model_artifacts(spec, scratch / "work")
+        reference_executable = artifacts["reference_executable"]
+        branch_of = {row["increment"]: row["branch"] for row in artifacts["branch_history"]}
+
+        progress("  sweeping %d finite-difference steps (compiled double-precision reference)"
+                 % len(hoc.STEP_FACTORS))
+        collected, affine, affine_margin, affine_amplitudes = _collect_sweep(
+            lambda index: generic.evaluator(reference_executable, spec, index),
+            spec.increments, spec.base_step, spec.ntens, progress,
+        )
+        rows = _build_rows(
+            collected, artifacts["oti_values"], lambda i: branch_of[i], spec.ntens, scale,
+            None, None, None, affine, affine_margin, affine_amplitudes,
+        )
+        hashes = dict(artifacts["hashes"])
+        primal_check = artifacts["primal_check"]
+        primal_agrees = artifacts["primal_agrees"]
+        branch_history = artifacts["branch_history"]
+        manifest_source = artifacts["paths"]["original_source"]
+
+    dataset = _write_outputs(
+        output_dir=output_dir,
+        model=spec.key,
+        rows=rows,
+        scale=scale,
+        base_step=spec.base_step,
+        reference_method=(
+            f"independently compiled original {spec.key} UMAT replayed for each "
+            "tensor-product centred finite-difference stencil node"
+        ),
+        reference_precision="IEEE double precision (compiled Fortran, gfortran)",
+        zero_support=(
+            "structural stencil invariance and exact local affineness at amplitudes "
+            + ", ".join("%.3e" % a for a in affine_amplitudes)
+            + "; the reference is a double-precision executable, so no "
+            "higher-precision recomputation is available for this model"
+        ),
+        source_path=manifest_source,
+        source_sha256=hashes["original_source"],
+    )
+    dataset["artifact_hashes"] = hashes
+    dataset["primal_consistency"] = {
+        "policy": (
+            "The transformed build must reproduce the original build's stress along "
+            "the same path before any of its derivatives are believed. Where the "
+            "primal responses differ, a derivative disagreement is not evidence "
+            "about differentiation -- the two builds are not the same model there."
+        ),
+        "relative_tolerance": 1.0e-9,
+        "agrees": primal_agrees,
+        "per_increment": primal_check,
+    }
+    if not primal_agrees:
+        dataset["summary"]["verified"] = False
+        dataset["summary"]["primal_divergence"] = True
+    dataset["branch_history"] = branch_history
+    dataset["increments"] = [list(v) for v in spec.increments]
+    dataset["directions"] = [list(v) for v in generic.SELECTED_DIRECTIONS]
+    dataset["properties"] = list(spec.props)
+    dataset["factorial_recovery"] = (
+        "OTI coefficients are multiplied by product factorials before oti_hjac.dat output."
+    )
+    Path(dataset["dataset_path"]).write_text(
+        json.dumps({k: v for k, v in dataset.items() if k != "rows"},
+                   indent=2, sort_keys=True, default=str),
+        encoding="utf-8",
+    )
+    return dataset
+
+
+# --------------------------------------------------------------------------- #
 # Output
 # --------------------------------------------------------------------------- #
 def _read_oti_from_csv(path: Path) -> dict[tuple[int, int, tuple[int, ...], int], float]:
@@ -654,7 +754,11 @@ def _sha256(path: Path) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", choices=("j2", "code_imp"), required=True)
+    parser.add_argument(
+        "--model",
+        choices=("j2", "code_imp", "UMAT_PCL", "UMAT_PCLK", "visco_imp"),
+        required=True,
+    )
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args(argv)
@@ -666,8 +770,10 @@ def main(argv: list[str] | None = None) -> int:
     progress(f"convergence study: {args.model}")
     if args.model == "j2":
         dataset = run_j2_convergence(args.out, progress)
-    else:
+    elif args.model == "code_imp":
         dataset = run_code_imp_convergence(args.out, progress)
+    else:
+        dataset = run_generic_convergence(args.model, args.out, progress)
 
     summary = dataset["summary"]
     print(json.dumps(summary, indent=2, sort_keys=True))
