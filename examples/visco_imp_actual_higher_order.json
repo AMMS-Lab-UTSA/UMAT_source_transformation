@@ -6,11 +6,84 @@
   "ntens": 4,
   "parameters": [],
   "state_variables": [
-    {"name": "P", "statev_index": 1},
-    {"name": "R", "statev_index": 2},
-    {"name": "FLOW", "statev_index": 3}
+    {
+      "name": "P",
+      "statev_index": 1
+    },
+    {
+      "name": "R",
+      "statev_index": 2
+    },
+    {
+      "name": "FLOW",
+      "statev_index": 3
+    }
   ],
   "derivatives": [
-    {"id": "stress_strain_order_four", "target": "DDSDDE4", "seed": "DSTRAN", "response": "STRESS", "order": 4}
-  ]
+    {
+      "id": "stress_strain_order_four",
+      "target": "DDSDDE4",
+      "seed": "DSTRAN",
+      "response": "STRESS",
+      "order": 4
+    }
+  ],
+  "validation": {
+    "_comment": "Material-point history for pipeline stages 11-13. Kept in the contract rather than a code registry so the stages stay generic.",
+    "increments": [
+      [
+        0.006,
+        -0.0025714,
+        0.0,
+        0.0
+      ],
+      [
+        0.006,
+        -0.0038141,
+        0.0,
+        0.0008
+      ],
+      [
+        0.009,
+        -0.0085635,
+        0.0,
+        0.0012
+      ],
+      [
+        0.003,
+        -0.002895,
+        0.0,
+        0.0004
+      ]
+    ],
+    "props": [
+      0.0
+    ],
+    "nstatv": 3,
+    "nprops": 1,
+    "inelastic_statev_index": 1,
+    "inelastic_threshold": 1e-12,
+    "branch_margin_statev_index": 3,
+    "branch_margin_meaning": "STATEV(3) = FLOW = PJ - R - YIELD, the signed trial yield function stored at visco_imp.f line 104; negative is elastic, positive yields",
+    "stress_scale": 10.0,
+    "stress_scale_meaning": "hard-coded YIELD = 10 in visco_imp.f",
+    "strain_scale": 0.01,
+    "strain_scale_meaning": "characteristic strain-increment magnitude of the load path",
+    "base_step": 0.0004,
+    "order": 4,
+    "fixed_form": false,
+    "local_solver_tolerance": 1e-12,
+    "local_solver_tolerance_citation": "visco_imp.f line 121: IF(ABS(XRES).LT.1.E-12) GOTO 10",
+    "source_zero_proofs": [
+      {
+        "kind": "source_affine_branch",
+        "detail": "In the elastic branch the update is STRESS = STRESS + DDSDDE . DSTRAN with a\nDDSDDE assembled only from the constant moduli, before any yield test. The\nresponse is therefore exactly affine in DSTRAN on this branch, so every\nderivative of order two and above vanishes identically -- not merely at the\npoints that were sampled. visco_imp.f lines 88-92: CALL KMLT1(DDSDDE,DSTRAN,DSTRESS) then STRESS(K)=STRESS(K)+DSTRESS(K), with DDSDDE from the constant E=1000, XNUE=0.3 set at lines 42-43. The plastic correction is reached only under IF(FLOW.GT.0.) at line 106.",
+        "branches": [
+          "elastic"
+        ],
+        "components": [],
+        "seed_directions": []
+      }
+    ]
+  }
 }

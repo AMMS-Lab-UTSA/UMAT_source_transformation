@@ -6,8 +6,14 @@
   "ntens": 4,
   "parameters": [],
   "state_variables": [
-    {"name": "P", "statev_index": 1},
-    {"name": "R", "statev_index": 2}
+    {
+      "name": "P",
+      "statev_index": 1
+    },
+    {
+      "name": "R",
+      "statev_index": 2
+    }
   ],
   "derivatives": [
     {
@@ -17,5 +23,76 @@
       "response": "STRESS",
       "order": 4
     }
-  ]
+  ],
+  "validation": {
+    "_comment": "Material-point history for pipeline stages 11-13. Kept in the contract rather than a code registry so the stages stay generic.",
+    "increments": [
+      [
+        0.000750000006519258,
+        -0.0003214285825379193,
+        0.0,
+        0.0
+      ],
+      [
+        0.000750000006519258,
+        -0.00047676003305241466,
+        0.0,
+        0.0
+      ],
+      [
+        0.0011249999515712261,
+        -0.0010704351589083672,
+        0.0,
+        0.0
+      ],
+      [
+        0.0003750000614672899,
+        -0.0003618698101490736,
+        0.0,
+        0.0
+      ]
+    ],
+    "props": [
+      0.0,
+      0.0
+    ],
+    "nstatv": 2,
+    "nprops": 2,
+    "inelastic_statev_index": 1,
+    "inelastic_threshold": 1e-12,
+    "branch_margin_statev_index": null,
+    "branch_margin_meaning": null,
+    "stress_scale": 240.0,
+    "stress_scale_meaning": "initial yield stress SIGY0 = 240 hard-coded at code_imp.f line 46",
+    "strain_scale": 0.001,
+    "strain_scale_meaning": "characteristic strain-increment magnitude of the load path",
+    "base_step": 4e-05,
+    "order": 4,
+    "fixed_form": true,
+    "local_solver_tolerance": 1e-05,
+    "local_solver_tolerance_citation": "code_imp.f line 29: TOLER=1.D-5, tested as IF(DABS(RES).LT.TOLER) at line 151. RES has stress units, so two builds may stop up to ~1e-5 MPa apart on the same increment.",
+    "source_zero_proofs": [
+      {
+        "kind": "source_affine_branch",
+        "detail": "In the elastic branch the update is STRESS = STRESS + DDSDDE . DSTRAN with a\nDDSDDE assembled only from the constant moduli, before any yield test. The\nresponse is therefore exactly affine in DSTRAN on this branch, so every\nderivative of order two and above vanishes identically -- not merely at the\npoints that were sampled. code_imp.f lines 66-104: DDSDDE is built from E=210000 and XNUE=0.3 (lines 44-45), CALL KMLT1(DDSDDE,DSTRAN,DSTRESS) then STRESS(K)=STRESS(K)+DSTRESS(K); the plastic correction is reached only under IF(ZY.GT.0.) at line 141.",
+        "branches": [
+          "elastic"
+        ],
+        "components": [],
+        "seed_directions": []
+      },
+      {
+        "kind": "source_independent",
+        "detail": "The in-plane shear stress is identically zero on this load path, in both branches, independently of the seeded directions. code_imp.f line 81 sets DDSDDE(4,4)=EG as the only non-zero entry in row 4, so DSTRESS(4)=EG*DSTRAN(4); every increment of this path has DSTRAN(4)=0 and the seeds are directions 1 and 2 only, so STRESS(4) never leaves its initial zero. The deviator of a tensor with zero off-diagonal keeps a zero off-diagonal (line 114), so the plastic correction DPSTRN(1,2) (line 158) is also zero. STRESS(4) is therefore exactly zero for all perturbations in directions 1 and 2, and all its derivatives with respect to them vanish.",
+        "branches": [],
+        "components": [
+          4
+        ],
+        "seed_directions": [
+          1,
+          2
+        ]
+      }
+    ]
+  }
 }
