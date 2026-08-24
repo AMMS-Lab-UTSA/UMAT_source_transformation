@@ -58,11 +58,89 @@ def test_aggregate_preserves_nonzero_ddsdde_metrics(tmp_path: Path):
     )
 
     output_json = tmp_path / "aggregate.json"
-    aggregate_abaqus_results(arc_dir, output_csv=tmp_path / "aggregate.csv", output_json=output_json)
+    aggregate_abaqus_results(
+        arc_dir,
+        output_csv=tmp_path / "aggregate.csv",
+        output_json=output_json,
+        commit_sha="audit-sha",
+        execution_commit_sha="execution-sha",
+    )
 
     row = json.loads(output_json.read_text(encoding="utf-8"))["rows"][0]
     assert row["ddsdde_max_abs_diff"] == 0.015625
     assert row["ddsdde_max_rel_diff"] == 8.2e-8
+    assert row["execution_commit_sha"] == "execution-sha"
+    assert row["audit_commit_sha"] == "audit-sha"
+
+
+def test_aggregate_archives_source_and_increment_provenance(tmp_path: Path):
+    arc_dir = tmp_path / "arc_123"
+    case_dir = arc_dir / "paired_batch" / "validation" / "code_imp"
+    case_dir.mkdir(parents=True)
+    original_source = case_dir / "original.f"
+    transformed_source = case_dir / "transformed.f90"
+    original_source.write_text("      DDSDDE(1,1) = 10.0D0\n", encoding="utf-8")
+    transformed_source.write_text(
+        "      DSTRAN_OTI(1) = DSTRAN_OTI(1) + OTI_E1\n"
+        "! OTIS-SKIP: DDSDDE(1,1) = 10.0D0\n"
+        "      DDSDDE(1,1) = GETIM(STRESS_OTI(1),1)\n"
+        "      STATEV(2) = DDSDDE(1,1)\n",
+        encoding="utf-8",
+    )
+    original_results = {
+        "ddsdde_component_count": 1,
+        "ddsdde_statev_start_index": 2,
+        "ddsdde_statev_end_index": 2,
+        "increments": [{"frame_index": 1, "increment_number": 1, "ddsdde": [[10.0]]}],
+    }
+    transformed_results = {
+        **original_results,
+        "increments": [{"frame_index": 1, "increment_number": 1, "ddsdde": [[10.25]]}],
+    }
+    original_results_path = case_dir / "original_results.json"
+    transformed_results_path = case_dir / "otis_results.json"
+    _write_json(original_results_path, original_results)
+    _write_json(transformed_results_path, transformed_results)
+    _write_json(
+        case_dir / "validation_report.json",
+        {
+            "status": "passed",
+            "final_pass": True,
+            "original_umat_path": str(original_source),
+            "transformed_umat_path": str(transformed_source),
+            "generated_files": {
+                "instrumented_original_user": str(original_source),
+                "combined_oti_user": str(transformed_source),
+                "original_results_json": str(original_results_path),
+                "otis_results_json": str(transformed_results_path),
+            },
+            "ddsdde_comparison": {
+                "status": "passed",
+                "max_abs_difference": 0.25,
+                "max_rel_difference": 0.025,
+            },
+        },
+    )
+
+    output_json = tmp_path / "aggregate.json"
+    aggregate_abaqus_results(
+        arc_dir, output_csv=tmp_path / "aggregate.csv", output_json=output_json
+    )
+
+    audit = json.loads(output_json.read_text(encoding="utf-8"))["rows"][0]["audit"]
+    checks = audit["transformed_source_checks"]
+    assert checks["oti_seeding_lines"][0]["line"] == 1
+    assert checks["original_ddsdde_assignment_span"] == {
+        "start_line": 1,
+        "end_line": 1,
+        "statement_count": 1,
+    }
+    assert checks["bypassed_ddsdde_assignment_span"]["start_line"] == 2
+    assert checks["compiled_ddsdde_extraction_span"]["start_line"] == 3
+    assert audit["increments"][0]["absolute_difference"] == [[0.25]]
+    assert audit["increments"][0]["max_rel_difference"] == 0.25 / 10.25
+    assert audit["result_extraction_layout"]["original"]["ddsdde_statev_start_index"] == 2
+    assert "job=original_umat_validation" in audit["jobs"]["original"]["command"]
 
 
 def test_claim_matrix_does_not_promote_reference_fixtures():
