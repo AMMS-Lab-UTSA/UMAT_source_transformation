@@ -47,6 +47,32 @@ def test_claim_matrix_has_complete_schema_and_allowed_statuses():
         assert claim["blocker"] is not None or claim["status"].startswith("verified_")
 
 
+def test_reference_quality_section_never_counts_an_unsupported_row():
+    """Higher-order rows are carried by a resolved reference, not by a tolerance."""
+    matrix = _matrix()
+    section = matrix["reference_quality"]
+    assert section["applies_to_claim"] == "higher_orders_from_actual_umat_models"
+    assert set(section["supporting_classifications"]) == {
+        "resolved",
+        "expected_zero_independently_supported",
+    }
+    # cancellation-limited and unresolved rows must never be treated as support
+    assert set(section["classifications"]) - set(section["supporting_classifications"]) == {
+        "cancellation_limited",
+        "reference_unresolved",
+    }
+    for name, model in section["models"].items():
+        supported = model["resolved"] + model["expected_zero_independently_supported"]
+        withheld = model["cancellation_limited"] + model["reference_unresolved"]
+        assert supported + withheld == model["rows"], name
+        # a model listed here is only listed because every row is carried
+        assert withheld == 0, f"{name} still has {withheld} rows without a usable reference"
+        assert model["max_relative_error_on_resolved_rows"] < 1.0e-4, name
+    # the models still awaiting a study must not appear as if they were done
+    assert set(section["models_not_yet_studied"]) == {"UMAT_PCL", "UMAT_PCLK", "visco_imp"}
+    assert not set(section["models"]) & set(section["models_not_yet_studied"])
+
+
 def test_narrow_evidence_does_not_promote_broad_claims():
     by_id = {claim["id"]: claim for claim in _matrix()["claims"]}
     assert by_id["higher_order_direction_factorial_fixture"]["status"] == "verified_reference_fixture_only"
