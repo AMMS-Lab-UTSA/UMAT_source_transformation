@@ -75,12 +75,12 @@
       "id": "higher_orders_from_actual_umat_models",
       "manuscript_location": "Table 4 and Figure 4 - derivatives through orders 1-4",
       "required_capability": "Generate and independently verify orders 2-4 from code_imp, UMAT_PCL, UMAT_PCLK, and visco_imp stress updates.",
-      "implementation": "src/umat_oti/transform/source_transform.py::_higher_order_jacobian_lines",
-      "source_case": "code_imp, UMAT_PCL, UMAT_PCLK, visco_imp",
-      "executable_test": "tests/test_transform_smoke.py covers generation only",
-      "evidence": "A code_imp Abaqus run produced oti_hjac.dat; no four-model independent-error table is archived",
+      "implementation": "src/umat_oti/transform/source_transform.py::_higher_order_jacobian_lines; src/umat_oti/validation/actual_umat_higher_order.py; src/umat_oti/validation/actual_legacy_higher_order.py",
+      "source_case": "controlled J2 actual UMAT and legacy code_imp completed; UMAT_PCL, UMAT_PCLK, and visco_imp remain required",
+      "executable_test": "tests/test_actual_umat_higher_order.py; tests/test_transform_smoke.py",
+      "evidence": "paper_results/actual_umat_higher_order/j2/actual_umat_higher_order_evidence.json; paper_results/actual_umat_higher_order/code_imp/actual_umat_higher_order_evidence.json; paper_results/actual_umat_higher_order/table4_higher_order_actual_umats.csv",
       "status": "partially_implemented",
-      "blocker": "Only code_imp generation/execution is demonstrated; deterministic DDSDDE2/3/4 exports and independent checks for all four named models are missing."
+      "blocker": "Controlled J2 and code_imp are independently verified on elastic and plastic histories. Independent checks for UMAT_PCL, UMAT_PCLK, and visco_imp are still missing."
     },
     {
       "id": "focused_j2_parameter_sensitivity",

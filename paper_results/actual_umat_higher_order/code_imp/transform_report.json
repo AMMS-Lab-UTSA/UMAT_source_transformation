@@ -1,0 +1,1921 @@
+{
+  "anchor_completion": {
+    "completion_issues": [],
+    "status": "ready_with_json_contract"
+  },
+  "blockers": [],
+  "branch_conditions": [
+    {
+      "condition": "I .EQ. J",
+      "is_convergence_check": false,
+      "line_numbers": [
+        86
+      ],
+      "text": "IF(I .EQ. J) THEN",
+      "tokens": [
+        "I",
+        "J"
+      ]
+    },
+    {
+      "condition": "ZY.GT.0.",
+      "is_convergence_check": false,
+      "line_numbers": [
+        141
+      ],
+      "text": "IF (ZY.GT.0.) THEN",
+      "tokens": [
+        "ZY"
+      ]
+    },
+    {
+      "condition": "DABS(RES).LT.TOLER",
+      "is_convergence_check": true,
+      "line_numbers": [
+        151
+      ],
+      "text": "IF(DABS(RES).LT.TOLER) GOTO 10",
+      "tokens": [
+        "RES",
+        "TOLER"
+      ]
+    },
+    {
+      "condition": "X .LE. 0.0",
+      "is_convergence_check": false,
+      "line_numbers": [
+        262
+      ],
+      "text": "IF(X .LE. 0.0) GO TO 20",
+      "tokens": [
+        "X"
+      ]
+    },
+    {
+      "condition": "I .EQ. J",
+      "is_convergence_check": false,
+      "line_numbers": [
+        321
+      ],
+      "text": "IF(I .EQ. J) THEN",
+      "tokens": [
+        "I",
+        "J"
+      ]
+    },
+    {
+      "condition": "I .EQ. J",
+      "is_convergence_check": false,
+      "line_numbers": [
+        329
+      ],
+      "text": "IF(I .EQ. J) THEN",
+      "tokens": [
+        "I",
+        "J"
+      ]
+    }
+  ],
+  "constant_variables": [
+    "COORDS",
+    "DM",
+    "DPRED",
+    "DROT",
+    "DTEMP",
+    "DTIME",
+    "E",
+    "EBULK3",
+    "EG",
+    "EG2",
+    "ELAM",
+    "H",
+    "ONE",
+    "PREDEF",
+    "PROPS",
+    "Q",
+    "SIGY0",
+    "STRAN",
+    "TEMP",
+    "THREE",
+    "TIME",
+    "TWO",
+    "VAL1",
+    "XIDEN",
+    "XK",
+    "XNUE",
+    "XR"
+  ],
+  "directions_required": {
+    "ddsdde_directions": 4,
+    "extra_directions": 0,
+    "slot_assignments": [],
+    "total_directions": 4
+  },
+  "extra_jacobian_contracts": [],
+  "extraction_inserted_after_stress_update": true,
+  "extraction_insertion_region_id": "TANGENT-022",
+  "extraction_method": "GETIM(STRESS_OTI(i), j)",
+  "finite_strain": {
+    "dfgrd0_executable_uses": [],
+    "dfgrd1_executable_uses": [],
+    "dfgrd_driven_stress_update": false,
+    "executable_dfgrd_use": false
+  },
+  "finite_strain_mode": {
+    "categories": {
+      "finite_strain_measures": [
+        "DSTR",
+        "STR"
+      ]
+    },
+    "enabled": false,
+    "promoted_kinematic_variables": [
+      "DSTR",
+      "STR"
+    ],
+    "reason": "No executable finite-strain kinematics detected on stress path"
+  },
+  "generated_files": [
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/master_parameters.f90",
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/real_utils.f90",
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/otim4n4.f90",
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/compile_order.txt",
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/compile_hint.sh",
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/higher_order_directions.csv",
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_oti.f"
+  ],
+  "helper_policy": {
+    "default": "pass_through",
+    "helper_calls": [
+      {
+        "arguments": [
+          "STR",
+          "XIDEN",
+          "DSTR"
+        ],
+        "blocking": false,
+        "classification": "pass_through",
+        "line_numbers": [
+          116
+        ],
+        "name": "KDEVIA",
+        "reason": "Helper call preserved; promoted arguments rewritten where needed."
+      },
+      {
+        "arguments": [
+          "DSTR",
+          "PJ"
+        ],
+        "blocking": false,
+        "classification": "pass_through",
+        "line_numbers": [
+          120
+        ],
+        "name": "KEFFP",
+        "reason": "Helper call preserved; promoted arguments rewritten where needed."
+      },
+      {
+        "arguments": [
+          "DDSDDE",
+          "DSTRAN",
+          "DSTRESS",
+          "NTENS"
+        ],
+        "blocking": false,
+        "classification": "pass_through",
+        "line_numbers": [
+          101
+        ],
+        "name": "KMLT1",
+        "reason": "Helper call preserved; promoted arguments rewritten where needed."
+      },
+      {
+        "arguments": [
+          "DDSDDE",
+          "DESTRAN",
+          "DSTRESS",
+          "NTENS"
+        ],
+        "blocking": false,
+        "classification": "pass_through",
+        "line_numbers": [
+          178
+        ],
+        "name": "KMLT1",
+        "reason": "Helper call preserved; promoted arguments rewritten where needed."
+      }
+    ],
+    "notes": "Stress-path helper names are not readiness blockers. Compilation and validation determine whether pass-through is valid."
+  },
+  "jacobian_artifacts": [],
+  "jacobian_contract": {
+    "constant_material_parameters": [
+      "PROPS"
+    ],
+    "contract": "DDSDDE(i,j) = d STRESS(i) / d DSTRAN(j)",
+    "dependent_variable": "STRESS",
+    "independent_variable": "DSTRAN",
+    "notes": "For Abaqus DDSDDE extraction, seed DSTRAN. PROPS affect the stress response but remain constants during derivative extraction.",
+    "output_variable": "DDSDDE"
+  },
+  "keep_real_variables": [
+    "CELENT",
+    "CMNAME",
+    "DDSDDE",
+    "DDSDDT",
+    "DEVITO",
+    "DFGRD0",
+    "DFGRD1",
+    "DM1",
+    "DM2",
+    "DM3",
+    "DRPLDE",
+    "DRPLDT",
+    "EFF1",
+    "I",
+    "J",
+    "K",
+    "KINC",
+    "KSPT",
+    "KSTEP",
+    "LAYER",
+    "NDI",
+    "NOEL",
+    "NPROPS",
+    "NPT",
+    "NSHR",
+    "NSTATV",
+    "NTENS",
+    "PNEWDT",
+    "RPL",
+    "SCD",
+    "SPD",
+    "SSE",
+    "STRSS",
+    "X",
+    "XIDENTY",
+    "XNDIR",
+    "XNV",
+    "Y"
+  ],
+  "ntens": 4,
+  "old_tangent_regions_replaced": [
+    {
+      "classification": "DDSDDE output replacement, replace with GETIM extraction",
+      "end_line": 209,
+      "preview": "      DO J=1,3\n       DDSDDE(I,J) = 2*EG*Q*XNV(I)*XNV(J)\n     +  + (XK-EG*XR*TWO/THREE) + TWO*EG*XR*XIDEN(I,J)\n      END DO\n...\n      DDSDDE(4,K) = DDSDDE(K,4)\n      END DO\n      DDSDDE(4,4) = TWO*EG*Q*XNV(4)*XNV(4) + EG*XR",
+      "reason": "assignment to DDSDDE old tangent/Jacobian output",
+      "region_id": "TANGENT-022",
+      "role": "ddsdde_output_replace",
+      "start_line": 200,
+      "variables": [
+        "DDSDDE",
+        "EG",
+        "I",
+        "J",
+        "K",
+        "Q",
+        "THREE",
+        "TWO",
+        "XIDEN",
+        "XK",
+        "XNV",
+        "XR"
+      ]
+    }
+  ],
+  "oti_module_name": "otim4n4",
+  "oti_order": 4,
+  "oti_type_name": "ONUMM4N4",
+  "plasticity_indicators": {
+    "by_category": {
+      "flow": [
+        {
+          "executable": false,
+          "line_numbers": [
+            31,
+            32,
+            33
+          ],
+          "text": "DIMENSION XIDEN(M,N),XNV(4),DPSTRAN(4), STRESSOLD(4), DESTRAN(4), DSTRESS(4), XNDIR(M,N), STR(M,N),DSTR(M,N), DPSTRN(M,N)",
+          "tokens": [
+            "DESTRAN",
+            "DIMENSION",
+            "DPSTRAN",
+            "DPSTRN",
+            "DSTR",
+            "DSTRESS",
+            "M",
+            "N",
+            "STR",
+            "STRESSOLD",
+            "XIDEN",
+            "XNDIR",
+            "XNV"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            126
+          ],
+          "text": "XNDIR(I,J) = DSTR(I,J)/PJ",
+          "tokens": [
+            "DSTR",
+            "I",
+            "J",
+            "PJ",
+            "XNDIR"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            133
+          ],
+          "text": "XNV(K) = XNDIR(K,K)",
+          "tokens": [
+            "K",
+            "XNDIR",
+            "XNV"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            135
+          ],
+          "text": "XNV(4) = XNDIR(1,2)",
+          "tokens": [
+            "XNDIR",
+            "XNV"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            201,
+            202
+          ],
+          "text": "DDSDDE(I,J) = 2*EG*Q*XNV(I)*XNV(J) + (XK-EG*XR*TWO/THREE) + TWO*EG*XR*XIDEN(I,J)",
+          "tokens": [
+            "DDSDDE",
+            "EG",
+            "I",
+            "J",
+            "Q",
+            "THREE",
+            "TWO",
+            "XIDEN",
+            "XK",
+            "XNV",
+            "XR"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            206
+          ],
+          "text": "DDSDDE(K,4) = TWO*EG*Q*XNV(K)*XNV(4)",
+          "tokens": [
+            "DDSDDE",
+            "EG",
+            "K",
+            "Q",
+            "TWO",
+            "XNV"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            209
+          ],
+          "text": "DDSDDE(4,4) = TWO*EG*Q*XNV(4)*XNV(4) + EG*XR",
+          "tokens": [
+            "DDSDDE",
+            "EG",
+            "Q",
+            "TWO",
+            "XNV",
+            "XR"
+          ]
+        }
+      ],
+      "gamma": [],
+      "hardening": [],
+      "lambda": [],
+      "newton_iteration": [
+        {
+          "executable": true,
+          "line_numbers": [
+            147
+          ],
+          "text": "DO KNEWT=1,10",
+          "tokens": [
+            "DO",
+            "KNEWT"
+          ]
+        }
+      ],
+      "plastic_strain": [
+        {
+          "executable": false,
+          "line_numbers": [
+            31,
+            32,
+            33
+          ],
+          "text": "DIMENSION XIDEN(M,N),XNV(4),DPSTRAN(4), STRESSOLD(4), DESTRAN(4), DSTRESS(4), XNDIR(M,N), STR(M,N),DSTR(M,N), DPSTRN(M,N)",
+          "tokens": [
+            "DESTRAN",
+            "DIMENSION",
+            "DPSTRAN",
+            "DPSTRN",
+            "DSTR",
+            "DSTRESS",
+            "M",
+            "N",
+            "STR",
+            "STRESSOLD",
+            "XIDEN",
+            "XNDIR",
+            "XNV"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            159
+          ],
+          "text": "DPSTRN(I,J) = (THREE/TWO)*dp*DSTR(I,J)/PJ",
+          "tokens": [
+            "DP",
+            "DPSTRN",
+            "DSTR",
+            "I",
+            "J",
+            "PJ",
+            "THREE",
+            "TWO"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            166
+          ],
+          "text": "DPSTRAN(K) = DPSTRN(K,K)",
+          "tokens": [
+            "DPSTRAN",
+            "DPSTRN",
+            "K"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            168
+          ],
+          "text": "DPSTRAN(4) = 2*DPSTRN(1,2)",
+          "tokens": [
+            "DPSTRAN",
+            "DPSTRN"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            173
+          ],
+          "text": "DESTRAN(K)=DSTRAN(K)-DPSTRAN(K)",
+          "tokens": [
+            "DESTRAN",
+            "DPSTRAN",
+            "DSTRAN",
+            "K"
+          ]
+        }
+      ],
+      "residual": [
+        {
+          "executable": true,
+          "line_numbers": [
+            148
+          ],
+          "text": "RES = PJ-3.*EG*dp-r-SIGY0",
+          "tokens": [
+            "DP",
+            "EG",
+            "PJ",
+            "R",
+            "RES",
+            "SIGY0"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            149
+          ],
+          "text": "dp = dp + RES/(3.*EG+h)",
+          "tokens": [
+            "DP",
+            "EG",
+            "H",
+            "RES"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            151
+          ],
+          "text": "IF(DABS(RES).LT.TOLER) GOTO 10",
+          "tokens": [
+            "GOTO",
+            "RES",
+            "TOLER"
+          ]
+        }
+      ],
+      "return_mapping": [],
+      "yield": [
+        {
+          "executable": true,
+          "line_numbers": [
+            46
+          ],
+          "text": "SIGY0 = 240.",
+          "tokens": [
+            "SIGY0"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            139
+          ],
+          "text": "ZY = PJ - r - SIGY0",
+          "tokens": [
+            "PJ",
+            "R",
+            "SIGY0",
+            "ZY"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            141
+          ],
+          "text": "IF (ZY.GT.0.) THEN",
+          "tokens": [
+            "ZY"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            148
+          ],
+          "text": "RES = PJ-3.*EG*dp-r-SIGY0",
+          "tokens": [
+            "DP",
+            "EG",
+            "PJ",
+            "R",
+            "RES",
+            "SIGY0"
+          ]
+        }
+      ]
+    },
+    "categories_present": [
+      "flow",
+      "newton_iteration",
+      "plastic_strain",
+      "residual",
+      "yield"
+    ],
+    "decisive_categories_present": [
+      "plastic_strain",
+      "yield"
+    ],
+    "is_plasticity_candidate": true,
+    "variables": [
+      "DDSDDE",
+      "DESTRAN",
+      "DIMENSION",
+      "DO",
+      "DP",
+      "DPSTRAN",
+      "DPSTRN",
+      "DSTR",
+      "DSTRAN",
+      "DSTRESS",
+      "EG",
+      "GOTO",
+      "H",
+      "I",
+      "J",
+      "K",
+      "KNEWT",
+      "M",
+      "N",
+      "PJ",
+      "Q",
+      "R",
+      "RES",
+      "SIGY0",
+      "STR",
+      "STRESSOLD",
+      "THREE",
+      "TOLER",
+      "TWO",
+      "XIDEN",
+      "XK",
+      "XNDIR",
+      "XNV",
+      "XR",
+      "ZY"
+    ]
+  },
+  "promoted_variables": [
+    "DESTRAN",
+    "DP",
+    "DPSTRAN",
+    "DPSTRN",
+    "DSTR",
+    "DSTRESS",
+    "P",
+    "PJ",
+    "R",
+    "R0",
+    "RES",
+    "STATEV",
+    "STR",
+    "STRESS",
+    "STRESSOLD",
+    "ZY"
+  ],
+  "seed_variables": [
+    "DSTRAN"
+  ],
+  "selected_umat": "UMAT",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true
+  },
+  "shared_setup_regions_kept": [
+    {
+      "classification": "Shared setup, keep real before transformed path",
+      "end_line": 47,
+      "preview": "      E = 210000.0\n      XNUE = 0.3\n      SIGY0 = 240.\n      h = 1206.0",
+      "reason": "E provides setup used before stress/tangent handling; XNUE provides setup used before stress/tangent handling; SIGY0 provides setup used before stress/tangent handling; H provides setup used before stress/tangent handling",
+      "region_id": "SHARED-SETUP-001",
+      "role": "keep_real",
+      "start_line": 44,
+      "variables": [
+        "E",
+        "H",
+        "SIGY0",
+        "XNUE"
+      ]
+    },
+    {
+      "classification": "Shared setup, keep real before transformed path",
+      "end_line": 80,
+      "preview": "      EBULK3 = E/(ONE-TWO*XNUE)\n      XK = EBULK3/THREE\n      EG2 = E/(ONE+XNUE)\n      EG = EG2/TWO\n...\n      END DO\nC\n        DDSDDE(4,4) = EG",
+      "reason": "EBULK3 provides setup used before stress/tangent handling; XK provides setup used before stress/tangent handling; EG2 provides setup used before stress/tangent handling; EG provides setup used before stress/tangent handling; ELAM provides setup used before stress/tangent handling; DDSDDE setup is consumed by a stress-path helper before final tangent replacement",
+      "region_id": "SHARED-SETUP-004",
+      "role": "keep_real",
+      "start_line": 66,
+      "variables": [
+        "C",
+        "DDSDDE",
+        "E",
+        "EBULK3",
+        "EG",
+        "EG2",
+        "ELAM",
+        "ONE",
+        "THREE",
+        "TWO",
+        "XK",
+        "XNUE"
+      ]
+    },
+    {
+      "classification": "Shared setup, keep real before transformed path",
+      "end_line": 89,
+      "preview": "          XIDEN(I,J)=1.0D0\n        ELSE\n          XIDEN(I,J)=0.0D0",
+      "reason": "XIDEN provides setup used before stress/tangent handling",
+      "region_id": "SHARED-SETUP-005",
+      "role": "keep_real",
+      "start_line": 87,
+      "variables": [
+        "XIDEN"
+      ]
+    },
+    {
+      "classification": "Shared setup, keep real before transformed path",
+      "end_line": 198,
+      "preview": "      XR = (PJ-3.*EG*dp)/PJ\n      Q = (ONE/(ONE+3.*EG/h)-XR)*THREE/TWO",
+      "reason": "XR provides setup used before stress/tangent handling; Q provides setup used before stress/tangent handling",
+      "region_id": "SHARED-SETUP-021",
+      "role": "keep_real",
+      "start_line": 197,
+      "variables": [
+        "DP",
+        "EG",
+        "H",
+        "ONE",
+        "PJ",
+        "Q",
+        "THREE",
+        "TWO",
+        "XR"
+      ]
+    }
+  ],
+  "source_file": "/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
+  "statev_accesses": {
+    "read_count": 2,
+    "reads": [
+      {
+        "line_numbers": [
+          60
+        ],
+        "text": "p = STATEV(1)"
+      },
+      {
+        "line_numbers": [
+          61
+        ],
+        "text": "r = STATEV(2)"
+      }
+    ],
+    "write_count": 2,
+    "writes": [
+      {
+        "line_numbers": [
+          191
+        ],
+        "text": "STATEV(1) = p"
+      },
+      {
+        "line_numbers": [
+          192
+        ],
+        "text": "STATEV(2) = r"
+      }
+    ]
+  },
+  "stress_path_helpers": [
+    {
+      "arguments": [
+        "STR",
+        "XIDEN",
+        "DSTR"
+      ],
+      "callee": "KDEVIA",
+      "caller": "UMAT",
+      "line_numbers": [
+        116
+      ],
+      "reason": "call inside detected stress-update interval"
+    },
+    {
+      "arguments": [
+        "DSTR",
+        "PJ"
+      ],
+      "callee": "KEFFP",
+      "caller": "UMAT",
+      "line_numbers": [
+        120
+      ],
+      "reason": "call inside detected stress-update interval"
+    },
+    {
+      "arguments": [
+        "DDSDDE",
+        "DSTRAN",
+        "DSTRESS",
+        "NTENS"
+      ],
+      "callee": "KMLT1",
+      "caller": "UMAT",
+      "line_numbers": [
+        101
+      ],
+      "reason": "call inside detected stress-update interval"
+    },
+    {
+      "arguments": [
+        "DDSDDE",
+        "DESTRAN",
+        "DSTRESS",
+        "NTENS"
+      ],
+      "callee": "KMLT1",
+      "caller": "UMAT",
+      "line_numbers": [
+        178
+      ],
+      "reason": "call inside detected stress-update interval"
+    }
+  ],
+  "stress_regions_transformed": [
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 54,
+      "preview": "      DO J=1,N\n      STR(I,J)=0.0\n      END DO",
+      "reason": "STR is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-002",
+      "role": "transform_with_oti",
+      "start_line": 52,
+      "variables": [
+        "STR"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 61,
+      "preview": "      p = STATEV(1)\n      r = STATEV(2)",
+      "reason": "P is on the DSTRAN to STRESS propagation path; R is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-003",
+      "role": "transform_with_oti",
+      "start_line": 60,
+      "variables": [
+        "P",
+        "R",
+        "STATEV"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 178,
+      "preview": "      r = STATEV(2)\nC\nC\nC    SET UP ELASTICITY MATRIX\n...\nC     DETERMINE STRESS INCREMENT\nC\n       CALL KMLT1(DDSDDE,DESTRAN,DSTRESS,NTENS)",
+      "reason": "DSTRESS is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-018",
+      "role": "transform_with_oti",
+      "start_line": 61,
+      "variables": [
+        "AND",
+        "AT",
+        "BEGINNING",
+        "C",
+        "CALCULATE",
+        "CONDITION",
+        "DDSDDE",
+        "DEFINE",
+        "DESTRAN",
+        "DETERMINE",
+        "DEVIATORIC",
+        "DIRECTION",
+        "DP",
+        "DPSTRAN",
+        "DPSTRN",
+        "DSTR",
+        "DSTRAN",
+        "DSTRESS",
+        "E",
+        "EBULK3",
+        "EFFECTIVE",
+        "EG",
+        "EG2",
+        "ELAM",
+        "ELASTIC",
+        "ELASTICITY",
+        "ENGG",
+        "EQ",
+        "FLOW",
+        "FOR",
+        "FORM",
+        "GOTO",
+        "GT",
+        "H",
+        "IDENTITY",
+        "IN",
+        "INCREMENT",
+        "INCREMENTS",
+        "IS",
+        "ITERATION",
+        "JACOBIAN",
+        "KDEVIA",
+        "KEFFP",
+        "KMLT1",
+        "KNEWT",
+        "LT",
+        "MATRIX",
+        "NEWTON",
+        "NOTATION",
+        "NTENS",
+        "OBTAIN",
+        "OF",
+        "ONE",
+        "PJ",
+        "PLASTIC",
+        "R",
+        "R0",
+        "RES",
+        "SATISFIED",
+        "SAVE",
+        "SET",
+        "SHEARS",
+        "SIGY0",
+        "STATEV",
+        "STEP",
+        "STR",
+        "STRAIN",
+        "STRESS",
+        "STRESSES",
+        "STRESSOLD",
+        "THE",
+        "THREE",
+        "TO",
+        "TOLER",
+        "TRIAL",
+        "TWO",
+        "UP",
+        "USE",
+        "VOIGT",
+        "WITH",
+        "WRITE",
+        "XIDEN",
+        "XK",
+        "XNDIR",
+        "XNUE",
+        "XNV",
+        "YIELD",
+        "ZY"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 97,
+      "preview": "      DO K=1,4\n      STRESSOLD(K) = STRESS(K)\n      END DO",
+      "reason": "STRESSOLD is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-006",
+      "role": "transform_with_oti",
+      "start_line": 95,
+      "variables": [
+        "K",
+        "STRESS",
+        "STRESSOLD"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 104,
+      "preview": "      CALL KMLT1(DDSDDE,DSTRAN,DSTRESS,NTENS)\n      DO K=1,NTENS\n      STRESS(K) = STRESS(K) + DSTRESS(K)\n      END DO",
+      "reason": "DSTRESS is on the DSTRAN to STRESS propagation path; STRESS is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-007",
+      "role": "transform_with_oti",
+      "start_line": 101,
+      "variables": [
+        "DDSDDE",
+        "DSTRAN",
+        "DSTRESS",
+        "K",
+        "KMLT1",
+        "NTENS",
+        "STRESS"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 112,
+      "preview": "      DO K = 1,3\n      STR(K,K) = STRESS(K)\n      END DO\n      STR(1,2) = STRESS(4)\n      STR(2,1) = STRESS(4)",
+      "reason": "STR is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-008",
+      "role": "transform_with_oti",
+      "start_line": 108,
+      "variables": [
+        "K",
+        "STR",
+        "STRESS"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 116,
+      "preview": "      STR(K,K) = STRESS(K)\n      END DO\n      STR(1,2) = STRESS(4)\n      STR(2,1) = STRESS(4)\nC\nC     CALCULATE DEVIATORIC TRIAL STRESS\nC\n      CALL KDEVIA(STR,XIDEN,DSTR)",
+      "reason": "DSTR is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-009",
+      "role": "transform_with_oti",
+      "start_line": 109,
+      "variables": [
+        "C",
+        "CALCULATE",
+        "DEVIATORIC",
+        "DSTR",
+        "KDEVIA",
+        "STR",
+        "STRESS",
+        "TRIAL",
+        "XIDEN"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 120,
+      "preview": "      STR(K,K) = STRESS(K)\n      END DO\n      STR(1,2) = STRESS(4)\n      STR(2,1) = STRESS(4)\n...\nC     CALCULATE EFFECTIVE TRIAL STRESS\nC\n      CALL KEFFP(DSTR,PJ)",
+      "reason": "PJ is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-010",
+      "role": "transform_with_oti",
+      "start_line": 109,
+      "variables": [
+        "C",
+        "CALCULATE",
+        "DEVIATORIC",
+        "DSTR",
+        "EFFECTIVE",
+        "KDEVIA",
+        "KEFFP",
+        "PJ",
+        "STR",
+        "STRESS",
+        "TRIAL",
+        "XIDEN"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 139,
+      "preview": "      ZY = PJ - r - SIGY0",
+      "reason": "ZY is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-013",
+      "role": "transform_with_oti",
+      "start_line": 139,
+      "variables": [
+        "PJ",
+        "R",
+        "SIGY0",
+        "ZY"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 152,
+      "preview": "      r0 = r\n      dp = 0.\n      DO KNEWT=1,10\n      RES = PJ-3.*EG*dp-r-SIGY0\n      dp = dp + RES/(3.*EG+h)\n      r = r0 + h*dp\n      IF(DABS(RES).LT.TOLER) GOTO 10\n      END DO",
+      "reason": "R0 is on the DSTRAN to STRESS propagation path; DP is on the DSTRAN to STRESS propagation path; RES is on the DSTRAN to STRESS propagation path; R is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-014",
+      "role": "transform_with_oti",
+      "start_line": 145,
+      "variables": [
+        "DP",
+        "EG",
+        "GOTO",
+        "H",
+        "KNEWT",
+        "LT",
+        "PJ",
+        "R",
+        "R0",
+        "RES",
+        "SIGY0",
+        "TOLER"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 160,
+      "preview": "       DO J = 1,3\n       DPSTRN(I,J) = (THREE/TWO)*dp*DSTR(I,J)/PJ\n       END DO",
+      "reason": "DPSTRN is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-015",
+      "role": "transform_with_oti",
+      "start_line": 158,
+      "variables": [
+        "DP",
+        "DPSTRN",
+        "DSTR",
+        "I",
+        "J",
+        "PJ",
+        "THREE",
+        "TWO"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 168,
+      "preview": "      DO K=1,3\n      DPSTRAN(K) = DPSTRN(K,K)\n      END DO\n      DPSTRAN(4) = 2*DPSTRN(1,2)",
+      "reason": "DPSTRAN is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-016",
+      "role": "transform_with_oti",
+      "start_line": 165,
+      "variables": [
+        "DPSTRAN",
+        "DPSTRN",
+        "K"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 174,
+      "preview": "      DO K=1,4\n      DESTRAN(K)=DSTRAN(K)-DPSTRAN(K)\n      END DO",
+      "reason": "DESTRAN is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-017",
+      "role": "transform_with_oti",
+      "start_line": 172,
+      "variables": [
+        "DESTRAN",
+        "DPSTRAN",
+        "DSTRAN",
+        "K"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 187,
+      "preview": "       DO K = 1,NTENS\n       STRESS(K) = STRESSOLD(K) + DSTRESS(K)\n       END DO\nC\n       p = p + dp",
+      "reason": "STRESS is on the DSTRAN to STRESS propagation path; P is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-019",
+      "role": "transform_with_oti",
+      "start_line": 183,
+      "variables": [
+        "C",
+        "DP",
+        "DSTRESS",
+        "K",
+        "P",
+        "STRESS",
+        "STRESSOLD"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 192,
+      "preview": "       STATEV(1) = p\n       STATEV(2) = r",
+      "reason": "STATEV is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-020",
+      "role": "transform_with_oti",
+      "start_line": 191,
+      "variables": [
+        "P",
+        "R",
+        "STATEV"
+      ]
+    }
+  ],
+  "success": true,
+  "tangent_helper_regions_skipped": [
+    {
+      "classification": "Tangent helper skip only",
+      "end_line": 127,
+      "preview": "      DO J=1,3\n      XNDIR(I,J) = DSTR(I,J)/PJ\n      END DO",
+      "reason": "XNDIR feeds only the old DDSDDE/tangent block",
+      "region_id": "TANGENT-011",
+      "role": "tangent_helper_skip_only",
+      "start_line": 125,
+      "variables": [
+        "DSTR",
+        "I",
+        "J",
+        "PJ",
+        "XNDIR"
+      ]
+    },
+    {
+      "classification": "Tangent helper skip only",
+      "end_line": 135,
+      "preview": "      DO K=1,3\n      XNV(K) = XNDIR(K,K)\n      END DO\n      XNV(4) = XNDIR(1,2)",
+      "reason": "XNV feeds only the old DDSDDE/tangent block",
+      "region_id": "TANGENT-012",
+      "role": "tangent_helper_skip_only",
+      "start_line": 132,
+      "variables": [
+        "K",
+        "XNDIR",
+        "XNV"
+      ]
+    }
+  ],
+  "tangent_output_regions_replaced": [
+    {
+      "classification": "DDSDDE output replacement, replace with GETIM extraction",
+      "end_line": 209,
+      "preview": "      DO J=1,3\n       DDSDDE(I,J) = 2*EG*Q*XNV(I)*XNV(J)\n     +  + (XK-EG*XR*TWO/THREE) + TWO*EG*XR*XIDEN(I,J)\n      END DO\n...\n      DDSDDE(4,K) = DDSDDE(K,4)\n      END DO\n      DDSDDE(4,4) = TWO*EG*Q*XNV(4)*XNV(4) + EG*XR",
+      "reason": "assignment to DDSDDE old tangent/Jacobian output",
+      "region_id": "TANGENT-022",
+      "role": "ddsdde_output_replace",
+      "start_line": 200,
+      "variables": [
+        "DDSDDE",
+        "EG",
+        "I",
+        "J",
+        "K",
+        "Q",
+        "THREE",
+        "TWO",
+        "XIDEN",
+        "XK",
+        "XNV",
+        "XR"
+      ]
+    }
+  ],
+  "transformation_anchors": {
+    "branch_regions": [
+      {
+        "condition": "I .EQ. J",
+        "end_line": 86,
+        "reason": "Branch condition is preserved; promoted variables are normalized if present.",
+        "region_id": "BRANCH-001",
+        "role": "preserve_branch_condition",
+        "start_line": 86,
+        "text": "IF(I .EQ. J) THEN",
+        "tokens": [
+          "I",
+          "J"
+        ]
+      },
+      {
+        "condition": "ZY.GT.0.",
+        "end_line": 141,
+        "reason": "Branch condition is preserved; promoted variables are normalized if present.",
+        "region_id": "BRANCH-002",
+        "role": "preserve_branch_condition",
+        "start_line": 141,
+        "text": "IF (ZY.GT.0.) THEN",
+        "tokens": [
+          "ZY"
+        ]
+      },
+      {
+        "condition": "DABS(RES).LT.TOLER",
+        "end_line": 151,
+        "reason": "Promoted values in branch/convergence logic must use REAL(...) for control flow.",
+        "region_id": "BRANCH-003",
+        "role": "normalize_condition_real_parts",
+        "start_line": 151,
+        "text": "IF(DABS(RES).LT.TOLER) GOTO 10",
+        "tokens": [
+          "RES",
+          "TOLER"
+        ]
+      }
+    ],
+    "completion_issues": [],
+    "ddsdde_extraction": {
+      "insert_after_line": 211,
+      "insert_at_region": "TANGENT-022",
+      "reason": "Insert GETIM DDSDDE extraction at the explicit old tangent output region or after the stress update when DDSDDE setup is kept real."
+    },
+    "file_io_regions": [],
+    "helper_call_regions": [
+      {
+        "arguments": [
+          "STR",
+          "XIDEN",
+          "DSTR"
+        ],
+        "callee": "KDEVIA",
+        "end_line": 116,
+        "reason": "Helper call is preserved; promoted arguments are rewritten to OTIS shadows.",
+        "region_id": "HELPER-CALL-001",
+        "role": "pass_through_rewrite_promoted_arguments",
+        "start_line": 116
+      },
+      {
+        "arguments": [
+          "DSTR",
+          "PJ"
+        ],
+        "callee": "KEFFP",
+        "end_line": 120,
+        "reason": "Helper call is preserved; promoted arguments are rewritten to OTIS shadows.",
+        "region_id": "HELPER-CALL-002",
+        "role": "pass_through_rewrite_promoted_arguments",
+        "start_line": 120
+      },
+      {
+        "arguments": [
+          "DDSDDE",
+          "DSTRAN",
+          "DSTRESS",
+          "NTENS"
+        ],
+        "callee": "KMLT1",
+        "end_line": 101,
+        "reason": "Helper call is preserved; promoted arguments are rewritten to OTIS shadows.",
+        "region_id": "HELPER-CALL-003",
+        "role": "pass_through_rewrite_promoted_arguments",
+        "start_line": 101
+      },
+      {
+        "arguments": [
+          "DDSDDE",
+          "DESTRAN",
+          "DSTRESS",
+          "NTENS"
+        ],
+        "callee": "KMLT1",
+        "end_line": 178,
+        "reason": "Helper call is preserved; promoted arguments are rewritten to OTIS shadows.",
+        "region_id": "HELPER-CALL-004",
+        "role": "pass_through_rewrite_promoted_arguments",
+        "start_line": 178
+      }
+    ],
+    "old_tangent": {
+      "helper_regions": [
+        {
+          "classification": "Tangent helper skip only",
+          "end_line": 127,
+          "preview": "      DO J=1,3\n      XNDIR(I,J) = DSTR(I,J)/PJ\n      END DO",
+          "reason": "XNDIR feeds only the old DDSDDE/tangent block",
+          "region_id": "TANGENT-011",
+          "role": "tangent_helper_skip_only",
+          "start_line": 125,
+          "variables": [
+            "DSTR",
+            "I",
+            "J",
+            "PJ",
+            "XNDIR"
+          ]
+        },
+        {
+          "classification": "Tangent helper skip only",
+          "end_line": 135,
+          "preview": "      DO K=1,3\n      XNV(K) = XNDIR(K,K)\n      END DO\n      XNV(4) = XNDIR(1,2)",
+          "reason": "XNV feeds only the old DDSDDE/tangent block",
+          "region_id": "TANGENT-012",
+          "role": "tangent_helper_skip_only",
+          "start_line": 132,
+          "variables": [
+            "K",
+            "XNDIR",
+            "XNV"
+          ]
+        }
+      ],
+      "output_region": {
+        "classification": "DDSDDE output replacement, replace with GETIM extraction",
+        "end_line": 209,
+        "preview": "      DO J=1,3\n       DDSDDE(I,J) = 2*EG*Q*XNV(I)*XNV(J)\n     +  + (XK-EG*XR*TWO/THREE) + TWO*EG*XR*XIDEN(I,J)\n      END DO\n...\n      DDSDDE(4,K) = DDSDDE(K,4)\n      END DO\n      DDSDDE(4,4) = TWO*EG*Q*XNV(4)*XNV(4) + EG*XR",
+        "reason": "assignment to DDSDDE old tangent/Jacobian output",
+        "region_id": "TANGENT-022",
+        "role": "ddsdde_output_replace",
+        "start_line": 200,
+        "variables": [
+          "DDSDDE",
+          "EG",
+          "I",
+          "J",
+          "K",
+          "Q",
+          "THREE",
+          "TWO",
+          "XIDEN",
+          "XK",
+          "XNV",
+          "XR"
+        ]
+      },
+      "output_regions": [
+        {
+          "classification": "DDSDDE output replacement, replace with GETIM extraction",
+          "end_line": 209,
+          "preview": "      DO J=1,3\n       DDSDDE(I,J) = 2*EG*Q*XNV(I)*XNV(J)\n     +  + (XK-EG*XR*TWO/THREE) + TWO*EG*XR*XIDEN(I,J)\n      END DO\n...\n      DDSDDE(4,K) = DDSDDE(K,4)\n      END DO\n      DDSDDE(4,4) = TWO*EG*Q*XNV(4)*XNV(4) + EG*XR",
+          "reason": "assignment to DDSDDE old tangent/Jacobian output",
+          "region_id": "TANGENT-022",
+          "role": "ddsdde_output_replace",
+          "start_line": 200,
+          "variables": [
+            "DDSDDE",
+            "EG",
+            "I",
+            "J",
+            "K",
+            "Q",
+            "THREE",
+            "TWO",
+            "XIDEN",
+            "XK",
+            "XNV",
+            "XR"
+          ]
+        }
+      ],
+      "reason": "Explicit DDSDDE-region contract. Helper regions are skipped only when the role says skip_only; keep-real setup is preserved."
+    },
+    "real_output_extraction": {
+      "insert_after_line": 211,
+      "reason": "Copy real STRESS/STATEV after the last transformed stress update."
+    },
+    "schema_version": 1,
+    "seed_insertion": {
+      "line_before": 52,
+      "reason": "Insert OTIS shadow initialization before the first user-confirmed stress-update line."
+    },
+    "selected_umat": "UMAT",
+    "selected_umat_span": {
+      "end_line": 214,
+      "start_line": 11
+    },
+    "shared_setup_regions_to_keep": [
+      {
+        "classification": "Shared setup, keep real before transformed path",
+        "end_line": 47,
+        "preview": "      E = 210000.0\n      XNUE = 0.3\n      SIGY0 = 240.\n      h = 1206.0",
+        "reason": "E provides setup used before stress/tangent handling; XNUE provides setup used before stress/tangent handling; SIGY0 provides setup used before stress/tangent handling; H provides setup used before stress/tangent handling",
+        "region_id": "SHARED-SETUP-001",
+        "role": "keep_real",
+        "start_line": 44,
+        "variables": [
+          "E",
+          "H",
+          "SIGY0",
+          "XNUE"
+        ]
+      },
+      {
+        "classification": "Shared setup, keep real before transformed path",
+        "end_line": 80,
+        "preview": "      EBULK3 = E/(ONE-TWO*XNUE)\n      XK = EBULK3/THREE\n      EG2 = E/(ONE+XNUE)\n      EG = EG2/TWO\n...\n      END DO\nC\n        DDSDDE(4,4) = EG",
+        "reason": "EBULK3 provides setup used before stress/tangent handling; XK provides setup used before stress/tangent handling; EG2 provides setup used before stress/tangent handling; EG provides setup used before stress/tangent handling; ELAM provides setup used before stress/tangent handling; DDSDDE setup is consumed by a stress-path helper before final tangent replacement",
+        "region_id": "SHARED-SETUP-004",
+        "role": "keep_real",
+        "start_line": 66,
+        "variables": [
+          "C",
+          "DDSDDE",
+          "E",
+          "EBULK3",
+          "EG",
+          "EG2",
+          "ELAM",
+          "ONE",
+          "THREE",
+          "TWO",
+          "XK",
+          "XNUE"
+        ]
+      },
+      {
+        "classification": "Shared setup, keep real before transformed path",
+        "end_line": 89,
+        "preview": "          XIDEN(I,J)=1.0D0\n        ELSE\n          XIDEN(I,J)=0.0D0",
+        "reason": "XIDEN provides setup used before stress/tangent handling",
+        "region_id": "SHARED-SETUP-005",
+        "role": "keep_real",
+        "start_line": 87,
+        "variables": [
+          "XIDEN"
+        ]
+      },
+      {
+        "classification": "Shared setup, keep real before transformed path",
+        "end_line": 198,
+        "preview": "      XR = (PJ-3.*EG*dp)/PJ\n      Q = (ONE/(ONE+3.*EG/h)-XR)*THREE/TWO",
+        "reason": "XR provides setup used before stress/tangent handling; Q provides setup used before stress/tangent handling",
+        "region_id": "SHARED-SETUP-021",
+        "role": "keep_real",
+        "start_line": 197,
+        "variables": [
+          "DP",
+          "EG",
+          "H",
+          "ONE",
+          "PJ",
+          "Q",
+          "THREE",
+          "TWO",
+          "XR"
+        ]
+      }
+    ],
+    "statev_read_regions": [
+      {
+        "end_line": 60,
+        "preview": "      p = STATEV(1)",
+        "reason": "Detected STATEV read in selected UMAT.",
+        "region_id": "STATEV-READS-001",
+        "role": "read_statev_shadow_or_real",
+        "start_line": 60,
+        "text": "p = STATEV(1)"
+      },
+      {
+        "end_line": 61,
+        "preview": "      r = STATEV(2)",
+        "reason": "Detected STATEV read in selected UMAT.",
+        "region_id": "STATEV-READS-002",
+        "role": "read_statev_shadow_or_real",
+        "start_line": 61,
+        "text": "r = STATEV(2)"
+      }
+    ],
+    "statev_write_regions": [
+      {
+        "end_line": 191,
+        "preview": "       STATEV(1) = p",
+        "reason": "Detected STATEV write in selected UMAT.",
+        "region_id": "STATEV-WRITES-001",
+        "role": "promote_statev",
+        "start_line": 191,
+        "text": "STATEV(1) = p"
+      },
+      {
+        "end_line": 192,
+        "preview": "       STATEV(2) = r",
+        "reason": "Detected STATEV write in selected UMAT.",
+        "region_id": "STATEV-WRITES-002",
+        "role": "promote_statev",
+        "start_line": 192,
+        "text": "STATEV(2) = r"
+      }
+    ],
+    "status": "ready_with_json_contract",
+    "stress_update": {
+      "reason": "Explicit source lines to transform with OTIS roles; generated from detected/user-selected regions and UMAT-local helper-call stress updates.",
+      "regions": [
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 54,
+          "preview": "      DO J=1,N\n      STR(I,J)=0.0\n      END DO",
+          "reason": "STR is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-002",
+          "role": "transform_with_oti",
+          "start_line": 52,
+          "variables": [
+            "STR"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 61,
+          "preview": "      p = STATEV(1)\n      r = STATEV(2)",
+          "reason": "P is on the DSTRAN to STRESS propagation path; R is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-003",
+          "role": "transform_with_oti",
+          "start_line": 60,
+          "variables": [
+            "P",
+            "R",
+            "STATEV"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 178,
+          "preview": "      r = STATEV(2)\nC\nC\nC    SET UP ELASTICITY MATRIX\n...\nC     DETERMINE STRESS INCREMENT\nC\n       CALL KMLT1(DDSDDE,DESTRAN,DSTRESS,NTENS)",
+          "reason": "DSTRESS is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-018",
+          "role": "transform_with_oti",
+          "start_line": 61,
+          "variables": [
+            "AND",
+            "AT",
+            "BEGINNING",
+            "C",
+            "CALCULATE",
+            "CONDITION",
+            "DDSDDE",
+            "DEFINE",
+            "DESTRAN",
+            "DETERMINE",
+            "DEVIATORIC",
+            "DIRECTION",
+            "DP",
+            "DPSTRAN",
+            "DPSTRN",
+            "DSTR",
+            "DSTRAN",
+            "DSTRESS",
+            "E",
+            "EBULK3",
+            "EFFECTIVE",
+            "EG",
+            "EG2",
+            "ELAM",
+            "ELASTIC",
+            "ELASTICITY",
+            "ENGG",
+            "EQ",
+            "FLOW",
+            "FOR",
+            "FORM",
+            "GOTO",
+            "GT",
+            "H",
+            "IDENTITY",
+            "IN",
+            "INCREMENT",
+            "INCREMENTS",
+            "IS",
+            "ITERATION",
+            "JACOBIAN",
+            "KDEVIA",
+            "KEFFP",
+            "KMLT1",
+            "KNEWT",
+            "LT",
+            "MATRIX",
+            "NEWTON",
+            "NOTATION",
+            "NTENS",
+            "OBTAIN",
+            "OF",
+            "ONE",
+            "PJ",
+            "PLASTIC",
+            "R",
+            "R0",
+            "RES",
+            "SATISFIED",
+            "SAVE",
+            "SET",
+            "SHEARS",
+            "SIGY0",
+            "STATEV",
+            "STEP",
+            "STR",
+            "STRAIN",
+            "STRESS",
+            "STRESSES",
+            "STRESSOLD",
+            "THE",
+            "THREE",
+            "TO",
+            "TOLER",
+            "TRIAL",
+            "TWO",
+            "UP",
+            "USE",
+            "VOIGT",
+            "WITH",
+            "WRITE",
+            "XIDEN",
+            "XK",
+            "XNDIR",
+            "XNUE",
+            "XNV",
+            "YIELD",
+            "ZY"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 97,
+          "preview": "      DO K=1,4\n      STRESSOLD(K) = STRESS(K)\n      END DO",
+          "reason": "STRESSOLD is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-006",
+          "role": "transform_with_oti",
+          "start_line": 95,
+          "variables": [
+            "K",
+            "STRESS",
+            "STRESSOLD"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 104,
+          "preview": "      CALL KMLT1(DDSDDE,DSTRAN,DSTRESS,NTENS)\n      DO K=1,NTENS\n      STRESS(K) = STRESS(K) + DSTRESS(K)\n      END DO",
+          "reason": "DSTRESS is on the DSTRAN to STRESS propagation path; STRESS is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-007",
+          "role": "transform_with_oti",
+          "start_line": 101,
+          "variables": [
+            "DDSDDE",
+            "DSTRAN",
+            "DSTRESS",
+            "K",
+            "KMLT1",
+            "NTENS",
+            "STRESS"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 112,
+          "preview": "      DO K = 1,3\n      STR(K,K) = STRESS(K)\n      END DO\n      STR(1,2) = STRESS(4)\n      STR(2,1) = STRESS(4)",
+          "reason": "STR is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-008",
+          "role": "transform_with_oti",
+          "start_line": 108,
+          "variables": [
+            "K",
+            "STR",
+            "STRESS"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 116,
+          "preview": "      STR(K,K) = STRESS(K)\n      END DO\n      STR(1,2) = STRESS(4)\n      STR(2,1) = STRESS(4)\nC\nC     CALCULATE DEVIATORIC TRIAL STRESS\nC\n      CALL KDEVIA(STR,XIDEN,DSTR)",
+          "reason": "DSTR is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-009",
+          "role": "transform_with_oti",
+          "start_line": 109,
+          "variables": [
+            "C",
+            "CALCULATE",
+            "DEVIATORIC",
+            "DSTR",
+            "KDEVIA",
+            "STR",
+            "STRESS",
+            "TRIAL",
+            "XIDEN"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 120,
+          "preview": "      STR(K,K) = STRESS(K)\n      END DO\n      STR(1,2) = STRESS(4)\n      STR(2,1) = STRESS(4)\n...\nC     CALCULATE EFFECTIVE TRIAL STRESS\nC\n      CALL KEFFP(DSTR,PJ)",
+          "reason": "PJ is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-010",
+          "role": "transform_with_oti",
+          "start_line": 109,
+          "variables": [
+            "C",
+            "CALCULATE",
+            "DEVIATORIC",
+            "DSTR",
+            "EFFECTIVE",
+            "KDEVIA",
+            "KEFFP",
+            "PJ",
+            "STR",
+            "STRESS",
+            "TRIAL",
+            "XIDEN"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 139,
+          "preview": "      ZY = PJ - r - SIGY0",
+          "reason": "ZY is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-013",
+          "role": "transform_with_oti",
+          "start_line": 139,
+          "variables": [
+            "PJ",
+            "R",
+            "SIGY0",
+            "ZY"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 152,
+          "preview": "      r0 = r\n      dp = 0.\n      DO KNEWT=1,10\n      RES = PJ-3.*EG*dp-r-SIGY0\n      dp = dp + RES/(3.*EG+h)\n      r = r0 + h*dp\n      IF(DABS(RES).LT.TOLER) GOTO 10\n      END DO",
+          "reason": "R0 is on the DSTRAN to STRESS propagation path; DP is on the DSTRAN to STRESS propagation path; RES is on the DSTRAN to STRESS propagation path; R is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-014",
+          "role": "transform_with_oti",
+          "start_line": 145,
+          "variables": [
+            "DP",
+            "EG",
+            "GOTO",
+            "H",
+            "KNEWT",
+            "LT",
+            "PJ",
+            "R",
+            "R0",
+            "RES",
+            "SIGY0",
+            "TOLER"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 160,
+          "preview": "       DO J = 1,3\n       DPSTRN(I,J) = (THREE/TWO)*dp*DSTR(I,J)/PJ\n       END DO",
+          "reason": "DPSTRN is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-015",
+          "role": "transform_with_oti",
+          "start_line": 158,
+          "variables": [
+            "DP",
+            "DPSTRN",
+            "DSTR",
+            "I",
+            "J",
+            "PJ",
+            "THREE",
+            "TWO"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 168,
+          "preview": "      DO K=1,3\n      DPSTRAN(K) = DPSTRN(K,K)\n      END DO\n      DPSTRAN(4) = 2*DPSTRN(1,2)",
+          "reason": "DPSTRAN is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-016",
+          "role": "transform_with_oti",
+          "start_line": 165,
+          "variables": [
+            "DPSTRAN",
+            "DPSTRN",
+            "K"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 174,
+          "preview": "      DO K=1,4\n      DESTRAN(K)=DSTRAN(K)-DPSTRAN(K)\n      END DO",
+          "reason": "DESTRAN is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-017",
+          "role": "transform_with_oti",
+          "start_line": 172,
+          "variables": [
+            "DESTRAN",
+            "DPSTRAN",
+            "DSTRAN",
+            "K"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 187,
+          "preview": "       DO K = 1,NTENS\n       STRESS(K) = STRESSOLD(K) + DSTRESS(K)\n       END DO\nC\n       p = p + dp",
+          "reason": "STRESS is on the DSTRAN to STRESS propagation path; P is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-019",
+          "role": "transform_with_oti",
+          "start_line": 183,
+          "variables": [
+            "C",
+            "DP",
+            "DSTRESS",
+            "K",
+            "P",
+            "STRESS",
+            "STRESSOLD"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 192,
+          "preview": "       STATEV(1) = p\n       STATEV(2) = r",
+          "reason": "STATEV is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-020",
+          "role": "transform_with_oti",
+          "start_line": 191,
+          "variables": [
+            "P",
+            "R",
+            "STATEV"
+          ]
+        }
+      ]
+    },
+    "tangent_helper_regions_to_skip": [
+      {
+        "classification": "Tangent helper skip only",
+        "end_line": 127,
+        "preview": "      DO J=1,3\n      XNDIR(I,J) = DSTR(I,J)/PJ\n      END DO",
+        "reason": "XNDIR feeds only the old DDSDDE/tangent block",
+        "region_id": "TANGENT-011",
+        "role": "tangent_helper_skip_only",
+        "start_line": 125,
+        "variables": [
+          "DSTR",
+          "I",
+          "J",
+          "PJ",
+          "XNDIR"
+        ]
+      },
+      {
+        "classification": "Tangent helper skip only",
+        "end_line": 135,
+        "preview": "      DO K=1,3\n      XNV(K) = XNDIR(K,K)\n      END DO\n      XNV(4) = XNDIR(1,2)",
+        "reason": "XNV feeds only the old DDSDDE/tangent block",
+        "region_id": "TANGENT-012",
+        "role": "tangent_helper_skip_only",
+        "start_line": 132,
+        "variables": [
+          "K",
+          "XNDIR",
+          "XNV"
+        ]
+      }
+    ]
+  },
+  "warnings": []
+}

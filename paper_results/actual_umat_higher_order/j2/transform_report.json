@@ -1,0 +1,652 @@
+{
+  "anchor_completion": {
+    "completion_issues": [],
+    "status": "ready_with_json_contract"
+  },
+  "blockers": [],
+  "branch_conditions": [
+    {
+      "condition": "PHI .LE. ZERO",
+      "is_convergence_check": false,
+      "line_numbers": [
+        79
+      ],
+      "text": "IF (PHI .LE. ZERO) THEN",
+      "tokens": [
+        "PHI",
+        "ZERO"
+      ]
+    }
+  ],
+  "constant_variables": [
+    "COORDS",
+    "DPRED",
+    "DROT",
+    "DTEMP",
+    "DTIME",
+    "E",
+    "ELAM",
+    "EMU",
+    "H",
+    "ONE",
+    "ONE_THIRD",
+    "PREDEF",
+    "PROPS",
+    "SIGY0",
+    "STRAN",
+    "TEMP",
+    "THREE",
+    "THREE_HALVES",
+    "TIME",
+    "TWO",
+    "TWOMU",
+    "XNU",
+    "ZERO"
+  ],
+  "directions_required": {
+    "ddsdde_directions": 6,
+    "extra_directions": 0,
+    "slot_assignments": [],
+    "total_directions": 6
+  },
+  "extra_jacobian_contracts": [],
+  "extraction_inserted_after_stress_update": true,
+  "extraction_insertion_region_id": "TANGENT-007",
+  "extraction_method": "GETIM(STRESS_OTI(i), j)",
+  "finite_strain": {
+    "dfgrd0_executable_uses": [],
+    "dfgrd1_executable_uses": [],
+    "dfgrd_driven_stress_update": false,
+    "executable_dfgrd_use": false
+  },
+  "finite_strain_mode": {
+    "categories": {},
+    "enabled": false,
+    "promoted_kinematic_variables": [],
+    "reason": "No executable finite-strain kinematics detected on stress path"
+  },
+  "generated_files": [
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/master_parameters.f90",
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/real_utils.f90",
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/otim6n4.f90",
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/compile_order.txt",
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/compile_hint.sh",
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/higher_order_directions.csv",
+    "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/j2_props_oti.f"
+  ],
+  "helper_policy": {
+    "default": "pass_through",
+    "helper_calls": [],
+    "notes": "Stress-path helper names are not readiness blockers. Compilation and validation determine whether pass-through is valid."
+  },
+  "jacobian_artifacts": [],
+  "jacobian_contract": {
+    "constant_material_parameters": [
+      "PROPS"
+    ],
+    "contract": "DDSDDE(i,j) = d STRESS(i) / d DSTRAN(j)",
+    "dependent_variable": "STRESS",
+    "independent_variable": "DSTRAN",
+    "notes": "For Abaqus DDSDDE extraction, seed DSTRAN. PROPS affect the stress response but remain constants during derivative extraction.",
+    "output_variable": "DDSDDE"
+  },
+  "keep_real_variables": [
+    "CELENT",
+    "CMNAME",
+    "DDSDDE",
+    "DDSDDT",
+    "DFGRD0",
+    "DFGRD1",
+    "DRPLDE",
+    "DRPLDT",
+    "I",
+    "J",
+    "KINC",
+    "KSPT",
+    "KSTEP",
+    "LAYER",
+    "NDI",
+    "NOEL",
+    "NPROPS",
+    "NPT",
+    "NSHR",
+    "NSTATV",
+    "NTENS",
+    "PNEWDT",
+    "RPL",
+    "SCD",
+    "SPD",
+    "SSE"
+  ],
+  "ntens": 6,
+  "old_tangent_regions_replaced": [
+    {
+      "classification": "DDSDDE output replacement, replace with GETIM extraction",
+      "end_line": 112,
+      "preview": "         DO J = 1, NTENS\n            DDSDDE(I, J) = ZERO\n         END DO\n      END DO\n...\n      DDSDDE(4, 4) = EMU\n      DDSDDE(5, 5) = EMU\n      DDSDDE(6, 6) = EMU",
+      "reason": "assignment to DDSDDE old tangent/Jacobian output",
+      "region_id": "TANGENT-007",
+      "role": "ddsdde_output_replace",
+      "start_line": 100,
+      "variables": [
+        "DDSDDE",
+        "ELAM",
+        "EMU",
+        "TWOMU",
+        "ZERO"
+      ]
+    }
+  ],
+  "oti_module_name": "otim6n4",
+  "oti_order": 4,
+  "oti_type_name": "ONUMM6N4",
+  "plasticity_indicators": {
+    "by_category": {
+      "flow": [],
+      "gamma": [],
+      "hardening": [],
+      "lambda": [],
+      "newton_iteration": [],
+      "plastic_strain": [
+        {
+          "executable": true,
+          "line_numbers": [
+            75
+          ],
+          "text": "EQPLAS_N = STATEV(1)",
+          "tokens": [
+            "EQPLAS_N",
+            "STATEV"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            76
+          ],
+          "text": "SIGMA_Y = SIGY0 + H * EQPLAS_N",
+          "tokens": [
+            "EQPLAS_N",
+            "H",
+            "SIGMA_Y",
+            "SIGY0"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            94
+          ],
+          "text": "STATEV(1) = EQPLAS_N + DGAMMA",
+          "tokens": [
+            "DGAMMA",
+            "EQPLAS_N",
+            "STATEV"
+          ]
+        }
+      ],
+      "residual": [],
+      "return_mapping": [],
+      "yield": [
+        {
+          "executable": true,
+          "line_numbers": [
+            44
+          ],
+          "text": "SIGY0 = PROPS(3)",
+          "tokens": [
+            "PROPS",
+            "SIGY0"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            76
+          ],
+          "text": "SIGMA_Y = SIGY0 + H * EQPLAS_N",
+          "tokens": [
+            "EQPLAS_N",
+            "H",
+            "SIGMA_Y",
+            "SIGY0"
+          ]
+        }
+      ]
+    },
+    "categories_present": [
+      "plastic_strain",
+      "yield"
+    ],
+    "decisive_categories_present": [
+      "plastic_strain",
+      "yield"
+    ],
+    "is_plasticity_candidate": true,
+    "variables": [
+      "DGAMMA",
+      "EQPLAS_N",
+      "H",
+      "PROPS",
+      "SIGMA_Y",
+      "SIGY0",
+      "STATEV"
+    ]
+  },
+  "promoted_variables": [
+    "DEV_TRIAL",
+    "DGAMMA",
+    "EQPLAS_N",
+    "PHI",
+    "PTRIAL",
+    "Q_TRIAL",
+    "SCALE",
+    "SIGMA_Y",
+    "STATEV",
+    "STRESS",
+    "STRESS_TRIAL"
+  ],
+  "seed_variables": [
+    "DSTRAN"
+  ],
+  "selected_umat": "UMAT",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true
+  },
+  "shared_setup_regions_kept": [
+    {
+      "classification": "Shared setup, keep real before transformed path",
+      "end_line": 48,
+      "preview": "      E     = PROPS(1)\n      XNU   = PROPS(2)\n      SIGY0 = PROPS(3)\n      H     = PROPS(4)\n      ELAM  = E * XNU / ((ONE + XNU) * (ONE - TWO * XNU))\n      EMU   = E / (TWO * (ONE + XNU))\n      TWOMU = TWO * EMU",
+      "reason": "E provides setup used before stress/tangent handling; XNU provides setup used before stress/tangent handling; SIGY0 provides setup used before stress/tangent handling; H provides setup used before stress/tangent handling; ELAM provides setup used before stress/tangent handling; EMU provides setup used before stress/tangent handling; TWOMU provides setup used before stress/tangent handling",
+      "region_id": "SHARED-SETUP-001",
+      "role": "keep_real",
+      "start_line": 42,
+      "variables": [
+        "E",
+        "ELAM",
+        "EMU",
+        "H",
+        "ONE",
+        "PROPS",
+        "SIGY0",
+        "TWO",
+        "TWOMU",
+        "XNU"
+      ]
+    }
+  ],
+  "source_file": "/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/generic_ps/j2_props.f",
+  "statev_accesses": {
+    "read_count": 1,
+    "reads": [
+      {
+        "line_numbers": [
+          75
+        ],
+        "text": "EQPLAS_N = STATEV(1)"
+      }
+    ],
+    "write_count": 1,
+    "writes": [
+      {
+        "line_numbers": [
+          94
+        ],
+        "text": "STATEV(1) = EQPLAS_N + DGAMMA"
+      }
+    ]
+  },
+  "stress_path_helpers": [],
+  "stress_regions_transformed": [
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 56,
+      "preview": "      STRESS_TRIAL(1) = STRESS(1) + (ELAM + TWOMU) * DSTRAN(1) + ELAM * DSTRAN(2) + ELAM * DSTRAN(3)\n      STRESS_TRIAL(2) = STRESS(2) + ELAM * DSTRAN(1) + (ELAM + TWOMU) * DSTRAN(2) + ELAM * DSTRAN(3)\n      STRESS_TRIAL(3) = STRESS(3) + ELAM * DSTRAN(1) + ELAM * DSTRAN(2) + (ELAM + TWOMU) * DSTRAN(3)\n      STRESS_TRIAL(4) = STRESS(4) + EMU * DSTRAN(4)\n      STRESS_TRIAL(5) = STRESS(5) + EMU * DSTRAN(5)\n      STRESS_TRIAL(6) = STRESS(6) + EMU * DSTRAN(6)",
+      "reason": "STRESS_TRIAL is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-002",
+      "role": "transform_with_oti",
+      "start_line": 51,
+      "variables": [
+        "DSTRAN",
+        "ELAM",
+        "EMU",
+        "STRESS",
+        "STRESS_TRIAL",
+        "TWOMU"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 65,
+      "preview": "      PTRIAL = (STRESS_TRIAL(1) + STRESS_TRIAL(2) + STRESS_TRIAL(3)) * ONE_THIRD\n      DEV_TRIAL(1) = STRESS_TRIAL(1) - PTRIAL\n      DEV_TRIAL(2) = STRESS_TRIAL(2) - PTRIAL\n      DEV_TRIAL(3) = STRESS_TRIAL(3) - PTRIAL\n      DEV_TRIAL(4) = STRESS_TRIAL(4)\n      DEV_TRIAL(5) = STRESS_TRIAL(5)\n      DEV_TRIAL(6) = STRESS_TRIAL(6)",
+      "reason": "PTRIAL is on the DSTRAN to STRESS propagation path; DEV_TRIAL is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-003",
+      "role": "transform_with_oti",
+      "start_line": 59,
+      "variables": [
+        "DEV_TRIAL",
+        "ONE_THIRD",
+        "PTRIAL",
+        "STRESS_TRIAL"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 77,
+      "preview": "      Q_TRIAL = SQRT(THREE_HALVES * (DEV_TRIAL(1)*DEV_TRIAL(1)\n     1                              + DEV_TRIAL(2)*DEV_TRIAL(2)\n     2                              + DEV_TRIAL(3)*DEV_TRIAL(3))\n     3          + THREE * (DEV_TRIAL(4)*DEV_TRIAL(4)\n...\n      EQPLAS_N = STATEV(1)\n      SIGMA_Y = SIGY0 + H * EQPLAS_N\n      PHI = Q_TRIAL - SIGMA_Y",
+      "reason": "Q_TRIAL is on the DSTRAN to STRESS propagation path; EQPLAS_N is on the DSTRAN to STRESS propagation path; SIGMA_Y is on the DSTRAN to STRESS propagation path; PHI is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-004",
+      "role": "transform_with_oti",
+      "start_line": 68,
+      "variables": [
+        "C",
+        "DEV_TRIAL",
+        "EQPLAS_N",
+        "H",
+        "PHI",
+        "Q_TRIAL",
+        "SIGMA_Y",
+        "SIGY0",
+        "STATEV",
+        "THREE",
+        "THREE_HALVES"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 83,
+      "preview": "         DO I = 1, NTENS\n            STRESS(I) = STRESS_TRIAL(I)\n         END DO",
+      "reason": "STRESS is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-005",
+      "role": "transform_with_oti",
+      "start_line": 81,
+      "variables": [
+        "I",
+        "STRESS",
+        "STRESS_TRIAL"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 94,
+      "preview": "         DGAMMA = PHI / (THREE * EMU + H)\n         SCALE = THREE * EMU * DGAMMA / Q_TRIAL\n         STRESS(1) = DEV_TRIAL(1) * (ONE - SCALE) + PTRIAL\n         STRESS(2) = DEV_TRIAL(2) * (ONE - SCALE) + PTRIAL\n...\n         STRESS(5) = DEV_TRIAL(5) * (ONE - SCALE)\n         STRESS(6) = DEV_TRIAL(6) * (ONE - SCALE)\n         STATEV(1) = EQPLAS_N + DGAMMA",
+      "reason": "DGAMMA is on the DSTRAN to STRESS propagation path; SCALE is on the DSTRAN to STRESS propagation path; STRESS is on the DSTRAN to STRESS propagation path; STATEV is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-006",
+      "role": "transform_with_oti",
+      "start_line": 86,
+      "variables": [
+        "DEV_TRIAL",
+        "DGAMMA",
+        "EMU",
+        "EQPLAS_N",
+        "H",
+        "ONE",
+        "PHI",
+        "PTRIAL",
+        "Q_TRIAL",
+        "SCALE",
+        "STATEV",
+        "STRESS",
+        "THREE"
+      ]
+    }
+  ],
+  "success": true,
+  "tangent_helper_regions_skipped": [],
+  "tangent_output_regions_replaced": [
+    {
+      "classification": "DDSDDE output replacement, replace with GETIM extraction",
+      "end_line": 112,
+      "preview": "         DO J = 1, NTENS\n            DDSDDE(I, J) = ZERO\n         END DO\n      END DO\n...\n      DDSDDE(4, 4) = EMU\n      DDSDDE(5, 5) = EMU\n      DDSDDE(6, 6) = EMU",
+      "reason": "assignment to DDSDDE old tangent/Jacobian output",
+      "region_id": "TANGENT-007",
+      "role": "ddsdde_output_replace",
+      "start_line": 100,
+      "variables": [
+        "DDSDDE",
+        "ELAM",
+        "EMU",
+        "TWOMU",
+        "ZERO"
+      ]
+    }
+  ],
+  "transformation_anchors": {
+    "branch_regions": [
+      {
+        "condition": "PHI .LE. ZERO",
+        "end_line": 79,
+        "reason": "Branch condition is preserved; promoted variables are normalized if present.",
+        "region_id": "BRANCH-001",
+        "role": "preserve_branch_condition",
+        "start_line": 79,
+        "text": "IF (PHI .LE. ZERO) THEN",
+        "tokens": [
+          "PHI",
+          "ZERO"
+        ]
+      }
+    ],
+    "completion_issues": [],
+    "ddsdde_extraction": {
+      "insert_after_line": 112,
+      "insert_at_region": "TANGENT-007",
+      "reason": "Insert GETIM DDSDDE extraction at the explicit old tangent output region or after the stress update when DDSDDE setup is kept real."
+    },
+    "file_io_regions": [],
+    "helper_call_regions": [],
+    "old_tangent": {
+      "helper_regions": [],
+      "output_region": {
+        "classification": "DDSDDE output replacement, replace with GETIM extraction",
+        "end_line": 112,
+        "preview": "         DO J = 1, NTENS\n            DDSDDE(I, J) = ZERO\n         END DO\n      END DO\n...\n      DDSDDE(4, 4) = EMU\n      DDSDDE(5, 5) = EMU\n      DDSDDE(6, 6) = EMU",
+        "reason": "assignment to DDSDDE old tangent/Jacobian output",
+        "region_id": "TANGENT-007",
+        "role": "ddsdde_output_replace",
+        "start_line": 100,
+        "variables": [
+          "DDSDDE",
+          "ELAM",
+          "EMU",
+          "TWOMU",
+          "ZERO"
+        ]
+      },
+      "output_regions": [
+        {
+          "classification": "DDSDDE output replacement, replace with GETIM extraction",
+          "end_line": 112,
+          "preview": "         DO J = 1, NTENS\n            DDSDDE(I, J) = ZERO\n         END DO\n      END DO\n...\n      DDSDDE(4, 4) = EMU\n      DDSDDE(5, 5) = EMU\n      DDSDDE(6, 6) = EMU",
+          "reason": "assignment to DDSDDE old tangent/Jacobian output",
+          "region_id": "TANGENT-007",
+          "role": "ddsdde_output_replace",
+          "start_line": 100,
+          "variables": [
+            "DDSDDE",
+            "ELAM",
+            "EMU",
+            "TWOMU",
+            "ZERO"
+          ]
+        }
+      ],
+      "reason": "Explicit DDSDDE-region contract. Helper regions are skipped only when the role says skip_only; keep-real setup is preserved."
+    },
+    "real_output_extraction": {
+      "insert_after_line": 112,
+      "reason": "Copy real STRESS/STATEV after the last transformed stress update."
+    },
+    "schema_version": 1,
+    "seed_insertion": {
+      "line_before": 51,
+      "reason": "Insert OTIS shadow initialization before the first user-confirmed stress-update line."
+    },
+    "selected_umat": "UMAT",
+    "selected_umat_span": {
+      "end_line": 115,
+      "start_line": 18
+    },
+    "shared_setup_regions_to_keep": [
+      {
+        "classification": "Shared setup, keep real before transformed path",
+        "end_line": 48,
+        "preview": "      E     = PROPS(1)\n      XNU   = PROPS(2)\n      SIGY0 = PROPS(3)\n      H     = PROPS(4)\n      ELAM  = E * XNU / ((ONE + XNU) * (ONE - TWO * XNU))\n      EMU   = E / (TWO * (ONE + XNU))\n      TWOMU = TWO * EMU",
+        "reason": "E provides setup used before stress/tangent handling; XNU provides setup used before stress/tangent handling; SIGY0 provides setup used before stress/tangent handling; H provides setup used before stress/tangent handling; ELAM provides setup used before stress/tangent handling; EMU provides setup used before stress/tangent handling; TWOMU provides setup used before stress/tangent handling",
+        "region_id": "SHARED-SETUP-001",
+        "role": "keep_real",
+        "start_line": 42,
+        "variables": [
+          "E",
+          "ELAM",
+          "EMU",
+          "H",
+          "ONE",
+          "PROPS",
+          "SIGY0",
+          "TWO",
+          "TWOMU",
+          "XNU"
+        ]
+      }
+    ],
+    "statev_read_regions": [
+      {
+        "end_line": 75,
+        "preview": "      EQPLAS_N = STATEV(1)",
+        "reason": "Detected STATEV read in selected UMAT.",
+        "region_id": "STATEV-READS-001",
+        "role": "read_statev_shadow_or_real",
+        "start_line": 75,
+        "text": "EQPLAS_N = STATEV(1)"
+      }
+    ],
+    "statev_write_regions": [
+      {
+        "end_line": 94,
+        "preview": "         STATEV(1) = EQPLAS_N + DGAMMA",
+        "reason": "Detected STATEV write in selected UMAT.",
+        "region_id": "STATEV-WRITES-001",
+        "role": "promote_statev",
+        "start_line": 94,
+        "text": "STATEV(1) = EQPLAS_N + DGAMMA"
+      }
+    ],
+    "status": "ready_with_json_contract",
+    "stress_update": {
+      "reason": "Explicit source lines to transform with OTIS roles; generated from detected/user-selected regions and UMAT-local helper-call stress updates.",
+      "regions": [
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 56,
+          "preview": "      STRESS_TRIAL(1) = STRESS(1) + (ELAM + TWOMU) * DSTRAN(1) + ELAM * DSTRAN(2) + ELAM * DSTRAN(3)\n      STRESS_TRIAL(2) = STRESS(2) + ELAM * DSTRAN(1) + (ELAM + TWOMU) * DSTRAN(2) + ELAM * DSTRAN(3)\n      STRESS_TRIAL(3) = STRESS(3) + ELAM * DSTRAN(1) + ELAM * DSTRAN(2) + (ELAM + TWOMU) * DSTRAN(3)\n      STRESS_TRIAL(4) = STRESS(4) + EMU * DSTRAN(4)\n      STRESS_TRIAL(5) = STRESS(5) + EMU * DSTRAN(5)\n      STRESS_TRIAL(6) = STRESS(6) + EMU * DSTRAN(6)",
+          "reason": "STRESS_TRIAL is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-002",
+          "role": "transform_with_oti",
+          "start_line": 51,
+          "variables": [
+            "DSTRAN",
+            "ELAM",
+            "EMU",
+            "STRESS",
+            "STRESS_TRIAL",
+            "TWOMU"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 65,
+          "preview": "      PTRIAL = (STRESS_TRIAL(1) + STRESS_TRIAL(2) + STRESS_TRIAL(3)) * ONE_THIRD\n      DEV_TRIAL(1) = STRESS_TRIAL(1) - PTRIAL\n      DEV_TRIAL(2) = STRESS_TRIAL(2) - PTRIAL\n      DEV_TRIAL(3) = STRESS_TRIAL(3) - PTRIAL\n      DEV_TRIAL(4) = STRESS_TRIAL(4)\n      DEV_TRIAL(5) = STRESS_TRIAL(5)\n      DEV_TRIAL(6) = STRESS_TRIAL(6)",
+          "reason": "PTRIAL is on the DSTRAN to STRESS propagation path; DEV_TRIAL is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-003",
+          "role": "transform_with_oti",
+          "start_line": 59,
+          "variables": [
+            "DEV_TRIAL",
+            "ONE_THIRD",
+            "PTRIAL",
+            "STRESS_TRIAL"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 77,
+          "preview": "      Q_TRIAL = SQRT(THREE_HALVES * (DEV_TRIAL(1)*DEV_TRIAL(1)\n     1                              + DEV_TRIAL(2)*DEV_TRIAL(2)\n     2                              + DEV_TRIAL(3)*DEV_TRIAL(3))\n     3          + THREE * (DEV_TRIAL(4)*DEV_TRIAL(4)\n...\n      EQPLAS_N = STATEV(1)\n      SIGMA_Y = SIGY0 + H * EQPLAS_N\n      PHI = Q_TRIAL - SIGMA_Y",
+          "reason": "Q_TRIAL is on the DSTRAN to STRESS propagation path; EQPLAS_N is on the DSTRAN to STRESS propagation path; SIGMA_Y is on the DSTRAN to STRESS propagation path; PHI is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-004",
+          "role": "transform_with_oti",
+          "start_line": 68,
+          "variables": [
+            "C",
+            "DEV_TRIAL",
+            "EQPLAS_N",
+            "H",
+            "PHI",
+            "Q_TRIAL",
+            "SIGMA_Y",
+            "SIGY0",
+            "STATEV",
+            "THREE",
+            "THREE_HALVES"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 83,
+          "preview": "         DO I = 1, NTENS\n            STRESS(I) = STRESS_TRIAL(I)\n         END DO",
+          "reason": "STRESS is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-005",
+          "role": "transform_with_oti",
+          "start_line": 81,
+          "variables": [
+            "I",
+            "STRESS",
+            "STRESS_TRIAL"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 94,
+          "preview": "         DGAMMA = PHI / (THREE * EMU + H)\n         SCALE = THREE * EMU * DGAMMA / Q_TRIAL\n         STRESS(1) = DEV_TRIAL(1) * (ONE - SCALE) + PTRIAL\n         STRESS(2) = DEV_TRIAL(2) * (ONE - SCALE) + PTRIAL\n...\n         STRESS(5) = DEV_TRIAL(5) * (ONE - SCALE)\n         STRESS(6) = DEV_TRIAL(6) * (ONE - SCALE)\n         STATEV(1) = EQPLAS_N + DGAMMA",
+          "reason": "DGAMMA is on the DSTRAN to STRESS propagation path; SCALE is on the DSTRAN to STRESS propagation path; STRESS is on the DSTRAN to STRESS propagation path; STATEV is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-006",
+          "role": "transform_with_oti",
+          "start_line": 86,
+          "variables": [
+            "DEV_TRIAL",
+            "DGAMMA",
+            "EMU",
+            "EQPLAS_N",
+            "H",
+            "ONE",
+            "PHI",
+            "PTRIAL",
+            "Q_TRIAL",
+            "SCALE",
+            "STATEV",
+            "STRESS",
+            "THREE"
+          ]
+        }
+      ]
+    },
+    "tangent_helper_regions_to_skip": []
+  },
+  "warnings": []
+}

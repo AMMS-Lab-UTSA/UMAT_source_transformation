@@ -1,0 +1,16022 @@
+! ===== master_parameters.f90 =====
+!*******************************************************************************************************!
+!> @brief This module contains the master parameters used in many Finite Element modules and other 
+!! programs.
+!!
+!! @author Mauricio Aristizabal Cano, University of Texas at San Antonio
+!*******************************************************************************************************!
+MODULE master_parameters
+   !----------------------------------------------------------------------------------------------------!
+   IMPLICIT NONE
+   !----------------------------------------------------------------------------------------------------!
+   INTEGER,  PARAMETER :: dp     = SELECTED_REAL_KIND(15,306)
+   INTEGER,  PARAMETER :: enum_t = SELECTED_INT_KIND(4)
+   !----------------------------------------------------------------------------------------------------!
+   INTEGER(enum_t), PARAMETER :: elNode        =  400, &
+                                 elLine        =  401, &
+                                 elTriangle    =  402, &
+                                 elQuadrangle  =  403, &
+                                 elTetrahedra  =  404, &
+                                 elHexahedra   =  405, &  
+                                 ! Definition of integration points.
+                                 intLobatto    =  410, &
+                                 intGauss      =  411
+   !----------------------------------------------------------------------------------------------------!
+   INTEGER, PARAMETER :: maxIntPts = 1024 
+   !----------------------------------------------------------------------------------------------------!
+   REAL(dp), PARAMETER :: ten    = 10.0_dp
+   REAL(dp), PARAMETER :: eight  =  8.0_dp
+   REAL(dp), PARAMETER :: six    =  6.0_dp
+   REAL(dp), PARAMETER :: three  =  3.0_dp
+   REAL(dp), PARAMETER :: two    =  2.0_dp
+   REAL(dp), PARAMETER :: one    =  1.0_dp
+   REAL(dp), PARAMETER :: half   =  0.5_dp
+   REAL(dp), PARAMETER :: third  =  1.0_dp/3.0_dp
+   REAL(dp), PARAMETER :: fourth =  0.25_dp
+   REAL(dp), PARAMETER :: eighth =  0.125_dp
+   REAL(dp), PARAMETER :: zero   =  0.0_dp
+   REAL(dp), PARAMETER :: piOver4 = ATAN(one)
+   REAL(dp), PARAMETER :: piOver2 = piOver4 * two
+   REAL(dp), PARAMETER :: pi      = piOver4 * 4.0_dp !3.141592653589793_dp
+   !----------------------------------------------------------------------------------------------------!
+END MODULE master_parameters
+!*******************************************************************************************************!
+! ===== real_utils.f90 =====
+!*******************************************************************************************************!
+!> @brief This module contains types and subroutines to simplify handling of real matrix and vector 
+!!        operations.
+!! 
+!! @author Mauricio Aristizabal Cano, University of Texas at San Antonio
+!*******************************************************************************************************!
+MODULE real_utils
+   !---------------------------------------------------------------------------------------------------! 
+   USE master_parameters
+   IMPLICIT NONE
+   !---------------------------------------------------------------------------------------------------! 
+   INTERFACE PPRINT
+     MODULE PROCEDURE RmatPrint, RvecPrint, Rprint,IPrint, ImatPrint, IvecPrint
+   END INTERFACE
+   
+   !---------------------------------------------------------------------------------------------------! 
+   ! Matrix Determinant overloads.
+   !---------------------------------------------------------------------------------------------------! 
+
+   INTERFACE det2x2
+     MODULE PROCEDURE Rdet2x2
+   END INTERFACE
+
+   INTERFACE det3x3
+     MODULE PROCEDURE Rdet3x3
+   END INTERFACE
+
+   INTERFACE det4x4
+     MODULE PROCEDURE Rdet4x4
+   END INTERFACE
+
+   !---------------------------------------------------------------------------------------------------! 
+   ! Matrix inverse overloads.
+   !---------------------------------------------------------------------------------------------------! 
+
+   INTERFACE inv2x2
+     MODULE PROCEDURE Rmatinv2x2
+   END INTERFACE
+
+   INTERFACE inv3x3
+     MODULE PROCEDURE Rmatinv3x3
+   END INTERFACE
+
+   INTERFACE inv4x4
+     MODULE PROCEDURE Rmatinv4x4
+   END INTERFACE
+
+   !---------------------------------------------------------------------------------------------------! 
+   ! Other Linalg Operations overloads.
+   !---------------------------------------------------------------------------------------------------! 
+
+   INTERFACE norm2_3
+     MODULE PROCEDURE Rnorm2_3
+   END INTERFACE
+
+   INTERFACE cross3
+     MODULE PROCEDURE Rcross3
+   END INTERFACE
+
+   INTERFACE interp1D
+     MODULE PROCEDURE Rinterp1D
+   END INTERFACE
+
+   INTERFACE Inxn
+     MODULE PROCEDURE RInxn
+   END INTERFACE
+
+   INTERFACE VectorToMatrix
+     MODULE PROCEDURE RVectorToMatrix
+   END INTERFACE
+
+   INTERFACE MatrixToVector
+     MODULE PROCEDURE RMatrixToVector
+   END INTERFACE
+
+   INTERFACE FrobeniusProduct
+     MODULE PROCEDURE RFrobeniusProduct
+   END INTERFACE
+
+
+   !---------------------------------------------------------------------------------------------------! 
+
+CONTAINS
+
+   !***************************************************************************************************! 
+   !> @brief 2 x 2  matrix inversion.
+   !!
+   !! Taken from https://fortranwiki.org/fortran/show/Matrix+inversion
+   !!
+   !! @param[in] A: Matrix to be printed.
+   !! @param[out] B: inverse of A.
+   !!
+   !***************************************************************************************************!
+   PURE FUNCTION Rmatinv2x2(A,det) RESULT(B)
+
+      IMPLICIT NONE
+
+      REAL(dp), INTENT(IN) :: A(2,2)   !! Matrix
+      REAL(dp), INTENT(IN), OPTIONAL :: det
+      REAL(dp)             :: B(2,2)   !! Inverse matrix
+      REAL(dp)             :: detinv
+
+      IF ( PRESENT(det) ) THEN
+         detinv = one/det
+      ELSE
+         ! Calculate the inverse determinant of the matrix
+         detinv = one/(A(1,1)*A(2,2) - A(1,2)*A(2,1))
+      END IF
+
+      ! Calculate the inverse of the matrix
+      B(1,1) =  detinv * A(2,2)
+      B(2,1) = -detinv * A(2,1)
+      B(1,2) = -detinv * A(1,2)
+      B(2,2) =  detinv * A(1,1)
+   END FUNCTION
+   !===================================================================================================! 
+   
+   !***************************************************************************************************! 
+   !> @brief 3 x 3  matrix inversion.
+   !!
+   !! Taken from https://fortranwiki.org/fortran/show/Matrix+inversion
+   !!
+   !! @param[in]  A: Matrix to be printed.
+   !! @param[out] B: inverse of A.
+   !!
+   !***************************************************************************************************!
+   PURE FUNCTION Rmatinv3x3(A,det) RESULT(B)
+      
+      IMPLICIT NONE
+
+      REAL(dp), INTENT(IN) :: A(3,3)   !! Matrix
+      REAL(dp), INTENT(IN), OPTIONAL :: det
+      REAL(dp)             :: B(3,3)   !! Inverse matrix
+      REAL(dp)             :: detinv
+
+      IF ( PRESENT(det) ) THEN
+         detinv = one/det
+      ELSE
+         ! Calculate the inverse determinant of the matrix
+         detinv = one/(A(1,1)*A(2,2)*A(3,3) - A(1,1)*A(2,3)*A(3,2)&
+                       - A(1,2)*A(2,1)*A(3,3) + A(1,2)*A(2,3)*A(3,1)&
+                       + A(1,3)*A(2,1)*A(3,2) - A(1,3)*A(2,2)*A(3,1))
+      END IF 
+
+      ! Calculate the inverse of the matrix
+      B(1,1) = + detinv * (A(2,2)*A(3,3) - A(2,3)*A(3,2))
+      B(2,1) = - detinv * (A(2,1)*A(3,3) - A(2,3)*A(3,1))
+      B(3,1) = + detinv * (A(2,1)*A(3,2) - A(2,2)*A(3,1))
+      B(1,2) = - detinv * (A(1,2)*A(3,3) - A(1,3)*A(3,2))
+      B(2,2) = + detinv * (A(1,1)*A(3,3) - A(1,3)*A(3,1))
+      B(3,2) = - detinv * (A(1,1)*A(3,2) - A(1,2)*A(3,1))
+      B(1,3) = + detinv * (A(1,2)*A(2,3) - A(1,3)*A(2,2))
+      B(2,3) = - detinv * (A(1,1)*A(2,3) - A(1,3)*A(2,1))
+      B(3,3) = + detinv * (A(1,1)*A(2,2) - A(1,2)*A(2,1))
+
+   END FUNCTION
+   !===================================================================================================! 
+
+   !***************************************************************************************************! 
+   !> @brief 4 x 4  matrix inversion.
+   !!
+   !! Taken from https://fortranwiki.org/fortran/show/Matrix+inversion
+   !!
+   !! @param[in]  A: Matrix to be printed.
+   !! @param[in]  det: (optional) Determinant of A.
+   !! @param[out] B: inverse of A.
+   !!
+   !***************************************************************************************************!
+   PURE FUNCTION Rmatinv4x4(A,det) RESULT(B)
+      
+      IMPLICIT NONE
+
+      REAL(dp), INTENT(IN) :: A(4,4)   !! Matrix
+      REAL(dp), INTENT(IN), OPTIONAL :: det
+      REAL(dp)             :: B(4,4)   !! Inverse matrix
+      REAL(dp)             :: di  !! Determinant inverse
+
+      ! Calculate the inverse determinant of the matrix
+      IF ( PRESENT(det) ) THEN
+         di = one/det
+      ELSE
+         di = &
+    one/(A(1,1)*(A(2,2)*(A(3,3)*A(4,4)-A(3,4)*A(4,3))+A(2,3)*(A(3,4)*A(4,2)-A(3,2)*A(4,4))+A(2,4)*(A(3,2)*A(4,3)-A(3,3)*A(4,2)))&
+         - A(1,2)*(A(2,1)*(A(3,3)*A(4,4)-A(3,4)*A(4,3))+A(2,3)*(A(3,4)*A(4,1)-A(3,1)*A(4,4))+A(2,4)*(A(3,1)*A(4,3)-A(3,3)*A(4,1)))&
+         + A(1,3)*(A(2,1)*(A(3,2)*A(4,4)-A(3,4)*A(4,2))+A(2,2)*(A(3,4)*A(4,1)-A(3,1)*A(4,4))+A(2,4)*(A(3,1)*A(4,2)-A(3,2)*A(4,1)))&
+         - A(1,4)*(A(2,1)*(A(3,2)*A(4,3)-A(3,3)*A(4,2))+A(2,2)*(A(3,3)*A(4,1)-A(3,1)*A(4,3))+A(2,3)*(A(3,1)*A(4,2)-A(3,2)*A(4,1))))
+      END IF 
+      
+      ! Calculate the inverse of the matrix
+      B(1,1) = di*(A(2,2)*(A(3,3)*A(4,4)-A(3,4)*A(4,3))+A(2,3)*(A(3,4)*A(4,2)-A(3,2)*A(4,4))+A(2,4)*(A(3,2)*A(4,3)-A(3,3)*A(4,2)))
+      B(2,1) = di*(A(2,1)*(A(3,4)*A(4,3)-A(3,3)*A(4,4))+A(2,3)*(A(3,1)*A(4,4)-A(3,4)*A(4,1))+A(2,4)*(A(3,3)*A(4,1)-A(3,1)*A(4,3)))
+      B(3,1) = di*(A(2,1)*(A(3,2)*A(4,4)-A(3,4)*A(4,2))+A(2,2)*(A(3,4)*A(4,1)-A(3,1)*A(4,4))+A(2,4)*(A(3,1)*A(4,2)-A(3,2)*A(4,1)))
+      B(4,1) = di*(A(2,1)*(A(3,3)*A(4,2)-A(3,2)*A(4,3))+A(2,2)*(A(3,1)*A(4,3)-A(3,3)*A(4,1))+A(2,3)*(A(3,2)*A(4,1)-A(3,1)*A(4,2)))
+      B(1,2) = di*(A(1,2)*(A(3,4)*A(4,3)-A(3,3)*A(4,4))+A(1,3)*(A(3,2)*A(4,4)-A(3,4)*A(4,2))+A(1,4)*(A(3,3)*A(4,2)-A(3,2)*A(4,3)))
+      B(2,2) = di*(A(1,1)*(A(3,3)*A(4,4)-A(3,4)*A(4,3))+A(1,3)*(A(3,4)*A(4,1)-A(3,1)*A(4,4))+A(1,4)*(A(3,1)*A(4,3)-A(3,3)*A(4,1)))
+      B(3,2) = di*(A(1,1)*(A(3,4)*A(4,2)-A(3,2)*A(4,4))+A(1,2)*(A(3,1)*A(4,4)-A(3,4)*A(4,1))+A(1,4)*(A(3,2)*A(4,1)-A(3,1)*A(4,2)))
+      B(4,2) = di*(A(1,1)*(A(3,2)*A(4,3)-A(3,3)*A(4,2))+A(1,2)*(A(3,3)*A(4,1)-A(3,1)*A(4,3))+A(1,3)*(A(3,1)*A(4,2)-A(3,2)*A(4,1)))
+      B(1,3) = di*(A(1,2)*(A(2,3)*A(4,4)-A(2,4)*A(4,3))+A(1,3)*(A(2,4)*A(4,2)-A(2,2)*A(4,4))+A(1,4)*(A(2,2)*A(4,3)-A(2,3)*A(4,2)))
+      B(2,3) = di*(A(1,1)*(A(2,4)*A(4,3)-A(2,3)*A(4,4))+A(1,3)*(A(2,1)*A(4,4)-A(2,4)*A(4,1))+A(1,4)*(A(2,3)*A(4,1)-A(2,1)*A(4,3)))
+      B(3,3) = di*(A(1,1)*(A(2,2)*A(4,4)-A(2,4)*A(4,2))+A(1,2)*(A(2,4)*A(4,1)-A(2,1)*A(4,4))+A(1,4)*(A(2,1)*A(4,2)-A(2,2)*A(4,1)))
+      B(4,3) = di*(A(1,1)*(A(2,3)*A(4,2)-A(2,2)*A(4,3))+A(1,2)*(A(2,1)*A(4,3)-A(2,3)*A(4,1))+A(1,3)*(A(2,2)*A(4,1)-A(2,1)*A(4,2)))
+      B(1,4) = di*(A(1,2)*(A(2,4)*A(3,3)-A(2,3)*A(3,4))+A(1,3)*(A(2,2)*A(3,4)-A(2,4)*A(3,2))+A(1,4)*(A(2,3)*A(3,2)-A(2,2)*A(3,3)))
+      B(2,4) = di*(A(1,1)*(A(2,3)*A(3,4)-A(2,4)*A(3,3))+A(1,3)*(A(2,4)*A(3,1)-A(2,1)*A(3,4))+A(1,4)*(A(2,1)*A(3,3)-A(2,3)*A(3,1)))
+      B(3,4) = di*(A(1,1)*(A(2,4)*A(3,2)-A(2,2)*A(3,4))+A(1,2)*(A(2,1)*A(3,4)-A(2,4)*A(3,1))+A(1,4)*(A(2,2)*A(3,1)-A(2,1)*A(3,2)))
+      B(4,4) = di*(A(1,1)*(A(2,2)*A(3,3)-A(2,3)*A(3,2))+A(1,2)*(A(2,3)*A(3,1)-A(2,1)*A(3,3))+A(1,3)*(A(2,1)*A(3,2)-A(2,2)*A(3,1)))
+   END FUNCTION
+   !===================================================================================================! 
+
+   !***************************************************************************************************! 
+   !> @brief 2 x 2  matrix determinant.
+   !!
+   !!
+   !! @param[in] A: Matrix to be printed.
+   !! @param[out] B: inverse of A.
+   !!
+   !***************************************************************************************************!
+   PURE FUNCTION Rdet2x2(A) RESULT(det)
+
+      IMPLICIT NONE
+
+      REAL(dp), INTENT(IN) :: A(2,2)   !! Matrix
+      REAL(dp)             :: det
+
+      ! Calculate the determinant of the matrix
+      det = (A(1,1)*A(2,2) - A(1,2)*A(2,1))
+
+   END FUNCTION
+   !===================================================================================================! 
+   
+   !***************************************************************************************************! 
+   !> @brief 3 x 3  matrix determinant.
+   !!
+   !!
+   !! @param[in]  A: Matrix to be printed.
+   !! @param[out] B: inverse of A.
+   !!
+   !***************************************************************************************************!
+   PURE FUNCTION Rdet3x3(A) RESULT(det)
+      
+      IMPLICIT NONE
+
+      REAL(dp), INTENT(IN) :: A(3,3)   !! Matrix
+      REAL(dp)             :: det
+
+      ! Calculate the inverse determinant of the matrix
+      det = (A(1,1)*A(2,2)*A(3,3) - A(1,1)*A(2,3)*A(3,2)&
+           - A(1,2)*A(2,1)*A(3,3) + A(1,2)*A(2,3)*A(3,1)&
+           + A(1,3)*A(2,1)*A(3,2) - A(1,3)*A(2,2)*A(3,1))
+
+   END FUNCTION
+   !===================================================================================================! 
+
+   !***************************************************************************************************! 
+   !> @brief 4 x 4  matrix determinant.
+   !!
+   !!
+   !! @param[in]  A: Matrix to be printed.
+   !! @param[out] B: inverse of A.
+   !!
+   !***************************************************************************************************!
+   PURE FUNCTION Rdet4x4(A) RESULT(det)
+      
+      IMPLICIT NONE
+
+      REAL(dp), INTENT(IN) :: A(4,4)   !! Matrix
+      REAL(dp)             :: det
+
+      ! Calculate the determinant of the matrix
+      det = &
+      (A(1,1)*(A(2,2)*(A(3,3)*A(4,4)-A(3,4)*A(4,3))+A(2,3)*(A(3,4)*A(4,2)-A(3,2)*A(4,4))+A(2,4)*(A(3,2)*A(4,3)-A(3,3)*A(4,2)))&
+     - A(1,2)*(A(2,1)*(A(3,3)*A(4,4)-A(3,4)*A(4,3))+A(2,3)*(A(3,4)*A(4,1)-A(3,1)*A(4,4))+A(2,4)*(A(3,1)*A(4,3)-A(3,3)*A(4,1)))&
+     + A(1,3)*(A(2,1)*(A(3,2)*A(4,4)-A(3,4)*A(4,2))+A(2,2)*(A(3,4)*A(4,1)-A(3,1)*A(4,4))+A(2,4)*(A(3,1)*A(4,2)-A(3,2)*A(4,1)))&
+     - A(1,4)*(A(2,1)*(A(3,2)*A(4,3)-A(3,3)*A(4,2))+A(2,2)*(A(3,3)*A(4,1)-A(3,1)*A(4,3))+A(2,3)*(A(3,1)*A(4,2)-A(3,2)*A(4,1))))
+
+   END FUNCTION
+   !===================================================================================================! 
+   
+   !***************************************************************************************************! 
+   !> @brief Cross product between two vectors.
+   !!
+   !! @param[in] a: Vector of 3 reals (rank 1).
+   !! @param[in] b: Vector of 3 reals (rank 1).
+   !!
+   !***************************************************************************************************!
+   PURE FUNCTION Rcross3(a,b) RESULT(v)
+      
+      IMPLICIT NONE 
+
+      REAL(dp), DIMENSION (3),INTENT(IN) :: a,b
+      REAL(dp), DIMENSION (3) :: v
+      
+      v(1) = a(2) * b(3) - a(3) * b(2)
+      v(2) = a(3) * b(1) - a(1) * b(3)
+      v(3) = a(1) * b(2) - a(2) * b(1)
+
+   END FUNCTION Rcross3
+   !===================================================================================================! 
+
+   !***************************************************************************************************! 
+   !> @brief Norm of a 3 element vector. # There is an intrinsic function named norm2.
+   !!
+   !! @param[in] a: Vector of 3 reals (rank 1).
+   !! @param[in] b: Vector of 3 reals (rank 1).
+   !!
+   !***************************************************************************************************!
+   PURE FUNCTION Rnorm2_3(v) RESULT(n)
+      
+      IMPLICIT NONE 
+
+      REAL(dp), INTENT(IN) :: v(3)
+      REAL(dp) :: n
+      
+      n = SQRT( v(1)*v(1) + v(2)*v(2) + v(3)*v(3) )
+
+   END FUNCTION Rnorm2_3
+   !===================================================================================================! 
+
+
+   !***************************************************************************************************! 
+   !> @brief Pretty print a real scalar.
+   !!
+   !! @param[in] val: Value to be printed.
+   !! @param[in] fmt: Format to print every element in the array.
+   !!
+   !***************************************************************************************************! 
+   SUBROUTINE RPrint(val,fmt, unit)
+      IMPLICIT NONE
+      REAL(dp),   INTENT(IN) :: val
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: fmt
+      INTEGER, INTENT(IN), OPTIONAL :: unit
+      CHARACTER(len=:),ALLOCATABLE :: output_format
+      INTEGER  i, j
+      INTEGER :: unt
+      !-------------------------------------------------------------------------------------------------!
+      
+      IF ( PRESENT(unit) ) THEN
+         unt = unit
+      ELSE
+         unt = 6 ! Default print unit for most systems.
+      END IF 
+
+      IF (PRESENT(fmt)) THEN
+         output_format = '('//trim(fmt)//')'
+      ELSE
+         output_format = '(F10.4)'
+      END IF
+
+      write(unt,output_format) val
+
+   END SUBROUTINE
+   !===================================================================================================! 
+
+   !***************************************************************************************************! 
+   !> @brief Pretty print a real matrix.
+   !!
+   !! @param[in] arr: Matrix to be printed.
+   !! @param[in] fmt: Format to print every element in the array.
+   !!
+   !***************************************************************************************************! 
+   SUBROUTINE RmatPrint(arr,fmt,unit)
+      IMPLICIT NONE
+      REAL(dp),   INTENT(IN) :: arr(:,:)
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: fmt
+      INTEGER, INTENT(IN), OPTIONAL :: unit
+      CHARACTER(len=:),ALLOCATABLE :: output_format
+      INTEGER  i, j
+      INTEGER :: unt
+      !-------------------------------------------------------------------------------------------------!
+      
+      IF ( PRESENT(unit) ) THEN
+         unt = unit
+      ELSE
+         unt = 6 ! Default print unit for most systems.
+      END IF 
+
+      IF (PRESENT(fmt)) THEN
+         output_format = '('//trim(fmt)//')'
+      ELSE
+         output_format = '(F10.4)'
+      END IF 
+
+      write(unt,'(A)',advance="no") "["
+
+      DO i=1,SIZE(arr,1)
+
+         IF (I /= 1) THEN
+            write(unt,'(A)',advance="no") " "   
+         END IF 
+         write(unt,'(A)',advance="no") "["
+
+         DO j=1,SIZE(arr,2)
+           
+            write(unt,output_format,advance="no") &
+              arr(i,j)
+
+            write(unt,"(A)",advance="no") ", "
+
+         END DO
+
+         IF (I /= SIZE(arr,1)) THEN
+            write(unt,'(A)') "]"
+         ELSE
+            write(unt,'(A)',advance="no") "]"   
+         END IF 
+
+      END DO
+      
+      write(unt,'(A)') "]"
+
+   END SUBROUTINE
+   !===================================================================================================! 
+   
+   !***************************************************************************************************! 
+   !> @brief Pretty print a real vector.
+   !!
+   !! @param[in] arr: Vector to be printed.
+   !! @param[in] fmt: Format to print every element in the array.
+   !!
+   !***************************************************************************************************! 
+   SUBROUTINE RvecPrint(arr,fmt, unit)
+      IMPLICIT NONE
+      REAL(dp),   INTENT(IN) :: arr(:)
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: fmt
+      INTEGER, INTENT(IN), OPTIONAL :: unit
+      CHARACTER(len=:),ALLOCATABLE :: output_format
+      INTEGER  i, j
+      INTEGER :: unt
+      !-------------------------------------------------------------------------------------------------!
+      
+      IF ( PRESENT(unit) ) THEN
+         unt = unit
+      ELSE
+         unt = 6 ! Default print unit for most systems.
+      END IF 
+
+      IF (PRESENT(fmt)) THEN
+         output_format = '('//trim(fmt)//')'
+      ELSE
+         output_format = '(F10.4)'
+      END IF 
+
+      write(unt,'(A)',advance="no") "["
+      
+      DO i=1,SIZE(arr,1)
+         write(unt,output_format,advance="no") arr(i)
+         write(unt,"(A)",advance="no") ", "
+      END DO
+      write(unt,'(A)') "]"
+
+   END SUBROUTINE
+   !===================================================================================================! 
+
+   !***************************************************************************************************! 
+   !> @brief Pretty print a integer scalar.
+   !!
+   !! @param[in] val: Value to be printed.
+   !! @param[in] fmt: Format to print every element in the array.
+   !!
+   !***************************************************************************************************! 
+   SUBROUTINE IPrint(val,fmt,unit)
+      IMPLICIT NONE
+      INTEGER,   INTENT(IN) :: val
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: fmt
+      INTEGER, INTENT(IN), OPTIONAL :: unit
+      CHARACTER(len=:),ALLOCATABLE :: output_format
+      INTEGER :: unt
+      !-------------------------------------------------------------------------------------------------!
+      
+      IF ( PRESENT(unit) ) THEN
+         unt = unit
+      ELSE
+         unt = 6 ! Default print unit for most systems.
+      END IF 
+
+      IF (PRESENT(fmt)) THEN
+         output_format = '('//trim(fmt)//')'
+      ELSE
+         output_format = '(I8)'
+      END IF
+
+      write(unt,output_format) val
+
+   END SUBROUTINE
+   !===================================================================================================! 
+
+   !***************************************************************************************************! 
+   !> @brief Pretty print a integer matrix.
+   !!
+   !! @param[in] arr: Matrix to be printed.
+   !! @param[in] fmt: Format to print every element in the array.
+   !!
+   !***************************************************************************************************! 
+   SUBROUTINE ImatPrint(arr,fmt,unit)
+      IMPLICIT NONE
+      INTEGER,   INTENT(IN) :: arr(:,:)
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: fmt
+      INTEGER, INTENT(IN), OPTIONAL :: unit
+      CHARACTER(len=:),ALLOCATABLE :: output_format
+      INTEGER  i, j
+      INTEGER :: unt
+      !-------------------------------------------------------------------------------------------------!
+      
+      IF ( PRESENT(unit) ) THEN
+         unt = unit
+      ELSE
+         unt = 6 ! Default print unit for most systems.
+      END IF 
+
+      IF (PRESENT(fmt)) THEN
+         output_format = '('//trim(fmt)//')'
+      ELSE
+         output_format = '(I8)'
+      END IF 
+
+      write(unt,'(A)',advance="no") "["
+
+      DO i=1,SIZE(arr,1)
+
+         IF (I /= 1) THEN
+            write(unt,'(A)',advance="no") " "   
+         END IF 
+         write(unt,'(A)',advance="no") "["
+
+         DO j=1,SIZE(arr,2)
+           
+            write(unt,output_format,advance="no") &
+              arr(i,j)
+
+            write(unt,"(A)",advance="no") ", "
+
+         END DO
+
+         IF (I /= SIZE(arr,1)) THEN
+            write(*,'(A)') "]"
+         ELSE
+            write(*,'(A)',advance="no") "]"   
+         END IF 
+
+      END DO
+      
+      write(unt,'(A)') "]"
+
+   END SUBROUTINE
+   !===================================================================================================! 
+   
+   !***************************************************************************************************! 
+   !> @brief Pretty print a integer vector.
+   !!
+   !! @param[in] arr: Vector to be printed.
+   !! @param[in] fmt: Format to print every element in the array.
+   !!
+   !***************************************************************************************************! 
+   SUBROUTINE IvecPrint(arr,fmt,unit)
+      IMPLICIT NONE
+      INTEGER,   INTENT(IN) :: arr(:)
+      CHARACTER(len=*), INTENT(IN), OPTIONAL :: fmt
+      INTEGER, INTENT(IN), OPTIONAL :: unit
+      CHARACTER(len=:),ALLOCATABLE :: output_format
+      INTEGER  i, j
+      INTEGER :: unt
+      !-------------------------------------------------------------------------------------------------!
+      
+      IF ( PRESENT(unit) ) THEN
+         unt = unit
+      ELSE
+         unt = 6 ! Default print unit for most systems.
+      END IF 
+
+      IF (PRESENT(fmt)) THEN
+         output_format = '('//trim(fmt)//')'
+      ELSE
+         output_format = '(I8)'
+      END IF 
+
+      WRITE(unt,'(A)',advance="no") "["
+      
+      DO i=1,SIZE(arr,1)
+         WRITE(unt,output_format,advance='no') arr(i)
+         WRITE(unt,'(A)',advance="no") ", "
+      END DO
+      WRITE(unt,'(A)') "]"
+
+   END SUBROUTINE
+   !===================================================================================================! 
+
+
+
+   !***************************************************************************************************! 
+   !> @brief Interpolation in 1D. xData MUST be in ascending order with no repeated entries.
+   !!
+   !! @param[in] xData: x-values of data in existance.
+   !! @param[in] yData: y-values of data in existance.
+   !! @param[in] x: Value to interpolate.
+   !!
+   !***************************************************************************************************! 
+   FUNCTION Rinterp1D(xData,yData,x) RESULT(y)
+      
+      IMPLICIT NONE
+      
+      REAL(dp),   INTENT(IN) :: xData(:)
+      REAL(dp),   INTENT(IN) :: yData( SIZE(xData) )
+      REAL(dp),   INTENT(IN) :: x
+      REAL(dp)               :: y ! Result.
+      REAL(dp)               :: m
+      INTEGER :: N, start, finish , range, mid 
+
+      N = SIZE(xData)
+
+      start = 1
+      finish = N
+      mid = (start + finish) / 2
+
+      ! First check bounds
+      IF ( x <= xData(start) ) THEN
+         
+         y =  yData(start)
+
+      ELSEIF ( x >= xData(finish) ) THEN
+         
+         y =  yData(finish)
+
+      ELSE
+         
+         range = finish - start
+
+         ! Loop to find correct index.
+         DO WHILE( range > 1 ) 
+            
+            IF (x > xData(mid)) THEN
+              start = mid 
+            ELSE 
+              finish = mid
+            END IF
+
+            range = finish - start
+            mid = (start + finish)/2
+
+         END DO
+
+         m = (yData(mid+1)-yData(mid)) / ( xData(mid+1)-xData(mid)) ! Line region slope.
+         y = m * ( x - xData(mid) )  + yData(mid)
+
+      END IF 
+
+
+   END FUNCTION
+   !===================================================================================================! 
+
+   !===================================================================================================! 
+
+   !***************************************************************************************************! 
+   !> @brief identity matrix rXr.
+   !!
+   !!
+   !***************************************************************************************************!
+   FUNCTION RInxn(r) RESULT(I)
+      
+      IMPLICIT NONE 
+
+      INTEGER,   INTENT(IN)  :: r
+      REAL(dp) :: I(r,r)
+      INTEGER  :: j
+
+      I = zero
+      DO j = 1,r 
+         I(j,j) = one
+      END DO
+      
+   END FUNCTION
+   !===================================================================================================! 
+
+   !***************************************************************************************************! 
+   !> @brief turn a tensor in vector notation to matrix notation.
+   !!
+   !!
+   !***************************************************************************************************!
+   PURE FUNCTION RVectorToMatrix(v) RESULT(T)
+      
+      IMPLICIT NONE 
+      
+      REAL(dp),   INTENT(IN)  :: v(6)
+      REAL(dp) :: T(3,3)
+
+      T(1,1) = v(1);  T(1,2) = v(4);  T(1,3) = v(6)
+      T(2,1) = v(4);  T(2,2) = v(2);  T(2,3) = v(5)
+      T(3,1) = v(6);  T(3,2) = v(5);  T(3,3) = v(3)
+      
+   END FUNCTION RVectorToMatrix
+   !===================================================================================================! 
+
+   !***************************************************************************************************! 
+   !> @brief turn a tensor in matrix notation to vector notation.
+   !!
+   !!
+   !***************************************************************************************************!
+   PURE FUNCTION RMatrixToVector(T) RESULT(v)
+      
+      IMPLICIT NONE 
+      
+      REAL(dp),   INTENT(IN) :: T(3,3)
+      REAL(dp) :: v(6)
+
+      v(1) = T(1,1) 
+      v(4) = T(2,1);  v(2) = T(2,2);
+      v(6) = T(3,1);  v(5) = T(3,2);  v(3) = T(3,3)
+      
+   END FUNCTION RMatrixToVector
+   !===================================================================================================! 
+
+   !***************************************************************************************************! 
+   !> @brief Compute the Frobenius product between two 3x3 tensors
+   !!
+   !!             res = A : B
+   !!
+   !! @param[in] A: 3x3 real tensor.
+   !! @param[in] B: 3x3 real tensor.
+   !!
+   !***************************************************************************************************!
+   PURE FUNCTION RFrobeniusProduct(A,B) RESULT(res)
+      
+      IMPLICIT NONE 
+      
+      REAL(dp), INTENT(IN) :: A(3,3), B(3,3)
+      REAL(dp) :: res
+
+      res = A(1,1)*B(1,1) + A(1,2)*B(1,2) + A(1,3)*B(1,3) + &
+            A(2,1)*B(2,1) + A(2,2)*B(2,2) + A(2,3)*B(2,3) + &
+            A(3,1)*B(3,1) + A(3,2)*B(3,2) + A(3,3)*B(3,3) 
+      
+   END FUNCTION RFrobeniusProduct
+   !===================================================================================================! 
+
+END MODULE real_utils
+! ===== otim4n4.f90 =====
+MODULE otim4n4
+
+  USE master_parameters, ONLY: DP
+  USE real_utils, ONLY: PPRINT, det2x2, det3x3, det4x4, inv2x2, inv3x3, inv4x4
+  IMPLICIT NONE
+
+  INTEGER, PARAMETER :: num_im_dir = 70
+  INTEGER, PARAMETER :: torder     = 4
+  INTEGER, PARAMETER :: n_imdir_order(5) = [1,4,10,20,35]
+
+  TYPE ONUMM4N4
+    ! Real
+    REAL(DP) :: R
+    ! Order 1
+    REAL(DP) :: E1
+    REAL(DP) :: E2
+    REAL(DP) :: E3
+    REAL(DP) :: E4
+    ! Order 2
+    REAL(DP) :: E11
+    REAL(DP) :: E12
+    REAL(DP) :: E22
+    REAL(DP) :: E13
+    REAL(DP) :: E23
+    REAL(DP) :: E33
+    REAL(DP) :: E14
+    REAL(DP) :: E24
+    REAL(DP) :: E34
+    REAL(DP) :: E44
+    ! Order 3
+    REAL(DP) :: E111
+    REAL(DP) :: E112
+    REAL(DP) :: E122
+    REAL(DP) :: E222
+    REAL(DP) :: E113
+    REAL(DP) :: E123
+    REAL(DP) :: E133
+    REAL(DP) :: E223
+    REAL(DP) :: E233
+    REAL(DP) :: E333
+    REAL(DP) :: E114
+    REAL(DP) :: E124
+    REAL(DP) :: E134
+    REAL(DP) :: E144
+    REAL(DP) :: E224
+    REAL(DP) :: E234
+    REAL(DP) :: E244
+    REAL(DP) :: E334
+    REAL(DP) :: E344
+    REAL(DP) :: E444
+    ! Order 4
+    REAL(DP) :: E1111
+    REAL(DP) :: E1112
+    REAL(DP) :: E1122
+    REAL(DP) :: E1222
+    REAL(DP) :: E2222
+    REAL(DP) :: E1113
+    REAL(DP) :: E1123
+    REAL(DP) :: E1133
+    REAL(DP) :: E1223
+    REAL(DP) :: E1233
+    REAL(DP) :: E1333
+    REAL(DP) :: E2223
+    REAL(DP) :: E2233
+    REAL(DP) :: E2333
+    REAL(DP) :: E3333
+    REAL(DP) :: E1114
+    REAL(DP) :: E1124
+    REAL(DP) :: E1134
+    REAL(DP) :: E1144
+    REAL(DP) :: E1224
+    REAL(DP) :: E1234
+    REAL(DP) :: E1244
+    REAL(DP) :: E1334
+    REAL(DP) :: E1344
+    REAL(DP) :: E1444
+    REAL(DP) :: E2224
+    REAL(DP) :: E2234
+    REAL(DP) :: E2244
+    REAL(DP) :: E2334
+    REAL(DP) :: E2344
+    REAL(DP) :: E2444
+    REAL(DP) :: E3334
+    REAL(DP) :: E3344
+    REAL(DP) :: E3444
+    REAL(DP) :: E4444
+  END TYPE ONUMM4N4
+
+  ! Constant imaginary directions.
+  ! Order 1
+  TYPE(ONUMM4N4), PARAMETER :: E1 = ONUMM4N4(0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E2 = ONUMM4N4(0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E3 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E4 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  ! Order 2
+  TYPE(ONUMM4N4), PARAMETER :: E11 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E12 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E22 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E13 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E23 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E33 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E14 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E24 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E34 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E44 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  ! Order 3
+  TYPE(ONUMM4N4), PARAMETER :: E111 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E112 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E122 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E222 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E113 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E123 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E133 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E223 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E233 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E333 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E114 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E124 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E134 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E144 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E224 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E234 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E244 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E334 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E344 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E444 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  ! Order 4
+  TYPE(ONUMM4N4), PARAMETER :: E1111 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1112 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1122 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1222 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E2222 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1113 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1123 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1133 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1223 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1233 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1333 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E2223 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E2233 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E2333 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E3333 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1114 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1124 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1134 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1144 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1224 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1234 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1244 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1334 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1344 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E1444 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E2224 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E2234 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E2244 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E2334 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E2344 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E2444 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E3334 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E3344 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E3444 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp,0.0_dp)
+  TYPE(ONUMM4N4), PARAMETER :: E4444 = ONUMM4N4(0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,0.0_dp,1.0_dp)
+
+
+  INTERFACE OPERATOR(*)
+    MODULE PROCEDURE ONUMM4N4_MUL_OO_SS,ONUMM4N4_MUL_RO_SS,ONUMM4N4_MUL_OR_SS,ONUMM4N4_MUL_OO_VS,&
+                     ONUMM4N4_MUL_RO_VS,ONUMM4N4_MUL_OR_VS,ONUMM4N4_MUL_OO_MS,ONUMM4N4_MUL_RO_MS,&
+                     ONUMM4N4_MUL_OR_MS,ONUMM4N4_MUL_OO_SV,ONUMM4N4_MUL_RO_SV,ONUMM4N4_MUL_OR_SV,&
+                     ONUMM4N4_MUL_OO_SM,ONUMM4N4_MUL_RO_SM,ONUMM4N4_MUL_OR_SM
+  END INTERFACE
+
+  INTERFACE OPERATOR(+)
+    MODULE PROCEDURE ONUMM4N4_ADD_OO_SS,ONUMM4N4_ADD_RO_SS,ONUMM4N4_ADD_OR_SS,ONUMM4N4_ADD_OO_VS,&
+                     ONUMM4N4_ADD_RO_VS,ONUMM4N4_ADD_OR_VS,ONUMM4N4_ADD_OO_MS,ONUMM4N4_ADD_RO_MS,&
+                     ONUMM4N4_ADD_OR_MS,ONUMM4N4_ADD_OO_SV,ONUMM4N4_ADD_RO_SV,ONUMM4N4_ADD_OR_SV,&
+                     ONUMM4N4_ADD_OO_SM,ONUMM4N4_ADD_RO_SM,ONUMM4N4_ADD_OR_SM
+  END INTERFACE
+
+  INTERFACE OPERATOR(-)
+    MODULE PROCEDURE ONUMM4N4_NEG,ONUMM4N4_SUB_OO_SS,ONUMM4N4_SUB_RO_SS,ONUMM4N4_SUB_OR_SS,&
+                     ONUMM4N4_SUB_OO_VS,ONUMM4N4_SUB_RO_VS,ONUMM4N4_SUB_OR_VS,ONUMM4N4_SUB_OO_MS,&
+                     ONUMM4N4_SUB_RO_MS,ONUMM4N4_SUB_OR_MS,ONUMM4N4_SUB_OO_SV,ONUMM4N4_SUB_RO_SV,&
+                     ONUMM4N4_SUB_OR_SV,ONUMM4N4_SUB_OO_SM,ONUMM4N4_SUB_RO_SM,ONUMM4N4_SUB_OR_SM
+  END INTERFACE
+
+  INTERFACE OPERATOR(/)
+    MODULE PROCEDURE ONUMM4N4_DIVISION_OO,ONUMM4N4_DIVISION_OR,ONUMM4N4_DIVISION_RO
+  END INTERFACE
+
+  INTERFACE ASSIGNMENT(=)
+    MODULE PROCEDURE ONUMM4N4_ASSIGN_R
+  END INTERFACE
+
+  INTERFACE OPERATOR(**)
+    MODULE PROCEDURE ONUMM4N4_POW_OR,ONUMM4N4_POW_RO,ONUMM4N4_POW_I8O,ONUMM4N4_POW_I4O,&
+                     ONUMM4N4_POW_OI8,ONUMM4N4_POW_OI4,ONUMM4N4_POW_OO
+  END INTERFACE
+
+  INTERFACE OPERATOR(==)
+    MODULE PROCEDURE ONUMM4N4_EQ_OO_SS,ONUMM4N4_EQ_RO_SS,ONUMM4N4_EQ_OR_SS,ONUMM4N4_EQ_OO_VS,&
+                     ONUMM4N4_EQ_RO_VS,ONUMM4N4_EQ_OR_VS,ONUMM4N4_EQ_OO_MS,ONUMM4N4_EQ_RO_MS,&
+                     ONUMM4N4_EQ_OR_MS,ONUMM4N4_EQ_OO_SV,ONUMM4N4_EQ_RO_SV,ONUMM4N4_EQ_OR_SV,&
+                     ONUMM4N4_EQ_OO_SM,ONUMM4N4_EQ_RO_SM,ONUMM4N4_EQ_OR_SM
+  END INTERFACE
+
+  INTERFACE OPERATOR(/=)
+    MODULE PROCEDURE ONUMM4N4_NE_OO_SS,ONUMM4N4_NE_RO_SS,ONUMM4N4_NE_OR_SS,ONUMM4N4_NE_OO_VS,&
+                     ONUMM4N4_NE_RO_VS,ONUMM4N4_NE_OR_VS,ONUMM4N4_NE_OO_MS,ONUMM4N4_NE_RO_MS,&
+                     ONUMM4N4_NE_OR_MS,ONUMM4N4_NE_OO_SV,ONUMM4N4_NE_RO_SV,ONUMM4N4_NE_OR_SV,&
+                     ONUMM4N4_NE_OO_SM,ONUMM4N4_NE_RO_SM,ONUMM4N4_NE_OR_SM
+  END INTERFACE
+
+  INTERFACE OPERATOR(>=)
+    MODULE PROCEDURE ONUMM4N4_GE_OO_SS,ONUMM4N4_GE_RO_SS,ONUMM4N4_GE_OR_SS,ONUMM4N4_GE_OO_VS,&
+                     ONUMM4N4_GE_RO_VS,ONUMM4N4_GE_OR_VS,ONUMM4N4_GE_OO_MS,ONUMM4N4_GE_RO_MS,&
+                     ONUMM4N4_GE_OR_MS,ONUMM4N4_GE_OO_SV,ONUMM4N4_GE_RO_SV,ONUMM4N4_GE_OR_SV,&
+                     ONUMM4N4_GE_OO_SM,ONUMM4N4_GE_RO_SM,ONUMM4N4_GE_OR_SM
+  END INTERFACE
+
+  INTERFACE OPERATOR(<=)
+    MODULE PROCEDURE ONUMM4N4_LE_OO_SS,ONUMM4N4_LE_RO_SS,ONUMM4N4_LE_OR_SS,ONUMM4N4_LE_OO_VS,&
+                     ONUMM4N4_LE_RO_VS,ONUMM4N4_LE_OR_VS,ONUMM4N4_LE_OO_MS,ONUMM4N4_LE_RO_MS,&
+                     ONUMM4N4_LE_OR_MS,ONUMM4N4_LE_OO_SV,ONUMM4N4_LE_RO_SV,ONUMM4N4_LE_OR_SV,&
+                     ONUMM4N4_LE_OO_SM,ONUMM4N4_LE_RO_SM,ONUMM4N4_LE_OR_SM
+  END INTERFACE
+
+  INTERFACE OPERATOR(>)
+    MODULE PROCEDURE ONUMM4N4_GT_OO_SS,ONUMM4N4_GT_RO_SS,ONUMM4N4_GT_OR_SS,ONUMM4N4_GT_OO_VS,&
+                     ONUMM4N4_GT_RO_VS,ONUMM4N4_GT_OR_VS,ONUMM4N4_GT_OO_MS,ONUMM4N4_GT_RO_MS,&
+                     ONUMM4N4_GT_OR_MS,ONUMM4N4_GT_OO_SV,ONUMM4N4_GT_RO_SV,ONUMM4N4_GT_OR_SV,&
+                     ONUMM4N4_GT_OO_SM,ONUMM4N4_GT_RO_SM,ONUMM4N4_GT_OR_SM
+  END INTERFACE
+
+  INTERFACE OPERATOR(<)
+    MODULE PROCEDURE ONUMM4N4_LT_OO_SS,ONUMM4N4_LT_RO_SS,ONUMM4N4_LT_OR_SS,ONUMM4N4_LT_OO_VS,&
+                     ONUMM4N4_LT_RO_VS,ONUMM4N4_LT_OR_VS,ONUMM4N4_LT_OO_MS,ONUMM4N4_LT_RO_MS,&
+                     ONUMM4N4_LT_OR_MS,ONUMM4N4_LT_OO_SV,ONUMM4N4_LT_RO_SV,ONUMM4N4_LT_OR_SV,&
+                     ONUMM4N4_LT_OO_SM,ONUMM4N4_LT_RO_SM,ONUMM4N4_LT_OR_SM
+  END INTERFACE
+
+  INTERFACE PPRINT
+    MODULE PROCEDURE ONUMM4N4_PPRINT_S,ONUMM4N4_PPRINT_V,ONUMM4N4_PPRINT_M
+  END INTERFACE
+
+  INTERFACE TRANSPOSE
+    MODULE PROCEDURE ONUMM4N4_TRANSPOSE
+  END INTERFACE
+
+  INTERFACE MATMUL
+    MODULE PROCEDURE ONUMM4N4_MATMUL_ONUMM4N4,R_MATMUL_ONUMM4N4,ONUMM4N4_MATMUL_R
+  END INTERFACE
+
+  INTERFACE DOT_PRODUCT
+    MODULE PROCEDURE ONUMM4N4_DOT_PRODUCT_ONUMM4N4,R_DOT_PRODUCT_ONUMM4N4,ONUMM4N4_DOT_PRODUCT_R
+  END INTERFACE
+
+  INTERFACE UNFOLD
+    MODULE PROCEDURE ONUMM4N4_TO_CR_MAT_S,ONUMM4N4_TO_CR_MAT_V,ONUMM4N4_TO_CR_MAT_M
+  END INTERFACE
+
+  INTERFACE TO_CR
+    MODULE PROCEDURE ONUMM4N4_TO_CR_MAT_S,ONUMM4N4_TO_CR_MAT_V,ONUMM4N4_TO_CR_MAT_M
+  END INTERFACE
+
+  INTERFACE SIN
+    MODULE PROCEDURE ONUMM4N4_SIN
+  END INTERFACE
+
+  INTERFACE COS
+    MODULE PROCEDURE ONUMM4N4_COS
+  END INTERFACE
+
+  INTERFACE TAN
+    MODULE PROCEDURE ONUMM4N4_TAN
+  END INTERFACE
+
+  INTERFACE ASIN
+    MODULE PROCEDURE ONUMM4N4_ASIN
+  END INTERFACE
+
+  INTERFACE ACOS
+    MODULE PROCEDURE ONUMM4N4_ACOS
+  END INTERFACE
+
+  INTERFACE ATAN
+    MODULE PROCEDURE ONUMM4N4_ATAN
+  END INTERFACE
+
+  INTERFACE SINH
+    MODULE PROCEDURE ONUMM4N4_SINH
+  END INTERFACE
+
+  INTERFACE COSH
+    MODULE PROCEDURE ONUMM4N4_COSH
+  END INTERFACE
+
+  INTERFACE TANH
+    MODULE PROCEDURE ONUMM4N4_TANH
+  END INTERFACE
+
+  INTERFACE SQRT
+    MODULE PROCEDURE ONUMM4N4_SQRT
+  END INTERFACE
+
+  INTERFACE LOG
+    MODULE PROCEDURE ONUMM4N4_LOG
+  END INTERFACE
+
+  INTERFACE EXP
+    MODULE PROCEDURE ONUMM4N4_EXP
+  END INTERFACE
+
+  INTERFACE GEM
+    MODULE PROCEDURE ONUMM4N4_GEM_OOO,ONUMM4N4_GEM_ROO,ONUMM4N4_GEM_ORO
+  END INTERFACE
+
+  INTERFACE FEVAL
+    MODULE PROCEDURE ONUMM4N4_FEVAL
+  END INTERFACE
+
+  INTERFACE F2EVAL
+    MODULE PROCEDURE ONUMM4N4_F2EVAL
+  END INTERFACE
+
+  INTERFACE REAL
+    MODULE PROCEDURE ONUMM4N4_REAL
+  END INTERFACE
+
+  INTERFACE DET2X2
+    MODULE PROCEDURE ONUMM4N4_det2x2
+  END INTERFACE
+
+  INTERFACE DET3X3
+    MODULE PROCEDURE ONUMM4N4_det3x3
+  END INTERFACE
+
+  INTERFACE DET4X4
+    MODULE PROCEDURE ONUMM4N4_det4x4
+  END INTERFACE
+
+  INTERFACE INV2X2
+    MODULE PROCEDURE ONUMM4N4_INV2X2
+  END INTERFACE
+
+  INTERFACE INV3X3
+    MODULE PROCEDURE ONUMM4N4_INV3X3
+  END INTERFACE
+
+  INTERFACE INV4X4
+    MODULE PROCEDURE ONUMM4N4_INV4X4
+  END INTERFACE
+
+  INTERFACE GETIM
+    MODULE PROCEDURE ONUMM4N4_GETIM_S,ONUMM4N4_GETIM_V,ONUMM4N4_GETIM_M
+  END INTERFACE
+
+  INTERFACE SETIM
+    MODULE PROCEDURE ONUMM4N4_SETIM_S,ONUMM4N4_SETIM_V,ONUMM4N4_SETIM_M
+  END INTERFACE
+
+  INTERFACE MAX
+    MODULE PROCEDURE ONUMM4N4_MAX
+  END INTERFACE
+
+  INTERFACE MIN
+    MODULE PROCEDURE ONUMM4N4_MIN
+  END INTERFACE
+
+  INTERFACE MAXLOC
+    MODULE PROCEDURE ONUMM4N4_MAXLOC_R1,ONUMM4N4_MAXLOC_R2,ONUMM4N4_MAXLOC_R3,ONUMM4N4_MAXLOC_R4
+  END INTERFACE
+
+  INTERFACE MAXVAL
+    MODULE PROCEDURE ONUMM4N4_MAXVAL_R1,ONUMM4N4_MAXVAL_R2,ONUMM4N4_MAXVAL_R3,ONUMM4N4_MAXVAL_R4
+  END INTERFACE
+
+  INTERFACE MINLOC
+    MODULE PROCEDURE ONUMM4N4_MINLOC_R1,ONUMM4N4_MINLOC_R2,ONUMM4N4_MINLOC_R3,ONUMM4N4_MINLOC_R4
+  END INTERFACE
+
+  INTERFACE MINVAL
+    MODULE PROCEDURE ONUMM4N4_MINVAL_R1,ONUMM4N4_MINVAL_R2,ONUMM4N4_MINVAL_R3,ONUMM4N4_MINVAL_R4
+  END INTERFACE
+
+  INTERFACE ABS
+    MODULE PROCEDURE ONUMM4N4_ABS
+  END INTERFACE ABS
+  INTERFACE KOTI_NORM
+    MODULE PROCEDURE KOTI_NORM_ONUMM4N4
+  END INTERFACE KOTI_NORM
+  CONTAINS
+
+  ELEMENTAL SUBROUTINE ONUMM4N4_ASSIGN_R(RES,LHS)
+    
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS 
+    TYPE(ONUMM4N4), INTENT(OUT) :: RES 
+
+    ! Assign like function 'LHS'
+    ! Real
+    RES%R = LHS
+
+    ! Order 1
+    RES%E1 = 0.0_dp
+    RES%E2 = 0.0_dp
+    RES%E3 = 0.0_dp
+    RES%E4 = 0.0_dp
+
+    ! Order 2
+    RES%E11 = 0.0_dp
+    RES%E12 = 0.0_dp
+    RES%E22 = 0.0_dp
+    RES%E13 = 0.0_dp
+    RES%E23 = 0.0_dp
+    RES%E33 = 0.0_dp
+    RES%E14 = 0.0_dp
+    RES%E24 = 0.0_dp
+    RES%E34 = 0.0_dp
+    RES%E44 = 0.0_dp
+
+    ! Order 3
+    RES%E111 = 0.0_dp
+    RES%E112 = 0.0_dp
+    RES%E122 = 0.0_dp
+    RES%E222 = 0.0_dp
+    RES%E113 = 0.0_dp
+    RES%E123 = 0.0_dp
+    RES%E133 = 0.0_dp
+    RES%E223 = 0.0_dp
+    RES%E233 = 0.0_dp
+    RES%E333 = 0.0_dp
+    RES%E114 = 0.0_dp
+    RES%E124 = 0.0_dp
+    RES%E134 = 0.0_dp
+    RES%E144 = 0.0_dp
+    RES%E224 = 0.0_dp
+    RES%E234 = 0.0_dp
+    RES%E244 = 0.0_dp
+    RES%E334 = 0.0_dp
+    RES%E344 = 0.0_dp
+    RES%E444 = 0.0_dp
+
+    ! Order 4
+    RES%E1111 = 0.0_dp
+    RES%E1112 = 0.0_dp
+    RES%E1122 = 0.0_dp
+    RES%E1222 = 0.0_dp
+    RES%E2222 = 0.0_dp
+    RES%E1113 = 0.0_dp
+    RES%E1123 = 0.0_dp
+    RES%E1133 = 0.0_dp
+    RES%E1223 = 0.0_dp
+    RES%E1233 = 0.0_dp
+    RES%E1333 = 0.0_dp
+    RES%E2223 = 0.0_dp
+    RES%E2233 = 0.0_dp
+    RES%E2333 = 0.0_dp
+    RES%E3333 = 0.0_dp
+    RES%E1114 = 0.0_dp
+    RES%E1124 = 0.0_dp
+    RES%E1134 = 0.0_dp
+    RES%E1144 = 0.0_dp
+    RES%E1224 = 0.0_dp
+    RES%E1234 = 0.0_dp
+    RES%E1244 = 0.0_dp
+    RES%E1334 = 0.0_dp
+    RES%E1344 = 0.0_dp
+    RES%E1444 = 0.0_dp
+    RES%E2224 = 0.0_dp
+    RES%E2234 = 0.0_dp
+    RES%E2244 = 0.0_dp
+    RES%E2334 = 0.0_dp
+    RES%E2344 = 0.0_dp
+    RES%E2444 = 0.0_dp
+    RES%E3334 = 0.0_dp
+    RES%E3344 = 0.0_dp
+    RES%E3444 = 0.0_dp
+    RES%E4444 = 0.0_dp
+
+  END SUBROUTINE ONUMM4N4_ASSIGN_R
+
+  ELEMENTAL FUNCTION ONUMM4N4_NEG(LHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS 
+    TYPE(ONUMM4N4) :: RES 
+
+    ! Negation like function '-LHS'
+    ! Real
+    RES%R = -LHS%R
+    ! Order 1
+    RES%E1 = -LHS%E1
+    RES%E2 = -LHS%E2
+    RES%E3 = -LHS%E3
+    RES%E4 = -LHS%E4
+    ! Order 2
+    RES%E11 = -LHS%E11
+    RES%E12 = -LHS%E12
+    RES%E22 = -LHS%E22
+    RES%E13 = -LHS%E13
+    RES%E23 = -LHS%E23
+    RES%E33 = -LHS%E33
+    RES%E14 = -LHS%E14
+    RES%E24 = -LHS%E24
+    RES%E34 = -LHS%E34
+    RES%E44 = -LHS%E44
+    ! Order 3
+    RES%E111 = -LHS%E111
+    RES%E112 = -LHS%E112
+    RES%E122 = -LHS%E122
+    RES%E222 = -LHS%E222
+    RES%E113 = -LHS%E113
+    RES%E123 = -LHS%E123
+    RES%E133 = -LHS%E133
+    RES%E223 = -LHS%E223
+    RES%E233 = -LHS%E233
+    RES%E333 = -LHS%E333
+    RES%E114 = -LHS%E114
+    RES%E124 = -LHS%E124
+    RES%E134 = -LHS%E134
+    RES%E144 = -LHS%E144
+    RES%E224 = -LHS%E224
+    RES%E234 = -LHS%E234
+    RES%E244 = -LHS%E244
+    RES%E334 = -LHS%E334
+    RES%E344 = -LHS%E344
+    RES%E444 = -LHS%E444
+    ! Order 4
+    RES%E1111 = -LHS%E1111
+    RES%E1112 = -LHS%E1112
+    RES%E1122 = -LHS%E1122
+    RES%E1222 = -LHS%E1222
+    RES%E2222 = -LHS%E2222
+    RES%E1113 = -LHS%E1113
+    RES%E1123 = -LHS%E1123
+    RES%E1133 = -LHS%E1133
+    RES%E1223 = -LHS%E1223
+    RES%E1233 = -LHS%E1233
+    RES%E1333 = -LHS%E1333
+    RES%E2223 = -LHS%E2223
+    RES%E2233 = -LHS%E2233
+    RES%E2333 = -LHS%E2333
+    RES%E3333 = -LHS%E3333
+    RES%E1114 = -LHS%E1114
+    RES%E1124 = -LHS%E1124
+    RES%E1134 = -LHS%E1134
+    RES%E1144 = -LHS%E1144
+    RES%E1224 = -LHS%E1224
+    RES%E1234 = -LHS%E1234
+    RES%E1244 = -LHS%E1244
+    RES%E1334 = -LHS%E1334
+    RES%E1344 = -LHS%E1344
+    RES%E1444 = -LHS%E1444
+    RES%E2224 = -LHS%E2224
+    RES%E2234 = -LHS%E2234
+    RES%E2244 = -LHS%E2244
+    RES%E2334 = -LHS%E2334
+    RES%E2344 = -LHS%E2344
+    RES%E2444 = -LHS%E2444
+    RES%E3334 = -LHS%E3334
+    RES%E3344 = -LHS%E3344
+    RES%E3444 = -LHS%E3444
+    RES%E4444 = -LHS%E4444
+
+  END FUNCTION ONUMM4N4_NEG
+
+  ELEMENTAL FUNCTION ONUMM4N4_ADD_OO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES 
+
+    ! Addition like function 'LHS + RHS'
+    !  Real
+    RES%R = LHS%R + RHS%R
+
+    ! Order 1
+    RES%E1 = LHS%E1 + RHS%E1
+    RES%E2 = LHS%E2 + RHS%E2
+    RES%E3 = LHS%E3 + RHS%E3
+    RES%E4 = LHS%E4 + RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11 + RHS%E11
+    RES%E12 = LHS%E12 + RHS%E12
+    RES%E22 = LHS%E22 + RHS%E22
+    RES%E13 = LHS%E13 + RHS%E13
+    RES%E23 = LHS%E23 + RHS%E23
+    RES%E33 = LHS%E33 + RHS%E33
+    RES%E14 = LHS%E14 + RHS%E14
+    RES%E24 = LHS%E24 + RHS%E24
+    RES%E34 = LHS%E34 + RHS%E34
+    RES%E44 = LHS%E44 + RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111 + RHS%E111
+    RES%E112 = LHS%E112 + RHS%E112
+    RES%E122 = LHS%E122 + RHS%E122
+    RES%E222 = LHS%E222 + RHS%E222
+    RES%E113 = LHS%E113 + RHS%E113
+    RES%E123 = LHS%E123 + RHS%E123
+    RES%E133 = LHS%E133 + RHS%E133
+    RES%E223 = LHS%E223 + RHS%E223
+    RES%E233 = LHS%E233 + RHS%E233
+    RES%E333 = LHS%E333 + RHS%E333
+    RES%E114 = LHS%E114 + RHS%E114
+    RES%E124 = LHS%E124 + RHS%E124
+    RES%E134 = LHS%E134 + RHS%E134
+    RES%E144 = LHS%E144 + RHS%E144
+    RES%E224 = LHS%E224 + RHS%E224
+    RES%E234 = LHS%E234 + RHS%E234
+    RES%E244 = LHS%E244 + RHS%E244
+    RES%E334 = LHS%E334 + RHS%E334
+    RES%E344 = LHS%E344 + RHS%E344
+    RES%E444 = LHS%E444 + RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111 + RHS%E1111
+    RES%E1112 = LHS%E1112 + RHS%E1112
+    RES%E1122 = LHS%E1122 + RHS%E1122
+    RES%E1222 = LHS%E1222 + RHS%E1222
+    RES%E2222 = LHS%E2222 + RHS%E2222
+    RES%E1113 = LHS%E1113 + RHS%E1113
+    RES%E1123 = LHS%E1123 + RHS%E1123
+    RES%E1133 = LHS%E1133 + RHS%E1133
+    RES%E1223 = LHS%E1223 + RHS%E1223
+    RES%E1233 = LHS%E1233 + RHS%E1233
+    RES%E1333 = LHS%E1333 + RHS%E1333
+    RES%E2223 = LHS%E2223 + RHS%E2223
+    RES%E2233 = LHS%E2233 + RHS%E2233
+    RES%E2333 = LHS%E2333 + RHS%E2333
+    RES%E3333 = LHS%E3333 + RHS%E3333
+    RES%E1114 = LHS%E1114 + RHS%E1114
+    RES%E1124 = LHS%E1124 + RHS%E1124
+    RES%E1134 = LHS%E1134 + RHS%E1134
+    RES%E1144 = LHS%E1144 + RHS%E1144
+    RES%E1224 = LHS%E1224 + RHS%E1224
+    RES%E1234 = LHS%E1234 + RHS%E1234
+    RES%E1244 = LHS%E1244 + RHS%E1244
+    RES%E1334 = LHS%E1334 + RHS%E1334
+    RES%E1344 = LHS%E1344 + RHS%E1344
+    RES%E1444 = LHS%E1444 + RHS%E1444
+    RES%E2224 = LHS%E2224 + RHS%E2224
+    RES%E2234 = LHS%E2234 + RHS%E2234
+    RES%E2244 = LHS%E2244 + RHS%E2244
+    RES%E2334 = LHS%E2334 + RHS%E2334
+    RES%E2344 = LHS%E2344 + RHS%E2344
+    RES%E2444 = LHS%E2444 + RHS%E2444
+    RES%E3334 = LHS%E3334 + RHS%E3334
+    RES%E3344 = LHS%E3344 + RHS%E3344
+    RES%E3444 = LHS%E3444 + RHS%E3444
+    RES%E4444 = LHS%E4444 + RHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_OO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_ADD_RO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES 
+
+    ! Addition like function 'LHS + RHS'
+    ! Real
+    RES%R = LHS + RHS%R
+
+    ! Order 1
+    RES%E1 =  + RHS%E1
+    RES%E2 =  + RHS%E2
+    RES%E3 =  + RHS%E3
+    RES%E4 =  + RHS%E4
+
+    ! Order 2
+    RES%E11 =  + RHS%E11
+    RES%E12 =  + RHS%E12
+    RES%E22 =  + RHS%E22
+    RES%E13 =  + RHS%E13
+    RES%E23 =  + RHS%E23
+    RES%E33 =  + RHS%E33
+    RES%E14 =  + RHS%E14
+    RES%E24 =  + RHS%E24
+    RES%E34 =  + RHS%E34
+    RES%E44 =  + RHS%E44
+
+    ! Order 3
+    RES%E111 =  + RHS%E111
+    RES%E112 =  + RHS%E112
+    RES%E122 =  + RHS%E122
+    RES%E222 =  + RHS%E222
+    RES%E113 =  + RHS%E113
+    RES%E123 =  + RHS%E123
+    RES%E133 =  + RHS%E133
+    RES%E223 =  + RHS%E223
+    RES%E233 =  + RHS%E233
+    RES%E333 =  + RHS%E333
+    RES%E114 =  + RHS%E114
+    RES%E124 =  + RHS%E124
+    RES%E134 =  + RHS%E134
+    RES%E144 =  + RHS%E144
+    RES%E224 =  + RHS%E224
+    RES%E234 =  + RHS%E234
+    RES%E244 =  + RHS%E244
+    RES%E334 =  + RHS%E334
+    RES%E344 =  + RHS%E344
+    RES%E444 =  + RHS%E444
+
+    ! Order 4
+    RES%E1111 =  + RHS%E1111
+    RES%E1112 =  + RHS%E1112
+    RES%E1122 =  + RHS%E1122
+    RES%E1222 =  + RHS%E1222
+    RES%E2222 =  + RHS%E2222
+    RES%E1113 =  + RHS%E1113
+    RES%E1123 =  + RHS%E1123
+    RES%E1133 =  + RHS%E1133
+    RES%E1223 =  + RHS%E1223
+    RES%E1233 =  + RHS%E1233
+    RES%E1333 =  + RHS%E1333
+    RES%E2223 =  + RHS%E2223
+    RES%E2233 =  + RHS%E2233
+    RES%E2333 =  + RHS%E2333
+    RES%E3333 =  + RHS%E3333
+    RES%E1114 =  + RHS%E1114
+    RES%E1124 =  + RHS%E1124
+    RES%E1134 =  + RHS%E1134
+    RES%E1144 =  + RHS%E1144
+    RES%E1224 =  + RHS%E1224
+    RES%E1234 =  + RHS%E1234
+    RES%E1244 =  + RHS%E1244
+    RES%E1334 =  + RHS%E1334
+    RES%E1344 =  + RHS%E1344
+    RES%E1444 =  + RHS%E1444
+    RES%E2224 =  + RHS%E2224
+    RES%E2234 =  + RHS%E2234
+    RES%E2244 =  + RHS%E2244
+    RES%E2334 =  + RHS%E2334
+    RES%E2344 =  + RHS%E2344
+    RES%E2444 =  + RHS%E2444
+    RES%E3334 =  + RHS%E3334
+    RES%E3344 =  + RHS%E3344
+    RES%E3444 =  + RHS%E3444
+    RES%E4444 =  + RHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_RO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_ADD_OR_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES 
+
+    ! Addition like function 'LHS + RHS'
+    ! Real
+    RES%R = LHS%R + RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1
+    RES%E2 = LHS%E2
+    RES%E3 = LHS%E3
+    RES%E4 = LHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11
+    RES%E12 = LHS%E12
+    RES%E22 = LHS%E22
+    RES%E13 = LHS%E13
+    RES%E23 = LHS%E23
+    RES%E33 = LHS%E33
+    RES%E14 = LHS%E14
+    RES%E24 = LHS%E24
+    RES%E34 = LHS%E34
+    RES%E44 = LHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111
+    RES%E112 = LHS%E112
+    RES%E122 = LHS%E122
+    RES%E222 = LHS%E222
+    RES%E113 = LHS%E113
+    RES%E123 = LHS%E123
+    RES%E133 = LHS%E133
+    RES%E223 = LHS%E223
+    RES%E233 = LHS%E233
+    RES%E333 = LHS%E333
+    RES%E114 = LHS%E114
+    RES%E124 = LHS%E124
+    RES%E134 = LHS%E134
+    RES%E144 = LHS%E144
+    RES%E224 = LHS%E224
+    RES%E234 = LHS%E234
+    RES%E244 = LHS%E244
+    RES%E334 = LHS%E334
+    RES%E344 = LHS%E344
+    RES%E444 = LHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111
+    RES%E1112 = LHS%E1112
+    RES%E1122 = LHS%E1122
+    RES%E1222 = LHS%E1222
+    RES%E2222 = LHS%E2222
+    RES%E1113 = LHS%E1113
+    RES%E1123 = LHS%E1123
+    RES%E1133 = LHS%E1133
+    RES%E1223 = LHS%E1223
+    RES%E1233 = LHS%E1233
+    RES%E1333 = LHS%E1333
+    RES%E2223 = LHS%E2223
+    RES%E2233 = LHS%E2233
+    RES%E2333 = LHS%E2333
+    RES%E3333 = LHS%E3333
+    RES%E1114 = LHS%E1114
+    RES%E1124 = LHS%E1124
+    RES%E1134 = LHS%E1134
+    RES%E1144 = LHS%E1144
+    RES%E1224 = LHS%E1224
+    RES%E1234 = LHS%E1234
+    RES%E1244 = LHS%E1244
+    RES%E1334 = LHS%E1334
+    RES%E1344 = LHS%E1344
+    RES%E1444 = LHS%E1444
+    RES%E2224 = LHS%E2224
+    RES%E2234 = LHS%E2234
+    RES%E2244 = LHS%E2244
+    RES%E2334 = LHS%E2334
+    RES%E2344 = LHS%E2344
+    RES%E2444 = LHS%E2444
+    RES%E3334 = LHS%E3334
+    RES%E3344 = LHS%E3344
+    RES%E3444 = LHS%E3444
+    RES%E4444 = LHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_OR_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_SUB_OO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES 
+
+    ! Addition like function 'LHS - RHS'
+    !  Real
+    RES%R = LHS%R - RHS%R
+
+    ! Order 1
+    RES%E1 = LHS%E1 - RHS%E1
+    RES%E2 = LHS%E2 - RHS%E2
+    RES%E3 = LHS%E3 - RHS%E3
+    RES%E4 = LHS%E4 - RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11 - RHS%E11
+    RES%E12 = LHS%E12 - RHS%E12
+    RES%E22 = LHS%E22 - RHS%E22
+    RES%E13 = LHS%E13 - RHS%E13
+    RES%E23 = LHS%E23 - RHS%E23
+    RES%E33 = LHS%E33 - RHS%E33
+    RES%E14 = LHS%E14 - RHS%E14
+    RES%E24 = LHS%E24 - RHS%E24
+    RES%E34 = LHS%E34 - RHS%E34
+    RES%E44 = LHS%E44 - RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111 - RHS%E111
+    RES%E112 = LHS%E112 - RHS%E112
+    RES%E122 = LHS%E122 - RHS%E122
+    RES%E222 = LHS%E222 - RHS%E222
+    RES%E113 = LHS%E113 - RHS%E113
+    RES%E123 = LHS%E123 - RHS%E123
+    RES%E133 = LHS%E133 - RHS%E133
+    RES%E223 = LHS%E223 - RHS%E223
+    RES%E233 = LHS%E233 - RHS%E233
+    RES%E333 = LHS%E333 - RHS%E333
+    RES%E114 = LHS%E114 - RHS%E114
+    RES%E124 = LHS%E124 - RHS%E124
+    RES%E134 = LHS%E134 - RHS%E134
+    RES%E144 = LHS%E144 - RHS%E144
+    RES%E224 = LHS%E224 - RHS%E224
+    RES%E234 = LHS%E234 - RHS%E234
+    RES%E244 = LHS%E244 - RHS%E244
+    RES%E334 = LHS%E334 - RHS%E334
+    RES%E344 = LHS%E344 - RHS%E344
+    RES%E444 = LHS%E444 - RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111 - RHS%E1111
+    RES%E1112 = LHS%E1112 - RHS%E1112
+    RES%E1122 = LHS%E1122 - RHS%E1122
+    RES%E1222 = LHS%E1222 - RHS%E1222
+    RES%E2222 = LHS%E2222 - RHS%E2222
+    RES%E1113 = LHS%E1113 - RHS%E1113
+    RES%E1123 = LHS%E1123 - RHS%E1123
+    RES%E1133 = LHS%E1133 - RHS%E1133
+    RES%E1223 = LHS%E1223 - RHS%E1223
+    RES%E1233 = LHS%E1233 - RHS%E1233
+    RES%E1333 = LHS%E1333 - RHS%E1333
+    RES%E2223 = LHS%E2223 - RHS%E2223
+    RES%E2233 = LHS%E2233 - RHS%E2233
+    RES%E2333 = LHS%E2333 - RHS%E2333
+    RES%E3333 = LHS%E3333 - RHS%E3333
+    RES%E1114 = LHS%E1114 - RHS%E1114
+    RES%E1124 = LHS%E1124 - RHS%E1124
+    RES%E1134 = LHS%E1134 - RHS%E1134
+    RES%E1144 = LHS%E1144 - RHS%E1144
+    RES%E1224 = LHS%E1224 - RHS%E1224
+    RES%E1234 = LHS%E1234 - RHS%E1234
+    RES%E1244 = LHS%E1244 - RHS%E1244
+    RES%E1334 = LHS%E1334 - RHS%E1334
+    RES%E1344 = LHS%E1344 - RHS%E1344
+    RES%E1444 = LHS%E1444 - RHS%E1444
+    RES%E2224 = LHS%E2224 - RHS%E2224
+    RES%E2234 = LHS%E2234 - RHS%E2234
+    RES%E2244 = LHS%E2244 - RHS%E2244
+    RES%E2334 = LHS%E2334 - RHS%E2334
+    RES%E2344 = LHS%E2344 - RHS%E2344
+    RES%E2444 = LHS%E2444 - RHS%E2444
+    RES%E3334 = LHS%E3334 - RHS%E3334
+    RES%E3344 = LHS%E3344 - RHS%E3344
+    RES%E3444 = LHS%E3444 - RHS%E3444
+    RES%E4444 = LHS%E4444 - RHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_OO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_SUB_RO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES 
+
+    ! Addition like function 'LHS - RHS'
+    ! Real
+    RES%R = LHS - RHS%R
+
+    ! Order 1
+    RES%E1 =  - RHS%E1
+    RES%E2 =  - RHS%E2
+    RES%E3 =  - RHS%E3
+    RES%E4 =  - RHS%E4
+
+    ! Order 2
+    RES%E11 =  - RHS%E11
+    RES%E12 =  - RHS%E12
+    RES%E22 =  - RHS%E22
+    RES%E13 =  - RHS%E13
+    RES%E23 =  - RHS%E23
+    RES%E33 =  - RHS%E33
+    RES%E14 =  - RHS%E14
+    RES%E24 =  - RHS%E24
+    RES%E34 =  - RHS%E34
+    RES%E44 =  - RHS%E44
+
+    ! Order 3
+    RES%E111 =  - RHS%E111
+    RES%E112 =  - RHS%E112
+    RES%E122 =  - RHS%E122
+    RES%E222 =  - RHS%E222
+    RES%E113 =  - RHS%E113
+    RES%E123 =  - RHS%E123
+    RES%E133 =  - RHS%E133
+    RES%E223 =  - RHS%E223
+    RES%E233 =  - RHS%E233
+    RES%E333 =  - RHS%E333
+    RES%E114 =  - RHS%E114
+    RES%E124 =  - RHS%E124
+    RES%E134 =  - RHS%E134
+    RES%E144 =  - RHS%E144
+    RES%E224 =  - RHS%E224
+    RES%E234 =  - RHS%E234
+    RES%E244 =  - RHS%E244
+    RES%E334 =  - RHS%E334
+    RES%E344 =  - RHS%E344
+    RES%E444 =  - RHS%E444
+
+    ! Order 4
+    RES%E1111 =  - RHS%E1111
+    RES%E1112 =  - RHS%E1112
+    RES%E1122 =  - RHS%E1122
+    RES%E1222 =  - RHS%E1222
+    RES%E2222 =  - RHS%E2222
+    RES%E1113 =  - RHS%E1113
+    RES%E1123 =  - RHS%E1123
+    RES%E1133 =  - RHS%E1133
+    RES%E1223 =  - RHS%E1223
+    RES%E1233 =  - RHS%E1233
+    RES%E1333 =  - RHS%E1333
+    RES%E2223 =  - RHS%E2223
+    RES%E2233 =  - RHS%E2233
+    RES%E2333 =  - RHS%E2333
+    RES%E3333 =  - RHS%E3333
+    RES%E1114 =  - RHS%E1114
+    RES%E1124 =  - RHS%E1124
+    RES%E1134 =  - RHS%E1134
+    RES%E1144 =  - RHS%E1144
+    RES%E1224 =  - RHS%E1224
+    RES%E1234 =  - RHS%E1234
+    RES%E1244 =  - RHS%E1244
+    RES%E1334 =  - RHS%E1334
+    RES%E1344 =  - RHS%E1344
+    RES%E1444 =  - RHS%E1444
+    RES%E2224 =  - RHS%E2224
+    RES%E2234 =  - RHS%E2234
+    RES%E2244 =  - RHS%E2244
+    RES%E2334 =  - RHS%E2334
+    RES%E2344 =  - RHS%E2344
+    RES%E2444 =  - RHS%E2444
+    RES%E3334 =  - RHS%E3334
+    RES%E3344 =  - RHS%E3344
+    RES%E3444 =  - RHS%E3444
+    RES%E4444 =  - RHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_RO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_SUB_OR_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES 
+
+    ! Addition like function 'LHS - RHS'
+    ! Real
+    RES%R = LHS%R - RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1
+    RES%E2 = LHS%E2
+    RES%E3 = LHS%E3
+    RES%E4 = LHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11
+    RES%E12 = LHS%E12
+    RES%E22 = LHS%E22
+    RES%E13 = LHS%E13
+    RES%E23 = LHS%E23
+    RES%E33 = LHS%E33
+    RES%E14 = LHS%E14
+    RES%E24 = LHS%E24
+    RES%E34 = LHS%E34
+    RES%E44 = LHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111
+    RES%E112 = LHS%E112
+    RES%E122 = LHS%E122
+    RES%E222 = LHS%E222
+    RES%E113 = LHS%E113
+    RES%E123 = LHS%E123
+    RES%E133 = LHS%E133
+    RES%E223 = LHS%E223
+    RES%E233 = LHS%E233
+    RES%E333 = LHS%E333
+    RES%E114 = LHS%E114
+    RES%E124 = LHS%E124
+    RES%E134 = LHS%E134
+    RES%E144 = LHS%E144
+    RES%E224 = LHS%E224
+    RES%E234 = LHS%E234
+    RES%E244 = LHS%E244
+    RES%E334 = LHS%E334
+    RES%E344 = LHS%E344
+    RES%E444 = LHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111
+    RES%E1112 = LHS%E1112
+    RES%E1122 = LHS%E1122
+    RES%E1222 = LHS%E1222
+    RES%E2222 = LHS%E2222
+    RES%E1113 = LHS%E1113
+    RES%E1123 = LHS%E1123
+    RES%E1133 = LHS%E1133
+    RES%E1223 = LHS%E1223
+    RES%E1233 = LHS%E1233
+    RES%E1333 = LHS%E1333
+    RES%E2223 = LHS%E2223
+    RES%E2233 = LHS%E2233
+    RES%E2333 = LHS%E2333
+    RES%E3333 = LHS%E3333
+    RES%E1114 = LHS%E1114
+    RES%E1124 = LHS%E1124
+    RES%E1134 = LHS%E1134
+    RES%E1144 = LHS%E1144
+    RES%E1224 = LHS%E1224
+    RES%E1234 = LHS%E1234
+    RES%E1244 = LHS%E1244
+    RES%E1334 = LHS%E1334
+    RES%E1344 = LHS%E1344
+    RES%E1444 = LHS%E1444
+    RES%E2224 = LHS%E2224
+    RES%E2234 = LHS%E2234
+    RES%E2244 = LHS%E2244
+    RES%E2334 = LHS%E2334
+    RES%E2344 = LHS%E2344
+    RES%E2444 = LHS%E2444
+    RES%E3334 = LHS%E3334
+    RES%E3344 = LHS%E3344
+    RES%E3444 = LHS%E3444
+    RES%E4444 = LHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_OR_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_MUL_OO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES 
+
+    !  Multiplication like function 'LHS*RHS'
+    ! Order 4
+    RES%E1111 = LHS%R*RHS%E1111 + LHS%E1111*RHS%R +  &
+             LHS%E1*RHS%E111 + LHS%E111*RHS%E1 + LHS%E11*RHS%E11
+    RES%E1112 = LHS%R*RHS%E1112 + LHS%E1112*RHS%R +  &
+             LHS%E1*RHS%E112 + LHS%E112*RHS%E1 + LHS%E2*RHS%E111 +  &
+             LHS%E111*RHS%E2 + LHS%E11*RHS%E12 + LHS%E12*RHS%E11
+    RES%E1122 = LHS%R*RHS%E1122 + LHS%E1122*RHS%R +  &
+             LHS%E1*RHS%E122 + LHS%E122*RHS%E1 + LHS%E2*RHS%E112 +  &
+             LHS%E112*RHS%E2 + LHS%E11*RHS%E22 + LHS%E12*RHS%E12 + LHS%E22*RHS%E11
+    RES%E1222 = LHS%R*RHS%E1222 + LHS%E1222*RHS%R +  &
+             LHS%E1*RHS%E222 + LHS%E222*RHS%E1 + LHS%E2*RHS%E122 +  &
+             LHS%E122*RHS%E2 + LHS%E12*RHS%E22 + LHS%E22*RHS%E12
+    RES%E2222 = LHS%R*RHS%E2222 + LHS%E2222*RHS%R +  &
+             LHS%E2*RHS%E222 + LHS%E222*RHS%E2 + LHS%E22*RHS%E22
+    RES%E1113 = LHS%R*RHS%E1113 + LHS%E1113*RHS%R +  &
+             LHS%E1*RHS%E113 + LHS%E113*RHS%E1 + LHS%E3*RHS%E111 +  &
+             LHS%E111*RHS%E3 + LHS%E11*RHS%E13 + LHS%E13*RHS%E11
+    RES%E1123 = LHS%R*RHS%E1123 + LHS%E1123*RHS%R +  &
+             LHS%E1*RHS%E123 + LHS%E123*RHS%E1 + LHS%E2*RHS%E113 +  &
+             LHS%E113*RHS%E2 + LHS%E3*RHS%E112 + LHS%E112*RHS%E3 +  &
+             LHS%E11*RHS%E23 + LHS%E12*RHS%E13 + LHS%E13*RHS%E12 + LHS%E23*RHS%E11
+    RES%E1133 = LHS%R*RHS%E1133 + LHS%E1133*RHS%R +  &
+             LHS%E1*RHS%E133 + LHS%E133*RHS%E1 + LHS%E3*RHS%E113 +  &
+             LHS%E113*RHS%E3 + LHS%E11*RHS%E33 + LHS%E13*RHS%E13 + LHS%E33*RHS%E11
+    RES%E1223 = LHS%R*RHS%E1223 + LHS%E1223*RHS%R +  &
+             LHS%E1*RHS%E223 + LHS%E223*RHS%E1 + LHS%E2*RHS%E123 +  &
+             LHS%E123*RHS%E2 + LHS%E3*RHS%E122 + LHS%E122*RHS%E3 +  &
+             LHS%E12*RHS%E23 + LHS%E22*RHS%E13 + LHS%E13*RHS%E22 + LHS%E23*RHS%E12
+    RES%E1233 = LHS%R*RHS%E1233 + LHS%E1233*RHS%R +  &
+             LHS%E1*RHS%E233 + LHS%E233*RHS%E1 + LHS%E2*RHS%E133 +  &
+             LHS%E133*RHS%E2 + LHS%E3*RHS%E123 + LHS%E123*RHS%E3 +  &
+             LHS%E12*RHS%E33 + LHS%E13*RHS%E23 + LHS%E23*RHS%E13 + LHS%E33*RHS%E12
+    RES%E1333 = LHS%R*RHS%E1333 + LHS%E1333*RHS%R +  &
+             LHS%E1*RHS%E333 + LHS%E333*RHS%E1 + LHS%E3*RHS%E133 +  &
+             LHS%E133*RHS%E3 + LHS%E13*RHS%E33 + LHS%E33*RHS%E13
+    RES%E2223 = LHS%R*RHS%E2223 + LHS%E2223*RHS%R +  &
+             LHS%E2*RHS%E223 + LHS%E223*RHS%E2 + LHS%E3*RHS%E222 +  &
+             LHS%E222*RHS%E3 + LHS%E22*RHS%E23 + LHS%E23*RHS%E22
+    RES%E2233 = LHS%R*RHS%E2233 + LHS%E2233*RHS%R +  &
+             LHS%E2*RHS%E233 + LHS%E233*RHS%E2 + LHS%E3*RHS%E223 +  &
+             LHS%E223*RHS%E3 + LHS%E22*RHS%E33 + LHS%E23*RHS%E23 + LHS%E33*RHS%E22
+    RES%E2333 = LHS%R*RHS%E2333 + LHS%E2333*RHS%R +  &
+             LHS%E2*RHS%E333 + LHS%E333*RHS%E2 + LHS%E3*RHS%E233 +  &
+             LHS%E233*RHS%E3 + LHS%E23*RHS%E33 + LHS%E33*RHS%E23
+    RES%E3333 = LHS%R*RHS%E3333 + LHS%E3333*RHS%R +  &
+             LHS%E3*RHS%E333 + LHS%E333*RHS%E3 + LHS%E33*RHS%E33
+    RES%E1114 = LHS%R*RHS%E1114 + LHS%E1114*RHS%R +  &
+             LHS%E1*RHS%E114 + LHS%E114*RHS%E1 + LHS%E4*RHS%E111 +  &
+             LHS%E111*RHS%E4 + LHS%E11*RHS%E14 + LHS%E14*RHS%E11
+    RES%E1124 = LHS%R*RHS%E1124 + LHS%E1124*RHS%R +  &
+             LHS%E1*RHS%E124 + LHS%E124*RHS%E1 + LHS%E2*RHS%E114 +  &
+             LHS%E114*RHS%E2 + LHS%E4*RHS%E112 + LHS%E112*RHS%E4 +  &
+             LHS%E11*RHS%E24 + LHS%E12*RHS%E14 + LHS%E14*RHS%E12 + LHS%E24*RHS%E11
+    RES%E1134 = LHS%R*RHS%E1134 + LHS%E1134*RHS%R +  &
+             LHS%E1*RHS%E134 + LHS%E134*RHS%E1 + LHS%E3*RHS%E114 +  &
+             LHS%E114*RHS%E3 + LHS%E4*RHS%E113 + LHS%E113*RHS%E4 +  &
+             LHS%E11*RHS%E34 + LHS%E13*RHS%E14 + LHS%E14*RHS%E13 + LHS%E34*RHS%E11
+    RES%E1144 = LHS%R*RHS%E1144 + LHS%E1144*RHS%R +  &
+             LHS%E1*RHS%E144 + LHS%E144*RHS%E1 + LHS%E4*RHS%E114 +  &
+             LHS%E114*RHS%E4 + LHS%E11*RHS%E44 + LHS%E14*RHS%E14 + LHS%E44*RHS%E11
+    RES%E1224 = LHS%R*RHS%E1224 + LHS%E1224*RHS%R +  &
+             LHS%E1*RHS%E224 + LHS%E224*RHS%E1 + LHS%E2*RHS%E124 +  &
+             LHS%E124*RHS%E2 + LHS%E4*RHS%E122 + LHS%E122*RHS%E4 +  &
+             LHS%E12*RHS%E24 + LHS%E22*RHS%E14 + LHS%E14*RHS%E22 + LHS%E24*RHS%E12
+    RES%E1234 = LHS%R*RHS%E1234 + LHS%E1234*RHS%R +  &
+             LHS%E1*RHS%E234 + LHS%E234*RHS%E1 + LHS%E2*RHS%E134 +  &
+             LHS%E134*RHS%E2 + LHS%E3*RHS%E124 + LHS%E124*RHS%E3 +  &
+             LHS%E4*RHS%E123 + LHS%E123*RHS%E4 + LHS%E12*RHS%E34 +  &
+             LHS%E13*RHS%E24 + LHS%E23*RHS%E14 + LHS%E14*RHS%E23 +  &
+             LHS%E24*RHS%E13 + LHS%E34*RHS%E12
+    RES%E1244 = LHS%R*RHS%E1244 + LHS%E1244*RHS%R +  &
+             LHS%E1*RHS%E244 + LHS%E244*RHS%E1 + LHS%E2*RHS%E144 +  &
+             LHS%E144*RHS%E2 + LHS%E4*RHS%E124 + LHS%E124*RHS%E4 +  &
+             LHS%E12*RHS%E44 + LHS%E14*RHS%E24 + LHS%E24*RHS%E14 + LHS%E44*RHS%E12
+    RES%E1334 = LHS%R*RHS%E1334 + LHS%E1334*RHS%R +  &
+             LHS%E1*RHS%E334 + LHS%E334*RHS%E1 + LHS%E3*RHS%E134 +  &
+             LHS%E134*RHS%E3 + LHS%E4*RHS%E133 + LHS%E133*RHS%E4 +  &
+             LHS%E13*RHS%E34 + LHS%E33*RHS%E14 + LHS%E14*RHS%E33 + LHS%E34*RHS%E13
+    RES%E1344 = LHS%R*RHS%E1344 + LHS%E1344*RHS%R +  &
+             LHS%E1*RHS%E344 + LHS%E344*RHS%E1 + LHS%E3*RHS%E144 +  &
+             LHS%E144*RHS%E3 + LHS%E4*RHS%E134 + LHS%E134*RHS%E4 +  &
+             LHS%E13*RHS%E44 + LHS%E14*RHS%E34 + LHS%E34*RHS%E14 + LHS%E44*RHS%E13
+    RES%E1444 = LHS%R*RHS%E1444 + LHS%E1444*RHS%R +  &
+             LHS%E1*RHS%E444 + LHS%E444*RHS%E1 + LHS%E4*RHS%E144 +  &
+             LHS%E144*RHS%E4 + LHS%E14*RHS%E44 + LHS%E44*RHS%E14
+    RES%E2224 = LHS%R*RHS%E2224 + LHS%E2224*RHS%R +  &
+             LHS%E2*RHS%E224 + LHS%E224*RHS%E2 + LHS%E4*RHS%E222 +  &
+             LHS%E222*RHS%E4 + LHS%E22*RHS%E24 + LHS%E24*RHS%E22
+    RES%E2234 = LHS%R*RHS%E2234 + LHS%E2234*RHS%R +  &
+             LHS%E2*RHS%E234 + LHS%E234*RHS%E2 + LHS%E3*RHS%E224 +  &
+             LHS%E224*RHS%E3 + LHS%E4*RHS%E223 + LHS%E223*RHS%E4 +  &
+             LHS%E22*RHS%E34 + LHS%E23*RHS%E24 + LHS%E24*RHS%E23 + LHS%E34*RHS%E22
+    RES%E2244 = LHS%R*RHS%E2244 + LHS%E2244*RHS%R +  &
+             LHS%E2*RHS%E244 + LHS%E244*RHS%E2 + LHS%E4*RHS%E224 +  &
+             LHS%E224*RHS%E4 + LHS%E22*RHS%E44 + LHS%E24*RHS%E24 + LHS%E44*RHS%E22
+    RES%E2334 = LHS%R*RHS%E2334 + LHS%E2334*RHS%R +  &
+             LHS%E2*RHS%E334 + LHS%E334*RHS%E2 + LHS%E3*RHS%E234 +  &
+             LHS%E234*RHS%E3 + LHS%E4*RHS%E233 + LHS%E233*RHS%E4 +  &
+             LHS%E23*RHS%E34 + LHS%E33*RHS%E24 + LHS%E24*RHS%E33 + LHS%E34*RHS%E23
+    RES%E2344 = LHS%R*RHS%E2344 + LHS%E2344*RHS%R +  &
+             LHS%E2*RHS%E344 + LHS%E344*RHS%E2 + LHS%E3*RHS%E244 +  &
+             LHS%E244*RHS%E3 + LHS%E4*RHS%E234 + LHS%E234*RHS%E4 +  &
+             LHS%E23*RHS%E44 + LHS%E24*RHS%E34 + LHS%E34*RHS%E24 + LHS%E44*RHS%E23
+    RES%E2444 = LHS%R*RHS%E2444 + LHS%E2444*RHS%R +  &
+             LHS%E2*RHS%E444 + LHS%E444*RHS%E2 + LHS%E4*RHS%E244 +  &
+             LHS%E244*RHS%E4 + LHS%E24*RHS%E44 + LHS%E44*RHS%E24
+    RES%E3334 = LHS%R*RHS%E3334 + LHS%E3334*RHS%R +  &
+             LHS%E3*RHS%E334 + LHS%E334*RHS%E3 + LHS%E4*RHS%E333 +  &
+             LHS%E333*RHS%E4 + LHS%E33*RHS%E34 + LHS%E34*RHS%E33
+    RES%E3344 = LHS%R*RHS%E3344 + LHS%E3344*RHS%R +  &
+             LHS%E3*RHS%E344 + LHS%E344*RHS%E3 + LHS%E4*RHS%E334 +  &
+             LHS%E334*RHS%E4 + LHS%E33*RHS%E44 + LHS%E34*RHS%E34 + LHS%E44*RHS%E33
+    RES%E3444 = LHS%R*RHS%E3444 + LHS%E3444*RHS%R +  &
+             LHS%E3*RHS%E444 + LHS%E444*RHS%E3 + LHS%E4*RHS%E344 +  &
+             LHS%E344*RHS%E4 + LHS%E34*RHS%E44 + LHS%E44*RHS%E34
+    RES%E4444 = LHS%R*RHS%E4444 + LHS%E4444*RHS%R +  &
+             LHS%E4*RHS%E444 + LHS%E444*RHS%E4 + LHS%E44*RHS%E44
+    ! Order 3
+    RES%E111 = LHS%R*RHS%E111 + LHS%E111*RHS%R +  &
+            LHS%E1*RHS%E11 + LHS%E11*RHS%E1
+    RES%E112 = LHS%R*RHS%E112 + LHS%E112*RHS%R +  &
+            LHS%E1*RHS%E12 + LHS%E12*RHS%E1 + LHS%E2*RHS%E11 + LHS%E11*RHS%E2
+    RES%E122 = LHS%R*RHS%E122 + LHS%E122*RHS%R +  &
+            LHS%E1*RHS%E22 + LHS%E22*RHS%E1 + LHS%E2*RHS%E12 + LHS%E12*RHS%E2
+    RES%E222 = LHS%R*RHS%E222 + LHS%E222*RHS%R +  &
+            LHS%E2*RHS%E22 + LHS%E22*RHS%E2
+    RES%E113 = LHS%R*RHS%E113 + LHS%E113*RHS%R +  &
+            LHS%E1*RHS%E13 + LHS%E13*RHS%E1 + LHS%E3*RHS%E11 + LHS%E11*RHS%E3
+    RES%E123 = LHS%R*RHS%E123 + LHS%E123*RHS%R +  &
+            LHS%E1*RHS%E23 + LHS%E23*RHS%E1 + LHS%E2*RHS%E13 +  &
+            LHS%E13*RHS%E2 + LHS%E3*RHS%E12 + LHS%E12*RHS%E3
+    RES%E133 = LHS%R*RHS%E133 + LHS%E133*RHS%R +  &
+            LHS%E1*RHS%E33 + LHS%E33*RHS%E1 + LHS%E3*RHS%E13 + LHS%E13*RHS%E3
+    RES%E223 = LHS%R*RHS%E223 + LHS%E223*RHS%R +  &
+            LHS%E2*RHS%E23 + LHS%E23*RHS%E2 + LHS%E3*RHS%E22 + LHS%E22*RHS%E3
+    RES%E233 = LHS%R*RHS%E233 + LHS%E233*RHS%R +  &
+            LHS%E2*RHS%E33 + LHS%E33*RHS%E2 + LHS%E3*RHS%E23 + LHS%E23*RHS%E3
+    RES%E333 = LHS%R*RHS%E333 + LHS%E333*RHS%R +  &
+            LHS%E3*RHS%E33 + LHS%E33*RHS%E3
+    RES%E114 = LHS%R*RHS%E114 + LHS%E114*RHS%R +  &
+            LHS%E1*RHS%E14 + LHS%E14*RHS%E1 + LHS%E4*RHS%E11 + LHS%E11*RHS%E4
+    RES%E124 = LHS%R*RHS%E124 + LHS%E124*RHS%R +  &
+            LHS%E1*RHS%E24 + LHS%E24*RHS%E1 + LHS%E2*RHS%E14 +  &
+            LHS%E14*RHS%E2 + LHS%E4*RHS%E12 + LHS%E12*RHS%E4
+    RES%E134 = LHS%R*RHS%E134 + LHS%E134*RHS%R +  &
+            LHS%E1*RHS%E34 + LHS%E34*RHS%E1 + LHS%E3*RHS%E14 +  &
+            LHS%E14*RHS%E3 + LHS%E4*RHS%E13 + LHS%E13*RHS%E4
+    RES%E144 = LHS%R*RHS%E144 + LHS%E144*RHS%R +  &
+            LHS%E1*RHS%E44 + LHS%E44*RHS%E1 + LHS%E4*RHS%E14 + LHS%E14*RHS%E4
+    RES%E224 = LHS%R*RHS%E224 + LHS%E224*RHS%R +  &
+            LHS%E2*RHS%E24 + LHS%E24*RHS%E2 + LHS%E4*RHS%E22 + LHS%E22*RHS%E4
+    RES%E234 = LHS%R*RHS%E234 + LHS%E234*RHS%R +  &
+            LHS%E2*RHS%E34 + LHS%E34*RHS%E2 + LHS%E3*RHS%E24 +  &
+            LHS%E24*RHS%E3 + LHS%E4*RHS%E23 + LHS%E23*RHS%E4
+    RES%E244 = LHS%R*RHS%E244 + LHS%E244*RHS%R +  &
+            LHS%E2*RHS%E44 + LHS%E44*RHS%E2 + LHS%E4*RHS%E24 + LHS%E24*RHS%E4
+    RES%E334 = LHS%R*RHS%E334 + LHS%E334*RHS%R +  &
+            LHS%E3*RHS%E34 + LHS%E34*RHS%E3 + LHS%E4*RHS%E33 + LHS%E33*RHS%E4
+    RES%E344 = LHS%R*RHS%E344 + LHS%E344*RHS%R +  &
+            LHS%E3*RHS%E44 + LHS%E44*RHS%E3 + LHS%E4*RHS%E34 + LHS%E34*RHS%E4
+    RES%E444 = LHS%R*RHS%E444 + LHS%E444*RHS%R +  &
+            LHS%E4*RHS%E44 + LHS%E44*RHS%E4
+    ! Order 2
+    RES%E11 = LHS%R*RHS%E11 + LHS%E11*RHS%R + LHS%E1*RHS%E1
+    RES%E12 = LHS%R*RHS%E12 + LHS%E12*RHS%R +  &
+           LHS%E1*RHS%E2 + LHS%E2*RHS%E1
+    RES%E22 = LHS%R*RHS%E22 + LHS%E22*RHS%R + LHS%E2*RHS%E2
+    RES%E13 = LHS%R*RHS%E13 + LHS%E13*RHS%R +  &
+           LHS%E1*RHS%E3 + LHS%E3*RHS%E1
+    RES%E23 = LHS%R*RHS%E23 + LHS%E23*RHS%R +  &
+           LHS%E2*RHS%E3 + LHS%E3*RHS%E2
+    RES%E33 = LHS%R*RHS%E33 + LHS%E33*RHS%R + LHS%E3*RHS%E3
+    RES%E14 = LHS%R*RHS%E14 + LHS%E14*RHS%R +  &
+           LHS%E1*RHS%E4 + LHS%E4*RHS%E1
+    RES%E24 = LHS%R*RHS%E24 + LHS%E24*RHS%R +  &
+           LHS%E2*RHS%E4 + LHS%E4*RHS%E2
+    RES%E34 = LHS%R*RHS%E34 + LHS%E34*RHS%R +  &
+           LHS%E3*RHS%E4 + LHS%E4*RHS%E3
+    RES%E44 = LHS%R*RHS%E44 + LHS%E44*RHS%R + LHS%E4*RHS%E4
+    ! Order 1
+    RES%E1 = LHS%R*RHS%E1 + LHS%E1*RHS%R
+    RES%E2 = LHS%R*RHS%E2 + LHS%E2*RHS%R
+    RES%E3 = LHS%R*RHS%E3 + LHS%E3*RHS%R
+    RES%E4 = LHS%R*RHS%E4 + LHS%E4*RHS%R
+    ! Order 0
+    RES%R = LHS%R*RHS%R
+
+  END FUNCTION ONUMM4N4_MUL_OO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_MUL_RO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES 
+
+    ! Multiplication like function 'LHS*RHS'
+    !  Real
+    RES%R = LHS*RHS%R
+
+    ! Order 1
+    RES%E1 = LHS*RHS%E1
+    RES%E2 = LHS*RHS%E2
+    RES%E3 = LHS*RHS%E3
+    RES%E4 = LHS*RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS*RHS%E11
+    RES%E12 = LHS*RHS%E12
+    RES%E22 = LHS*RHS%E22
+    RES%E13 = LHS*RHS%E13
+    RES%E23 = LHS*RHS%E23
+    RES%E33 = LHS*RHS%E33
+    RES%E14 = LHS*RHS%E14
+    RES%E24 = LHS*RHS%E24
+    RES%E34 = LHS*RHS%E34
+    RES%E44 = LHS*RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS*RHS%E111
+    RES%E112 = LHS*RHS%E112
+    RES%E122 = LHS*RHS%E122
+    RES%E222 = LHS*RHS%E222
+    RES%E113 = LHS*RHS%E113
+    RES%E123 = LHS*RHS%E123
+    RES%E133 = LHS*RHS%E133
+    RES%E223 = LHS*RHS%E223
+    RES%E233 = LHS*RHS%E233
+    RES%E333 = LHS*RHS%E333
+    RES%E114 = LHS*RHS%E114
+    RES%E124 = LHS*RHS%E124
+    RES%E134 = LHS*RHS%E134
+    RES%E144 = LHS*RHS%E144
+    RES%E224 = LHS*RHS%E224
+    RES%E234 = LHS*RHS%E234
+    RES%E244 = LHS*RHS%E244
+    RES%E334 = LHS*RHS%E334
+    RES%E344 = LHS*RHS%E344
+    RES%E444 = LHS*RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS*RHS%E1111
+    RES%E1112 = LHS*RHS%E1112
+    RES%E1122 = LHS*RHS%E1122
+    RES%E1222 = LHS*RHS%E1222
+    RES%E2222 = LHS*RHS%E2222
+    RES%E1113 = LHS*RHS%E1113
+    RES%E1123 = LHS*RHS%E1123
+    RES%E1133 = LHS*RHS%E1133
+    RES%E1223 = LHS*RHS%E1223
+    RES%E1233 = LHS*RHS%E1233
+    RES%E1333 = LHS*RHS%E1333
+    RES%E2223 = LHS*RHS%E2223
+    RES%E2233 = LHS*RHS%E2233
+    RES%E2333 = LHS*RHS%E2333
+    RES%E3333 = LHS*RHS%E3333
+    RES%E1114 = LHS*RHS%E1114
+    RES%E1124 = LHS*RHS%E1124
+    RES%E1134 = LHS*RHS%E1134
+    RES%E1144 = LHS*RHS%E1144
+    RES%E1224 = LHS*RHS%E1224
+    RES%E1234 = LHS*RHS%E1234
+    RES%E1244 = LHS*RHS%E1244
+    RES%E1334 = LHS*RHS%E1334
+    RES%E1344 = LHS*RHS%E1344
+    RES%E1444 = LHS*RHS%E1444
+    RES%E2224 = LHS*RHS%E2224
+    RES%E2234 = LHS*RHS%E2234
+    RES%E2244 = LHS*RHS%E2244
+    RES%E2334 = LHS*RHS%E2334
+    RES%E2344 = LHS*RHS%E2344
+    RES%E2444 = LHS*RHS%E2444
+    RES%E3334 = LHS*RHS%E3334
+    RES%E3344 = LHS*RHS%E3344
+    RES%E3444 = LHS*RHS%E3444
+    RES%E4444 = LHS*RHS%E4444
+
+  END FUNCTION ONUMM4N4_MUL_RO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_MUL_OR_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES 
+
+    ! Multiplication like function 'LHS*RHS'
+    !  Real
+    RES%R = LHS%R*RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1*RHS
+    RES%E2 = LHS%E2*RHS
+    RES%E3 = LHS%E3*RHS
+    RES%E4 = LHS%E4*RHS
+
+    ! Order 2
+    RES%E11 = LHS%E11*RHS
+    RES%E12 = LHS%E12*RHS
+    RES%E22 = LHS%E22*RHS
+    RES%E13 = LHS%E13*RHS
+    RES%E23 = LHS%E23*RHS
+    RES%E33 = LHS%E33*RHS
+    RES%E14 = LHS%E14*RHS
+    RES%E24 = LHS%E24*RHS
+    RES%E34 = LHS%E34*RHS
+    RES%E44 = LHS%E44*RHS
+
+    ! Order 3
+    RES%E111 = LHS%E111*RHS
+    RES%E112 = LHS%E112*RHS
+    RES%E122 = LHS%E122*RHS
+    RES%E222 = LHS%E222*RHS
+    RES%E113 = LHS%E113*RHS
+    RES%E123 = LHS%E123*RHS
+    RES%E133 = LHS%E133*RHS
+    RES%E223 = LHS%E223*RHS
+    RES%E233 = LHS%E233*RHS
+    RES%E333 = LHS%E333*RHS
+    RES%E114 = LHS%E114*RHS
+    RES%E124 = LHS%E124*RHS
+    RES%E134 = LHS%E134*RHS
+    RES%E144 = LHS%E144*RHS
+    RES%E224 = LHS%E224*RHS
+    RES%E234 = LHS%E234*RHS
+    RES%E244 = LHS%E244*RHS
+    RES%E334 = LHS%E334*RHS
+    RES%E344 = LHS%E344*RHS
+    RES%E444 = LHS%E444*RHS
+
+    ! Order 4
+    RES%E1111 = LHS%E1111*RHS
+    RES%E1112 = LHS%E1112*RHS
+    RES%E1122 = LHS%E1122*RHS
+    RES%E1222 = LHS%E1222*RHS
+    RES%E2222 = LHS%E2222*RHS
+    RES%E1113 = LHS%E1113*RHS
+    RES%E1123 = LHS%E1123*RHS
+    RES%E1133 = LHS%E1133*RHS
+    RES%E1223 = LHS%E1223*RHS
+    RES%E1233 = LHS%E1233*RHS
+    RES%E1333 = LHS%E1333*RHS
+    RES%E2223 = LHS%E2223*RHS
+    RES%E2233 = LHS%E2233*RHS
+    RES%E2333 = LHS%E2333*RHS
+    RES%E3333 = LHS%E3333*RHS
+    RES%E1114 = LHS%E1114*RHS
+    RES%E1124 = LHS%E1124*RHS
+    RES%E1134 = LHS%E1134*RHS
+    RES%E1144 = LHS%E1144*RHS
+    RES%E1224 = LHS%E1224*RHS
+    RES%E1234 = LHS%E1234*RHS
+    RES%E1244 = LHS%E1244*RHS
+    RES%E1334 = LHS%E1334*RHS
+    RES%E1344 = LHS%E1344*RHS
+    RES%E1444 = LHS%E1444*RHS
+    RES%E2224 = LHS%E2224*RHS
+    RES%E2234 = LHS%E2234*RHS
+    RES%E2244 = LHS%E2244*RHS
+    RES%E2334 = LHS%E2334*RHS
+    RES%E2344 = LHS%E2344*RHS
+    RES%E2444 = LHS%E2444*RHS
+    RES%E3334 = LHS%E3334*RHS
+    RES%E3344 = LHS%E3344*RHS
+    RES%E3444 = LHS%E3444*RHS
+    RES%E4444 = LHS%E4444*RHS
+
+  END FUNCTION ONUMM4N4_MUL_OR_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_EQ_OO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS%R == RHS%R
+
+  END FUNCTION ONUMM4N4_EQ_OO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_EQ_RO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS == RHS%R
+
+  END FUNCTION ONUMM4N4_EQ_RO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_EQ_OR_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS%R == RHS
+
+  END FUNCTION ONUMM4N4_EQ_OR_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_NE_OO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS%R /= RHS%R
+
+  END FUNCTION ONUMM4N4_NE_OO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_NE_RO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS /= RHS%R
+
+  END FUNCTION ONUMM4N4_NE_RO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_NE_OR_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS%R /= RHS
+
+  END FUNCTION ONUMM4N4_NE_OR_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_LT_OO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS%R < RHS%R
+
+  END FUNCTION ONUMM4N4_LT_OO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_LT_RO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS < RHS%R
+
+  END FUNCTION ONUMM4N4_LT_RO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_LT_OR_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS%R < RHS
+
+  END FUNCTION ONUMM4N4_LT_OR_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_GT_OO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS%R > RHS%R
+
+  END FUNCTION ONUMM4N4_GT_OO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_GT_RO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS > RHS%R
+
+  END FUNCTION ONUMM4N4_GT_RO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_GT_OR_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS%R > RHS
+
+  END FUNCTION ONUMM4N4_GT_OR_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_LE_OO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS%R <= RHS%R
+
+  END FUNCTION ONUMM4N4_LE_OO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_LE_RO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS <= RHS%R
+
+  END FUNCTION ONUMM4N4_LE_RO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_LE_OR_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS%R <= RHS
+
+  END FUNCTION ONUMM4N4_LE_OR_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_GE_OO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS%R >= RHS%R
+
+  END FUNCTION ONUMM4N4_GE_OO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_GE_RO_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS >= RHS%R
+
+  END FUNCTION ONUMM4N4_GE_RO_SS
+
+  ELEMENTAL FUNCTION ONUMM4N4_GE_OR_SS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS%R >= RHS
+
+  END FUNCTION ONUMM4N4_GE_OR_SS
+
+  FUNCTION ONUMM4N4_ADD_OO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1)) 
+
+    ! Addition like function 'LHS + RHS'
+    !  Real
+    RES%R = LHS%R + RHS%R
+
+    ! Order 1
+    RES%E1 = LHS%E1 + RHS%E1
+    RES%E2 = LHS%E2 + RHS%E2
+    RES%E3 = LHS%E3 + RHS%E3
+    RES%E4 = LHS%E4 + RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11 + RHS%E11
+    RES%E12 = LHS%E12 + RHS%E12
+    RES%E22 = LHS%E22 + RHS%E22
+    RES%E13 = LHS%E13 + RHS%E13
+    RES%E23 = LHS%E23 + RHS%E23
+    RES%E33 = LHS%E33 + RHS%E33
+    RES%E14 = LHS%E14 + RHS%E14
+    RES%E24 = LHS%E24 + RHS%E24
+    RES%E34 = LHS%E34 + RHS%E34
+    RES%E44 = LHS%E44 + RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111 + RHS%E111
+    RES%E112 = LHS%E112 + RHS%E112
+    RES%E122 = LHS%E122 + RHS%E122
+    RES%E222 = LHS%E222 + RHS%E222
+    RES%E113 = LHS%E113 + RHS%E113
+    RES%E123 = LHS%E123 + RHS%E123
+    RES%E133 = LHS%E133 + RHS%E133
+    RES%E223 = LHS%E223 + RHS%E223
+    RES%E233 = LHS%E233 + RHS%E233
+    RES%E333 = LHS%E333 + RHS%E333
+    RES%E114 = LHS%E114 + RHS%E114
+    RES%E124 = LHS%E124 + RHS%E124
+    RES%E134 = LHS%E134 + RHS%E134
+    RES%E144 = LHS%E144 + RHS%E144
+    RES%E224 = LHS%E224 + RHS%E224
+    RES%E234 = LHS%E234 + RHS%E234
+    RES%E244 = LHS%E244 + RHS%E244
+    RES%E334 = LHS%E334 + RHS%E334
+    RES%E344 = LHS%E344 + RHS%E344
+    RES%E444 = LHS%E444 + RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111 + RHS%E1111
+    RES%E1112 = LHS%E1112 + RHS%E1112
+    RES%E1122 = LHS%E1122 + RHS%E1122
+    RES%E1222 = LHS%E1222 + RHS%E1222
+    RES%E2222 = LHS%E2222 + RHS%E2222
+    RES%E1113 = LHS%E1113 + RHS%E1113
+    RES%E1123 = LHS%E1123 + RHS%E1123
+    RES%E1133 = LHS%E1133 + RHS%E1133
+    RES%E1223 = LHS%E1223 + RHS%E1223
+    RES%E1233 = LHS%E1233 + RHS%E1233
+    RES%E1333 = LHS%E1333 + RHS%E1333
+    RES%E2223 = LHS%E2223 + RHS%E2223
+    RES%E2233 = LHS%E2233 + RHS%E2233
+    RES%E2333 = LHS%E2333 + RHS%E2333
+    RES%E3333 = LHS%E3333 + RHS%E3333
+    RES%E1114 = LHS%E1114 + RHS%E1114
+    RES%E1124 = LHS%E1124 + RHS%E1124
+    RES%E1134 = LHS%E1134 + RHS%E1134
+    RES%E1144 = LHS%E1144 + RHS%E1144
+    RES%E1224 = LHS%E1224 + RHS%E1224
+    RES%E1234 = LHS%E1234 + RHS%E1234
+    RES%E1244 = LHS%E1244 + RHS%E1244
+    RES%E1334 = LHS%E1334 + RHS%E1334
+    RES%E1344 = LHS%E1344 + RHS%E1344
+    RES%E1444 = LHS%E1444 + RHS%E1444
+    RES%E2224 = LHS%E2224 + RHS%E2224
+    RES%E2234 = LHS%E2234 + RHS%E2234
+    RES%E2244 = LHS%E2244 + RHS%E2244
+    RES%E2334 = LHS%E2334 + RHS%E2334
+    RES%E2344 = LHS%E2344 + RHS%E2344
+    RES%E2444 = LHS%E2444 + RHS%E2444
+    RES%E3334 = LHS%E3334 + RHS%E3334
+    RES%E3344 = LHS%E3344 + RHS%E3344
+    RES%E3444 = LHS%E3444 + RHS%E3444
+    RES%E4444 = LHS%E4444 + RHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_OO_VS
+
+  FUNCTION ONUMM4N4_ADD_RO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1)) 
+
+    ! Addition like function 'LHS + RHS'
+    ! Real
+    RES%R = LHS + RHS%R
+
+    ! Order 1
+    RES%E1 =  + RHS%E1
+    RES%E2 =  + RHS%E2
+    RES%E3 =  + RHS%E3
+    RES%E4 =  + RHS%E4
+
+    ! Order 2
+    RES%E11 =  + RHS%E11
+    RES%E12 =  + RHS%E12
+    RES%E22 =  + RHS%E22
+    RES%E13 =  + RHS%E13
+    RES%E23 =  + RHS%E23
+    RES%E33 =  + RHS%E33
+    RES%E14 =  + RHS%E14
+    RES%E24 =  + RHS%E24
+    RES%E34 =  + RHS%E34
+    RES%E44 =  + RHS%E44
+
+    ! Order 3
+    RES%E111 =  + RHS%E111
+    RES%E112 =  + RHS%E112
+    RES%E122 =  + RHS%E122
+    RES%E222 =  + RHS%E222
+    RES%E113 =  + RHS%E113
+    RES%E123 =  + RHS%E123
+    RES%E133 =  + RHS%E133
+    RES%E223 =  + RHS%E223
+    RES%E233 =  + RHS%E233
+    RES%E333 =  + RHS%E333
+    RES%E114 =  + RHS%E114
+    RES%E124 =  + RHS%E124
+    RES%E134 =  + RHS%E134
+    RES%E144 =  + RHS%E144
+    RES%E224 =  + RHS%E224
+    RES%E234 =  + RHS%E234
+    RES%E244 =  + RHS%E244
+    RES%E334 =  + RHS%E334
+    RES%E344 =  + RHS%E344
+    RES%E444 =  + RHS%E444
+
+    ! Order 4
+    RES%E1111 =  + RHS%E1111
+    RES%E1112 =  + RHS%E1112
+    RES%E1122 =  + RHS%E1122
+    RES%E1222 =  + RHS%E1222
+    RES%E2222 =  + RHS%E2222
+    RES%E1113 =  + RHS%E1113
+    RES%E1123 =  + RHS%E1123
+    RES%E1133 =  + RHS%E1133
+    RES%E1223 =  + RHS%E1223
+    RES%E1233 =  + RHS%E1233
+    RES%E1333 =  + RHS%E1333
+    RES%E2223 =  + RHS%E2223
+    RES%E2233 =  + RHS%E2233
+    RES%E2333 =  + RHS%E2333
+    RES%E3333 =  + RHS%E3333
+    RES%E1114 =  + RHS%E1114
+    RES%E1124 =  + RHS%E1124
+    RES%E1134 =  + RHS%E1134
+    RES%E1144 =  + RHS%E1144
+    RES%E1224 =  + RHS%E1224
+    RES%E1234 =  + RHS%E1234
+    RES%E1244 =  + RHS%E1244
+    RES%E1334 =  + RHS%E1334
+    RES%E1344 =  + RHS%E1344
+    RES%E1444 =  + RHS%E1444
+    RES%E2224 =  + RHS%E2224
+    RES%E2234 =  + RHS%E2234
+    RES%E2244 =  + RHS%E2244
+    RES%E2334 =  + RHS%E2334
+    RES%E2344 =  + RHS%E2344
+    RES%E2444 =  + RHS%E2444
+    RES%E3334 =  + RHS%E3334
+    RES%E3344 =  + RHS%E3344
+    RES%E3444 =  + RHS%E3444
+    RES%E4444 =  + RHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_RO_VS
+
+  FUNCTION ONUMM4N4_ADD_OR_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    REAL(DP), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1)) 
+
+    ! Addition like function 'LHS + RHS'
+    ! Real
+    RES%R = LHS%R + RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1
+    RES%E2 = LHS%E2
+    RES%E3 = LHS%E3
+    RES%E4 = LHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11
+    RES%E12 = LHS%E12
+    RES%E22 = LHS%E22
+    RES%E13 = LHS%E13
+    RES%E23 = LHS%E23
+    RES%E33 = LHS%E33
+    RES%E14 = LHS%E14
+    RES%E24 = LHS%E24
+    RES%E34 = LHS%E34
+    RES%E44 = LHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111
+    RES%E112 = LHS%E112
+    RES%E122 = LHS%E122
+    RES%E222 = LHS%E222
+    RES%E113 = LHS%E113
+    RES%E123 = LHS%E123
+    RES%E133 = LHS%E133
+    RES%E223 = LHS%E223
+    RES%E233 = LHS%E233
+    RES%E333 = LHS%E333
+    RES%E114 = LHS%E114
+    RES%E124 = LHS%E124
+    RES%E134 = LHS%E134
+    RES%E144 = LHS%E144
+    RES%E224 = LHS%E224
+    RES%E234 = LHS%E234
+    RES%E244 = LHS%E244
+    RES%E334 = LHS%E334
+    RES%E344 = LHS%E344
+    RES%E444 = LHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111
+    RES%E1112 = LHS%E1112
+    RES%E1122 = LHS%E1122
+    RES%E1222 = LHS%E1222
+    RES%E2222 = LHS%E2222
+    RES%E1113 = LHS%E1113
+    RES%E1123 = LHS%E1123
+    RES%E1133 = LHS%E1133
+    RES%E1223 = LHS%E1223
+    RES%E1233 = LHS%E1233
+    RES%E1333 = LHS%E1333
+    RES%E2223 = LHS%E2223
+    RES%E2233 = LHS%E2233
+    RES%E2333 = LHS%E2333
+    RES%E3333 = LHS%E3333
+    RES%E1114 = LHS%E1114
+    RES%E1124 = LHS%E1124
+    RES%E1134 = LHS%E1134
+    RES%E1144 = LHS%E1144
+    RES%E1224 = LHS%E1224
+    RES%E1234 = LHS%E1234
+    RES%E1244 = LHS%E1244
+    RES%E1334 = LHS%E1334
+    RES%E1344 = LHS%E1344
+    RES%E1444 = LHS%E1444
+    RES%E2224 = LHS%E2224
+    RES%E2234 = LHS%E2234
+    RES%E2244 = LHS%E2244
+    RES%E2334 = LHS%E2334
+    RES%E2344 = LHS%E2344
+    RES%E2444 = LHS%E2444
+    RES%E3334 = LHS%E3334
+    RES%E3344 = LHS%E3344
+    RES%E3444 = LHS%E3444
+    RES%E4444 = LHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_OR_VS
+
+  FUNCTION ONUMM4N4_SUB_OO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1)) 
+
+    ! Addition like function 'LHS - RHS'
+    !  Real
+    RES%R = LHS%R - RHS%R
+
+    ! Order 1
+    RES%E1 = LHS%E1 - RHS%E1
+    RES%E2 = LHS%E2 - RHS%E2
+    RES%E3 = LHS%E3 - RHS%E3
+    RES%E4 = LHS%E4 - RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11 - RHS%E11
+    RES%E12 = LHS%E12 - RHS%E12
+    RES%E22 = LHS%E22 - RHS%E22
+    RES%E13 = LHS%E13 - RHS%E13
+    RES%E23 = LHS%E23 - RHS%E23
+    RES%E33 = LHS%E33 - RHS%E33
+    RES%E14 = LHS%E14 - RHS%E14
+    RES%E24 = LHS%E24 - RHS%E24
+    RES%E34 = LHS%E34 - RHS%E34
+    RES%E44 = LHS%E44 - RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111 - RHS%E111
+    RES%E112 = LHS%E112 - RHS%E112
+    RES%E122 = LHS%E122 - RHS%E122
+    RES%E222 = LHS%E222 - RHS%E222
+    RES%E113 = LHS%E113 - RHS%E113
+    RES%E123 = LHS%E123 - RHS%E123
+    RES%E133 = LHS%E133 - RHS%E133
+    RES%E223 = LHS%E223 - RHS%E223
+    RES%E233 = LHS%E233 - RHS%E233
+    RES%E333 = LHS%E333 - RHS%E333
+    RES%E114 = LHS%E114 - RHS%E114
+    RES%E124 = LHS%E124 - RHS%E124
+    RES%E134 = LHS%E134 - RHS%E134
+    RES%E144 = LHS%E144 - RHS%E144
+    RES%E224 = LHS%E224 - RHS%E224
+    RES%E234 = LHS%E234 - RHS%E234
+    RES%E244 = LHS%E244 - RHS%E244
+    RES%E334 = LHS%E334 - RHS%E334
+    RES%E344 = LHS%E344 - RHS%E344
+    RES%E444 = LHS%E444 - RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111 - RHS%E1111
+    RES%E1112 = LHS%E1112 - RHS%E1112
+    RES%E1122 = LHS%E1122 - RHS%E1122
+    RES%E1222 = LHS%E1222 - RHS%E1222
+    RES%E2222 = LHS%E2222 - RHS%E2222
+    RES%E1113 = LHS%E1113 - RHS%E1113
+    RES%E1123 = LHS%E1123 - RHS%E1123
+    RES%E1133 = LHS%E1133 - RHS%E1133
+    RES%E1223 = LHS%E1223 - RHS%E1223
+    RES%E1233 = LHS%E1233 - RHS%E1233
+    RES%E1333 = LHS%E1333 - RHS%E1333
+    RES%E2223 = LHS%E2223 - RHS%E2223
+    RES%E2233 = LHS%E2233 - RHS%E2233
+    RES%E2333 = LHS%E2333 - RHS%E2333
+    RES%E3333 = LHS%E3333 - RHS%E3333
+    RES%E1114 = LHS%E1114 - RHS%E1114
+    RES%E1124 = LHS%E1124 - RHS%E1124
+    RES%E1134 = LHS%E1134 - RHS%E1134
+    RES%E1144 = LHS%E1144 - RHS%E1144
+    RES%E1224 = LHS%E1224 - RHS%E1224
+    RES%E1234 = LHS%E1234 - RHS%E1234
+    RES%E1244 = LHS%E1244 - RHS%E1244
+    RES%E1334 = LHS%E1334 - RHS%E1334
+    RES%E1344 = LHS%E1344 - RHS%E1344
+    RES%E1444 = LHS%E1444 - RHS%E1444
+    RES%E2224 = LHS%E2224 - RHS%E2224
+    RES%E2234 = LHS%E2234 - RHS%E2234
+    RES%E2244 = LHS%E2244 - RHS%E2244
+    RES%E2334 = LHS%E2334 - RHS%E2334
+    RES%E2344 = LHS%E2344 - RHS%E2344
+    RES%E2444 = LHS%E2444 - RHS%E2444
+    RES%E3334 = LHS%E3334 - RHS%E3334
+    RES%E3344 = LHS%E3344 - RHS%E3344
+    RES%E3444 = LHS%E3444 - RHS%E3444
+    RES%E4444 = LHS%E4444 - RHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_OO_VS
+
+  FUNCTION ONUMM4N4_SUB_RO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1)) 
+
+    ! Addition like function 'LHS - RHS'
+    ! Real
+    RES%R = LHS - RHS%R
+
+    ! Order 1
+    RES%E1 =  - RHS%E1
+    RES%E2 =  - RHS%E2
+    RES%E3 =  - RHS%E3
+    RES%E4 =  - RHS%E4
+
+    ! Order 2
+    RES%E11 =  - RHS%E11
+    RES%E12 =  - RHS%E12
+    RES%E22 =  - RHS%E22
+    RES%E13 =  - RHS%E13
+    RES%E23 =  - RHS%E23
+    RES%E33 =  - RHS%E33
+    RES%E14 =  - RHS%E14
+    RES%E24 =  - RHS%E24
+    RES%E34 =  - RHS%E34
+    RES%E44 =  - RHS%E44
+
+    ! Order 3
+    RES%E111 =  - RHS%E111
+    RES%E112 =  - RHS%E112
+    RES%E122 =  - RHS%E122
+    RES%E222 =  - RHS%E222
+    RES%E113 =  - RHS%E113
+    RES%E123 =  - RHS%E123
+    RES%E133 =  - RHS%E133
+    RES%E223 =  - RHS%E223
+    RES%E233 =  - RHS%E233
+    RES%E333 =  - RHS%E333
+    RES%E114 =  - RHS%E114
+    RES%E124 =  - RHS%E124
+    RES%E134 =  - RHS%E134
+    RES%E144 =  - RHS%E144
+    RES%E224 =  - RHS%E224
+    RES%E234 =  - RHS%E234
+    RES%E244 =  - RHS%E244
+    RES%E334 =  - RHS%E334
+    RES%E344 =  - RHS%E344
+    RES%E444 =  - RHS%E444
+
+    ! Order 4
+    RES%E1111 =  - RHS%E1111
+    RES%E1112 =  - RHS%E1112
+    RES%E1122 =  - RHS%E1122
+    RES%E1222 =  - RHS%E1222
+    RES%E2222 =  - RHS%E2222
+    RES%E1113 =  - RHS%E1113
+    RES%E1123 =  - RHS%E1123
+    RES%E1133 =  - RHS%E1133
+    RES%E1223 =  - RHS%E1223
+    RES%E1233 =  - RHS%E1233
+    RES%E1333 =  - RHS%E1333
+    RES%E2223 =  - RHS%E2223
+    RES%E2233 =  - RHS%E2233
+    RES%E2333 =  - RHS%E2333
+    RES%E3333 =  - RHS%E3333
+    RES%E1114 =  - RHS%E1114
+    RES%E1124 =  - RHS%E1124
+    RES%E1134 =  - RHS%E1134
+    RES%E1144 =  - RHS%E1144
+    RES%E1224 =  - RHS%E1224
+    RES%E1234 =  - RHS%E1234
+    RES%E1244 =  - RHS%E1244
+    RES%E1334 =  - RHS%E1334
+    RES%E1344 =  - RHS%E1344
+    RES%E1444 =  - RHS%E1444
+    RES%E2224 =  - RHS%E2224
+    RES%E2234 =  - RHS%E2234
+    RES%E2244 =  - RHS%E2244
+    RES%E2334 =  - RHS%E2334
+    RES%E2344 =  - RHS%E2344
+    RES%E2444 =  - RHS%E2444
+    RES%E3334 =  - RHS%E3334
+    RES%E3344 =  - RHS%E3344
+    RES%E3444 =  - RHS%E3444
+    RES%E4444 =  - RHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_RO_VS
+
+  FUNCTION ONUMM4N4_SUB_OR_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    REAL(DP), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1)) 
+
+    ! Addition like function 'LHS - RHS'
+    ! Real
+    RES%R = LHS%R - RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1
+    RES%E2 = LHS%E2
+    RES%E3 = LHS%E3
+    RES%E4 = LHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11
+    RES%E12 = LHS%E12
+    RES%E22 = LHS%E22
+    RES%E13 = LHS%E13
+    RES%E23 = LHS%E23
+    RES%E33 = LHS%E33
+    RES%E14 = LHS%E14
+    RES%E24 = LHS%E24
+    RES%E34 = LHS%E34
+    RES%E44 = LHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111
+    RES%E112 = LHS%E112
+    RES%E122 = LHS%E122
+    RES%E222 = LHS%E222
+    RES%E113 = LHS%E113
+    RES%E123 = LHS%E123
+    RES%E133 = LHS%E133
+    RES%E223 = LHS%E223
+    RES%E233 = LHS%E233
+    RES%E333 = LHS%E333
+    RES%E114 = LHS%E114
+    RES%E124 = LHS%E124
+    RES%E134 = LHS%E134
+    RES%E144 = LHS%E144
+    RES%E224 = LHS%E224
+    RES%E234 = LHS%E234
+    RES%E244 = LHS%E244
+    RES%E334 = LHS%E334
+    RES%E344 = LHS%E344
+    RES%E444 = LHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111
+    RES%E1112 = LHS%E1112
+    RES%E1122 = LHS%E1122
+    RES%E1222 = LHS%E1222
+    RES%E2222 = LHS%E2222
+    RES%E1113 = LHS%E1113
+    RES%E1123 = LHS%E1123
+    RES%E1133 = LHS%E1133
+    RES%E1223 = LHS%E1223
+    RES%E1233 = LHS%E1233
+    RES%E1333 = LHS%E1333
+    RES%E2223 = LHS%E2223
+    RES%E2233 = LHS%E2233
+    RES%E2333 = LHS%E2333
+    RES%E3333 = LHS%E3333
+    RES%E1114 = LHS%E1114
+    RES%E1124 = LHS%E1124
+    RES%E1134 = LHS%E1134
+    RES%E1144 = LHS%E1144
+    RES%E1224 = LHS%E1224
+    RES%E1234 = LHS%E1234
+    RES%E1244 = LHS%E1244
+    RES%E1334 = LHS%E1334
+    RES%E1344 = LHS%E1344
+    RES%E1444 = LHS%E1444
+    RES%E2224 = LHS%E2224
+    RES%E2234 = LHS%E2234
+    RES%E2244 = LHS%E2244
+    RES%E2334 = LHS%E2334
+    RES%E2344 = LHS%E2344
+    RES%E2444 = LHS%E2444
+    RES%E3334 = LHS%E3334
+    RES%E3344 = LHS%E3344
+    RES%E3444 = LHS%E3444
+    RES%E4444 = LHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_OR_VS
+
+  FUNCTION ONUMM4N4_MUL_OO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1)) 
+
+    !  Multiplication like function 'LHS*RHS'
+    ! Order 4
+    RES%E1111 = LHS%R*RHS%E1111 + LHS%E1111*RHS%R +  &
+             LHS%E1*RHS%E111 + LHS%E111*RHS%E1 + LHS%E11*RHS%E11
+    RES%E1112 = LHS%R*RHS%E1112 + LHS%E1112*RHS%R +  &
+             LHS%E1*RHS%E112 + LHS%E112*RHS%E1 + LHS%E2*RHS%E111 +  &
+             LHS%E111*RHS%E2 + LHS%E11*RHS%E12 + LHS%E12*RHS%E11
+    RES%E1122 = LHS%R*RHS%E1122 + LHS%E1122*RHS%R +  &
+             LHS%E1*RHS%E122 + LHS%E122*RHS%E1 + LHS%E2*RHS%E112 +  &
+             LHS%E112*RHS%E2 + LHS%E11*RHS%E22 + LHS%E12*RHS%E12 + LHS%E22*RHS%E11
+    RES%E1222 = LHS%R*RHS%E1222 + LHS%E1222*RHS%R +  &
+             LHS%E1*RHS%E222 + LHS%E222*RHS%E1 + LHS%E2*RHS%E122 +  &
+             LHS%E122*RHS%E2 + LHS%E12*RHS%E22 + LHS%E22*RHS%E12
+    RES%E2222 = LHS%R*RHS%E2222 + LHS%E2222*RHS%R +  &
+             LHS%E2*RHS%E222 + LHS%E222*RHS%E2 + LHS%E22*RHS%E22
+    RES%E1113 = LHS%R*RHS%E1113 + LHS%E1113*RHS%R +  &
+             LHS%E1*RHS%E113 + LHS%E113*RHS%E1 + LHS%E3*RHS%E111 +  &
+             LHS%E111*RHS%E3 + LHS%E11*RHS%E13 + LHS%E13*RHS%E11
+    RES%E1123 = LHS%R*RHS%E1123 + LHS%E1123*RHS%R +  &
+             LHS%E1*RHS%E123 + LHS%E123*RHS%E1 + LHS%E2*RHS%E113 +  &
+             LHS%E113*RHS%E2 + LHS%E3*RHS%E112 + LHS%E112*RHS%E3 +  &
+             LHS%E11*RHS%E23 + LHS%E12*RHS%E13 + LHS%E13*RHS%E12 + LHS%E23*RHS%E11
+    RES%E1133 = LHS%R*RHS%E1133 + LHS%E1133*RHS%R +  &
+             LHS%E1*RHS%E133 + LHS%E133*RHS%E1 + LHS%E3*RHS%E113 +  &
+             LHS%E113*RHS%E3 + LHS%E11*RHS%E33 + LHS%E13*RHS%E13 + LHS%E33*RHS%E11
+    RES%E1223 = LHS%R*RHS%E1223 + LHS%E1223*RHS%R +  &
+             LHS%E1*RHS%E223 + LHS%E223*RHS%E1 + LHS%E2*RHS%E123 +  &
+             LHS%E123*RHS%E2 + LHS%E3*RHS%E122 + LHS%E122*RHS%E3 +  &
+             LHS%E12*RHS%E23 + LHS%E22*RHS%E13 + LHS%E13*RHS%E22 + LHS%E23*RHS%E12
+    RES%E1233 = LHS%R*RHS%E1233 + LHS%E1233*RHS%R +  &
+             LHS%E1*RHS%E233 + LHS%E233*RHS%E1 + LHS%E2*RHS%E133 +  &
+             LHS%E133*RHS%E2 + LHS%E3*RHS%E123 + LHS%E123*RHS%E3 +  &
+             LHS%E12*RHS%E33 + LHS%E13*RHS%E23 + LHS%E23*RHS%E13 + LHS%E33*RHS%E12
+    RES%E1333 = LHS%R*RHS%E1333 + LHS%E1333*RHS%R +  &
+             LHS%E1*RHS%E333 + LHS%E333*RHS%E1 + LHS%E3*RHS%E133 +  &
+             LHS%E133*RHS%E3 + LHS%E13*RHS%E33 + LHS%E33*RHS%E13
+    RES%E2223 = LHS%R*RHS%E2223 + LHS%E2223*RHS%R +  &
+             LHS%E2*RHS%E223 + LHS%E223*RHS%E2 + LHS%E3*RHS%E222 +  &
+             LHS%E222*RHS%E3 + LHS%E22*RHS%E23 + LHS%E23*RHS%E22
+    RES%E2233 = LHS%R*RHS%E2233 + LHS%E2233*RHS%R +  &
+             LHS%E2*RHS%E233 + LHS%E233*RHS%E2 + LHS%E3*RHS%E223 +  &
+             LHS%E223*RHS%E3 + LHS%E22*RHS%E33 + LHS%E23*RHS%E23 + LHS%E33*RHS%E22
+    RES%E2333 = LHS%R*RHS%E2333 + LHS%E2333*RHS%R +  &
+             LHS%E2*RHS%E333 + LHS%E333*RHS%E2 + LHS%E3*RHS%E233 +  &
+             LHS%E233*RHS%E3 + LHS%E23*RHS%E33 + LHS%E33*RHS%E23
+    RES%E3333 = LHS%R*RHS%E3333 + LHS%E3333*RHS%R +  &
+             LHS%E3*RHS%E333 + LHS%E333*RHS%E3 + LHS%E33*RHS%E33
+    RES%E1114 = LHS%R*RHS%E1114 + LHS%E1114*RHS%R +  &
+             LHS%E1*RHS%E114 + LHS%E114*RHS%E1 + LHS%E4*RHS%E111 +  &
+             LHS%E111*RHS%E4 + LHS%E11*RHS%E14 + LHS%E14*RHS%E11
+    RES%E1124 = LHS%R*RHS%E1124 + LHS%E1124*RHS%R +  &
+             LHS%E1*RHS%E124 + LHS%E124*RHS%E1 + LHS%E2*RHS%E114 +  &
+             LHS%E114*RHS%E2 + LHS%E4*RHS%E112 + LHS%E112*RHS%E4 +  &
+             LHS%E11*RHS%E24 + LHS%E12*RHS%E14 + LHS%E14*RHS%E12 + LHS%E24*RHS%E11
+    RES%E1134 = LHS%R*RHS%E1134 + LHS%E1134*RHS%R +  &
+             LHS%E1*RHS%E134 + LHS%E134*RHS%E1 + LHS%E3*RHS%E114 +  &
+             LHS%E114*RHS%E3 + LHS%E4*RHS%E113 + LHS%E113*RHS%E4 +  &
+             LHS%E11*RHS%E34 + LHS%E13*RHS%E14 + LHS%E14*RHS%E13 + LHS%E34*RHS%E11
+    RES%E1144 = LHS%R*RHS%E1144 + LHS%E1144*RHS%R +  &
+             LHS%E1*RHS%E144 + LHS%E144*RHS%E1 + LHS%E4*RHS%E114 +  &
+             LHS%E114*RHS%E4 + LHS%E11*RHS%E44 + LHS%E14*RHS%E14 + LHS%E44*RHS%E11
+    RES%E1224 = LHS%R*RHS%E1224 + LHS%E1224*RHS%R +  &
+             LHS%E1*RHS%E224 + LHS%E224*RHS%E1 + LHS%E2*RHS%E124 +  &
+             LHS%E124*RHS%E2 + LHS%E4*RHS%E122 + LHS%E122*RHS%E4 +  &
+             LHS%E12*RHS%E24 + LHS%E22*RHS%E14 + LHS%E14*RHS%E22 + LHS%E24*RHS%E12
+    RES%E1234 = LHS%R*RHS%E1234 + LHS%E1234*RHS%R +  &
+             LHS%E1*RHS%E234 + LHS%E234*RHS%E1 + LHS%E2*RHS%E134 +  &
+             LHS%E134*RHS%E2 + LHS%E3*RHS%E124 + LHS%E124*RHS%E3 +  &
+             LHS%E4*RHS%E123 + LHS%E123*RHS%E4 + LHS%E12*RHS%E34 +  &
+             LHS%E13*RHS%E24 + LHS%E23*RHS%E14 + LHS%E14*RHS%E23 +  &
+             LHS%E24*RHS%E13 + LHS%E34*RHS%E12
+    RES%E1244 = LHS%R*RHS%E1244 + LHS%E1244*RHS%R +  &
+             LHS%E1*RHS%E244 + LHS%E244*RHS%E1 + LHS%E2*RHS%E144 +  &
+             LHS%E144*RHS%E2 + LHS%E4*RHS%E124 + LHS%E124*RHS%E4 +  &
+             LHS%E12*RHS%E44 + LHS%E14*RHS%E24 + LHS%E24*RHS%E14 + LHS%E44*RHS%E12
+    RES%E1334 = LHS%R*RHS%E1334 + LHS%E1334*RHS%R +  &
+             LHS%E1*RHS%E334 + LHS%E334*RHS%E1 + LHS%E3*RHS%E134 +  &
+             LHS%E134*RHS%E3 + LHS%E4*RHS%E133 + LHS%E133*RHS%E4 +  &
+             LHS%E13*RHS%E34 + LHS%E33*RHS%E14 + LHS%E14*RHS%E33 + LHS%E34*RHS%E13
+    RES%E1344 = LHS%R*RHS%E1344 + LHS%E1344*RHS%R +  &
+             LHS%E1*RHS%E344 + LHS%E344*RHS%E1 + LHS%E3*RHS%E144 +  &
+             LHS%E144*RHS%E3 + LHS%E4*RHS%E134 + LHS%E134*RHS%E4 +  &
+             LHS%E13*RHS%E44 + LHS%E14*RHS%E34 + LHS%E34*RHS%E14 + LHS%E44*RHS%E13
+    RES%E1444 = LHS%R*RHS%E1444 + LHS%E1444*RHS%R +  &
+             LHS%E1*RHS%E444 + LHS%E444*RHS%E1 + LHS%E4*RHS%E144 +  &
+             LHS%E144*RHS%E4 + LHS%E14*RHS%E44 + LHS%E44*RHS%E14
+    RES%E2224 = LHS%R*RHS%E2224 + LHS%E2224*RHS%R +  &
+             LHS%E2*RHS%E224 + LHS%E224*RHS%E2 + LHS%E4*RHS%E222 +  &
+             LHS%E222*RHS%E4 + LHS%E22*RHS%E24 + LHS%E24*RHS%E22
+    RES%E2234 = LHS%R*RHS%E2234 + LHS%E2234*RHS%R +  &
+             LHS%E2*RHS%E234 + LHS%E234*RHS%E2 + LHS%E3*RHS%E224 +  &
+             LHS%E224*RHS%E3 + LHS%E4*RHS%E223 + LHS%E223*RHS%E4 +  &
+             LHS%E22*RHS%E34 + LHS%E23*RHS%E24 + LHS%E24*RHS%E23 + LHS%E34*RHS%E22
+    RES%E2244 = LHS%R*RHS%E2244 + LHS%E2244*RHS%R +  &
+             LHS%E2*RHS%E244 + LHS%E244*RHS%E2 + LHS%E4*RHS%E224 +  &
+             LHS%E224*RHS%E4 + LHS%E22*RHS%E44 + LHS%E24*RHS%E24 + LHS%E44*RHS%E22
+    RES%E2334 = LHS%R*RHS%E2334 + LHS%E2334*RHS%R +  &
+             LHS%E2*RHS%E334 + LHS%E334*RHS%E2 + LHS%E3*RHS%E234 +  &
+             LHS%E234*RHS%E3 + LHS%E4*RHS%E233 + LHS%E233*RHS%E4 +  &
+             LHS%E23*RHS%E34 + LHS%E33*RHS%E24 + LHS%E24*RHS%E33 + LHS%E34*RHS%E23
+    RES%E2344 = LHS%R*RHS%E2344 + LHS%E2344*RHS%R +  &
+             LHS%E2*RHS%E344 + LHS%E344*RHS%E2 + LHS%E3*RHS%E244 +  &
+             LHS%E244*RHS%E3 + LHS%E4*RHS%E234 + LHS%E234*RHS%E4 +  &
+             LHS%E23*RHS%E44 + LHS%E24*RHS%E34 + LHS%E34*RHS%E24 + LHS%E44*RHS%E23
+    RES%E2444 = LHS%R*RHS%E2444 + LHS%E2444*RHS%R +  &
+             LHS%E2*RHS%E444 + LHS%E444*RHS%E2 + LHS%E4*RHS%E244 +  &
+             LHS%E244*RHS%E4 + LHS%E24*RHS%E44 + LHS%E44*RHS%E24
+    RES%E3334 = LHS%R*RHS%E3334 + LHS%E3334*RHS%R +  &
+             LHS%E3*RHS%E334 + LHS%E334*RHS%E3 + LHS%E4*RHS%E333 +  &
+             LHS%E333*RHS%E4 + LHS%E33*RHS%E34 + LHS%E34*RHS%E33
+    RES%E3344 = LHS%R*RHS%E3344 + LHS%E3344*RHS%R +  &
+             LHS%E3*RHS%E344 + LHS%E344*RHS%E3 + LHS%E4*RHS%E334 +  &
+             LHS%E334*RHS%E4 + LHS%E33*RHS%E44 + LHS%E34*RHS%E34 + LHS%E44*RHS%E33
+    RES%E3444 = LHS%R*RHS%E3444 + LHS%E3444*RHS%R +  &
+             LHS%E3*RHS%E444 + LHS%E444*RHS%E3 + LHS%E4*RHS%E344 +  &
+             LHS%E344*RHS%E4 + LHS%E34*RHS%E44 + LHS%E44*RHS%E34
+    RES%E4444 = LHS%R*RHS%E4444 + LHS%E4444*RHS%R +  &
+             LHS%E4*RHS%E444 + LHS%E444*RHS%E4 + LHS%E44*RHS%E44
+    ! Order 3
+    RES%E111 = LHS%R*RHS%E111 + LHS%E111*RHS%R +  &
+            LHS%E1*RHS%E11 + LHS%E11*RHS%E1
+    RES%E112 = LHS%R*RHS%E112 + LHS%E112*RHS%R +  &
+            LHS%E1*RHS%E12 + LHS%E12*RHS%E1 + LHS%E2*RHS%E11 + LHS%E11*RHS%E2
+    RES%E122 = LHS%R*RHS%E122 + LHS%E122*RHS%R +  &
+            LHS%E1*RHS%E22 + LHS%E22*RHS%E1 + LHS%E2*RHS%E12 + LHS%E12*RHS%E2
+    RES%E222 = LHS%R*RHS%E222 + LHS%E222*RHS%R +  &
+            LHS%E2*RHS%E22 + LHS%E22*RHS%E2
+    RES%E113 = LHS%R*RHS%E113 + LHS%E113*RHS%R +  &
+            LHS%E1*RHS%E13 + LHS%E13*RHS%E1 + LHS%E3*RHS%E11 + LHS%E11*RHS%E3
+    RES%E123 = LHS%R*RHS%E123 + LHS%E123*RHS%R +  &
+            LHS%E1*RHS%E23 + LHS%E23*RHS%E1 + LHS%E2*RHS%E13 +  &
+            LHS%E13*RHS%E2 + LHS%E3*RHS%E12 + LHS%E12*RHS%E3
+    RES%E133 = LHS%R*RHS%E133 + LHS%E133*RHS%R +  &
+            LHS%E1*RHS%E33 + LHS%E33*RHS%E1 + LHS%E3*RHS%E13 + LHS%E13*RHS%E3
+    RES%E223 = LHS%R*RHS%E223 + LHS%E223*RHS%R +  &
+            LHS%E2*RHS%E23 + LHS%E23*RHS%E2 + LHS%E3*RHS%E22 + LHS%E22*RHS%E3
+    RES%E233 = LHS%R*RHS%E233 + LHS%E233*RHS%R +  &
+            LHS%E2*RHS%E33 + LHS%E33*RHS%E2 + LHS%E3*RHS%E23 + LHS%E23*RHS%E3
+    RES%E333 = LHS%R*RHS%E333 + LHS%E333*RHS%R +  &
+            LHS%E3*RHS%E33 + LHS%E33*RHS%E3
+    RES%E114 = LHS%R*RHS%E114 + LHS%E114*RHS%R +  &
+            LHS%E1*RHS%E14 + LHS%E14*RHS%E1 + LHS%E4*RHS%E11 + LHS%E11*RHS%E4
+    RES%E124 = LHS%R*RHS%E124 + LHS%E124*RHS%R +  &
+            LHS%E1*RHS%E24 + LHS%E24*RHS%E1 + LHS%E2*RHS%E14 +  &
+            LHS%E14*RHS%E2 + LHS%E4*RHS%E12 + LHS%E12*RHS%E4
+    RES%E134 = LHS%R*RHS%E134 + LHS%E134*RHS%R +  &
+            LHS%E1*RHS%E34 + LHS%E34*RHS%E1 + LHS%E3*RHS%E14 +  &
+            LHS%E14*RHS%E3 + LHS%E4*RHS%E13 + LHS%E13*RHS%E4
+    RES%E144 = LHS%R*RHS%E144 + LHS%E144*RHS%R +  &
+            LHS%E1*RHS%E44 + LHS%E44*RHS%E1 + LHS%E4*RHS%E14 + LHS%E14*RHS%E4
+    RES%E224 = LHS%R*RHS%E224 + LHS%E224*RHS%R +  &
+            LHS%E2*RHS%E24 + LHS%E24*RHS%E2 + LHS%E4*RHS%E22 + LHS%E22*RHS%E4
+    RES%E234 = LHS%R*RHS%E234 + LHS%E234*RHS%R +  &
+            LHS%E2*RHS%E34 + LHS%E34*RHS%E2 + LHS%E3*RHS%E24 +  &
+            LHS%E24*RHS%E3 + LHS%E4*RHS%E23 + LHS%E23*RHS%E4
+    RES%E244 = LHS%R*RHS%E244 + LHS%E244*RHS%R +  &
+            LHS%E2*RHS%E44 + LHS%E44*RHS%E2 + LHS%E4*RHS%E24 + LHS%E24*RHS%E4
+    RES%E334 = LHS%R*RHS%E334 + LHS%E334*RHS%R +  &
+            LHS%E3*RHS%E34 + LHS%E34*RHS%E3 + LHS%E4*RHS%E33 + LHS%E33*RHS%E4
+    RES%E344 = LHS%R*RHS%E344 + LHS%E344*RHS%R +  &
+            LHS%E3*RHS%E44 + LHS%E44*RHS%E3 + LHS%E4*RHS%E34 + LHS%E34*RHS%E4
+    RES%E444 = LHS%R*RHS%E444 + LHS%E444*RHS%R +  &
+            LHS%E4*RHS%E44 + LHS%E44*RHS%E4
+    ! Order 2
+    RES%E11 = LHS%R*RHS%E11 + LHS%E11*RHS%R + LHS%E1*RHS%E1
+    RES%E12 = LHS%R*RHS%E12 + LHS%E12*RHS%R +  &
+           LHS%E1*RHS%E2 + LHS%E2*RHS%E1
+    RES%E22 = LHS%R*RHS%E22 + LHS%E22*RHS%R + LHS%E2*RHS%E2
+    RES%E13 = LHS%R*RHS%E13 + LHS%E13*RHS%R +  &
+           LHS%E1*RHS%E3 + LHS%E3*RHS%E1
+    RES%E23 = LHS%R*RHS%E23 + LHS%E23*RHS%R +  &
+           LHS%E2*RHS%E3 + LHS%E3*RHS%E2
+    RES%E33 = LHS%R*RHS%E33 + LHS%E33*RHS%R + LHS%E3*RHS%E3
+    RES%E14 = LHS%R*RHS%E14 + LHS%E14*RHS%R +  &
+           LHS%E1*RHS%E4 + LHS%E4*RHS%E1
+    RES%E24 = LHS%R*RHS%E24 + LHS%E24*RHS%R +  &
+           LHS%E2*RHS%E4 + LHS%E4*RHS%E2
+    RES%E34 = LHS%R*RHS%E34 + LHS%E34*RHS%R +  &
+           LHS%E3*RHS%E4 + LHS%E4*RHS%E3
+    RES%E44 = LHS%R*RHS%E44 + LHS%E44*RHS%R + LHS%E4*RHS%E4
+    ! Order 1
+    RES%E1 = LHS%R*RHS%E1 + LHS%E1*RHS%R
+    RES%E2 = LHS%R*RHS%E2 + LHS%E2*RHS%R
+    RES%E3 = LHS%R*RHS%E3 + LHS%E3*RHS%R
+    RES%E4 = LHS%R*RHS%E4 + LHS%E4*RHS%R
+    ! Order 0
+    RES%R = LHS%R*RHS%R
+
+  END FUNCTION ONUMM4N4_MUL_OO_VS
+
+  FUNCTION ONUMM4N4_MUL_RO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1)) 
+
+    ! Multiplication like function 'LHS*RHS'
+    !  Real
+    RES%R = LHS*RHS%R
+
+    ! Order 1
+    RES%E1 = LHS*RHS%E1
+    RES%E2 = LHS*RHS%E2
+    RES%E3 = LHS*RHS%E3
+    RES%E4 = LHS*RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS*RHS%E11
+    RES%E12 = LHS*RHS%E12
+    RES%E22 = LHS*RHS%E22
+    RES%E13 = LHS*RHS%E13
+    RES%E23 = LHS*RHS%E23
+    RES%E33 = LHS*RHS%E33
+    RES%E14 = LHS*RHS%E14
+    RES%E24 = LHS*RHS%E24
+    RES%E34 = LHS*RHS%E34
+    RES%E44 = LHS*RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS*RHS%E111
+    RES%E112 = LHS*RHS%E112
+    RES%E122 = LHS*RHS%E122
+    RES%E222 = LHS*RHS%E222
+    RES%E113 = LHS*RHS%E113
+    RES%E123 = LHS*RHS%E123
+    RES%E133 = LHS*RHS%E133
+    RES%E223 = LHS*RHS%E223
+    RES%E233 = LHS*RHS%E233
+    RES%E333 = LHS*RHS%E333
+    RES%E114 = LHS*RHS%E114
+    RES%E124 = LHS*RHS%E124
+    RES%E134 = LHS*RHS%E134
+    RES%E144 = LHS*RHS%E144
+    RES%E224 = LHS*RHS%E224
+    RES%E234 = LHS*RHS%E234
+    RES%E244 = LHS*RHS%E244
+    RES%E334 = LHS*RHS%E334
+    RES%E344 = LHS*RHS%E344
+    RES%E444 = LHS*RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS*RHS%E1111
+    RES%E1112 = LHS*RHS%E1112
+    RES%E1122 = LHS*RHS%E1122
+    RES%E1222 = LHS*RHS%E1222
+    RES%E2222 = LHS*RHS%E2222
+    RES%E1113 = LHS*RHS%E1113
+    RES%E1123 = LHS*RHS%E1123
+    RES%E1133 = LHS*RHS%E1133
+    RES%E1223 = LHS*RHS%E1223
+    RES%E1233 = LHS*RHS%E1233
+    RES%E1333 = LHS*RHS%E1333
+    RES%E2223 = LHS*RHS%E2223
+    RES%E2233 = LHS*RHS%E2233
+    RES%E2333 = LHS*RHS%E2333
+    RES%E3333 = LHS*RHS%E3333
+    RES%E1114 = LHS*RHS%E1114
+    RES%E1124 = LHS*RHS%E1124
+    RES%E1134 = LHS*RHS%E1134
+    RES%E1144 = LHS*RHS%E1144
+    RES%E1224 = LHS*RHS%E1224
+    RES%E1234 = LHS*RHS%E1234
+    RES%E1244 = LHS*RHS%E1244
+    RES%E1334 = LHS*RHS%E1334
+    RES%E1344 = LHS*RHS%E1344
+    RES%E1444 = LHS*RHS%E1444
+    RES%E2224 = LHS*RHS%E2224
+    RES%E2234 = LHS*RHS%E2234
+    RES%E2244 = LHS*RHS%E2244
+    RES%E2334 = LHS*RHS%E2334
+    RES%E2344 = LHS*RHS%E2344
+    RES%E2444 = LHS*RHS%E2444
+    RES%E3334 = LHS*RHS%E3334
+    RES%E3344 = LHS*RHS%E3344
+    RES%E3444 = LHS*RHS%E3444
+    RES%E4444 = LHS*RHS%E4444
+
+  END FUNCTION ONUMM4N4_MUL_RO_VS
+
+  FUNCTION ONUMM4N4_MUL_OR_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    REAL(DP), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1)) 
+
+    ! Multiplication like function 'LHS*RHS'
+    !  Real
+    RES%R = LHS%R*RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1*RHS
+    RES%E2 = LHS%E2*RHS
+    RES%E3 = LHS%E3*RHS
+    RES%E4 = LHS%E4*RHS
+
+    ! Order 2
+    RES%E11 = LHS%E11*RHS
+    RES%E12 = LHS%E12*RHS
+    RES%E22 = LHS%E22*RHS
+    RES%E13 = LHS%E13*RHS
+    RES%E23 = LHS%E23*RHS
+    RES%E33 = LHS%E33*RHS
+    RES%E14 = LHS%E14*RHS
+    RES%E24 = LHS%E24*RHS
+    RES%E34 = LHS%E34*RHS
+    RES%E44 = LHS%E44*RHS
+
+    ! Order 3
+    RES%E111 = LHS%E111*RHS
+    RES%E112 = LHS%E112*RHS
+    RES%E122 = LHS%E122*RHS
+    RES%E222 = LHS%E222*RHS
+    RES%E113 = LHS%E113*RHS
+    RES%E123 = LHS%E123*RHS
+    RES%E133 = LHS%E133*RHS
+    RES%E223 = LHS%E223*RHS
+    RES%E233 = LHS%E233*RHS
+    RES%E333 = LHS%E333*RHS
+    RES%E114 = LHS%E114*RHS
+    RES%E124 = LHS%E124*RHS
+    RES%E134 = LHS%E134*RHS
+    RES%E144 = LHS%E144*RHS
+    RES%E224 = LHS%E224*RHS
+    RES%E234 = LHS%E234*RHS
+    RES%E244 = LHS%E244*RHS
+    RES%E334 = LHS%E334*RHS
+    RES%E344 = LHS%E344*RHS
+    RES%E444 = LHS%E444*RHS
+
+    ! Order 4
+    RES%E1111 = LHS%E1111*RHS
+    RES%E1112 = LHS%E1112*RHS
+    RES%E1122 = LHS%E1122*RHS
+    RES%E1222 = LHS%E1222*RHS
+    RES%E2222 = LHS%E2222*RHS
+    RES%E1113 = LHS%E1113*RHS
+    RES%E1123 = LHS%E1123*RHS
+    RES%E1133 = LHS%E1133*RHS
+    RES%E1223 = LHS%E1223*RHS
+    RES%E1233 = LHS%E1233*RHS
+    RES%E1333 = LHS%E1333*RHS
+    RES%E2223 = LHS%E2223*RHS
+    RES%E2233 = LHS%E2233*RHS
+    RES%E2333 = LHS%E2333*RHS
+    RES%E3333 = LHS%E3333*RHS
+    RES%E1114 = LHS%E1114*RHS
+    RES%E1124 = LHS%E1124*RHS
+    RES%E1134 = LHS%E1134*RHS
+    RES%E1144 = LHS%E1144*RHS
+    RES%E1224 = LHS%E1224*RHS
+    RES%E1234 = LHS%E1234*RHS
+    RES%E1244 = LHS%E1244*RHS
+    RES%E1334 = LHS%E1334*RHS
+    RES%E1344 = LHS%E1344*RHS
+    RES%E1444 = LHS%E1444*RHS
+    RES%E2224 = LHS%E2224*RHS
+    RES%E2234 = LHS%E2234*RHS
+    RES%E2244 = LHS%E2244*RHS
+    RES%E2334 = LHS%E2334*RHS
+    RES%E2344 = LHS%E2344*RHS
+    RES%E2444 = LHS%E2444*RHS
+    RES%E3334 = LHS%E3334*RHS
+    RES%E3344 = LHS%E3344*RHS
+    RES%E3444 = LHS%E3444*RHS
+    RES%E4444 = LHS%E4444*RHS
+
+  END FUNCTION ONUMM4N4_MUL_OR_VS
+
+  FUNCTION ONUMM4N4_EQ_OO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS%R == RHS%R
+
+  END FUNCTION ONUMM4N4_EQ_OO_VS
+
+  FUNCTION ONUMM4N4_EQ_RO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS == RHS%R
+
+  END FUNCTION ONUMM4N4_EQ_RO_VS
+
+  FUNCTION ONUMM4N4_EQ_OR_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS%R == RHS
+
+  END FUNCTION ONUMM4N4_EQ_OR_VS
+
+  FUNCTION ONUMM4N4_NE_OO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS%R /= RHS%R
+
+  END FUNCTION ONUMM4N4_NE_OO_VS
+
+  FUNCTION ONUMM4N4_NE_RO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS /= RHS%R
+
+  END FUNCTION ONUMM4N4_NE_RO_VS
+
+  FUNCTION ONUMM4N4_NE_OR_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS%R /= RHS
+
+  END FUNCTION ONUMM4N4_NE_OR_VS
+
+  FUNCTION ONUMM4N4_LT_OO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS%R < RHS%R
+
+  END FUNCTION ONUMM4N4_LT_OO_VS
+
+  FUNCTION ONUMM4N4_LT_RO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS < RHS%R
+
+  END FUNCTION ONUMM4N4_LT_RO_VS
+
+  FUNCTION ONUMM4N4_LT_OR_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS%R < RHS
+
+  END FUNCTION ONUMM4N4_LT_OR_VS
+
+  FUNCTION ONUMM4N4_GT_OO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS%R > RHS%R
+
+  END FUNCTION ONUMM4N4_GT_OO_VS
+
+  FUNCTION ONUMM4N4_GT_RO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS > RHS%R
+
+  END FUNCTION ONUMM4N4_GT_RO_VS
+
+  FUNCTION ONUMM4N4_GT_OR_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS%R > RHS
+
+  END FUNCTION ONUMM4N4_GT_OR_VS
+
+  FUNCTION ONUMM4N4_LE_OO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS%R <= RHS%R
+
+  END FUNCTION ONUMM4N4_LE_OO_VS
+
+  FUNCTION ONUMM4N4_LE_RO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS <= RHS%R
+
+  END FUNCTION ONUMM4N4_LE_RO_VS
+
+  FUNCTION ONUMM4N4_LE_OR_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS%R <= RHS
+
+  END FUNCTION ONUMM4N4_LE_OR_VS
+
+  FUNCTION ONUMM4N4_GE_OO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS%R >= RHS%R
+
+  END FUNCTION ONUMM4N4_GE_OO_VS
+
+  FUNCTION ONUMM4N4_GE_RO_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS >= RHS%R
+
+  END FUNCTION ONUMM4N4_GE_RO_VS
+
+  FUNCTION ONUMM4N4_GE_OR_VS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1)) 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS%R >= RHS
+
+  END FUNCTION ONUMM4N4_GE_OR_VS
+
+  FUNCTION ONUMM4N4_ADD_OO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Addition like function 'LHS + RHS'
+    !  Real
+    RES%R = LHS%R + RHS%R
+
+    ! Order 1
+    RES%E1 = LHS%E1 + RHS%E1
+    RES%E2 = LHS%E2 + RHS%E2
+    RES%E3 = LHS%E3 + RHS%E3
+    RES%E4 = LHS%E4 + RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11 + RHS%E11
+    RES%E12 = LHS%E12 + RHS%E12
+    RES%E22 = LHS%E22 + RHS%E22
+    RES%E13 = LHS%E13 + RHS%E13
+    RES%E23 = LHS%E23 + RHS%E23
+    RES%E33 = LHS%E33 + RHS%E33
+    RES%E14 = LHS%E14 + RHS%E14
+    RES%E24 = LHS%E24 + RHS%E24
+    RES%E34 = LHS%E34 + RHS%E34
+    RES%E44 = LHS%E44 + RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111 + RHS%E111
+    RES%E112 = LHS%E112 + RHS%E112
+    RES%E122 = LHS%E122 + RHS%E122
+    RES%E222 = LHS%E222 + RHS%E222
+    RES%E113 = LHS%E113 + RHS%E113
+    RES%E123 = LHS%E123 + RHS%E123
+    RES%E133 = LHS%E133 + RHS%E133
+    RES%E223 = LHS%E223 + RHS%E223
+    RES%E233 = LHS%E233 + RHS%E233
+    RES%E333 = LHS%E333 + RHS%E333
+    RES%E114 = LHS%E114 + RHS%E114
+    RES%E124 = LHS%E124 + RHS%E124
+    RES%E134 = LHS%E134 + RHS%E134
+    RES%E144 = LHS%E144 + RHS%E144
+    RES%E224 = LHS%E224 + RHS%E224
+    RES%E234 = LHS%E234 + RHS%E234
+    RES%E244 = LHS%E244 + RHS%E244
+    RES%E334 = LHS%E334 + RHS%E334
+    RES%E344 = LHS%E344 + RHS%E344
+    RES%E444 = LHS%E444 + RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111 + RHS%E1111
+    RES%E1112 = LHS%E1112 + RHS%E1112
+    RES%E1122 = LHS%E1122 + RHS%E1122
+    RES%E1222 = LHS%E1222 + RHS%E1222
+    RES%E2222 = LHS%E2222 + RHS%E2222
+    RES%E1113 = LHS%E1113 + RHS%E1113
+    RES%E1123 = LHS%E1123 + RHS%E1123
+    RES%E1133 = LHS%E1133 + RHS%E1133
+    RES%E1223 = LHS%E1223 + RHS%E1223
+    RES%E1233 = LHS%E1233 + RHS%E1233
+    RES%E1333 = LHS%E1333 + RHS%E1333
+    RES%E2223 = LHS%E2223 + RHS%E2223
+    RES%E2233 = LHS%E2233 + RHS%E2233
+    RES%E2333 = LHS%E2333 + RHS%E2333
+    RES%E3333 = LHS%E3333 + RHS%E3333
+    RES%E1114 = LHS%E1114 + RHS%E1114
+    RES%E1124 = LHS%E1124 + RHS%E1124
+    RES%E1134 = LHS%E1134 + RHS%E1134
+    RES%E1144 = LHS%E1144 + RHS%E1144
+    RES%E1224 = LHS%E1224 + RHS%E1224
+    RES%E1234 = LHS%E1234 + RHS%E1234
+    RES%E1244 = LHS%E1244 + RHS%E1244
+    RES%E1334 = LHS%E1334 + RHS%E1334
+    RES%E1344 = LHS%E1344 + RHS%E1344
+    RES%E1444 = LHS%E1444 + RHS%E1444
+    RES%E2224 = LHS%E2224 + RHS%E2224
+    RES%E2234 = LHS%E2234 + RHS%E2234
+    RES%E2244 = LHS%E2244 + RHS%E2244
+    RES%E2334 = LHS%E2334 + RHS%E2334
+    RES%E2344 = LHS%E2344 + RHS%E2344
+    RES%E2444 = LHS%E2444 + RHS%E2444
+    RES%E3334 = LHS%E3334 + RHS%E3334
+    RES%E3344 = LHS%E3344 + RHS%E3344
+    RES%E3444 = LHS%E3444 + RHS%E3444
+    RES%E4444 = LHS%E4444 + RHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_OO_MS
+
+  FUNCTION ONUMM4N4_ADD_RO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Addition like function 'LHS + RHS'
+    ! Real
+    RES%R = LHS + RHS%R
+
+    ! Order 1
+    RES%E1 =  + RHS%E1
+    RES%E2 =  + RHS%E2
+    RES%E3 =  + RHS%E3
+    RES%E4 =  + RHS%E4
+
+    ! Order 2
+    RES%E11 =  + RHS%E11
+    RES%E12 =  + RHS%E12
+    RES%E22 =  + RHS%E22
+    RES%E13 =  + RHS%E13
+    RES%E23 =  + RHS%E23
+    RES%E33 =  + RHS%E33
+    RES%E14 =  + RHS%E14
+    RES%E24 =  + RHS%E24
+    RES%E34 =  + RHS%E34
+    RES%E44 =  + RHS%E44
+
+    ! Order 3
+    RES%E111 =  + RHS%E111
+    RES%E112 =  + RHS%E112
+    RES%E122 =  + RHS%E122
+    RES%E222 =  + RHS%E222
+    RES%E113 =  + RHS%E113
+    RES%E123 =  + RHS%E123
+    RES%E133 =  + RHS%E133
+    RES%E223 =  + RHS%E223
+    RES%E233 =  + RHS%E233
+    RES%E333 =  + RHS%E333
+    RES%E114 =  + RHS%E114
+    RES%E124 =  + RHS%E124
+    RES%E134 =  + RHS%E134
+    RES%E144 =  + RHS%E144
+    RES%E224 =  + RHS%E224
+    RES%E234 =  + RHS%E234
+    RES%E244 =  + RHS%E244
+    RES%E334 =  + RHS%E334
+    RES%E344 =  + RHS%E344
+    RES%E444 =  + RHS%E444
+
+    ! Order 4
+    RES%E1111 =  + RHS%E1111
+    RES%E1112 =  + RHS%E1112
+    RES%E1122 =  + RHS%E1122
+    RES%E1222 =  + RHS%E1222
+    RES%E2222 =  + RHS%E2222
+    RES%E1113 =  + RHS%E1113
+    RES%E1123 =  + RHS%E1123
+    RES%E1133 =  + RHS%E1133
+    RES%E1223 =  + RHS%E1223
+    RES%E1233 =  + RHS%E1233
+    RES%E1333 =  + RHS%E1333
+    RES%E2223 =  + RHS%E2223
+    RES%E2233 =  + RHS%E2233
+    RES%E2333 =  + RHS%E2333
+    RES%E3333 =  + RHS%E3333
+    RES%E1114 =  + RHS%E1114
+    RES%E1124 =  + RHS%E1124
+    RES%E1134 =  + RHS%E1134
+    RES%E1144 =  + RHS%E1144
+    RES%E1224 =  + RHS%E1224
+    RES%E1234 =  + RHS%E1234
+    RES%E1244 =  + RHS%E1244
+    RES%E1334 =  + RHS%E1334
+    RES%E1344 =  + RHS%E1344
+    RES%E1444 =  + RHS%E1444
+    RES%E2224 =  + RHS%E2224
+    RES%E2234 =  + RHS%E2234
+    RES%E2244 =  + RHS%E2244
+    RES%E2334 =  + RHS%E2334
+    RES%E2344 =  + RHS%E2344
+    RES%E2444 =  + RHS%E2444
+    RES%E3334 =  + RHS%E3334
+    RES%E3344 =  + RHS%E3344
+    RES%E3444 =  + RHS%E3444
+    RES%E4444 =  + RHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_RO_MS
+
+  FUNCTION ONUMM4N4_ADD_OR_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    REAL(DP), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Addition like function 'LHS + RHS'
+    ! Real
+    RES%R = LHS%R + RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1
+    RES%E2 = LHS%E2
+    RES%E3 = LHS%E3
+    RES%E4 = LHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11
+    RES%E12 = LHS%E12
+    RES%E22 = LHS%E22
+    RES%E13 = LHS%E13
+    RES%E23 = LHS%E23
+    RES%E33 = LHS%E33
+    RES%E14 = LHS%E14
+    RES%E24 = LHS%E24
+    RES%E34 = LHS%E34
+    RES%E44 = LHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111
+    RES%E112 = LHS%E112
+    RES%E122 = LHS%E122
+    RES%E222 = LHS%E222
+    RES%E113 = LHS%E113
+    RES%E123 = LHS%E123
+    RES%E133 = LHS%E133
+    RES%E223 = LHS%E223
+    RES%E233 = LHS%E233
+    RES%E333 = LHS%E333
+    RES%E114 = LHS%E114
+    RES%E124 = LHS%E124
+    RES%E134 = LHS%E134
+    RES%E144 = LHS%E144
+    RES%E224 = LHS%E224
+    RES%E234 = LHS%E234
+    RES%E244 = LHS%E244
+    RES%E334 = LHS%E334
+    RES%E344 = LHS%E344
+    RES%E444 = LHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111
+    RES%E1112 = LHS%E1112
+    RES%E1122 = LHS%E1122
+    RES%E1222 = LHS%E1222
+    RES%E2222 = LHS%E2222
+    RES%E1113 = LHS%E1113
+    RES%E1123 = LHS%E1123
+    RES%E1133 = LHS%E1133
+    RES%E1223 = LHS%E1223
+    RES%E1233 = LHS%E1233
+    RES%E1333 = LHS%E1333
+    RES%E2223 = LHS%E2223
+    RES%E2233 = LHS%E2233
+    RES%E2333 = LHS%E2333
+    RES%E3333 = LHS%E3333
+    RES%E1114 = LHS%E1114
+    RES%E1124 = LHS%E1124
+    RES%E1134 = LHS%E1134
+    RES%E1144 = LHS%E1144
+    RES%E1224 = LHS%E1224
+    RES%E1234 = LHS%E1234
+    RES%E1244 = LHS%E1244
+    RES%E1334 = LHS%E1334
+    RES%E1344 = LHS%E1344
+    RES%E1444 = LHS%E1444
+    RES%E2224 = LHS%E2224
+    RES%E2234 = LHS%E2234
+    RES%E2244 = LHS%E2244
+    RES%E2334 = LHS%E2334
+    RES%E2344 = LHS%E2344
+    RES%E2444 = LHS%E2444
+    RES%E3334 = LHS%E3334
+    RES%E3344 = LHS%E3344
+    RES%E3444 = LHS%E3444
+    RES%E4444 = LHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_OR_MS
+
+  FUNCTION ONUMM4N4_SUB_OO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Addition like function 'LHS - RHS'
+    !  Real
+    RES%R = LHS%R - RHS%R
+
+    ! Order 1
+    RES%E1 = LHS%E1 - RHS%E1
+    RES%E2 = LHS%E2 - RHS%E2
+    RES%E3 = LHS%E3 - RHS%E3
+    RES%E4 = LHS%E4 - RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11 - RHS%E11
+    RES%E12 = LHS%E12 - RHS%E12
+    RES%E22 = LHS%E22 - RHS%E22
+    RES%E13 = LHS%E13 - RHS%E13
+    RES%E23 = LHS%E23 - RHS%E23
+    RES%E33 = LHS%E33 - RHS%E33
+    RES%E14 = LHS%E14 - RHS%E14
+    RES%E24 = LHS%E24 - RHS%E24
+    RES%E34 = LHS%E34 - RHS%E34
+    RES%E44 = LHS%E44 - RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111 - RHS%E111
+    RES%E112 = LHS%E112 - RHS%E112
+    RES%E122 = LHS%E122 - RHS%E122
+    RES%E222 = LHS%E222 - RHS%E222
+    RES%E113 = LHS%E113 - RHS%E113
+    RES%E123 = LHS%E123 - RHS%E123
+    RES%E133 = LHS%E133 - RHS%E133
+    RES%E223 = LHS%E223 - RHS%E223
+    RES%E233 = LHS%E233 - RHS%E233
+    RES%E333 = LHS%E333 - RHS%E333
+    RES%E114 = LHS%E114 - RHS%E114
+    RES%E124 = LHS%E124 - RHS%E124
+    RES%E134 = LHS%E134 - RHS%E134
+    RES%E144 = LHS%E144 - RHS%E144
+    RES%E224 = LHS%E224 - RHS%E224
+    RES%E234 = LHS%E234 - RHS%E234
+    RES%E244 = LHS%E244 - RHS%E244
+    RES%E334 = LHS%E334 - RHS%E334
+    RES%E344 = LHS%E344 - RHS%E344
+    RES%E444 = LHS%E444 - RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111 - RHS%E1111
+    RES%E1112 = LHS%E1112 - RHS%E1112
+    RES%E1122 = LHS%E1122 - RHS%E1122
+    RES%E1222 = LHS%E1222 - RHS%E1222
+    RES%E2222 = LHS%E2222 - RHS%E2222
+    RES%E1113 = LHS%E1113 - RHS%E1113
+    RES%E1123 = LHS%E1123 - RHS%E1123
+    RES%E1133 = LHS%E1133 - RHS%E1133
+    RES%E1223 = LHS%E1223 - RHS%E1223
+    RES%E1233 = LHS%E1233 - RHS%E1233
+    RES%E1333 = LHS%E1333 - RHS%E1333
+    RES%E2223 = LHS%E2223 - RHS%E2223
+    RES%E2233 = LHS%E2233 - RHS%E2233
+    RES%E2333 = LHS%E2333 - RHS%E2333
+    RES%E3333 = LHS%E3333 - RHS%E3333
+    RES%E1114 = LHS%E1114 - RHS%E1114
+    RES%E1124 = LHS%E1124 - RHS%E1124
+    RES%E1134 = LHS%E1134 - RHS%E1134
+    RES%E1144 = LHS%E1144 - RHS%E1144
+    RES%E1224 = LHS%E1224 - RHS%E1224
+    RES%E1234 = LHS%E1234 - RHS%E1234
+    RES%E1244 = LHS%E1244 - RHS%E1244
+    RES%E1334 = LHS%E1334 - RHS%E1334
+    RES%E1344 = LHS%E1344 - RHS%E1344
+    RES%E1444 = LHS%E1444 - RHS%E1444
+    RES%E2224 = LHS%E2224 - RHS%E2224
+    RES%E2234 = LHS%E2234 - RHS%E2234
+    RES%E2244 = LHS%E2244 - RHS%E2244
+    RES%E2334 = LHS%E2334 - RHS%E2334
+    RES%E2344 = LHS%E2344 - RHS%E2344
+    RES%E2444 = LHS%E2444 - RHS%E2444
+    RES%E3334 = LHS%E3334 - RHS%E3334
+    RES%E3344 = LHS%E3344 - RHS%E3344
+    RES%E3444 = LHS%E3444 - RHS%E3444
+    RES%E4444 = LHS%E4444 - RHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_OO_MS
+
+  FUNCTION ONUMM4N4_SUB_RO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Addition like function 'LHS - RHS'
+    ! Real
+    RES%R = LHS - RHS%R
+
+    ! Order 1
+    RES%E1 =  - RHS%E1
+    RES%E2 =  - RHS%E2
+    RES%E3 =  - RHS%E3
+    RES%E4 =  - RHS%E4
+
+    ! Order 2
+    RES%E11 =  - RHS%E11
+    RES%E12 =  - RHS%E12
+    RES%E22 =  - RHS%E22
+    RES%E13 =  - RHS%E13
+    RES%E23 =  - RHS%E23
+    RES%E33 =  - RHS%E33
+    RES%E14 =  - RHS%E14
+    RES%E24 =  - RHS%E24
+    RES%E34 =  - RHS%E34
+    RES%E44 =  - RHS%E44
+
+    ! Order 3
+    RES%E111 =  - RHS%E111
+    RES%E112 =  - RHS%E112
+    RES%E122 =  - RHS%E122
+    RES%E222 =  - RHS%E222
+    RES%E113 =  - RHS%E113
+    RES%E123 =  - RHS%E123
+    RES%E133 =  - RHS%E133
+    RES%E223 =  - RHS%E223
+    RES%E233 =  - RHS%E233
+    RES%E333 =  - RHS%E333
+    RES%E114 =  - RHS%E114
+    RES%E124 =  - RHS%E124
+    RES%E134 =  - RHS%E134
+    RES%E144 =  - RHS%E144
+    RES%E224 =  - RHS%E224
+    RES%E234 =  - RHS%E234
+    RES%E244 =  - RHS%E244
+    RES%E334 =  - RHS%E334
+    RES%E344 =  - RHS%E344
+    RES%E444 =  - RHS%E444
+
+    ! Order 4
+    RES%E1111 =  - RHS%E1111
+    RES%E1112 =  - RHS%E1112
+    RES%E1122 =  - RHS%E1122
+    RES%E1222 =  - RHS%E1222
+    RES%E2222 =  - RHS%E2222
+    RES%E1113 =  - RHS%E1113
+    RES%E1123 =  - RHS%E1123
+    RES%E1133 =  - RHS%E1133
+    RES%E1223 =  - RHS%E1223
+    RES%E1233 =  - RHS%E1233
+    RES%E1333 =  - RHS%E1333
+    RES%E2223 =  - RHS%E2223
+    RES%E2233 =  - RHS%E2233
+    RES%E2333 =  - RHS%E2333
+    RES%E3333 =  - RHS%E3333
+    RES%E1114 =  - RHS%E1114
+    RES%E1124 =  - RHS%E1124
+    RES%E1134 =  - RHS%E1134
+    RES%E1144 =  - RHS%E1144
+    RES%E1224 =  - RHS%E1224
+    RES%E1234 =  - RHS%E1234
+    RES%E1244 =  - RHS%E1244
+    RES%E1334 =  - RHS%E1334
+    RES%E1344 =  - RHS%E1344
+    RES%E1444 =  - RHS%E1444
+    RES%E2224 =  - RHS%E2224
+    RES%E2234 =  - RHS%E2234
+    RES%E2244 =  - RHS%E2244
+    RES%E2334 =  - RHS%E2334
+    RES%E2344 =  - RHS%E2344
+    RES%E2444 =  - RHS%E2444
+    RES%E3334 =  - RHS%E3334
+    RES%E3344 =  - RHS%E3344
+    RES%E3444 =  - RHS%E3444
+    RES%E4444 =  - RHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_RO_MS
+
+  FUNCTION ONUMM4N4_SUB_OR_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    REAL(DP), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Addition like function 'LHS - RHS'
+    ! Real
+    RES%R = LHS%R - RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1
+    RES%E2 = LHS%E2
+    RES%E3 = LHS%E3
+    RES%E4 = LHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11
+    RES%E12 = LHS%E12
+    RES%E22 = LHS%E22
+    RES%E13 = LHS%E13
+    RES%E23 = LHS%E23
+    RES%E33 = LHS%E33
+    RES%E14 = LHS%E14
+    RES%E24 = LHS%E24
+    RES%E34 = LHS%E34
+    RES%E44 = LHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111
+    RES%E112 = LHS%E112
+    RES%E122 = LHS%E122
+    RES%E222 = LHS%E222
+    RES%E113 = LHS%E113
+    RES%E123 = LHS%E123
+    RES%E133 = LHS%E133
+    RES%E223 = LHS%E223
+    RES%E233 = LHS%E233
+    RES%E333 = LHS%E333
+    RES%E114 = LHS%E114
+    RES%E124 = LHS%E124
+    RES%E134 = LHS%E134
+    RES%E144 = LHS%E144
+    RES%E224 = LHS%E224
+    RES%E234 = LHS%E234
+    RES%E244 = LHS%E244
+    RES%E334 = LHS%E334
+    RES%E344 = LHS%E344
+    RES%E444 = LHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111
+    RES%E1112 = LHS%E1112
+    RES%E1122 = LHS%E1122
+    RES%E1222 = LHS%E1222
+    RES%E2222 = LHS%E2222
+    RES%E1113 = LHS%E1113
+    RES%E1123 = LHS%E1123
+    RES%E1133 = LHS%E1133
+    RES%E1223 = LHS%E1223
+    RES%E1233 = LHS%E1233
+    RES%E1333 = LHS%E1333
+    RES%E2223 = LHS%E2223
+    RES%E2233 = LHS%E2233
+    RES%E2333 = LHS%E2333
+    RES%E3333 = LHS%E3333
+    RES%E1114 = LHS%E1114
+    RES%E1124 = LHS%E1124
+    RES%E1134 = LHS%E1134
+    RES%E1144 = LHS%E1144
+    RES%E1224 = LHS%E1224
+    RES%E1234 = LHS%E1234
+    RES%E1244 = LHS%E1244
+    RES%E1334 = LHS%E1334
+    RES%E1344 = LHS%E1344
+    RES%E1444 = LHS%E1444
+    RES%E2224 = LHS%E2224
+    RES%E2234 = LHS%E2234
+    RES%E2244 = LHS%E2244
+    RES%E2334 = LHS%E2334
+    RES%E2344 = LHS%E2344
+    RES%E2444 = LHS%E2444
+    RES%E3334 = LHS%E3334
+    RES%E3344 = LHS%E3344
+    RES%E3444 = LHS%E3444
+    RES%E4444 = LHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_OR_MS
+
+  FUNCTION ONUMM4N4_MUL_OO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    !  Multiplication like function 'LHS*RHS'
+    ! Order 4
+    RES%E1111 = LHS%R*RHS%E1111 + LHS%E1111*RHS%R +  &
+             LHS%E1*RHS%E111 + LHS%E111*RHS%E1 + LHS%E11*RHS%E11
+    RES%E1112 = LHS%R*RHS%E1112 + LHS%E1112*RHS%R +  &
+             LHS%E1*RHS%E112 + LHS%E112*RHS%E1 + LHS%E2*RHS%E111 +  &
+             LHS%E111*RHS%E2 + LHS%E11*RHS%E12 + LHS%E12*RHS%E11
+    RES%E1122 = LHS%R*RHS%E1122 + LHS%E1122*RHS%R +  &
+             LHS%E1*RHS%E122 + LHS%E122*RHS%E1 + LHS%E2*RHS%E112 +  &
+             LHS%E112*RHS%E2 + LHS%E11*RHS%E22 + LHS%E12*RHS%E12 + LHS%E22*RHS%E11
+    RES%E1222 = LHS%R*RHS%E1222 + LHS%E1222*RHS%R +  &
+             LHS%E1*RHS%E222 + LHS%E222*RHS%E1 + LHS%E2*RHS%E122 +  &
+             LHS%E122*RHS%E2 + LHS%E12*RHS%E22 + LHS%E22*RHS%E12
+    RES%E2222 = LHS%R*RHS%E2222 + LHS%E2222*RHS%R +  &
+             LHS%E2*RHS%E222 + LHS%E222*RHS%E2 + LHS%E22*RHS%E22
+    RES%E1113 = LHS%R*RHS%E1113 + LHS%E1113*RHS%R +  &
+             LHS%E1*RHS%E113 + LHS%E113*RHS%E1 + LHS%E3*RHS%E111 +  &
+             LHS%E111*RHS%E3 + LHS%E11*RHS%E13 + LHS%E13*RHS%E11
+    RES%E1123 = LHS%R*RHS%E1123 + LHS%E1123*RHS%R +  &
+             LHS%E1*RHS%E123 + LHS%E123*RHS%E1 + LHS%E2*RHS%E113 +  &
+             LHS%E113*RHS%E2 + LHS%E3*RHS%E112 + LHS%E112*RHS%E3 +  &
+             LHS%E11*RHS%E23 + LHS%E12*RHS%E13 + LHS%E13*RHS%E12 + LHS%E23*RHS%E11
+    RES%E1133 = LHS%R*RHS%E1133 + LHS%E1133*RHS%R +  &
+             LHS%E1*RHS%E133 + LHS%E133*RHS%E1 + LHS%E3*RHS%E113 +  &
+             LHS%E113*RHS%E3 + LHS%E11*RHS%E33 + LHS%E13*RHS%E13 + LHS%E33*RHS%E11
+    RES%E1223 = LHS%R*RHS%E1223 + LHS%E1223*RHS%R +  &
+             LHS%E1*RHS%E223 + LHS%E223*RHS%E1 + LHS%E2*RHS%E123 +  &
+             LHS%E123*RHS%E2 + LHS%E3*RHS%E122 + LHS%E122*RHS%E3 +  &
+             LHS%E12*RHS%E23 + LHS%E22*RHS%E13 + LHS%E13*RHS%E22 + LHS%E23*RHS%E12
+    RES%E1233 = LHS%R*RHS%E1233 + LHS%E1233*RHS%R +  &
+             LHS%E1*RHS%E233 + LHS%E233*RHS%E1 + LHS%E2*RHS%E133 +  &
+             LHS%E133*RHS%E2 + LHS%E3*RHS%E123 + LHS%E123*RHS%E3 +  &
+             LHS%E12*RHS%E33 + LHS%E13*RHS%E23 + LHS%E23*RHS%E13 + LHS%E33*RHS%E12
+    RES%E1333 = LHS%R*RHS%E1333 + LHS%E1333*RHS%R +  &
+             LHS%E1*RHS%E333 + LHS%E333*RHS%E1 + LHS%E3*RHS%E133 +  &
+             LHS%E133*RHS%E3 + LHS%E13*RHS%E33 + LHS%E33*RHS%E13
+    RES%E2223 = LHS%R*RHS%E2223 + LHS%E2223*RHS%R +  &
+             LHS%E2*RHS%E223 + LHS%E223*RHS%E2 + LHS%E3*RHS%E222 +  &
+             LHS%E222*RHS%E3 + LHS%E22*RHS%E23 + LHS%E23*RHS%E22
+    RES%E2233 = LHS%R*RHS%E2233 + LHS%E2233*RHS%R +  &
+             LHS%E2*RHS%E233 + LHS%E233*RHS%E2 + LHS%E3*RHS%E223 +  &
+             LHS%E223*RHS%E3 + LHS%E22*RHS%E33 + LHS%E23*RHS%E23 + LHS%E33*RHS%E22
+    RES%E2333 = LHS%R*RHS%E2333 + LHS%E2333*RHS%R +  &
+             LHS%E2*RHS%E333 + LHS%E333*RHS%E2 + LHS%E3*RHS%E233 +  &
+             LHS%E233*RHS%E3 + LHS%E23*RHS%E33 + LHS%E33*RHS%E23
+    RES%E3333 = LHS%R*RHS%E3333 + LHS%E3333*RHS%R +  &
+             LHS%E3*RHS%E333 + LHS%E333*RHS%E3 + LHS%E33*RHS%E33
+    RES%E1114 = LHS%R*RHS%E1114 + LHS%E1114*RHS%R +  &
+             LHS%E1*RHS%E114 + LHS%E114*RHS%E1 + LHS%E4*RHS%E111 +  &
+             LHS%E111*RHS%E4 + LHS%E11*RHS%E14 + LHS%E14*RHS%E11
+    RES%E1124 = LHS%R*RHS%E1124 + LHS%E1124*RHS%R +  &
+             LHS%E1*RHS%E124 + LHS%E124*RHS%E1 + LHS%E2*RHS%E114 +  &
+             LHS%E114*RHS%E2 + LHS%E4*RHS%E112 + LHS%E112*RHS%E4 +  &
+             LHS%E11*RHS%E24 + LHS%E12*RHS%E14 + LHS%E14*RHS%E12 + LHS%E24*RHS%E11
+    RES%E1134 = LHS%R*RHS%E1134 + LHS%E1134*RHS%R +  &
+             LHS%E1*RHS%E134 + LHS%E134*RHS%E1 + LHS%E3*RHS%E114 +  &
+             LHS%E114*RHS%E3 + LHS%E4*RHS%E113 + LHS%E113*RHS%E4 +  &
+             LHS%E11*RHS%E34 + LHS%E13*RHS%E14 + LHS%E14*RHS%E13 + LHS%E34*RHS%E11
+    RES%E1144 = LHS%R*RHS%E1144 + LHS%E1144*RHS%R +  &
+             LHS%E1*RHS%E144 + LHS%E144*RHS%E1 + LHS%E4*RHS%E114 +  &
+             LHS%E114*RHS%E4 + LHS%E11*RHS%E44 + LHS%E14*RHS%E14 + LHS%E44*RHS%E11
+    RES%E1224 = LHS%R*RHS%E1224 + LHS%E1224*RHS%R +  &
+             LHS%E1*RHS%E224 + LHS%E224*RHS%E1 + LHS%E2*RHS%E124 +  &
+             LHS%E124*RHS%E2 + LHS%E4*RHS%E122 + LHS%E122*RHS%E4 +  &
+             LHS%E12*RHS%E24 + LHS%E22*RHS%E14 + LHS%E14*RHS%E22 + LHS%E24*RHS%E12
+    RES%E1234 = LHS%R*RHS%E1234 + LHS%E1234*RHS%R +  &
+             LHS%E1*RHS%E234 + LHS%E234*RHS%E1 + LHS%E2*RHS%E134 +  &
+             LHS%E134*RHS%E2 + LHS%E3*RHS%E124 + LHS%E124*RHS%E3 +  &
+             LHS%E4*RHS%E123 + LHS%E123*RHS%E4 + LHS%E12*RHS%E34 +  &
+             LHS%E13*RHS%E24 + LHS%E23*RHS%E14 + LHS%E14*RHS%E23 +  &
+             LHS%E24*RHS%E13 + LHS%E34*RHS%E12
+    RES%E1244 = LHS%R*RHS%E1244 + LHS%E1244*RHS%R +  &
+             LHS%E1*RHS%E244 + LHS%E244*RHS%E1 + LHS%E2*RHS%E144 +  &
+             LHS%E144*RHS%E2 + LHS%E4*RHS%E124 + LHS%E124*RHS%E4 +  &
+             LHS%E12*RHS%E44 + LHS%E14*RHS%E24 + LHS%E24*RHS%E14 + LHS%E44*RHS%E12
+    RES%E1334 = LHS%R*RHS%E1334 + LHS%E1334*RHS%R +  &
+             LHS%E1*RHS%E334 + LHS%E334*RHS%E1 + LHS%E3*RHS%E134 +  &
+             LHS%E134*RHS%E3 + LHS%E4*RHS%E133 + LHS%E133*RHS%E4 +  &
+             LHS%E13*RHS%E34 + LHS%E33*RHS%E14 + LHS%E14*RHS%E33 + LHS%E34*RHS%E13
+    RES%E1344 = LHS%R*RHS%E1344 + LHS%E1344*RHS%R +  &
+             LHS%E1*RHS%E344 + LHS%E344*RHS%E1 + LHS%E3*RHS%E144 +  &
+             LHS%E144*RHS%E3 + LHS%E4*RHS%E134 + LHS%E134*RHS%E4 +  &
+             LHS%E13*RHS%E44 + LHS%E14*RHS%E34 + LHS%E34*RHS%E14 + LHS%E44*RHS%E13
+    RES%E1444 = LHS%R*RHS%E1444 + LHS%E1444*RHS%R +  &
+             LHS%E1*RHS%E444 + LHS%E444*RHS%E1 + LHS%E4*RHS%E144 +  &
+             LHS%E144*RHS%E4 + LHS%E14*RHS%E44 + LHS%E44*RHS%E14
+    RES%E2224 = LHS%R*RHS%E2224 + LHS%E2224*RHS%R +  &
+             LHS%E2*RHS%E224 + LHS%E224*RHS%E2 + LHS%E4*RHS%E222 +  &
+             LHS%E222*RHS%E4 + LHS%E22*RHS%E24 + LHS%E24*RHS%E22
+    RES%E2234 = LHS%R*RHS%E2234 + LHS%E2234*RHS%R +  &
+             LHS%E2*RHS%E234 + LHS%E234*RHS%E2 + LHS%E3*RHS%E224 +  &
+             LHS%E224*RHS%E3 + LHS%E4*RHS%E223 + LHS%E223*RHS%E4 +  &
+             LHS%E22*RHS%E34 + LHS%E23*RHS%E24 + LHS%E24*RHS%E23 + LHS%E34*RHS%E22
+    RES%E2244 = LHS%R*RHS%E2244 + LHS%E2244*RHS%R +  &
+             LHS%E2*RHS%E244 + LHS%E244*RHS%E2 + LHS%E4*RHS%E224 +  &
+             LHS%E224*RHS%E4 + LHS%E22*RHS%E44 + LHS%E24*RHS%E24 + LHS%E44*RHS%E22
+    RES%E2334 = LHS%R*RHS%E2334 + LHS%E2334*RHS%R +  &
+             LHS%E2*RHS%E334 + LHS%E334*RHS%E2 + LHS%E3*RHS%E234 +  &
+             LHS%E234*RHS%E3 + LHS%E4*RHS%E233 + LHS%E233*RHS%E4 +  &
+             LHS%E23*RHS%E34 + LHS%E33*RHS%E24 + LHS%E24*RHS%E33 + LHS%E34*RHS%E23
+    RES%E2344 = LHS%R*RHS%E2344 + LHS%E2344*RHS%R +  &
+             LHS%E2*RHS%E344 + LHS%E344*RHS%E2 + LHS%E3*RHS%E244 +  &
+             LHS%E244*RHS%E3 + LHS%E4*RHS%E234 + LHS%E234*RHS%E4 +  &
+             LHS%E23*RHS%E44 + LHS%E24*RHS%E34 + LHS%E34*RHS%E24 + LHS%E44*RHS%E23
+    RES%E2444 = LHS%R*RHS%E2444 + LHS%E2444*RHS%R +  &
+             LHS%E2*RHS%E444 + LHS%E444*RHS%E2 + LHS%E4*RHS%E244 +  &
+             LHS%E244*RHS%E4 + LHS%E24*RHS%E44 + LHS%E44*RHS%E24
+    RES%E3334 = LHS%R*RHS%E3334 + LHS%E3334*RHS%R +  &
+             LHS%E3*RHS%E334 + LHS%E334*RHS%E3 + LHS%E4*RHS%E333 +  &
+             LHS%E333*RHS%E4 + LHS%E33*RHS%E34 + LHS%E34*RHS%E33
+    RES%E3344 = LHS%R*RHS%E3344 + LHS%E3344*RHS%R +  &
+             LHS%E3*RHS%E344 + LHS%E344*RHS%E3 + LHS%E4*RHS%E334 +  &
+             LHS%E334*RHS%E4 + LHS%E33*RHS%E44 + LHS%E34*RHS%E34 + LHS%E44*RHS%E33
+    RES%E3444 = LHS%R*RHS%E3444 + LHS%E3444*RHS%R +  &
+             LHS%E3*RHS%E444 + LHS%E444*RHS%E3 + LHS%E4*RHS%E344 +  &
+             LHS%E344*RHS%E4 + LHS%E34*RHS%E44 + LHS%E44*RHS%E34
+    RES%E4444 = LHS%R*RHS%E4444 + LHS%E4444*RHS%R +  &
+             LHS%E4*RHS%E444 + LHS%E444*RHS%E4 + LHS%E44*RHS%E44
+    ! Order 3
+    RES%E111 = LHS%R*RHS%E111 + LHS%E111*RHS%R +  &
+            LHS%E1*RHS%E11 + LHS%E11*RHS%E1
+    RES%E112 = LHS%R*RHS%E112 + LHS%E112*RHS%R +  &
+            LHS%E1*RHS%E12 + LHS%E12*RHS%E1 + LHS%E2*RHS%E11 + LHS%E11*RHS%E2
+    RES%E122 = LHS%R*RHS%E122 + LHS%E122*RHS%R +  &
+            LHS%E1*RHS%E22 + LHS%E22*RHS%E1 + LHS%E2*RHS%E12 + LHS%E12*RHS%E2
+    RES%E222 = LHS%R*RHS%E222 + LHS%E222*RHS%R +  &
+            LHS%E2*RHS%E22 + LHS%E22*RHS%E2
+    RES%E113 = LHS%R*RHS%E113 + LHS%E113*RHS%R +  &
+            LHS%E1*RHS%E13 + LHS%E13*RHS%E1 + LHS%E3*RHS%E11 + LHS%E11*RHS%E3
+    RES%E123 = LHS%R*RHS%E123 + LHS%E123*RHS%R +  &
+            LHS%E1*RHS%E23 + LHS%E23*RHS%E1 + LHS%E2*RHS%E13 +  &
+            LHS%E13*RHS%E2 + LHS%E3*RHS%E12 + LHS%E12*RHS%E3
+    RES%E133 = LHS%R*RHS%E133 + LHS%E133*RHS%R +  &
+            LHS%E1*RHS%E33 + LHS%E33*RHS%E1 + LHS%E3*RHS%E13 + LHS%E13*RHS%E3
+    RES%E223 = LHS%R*RHS%E223 + LHS%E223*RHS%R +  &
+            LHS%E2*RHS%E23 + LHS%E23*RHS%E2 + LHS%E3*RHS%E22 + LHS%E22*RHS%E3
+    RES%E233 = LHS%R*RHS%E233 + LHS%E233*RHS%R +  &
+            LHS%E2*RHS%E33 + LHS%E33*RHS%E2 + LHS%E3*RHS%E23 + LHS%E23*RHS%E3
+    RES%E333 = LHS%R*RHS%E333 + LHS%E333*RHS%R +  &
+            LHS%E3*RHS%E33 + LHS%E33*RHS%E3
+    RES%E114 = LHS%R*RHS%E114 + LHS%E114*RHS%R +  &
+            LHS%E1*RHS%E14 + LHS%E14*RHS%E1 + LHS%E4*RHS%E11 + LHS%E11*RHS%E4
+    RES%E124 = LHS%R*RHS%E124 + LHS%E124*RHS%R +  &
+            LHS%E1*RHS%E24 + LHS%E24*RHS%E1 + LHS%E2*RHS%E14 +  &
+            LHS%E14*RHS%E2 + LHS%E4*RHS%E12 + LHS%E12*RHS%E4
+    RES%E134 = LHS%R*RHS%E134 + LHS%E134*RHS%R +  &
+            LHS%E1*RHS%E34 + LHS%E34*RHS%E1 + LHS%E3*RHS%E14 +  &
+            LHS%E14*RHS%E3 + LHS%E4*RHS%E13 + LHS%E13*RHS%E4
+    RES%E144 = LHS%R*RHS%E144 + LHS%E144*RHS%R +  &
+            LHS%E1*RHS%E44 + LHS%E44*RHS%E1 + LHS%E4*RHS%E14 + LHS%E14*RHS%E4
+    RES%E224 = LHS%R*RHS%E224 + LHS%E224*RHS%R +  &
+            LHS%E2*RHS%E24 + LHS%E24*RHS%E2 + LHS%E4*RHS%E22 + LHS%E22*RHS%E4
+    RES%E234 = LHS%R*RHS%E234 + LHS%E234*RHS%R +  &
+            LHS%E2*RHS%E34 + LHS%E34*RHS%E2 + LHS%E3*RHS%E24 +  &
+            LHS%E24*RHS%E3 + LHS%E4*RHS%E23 + LHS%E23*RHS%E4
+    RES%E244 = LHS%R*RHS%E244 + LHS%E244*RHS%R +  &
+            LHS%E2*RHS%E44 + LHS%E44*RHS%E2 + LHS%E4*RHS%E24 + LHS%E24*RHS%E4
+    RES%E334 = LHS%R*RHS%E334 + LHS%E334*RHS%R +  &
+            LHS%E3*RHS%E34 + LHS%E34*RHS%E3 + LHS%E4*RHS%E33 + LHS%E33*RHS%E4
+    RES%E344 = LHS%R*RHS%E344 + LHS%E344*RHS%R +  &
+            LHS%E3*RHS%E44 + LHS%E44*RHS%E3 + LHS%E4*RHS%E34 + LHS%E34*RHS%E4
+    RES%E444 = LHS%R*RHS%E444 + LHS%E444*RHS%R +  &
+            LHS%E4*RHS%E44 + LHS%E44*RHS%E4
+    ! Order 2
+    RES%E11 = LHS%R*RHS%E11 + LHS%E11*RHS%R + LHS%E1*RHS%E1
+    RES%E12 = LHS%R*RHS%E12 + LHS%E12*RHS%R +  &
+           LHS%E1*RHS%E2 + LHS%E2*RHS%E1
+    RES%E22 = LHS%R*RHS%E22 + LHS%E22*RHS%R + LHS%E2*RHS%E2
+    RES%E13 = LHS%R*RHS%E13 + LHS%E13*RHS%R +  &
+           LHS%E1*RHS%E3 + LHS%E3*RHS%E1
+    RES%E23 = LHS%R*RHS%E23 + LHS%E23*RHS%R +  &
+           LHS%E2*RHS%E3 + LHS%E3*RHS%E2
+    RES%E33 = LHS%R*RHS%E33 + LHS%E33*RHS%R + LHS%E3*RHS%E3
+    RES%E14 = LHS%R*RHS%E14 + LHS%E14*RHS%R +  &
+           LHS%E1*RHS%E4 + LHS%E4*RHS%E1
+    RES%E24 = LHS%R*RHS%E24 + LHS%E24*RHS%R +  &
+           LHS%E2*RHS%E4 + LHS%E4*RHS%E2
+    RES%E34 = LHS%R*RHS%E34 + LHS%E34*RHS%R +  &
+           LHS%E3*RHS%E4 + LHS%E4*RHS%E3
+    RES%E44 = LHS%R*RHS%E44 + LHS%E44*RHS%R + LHS%E4*RHS%E4
+    ! Order 1
+    RES%E1 = LHS%R*RHS%E1 + LHS%E1*RHS%R
+    RES%E2 = LHS%R*RHS%E2 + LHS%E2*RHS%R
+    RES%E3 = LHS%R*RHS%E3 + LHS%E3*RHS%R
+    RES%E4 = LHS%R*RHS%E4 + LHS%E4*RHS%R
+    ! Order 0
+    RES%R = LHS%R*RHS%R
+
+  END FUNCTION ONUMM4N4_MUL_OO_MS
+
+  FUNCTION ONUMM4N4_MUL_RO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Multiplication like function 'LHS*RHS'
+    !  Real
+    RES%R = LHS*RHS%R
+
+    ! Order 1
+    RES%E1 = LHS*RHS%E1
+    RES%E2 = LHS*RHS%E2
+    RES%E3 = LHS*RHS%E3
+    RES%E4 = LHS*RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS*RHS%E11
+    RES%E12 = LHS*RHS%E12
+    RES%E22 = LHS*RHS%E22
+    RES%E13 = LHS*RHS%E13
+    RES%E23 = LHS*RHS%E23
+    RES%E33 = LHS*RHS%E33
+    RES%E14 = LHS*RHS%E14
+    RES%E24 = LHS*RHS%E24
+    RES%E34 = LHS*RHS%E34
+    RES%E44 = LHS*RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS*RHS%E111
+    RES%E112 = LHS*RHS%E112
+    RES%E122 = LHS*RHS%E122
+    RES%E222 = LHS*RHS%E222
+    RES%E113 = LHS*RHS%E113
+    RES%E123 = LHS*RHS%E123
+    RES%E133 = LHS*RHS%E133
+    RES%E223 = LHS*RHS%E223
+    RES%E233 = LHS*RHS%E233
+    RES%E333 = LHS*RHS%E333
+    RES%E114 = LHS*RHS%E114
+    RES%E124 = LHS*RHS%E124
+    RES%E134 = LHS*RHS%E134
+    RES%E144 = LHS*RHS%E144
+    RES%E224 = LHS*RHS%E224
+    RES%E234 = LHS*RHS%E234
+    RES%E244 = LHS*RHS%E244
+    RES%E334 = LHS*RHS%E334
+    RES%E344 = LHS*RHS%E344
+    RES%E444 = LHS*RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS*RHS%E1111
+    RES%E1112 = LHS*RHS%E1112
+    RES%E1122 = LHS*RHS%E1122
+    RES%E1222 = LHS*RHS%E1222
+    RES%E2222 = LHS*RHS%E2222
+    RES%E1113 = LHS*RHS%E1113
+    RES%E1123 = LHS*RHS%E1123
+    RES%E1133 = LHS*RHS%E1133
+    RES%E1223 = LHS*RHS%E1223
+    RES%E1233 = LHS*RHS%E1233
+    RES%E1333 = LHS*RHS%E1333
+    RES%E2223 = LHS*RHS%E2223
+    RES%E2233 = LHS*RHS%E2233
+    RES%E2333 = LHS*RHS%E2333
+    RES%E3333 = LHS*RHS%E3333
+    RES%E1114 = LHS*RHS%E1114
+    RES%E1124 = LHS*RHS%E1124
+    RES%E1134 = LHS*RHS%E1134
+    RES%E1144 = LHS*RHS%E1144
+    RES%E1224 = LHS*RHS%E1224
+    RES%E1234 = LHS*RHS%E1234
+    RES%E1244 = LHS*RHS%E1244
+    RES%E1334 = LHS*RHS%E1334
+    RES%E1344 = LHS*RHS%E1344
+    RES%E1444 = LHS*RHS%E1444
+    RES%E2224 = LHS*RHS%E2224
+    RES%E2234 = LHS*RHS%E2234
+    RES%E2244 = LHS*RHS%E2244
+    RES%E2334 = LHS*RHS%E2334
+    RES%E2344 = LHS*RHS%E2344
+    RES%E2444 = LHS*RHS%E2444
+    RES%E3334 = LHS*RHS%E3334
+    RES%E3344 = LHS*RHS%E3344
+    RES%E3444 = LHS*RHS%E3444
+    RES%E4444 = LHS*RHS%E4444
+
+  END FUNCTION ONUMM4N4_MUL_RO_MS
+
+  FUNCTION ONUMM4N4_MUL_OR_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    REAL(DP), INTENT(IN) :: RHS
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Multiplication like function 'LHS*RHS'
+    !  Real
+    RES%R = LHS%R*RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1*RHS
+    RES%E2 = LHS%E2*RHS
+    RES%E3 = LHS%E3*RHS
+    RES%E4 = LHS%E4*RHS
+
+    ! Order 2
+    RES%E11 = LHS%E11*RHS
+    RES%E12 = LHS%E12*RHS
+    RES%E22 = LHS%E22*RHS
+    RES%E13 = LHS%E13*RHS
+    RES%E23 = LHS%E23*RHS
+    RES%E33 = LHS%E33*RHS
+    RES%E14 = LHS%E14*RHS
+    RES%E24 = LHS%E24*RHS
+    RES%E34 = LHS%E34*RHS
+    RES%E44 = LHS%E44*RHS
+
+    ! Order 3
+    RES%E111 = LHS%E111*RHS
+    RES%E112 = LHS%E112*RHS
+    RES%E122 = LHS%E122*RHS
+    RES%E222 = LHS%E222*RHS
+    RES%E113 = LHS%E113*RHS
+    RES%E123 = LHS%E123*RHS
+    RES%E133 = LHS%E133*RHS
+    RES%E223 = LHS%E223*RHS
+    RES%E233 = LHS%E233*RHS
+    RES%E333 = LHS%E333*RHS
+    RES%E114 = LHS%E114*RHS
+    RES%E124 = LHS%E124*RHS
+    RES%E134 = LHS%E134*RHS
+    RES%E144 = LHS%E144*RHS
+    RES%E224 = LHS%E224*RHS
+    RES%E234 = LHS%E234*RHS
+    RES%E244 = LHS%E244*RHS
+    RES%E334 = LHS%E334*RHS
+    RES%E344 = LHS%E344*RHS
+    RES%E444 = LHS%E444*RHS
+
+    ! Order 4
+    RES%E1111 = LHS%E1111*RHS
+    RES%E1112 = LHS%E1112*RHS
+    RES%E1122 = LHS%E1122*RHS
+    RES%E1222 = LHS%E1222*RHS
+    RES%E2222 = LHS%E2222*RHS
+    RES%E1113 = LHS%E1113*RHS
+    RES%E1123 = LHS%E1123*RHS
+    RES%E1133 = LHS%E1133*RHS
+    RES%E1223 = LHS%E1223*RHS
+    RES%E1233 = LHS%E1233*RHS
+    RES%E1333 = LHS%E1333*RHS
+    RES%E2223 = LHS%E2223*RHS
+    RES%E2233 = LHS%E2233*RHS
+    RES%E2333 = LHS%E2333*RHS
+    RES%E3333 = LHS%E3333*RHS
+    RES%E1114 = LHS%E1114*RHS
+    RES%E1124 = LHS%E1124*RHS
+    RES%E1134 = LHS%E1134*RHS
+    RES%E1144 = LHS%E1144*RHS
+    RES%E1224 = LHS%E1224*RHS
+    RES%E1234 = LHS%E1234*RHS
+    RES%E1244 = LHS%E1244*RHS
+    RES%E1334 = LHS%E1334*RHS
+    RES%E1344 = LHS%E1344*RHS
+    RES%E1444 = LHS%E1444*RHS
+    RES%E2224 = LHS%E2224*RHS
+    RES%E2234 = LHS%E2234*RHS
+    RES%E2244 = LHS%E2244*RHS
+    RES%E2334 = LHS%E2334*RHS
+    RES%E2344 = LHS%E2344*RHS
+    RES%E2444 = LHS%E2444*RHS
+    RES%E3334 = LHS%E3334*RHS
+    RES%E3344 = LHS%E3344*RHS
+    RES%E3444 = LHS%E3444*RHS
+    RES%E4444 = LHS%E4444*RHS
+
+  END FUNCTION ONUMM4N4_MUL_OR_MS
+
+  FUNCTION ONUMM4N4_EQ_OO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS%R == RHS%R
+
+  END FUNCTION ONUMM4N4_EQ_OO_MS
+
+  FUNCTION ONUMM4N4_EQ_RO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS == RHS%R
+
+  END FUNCTION ONUMM4N4_EQ_RO_MS
+
+  FUNCTION ONUMM4N4_EQ_OR_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS%R == RHS
+
+  END FUNCTION ONUMM4N4_EQ_OR_MS
+
+  FUNCTION ONUMM4N4_NE_OO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS%R /= RHS%R
+
+  END FUNCTION ONUMM4N4_NE_OO_MS
+
+  FUNCTION ONUMM4N4_NE_RO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS /= RHS%R
+
+  END FUNCTION ONUMM4N4_NE_RO_MS
+
+  FUNCTION ONUMM4N4_NE_OR_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS%R /= RHS
+
+  END FUNCTION ONUMM4N4_NE_OR_MS
+
+  FUNCTION ONUMM4N4_LT_OO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS%R < RHS%R
+
+  END FUNCTION ONUMM4N4_LT_OO_MS
+
+  FUNCTION ONUMM4N4_LT_RO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS < RHS%R
+
+  END FUNCTION ONUMM4N4_LT_RO_MS
+
+  FUNCTION ONUMM4N4_LT_OR_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS%R < RHS
+
+  END FUNCTION ONUMM4N4_LT_OR_MS
+
+  FUNCTION ONUMM4N4_GT_OO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS%R > RHS%R
+
+  END FUNCTION ONUMM4N4_GT_OO_MS
+
+  FUNCTION ONUMM4N4_GT_RO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS > RHS%R
+
+  END FUNCTION ONUMM4N4_GT_RO_MS
+
+  FUNCTION ONUMM4N4_GT_OR_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS%R > RHS
+
+  END FUNCTION ONUMM4N4_GT_OR_MS
+
+  FUNCTION ONUMM4N4_LE_OO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS%R <= RHS%R
+
+  END FUNCTION ONUMM4N4_LE_OO_MS
+
+  FUNCTION ONUMM4N4_LE_RO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS <= RHS%R
+
+  END FUNCTION ONUMM4N4_LE_RO_MS
+
+  FUNCTION ONUMM4N4_LE_OR_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS%R <= RHS
+
+  END FUNCTION ONUMM4N4_LE_OR_MS
+
+  FUNCTION ONUMM4N4_GE_OO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS%R >= RHS%R
+
+  END FUNCTION ONUMM4N4_GE_OO_MS
+
+  FUNCTION ONUMM4N4_GE_RO_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS >= RHS%R
+
+  END FUNCTION ONUMM4N4_GE_RO_MS
+
+  FUNCTION ONUMM4N4_GE_OR_MS(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    REAL(DP), INTENT(IN) :: RHS
+    LOGICAL :: RES(SIZE(LHS,1),SIZE(LHS,2)) 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS%R >= RHS
+
+  END FUNCTION ONUMM4N4_GE_OR_MS
+
+  FUNCTION ONUMM4N4_ADD_OO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1)) 
+
+    ! Addition like function 'LHS + RHS'
+    !  Real
+    RES%R = LHS%R + RHS%R
+
+    ! Order 1
+    RES%E1 = LHS%E1 + RHS%E1
+    RES%E2 = LHS%E2 + RHS%E2
+    RES%E3 = LHS%E3 + RHS%E3
+    RES%E4 = LHS%E4 + RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11 + RHS%E11
+    RES%E12 = LHS%E12 + RHS%E12
+    RES%E22 = LHS%E22 + RHS%E22
+    RES%E13 = LHS%E13 + RHS%E13
+    RES%E23 = LHS%E23 + RHS%E23
+    RES%E33 = LHS%E33 + RHS%E33
+    RES%E14 = LHS%E14 + RHS%E14
+    RES%E24 = LHS%E24 + RHS%E24
+    RES%E34 = LHS%E34 + RHS%E34
+    RES%E44 = LHS%E44 + RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111 + RHS%E111
+    RES%E112 = LHS%E112 + RHS%E112
+    RES%E122 = LHS%E122 + RHS%E122
+    RES%E222 = LHS%E222 + RHS%E222
+    RES%E113 = LHS%E113 + RHS%E113
+    RES%E123 = LHS%E123 + RHS%E123
+    RES%E133 = LHS%E133 + RHS%E133
+    RES%E223 = LHS%E223 + RHS%E223
+    RES%E233 = LHS%E233 + RHS%E233
+    RES%E333 = LHS%E333 + RHS%E333
+    RES%E114 = LHS%E114 + RHS%E114
+    RES%E124 = LHS%E124 + RHS%E124
+    RES%E134 = LHS%E134 + RHS%E134
+    RES%E144 = LHS%E144 + RHS%E144
+    RES%E224 = LHS%E224 + RHS%E224
+    RES%E234 = LHS%E234 + RHS%E234
+    RES%E244 = LHS%E244 + RHS%E244
+    RES%E334 = LHS%E334 + RHS%E334
+    RES%E344 = LHS%E344 + RHS%E344
+    RES%E444 = LHS%E444 + RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111 + RHS%E1111
+    RES%E1112 = LHS%E1112 + RHS%E1112
+    RES%E1122 = LHS%E1122 + RHS%E1122
+    RES%E1222 = LHS%E1222 + RHS%E1222
+    RES%E2222 = LHS%E2222 + RHS%E2222
+    RES%E1113 = LHS%E1113 + RHS%E1113
+    RES%E1123 = LHS%E1123 + RHS%E1123
+    RES%E1133 = LHS%E1133 + RHS%E1133
+    RES%E1223 = LHS%E1223 + RHS%E1223
+    RES%E1233 = LHS%E1233 + RHS%E1233
+    RES%E1333 = LHS%E1333 + RHS%E1333
+    RES%E2223 = LHS%E2223 + RHS%E2223
+    RES%E2233 = LHS%E2233 + RHS%E2233
+    RES%E2333 = LHS%E2333 + RHS%E2333
+    RES%E3333 = LHS%E3333 + RHS%E3333
+    RES%E1114 = LHS%E1114 + RHS%E1114
+    RES%E1124 = LHS%E1124 + RHS%E1124
+    RES%E1134 = LHS%E1134 + RHS%E1134
+    RES%E1144 = LHS%E1144 + RHS%E1144
+    RES%E1224 = LHS%E1224 + RHS%E1224
+    RES%E1234 = LHS%E1234 + RHS%E1234
+    RES%E1244 = LHS%E1244 + RHS%E1244
+    RES%E1334 = LHS%E1334 + RHS%E1334
+    RES%E1344 = LHS%E1344 + RHS%E1344
+    RES%E1444 = LHS%E1444 + RHS%E1444
+    RES%E2224 = LHS%E2224 + RHS%E2224
+    RES%E2234 = LHS%E2234 + RHS%E2234
+    RES%E2244 = LHS%E2244 + RHS%E2244
+    RES%E2334 = LHS%E2334 + RHS%E2334
+    RES%E2344 = LHS%E2344 + RHS%E2344
+    RES%E2444 = LHS%E2444 + RHS%E2444
+    RES%E3334 = LHS%E3334 + RHS%E3334
+    RES%E3344 = LHS%E3344 + RHS%E3344
+    RES%E3444 = LHS%E3444 + RHS%E3444
+    RES%E4444 = LHS%E4444 + RHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_OO_SV
+
+  FUNCTION ONUMM4N4_ADD_RO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1)) 
+
+    ! Addition like function 'LHS + RHS'
+    ! Real
+    RES%R = LHS + RHS%R
+
+    ! Order 1
+    RES%E1 =  + RHS%E1
+    RES%E2 =  + RHS%E2
+    RES%E3 =  + RHS%E3
+    RES%E4 =  + RHS%E4
+
+    ! Order 2
+    RES%E11 =  + RHS%E11
+    RES%E12 =  + RHS%E12
+    RES%E22 =  + RHS%E22
+    RES%E13 =  + RHS%E13
+    RES%E23 =  + RHS%E23
+    RES%E33 =  + RHS%E33
+    RES%E14 =  + RHS%E14
+    RES%E24 =  + RHS%E24
+    RES%E34 =  + RHS%E34
+    RES%E44 =  + RHS%E44
+
+    ! Order 3
+    RES%E111 =  + RHS%E111
+    RES%E112 =  + RHS%E112
+    RES%E122 =  + RHS%E122
+    RES%E222 =  + RHS%E222
+    RES%E113 =  + RHS%E113
+    RES%E123 =  + RHS%E123
+    RES%E133 =  + RHS%E133
+    RES%E223 =  + RHS%E223
+    RES%E233 =  + RHS%E233
+    RES%E333 =  + RHS%E333
+    RES%E114 =  + RHS%E114
+    RES%E124 =  + RHS%E124
+    RES%E134 =  + RHS%E134
+    RES%E144 =  + RHS%E144
+    RES%E224 =  + RHS%E224
+    RES%E234 =  + RHS%E234
+    RES%E244 =  + RHS%E244
+    RES%E334 =  + RHS%E334
+    RES%E344 =  + RHS%E344
+    RES%E444 =  + RHS%E444
+
+    ! Order 4
+    RES%E1111 =  + RHS%E1111
+    RES%E1112 =  + RHS%E1112
+    RES%E1122 =  + RHS%E1122
+    RES%E1222 =  + RHS%E1222
+    RES%E2222 =  + RHS%E2222
+    RES%E1113 =  + RHS%E1113
+    RES%E1123 =  + RHS%E1123
+    RES%E1133 =  + RHS%E1133
+    RES%E1223 =  + RHS%E1223
+    RES%E1233 =  + RHS%E1233
+    RES%E1333 =  + RHS%E1333
+    RES%E2223 =  + RHS%E2223
+    RES%E2233 =  + RHS%E2233
+    RES%E2333 =  + RHS%E2333
+    RES%E3333 =  + RHS%E3333
+    RES%E1114 =  + RHS%E1114
+    RES%E1124 =  + RHS%E1124
+    RES%E1134 =  + RHS%E1134
+    RES%E1144 =  + RHS%E1144
+    RES%E1224 =  + RHS%E1224
+    RES%E1234 =  + RHS%E1234
+    RES%E1244 =  + RHS%E1244
+    RES%E1334 =  + RHS%E1334
+    RES%E1344 =  + RHS%E1344
+    RES%E1444 =  + RHS%E1444
+    RES%E2224 =  + RHS%E2224
+    RES%E2234 =  + RHS%E2234
+    RES%E2244 =  + RHS%E2244
+    RES%E2334 =  + RHS%E2334
+    RES%E2344 =  + RHS%E2344
+    RES%E2444 =  + RHS%E2444
+    RES%E3334 =  + RHS%E3334
+    RES%E3344 =  + RHS%E3344
+    RES%E3444 =  + RHS%E3444
+    RES%E4444 =  + RHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_RO_SV
+
+  FUNCTION ONUMM4N4_ADD_OR_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1)) 
+
+    ! Addition like function 'LHS + RHS'
+    ! Real
+    RES%R = LHS%R + RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1
+    RES%E2 = LHS%E2
+    RES%E3 = LHS%E3
+    RES%E4 = LHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11
+    RES%E12 = LHS%E12
+    RES%E22 = LHS%E22
+    RES%E13 = LHS%E13
+    RES%E23 = LHS%E23
+    RES%E33 = LHS%E33
+    RES%E14 = LHS%E14
+    RES%E24 = LHS%E24
+    RES%E34 = LHS%E34
+    RES%E44 = LHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111
+    RES%E112 = LHS%E112
+    RES%E122 = LHS%E122
+    RES%E222 = LHS%E222
+    RES%E113 = LHS%E113
+    RES%E123 = LHS%E123
+    RES%E133 = LHS%E133
+    RES%E223 = LHS%E223
+    RES%E233 = LHS%E233
+    RES%E333 = LHS%E333
+    RES%E114 = LHS%E114
+    RES%E124 = LHS%E124
+    RES%E134 = LHS%E134
+    RES%E144 = LHS%E144
+    RES%E224 = LHS%E224
+    RES%E234 = LHS%E234
+    RES%E244 = LHS%E244
+    RES%E334 = LHS%E334
+    RES%E344 = LHS%E344
+    RES%E444 = LHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111
+    RES%E1112 = LHS%E1112
+    RES%E1122 = LHS%E1122
+    RES%E1222 = LHS%E1222
+    RES%E2222 = LHS%E2222
+    RES%E1113 = LHS%E1113
+    RES%E1123 = LHS%E1123
+    RES%E1133 = LHS%E1133
+    RES%E1223 = LHS%E1223
+    RES%E1233 = LHS%E1233
+    RES%E1333 = LHS%E1333
+    RES%E2223 = LHS%E2223
+    RES%E2233 = LHS%E2233
+    RES%E2333 = LHS%E2333
+    RES%E3333 = LHS%E3333
+    RES%E1114 = LHS%E1114
+    RES%E1124 = LHS%E1124
+    RES%E1134 = LHS%E1134
+    RES%E1144 = LHS%E1144
+    RES%E1224 = LHS%E1224
+    RES%E1234 = LHS%E1234
+    RES%E1244 = LHS%E1244
+    RES%E1334 = LHS%E1334
+    RES%E1344 = LHS%E1344
+    RES%E1444 = LHS%E1444
+    RES%E2224 = LHS%E2224
+    RES%E2234 = LHS%E2234
+    RES%E2244 = LHS%E2244
+    RES%E2334 = LHS%E2334
+    RES%E2344 = LHS%E2344
+    RES%E2444 = LHS%E2444
+    RES%E3334 = LHS%E3334
+    RES%E3344 = LHS%E3344
+    RES%E3444 = LHS%E3444
+    RES%E4444 = LHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_OR_SV
+
+  FUNCTION ONUMM4N4_SUB_OO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1)) 
+
+    ! Addition like function 'LHS - RHS'
+    !  Real
+    RES%R = LHS%R - RHS%R
+
+    ! Order 1
+    RES%E1 = LHS%E1 - RHS%E1
+    RES%E2 = LHS%E2 - RHS%E2
+    RES%E3 = LHS%E3 - RHS%E3
+    RES%E4 = LHS%E4 - RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11 - RHS%E11
+    RES%E12 = LHS%E12 - RHS%E12
+    RES%E22 = LHS%E22 - RHS%E22
+    RES%E13 = LHS%E13 - RHS%E13
+    RES%E23 = LHS%E23 - RHS%E23
+    RES%E33 = LHS%E33 - RHS%E33
+    RES%E14 = LHS%E14 - RHS%E14
+    RES%E24 = LHS%E24 - RHS%E24
+    RES%E34 = LHS%E34 - RHS%E34
+    RES%E44 = LHS%E44 - RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111 - RHS%E111
+    RES%E112 = LHS%E112 - RHS%E112
+    RES%E122 = LHS%E122 - RHS%E122
+    RES%E222 = LHS%E222 - RHS%E222
+    RES%E113 = LHS%E113 - RHS%E113
+    RES%E123 = LHS%E123 - RHS%E123
+    RES%E133 = LHS%E133 - RHS%E133
+    RES%E223 = LHS%E223 - RHS%E223
+    RES%E233 = LHS%E233 - RHS%E233
+    RES%E333 = LHS%E333 - RHS%E333
+    RES%E114 = LHS%E114 - RHS%E114
+    RES%E124 = LHS%E124 - RHS%E124
+    RES%E134 = LHS%E134 - RHS%E134
+    RES%E144 = LHS%E144 - RHS%E144
+    RES%E224 = LHS%E224 - RHS%E224
+    RES%E234 = LHS%E234 - RHS%E234
+    RES%E244 = LHS%E244 - RHS%E244
+    RES%E334 = LHS%E334 - RHS%E334
+    RES%E344 = LHS%E344 - RHS%E344
+    RES%E444 = LHS%E444 - RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111 - RHS%E1111
+    RES%E1112 = LHS%E1112 - RHS%E1112
+    RES%E1122 = LHS%E1122 - RHS%E1122
+    RES%E1222 = LHS%E1222 - RHS%E1222
+    RES%E2222 = LHS%E2222 - RHS%E2222
+    RES%E1113 = LHS%E1113 - RHS%E1113
+    RES%E1123 = LHS%E1123 - RHS%E1123
+    RES%E1133 = LHS%E1133 - RHS%E1133
+    RES%E1223 = LHS%E1223 - RHS%E1223
+    RES%E1233 = LHS%E1233 - RHS%E1233
+    RES%E1333 = LHS%E1333 - RHS%E1333
+    RES%E2223 = LHS%E2223 - RHS%E2223
+    RES%E2233 = LHS%E2233 - RHS%E2233
+    RES%E2333 = LHS%E2333 - RHS%E2333
+    RES%E3333 = LHS%E3333 - RHS%E3333
+    RES%E1114 = LHS%E1114 - RHS%E1114
+    RES%E1124 = LHS%E1124 - RHS%E1124
+    RES%E1134 = LHS%E1134 - RHS%E1134
+    RES%E1144 = LHS%E1144 - RHS%E1144
+    RES%E1224 = LHS%E1224 - RHS%E1224
+    RES%E1234 = LHS%E1234 - RHS%E1234
+    RES%E1244 = LHS%E1244 - RHS%E1244
+    RES%E1334 = LHS%E1334 - RHS%E1334
+    RES%E1344 = LHS%E1344 - RHS%E1344
+    RES%E1444 = LHS%E1444 - RHS%E1444
+    RES%E2224 = LHS%E2224 - RHS%E2224
+    RES%E2234 = LHS%E2234 - RHS%E2234
+    RES%E2244 = LHS%E2244 - RHS%E2244
+    RES%E2334 = LHS%E2334 - RHS%E2334
+    RES%E2344 = LHS%E2344 - RHS%E2344
+    RES%E2444 = LHS%E2444 - RHS%E2444
+    RES%E3334 = LHS%E3334 - RHS%E3334
+    RES%E3344 = LHS%E3344 - RHS%E3344
+    RES%E3444 = LHS%E3444 - RHS%E3444
+    RES%E4444 = LHS%E4444 - RHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_OO_SV
+
+  FUNCTION ONUMM4N4_SUB_RO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1)) 
+
+    ! Addition like function 'LHS - RHS'
+    ! Real
+    RES%R = LHS - RHS%R
+
+    ! Order 1
+    RES%E1 =  - RHS%E1
+    RES%E2 =  - RHS%E2
+    RES%E3 =  - RHS%E3
+    RES%E4 =  - RHS%E4
+
+    ! Order 2
+    RES%E11 =  - RHS%E11
+    RES%E12 =  - RHS%E12
+    RES%E22 =  - RHS%E22
+    RES%E13 =  - RHS%E13
+    RES%E23 =  - RHS%E23
+    RES%E33 =  - RHS%E33
+    RES%E14 =  - RHS%E14
+    RES%E24 =  - RHS%E24
+    RES%E34 =  - RHS%E34
+    RES%E44 =  - RHS%E44
+
+    ! Order 3
+    RES%E111 =  - RHS%E111
+    RES%E112 =  - RHS%E112
+    RES%E122 =  - RHS%E122
+    RES%E222 =  - RHS%E222
+    RES%E113 =  - RHS%E113
+    RES%E123 =  - RHS%E123
+    RES%E133 =  - RHS%E133
+    RES%E223 =  - RHS%E223
+    RES%E233 =  - RHS%E233
+    RES%E333 =  - RHS%E333
+    RES%E114 =  - RHS%E114
+    RES%E124 =  - RHS%E124
+    RES%E134 =  - RHS%E134
+    RES%E144 =  - RHS%E144
+    RES%E224 =  - RHS%E224
+    RES%E234 =  - RHS%E234
+    RES%E244 =  - RHS%E244
+    RES%E334 =  - RHS%E334
+    RES%E344 =  - RHS%E344
+    RES%E444 =  - RHS%E444
+
+    ! Order 4
+    RES%E1111 =  - RHS%E1111
+    RES%E1112 =  - RHS%E1112
+    RES%E1122 =  - RHS%E1122
+    RES%E1222 =  - RHS%E1222
+    RES%E2222 =  - RHS%E2222
+    RES%E1113 =  - RHS%E1113
+    RES%E1123 =  - RHS%E1123
+    RES%E1133 =  - RHS%E1133
+    RES%E1223 =  - RHS%E1223
+    RES%E1233 =  - RHS%E1233
+    RES%E1333 =  - RHS%E1333
+    RES%E2223 =  - RHS%E2223
+    RES%E2233 =  - RHS%E2233
+    RES%E2333 =  - RHS%E2333
+    RES%E3333 =  - RHS%E3333
+    RES%E1114 =  - RHS%E1114
+    RES%E1124 =  - RHS%E1124
+    RES%E1134 =  - RHS%E1134
+    RES%E1144 =  - RHS%E1144
+    RES%E1224 =  - RHS%E1224
+    RES%E1234 =  - RHS%E1234
+    RES%E1244 =  - RHS%E1244
+    RES%E1334 =  - RHS%E1334
+    RES%E1344 =  - RHS%E1344
+    RES%E1444 =  - RHS%E1444
+    RES%E2224 =  - RHS%E2224
+    RES%E2234 =  - RHS%E2234
+    RES%E2244 =  - RHS%E2244
+    RES%E2334 =  - RHS%E2334
+    RES%E2344 =  - RHS%E2344
+    RES%E2444 =  - RHS%E2444
+    RES%E3334 =  - RHS%E3334
+    RES%E3344 =  - RHS%E3344
+    RES%E3444 =  - RHS%E3444
+    RES%E4444 =  - RHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_RO_SV
+
+  FUNCTION ONUMM4N4_SUB_OR_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1)) 
+
+    ! Addition like function 'LHS - RHS'
+    ! Real
+    RES%R = LHS%R - RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1
+    RES%E2 = LHS%E2
+    RES%E3 = LHS%E3
+    RES%E4 = LHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11
+    RES%E12 = LHS%E12
+    RES%E22 = LHS%E22
+    RES%E13 = LHS%E13
+    RES%E23 = LHS%E23
+    RES%E33 = LHS%E33
+    RES%E14 = LHS%E14
+    RES%E24 = LHS%E24
+    RES%E34 = LHS%E34
+    RES%E44 = LHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111
+    RES%E112 = LHS%E112
+    RES%E122 = LHS%E122
+    RES%E222 = LHS%E222
+    RES%E113 = LHS%E113
+    RES%E123 = LHS%E123
+    RES%E133 = LHS%E133
+    RES%E223 = LHS%E223
+    RES%E233 = LHS%E233
+    RES%E333 = LHS%E333
+    RES%E114 = LHS%E114
+    RES%E124 = LHS%E124
+    RES%E134 = LHS%E134
+    RES%E144 = LHS%E144
+    RES%E224 = LHS%E224
+    RES%E234 = LHS%E234
+    RES%E244 = LHS%E244
+    RES%E334 = LHS%E334
+    RES%E344 = LHS%E344
+    RES%E444 = LHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111
+    RES%E1112 = LHS%E1112
+    RES%E1122 = LHS%E1122
+    RES%E1222 = LHS%E1222
+    RES%E2222 = LHS%E2222
+    RES%E1113 = LHS%E1113
+    RES%E1123 = LHS%E1123
+    RES%E1133 = LHS%E1133
+    RES%E1223 = LHS%E1223
+    RES%E1233 = LHS%E1233
+    RES%E1333 = LHS%E1333
+    RES%E2223 = LHS%E2223
+    RES%E2233 = LHS%E2233
+    RES%E2333 = LHS%E2333
+    RES%E3333 = LHS%E3333
+    RES%E1114 = LHS%E1114
+    RES%E1124 = LHS%E1124
+    RES%E1134 = LHS%E1134
+    RES%E1144 = LHS%E1144
+    RES%E1224 = LHS%E1224
+    RES%E1234 = LHS%E1234
+    RES%E1244 = LHS%E1244
+    RES%E1334 = LHS%E1334
+    RES%E1344 = LHS%E1344
+    RES%E1444 = LHS%E1444
+    RES%E2224 = LHS%E2224
+    RES%E2234 = LHS%E2234
+    RES%E2244 = LHS%E2244
+    RES%E2334 = LHS%E2334
+    RES%E2344 = LHS%E2344
+    RES%E2444 = LHS%E2444
+    RES%E3334 = LHS%E3334
+    RES%E3344 = LHS%E3344
+    RES%E3444 = LHS%E3444
+    RES%E4444 = LHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_OR_SV
+
+  FUNCTION ONUMM4N4_MUL_OO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1)) 
+
+    !  Multiplication like function 'LHS*RHS'
+    ! Order 4
+    RES%E1111 = LHS%R*RHS%E1111 + LHS%E1111*RHS%R +  &
+             LHS%E1*RHS%E111 + LHS%E111*RHS%E1 + LHS%E11*RHS%E11
+    RES%E1112 = LHS%R*RHS%E1112 + LHS%E1112*RHS%R +  &
+             LHS%E1*RHS%E112 + LHS%E112*RHS%E1 + LHS%E2*RHS%E111 +  &
+             LHS%E111*RHS%E2 + LHS%E11*RHS%E12 + LHS%E12*RHS%E11
+    RES%E1122 = LHS%R*RHS%E1122 + LHS%E1122*RHS%R +  &
+             LHS%E1*RHS%E122 + LHS%E122*RHS%E1 + LHS%E2*RHS%E112 +  &
+             LHS%E112*RHS%E2 + LHS%E11*RHS%E22 + LHS%E12*RHS%E12 + LHS%E22*RHS%E11
+    RES%E1222 = LHS%R*RHS%E1222 + LHS%E1222*RHS%R +  &
+             LHS%E1*RHS%E222 + LHS%E222*RHS%E1 + LHS%E2*RHS%E122 +  &
+             LHS%E122*RHS%E2 + LHS%E12*RHS%E22 + LHS%E22*RHS%E12
+    RES%E2222 = LHS%R*RHS%E2222 + LHS%E2222*RHS%R +  &
+             LHS%E2*RHS%E222 + LHS%E222*RHS%E2 + LHS%E22*RHS%E22
+    RES%E1113 = LHS%R*RHS%E1113 + LHS%E1113*RHS%R +  &
+             LHS%E1*RHS%E113 + LHS%E113*RHS%E1 + LHS%E3*RHS%E111 +  &
+             LHS%E111*RHS%E3 + LHS%E11*RHS%E13 + LHS%E13*RHS%E11
+    RES%E1123 = LHS%R*RHS%E1123 + LHS%E1123*RHS%R +  &
+             LHS%E1*RHS%E123 + LHS%E123*RHS%E1 + LHS%E2*RHS%E113 +  &
+             LHS%E113*RHS%E2 + LHS%E3*RHS%E112 + LHS%E112*RHS%E3 +  &
+             LHS%E11*RHS%E23 + LHS%E12*RHS%E13 + LHS%E13*RHS%E12 + LHS%E23*RHS%E11
+    RES%E1133 = LHS%R*RHS%E1133 + LHS%E1133*RHS%R +  &
+             LHS%E1*RHS%E133 + LHS%E133*RHS%E1 + LHS%E3*RHS%E113 +  &
+             LHS%E113*RHS%E3 + LHS%E11*RHS%E33 + LHS%E13*RHS%E13 + LHS%E33*RHS%E11
+    RES%E1223 = LHS%R*RHS%E1223 + LHS%E1223*RHS%R +  &
+             LHS%E1*RHS%E223 + LHS%E223*RHS%E1 + LHS%E2*RHS%E123 +  &
+             LHS%E123*RHS%E2 + LHS%E3*RHS%E122 + LHS%E122*RHS%E3 +  &
+             LHS%E12*RHS%E23 + LHS%E22*RHS%E13 + LHS%E13*RHS%E22 + LHS%E23*RHS%E12
+    RES%E1233 = LHS%R*RHS%E1233 + LHS%E1233*RHS%R +  &
+             LHS%E1*RHS%E233 + LHS%E233*RHS%E1 + LHS%E2*RHS%E133 +  &
+             LHS%E133*RHS%E2 + LHS%E3*RHS%E123 + LHS%E123*RHS%E3 +  &
+             LHS%E12*RHS%E33 + LHS%E13*RHS%E23 + LHS%E23*RHS%E13 + LHS%E33*RHS%E12
+    RES%E1333 = LHS%R*RHS%E1333 + LHS%E1333*RHS%R +  &
+             LHS%E1*RHS%E333 + LHS%E333*RHS%E1 + LHS%E3*RHS%E133 +  &
+             LHS%E133*RHS%E3 + LHS%E13*RHS%E33 + LHS%E33*RHS%E13
+    RES%E2223 = LHS%R*RHS%E2223 + LHS%E2223*RHS%R +  &
+             LHS%E2*RHS%E223 + LHS%E223*RHS%E2 + LHS%E3*RHS%E222 +  &
+             LHS%E222*RHS%E3 + LHS%E22*RHS%E23 + LHS%E23*RHS%E22
+    RES%E2233 = LHS%R*RHS%E2233 + LHS%E2233*RHS%R +  &
+             LHS%E2*RHS%E233 + LHS%E233*RHS%E2 + LHS%E3*RHS%E223 +  &
+             LHS%E223*RHS%E3 + LHS%E22*RHS%E33 + LHS%E23*RHS%E23 + LHS%E33*RHS%E22
+    RES%E2333 = LHS%R*RHS%E2333 + LHS%E2333*RHS%R +  &
+             LHS%E2*RHS%E333 + LHS%E333*RHS%E2 + LHS%E3*RHS%E233 +  &
+             LHS%E233*RHS%E3 + LHS%E23*RHS%E33 + LHS%E33*RHS%E23
+    RES%E3333 = LHS%R*RHS%E3333 + LHS%E3333*RHS%R +  &
+             LHS%E3*RHS%E333 + LHS%E333*RHS%E3 + LHS%E33*RHS%E33
+    RES%E1114 = LHS%R*RHS%E1114 + LHS%E1114*RHS%R +  &
+             LHS%E1*RHS%E114 + LHS%E114*RHS%E1 + LHS%E4*RHS%E111 +  &
+             LHS%E111*RHS%E4 + LHS%E11*RHS%E14 + LHS%E14*RHS%E11
+    RES%E1124 = LHS%R*RHS%E1124 + LHS%E1124*RHS%R +  &
+             LHS%E1*RHS%E124 + LHS%E124*RHS%E1 + LHS%E2*RHS%E114 +  &
+             LHS%E114*RHS%E2 + LHS%E4*RHS%E112 + LHS%E112*RHS%E4 +  &
+             LHS%E11*RHS%E24 + LHS%E12*RHS%E14 + LHS%E14*RHS%E12 + LHS%E24*RHS%E11
+    RES%E1134 = LHS%R*RHS%E1134 + LHS%E1134*RHS%R +  &
+             LHS%E1*RHS%E134 + LHS%E134*RHS%E1 + LHS%E3*RHS%E114 +  &
+             LHS%E114*RHS%E3 + LHS%E4*RHS%E113 + LHS%E113*RHS%E4 +  &
+             LHS%E11*RHS%E34 + LHS%E13*RHS%E14 + LHS%E14*RHS%E13 + LHS%E34*RHS%E11
+    RES%E1144 = LHS%R*RHS%E1144 + LHS%E1144*RHS%R +  &
+             LHS%E1*RHS%E144 + LHS%E144*RHS%E1 + LHS%E4*RHS%E114 +  &
+             LHS%E114*RHS%E4 + LHS%E11*RHS%E44 + LHS%E14*RHS%E14 + LHS%E44*RHS%E11
+    RES%E1224 = LHS%R*RHS%E1224 + LHS%E1224*RHS%R +  &
+             LHS%E1*RHS%E224 + LHS%E224*RHS%E1 + LHS%E2*RHS%E124 +  &
+             LHS%E124*RHS%E2 + LHS%E4*RHS%E122 + LHS%E122*RHS%E4 +  &
+             LHS%E12*RHS%E24 + LHS%E22*RHS%E14 + LHS%E14*RHS%E22 + LHS%E24*RHS%E12
+    RES%E1234 = LHS%R*RHS%E1234 + LHS%E1234*RHS%R +  &
+             LHS%E1*RHS%E234 + LHS%E234*RHS%E1 + LHS%E2*RHS%E134 +  &
+             LHS%E134*RHS%E2 + LHS%E3*RHS%E124 + LHS%E124*RHS%E3 +  &
+             LHS%E4*RHS%E123 + LHS%E123*RHS%E4 + LHS%E12*RHS%E34 +  &
+             LHS%E13*RHS%E24 + LHS%E23*RHS%E14 + LHS%E14*RHS%E23 +  &
+             LHS%E24*RHS%E13 + LHS%E34*RHS%E12
+    RES%E1244 = LHS%R*RHS%E1244 + LHS%E1244*RHS%R +  &
+             LHS%E1*RHS%E244 + LHS%E244*RHS%E1 + LHS%E2*RHS%E144 +  &
+             LHS%E144*RHS%E2 + LHS%E4*RHS%E124 + LHS%E124*RHS%E4 +  &
+             LHS%E12*RHS%E44 + LHS%E14*RHS%E24 + LHS%E24*RHS%E14 + LHS%E44*RHS%E12
+    RES%E1334 = LHS%R*RHS%E1334 + LHS%E1334*RHS%R +  &
+             LHS%E1*RHS%E334 + LHS%E334*RHS%E1 + LHS%E3*RHS%E134 +  &
+             LHS%E134*RHS%E3 + LHS%E4*RHS%E133 + LHS%E133*RHS%E4 +  &
+             LHS%E13*RHS%E34 + LHS%E33*RHS%E14 + LHS%E14*RHS%E33 + LHS%E34*RHS%E13
+    RES%E1344 = LHS%R*RHS%E1344 + LHS%E1344*RHS%R +  &
+             LHS%E1*RHS%E344 + LHS%E344*RHS%E1 + LHS%E3*RHS%E144 +  &
+             LHS%E144*RHS%E3 + LHS%E4*RHS%E134 + LHS%E134*RHS%E4 +  &
+             LHS%E13*RHS%E44 + LHS%E14*RHS%E34 + LHS%E34*RHS%E14 + LHS%E44*RHS%E13
+    RES%E1444 = LHS%R*RHS%E1444 + LHS%E1444*RHS%R +  &
+             LHS%E1*RHS%E444 + LHS%E444*RHS%E1 + LHS%E4*RHS%E144 +  &
+             LHS%E144*RHS%E4 + LHS%E14*RHS%E44 + LHS%E44*RHS%E14
+    RES%E2224 = LHS%R*RHS%E2224 + LHS%E2224*RHS%R +  &
+             LHS%E2*RHS%E224 + LHS%E224*RHS%E2 + LHS%E4*RHS%E222 +  &
+             LHS%E222*RHS%E4 + LHS%E22*RHS%E24 + LHS%E24*RHS%E22
+    RES%E2234 = LHS%R*RHS%E2234 + LHS%E2234*RHS%R +  &
+             LHS%E2*RHS%E234 + LHS%E234*RHS%E2 + LHS%E3*RHS%E224 +  &
+             LHS%E224*RHS%E3 + LHS%E4*RHS%E223 + LHS%E223*RHS%E4 +  &
+             LHS%E22*RHS%E34 + LHS%E23*RHS%E24 + LHS%E24*RHS%E23 + LHS%E34*RHS%E22
+    RES%E2244 = LHS%R*RHS%E2244 + LHS%E2244*RHS%R +  &
+             LHS%E2*RHS%E244 + LHS%E244*RHS%E2 + LHS%E4*RHS%E224 +  &
+             LHS%E224*RHS%E4 + LHS%E22*RHS%E44 + LHS%E24*RHS%E24 + LHS%E44*RHS%E22
+    RES%E2334 = LHS%R*RHS%E2334 + LHS%E2334*RHS%R +  &
+             LHS%E2*RHS%E334 + LHS%E334*RHS%E2 + LHS%E3*RHS%E234 +  &
+             LHS%E234*RHS%E3 + LHS%E4*RHS%E233 + LHS%E233*RHS%E4 +  &
+             LHS%E23*RHS%E34 + LHS%E33*RHS%E24 + LHS%E24*RHS%E33 + LHS%E34*RHS%E23
+    RES%E2344 = LHS%R*RHS%E2344 + LHS%E2344*RHS%R +  &
+             LHS%E2*RHS%E344 + LHS%E344*RHS%E2 + LHS%E3*RHS%E244 +  &
+             LHS%E244*RHS%E3 + LHS%E4*RHS%E234 + LHS%E234*RHS%E4 +  &
+             LHS%E23*RHS%E44 + LHS%E24*RHS%E34 + LHS%E34*RHS%E24 + LHS%E44*RHS%E23
+    RES%E2444 = LHS%R*RHS%E2444 + LHS%E2444*RHS%R +  &
+             LHS%E2*RHS%E444 + LHS%E444*RHS%E2 + LHS%E4*RHS%E244 +  &
+             LHS%E244*RHS%E4 + LHS%E24*RHS%E44 + LHS%E44*RHS%E24
+    RES%E3334 = LHS%R*RHS%E3334 + LHS%E3334*RHS%R +  &
+             LHS%E3*RHS%E334 + LHS%E334*RHS%E3 + LHS%E4*RHS%E333 +  &
+             LHS%E333*RHS%E4 + LHS%E33*RHS%E34 + LHS%E34*RHS%E33
+    RES%E3344 = LHS%R*RHS%E3344 + LHS%E3344*RHS%R +  &
+             LHS%E3*RHS%E344 + LHS%E344*RHS%E3 + LHS%E4*RHS%E334 +  &
+             LHS%E334*RHS%E4 + LHS%E33*RHS%E44 + LHS%E34*RHS%E34 + LHS%E44*RHS%E33
+    RES%E3444 = LHS%R*RHS%E3444 + LHS%E3444*RHS%R +  &
+             LHS%E3*RHS%E444 + LHS%E444*RHS%E3 + LHS%E4*RHS%E344 +  &
+             LHS%E344*RHS%E4 + LHS%E34*RHS%E44 + LHS%E44*RHS%E34
+    RES%E4444 = LHS%R*RHS%E4444 + LHS%E4444*RHS%R +  &
+             LHS%E4*RHS%E444 + LHS%E444*RHS%E4 + LHS%E44*RHS%E44
+    ! Order 3
+    RES%E111 = LHS%R*RHS%E111 + LHS%E111*RHS%R +  &
+            LHS%E1*RHS%E11 + LHS%E11*RHS%E1
+    RES%E112 = LHS%R*RHS%E112 + LHS%E112*RHS%R +  &
+            LHS%E1*RHS%E12 + LHS%E12*RHS%E1 + LHS%E2*RHS%E11 + LHS%E11*RHS%E2
+    RES%E122 = LHS%R*RHS%E122 + LHS%E122*RHS%R +  &
+            LHS%E1*RHS%E22 + LHS%E22*RHS%E1 + LHS%E2*RHS%E12 + LHS%E12*RHS%E2
+    RES%E222 = LHS%R*RHS%E222 + LHS%E222*RHS%R +  &
+            LHS%E2*RHS%E22 + LHS%E22*RHS%E2
+    RES%E113 = LHS%R*RHS%E113 + LHS%E113*RHS%R +  &
+            LHS%E1*RHS%E13 + LHS%E13*RHS%E1 + LHS%E3*RHS%E11 + LHS%E11*RHS%E3
+    RES%E123 = LHS%R*RHS%E123 + LHS%E123*RHS%R +  &
+            LHS%E1*RHS%E23 + LHS%E23*RHS%E1 + LHS%E2*RHS%E13 +  &
+            LHS%E13*RHS%E2 + LHS%E3*RHS%E12 + LHS%E12*RHS%E3
+    RES%E133 = LHS%R*RHS%E133 + LHS%E133*RHS%R +  &
+            LHS%E1*RHS%E33 + LHS%E33*RHS%E1 + LHS%E3*RHS%E13 + LHS%E13*RHS%E3
+    RES%E223 = LHS%R*RHS%E223 + LHS%E223*RHS%R +  &
+            LHS%E2*RHS%E23 + LHS%E23*RHS%E2 + LHS%E3*RHS%E22 + LHS%E22*RHS%E3
+    RES%E233 = LHS%R*RHS%E233 + LHS%E233*RHS%R +  &
+            LHS%E2*RHS%E33 + LHS%E33*RHS%E2 + LHS%E3*RHS%E23 + LHS%E23*RHS%E3
+    RES%E333 = LHS%R*RHS%E333 + LHS%E333*RHS%R +  &
+            LHS%E3*RHS%E33 + LHS%E33*RHS%E3
+    RES%E114 = LHS%R*RHS%E114 + LHS%E114*RHS%R +  &
+            LHS%E1*RHS%E14 + LHS%E14*RHS%E1 + LHS%E4*RHS%E11 + LHS%E11*RHS%E4
+    RES%E124 = LHS%R*RHS%E124 + LHS%E124*RHS%R +  &
+            LHS%E1*RHS%E24 + LHS%E24*RHS%E1 + LHS%E2*RHS%E14 +  &
+            LHS%E14*RHS%E2 + LHS%E4*RHS%E12 + LHS%E12*RHS%E4
+    RES%E134 = LHS%R*RHS%E134 + LHS%E134*RHS%R +  &
+            LHS%E1*RHS%E34 + LHS%E34*RHS%E1 + LHS%E3*RHS%E14 +  &
+            LHS%E14*RHS%E3 + LHS%E4*RHS%E13 + LHS%E13*RHS%E4
+    RES%E144 = LHS%R*RHS%E144 + LHS%E144*RHS%R +  &
+            LHS%E1*RHS%E44 + LHS%E44*RHS%E1 + LHS%E4*RHS%E14 + LHS%E14*RHS%E4
+    RES%E224 = LHS%R*RHS%E224 + LHS%E224*RHS%R +  &
+            LHS%E2*RHS%E24 + LHS%E24*RHS%E2 + LHS%E4*RHS%E22 + LHS%E22*RHS%E4
+    RES%E234 = LHS%R*RHS%E234 + LHS%E234*RHS%R +  &
+            LHS%E2*RHS%E34 + LHS%E34*RHS%E2 + LHS%E3*RHS%E24 +  &
+            LHS%E24*RHS%E3 + LHS%E4*RHS%E23 + LHS%E23*RHS%E4
+    RES%E244 = LHS%R*RHS%E244 + LHS%E244*RHS%R +  &
+            LHS%E2*RHS%E44 + LHS%E44*RHS%E2 + LHS%E4*RHS%E24 + LHS%E24*RHS%E4
+    RES%E334 = LHS%R*RHS%E334 + LHS%E334*RHS%R +  &
+            LHS%E3*RHS%E34 + LHS%E34*RHS%E3 + LHS%E4*RHS%E33 + LHS%E33*RHS%E4
+    RES%E344 = LHS%R*RHS%E344 + LHS%E344*RHS%R +  &
+            LHS%E3*RHS%E44 + LHS%E44*RHS%E3 + LHS%E4*RHS%E34 + LHS%E34*RHS%E4
+    RES%E444 = LHS%R*RHS%E444 + LHS%E444*RHS%R +  &
+            LHS%E4*RHS%E44 + LHS%E44*RHS%E4
+    ! Order 2
+    RES%E11 = LHS%R*RHS%E11 + LHS%E11*RHS%R + LHS%E1*RHS%E1
+    RES%E12 = LHS%R*RHS%E12 + LHS%E12*RHS%R +  &
+           LHS%E1*RHS%E2 + LHS%E2*RHS%E1
+    RES%E22 = LHS%R*RHS%E22 + LHS%E22*RHS%R + LHS%E2*RHS%E2
+    RES%E13 = LHS%R*RHS%E13 + LHS%E13*RHS%R +  &
+           LHS%E1*RHS%E3 + LHS%E3*RHS%E1
+    RES%E23 = LHS%R*RHS%E23 + LHS%E23*RHS%R +  &
+           LHS%E2*RHS%E3 + LHS%E3*RHS%E2
+    RES%E33 = LHS%R*RHS%E33 + LHS%E33*RHS%R + LHS%E3*RHS%E3
+    RES%E14 = LHS%R*RHS%E14 + LHS%E14*RHS%R +  &
+           LHS%E1*RHS%E4 + LHS%E4*RHS%E1
+    RES%E24 = LHS%R*RHS%E24 + LHS%E24*RHS%R +  &
+           LHS%E2*RHS%E4 + LHS%E4*RHS%E2
+    RES%E34 = LHS%R*RHS%E34 + LHS%E34*RHS%R +  &
+           LHS%E3*RHS%E4 + LHS%E4*RHS%E3
+    RES%E44 = LHS%R*RHS%E44 + LHS%E44*RHS%R + LHS%E4*RHS%E4
+    ! Order 1
+    RES%E1 = LHS%R*RHS%E1 + LHS%E1*RHS%R
+    RES%E2 = LHS%R*RHS%E2 + LHS%E2*RHS%R
+    RES%E3 = LHS%R*RHS%E3 + LHS%E3*RHS%R
+    RES%E4 = LHS%R*RHS%E4 + LHS%E4*RHS%R
+    ! Order 0
+    RES%R = LHS%R*RHS%R
+
+  END FUNCTION ONUMM4N4_MUL_OO_SV
+
+  FUNCTION ONUMM4N4_MUL_RO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1)) 
+
+    ! Multiplication like function 'LHS*RHS'
+    !  Real
+    RES%R = LHS*RHS%R
+
+    ! Order 1
+    RES%E1 = LHS*RHS%E1
+    RES%E2 = LHS*RHS%E2
+    RES%E3 = LHS*RHS%E3
+    RES%E4 = LHS*RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS*RHS%E11
+    RES%E12 = LHS*RHS%E12
+    RES%E22 = LHS*RHS%E22
+    RES%E13 = LHS*RHS%E13
+    RES%E23 = LHS*RHS%E23
+    RES%E33 = LHS*RHS%E33
+    RES%E14 = LHS*RHS%E14
+    RES%E24 = LHS*RHS%E24
+    RES%E34 = LHS*RHS%E34
+    RES%E44 = LHS*RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS*RHS%E111
+    RES%E112 = LHS*RHS%E112
+    RES%E122 = LHS*RHS%E122
+    RES%E222 = LHS*RHS%E222
+    RES%E113 = LHS*RHS%E113
+    RES%E123 = LHS*RHS%E123
+    RES%E133 = LHS*RHS%E133
+    RES%E223 = LHS*RHS%E223
+    RES%E233 = LHS*RHS%E233
+    RES%E333 = LHS*RHS%E333
+    RES%E114 = LHS*RHS%E114
+    RES%E124 = LHS*RHS%E124
+    RES%E134 = LHS*RHS%E134
+    RES%E144 = LHS*RHS%E144
+    RES%E224 = LHS*RHS%E224
+    RES%E234 = LHS*RHS%E234
+    RES%E244 = LHS*RHS%E244
+    RES%E334 = LHS*RHS%E334
+    RES%E344 = LHS*RHS%E344
+    RES%E444 = LHS*RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS*RHS%E1111
+    RES%E1112 = LHS*RHS%E1112
+    RES%E1122 = LHS*RHS%E1122
+    RES%E1222 = LHS*RHS%E1222
+    RES%E2222 = LHS*RHS%E2222
+    RES%E1113 = LHS*RHS%E1113
+    RES%E1123 = LHS*RHS%E1123
+    RES%E1133 = LHS*RHS%E1133
+    RES%E1223 = LHS*RHS%E1223
+    RES%E1233 = LHS*RHS%E1233
+    RES%E1333 = LHS*RHS%E1333
+    RES%E2223 = LHS*RHS%E2223
+    RES%E2233 = LHS*RHS%E2233
+    RES%E2333 = LHS*RHS%E2333
+    RES%E3333 = LHS*RHS%E3333
+    RES%E1114 = LHS*RHS%E1114
+    RES%E1124 = LHS*RHS%E1124
+    RES%E1134 = LHS*RHS%E1134
+    RES%E1144 = LHS*RHS%E1144
+    RES%E1224 = LHS*RHS%E1224
+    RES%E1234 = LHS*RHS%E1234
+    RES%E1244 = LHS*RHS%E1244
+    RES%E1334 = LHS*RHS%E1334
+    RES%E1344 = LHS*RHS%E1344
+    RES%E1444 = LHS*RHS%E1444
+    RES%E2224 = LHS*RHS%E2224
+    RES%E2234 = LHS*RHS%E2234
+    RES%E2244 = LHS*RHS%E2244
+    RES%E2334 = LHS*RHS%E2334
+    RES%E2344 = LHS*RHS%E2344
+    RES%E2444 = LHS*RHS%E2444
+    RES%E3334 = LHS*RHS%E3334
+    RES%E3344 = LHS*RHS%E3344
+    RES%E3444 = LHS*RHS%E3444
+    RES%E4444 = LHS*RHS%E4444
+
+  END FUNCTION ONUMM4N4_MUL_RO_SV
+
+  FUNCTION ONUMM4N4_MUL_OR_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1)) 
+
+    ! Multiplication like function 'LHS*RHS'
+    !  Real
+    RES%R = LHS%R*RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1*RHS
+    RES%E2 = LHS%E2*RHS
+    RES%E3 = LHS%E3*RHS
+    RES%E4 = LHS%E4*RHS
+
+    ! Order 2
+    RES%E11 = LHS%E11*RHS
+    RES%E12 = LHS%E12*RHS
+    RES%E22 = LHS%E22*RHS
+    RES%E13 = LHS%E13*RHS
+    RES%E23 = LHS%E23*RHS
+    RES%E33 = LHS%E33*RHS
+    RES%E14 = LHS%E14*RHS
+    RES%E24 = LHS%E24*RHS
+    RES%E34 = LHS%E34*RHS
+    RES%E44 = LHS%E44*RHS
+
+    ! Order 3
+    RES%E111 = LHS%E111*RHS
+    RES%E112 = LHS%E112*RHS
+    RES%E122 = LHS%E122*RHS
+    RES%E222 = LHS%E222*RHS
+    RES%E113 = LHS%E113*RHS
+    RES%E123 = LHS%E123*RHS
+    RES%E133 = LHS%E133*RHS
+    RES%E223 = LHS%E223*RHS
+    RES%E233 = LHS%E233*RHS
+    RES%E333 = LHS%E333*RHS
+    RES%E114 = LHS%E114*RHS
+    RES%E124 = LHS%E124*RHS
+    RES%E134 = LHS%E134*RHS
+    RES%E144 = LHS%E144*RHS
+    RES%E224 = LHS%E224*RHS
+    RES%E234 = LHS%E234*RHS
+    RES%E244 = LHS%E244*RHS
+    RES%E334 = LHS%E334*RHS
+    RES%E344 = LHS%E344*RHS
+    RES%E444 = LHS%E444*RHS
+
+    ! Order 4
+    RES%E1111 = LHS%E1111*RHS
+    RES%E1112 = LHS%E1112*RHS
+    RES%E1122 = LHS%E1122*RHS
+    RES%E1222 = LHS%E1222*RHS
+    RES%E2222 = LHS%E2222*RHS
+    RES%E1113 = LHS%E1113*RHS
+    RES%E1123 = LHS%E1123*RHS
+    RES%E1133 = LHS%E1133*RHS
+    RES%E1223 = LHS%E1223*RHS
+    RES%E1233 = LHS%E1233*RHS
+    RES%E1333 = LHS%E1333*RHS
+    RES%E2223 = LHS%E2223*RHS
+    RES%E2233 = LHS%E2233*RHS
+    RES%E2333 = LHS%E2333*RHS
+    RES%E3333 = LHS%E3333*RHS
+    RES%E1114 = LHS%E1114*RHS
+    RES%E1124 = LHS%E1124*RHS
+    RES%E1134 = LHS%E1134*RHS
+    RES%E1144 = LHS%E1144*RHS
+    RES%E1224 = LHS%E1224*RHS
+    RES%E1234 = LHS%E1234*RHS
+    RES%E1244 = LHS%E1244*RHS
+    RES%E1334 = LHS%E1334*RHS
+    RES%E1344 = LHS%E1344*RHS
+    RES%E1444 = LHS%E1444*RHS
+    RES%E2224 = LHS%E2224*RHS
+    RES%E2234 = LHS%E2234*RHS
+    RES%E2244 = LHS%E2244*RHS
+    RES%E2334 = LHS%E2334*RHS
+    RES%E2344 = LHS%E2344*RHS
+    RES%E2444 = LHS%E2444*RHS
+    RES%E3334 = LHS%E3334*RHS
+    RES%E3344 = LHS%E3344*RHS
+    RES%E3444 = LHS%E3444*RHS
+    RES%E4444 = LHS%E4444*RHS
+
+  END FUNCTION ONUMM4N4_MUL_OR_SV
+
+  FUNCTION ONUMM4N4_EQ_OO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS%R == RHS%R
+
+  END FUNCTION ONUMM4N4_EQ_OO_SV
+
+  FUNCTION ONUMM4N4_EQ_RO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS == RHS%R
+
+  END FUNCTION ONUMM4N4_EQ_RO_SV
+
+  FUNCTION ONUMM4N4_EQ_OR_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS%R == RHS
+
+  END FUNCTION ONUMM4N4_EQ_OR_SV
+
+  FUNCTION ONUMM4N4_NE_OO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS%R /= RHS%R
+
+  END FUNCTION ONUMM4N4_NE_OO_SV
+
+  FUNCTION ONUMM4N4_NE_RO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS /= RHS%R
+
+  END FUNCTION ONUMM4N4_NE_RO_SV
+
+  FUNCTION ONUMM4N4_NE_OR_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS%R /= RHS
+
+  END FUNCTION ONUMM4N4_NE_OR_SV
+
+  FUNCTION ONUMM4N4_LT_OO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS%R < RHS%R
+
+  END FUNCTION ONUMM4N4_LT_OO_SV
+
+  FUNCTION ONUMM4N4_LT_RO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS < RHS%R
+
+  END FUNCTION ONUMM4N4_LT_RO_SV
+
+  FUNCTION ONUMM4N4_LT_OR_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS%R < RHS
+
+  END FUNCTION ONUMM4N4_LT_OR_SV
+
+  FUNCTION ONUMM4N4_GT_OO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS%R > RHS%R
+
+  END FUNCTION ONUMM4N4_GT_OO_SV
+
+  FUNCTION ONUMM4N4_GT_RO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS > RHS%R
+
+  END FUNCTION ONUMM4N4_GT_RO_SV
+
+  FUNCTION ONUMM4N4_GT_OR_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS%R > RHS
+
+  END FUNCTION ONUMM4N4_GT_OR_SV
+
+  FUNCTION ONUMM4N4_LE_OO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS%R <= RHS%R
+
+  END FUNCTION ONUMM4N4_LE_OO_SV
+
+  FUNCTION ONUMM4N4_LE_RO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS <= RHS%R
+
+  END FUNCTION ONUMM4N4_LE_RO_SV
+
+  FUNCTION ONUMM4N4_LE_OR_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS%R <= RHS
+
+  END FUNCTION ONUMM4N4_LE_OR_SV
+
+  FUNCTION ONUMM4N4_GE_OO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS%R >= RHS%R
+
+  END FUNCTION ONUMM4N4_GE_OO_SV
+
+  FUNCTION ONUMM4N4_GE_RO_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS >= RHS%R
+
+  END FUNCTION ONUMM4N4_GE_RO_SV
+
+  FUNCTION ONUMM4N4_GE_OR_SV(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:)
+    LOGICAL :: RES(SIZE(RHS,1)) 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS%R >= RHS
+
+  END FUNCTION ONUMM4N4_GE_OR_SV
+
+  FUNCTION ONUMM4N4_ADD_OO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Addition like function 'LHS + RHS'
+    !  Real
+    RES%R = LHS%R + RHS%R
+
+    ! Order 1
+    RES%E1 = LHS%E1 + RHS%E1
+    RES%E2 = LHS%E2 + RHS%E2
+    RES%E3 = LHS%E3 + RHS%E3
+    RES%E4 = LHS%E4 + RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11 + RHS%E11
+    RES%E12 = LHS%E12 + RHS%E12
+    RES%E22 = LHS%E22 + RHS%E22
+    RES%E13 = LHS%E13 + RHS%E13
+    RES%E23 = LHS%E23 + RHS%E23
+    RES%E33 = LHS%E33 + RHS%E33
+    RES%E14 = LHS%E14 + RHS%E14
+    RES%E24 = LHS%E24 + RHS%E24
+    RES%E34 = LHS%E34 + RHS%E34
+    RES%E44 = LHS%E44 + RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111 + RHS%E111
+    RES%E112 = LHS%E112 + RHS%E112
+    RES%E122 = LHS%E122 + RHS%E122
+    RES%E222 = LHS%E222 + RHS%E222
+    RES%E113 = LHS%E113 + RHS%E113
+    RES%E123 = LHS%E123 + RHS%E123
+    RES%E133 = LHS%E133 + RHS%E133
+    RES%E223 = LHS%E223 + RHS%E223
+    RES%E233 = LHS%E233 + RHS%E233
+    RES%E333 = LHS%E333 + RHS%E333
+    RES%E114 = LHS%E114 + RHS%E114
+    RES%E124 = LHS%E124 + RHS%E124
+    RES%E134 = LHS%E134 + RHS%E134
+    RES%E144 = LHS%E144 + RHS%E144
+    RES%E224 = LHS%E224 + RHS%E224
+    RES%E234 = LHS%E234 + RHS%E234
+    RES%E244 = LHS%E244 + RHS%E244
+    RES%E334 = LHS%E334 + RHS%E334
+    RES%E344 = LHS%E344 + RHS%E344
+    RES%E444 = LHS%E444 + RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111 + RHS%E1111
+    RES%E1112 = LHS%E1112 + RHS%E1112
+    RES%E1122 = LHS%E1122 + RHS%E1122
+    RES%E1222 = LHS%E1222 + RHS%E1222
+    RES%E2222 = LHS%E2222 + RHS%E2222
+    RES%E1113 = LHS%E1113 + RHS%E1113
+    RES%E1123 = LHS%E1123 + RHS%E1123
+    RES%E1133 = LHS%E1133 + RHS%E1133
+    RES%E1223 = LHS%E1223 + RHS%E1223
+    RES%E1233 = LHS%E1233 + RHS%E1233
+    RES%E1333 = LHS%E1333 + RHS%E1333
+    RES%E2223 = LHS%E2223 + RHS%E2223
+    RES%E2233 = LHS%E2233 + RHS%E2233
+    RES%E2333 = LHS%E2333 + RHS%E2333
+    RES%E3333 = LHS%E3333 + RHS%E3333
+    RES%E1114 = LHS%E1114 + RHS%E1114
+    RES%E1124 = LHS%E1124 + RHS%E1124
+    RES%E1134 = LHS%E1134 + RHS%E1134
+    RES%E1144 = LHS%E1144 + RHS%E1144
+    RES%E1224 = LHS%E1224 + RHS%E1224
+    RES%E1234 = LHS%E1234 + RHS%E1234
+    RES%E1244 = LHS%E1244 + RHS%E1244
+    RES%E1334 = LHS%E1334 + RHS%E1334
+    RES%E1344 = LHS%E1344 + RHS%E1344
+    RES%E1444 = LHS%E1444 + RHS%E1444
+    RES%E2224 = LHS%E2224 + RHS%E2224
+    RES%E2234 = LHS%E2234 + RHS%E2234
+    RES%E2244 = LHS%E2244 + RHS%E2244
+    RES%E2334 = LHS%E2334 + RHS%E2334
+    RES%E2344 = LHS%E2344 + RHS%E2344
+    RES%E2444 = LHS%E2444 + RHS%E2444
+    RES%E3334 = LHS%E3334 + RHS%E3334
+    RES%E3344 = LHS%E3344 + RHS%E3344
+    RES%E3444 = LHS%E3444 + RHS%E3444
+    RES%E4444 = LHS%E4444 + RHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_OO_SM
+
+  FUNCTION ONUMM4N4_ADD_RO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Addition like function 'LHS + RHS'
+    ! Real
+    RES%R = LHS + RHS%R
+
+    ! Order 1
+    RES%E1 =  + RHS%E1
+    RES%E2 =  + RHS%E2
+    RES%E3 =  + RHS%E3
+    RES%E4 =  + RHS%E4
+
+    ! Order 2
+    RES%E11 =  + RHS%E11
+    RES%E12 =  + RHS%E12
+    RES%E22 =  + RHS%E22
+    RES%E13 =  + RHS%E13
+    RES%E23 =  + RHS%E23
+    RES%E33 =  + RHS%E33
+    RES%E14 =  + RHS%E14
+    RES%E24 =  + RHS%E24
+    RES%E34 =  + RHS%E34
+    RES%E44 =  + RHS%E44
+
+    ! Order 3
+    RES%E111 =  + RHS%E111
+    RES%E112 =  + RHS%E112
+    RES%E122 =  + RHS%E122
+    RES%E222 =  + RHS%E222
+    RES%E113 =  + RHS%E113
+    RES%E123 =  + RHS%E123
+    RES%E133 =  + RHS%E133
+    RES%E223 =  + RHS%E223
+    RES%E233 =  + RHS%E233
+    RES%E333 =  + RHS%E333
+    RES%E114 =  + RHS%E114
+    RES%E124 =  + RHS%E124
+    RES%E134 =  + RHS%E134
+    RES%E144 =  + RHS%E144
+    RES%E224 =  + RHS%E224
+    RES%E234 =  + RHS%E234
+    RES%E244 =  + RHS%E244
+    RES%E334 =  + RHS%E334
+    RES%E344 =  + RHS%E344
+    RES%E444 =  + RHS%E444
+
+    ! Order 4
+    RES%E1111 =  + RHS%E1111
+    RES%E1112 =  + RHS%E1112
+    RES%E1122 =  + RHS%E1122
+    RES%E1222 =  + RHS%E1222
+    RES%E2222 =  + RHS%E2222
+    RES%E1113 =  + RHS%E1113
+    RES%E1123 =  + RHS%E1123
+    RES%E1133 =  + RHS%E1133
+    RES%E1223 =  + RHS%E1223
+    RES%E1233 =  + RHS%E1233
+    RES%E1333 =  + RHS%E1333
+    RES%E2223 =  + RHS%E2223
+    RES%E2233 =  + RHS%E2233
+    RES%E2333 =  + RHS%E2333
+    RES%E3333 =  + RHS%E3333
+    RES%E1114 =  + RHS%E1114
+    RES%E1124 =  + RHS%E1124
+    RES%E1134 =  + RHS%E1134
+    RES%E1144 =  + RHS%E1144
+    RES%E1224 =  + RHS%E1224
+    RES%E1234 =  + RHS%E1234
+    RES%E1244 =  + RHS%E1244
+    RES%E1334 =  + RHS%E1334
+    RES%E1344 =  + RHS%E1344
+    RES%E1444 =  + RHS%E1444
+    RES%E2224 =  + RHS%E2224
+    RES%E2234 =  + RHS%E2234
+    RES%E2244 =  + RHS%E2244
+    RES%E2334 =  + RHS%E2334
+    RES%E2344 =  + RHS%E2344
+    RES%E2444 =  + RHS%E2444
+    RES%E3334 =  + RHS%E3334
+    RES%E3344 =  + RHS%E3344
+    RES%E3444 =  + RHS%E3444
+    RES%E4444 =  + RHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_RO_SM
+
+  FUNCTION ONUMM4N4_ADD_OR_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:,:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Addition like function 'LHS + RHS'
+    ! Real
+    RES%R = LHS%R + RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1
+    RES%E2 = LHS%E2
+    RES%E3 = LHS%E3
+    RES%E4 = LHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11
+    RES%E12 = LHS%E12
+    RES%E22 = LHS%E22
+    RES%E13 = LHS%E13
+    RES%E23 = LHS%E23
+    RES%E33 = LHS%E33
+    RES%E14 = LHS%E14
+    RES%E24 = LHS%E24
+    RES%E34 = LHS%E34
+    RES%E44 = LHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111
+    RES%E112 = LHS%E112
+    RES%E122 = LHS%E122
+    RES%E222 = LHS%E222
+    RES%E113 = LHS%E113
+    RES%E123 = LHS%E123
+    RES%E133 = LHS%E133
+    RES%E223 = LHS%E223
+    RES%E233 = LHS%E233
+    RES%E333 = LHS%E333
+    RES%E114 = LHS%E114
+    RES%E124 = LHS%E124
+    RES%E134 = LHS%E134
+    RES%E144 = LHS%E144
+    RES%E224 = LHS%E224
+    RES%E234 = LHS%E234
+    RES%E244 = LHS%E244
+    RES%E334 = LHS%E334
+    RES%E344 = LHS%E344
+    RES%E444 = LHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111
+    RES%E1112 = LHS%E1112
+    RES%E1122 = LHS%E1122
+    RES%E1222 = LHS%E1222
+    RES%E2222 = LHS%E2222
+    RES%E1113 = LHS%E1113
+    RES%E1123 = LHS%E1123
+    RES%E1133 = LHS%E1133
+    RES%E1223 = LHS%E1223
+    RES%E1233 = LHS%E1233
+    RES%E1333 = LHS%E1333
+    RES%E2223 = LHS%E2223
+    RES%E2233 = LHS%E2233
+    RES%E2333 = LHS%E2333
+    RES%E3333 = LHS%E3333
+    RES%E1114 = LHS%E1114
+    RES%E1124 = LHS%E1124
+    RES%E1134 = LHS%E1134
+    RES%E1144 = LHS%E1144
+    RES%E1224 = LHS%E1224
+    RES%E1234 = LHS%E1234
+    RES%E1244 = LHS%E1244
+    RES%E1334 = LHS%E1334
+    RES%E1344 = LHS%E1344
+    RES%E1444 = LHS%E1444
+    RES%E2224 = LHS%E2224
+    RES%E2234 = LHS%E2234
+    RES%E2244 = LHS%E2244
+    RES%E2334 = LHS%E2334
+    RES%E2344 = LHS%E2344
+    RES%E2444 = LHS%E2444
+    RES%E3334 = LHS%E3334
+    RES%E3344 = LHS%E3344
+    RES%E3444 = LHS%E3444
+    RES%E4444 = LHS%E4444
+
+  END FUNCTION ONUMM4N4_ADD_OR_SM
+
+  FUNCTION ONUMM4N4_SUB_OO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Addition like function 'LHS - RHS'
+    !  Real
+    RES%R = LHS%R - RHS%R
+
+    ! Order 1
+    RES%E1 = LHS%E1 - RHS%E1
+    RES%E2 = LHS%E2 - RHS%E2
+    RES%E3 = LHS%E3 - RHS%E3
+    RES%E4 = LHS%E4 - RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11 - RHS%E11
+    RES%E12 = LHS%E12 - RHS%E12
+    RES%E22 = LHS%E22 - RHS%E22
+    RES%E13 = LHS%E13 - RHS%E13
+    RES%E23 = LHS%E23 - RHS%E23
+    RES%E33 = LHS%E33 - RHS%E33
+    RES%E14 = LHS%E14 - RHS%E14
+    RES%E24 = LHS%E24 - RHS%E24
+    RES%E34 = LHS%E34 - RHS%E34
+    RES%E44 = LHS%E44 - RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111 - RHS%E111
+    RES%E112 = LHS%E112 - RHS%E112
+    RES%E122 = LHS%E122 - RHS%E122
+    RES%E222 = LHS%E222 - RHS%E222
+    RES%E113 = LHS%E113 - RHS%E113
+    RES%E123 = LHS%E123 - RHS%E123
+    RES%E133 = LHS%E133 - RHS%E133
+    RES%E223 = LHS%E223 - RHS%E223
+    RES%E233 = LHS%E233 - RHS%E233
+    RES%E333 = LHS%E333 - RHS%E333
+    RES%E114 = LHS%E114 - RHS%E114
+    RES%E124 = LHS%E124 - RHS%E124
+    RES%E134 = LHS%E134 - RHS%E134
+    RES%E144 = LHS%E144 - RHS%E144
+    RES%E224 = LHS%E224 - RHS%E224
+    RES%E234 = LHS%E234 - RHS%E234
+    RES%E244 = LHS%E244 - RHS%E244
+    RES%E334 = LHS%E334 - RHS%E334
+    RES%E344 = LHS%E344 - RHS%E344
+    RES%E444 = LHS%E444 - RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111 - RHS%E1111
+    RES%E1112 = LHS%E1112 - RHS%E1112
+    RES%E1122 = LHS%E1122 - RHS%E1122
+    RES%E1222 = LHS%E1222 - RHS%E1222
+    RES%E2222 = LHS%E2222 - RHS%E2222
+    RES%E1113 = LHS%E1113 - RHS%E1113
+    RES%E1123 = LHS%E1123 - RHS%E1123
+    RES%E1133 = LHS%E1133 - RHS%E1133
+    RES%E1223 = LHS%E1223 - RHS%E1223
+    RES%E1233 = LHS%E1233 - RHS%E1233
+    RES%E1333 = LHS%E1333 - RHS%E1333
+    RES%E2223 = LHS%E2223 - RHS%E2223
+    RES%E2233 = LHS%E2233 - RHS%E2233
+    RES%E2333 = LHS%E2333 - RHS%E2333
+    RES%E3333 = LHS%E3333 - RHS%E3333
+    RES%E1114 = LHS%E1114 - RHS%E1114
+    RES%E1124 = LHS%E1124 - RHS%E1124
+    RES%E1134 = LHS%E1134 - RHS%E1134
+    RES%E1144 = LHS%E1144 - RHS%E1144
+    RES%E1224 = LHS%E1224 - RHS%E1224
+    RES%E1234 = LHS%E1234 - RHS%E1234
+    RES%E1244 = LHS%E1244 - RHS%E1244
+    RES%E1334 = LHS%E1334 - RHS%E1334
+    RES%E1344 = LHS%E1344 - RHS%E1344
+    RES%E1444 = LHS%E1444 - RHS%E1444
+    RES%E2224 = LHS%E2224 - RHS%E2224
+    RES%E2234 = LHS%E2234 - RHS%E2234
+    RES%E2244 = LHS%E2244 - RHS%E2244
+    RES%E2334 = LHS%E2334 - RHS%E2334
+    RES%E2344 = LHS%E2344 - RHS%E2344
+    RES%E2444 = LHS%E2444 - RHS%E2444
+    RES%E3334 = LHS%E3334 - RHS%E3334
+    RES%E3344 = LHS%E3344 - RHS%E3344
+    RES%E3444 = LHS%E3444 - RHS%E3444
+    RES%E4444 = LHS%E4444 - RHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_OO_SM
+
+  FUNCTION ONUMM4N4_SUB_RO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Addition like function 'LHS - RHS'
+    ! Real
+    RES%R = LHS - RHS%R
+
+    ! Order 1
+    RES%E1 =  - RHS%E1
+    RES%E2 =  - RHS%E2
+    RES%E3 =  - RHS%E3
+    RES%E4 =  - RHS%E4
+
+    ! Order 2
+    RES%E11 =  - RHS%E11
+    RES%E12 =  - RHS%E12
+    RES%E22 =  - RHS%E22
+    RES%E13 =  - RHS%E13
+    RES%E23 =  - RHS%E23
+    RES%E33 =  - RHS%E33
+    RES%E14 =  - RHS%E14
+    RES%E24 =  - RHS%E24
+    RES%E34 =  - RHS%E34
+    RES%E44 =  - RHS%E44
+
+    ! Order 3
+    RES%E111 =  - RHS%E111
+    RES%E112 =  - RHS%E112
+    RES%E122 =  - RHS%E122
+    RES%E222 =  - RHS%E222
+    RES%E113 =  - RHS%E113
+    RES%E123 =  - RHS%E123
+    RES%E133 =  - RHS%E133
+    RES%E223 =  - RHS%E223
+    RES%E233 =  - RHS%E233
+    RES%E333 =  - RHS%E333
+    RES%E114 =  - RHS%E114
+    RES%E124 =  - RHS%E124
+    RES%E134 =  - RHS%E134
+    RES%E144 =  - RHS%E144
+    RES%E224 =  - RHS%E224
+    RES%E234 =  - RHS%E234
+    RES%E244 =  - RHS%E244
+    RES%E334 =  - RHS%E334
+    RES%E344 =  - RHS%E344
+    RES%E444 =  - RHS%E444
+
+    ! Order 4
+    RES%E1111 =  - RHS%E1111
+    RES%E1112 =  - RHS%E1112
+    RES%E1122 =  - RHS%E1122
+    RES%E1222 =  - RHS%E1222
+    RES%E2222 =  - RHS%E2222
+    RES%E1113 =  - RHS%E1113
+    RES%E1123 =  - RHS%E1123
+    RES%E1133 =  - RHS%E1133
+    RES%E1223 =  - RHS%E1223
+    RES%E1233 =  - RHS%E1233
+    RES%E1333 =  - RHS%E1333
+    RES%E2223 =  - RHS%E2223
+    RES%E2233 =  - RHS%E2233
+    RES%E2333 =  - RHS%E2333
+    RES%E3333 =  - RHS%E3333
+    RES%E1114 =  - RHS%E1114
+    RES%E1124 =  - RHS%E1124
+    RES%E1134 =  - RHS%E1134
+    RES%E1144 =  - RHS%E1144
+    RES%E1224 =  - RHS%E1224
+    RES%E1234 =  - RHS%E1234
+    RES%E1244 =  - RHS%E1244
+    RES%E1334 =  - RHS%E1334
+    RES%E1344 =  - RHS%E1344
+    RES%E1444 =  - RHS%E1444
+    RES%E2224 =  - RHS%E2224
+    RES%E2234 =  - RHS%E2234
+    RES%E2244 =  - RHS%E2244
+    RES%E2334 =  - RHS%E2334
+    RES%E2344 =  - RHS%E2344
+    RES%E2444 =  - RHS%E2444
+    RES%E3334 =  - RHS%E3334
+    RES%E3344 =  - RHS%E3344
+    RES%E3444 =  - RHS%E3444
+    RES%E4444 =  - RHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_RO_SM
+
+  FUNCTION ONUMM4N4_SUB_OR_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:,:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Addition like function 'LHS - RHS'
+    ! Real
+    RES%R = LHS%R - RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1
+    RES%E2 = LHS%E2
+    RES%E3 = LHS%E3
+    RES%E4 = LHS%E4
+
+    ! Order 2
+    RES%E11 = LHS%E11
+    RES%E12 = LHS%E12
+    RES%E22 = LHS%E22
+    RES%E13 = LHS%E13
+    RES%E23 = LHS%E23
+    RES%E33 = LHS%E33
+    RES%E14 = LHS%E14
+    RES%E24 = LHS%E24
+    RES%E34 = LHS%E34
+    RES%E44 = LHS%E44
+
+    ! Order 3
+    RES%E111 = LHS%E111
+    RES%E112 = LHS%E112
+    RES%E122 = LHS%E122
+    RES%E222 = LHS%E222
+    RES%E113 = LHS%E113
+    RES%E123 = LHS%E123
+    RES%E133 = LHS%E133
+    RES%E223 = LHS%E223
+    RES%E233 = LHS%E233
+    RES%E333 = LHS%E333
+    RES%E114 = LHS%E114
+    RES%E124 = LHS%E124
+    RES%E134 = LHS%E134
+    RES%E144 = LHS%E144
+    RES%E224 = LHS%E224
+    RES%E234 = LHS%E234
+    RES%E244 = LHS%E244
+    RES%E334 = LHS%E334
+    RES%E344 = LHS%E344
+    RES%E444 = LHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS%E1111
+    RES%E1112 = LHS%E1112
+    RES%E1122 = LHS%E1122
+    RES%E1222 = LHS%E1222
+    RES%E2222 = LHS%E2222
+    RES%E1113 = LHS%E1113
+    RES%E1123 = LHS%E1123
+    RES%E1133 = LHS%E1133
+    RES%E1223 = LHS%E1223
+    RES%E1233 = LHS%E1233
+    RES%E1333 = LHS%E1333
+    RES%E2223 = LHS%E2223
+    RES%E2233 = LHS%E2233
+    RES%E2333 = LHS%E2333
+    RES%E3333 = LHS%E3333
+    RES%E1114 = LHS%E1114
+    RES%E1124 = LHS%E1124
+    RES%E1134 = LHS%E1134
+    RES%E1144 = LHS%E1144
+    RES%E1224 = LHS%E1224
+    RES%E1234 = LHS%E1234
+    RES%E1244 = LHS%E1244
+    RES%E1334 = LHS%E1334
+    RES%E1344 = LHS%E1344
+    RES%E1444 = LHS%E1444
+    RES%E2224 = LHS%E2224
+    RES%E2234 = LHS%E2234
+    RES%E2244 = LHS%E2244
+    RES%E2334 = LHS%E2334
+    RES%E2344 = LHS%E2344
+    RES%E2444 = LHS%E2444
+    RES%E3334 = LHS%E3334
+    RES%E3344 = LHS%E3344
+    RES%E3444 = LHS%E3444
+    RES%E4444 = LHS%E4444
+
+  END FUNCTION ONUMM4N4_SUB_OR_SM
+
+  FUNCTION ONUMM4N4_MUL_OO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    !  Multiplication like function 'LHS*RHS'
+    ! Order 4
+    RES%E1111 = LHS%R*RHS%E1111 + LHS%E1111*RHS%R +  &
+             LHS%E1*RHS%E111 + LHS%E111*RHS%E1 + LHS%E11*RHS%E11
+    RES%E1112 = LHS%R*RHS%E1112 + LHS%E1112*RHS%R +  &
+             LHS%E1*RHS%E112 + LHS%E112*RHS%E1 + LHS%E2*RHS%E111 +  &
+             LHS%E111*RHS%E2 + LHS%E11*RHS%E12 + LHS%E12*RHS%E11
+    RES%E1122 = LHS%R*RHS%E1122 + LHS%E1122*RHS%R +  &
+             LHS%E1*RHS%E122 + LHS%E122*RHS%E1 + LHS%E2*RHS%E112 +  &
+             LHS%E112*RHS%E2 + LHS%E11*RHS%E22 + LHS%E12*RHS%E12 + LHS%E22*RHS%E11
+    RES%E1222 = LHS%R*RHS%E1222 + LHS%E1222*RHS%R +  &
+             LHS%E1*RHS%E222 + LHS%E222*RHS%E1 + LHS%E2*RHS%E122 +  &
+             LHS%E122*RHS%E2 + LHS%E12*RHS%E22 + LHS%E22*RHS%E12
+    RES%E2222 = LHS%R*RHS%E2222 + LHS%E2222*RHS%R +  &
+             LHS%E2*RHS%E222 + LHS%E222*RHS%E2 + LHS%E22*RHS%E22
+    RES%E1113 = LHS%R*RHS%E1113 + LHS%E1113*RHS%R +  &
+             LHS%E1*RHS%E113 + LHS%E113*RHS%E1 + LHS%E3*RHS%E111 +  &
+             LHS%E111*RHS%E3 + LHS%E11*RHS%E13 + LHS%E13*RHS%E11
+    RES%E1123 = LHS%R*RHS%E1123 + LHS%E1123*RHS%R +  &
+             LHS%E1*RHS%E123 + LHS%E123*RHS%E1 + LHS%E2*RHS%E113 +  &
+             LHS%E113*RHS%E2 + LHS%E3*RHS%E112 + LHS%E112*RHS%E3 +  &
+             LHS%E11*RHS%E23 + LHS%E12*RHS%E13 + LHS%E13*RHS%E12 + LHS%E23*RHS%E11
+    RES%E1133 = LHS%R*RHS%E1133 + LHS%E1133*RHS%R +  &
+             LHS%E1*RHS%E133 + LHS%E133*RHS%E1 + LHS%E3*RHS%E113 +  &
+             LHS%E113*RHS%E3 + LHS%E11*RHS%E33 + LHS%E13*RHS%E13 + LHS%E33*RHS%E11
+    RES%E1223 = LHS%R*RHS%E1223 + LHS%E1223*RHS%R +  &
+             LHS%E1*RHS%E223 + LHS%E223*RHS%E1 + LHS%E2*RHS%E123 +  &
+             LHS%E123*RHS%E2 + LHS%E3*RHS%E122 + LHS%E122*RHS%E3 +  &
+             LHS%E12*RHS%E23 + LHS%E22*RHS%E13 + LHS%E13*RHS%E22 + LHS%E23*RHS%E12
+    RES%E1233 = LHS%R*RHS%E1233 + LHS%E1233*RHS%R +  &
+             LHS%E1*RHS%E233 + LHS%E233*RHS%E1 + LHS%E2*RHS%E133 +  &
+             LHS%E133*RHS%E2 + LHS%E3*RHS%E123 + LHS%E123*RHS%E3 +  &
+             LHS%E12*RHS%E33 + LHS%E13*RHS%E23 + LHS%E23*RHS%E13 + LHS%E33*RHS%E12
+    RES%E1333 = LHS%R*RHS%E1333 + LHS%E1333*RHS%R +  &
+             LHS%E1*RHS%E333 + LHS%E333*RHS%E1 + LHS%E3*RHS%E133 +  &
+             LHS%E133*RHS%E3 + LHS%E13*RHS%E33 + LHS%E33*RHS%E13
+    RES%E2223 = LHS%R*RHS%E2223 + LHS%E2223*RHS%R +  &
+             LHS%E2*RHS%E223 + LHS%E223*RHS%E2 + LHS%E3*RHS%E222 +  &
+             LHS%E222*RHS%E3 + LHS%E22*RHS%E23 + LHS%E23*RHS%E22
+    RES%E2233 = LHS%R*RHS%E2233 + LHS%E2233*RHS%R +  &
+             LHS%E2*RHS%E233 + LHS%E233*RHS%E2 + LHS%E3*RHS%E223 +  &
+             LHS%E223*RHS%E3 + LHS%E22*RHS%E33 + LHS%E23*RHS%E23 + LHS%E33*RHS%E22
+    RES%E2333 = LHS%R*RHS%E2333 + LHS%E2333*RHS%R +  &
+             LHS%E2*RHS%E333 + LHS%E333*RHS%E2 + LHS%E3*RHS%E233 +  &
+             LHS%E233*RHS%E3 + LHS%E23*RHS%E33 + LHS%E33*RHS%E23
+    RES%E3333 = LHS%R*RHS%E3333 + LHS%E3333*RHS%R +  &
+             LHS%E3*RHS%E333 + LHS%E333*RHS%E3 + LHS%E33*RHS%E33
+    RES%E1114 = LHS%R*RHS%E1114 + LHS%E1114*RHS%R +  &
+             LHS%E1*RHS%E114 + LHS%E114*RHS%E1 + LHS%E4*RHS%E111 +  &
+             LHS%E111*RHS%E4 + LHS%E11*RHS%E14 + LHS%E14*RHS%E11
+    RES%E1124 = LHS%R*RHS%E1124 + LHS%E1124*RHS%R +  &
+             LHS%E1*RHS%E124 + LHS%E124*RHS%E1 + LHS%E2*RHS%E114 +  &
+             LHS%E114*RHS%E2 + LHS%E4*RHS%E112 + LHS%E112*RHS%E4 +  &
+             LHS%E11*RHS%E24 + LHS%E12*RHS%E14 + LHS%E14*RHS%E12 + LHS%E24*RHS%E11
+    RES%E1134 = LHS%R*RHS%E1134 + LHS%E1134*RHS%R +  &
+             LHS%E1*RHS%E134 + LHS%E134*RHS%E1 + LHS%E3*RHS%E114 +  &
+             LHS%E114*RHS%E3 + LHS%E4*RHS%E113 + LHS%E113*RHS%E4 +  &
+             LHS%E11*RHS%E34 + LHS%E13*RHS%E14 + LHS%E14*RHS%E13 + LHS%E34*RHS%E11
+    RES%E1144 = LHS%R*RHS%E1144 + LHS%E1144*RHS%R +  &
+             LHS%E1*RHS%E144 + LHS%E144*RHS%E1 + LHS%E4*RHS%E114 +  &
+             LHS%E114*RHS%E4 + LHS%E11*RHS%E44 + LHS%E14*RHS%E14 + LHS%E44*RHS%E11
+    RES%E1224 = LHS%R*RHS%E1224 + LHS%E1224*RHS%R +  &
+             LHS%E1*RHS%E224 + LHS%E224*RHS%E1 + LHS%E2*RHS%E124 +  &
+             LHS%E124*RHS%E2 + LHS%E4*RHS%E122 + LHS%E122*RHS%E4 +  &
+             LHS%E12*RHS%E24 + LHS%E22*RHS%E14 + LHS%E14*RHS%E22 + LHS%E24*RHS%E12
+    RES%E1234 = LHS%R*RHS%E1234 + LHS%E1234*RHS%R +  &
+             LHS%E1*RHS%E234 + LHS%E234*RHS%E1 + LHS%E2*RHS%E134 +  &
+             LHS%E134*RHS%E2 + LHS%E3*RHS%E124 + LHS%E124*RHS%E3 +  &
+             LHS%E4*RHS%E123 + LHS%E123*RHS%E4 + LHS%E12*RHS%E34 +  &
+             LHS%E13*RHS%E24 + LHS%E23*RHS%E14 + LHS%E14*RHS%E23 +  &
+             LHS%E24*RHS%E13 + LHS%E34*RHS%E12
+    RES%E1244 = LHS%R*RHS%E1244 + LHS%E1244*RHS%R +  &
+             LHS%E1*RHS%E244 + LHS%E244*RHS%E1 + LHS%E2*RHS%E144 +  &
+             LHS%E144*RHS%E2 + LHS%E4*RHS%E124 + LHS%E124*RHS%E4 +  &
+             LHS%E12*RHS%E44 + LHS%E14*RHS%E24 + LHS%E24*RHS%E14 + LHS%E44*RHS%E12
+    RES%E1334 = LHS%R*RHS%E1334 + LHS%E1334*RHS%R +  &
+             LHS%E1*RHS%E334 + LHS%E334*RHS%E1 + LHS%E3*RHS%E134 +  &
+             LHS%E134*RHS%E3 + LHS%E4*RHS%E133 + LHS%E133*RHS%E4 +  &
+             LHS%E13*RHS%E34 + LHS%E33*RHS%E14 + LHS%E14*RHS%E33 + LHS%E34*RHS%E13
+    RES%E1344 = LHS%R*RHS%E1344 + LHS%E1344*RHS%R +  &
+             LHS%E1*RHS%E344 + LHS%E344*RHS%E1 + LHS%E3*RHS%E144 +  &
+             LHS%E144*RHS%E3 + LHS%E4*RHS%E134 + LHS%E134*RHS%E4 +  &
+             LHS%E13*RHS%E44 + LHS%E14*RHS%E34 + LHS%E34*RHS%E14 + LHS%E44*RHS%E13
+    RES%E1444 = LHS%R*RHS%E1444 + LHS%E1444*RHS%R +  &
+             LHS%E1*RHS%E444 + LHS%E444*RHS%E1 + LHS%E4*RHS%E144 +  &
+             LHS%E144*RHS%E4 + LHS%E14*RHS%E44 + LHS%E44*RHS%E14
+    RES%E2224 = LHS%R*RHS%E2224 + LHS%E2224*RHS%R +  &
+             LHS%E2*RHS%E224 + LHS%E224*RHS%E2 + LHS%E4*RHS%E222 +  &
+             LHS%E222*RHS%E4 + LHS%E22*RHS%E24 + LHS%E24*RHS%E22
+    RES%E2234 = LHS%R*RHS%E2234 + LHS%E2234*RHS%R +  &
+             LHS%E2*RHS%E234 + LHS%E234*RHS%E2 + LHS%E3*RHS%E224 +  &
+             LHS%E224*RHS%E3 + LHS%E4*RHS%E223 + LHS%E223*RHS%E4 +  &
+             LHS%E22*RHS%E34 + LHS%E23*RHS%E24 + LHS%E24*RHS%E23 + LHS%E34*RHS%E22
+    RES%E2244 = LHS%R*RHS%E2244 + LHS%E2244*RHS%R +  &
+             LHS%E2*RHS%E244 + LHS%E244*RHS%E2 + LHS%E4*RHS%E224 +  &
+             LHS%E224*RHS%E4 + LHS%E22*RHS%E44 + LHS%E24*RHS%E24 + LHS%E44*RHS%E22
+    RES%E2334 = LHS%R*RHS%E2334 + LHS%E2334*RHS%R +  &
+             LHS%E2*RHS%E334 + LHS%E334*RHS%E2 + LHS%E3*RHS%E234 +  &
+             LHS%E234*RHS%E3 + LHS%E4*RHS%E233 + LHS%E233*RHS%E4 +  &
+             LHS%E23*RHS%E34 + LHS%E33*RHS%E24 + LHS%E24*RHS%E33 + LHS%E34*RHS%E23
+    RES%E2344 = LHS%R*RHS%E2344 + LHS%E2344*RHS%R +  &
+             LHS%E2*RHS%E344 + LHS%E344*RHS%E2 + LHS%E3*RHS%E244 +  &
+             LHS%E244*RHS%E3 + LHS%E4*RHS%E234 + LHS%E234*RHS%E4 +  &
+             LHS%E23*RHS%E44 + LHS%E24*RHS%E34 + LHS%E34*RHS%E24 + LHS%E44*RHS%E23
+    RES%E2444 = LHS%R*RHS%E2444 + LHS%E2444*RHS%R +  &
+             LHS%E2*RHS%E444 + LHS%E444*RHS%E2 + LHS%E4*RHS%E244 +  &
+             LHS%E244*RHS%E4 + LHS%E24*RHS%E44 + LHS%E44*RHS%E24
+    RES%E3334 = LHS%R*RHS%E3334 + LHS%E3334*RHS%R +  &
+             LHS%E3*RHS%E334 + LHS%E334*RHS%E3 + LHS%E4*RHS%E333 +  &
+             LHS%E333*RHS%E4 + LHS%E33*RHS%E34 + LHS%E34*RHS%E33
+    RES%E3344 = LHS%R*RHS%E3344 + LHS%E3344*RHS%R +  &
+             LHS%E3*RHS%E344 + LHS%E344*RHS%E3 + LHS%E4*RHS%E334 +  &
+             LHS%E334*RHS%E4 + LHS%E33*RHS%E44 + LHS%E34*RHS%E34 + LHS%E44*RHS%E33
+    RES%E3444 = LHS%R*RHS%E3444 + LHS%E3444*RHS%R +  &
+             LHS%E3*RHS%E444 + LHS%E444*RHS%E3 + LHS%E4*RHS%E344 +  &
+             LHS%E344*RHS%E4 + LHS%E34*RHS%E44 + LHS%E44*RHS%E34
+    RES%E4444 = LHS%R*RHS%E4444 + LHS%E4444*RHS%R +  &
+             LHS%E4*RHS%E444 + LHS%E444*RHS%E4 + LHS%E44*RHS%E44
+    ! Order 3
+    RES%E111 = LHS%R*RHS%E111 + LHS%E111*RHS%R +  &
+            LHS%E1*RHS%E11 + LHS%E11*RHS%E1
+    RES%E112 = LHS%R*RHS%E112 + LHS%E112*RHS%R +  &
+            LHS%E1*RHS%E12 + LHS%E12*RHS%E1 + LHS%E2*RHS%E11 + LHS%E11*RHS%E2
+    RES%E122 = LHS%R*RHS%E122 + LHS%E122*RHS%R +  &
+            LHS%E1*RHS%E22 + LHS%E22*RHS%E1 + LHS%E2*RHS%E12 + LHS%E12*RHS%E2
+    RES%E222 = LHS%R*RHS%E222 + LHS%E222*RHS%R +  &
+            LHS%E2*RHS%E22 + LHS%E22*RHS%E2
+    RES%E113 = LHS%R*RHS%E113 + LHS%E113*RHS%R +  &
+            LHS%E1*RHS%E13 + LHS%E13*RHS%E1 + LHS%E3*RHS%E11 + LHS%E11*RHS%E3
+    RES%E123 = LHS%R*RHS%E123 + LHS%E123*RHS%R +  &
+            LHS%E1*RHS%E23 + LHS%E23*RHS%E1 + LHS%E2*RHS%E13 +  &
+            LHS%E13*RHS%E2 + LHS%E3*RHS%E12 + LHS%E12*RHS%E3
+    RES%E133 = LHS%R*RHS%E133 + LHS%E133*RHS%R +  &
+            LHS%E1*RHS%E33 + LHS%E33*RHS%E1 + LHS%E3*RHS%E13 + LHS%E13*RHS%E3
+    RES%E223 = LHS%R*RHS%E223 + LHS%E223*RHS%R +  &
+            LHS%E2*RHS%E23 + LHS%E23*RHS%E2 + LHS%E3*RHS%E22 + LHS%E22*RHS%E3
+    RES%E233 = LHS%R*RHS%E233 + LHS%E233*RHS%R +  &
+            LHS%E2*RHS%E33 + LHS%E33*RHS%E2 + LHS%E3*RHS%E23 + LHS%E23*RHS%E3
+    RES%E333 = LHS%R*RHS%E333 + LHS%E333*RHS%R +  &
+            LHS%E3*RHS%E33 + LHS%E33*RHS%E3
+    RES%E114 = LHS%R*RHS%E114 + LHS%E114*RHS%R +  &
+            LHS%E1*RHS%E14 + LHS%E14*RHS%E1 + LHS%E4*RHS%E11 + LHS%E11*RHS%E4
+    RES%E124 = LHS%R*RHS%E124 + LHS%E124*RHS%R +  &
+            LHS%E1*RHS%E24 + LHS%E24*RHS%E1 + LHS%E2*RHS%E14 +  &
+            LHS%E14*RHS%E2 + LHS%E4*RHS%E12 + LHS%E12*RHS%E4
+    RES%E134 = LHS%R*RHS%E134 + LHS%E134*RHS%R +  &
+            LHS%E1*RHS%E34 + LHS%E34*RHS%E1 + LHS%E3*RHS%E14 +  &
+            LHS%E14*RHS%E3 + LHS%E4*RHS%E13 + LHS%E13*RHS%E4
+    RES%E144 = LHS%R*RHS%E144 + LHS%E144*RHS%R +  &
+            LHS%E1*RHS%E44 + LHS%E44*RHS%E1 + LHS%E4*RHS%E14 + LHS%E14*RHS%E4
+    RES%E224 = LHS%R*RHS%E224 + LHS%E224*RHS%R +  &
+            LHS%E2*RHS%E24 + LHS%E24*RHS%E2 + LHS%E4*RHS%E22 + LHS%E22*RHS%E4
+    RES%E234 = LHS%R*RHS%E234 + LHS%E234*RHS%R +  &
+            LHS%E2*RHS%E34 + LHS%E34*RHS%E2 + LHS%E3*RHS%E24 +  &
+            LHS%E24*RHS%E3 + LHS%E4*RHS%E23 + LHS%E23*RHS%E4
+    RES%E244 = LHS%R*RHS%E244 + LHS%E244*RHS%R +  &
+            LHS%E2*RHS%E44 + LHS%E44*RHS%E2 + LHS%E4*RHS%E24 + LHS%E24*RHS%E4
+    RES%E334 = LHS%R*RHS%E334 + LHS%E334*RHS%R +  &
+            LHS%E3*RHS%E34 + LHS%E34*RHS%E3 + LHS%E4*RHS%E33 + LHS%E33*RHS%E4
+    RES%E344 = LHS%R*RHS%E344 + LHS%E344*RHS%R +  &
+            LHS%E3*RHS%E44 + LHS%E44*RHS%E3 + LHS%E4*RHS%E34 + LHS%E34*RHS%E4
+    RES%E444 = LHS%R*RHS%E444 + LHS%E444*RHS%R +  &
+            LHS%E4*RHS%E44 + LHS%E44*RHS%E4
+    ! Order 2
+    RES%E11 = LHS%R*RHS%E11 + LHS%E11*RHS%R + LHS%E1*RHS%E1
+    RES%E12 = LHS%R*RHS%E12 + LHS%E12*RHS%R +  &
+           LHS%E1*RHS%E2 + LHS%E2*RHS%E1
+    RES%E22 = LHS%R*RHS%E22 + LHS%E22*RHS%R + LHS%E2*RHS%E2
+    RES%E13 = LHS%R*RHS%E13 + LHS%E13*RHS%R +  &
+           LHS%E1*RHS%E3 + LHS%E3*RHS%E1
+    RES%E23 = LHS%R*RHS%E23 + LHS%E23*RHS%R +  &
+           LHS%E2*RHS%E3 + LHS%E3*RHS%E2
+    RES%E33 = LHS%R*RHS%E33 + LHS%E33*RHS%R + LHS%E3*RHS%E3
+    RES%E14 = LHS%R*RHS%E14 + LHS%E14*RHS%R +  &
+           LHS%E1*RHS%E4 + LHS%E4*RHS%E1
+    RES%E24 = LHS%R*RHS%E24 + LHS%E24*RHS%R +  &
+           LHS%E2*RHS%E4 + LHS%E4*RHS%E2
+    RES%E34 = LHS%R*RHS%E34 + LHS%E34*RHS%R +  &
+           LHS%E3*RHS%E4 + LHS%E4*RHS%E3
+    RES%E44 = LHS%R*RHS%E44 + LHS%E44*RHS%R + LHS%E4*RHS%E4
+    ! Order 1
+    RES%E1 = LHS%R*RHS%E1 + LHS%E1*RHS%R
+    RES%E2 = LHS%R*RHS%E2 + LHS%E2*RHS%R
+    RES%E3 = LHS%R*RHS%E3 + LHS%E3*RHS%R
+    RES%E4 = LHS%R*RHS%E4 + LHS%E4*RHS%R
+    ! Order 0
+    RES%R = LHS%R*RHS%R
+
+  END FUNCTION ONUMM4N4_MUL_OO_SM
+
+  FUNCTION ONUMM4N4_MUL_RO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Multiplication like function 'LHS*RHS'
+    !  Real
+    RES%R = LHS*RHS%R
+
+    ! Order 1
+    RES%E1 = LHS*RHS%E1
+    RES%E2 = LHS*RHS%E2
+    RES%E3 = LHS*RHS%E3
+    RES%E4 = LHS*RHS%E4
+
+    ! Order 2
+    RES%E11 = LHS*RHS%E11
+    RES%E12 = LHS*RHS%E12
+    RES%E22 = LHS*RHS%E22
+    RES%E13 = LHS*RHS%E13
+    RES%E23 = LHS*RHS%E23
+    RES%E33 = LHS*RHS%E33
+    RES%E14 = LHS*RHS%E14
+    RES%E24 = LHS*RHS%E24
+    RES%E34 = LHS*RHS%E34
+    RES%E44 = LHS*RHS%E44
+
+    ! Order 3
+    RES%E111 = LHS*RHS%E111
+    RES%E112 = LHS*RHS%E112
+    RES%E122 = LHS*RHS%E122
+    RES%E222 = LHS*RHS%E222
+    RES%E113 = LHS*RHS%E113
+    RES%E123 = LHS*RHS%E123
+    RES%E133 = LHS*RHS%E133
+    RES%E223 = LHS*RHS%E223
+    RES%E233 = LHS*RHS%E233
+    RES%E333 = LHS*RHS%E333
+    RES%E114 = LHS*RHS%E114
+    RES%E124 = LHS*RHS%E124
+    RES%E134 = LHS*RHS%E134
+    RES%E144 = LHS*RHS%E144
+    RES%E224 = LHS*RHS%E224
+    RES%E234 = LHS*RHS%E234
+    RES%E244 = LHS*RHS%E244
+    RES%E334 = LHS*RHS%E334
+    RES%E344 = LHS*RHS%E344
+    RES%E444 = LHS*RHS%E444
+
+    ! Order 4
+    RES%E1111 = LHS*RHS%E1111
+    RES%E1112 = LHS*RHS%E1112
+    RES%E1122 = LHS*RHS%E1122
+    RES%E1222 = LHS*RHS%E1222
+    RES%E2222 = LHS*RHS%E2222
+    RES%E1113 = LHS*RHS%E1113
+    RES%E1123 = LHS*RHS%E1123
+    RES%E1133 = LHS*RHS%E1133
+    RES%E1223 = LHS*RHS%E1223
+    RES%E1233 = LHS*RHS%E1233
+    RES%E1333 = LHS*RHS%E1333
+    RES%E2223 = LHS*RHS%E2223
+    RES%E2233 = LHS*RHS%E2233
+    RES%E2333 = LHS*RHS%E2333
+    RES%E3333 = LHS*RHS%E3333
+    RES%E1114 = LHS*RHS%E1114
+    RES%E1124 = LHS*RHS%E1124
+    RES%E1134 = LHS*RHS%E1134
+    RES%E1144 = LHS*RHS%E1144
+    RES%E1224 = LHS*RHS%E1224
+    RES%E1234 = LHS*RHS%E1234
+    RES%E1244 = LHS*RHS%E1244
+    RES%E1334 = LHS*RHS%E1334
+    RES%E1344 = LHS*RHS%E1344
+    RES%E1444 = LHS*RHS%E1444
+    RES%E2224 = LHS*RHS%E2224
+    RES%E2234 = LHS*RHS%E2234
+    RES%E2244 = LHS*RHS%E2244
+    RES%E2334 = LHS*RHS%E2334
+    RES%E2344 = LHS*RHS%E2344
+    RES%E2444 = LHS*RHS%E2444
+    RES%E3334 = LHS*RHS%E3334
+    RES%E3344 = LHS*RHS%E3344
+    RES%E3444 = LHS*RHS%E3444
+    RES%E4444 = LHS*RHS%E4444
+
+  END FUNCTION ONUMM4N4_MUL_RO_SM
+
+  FUNCTION ONUMM4N4_MUL_OR_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:,:)
+    TYPE(ONUMM4N4) :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Multiplication like function 'LHS*RHS'
+    !  Real
+    RES%R = LHS%R*RHS
+
+    ! Order 1
+    RES%E1 = LHS%E1*RHS
+    RES%E2 = LHS%E2*RHS
+    RES%E3 = LHS%E3*RHS
+    RES%E4 = LHS%E4*RHS
+
+    ! Order 2
+    RES%E11 = LHS%E11*RHS
+    RES%E12 = LHS%E12*RHS
+    RES%E22 = LHS%E22*RHS
+    RES%E13 = LHS%E13*RHS
+    RES%E23 = LHS%E23*RHS
+    RES%E33 = LHS%E33*RHS
+    RES%E14 = LHS%E14*RHS
+    RES%E24 = LHS%E24*RHS
+    RES%E34 = LHS%E34*RHS
+    RES%E44 = LHS%E44*RHS
+
+    ! Order 3
+    RES%E111 = LHS%E111*RHS
+    RES%E112 = LHS%E112*RHS
+    RES%E122 = LHS%E122*RHS
+    RES%E222 = LHS%E222*RHS
+    RES%E113 = LHS%E113*RHS
+    RES%E123 = LHS%E123*RHS
+    RES%E133 = LHS%E133*RHS
+    RES%E223 = LHS%E223*RHS
+    RES%E233 = LHS%E233*RHS
+    RES%E333 = LHS%E333*RHS
+    RES%E114 = LHS%E114*RHS
+    RES%E124 = LHS%E124*RHS
+    RES%E134 = LHS%E134*RHS
+    RES%E144 = LHS%E144*RHS
+    RES%E224 = LHS%E224*RHS
+    RES%E234 = LHS%E234*RHS
+    RES%E244 = LHS%E244*RHS
+    RES%E334 = LHS%E334*RHS
+    RES%E344 = LHS%E344*RHS
+    RES%E444 = LHS%E444*RHS
+
+    ! Order 4
+    RES%E1111 = LHS%E1111*RHS
+    RES%E1112 = LHS%E1112*RHS
+    RES%E1122 = LHS%E1122*RHS
+    RES%E1222 = LHS%E1222*RHS
+    RES%E2222 = LHS%E2222*RHS
+    RES%E1113 = LHS%E1113*RHS
+    RES%E1123 = LHS%E1123*RHS
+    RES%E1133 = LHS%E1133*RHS
+    RES%E1223 = LHS%E1223*RHS
+    RES%E1233 = LHS%E1233*RHS
+    RES%E1333 = LHS%E1333*RHS
+    RES%E2223 = LHS%E2223*RHS
+    RES%E2233 = LHS%E2233*RHS
+    RES%E2333 = LHS%E2333*RHS
+    RES%E3333 = LHS%E3333*RHS
+    RES%E1114 = LHS%E1114*RHS
+    RES%E1124 = LHS%E1124*RHS
+    RES%E1134 = LHS%E1134*RHS
+    RES%E1144 = LHS%E1144*RHS
+    RES%E1224 = LHS%E1224*RHS
+    RES%E1234 = LHS%E1234*RHS
+    RES%E1244 = LHS%E1244*RHS
+    RES%E1334 = LHS%E1334*RHS
+    RES%E1344 = LHS%E1344*RHS
+    RES%E1444 = LHS%E1444*RHS
+    RES%E2224 = LHS%E2224*RHS
+    RES%E2234 = LHS%E2234*RHS
+    RES%E2244 = LHS%E2244*RHS
+    RES%E2334 = LHS%E2334*RHS
+    RES%E2344 = LHS%E2344*RHS
+    RES%E2444 = LHS%E2444*RHS
+    RES%E3334 = LHS%E3334*RHS
+    RES%E3344 = LHS%E3344*RHS
+    RES%E3444 = LHS%E3444*RHS
+    RES%E4444 = LHS%E4444*RHS
+
+  END FUNCTION ONUMM4N4_MUL_OR_SM
+
+  FUNCTION ONUMM4N4_EQ_OO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS%R == RHS%R
+
+  END FUNCTION ONUMM4N4_EQ_OO_SM
+
+  FUNCTION ONUMM4N4_EQ_RO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS == RHS%R
+
+  END FUNCTION ONUMM4N4_EQ_RO_SM
+
+  FUNCTION ONUMM4N4_EQ_OR_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS == RHS'
+    ! Compare real-only 
+    RES = LHS%R == RHS
+
+  END FUNCTION ONUMM4N4_EQ_OR_SM
+
+  FUNCTION ONUMM4N4_NE_OO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS%R /= RHS%R
+
+  END FUNCTION ONUMM4N4_NE_OO_SM
+
+  FUNCTION ONUMM4N4_NE_RO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS /= RHS%R
+
+  END FUNCTION ONUMM4N4_NE_RO_SM
+
+  FUNCTION ONUMM4N4_NE_OR_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS /= RHS'
+    ! Compare real-only 
+    RES = LHS%R /= RHS
+
+  END FUNCTION ONUMM4N4_NE_OR_SM
+
+  FUNCTION ONUMM4N4_LT_OO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS%R < RHS%R
+
+  END FUNCTION ONUMM4N4_LT_OO_SM
+
+  FUNCTION ONUMM4N4_LT_RO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS < RHS%R
+
+  END FUNCTION ONUMM4N4_LT_RO_SM
+
+  FUNCTION ONUMM4N4_LT_OR_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS < RHS'
+    ! Compare real-only 
+    RES = LHS%R < RHS
+
+  END FUNCTION ONUMM4N4_LT_OR_SM
+
+  FUNCTION ONUMM4N4_GT_OO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS%R > RHS%R
+
+  END FUNCTION ONUMM4N4_GT_OO_SM
+
+  FUNCTION ONUMM4N4_GT_RO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS > RHS%R
+
+  END FUNCTION ONUMM4N4_GT_RO_SM
+
+  FUNCTION ONUMM4N4_GT_OR_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS > RHS'
+    ! Compare real-only 
+    RES = LHS%R > RHS
+
+  END FUNCTION ONUMM4N4_GT_OR_SM
+
+  FUNCTION ONUMM4N4_LE_OO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS%R <= RHS%R
+
+  END FUNCTION ONUMM4N4_LE_OO_SM
+
+  FUNCTION ONUMM4N4_LE_RO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS <= RHS%R
+
+  END FUNCTION ONUMM4N4_LE_RO_SM
+
+  FUNCTION ONUMM4N4_LE_OR_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS <= RHS'
+    ! Compare real-only 
+    RES = LHS%R <= RHS
+
+  END FUNCTION ONUMM4N4_LE_OR_SM
+
+  FUNCTION ONUMM4N4_GE_OO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS%R >= RHS%R
+
+  END FUNCTION ONUMM4N4_GE_OO_SM
+
+  FUNCTION ONUMM4N4_GE_RO_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS >= RHS%R
+
+  END FUNCTION ONUMM4N4_GE_RO_SM
+
+  FUNCTION ONUMM4N4_GE_OR_SM(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS
+    REAL(DP), INTENT(IN) :: RHS(:,:)
+    LOGICAL :: RES(SIZE(RHS,1),SIZE(RHS,2)) 
+
+    ! Relation like function 'LHS >= RHS'
+    ! Compare real-only 
+    RES = LHS%R >= RHS
+
+  END FUNCTION ONUMM4N4_GE_OR_SM
+
+ELEMENTAL   FUNCTION ONUMM4N4_GEM_OOO(A,B,C)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: A 
+    TYPE(ONUMM4N4), INTENT(IN) :: B 
+    TYPE(ONUMM4N4), INTENT(IN) :: C 
+    TYPE(ONUMM4N4) :: RES 
+
+    !  General multiplication like function 'A*B + C'
+
+    ! Order 0
+    RES%R = C%R + A%R*B%R
+
+    ! Order 1
+    RES%E1 = C%E1 + A%R*B%E1 + A%E1*B%R
+    RES%E2 = C%E2 + A%R*B%E2 + A%E2*B%R
+    RES%E3 = C%E3 + A%R*B%E3 + A%E3*B%R
+    RES%E4 = C%E4 + A%R*B%E4 + A%E4*B%R
+
+    ! Order 2
+    RES%E11 = C%E11 + A%R*B%E11 + A%E11*B%R + A%E1*B%E1
+    RES%E12 = C%E12 + A%R*B%E12 + A%E12*B%R + A%E1*B%E2 &
+            + A%E2*B%E1
+    RES%E22 = C%E22 + A%R*B%E22 + A%E22*B%R + A%E2*B%E2
+    RES%E13 = C%E13 + A%R*B%E13 + A%E13*B%R + A%E1*B%E3 &
+            + A%E3*B%E1
+    RES%E23 = C%E23 + A%R*B%E23 + A%E23*B%R + A%E2*B%E3 &
+            + A%E3*B%E2
+    RES%E33 = C%E33 + A%R*B%E33 + A%E33*B%R + A%E3*B%E3
+    RES%E14 = C%E14 + A%R*B%E14 + A%E14*B%R + A%E1*B%E4 &
+            + A%E4*B%E1
+    RES%E24 = C%E24 + A%R*B%E24 + A%E24*B%R + A%E2*B%E4 &
+            + A%E4*B%E2
+    RES%E34 = C%E34 + A%R*B%E34 + A%E34*B%R + A%E3*B%E4 &
+            + A%E4*B%E3
+    RES%E44 = C%E44 + A%R*B%E44 + A%E44*B%R + A%E4*B%E4
+
+    ! Order 3
+    RES%E111 = C%E111 + A%R*B%E111 + A%E111*B%R + A%E1*B%E11 &
+             + A%E11*B%E1
+    RES%E112 = C%E112 + A%R*B%E112 + A%E112*B%R + A%E1*B%E12 &
+             + A%E12*B%E1 + A%E2*B%E11 + A%E11*B%E2
+    RES%E122 = C%E122 + A%R*B%E122 + A%E122*B%R + A%E1*B%E22 &
+             + A%E22*B%E1 + A%E2*B%E12 + A%E12*B%E2
+    RES%E222 = C%E222 + A%R*B%E222 + A%E222*B%R + A%E2*B%E22 &
+             + A%E22*B%E2
+    RES%E113 = C%E113 + A%R*B%E113 + A%E113*B%R + A%E1*B%E13 &
+             + A%E13*B%E1 + A%E3*B%E11 + A%E11*B%E3
+    RES%E123 = C%E123 + A%R*B%E123 + A%E123*B%R + A%E1*B%E23 &
+             + A%E23*B%E1 + A%E2*B%E13 + A%E13*B%E2 &
+             + A%E3*B%E12 + A%E12*B%E3
+    RES%E133 = C%E133 + A%R*B%E133 + A%E133*B%R + A%E1*B%E33 &
+             + A%E33*B%E1 + A%E3*B%E13 + A%E13*B%E3
+    RES%E223 = C%E223 + A%R*B%E223 + A%E223*B%R + A%E2*B%E23 &
+             + A%E23*B%E2 + A%E3*B%E22 + A%E22*B%E3
+    RES%E233 = C%E233 + A%R*B%E233 + A%E233*B%R + A%E2*B%E33 &
+             + A%E33*B%E2 + A%E3*B%E23 + A%E23*B%E3
+    RES%E333 = C%E333 + A%R*B%E333 + A%E333*B%R + A%E3*B%E33 &
+             + A%E33*B%E3
+    RES%E114 = C%E114 + A%R*B%E114 + A%E114*B%R + A%E1*B%E14 &
+             + A%E14*B%E1 + A%E4*B%E11 + A%E11*B%E4
+    RES%E124 = C%E124 + A%R*B%E124 + A%E124*B%R + A%E1*B%E24 &
+             + A%E24*B%E1 + A%E2*B%E14 + A%E14*B%E2 &
+             + A%E4*B%E12 + A%E12*B%E4
+    RES%E134 = C%E134 + A%R*B%E134 + A%E134*B%R + A%E1*B%E34 &
+             + A%E34*B%E1 + A%E3*B%E14 + A%E14*B%E3 &
+             + A%E4*B%E13 + A%E13*B%E4
+    RES%E144 = C%E144 + A%R*B%E144 + A%E144*B%R + A%E1*B%E44 &
+             + A%E44*B%E1 + A%E4*B%E14 + A%E14*B%E4
+    RES%E224 = C%E224 + A%R*B%E224 + A%E224*B%R + A%E2*B%E24 &
+             + A%E24*B%E2 + A%E4*B%E22 + A%E22*B%E4
+    RES%E234 = C%E234 + A%R*B%E234 + A%E234*B%R + A%E2*B%E34 &
+             + A%E34*B%E2 + A%E3*B%E24 + A%E24*B%E3 &
+             + A%E4*B%E23 + A%E23*B%E4
+    RES%E244 = C%E244 + A%R*B%E244 + A%E244*B%R + A%E2*B%E44 &
+             + A%E44*B%E2 + A%E4*B%E24 + A%E24*B%E4
+    RES%E334 = C%E334 + A%R*B%E334 + A%E334*B%R + A%E3*B%E34 &
+             + A%E34*B%E3 + A%E4*B%E33 + A%E33*B%E4
+    RES%E344 = C%E344 + A%R*B%E344 + A%E344*B%R + A%E3*B%E44 &
+             + A%E44*B%E3 + A%E4*B%E34 + A%E34*B%E4
+    RES%E444 = C%E444 + A%R*B%E444 + A%E444*B%R + A%E4*B%E44 &
+             + A%E44*B%E4
+
+    ! Order 4
+    RES%E1111 = C%E1111 + A%R*B%E1111 + A%E1111*B%R + A%E1*B%E111 &
+              + A%E111*B%E1 + A%E11*B%E11
+    RES%E1112 = C%E1112 + A%R*B%E1112 + A%E1112*B%R + A%E1*B%E112 &
+              + A%E112*B%E1 + A%E2*B%E111 + A%E111*B%E2 &
+              + A%E11*B%E12 + A%E12*B%E11
+    RES%E1122 = C%E1122 + A%R*B%E1122 + A%E1122*B%R + A%E1*B%E122 &
+              + A%E122*B%E1 + A%E2*B%E112 + A%E112*B%E2 &
+              + A%E11*B%E22 + A%E12*B%E12 + A%E22*B%E11
+    RES%E1222 = C%E1222 + A%R*B%E1222 + A%E1222*B%R + A%E1*B%E222 &
+              + A%E222*B%E1 + A%E2*B%E122 + A%E122*B%E2 &
+              + A%E12*B%E22 + A%E22*B%E12
+    RES%E2222 = C%E2222 + A%R*B%E2222 + A%E2222*B%R + A%E2*B%E222 &
+              + A%E222*B%E2 + A%E22*B%E22
+    RES%E1113 = C%E1113 + A%R*B%E1113 + A%E1113*B%R + A%E1*B%E113 &
+              + A%E113*B%E1 + A%E3*B%E111 + A%E111*B%E3 &
+              + A%E11*B%E13 + A%E13*B%E11
+    RES%E1123 = C%E1123 + A%R*B%E1123 + A%E1123*B%R + A%E1*B%E123 &
+              + A%E123*B%E1 + A%E2*B%E113 + A%E113*B%E2 &
+              + A%E3*B%E112 + A%E112*B%E3 + A%E11*B%E23 &
+              + A%E12*B%E13 + A%E13*B%E12 + A%E23*B%E11
+    RES%E1133 = C%E1133 + A%R*B%E1133 + A%E1133*B%R + A%E1*B%E133 &
+              + A%E133*B%E1 + A%E3*B%E113 + A%E113*B%E3 &
+              + A%E11*B%E33 + A%E13*B%E13 + A%E33*B%E11
+    RES%E1223 = C%E1223 + A%R*B%E1223 + A%E1223*B%R + A%E1*B%E223 &
+              + A%E223*B%E1 + A%E2*B%E123 + A%E123*B%E2 &
+              + A%E3*B%E122 + A%E122*B%E3 + A%E12*B%E23 &
+              + A%E22*B%E13 + A%E13*B%E22 + A%E23*B%E12
+    RES%E1233 = C%E1233 + A%R*B%E1233 + A%E1233*B%R + A%E1*B%E233 &
+              + A%E233*B%E1 + A%E2*B%E133 + A%E133*B%E2 &
+              + A%E3*B%E123 + A%E123*B%E3 + A%E12*B%E33 &
+              + A%E13*B%E23 + A%E23*B%E13 + A%E33*B%E12
+    RES%E1333 = C%E1333 + A%R*B%E1333 + A%E1333*B%R + A%E1*B%E333 &
+              + A%E333*B%E1 + A%E3*B%E133 + A%E133*B%E3 &
+              + A%E13*B%E33 + A%E33*B%E13
+    RES%E2223 = C%E2223 + A%R*B%E2223 + A%E2223*B%R + A%E2*B%E223 &
+              + A%E223*B%E2 + A%E3*B%E222 + A%E222*B%E3 &
+              + A%E22*B%E23 + A%E23*B%E22
+    RES%E2233 = C%E2233 + A%R*B%E2233 + A%E2233*B%R + A%E2*B%E233 &
+              + A%E233*B%E2 + A%E3*B%E223 + A%E223*B%E3 &
+              + A%E22*B%E33 + A%E23*B%E23 + A%E33*B%E22
+    RES%E2333 = C%E2333 + A%R*B%E2333 + A%E2333*B%R + A%E2*B%E333 &
+              + A%E333*B%E2 + A%E3*B%E233 + A%E233*B%E3 &
+              + A%E23*B%E33 + A%E33*B%E23
+    RES%E3333 = C%E3333 + A%R*B%E3333 + A%E3333*B%R + A%E3*B%E333 &
+              + A%E333*B%E3 + A%E33*B%E33
+    RES%E1114 = C%E1114 + A%R*B%E1114 + A%E1114*B%R + A%E1*B%E114 &
+              + A%E114*B%E1 + A%E4*B%E111 + A%E111*B%E4 &
+              + A%E11*B%E14 + A%E14*B%E11
+    RES%E1124 = C%E1124 + A%R*B%E1124 + A%E1124*B%R + A%E1*B%E124 &
+              + A%E124*B%E1 + A%E2*B%E114 + A%E114*B%E2 &
+              + A%E4*B%E112 + A%E112*B%E4 + A%E11*B%E24 &
+              + A%E12*B%E14 + A%E14*B%E12 + A%E24*B%E11
+    RES%E1134 = C%E1134 + A%R*B%E1134 + A%E1134*B%R + A%E1*B%E134 &
+              + A%E134*B%E1 + A%E3*B%E114 + A%E114*B%E3 &
+              + A%E4*B%E113 + A%E113*B%E4 + A%E11*B%E34 &
+              + A%E13*B%E14 + A%E14*B%E13 + A%E34*B%E11
+    RES%E1144 = C%E1144 + A%R*B%E1144 + A%E1144*B%R + A%E1*B%E144 &
+              + A%E144*B%E1 + A%E4*B%E114 + A%E114*B%E4 &
+              + A%E11*B%E44 + A%E14*B%E14 + A%E44*B%E11
+    RES%E1224 = C%E1224 + A%R*B%E1224 + A%E1224*B%R + A%E1*B%E224 &
+              + A%E224*B%E1 + A%E2*B%E124 + A%E124*B%E2 &
+              + A%E4*B%E122 + A%E122*B%E4 + A%E12*B%E24 &
+              + A%E22*B%E14 + A%E14*B%E22 + A%E24*B%E12
+    RES%E1234 = C%E1234 + A%R*B%E1234 + A%E1234*B%R + A%E1*B%E234 &
+              + A%E234*B%E1 + A%E2*B%E134 + A%E134*B%E2 &
+              + A%E3*B%E124 + A%E124*B%E3 + A%E4*B%E123 &
+              + A%E123*B%E4 + A%E12*B%E34 + A%E13*B%E24 &
+              + A%E23*B%E14 + A%E14*B%E23 + A%E24*B%E13 &
+              + A%E34*B%E12
+    RES%E1244 = C%E1244 + A%R*B%E1244 + A%E1244*B%R + A%E1*B%E244 &
+              + A%E244*B%E1 + A%E2*B%E144 + A%E144*B%E2 &
+              + A%E4*B%E124 + A%E124*B%E4 + A%E12*B%E44 &
+              + A%E14*B%E24 + A%E24*B%E14 + A%E44*B%E12
+    RES%E1334 = C%E1334 + A%R*B%E1334 + A%E1334*B%R + A%E1*B%E334 &
+              + A%E334*B%E1 + A%E3*B%E134 + A%E134*B%E3 &
+              + A%E4*B%E133 + A%E133*B%E4 + A%E13*B%E34 &
+              + A%E33*B%E14 + A%E14*B%E33 + A%E34*B%E13
+    RES%E1344 = C%E1344 + A%R*B%E1344 + A%E1344*B%R + A%E1*B%E344 &
+              + A%E344*B%E1 + A%E3*B%E144 + A%E144*B%E3 &
+              + A%E4*B%E134 + A%E134*B%E4 + A%E13*B%E44 &
+              + A%E14*B%E34 + A%E34*B%E14 + A%E44*B%E13
+    RES%E1444 = C%E1444 + A%R*B%E1444 + A%E1444*B%R + A%E1*B%E444 &
+              + A%E444*B%E1 + A%E4*B%E144 + A%E144*B%E4 &
+              + A%E14*B%E44 + A%E44*B%E14
+    RES%E2224 = C%E2224 + A%R*B%E2224 + A%E2224*B%R + A%E2*B%E224 &
+              + A%E224*B%E2 + A%E4*B%E222 + A%E222*B%E4 &
+              + A%E22*B%E24 + A%E24*B%E22
+    RES%E2234 = C%E2234 + A%R*B%E2234 + A%E2234*B%R + A%E2*B%E234 &
+              + A%E234*B%E2 + A%E3*B%E224 + A%E224*B%E3 &
+              + A%E4*B%E223 + A%E223*B%E4 + A%E22*B%E34 &
+              + A%E23*B%E24 + A%E24*B%E23 + A%E34*B%E22
+    RES%E2244 = C%E2244 + A%R*B%E2244 + A%E2244*B%R + A%E2*B%E244 &
+              + A%E244*B%E2 + A%E4*B%E224 + A%E224*B%E4 &
+              + A%E22*B%E44 + A%E24*B%E24 + A%E44*B%E22
+    RES%E2334 = C%E2334 + A%R*B%E2334 + A%E2334*B%R + A%E2*B%E334 &
+              + A%E334*B%E2 + A%E3*B%E234 + A%E234*B%E3 &
+              + A%E4*B%E233 + A%E233*B%E4 + A%E23*B%E34 &
+              + A%E33*B%E24 + A%E24*B%E33 + A%E34*B%E23
+    RES%E2344 = C%E2344 + A%R*B%E2344 + A%E2344*B%R + A%E2*B%E344 &
+              + A%E344*B%E2 + A%E3*B%E244 + A%E244*B%E3 &
+              + A%E4*B%E234 + A%E234*B%E4 + A%E23*B%E44 &
+              + A%E24*B%E34 + A%E34*B%E24 + A%E44*B%E23
+    RES%E2444 = C%E2444 + A%R*B%E2444 + A%E2444*B%R + A%E2*B%E444 &
+              + A%E444*B%E2 + A%E4*B%E244 + A%E244*B%E4 &
+              + A%E24*B%E44 + A%E44*B%E24
+    RES%E3334 = C%E3334 + A%R*B%E3334 + A%E3334*B%R + A%E3*B%E334 &
+              + A%E334*B%E3 + A%E4*B%E333 + A%E333*B%E4 &
+              + A%E33*B%E34 + A%E34*B%E33
+    RES%E3344 = C%E3344 + A%R*B%E3344 + A%E3344*B%R + A%E3*B%E344 &
+              + A%E344*B%E3 + A%E4*B%E334 + A%E334*B%E4 &
+              + A%E33*B%E44 + A%E34*B%E34 + A%E44*B%E33
+    RES%E3444 = C%E3444 + A%R*B%E3444 + A%E3444*B%R + A%E3*B%E444 &
+              + A%E444*B%E3 + A%E4*B%E344 + A%E344*B%E4 &
+              + A%E34*B%E44 + A%E44*B%E34
+    RES%E4444 = C%E4444 + A%R*B%E4444 + A%E4444*B%R + A%E4*B%E444 &
+              + A%E444*B%E4 + A%E44*B%E44
+
+  END FUNCTION ONUMM4N4_GEM_OOO
+
+ELEMENTAL   FUNCTION ONUMM4N4_GEM_ROO(A,B,C)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: A 
+    TYPE(ONUMM4N4), INTENT(IN) :: B 
+    TYPE(ONUMM4N4), INTENT(IN) :: C 
+    TYPE(ONUMM4N4) :: RES 
+
+    !  General multiplication like function 'A*B + C'
+    ! Order 4
+    RES%E1111 = C%E1111 + A*B%E1111
+    RES%E1112 = C%E1112 + A*B%E1112
+    RES%E1122 = C%E1122 + A*B%E1122
+    RES%E1222 = C%E1222 + A*B%E1222
+    RES%E2222 = C%E2222 + A*B%E2222
+    RES%E1113 = C%E1113 + A*B%E1113
+    RES%E1123 = C%E1123 + A*B%E1123
+    RES%E1133 = C%E1133 + A*B%E1133
+    RES%E1223 = C%E1223 + A*B%E1223
+    RES%E1233 = C%E1233 + A*B%E1233
+    RES%E1333 = C%E1333 + A*B%E1333
+    RES%E2223 = C%E2223 + A*B%E2223
+    RES%E2233 = C%E2233 + A*B%E2233
+    RES%E2333 = C%E2333 + A*B%E2333
+    RES%E3333 = C%E3333 + A*B%E3333
+    RES%E1114 = C%E1114 + A*B%E1114
+    RES%E1124 = C%E1124 + A*B%E1124
+    RES%E1134 = C%E1134 + A*B%E1134
+    RES%E1144 = C%E1144 + A*B%E1144
+    RES%E1224 = C%E1224 + A*B%E1224
+    RES%E1234 = C%E1234 + A*B%E1234
+    RES%E1244 = C%E1244 + A*B%E1244
+    RES%E1334 = C%E1334 + A*B%E1334
+    RES%E1344 = C%E1344 + A*B%E1344
+    RES%E1444 = C%E1444 + A*B%E1444
+    RES%E2224 = C%E2224 + A*B%E2224
+    RES%E2234 = C%E2234 + A*B%E2234
+    RES%E2244 = C%E2244 + A*B%E2244
+    RES%E2334 = C%E2334 + A*B%E2334
+    RES%E2344 = C%E2344 + A*B%E2344
+    RES%E2444 = C%E2444 + A*B%E2444
+    RES%E3334 = C%E3334 + A*B%E3334
+    RES%E3344 = C%E3344 + A*B%E3344
+    RES%E3444 = C%E3444 + A*B%E3444
+    RES%E4444 = C%E4444 + A*B%E4444
+    ! Order 3
+    RES%E111 = C%E111 + A*B%E111
+    RES%E112 = C%E112 + A*B%E112
+    RES%E122 = C%E122 + A*B%E122
+    RES%E222 = C%E222 + A*B%E222
+    RES%E113 = C%E113 + A*B%E113
+    RES%E123 = C%E123 + A*B%E123
+    RES%E133 = C%E133 + A*B%E133
+    RES%E223 = C%E223 + A*B%E223
+    RES%E233 = C%E233 + A*B%E233
+    RES%E333 = C%E333 + A*B%E333
+    RES%E114 = C%E114 + A*B%E114
+    RES%E124 = C%E124 + A*B%E124
+    RES%E134 = C%E134 + A*B%E134
+    RES%E144 = C%E144 + A*B%E144
+    RES%E224 = C%E224 + A*B%E224
+    RES%E234 = C%E234 + A*B%E234
+    RES%E244 = C%E244 + A*B%E244
+    RES%E334 = C%E334 + A*B%E334
+    RES%E344 = C%E344 + A*B%E344
+    RES%E444 = C%E444 + A*B%E444
+    ! Order 2
+    RES%E11 = C%E11 + A*B%E11
+    RES%E12 = C%E12 + A*B%E12
+    RES%E22 = C%E22 + A*B%E22
+    RES%E13 = C%E13 + A*B%E13
+    RES%E23 = C%E23 + A*B%E23
+    RES%E33 = C%E33 + A*B%E33
+    RES%E14 = C%E14 + A*B%E14
+    RES%E24 = C%E24 + A*B%E24
+    RES%E34 = C%E34 + A*B%E34
+    RES%E44 = C%E44 + A*B%E44
+    ! Order 1
+    RES%E1 = C%E1 + A*B%E1
+    RES%E2 = C%E2 + A*B%E2
+    RES%E3 = C%E3 + A*B%E3
+    RES%E4 = C%E4 + A*B%E4
+    ! Order 0
+    RES%R = C%R + A*B%R
+
+  END FUNCTION ONUMM4N4_GEM_ROO
+
+ELEMENTAL   FUNCTION ONUMM4N4_GEM_ORO(A,B,C)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: A 
+    REAL(DP), INTENT(IN) :: B 
+    TYPE(ONUMM4N4), INTENT(IN) :: C 
+    TYPE(ONUMM4N4) :: RES 
+
+    !  General multiplication like function 'A*B + C'
+
+    ! Order 0
+    RES%R = C%R + A%R*B
+
+    ! Order 1
+    RES%E1 = C%E1 + A%E1*B
+    RES%E2 = C%E2 + A%E2*B
+    RES%E3 = C%E3 + A%E3*B
+    RES%E4 = C%E4 + A%E4*B
+
+    ! Order 2
+    RES%E11 = C%E11 + A%E11*B
+    RES%E12 = C%E12 + A%E12*B
+    RES%E22 = C%E22 + A%E22*B
+    RES%E13 = C%E13 + A%E13*B
+    RES%E23 = C%E23 + A%E23*B
+    RES%E33 = C%E33 + A%E33*B
+    RES%E14 = C%E14 + A%E14*B
+    RES%E24 = C%E24 + A%E24*B
+    RES%E34 = C%E34 + A%E34*B
+    RES%E44 = C%E44 + A%E44*B
+
+    ! Order 3
+    RES%E111 = C%E111 + A%E111*B
+    RES%E112 = C%E112 + A%E112*B
+    RES%E122 = C%E122 + A%E122*B
+    RES%E222 = C%E222 + A%E222*B
+    RES%E113 = C%E113 + A%E113*B
+    RES%E123 = C%E123 + A%E123*B
+    RES%E133 = C%E133 + A%E133*B
+    RES%E223 = C%E223 + A%E223*B
+    RES%E233 = C%E233 + A%E233*B
+    RES%E333 = C%E333 + A%E333*B
+    RES%E114 = C%E114 + A%E114*B
+    RES%E124 = C%E124 + A%E124*B
+    RES%E134 = C%E134 + A%E134*B
+    RES%E144 = C%E144 + A%E144*B
+    RES%E224 = C%E224 + A%E224*B
+    RES%E234 = C%E234 + A%E234*B
+    RES%E244 = C%E244 + A%E244*B
+    RES%E334 = C%E334 + A%E334*B
+    RES%E344 = C%E344 + A%E344*B
+    RES%E444 = C%E444 + A%E444*B
+
+    ! Order 4
+    RES%E1111 = C%E1111 + A%E1111*B
+    RES%E1112 = C%E1112 + A%E1112*B
+    RES%E1122 = C%E1122 + A%E1122*B
+    RES%E1222 = C%E1222 + A%E1222*B
+    RES%E2222 = C%E2222 + A%E2222*B
+    RES%E1113 = C%E1113 + A%E1113*B
+    RES%E1123 = C%E1123 + A%E1123*B
+    RES%E1133 = C%E1133 + A%E1133*B
+    RES%E1223 = C%E1223 + A%E1223*B
+    RES%E1233 = C%E1233 + A%E1233*B
+    RES%E1333 = C%E1333 + A%E1333*B
+    RES%E2223 = C%E2223 + A%E2223*B
+    RES%E2233 = C%E2233 + A%E2233*B
+    RES%E2333 = C%E2333 + A%E2333*B
+    RES%E3333 = C%E3333 + A%E3333*B
+    RES%E1114 = C%E1114 + A%E1114*B
+    RES%E1124 = C%E1124 + A%E1124*B
+    RES%E1134 = C%E1134 + A%E1134*B
+    RES%E1144 = C%E1144 + A%E1144*B
+    RES%E1224 = C%E1224 + A%E1224*B
+    RES%E1234 = C%E1234 + A%E1234*B
+    RES%E1244 = C%E1244 + A%E1244*B
+    RES%E1334 = C%E1334 + A%E1334*B
+    RES%E1344 = C%E1344 + A%E1344*B
+    RES%E1444 = C%E1444 + A%E1444*B
+    RES%E2224 = C%E2224 + A%E2224*B
+    RES%E2234 = C%E2234 + A%E2234*B
+    RES%E2244 = C%E2244 + A%E2244*B
+    RES%E2334 = C%E2334 + A%E2334*B
+    RES%E2344 = C%E2344 + A%E2344*B
+    RES%E2444 = C%E2444 + A%E2444*B
+    RES%E3334 = C%E3334 + A%E3334*B
+    RES%E3344 = C%E3344 + A%E3344*B
+    RES%E3444 = C%E3444 + A%E3444*B
+    RES%E4444 = C%E4444 + A%E4444*B
+
+  END FUNCTION ONUMM4N4_GEM_ORO
+
+  FUNCTION ONUMM4N4_MATMUL_ONUMM4N4(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1),SIZE(RHS,2))
+
+    !  Multiplication like function 'MATMUL(lhs,rhs)'
+    ! Order 4
+    res%E1111 = MATMUL(lhs%R,rhs%E1111) + MATMUL(lhs%E1111,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E111) + MATMUL(lhs%E111,rhs%E1) + MATMUL(lhs%E11,rhs%E11)
+    res%E1112 = MATMUL(lhs%R,rhs%E1112) + MATMUL(lhs%E1112,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E112) + MATMUL(lhs%E112,rhs%E1) + MATMUL(lhs%E2,rhs%E111) +  &
+             MATMUL(lhs%E111,rhs%E2) + MATMUL(lhs%E11,rhs%E12) + MATMUL(lhs%E12,rhs%E11)
+    res%E1122 = MATMUL(lhs%R,rhs%E1122) + MATMUL(lhs%E1122,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E122) + MATMUL(lhs%E122,rhs%E1) + MATMUL(lhs%E2,rhs%E112) +  &
+             MATMUL(lhs%E112,rhs%E2) + MATMUL(lhs%E11,rhs%E22) + MATMUL(lhs%E12,rhs%E12) + MATMUL(lhs%E22,rhs%E11)
+    res%E1222 = MATMUL(lhs%R,rhs%E1222) + MATMUL(lhs%E1222,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E222) + MATMUL(lhs%E222,rhs%E1) + MATMUL(lhs%E2,rhs%E122) +  &
+             MATMUL(lhs%E122,rhs%E2) + MATMUL(lhs%E12,rhs%E22) + MATMUL(lhs%E22,rhs%E12)
+    res%E2222 = MATMUL(lhs%R,rhs%E2222) + MATMUL(lhs%E2222,rhs%R) +  &
+             MATMUL(lhs%E2,rhs%E222) + MATMUL(lhs%E222,rhs%E2) + MATMUL(lhs%E22,rhs%E22)
+    res%E1113 = MATMUL(lhs%R,rhs%E1113) + MATMUL(lhs%E1113,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E113) + MATMUL(lhs%E113,rhs%E1) + MATMUL(lhs%E3,rhs%E111) +  &
+             MATMUL(lhs%E111,rhs%E3) + MATMUL(lhs%E11,rhs%E13) + MATMUL(lhs%E13,rhs%E11)
+    res%E1123 = MATMUL(lhs%R,rhs%E1123) + MATMUL(lhs%E1123,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E123) + MATMUL(lhs%E123,rhs%E1) + MATMUL(lhs%E2,rhs%E113) +  &
+             MATMUL(lhs%E113,rhs%E2) + MATMUL(lhs%E3,rhs%E112) + MATMUL(lhs%E112,rhs%E3) +  &
+             MATMUL(lhs%E11,rhs%E23) + MATMUL(lhs%E12,rhs%E13) + MATMUL(lhs%E13,rhs%E12) + MATMUL(lhs%E23,rhs%E11)
+    res%E1133 = MATMUL(lhs%R,rhs%E1133) + MATMUL(lhs%E1133,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E133) + MATMUL(lhs%E133,rhs%E1) + MATMUL(lhs%E3,rhs%E113) +  &
+             MATMUL(lhs%E113,rhs%E3) + MATMUL(lhs%E11,rhs%E33) + MATMUL(lhs%E13,rhs%E13) + MATMUL(lhs%E33,rhs%E11)
+    res%E1223 = MATMUL(lhs%R,rhs%E1223) + MATMUL(lhs%E1223,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E223) + MATMUL(lhs%E223,rhs%E1) + MATMUL(lhs%E2,rhs%E123) +  &
+             MATMUL(lhs%E123,rhs%E2) + MATMUL(lhs%E3,rhs%E122) + MATMUL(lhs%E122,rhs%E3) +  &
+             MATMUL(lhs%E12,rhs%E23) + MATMUL(lhs%E22,rhs%E13) + MATMUL(lhs%E13,rhs%E22) + MATMUL(lhs%E23,rhs%E12)
+    res%E1233 = MATMUL(lhs%R,rhs%E1233) + MATMUL(lhs%E1233,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E233) + MATMUL(lhs%E233,rhs%E1) + MATMUL(lhs%E2,rhs%E133) +  &
+             MATMUL(lhs%E133,rhs%E2) + MATMUL(lhs%E3,rhs%E123) + MATMUL(lhs%E123,rhs%E3) +  &
+             MATMUL(lhs%E12,rhs%E33) + MATMUL(lhs%E13,rhs%E23) + MATMUL(lhs%E23,rhs%E13) + MATMUL(lhs%E33,rhs%E12)
+    res%E1333 = MATMUL(lhs%R,rhs%E1333) + MATMUL(lhs%E1333,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E333) + MATMUL(lhs%E333,rhs%E1) + MATMUL(lhs%E3,rhs%E133) +  &
+             MATMUL(lhs%E133,rhs%E3) + MATMUL(lhs%E13,rhs%E33) + MATMUL(lhs%E33,rhs%E13)
+    res%E2223 = MATMUL(lhs%R,rhs%E2223) + MATMUL(lhs%E2223,rhs%R) +  &
+             MATMUL(lhs%E2,rhs%E223) + MATMUL(lhs%E223,rhs%E2) + MATMUL(lhs%E3,rhs%E222) +  &
+             MATMUL(lhs%E222,rhs%E3) + MATMUL(lhs%E22,rhs%E23) + MATMUL(lhs%E23,rhs%E22)
+    res%E2233 = MATMUL(lhs%R,rhs%E2233) + MATMUL(lhs%E2233,rhs%R) +  &
+             MATMUL(lhs%E2,rhs%E233) + MATMUL(lhs%E233,rhs%E2) + MATMUL(lhs%E3,rhs%E223) +  &
+             MATMUL(lhs%E223,rhs%E3) + MATMUL(lhs%E22,rhs%E33) + MATMUL(lhs%E23,rhs%E23) + MATMUL(lhs%E33,rhs%E22)
+    res%E2333 = MATMUL(lhs%R,rhs%E2333) + MATMUL(lhs%E2333,rhs%R) +  &
+             MATMUL(lhs%E2,rhs%E333) + MATMUL(lhs%E333,rhs%E2) + MATMUL(lhs%E3,rhs%E233) +  &
+             MATMUL(lhs%E233,rhs%E3) + MATMUL(lhs%E23,rhs%E33) + MATMUL(lhs%E33,rhs%E23)
+    res%E3333 = MATMUL(lhs%R,rhs%E3333) + MATMUL(lhs%E3333,rhs%R) +  &
+             MATMUL(lhs%E3,rhs%E333) + MATMUL(lhs%E333,rhs%E3) + MATMUL(lhs%E33,rhs%E33)
+    res%E1114 = MATMUL(lhs%R,rhs%E1114) + MATMUL(lhs%E1114,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E114) + MATMUL(lhs%E114,rhs%E1) + MATMUL(lhs%E4,rhs%E111) +  &
+             MATMUL(lhs%E111,rhs%E4) + MATMUL(lhs%E11,rhs%E14) + MATMUL(lhs%E14,rhs%E11)
+    res%E1124 = MATMUL(lhs%R,rhs%E1124) + MATMUL(lhs%E1124,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E124) + MATMUL(lhs%E124,rhs%E1) + MATMUL(lhs%E2,rhs%E114) +  &
+             MATMUL(lhs%E114,rhs%E2) + MATMUL(lhs%E4,rhs%E112) + MATMUL(lhs%E112,rhs%E4) +  &
+             MATMUL(lhs%E11,rhs%E24) + MATMUL(lhs%E12,rhs%E14) + MATMUL(lhs%E14,rhs%E12) + MATMUL(lhs%E24,rhs%E11)
+    res%E1134 = MATMUL(lhs%R,rhs%E1134) + MATMUL(lhs%E1134,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E134) + MATMUL(lhs%E134,rhs%E1) + MATMUL(lhs%E3,rhs%E114) +  &
+             MATMUL(lhs%E114,rhs%E3) + MATMUL(lhs%E4,rhs%E113) + MATMUL(lhs%E113,rhs%E4) +  &
+             MATMUL(lhs%E11,rhs%E34) + MATMUL(lhs%E13,rhs%E14) + MATMUL(lhs%E14,rhs%E13) + MATMUL(lhs%E34,rhs%E11)
+    res%E1144 = MATMUL(lhs%R,rhs%E1144) + MATMUL(lhs%E1144,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E144) + MATMUL(lhs%E144,rhs%E1) + MATMUL(lhs%E4,rhs%E114) +  &
+             MATMUL(lhs%E114,rhs%E4) + MATMUL(lhs%E11,rhs%E44) + MATMUL(lhs%E14,rhs%E14) + MATMUL(lhs%E44,rhs%E11)
+    res%E1224 = MATMUL(lhs%R,rhs%E1224) + MATMUL(lhs%E1224,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E224) + MATMUL(lhs%E224,rhs%E1) + MATMUL(lhs%E2,rhs%E124) +  &
+             MATMUL(lhs%E124,rhs%E2) + MATMUL(lhs%E4,rhs%E122) + MATMUL(lhs%E122,rhs%E4) +  &
+             MATMUL(lhs%E12,rhs%E24) + MATMUL(lhs%E22,rhs%E14) + MATMUL(lhs%E14,rhs%E22) + MATMUL(lhs%E24,rhs%E12)
+    res%E1234 = MATMUL(lhs%R,rhs%E1234) + MATMUL(lhs%E1234,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E234) + MATMUL(lhs%E234,rhs%E1) + MATMUL(lhs%E2,rhs%E134) +  &
+             MATMUL(lhs%E134,rhs%E2) + MATMUL(lhs%E3,rhs%E124) + MATMUL(lhs%E124,rhs%E3) +  &
+             MATMUL(lhs%E4,rhs%E123) + MATMUL(lhs%E123,rhs%E4) + MATMUL(lhs%E12,rhs%E34) +  &
+             MATMUL(lhs%E13,rhs%E24) + MATMUL(lhs%E23,rhs%E14) + MATMUL(lhs%E14,rhs%E23) +  &
+             MATMUL(lhs%E24,rhs%E13) + MATMUL(lhs%E34,rhs%E12)
+    res%E1244 = MATMUL(lhs%R,rhs%E1244) + MATMUL(lhs%E1244,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E244) + MATMUL(lhs%E244,rhs%E1) + MATMUL(lhs%E2,rhs%E144) +  &
+             MATMUL(lhs%E144,rhs%E2) + MATMUL(lhs%E4,rhs%E124) + MATMUL(lhs%E124,rhs%E4) +  &
+             MATMUL(lhs%E12,rhs%E44) + MATMUL(lhs%E14,rhs%E24) + MATMUL(lhs%E24,rhs%E14) + MATMUL(lhs%E44,rhs%E12)
+    res%E1334 = MATMUL(lhs%R,rhs%E1334) + MATMUL(lhs%E1334,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E334) + MATMUL(lhs%E334,rhs%E1) + MATMUL(lhs%E3,rhs%E134) +  &
+             MATMUL(lhs%E134,rhs%E3) + MATMUL(lhs%E4,rhs%E133) + MATMUL(lhs%E133,rhs%E4) +  &
+             MATMUL(lhs%E13,rhs%E34) + MATMUL(lhs%E33,rhs%E14) + MATMUL(lhs%E14,rhs%E33) + MATMUL(lhs%E34,rhs%E13)
+    res%E1344 = MATMUL(lhs%R,rhs%E1344) + MATMUL(lhs%E1344,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E344) + MATMUL(lhs%E344,rhs%E1) + MATMUL(lhs%E3,rhs%E144) +  &
+             MATMUL(lhs%E144,rhs%E3) + MATMUL(lhs%E4,rhs%E134) + MATMUL(lhs%E134,rhs%E4) +  &
+             MATMUL(lhs%E13,rhs%E44) + MATMUL(lhs%E14,rhs%E34) + MATMUL(lhs%E34,rhs%E14) + MATMUL(lhs%E44,rhs%E13)
+    res%E1444 = MATMUL(lhs%R,rhs%E1444) + MATMUL(lhs%E1444,rhs%R) +  &
+             MATMUL(lhs%E1,rhs%E444) + MATMUL(lhs%E444,rhs%E1) + MATMUL(lhs%E4,rhs%E144) +  &
+             MATMUL(lhs%E144,rhs%E4) + MATMUL(lhs%E14,rhs%E44) + MATMUL(lhs%E44,rhs%E14)
+    res%E2224 = MATMUL(lhs%R,rhs%E2224) + MATMUL(lhs%E2224,rhs%R) +  &
+             MATMUL(lhs%E2,rhs%E224) + MATMUL(lhs%E224,rhs%E2) + MATMUL(lhs%E4,rhs%E222) +  &
+             MATMUL(lhs%E222,rhs%E4) + MATMUL(lhs%E22,rhs%E24) + MATMUL(lhs%E24,rhs%E22)
+    res%E2234 = MATMUL(lhs%R,rhs%E2234) + MATMUL(lhs%E2234,rhs%R) +  &
+             MATMUL(lhs%E2,rhs%E234) + MATMUL(lhs%E234,rhs%E2) + MATMUL(lhs%E3,rhs%E224) +  &
+             MATMUL(lhs%E224,rhs%E3) + MATMUL(lhs%E4,rhs%E223) + MATMUL(lhs%E223,rhs%E4) +  &
+             MATMUL(lhs%E22,rhs%E34) + MATMUL(lhs%E23,rhs%E24) + MATMUL(lhs%E24,rhs%E23) + MATMUL(lhs%E34,rhs%E22)
+    res%E2244 = MATMUL(lhs%R,rhs%E2244) + MATMUL(lhs%E2244,rhs%R) +  &
+             MATMUL(lhs%E2,rhs%E244) + MATMUL(lhs%E244,rhs%E2) + MATMUL(lhs%E4,rhs%E224) +  &
+             MATMUL(lhs%E224,rhs%E4) + MATMUL(lhs%E22,rhs%E44) + MATMUL(lhs%E24,rhs%E24) + MATMUL(lhs%E44,rhs%E22)
+    res%E2334 = MATMUL(lhs%R,rhs%E2334) + MATMUL(lhs%E2334,rhs%R) +  &
+             MATMUL(lhs%E2,rhs%E334) + MATMUL(lhs%E334,rhs%E2) + MATMUL(lhs%E3,rhs%E234) +  &
+             MATMUL(lhs%E234,rhs%E3) + MATMUL(lhs%E4,rhs%E233) + MATMUL(lhs%E233,rhs%E4) +  &
+             MATMUL(lhs%E23,rhs%E34) + MATMUL(lhs%E33,rhs%E24) + MATMUL(lhs%E24,rhs%E33) + MATMUL(lhs%E34,rhs%E23)
+    res%E2344 = MATMUL(lhs%R,rhs%E2344) + MATMUL(lhs%E2344,rhs%R) +  &
+             MATMUL(lhs%E2,rhs%E344) + MATMUL(lhs%E344,rhs%E2) + MATMUL(lhs%E3,rhs%E244) +  &
+             MATMUL(lhs%E244,rhs%E3) + MATMUL(lhs%E4,rhs%E234) + MATMUL(lhs%E234,rhs%E4) +  &
+             MATMUL(lhs%E23,rhs%E44) + MATMUL(lhs%E24,rhs%E34) + MATMUL(lhs%E34,rhs%E24) + MATMUL(lhs%E44,rhs%E23)
+    res%E2444 = MATMUL(lhs%R,rhs%E2444) + MATMUL(lhs%E2444,rhs%R) +  &
+             MATMUL(lhs%E2,rhs%E444) + MATMUL(lhs%E444,rhs%E2) + MATMUL(lhs%E4,rhs%E244) +  &
+             MATMUL(lhs%E244,rhs%E4) + MATMUL(lhs%E24,rhs%E44) + MATMUL(lhs%E44,rhs%E24)
+    res%E3334 = MATMUL(lhs%R,rhs%E3334) + MATMUL(lhs%E3334,rhs%R) +  &
+             MATMUL(lhs%E3,rhs%E334) + MATMUL(lhs%E334,rhs%E3) + MATMUL(lhs%E4,rhs%E333) +  &
+             MATMUL(lhs%E333,rhs%E4) + MATMUL(lhs%E33,rhs%E34) + MATMUL(lhs%E34,rhs%E33)
+    res%E3344 = MATMUL(lhs%R,rhs%E3344) + MATMUL(lhs%E3344,rhs%R) +  &
+             MATMUL(lhs%E3,rhs%E344) + MATMUL(lhs%E344,rhs%E3) + MATMUL(lhs%E4,rhs%E334) +  &
+             MATMUL(lhs%E334,rhs%E4) + MATMUL(lhs%E33,rhs%E44) + MATMUL(lhs%E34,rhs%E34) + MATMUL(lhs%E44,rhs%E33)
+    res%E3444 = MATMUL(lhs%R,rhs%E3444) + MATMUL(lhs%E3444,rhs%R) +  &
+             MATMUL(lhs%E3,rhs%E444) + MATMUL(lhs%E444,rhs%E3) + MATMUL(lhs%E4,rhs%E344) +  &
+             MATMUL(lhs%E344,rhs%E4) + MATMUL(lhs%E34,rhs%E44) + MATMUL(lhs%E44,rhs%E34)
+    res%E4444 = MATMUL(lhs%R,rhs%E4444) + MATMUL(lhs%E4444,rhs%R) +  &
+             MATMUL(lhs%E4,rhs%E444) + MATMUL(lhs%E444,rhs%E4) + MATMUL(lhs%E44,rhs%E44)
+    ! Order 3
+    res%E111 = MATMUL(lhs%R,rhs%E111) + MATMUL(lhs%E111,rhs%R) +  &
+            MATMUL(lhs%E1,rhs%E11) + MATMUL(lhs%E11,rhs%E1)
+    res%E112 = MATMUL(lhs%R,rhs%E112) + MATMUL(lhs%E112,rhs%R) +  &
+            MATMUL(lhs%E1,rhs%E12) + MATMUL(lhs%E12,rhs%E1) + MATMUL(lhs%E2,rhs%E11) + MATMUL(lhs%E11,rhs%E2)
+    res%E122 = MATMUL(lhs%R,rhs%E122) + MATMUL(lhs%E122,rhs%R) +  &
+            MATMUL(lhs%E1,rhs%E22) + MATMUL(lhs%E22,rhs%E1) + MATMUL(lhs%E2,rhs%E12) + MATMUL(lhs%E12,rhs%E2)
+    res%E222 = MATMUL(lhs%R,rhs%E222) + MATMUL(lhs%E222,rhs%R) +  &
+            MATMUL(lhs%E2,rhs%E22) + MATMUL(lhs%E22,rhs%E2)
+    res%E113 = MATMUL(lhs%R,rhs%E113) + MATMUL(lhs%E113,rhs%R) +  &
+            MATMUL(lhs%E1,rhs%E13) + MATMUL(lhs%E13,rhs%E1) + MATMUL(lhs%E3,rhs%E11) + MATMUL(lhs%E11,rhs%E3)
+    res%E123 = MATMUL(lhs%R,rhs%E123) + MATMUL(lhs%E123,rhs%R) +  &
+            MATMUL(lhs%E1,rhs%E23) + MATMUL(lhs%E23,rhs%E1) + MATMUL(lhs%E2,rhs%E13) +  &
+            MATMUL(lhs%E13,rhs%E2) + MATMUL(lhs%E3,rhs%E12) + MATMUL(lhs%E12,rhs%E3)
+    res%E133 = MATMUL(lhs%R,rhs%E133) + MATMUL(lhs%E133,rhs%R) +  &
+            MATMUL(lhs%E1,rhs%E33) + MATMUL(lhs%E33,rhs%E1) + MATMUL(lhs%E3,rhs%E13) + MATMUL(lhs%E13,rhs%E3)
+    res%E223 = MATMUL(lhs%R,rhs%E223) + MATMUL(lhs%E223,rhs%R) +  &
+            MATMUL(lhs%E2,rhs%E23) + MATMUL(lhs%E23,rhs%E2) + MATMUL(lhs%E3,rhs%E22) + MATMUL(lhs%E22,rhs%E3)
+    res%E233 = MATMUL(lhs%R,rhs%E233) + MATMUL(lhs%E233,rhs%R) +  &
+            MATMUL(lhs%E2,rhs%E33) + MATMUL(lhs%E33,rhs%E2) + MATMUL(lhs%E3,rhs%E23) + MATMUL(lhs%E23,rhs%E3)
+    res%E333 = MATMUL(lhs%R,rhs%E333) + MATMUL(lhs%E333,rhs%R) +  &
+            MATMUL(lhs%E3,rhs%E33) + MATMUL(lhs%E33,rhs%E3)
+    res%E114 = MATMUL(lhs%R,rhs%E114) + MATMUL(lhs%E114,rhs%R) +  &
+            MATMUL(lhs%E1,rhs%E14) + MATMUL(lhs%E14,rhs%E1) + MATMUL(lhs%E4,rhs%E11) + MATMUL(lhs%E11,rhs%E4)
+    res%E124 = MATMUL(lhs%R,rhs%E124) + MATMUL(lhs%E124,rhs%R) +  &
+            MATMUL(lhs%E1,rhs%E24) + MATMUL(lhs%E24,rhs%E1) + MATMUL(lhs%E2,rhs%E14) +  &
+            MATMUL(lhs%E14,rhs%E2) + MATMUL(lhs%E4,rhs%E12) + MATMUL(lhs%E12,rhs%E4)
+    res%E134 = MATMUL(lhs%R,rhs%E134) + MATMUL(lhs%E134,rhs%R) +  &
+            MATMUL(lhs%E1,rhs%E34) + MATMUL(lhs%E34,rhs%E1) + MATMUL(lhs%E3,rhs%E14) +  &
+            MATMUL(lhs%E14,rhs%E3) + MATMUL(lhs%E4,rhs%E13) + MATMUL(lhs%E13,rhs%E4)
+    res%E144 = MATMUL(lhs%R,rhs%E144) + MATMUL(lhs%E144,rhs%R) +  &
+            MATMUL(lhs%E1,rhs%E44) + MATMUL(lhs%E44,rhs%E1) + MATMUL(lhs%E4,rhs%E14) + MATMUL(lhs%E14,rhs%E4)
+    res%E224 = MATMUL(lhs%R,rhs%E224) + MATMUL(lhs%E224,rhs%R) +  &
+            MATMUL(lhs%E2,rhs%E24) + MATMUL(lhs%E24,rhs%E2) + MATMUL(lhs%E4,rhs%E22) + MATMUL(lhs%E22,rhs%E4)
+    res%E234 = MATMUL(lhs%R,rhs%E234) + MATMUL(lhs%E234,rhs%R) +  &
+            MATMUL(lhs%E2,rhs%E34) + MATMUL(lhs%E34,rhs%E2) + MATMUL(lhs%E3,rhs%E24) +  &
+            MATMUL(lhs%E24,rhs%E3) + MATMUL(lhs%E4,rhs%E23) + MATMUL(lhs%E23,rhs%E4)
+    res%E244 = MATMUL(lhs%R,rhs%E244) + MATMUL(lhs%E244,rhs%R) +  &
+            MATMUL(lhs%E2,rhs%E44) + MATMUL(lhs%E44,rhs%E2) + MATMUL(lhs%E4,rhs%E24) + MATMUL(lhs%E24,rhs%E4)
+    res%E334 = MATMUL(lhs%R,rhs%E334) + MATMUL(lhs%E334,rhs%R) +  &
+            MATMUL(lhs%E3,rhs%E34) + MATMUL(lhs%E34,rhs%E3) + MATMUL(lhs%E4,rhs%E33) + MATMUL(lhs%E33,rhs%E4)
+    res%E344 = MATMUL(lhs%R,rhs%E344) + MATMUL(lhs%E344,rhs%R) +  &
+            MATMUL(lhs%E3,rhs%E44) + MATMUL(lhs%E44,rhs%E3) + MATMUL(lhs%E4,rhs%E34) + MATMUL(lhs%E34,rhs%E4)
+    res%E444 = MATMUL(lhs%R,rhs%E444) + MATMUL(lhs%E444,rhs%R) +  &
+            MATMUL(lhs%E4,rhs%E44) + MATMUL(lhs%E44,rhs%E4)
+    ! Order 2
+    res%E11 = MATMUL(lhs%R,rhs%E11) + MATMUL(lhs%E11,rhs%R) + MATMUL(lhs%E1,rhs%E1)
+    res%E12 = MATMUL(lhs%R,rhs%E12) + MATMUL(lhs%E12,rhs%R) +  &
+           MATMUL(lhs%E1,rhs%E2) + MATMUL(lhs%E2,rhs%E1)
+    res%E22 = MATMUL(lhs%R,rhs%E22) + MATMUL(lhs%E22,rhs%R) + MATMUL(lhs%E2,rhs%E2)
+    res%E13 = MATMUL(lhs%R,rhs%E13) + MATMUL(lhs%E13,rhs%R) +  &
+           MATMUL(lhs%E1,rhs%E3) + MATMUL(lhs%E3,rhs%E1)
+    res%E23 = MATMUL(lhs%R,rhs%E23) + MATMUL(lhs%E23,rhs%R) +  &
+           MATMUL(lhs%E2,rhs%E3) + MATMUL(lhs%E3,rhs%E2)
+    res%E33 = MATMUL(lhs%R,rhs%E33) + MATMUL(lhs%E33,rhs%R) + MATMUL(lhs%E3,rhs%E3)
+    res%E14 = MATMUL(lhs%R,rhs%E14) + MATMUL(lhs%E14,rhs%R) +  &
+           MATMUL(lhs%E1,rhs%E4) + MATMUL(lhs%E4,rhs%E1)
+    res%E24 = MATMUL(lhs%R,rhs%E24) + MATMUL(lhs%E24,rhs%R) +  &
+           MATMUL(lhs%E2,rhs%E4) + MATMUL(lhs%E4,rhs%E2)
+    res%E34 = MATMUL(lhs%R,rhs%E34) + MATMUL(lhs%E34,rhs%R) +  &
+           MATMUL(lhs%E3,rhs%E4) + MATMUL(lhs%E4,rhs%E3)
+    res%E44 = MATMUL(lhs%R,rhs%E44) + MATMUL(lhs%E44,rhs%R) + MATMUL(lhs%E4,rhs%E4)
+    ! Order 1
+    res%E1 = MATMUL(lhs%R,rhs%E1) + MATMUL(lhs%E1,rhs%R)
+    res%E2 = MATMUL(lhs%R,rhs%E2) + MATMUL(lhs%E2,rhs%R)
+    res%E3 = MATMUL(lhs%R,rhs%E3) + MATMUL(lhs%E3,rhs%R)
+    res%E4 = MATMUL(lhs%R,rhs%E4) + MATMUL(lhs%E4,rhs%R)
+    ! Order 0
+    res%R = MATMUL(lhs%R,rhs%R)
+
+  END FUNCTION ONUMM4N4_MATMUL_ONUMM4N4
+
+  FUNCTION R_MATMUL_ONUMM4N4(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(:,:)
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1),SIZE(RHS,2))
+
+    ! Multiplication like function 'MATMUL(lhs,rhs)'
+    !  Real
+    res%R = MATMUL(lhs,rhs%R)
+
+    ! Order 1
+    res%E1 = MATMUL(lhs,rhs%E1)
+    res%E2 = MATMUL(lhs,rhs%E2)
+    res%E3 = MATMUL(lhs,rhs%E3)
+    res%E4 = MATMUL(lhs,rhs%E4)
+
+    ! Order 2
+    res%E11 = MATMUL(lhs,rhs%E11)
+    res%E12 = MATMUL(lhs,rhs%E12)
+    res%E22 = MATMUL(lhs,rhs%E22)
+    res%E13 = MATMUL(lhs,rhs%E13)
+    res%E23 = MATMUL(lhs,rhs%E23)
+    res%E33 = MATMUL(lhs,rhs%E33)
+    res%E14 = MATMUL(lhs,rhs%E14)
+    res%E24 = MATMUL(lhs,rhs%E24)
+    res%E34 = MATMUL(lhs,rhs%E34)
+    res%E44 = MATMUL(lhs,rhs%E44)
+
+    ! Order 3
+    res%E111 = MATMUL(lhs,rhs%E111)
+    res%E112 = MATMUL(lhs,rhs%E112)
+    res%E122 = MATMUL(lhs,rhs%E122)
+    res%E222 = MATMUL(lhs,rhs%E222)
+    res%E113 = MATMUL(lhs,rhs%E113)
+    res%E123 = MATMUL(lhs,rhs%E123)
+    res%E133 = MATMUL(lhs,rhs%E133)
+    res%E223 = MATMUL(lhs,rhs%E223)
+    res%E233 = MATMUL(lhs,rhs%E233)
+    res%E333 = MATMUL(lhs,rhs%E333)
+    res%E114 = MATMUL(lhs,rhs%E114)
+    res%E124 = MATMUL(lhs,rhs%E124)
+    res%E134 = MATMUL(lhs,rhs%E134)
+    res%E144 = MATMUL(lhs,rhs%E144)
+    res%E224 = MATMUL(lhs,rhs%E224)
+    res%E234 = MATMUL(lhs,rhs%E234)
+    res%E244 = MATMUL(lhs,rhs%E244)
+    res%E334 = MATMUL(lhs,rhs%E334)
+    res%E344 = MATMUL(lhs,rhs%E344)
+    res%E444 = MATMUL(lhs,rhs%E444)
+
+    ! Order 4
+    res%E1111 = MATMUL(lhs,rhs%E1111)
+    res%E1112 = MATMUL(lhs,rhs%E1112)
+    res%E1122 = MATMUL(lhs,rhs%E1122)
+    res%E1222 = MATMUL(lhs,rhs%E1222)
+    res%E2222 = MATMUL(lhs,rhs%E2222)
+    res%E1113 = MATMUL(lhs,rhs%E1113)
+    res%E1123 = MATMUL(lhs,rhs%E1123)
+    res%E1133 = MATMUL(lhs,rhs%E1133)
+    res%E1223 = MATMUL(lhs,rhs%E1223)
+    res%E1233 = MATMUL(lhs,rhs%E1233)
+    res%E1333 = MATMUL(lhs,rhs%E1333)
+    res%E2223 = MATMUL(lhs,rhs%E2223)
+    res%E2233 = MATMUL(lhs,rhs%E2233)
+    res%E2333 = MATMUL(lhs,rhs%E2333)
+    res%E3333 = MATMUL(lhs,rhs%E3333)
+    res%E1114 = MATMUL(lhs,rhs%E1114)
+    res%E1124 = MATMUL(lhs,rhs%E1124)
+    res%E1134 = MATMUL(lhs,rhs%E1134)
+    res%E1144 = MATMUL(lhs,rhs%E1144)
+    res%E1224 = MATMUL(lhs,rhs%E1224)
+    res%E1234 = MATMUL(lhs,rhs%E1234)
+    res%E1244 = MATMUL(lhs,rhs%E1244)
+    res%E1334 = MATMUL(lhs,rhs%E1334)
+    res%E1344 = MATMUL(lhs,rhs%E1344)
+    res%E1444 = MATMUL(lhs,rhs%E1444)
+    res%E2224 = MATMUL(lhs,rhs%E2224)
+    res%E2234 = MATMUL(lhs,rhs%E2234)
+    res%E2244 = MATMUL(lhs,rhs%E2244)
+    res%E2334 = MATMUL(lhs,rhs%E2334)
+    res%E2344 = MATMUL(lhs,rhs%E2344)
+    res%E2444 = MATMUL(lhs,rhs%E2444)
+    res%E3334 = MATMUL(lhs,rhs%E3334)
+    res%E3344 = MATMUL(lhs,rhs%E3344)
+    res%E3444 = MATMUL(lhs,rhs%E3444)
+    res%E4444 = MATMUL(lhs,rhs%E4444)
+
+  END FUNCTION R_MATMUL_ONUMM4N4
+
+  FUNCTION ONUMM4N4_MATMUL_R(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    REAL(DP), INTENT(IN) :: RHS(:,:)
+    TYPE(ONUMM4N4) :: RES(SIZE(LHS,1),SIZE(RHS,2))
+
+    ! Multiplication like function 'MATMUL(lhs,rhs)'
+    !  Real
+    res%R = MATMUL(lhs%R,rhs)
+
+    ! Order 1
+    res%E1 = MATMUL(lhs%E1,rhs)
+    res%E2 = MATMUL(lhs%E2,rhs)
+    res%E3 = MATMUL(lhs%E3,rhs)
+    res%E4 = MATMUL(lhs%E4,rhs)
+
+    ! Order 2
+    res%E11 = MATMUL(lhs%E11,rhs)
+    res%E12 = MATMUL(lhs%E12,rhs)
+    res%E22 = MATMUL(lhs%E22,rhs)
+    res%E13 = MATMUL(lhs%E13,rhs)
+    res%E23 = MATMUL(lhs%E23,rhs)
+    res%E33 = MATMUL(lhs%E33,rhs)
+    res%E14 = MATMUL(lhs%E14,rhs)
+    res%E24 = MATMUL(lhs%E24,rhs)
+    res%E34 = MATMUL(lhs%E34,rhs)
+    res%E44 = MATMUL(lhs%E44,rhs)
+
+    ! Order 3
+    res%E111 = MATMUL(lhs%E111,rhs)
+    res%E112 = MATMUL(lhs%E112,rhs)
+    res%E122 = MATMUL(lhs%E122,rhs)
+    res%E222 = MATMUL(lhs%E222,rhs)
+    res%E113 = MATMUL(lhs%E113,rhs)
+    res%E123 = MATMUL(lhs%E123,rhs)
+    res%E133 = MATMUL(lhs%E133,rhs)
+    res%E223 = MATMUL(lhs%E223,rhs)
+    res%E233 = MATMUL(lhs%E233,rhs)
+    res%E333 = MATMUL(lhs%E333,rhs)
+    res%E114 = MATMUL(lhs%E114,rhs)
+    res%E124 = MATMUL(lhs%E124,rhs)
+    res%E134 = MATMUL(lhs%E134,rhs)
+    res%E144 = MATMUL(lhs%E144,rhs)
+    res%E224 = MATMUL(lhs%E224,rhs)
+    res%E234 = MATMUL(lhs%E234,rhs)
+    res%E244 = MATMUL(lhs%E244,rhs)
+    res%E334 = MATMUL(lhs%E334,rhs)
+    res%E344 = MATMUL(lhs%E344,rhs)
+    res%E444 = MATMUL(lhs%E444,rhs)
+
+    ! Order 4
+    res%E1111 = MATMUL(lhs%E1111,rhs)
+    res%E1112 = MATMUL(lhs%E1112,rhs)
+    res%E1122 = MATMUL(lhs%E1122,rhs)
+    res%E1222 = MATMUL(lhs%E1222,rhs)
+    res%E2222 = MATMUL(lhs%E2222,rhs)
+    res%E1113 = MATMUL(lhs%E1113,rhs)
+    res%E1123 = MATMUL(lhs%E1123,rhs)
+    res%E1133 = MATMUL(lhs%E1133,rhs)
+    res%E1223 = MATMUL(lhs%E1223,rhs)
+    res%E1233 = MATMUL(lhs%E1233,rhs)
+    res%E1333 = MATMUL(lhs%E1333,rhs)
+    res%E2223 = MATMUL(lhs%E2223,rhs)
+    res%E2233 = MATMUL(lhs%E2233,rhs)
+    res%E2333 = MATMUL(lhs%E2333,rhs)
+    res%E3333 = MATMUL(lhs%E3333,rhs)
+    res%E1114 = MATMUL(lhs%E1114,rhs)
+    res%E1124 = MATMUL(lhs%E1124,rhs)
+    res%E1134 = MATMUL(lhs%E1134,rhs)
+    res%E1144 = MATMUL(lhs%E1144,rhs)
+    res%E1224 = MATMUL(lhs%E1224,rhs)
+    res%E1234 = MATMUL(lhs%E1234,rhs)
+    res%E1244 = MATMUL(lhs%E1244,rhs)
+    res%E1334 = MATMUL(lhs%E1334,rhs)
+    res%E1344 = MATMUL(lhs%E1344,rhs)
+    res%E1444 = MATMUL(lhs%E1444,rhs)
+    res%E2224 = MATMUL(lhs%E2224,rhs)
+    res%E2234 = MATMUL(lhs%E2234,rhs)
+    res%E2244 = MATMUL(lhs%E2244,rhs)
+    res%E2334 = MATMUL(lhs%E2334,rhs)
+    res%E2344 = MATMUL(lhs%E2344,rhs)
+    res%E2444 = MATMUL(lhs%E2444,rhs)
+    res%E3334 = MATMUL(lhs%E3334,rhs)
+    res%E3344 = MATMUL(lhs%E3344,rhs)
+    res%E3444 = MATMUL(lhs%E3444,rhs)
+    res%E4444 = MATMUL(lhs%E4444,rhs)
+
+  END FUNCTION ONUMM4N4_MATMUL_R
+
+  FUNCTION ONUMM4N4_DOT_PRODUCT_ONUMM4N4(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(SIZE(LHS))
+    TYPE(ONUMM4N4) :: RES
+
+    !  Multiplication like function 'DOT_PRODUCT(lhs,rhs)'
+    ! Order 4
+    res%E1111 = DOT_PRODUCT(lhs%R,rhs%E1111) + DOT_PRODUCT(lhs%E1111,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E111) + DOT_PRODUCT(lhs%E111,rhs%E1) + DOT_PRODUCT(lhs%E11,rhs%E11)
+    res%E1112 = DOT_PRODUCT(lhs%R,rhs%E1112) + DOT_PRODUCT(lhs%E1112,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E112) + DOT_PRODUCT(lhs%E112,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E111) +  &
+             DOT_PRODUCT(lhs%E111,rhs%E2) + DOT_PRODUCT(lhs%E11,rhs%E12) + DOT_PRODUCT(lhs%E12,rhs%E11)
+    res%E1122 = DOT_PRODUCT(lhs%R,rhs%E1122) + DOT_PRODUCT(lhs%E1122,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E122) + DOT_PRODUCT(lhs%E122,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E112) +  &
+             DOT_PRODUCT(lhs%E112,rhs%E2) + DOT_PRODUCT(lhs%E11,rhs%E22) + DOT_PRODUCT(lhs%E12,rhs%E12) + DOT_PRODUCT(lhs%E22,rhs%E11)
+    res%E1222 = DOT_PRODUCT(lhs%R,rhs%E1222) + DOT_PRODUCT(lhs%E1222,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E222) + DOT_PRODUCT(lhs%E222,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E122) +  &
+             DOT_PRODUCT(lhs%E122,rhs%E2) + DOT_PRODUCT(lhs%E12,rhs%E22) + DOT_PRODUCT(lhs%E22,rhs%E12)
+    res%E2222 = DOT_PRODUCT(lhs%R,rhs%E2222) + DOT_PRODUCT(lhs%E2222,rhs%R) +  &
+             DOT_PRODUCT(lhs%E2,rhs%E222) + DOT_PRODUCT(lhs%E222,rhs%E2) + DOT_PRODUCT(lhs%E22,rhs%E22)
+    res%E1113 = DOT_PRODUCT(lhs%R,rhs%E1113) + DOT_PRODUCT(lhs%E1113,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E113) + DOT_PRODUCT(lhs%E113,rhs%E1) + DOT_PRODUCT(lhs%E3,rhs%E111) +  &
+             DOT_PRODUCT(lhs%E111,rhs%E3) + DOT_PRODUCT(lhs%E11,rhs%E13) + DOT_PRODUCT(lhs%E13,rhs%E11)
+    res%E1123 = DOT_PRODUCT(lhs%R,rhs%E1123) + DOT_PRODUCT(lhs%E1123,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E123) + DOT_PRODUCT(lhs%E123,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E113) +  &
+             DOT_PRODUCT(lhs%E113,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E112) + DOT_PRODUCT(lhs%E112,rhs%E3) +  &
+             DOT_PRODUCT(lhs%E11,rhs%E23) + DOT_PRODUCT(lhs%E12,rhs%E13) + DOT_PRODUCT(lhs%E13,rhs%E12) + DOT_PRODUCT(lhs%E23,rhs%E11)
+    res%E1133 = DOT_PRODUCT(lhs%R,rhs%E1133) + DOT_PRODUCT(lhs%E1133,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E133) + DOT_PRODUCT(lhs%E133,rhs%E1) + DOT_PRODUCT(lhs%E3,rhs%E113) +  &
+             DOT_PRODUCT(lhs%E113,rhs%E3) + DOT_PRODUCT(lhs%E11,rhs%E33) + DOT_PRODUCT(lhs%E13,rhs%E13) + DOT_PRODUCT(lhs%E33,rhs%E11)
+    res%E1223 = DOT_PRODUCT(lhs%R,rhs%E1223) + DOT_PRODUCT(lhs%E1223,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E223) + DOT_PRODUCT(lhs%E223,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E123) +  &
+             DOT_PRODUCT(lhs%E123,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E122) + DOT_PRODUCT(lhs%E122,rhs%E3) +  &
+             DOT_PRODUCT(lhs%E12,rhs%E23) + DOT_PRODUCT(lhs%E22,rhs%E13) + DOT_PRODUCT(lhs%E13,rhs%E22) + DOT_PRODUCT(lhs%E23,rhs%E12)
+    res%E1233 = DOT_PRODUCT(lhs%R,rhs%E1233) + DOT_PRODUCT(lhs%E1233,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E233) + DOT_PRODUCT(lhs%E233,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E133) +  &
+             DOT_PRODUCT(lhs%E133,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E123) + DOT_PRODUCT(lhs%E123,rhs%E3) +  &
+             DOT_PRODUCT(lhs%E12,rhs%E33) + DOT_PRODUCT(lhs%E13,rhs%E23) + DOT_PRODUCT(lhs%E23,rhs%E13) + DOT_PRODUCT(lhs%E33,rhs%E12)
+    res%E1333 = DOT_PRODUCT(lhs%R,rhs%E1333) + DOT_PRODUCT(lhs%E1333,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E333) + DOT_PRODUCT(lhs%E333,rhs%E1) + DOT_PRODUCT(lhs%E3,rhs%E133) +  &
+             DOT_PRODUCT(lhs%E133,rhs%E3) + DOT_PRODUCT(lhs%E13,rhs%E33) + DOT_PRODUCT(lhs%E33,rhs%E13)
+    res%E2223 = DOT_PRODUCT(lhs%R,rhs%E2223) + DOT_PRODUCT(lhs%E2223,rhs%R) +  &
+             DOT_PRODUCT(lhs%E2,rhs%E223) + DOT_PRODUCT(lhs%E223,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E222) +  &
+             DOT_PRODUCT(lhs%E222,rhs%E3) + DOT_PRODUCT(lhs%E22,rhs%E23) + DOT_PRODUCT(lhs%E23,rhs%E22)
+    res%E2233 = DOT_PRODUCT(lhs%R,rhs%E2233) + DOT_PRODUCT(lhs%E2233,rhs%R) +  &
+             DOT_PRODUCT(lhs%E2,rhs%E233) + DOT_PRODUCT(lhs%E233,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E223) +  &
+             DOT_PRODUCT(lhs%E223,rhs%E3) + DOT_PRODUCT(lhs%E22,rhs%E33) + DOT_PRODUCT(lhs%E23,rhs%E23) + DOT_PRODUCT(lhs%E33,rhs%E22)
+    res%E2333 = DOT_PRODUCT(lhs%R,rhs%E2333) + DOT_PRODUCT(lhs%E2333,rhs%R) +  &
+             DOT_PRODUCT(lhs%E2,rhs%E333) + DOT_PRODUCT(lhs%E333,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E233) +  &
+             DOT_PRODUCT(lhs%E233,rhs%E3) + DOT_PRODUCT(lhs%E23,rhs%E33) + DOT_PRODUCT(lhs%E33,rhs%E23)
+    res%E3333 = DOT_PRODUCT(lhs%R,rhs%E3333) + DOT_PRODUCT(lhs%E3333,rhs%R) +  &
+             DOT_PRODUCT(lhs%E3,rhs%E333) + DOT_PRODUCT(lhs%E333,rhs%E3) + DOT_PRODUCT(lhs%E33,rhs%E33)
+    res%E1114 = DOT_PRODUCT(lhs%R,rhs%E1114) + DOT_PRODUCT(lhs%E1114,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E114) + DOT_PRODUCT(lhs%E114,rhs%E1) + DOT_PRODUCT(lhs%E4,rhs%E111) +  &
+             DOT_PRODUCT(lhs%E111,rhs%E4) + DOT_PRODUCT(lhs%E11,rhs%E14) + DOT_PRODUCT(lhs%E14,rhs%E11)
+    res%E1124 = DOT_PRODUCT(lhs%R,rhs%E1124) + DOT_PRODUCT(lhs%E1124,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E124) + DOT_PRODUCT(lhs%E124,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E114) +  &
+             DOT_PRODUCT(lhs%E114,rhs%E2) + DOT_PRODUCT(lhs%E4,rhs%E112) + DOT_PRODUCT(lhs%E112,rhs%E4) +  &
+             DOT_PRODUCT(lhs%E11,rhs%E24) + DOT_PRODUCT(lhs%E12,rhs%E14) + DOT_PRODUCT(lhs%E14,rhs%E12) + DOT_PRODUCT(lhs%E24,rhs%E11)
+    res%E1134 = DOT_PRODUCT(lhs%R,rhs%E1134) + DOT_PRODUCT(lhs%E1134,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E134) + DOT_PRODUCT(lhs%E134,rhs%E1) + DOT_PRODUCT(lhs%E3,rhs%E114) +  &
+             DOT_PRODUCT(lhs%E114,rhs%E3) + DOT_PRODUCT(lhs%E4,rhs%E113) + DOT_PRODUCT(lhs%E113,rhs%E4) +  &
+             DOT_PRODUCT(lhs%E11,rhs%E34) + DOT_PRODUCT(lhs%E13,rhs%E14) + DOT_PRODUCT(lhs%E14,rhs%E13) + DOT_PRODUCT(lhs%E34,rhs%E11)
+    res%E1144 = DOT_PRODUCT(lhs%R,rhs%E1144) + DOT_PRODUCT(lhs%E1144,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E144) + DOT_PRODUCT(lhs%E144,rhs%E1) + DOT_PRODUCT(lhs%E4,rhs%E114) +  &
+             DOT_PRODUCT(lhs%E114,rhs%E4) + DOT_PRODUCT(lhs%E11,rhs%E44) + DOT_PRODUCT(lhs%E14,rhs%E14) + DOT_PRODUCT(lhs%E44,rhs%E11)
+    res%E1224 = DOT_PRODUCT(lhs%R,rhs%E1224) + DOT_PRODUCT(lhs%E1224,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E224) + DOT_PRODUCT(lhs%E224,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E124) +  &
+             DOT_PRODUCT(lhs%E124,rhs%E2) + DOT_PRODUCT(lhs%E4,rhs%E122) + DOT_PRODUCT(lhs%E122,rhs%E4) +  &
+             DOT_PRODUCT(lhs%E12,rhs%E24) + DOT_PRODUCT(lhs%E22,rhs%E14) + DOT_PRODUCT(lhs%E14,rhs%E22) + DOT_PRODUCT(lhs%E24,rhs%E12)
+    res%E1234 = DOT_PRODUCT(lhs%R,rhs%E1234) + DOT_PRODUCT(lhs%E1234,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E234) + DOT_PRODUCT(lhs%E234,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E134) +  &
+             DOT_PRODUCT(lhs%E134,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E124) + DOT_PRODUCT(lhs%E124,rhs%E3) +  &
+             DOT_PRODUCT(lhs%E4,rhs%E123) + DOT_PRODUCT(lhs%E123,rhs%E4) + DOT_PRODUCT(lhs%E12,rhs%E34) +  &
+             DOT_PRODUCT(lhs%E13,rhs%E24) + DOT_PRODUCT(lhs%E23,rhs%E14) + DOT_PRODUCT(lhs%E14,rhs%E23) +  &
+             DOT_PRODUCT(lhs%E24,rhs%E13) + DOT_PRODUCT(lhs%E34,rhs%E12)
+    res%E1244 = DOT_PRODUCT(lhs%R,rhs%E1244) + DOT_PRODUCT(lhs%E1244,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E244) + DOT_PRODUCT(lhs%E244,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E144) +  &
+             DOT_PRODUCT(lhs%E144,rhs%E2) + DOT_PRODUCT(lhs%E4,rhs%E124) + DOT_PRODUCT(lhs%E124,rhs%E4) +  &
+             DOT_PRODUCT(lhs%E12,rhs%E44) + DOT_PRODUCT(lhs%E14,rhs%E24) + DOT_PRODUCT(lhs%E24,rhs%E14) + DOT_PRODUCT(lhs%E44,rhs%E12)
+    res%E1334 = DOT_PRODUCT(lhs%R,rhs%E1334) + DOT_PRODUCT(lhs%E1334,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E334) + DOT_PRODUCT(lhs%E334,rhs%E1) + DOT_PRODUCT(lhs%E3,rhs%E134) +  &
+             DOT_PRODUCT(lhs%E134,rhs%E3) + DOT_PRODUCT(lhs%E4,rhs%E133) + DOT_PRODUCT(lhs%E133,rhs%E4) +  &
+             DOT_PRODUCT(lhs%E13,rhs%E34) + DOT_PRODUCT(lhs%E33,rhs%E14) + DOT_PRODUCT(lhs%E14,rhs%E33) + DOT_PRODUCT(lhs%E34,rhs%E13)
+    res%E1344 = DOT_PRODUCT(lhs%R,rhs%E1344) + DOT_PRODUCT(lhs%E1344,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E344) + DOT_PRODUCT(lhs%E344,rhs%E1) + DOT_PRODUCT(lhs%E3,rhs%E144) +  &
+             DOT_PRODUCT(lhs%E144,rhs%E3) + DOT_PRODUCT(lhs%E4,rhs%E134) + DOT_PRODUCT(lhs%E134,rhs%E4) +  &
+             DOT_PRODUCT(lhs%E13,rhs%E44) + DOT_PRODUCT(lhs%E14,rhs%E34) + DOT_PRODUCT(lhs%E34,rhs%E14) + DOT_PRODUCT(lhs%E44,rhs%E13)
+    res%E1444 = DOT_PRODUCT(lhs%R,rhs%E1444) + DOT_PRODUCT(lhs%E1444,rhs%R) +  &
+             DOT_PRODUCT(lhs%E1,rhs%E444) + DOT_PRODUCT(lhs%E444,rhs%E1) + DOT_PRODUCT(lhs%E4,rhs%E144) +  &
+             DOT_PRODUCT(lhs%E144,rhs%E4) + DOT_PRODUCT(lhs%E14,rhs%E44) + DOT_PRODUCT(lhs%E44,rhs%E14)
+    res%E2224 = DOT_PRODUCT(lhs%R,rhs%E2224) + DOT_PRODUCT(lhs%E2224,rhs%R) +  &
+             DOT_PRODUCT(lhs%E2,rhs%E224) + DOT_PRODUCT(lhs%E224,rhs%E2) + DOT_PRODUCT(lhs%E4,rhs%E222) +  &
+             DOT_PRODUCT(lhs%E222,rhs%E4) + DOT_PRODUCT(lhs%E22,rhs%E24) + DOT_PRODUCT(lhs%E24,rhs%E22)
+    res%E2234 = DOT_PRODUCT(lhs%R,rhs%E2234) + DOT_PRODUCT(lhs%E2234,rhs%R) +  &
+             DOT_PRODUCT(lhs%E2,rhs%E234) + DOT_PRODUCT(lhs%E234,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E224) +  &
+             DOT_PRODUCT(lhs%E224,rhs%E3) + DOT_PRODUCT(lhs%E4,rhs%E223) + DOT_PRODUCT(lhs%E223,rhs%E4) +  &
+             DOT_PRODUCT(lhs%E22,rhs%E34) + DOT_PRODUCT(lhs%E23,rhs%E24) + DOT_PRODUCT(lhs%E24,rhs%E23) + DOT_PRODUCT(lhs%E34,rhs%E22)
+    res%E2244 = DOT_PRODUCT(lhs%R,rhs%E2244) + DOT_PRODUCT(lhs%E2244,rhs%R) +  &
+             DOT_PRODUCT(lhs%E2,rhs%E244) + DOT_PRODUCT(lhs%E244,rhs%E2) + DOT_PRODUCT(lhs%E4,rhs%E224) +  &
+             DOT_PRODUCT(lhs%E224,rhs%E4) + DOT_PRODUCT(lhs%E22,rhs%E44) + DOT_PRODUCT(lhs%E24,rhs%E24) + DOT_PRODUCT(lhs%E44,rhs%E22)
+    res%E2334 = DOT_PRODUCT(lhs%R,rhs%E2334) + DOT_PRODUCT(lhs%E2334,rhs%R) +  &
+             DOT_PRODUCT(lhs%E2,rhs%E334) + DOT_PRODUCT(lhs%E334,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E234) +  &
+             DOT_PRODUCT(lhs%E234,rhs%E3) + DOT_PRODUCT(lhs%E4,rhs%E233) + DOT_PRODUCT(lhs%E233,rhs%E4) +  &
+             DOT_PRODUCT(lhs%E23,rhs%E34) + DOT_PRODUCT(lhs%E33,rhs%E24) + DOT_PRODUCT(lhs%E24,rhs%E33) + DOT_PRODUCT(lhs%E34,rhs%E23)
+    res%E2344 = DOT_PRODUCT(lhs%R,rhs%E2344) + DOT_PRODUCT(lhs%E2344,rhs%R) +  &
+             DOT_PRODUCT(lhs%E2,rhs%E344) + DOT_PRODUCT(lhs%E344,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E244) +  &
+             DOT_PRODUCT(lhs%E244,rhs%E3) + DOT_PRODUCT(lhs%E4,rhs%E234) + DOT_PRODUCT(lhs%E234,rhs%E4) +  &
+             DOT_PRODUCT(lhs%E23,rhs%E44) + DOT_PRODUCT(lhs%E24,rhs%E34) + DOT_PRODUCT(lhs%E34,rhs%E24) + DOT_PRODUCT(lhs%E44,rhs%E23)
+    res%E2444 = DOT_PRODUCT(lhs%R,rhs%E2444) + DOT_PRODUCT(lhs%E2444,rhs%R) +  &
+             DOT_PRODUCT(lhs%E2,rhs%E444) + DOT_PRODUCT(lhs%E444,rhs%E2) + DOT_PRODUCT(lhs%E4,rhs%E244) +  &
+             DOT_PRODUCT(lhs%E244,rhs%E4) + DOT_PRODUCT(lhs%E24,rhs%E44) + DOT_PRODUCT(lhs%E44,rhs%E24)
+    res%E3334 = DOT_PRODUCT(lhs%R,rhs%E3334) + DOT_PRODUCT(lhs%E3334,rhs%R) +  &
+             DOT_PRODUCT(lhs%E3,rhs%E334) + DOT_PRODUCT(lhs%E334,rhs%E3) + DOT_PRODUCT(lhs%E4,rhs%E333) +  &
+             DOT_PRODUCT(lhs%E333,rhs%E4) + DOT_PRODUCT(lhs%E33,rhs%E34) + DOT_PRODUCT(lhs%E34,rhs%E33)
+    res%E3344 = DOT_PRODUCT(lhs%R,rhs%E3344) + DOT_PRODUCT(lhs%E3344,rhs%R) +  &
+             DOT_PRODUCT(lhs%E3,rhs%E344) + DOT_PRODUCT(lhs%E344,rhs%E3) + DOT_PRODUCT(lhs%E4,rhs%E334) +  &
+             DOT_PRODUCT(lhs%E334,rhs%E4) + DOT_PRODUCT(lhs%E33,rhs%E44) + DOT_PRODUCT(lhs%E34,rhs%E34) + DOT_PRODUCT(lhs%E44,rhs%E33)
+    res%E3444 = DOT_PRODUCT(lhs%R,rhs%E3444) + DOT_PRODUCT(lhs%E3444,rhs%R) +  &
+             DOT_PRODUCT(lhs%E3,rhs%E444) + DOT_PRODUCT(lhs%E444,rhs%E3) + DOT_PRODUCT(lhs%E4,rhs%E344) +  &
+             DOT_PRODUCT(lhs%E344,rhs%E4) + DOT_PRODUCT(lhs%E34,rhs%E44) + DOT_PRODUCT(lhs%E44,rhs%E34)
+    res%E4444 = DOT_PRODUCT(lhs%R,rhs%E4444) + DOT_PRODUCT(lhs%E4444,rhs%R) +  &
+             DOT_PRODUCT(lhs%E4,rhs%E444) + DOT_PRODUCT(lhs%E444,rhs%E4) + DOT_PRODUCT(lhs%E44,rhs%E44)
+    ! Order 3
+    res%E111 = DOT_PRODUCT(lhs%R,rhs%E111) + DOT_PRODUCT(lhs%E111,rhs%R) +  &
+            DOT_PRODUCT(lhs%E1,rhs%E11) + DOT_PRODUCT(lhs%E11,rhs%E1)
+    res%E112 = DOT_PRODUCT(lhs%R,rhs%E112) + DOT_PRODUCT(lhs%E112,rhs%R) +  &
+            DOT_PRODUCT(lhs%E1,rhs%E12) + DOT_PRODUCT(lhs%E12,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E11) + DOT_PRODUCT(lhs%E11,rhs%E2)
+    res%E122 = DOT_PRODUCT(lhs%R,rhs%E122) + DOT_PRODUCT(lhs%E122,rhs%R) +  &
+            DOT_PRODUCT(lhs%E1,rhs%E22) + DOT_PRODUCT(lhs%E22,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E12) + DOT_PRODUCT(lhs%E12,rhs%E2)
+    res%E222 = DOT_PRODUCT(lhs%R,rhs%E222) + DOT_PRODUCT(lhs%E222,rhs%R) +  &
+            DOT_PRODUCT(lhs%E2,rhs%E22) + DOT_PRODUCT(lhs%E22,rhs%E2)
+    res%E113 = DOT_PRODUCT(lhs%R,rhs%E113) + DOT_PRODUCT(lhs%E113,rhs%R) +  &
+            DOT_PRODUCT(lhs%E1,rhs%E13) + DOT_PRODUCT(lhs%E13,rhs%E1) + DOT_PRODUCT(lhs%E3,rhs%E11) + DOT_PRODUCT(lhs%E11,rhs%E3)
+    res%E123 = DOT_PRODUCT(lhs%R,rhs%E123) + DOT_PRODUCT(lhs%E123,rhs%R) +  &
+            DOT_PRODUCT(lhs%E1,rhs%E23) + DOT_PRODUCT(lhs%E23,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E13) +  &
+            DOT_PRODUCT(lhs%E13,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E12) + DOT_PRODUCT(lhs%E12,rhs%E3)
+    res%E133 = DOT_PRODUCT(lhs%R,rhs%E133) + DOT_PRODUCT(lhs%E133,rhs%R) +  &
+            DOT_PRODUCT(lhs%E1,rhs%E33) + DOT_PRODUCT(lhs%E33,rhs%E1) + DOT_PRODUCT(lhs%E3,rhs%E13) + DOT_PRODUCT(lhs%E13,rhs%E3)
+    res%E223 = DOT_PRODUCT(lhs%R,rhs%E223) + DOT_PRODUCT(lhs%E223,rhs%R) +  &
+            DOT_PRODUCT(lhs%E2,rhs%E23) + DOT_PRODUCT(lhs%E23,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E22) + DOT_PRODUCT(lhs%E22,rhs%E3)
+    res%E233 = DOT_PRODUCT(lhs%R,rhs%E233) + DOT_PRODUCT(lhs%E233,rhs%R) +  &
+            DOT_PRODUCT(lhs%E2,rhs%E33) + DOT_PRODUCT(lhs%E33,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E23) + DOT_PRODUCT(lhs%E23,rhs%E3)
+    res%E333 = DOT_PRODUCT(lhs%R,rhs%E333) + DOT_PRODUCT(lhs%E333,rhs%R) +  &
+            DOT_PRODUCT(lhs%E3,rhs%E33) + DOT_PRODUCT(lhs%E33,rhs%E3)
+    res%E114 = DOT_PRODUCT(lhs%R,rhs%E114) + DOT_PRODUCT(lhs%E114,rhs%R) +  &
+            DOT_PRODUCT(lhs%E1,rhs%E14) + DOT_PRODUCT(lhs%E14,rhs%E1) + DOT_PRODUCT(lhs%E4,rhs%E11) + DOT_PRODUCT(lhs%E11,rhs%E4)
+    res%E124 = DOT_PRODUCT(lhs%R,rhs%E124) + DOT_PRODUCT(lhs%E124,rhs%R) +  &
+            DOT_PRODUCT(lhs%E1,rhs%E24) + DOT_PRODUCT(lhs%E24,rhs%E1) + DOT_PRODUCT(lhs%E2,rhs%E14) +  &
+            DOT_PRODUCT(lhs%E14,rhs%E2) + DOT_PRODUCT(lhs%E4,rhs%E12) + DOT_PRODUCT(lhs%E12,rhs%E4)
+    res%E134 = DOT_PRODUCT(lhs%R,rhs%E134) + DOT_PRODUCT(lhs%E134,rhs%R) +  &
+            DOT_PRODUCT(lhs%E1,rhs%E34) + DOT_PRODUCT(lhs%E34,rhs%E1) + DOT_PRODUCT(lhs%E3,rhs%E14) +  &
+            DOT_PRODUCT(lhs%E14,rhs%E3) + DOT_PRODUCT(lhs%E4,rhs%E13) + DOT_PRODUCT(lhs%E13,rhs%E4)
+    res%E144 = DOT_PRODUCT(lhs%R,rhs%E144) + DOT_PRODUCT(lhs%E144,rhs%R) +  &
+            DOT_PRODUCT(lhs%E1,rhs%E44) + DOT_PRODUCT(lhs%E44,rhs%E1) + DOT_PRODUCT(lhs%E4,rhs%E14) + DOT_PRODUCT(lhs%E14,rhs%E4)
+    res%E224 = DOT_PRODUCT(lhs%R,rhs%E224) + DOT_PRODUCT(lhs%E224,rhs%R) +  &
+            DOT_PRODUCT(lhs%E2,rhs%E24) + DOT_PRODUCT(lhs%E24,rhs%E2) + DOT_PRODUCT(lhs%E4,rhs%E22) + DOT_PRODUCT(lhs%E22,rhs%E4)
+    res%E234 = DOT_PRODUCT(lhs%R,rhs%E234) + DOT_PRODUCT(lhs%E234,rhs%R) +  &
+            DOT_PRODUCT(lhs%E2,rhs%E34) + DOT_PRODUCT(lhs%E34,rhs%E2) + DOT_PRODUCT(lhs%E3,rhs%E24) +  &
+            DOT_PRODUCT(lhs%E24,rhs%E3) + DOT_PRODUCT(lhs%E4,rhs%E23) + DOT_PRODUCT(lhs%E23,rhs%E4)
+    res%E244 = DOT_PRODUCT(lhs%R,rhs%E244) + DOT_PRODUCT(lhs%E244,rhs%R) +  &
+            DOT_PRODUCT(lhs%E2,rhs%E44) + DOT_PRODUCT(lhs%E44,rhs%E2) + DOT_PRODUCT(lhs%E4,rhs%E24) + DOT_PRODUCT(lhs%E24,rhs%E4)
+    res%E334 = DOT_PRODUCT(lhs%R,rhs%E334) + DOT_PRODUCT(lhs%E334,rhs%R) +  &
+            DOT_PRODUCT(lhs%E3,rhs%E34) + DOT_PRODUCT(lhs%E34,rhs%E3) + DOT_PRODUCT(lhs%E4,rhs%E33) + DOT_PRODUCT(lhs%E33,rhs%E4)
+    res%E344 = DOT_PRODUCT(lhs%R,rhs%E344) + DOT_PRODUCT(lhs%E344,rhs%R) +  &
+            DOT_PRODUCT(lhs%E3,rhs%E44) + DOT_PRODUCT(lhs%E44,rhs%E3) + DOT_PRODUCT(lhs%E4,rhs%E34) + DOT_PRODUCT(lhs%E34,rhs%E4)
+    res%E444 = DOT_PRODUCT(lhs%R,rhs%E444) + DOT_PRODUCT(lhs%E444,rhs%R) +  &
+            DOT_PRODUCT(lhs%E4,rhs%E44) + DOT_PRODUCT(lhs%E44,rhs%E4)
+    ! Order 2
+    res%E11 = DOT_PRODUCT(lhs%R,rhs%E11) + DOT_PRODUCT(lhs%E11,rhs%R) + DOT_PRODUCT(lhs%E1,rhs%E1)
+    res%E12 = DOT_PRODUCT(lhs%R,rhs%E12) + DOT_PRODUCT(lhs%E12,rhs%R) +  &
+           DOT_PRODUCT(lhs%E1,rhs%E2) + DOT_PRODUCT(lhs%E2,rhs%E1)
+    res%E22 = DOT_PRODUCT(lhs%R,rhs%E22) + DOT_PRODUCT(lhs%E22,rhs%R) + DOT_PRODUCT(lhs%E2,rhs%E2)
+    res%E13 = DOT_PRODUCT(lhs%R,rhs%E13) + DOT_PRODUCT(lhs%E13,rhs%R) +  &
+           DOT_PRODUCT(lhs%E1,rhs%E3) + DOT_PRODUCT(lhs%E3,rhs%E1)
+    res%E23 = DOT_PRODUCT(lhs%R,rhs%E23) + DOT_PRODUCT(lhs%E23,rhs%R) +  &
+           DOT_PRODUCT(lhs%E2,rhs%E3) + DOT_PRODUCT(lhs%E3,rhs%E2)
+    res%E33 = DOT_PRODUCT(lhs%R,rhs%E33) + DOT_PRODUCT(lhs%E33,rhs%R) + DOT_PRODUCT(lhs%E3,rhs%E3)
+    res%E14 = DOT_PRODUCT(lhs%R,rhs%E14) + DOT_PRODUCT(lhs%E14,rhs%R) +  &
+           DOT_PRODUCT(lhs%E1,rhs%E4) + DOT_PRODUCT(lhs%E4,rhs%E1)
+    res%E24 = DOT_PRODUCT(lhs%R,rhs%E24) + DOT_PRODUCT(lhs%E24,rhs%R) +  &
+           DOT_PRODUCT(lhs%E2,rhs%E4) + DOT_PRODUCT(lhs%E4,rhs%E2)
+    res%E34 = DOT_PRODUCT(lhs%R,rhs%E34) + DOT_PRODUCT(lhs%E34,rhs%R) +  &
+           DOT_PRODUCT(lhs%E3,rhs%E4) + DOT_PRODUCT(lhs%E4,rhs%E3)
+    res%E44 = DOT_PRODUCT(lhs%R,rhs%E44) + DOT_PRODUCT(lhs%E44,rhs%R) + DOT_PRODUCT(lhs%E4,rhs%E4)
+    ! Order 1
+    res%E1 = DOT_PRODUCT(lhs%R,rhs%E1) + DOT_PRODUCT(lhs%E1,rhs%R)
+    res%E2 = DOT_PRODUCT(lhs%R,rhs%E2) + DOT_PRODUCT(lhs%E2,rhs%R)
+    res%E3 = DOT_PRODUCT(lhs%R,rhs%E3) + DOT_PRODUCT(lhs%E3,rhs%R)
+    res%E4 = DOT_PRODUCT(lhs%R,rhs%E4) + DOT_PRODUCT(lhs%E4,rhs%R)
+    ! Order 0
+    res%R = DOT_PRODUCT(lhs%R,rhs%R)
+
+  END FUNCTION ONUMM4N4_DOT_PRODUCT_ONUMM4N4
+
+  FUNCTION R_DOT_PRODUCT_ONUMM4N4(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    REAL(DP), INTENT(IN) :: LHS(:)
+    TYPE(ONUMM4N4), INTENT(IN) :: RHS(SIZE(LHS))
+    TYPE(ONUMM4N4) :: RES
+
+    ! Multiplication like function 'DOT_PRODUCT(lhs,rhs)'
+    !  Real
+    res%R = DOT_PRODUCT(lhs,rhs%R)
+
+    ! Order 1
+    res%E1 = DOT_PRODUCT(lhs,rhs%E1)
+    res%E2 = DOT_PRODUCT(lhs,rhs%E2)
+    res%E3 = DOT_PRODUCT(lhs,rhs%E3)
+    res%E4 = DOT_PRODUCT(lhs,rhs%E4)
+
+    ! Order 2
+    res%E11 = DOT_PRODUCT(lhs,rhs%E11)
+    res%E12 = DOT_PRODUCT(lhs,rhs%E12)
+    res%E22 = DOT_PRODUCT(lhs,rhs%E22)
+    res%E13 = DOT_PRODUCT(lhs,rhs%E13)
+    res%E23 = DOT_PRODUCT(lhs,rhs%E23)
+    res%E33 = DOT_PRODUCT(lhs,rhs%E33)
+    res%E14 = DOT_PRODUCT(lhs,rhs%E14)
+    res%E24 = DOT_PRODUCT(lhs,rhs%E24)
+    res%E34 = DOT_PRODUCT(lhs,rhs%E34)
+    res%E44 = DOT_PRODUCT(lhs,rhs%E44)
+
+    ! Order 3
+    res%E111 = DOT_PRODUCT(lhs,rhs%E111)
+    res%E112 = DOT_PRODUCT(lhs,rhs%E112)
+    res%E122 = DOT_PRODUCT(lhs,rhs%E122)
+    res%E222 = DOT_PRODUCT(lhs,rhs%E222)
+    res%E113 = DOT_PRODUCT(lhs,rhs%E113)
+    res%E123 = DOT_PRODUCT(lhs,rhs%E123)
+    res%E133 = DOT_PRODUCT(lhs,rhs%E133)
+    res%E223 = DOT_PRODUCT(lhs,rhs%E223)
+    res%E233 = DOT_PRODUCT(lhs,rhs%E233)
+    res%E333 = DOT_PRODUCT(lhs,rhs%E333)
+    res%E114 = DOT_PRODUCT(lhs,rhs%E114)
+    res%E124 = DOT_PRODUCT(lhs,rhs%E124)
+    res%E134 = DOT_PRODUCT(lhs,rhs%E134)
+    res%E144 = DOT_PRODUCT(lhs,rhs%E144)
+    res%E224 = DOT_PRODUCT(lhs,rhs%E224)
+    res%E234 = DOT_PRODUCT(lhs,rhs%E234)
+    res%E244 = DOT_PRODUCT(lhs,rhs%E244)
+    res%E334 = DOT_PRODUCT(lhs,rhs%E334)
+    res%E344 = DOT_PRODUCT(lhs,rhs%E344)
+    res%E444 = DOT_PRODUCT(lhs,rhs%E444)
+
+    ! Order 4
+    res%E1111 = DOT_PRODUCT(lhs,rhs%E1111)
+    res%E1112 = DOT_PRODUCT(lhs,rhs%E1112)
+    res%E1122 = DOT_PRODUCT(lhs,rhs%E1122)
+    res%E1222 = DOT_PRODUCT(lhs,rhs%E1222)
+    res%E2222 = DOT_PRODUCT(lhs,rhs%E2222)
+    res%E1113 = DOT_PRODUCT(lhs,rhs%E1113)
+    res%E1123 = DOT_PRODUCT(lhs,rhs%E1123)
+    res%E1133 = DOT_PRODUCT(lhs,rhs%E1133)
+    res%E1223 = DOT_PRODUCT(lhs,rhs%E1223)
+    res%E1233 = DOT_PRODUCT(lhs,rhs%E1233)
+    res%E1333 = DOT_PRODUCT(lhs,rhs%E1333)
+    res%E2223 = DOT_PRODUCT(lhs,rhs%E2223)
+    res%E2233 = DOT_PRODUCT(lhs,rhs%E2233)
+    res%E2333 = DOT_PRODUCT(lhs,rhs%E2333)
+    res%E3333 = DOT_PRODUCT(lhs,rhs%E3333)
+    res%E1114 = DOT_PRODUCT(lhs,rhs%E1114)
+    res%E1124 = DOT_PRODUCT(lhs,rhs%E1124)
+    res%E1134 = DOT_PRODUCT(lhs,rhs%E1134)
+    res%E1144 = DOT_PRODUCT(lhs,rhs%E1144)
+    res%E1224 = DOT_PRODUCT(lhs,rhs%E1224)
+    res%E1234 = DOT_PRODUCT(lhs,rhs%E1234)
+    res%E1244 = DOT_PRODUCT(lhs,rhs%E1244)
+    res%E1334 = DOT_PRODUCT(lhs,rhs%E1334)
+    res%E1344 = DOT_PRODUCT(lhs,rhs%E1344)
+    res%E1444 = DOT_PRODUCT(lhs,rhs%E1444)
+    res%E2224 = DOT_PRODUCT(lhs,rhs%E2224)
+    res%E2234 = DOT_PRODUCT(lhs,rhs%E2234)
+    res%E2244 = DOT_PRODUCT(lhs,rhs%E2244)
+    res%E2334 = DOT_PRODUCT(lhs,rhs%E2334)
+    res%E2344 = DOT_PRODUCT(lhs,rhs%E2344)
+    res%E2444 = DOT_PRODUCT(lhs,rhs%E2444)
+    res%E3334 = DOT_PRODUCT(lhs,rhs%E3334)
+    res%E3344 = DOT_PRODUCT(lhs,rhs%E3344)
+    res%E3444 = DOT_PRODUCT(lhs,rhs%E3444)
+    res%E4444 = DOT_PRODUCT(lhs,rhs%E4444)
+
+  END FUNCTION R_DOT_PRODUCT_ONUMM4N4
+
+  FUNCTION ONUMM4N4_DOT_PRODUCT_R(LHS,RHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:)
+    REAL(DP), INTENT(IN) :: RHS(SIZE(LHS))
+    TYPE(ONUMM4N4) :: RES
+
+    ! Multiplication like function 'DOT_PRODUCT(lhs,rhs)'
+    !  Real
+    res%R = DOT_PRODUCT(lhs%R,rhs)
+
+    ! Order 1
+    res%E1 = DOT_PRODUCT(lhs%E1,rhs)
+    res%E2 = DOT_PRODUCT(lhs%E2,rhs)
+    res%E3 = DOT_PRODUCT(lhs%E3,rhs)
+    res%E4 = DOT_PRODUCT(lhs%E4,rhs)
+
+    ! Order 2
+    res%E11 = DOT_PRODUCT(lhs%E11,rhs)
+    res%E12 = DOT_PRODUCT(lhs%E12,rhs)
+    res%E22 = DOT_PRODUCT(lhs%E22,rhs)
+    res%E13 = DOT_PRODUCT(lhs%E13,rhs)
+    res%E23 = DOT_PRODUCT(lhs%E23,rhs)
+    res%E33 = DOT_PRODUCT(lhs%E33,rhs)
+    res%E14 = DOT_PRODUCT(lhs%E14,rhs)
+    res%E24 = DOT_PRODUCT(lhs%E24,rhs)
+    res%E34 = DOT_PRODUCT(lhs%E34,rhs)
+    res%E44 = DOT_PRODUCT(lhs%E44,rhs)
+
+    ! Order 3
+    res%E111 = DOT_PRODUCT(lhs%E111,rhs)
+    res%E112 = DOT_PRODUCT(lhs%E112,rhs)
+    res%E122 = DOT_PRODUCT(lhs%E122,rhs)
+    res%E222 = DOT_PRODUCT(lhs%E222,rhs)
+    res%E113 = DOT_PRODUCT(lhs%E113,rhs)
+    res%E123 = DOT_PRODUCT(lhs%E123,rhs)
+    res%E133 = DOT_PRODUCT(lhs%E133,rhs)
+    res%E223 = DOT_PRODUCT(lhs%E223,rhs)
+    res%E233 = DOT_PRODUCT(lhs%E233,rhs)
+    res%E333 = DOT_PRODUCT(lhs%E333,rhs)
+    res%E114 = DOT_PRODUCT(lhs%E114,rhs)
+    res%E124 = DOT_PRODUCT(lhs%E124,rhs)
+    res%E134 = DOT_PRODUCT(lhs%E134,rhs)
+    res%E144 = DOT_PRODUCT(lhs%E144,rhs)
+    res%E224 = DOT_PRODUCT(lhs%E224,rhs)
+    res%E234 = DOT_PRODUCT(lhs%E234,rhs)
+    res%E244 = DOT_PRODUCT(lhs%E244,rhs)
+    res%E334 = DOT_PRODUCT(lhs%E334,rhs)
+    res%E344 = DOT_PRODUCT(lhs%E344,rhs)
+    res%E444 = DOT_PRODUCT(lhs%E444,rhs)
+
+    ! Order 4
+    res%E1111 = DOT_PRODUCT(lhs%E1111,rhs)
+    res%E1112 = DOT_PRODUCT(lhs%E1112,rhs)
+    res%E1122 = DOT_PRODUCT(lhs%E1122,rhs)
+    res%E1222 = DOT_PRODUCT(lhs%E1222,rhs)
+    res%E2222 = DOT_PRODUCT(lhs%E2222,rhs)
+    res%E1113 = DOT_PRODUCT(lhs%E1113,rhs)
+    res%E1123 = DOT_PRODUCT(lhs%E1123,rhs)
+    res%E1133 = DOT_PRODUCT(lhs%E1133,rhs)
+    res%E1223 = DOT_PRODUCT(lhs%E1223,rhs)
+    res%E1233 = DOT_PRODUCT(lhs%E1233,rhs)
+    res%E1333 = DOT_PRODUCT(lhs%E1333,rhs)
+    res%E2223 = DOT_PRODUCT(lhs%E2223,rhs)
+    res%E2233 = DOT_PRODUCT(lhs%E2233,rhs)
+    res%E2333 = DOT_PRODUCT(lhs%E2333,rhs)
+    res%E3333 = DOT_PRODUCT(lhs%E3333,rhs)
+    res%E1114 = DOT_PRODUCT(lhs%E1114,rhs)
+    res%E1124 = DOT_PRODUCT(lhs%E1124,rhs)
+    res%E1134 = DOT_PRODUCT(lhs%E1134,rhs)
+    res%E1144 = DOT_PRODUCT(lhs%E1144,rhs)
+    res%E1224 = DOT_PRODUCT(lhs%E1224,rhs)
+    res%E1234 = DOT_PRODUCT(lhs%E1234,rhs)
+    res%E1244 = DOT_PRODUCT(lhs%E1244,rhs)
+    res%E1334 = DOT_PRODUCT(lhs%E1334,rhs)
+    res%E1344 = DOT_PRODUCT(lhs%E1344,rhs)
+    res%E1444 = DOT_PRODUCT(lhs%E1444,rhs)
+    res%E2224 = DOT_PRODUCT(lhs%E2224,rhs)
+    res%E2234 = DOT_PRODUCT(lhs%E2234,rhs)
+    res%E2244 = DOT_PRODUCT(lhs%E2244,rhs)
+    res%E2334 = DOT_PRODUCT(lhs%E2334,rhs)
+    res%E2344 = DOT_PRODUCT(lhs%E2344,rhs)
+    res%E2444 = DOT_PRODUCT(lhs%E2444,rhs)
+    res%E3334 = DOT_PRODUCT(lhs%E3334,rhs)
+    res%E3344 = DOT_PRODUCT(lhs%E3344,rhs)
+    res%E3444 = DOT_PRODUCT(lhs%E3444,rhs)
+    res%E4444 = DOT_PRODUCT(lhs%E4444,rhs)
+
+  END FUNCTION ONUMM4N4_DOT_PRODUCT_R
+
+  FUNCTION ONUMM4N4_TRANSPOSE(LHS)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: LHS(:,:)
+    TYPE(ONUMM4N4) :: RES (SIZE(LHS,2),SIZE(LHS,1))
+
+    ! Negation like function 'TRANSPOSE(LHS)'
+    ! Real
+    RES%R = TRANSPOSE(LHS%R)
+    ! Order 1
+    RES%E1 = TRANSPOSE(LHS%E1)
+    RES%E2 = TRANSPOSE(LHS%E2)
+    RES%E3 = TRANSPOSE(LHS%E3)
+    RES%E4 = TRANSPOSE(LHS%E4)
+    ! Order 2
+    RES%E11 = TRANSPOSE(LHS%E11)
+    RES%E12 = TRANSPOSE(LHS%E12)
+    RES%E22 = TRANSPOSE(LHS%E22)
+    RES%E13 = TRANSPOSE(LHS%E13)
+    RES%E23 = TRANSPOSE(LHS%E23)
+    RES%E33 = TRANSPOSE(LHS%E33)
+    RES%E14 = TRANSPOSE(LHS%E14)
+    RES%E24 = TRANSPOSE(LHS%E24)
+    RES%E34 = TRANSPOSE(LHS%E34)
+    RES%E44 = TRANSPOSE(LHS%E44)
+    ! Order 3
+    RES%E111 = TRANSPOSE(LHS%E111)
+    RES%E112 = TRANSPOSE(LHS%E112)
+    RES%E122 = TRANSPOSE(LHS%E122)
+    RES%E222 = TRANSPOSE(LHS%E222)
+    RES%E113 = TRANSPOSE(LHS%E113)
+    RES%E123 = TRANSPOSE(LHS%E123)
+    RES%E133 = TRANSPOSE(LHS%E133)
+    RES%E223 = TRANSPOSE(LHS%E223)
+    RES%E233 = TRANSPOSE(LHS%E233)
+    RES%E333 = TRANSPOSE(LHS%E333)
+    RES%E114 = TRANSPOSE(LHS%E114)
+    RES%E124 = TRANSPOSE(LHS%E124)
+    RES%E134 = TRANSPOSE(LHS%E134)
+    RES%E144 = TRANSPOSE(LHS%E144)
+    RES%E224 = TRANSPOSE(LHS%E224)
+    RES%E234 = TRANSPOSE(LHS%E234)
+    RES%E244 = TRANSPOSE(LHS%E244)
+    RES%E334 = TRANSPOSE(LHS%E334)
+    RES%E344 = TRANSPOSE(LHS%E344)
+    RES%E444 = TRANSPOSE(LHS%E444)
+    ! Order 4
+    RES%E1111 = TRANSPOSE(LHS%E1111)
+    RES%E1112 = TRANSPOSE(LHS%E1112)
+    RES%E1122 = TRANSPOSE(LHS%E1122)
+    RES%E1222 = TRANSPOSE(LHS%E1222)
+    RES%E2222 = TRANSPOSE(LHS%E2222)
+    RES%E1113 = TRANSPOSE(LHS%E1113)
+    RES%E1123 = TRANSPOSE(LHS%E1123)
+    RES%E1133 = TRANSPOSE(LHS%E1133)
+    RES%E1223 = TRANSPOSE(LHS%E1223)
+    RES%E1233 = TRANSPOSE(LHS%E1233)
+    RES%E1333 = TRANSPOSE(LHS%E1333)
+    RES%E2223 = TRANSPOSE(LHS%E2223)
+    RES%E2233 = TRANSPOSE(LHS%E2233)
+    RES%E2333 = TRANSPOSE(LHS%E2333)
+    RES%E3333 = TRANSPOSE(LHS%E3333)
+    RES%E1114 = TRANSPOSE(LHS%E1114)
+    RES%E1124 = TRANSPOSE(LHS%E1124)
+    RES%E1134 = TRANSPOSE(LHS%E1134)
+    RES%E1144 = TRANSPOSE(LHS%E1144)
+    RES%E1224 = TRANSPOSE(LHS%E1224)
+    RES%E1234 = TRANSPOSE(LHS%E1234)
+    RES%E1244 = TRANSPOSE(LHS%E1244)
+    RES%E1334 = TRANSPOSE(LHS%E1334)
+    RES%E1344 = TRANSPOSE(LHS%E1344)
+    RES%E1444 = TRANSPOSE(LHS%E1444)
+    RES%E2224 = TRANSPOSE(LHS%E2224)
+    RES%E2234 = TRANSPOSE(LHS%E2234)
+    RES%E2244 = TRANSPOSE(LHS%E2244)
+    RES%E2334 = TRANSPOSE(LHS%E2334)
+    RES%E2344 = TRANSPOSE(LHS%E2344)
+    RES%E2444 = TRANSPOSE(LHS%E2444)
+    RES%E3334 = TRANSPOSE(LHS%E3334)
+    RES%E3344 = TRANSPOSE(LHS%E3344)
+    RES%E3444 = TRANSPOSE(LHS%E3444)
+    RES%E4444 = TRANSPOSE(LHS%E4444)
+
+  END FUNCTION ONUMM4N4_TRANSPOSE
+
+FUNCTION ONUMM4N4_TO_CR_MAT_S(VAL) RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: VAL
+    REAL(DP) :: RES(NUM_IM_DIR,NUM_IM_DIR) 
+    INTEGER :: NCOLS=1, NROWS=1
+
+
+    ! R x R -> R (1, 1)
+    RES(1+NROWS*0:NROWS*1,1+NCOLS*0:NCOLS*1) = VAL%R
+    ! R x E1 -> E1 (2, 2)
+    RES(1+NROWS*1:NROWS*2,1+NCOLS*1:NCOLS*2) = VAL%R
+    ! E1 x R -> E1 (2, 1)
+    RES(1+NROWS*1:NROWS*2,1+NCOLS*0:NCOLS*1) = VAL%E1
+    ! R x E2 -> E2 (3, 3)
+    RES(1+NROWS*2:NROWS*3,1+NCOLS*2:NCOLS*3) = VAL%R
+    ! E2 x R -> E2 (3, 1)
+    RES(1+NROWS*2:NROWS*3,1+NCOLS*0:NCOLS*1) = VAL%E2
+    ! R x E3 -> E3 (4, 4)
+    RES(1+NROWS*3:NROWS*4,1+NCOLS*3:NCOLS*4) = VAL%R
+    ! E3 x R -> E3 (4, 1)
+    RES(1+NROWS*3:NROWS*4,1+NCOLS*0:NCOLS*1) = VAL%E3
+    ! R x E4 -> E4 (5, 5)
+    RES(1+NROWS*4:NROWS*5,1+NCOLS*4:NCOLS*5) = VAL%R
+    ! E4 x R -> E4 (5, 1)
+    RES(1+NROWS*4:NROWS*5,1+NCOLS*0:NCOLS*1) = VAL%E4
+    ! R x E11 -> E11 (6, 6)
+    RES(1+NROWS*5:NROWS*6,1+NCOLS*5:NCOLS*6) = VAL%R
+    ! E11 x R -> E11 (6, 1)
+    RES(1+NROWS*5:NROWS*6,1+NCOLS*0:NCOLS*1) = VAL%E11
+    ! E1 x E1 -> E11 (6, 2)
+    RES(1+NROWS*5:NROWS*6,1+NCOLS*1:NCOLS*2) = VAL%E1
+    ! R x E12 -> E12 (7, 7)
+    RES(1+NROWS*6:NROWS*7,1+NCOLS*6:NCOLS*7) = VAL%R
+    ! E12 x R -> E12 (7, 1)
+    RES(1+NROWS*6:NROWS*7,1+NCOLS*0:NCOLS*1) = VAL%E12
+    ! E1 x E2 -> E12 (7, 3)
+    RES(1+NROWS*6:NROWS*7,1+NCOLS*2:NCOLS*3) = VAL%E1
+    ! E2 x E1 -> E12 (7, 2)
+    RES(1+NROWS*6:NROWS*7,1+NCOLS*1:NCOLS*2) = VAL%E2
+    ! R x E22 -> E22 (8, 8)
+    RES(1+NROWS*7:NROWS*8,1+NCOLS*7:NCOLS*8) = VAL%R
+    ! E22 x R -> E22 (8, 1)
+    RES(1+NROWS*7:NROWS*8,1+NCOLS*0:NCOLS*1) = VAL%E22
+    ! E2 x E2 -> E22 (8, 3)
+    RES(1+NROWS*7:NROWS*8,1+NCOLS*2:NCOLS*3) = VAL%E2
+    ! R x E13 -> E13 (9, 9)
+    RES(1+NROWS*8:NROWS*9,1+NCOLS*8:NCOLS*9) = VAL%R
+    ! E13 x R -> E13 (9, 1)
+    RES(1+NROWS*8:NROWS*9,1+NCOLS*0:NCOLS*1) = VAL%E13
+    ! E1 x E3 -> E13 (9, 4)
+    RES(1+NROWS*8:NROWS*9,1+NCOLS*3:NCOLS*4) = VAL%E1
+    ! E3 x E1 -> E13 (9, 2)
+    RES(1+NROWS*8:NROWS*9,1+NCOLS*1:NCOLS*2) = VAL%E3
+    ! R x E23 -> E23 (10, 10)
+    RES(1+NROWS*9:NROWS*10,1+NCOLS*9:NCOLS*10) = VAL%R
+    ! E23 x R -> E23 (10, 1)
+    RES(1+NROWS*9:NROWS*10,1+NCOLS*0:NCOLS*1) = VAL%E23
+    ! E2 x E3 -> E23 (10, 4)
+    RES(1+NROWS*9:NROWS*10,1+NCOLS*3:NCOLS*4) = VAL%E2
+    ! E3 x E2 -> E23 (10, 3)
+    RES(1+NROWS*9:NROWS*10,1+NCOLS*2:NCOLS*3) = VAL%E3
+    ! R x E33 -> E33 (11, 11)
+    RES(1+NROWS*10:NROWS*11,1+NCOLS*10:NCOLS*11) = VAL%R
+    ! E33 x R -> E33 (11, 1)
+    RES(1+NROWS*10:NROWS*11,1+NCOLS*0:NCOLS*1) = VAL%E33
+    ! E3 x E3 -> E33 (11, 4)
+    RES(1+NROWS*10:NROWS*11,1+NCOLS*3:NCOLS*4) = VAL%E3
+    ! R x E14 -> E14 (12, 12)
+    RES(1+NROWS*11:NROWS*12,1+NCOLS*11:NCOLS*12) = VAL%R
+    ! E14 x R -> E14 (12, 1)
+    RES(1+NROWS*11:NROWS*12,1+NCOLS*0:NCOLS*1) = VAL%E14
+    ! E1 x E4 -> E14 (12, 5)
+    RES(1+NROWS*11:NROWS*12,1+NCOLS*4:NCOLS*5) = VAL%E1
+    ! E4 x E1 -> E14 (12, 2)
+    RES(1+NROWS*11:NROWS*12,1+NCOLS*1:NCOLS*2) = VAL%E4
+    ! R x E24 -> E24 (13, 13)
+    RES(1+NROWS*12:NROWS*13,1+NCOLS*12:NCOLS*13) = VAL%R
+    ! E24 x R -> E24 (13, 1)
+    RES(1+NROWS*12:NROWS*13,1+NCOLS*0:NCOLS*1) = VAL%E24
+    ! E2 x E4 -> E24 (13, 5)
+    RES(1+NROWS*12:NROWS*13,1+NCOLS*4:NCOLS*5) = VAL%E2
+    ! E4 x E2 -> E24 (13, 3)
+    RES(1+NROWS*12:NROWS*13,1+NCOLS*2:NCOLS*3) = VAL%E4
+    ! R x E34 -> E34 (14, 14)
+    RES(1+NROWS*13:NROWS*14,1+NCOLS*13:NCOLS*14) = VAL%R
+    ! E34 x R -> E34 (14, 1)
+    RES(1+NROWS*13:NROWS*14,1+NCOLS*0:NCOLS*1) = VAL%E34
+    ! E3 x E4 -> E34 (14, 5)
+    RES(1+NROWS*13:NROWS*14,1+NCOLS*4:NCOLS*5) = VAL%E3
+    ! E4 x E3 -> E34 (14, 4)
+    RES(1+NROWS*13:NROWS*14,1+NCOLS*3:NCOLS*4) = VAL%E4
+    ! R x E44 -> E44 (15, 15)
+    RES(1+NROWS*14:NROWS*15,1+NCOLS*14:NCOLS*15) = VAL%R
+    ! E44 x R -> E44 (15, 1)
+    RES(1+NROWS*14:NROWS*15,1+NCOLS*0:NCOLS*1) = VAL%E44
+    ! E4 x E4 -> E44 (15, 5)
+    RES(1+NROWS*14:NROWS*15,1+NCOLS*4:NCOLS*5) = VAL%E4
+    ! R x E111 -> E111 (16, 16)
+    RES(1+NROWS*15:NROWS*16,1+NCOLS*15:NCOLS*16) = VAL%R
+    ! E111 x R -> E111 (16, 1)
+    RES(1+NROWS*15:NROWS*16,1+NCOLS*0:NCOLS*1) = VAL%E111
+    ! E1 x E11 -> E111 (16, 6)
+    RES(1+NROWS*15:NROWS*16,1+NCOLS*5:NCOLS*6) = VAL%E1
+    ! E11 x E1 -> E111 (16, 2)
+    RES(1+NROWS*15:NROWS*16,1+NCOLS*1:NCOLS*2) = VAL%E11
+    ! R x E112 -> E112 (17, 17)
+    RES(1+NROWS*16:NROWS*17,1+NCOLS*16:NCOLS*17) = VAL%R
+    ! E112 x R -> E112 (17, 1)
+    RES(1+NROWS*16:NROWS*17,1+NCOLS*0:NCOLS*1) = VAL%E112
+    ! E1 x E12 -> E112 (17, 7)
+    RES(1+NROWS*16:NROWS*17,1+NCOLS*6:NCOLS*7) = VAL%E1
+    ! E12 x E1 -> E112 (17, 2)
+    RES(1+NROWS*16:NROWS*17,1+NCOLS*1:NCOLS*2) = VAL%E12
+    ! E2 x E11 -> E112 (17, 6)
+    RES(1+NROWS*16:NROWS*17,1+NCOLS*5:NCOLS*6) = VAL%E2
+    ! E11 x E2 -> E112 (17, 3)
+    RES(1+NROWS*16:NROWS*17,1+NCOLS*2:NCOLS*3) = VAL%E11
+    ! R x E122 -> E122 (18, 18)
+    RES(1+NROWS*17:NROWS*18,1+NCOLS*17:NCOLS*18) = VAL%R
+    ! E122 x R -> E122 (18, 1)
+    RES(1+NROWS*17:NROWS*18,1+NCOLS*0:NCOLS*1) = VAL%E122
+    ! E1 x E22 -> E122 (18, 8)
+    RES(1+NROWS*17:NROWS*18,1+NCOLS*7:NCOLS*8) = VAL%E1
+    ! E22 x E1 -> E122 (18, 2)
+    RES(1+NROWS*17:NROWS*18,1+NCOLS*1:NCOLS*2) = VAL%E22
+    ! E2 x E12 -> E122 (18, 7)
+    RES(1+NROWS*17:NROWS*18,1+NCOLS*6:NCOLS*7) = VAL%E2
+    ! E12 x E2 -> E122 (18, 3)
+    RES(1+NROWS*17:NROWS*18,1+NCOLS*2:NCOLS*3) = VAL%E12
+    ! R x E222 -> E222 (19, 19)
+    RES(1+NROWS*18:NROWS*19,1+NCOLS*18:NCOLS*19) = VAL%R
+    ! E222 x R -> E222 (19, 1)
+    RES(1+NROWS*18:NROWS*19,1+NCOLS*0:NCOLS*1) = VAL%E222
+    ! E2 x E22 -> E222 (19, 8)
+    RES(1+NROWS*18:NROWS*19,1+NCOLS*7:NCOLS*8) = VAL%E2
+    ! E22 x E2 -> E222 (19, 3)
+    RES(1+NROWS*18:NROWS*19,1+NCOLS*2:NCOLS*3) = VAL%E22
+    ! R x E113 -> E113 (20, 20)
+    RES(1+NROWS*19:NROWS*20,1+NCOLS*19:NCOLS*20) = VAL%R
+    ! E113 x R -> E113 (20, 1)
+    RES(1+NROWS*19:NROWS*20,1+NCOLS*0:NCOLS*1) = VAL%E113
+    ! E1 x E13 -> E113 (20, 9)
+    RES(1+NROWS*19:NROWS*20,1+NCOLS*8:NCOLS*9) = VAL%E1
+    ! E13 x E1 -> E113 (20, 2)
+    RES(1+NROWS*19:NROWS*20,1+NCOLS*1:NCOLS*2) = VAL%E13
+    ! E3 x E11 -> E113 (20, 6)
+    RES(1+NROWS*19:NROWS*20,1+NCOLS*5:NCOLS*6) = VAL%E3
+    ! E11 x E3 -> E113 (20, 4)
+    RES(1+NROWS*19:NROWS*20,1+NCOLS*3:NCOLS*4) = VAL%E11
+    ! R x E123 -> E123 (21, 21)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*20:NCOLS*21) = VAL%R
+    ! E123 x R -> E123 (21, 1)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*0:NCOLS*1) = VAL%E123
+    ! E1 x E23 -> E123 (21, 10)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*9:NCOLS*10) = VAL%E1
+    ! E23 x E1 -> E123 (21, 2)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*1:NCOLS*2) = VAL%E23
+    ! E2 x E13 -> E123 (21, 9)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*8:NCOLS*9) = VAL%E2
+    ! E13 x E2 -> E123 (21, 3)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*2:NCOLS*3) = VAL%E13
+    ! E3 x E12 -> E123 (21, 7)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*6:NCOLS*7) = VAL%E3
+    ! E12 x E3 -> E123 (21, 4)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*3:NCOLS*4) = VAL%E12
+    ! R x E133 -> E133 (22, 22)
+    RES(1+NROWS*21:NROWS*22,1+NCOLS*21:NCOLS*22) = VAL%R
+    ! E133 x R -> E133 (22, 1)
+    RES(1+NROWS*21:NROWS*22,1+NCOLS*0:NCOLS*1) = VAL%E133
+    ! E1 x E33 -> E133 (22, 11)
+    RES(1+NROWS*21:NROWS*22,1+NCOLS*10:NCOLS*11) = VAL%E1
+    ! E33 x E1 -> E133 (22, 2)
+    RES(1+NROWS*21:NROWS*22,1+NCOLS*1:NCOLS*2) = VAL%E33
+    ! E3 x E13 -> E133 (22, 9)
+    RES(1+NROWS*21:NROWS*22,1+NCOLS*8:NCOLS*9) = VAL%E3
+    ! E13 x E3 -> E133 (22, 4)
+    RES(1+NROWS*21:NROWS*22,1+NCOLS*3:NCOLS*4) = VAL%E13
+    ! R x E223 -> E223 (23, 23)
+    RES(1+NROWS*22:NROWS*23,1+NCOLS*22:NCOLS*23) = VAL%R
+    ! E223 x R -> E223 (23, 1)
+    RES(1+NROWS*22:NROWS*23,1+NCOLS*0:NCOLS*1) = VAL%E223
+    ! E2 x E23 -> E223 (23, 10)
+    RES(1+NROWS*22:NROWS*23,1+NCOLS*9:NCOLS*10) = VAL%E2
+    ! E23 x E2 -> E223 (23, 3)
+    RES(1+NROWS*22:NROWS*23,1+NCOLS*2:NCOLS*3) = VAL%E23
+    ! E3 x E22 -> E223 (23, 8)
+    RES(1+NROWS*22:NROWS*23,1+NCOLS*7:NCOLS*8) = VAL%E3
+    ! E22 x E3 -> E223 (23, 4)
+    RES(1+NROWS*22:NROWS*23,1+NCOLS*3:NCOLS*4) = VAL%E22
+    ! R x E233 -> E233 (24, 24)
+    RES(1+NROWS*23:NROWS*24,1+NCOLS*23:NCOLS*24) = VAL%R
+    ! E233 x R -> E233 (24, 1)
+    RES(1+NROWS*23:NROWS*24,1+NCOLS*0:NCOLS*1) = VAL%E233
+    ! E2 x E33 -> E233 (24, 11)
+    RES(1+NROWS*23:NROWS*24,1+NCOLS*10:NCOLS*11) = VAL%E2
+    ! E33 x E2 -> E233 (24, 3)
+    RES(1+NROWS*23:NROWS*24,1+NCOLS*2:NCOLS*3) = VAL%E33
+    ! E3 x E23 -> E233 (24, 10)
+    RES(1+NROWS*23:NROWS*24,1+NCOLS*9:NCOLS*10) = VAL%E3
+    ! E23 x E3 -> E233 (24, 4)
+    RES(1+NROWS*23:NROWS*24,1+NCOLS*3:NCOLS*4) = VAL%E23
+    ! R x E333 -> E333 (25, 25)
+    RES(1+NROWS*24:NROWS*25,1+NCOLS*24:NCOLS*25) = VAL%R
+    ! E333 x R -> E333 (25, 1)
+    RES(1+NROWS*24:NROWS*25,1+NCOLS*0:NCOLS*1) = VAL%E333
+    ! E3 x E33 -> E333 (25, 11)
+    RES(1+NROWS*24:NROWS*25,1+NCOLS*10:NCOLS*11) = VAL%E3
+    ! E33 x E3 -> E333 (25, 4)
+    RES(1+NROWS*24:NROWS*25,1+NCOLS*3:NCOLS*4) = VAL%E33
+    ! R x E114 -> E114 (26, 26)
+    RES(1+NROWS*25:NROWS*26,1+NCOLS*25:NCOLS*26) = VAL%R
+    ! E114 x R -> E114 (26, 1)
+    RES(1+NROWS*25:NROWS*26,1+NCOLS*0:NCOLS*1) = VAL%E114
+    ! E1 x E14 -> E114 (26, 12)
+    RES(1+NROWS*25:NROWS*26,1+NCOLS*11:NCOLS*12) = VAL%E1
+    ! E14 x E1 -> E114 (26, 2)
+    RES(1+NROWS*25:NROWS*26,1+NCOLS*1:NCOLS*2) = VAL%E14
+    ! E4 x E11 -> E114 (26, 6)
+    RES(1+NROWS*25:NROWS*26,1+NCOLS*5:NCOLS*6) = VAL%E4
+    ! E11 x E4 -> E114 (26, 5)
+    RES(1+NROWS*25:NROWS*26,1+NCOLS*4:NCOLS*5) = VAL%E11
+    ! R x E124 -> E124 (27, 27)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*26:NCOLS*27) = VAL%R
+    ! E124 x R -> E124 (27, 1)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*0:NCOLS*1) = VAL%E124
+    ! E1 x E24 -> E124 (27, 13)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*12:NCOLS*13) = VAL%E1
+    ! E24 x E1 -> E124 (27, 2)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*1:NCOLS*2) = VAL%E24
+    ! E2 x E14 -> E124 (27, 12)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*11:NCOLS*12) = VAL%E2
+    ! E14 x E2 -> E124 (27, 3)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*2:NCOLS*3) = VAL%E14
+    ! E4 x E12 -> E124 (27, 7)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*6:NCOLS*7) = VAL%E4
+    ! E12 x E4 -> E124 (27, 5)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*4:NCOLS*5) = VAL%E12
+    ! R x E134 -> E134 (28, 28)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*27:NCOLS*28) = VAL%R
+    ! E134 x R -> E134 (28, 1)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*0:NCOLS*1) = VAL%E134
+    ! E1 x E34 -> E134 (28, 14)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*13:NCOLS*14) = VAL%E1
+    ! E34 x E1 -> E134 (28, 2)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*1:NCOLS*2) = VAL%E34
+    ! E3 x E14 -> E134 (28, 12)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*11:NCOLS*12) = VAL%E3
+    ! E14 x E3 -> E134 (28, 4)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*3:NCOLS*4) = VAL%E14
+    ! E4 x E13 -> E134 (28, 9)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*8:NCOLS*9) = VAL%E4
+    ! E13 x E4 -> E134 (28, 5)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*4:NCOLS*5) = VAL%E13
+    ! R x E144 -> E144 (29, 29)
+    RES(1+NROWS*28:NROWS*29,1+NCOLS*28:NCOLS*29) = VAL%R
+    ! E144 x R -> E144 (29, 1)
+    RES(1+NROWS*28:NROWS*29,1+NCOLS*0:NCOLS*1) = VAL%E144
+    ! E1 x E44 -> E144 (29, 15)
+    RES(1+NROWS*28:NROWS*29,1+NCOLS*14:NCOLS*15) = VAL%E1
+    ! E44 x E1 -> E144 (29, 2)
+    RES(1+NROWS*28:NROWS*29,1+NCOLS*1:NCOLS*2) = VAL%E44
+    ! E4 x E14 -> E144 (29, 12)
+    RES(1+NROWS*28:NROWS*29,1+NCOLS*11:NCOLS*12) = VAL%E4
+    ! E14 x E4 -> E144 (29, 5)
+    RES(1+NROWS*28:NROWS*29,1+NCOLS*4:NCOLS*5) = VAL%E14
+    ! R x E224 -> E224 (30, 30)
+    RES(1+NROWS*29:NROWS*30,1+NCOLS*29:NCOLS*30) = VAL%R
+    ! E224 x R -> E224 (30, 1)
+    RES(1+NROWS*29:NROWS*30,1+NCOLS*0:NCOLS*1) = VAL%E224
+    ! E2 x E24 -> E224 (30, 13)
+    RES(1+NROWS*29:NROWS*30,1+NCOLS*12:NCOLS*13) = VAL%E2
+    ! E24 x E2 -> E224 (30, 3)
+    RES(1+NROWS*29:NROWS*30,1+NCOLS*2:NCOLS*3) = VAL%E24
+    ! E4 x E22 -> E224 (30, 8)
+    RES(1+NROWS*29:NROWS*30,1+NCOLS*7:NCOLS*8) = VAL%E4
+    ! E22 x E4 -> E224 (30, 5)
+    RES(1+NROWS*29:NROWS*30,1+NCOLS*4:NCOLS*5) = VAL%E22
+    ! R x E234 -> E234 (31, 31)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*30:NCOLS*31) = VAL%R
+    ! E234 x R -> E234 (31, 1)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*0:NCOLS*1) = VAL%E234
+    ! E2 x E34 -> E234 (31, 14)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*13:NCOLS*14) = VAL%E2
+    ! E34 x E2 -> E234 (31, 3)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*2:NCOLS*3) = VAL%E34
+    ! E3 x E24 -> E234 (31, 13)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*12:NCOLS*13) = VAL%E3
+    ! E24 x E3 -> E234 (31, 4)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*3:NCOLS*4) = VAL%E24
+    ! E4 x E23 -> E234 (31, 10)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*9:NCOLS*10) = VAL%E4
+    ! E23 x E4 -> E234 (31, 5)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*4:NCOLS*5) = VAL%E23
+    ! R x E244 -> E244 (32, 32)
+    RES(1+NROWS*31:NROWS*32,1+NCOLS*31:NCOLS*32) = VAL%R
+    ! E244 x R -> E244 (32, 1)
+    RES(1+NROWS*31:NROWS*32,1+NCOLS*0:NCOLS*1) = VAL%E244
+    ! E2 x E44 -> E244 (32, 15)
+    RES(1+NROWS*31:NROWS*32,1+NCOLS*14:NCOLS*15) = VAL%E2
+    ! E44 x E2 -> E244 (32, 3)
+    RES(1+NROWS*31:NROWS*32,1+NCOLS*2:NCOLS*3) = VAL%E44
+    ! E4 x E24 -> E244 (32, 13)
+    RES(1+NROWS*31:NROWS*32,1+NCOLS*12:NCOLS*13) = VAL%E4
+    ! E24 x E4 -> E244 (32, 5)
+    RES(1+NROWS*31:NROWS*32,1+NCOLS*4:NCOLS*5) = VAL%E24
+    ! R x E334 -> E334 (33, 33)
+    RES(1+NROWS*32:NROWS*33,1+NCOLS*32:NCOLS*33) = VAL%R
+    ! E334 x R -> E334 (33, 1)
+    RES(1+NROWS*32:NROWS*33,1+NCOLS*0:NCOLS*1) = VAL%E334
+    ! E3 x E34 -> E334 (33, 14)
+    RES(1+NROWS*32:NROWS*33,1+NCOLS*13:NCOLS*14) = VAL%E3
+    ! E34 x E3 -> E334 (33, 4)
+    RES(1+NROWS*32:NROWS*33,1+NCOLS*3:NCOLS*4) = VAL%E34
+    ! E4 x E33 -> E334 (33, 11)
+    RES(1+NROWS*32:NROWS*33,1+NCOLS*10:NCOLS*11) = VAL%E4
+    ! E33 x E4 -> E334 (33, 5)
+    RES(1+NROWS*32:NROWS*33,1+NCOLS*4:NCOLS*5) = VAL%E33
+    ! R x E344 -> E344 (34, 34)
+    RES(1+NROWS*33:NROWS*34,1+NCOLS*33:NCOLS*34) = VAL%R
+    ! E344 x R -> E344 (34, 1)
+    RES(1+NROWS*33:NROWS*34,1+NCOLS*0:NCOLS*1) = VAL%E344
+    ! E3 x E44 -> E344 (34, 15)
+    RES(1+NROWS*33:NROWS*34,1+NCOLS*14:NCOLS*15) = VAL%E3
+    ! E44 x E3 -> E344 (34, 4)
+    RES(1+NROWS*33:NROWS*34,1+NCOLS*3:NCOLS*4) = VAL%E44
+    ! E4 x E34 -> E344 (34, 14)
+    RES(1+NROWS*33:NROWS*34,1+NCOLS*13:NCOLS*14) = VAL%E4
+    ! E34 x E4 -> E344 (34, 5)
+    RES(1+NROWS*33:NROWS*34,1+NCOLS*4:NCOLS*5) = VAL%E34
+    ! R x E444 -> E444 (35, 35)
+    RES(1+NROWS*34:NROWS*35,1+NCOLS*34:NCOLS*35) = VAL%R
+    ! E444 x R -> E444 (35, 1)
+    RES(1+NROWS*34:NROWS*35,1+NCOLS*0:NCOLS*1) = VAL%E444
+    ! E4 x E44 -> E444 (35, 15)
+    RES(1+NROWS*34:NROWS*35,1+NCOLS*14:NCOLS*15) = VAL%E4
+    ! E44 x E4 -> E444 (35, 5)
+    RES(1+NROWS*34:NROWS*35,1+NCOLS*4:NCOLS*5) = VAL%E44
+    ! R x E1111 -> E1111 (36, 36)
+    RES(1+NROWS*35:NROWS*36,1+NCOLS*35:NCOLS*36) = VAL%R
+    ! E1111 x R -> E1111 (36, 1)
+    RES(1+NROWS*35:NROWS*36,1+NCOLS*0:NCOLS*1) = VAL%E1111
+    ! E1 x E111 -> E1111 (36, 16)
+    RES(1+NROWS*35:NROWS*36,1+NCOLS*15:NCOLS*16) = VAL%E1
+    ! E111 x E1 -> E1111 (36, 2)
+    RES(1+NROWS*35:NROWS*36,1+NCOLS*1:NCOLS*2) = VAL%E111
+    ! E11 x E11 -> E1111 (36, 6)
+    RES(1+NROWS*35:NROWS*36,1+NCOLS*5:NCOLS*6) = VAL%E11
+    ! R x E1112 -> E1112 (37, 37)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*36:NCOLS*37) = VAL%R
+    ! E1112 x R -> E1112 (37, 1)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*0:NCOLS*1) = VAL%E1112
+    ! E1 x E112 -> E1112 (37, 17)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*16:NCOLS*17) = VAL%E1
+    ! E112 x E1 -> E1112 (37, 2)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*1:NCOLS*2) = VAL%E112
+    ! E2 x E111 -> E1112 (37, 16)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*15:NCOLS*16) = VAL%E2
+    ! E111 x E2 -> E1112 (37, 3)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*2:NCOLS*3) = VAL%E111
+    ! E11 x E12 -> E1112 (37, 7)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*6:NCOLS*7) = VAL%E11
+    ! E12 x E11 -> E1112 (37, 6)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*5:NCOLS*6) = VAL%E12
+    ! R x E1122 -> E1122 (38, 38)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*37:NCOLS*38) = VAL%R
+    ! E1122 x R -> E1122 (38, 1)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*0:NCOLS*1) = VAL%E1122
+    ! E1 x E122 -> E1122 (38, 18)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*17:NCOLS*18) = VAL%E1
+    ! E122 x E1 -> E1122 (38, 2)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*1:NCOLS*2) = VAL%E122
+    ! E2 x E112 -> E1122 (38, 17)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*16:NCOLS*17) = VAL%E2
+    ! E112 x E2 -> E1122 (38, 3)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*2:NCOLS*3) = VAL%E112
+    ! E11 x E22 -> E1122 (38, 8)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*7:NCOLS*8) = VAL%E11
+    ! E12 x E12 -> E1122 (38, 7)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*6:NCOLS*7) = VAL%E12
+    ! E22 x E11 -> E1122 (38, 6)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*5:NCOLS*6) = VAL%E22
+    ! R x E1222 -> E1222 (39, 39)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*38:NCOLS*39) = VAL%R
+    ! E1222 x R -> E1222 (39, 1)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*0:NCOLS*1) = VAL%E1222
+    ! E1 x E222 -> E1222 (39, 19)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*18:NCOLS*19) = VAL%E1
+    ! E222 x E1 -> E1222 (39, 2)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*1:NCOLS*2) = VAL%E222
+    ! E2 x E122 -> E1222 (39, 18)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*17:NCOLS*18) = VAL%E2
+    ! E122 x E2 -> E1222 (39, 3)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*2:NCOLS*3) = VAL%E122
+    ! E12 x E22 -> E1222 (39, 8)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*7:NCOLS*8) = VAL%E12
+    ! E22 x E12 -> E1222 (39, 7)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*6:NCOLS*7) = VAL%E22
+    ! R x E2222 -> E2222 (40, 40)
+    RES(1+NROWS*39:NROWS*40,1+NCOLS*39:NCOLS*40) = VAL%R
+    ! E2222 x R -> E2222 (40, 1)
+    RES(1+NROWS*39:NROWS*40,1+NCOLS*0:NCOLS*1) = VAL%E2222
+    ! E2 x E222 -> E2222 (40, 19)
+    RES(1+NROWS*39:NROWS*40,1+NCOLS*18:NCOLS*19) = VAL%E2
+    ! E222 x E2 -> E2222 (40, 3)
+    RES(1+NROWS*39:NROWS*40,1+NCOLS*2:NCOLS*3) = VAL%E222
+    ! E22 x E22 -> E2222 (40, 8)
+    RES(1+NROWS*39:NROWS*40,1+NCOLS*7:NCOLS*8) = VAL%E22
+    ! R x E1113 -> E1113 (41, 41)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*40:NCOLS*41) = VAL%R
+    ! E1113 x R -> E1113 (41, 1)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*0:NCOLS*1) = VAL%E1113
+    ! E1 x E113 -> E1113 (41, 20)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*19:NCOLS*20) = VAL%E1
+    ! E113 x E1 -> E1113 (41, 2)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*1:NCOLS*2) = VAL%E113
+    ! E3 x E111 -> E1113 (41, 16)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*15:NCOLS*16) = VAL%E3
+    ! E111 x E3 -> E1113 (41, 4)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*3:NCOLS*4) = VAL%E111
+    ! E11 x E13 -> E1113 (41, 9)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*8:NCOLS*9) = VAL%E11
+    ! E13 x E11 -> E1113 (41, 6)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*5:NCOLS*6) = VAL%E13
+    ! R x E1123 -> E1123 (42, 42)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*41:NCOLS*42) = VAL%R
+    ! E1123 x R -> E1123 (42, 1)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*0:NCOLS*1) = VAL%E1123
+    ! E1 x E123 -> E1123 (42, 21)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*20:NCOLS*21) = VAL%E1
+    ! E123 x E1 -> E1123 (42, 2)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*1:NCOLS*2) = VAL%E123
+    ! E2 x E113 -> E1123 (42, 20)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*19:NCOLS*20) = VAL%E2
+    ! E113 x E2 -> E1123 (42, 3)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*2:NCOLS*3) = VAL%E113
+    ! E3 x E112 -> E1123 (42, 17)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*16:NCOLS*17) = VAL%E3
+    ! E112 x E3 -> E1123 (42, 4)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*3:NCOLS*4) = VAL%E112
+    ! E11 x E23 -> E1123 (42, 10)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*9:NCOLS*10) = VAL%E11
+    ! E12 x E13 -> E1123 (42, 9)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*8:NCOLS*9) = VAL%E12
+    ! E13 x E12 -> E1123 (42, 7)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*6:NCOLS*7) = VAL%E13
+    ! E23 x E11 -> E1123 (42, 6)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*5:NCOLS*6) = VAL%E23
+    ! R x E1133 -> E1133 (43, 43)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*42:NCOLS*43) = VAL%R
+    ! E1133 x R -> E1133 (43, 1)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*0:NCOLS*1) = VAL%E1133
+    ! E1 x E133 -> E1133 (43, 22)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*21:NCOLS*22) = VAL%E1
+    ! E133 x E1 -> E1133 (43, 2)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*1:NCOLS*2) = VAL%E133
+    ! E3 x E113 -> E1133 (43, 20)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*19:NCOLS*20) = VAL%E3
+    ! E113 x E3 -> E1133 (43, 4)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*3:NCOLS*4) = VAL%E113
+    ! E11 x E33 -> E1133 (43, 11)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*10:NCOLS*11) = VAL%E11
+    ! E13 x E13 -> E1133 (43, 9)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*8:NCOLS*9) = VAL%E13
+    ! E33 x E11 -> E1133 (43, 6)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*5:NCOLS*6) = VAL%E33
+    ! R x E1223 -> E1223 (44, 44)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*43:NCOLS*44) = VAL%R
+    ! E1223 x R -> E1223 (44, 1)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*0:NCOLS*1) = VAL%E1223
+    ! E1 x E223 -> E1223 (44, 23)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*22:NCOLS*23) = VAL%E1
+    ! E223 x E1 -> E1223 (44, 2)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*1:NCOLS*2) = VAL%E223
+    ! E2 x E123 -> E1223 (44, 21)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*20:NCOLS*21) = VAL%E2
+    ! E123 x E2 -> E1223 (44, 3)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*2:NCOLS*3) = VAL%E123
+    ! E3 x E122 -> E1223 (44, 18)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*17:NCOLS*18) = VAL%E3
+    ! E122 x E3 -> E1223 (44, 4)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*3:NCOLS*4) = VAL%E122
+    ! E12 x E23 -> E1223 (44, 10)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*9:NCOLS*10) = VAL%E12
+    ! E22 x E13 -> E1223 (44, 9)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*8:NCOLS*9) = VAL%E22
+    ! E13 x E22 -> E1223 (44, 8)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*7:NCOLS*8) = VAL%E13
+    ! E23 x E12 -> E1223 (44, 7)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*6:NCOLS*7) = VAL%E23
+    ! R x E1233 -> E1233 (45, 45)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*44:NCOLS*45) = VAL%R
+    ! E1233 x R -> E1233 (45, 1)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*0:NCOLS*1) = VAL%E1233
+    ! E1 x E233 -> E1233 (45, 24)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*23:NCOLS*24) = VAL%E1
+    ! E233 x E1 -> E1233 (45, 2)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*1:NCOLS*2) = VAL%E233
+    ! E2 x E133 -> E1233 (45, 22)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*21:NCOLS*22) = VAL%E2
+    ! E133 x E2 -> E1233 (45, 3)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*2:NCOLS*3) = VAL%E133
+    ! E3 x E123 -> E1233 (45, 21)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*20:NCOLS*21) = VAL%E3
+    ! E123 x E3 -> E1233 (45, 4)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*3:NCOLS*4) = VAL%E123
+    ! E12 x E33 -> E1233 (45, 11)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*10:NCOLS*11) = VAL%E12
+    ! E13 x E23 -> E1233 (45, 10)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*9:NCOLS*10) = VAL%E13
+    ! E23 x E13 -> E1233 (45, 9)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*8:NCOLS*9) = VAL%E23
+    ! E33 x E12 -> E1233 (45, 7)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*6:NCOLS*7) = VAL%E33
+    ! R x E1333 -> E1333 (46, 46)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*45:NCOLS*46) = VAL%R
+    ! E1333 x R -> E1333 (46, 1)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*0:NCOLS*1) = VAL%E1333
+    ! E1 x E333 -> E1333 (46, 25)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*24:NCOLS*25) = VAL%E1
+    ! E333 x E1 -> E1333 (46, 2)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*1:NCOLS*2) = VAL%E333
+    ! E3 x E133 -> E1333 (46, 22)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*21:NCOLS*22) = VAL%E3
+    ! E133 x E3 -> E1333 (46, 4)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*3:NCOLS*4) = VAL%E133
+    ! E13 x E33 -> E1333 (46, 11)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*10:NCOLS*11) = VAL%E13
+    ! E33 x E13 -> E1333 (46, 9)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*8:NCOLS*9) = VAL%E33
+    ! R x E2223 -> E2223 (47, 47)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*46:NCOLS*47) = VAL%R
+    ! E2223 x R -> E2223 (47, 1)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*0:NCOLS*1) = VAL%E2223
+    ! E2 x E223 -> E2223 (47, 23)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*22:NCOLS*23) = VAL%E2
+    ! E223 x E2 -> E2223 (47, 3)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*2:NCOLS*3) = VAL%E223
+    ! E3 x E222 -> E2223 (47, 19)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*18:NCOLS*19) = VAL%E3
+    ! E222 x E3 -> E2223 (47, 4)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*3:NCOLS*4) = VAL%E222
+    ! E22 x E23 -> E2223 (47, 10)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*9:NCOLS*10) = VAL%E22
+    ! E23 x E22 -> E2223 (47, 8)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*7:NCOLS*8) = VAL%E23
+    ! R x E2233 -> E2233 (48, 48)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*47:NCOLS*48) = VAL%R
+    ! E2233 x R -> E2233 (48, 1)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*0:NCOLS*1) = VAL%E2233
+    ! E2 x E233 -> E2233 (48, 24)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*23:NCOLS*24) = VAL%E2
+    ! E233 x E2 -> E2233 (48, 3)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*2:NCOLS*3) = VAL%E233
+    ! E3 x E223 -> E2233 (48, 23)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*22:NCOLS*23) = VAL%E3
+    ! E223 x E3 -> E2233 (48, 4)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*3:NCOLS*4) = VAL%E223
+    ! E22 x E33 -> E2233 (48, 11)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*10:NCOLS*11) = VAL%E22
+    ! E23 x E23 -> E2233 (48, 10)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*9:NCOLS*10) = VAL%E23
+    ! E33 x E22 -> E2233 (48, 8)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*7:NCOLS*8) = VAL%E33
+    ! R x E2333 -> E2333 (49, 49)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*48:NCOLS*49) = VAL%R
+    ! E2333 x R -> E2333 (49, 1)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*0:NCOLS*1) = VAL%E2333
+    ! E2 x E333 -> E2333 (49, 25)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*24:NCOLS*25) = VAL%E2
+    ! E333 x E2 -> E2333 (49, 3)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*2:NCOLS*3) = VAL%E333
+    ! E3 x E233 -> E2333 (49, 24)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*23:NCOLS*24) = VAL%E3
+    ! E233 x E3 -> E2333 (49, 4)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*3:NCOLS*4) = VAL%E233
+    ! E23 x E33 -> E2333 (49, 11)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*10:NCOLS*11) = VAL%E23
+    ! E33 x E23 -> E2333 (49, 10)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*9:NCOLS*10) = VAL%E33
+    ! R x E3333 -> E3333 (50, 50)
+    RES(1+NROWS*49:NROWS*50,1+NCOLS*49:NCOLS*50) = VAL%R
+    ! E3333 x R -> E3333 (50, 1)
+    RES(1+NROWS*49:NROWS*50,1+NCOLS*0:NCOLS*1) = VAL%E3333
+    ! E3 x E333 -> E3333 (50, 25)
+    RES(1+NROWS*49:NROWS*50,1+NCOLS*24:NCOLS*25) = VAL%E3
+    ! E333 x E3 -> E3333 (50, 4)
+    RES(1+NROWS*49:NROWS*50,1+NCOLS*3:NCOLS*4) = VAL%E333
+    ! E33 x E33 -> E3333 (50, 11)
+    RES(1+NROWS*49:NROWS*50,1+NCOLS*10:NCOLS*11) = VAL%E33
+    ! R x E1114 -> E1114 (51, 51)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*50:NCOLS*51) = VAL%R
+    ! E1114 x R -> E1114 (51, 1)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*0:NCOLS*1) = VAL%E1114
+    ! E1 x E114 -> E1114 (51, 26)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*25:NCOLS*26) = VAL%E1
+    ! E114 x E1 -> E1114 (51, 2)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*1:NCOLS*2) = VAL%E114
+    ! E4 x E111 -> E1114 (51, 16)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*15:NCOLS*16) = VAL%E4
+    ! E111 x E4 -> E1114 (51, 5)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*4:NCOLS*5) = VAL%E111
+    ! E11 x E14 -> E1114 (51, 12)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*11:NCOLS*12) = VAL%E11
+    ! E14 x E11 -> E1114 (51, 6)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*5:NCOLS*6) = VAL%E14
+    ! R x E1124 -> E1124 (52, 52)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*51:NCOLS*52) = VAL%R
+    ! E1124 x R -> E1124 (52, 1)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*0:NCOLS*1) = VAL%E1124
+    ! E1 x E124 -> E1124 (52, 27)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*26:NCOLS*27) = VAL%E1
+    ! E124 x E1 -> E1124 (52, 2)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*1:NCOLS*2) = VAL%E124
+    ! E2 x E114 -> E1124 (52, 26)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*25:NCOLS*26) = VAL%E2
+    ! E114 x E2 -> E1124 (52, 3)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*2:NCOLS*3) = VAL%E114
+    ! E4 x E112 -> E1124 (52, 17)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*16:NCOLS*17) = VAL%E4
+    ! E112 x E4 -> E1124 (52, 5)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*4:NCOLS*5) = VAL%E112
+    ! E11 x E24 -> E1124 (52, 13)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*12:NCOLS*13) = VAL%E11
+    ! E12 x E14 -> E1124 (52, 12)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*11:NCOLS*12) = VAL%E12
+    ! E14 x E12 -> E1124 (52, 7)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*6:NCOLS*7) = VAL%E14
+    ! E24 x E11 -> E1124 (52, 6)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*5:NCOLS*6) = VAL%E24
+    ! R x E1134 -> E1134 (53, 53)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*52:NCOLS*53) = VAL%R
+    ! E1134 x R -> E1134 (53, 1)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*0:NCOLS*1) = VAL%E1134
+    ! E1 x E134 -> E1134 (53, 28)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*27:NCOLS*28) = VAL%E1
+    ! E134 x E1 -> E1134 (53, 2)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*1:NCOLS*2) = VAL%E134
+    ! E3 x E114 -> E1134 (53, 26)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*25:NCOLS*26) = VAL%E3
+    ! E114 x E3 -> E1134 (53, 4)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*3:NCOLS*4) = VAL%E114
+    ! E4 x E113 -> E1134 (53, 20)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*19:NCOLS*20) = VAL%E4
+    ! E113 x E4 -> E1134 (53, 5)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*4:NCOLS*5) = VAL%E113
+    ! E11 x E34 -> E1134 (53, 14)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*13:NCOLS*14) = VAL%E11
+    ! E13 x E14 -> E1134 (53, 12)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*11:NCOLS*12) = VAL%E13
+    ! E14 x E13 -> E1134 (53, 9)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*8:NCOLS*9) = VAL%E14
+    ! E34 x E11 -> E1134 (53, 6)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*5:NCOLS*6) = VAL%E34
+    ! R x E1144 -> E1144 (54, 54)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*53:NCOLS*54) = VAL%R
+    ! E1144 x R -> E1144 (54, 1)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*0:NCOLS*1) = VAL%E1144
+    ! E1 x E144 -> E1144 (54, 29)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*28:NCOLS*29) = VAL%E1
+    ! E144 x E1 -> E1144 (54, 2)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*1:NCOLS*2) = VAL%E144
+    ! E4 x E114 -> E1144 (54, 26)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*25:NCOLS*26) = VAL%E4
+    ! E114 x E4 -> E1144 (54, 5)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*4:NCOLS*5) = VAL%E114
+    ! E11 x E44 -> E1144 (54, 15)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*14:NCOLS*15) = VAL%E11
+    ! E14 x E14 -> E1144 (54, 12)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*11:NCOLS*12) = VAL%E14
+    ! E44 x E11 -> E1144 (54, 6)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*5:NCOLS*6) = VAL%E44
+    ! R x E1224 -> E1224 (55, 55)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*54:NCOLS*55) = VAL%R
+    ! E1224 x R -> E1224 (55, 1)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*0:NCOLS*1) = VAL%E1224
+    ! E1 x E224 -> E1224 (55, 30)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*29:NCOLS*30) = VAL%E1
+    ! E224 x E1 -> E1224 (55, 2)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*1:NCOLS*2) = VAL%E224
+    ! E2 x E124 -> E1224 (55, 27)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*26:NCOLS*27) = VAL%E2
+    ! E124 x E2 -> E1224 (55, 3)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*2:NCOLS*3) = VAL%E124
+    ! E4 x E122 -> E1224 (55, 18)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*17:NCOLS*18) = VAL%E4
+    ! E122 x E4 -> E1224 (55, 5)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*4:NCOLS*5) = VAL%E122
+    ! E12 x E24 -> E1224 (55, 13)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*12:NCOLS*13) = VAL%E12
+    ! E22 x E14 -> E1224 (55, 12)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*11:NCOLS*12) = VAL%E22
+    ! E14 x E22 -> E1224 (55, 8)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*7:NCOLS*8) = VAL%E14
+    ! E24 x E12 -> E1224 (55, 7)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*6:NCOLS*7) = VAL%E24
+    ! R x E1234 -> E1234 (56, 56)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*55:NCOLS*56) = VAL%R
+    ! E1234 x R -> E1234 (56, 1)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*0:NCOLS*1) = VAL%E1234
+    ! E1 x E234 -> E1234 (56, 31)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*30:NCOLS*31) = VAL%E1
+    ! E234 x E1 -> E1234 (56, 2)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*1:NCOLS*2) = VAL%E234
+    ! E2 x E134 -> E1234 (56, 28)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*27:NCOLS*28) = VAL%E2
+    ! E134 x E2 -> E1234 (56, 3)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*2:NCOLS*3) = VAL%E134
+    ! E3 x E124 -> E1234 (56, 27)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*26:NCOLS*27) = VAL%E3
+    ! E124 x E3 -> E1234 (56, 4)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*3:NCOLS*4) = VAL%E124
+    ! E4 x E123 -> E1234 (56, 21)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*20:NCOLS*21) = VAL%E4
+    ! E123 x E4 -> E1234 (56, 5)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*4:NCOLS*5) = VAL%E123
+    ! E12 x E34 -> E1234 (56, 14)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*13:NCOLS*14) = VAL%E12
+    ! E13 x E24 -> E1234 (56, 13)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*12:NCOLS*13) = VAL%E13
+    ! E23 x E14 -> E1234 (56, 12)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*11:NCOLS*12) = VAL%E23
+    ! E14 x E23 -> E1234 (56, 10)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*9:NCOLS*10) = VAL%E14
+    ! E24 x E13 -> E1234 (56, 9)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*8:NCOLS*9) = VAL%E24
+    ! E34 x E12 -> E1234 (56, 7)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*6:NCOLS*7) = VAL%E34
+    ! R x E1244 -> E1244 (57, 57)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*56:NCOLS*57) = VAL%R
+    ! E1244 x R -> E1244 (57, 1)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*0:NCOLS*1) = VAL%E1244
+    ! E1 x E244 -> E1244 (57, 32)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*31:NCOLS*32) = VAL%E1
+    ! E244 x E1 -> E1244 (57, 2)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*1:NCOLS*2) = VAL%E244
+    ! E2 x E144 -> E1244 (57, 29)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*28:NCOLS*29) = VAL%E2
+    ! E144 x E2 -> E1244 (57, 3)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*2:NCOLS*3) = VAL%E144
+    ! E4 x E124 -> E1244 (57, 27)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*26:NCOLS*27) = VAL%E4
+    ! E124 x E4 -> E1244 (57, 5)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*4:NCOLS*5) = VAL%E124
+    ! E12 x E44 -> E1244 (57, 15)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*14:NCOLS*15) = VAL%E12
+    ! E14 x E24 -> E1244 (57, 13)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*12:NCOLS*13) = VAL%E14
+    ! E24 x E14 -> E1244 (57, 12)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*11:NCOLS*12) = VAL%E24
+    ! E44 x E12 -> E1244 (57, 7)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*6:NCOLS*7) = VAL%E44
+    ! R x E1334 -> E1334 (58, 58)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*57:NCOLS*58) = VAL%R
+    ! E1334 x R -> E1334 (58, 1)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*0:NCOLS*1) = VAL%E1334
+    ! E1 x E334 -> E1334 (58, 33)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*32:NCOLS*33) = VAL%E1
+    ! E334 x E1 -> E1334 (58, 2)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*1:NCOLS*2) = VAL%E334
+    ! E3 x E134 -> E1334 (58, 28)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*27:NCOLS*28) = VAL%E3
+    ! E134 x E3 -> E1334 (58, 4)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*3:NCOLS*4) = VAL%E134
+    ! E4 x E133 -> E1334 (58, 22)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*21:NCOLS*22) = VAL%E4
+    ! E133 x E4 -> E1334 (58, 5)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*4:NCOLS*5) = VAL%E133
+    ! E13 x E34 -> E1334 (58, 14)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*13:NCOLS*14) = VAL%E13
+    ! E33 x E14 -> E1334 (58, 12)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*11:NCOLS*12) = VAL%E33
+    ! E14 x E33 -> E1334 (58, 11)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*10:NCOLS*11) = VAL%E14
+    ! E34 x E13 -> E1334 (58, 9)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*8:NCOLS*9) = VAL%E34
+    ! R x E1344 -> E1344 (59, 59)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*58:NCOLS*59) = VAL%R
+    ! E1344 x R -> E1344 (59, 1)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*0:NCOLS*1) = VAL%E1344
+    ! E1 x E344 -> E1344 (59, 34)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*33:NCOLS*34) = VAL%E1
+    ! E344 x E1 -> E1344 (59, 2)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*1:NCOLS*2) = VAL%E344
+    ! E3 x E144 -> E1344 (59, 29)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*28:NCOLS*29) = VAL%E3
+    ! E144 x E3 -> E1344 (59, 4)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*3:NCOLS*4) = VAL%E144
+    ! E4 x E134 -> E1344 (59, 28)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*27:NCOLS*28) = VAL%E4
+    ! E134 x E4 -> E1344 (59, 5)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*4:NCOLS*5) = VAL%E134
+    ! E13 x E44 -> E1344 (59, 15)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*14:NCOLS*15) = VAL%E13
+    ! E14 x E34 -> E1344 (59, 14)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*13:NCOLS*14) = VAL%E14
+    ! E34 x E14 -> E1344 (59, 12)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*11:NCOLS*12) = VAL%E34
+    ! E44 x E13 -> E1344 (59, 9)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*8:NCOLS*9) = VAL%E44
+    ! R x E1444 -> E1444 (60, 60)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*59:NCOLS*60) = VAL%R
+    ! E1444 x R -> E1444 (60, 1)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*0:NCOLS*1) = VAL%E1444
+    ! E1 x E444 -> E1444 (60, 35)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*34:NCOLS*35) = VAL%E1
+    ! E444 x E1 -> E1444 (60, 2)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*1:NCOLS*2) = VAL%E444
+    ! E4 x E144 -> E1444 (60, 29)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*28:NCOLS*29) = VAL%E4
+    ! E144 x E4 -> E1444 (60, 5)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*4:NCOLS*5) = VAL%E144
+    ! E14 x E44 -> E1444 (60, 15)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*14:NCOLS*15) = VAL%E14
+    ! E44 x E14 -> E1444 (60, 12)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*11:NCOLS*12) = VAL%E44
+    ! R x E2224 -> E2224 (61, 61)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*60:NCOLS*61) = VAL%R
+    ! E2224 x R -> E2224 (61, 1)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*0:NCOLS*1) = VAL%E2224
+    ! E2 x E224 -> E2224 (61, 30)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*29:NCOLS*30) = VAL%E2
+    ! E224 x E2 -> E2224 (61, 3)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*2:NCOLS*3) = VAL%E224
+    ! E4 x E222 -> E2224 (61, 19)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*18:NCOLS*19) = VAL%E4
+    ! E222 x E4 -> E2224 (61, 5)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*4:NCOLS*5) = VAL%E222
+    ! E22 x E24 -> E2224 (61, 13)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*12:NCOLS*13) = VAL%E22
+    ! E24 x E22 -> E2224 (61, 8)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*7:NCOLS*8) = VAL%E24
+    ! R x E2234 -> E2234 (62, 62)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*61:NCOLS*62) = VAL%R
+    ! E2234 x R -> E2234 (62, 1)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*0:NCOLS*1) = VAL%E2234
+    ! E2 x E234 -> E2234 (62, 31)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*30:NCOLS*31) = VAL%E2
+    ! E234 x E2 -> E2234 (62, 3)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*2:NCOLS*3) = VAL%E234
+    ! E3 x E224 -> E2234 (62, 30)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*29:NCOLS*30) = VAL%E3
+    ! E224 x E3 -> E2234 (62, 4)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*3:NCOLS*4) = VAL%E224
+    ! E4 x E223 -> E2234 (62, 23)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*22:NCOLS*23) = VAL%E4
+    ! E223 x E4 -> E2234 (62, 5)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*4:NCOLS*5) = VAL%E223
+    ! E22 x E34 -> E2234 (62, 14)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*13:NCOLS*14) = VAL%E22
+    ! E23 x E24 -> E2234 (62, 13)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*12:NCOLS*13) = VAL%E23
+    ! E24 x E23 -> E2234 (62, 10)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*9:NCOLS*10) = VAL%E24
+    ! E34 x E22 -> E2234 (62, 8)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*7:NCOLS*8) = VAL%E34
+    ! R x E2244 -> E2244 (63, 63)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*62:NCOLS*63) = VAL%R
+    ! E2244 x R -> E2244 (63, 1)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*0:NCOLS*1) = VAL%E2244
+    ! E2 x E244 -> E2244 (63, 32)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*31:NCOLS*32) = VAL%E2
+    ! E244 x E2 -> E2244 (63, 3)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*2:NCOLS*3) = VAL%E244
+    ! E4 x E224 -> E2244 (63, 30)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*29:NCOLS*30) = VAL%E4
+    ! E224 x E4 -> E2244 (63, 5)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*4:NCOLS*5) = VAL%E224
+    ! E22 x E44 -> E2244 (63, 15)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*14:NCOLS*15) = VAL%E22
+    ! E24 x E24 -> E2244 (63, 13)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*12:NCOLS*13) = VAL%E24
+    ! E44 x E22 -> E2244 (63, 8)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*7:NCOLS*8) = VAL%E44
+    ! R x E2334 -> E2334 (64, 64)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*63:NCOLS*64) = VAL%R
+    ! E2334 x R -> E2334 (64, 1)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*0:NCOLS*1) = VAL%E2334
+    ! E2 x E334 -> E2334 (64, 33)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*32:NCOLS*33) = VAL%E2
+    ! E334 x E2 -> E2334 (64, 3)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*2:NCOLS*3) = VAL%E334
+    ! E3 x E234 -> E2334 (64, 31)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*30:NCOLS*31) = VAL%E3
+    ! E234 x E3 -> E2334 (64, 4)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*3:NCOLS*4) = VAL%E234
+    ! E4 x E233 -> E2334 (64, 24)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*23:NCOLS*24) = VAL%E4
+    ! E233 x E4 -> E2334 (64, 5)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*4:NCOLS*5) = VAL%E233
+    ! E23 x E34 -> E2334 (64, 14)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*13:NCOLS*14) = VAL%E23
+    ! E33 x E24 -> E2334 (64, 13)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*12:NCOLS*13) = VAL%E33
+    ! E24 x E33 -> E2334 (64, 11)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*10:NCOLS*11) = VAL%E24
+    ! E34 x E23 -> E2334 (64, 10)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*9:NCOLS*10) = VAL%E34
+    ! R x E2344 -> E2344 (65, 65)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*64:NCOLS*65) = VAL%R
+    ! E2344 x R -> E2344 (65, 1)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*0:NCOLS*1) = VAL%E2344
+    ! E2 x E344 -> E2344 (65, 34)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*33:NCOLS*34) = VAL%E2
+    ! E344 x E2 -> E2344 (65, 3)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*2:NCOLS*3) = VAL%E344
+    ! E3 x E244 -> E2344 (65, 32)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*31:NCOLS*32) = VAL%E3
+    ! E244 x E3 -> E2344 (65, 4)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*3:NCOLS*4) = VAL%E244
+    ! E4 x E234 -> E2344 (65, 31)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*30:NCOLS*31) = VAL%E4
+    ! E234 x E4 -> E2344 (65, 5)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*4:NCOLS*5) = VAL%E234
+    ! E23 x E44 -> E2344 (65, 15)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*14:NCOLS*15) = VAL%E23
+    ! E24 x E34 -> E2344 (65, 14)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*13:NCOLS*14) = VAL%E24
+    ! E34 x E24 -> E2344 (65, 13)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*12:NCOLS*13) = VAL%E34
+    ! E44 x E23 -> E2344 (65, 10)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*9:NCOLS*10) = VAL%E44
+    ! R x E2444 -> E2444 (66, 66)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*65:NCOLS*66) = VAL%R
+    ! E2444 x R -> E2444 (66, 1)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*0:NCOLS*1) = VAL%E2444
+    ! E2 x E444 -> E2444 (66, 35)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*34:NCOLS*35) = VAL%E2
+    ! E444 x E2 -> E2444 (66, 3)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*2:NCOLS*3) = VAL%E444
+    ! E4 x E244 -> E2444 (66, 32)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*31:NCOLS*32) = VAL%E4
+    ! E244 x E4 -> E2444 (66, 5)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*4:NCOLS*5) = VAL%E244
+    ! E24 x E44 -> E2444 (66, 15)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*14:NCOLS*15) = VAL%E24
+    ! E44 x E24 -> E2444 (66, 13)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*12:NCOLS*13) = VAL%E44
+    ! R x E3334 -> E3334 (67, 67)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*66:NCOLS*67) = VAL%R
+    ! E3334 x R -> E3334 (67, 1)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*0:NCOLS*1) = VAL%E3334
+    ! E3 x E334 -> E3334 (67, 33)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*32:NCOLS*33) = VAL%E3
+    ! E334 x E3 -> E3334 (67, 4)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*3:NCOLS*4) = VAL%E334
+    ! E4 x E333 -> E3334 (67, 25)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*24:NCOLS*25) = VAL%E4
+    ! E333 x E4 -> E3334 (67, 5)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*4:NCOLS*5) = VAL%E333
+    ! E33 x E34 -> E3334 (67, 14)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*13:NCOLS*14) = VAL%E33
+    ! E34 x E33 -> E3334 (67, 11)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*10:NCOLS*11) = VAL%E34
+    ! R x E3344 -> E3344 (68, 68)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*67:NCOLS*68) = VAL%R
+    ! E3344 x R -> E3344 (68, 1)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*0:NCOLS*1) = VAL%E3344
+    ! E3 x E344 -> E3344 (68, 34)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*33:NCOLS*34) = VAL%E3
+    ! E344 x E3 -> E3344 (68, 4)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*3:NCOLS*4) = VAL%E344
+    ! E4 x E334 -> E3344 (68, 33)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*32:NCOLS*33) = VAL%E4
+    ! E334 x E4 -> E3344 (68, 5)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*4:NCOLS*5) = VAL%E334
+    ! E33 x E44 -> E3344 (68, 15)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*14:NCOLS*15) = VAL%E33
+    ! E34 x E34 -> E3344 (68, 14)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*13:NCOLS*14) = VAL%E34
+    ! E44 x E33 -> E3344 (68, 11)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*10:NCOLS*11) = VAL%E44
+    ! R x E3444 -> E3444 (69, 69)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*68:NCOLS*69) = VAL%R
+    ! E3444 x R -> E3444 (69, 1)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*0:NCOLS*1) = VAL%E3444
+    ! E3 x E444 -> E3444 (69, 35)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*34:NCOLS*35) = VAL%E3
+    ! E444 x E3 -> E3444 (69, 4)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*3:NCOLS*4) = VAL%E444
+    ! E4 x E344 -> E3444 (69, 34)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*33:NCOLS*34) = VAL%E4
+    ! E344 x E4 -> E3444 (69, 5)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*4:NCOLS*5) = VAL%E344
+    ! E34 x E44 -> E3444 (69, 15)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*14:NCOLS*15) = VAL%E34
+    ! E44 x E34 -> E3444 (69, 14)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*13:NCOLS*14) = VAL%E44
+    ! R x E4444 -> E4444 (70, 70)
+    RES(1+NROWS*69:NROWS*70,1+NCOLS*69:NCOLS*70) = VAL%R
+    ! E4444 x R -> E4444 (70, 1)
+    RES(1+NROWS*69:NROWS*70,1+NCOLS*0:NCOLS*1) = VAL%E4444
+    ! E4 x E444 -> E4444 (70, 35)
+    RES(1+NROWS*69:NROWS*70,1+NCOLS*34:NCOLS*35) = VAL%E4
+    ! E444 x E4 -> E4444 (70, 5)
+    RES(1+NROWS*69:NROWS*70,1+NCOLS*4:NCOLS*5) = VAL%E444
+    ! E44 x E44 -> E4444 (70, 15)
+    RES(1+NROWS*69:NROWS*70,1+NCOLS*14:NCOLS*15) = VAL%E44
+  END FUNCTION ONUMM4N4_TO_CR_MAT_S
+
+FUNCTION ONUMM4N4_TO_CR_MAT_V(VAL) RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: VAL(:)
+    REAL(DP) :: RES(NUM_IM_DIR*SIZE(VAL,1),NUM_IM_DIR) 
+    INTEGER :: NCOLS=1, NROWS=1
+
+    NROWS = SIZE(VAL,1)
+
+    ! R x R -> R (1, 1)
+    RES(1+NROWS*0:NROWS*1,1) = VAL%R
+    ! R x E1 -> E1 (2, 2)
+    RES(1+NROWS*1:NROWS*2,2) = VAL%R
+    ! E1 x R -> E1 (2, 1)
+    RES(1+NROWS*1:NROWS*2,1) = VAL%E1
+    ! R x E2 -> E2 (3, 3)
+    RES(1+NROWS*2:NROWS*3,3) = VAL%R
+    ! E2 x R -> E2 (3, 1)
+    RES(1+NROWS*2:NROWS*3,1) = VAL%E2
+    ! R x E3 -> E3 (4, 4)
+    RES(1+NROWS*3:NROWS*4,4) = VAL%R
+    ! E3 x R -> E3 (4, 1)
+    RES(1+NROWS*3:NROWS*4,1) = VAL%E3
+    ! R x E4 -> E4 (5, 5)
+    RES(1+NROWS*4:NROWS*5,5) = VAL%R
+    ! E4 x R -> E4 (5, 1)
+    RES(1+NROWS*4:NROWS*5,1) = VAL%E4
+    ! R x E11 -> E11 (6, 6)
+    RES(1+NROWS*5:NROWS*6,6) = VAL%R
+    ! E11 x R -> E11 (6, 1)
+    RES(1+NROWS*5:NROWS*6,1) = VAL%E11
+    ! E1 x E1 -> E11 (6, 2)
+    RES(1+NROWS*5:NROWS*6,2) = VAL%E1
+    ! R x E12 -> E12 (7, 7)
+    RES(1+NROWS*6:NROWS*7,7) = VAL%R
+    ! E12 x R -> E12 (7, 1)
+    RES(1+NROWS*6:NROWS*7,1) = VAL%E12
+    ! E1 x E2 -> E12 (7, 3)
+    RES(1+NROWS*6:NROWS*7,3) = VAL%E1
+    ! E2 x E1 -> E12 (7, 2)
+    RES(1+NROWS*6:NROWS*7,2) = VAL%E2
+    ! R x E22 -> E22 (8, 8)
+    RES(1+NROWS*7:NROWS*8,8) = VAL%R
+    ! E22 x R -> E22 (8, 1)
+    RES(1+NROWS*7:NROWS*8,1) = VAL%E22
+    ! E2 x E2 -> E22 (8, 3)
+    RES(1+NROWS*7:NROWS*8,3) = VAL%E2
+    ! R x E13 -> E13 (9, 9)
+    RES(1+NROWS*8:NROWS*9,9) = VAL%R
+    ! E13 x R -> E13 (9, 1)
+    RES(1+NROWS*8:NROWS*9,1) = VAL%E13
+    ! E1 x E3 -> E13 (9, 4)
+    RES(1+NROWS*8:NROWS*9,4) = VAL%E1
+    ! E3 x E1 -> E13 (9, 2)
+    RES(1+NROWS*8:NROWS*9,2) = VAL%E3
+    ! R x E23 -> E23 (10, 10)
+    RES(1+NROWS*9:NROWS*10,10) = VAL%R
+    ! E23 x R -> E23 (10, 1)
+    RES(1+NROWS*9:NROWS*10,1) = VAL%E23
+    ! E2 x E3 -> E23 (10, 4)
+    RES(1+NROWS*9:NROWS*10,4) = VAL%E2
+    ! E3 x E2 -> E23 (10, 3)
+    RES(1+NROWS*9:NROWS*10,3) = VAL%E3
+    ! R x E33 -> E33 (11, 11)
+    RES(1+NROWS*10:NROWS*11,11) = VAL%R
+    ! E33 x R -> E33 (11, 1)
+    RES(1+NROWS*10:NROWS*11,1) = VAL%E33
+    ! E3 x E3 -> E33 (11, 4)
+    RES(1+NROWS*10:NROWS*11,4) = VAL%E3
+    ! R x E14 -> E14 (12, 12)
+    RES(1+NROWS*11:NROWS*12,12) = VAL%R
+    ! E14 x R -> E14 (12, 1)
+    RES(1+NROWS*11:NROWS*12,1) = VAL%E14
+    ! E1 x E4 -> E14 (12, 5)
+    RES(1+NROWS*11:NROWS*12,5) = VAL%E1
+    ! E4 x E1 -> E14 (12, 2)
+    RES(1+NROWS*11:NROWS*12,2) = VAL%E4
+    ! R x E24 -> E24 (13, 13)
+    RES(1+NROWS*12:NROWS*13,13) = VAL%R
+    ! E24 x R -> E24 (13, 1)
+    RES(1+NROWS*12:NROWS*13,1) = VAL%E24
+    ! E2 x E4 -> E24 (13, 5)
+    RES(1+NROWS*12:NROWS*13,5) = VAL%E2
+    ! E4 x E2 -> E24 (13, 3)
+    RES(1+NROWS*12:NROWS*13,3) = VAL%E4
+    ! R x E34 -> E34 (14, 14)
+    RES(1+NROWS*13:NROWS*14,14) = VAL%R
+    ! E34 x R -> E34 (14, 1)
+    RES(1+NROWS*13:NROWS*14,1) = VAL%E34
+    ! E3 x E4 -> E34 (14, 5)
+    RES(1+NROWS*13:NROWS*14,5) = VAL%E3
+    ! E4 x E3 -> E34 (14, 4)
+    RES(1+NROWS*13:NROWS*14,4) = VAL%E4
+    ! R x E44 -> E44 (15, 15)
+    RES(1+NROWS*14:NROWS*15,15) = VAL%R
+    ! E44 x R -> E44 (15, 1)
+    RES(1+NROWS*14:NROWS*15,1) = VAL%E44
+    ! E4 x E4 -> E44 (15, 5)
+    RES(1+NROWS*14:NROWS*15,5) = VAL%E4
+    ! R x E111 -> E111 (16, 16)
+    RES(1+NROWS*15:NROWS*16,16) = VAL%R
+    ! E111 x R -> E111 (16, 1)
+    RES(1+NROWS*15:NROWS*16,1) = VAL%E111
+    ! E1 x E11 -> E111 (16, 6)
+    RES(1+NROWS*15:NROWS*16,6) = VAL%E1
+    ! E11 x E1 -> E111 (16, 2)
+    RES(1+NROWS*15:NROWS*16,2) = VAL%E11
+    ! R x E112 -> E112 (17, 17)
+    RES(1+NROWS*16:NROWS*17,17) = VAL%R
+    ! E112 x R -> E112 (17, 1)
+    RES(1+NROWS*16:NROWS*17,1) = VAL%E112
+    ! E1 x E12 -> E112 (17, 7)
+    RES(1+NROWS*16:NROWS*17,7) = VAL%E1
+    ! E12 x E1 -> E112 (17, 2)
+    RES(1+NROWS*16:NROWS*17,2) = VAL%E12
+    ! E2 x E11 -> E112 (17, 6)
+    RES(1+NROWS*16:NROWS*17,6) = VAL%E2
+    ! E11 x E2 -> E112 (17, 3)
+    RES(1+NROWS*16:NROWS*17,3) = VAL%E11
+    ! R x E122 -> E122 (18, 18)
+    RES(1+NROWS*17:NROWS*18,18) = VAL%R
+    ! E122 x R -> E122 (18, 1)
+    RES(1+NROWS*17:NROWS*18,1) = VAL%E122
+    ! E1 x E22 -> E122 (18, 8)
+    RES(1+NROWS*17:NROWS*18,8) = VAL%E1
+    ! E22 x E1 -> E122 (18, 2)
+    RES(1+NROWS*17:NROWS*18,2) = VAL%E22
+    ! E2 x E12 -> E122 (18, 7)
+    RES(1+NROWS*17:NROWS*18,7) = VAL%E2
+    ! E12 x E2 -> E122 (18, 3)
+    RES(1+NROWS*17:NROWS*18,3) = VAL%E12
+    ! R x E222 -> E222 (19, 19)
+    RES(1+NROWS*18:NROWS*19,19) = VAL%R
+    ! E222 x R -> E222 (19, 1)
+    RES(1+NROWS*18:NROWS*19,1) = VAL%E222
+    ! E2 x E22 -> E222 (19, 8)
+    RES(1+NROWS*18:NROWS*19,8) = VAL%E2
+    ! E22 x E2 -> E222 (19, 3)
+    RES(1+NROWS*18:NROWS*19,3) = VAL%E22
+    ! R x E113 -> E113 (20, 20)
+    RES(1+NROWS*19:NROWS*20,20) = VAL%R
+    ! E113 x R -> E113 (20, 1)
+    RES(1+NROWS*19:NROWS*20,1) = VAL%E113
+    ! E1 x E13 -> E113 (20, 9)
+    RES(1+NROWS*19:NROWS*20,9) = VAL%E1
+    ! E13 x E1 -> E113 (20, 2)
+    RES(1+NROWS*19:NROWS*20,2) = VAL%E13
+    ! E3 x E11 -> E113 (20, 6)
+    RES(1+NROWS*19:NROWS*20,6) = VAL%E3
+    ! E11 x E3 -> E113 (20, 4)
+    RES(1+NROWS*19:NROWS*20,4) = VAL%E11
+    ! R x E123 -> E123 (21, 21)
+    RES(1+NROWS*20:NROWS*21,21) = VAL%R
+    ! E123 x R -> E123 (21, 1)
+    RES(1+NROWS*20:NROWS*21,1) = VAL%E123
+    ! E1 x E23 -> E123 (21, 10)
+    RES(1+NROWS*20:NROWS*21,10) = VAL%E1
+    ! E23 x E1 -> E123 (21, 2)
+    RES(1+NROWS*20:NROWS*21,2) = VAL%E23
+    ! E2 x E13 -> E123 (21, 9)
+    RES(1+NROWS*20:NROWS*21,9) = VAL%E2
+    ! E13 x E2 -> E123 (21, 3)
+    RES(1+NROWS*20:NROWS*21,3) = VAL%E13
+    ! E3 x E12 -> E123 (21, 7)
+    RES(1+NROWS*20:NROWS*21,7) = VAL%E3
+    ! E12 x E3 -> E123 (21, 4)
+    RES(1+NROWS*20:NROWS*21,4) = VAL%E12
+    ! R x E133 -> E133 (22, 22)
+    RES(1+NROWS*21:NROWS*22,22) = VAL%R
+    ! E133 x R -> E133 (22, 1)
+    RES(1+NROWS*21:NROWS*22,1) = VAL%E133
+    ! E1 x E33 -> E133 (22, 11)
+    RES(1+NROWS*21:NROWS*22,11) = VAL%E1
+    ! E33 x E1 -> E133 (22, 2)
+    RES(1+NROWS*21:NROWS*22,2) = VAL%E33
+    ! E3 x E13 -> E133 (22, 9)
+    RES(1+NROWS*21:NROWS*22,9) = VAL%E3
+    ! E13 x E3 -> E133 (22, 4)
+    RES(1+NROWS*21:NROWS*22,4) = VAL%E13
+    ! R x E223 -> E223 (23, 23)
+    RES(1+NROWS*22:NROWS*23,23) = VAL%R
+    ! E223 x R -> E223 (23, 1)
+    RES(1+NROWS*22:NROWS*23,1) = VAL%E223
+    ! E2 x E23 -> E223 (23, 10)
+    RES(1+NROWS*22:NROWS*23,10) = VAL%E2
+    ! E23 x E2 -> E223 (23, 3)
+    RES(1+NROWS*22:NROWS*23,3) = VAL%E23
+    ! E3 x E22 -> E223 (23, 8)
+    RES(1+NROWS*22:NROWS*23,8) = VAL%E3
+    ! E22 x E3 -> E223 (23, 4)
+    RES(1+NROWS*22:NROWS*23,4) = VAL%E22
+    ! R x E233 -> E233 (24, 24)
+    RES(1+NROWS*23:NROWS*24,24) = VAL%R
+    ! E233 x R -> E233 (24, 1)
+    RES(1+NROWS*23:NROWS*24,1) = VAL%E233
+    ! E2 x E33 -> E233 (24, 11)
+    RES(1+NROWS*23:NROWS*24,11) = VAL%E2
+    ! E33 x E2 -> E233 (24, 3)
+    RES(1+NROWS*23:NROWS*24,3) = VAL%E33
+    ! E3 x E23 -> E233 (24, 10)
+    RES(1+NROWS*23:NROWS*24,10) = VAL%E3
+    ! E23 x E3 -> E233 (24, 4)
+    RES(1+NROWS*23:NROWS*24,4) = VAL%E23
+    ! R x E333 -> E333 (25, 25)
+    RES(1+NROWS*24:NROWS*25,25) = VAL%R
+    ! E333 x R -> E333 (25, 1)
+    RES(1+NROWS*24:NROWS*25,1) = VAL%E333
+    ! E3 x E33 -> E333 (25, 11)
+    RES(1+NROWS*24:NROWS*25,11) = VAL%E3
+    ! E33 x E3 -> E333 (25, 4)
+    RES(1+NROWS*24:NROWS*25,4) = VAL%E33
+    ! R x E114 -> E114 (26, 26)
+    RES(1+NROWS*25:NROWS*26,26) = VAL%R
+    ! E114 x R -> E114 (26, 1)
+    RES(1+NROWS*25:NROWS*26,1) = VAL%E114
+    ! E1 x E14 -> E114 (26, 12)
+    RES(1+NROWS*25:NROWS*26,12) = VAL%E1
+    ! E14 x E1 -> E114 (26, 2)
+    RES(1+NROWS*25:NROWS*26,2) = VAL%E14
+    ! E4 x E11 -> E114 (26, 6)
+    RES(1+NROWS*25:NROWS*26,6) = VAL%E4
+    ! E11 x E4 -> E114 (26, 5)
+    RES(1+NROWS*25:NROWS*26,5) = VAL%E11
+    ! R x E124 -> E124 (27, 27)
+    RES(1+NROWS*26:NROWS*27,27) = VAL%R
+    ! E124 x R -> E124 (27, 1)
+    RES(1+NROWS*26:NROWS*27,1) = VAL%E124
+    ! E1 x E24 -> E124 (27, 13)
+    RES(1+NROWS*26:NROWS*27,13) = VAL%E1
+    ! E24 x E1 -> E124 (27, 2)
+    RES(1+NROWS*26:NROWS*27,2) = VAL%E24
+    ! E2 x E14 -> E124 (27, 12)
+    RES(1+NROWS*26:NROWS*27,12) = VAL%E2
+    ! E14 x E2 -> E124 (27, 3)
+    RES(1+NROWS*26:NROWS*27,3) = VAL%E14
+    ! E4 x E12 -> E124 (27, 7)
+    RES(1+NROWS*26:NROWS*27,7) = VAL%E4
+    ! E12 x E4 -> E124 (27, 5)
+    RES(1+NROWS*26:NROWS*27,5) = VAL%E12
+    ! R x E134 -> E134 (28, 28)
+    RES(1+NROWS*27:NROWS*28,28) = VAL%R
+    ! E134 x R -> E134 (28, 1)
+    RES(1+NROWS*27:NROWS*28,1) = VAL%E134
+    ! E1 x E34 -> E134 (28, 14)
+    RES(1+NROWS*27:NROWS*28,14) = VAL%E1
+    ! E34 x E1 -> E134 (28, 2)
+    RES(1+NROWS*27:NROWS*28,2) = VAL%E34
+    ! E3 x E14 -> E134 (28, 12)
+    RES(1+NROWS*27:NROWS*28,12) = VAL%E3
+    ! E14 x E3 -> E134 (28, 4)
+    RES(1+NROWS*27:NROWS*28,4) = VAL%E14
+    ! E4 x E13 -> E134 (28, 9)
+    RES(1+NROWS*27:NROWS*28,9) = VAL%E4
+    ! E13 x E4 -> E134 (28, 5)
+    RES(1+NROWS*27:NROWS*28,5) = VAL%E13
+    ! R x E144 -> E144 (29, 29)
+    RES(1+NROWS*28:NROWS*29,29) = VAL%R
+    ! E144 x R -> E144 (29, 1)
+    RES(1+NROWS*28:NROWS*29,1) = VAL%E144
+    ! E1 x E44 -> E144 (29, 15)
+    RES(1+NROWS*28:NROWS*29,15) = VAL%E1
+    ! E44 x E1 -> E144 (29, 2)
+    RES(1+NROWS*28:NROWS*29,2) = VAL%E44
+    ! E4 x E14 -> E144 (29, 12)
+    RES(1+NROWS*28:NROWS*29,12) = VAL%E4
+    ! E14 x E4 -> E144 (29, 5)
+    RES(1+NROWS*28:NROWS*29,5) = VAL%E14
+    ! R x E224 -> E224 (30, 30)
+    RES(1+NROWS*29:NROWS*30,30) = VAL%R
+    ! E224 x R -> E224 (30, 1)
+    RES(1+NROWS*29:NROWS*30,1) = VAL%E224
+    ! E2 x E24 -> E224 (30, 13)
+    RES(1+NROWS*29:NROWS*30,13) = VAL%E2
+    ! E24 x E2 -> E224 (30, 3)
+    RES(1+NROWS*29:NROWS*30,3) = VAL%E24
+    ! E4 x E22 -> E224 (30, 8)
+    RES(1+NROWS*29:NROWS*30,8) = VAL%E4
+    ! E22 x E4 -> E224 (30, 5)
+    RES(1+NROWS*29:NROWS*30,5) = VAL%E22
+    ! R x E234 -> E234 (31, 31)
+    RES(1+NROWS*30:NROWS*31,31) = VAL%R
+    ! E234 x R -> E234 (31, 1)
+    RES(1+NROWS*30:NROWS*31,1) = VAL%E234
+    ! E2 x E34 -> E234 (31, 14)
+    RES(1+NROWS*30:NROWS*31,14) = VAL%E2
+    ! E34 x E2 -> E234 (31, 3)
+    RES(1+NROWS*30:NROWS*31,3) = VAL%E34
+    ! E3 x E24 -> E234 (31, 13)
+    RES(1+NROWS*30:NROWS*31,13) = VAL%E3
+    ! E24 x E3 -> E234 (31, 4)
+    RES(1+NROWS*30:NROWS*31,4) = VAL%E24
+    ! E4 x E23 -> E234 (31, 10)
+    RES(1+NROWS*30:NROWS*31,10) = VAL%E4
+    ! E23 x E4 -> E234 (31, 5)
+    RES(1+NROWS*30:NROWS*31,5) = VAL%E23
+    ! R x E244 -> E244 (32, 32)
+    RES(1+NROWS*31:NROWS*32,32) = VAL%R
+    ! E244 x R -> E244 (32, 1)
+    RES(1+NROWS*31:NROWS*32,1) = VAL%E244
+    ! E2 x E44 -> E244 (32, 15)
+    RES(1+NROWS*31:NROWS*32,15) = VAL%E2
+    ! E44 x E2 -> E244 (32, 3)
+    RES(1+NROWS*31:NROWS*32,3) = VAL%E44
+    ! E4 x E24 -> E244 (32, 13)
+    RES(1+NROWS*31:NROWS*32,13) = VAL%E4
+    ! E24 x E4 -> E244 (32, 5)
+    RES(1+NROWS*31:NROWS*32,5) = VAL%E24
+    ! R x E334 -> E334 (33, 33)
+    RES(1+NROWS*32:NROWS*33,33) = VAL%R
+    ! E334 x R -> E334 (33, 1)
+    RES(1+NROWS*32:NROWS*33,1) = VAL%E334
+    ! E3 x E34 -> E334 (33, 14)
+    RES(1+NROWS*32:NROWS*33,14) = VAL%E3
+    ! E34 x E3 -> E334 (33, 4)
+    RES(1+NROWS*32:NROWS*33,4) = VAL%E34
+    ! E4 x E33 -> E334 (33, 11)
+    RES(1+NROWS*32:NROWS*33,11) = VAL%E4
+    ! E33 x E4 -> E334 (33, 5)
+    RES(1+NROWS*32:NROWS*33,5) = VAL%E33
+    ! R x E344 -> E344 (34, 34)
+    RES(1+NROWS*33:NROWS*34,34) = VAL%R
+    ! E344 x R -> E344 (34, 1)
+    RES(1+NROWS*33:NROWS*34,1) = VAL%E344
+    ! E3 x E44 -> E344 (34, 15)
+    RES(1+NROWS*33:NROWS*34,15) = VAL%E3
+    ! E44 x E3 -> E344 (34, 4)
+    RES(1+NROWS*33:NROWS*34,4) = VAL%E44
+    ! E4 x E34 -> E344 (34, 14)
+    RES(1+NROWS*33:NROWS*34,14) = VAL%E4
+    ! E34 x E4 -> E344 (34, 5)
+    RES(1+NROWS*33:NROWS*34,5) = VAL%E34
+    ! R x E444 -> E444 (35, 35)
+    RES(1+NROWS*34:NROWS*35,35) = VAL%R
+    ! E444 x R -> E444 (35, 1)
+    RES(1+NROWS*34:NROWS*35,1) = VAL%E444
+    ! E4 x E44 -> E444 (35, 15)
+    RES(1+NROWS*34:NROWS*35,15) = VAL%E4
+    ! E44 x E4 -> E444 (35, 5)
+    RES(1+NROWS*34:NROWS*35,5) = VAL%E44
+    ! R x E1111 -> E1111 (36, 36)
+    RES(1+NROWS*35:NROWS*36,36) = VAL%R
+    ! E1111 x R -> E1111 (36, 1)
+    RES(1+NROWS*35:NROWS*36,1) = VAL%E1111
+    ! E1 x E111 -> E1111 (36, 16)
+    RES(1+NROWS*35:NROWS*36,16) = VAL%E1
+    ! E111 x E1 -> E1111 (36, 2)
+    RES(1+NROWS*35:NROWS*36,2) = VAL%E111
+    ! E11 x E11 -> E1111 (36, 6)
+    RES(1+NROWS*35:NROWS*36,6) = VAL%E11
+    ! R x E1112 -> E1112 (37, 37)
+    RES(1+NROWS*36:NROWS*37,37) = VAL%R
+    ! E1112 x R -> E1112 (37, 1)
+    RES(1+NROWS*36:NROWS*37,1) = VAL%E1112
+    ! E1 x E112 -> E1112 (37, 17)
+    RES(1+NROWS*36:NROWS*37,17) = VAL%E1
+    ! E112 x E1 -> E1112 (37, 2)
+    RES(1+NROWS*36:NROWS*37,2) = VAL%E112
+    ! E2 x E111 -> E1112 (37, 16)
+    RES(1+NROWS*36:NROWS*37,16) = VAL%E2
+    ! E111 x E2 -> E1112 (37, 3)
+    RES(1+NROWS*36:NROWS*37,3) = VAL%E111
+    ! E11 x E12 -> E1112 (37, 7)
+    RES(1+NROWS*36:NROWS*37,7) = VAL%E11
+    ! E12 x E11 -> E1112 (37, 6)
+    RES(1+NROWS*36:NROWS*37,6) = VAL%E12
+    ! R x E1122 -> E1122 (38, 38)
+    RES(1+NROWS*37:NROWS*38,38) = VAL%R
+    ! E1122 x R -> E1122 (38, 1)
+    RES(1+NROWS*37:NROWS*38,1) = VAL%E1122
+    ! E1 x E122 -> E1122 (38, 18)
+    RES(1+NROWS*37:NROWS*38,18) = VAL%E1
+    ! E122 x E1 -> E1122 (38, 2)
+    RES(1+NROWS*37:NROWS*38,2) = VAL%E122
+    ! E2 x E112 -> E1122 (38, 17)
+    RES(1+NROWS*37:NROWS*38,17) = VAL%E2
+    ! E112 x E2 -> E1122 (38, 3)
+    RES(1+NROWS*37:NROWS*38,3) = VAL%E112
+    ! E11 x E22 -> E1122 (38, 8)
+    RES(1+NROWS*37:NROWS*38,8) = VAL%E11
+    ! E12 x E12 -> E1122 (38, 7)
+    RES(1+NROWS*37:NROWS*38,7) = VAL%E12
+    ! E22 x E11 -> E1122 (38, 6)
+    RES(1+NROWS*37:NROWS*38,6) = VAL%E22
+    ! R x E1222 -> E1222 (39, 39)
+    RES(1+NROWS*38:NROWS*39,39) = VAL%R
+    ! E1222 x R -> E1222 (39, 1)
+    RES(1+NROWS*38:NROWS*39,1) = VAL%E1222
+    ! E1 x E222 -> E1222 (39, 19)
+    RES(1+NROWS*38:NROWS*39,19) = VAL%E1
+    ! E222 x E1 -> E1222 (39, 2)
+    RES(1+NROWS*38:NROWS*39,2) = VAL%E222
+    ! E2 x E122 -> E1222 (39, 18)
+    RES(1+NROWS*38:NROWS*39,18) = VAL%E2
+    ! E122 x E2 -> E1222 (39, 3)
+    RES(1+NROWS*38:NROWS*39,3) = VAL%E122
+    ! E12 x E22 -> E1222 (39, 8)
+    RES(1+NROWS*38:NROWS*39,8) = VAL%E12
+    ! E22 x E12 -> E1222 (39, 7)
+    RES(1+NROWS*38:NROWS*39,7) = VAL%E22
+    ! R x E2222 -> E2222 (40, 40)
+    RES(1+NROWS*39:NROWS*40,40) = VAL%R
+    ! E2222 x R -> E2222 (40, 1)
+    RES(1+NROWS*39:NROWS*40,1) = VAL%E2222
+    ! E2 x E222 -> E2222 (40, 19)
+    RES(1+NROWS*39:NROWS*40,19) = VAL%E2
+    ! E222 x E2 -> E2222 (40, 3)
+    RES(1+NROWS*39:NROWS*40,3) = VAL%E222
+    ! E22 x E22 -> E2222 (40, 8)
+    RES(1+NROWS*39:NROWS*40,8) = VAL%E22
+    ! R x E1113 -> E1113 (41, 41)
+    RES(1+NROWS*40:NROWS*41,41) = VAL%R
+    ! E1113 x R -> E1113 (41, 1)
+    RES(1+NROWS*40:NROWS*41,1) = VAL%E1113
+    ! E1 x E113 -> E1113 (41, 20)
+    RES(1+NROWS*40:NROWS*41,20) = VAL%E1
+    ! E113 x E1 -> E1113 (41, 2)
+    RES(1+NROWS*40:NROWS*41,2) = VAL%E113
+    ! E3 x E111 -> E1113 (41, 16)
+    RES(1+NROWS*40:NROWS*41,16) = VAL%E3
+    ! E111 x E3 -> E1113 (41, 4)
+    RES(1+NROWS*40:NROWS*41,4) = VAL%E111
+    ! E11 x E13 -> E1113 (41, 9)
+    RES(1+NROWS*40:NROWS*41,9) = VAL%E11
+    ! E13 x E11 -> E1113 (41, 6)
+    RES(1+NROWS*40:NROWS*41,6) = VAL%E13
+    ! R x E1123 -> E1123 (42, 42)
+    RES(1+NROWS*41:NROWS*42,42) = VAL%R
+    ! E1123 x R -> E1123 (42, 1)
+    RES(1+NROWS*41:NROWS*42,1) = VAL%E1123
+    ! E1 x E123 -> E1123 (42, 21)
+    RES(1+NROWS*41:NROWS*42,21) = VAL%E1
+    ! E123 x E1 -> E1123 (42, 2)
+    RES(1+NROWS*41:NROWS*42,2) = VAL%E123
+    ! E2 x E113 -> E1123 (42, 20)
+    RES(1+NROWS*41:NROWS*42,20) = VAL%E2
+    ! E113 x E2 -> E1123 (42, 3)
+    RES(1+NROWS*41:NROWS*42,3) = VAL%E113
+    ! E3 x E112 -> E1123 (42, 17)
+    RES(1+NROWS*41:NROWS*42,17) = VAL%E3
+    ! E112 x E3 -> E1123 (42, 4)
+    RES(1+NROWS*41:NROWS*42,4) = VAL%E112
+    ! E11 x E23 -> E1123 (42, 10)
+    RES(1+NROWS*41:NROWS*42,10) = VAL%E11
+    ! E12 x E13 -> E1123 (42, 9)
+    RES(1+NROWS*41:NROWS*42,9) = VAL%E12
+    ! E13 x E12 -> E1123 (42, 7)
+    RES(1+NROWS*41:NROWS*42,7) = VAL%E13
+    ! E23 x E11 -> E1123 (42, 6)
+    RES(1+NROWS*41:NROWS*42,6) = VAL%E23
+    ! R x E1133 -> E1133 (43, 43)
+    RES(1+NROWS*42:NROWS*43,43) = VAL%R
+    ! E1133 x R -> E1133 (43, 1)
+    RES(1+NROWS*42:NROWS*43,1) = VAL%E1133
+    ! E1 x E133 -> E1133 (43, 22)
+    RES(1+NROWS*42:NROWS*43,22) = VAL%E1
+    ! E133 x E1 -> E1133 (43, 2)
+    RES(1+NROWS*42:NROWS*43,2) = VAL%E133
+    ! E3 x E113 -> E1133 (43, 20)
+    RES(1+NROWS*42:NROWS*43,20) = VAL%E3
+    ! E113 x E3 -> E1133 (43, 4)
+    RES(1+NROWS*42:NROWS*43,4) = VAL%E113
+    ! E11 x E33 -> E1133 (43, 11)
+    RES(1+NROWS*42:NROWS*43,11) = VAL%E11
+    ! E13 x E13 -> E1133 (43, 9)
+    RES(1+NROWS*42:NROWS*43,9) = VAL%E13
+    ! E33 x E11 -> E1133 (43, 6)
+    RES(1+NROWS*42:NROWS*43,6) = VAL%E33
+    ! R x E1223 -> E1223 (44, 44)
+    RES(1+NROWS*43:NROWS*44,44) = VAL%R
+    ! E1223 x R -> E1223 (44, 1)
+    RES(1+NROWS*43:NROWS*44,1) = VAL%E1223
+    ! E1 x E223 -> E1223 (44, 23)
+    RES(1+NROWS*43:NROWS*44,23) = VAL%E1
+    ! E223 x E1 -> E1223 (44, 2)
+    RES(1+NROWS*43:NROWS*44,2) = VAL%E223
+    ! E2 x E123 -> E1223 (44, 21)
+    RES(1+NROWS*43:NROWS*44,21) = VAL%E2
+    ! E123 x E2 -> E1223 (44, 3)
+    RES(1+NROWS*43:NROWS*44,3) = VAL%E123
+    ! E3 x E122 -> E1223 (44, 18)
+    RES(1+NROWS*43:NROWS*44,18) = VAL%E3
+    ! E122 x E3 -> E1223 (44, 4)
+    RES(1+NROWS*43:NROWS*44,4) = VAL%E122
+    ! E12 x E23 -> E1223 (44, 10)
+    RES(1+NROWS*43:NROWS*44,10) = VAL%E12
+    ! E22 x E13 -> E1223 (44, 9)
+    RES(1+NROWS*43:NROWS*44,9) = VAL%E22
+    ! E13 x E22 -> E1223 (44, 8)
+    RES(1+NROWS*43:NROWS*44,8) = VAL%E13
+    ! E23 x E12 -> E1223 (44, 7)
+    RES(1+NROWS*43:NROWS*44,7) = VAL%E23
+    ! R x E1233 -> E1233 (45, 45)
+    RES(1+NROWS*44:NROWS*45,45) = VAL%R
+    ! E1233 x R -> E1233 (45, 1)
+    RES(1+NROWS*44:NROWS*45,1) = VAL%E1233
+    ! E1 x E233 -> E1233 (45, 24)
+    RES(1+NROWS*44:NROWS*45,24) = VAL%E1
+    ! E233 x E1 -> E1233 (45, 2)
+    RES(1+NROWS*44:NROWS*45,2) = VAL%E233
+    ! E2 x E133 -> E1233 (45, 22)
+    RES(1+NROWS*44:NROWS*45,22) = VAL%E2
+    ! E133 x E2 -> E1233 (45, 3)
+    RES(1+NROWS*44:NROWS*45,3) = VAL%E133
+    ! E3 x E123 -> E1233 (45, 21)
+    RES(1+NROWS*44:NROWS*45,21) = VAL%E3
+    ! E123 x E3 -> E1233 (45, 4)
+    RES(1+NROWS*44:NROWS*45,4) = VAL%E123
+    ! E12 x E33 -> E1233 (45, 11)
+    RES(1+NROWS*44:NROWS*45,11) = VAL%E12
+    ! E13 x E23 -> E1233 (45, 10)
+    RES(1+NROWS*44:NROWS*45,10) = VAL%E13
+    ! E23 x E13 -> E1233 (45, 9)
+    RES(1+NROWS*44:NROWS*45,9) = VAL%E23
+    ! E33 x E12 -> E1233 (45, 7)
+    RES(1+NROWS*44:NROWS*45,7) = VAL%E33
+    ! R x E1333 -> E1333 (46, 46)
+    RES(1+NROWS*45:NROWS*46,46) = VAL%R
+    ! E1333 x R -> E1333 (46, 1)
+    RES(1+NROWS*45:NROWS*46,1) = VAL%E1333
+    ! E1 x E333 -> E1333 (46, 25)
+    RES(1+NROWS*45:NROWS*46,25) = VAL%E1
+    ! E333 x E1 -> E1333 (46, 2)
+    RES(1+NROWS*45:NROWS*46,2) = VAL%E333
+    ! E3 x E133 -> E1333 (46, 22)
+    RES(1+NROWS*45:NROWS*46,22) = VAL%E3
+    ! E133 x E3 -> E1333 (46, 4)
+    RES(1+NROWS*45:NROWS*46,4) = VAL%E133
+    ! E13 x E33 -> E1333 (46, 11)
+    RES(1+NROWS*45:NROWS*46,11) = VAL%E13
+    ! E33 x E13 -> E1333 (46, 9)
+    RES(1+NROWS*45:NROWS*46,9) = VAL%E33
+    ! R x E2223 -> E2223 (47, 47)
+    RES(1+NROWS*46:NROWS*47,47) = VAL%R
+    ! E2223 x R -> E2223 (47, 1)
+    RES(1+NROWS*46:NROWS*47,1) = VAL%E2223
+    ! E2 x E223 -> E2223 (47, 23)
+    RES(1+NROWS*46:NROWS*47,23) = VAL%E2
+    ! E223 x E2 -> E2223 (47, 3)
+    RES(1+NROWS*46:NROWS*47,3) = VAL%E223
+    ! E3 x E222 -> E2223 (47, 19)
+    RES(1+NROWS*46:NROWS*47,19) = VAL%E3
+    ! E222 x E3 -> E2223 (47, 4)
+    RES(1+NROWS*46:NROWS*47,4) = VAL%E222
+    ! E22 x E23 -> E2223 (47, 10)
+    RES(1+NROWS*46:NROWS*47,10) = VAL%E22
+    ! E23 x E22 -> E2223 (47, 8)
+    RES(1+NROWS*46:NROWS*47,8) = VAL%E23
+    ! R x E2233 -> E2233 (48, 48)
+    RES(1+NROWS*47:NROWS*48,48) = VAL%R
+    ! E2233 x R -> E2233 (48, 1)
+    RES(1+NROWS*47:NROWS*48,1) = VAL%E2233
+    ! E2 x E233 -> E2233 (48, 24)
+    RES(1+NROWS*47:NROWS*48,24) = VAL%E2
+    ! E233 x E2 -> E2233 (48, 3)
+    RES(1+NROWS*47:NROWS*48,3) = VAL%E233
+    ! E3 x E223 -> E2233 (48, 23)
+    RES(1+NROWS*47:NROWS*48,23) = VAL%E3
+    ! E223 x E3 -> E2233 (48, 4)
+    RES(1+NROWS*47:NROWS*48,4) = VAL%E223
+    ! E22 x E33 -> E2233 (48, 11)
+    RES(1+NROWS*47:NROWS*48,11) = VAL%E22
+    ! E23 x E23 -> E2233 (48, 10)
+    RES(1+NROWS*47:NROWS*48,10) = VAL%E23
+    ! E33 x E22 -> E2233 (48, 8)
+    RES(1+NROWS*47:NROWS*48,8) = VAL%E33
+    ! R x E2333 -> E2333 (49, 49)
+    RES(1+NROWS*48:NROWS*49,49) = VAL%R
+    ! E2333 x R -> E2333 (49, 1)
+    RES(1+NROWS*48:NROWS*49,1) = VAL%E2333
+    ! E2 x E333 -> E2333 (49, 25)
+    RES(1+NROWS*48:NROWS*49,25) = VAL%E2
+    ! E333 x E2 -> E2333 (49, 3)
+    RES(1+NROWS*48:NROWS*49,3) = VAL%E333
+    ! E3 x E233 -> E2333 (49, 24)
+    RES(1+NROWS*48:NROWS*49,24) = VAL%E3
+    ! E233 x E3 -> E2333 (49, 4)
+    RES(1+NROWS*48:NROWS*49,4) = VAL%E233
+    ! E23 x E33 -> E2333 (49, 11)
+    RES(1+NROWS*48:NROWS*49,11) = VAL%E23
+    ! E33 x E23 -> E2333 (49, 10)
+    RES(1+NROWS*48:NROWS*49,10) = VAL%E33
+    ! R x E3333 -> E3333 (50, 50)
+    RES(1+NROWS*49:NROWS*50,50) = VAL%R
+    ! E3333 x R -> E3333 (50, 1)
+    RES(1+NROWS*49:NROWS*50,1) = VAL%E3333
+    ! E3 x E333 -> E3333 (50, 25)
+    RES(1+NROWS*49:NROWS*50,25) = VAL%E3
+    ! E333 x E3 -> E3333 (50, 4)
+    RES(1+NROWS*49:NROWS*50,4) = VAL%E333
+    ! E33 x E33 -> E3333 (50, 11)
+    RES(1+NROWS*49:NROWS*50,11) = VAL%E33
+    ! R x E1114 -> E1114 (51, 51)
+    RES(1+NROWS*50:NROWS*51,51) = VAL%R
+    ! E1114 x R -> E1114 (51, 1)
+    RES(1+NROWS*50:NROWS*51,1) = VAL%E1114
+    ! E1 x E114 -> E1114 (51, 26)
+    RES(1+NROWS*50:NROWS*51,26) = VAL%E1
+    ! E114 x E1 -> E1114 (51, 2)
+    RES(1+NROWS*50:NROWS*51,2) = VAL%E114
+    ! E4 x E111 -> E1114 (51, 16)
+    RES(1+NROWS*50:NROWS*51,16) = VAL%E4
+    ! E111 x E4 -> E1114 (51, 5)
+    RES(1+NROWS*50:NROWS*51,5) = VAL%E111
+    ! E11 x E14 -> E1114 (51, 12)
+    RES(1+NROWS*50:NROWS*51,12) = VAL%E11
+    ! E14 x E11 -> E1114 (51, 6)
+    RES(1+NROWS*50:NROWS*51,6) = VAL%E14
+    ! R x E1124 -> E1124 (52, 52)
+    RES(1+NROWS*51:NROWS*52,52) = VAL%R
+    ! E1124 x R -> E1124 (52, 1)
+    RES(1+NROWS*51:NROWS*52,1) = VAL%E1124
+    ! E1 x E124 -> E1124 (52, 27)
+    RES(1+NROWS*51:NROWS*52,27) = VAL%E1
+    ! E124 x E1 -> E1124 (52, 2)
+    RES(1+NROWS*51:NROWS*52,2) = VAL%E124
+    ! E2 x E114 -> E1124 (52, 26)
+    RES(1+NROWS*51:NROWS*52,26) = VAL%E2
+    ! E114 x E2 -> E1124 (52, 3)
+    RES(1+NROWS*51:NROWS*52,3) = VAL%E114
+    ! E4 x E112 -> E1124 (52, 17)
+    RES(1+NROWS*51:NROWS*52,17) = VAL%E4
+    ! E112 x E4 -> E1124 (52, 5)
+    RES(1+NROWS*51:NROWS*52,5) = VAL%E112
+    ! E11 x E24 -> E1124 (52, 13)
+    RES(1+NROWS*51:NROWS*52,13) = VAL%E11
+    ! E12 x E14 -> E1124 (52, 12)
+    RES(1+NROWS*51:NROWS*52,12) = VAL%E12
+    ! E14 x E12 -> E1124 (52, 7)
+    RES(1+NROWS*51:NROWS*52,7) = VAL%E14
+    ! E24 x E11 -> E1124 (52, 6)
+    RES(1+NROWS*51:NROWS*52,6) = VAL%E24
+    ! R x E1134 -> E1134 (53, 53)
+    RES(1+NROWS*52:NROWS*53,53) = VAL%R
+    ! E1134 x R -> E1134 (53, 1)
+    RES(1+NROWS*52:NROWS*53,1) = VAL%E1134
+    ! E1 x E134 -> E1134 (53, 28)
+    RES(1+NROWS*52:NROWS*53,28) = VAL%E1
+    ! E134 x E1 -> E1134 (53, 2)
+    RES(1+NROWS*52:NROWS*53,2) = VAL%E134
+    ! E3 x E114 -> E1134 (53, 26)
+    RES(1+NROWS*52:NROWS*53,26) = VAL%E3
+    ! E114 x E3 -> E1134 (53, 4)
+    RES(1+NROWS*52:NROWS*53,4) = VAL%E114
+    ! E4 x E113 -> E1134 (53, 20)
+    RES(1+NROWS*52:NROWS*53,20) = VAL%E4
+    ! E113 x E4 -> E1134 (53, 5)
+    RES(1+NROWS*52:NROWS*53,5) = VAL%E113
+    ! E11 x E34 -> E1134 (53, 14)
+    RES(1+NROWS*52:NROWS*53,14) = VAL%E11
+    ! E13 x E14 -> E1134 (53, 12)
+    RES(1+NROWS*52:NROWS*53,12) = VAL%E13
+    ! E14 x E13 -> E1134 (53, 9)
+    RES(1+NROWS*52:NROWS*53,9) = VAL%E14
+    ! E34 x E11 -> E1134 (53, 6)
+    RES(1+NROWS*52:NROWS*53,6) = VAL%E34
+    ! R x E1144 -> E1144 (54, 54)
+    RES(1+NROWS*53:NROWS*54,54) = VAL%R
+    ! E1144 x R -> E1144 (54, 1)
+    RES(1+NROWS*53:NROWS*54,1) = VAL%E1144
+    ! E1 x E144 -> E1144 (54, 29)
+    RES(1+NROWS*53:NROWS*54,29) = VAL%E1
+    ! E144 x E1 -> E1144 (54, 2)
+    RES(1+NROWS*53:NROWS*54,2) = VAL%E144
+    ! E4 x E114 -> E1144 (54, 26)
+    RES(1+NROWS*53:NROWS*54,26) = VAL%E4
+    ! E114 x E4 -> E1144 (54, 5)
+    RES(1+NROWS*53:NROWS*54,5) = VAL%E114
+    ! E11 x E44 -> E1144 (54, 15)
+    RES(1+NROWS*53:NROWS*54,15) = VAL%E11
+    ! E14 x E14 -> E1144 (54, 12)
+    RES(1+NROWS*53:NROWS*54,12) = VAL%E14
+    ! E44 x E11 -> E1144 (54, 6)
+    RES(1+NROWS*53:NROWS*54,6) = VAL%E44
+    ! R x E1224 -> E1224 (55, 55)
+    RES(1+NROWS*54:NROWS*55,55) = VAL%R
+    ! E1224 x R -> E1224 (55, 1)
+    RES(1+NROWS*54:NROWS*55,1) = VAL%E1224
+    ! E1 x E224 -> E1224 (55, 30)
+    RES(1+NROWS*54:NROWS*55,30) = VAL%E1
+    ! E224 x E1 -> E1224 (55, 2)
+    RES(1+NROWS*54:NROWS*55,2) = VAL%E224
+    ! E2 x E124 -> E1224 (55, 27)
+    RES(1+NROWS*54:NROWS*55,27) = VAL%E2
+    ! E124 x E2 -> E1224 (55, 3)
+    RES(1+NROWS*54:NROWS*55,3) = VAL%E124
+    ! E4 x E122 -> E1224 (55, 18)
+    RES(1+NROWS*54:NROWS*55,18) = VAL%E4
+    ! E122 x E4 -> E1224 (55, 5)
+    RES(1+NROWS*54:NROWS*55,5) = VAL%E122
+    ! E12 x E24 -> E1224 (55, 13)
+    RES(1+NROWS*54:NROWS*55,13) = VAL%E12
+    ! E22 x E14 -> E1224 (55, 12)
+    RES(1+NROWS*54:NROWS*55,12) = VAL%E22
+    ! E14 x E22 -> E1224 (55, 8)
+    RES(1+NROWS*54:NROWS*55,8) = VAL%E14
+    ! E24 x E12 -> E1224 (55, 7)
+    RES(1+NROWS*54:NROWS*55,7) = VAL%E24
+    ! R x E1234 -> E1234 (56, 56)
+    RES(1+NROWS*55:NROWS*56,56) = VAL%R
+    ! E1234 x R -> E1234 (56, 1)
+    RES(1+NROWS*55:NROWS*56,1) = VAL%E1234
+    ! E1 x E234 -> E1234 (56, 31)
+    RES(1+NROWS*55:NROWS*56,31) = VAL%E1
+    ! E234 x E1 -> E1234 (56, 2)
+    RES(1+NROWS*55:NROWS*56,2) = VAL%E234
+    ! E2 x E134 -> E1234 (56, 28)
+    RES(1+NROWS*55:NROWS*56,28) = VAL%E2
+    ! E134 x E2 -> E1234 (56, 3)
+    RES(1+NROWS*55:NROWS*56,3) = VAL%E134
+    ! E3 x E124 -> E1234 (56, 27)
+    RES(1+NROWS*55:NROWS*56,27) = VAL%E3
+    ! E124 x E3 -> E1234 (56, 4)
+    RES(1+NROWS*55:NROWS*56,4) = VAL%E124
+    ! E4 x E123 -> E1234 (56, 21)
+    RES(1+NROWS*55:NROWS*56,21) = VAL%E4
+    ! E123 x E4 -> E1234 (56, 5)
+    RES(1+NROWS*55:NROWS*56,5) = VAL%E123
+    ! E12 x E34 -> E1234 (56, 14)
+    RES(1+NROWS*55:NROWS*56,14) = VAL%E12
+    ! E13 x E24 -> E1234 (56, 13)
+    RES(1+NROWS*55:NROWS*56,13) = VAL%E13
+    ! E23 x E14 -> E1234 (56, 12)
+    RES(1+NROWS*55:NROWS*56,12) = VAL%E23
+    ! E14 x E23 -> E1234 (56, 10)
+    RES(1+NROWS*55:NROWS*56,10) = VAL%E14
+    ! E24 x E13 -> E1234 (56, 9)
+    RES(1+NROWS*55:NROWS*56,9) = VAL%E24
+    ! E34 x E12 -> E1234 (56, 7)
+    RES(1+NROWS*55:NROWS*56,7) = VAL%E34
+    ! R x E1244 -> E1244 (57, 57)
+    RES(1+NROWS*56:NROWS*57,57) = VAL%R
+    ! E1244 x R -> E1244 (57, 1)
+    RES(1+NROWS*56:NROWS*57,1) = VAL%E1244
+    ! E1 x E244 -> E1244 (57, 32)
+    RES(1+NROWS*56:NROWS*57,32) = VAL%E1
+    ! E244 x E1 -> E1244 (57, 2)
+    RES(1+NROWS*56:NROWS*57,2) = VAL%E244
+    ! E2 x E144 -> E1244 (57, 29)
+    RES(1+NROWS*56:NROWS*57,29) = VAL%E2
+    ! E144 x E2 -> E1244 (57, 3)
+    RES(1+NROWS*56:NROWS*57,3) = VAL%E144
+    ! E4 x E124 -> E1244 (57, 27)
+    RES(1+NROWS*56:NROWS*57,27) = VAL%E4
+    ! E124 x E4 -> E1244 (57, 5)
+    RES(1+NROWS*56:NROWS*57,5) = VAL%E124
+    ! E12 x E44 -> E1244 (57, 15)
+    RES(1+NROWS*56:NROWS*57,15) = VAL%E12
+    ! E14 x E24 -> E1244 (57, 13)
+    RES(1+NROWS*56:NROWS*57,13) = VAL%E14
+    ! E24 x E14 -> E1244 (57, 12)
+    RES(1+NROWS*56:NROWS*57,12) = VAL%E24
+    ! E44 x E12 -> E1244 (57, 7)
+    RES(1+NROWS*56:NROWS*57,7) = VAL%E44
+    ! R x E1334 -> E1334 (58, 58)
+    RES(1+NROWS*57:NROWS*58,58) = VAL%R
+    ! E1334 x R -> E1334 (58, 1)
+    RES(1+NROWS*57:NROWS*58,1) = VAL%E1334
+    ! E1 x E334 -> E1334 (58, 33)
+    RES(1+NROWS*57:NROWS*58,33) = VAL%E1
+    ! E334 x E1 -> E1334 (58, 2)
+    RES(1+NROWS*57:NROWS*58,2) = VAL%E334
+    ! E3 x E134 -> E1334 (58, 28)
+    RES(1+NROWS*57:NROWS*58,28) = VAL%E3
+    ! E134 x E3 -> E1334 (58, 4)
+    RES(1+NROWS*57:NROWS*58,4) = VAL%E134
+    ! E4 x E133 -> E1334 (58, 22)
+    RES(1+NROWS*57:NROWS*58,22) = VAL%E4
+    ! E133 x E4 -> E1334 (58, 5)
+    RES(1+NROWS*57:NROWS*58,5) = VAL%E133
+    ! E13 x E34 -> E1334 (58, 14)
+    RES(1+NROWS*57:NROWS*58,14) = VAL%E13
+    ! E33 x E14 -> E1334 (58, 12)
+    RES(1+NROWS*57:NROWS*58,12) = VAL%E33
+    ! E14 x E33 -> E1334 (58, 11)
+    RES(1+NROWS*57:NROWS*58,11) = VAL%E14
+    ! E34 x E13 -> E1334 (58, 9)
+    RES(1+NROWS*57:NROWS*58,9) = VAL%E34
+    ! R x E1344 -> E1344 (59, 59)
+    RES(1+NROWS*58:NROWS*59,59) = VAL%R
+    ! E1344 x R -> E1344 (59, 1)
+    RES(1+NROWS*58:NROWS*59,1) = VAL%E1344
+    ! E1 x E344 -> E1344 (59, 34)
+    RES(1+NROWS*58:NROWS*59,34) = VAL%E1
+    ! E344 x E1 -> E1344 (59, 2)
+    RES(1+NROWS*58:NROWS*59,2) = VAL%E344
+    ! E3 x E144 -> E1344 (59, 29)
+    RES(1+NROWS*58:NROWS*59,29) = VAL%E3
+    ! E144 x E3 -> E1344 (59, 4)
+    RES(1+NROWS*58:NROWS*59,4) = VAL%E144
+    ! E4 x E134 -> E1344 (59, 28)
+    RES(1+NROWS*58:NROWS*59,28) = VAL%E4
+    ! E134 x E4 -> E1344 (59, 5)
+    RES(1+NROWS*58:NROWS*59,5) = VAL%E134
+    ! E13 x E44 -> E1344 (59, 15)
+    RES(1+NROWS*58:NROWS*59,15) = VAL%E13
+    ! E14 x E34 -> E1344 (59, 14)
+    RES(1+NROWS*58:NROWS*59,14) = VAL%E14
+    ! E34 x E14 -> E1344 (59, 12)
+    RES(1+NROWS*58:NROWS*59,12) = VAL%E34
+    ! E44 x E13 -> E1344 (59, 9)
+    RES(1+NROWS*58:NROWS*59,9) = VAL%E44
+    ! R x E1444 -> E1444 (60, 60)
+    RES(1+NROWS*59:NROWS*60,60) = VAL%R
+    ! E1444 x R -> E1444 (60, 1)
+    RES(1+NROWS*59:NROWS*60,1) = VAL%E1444
+    ! E1 x E444 -> E1444 (60, 35)
+    RES(1+NROWS*59:NROWS*60,35) = VAL%E1
+    ! E444 x E1 -> E1444 (60, 2)
+    RES(1+NROWS*59:NROWS*60,2) = VAL%E444
+    ! E4 x E144 -> E1444 (60, 29)
+    RES(1+NROWS*59:NROWS*60,29) = VAL%E4
+    ! E144 x E4 -> E1444 (60, 5)
+    RES(1+NROWS*59:NROWS*60,5) = VAL%E144
+    ! E14 x E44 -> E1444 (60, 15)
+    RES(1+NROWS*59:NROWS*60,15) = VAL%E14
+    ! E44 x E14 -> E1444 (60, 12)
+    RES(1+NROWS*59:NROWS*60,12) = VAL%E44
+    ! R x E2224 -> E2224 (61, 61)
+    RES(1+NROWS*60:NROWS*61,61) = VAL%R
+    ! E2224 x R -> E2224 (61, 1)
+    RES(1+NROWS*60:NROWS*61,1) = VAL%E2224
+    ! E2 x E224 -> E2224 (61, 30)
+    RES(1+NROWS*60:NROWS*61,30) = VAL%E2
+    ! E224 x E2 -> E2224 (61, 3)
+    RES(1+NROWS*60:NROWS*61,3) = VAL%E224
+    ! E4 x E222 -> E2224 (61, 19)
+    RES(1+NROWS*60:NROWS*61,19) = VAL%E4
+    ! E222 x E4 -> E2224 (61, 5)
+    RES(1+NROWS*60:NROWS*61,5) = VAL%E222
+    ! E22 x E24 -> E2224 (61, 13)
+    RES(1+NROWS*60:NROWS*61,13) = VAL%E22
+    ! E24 x E22 -> E2224 (61, 8)
+    RES(1+NROWS*60:NROWS*61,8) = VAL%E24
+    ! R x E2234 -> E2234 (62, 62)
+    RES(1+NROWS*61:NROWS*62,62) = VAL%R
+    ! E2234 x R -> E2234 (62, 1)
+    RES(1+NROWS*61:NROWS*62,1) = VAL%E2234
+    ! E2 x E234 -> E2234 (62, 31)
+    RES(1+NROWS*61:NROWS*62,31) = VAL%E2
+    ! E234 x E2 -> E2234 (62, 3)
+    RES(1+NROWS*61:NROWS*62,3) = VAL%E234
+    ! E3 x E224 -> E2234 (62, 30)
+    RES(1+NROWS*61:NROWS*62,30) = VAL%E3
+    ! E224 x E3 -> E2234 (62, 4)
+    RES(1+NROWS*61:NROWS*62,4) = VAL%E224
+    ! E4 x E223 -> E2234 (62, 23)
+    RES(1+NROWS*61:NROWS*62,23) = VAL%E4
+    ! E223 x E4 -> E2234 (62, 5)
+    RES(1+NROWS*61:NROWS*62,5) = VAL%E223
+    ! E22 x E34 -> E2234 (62, 14)
+    RES(1+NROWS*61:NROWS*62,14) = VAL%E22
+    ! E23 x E24 -> E2234 (62, 13)
+    RES(1+NROWS*61:NROWS*62,13) = VAL%E23
+    ! E24 x E23 -> E2234 (62, 10)
+    RES(1+NROWS*61:NROWS*62,10) = VAL%E24
+    ! E34 x E22 -> E2234 (62, 8)
+    RES(1+NROWS*61:NROWS*62,8) = VAL%E34
+    ! R x E2244 -> E2244 (63, 63)
+    RES(1+NROWS*62:NROWS*63,63) = VAL%R
+    ! E2244 x R -> E2244 (63, 1)
+    RES(1+NROWS*62:NROWS*63,1) = VAL%E2244
+    ! E2 x E244 -> E2244 (63, 32)
+    RES(1+NROWS*62:NROWS*63,32) = VAL%E2
+    ! E244 x E2 -> E2244 (63, 3)
+    RES(1+NROWS*62:NROWS*63,3) = VAL%E244
+    ! E4 x E224 -> E2244 (63, 30)
+    RES(1+NROWS*62:NROWS*63,30) = VAL%E4
+    ! E224 x E4 -> E2244 (63, 5)
+    RES(1+NROWS*62:NROWS*63,5) = VAL%E224
+    ! E22 x E44 -> E2244 (63, 15)
+    RES(1+NROWS*62:NROWS*63,15) = VAL%E22
+    ! E24 x E24 -> E2244 (63, 13)
+    RES(1+NROWS*62:NROWS*63,13) = VAL%E24
+    ! E44 x E22 -> E2244 (63, 8)
+    RES(1+NROWS*62:NROWS*63,8) = VAL%E44
+    ! R x E2334 -> E2334 (64, 64)
+    RES(1+NROWS*63:NROWS*64,64) = VAL%R
+    ! E2334 x R -> E2334 (64, 1)
+    RES(1+NROWS*63:NROWS*64,1) = VAL%E2334
+    ! E2 x E334 -> E2334 (64, 33)
+    RES(1+NROWS*63:NROWS*64,33) = VAL%E2
+    ! E334 x E2 -> E2334 (64, 3)
+    RES(1+NROWS*63:NROWS*64,3) = VAL%E334
+    ! E3 x E234 -> E2334 (64, 31)
+    RES(1+NROWS*63:NROWS*64,31) = VAL%E3
+    ! E234 x E3 -> E2334 (64, 4)
+    RES(1+NROWS*63:NROWS*64,4) = VAL%E234
+    ! E4 x E233 -> E2334 (64, 24)
+    RES(1+NROWS*63:NROWS*64,24) = VAL%E4
+    ! E233 x E4 -> E2334 (64, 5)
+    RES(1+NROWS*63:NROWS*64,5) = VAL%E233
+    ! E23 x E34 -> E2334 (64, 14)
+    RES(1+NROWS*63:NROWS*64,14) = VAL%E23
+    ! E33 x E24 -> E2334 (64, 13)
+    RES(1+NROWS*63:NROWS*64,13) = VAL%E33
+    ! E24 x E33 -> E2334 (64, 11)
+    RES(1+NROWS*63:NROWS*64,11) = VAL%E24
+    ! E34 x E23 -> E2334 (64, 10)
+    RES(1+NROWS*63:NROWS*64,10) = VAL%E34
+    ! R x E2344 -> E2344 (65, 65)
+    RES(1+NROWS*64:NROWS*65,65) = VAL%R
+    ! E2344 x R -> E2344 (65, 1)
+    RES(1+NROWS*64:NROWS*65,1) = VAL%E2344
+    ! E2 x E344 -> E2344 (65, 34)
+    RES(1+NROWS*64:NROWS*65,34) = VAL%E2
+    ! E344 x E2 -> E2344 (65, 3)
+    RES(1+NROWS*64:NROWS*65,3) = VAL%E344
+    ! E3 x E244 -> E2344 (65, 32)
+    RES(1+NROWS*64:NROWS*65,32) = VAL%E3
+    ! E244 x E3 -> E2344 (65, 4)
+    RES(1+NROWS*64:NROWS*65,4) = VAL%E244
+    ! E4 x E234 -> E2344 (65, 31)
+    RES(1+NROWS*64:NROWS*65,31) = VAL%E4
+    ! E234 x E4 -> E2344 (65, 5)
+    RES(1+NROWS*64:NROWS*65,5) = VAL%E234
+    ! E23 x E44 -> E2344 (65, 15)
+    RES(1+NROWS*64:NROWS*65,15) = VAL%E23
+    ! E24 x E34 -> E2344 (65, 14)
+    RES(1+NROWS*64:NROWS*65,14) = VAL%E24
+    ! E34 x E24 -> E2344 (65, 13)
+    RES(1+NROWS*64:NROWS*65,13) = VAL%E34
+    ! E44 x E23 -> E2344 (65, 10)
+    RES(1+NROWS*64:NROWS*65,10) = VAL%E44
+    ! R x E2444 -> E2444 (66, 66)
+    RES(1+NROWS*65:NROWS*66,66) = VAL%R
+    ! E2444 x R -> E2444 (66, 1)
+    RES(1+NROWS*65:NROWS*66,1) = VAL%E2444
+    ! E2 x E444 -> E2444 (66, 35)
+    RES(1+NROWS*65:NROWS*66,35) = VAL%E2
+    ! E444 x E2 -> E2444 (66, 3)
+    RES(1+NROWS*65:NROWS*66,3) = VAL%E444
+    ! E4 x E244 -> E2444 (66, 32)
+    RES(1+NROWS*65:NROWS*66,32) = VAL%E4
+    ! E244 x E4 -> E2444 (66, 5)
+    RES(1+NROWS*65:NROWS*66,5) = VAL%E244
+    ! E24 x E44 -> E2444 (66, 15)
+    RES(1+NROWS*65:NROWS*66,15) = VAL%E24
+    ! E44 x E24 -> E2444 (66, 13)
+    RES(1+NROWS*65:NROWS*66,13) = VAL%E44
+    ! R x E3334 -> E3334 (67, 67)
+    RES(1+NROWS*66:NROWS*67,67) = VAL%R
+    ! E3334 x R -> E3334 (67, 1)
+    RES(1+NROWS*66:NROWS*67,1) = VAL%E3334
+    ! E3 x E334 -> E3334 (67, 33)
+    RES(1+NROWS*66:NROWS*67,33) = VAL%E3
+    ! E334 x E3 -> E3334 (67, 4)
+    RES(1+NROWS*66:NROWS*67,4) = VAL%E334
+    ! E4 x E333 -> E3334 (67, 25)
+    RES(1+NROWS*66:NROWS*67,25) = VAL%E4
+    ! E333 x E4 -> E3334 (67, 5)
+    RES(1+NROWS*66:NROWS*67,5) = VAL%E333
+    ! E33 x E34 -> E3334 (67, 14)
+    RES(1+NROWS*66:NROWS*67,14) = VAL%E33
+    ! E34 x E33 -> E3334 (67, 11)
+    RES(1+NROWS*66:NROWS*67,11) = VAL%E34
+    ! R x E3344 -> E3344 (68, 68)
+    RES(1+NROWS*67:NROWS*68,68) = VAL%R
+    ! E3344 x R -> E3344 (68, 1)
+    RES(1+NROWS*67:NROWS*68,1) = VAL%E3344
+    ! E3 x E344 -> E3344 (68, 34)
+    RES(1+NROWS*67:NROWS*68,34) = VAL%E3
+    ! E344 x E3 -> E3344 (68, 4)
+    RES(1+NROWS*67:NROWS*68,4) = VAL%E344
+    ! E4 x E334 -> E3344 (68, 33)
+    RES(1+NROWS*67:NROWS*68,33) = VAL%E4
+    ! E334 x E4 -> E3344 (68, 5)
+    RES(1+NROWS*67:NROWS*68,5) = VAL%E334
+    ! E33 x E44 -> E3344 (68, 15)
+    RES(1+NROWS*67:NROWS*68,15) = VAL%E33
+    ! E34 x E34 -> E3344 (68, 14)
+    RES(1+NROWS*67:NROWS*68,14) = VAL%E34
+    ! E44 x E33 -> E3344 (68, 11)
+    RES(1+NROWS*67:NROWS*68,11) = VAL%E44
+    ! R x E3444 -> E3444 (69, 69)
+    RES(1+NROWS*68:NROWS*69,69) = VAL%R
+    ! E3444 x R -> E3444 (69, 1)
+    RES(1+NROWS*68:NROWS*69,1) = VAL%E3444
+    ! E3 x E444 -> E3444 (69, 35)
+    RES(1+NROWS*68:NROWS*69,35) = VAL%E3
+    ! E444 x E3 -> E3444 (69, 4)
+    RES(1+NROWS*68:NROWS*69,4) = VAL%E444
+    ! E4 x E344 -> E3444 (69, 34)
+    RES(1+NROWS*68:NROWS*69,34) = VAL%E4
+    ! E344 x E4 -> E3444 (69, 5)
+    RES(1+NROWS*68:NROWS*69,5) = VAL%E344
+    ! E34 x E44 -> E3444 (69, 15)
+    RES(1+NROWS*68:NROWS*69,15) = VAL%E34
+    ! E44 x E34 -> E3444 (69, 14)
+    RES(1+NROWS*68:NROWS*69,14) = VAL%E44
+    ! R x E4444 -> E4444 (70, 70)
+    RES(1+NROWS*69:NROWS*70,70) = VAL%R
+    ! E4444 x R -> E4444 (70, 1)
+    RES(1+NROWS*69:NROWS*70,1) = VAL%E4444
+    ! E4 x E444 -> E4444 (70, 35)
+    RES(1+NROWS*69:NROWS*70,35) = VAL%E4
+    ! E444 x E4 -> E4444 (70, 5)
+    RES(1+NROWS*69:NROWS*70,5) = VAL%E444
+    ! E44 x E44 -> E4444 (70, 15)
+    RES(1+NROWS*69:NROWS*70,15) = VAL%E44
+  END FUNCTION ONUMM4N4_TO_CR_MAT_V
+
+FUNCTION ONUMM4N4_TO_CR_MAT_M(VAL) RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: VAL(:,:)
+    REAL(DP) :: RES(NUM_IM_DIR*SIZE(VAL,1),NUM_IM_DIR*SIZE(VAL,2)) 
+    INTEGER :: NCOLS=1, NROWS=1
+
+    NCOLS = SIZE(VAL,1)
+    NROWS = SIZE(VAL,2)
+
+    ! R x R -> R (1, 1)
+    RES(1+NROWS*0:NROWS*1,1+NCOLS*0:NCOLS*1) = VAL%R
+    ! R x E1 -> E1 (2, 2)
+    RES(1+NROWS*1:NROWS*2,1+NCOLS*1:NCOLS*2) = VAL%R
+    ! E1 x R -> E1 (2, 1)
+    RES(1+NROWS*1:NROWS*2,1+NCOLS*0:NCOLS*1) = VAL%E1
+    ! R x E2 -> E2 (3, 3)
+    RES(1+NROWS*2:NROWS*3,1+NCOLS*2:NCOLS*3) = VAL%R
+    ! E2 x R -> E2 (3, 1)
+    RES(1+NROWS*2:NROWS*3,1+NCOLS*0:NCOLS*1) = VAL%E2
+    ! R x E3 -> E3 (4, 4)
+    RES(1+NROWS*3:NROWS*4,1+NCOLS*3:NCOLS*4) = VAL%R
+    ! E3 x R -> E3 (4, 1)
+    RES(1+NROWS*3:NROWS*4,1+NCOLS*0:NCOLS*1) = VAL%E3
+    ! R x E4 -> E4 (5, 5)
+    RES(1+NROWS*4:NROWS*5,1+NCOLS*4:NCOLS*5) = VAL%R
+    ! E4 x R -> E4 (5, 1)
+    RES(1+NROWS*4:NROWS*5,1+NCOLS*0:NCOLS*1) = VAL%E4
+    ! R x E11 -> E11 (6, 6)
+    RES(1+NROWS*5:NROWS*6,1+NCOLS*5:NCOLS*6) = VAL%R
+    ! E11 x R -> E11 (6, 1)
+    RES(1+NROWS*5:NROWS*6,1+NCOLS*0:NCOLS*1) = VAL%E11
+    ! E1 x E1 -> E11 (6, 2)
+    RES(1+NROWS*5:NROWS*6,1+NCOLS*1:NCOLS*2) = VAL%E1
+    ! R x E12 -> E12 (7, 7)
+    RES(1+NROWS*6:NROWS*7,1+NCOLS*6:NCOLS*7) = VAL%R
+    ! E12 x R -> E12 (7, 1)
+    RES(1+NROWS*6:NROWS*7,1+NCOLS*0:NCOLS*1) = VAL%E12
+    ! E1 x E2 -> E12 (7, 3)
+    RES(1+NROWS*6:NROWS*7,1+NCOLS*2:NCOLS*3) = VAL%E1
+    ! E2 x E1 -> E12 (7, 2)
+    RES(1+NROWS*6:NROWS*7,1+NCOLS*1:NCOLS*2) = VAL%E2
+    ! R x E22 -> E22 (8, 8)
+    RES(1+NROWS*7:NROWS*8,1+NCOLS*7:NCOLS*8) = VAL%R
+    ! E22 x R -> E22 (8, 1)
+    RES(1+NROWS*7:NROWS*8,1+NCOLS*0:NCOLS*1) = VAL%E22
+    ! E2 x E2 -> E22 (8, 3)
+    RES(1+NROWS*7:NROWS*8,1+NCOLS*2:NCOLS*3) = VAL%E2
+    ! R x E13 -> E13 (9, 9)
+    RES(1+NROWS*8:NROWS*9,1+NCOLS*8:NCOLS*9) = VAL%R
+    ! E13 x R -> E13 (9, 1)
+    RES(1+NROWS*8:NROWS*9,1+NCOLS*0:NCOLS*1) = VAL%E13
+    ! E1 x E3 -> E13 (9, 4)
+    RES(1+NROWS*8:NROWS*9,1+NCOLS*3:NCOLS*4) = VAL%E1
+    ! E3 x E1 -> E13 (9, 2)
+    RES(1+NROWS*8:NROWS*9,1+NCOLS*1:NCOLS*2) = VAL%E3
+    ! R x E23 -> E23 (10, 10)
+    RES(1+NROWS*9:NROWS*10,1+NCOLS*9:NCOLS*10) = VAL%R
+    ! E23 x R -> E23 (10, 1)
+    RES(1+NROWS*9:NROWS*10,1+NCOLS*0:NCOLS*1) = VAL%E23
+    ! E2 x E3 -> E23 (10, 4)
+    RES(1+NROWS*9:NROWS*10,1+NCOLS*3:NCOLS*4) = VAL%E2
+    ! E3 x E2 -> E23 (10, 3)
+    RES(1+NROWS*9:NROWS*10,1+NCOLS*2:NCOLS*3) = VAL%E3
+    ! R x E33 -> E33 (11, 11)
+    RES(1+NROWS*10:NROWS*11,1+NCOLS*10:NCOLS*11) = VAL%R
+    ! E33 x R -> E33 (11, 1)
+    RES(1+NROWS*10:NROWS*11,1+NCOLS*0:NCOLS*1) = VAL%E33
+    ! E3 x E3 -> E33 (11, 4)
+    RES(1+NROWS*10:NROWS*11,1+NCOLS*3:NCOLS*4) = VAL%E3
+    ! R x E14 -> E14 (12, 12)
+    RES(1+NROWS*11:NROWS*12,1+NCOLS*11:NCOLS*12) = VAL%R
+    ! E14 x R -> E14 (12, 1)
+    RES(1+NROWS*11:NROWS*12,1+NCOLS*0:NCOLS*1) = VAL%E14
+    ! E1 x E4 -> E14 (12, 5)
+    RES(1+NROWS*11:NROWS*12,1+NCOLS*4:NCOLS*5) = VAL%E1
+    ! E4 x E1 -> E14 (12, 2)
+    RES(1+NROWS*11:NROWS*12,1+NCOLS*1:NCOLS*2) = VAL%E4
+    ! R x E24 -> E24 (13, 13)
+    RES(1+NROWS*12:NROWS*13,1+NCOLS*12:NCOLS*13) = VAL%R
+    ! E24 x R -> E24 (13, 1)
+    RES(1+NROWS*12:NROWS*13,1+NCOLS*0:NCOLS*1) = VAL%E24
+    ! E2 x E4 -> E24 (13, 5)
+    RES(1+NROWS*12:NROWS*13,1+NCOLS*4:NCOLS*5) = VAL%E2
+    ! E4 x E2 -> E24 (13, 3)
+    RES(1+NROWS*12:NROWS*13,1+NCOLS*2:NCOLS*3) = VAL%E4
+    ! R x E34 -> E34 (14, 14)
+    RES(1+NROWS*13:NROWS*14,1+NCOLS*13:NCOLS*14) = VAL%R
+    ! E34 x R -> E34 (14, 1)
+    RES(1+NROWS*13:NROWS*14,1+NCOLS*0:NCOLS*1) = VAL%E34
+    ! E3 x E4 -> E34 (14, 5)
+    RES(1+NROWS*13:NROWS*14,1+NCOLS*4:NCOLS*5) = VAL%E3
+    ! E4 x E3 -> E34 (14, 4)
+    RES(1+NROWS*13:NROWS*14,1+NCOLS*3:NCOLS*4) = VAL%E4
+    ! R x E44 -> E44 (15, 15)
+    RES(1+NROWS*14:NROWS*15,1+NCOLS*14:NCOLS*15) = VAL%R
+    ! E44 x R -> E44 (15, 1)
+    RES(1+NROWS*14:NROWS*15,1+NCOLS*0:NCOLS*1) = VAL%E44
+    ! E4 x E4 -> E44 (15, 5)
+    RES(1+NROWS*14:NROWS*15,1+NCOLS*4:NCOLS*5) = VAL%E4
+    ! R x E111 -> E111 (16, 16)
+    RES(1+NROWS*15:NROWS*16,1+NCOLS*15:NCOLS*16) = VAL%R
+    ! E111 x R -> E111 (16, 1)
+    RES(1+NROWS*15:NROWS*16,1+NCOLS*0:NCOLS*1) = VAL%E111
+    ! E1 x E11 -> E111 (16, 6)
+    RES(1+NROWS*15:NROWS*16,1+NCOLS*5:NCOLS*6) = VAL%E1
+    ! E11 x E1 -> E111 (16, 2)
+    RES(1+NROWS*15:NROWS*16,1+NCOLS*1:NCOLS*2) = VAL%E11
+    ! R x E112 -> E112 (17, 17)
+    RES(1+NROWS*16:NROWS*17,1+NCOLS*16:NCOLS*17) = VAL%R
+    ! E112 x R -> E112 (17, 1)
+    RES(1+NROWS*16:NROWS*17,1+NCOLS*0:NCOLS*1) = VAL%E112
+    ! E1 x E12 -> E112 (17, 7)
+    RES(1+NROWS*16:NROWS*17,1+NCOLS*6:NCOLS*7) = VAL%E1
+    ! E12 x E1 -> E112 (17, 2)
+    RES(1+NROWS*16:NROWS*17,1+NCOLS*1:NCOLS*2) = VAL%E12
+    ! E2 x E11 -> E112 (17, 6)
+    RES(1+NROWS*16:NROWS*17,1+NCOLS*5:NCOLS*6) = VAL%E2
+    ! E11 x E2 -> E112 (17, 3)
+    RES(1+NROWS*16:NROWS*17,1+NCOLS*2:NCOLS*3) = VAL%E11
+    ! R x E122 -> E122 (18, 18)
+    RES(1+NROWS*17:NROWS*18,1+NCOLS*17:NCOLS*18) = VAL%R
+    ! E122 x R -> E122 (18, 1)
+    RES(1+NROWS*17:NROWS*18,1+NCOLS*0:NCOLS*1) = VAL%E122
+    ! E1 x E22 -> E122 (18, 8)
+    RES(1+NROWS*17:NROWS*18,1+NCOLS*7:NCOLS*8) = VAL%E1
+    ! E22 x E1 -> E122 (18, 2)
+    RES(1+NROWS*17:NROWS*18,1+NCOLS*1:NCOLS*2) = VAL%E22
+    ! E2 x E12 -> E122 (18, 7)
+    RES(1+NROWS*17:NROWS*18,1+NCOLS*6:NCOLS*7) = VAL%E2
+    ! E12 x E2 -> E122 (18, 3)
+    RES(1+NROWS*17:NROWS*18,1+NCOLS*2:NCOLS*3) = VAL%E12
+    ! R x E222 -> E222 (19, 19)
+    RES(1+NROWS*18:NROWS*19,1+NCOLS*18:NCOLS*19) = VAL%R
+    ! E222 x R -> E222 (19, 1)
+    RES(1+NROWS*18:NROWS*19,1+NCOLS*0:NCOLS*1) = VAL%E222
+    ! E2 x E22 -> E222 (19, 8)
+    RES(1+NROWS*18:NROWS*19,1+NCOLS*7:NCOLS*8) = VAL%E2
+    ! E22 x E2 -> E222 (19, 3)
+    RES(1+NROWS*18:NROWS*19,1+NCOLS*2:NCOLS*3) = VAL%E22
+    ! R x E113 -> E113 (20, 20)
+    RES(1+NROWS*19:NROWS*20,1+NCOLS*19:NCOLS*20) = VAL%R
+    ! E113 x R -> E113 (20, 1)
+    RES(1+NROWS*19:NROWS*20,1+NCOLS*0:NCOLS*1) = VAL%E113
+    ! E1 x E13 -> E113 (20, 9)
+    RES(1+NROWS*19:NROWS*20,1+NCOLS*8:NCOLS*9) = VAL%E1
+    ! E13 x E1 -> E113 (20, 2)
+    RES(1+NROWS*19:NROWS*20,1+NCOLS*1:NCOLS*2) = VAL%E13
+    ! E3 x E11 -> E113 (20, 6)
+    RES(1+NROWS*19:NROWS*20,1+NCOLS*5:NCOLS*6) = VAL%E3
+    ! E11 x E3 -> E113 (20, 4)
+    RES(1+NROWS*19:NROWS*20,1+NCOLS*3:NCOLS*4) = VAL%E11
+    ! R x E123 -> E123 (21, 21)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*20:NCOLS*21) = VAL%R
+    ! E123 x R -> E123 (21, 1)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*0:NCOLS*1) = VAL%E123
+    ! E1 x E23 -> E123 (21, 10)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*9:NCOLS*10) = VAL%E1
+    ! E23 x E1 -> E123 (21, 2)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*1:NCOLS*2) = VAL%E23
+    ! E2 x E13 -> E123 (21, 9)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*8:NCOLS*9) = VAL%E2
+    ! E13 x E2 -> E123 (21, 3)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*2:NCOLS*3) = VAL%E13
+    ! E3 x E12 -> E123 (21, 7)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*6:NCOLS*7) = VAL%E3
+    ! E12 x E3 -> E123 (21, 4)
+    RES(1+NROWS*20:NROWS*21,1+NCOLS*3:NCOLS*4) = VAL%E12
+    ! R x E133 -> E133 (22, 22)
+    RES(1+NROWS*21:NROWS*22,1+NCOLS*21:NCOLS*22) = VAL%R
+    ! E133 x R -> E133 (22, 1)
+    RES(1+NROWS*21:NROWS*22,1+NCOLS*0:NCOLS*1) = VAL%E133
+    ! E1 x E33 -> E133 (22, 11)
+    RES(1+NROWS*21:NROWS*22,1+NCOLS*10:NCOLS*11) = VAL%E1
+    ! E33 x E1 -> E133 (22, 2)
+    RES(1+NROWS*21:NROWS*22,1+NCOLS*1:NCOLS*2) = VAL%E33
+    ! E3 x E13 -> E133 (22, 9)
+    RES(1+NROWS*21:NROWS*22,1+NCOLS*8:NCOLS*9) = VAL%E3
+    ! E13 x E3 -> E133 (22, 4)
+    RES(1+NROWS*21:NROWS*22,1+NCOLS*3:NCOLS*4) = VAL%E13
+    ! R x E223 -> E223 (23, 23)
+    RES(1+NROWS*22:NROWS*23,1+NCOLS*22:NCOLS*23) = VAL%R
+    ! E223 x R -> E223 (23, 1)
+    RES(1+NROWS*22:NROWS*23,1+NCOLS*0:NCOLS*1) = VAL%E223
+    ! E2 x E23 -> E223 (23, 10)
+    RES(1+NROWS*22:NROWS*23,1+NCOLS*9:NCOLS*10) = VAL%E2
+    ! E23 x E2 -> E223 (23, 3)
+    RES(1+NROWS*22:NROWS*23,1+NCOLS*2:NCOLS*3) = VAL%E23
+    ! E3 x E22 -> E223 (23, 8)
+    RES(1+NROWS*22:NROWS*23,1+NCOLS*7:NCOLS*8) = VAL%E3
+    ! E22 x E3 -> E223 (23, 4)
+    RES(1+NROWS*22:NROWS*23,1+NCOLS*3:NCOLS*4) = VAL%E22
+    ! R x E233 -> E233 (24, 24)
+    RES(1+NROWS*23:NROWS*24,1+NCOLS*23:NCOLS*24) = VAL%R
+    ! E233 x R -> E233 (24, 1)
+    RES(1+NROWS*23:NROWS*24,1+NCOLS*0:NCOLS*1) = VAL%E233
+    ! E2 x E33 -> E233 (24, 11)
+    RES(1+NROWS*23:NROWS*24,1+NCOLS*10:NCOLS*11) = VAL%E2
+    ! E33 x E2 -> E233 (24, 3)
+    RES(1+NROWS*23:NROWS*24,1+NCOLS*2:NCOLS*3) = VAL%E33
+    ! E3 x E23 -> E233 (24, 10)
+    RES(1+NROWS*23:NROWS*24,1+NCOLS*9:NCOLS*10) = VAL%E3
+    ! E23 x E3 -> E233 (24, 4)
+    RES(1+NROWS*23:NROWS*24,1+NCOLS*3:NCOLS*4) = VAL%E23
+    ! R x E333 -> E333 (25, 25)
+    RES(1+NROWS*24:NROWS*25,1+NCOLS*24:NCOLS*25) = VAL%R
+    ! E333 x R -> E333 (25, 1)
+    RES(1+NROWS*24:NROWS*25,1+NCOLS*0:NCOLS*1) = VAL%E333
+    ! E3 x E33 -> E333 (25, 11)
+    RES(1+NROWS*24:NROWS*25,1+NCOLS*10:NCOLS*11) = VAL%E3
+    ! E33 x E3 -> E333 (25, 4)
+    RES(1+NROWS*24:NROWS*25,1+NCOLS*3:NCOLS*4) = VAL%E33
+    ! R x E114 -> E114 (26, 26)
+    RES(1+NROWS*25:NROWS*26,1+NCOLS*25:NCOLS*26) = VAL%R
+    ! E114 x R -> E114 (26, 1)
+    RES(1+NROWS*25:NROWS*26,1+NCOLS*0:NCOLS*1) = VAL%E114
+    ! E1 x E14 -> E114 (26, 12)
+    RES(1+NROWS*25:NROWS*26,1+NCOLS*11:NCOLS*12) = VAL%E1
+    ! E14 x E1 -> E114 (26, 2)
+    RES(1+NROWS*25:NROWS*26,1+NCOLS*1:NCOLS*2) = VAL%E14
+    ! E4 x E11 -> E114 (26, 6)
+    RES(1+NROWS*25:NROWS*26,1+NCOLS*5:NCOLS*6) = VAL%E4
+    ! E11 x E4 -> E114 (26, 5)
+    RES(1+NROWS*25:NROWS*26,1+NCOLS*4:NCOLS*5) = VAL%E11
+    ! R x E124 -> E124 (27, 27)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*26:NCOLS*27) = VAL%R
+    ! E124 x R -> E124 (27, 1)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*0:NCOLS*1) = VAL%E124
+    ! E1 x E24 -> E124 (27, 13)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*12:NCOLS*13) = VAL%E1
+    ! E24 x E1 -> E124 (27, 2)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*1:NCOLS*2) = VAL%E24
+    ! E2 x E14 -> E124 (27, 12)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*11:NCOLS*12) = VAL%E2
+    ! E14 x E2 -> E124 (27, 3)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*2:NCOLS*3) = VAL%E14
+    ! E4 x E12 -> E124 (27, 7)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*6:NCOLS*7) = VAL%E4
+    ! E12 x E4 -> E124 (27, 5)
+    RES(1+NROWS*26:NROWS*27,1+NCOLS*4:NCOLS*5) = VAL%E12
+    ! R x E134 -> E134 (28, 28)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*27:NCOLS*28) = VAL%R
+    ! E134 x R -> E134 (28, 1)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*0:NCOLS*1) = VAL%E134
+    ! E1 x E34 -> E134 (28, 14)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*13:NCOLS*14) = VAL%E1
+    ! E34 x E1 -> E134 (28, 2)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*1:NCOLS*2) = VAL%E34
+    ! E3 x E14 -> E134 (28, 12)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*11:NCOLS*12) = VAL%E3
+    ! E14 x E3 -> E134 (28, 4)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*3:NCOLS*4) = VAL%E14
+    ! E4 x E13 -> E134 (28, 9)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*8:NCOLS*9) = VAL%E4
+    ! E13 x E4 -> E134 (28, 5)
+    RES(1+NROWS*27:NROWS*28,1+NCOLS*4:NCOLS*5) = VAL%E13
+    ! R x E144 -> E144 (29, 29)
+    RES(1+NROWS*28:NROWS*29,1+NCOLS*28:NCOLS*29) = VAL%R
+    ! E144 x R -> E144 (29, 1)
+    RES(1+NROWS*28:NROWS*29,1+NCOLS*0:NCOLS*1) = VAL%E144
+    ! E1 x E44 -> E144 (29, 15)
+    RES(1+NROWS*28:NROWS*29,1+NCOLS*14:NCOLS*15) = VAL%E1
+    ! E44 x E1 -> E144 (29, 2)
+    RES(1+NROWS*28:NROWS*29,1+NCOLS*1:NCOLS*2) = VAL%E44
+    ! E4 x E14 -> E144 (29, 12)
+    RES(1+NROWS*28:NROWS*29,1+NCOLS*11:NCOLS*12) = VAL%E4
+    ! E14 x E4 -> E144 (29, 5)
+    RES(1+NROWS*28:NROWS*29,1+NCOLS*4:NCOLS*5) = VAL%E14
+    ! R x E224 -> E224 (30, 30)
+    RES(1+NROWS*29:NROWS*30,1+NCOLS*29:NCOLS*30) = VAL%R
+    ! E224 x R -> E224 (30, 1)
+    RES(1+NROWS*29:NROWS*30,1+NCOLS*0:NCOLS*1) = VAL%E224
+    ! E2 x E24 -> E224 (30, 13)
+    RES(1+NROWS*29:NROWS*30,1+NCOLS*12:NCOLS*13) = VAL%E2
+    ! E24 x E2 -> E224 (30, 3)
+    RES(1+NROWS*29:NROWS*30,1+NCOLS*2:NCOLS*3) = VAL%E24
+    ! E4 x E22 -> E224 (30, 8)
+    RES(1+NROWS*29:NROWS*30,1+NCOLS*7:NCOLS*8) = VAL%E4
+    ! E22 x E4 -> E224 (30, 5)
+    RES(1+NROWS*29:NROWS*30,1+NCOLS*4:NCOLS*5) = VAL%E22
+    ! R x E234 -> E234 (31, 31)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*30:NCOLS*31) = VAL%R
+    ! E234 x R -> E234 (31, 1)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*0:NCOLS*1) = VAL%E234
+    ! E2 x E34 -> E234 (31, 14)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*13:NCOLS*14) = VAL%E2
+    ! E34 x E2 -> E234 (31, 3)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*2:NCOLS*3) = VAL%E34
+    ! E3 x E24 -> E234 (31, 13)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*12:NCOLS*13) = VAL%E3
+    ! E24 x E3 -> E234 (31, 4)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*3:NCOLS*4) = VAL%E24
+    ! E4 x E23 -> E234 (31, 10)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*9:NCOLS*10) = VAL%E4
+    ! E23 x E4 -> E234 (31, 5)
+    RES(1+NROWS*30:NROWS*31,1+NCOLS*4:NCOLS*5) = VAL%E23
+    ! R x E244 -> E244 (32, 32)
+    RES(1+NROWS*31:NROWS*32,1+NCOLS*31:NCOLS*32) = VAL%R
+    ! E244 x R -> E244 (32, 1)
+    RES(1+NROWS*31:NROWS*32,1+NCOLS*0:NCOLS*1) = VAL%E244
+    ! E2 x E44 -> E244 (32, 15)
+    RES(1+NROWS*31:NROWS*32,1+NCOLS*14:NCOLS*15) = VAL%E2
+    ! E44 x E2 -> E244 (32, 3)
+    RES(1+NROWS*31:NROWS*32,1+NCOLS*2:NCOLS*3) = VAL%E44
+    ! E4 x E24 -> E244 (32, 13)
+    RES(1+NROWS*31:NROWS*32,1+NCOLS*12:NCOLS*13) = VAL%E4
+    ! E24 x E4 -> E244 (32, 5)
+    RES(1+NROWS*31:NROWS*32,1+NCOLS*4:NCOLS*5) = VAL%E24
+    ! R x E334 -> E334 (33, 33)
+    RES(1+NROWS*32:NROWS*33,1+NCOLS*32:NCOLS*33) = VAL%R
+    ! E334 x R -> E334 (33, 1)
+    RES(1+NROWS*32:NROWS*33,1+NCOLS*0:NCOLS*1) = VAL%E334
+    ! E3 x E34 -> E334 (33, 14)
+    RES(1+NROWS*32:NROWS*33,1+NCOLS*13:NCOLS*14) = VAL%E3
+    ! E34 x E3 -> E334 (33, 4)
+    RES(1+NROWS*32:NROWS*33,1+NCOLS*3:NCOLS*4) = VAL%E34
+    ! E4 x E33 -> E334 (33, 11)
+    RES(1+NROWS*32:NROWS*33,1+NCOLS*10:NCOLS*11) = VAL%E4
+    ! E33 x E4 -> E334 (33, 5)
+    RES(1+NROWS*32:NROWS*33,1+NCOLS*4:NCOLS*5) = VAL%E33
+    ! R x E344 -> E344 (34, 34)
+    RES(1+NROWS*33:NROWS*34,1+NCOLS*33:NCOLS*34) = VAL%R
+    ! E344 x R -> E344 (34, 1)
+    RES(1+NROWS*33:NROWS*34,1+NCOLS*0:NCOLS*1) = VAL%E344
+    ! E3 x E44 -> E344 (34, 15)
+    RES(1+NROWS*33:NROWS*34,1+NCOLS*14:NCOLS*15) = VAL%E3
+    ! E44 x E3 -> E344 (34, 4)
+    RES(1+NROWS*33:NROWS*34,1+NCOLS*3:NCOLS*4) = VAL%E44
+    ! E4 x E34 -> E344 (34, 14)
+    RES(1+NROWS*33:NROWS*34,1+NCOLS*13:NCOLS*14) = VAL%E4
+    ! E34 x E4 -> E344 (34, 5)
+    RES(1+NROWS*33:NROWS*34,1+NCOLS*4:NCOLS*5) = VAL%E34
+    ! R x E444 -> E444 (35, 35)
+    RES(1+NROWS*34:NROWS*35,1+NCOLS*34:NCOLS*35) = VAL%R
+    ! E444 x R -> E444 (35, 1)
+    RES(1+NROWS*34:NROWS*35,1+NCOLS*0:NCOLS*1) = VAL%E444
+    ! E4 x E44 -> E444 (35, 15)
+    RES(1+NROWS*34:NROWS*35,1+NCOLS*14:NCOLS*15) = VAL%E4
+    ! E44 x E4 -> E444 (35, 5)
+    RES(1+NROWS*34:NROWS*35,1+NCOLS*4:NCOLS*5) = VAL%E44
+    ! R x E1111 -> E1111 (36, 36)
+    RES(1+NROWS*35:NROWS*36,1+NCOLS*35:NCOLS*36) = VAL%R
+    ! E1111 x R -> E1111 (36, 1)
+    RES(1+NROWS*35:NROWS*36,1+NCOLS*0:NCOLS*1) = VAL%E1111
+    ! E1 x E111 -> E1111 (36, 16)
+    RES(1+NROWS*35:NROWS*36,1+NCOLS*15:NCOLS*16) = VAL%E1
+    ! E111 x E1 -> E1111 (36, 2)
+    RES(1+NROWS*35:NROWS*36,1+NCOLS*1:NCOLS*2) = VAL%E111
+    ! E11 x E11 -> E1111 (36, 6)
+    RES(1+NROWS*35:NROWS*36,1+NCOLS*5:NCOLS*6) = VAL%E11
+    ! R x E1112 -> E1112 (37, 37)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*36:NCOLS*37) = VAL%R
+    ! E1112 x R -> E1112 (37, 1)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*0:NCOLS*1) = VAL%E1112
+    ! E1 x E112 -> E1112 (37, 17)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*16:NCOLS*17) = VAL%E1
+    ! E112 x E1 -> E1112 (37, 2)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*1:NCOLS*2) = VAL%E112
+    ! E2 x E111 -> E1112 (37, 16)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*15:NCOLS*16) = VAL%E2
+    ! E111 x E2 -> E1112 (37, 3)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*2:NCOLS*3) = VAL%E111
+    ! E11 x E12 -> E1112 (37, 7)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*6:NCOLS*7) = VAL%E11
+    ! E12 x E11 -> E1112 (37, 6)
+    RES(1+NROWS*36:NROWS*37,1+NCOLS*5:NCOLS*6) = VAL%E12
+    ! R x E1122 -> E1122 (38, 38)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*37:NCOLS*38) = VAL%R
+    ! E1122 x R -> E1122 (38, 1)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*0:NCOLS*1) = VAL%E1122
+    ! E1 x E122 -> E1122 (38, 18)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*17:NCOLS*18) = VAL%E1
+    ! E122 x E1 -> E1122 (38, 2)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*1:NCOLS*2) = VAL%E122
+    ! E2 x E112 -> E1122 (38, 17)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*16:NCOLS*17) = VAL%E2
+    ! E112 x E2 -> E1122 (38, 3)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*2:NCOLS*3) = VAL%E112
+    ! E11 x E22 -> E1122 (38, 8)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*7:NCOLS*8) = VAL%E11
+    ! E12 x E12 -> E1122 (38, 7)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*6:NCOLS*7) = VAL%E12
+    ! E22 x E11 -> E1122 (38, 6)
+    RES(1+NROWS*37:NROWS*38,1+NCOLS*5:NCOLS*6) = VAL%E22
+    ! R x E1222 -> E1222 (39, 39)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*38:NCOLS*39) = VAL%R
+    ! E1222 x R -> E1222 (39, 1)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*0:NCOLS*1) = VAL%E1222
+    ! E1 x E222 -> E1222 (39, 19)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*18:NCOLS*19) = VAL%E1
+    ! E222 x E1 -> E1222 (39, 2)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*1:NCOLS*2) = VAL%E222
+    ! E2 x E122 -> E1222 (39, 18)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*17:NCOLS*18) = VAL%E2
+    ! E122 x E2 -> E1222 (39, 3)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*2:NCOLS*3) = VAL%E122
+    ! E12 x E22 -> E1222 (39, 8)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*7:NCOLS*8) = VAL%E12
+    ! E22 x E12 -> E1222 (39, 7)
+    RES(1+NROWS*38:NROWS*39,1+NCOLS*6:NCOLS*7) = VAL%E22
+    ! R x E2222 -> E2222 (40, 40)
+    RES(1+NROWS*39:NROWS*40,1+NCOLS*39:NCOLS*40) = VAL%R
+    ! E2222 x R -> E2222 (40, 1)
+    RES(1+NROWS*39:NROWS*40,1+NCOLS*0:NCOLS*1) = VAL%E2222
+    ! E2 x E222 -> E2222 (40, 19)
+    RES(1+NROWS*39:NROWS*40,1+NCOLS*18:NCOLS*19) = VAL%E2
+    ! E222 x E2 -> E2222 (40, 3)
+    RES(1+NROWS*39:NROWS*40,1+NCOLS*2:NCOLS*3) = VAL%E222
+    ! E22 x E22 -> E2222 (40, 8)
+    RES(1+NROWS*39:NROWS*40,1+NCOLS*7:NCOLS*8) = VAL%E22
+    ! R x E1113 -> E1113 (41, 41)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*40:NCOLS*41) = VAL%R
+    ! E1113 x R -> E1113 (41, 1)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*0:NCOLS*1) = VAL%E1113
+    ! E1 x E113 -> E1113 (41, 20)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*19:NCOLS*20) = VAL%E1
+    ! E113 x E1 -> E1113 (41, 2)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*1:NCOLS*2) = VAL%E113
+    ! E3 x E111 -> E1113 (41, 16)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*15:NCOLS*16) = VAL%E3
+    ! E111 x E3 -> E1113 (41, 4)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*3:NCOLS*4) = VAL%E111
+    ! E11 x E13 -> E1113 (41, 9)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*8:NCOLS*9) = VAL%E11
+    ! E13 x E11 -> E1113 (41, 6)
+    RES(1+NROWS*40:NROWS*41,1+NCOLS*5:NCOLS*6) = VAL%E13
+    ! R x E1123 -> E1123 (42, 42)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*41:NCOLS*42) = VAL%R
+    ! E1123 x R -> E1123 (42, 1)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*0:NCOLS*1) = VAL%E1123
+    ! E1 x E123 -> E1123 (42, 21)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*20:NCOLS*21) = VAL%E1
+    ! E123 x E1 -> E1123 (42, 2)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*1:NCOLS*2) = VAL%E123
+    ! E2 x E113 -> E1123 (42, 20)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*19:NCOLS*20) = VAL%E2
+    ! E113 x E2 -> E1123 (42, 3)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*2:NCOLS*3) = VAL%E113
+    ! E3 x E112 -> E1123 (42, 17)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*16:NCOLS*17) = VAL%E3
+    ! E112 x E3 -> E1123 (42, 4)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*3:NCOLS*4) = VAL%E112
+    ! E11 x E23 -> E1123 (42, 10)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*9:NCOLS*10) = VAL%E11
+    ! E12 x E13 -> E1123 (42, 9)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*8:NCOLS*9) = VAL%E12
+    ! E13 x E12 -> E1123 (42, 7)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*6:NCOLS*7) = VAL%E13
+    ! E23 x E11 -> E1123 (42, 6)
+    RES(1+NROWS*41:NROWS*42,1+NCOLS*5:NCOLS*6) = VAL%E23
+    ! R x E1133 -> E1133 (43, 43)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*42:NCOLS*43) = VAL%R
+    ! E1133 x R -> E1133 (43, 1)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*0:NCOLS*1) = VAL%E1133
+    ! E1 x E133 -> E1133 (43, 22)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*21:NCOLS*22) = VAL%E1
+    ! E133 x E1 -> E1133 (43, 2)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*1:NCOLS*2) = VAL%E133
+    ! E3 x E113 -> E1133 (43, 20)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*19:NCOLS*20) = VAL%E3
+    ! E113 x E3 -> E1133 (43, 4)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*3:NCOLS*4) = VAL%E113
+    ! E11 x E33 -> E1133 (43, 11)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*10:NCOLS*11) = VAL%E11
+    ! E13 x E13 -> E1133 (43, 9)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*8:NCOLS*9) = VAL%E13
+    ! E33 x E11 -> E1133 (43, 6)
+    RES(1+NROWS*42:NROWS*43,1+NCOLS*5:NCOLS*6) = VAL%E33
+    ! R x E1223 -> E1223 (44, 44)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*43:NCOLS*44) = VAL%R
+    ! E1223 x R -> E1223 (44, 1)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*0:NCOLS*1) = VAL%E1223
+    ! E1 x E223 -> E1223 (44, 23)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*22:NCOLS*23) = VAL%E1
+    ! E223 x E1 -> E1223 (44, 2)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*1:NCOLS*2) = VAL%E223
+    ! E2 x E123 -> E1223 (44, 21)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*20:NCOLS*21) = VAL%E2
+    ! E123 x E2 -> E1223 (44, 3)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*2:NCOLS*3) = VAL%E123
+    ! E3 x E122 -> E1223 (44, 18)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*17:NCOLS*18) = VAL%E3
+    ! E122 x E3 -> E1223 (44, 4)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*3:NCOLS*4) = VAL%E122
+    ! E12 x E23 -> E1223 (44, 10)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*9:NCOLS*10) = VAL%E12
+    ! E22 x E13 -> E1223 (44, 9)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*8:NCOLS*9) = VAL%E22
+    ! E13 x E22 -> E1223 (44, 8)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*7:NCOLS*8) = VAL%E13
+    ! E23 x E12 -> E1223 (44, 7)
+    RES(1+NROWS*43:NROWS*44,1+NCOLS*6:NCOLS*7) = VAL%E23
+    ! R x E1233 -> E1233 (45, 45)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*44:NCOLS*45) = VAL%R
+    ! E1233 x R -> E1233 (45, 1)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*0:NCOLS*1) = VAL%E1233
+    ! E1 x E233 -> E1233 (45, 24)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*23:NCOLS*24) = VAL%E1
+    ! E233 x E1 -> E1233 (45, 2)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*1:NCOLS*2) = VAL%E233
+    ! E2 x E133 -> E1233 (45, 22)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*21:NCOLS*22) = VAL%E2
+    ! E133 x E2 -> E1233 (45, 3)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*2:NCOLS*3) = VAL%E133
+    ! E3 x E123 -> E1233 (45, 21)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*20:NCOLS*21) = VAL%E3
+    ! E123 x E3 -> E1233 (45, 4)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*3:NCOLS*4) = VAL%E123
+    ! E12 x E33 -> E1233 (45, 11)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*10:NCOLS*11) = VAL%E12
+    ! E13 x E23 -> E1233 (45, 10)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*9:NCOLS*10) = VAL%E13
+    ! E23 x E13 -> E1233 (45, 9)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*8:NCOLS*9) = VAL%E23
+    ! E33 x E12 -> E1233 (45, 7)
+    RES(1+NROWS*44:NROWS*45,1+NCOLS*6:NCOLS*7) = VAL%E33
+    ! R x E1333 -> E1333 (46, 46)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*45:NCOLS*46) = VAL%R
+    ! E1333 x R -> E1333 (46, 1)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*0:NCOLS*1) = VAL%E1333
+    ! E1 x E333 -> E1333 (46, 25)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*24:NCOLS*25) = VAL%E1
+    ! E333 x E1 -> E1333 (46, 2)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*1:NCOLS*2) = VAL%E333
+    ! E3 x E133 -> E1333 (46, 22)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*21:NCOLS*22) = VAL%E3
+    ! E133 x E3 -> E1333 (46, 4)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*3:NCOLS*4) = VAL%E133
+    ! E13 x E33 -> E1333 (46, 11)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*10:NCOLS*11) = VAL%E13
+    ! E33 x E13 -> E1333 (46, 9)
+    RES(1+NROWS*45:NROWS*46,1+NCOLS*8:NCOLS*9) = VAL%E33
+    ! R x E2223 -> E2223 (47, 47)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*46:NCOLS*47) = VAL%R
+    ! E2223 x R -> E2223 (47, 1)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*0:NCOLS*1) = VAL%E2223
+    ! E2 x E223 -> E2223 (47, 23)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*22:NCOLS*23) = VAL%E2
+    ! E223 x E2 -> E2223 (47, 3)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*2:NCOLS*3) = VAL%E223
+    ! E3 x E222 -> E2223 (47, 19)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*18:NCOLS*19) = VAL%E3
+    ! E222 x E3 -> E2223 (47, 4)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*3:NCOLS*4) = VAL%E222
+    ! E22 x E23 -> E2223 (47, 10)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*9:NCOLS*10) = VAL%E22
+    ! E23 x E22 -> E2223 (47, 8)
+    RES(1+NROWS*46:NROWS*47,1+NCOLS*7:NCOLS*8) = VAL%E23
+    ! R x E2233 -> E2233 (48, 48)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*47:NCOLS*48) = VAL%R
+    ! E2233 x R -> E2233 (48, 1)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*0:NCOLS*1) = VAL%E2233
+    ! E2 x E233 -> E2233 (48, 24)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*23:NCOLS*24) = VAL%E2
+    ! E233 x E2 -> E2233 (48, 3)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*2:NCOLS*3) = VAL%E233
+    ! E3 x E223 -> E2233 (48, 23)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*22:NCOLS*23) = VAL%E3
+    ! E223 x E3 -> E2233 (48, 4)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*3:NCOLS*4) = VAL%E223
+    ! E22 x E33 -> E2233 (48, 11)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*10:NCOLS*11) = VAL%E22
+    ! E23 x E23 -> E2233 (48, 10)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*9:NCOLS*10) = VAL%E23
+    ! E33 x E22 -> E2233 (48, 8)
+    RES(1+NROWS*47:NROWS*48,1+NCOLS*7:NCOLS*8) = VAL%E33
+    ! R x E2333 -> E2333 (49, 49)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*48:NCOLS*49) = VAL%R
+    ! E2333 x R -> E2333 (49, 1)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*0:NCOLS*1) = VAL%E2333
+    ! E2 x E333 -> E2333 (49, 25)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*24:NCOLS*25) = VAL%E2
+    ! E333 x E2 -> E2333 (49, 3)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*2:NCOLS*3) = VAL%E333
+    ! E3 x E233 -> E2333 (49, 24)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*23:NCOLS*24) = VAL%E3
+    ! E233 x E3 -> E2333 (49, 4)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*3:NCOLS*4) = VAL%E233
+    ! E23 x E33 -> E2333 (49, 11)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*10:NCOLS*11) = VAL%E23
+    ! E33 x E23 -> E2333 (49, 10)
+    RES(1+NROWS*48:NROWS*49,1+NCOLS*9:NCOLS*10) = VAL%E33
+    ! R x E3333 -> E3333 (50, 50)
+    RES(1+NROWS*49:NROWS*50,1+NCOLS*49:NCOLS*50) = VAL%R
+    ! E3333 x R -> E3333 (50, 1)
+    RES(1+NROWS*49:NROWS*50,1+NCOLS*0:NCOLS*1) = VAL%E3333
+    ! E3 x E333 -> E3333 (50, 25)
+    RES(1+NROWS*49:NROWS*50,1+NCOLS*24:NCOLS*25) = VAL%E3
+    ! E333 x E3 -> E3333 (50, 4)
+    RES(1+NROWS*49:NROWS*50,1+NCOLS*3:NCOLS*4) = VAL%E333
+    ! E33 x E33 -> E3333 (50, 11)
+    RES(1+NROWS*49:NROWS*50,1+NCOLS*10:NCOLS*11) = VAL%E33
+    ! R x E1114 -> E1114 (51, 51)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*50:NCOLS*51) = VAL%R
+    ! E1114 x R -> E1114 (51, 1)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*0:NCOLS*1) = VAL%E1114
+    ! E1 x E114 -> E1114 (51, 26)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*25:NCOLS*26) = VAL%E1
+    ! E114 x E1 -> E1114 (51, 2)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*1:NCOLS*2) = VAL%E114
+    ! E4 x E111 -> E1114 (51, 16)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*15:NCOLS*16) = VAL%E4
+    ! E111 x E4 -> E1114 (51, 5)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*4:NCOLS*5) = VAL%E111
+    ! E11 x E14 -> E1114 (51, 12)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*11:NCOLS*12) = VAL%E11
+    ! E14 x E11 -> E1114 (51, 6)
+    RES(1+NROWS*50:NROWS*51,1+NCOLS*5:NCOLS*6) = VAL%E14
+    ! R x E1124 -> E1124 (52, 52)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*51:NCOLS*52) = VAL%R
+    ! E1124 x R -> E1124 (52, 1)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*0:NCOLS*1) = VAL%E1124
+    ! E1 x E124 -> E1124 (52, 27)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*26:NCOLS*27) = VAL%E1
+    ! E124 x E1 -> E1124 (52, 2)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*1:NCOLS*2) = VAL%E124
+    ! E2 x E114 -> E1124 (52, 26)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*25:NCOLS*26) = VAL%E2
+    ! E114 x E2 -> E1124 (52, 3)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*2:NCOLS*3) = VAL%E114
+    ! E4 x E112 -> E1124 (52, 17)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*16:NCOLS*17) = VAL%E4
+    ! E112 x E4 -> E1124 (52, 5)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*4:NCOLS*5) = VAL%E112
+    ! E11 x E24 -> E1124 (52, 13)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*12:NCOLS*13) = VAL%E11
+    ! E12 x E14 -> E1124 (52, 12)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*11:NCOLS*12) = VAL%E12
+    ! E14 x E12 -> E1124 (52, 7)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*6:NCOLS*7) = VAL%E14
+    ! E24 x E11 -> E1124 (52, 6)
+    RES(1+NROWS*51:NROWS*52,1+NCOLS*5:NCOLS*6) = VAL%E24
+    ! R x E1134 -> E1134 (53, 53)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*52:NCOLS*53) = VAL%R
+    ! E1134 x R -> E1134 (53, 1)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*0:NCOLS*1) = VAL%E1134
+    ! E1 x E134 -> E1134 (53, 28)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*27:NCOLS*28) = VAL%E1
+    ! E134 x E1 -> E1134 (53, 2)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*1:NCOLS*2) = VAL%E134
+    ! E3 x E114 -> E1134 (53, 26)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*25:NCOLS*26) = VAL%E3
+    ! E114 x E3 -> E1134 (53, 4)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*3:NCOLS*4) = VAL%E114
+    ! E4 x E113 -> E1134 (53, 20)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*19:NCOLS*20) = VAL%E4
+    ! E113 x E4 -> E1134 (53, 5)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*4:NCOLS*5) = VAL%E113
+    ! E11 x E34 -> E1134 (53, 14)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*13:NCOLS*14) = VAL%E11
+    ! E13 x E14 -> E1134 (53, 12)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*11:NCOLS*12) = VAL%E13
+    ! E14 x E13 -> E1134 (53, 9)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*8:NCOLS*9) = VAL%E14
+    ! E34 x E11 -> E1134 (53, 6)
+    RES(1+NROWS*52:NROWS*53,1+NCOLS*5:NCOLS*6) = VAL%E34
+    ! R x E1144 -> E1144 (54, 54)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*53:NCOLS*54) = VAL%R
+    ! E1144 x R -> E1144 (54, 1)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*0:NCOLS*1) = VAL%E1144
+    ! E1 x E144 -> E1144 (54, 29)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*28:NCOLS*29) = VAL%E1
+    ! E144 x E1 -> E1144 (54, 2)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*1:NCOLS*2) = VAL%E144
+    ! E4 x E114 -> E1144 (54, 26)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*25:NCOLS*26) = VAL%E4
+    ! E114 x E4 -> E1144 (54, 5)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*4:NCOLS*5) = VAL%E114
+    ! E11 x E44 -> E1144 (54, 15)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*14:NCOLS*15) = VAL%E11
+    ! E14 x E14 -> E1144 (54, 12)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*11:NCOLS*12) = VAL%E14
+    ! E44 x E11 -> E1144 (54, 6)
+    RES(1+NROWS*53:NROWS*54,1+NCOLS*5:NCOLS*6) = VAL%E44
+    ! R x E1224 -> E1224 (55, 55)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*54:NCOLS*55) = VAL%R
+    ! E1224 x R -> E1224 (55, 1)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*0:NCOLS*1) = VAL%E1224
+    ! E1 x E224 -> E1224 (55, 30)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*29:NCOLS*30) = VAL%E1
+    ! E224 x E1 -> E1224 (55, 2)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*1:NCOLS*2) = VAL%E224
+    ! E2 x E124 -> E1224 (55, 27)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*26:NCOLS*27) = VAL%E2
+    ! E124 x E2 -> E1224 (55, 3)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*2:NCOLS*3) = VAL%E124
+    ! E4 x E122 -> E1224 (55, 18)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*17:NCOLS*18) = VAL%E4
+    ! E122 x E4 -> E1224 (55, 5)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*4:NCOLS*5) = VAL%E122
+    ! E12 x E24 -> E1224 (55, 13)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*12:NCOLS*13) = VAL%E12
+    ! E22 x E14 -> E1224 (55, 12)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*11:NCOLS*12) = VAL%E22
+    ! E14 x E22 -> E1224 (55, 8)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*7:NCOLS*8) = VAL%E14
+    ! E24 x E12 -> E1224 (55, 7)
+    RES(1+NROWS*54:NROWS*55,1+NCOLS*6:NCOLS*7) = VAL%E24
+    ! R x E1234 -> E1234 (56, 56)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*55:NCOLS*56) = VAL%R
+    ! E1234 x R -> E1234 (56, 1)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*0:NCOLS*1) = VAL%E1234
+    ! E1 x E234 -> E1234 (56, 31)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*30:NCOLS*31) = VAL%E1
+    ! E234 x E1 -> E1234 (56, 2)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*1:NCOLS*2) = VAL%E234
+    ! E2 x E134 -> E1234 (56, 28)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*27:NCOLS*28) = VAL%E2
+    ! E134 x E2 -> E1234 (56, 3)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*2:NCOLS*3) = VAL%E134
+    ! E3 x E124 -> E1234 (56, 27)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*26:NCOLS*27) = VAL%E3
+    ! E124 x E3 -> E1234 (56, 4)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*3:NCOLS*4) = VAL%E124
+    ! E4 x E123 -> E1234 (56, 21)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*20:NCOLS*21) = VAL%E4
+    ! E123 x E4 -> E1234 (56, 5)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*4:NCOLS*5) = VAL%E123
+    ! E12 x E34 -> E1234 (56, 14)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*13:NCOLS*14) = VAL%E12
+    ! E13 x E24 -> E1234 (56, 13)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*12:NCOLS*13) = VAL%E13
+    ! E23 x E14 -> E1234 (56, 12)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*11:NCOLS*12) = VAL%E23
+    ! E14 x E23 -> E1234 (56, 10)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*9:NCOLS*10) = VAL%E14
+    ! E24 x E13 -> E1234 (56, 9)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*8:NCOLS*9) = VAL%E24
+    ! E34 x E12 -> E1234 (56, 7)
+    RES(1+NROWS*55:NROWS*56,1+NCOLS*6:NCOLS*7) = VAL%E34
+    ! R x E1244 -> E1244 (57, 57)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*56:NCOLS*57) = VAL%R
+    ! E1244 x R -> E1244 (57, 1)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*0:NCOLS*1) = VAL%E1244
+    ! E1 x E244 -> E1244 (57, 32)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*31:NCOLS*32) = VAL%E1
+    ! E244 x E1 -> E1244 (57, 2)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*1:NCOLS*2) = VAL%E244
+    ! E2 x E144 -> E1244 (57, 29)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*28:NCOLS*29) = VAL%E2
+    ! E144 x E2 -> E1244 (57, 3)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*2:NCOLS*3) = VAL%E144
+    ! E4 x E124 -> E1244 (57, 27)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*26:NCOLS*27) = VAL%E4
+    ! E124 x E4 -> E1244 (57, 5)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*4:NCOLS*5) = VAL%E124
+    ! E12 x E44 -> E1244 (57, 15)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*14:NCOLS*15) = VAL%E12
+    ! E14 x E24 -> E1244 (57, 13)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*12:NCOLS*13) = VAL%E14
+    ! E24 x E14 -> E1244 (57, 12)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*11:NCOLS*12) = VAL%E24
+    ! E44 x E12 -> E1244 (57, 7)
+    RES(1+NROWS*56:NROWS*57,1+NCOLS*6:NCOLS*7) = VAL%E44
+    ! R x E1334 -> E1334 (58, 58)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*57:NCOLS*58) = VAL%R
+    ! E1334 x R -> E1334 (58, 1)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*0:NCOLS*1) = VAL%E1334
+    ! E1 x E334 -> E1334 (58, 33)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*32:NCOLS*33) = VAL%E1
+    ! E334 x E1 -> E1334 (58, 2)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*1:NCOLS*2) = VAL%E334
+    ! E3 x E134 -> E1334 (58, 28)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*27:NCOLS*28) = VAL%E3
+    ! E134 x E3 -> E1334 (58, 4)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*3:NCOLS*4) = VAL%E134
+    ! E4 x E133 -> E1334 (58, 22)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*21:NCOLS*22) = VAL%E4
+    ! E133 x E4 -> E1334 (58, 5)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*4:NCOLS*5) = VAL%E133
+    ! E13 x E34 -> E1334 (58, 14)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*13:NCOLS*14) = VAL%E13
+    ! E33 x E14 -> E1334 (58, 12)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*11:NCOLS*12) = VAL%E33
+    ! E14 x E33 -> E1334 (58, 11)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*10:NCOLS*11) = VAL%E14
+    ! E34 x E13 -> E1334 (58, 9)
+    RES(1+NROWS*57:NROWS*58,1+NCOLS*8:NCOLS*9) = VAL%E34
+    ! R x E1344 -> E1344 (59, 59)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*58:NCOLS*59) = VAL%R
+    ! E1344 x R -> E1344 (59, 1)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*0:NCOLS*1) = VAL%E1344
+    ! E1 x E344 -> E1344 (59, 34)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*33:NCOLS*34) = VAL%E1
+    ! E344 x E1 -> E1344 (59, 2)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*1:NCOLS*2) = VAL%E344
+    ! E3 x E144 -> E1344 (59, 29)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*28:NCOLS*29) = VAL%E3
+    ! E144 x E3 -> E1344 (59, 4)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*3:NCOLS*4) = VAL%E144
+    ! E4 x E134 -> E1344 (59, 28)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*27:NCOLS*28) = VAL%E4
+    ! E134 x E4 -> E1344 (59, 5)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*4:NCOLS*5) = VAL%E134
+    ! E13 x E44 -> E1344 (59, 15)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*14:NCOLS*15) = VAL%E13
+    ! E14 x E34 -> E1344 (59, 14)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*13:NCOLS*14) = VAL%E14
+    ! E34 x E14 -> E1344 (59, 12)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*11:NCOLS*12) = VAL%E34
+    ! E44 x E13 -> E1344 (59, 9)
+    RES(1+NROWS*58:NROWS*59,1+NCOLS*8:NCOLS*9) = VAL%E44
+    ! R x E1444 -> E1444 (60, 60)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*59:NCOLS*60) = VAL%R
+    ! E1444 x R -> E1444 (60, 1)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*0:NCOLS*1) = VAL%E1444
+    ! E1 x E444 -> E1444 (60, 35)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*34:NCOLS*35) = VAL%E1
+    ! E444 x E1 -> E1444 (60, 2)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*1:NCOLS*2) = VAL%E444
+    ! E4 x E144 -> E1444 (60, 29)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*28:NCOLS*29) = VAL%E4
+    ! E144 x E4 -> E1444 (60, 5)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*4:NCOLS*5) = VAL%E144
+    ! E14 x E44 -> E1444 (60, 15)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*14:NCOLS*15) = VAL%E14
+    ! E44 x E14 -> E1444 (60, 12)
+    RES(1+NROWS*59:NROWS*60,1+NCOLS*11:NCOLS*12) = VAL%E44
+    ! R x E2224 -> E2224 (61, 61)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*60:NCOLS*61) = VAL%R
+    ! E2224 x R -> E2224 (61, 1)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*0:NCOLS*1) = VAL%E2224
+    ! E2 x E224 -> E2224 (61, 30)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*29:NCOLS*30) = VAL%E2
+    ! E224 x E2 -> E2224 (61, 3)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*2:NCOLS*3) = VAL%E224
+    ! E4 x E222 -> E2224 (61, 19)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*18:NCOLS*19) = VAL%E4
+    ! E222 x E4 -> E2224 (61, 5)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*4:NCOLS*5) = VAL%E222
+    ! E22 x E24 -> E2224 (61, 13)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*12:NCOLS*13) = VAL%E22
+    ! E24 x E22 -> E2224 (61, 8)
+    RES(1+NROWS*60:NROWS*61,1+NCOLS*7:NCOLS*8) = VAL%E24
+    ! R x E2234 -> E2234 (62, 62)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*61:NCOLS*62) = VAL%R
+    ! E2234 x R -> E2234 (62, 1)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*0:NCOLS*1) = VAL%E2234
+    ! E2 x E234 -> E2234 (62, 31)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*30:NCOLS*31) = VAL%E2
+    ! E234 x E2 -> E2234 (62, 3)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*2:NCOLS*3) = VAL%E234
+    ! E3 x E224 -> E2234 (62, 30)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*29:NCOLS*30) = VAL%E3
+    ! E224 x E3 -> E2234 (62, 4)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*3:NCOLS*4) = VAL%E224
+    ! E4 x E223 -> E2234 (62, 23)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*22:NCOLS*23) = VAL%E4
+    ! E223 x E4 -> E2234 (62, 5)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*4:NCOLS*5) = VAL%E223
+    ! E22 x E34 -> E2234 (62, 14)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*13:NCOLS*14) = VAL%E22
+    ! E23 x E24 -> E2234 (62, 13)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*12:NCOLS*13) = VAL%E23
+    ! E24 x E23 -> E2234 (62, 10)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*9:NCOLS*10) = VAL%E24
+    ! E34 x E22 -> E2234 (62, 8)
+    RES(1+NROWS*61:NROWS*62,1+NCOLS*7:NCOLS*8) = VAL%E34
+    ! R x E2244 -> E2244 (63, 63)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*62:NCOLS*63) = VAL%R
+    ! E2244 x R -> E2244 (63, 1)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*0:NCOLS*1) = VAL%E2244
+    ! E2 x E244 -> E2244 (63, 32)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*31:NCOLS*32) = VAL%E2
+    ! E244 x E2 -> E2244 (63, 3)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*2:NCOLS*3) = VAL%E244
+    ! E4 x E224 -> E2244 (63, 30)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*29:NCOLS*30) = VAL%E4
+    ! E224 x E4 -> E2244 (63, 5)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*4:NCOLS*5) = VAL%E224
+    ! E22 x E44 -> E2244 (63, 15)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*14:NCOLS*15) = VAL%E22
+    ! E24 x E24 -> E2244 (63, 13)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*12:NCOLS*13) = VAL%E24
+    ! E44 x E22 -> E2244 (63, 8)
+    RES(1+NROWS*62:NROWS*63,1+NCOLS*7:NCOLS*8) = VAL%E44
+    ! R x E2334 -> E2334 (64, 64)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*63:NCOLS*64) = VAL%R
+    ! E2334 x R -> E2334 (64, 1)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*0:NCOLS*1) = VAL%E2334
+    ! E2 x E334 -> E2334 (64, 33)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*32:NCOLS*33) = VAL%E2
+    ! E334 x E2 -> E2334 (64, 3)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*2:NCOLS*3) = VAL%E334
+    ! E3 x E234 -> E2334 (64, 31)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*30:NCOLS*31) = VAL%E3
+    ! E234 x E3 -> E2334 (64, 4)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*3:NCOLS*4) = VAL%E234
+    ! E4 x E233 -> E2334 (64, 24)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*23:NCOLS*24) = VAL%E4
+    ! E233 x E4 -> E2334 (64, 5)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*4:NCOLS*5) = VAL%E233
+    ! E23 x E34 -> E2334 (64, 14)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*13:NCOLS*14) = VAL%E23
+    ! E33 x E24 -> E2334 (64, 13)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*12:NCOLS*13) = VAL%E33
+    ! E24 x E33 -> E2334 (64, 11)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*10:NCOLS*11) = VAL%E24
+    ! E34 x E23 -> E2334 (64, 10)
+    RES(1+NROWS*63:NROWS*64,1+NCOLS*9:NCOLS*10) = VAL%E34
+    ! R x E2344 -> E2344 (65, 65)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*64:NCOLS*65) = VAL%R
+    ! E2344 x R -> E2344 (65, 1)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*0:NCOLS*1) = VAL%E2344
+    ! E2 x E344 -> E2344 (65, 34)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*33:NCOLS*34) = VAL%E2
+    ! E344 x E2 -> E2344 (65, 3)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*2:NCOLS*3) = VAL%E344
+    ! E3 x E244 -> E2344 (65, 32)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*31:NCOLS*32) = VAL%E3
+    ! E244 x E3 -> E2344 (65, 4)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*3:NCOLS*4) = VAL%E244
+    ! E4 x E234 -> E2344 (65, 31)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*30:NCOLS*31) = VAL%E4
+    ! E234 x E4 -> E2344 (65, 5)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*4:NCOLS*5) = VAL%E234
+    ! E23 x E44 -> E2344 (65, 15)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*14:NCOLS*15) = VAL%E23
+    ! E24 x E34 -> E2344 (65, 14)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*13:NCOLS*14) = VAL%E24
+    ! E34 x E24 -> E2344 (65, 13)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*12:NCOLS*13) = VAL%E34
+    ! E44 x E23 -> E2344 (65, 10)
+    RES(1+NROWS*64:NROWS*65,1+NCOLS*9:NCOLS*10) = VAL%E44
+    ! R x E2444 -> E2444 (66, 66)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*65:NCOLS*66) = VAL%R
+    ! E2444 x R -> E2444 (66, 1)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*0:NCOLS*1) = VAL%E2444
+    ! E2 x E444 -> E2444 (66, 35)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*34:NCOLS*35) = VAL%E2
+    ! E444 x E2 -> E2444 (66, 3)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*2:NCOLS*3) = VAL%E444
+    ! E4 x E244 -> E2444 (66, 32)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*31:NCOLS*32) = VAL%E4
+    ! E244 x E4 -> E2444 (66, 5)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*4:NCOLS*5) = VAL%E244
+    ! E24 x E44 -> E2444 (66, 15)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*14:NCOLS*15) = VAL%E24
+    ! E44 x E24 -> E2444 (66, 13)
+    RES(1+NROWS*65:NROWS*66,1+NCOLS*12:NCOLS*13) = VAL%E44
+    ! R x E3334 -> E3334 (67, 67)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*66:NCOLS*67) = VAL%R
+    ! E3334 x R -> E3334 (67, 1)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*0:NCOLS*1) = VAL%E3334
+    ! E3 x E334 -> E3334 (67, 33)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*32:NCOLS*33) = VAL%E3
+    ! E334 x E3 -> E3334 (67, 4)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*3:NCOLS*4) = VAL%E334
+    ! E4 x E333 -> E3334 (67, 25)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*24:NCOLS*25) = VAL%E4
+    ! E333 x E4 -> E3334 (67, 5)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*4:NCOLS*5) = VAL%E333
+    ! E33 x E34 -> E3334 (67, 14)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*13:NCOLS*14) = VAL%E33
+    ! E34 x E33 -> E3334 (67, 11)
+    RES(1+NROWS*66:NROWS*67,1+NCOLS*10:NCOLS*11) = VAL%E34
+    ! R x E3344 -> E3344 (68, 68)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*67:NCOLS*68) = VAL%R
+    ! E3344 x R -> E3344 (68, 1)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*0:NCOLS*1) = VAL%E3344
+    ! E3 x E344 -> E3344 (68, 34)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*33:NCOLS*34) = VAL%E3
+    ! E344 x E3 -> E3344 (68, 4)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*3:NCOLS*4) = VAL%E344
+    ! E4 x E334 -> E3344 (68, 33)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*32:NCOLS*33) = VAL%E4
+    ! E334 x E4 -> E3344 (68, 5)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*4:NCOLS*5) = VAL%E334
+    ! E33 x E44 -> E3344 (68, 15)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*14:NCOLS*15) = VAL%E33
+    ! E34 x E34 -> E3344 (68, 14)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*13:NCOLS*14) = VAL%E34
+    ! E44 x E33 -> E3344 (68, 11)
+    RES(1+NROWS*67:NROWS*68,1+NCOLS*10:NCOLS*11) = VAL%E44
+    ! R x E3444 -> E3444 (69, 69)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*68:NCOLS*69) = VAL%R
+    ! E3444 x R -> E3444 (69, 1)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*0:NCOLS*1) = VAL%E3444
+    ! E3 x E444 -> E3444 (69, 35)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*34:NCOLS*35) = VAL%E3
+    ! E444 x E3 -> E3444 (69, 4)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*3:NCOLS*4) = VAL%E444
+    ! E4 x E344 -> E3444 (69, 34)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*33:NCOLS*34) = VAL%E4
+    ! E344 x E4 -> E3444 (69, 5)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*4:NCOLS*5) = VAL%E344
+    ! E34 x E44 -> E3444 (69, 15)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*14:NCOLS*15) = VAL%E34
+    ! E44 x E34 -> E3444 (69, 14)
+    RES(1+NROWS*68:NROWS*69,1+NCOLS*13:NCOLS*14) = VAL%E44
+    ! R x E4444 -> E4444 (70, 70)
+    RES(1+NROWS*69:NROWS*70,1+NCOLS*69:NCOLS*70) = VAL%R
+    ! E4444 x R -> E4444 (70, 1)
+    RES(1+NROWS*69:NROWS*70,1+NCOLS*0:NCOLS*1) = VAL%E4444
+    ! E4 x E444 -> E4444 (70, 35)
+    RES(1+NROWS*69:NROWS*70,1+NCOLS*34:NCOLS*35) = VAL%E4
+    ! E444 x E4 -> E4444 (70, 5)
+    RES(1+NROWS*69:NROWS*70,1+NCOLS*4:NCOLS*5) = VAL%E444
+    ! E44 x E44 -> E4444 (70, 15)
+    RES(1+NROWS*69:NROWS*70,1+NCOLS*14:NCOLS*15) = VAL%E44
+  END FUNCTION ONUMM4N4_TO_CR_MAT_M
+
+    SUBROUTINE ONUMM4N4_SETIM_S(VAL,IDX,RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(INOUT) :: VAL
+    REAL(DP),INTENT(IN) :: RES 
+    INTEGER, INTENT(IN) :: IDX
+
+    SELECT CASE(IDX)
+    ! Order 0
+    CASE(0)
+      VAL%R=RES
+
+    ! Order 1
+    CASE(1)
+      VAL%E1=RES
+    CASE(2)
+      VAL%E2=RES
+    CASE(3)
+      VAL%E3=RES
+    CASE(4)
+      VAL%E4=RES
+
+    ! Order 2
+    CASE(5)
+      VAL%E11=RES
+    CASE(6)
+      VAL%E12=RES
+    CASE(7)
+      VAL%E22=RES
+    CASE(8)
+      VAL%E13=RES
+    CASE(9)
+      VAL%E23=RES
+    CASE(10)
+      VAL%E33=RES
+    CASE(11)
+      VAL%E14=RES
+    CASE(12)
+      VAL%E24=RES
+    CASE(13)
+      VAL%E34=RES
+    CASE(14)
+      VAL%E44=RES
+
+    ! Order 3
+    CASE(15)
+      VAL%E111=RES
+    CASE(16)
+      VAL%E112=RES
+    CASE(17)
+      VAL%E122=RES
+    CASE(18)
+      VAL%E222=RES
+    CASE(19)
+      VAL%E113=RES
+    CASE(20)
+      VAL%E123=RES
+    CASE(21)
+      VAL%E133=RES
+    CASE(22)
+      VAL%E223=RES
+    CASE(23)
+      VAL%E233=RES
+    CASE(24)
+      VAL%E333=RES
+    CASE(25)
+      VAL%E114=RES
+    CASE(26)
+      VAL%E124=RES
+    CASE(27)
+      VAL%E134=RES
+    CASE(28)
+      VAL%E144=RES
+    CASE(29)
+      VAL%E224=RES
+    CASE(30)
+      VAL%E234=RES
+    CASE(31)
+      VAL%E244=RES
+    CASE(32)
+      VAL%E334=RES
+    CASE(33)
+      VAL%E344=RES
+    CASE(34)
+      VAL%E444=RES
+
+    ! Order 4
+    CASE(35)
+      VAL%E1111=RES
+    CASE(36)
+      VAL%E1112=RES
+    CASE(37)
+      VAL%E1122=RES
+    CASE(38)
+      VAL%E1222=RES
+    CASE(39)
+      VAL%E2222=RES
+    CASE(40)
+      VAL%E1113=RES
+    CASE(41)
+      VAL%E1123=RES
+    CASE(42)
+      VAL%E1133=RES
+    CASE(43)
+      VAL%E1223=RES
+    CASE(44)
+      VAL%E1233=RES
+    CASE(45)
+      VAL%E1333=RES
+    CASE(46)
+      VAL%E2223=RES
+    CASE(47)
+      VAL%E2233=RES
+    CASE(48)
+      VAL%E2333=RES
+    CASE(49)
+      VAL%E3333=RES
+    CASE(50)
+      VAL%E1114=RES
+    CASE(51)
+      VAL%E1124=RES
+    CASE(52)
+      VAL%E1134=RES
+    CASE(53)
+      VAL%E1144=RES
+    CASE(54)
+      VAL%E1224=RES
+    CASE(55)
+      VAL%E1234=RES
+    CASE(56)
+      VAL%E1244=RES
+    CASE(57)
+      VAL%E1334=RES
+    CASE(58)
+      VAL%E1344=RES
+    CASE(59)
+      VAL%E1444=RES
+    CASE(60)
+      VAL%E2224=RES
+    CASE(61)
+      VAL%E2234=RES
+    CASE(62)
+      VAL%E2244=RES
+    CASE(63)
+      VAL%E2334=RES
+    CASE(64)
+      VAL%E2344=RES
+    CASE(65)
+      VAL%E2444=RES
+    CASE(66)
+      VAL%E3334=RES
+    CASE(67)
+      VAL%E3344=RES
+    CASE(68)
+      VAL%E3444=RES
+    CASE(69)
+      VAL%E4444=RES
+
+    END SELECT
+  END SUBROUTINE ONUMM4N4_SETIM_S
+
+    SUBROUTINE ONUMM4N4_SETIM_V(VAL,IDX,RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(INOUT) :: VAL(:)
+    REAL(DP),INTENT(IN) :: RES(SIZE(VAL)) 
+    INTEGER, INTENT(IN) :: IDX
+
+    SELECT CASE(IDX)
+    ! Order 0
+    CASE(0)
+      VAL%R=RES
+
+    ! Order 1
+    CASE(1)
+      VAL%E1=RES
+    CASE(2)
+      VAL%E2=RES
+    CASE(3)
+      VAL%E3=RES
+    CASE(4)
+      VAL%E4=RES
+
+    ! Order 2
+    CASE(5)
+      VAL%E11=RES
+    CASE(6)
+      VAL%E12=RES
+    CASE(7)
+      VAL%E22=RES
+    CASE(8)
+      VAL%E13=RES
+    CASE(9)
+      VAL%E23=RES
+    CASE(10)
+      VAL%E33=RES
+    CASE(11)
+      VAL%E14=RES
+    CASE(12)
+      VAL%E24=RES
+    CASE(13)
+      VAL%E34=RES
+    CASE(14)
+      VAL%E44=RES
+
+    ! Order 3
+    CASE(15)
+      VAL%E111=RES
+    CASE(16)
+      VAL%E112=RES
+    CASE(17)
+      VAL%E122=RES
+    CASE(18)
+      VAL%E222=RES
+    CASE(19)
+      VAL%E113=RES
+    CASE(20)
+      VAL%E123=RES
+    CASE(21)
+      VAL%E133=RES
+    CASE(22)
+      VAL%E223=RES
+    CASE(23)
+      VAL%E233=RES
+    CASE(24)
+      VAL%E333=RES
+    CASE(25)
+      VAL%E114=RES
+    CASE(26)
+      VAL%E124=RES
+    CASE(27)
+      VAL%E134=RES
+    CASE(28)
+      VAL%E144=RES
+    CASE(29)
+      VAL%E224=RES
+    CASE(30)
+      VAL%E234=RES
+    CASE(31)
+      VAL%E244=RES
+    CASE(32)
+      VAL%E334=RES
+    CASE(33)
+      VAL%E344=RES
+    CASE(34)
+      VAL%E444=RES
+
+    ! Order 4
+    CASE(35)
+      VAL%E1111=RES
+    CASE(36)
+      VAL%E1112=RES
+    CASE(37)
+      VAL%E1122=RES
+    CASE(38)
+      VAL%E1222=RES
+    CASE(39)
+      VAL%E2222=RES
+    CASE(40)
+      VAL%E1113=RES
+    CASE(41)
+      VAL%E1123=RES
+    CASE(42)
+      VAL%E1133=RES
+    CASE(43)
+      VAL%E1223=RES
+    CASE(44)
+      VAL%E1233=RES
+    CASE(45)
+      VAL%E1333=RES
+    CASE(46)
+      VAL%E2223=RES
+    CASE(47)
+      VAL%E2233=RES
+    CASE(48)
+      VAL%E2333=RES
+    CASE(49)
+      VAL%E3333=RES
+    CASE(50)
+      VAL%E1114=RES
+    CASE(51)
+      VAL%E1124=RES
+    CASE(52)
+      VAL%E1134=RES
+    CASE(53)
+      VAL%E1144=RES
+    CASE(54)
+      VAL%E1224=RES
+    CASE(55)
+      VAL%E1234=RES
+    CASE(56)
+      VAL%E1244=RES
+    CASE(57)
+      VAL%E1334=RES
+    CASE(58)
+      VAL%E1344=RES
+    CASE(59)
+      VAL%E1444=RES
+    CASE(60)
+      VAL%E2224=RES
+    CASE(61)
+      VAL%E2234=RES
+    CASE(62)
+      VAL%E2244=RES
+    CASE(63)
+      VAL%E2334=RES
+    CASE(64)
+      VAL%E2344=RES
+    CASE(65)
+      VAL%E2444=RES
+    CASE(66)
+      VAL%E3334=RES
+    CASE(67)
+      VAL%E3344=RES
+    CASE(68)
+      VAL%E3444=RES
+    CASE(69)
+      VAL%E4444=RES
+
+    END SELECT
+  END SUBROUTINE ONUMM4N4_SETIM_V
+
+    SUBROUTINE ONUMM4N4_SETIM_M(VAL,IDX,RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(INOUT) :: VAL(:,:)
+    REAL(DP),INTENT(IN) :: RES(SIZE(VAL,1),SIZE(VAL,2)) 
+    INTEGER, INTENT(IN) :: IDX
+
+    SELECT CASE(IDX)
+    ! Order 0
+    CASE(0)
+      VAL%R=RES
+
+    ! Order 1
+    CASE(1)
+      VAL%E1=RES
+    CASE(2)
+      VAL%E2=RES
+    CASE(3)
+      VAL%E3=RES
+    CASE(4)
+      VAL%E4=RES
+
+    ! Order 2
+    CASE(5)
+      VAL%E11=RES
+    CASE(6)
+      VAL%E12=RES
+    CASE(7)
+      VAL%E22=RES
+    CASE(8)
+      VAL%E13=RES
+    CASE(9)
+      VAL%E23=RES
+    CASE(10)
+      VAL%E33=RES
+    CASE(11)
+      VAL%E14=RES
+    CASE(12)
+      VAL%E24=RES
+    CASE(13)
+      VAL%E34=RES
+    CASE(14)
+      VAL%E44=RES
+
+    ! Order 3
+    CASE(15)
+      VAL%E111=RES
+    CASE(16)
+      VAL%E112=RES
+    CASE(17)
+      VAL%E122=RES
+    CASE(18)
+      VAL%E222=RES
+    CASE(19)
+      VAL%E113=RES
+    CASE(20)
+      VAL%E123=RES
+    CASE(21)
+      VAL%E133=RES
+    CASE(22)
+      VAL%E223=RES
+    CASE(23)
+      VAL%E233=RES
+    CASE(24)
+      VAL%E333=RES
+    CASE(25)
+      VAL%E114=RES
+    CASE(26)
+      VAL%E124=RES
+    CASE(27)
+      VAL%E134=RES
+    CASE(28)
+      VAL%E144=RES
+    CASE(29)
+      VAL%E224=RES
+    CASE(30)
+      VAL%E234=RES
+    CASE(31)
+      VAL%E244=RES
+    CASE(32)
+      VAL%E334=RES
+    CASE(33)
+      VAL%E344=RES
+    CASE(34)
+      VAL%E444=RES
+
+    ! Order 4
+    CASE(35)
+      VAL%E1111=RES
+    CASE(36)
+      VAL%E1112=RES
+    CASE(37)
+      VAL%E1122=RES
+    CASE(38)
+      VAL%E1222=RES
+    CASE(39)
+      VAL%E2222=RES
+    CASE(40)
+      VAL%E1113=RES
+    CASE(41)
+      VAL%E1123=RES
+    CASE(42)
+      VAL%E1133=RES
+    CASE(43)
+      VAL%E1223=RES
+    CASE(44)
+      VAL%E1233=RES
+    CASE(45)
+      VAL%E1333=RES
+    CASE(46)
+      VAL%E2223=RES
+    CASE(47)
+      VAL%E2233=RES
+    CASE(48)
+      VAL%E2333=RES
+    CASE(49)
+      VAL%E3333=RES
+    CASE(50)
+      VAL%E1114=RES
+    CASE(51)
+      VAL%E1124=RES
+    CASE(52)
+      VAL%E1134=RES
+    CASE(53)
+      VAL%E1144=RES
+    CASE(54)
+      VAL%E1224=RES
+    CASE(55)
+      VAL%E1234=RES
+    CASE(56)
+      VAL%E1244=RES
+    CASE(57)
+      VAL%E1334=RES
+    CASE(58)
+      VAL%E1344=RES
+    CASE(59)
+      VAL%E1444=RES
+    CASE(60)
+      VAL%E2224=RES
+    CASE(61)
+      VAL%E2234=RES
+    CASE(62)
+      VAL%E2244=RES
+    CASE(63)
+      VAL%E2334=RES
+    CASE(64)
+      VAL%E2344=RES
+    CASE(65)
+      VAL%E2444=RES
+    CASE(66)
+      VAL%E3334=RES
+    CASE(67)
+      VAL%E3344=RES
+    CASE(68)
+      VAL%E3444=RES
+    CASE(69)
+      VAL%E4444=RES
+
+    END SELECT
+  END SUBROUTINE ONUMM4N4_SETIM_M
+
+FUNCTION ONUMM4N4_GETIM_S(VAL,IDX) RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: VAL
+    REAL(DP) :: RES 
+    INTEGER, INTENT(IN) :: IDX
+
+    RES = 0.0_dp
+
+    SELECT CASE(IDX)
+    ! Order 0
+    CASE(0)
+      RES=VAL%R
+
+    ! Order 1
+    CASE(1)
+      RES=VAL%E1
+    CASE(2)
+      RES=VAL%E2
+    CASE(3)
+      RES=VAL%E3
+    CASE(4)
+      RES=VAL%E4
+
+    ! Order 2
+    CASE(5)
+      RES=VAL%E11
+    CASE(6)
+      RES=VAL%E12
+    CASE(7)
+      RES=VAL%E22
+    CASE(8)
+      RES=VAL%E13
+    CASE(9)
+      RES=VAL%E23
+    CASE(10)
+      RES=VAL%E33
+    CASE(11)
+      RES=VAL%E14
+    CASE(12)
+      RES=VAL%E24
+    CASE(13)
+      RES=VAL%E34
+    CASE(14)
+      RES=VAL%E44
+
+    ! Order 3
+    CASE(15)
+      RES=VAL%E111
+    CASE(16)
+      RES=VAL%E112
+    CASE(17)
+      RES=VAL%E122
+    CASE(18)
+      RES=VAL%E222
+    CASE(19)
+      RES=VAL%E113
+    CASE(20)
+      RES=VAL%E123
+    CASE(21)
+      RES=VAL%E133
+    CASE(22)
+      RES=VAL%E223
+    CASE(23)
+      RES=VAL%E233
+    CASE(24)
+      RES=VAL%E333
+    CASE(25)
+      RES=VAL%E114
+    CASE(26)
+      RES=VAL%E124
+    CASE(27)
+      RES=VAL%E134
+    CASE(28)
+      RES=VAL%E144
+    CASE(29)
+      RES=VAL%E224
+    CASE(30)
+      RES=VAL%E234
+    CASE(31)
+      RES=VAL%E244
+    CASE(32)
+      RES=VAL%E334
+    CASE(33)
+      RES=VAL%E344
+    CASE(34)
+      RES=VAL%E444
+
+    ! Order 4
+    CASE(35)
+      RES=VAL%E1111
+    CASE(36)
+      RES=VAL%E1112
+    CASE(37)
+      RES=VAL%E1122
+    CASE(38)
+      RES=VAL%E1222
+    CASE(39)
+      RES=VAL%E2222
+    CASE(40)
+      RES=VAL%E1113
+    CASE(41)
+      RES=VAL%E1123
+    CASE(42)
+      RES=VAL%E1133
+    CASE(43)
+      RES=VAL%E1223
+    CASE(44)
+      RES=VAL%E1233
+    CASE(45)
+      RES=VAL%E1333
+    CASE(46)
+      RES=VAL%E2223
+    CASE(47)
+      RES=VAL%E2233
+    CASE(48)
+      RES=VAL%E2333
+    CASE(49)
+      RES=VAL%E3333
+    CASE(50)
+      RES=VAL%E1114
+    CASE(51)
+      RES=VAL%E1124
+    CASE(52)
+      RES=VAL%E1134
+    CASE(53)
+      RES=VAL%E1144
+    CASE(54)
+      RES=VAL%E1224
+    CASE(55)
+      RES=VAL%E1234
+    CASE(56)
+      RES=VAL%E1244
+    CASE(57)
+      RES=VAL%E1334
+    CASE(58)
+      RES=VAL%E1344
+    CASE(59)
+      RES=VAL%E1444
+    CASE(60)
+      RES=VAL%E2224
+    CASE(61)
+      RES=VAL%E2234
+    CASE(62)
+      RES=VAL%E2244
+    CASE(63)
+      RES=VAL%E2334
+    CASE(64)
+      RES=VAL%E2344
+    CASE(65)
+      RES=VAL%E2444
+    CASE(66)
+      RES=VAL%E3334
+    CASE(67)
+      RES=VAL%E3344
+    CASE(68)
+      RES=VAL%E3444
+    CASE(69)
+      RES=VAL%E4444
+
+    END SELECT
+  END FUNCTION ONUMM4N4_GETIM_S
+
+FUNCTION ONUMM4N4_GETIM_V(VAL,IDX) RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: VAL(:)
+    REAL(DP) :: RES(SIZE(VAL)) 
+    INTEGER, INTENT(IN) :: IDX
+
+    RES = 0.0_dp
+
+    SELECT CASE(IDX)
+    ! Order 0
+    CASE(0)
+      RES=VAL%R
+
+    ! Order 1
+    CASE(1)
+      RES=VAL%E1
+    CASE(2)
+      RES=VAL%E2
+    CASE(3)
+      RES=VAL%E3
+    CASE(4)
+      RES=VAL%E4
+
+    ! Order 2
+    CASE(5)
+      RES=VAL%E11
+    CASE(6)
+      RES=VAL%E12
+    CASE(7)
+      RES=VAL%E22
+    CASE(8)
+      RES=VAL%E13
+    CASE(9)
+      RES=VAL%E23
+    CASE(10)
+      RES=VAL%E33
+    CASE(11)
+      RES=VAL%E14
+    CASE(12)
+      RES=VAL%E24
+    CASE(13)
+      RES=VAL%E34
+    CASE(14)
+      RES=VAL%E44
+
+    ! Order 3
+    CASE(15)
+      RES=VAL%E111
+    CASE(16)
+      RES=VAL%E112
+    CASE(17)
+      RES=VAL%E122
+    CASE(18)
+      RES=VAL%E222
+    CASE(19)
+      RES=VAL%E113
+    CASE(20)
+      RES=VAL%E123
+    CASE(21)
+      RES=VAL%E133
+    CASE(22)
+      RES=VAL%E223
+    CASE(23)
+      RES=VAL%E233
+    CASE(24)
+      RES=VAL%E333
+    CASE(25)
+      RES=VAL%E114
+    CASE(26)
+      RES=VAL%E124
+    CASE(27)
+      RES=VAL%E134
+    CASE(28)
+      RES=VAL%E144
+    CASE(29)
+      RES=VAL%E224
+    CASE(30)
+      RES=VAL%E234
+    CASE(31)
+      RES=VAL%E244
+    CASE(32)
+      RES=VAL%E334
+    CASE(33)
+      RES=VAL%E344
+    CASE(34)
+      RES=VAL%E444
+
+    ! Order 4
+    CASE(35)
+      RES=VAL%E1111
+    CASE(36)
+      RES=VAL%E1112
+    CASE(37)
+      RES=VAL%E1122
+    CASE(38)
+      RES=VAL%E1222
+    CASE(39)
+      RES=VAL%E2222
+    CASE(40)
+      RES=VAL%E1113
+    CASE(41)
+      RES=VAL%E1123
+    CASE(42)
+      RES=VAL%E1133
+    CASE(43)
+      RES=VAL%E1223
+    CASE(44)
+      RES=VAL%E1233
+    CASE(45)
+      RES=VAL%E1333
+    CASE(46)
+      RES=VAL%E2223
+    CASE(47)
+      RES=VAL%E2233
+    CASE(48)
+      RES=VAL%E2333
+    CASE(49)
+      RES=VAL%E3333
+    CASE(50)
+      RES=VAL%E1114
+    CASE(51)
+      RES=VAL%E1124
+    CASE(52)
+      RES=VAL%E1134
+    CASE(53)
+      RES=VAL%E1144
+    CASE(54)
+      RES=VAL%E1224
+    CASE(55)
+      RES=VAL%E1234
+    CASE(56)
+      RES=VAL%E1244
+    CASE(57)
+      RES=VAL%E1334
+    CASE(58)
+      RES=VAL%E1344
+    CASE(59)
+      RES=VAL%E1444
+    CASE(60)
+      RES=VAL%E2224
+    CASE(61)
+      RES=VAL%E2234
+    CASE(62)
+      RES=VAL%E2244
+    CASE(63)
+      RES=VAL%E2334
+    CASE(64)
+      RES=VAL%E2344
+    CASE(65)
+      RES=VAL%E2444
+    CASE(66)
+      RES=VAL%E3334
+    CASE(67)
+      RES=VAL%E3344
+    CASE(68)
+      RES=VAL%E3444
+    CASE(69)
+      RES=VAL%E4444
+
+    END SELECT
+  END FUNCTION ONUMM4N4_GETIM_V
+
+FUNCTION ONUMM4N4_GETIM_M(VAL,IDX) RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: VAL(:,:)
+    REAL(DP) :: RES(SIZE(VAL,1),SIZE(VAL,2)) 
+    INTEGER, INTENT(IN) :: IDX
+
+    RES = 0.0_dp
+
+    SELECT CASE(IDX)
+    ! Order 0
+    CASE(0)
+      RES=VAL%R
+
+    ! Order 1
+    CASE(1)
+      RES=VAL%E1
+    CASE(2)
+      RES=VAL%E2
+    CASE(3)
+      RES=VAL%E3
+    CASE(4)
+      RES=VAL%E4
+
+    ! Order 2
+    CASE(5)
+      RES=VAL%E11
+    CASE(6)
+      RES=VAL%E12
+    CASE(7)
+      RES=VAL%E22
+    CASE(8)
+      RES=VAL%E13
+    CASE(9)
+      RES=VAL%E23
+    CASE(10)
+      RES=VAL%E33
+    CASE(11)
+      RES=VAL%E14
+    CASE(12)
+      RES=VAL%E24
+    CASE(13)
+      RES=VAL%E34
+    CASE(14)
+      RES=VAL%E44
+
+    ! Order 3
+    CASE(15)
+      RES=VAL%E111
+    CASE(16)
+      RES=VAL%E112
+    CASE(17)
+      RES=VAL%E122
+    CASE(18)
+      RES=VAL%E222
+    CASE(19)
+      RES=VAL%E113
+    CASE(20)
+      RES=VAL%E123
+    CASE(21)
+      RES=VAL%E133
+    CASE(22)
+      RES=VAL%E223
+    CASE(23)
+      RES=VAL%E233
+    CASE(24)
+      RES=VAL%E333
+    CASE(25)
+      RES=VAL%E114
+    CASE(26)
+      RES=VAL%E124
+    CASE(27)
+      RES=VAL%E134
+    CASE(28)
+      RES=VAL%E144
+    CASE(29)
+      RES=VAL%E224
+    CASE(30)
+      RES=VAL%E234
+    CASE(31)
+      RES=VAL%E244
+    CASE(32)
+      RES=VAL%E334
+    CASE(33)
+      RES=VAL%E344
+    CASE(34)
+      RES=VAL%E444
+
+    ! Order 4
+    CASE(35)
+      RES=VAL%E1111
+    CASE(36)
+      RES=VAL%E1112
+    CASE(37)
+      RES=VAL%E1122
+    CASE(38)
+      RES=VAL%E1222
+    CASE(39)
+      RES=VAL%E2222
+    CASE(40)
+      RES=VAL%E1113
+    CASE(41)
+      RES=VAL%E1123
+    CASE(42)
+      RES=VAL%E1133
+    CASE(43)
+      RES=VAL%E1223
+    CASE(44)
+      RES=VAL%E1233
+    CASE(45)
+      RES=VAL%E1333
+    CASE(46)
+      RES=VAL%E2223
+    CASE(47)
+      RES=VAL%E2233
+    CASE(48)
+      RES=VAL%E2333
+    CASE(49)
+      RES=VAL%E3333
+    CASE(50)
+      RES=VAL%E1114
+    CASE(51)
+      RES=VAL%E1124
+    CASE(52)
+      RES=VAL%E1134
+    CASE(53)
+      RES=VAL%E1144
+    CASE(54)
+      RES=VAL%E1224
+    CASE(55)
+      RES=VAL%E1234
+    CASE(56)
+      RES=VAL%E1244
+    CASE(57)
+      RES=VAL%E1334
+    CASE(58)
+      RES=VAL%E1344
+    CASE(59)
+      RES=VAL%E1444
+    CASE(60)
+      RES=VAL%E2224
+    CASE(61)
+      RES=VAL%E2234
+    CASE(62)
+      RES=VAL%E2244
+    CASE(63)
+      RES=VAL%E2334
+    CASE(64)
+      RES=VAL%E2344
+    CASE(65)
+      RES=VAL%E2444
+    CASE(66)
+      RES=VAL%E3334
+    CASE(67)
+      RES=VAL%E3344
+    CASE(68)
+      RES=VAL%E3444
+    CASE(69)
+      RES=VAL%E4444
+
+    END SELECT
+  END FUNCTION ONUMM4N4_GETIM_M
+
+  SUBROUTINE ONUMM4N4_PPRINT_S(VAR,FMT,UNIT)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: VAR
+    CHARACTER(len=*), INTENT(IN), OPTIONAL :: fmt
+    INTEGER, INTENT(IN), OPTIONAL :: unit
+    CHARACTER(len=:),ALLOCATABLE :: output_format
+    INTEGER :: unt
+
+    IF ( PRESENT(unit) ) THEN
+      unt = unit
+    ELSE
+      unt = 6
+    END IF
+
+    IF ( PRESENT(fmt) ) THEN
+      output_format = '('//trim(fmt)//')'
+    ELSE
+      output_format = '(F10.4)'
+    END IF
+
+    ! Pretty print function.
+    !  Real
+    CALL PPRINT(VAR%R,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') ' '
+
+    !  Order 1
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1 * '
+    CALL PPRINT(VAR%E1,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E2 * '
+    CALL PPRINT(VAR%E2,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E3 * '
+    CALL PPRINT(VAR%E3,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E4 * '
+    CALL PPRINT(VAR%E4,unit=unt,fmt=output_format)
+
+    !  Order 2
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E11 * '
+    CALL PPRINT(VAR%E11,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E12 * '
+    CALL PPRINT(VAR%E12,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E22 * '
+    CALL PPRINT(VAR%E22,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E13 * '
+    CALL PPRINT(VAR%E13,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E23 * '
+    CALL PPRINT(VAR%E23,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E33 * '
+    CALL PPRINT(VAR%E33,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E14 * '
+    CALL PPRINT(VAR%E14,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E24 * '
+    CALL PPRINT(VAR%E24,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E34 * '
+    CALL PPRINT(VAR%E34,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E44 * '
+    CALL PPRINT(VAR%E44,unit=unt,fmt=output_format)
+
+    !  Order 3
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E111 * '
+    CALL PPRINT(VAR%E111,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E112 * '
+    CALL PPRINT(VAR%E112,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E122 * '
+    CALL PPRINT(VAR%E122,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E222 * '
+    CALL PPRINT(VAR%E222,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E113 * '
+    CALL PPRINT(VAR%E113,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E123 * '
+    CALL PPRINT(VAR%E123,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E133 * '
+    CALL PPRINT(VAR%E133,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E223 * '
+    CALL PPRINT(VAR%E223,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E233 * '
+    CALL PPRINT(VAR%E233,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E333 * '
+    CALL PPRINT(VAR%E333,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E114 * '
+    CALL PPRINT(VAR%E114,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E124 * '
+    CALL PPRINT(VAR%E124,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E134 * '
+    CALL PPRINT(VAR%E134,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E144 * '
+    CALL PPRINT(VAR%E144,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E224 * '
+    CALL PPRINT(VAR%E224,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E234 * '
+    CALL PPRINT(VAR%E234,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E244 * '
+    CALL PPRINT(VAR%E244,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E334 * '
+    CALL PPRINT(VAR%E334,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E344 * '
+    CALL PPRINT(VAR%E344,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E444 * '
+    CALL PPRINT(VAR%E444,unit=unt,fmt=output_format)
+
+    !  Order 4
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1111 * '
+    CALL PPRINT(VAR%E1111,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1112 * '
+    CALL PPRINT(VAR%E1112,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1122 * '
+    CALL PPRINT(VAR%E1122,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1222 * '
+    CALL PPRINT(VAR%E1222,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E2222 * '
+    CALL PPRINT(VAR%E2222,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1113 * '
+    CALL PPRINT(VAR%E1113,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1123 * '
+    CALL PPRINT(VAR%E1123,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1133 * '
+    CALL PPRINT(VAR%E1133,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1223 * '
+    CALL PPRINT(VAR%E1223,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1233 * '
+    CALL PPRINT(VAR%E1233,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1333 * '
+    CALL PPRINT(VAR%E1333,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E2223 * '
+    CALL PPRINT(VAR%E2223,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E2233 * '
+    CALL PPRINT(VAR%E2233,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E2333 * '
+    CALL PPRINT(VAR%E2333,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E3333 * '
+    CALL PPRINT(VAR%E3333,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1114 * '
+    CALL PPRINT(VAR%E1114,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1124 * '
+    CALL PPRINT(VAR%E1124,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1134 * '
+    CALL PPRINT(VAR%E1134,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1144 * '
+    CALL PPRINT(VAR%E1144,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1224 * '
+    CALL PPRINT(VAR%E1224,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1234 * '
+    CALL PPRINT(VAR%E1234,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1244 * '
+    CALL PPRINT(VAR%E1244,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1334 * '
+    CALL PPRINT(VAR%E1334,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1344 * '
+    CALL PPRINT(VAR%E1344,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E1444 * '
+    CALL PPRINT(VAR%E1444,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E2224 * '
+    CALL PPRINT(VAR%E2224,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E2234 * '
+    CALL PPRINT(VAR%E2234,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E2244 * '
+    CALL PPRINT(VAR%E2244,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E2334 * '
+    CALL PPRINT(VAR%E2334,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E2344 * '
+    CALL PPRINT(VAR%E2344,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E2444 * '
+    CALL PPRINT(VAR%E2444,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E3334 * '
+    CALL PPRINT(VAR%E3334,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E3344 * '
+    CALL PPRINT(VAR%E3344,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E3444 * '
+    CALL PPRINT(VAR%E3444,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='NO') '+ '
+    WRITE(unt,'(A)',advance='NO') 'E4444 * '
+    CALL PPRINT(VAR%E4444,unit=unt,fmt=output_format)
+
+
+  END SUBROUTINE ONUMM4N4_PPRINT_S
+
+  SUBROUTINE ONUMM4N4_PPRINT_V(VAR,FMT,UNIT)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: VAR(:)
+    CHARACTER(len=*), INTENT(IN), OPTIONAL :: fmt
+    INTEGER, INTENT(IN), OPTIONAL :: unit
+    CHARACTER(len=:),ALLOCATABLE :: output_format
+    INTEGER :: unt
+
+    IF ( PRESENT(unit) ) THEN
+      unt = unit
+    ELSE
+      unt = 6
+    END IF
+
+    IF ( PRESENT(fmt) ) THEN
+      output_format = '('//trim(fmt)//')'
+    ELSE
+      output_format = '(F10.4)'
+    END IF
+
+    ! Pretty print function.
+    !  Real
+    CALL PPRINT(VAR%R,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') ' '
+
+    !  Order 1
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1 * '
+    CALL PPRINT(VAR%E1,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2 * '
+    CALL PPRINT(VAR%E2,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E3 * '
+    CALL PPRINT(VAR%E3,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E4 * '
+    CALL PPRINT(VAR%E4,unit=unt,fmt=output_format)
+
+    !  Order 2
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E11 * '
+    CALL PPRINT(VAR%E11,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E12 * '
+    CALL PPRINT(VAR%E12,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E22 * '
+    CALL PPRINT(VAR%E22,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E13 * '
+    CALL PPRINT(VAR%E13,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E23 * '
+    CALL PPRINT(VAR%E23,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E33 * '
+    CALL PPRINT(VAR%E33,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E14 * '
+    CALL PPRINT(VAR%E14,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E24 * '
+    CALL PPRINT(VAR%E24,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E34 * '
+    CALL PPRINT(VAR%E34,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E44 * '
+    CALL PPRINT(VAR%E44,unit=unt,fmt=output_format)
+
+    !  Order 3
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E111 * '
+    CALL PPRINT(VAR%E111,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E112 * '
+    CALL PPRINT(VAR%E112,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E122 * '
+    CALL PPRINT(VAR%E122,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E222 * '
+    CALL PPRINT(VAR%E222,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E113 * '
+    CALL PPRINT(VAR%E113,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E123 * '
+    CALL PPRINT(VAR%E123,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E133 * '
+    CALL PPRINT(VAR%E133,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E223 * '
+    CALL PPRINT(VAR%E223,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E233 * '
+    CALL PPRINT(VAR%E233,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E333 * '
+    CALL PPRINT(VAR%E333,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E114 * '
+    CALL PPRINT(VAR%E114,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E124 * '
+    CALL PPRINT(VAR%E124,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E134 * '
+    CALL PPRINT(VAR%E134,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E144 * '
+    CALL PPRINT(VAR%E144,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E224 * '
+    CALL PPRINT(VAR%E224,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E234 * '
+    CALL PPRINT(VAR%E234,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E244 * '
+    CALL PPRINT(VAR%E244,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E334 * '
+    CALL PPRINT(VAR%E334,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E344 * '
+    CALL PPRINT(VAR%E344,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E444 * '
+    CALL PPRINT(VAR%E444,unit=unt,fmt=output_format)
+
+    !  Order 4
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1111 * '
+    CALL PPRINT(VAR%E1111,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1112 * '
+    CALL PPRINT(VAR%E1112,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1122 * '
+    CALL PPRINT(VAR%E1122,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1222 * '
+    CALL PPRINT(VAR%E1222,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2222 * '
+    CALL PPRINT(VAR%E2222,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1113 * '
+    CALL PPRINT(VAR%E1113,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1123 * '
+    CALL PPRINT(VAR%E1123,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1133 * '
+    CALL PPRINT(VAR%E1133,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1223 * '
+    CALL PPRINT(VAR%E1223,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1233 * '
+    CALL PPRINT(VAR%E1233,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1333 * '
+    CALL PPRINT(VAR%E1333,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2223 * '
+    CALL PPRINT(VAR%E2223,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2233 * '
+    CALL PPRINT(VAR%E2233,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2333 * '
+    CALL PPRINT(VAR%E2333,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E3333 * '
+    CALL PPRINT(VAR%E3333,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1114 * '
+    CALL PPRINT(VAR%E1114,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1124 * '
+    CALL PPRINT(VAR%E1124,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1134 * '
+    CALL PPRINT(VAR%E1134,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1144 * '
+    CALL PPRINT(VAR%E1144,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1224 * '
+    CALL PPRINT(VAR%E1224,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1234 * '
+    CALL PPRINT(VAR%E1234,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1244 * '
+    CALL PPRINT(VAR%E1244,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1334 * '
+    CALL PPRINT(VAR%E1334,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1344 * '
+    CALL PPRINT(VAR%E1344,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1444 * '
+    CALL PPRINT(VAR%E1444,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2224 * '
+    CALL PPRINT(VAR%E2224,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2234 * '
+    CALL PPRINT(VAR%E2234,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2244 * '
+    CALL PPRINT(VAR%E2244,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2334 * '
+    CALL PPRINT(VAR%E2334,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2344 * '
+    CALL PPRINT(VAR%E2344,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2444 * '
+    CALL PPRINT(VAR%E2444,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E3334 * '
+    CALL PPRINT(VAR%E3334,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E3344 * '
+    CALL PPRINT(VAR%E3344,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E3444 * '
+    CALL PPRINT(VAR%E3444,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E4444 * '
+    CALL PPRINT(VAR%E4444,unit=unt,fmt=output_format)
+
+
+  END SUBROUTINE ONUMM4N4_PPRINT_V
+
+  SUBROUTINE ONUMM4N4_PPRINT_M(VAR,FMT,UNIT)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4), INTENT(IN) :: VAR(:,:)
+    CHARACTER(len=*), INTENT(IN), OPTIONAL :: fmt
+    INTEGER, INTENT(IN), OPTIONAL :: unit
+    CHARACTER(len=:),ALLOCATABLE :: output_format
+    INTEGER :: unt
+
+    IF ( PRESENT(unit) ) THEN
+      unt = unit
+    ELSE
+      unt = 6
+    END IF
+
+    IF ( PRESENT(fmt) ) THEN
+      output_format = '('//trim(fmt)//')'
+    ELSE
+      output_format = '(F10.4)'
+    END IF
+
+    ! Pretty print function.
+    !  Real
+    CALL PPRINT(VAR%R,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') ' '
+
+    !  Order 1
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1 * '
+    CALL PPRINT(VAR%E1,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2 * '
+    CALL PPRINT(VAR%E2,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E3 * '
+    CALL PPRINT(VAR%E3,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E4 * '
+    CALL PPRINT(VAR%E4,unit=unt,fmt=output_format)
+
+    !  Order 2
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E11 * '
+    CALL PPRINT(VAR%E11,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E12 * '
+    CALL PPRINT(VAR%E12,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E22 * '
+    CALL PPRINT(VAR%E22,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E13 * '
+    CALL PPRINT(VAR%E13,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E23 * '
+    CALL PPRINT(VAR%E23,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E33 * '
+    CALL PPRINT(VAR%E33,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E14 * '
+    CALL PPRINT(VAR%E14,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E24 * '
+    CALL PPRINT(VAR%E24,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E34 * '
+    CALL PPRINT(VAR%E34,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E44 * '
+    CALL PPRINT(VAR%E44,unit=unt,fmt=output_format)
+
+    !  Order 3
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E111 * '
+    CALL PPRINT(VAR%E111,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E112 * '
+    CALL PPRINT(VAR%E112,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E122 * '
+    CALL PPRINT(VAR%E122,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E222 * '
+    CALL PPRINT(VAR%E222,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E113 * '
+    CALL PPRINT(VAR%E113,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E123 * '
+    CALL PPRINT(VAR%E123,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E133 * '
+    CALL PPRINT(VAR%E133,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E223 * '
+    CALL PPRINT(VAR%E223,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E233 * '
+    CALL PPRINT(VAR%E233,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E333 * '
+    CALL PPRINT(VAR%E333,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E114 * '
+    CALL PPRINT(VAR%E114,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E124 * '
+    CALL PPRINT(VAR%E124,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E134 * '
+    CALL PPRINT(VAR%E134,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E144 * '
+    CALL PPRINT(VAR%E144,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E224 * '
+    CALL PPRINT(VAR%E224,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E234 * '
+    CALL PPRINT(VAR%E234,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E244 * '
+    CALL PPRINT(VAR%E244,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E334 * '
+    CALL PPRINT(VAR%E334,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E344 * '
+    CALL PPRINT(VAR%E344,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E444 * '
+    CALL PPRINT(VAR%E444,unit=unt,fmt=output_format)
+
+    !  Order 4
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1111 * '
+    CALL PPRINT(VAR%E1111,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1112 * '
+    CALL PPRINT(VAR%E1112,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1122 * '
+    CALL PPRINT(VAR%E1122,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1222 * '
+    CALL PPRINT(VAR%E1222,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2222 * '
+    CALL PPRINT(VAR%E2222,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1113 * '
+    CALL PPRINT(VAR%E1113,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1123 * '
+    CALL PPRINT(VAR%E1123,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1133 * '
+    CALL PPRINT(VAR%E1133,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1223 * '
+    CALL PPRINT(VAR%E1223,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1233 * '
+    CALL PPRINT(VAR%E1233,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1333 * '
+    CALL PPRINT(VAR%E1333,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2223 * '
+    CALL PPRINT(VAR%E2223,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2233 * '
+    CALL PPRINT(VAR%E2233,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2333 * '
+    CALL PPRINT(VAR%E2333,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E3333 * '
+    CALL PPRINT(VAR%E3333,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1114 * '
+    CALL PPRINT(VAR%E1114,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1124 * '
+    CALL PPRINT(VAR%E1124,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1134 * '
+    CALL PPRINT(VAR%E1134,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1144 * '
+    CALL PPRINT(VAR%E1144,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1224 * '
+    CALL PPRINT(VAR%E1224,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1234 * '
+    CALL PPRINT(VAR%E1234,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1244 * '
+    CALL PPRINT(VAR%E1244,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1334 * '
+    CALL PPRINT(VAR%E1334,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1344 * '
+    CALL PPRINT(VAR%E1344,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E1444 * '
+    CALL PPRINT(VAR%E1444,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2224 * '
+    CALL PPRINT(VAR%E2224,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2234 * '
+    CALL PPRINT(VAR%E2234,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2244 * '
+    CALL PPRINT(VAR%E2244,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2334 * '
+    CALL PPRINT(VAR%E2334,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2344 * '
+    CALL PPRINT(VAR%E2344,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E2444 * '
+    CALL PPRINT(VAR%E2444,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E3334 * '
+    CALL PPRINT(VAR%E3334,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E3344 * '
+    CALL PPRINT(VAR%E3344,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E3444 * '
+    CALL PPRINT(VAR%E3444,unit=unt,fmt=output_format)
+    WRITE(unt,'(A)',advance='YES') '+ '
+    WRITE(unt,'(A)',advance='YES') 'E4444 * '
+    CALL PPRINT(VAR%E4444,unit=unt,fmt=output_format)
+
+
+  END SUBROUTINE ONUMM4N4_PPRINT_M
+
+  ELEMENTAL FUNCTION ONUMM4N4_FEVAL(X,DER0,DER1,DER2,DER3,DER4)&
+    RESULT(RES)
+    IMPLICIT NONE
+    !  Definitions
+    REAL(DP) :: FACTOR, COEF
+    TYPE(ONUMM4N4), INTENT(IN)  :: X
+    REAL(DP), INTENT(IN)  :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    TYPE(ONUMM4N4) :: DX, DX_P
+
+    FACTOR = 1.0_DP
+    COEF   = 0.0_DP
+    DX     = X
+    DX_P   = X
+
+    !  Set real part of deltas zero.
+    DX%R = 0.0_dp
+    DX_P%R = 0.0_dp
+
+    ! Sets real part
+    RES = DER0
+
+    ! Sets order 1
+    FACTOR = FACTOR * 1
+    COEF = DER1 / FACTOR
+    ! RES = RES COEF * DX_P
+    ! Order 4
+    RES%E1111 = RES%E1111+COEF*DX_P%E1111
+    RES%E1112 = RES%E1112+COEF*DX_P%E1112
+    RES%E1122 = RES%E1122+COEF*DX_P%E1122
+    RES%E1222 = RES%E1222+COEF*DX_P%E1222
+    RES%E2222 = RES%E2222+COEF*DX_P%E2222
+    RES%E1113 = RES%E1113+COEF*DX_P%E1113
+    RES%E1123 = RES%E1123+COEF*DX_P%E1123
+    RES%E1133 = RES%E1133+COEF*DX_P%E1133
+    RES%E1223 = RES%E1223+COEF*DX_P%E1223
+    RES%E1233 = RES%E1233+COEF*DX_P%E1233
+    RES%E1333 = RES%E1333+COEF*DX_P%E1333
+    RES%E2223 = RES%E2223+COEF*DX_P%E2223
+    RES%E2233 = RES%E2233+COEF*DX_P%E2233
+    RES%E2333 = RES%E2333+COEF*DX_P%E2333
+    RES%E3333 = RES%E3333+COEF*DX_P%E3333
+    RES%E1114 = RES%E1114+COEF*DX_P%E1114
+    RES%E1124 = RES%E1124+COEF*DX_P%E1124
+    RES%E1134 = RES%E1134+COEF*DX_P%E1134
+    RES%E1144 = RES%E1144+COEF*DX_P%E1144
+    RES%E1224 = RES%E1224+COEF*DX_P%E1224
+    RES%E1234 = RES%E1234+COEF*DX_P%E1234
+    RES%E1244 = RES%E1244+COEF*DX_P%E1244
+    RES%E1334 = RES%E1334+COEF*DX_P%E1334
+    RES%E1344 = RES%E1344+COEF*DX_P%E1344
+    RES%E1444 = RES%E1444+COEF*DX_P%E1444
+    RES%E2224 = RES%E2224+COEF*DX_P%E2224
+    RES%E2234 = RES%E2234+COEF*DX_P%E2234
+    RES%E2244 = RES%E2244+COEF*DX_P%E2244
+    RES%E2334 = RES%E2334+COEF*DX_P%E2334
+    RES%E2344 = RES%E2344+COEF*DX_P%E2344
+    RES%E2444 = RES%E2444+COEF*DX_P%E2444
+    RES%E3334 = RES%E3334+COEF*DX_P%E3334
+    RES%E3344 = RES%E3344+COEF*DX_P%E3344
+    RES%E3444 = RES%E3444+COEF*DX_P%E3444
+    RES%E4444 = RES%E4444+COEF*DX_P%E4444
+    ! Order 3
+    RES%E111 = RES%E111+COEF*DX_P%E111
+    RES%E112 = RES%E112+COEF*DX_P%E112
+    RES%E122 = RES%E122+COEF*DX_P%E122
+    RES%E222 = RES%E222+COEF*DX_P%E222
+    RES%E113 = RES%E113+COEF*DX_P%E113
+    RES%E123 = RES%E123+COEF*DX_P%E123
+    RES%E133 = RES%E133+COEF*DX_P%E133
+    RES%E223 = RES%E223+COEF*DX_P%E223
+    RES%E233 = RES%E233+COEF*DX_P%E233
+    RES%E333 = RES%E333+COEF*DX_P%E333
+    RES%E114 = RES%E114+COEF*DX_P%E114
+    RES%E124 = RES%E124+COEF*DX_P%E124
+    RES%E134 = RES%E134+COEF*DX_P%E134
+    RES%E144 = RES%E144+COEF*DX_P%E144
+    RES%E224 = RES%E224+COEF*DX_P%E224
+    RES%E234 = RES%E234+COEF*DX_P%E234
+    RES%E244 = RES%E244+COEF*DX_P%E244
+    RES%E334 = RES%E334+COEF*DX_P%E334
+    RES%E344 = RES%E344+COEF*DX_P%E344
+    RES%E444 = RES%E444+COEF*DX_P%E444
+    ! Order 2
+    RES%E11 = RES%E11+COEF*DX_P%E11
+    RES%E12 = RES%E12+COEF*DX_P%E12
+    RES%E22 = RES%E22+COEF*DX_P%E22
+    RES%E13 = RES%E13+COEF*DX_P%E13
+    RES%E23 = RES%E23+COEF*DX_P%E23
+    RES%E33 = RES%E33+COEF*DX_P%E33
+    RES%E14 = RES%E14+COEF*DX_P%E14
+    RES%E24 = RES%E24+COEF*DX_P%E24
+    RES%E34 = RES%E34+COEF*DX_P%E34
+    RES%E44 = RES%E44+COEF*DX_P%E44
+    ! Order 1
+    RES%E1 = RES%E1+COEF*DX_P%E1
+    RES%E2 = RES%E2+COEF*DX_P%E2
+    RES%E3 = RES%E3+COEF*DX_P%E3
+    RES%E4 = RES%E4+COEF*DX_P%E4
+    ! DX_P = DX_P * DX
+    ! Order 4
+    DX_P%E1111 = DX_P%E1*DX%E111+DX_P%E111*DX%E1+ &
+              DX_P%E11*DX%E11
+    DX_P%E1112 = DX_P%E1*DX%E112+DX_P%E112*DX%E1+ &
+              DX_P%E2*DX%E111+DX_P%E111*DX%E2+DX_P%E11*DX%E12+ &
+              DX_P%E12*DX%E11
+    DX_P%E1122 = DX_P%E1*DX%E122+DX_P%E122*DX%E1+ &
+              DX_P%E2*DX%E112+DX_P%E112*DX%E2+DX_P%E11*DX%E22+ &
+              DX_P%E12*DX%E12+DX_P%E22*DX%E11
+    DX_P%E1222 = DX_P%E1*DX%E222+DX_P%E222*DX%E1+ &
+              DX_P%E2*DX%E122+DX_P%E122*DX%E2+DX_P%E12*DX%E22+ &
+              DX_P%E22*DX%E12
+    DX_P%E2222 = DX_P%E2*DX%E222+DX_P%E222*DX%E2+ &
+              DX_P%E22*DX%E22
+    DX_P%E1113 = DX_P%E1*DX%E113+DX_P%E113*DX%E1+ &
+              DX_P%E3*DX%E111+DX_P%E111*DX%E3+DX_P%E11*DX%E13+ &
+              DX_P%E13*DX%E11
+    DX_P%E1123 = DX_P%E1*DX%E123+DX_P%E123*DX%E1+ &
+              DX_P%E2*DX%E113+DX_P%E113*DX%E2+DX_P%E3*DX%E112+ &
+              DX_P%E112*DX%E3+DX_P%E11*DX%E23+DX_P%E12*DX%E13+ &
+              DX_P%E13*DX%E12+DX_P%E23*DX%E11
+    DX_P%E1133 = DX_P%E1*DX%E133+DX_P%E133*DX%E1+ &
+              DX_P%E3*DX%E113+DX_P%E113*DX%E3+DX_P%E11*DX%E33+ &
+              DX_P%E13*DX%E13+DX_P%E33*DX%E11
+    DX_P%E1223 = DX_P%E1*DX%E223+DX_P%E223*DX%E1+ &
+              DX_P%E2*DX%E123+DX_P%E123*DX%E2+DX_P%E3*DX%E122+ &
+              DX_P%E122*DX%E3+DX_P%E12*DX%E23+DX_P%E22*DX%E13+ &
+              DX_P%E13*DX%E22+DX_P%E23*DX%E12
+    DX_P%E1233 = DX_P%E1*DX%E233+DX_P%E233*DX%E1+ &
+              DX_P%E2*DX%E133+DX_P%E133*DX%E2+DX_P%E3*DX%E123+ &
+              DX_P%E123*DX%E3+DX_P%E12*DX%E33+DX_P%E13*DX%E23+ &
+              DX_P%E23*DX%E13+DX_P%E33*DX%E12
+    DX_P%E1333 = DX_P%E1*DX%E333+DX_P%E333*DX%E1+ &
+              DX_P%E3*DX%E133+DX_P%E133*DX%E3+DX_P%E13*DX%E33+ &
+              DX_P%E33*DX%E13
+    DX_P%E2223 = DX_P%E2*DX%E223+DX_P%E223*DX%E2+ &
+              DX_P%E3*DX%E222+DX_P%E222*DX%E3+DX_P%E22*DX%E23+ &
+              DX_P%E23*DX%E22
+    DX_P%E2233 = DX_P%E2*DX%E233+DX_P%E233*DX%E2+ &
+              DX_P%E3*DX%E223+DX_P%E223*DX%E3+DX_P%E22*DX%E33+ &
+              DX_P%E23*DX%E23+DX_P%E33*DX%E22
+    DX_P%E2333 = DX_P%E2*DX%E333+DX_P%E333*DX%E2+ &
+              DX_P%E3*DX%E233+DX_P%E233*DX%E3+DX_P%E23*DX%E33+ &
+              DX_P%E33*DX%E23
+    DX_P%E3333 = DX_P%E3*DX%E333+DX_P%E333*DX%E3+ &
+              DX_P%E33*DX%E33
+    DX_P%E1114 = DX_P%E1*DX%E114+DX_P%E114*DX%E1+ &
+              DX_P%E4*DX%E111+DX_P%E111*DX%E4+DX_P%E11*DX%E14+ &
+              DX_P%E14*DX%E11
+    DX_P%E1124 = DX_P%E1*DX%E124+DX_P%E124*DX%E1+ &
+              DX_P%E2*DX%E114+DX_P%E114*DX%E2+DX_P%E4*DX%E112+ &
+              DX_P%E112*DX%E4+DX_P%E11*DX%E24+DX_P%E12*DX%E14+ &
+              DX_P%E14*DX%E12+DX_P%E24*DX%E11
+    DX_P%E1134 = DX_P%E1*DX%E134+DX_P%E134*DX%E1+ &
+              DX_P%E3*DX%E114+DX_P%E114*DX%E3+DX_P%E4*DX%E113+ &
+              DX_P%E113*DX%E4+DX_P%E11*DX%E34+DX_P%E13*DX%E14+ &
+              DX_P%E14*DX%E13+DX_P%E34*DX%E11
+    DX_P%E1144 = DX_P%E1*DX%E144+DX_P%E144*DX%E1+ &
+              DX_P%E4*DX%E114+DX_P%E114*DX%E4+DX_P%E11*DX%E44+ &
+              DX_P%E14*DX%E14+DX_P%E44*DX%E11
+    DX_P%E1224 = DX_P%E1*DX%E224+DX_P%E224*DX%E1+ &
+              DX_P%E2*DX%E124+DX_P%E124*DX%E2+DX_P%E4*DX%E122+ &
+              DX_P%E122*DX%E4+DX_P%E12*DX%E24+DX_P%E22*DX%E14+ &
+              DX_P%E14*DX%E22+DX_P%E24*DX%E12
+    DX_P%E1234 = DX_P%E1*DX%E234+DX_P%E234*DX%E1+ &
+              DX_P%E2*DX%E134+DX_P%E134*DX%E2+DX_P%E3*DX%E124+ &
+              DX_P%E124*DX%E3+DX_P%E4*DX%E123+DX_P%E123*DX%E4+ &
+              DX_P%E12*DX%E34+DX_P%E13*DX%E24+DX_P%E23*DX%E14+ &
+              DX_P%E14*DX%E23+DX_P%E24*DX%E13+DX_P%E34*DX%E12
+    DX_P%E1244 = DX_P%E1*DX%E244+DX_P%E244*DX%E1+ &
+              DX_P%E2*DX%E144+DX_P%E144*DX%E2+DX_P%E4*DX%E124+ &
+              DX_P%E124*DX%E4+DX_P%E12*DX%E44+DX_P%E14*DX%E24+ &
+              DX_P%E24*DX%E14+DX_P%E44*DX%E12
+    DX_P%E1334 = DX_P%E1*DX%E334+DX_P%E334*DX%E1+ &
+              DX_P%E3*DX%E134+DX_P%E134*DX%E3+DX_P%E4*DX%E133+ &
+              DX_P%E133*DX%E4+DX_P%E13*DX%E34+DX_P%E33*DX%E14+ &
+              DX_P%E14*DX%E33+DX_P%E34*DX%E13
+    DX_P%E1344 = DX_P%E1*DX%E344+DX_P%E344*DX%E1+ &
+              DX_P%E3*DX%E144+DX_P%E144*DX%E3+DX_P%E4*DX%E134+ &
+              DX_P%E134*DX%E4+DX_P%E13*DX%E44+DX_P%E14*DX%E34+ &
+              DX_P%E34*DX%E14+DX_P%E44*DX%E13
+    DX_P%E1444 = DX_P%E1*DX%E444+DX_P%E444*DX%E1+ &
+              DX_P%E4*DX%E144+DX_P%E144*DX%E4+DX_P%E14*DX%E44+ &
+              DX_P%E44*DX%E14
+    DX_P%E2224 = DX_P%E2*DX%E224+DX_P%E224*DX%E2+ &
+              DX_P%E4*DX%E222+DX_P%E222*DX%E4+DX_P%E22*DX%E24+ &
+              DX_P%E24*DX%E22
+    DX_P%E2234 = DX_P%E2*DX%E234+DX_P%E234*DX%E2+ &
+              DX_P%E3*DX%E224+DX_P%E224*DX%E3+DX_P%E4*DX%E223+ &
+              DX_P%E223*DX%E4+DX_P%E22*DX%E34+DX_P%E23*DX%E24+ &
+              DX_P%E24*DX%E23+DX_P%E34*DX%E22
+    DX_P%E2244 = DX_P%E2*DX%E244+DX_P%E244*DX%E2+ &
+              DX_P%E4*DX%E224+DX_P%E224*DX%E4+DX_P%E22*DX%E44+ &
+              DX_P%E24*DX%E24+DX_P%E44*DX%E22
+    DX_P%E2334 = DX_P%E2*DX%E334+DX_P%E334*DX%E2+ &
+              DX_P%E3*DX%E234+DX_P%E234*DX%E3+DX_P%E4*DX%E233+ &
+              DX_P%E233*DX%E4+DX_P%E23*DX%E34+DX_P%E33*DX%E24+ &
+              DX_P%E24*DX%E33+DX_P%E34*DX%E23
+    DX_P%E2344 = DX_P%E2*DX%E344+DX_P%E344*DX%E2+ &
+              DX_P%E3*DX%E244+DX_P%E244*DX%E3+DX_P%E4*DX%E234+ &
+              DX_P%E234*DX%E4+DX_P%E23*DX%E44+DX_P%E24*DX%E34+ &
+              DX_P%E34*DX%E24+DX_P%E44*DX%E23
+    DX_P%E2444 = DX_P%E2*DX%E444+DX_P%E444*DX%E2+ &
+              DX_P%E4*DX%E244+DX_P%E244*DX%E4+DX_P%E24*DX%E44+ &
+              DX_P%E44*DX%E24
+    DX_P%E3334 = DX_P%E3*DX%E334+DX_P%E334*DX%E3+ &
+              DX_P%E4*DX%E333+DX_P%E333*DX%E4+DX_P%E33*DX%E34+ &
+              DX_P%E34*DX%E33
+    DX_P%E3344 = DX_P%E3*DX%E344+DX_P%E344*DX%E3+ &
+              DX_P%E4*DX%E334+DX_P%E334*DX%E4+DX_P%E33*DX%E44+ &
+              DX_P%E34*DX%E34+DX_P%E44*DX%E33
+    DX_P%E3444 = DX_P%E3*DX%E444+DX_P%E444*DX%E3+ &
+              DX_P%E4*DX%E344+DX_P%E344*DX%E4+DX_P%E34*DX%E44+ &
+              DX_P%E44*DX%E34
+    DX_P%E4444 = DX_P%E4*DX%E444+DX_P%E444*DX%E4+ &
+              DX_P%E44*DX%E44
+    ! Order 3
+    DX_P%E111 = DX_P%E1*DX%E11+DX_P%E11*DX%E1
+    DX_P%E112 = DX_P%E1*DX%E12+DX_P%E12*DX%E1+ &
+             DX_P%E2*DX%E11+DX_P%E11*DX%E2
+    DX_P%E122 = DX_P%E1*DX%E22+DX_P%E22*DX%E1+ &
+             DX_P%E2*DX%E12+DX_P%E12*DX%E2
+    DX_P%E222 = DX_P%E2*DX%E22+DX_P%E22*DX%E2
+    DX_P%E113 = DX_P%E1*DX%E13+DX_P%E13*DX%E1+ &
+             DX_P%E3*DX%E11+DX_P%E11*DX%E3
+    DX_P%E123 = DX_P%E1*DX%E23+DX_P%E23*DX%E1+ &
+             DX_P%E2*DX%E13+DX_P%E13*DX%E2+DX_P%E3*DX%E12+ &
+             DX_P%E12*DX%E3
+    DX_P%E133 = DX_P%E1*DX%E33+DX_P%E33*DX%E1+ &
+             DX_P%E3*DX%E13+DX_P%E13*DX%E3
+    DX_P%E223 = DX_P%E2*DX%E23+DX_P%E23*DX%E2+ &
+             DX_P%E3*DX%E22+DX_P%E22*DX%E3
+    DX_P%E233 = DX_P%E2*DX%E33+DX_P%E33*DX%E2+ &
+             DX_P%E3*DX%E23+DX_P%E23*DX%E3
+    DX_P%E333 = DX_P%E3*DX%E33+DX_P%E33*DX%E3
+    DX_P%E114 = DX_P%E1*DX%E14+DX_P%E14*DX%E1+ &
+             DX_P%E4*DX%E11+DX_P%E11*DX%E4
+    DX_P%E124 = DX_P%E1*DX%E24+DX_P%E24*DX%E1+ &
+             DX_P%E2*DX%E14+DX_P%E14*DX%E2+DX_P%E4*DX%E12+ &
+             DX_P%E12*DX%E4
+    DX_P%E134 = DX_P%E1*DX%E34+DX_P%E34*DX%E1+ &
+             DX_P%E3*DX%E14+DX_P%E14*DX%E3+DX_P%E4*DX%E13+ &
+             DX_P%E13*DX%E4
+    DX_P%E144 = DX_P%E1*DX%E44+DX_P%E44*DX%E1+ &
+             DX_P%E4*DX%E14+DX_P%E14*DX%E4
+    DX_P%E224 = DX_P%E2*DX%E24+DX_P%E24*DX%E2+ &
+             DX_P%E4*DX%E22+DX_P%E22*DX%E4
+    DX_P%E234 = DX_P%E2*DX%E34+DX_P%E34*DX%E2+ &
+             DX_P%E3*DX%E24+DX_P%E24*DX%E3+DX_P%E4*DX%E23+ &
+             DX_P%E23*DX%E4
+    DX_P%E244 = DX_P%E2*DX%E44+DX_P%E44*DX%E2+ &
+             DX_P%E4*DX%E24+DX_P%E24*DX%E4
+    DX_P%E334 = DX_P%E3*DX%E34+DX_P%E34*DX%E3+ &
+             DX_P%E4*DX%E33+DX_P%E33*DX%E4
+    DX_P%E344 = DX_P%E3*DX%E44+DX_P%E44*DX%E3+ &
+             DX_P%E4*DX%E34+DX_P%E34*DX%E4
+    DX_P%E444 = DX_P%E4*DX%E44+DX_P%E44*DX%E4
+    ! Order 2
+    DX_P%E11 = DX_P%E1*DX%E1
+    DX_P%E12 = DX_P%E1*DX%E2+DX_P%E2*DX%E1
+    DX_P%E22 = DX_P%E2*DX%E2
+    DX_P%E13 = DX_P%E1*DX%E3+DX_P%E3*DX%E1
+    DX_P%E23 = DX_P%E2*DX%E3+DX_P%E3*DX%E2
+    DX_P%E33 = DX_P%E3*DX%E3
+    DX_P%E14 = DX_P%E1*DX%E4+DX_P%E4*DX%E1
+    DX_P%E24 = DX_P%E2*DX%E4+DX_P%E4*DX%E2
+    DX_P%E34 = DX_P%E3*DX%E4+DX_P%E4*DX%E3
+    DX_P%E44 = DX_P%E4*DX%E4
+    
+    ! Sets order 2
+    FACTOR = FACTOR * 2
+    COEF = DER2 / FACTOR
+    ! RES = RES COEF * DX_P
+    ! Order 4
+    RES%E1111 = RES%E1111+COEF*DX_P%E1111
+    RES%E1112 = RES%E1112+COEF*DX_P%E1112
+    RES%E1122 = RES%E1122+COEF*DX_P%E1122
+    RES%E1222 = RES%E1222+COEF*DX_P%E1222
+    RES%E2222 = RES%E2222+COEF*DX_P%E2222
+    RES%E1113 = RES%E1113+COEF*DX_P%E1113
+    RES%E1123 = RES%E1123+COEF*DX_P%E1123
+    RES%E1133 = RES%E1133+COEF*DX_P%E1133
+    RES%E1223 = RES%E1223+COEF*DX_P%E1223
+    RES%E1233 = RES%E1233+COEF*DX_P%E1233
+    RES%E1333 = RES%E1333+COEF*DX_P%E1333
+    RES%E2223 = RES%E2223+COEF*DX_P%E2223
+    RES%E2233 = RES%E2233+COEF*DX_P%E2233
+    RES%E2333 = RES%E2333+COEF*DX_P%E2333
+    RES%E3333 = RES%E3333+COEF*DX_P%E3333
+    RES%E1114 = RES%E1114+COEF*DX_P%E1114
+    RES%E1124 = RES%E1124+COEF*DX_P%E1124
+    RES%E1134 = RES%E1134+COEF*DX_P%E1134
+    RES%E1144 = RES%E1144+COEF*DX_P%E1144
+    RES%E1224 = RES%E1224+COEF*DX_P%E1224
+    RES%E1234 = RES%E1234+COEF*DX_P%E1234
+    RES%E1244 = RES%E1244+COEF*DX_P%E1244
+    RES%E1334 = RES%E1334+COEF*DX_P%E1334
+    RES%E1344 = RES%E1344+COEF*DX_P%E1344
+    RES%E1444 = RES%E1444+COEF*DX_P%E1444
+    RES%E2224 = RES%E2224+COEF*DX_P%E2224
+    RES%E2234 = RES%E2234+COEF*DX_P%E2234
+    RES%E2244 = RES%E2244+COEF*DX_P%E2244
+    RES%E2334 = RES%E2334+COEF*DX_P%E2334
+    RES%E2344 = RES%E2344+COEF*DX_P%E2344
+    RES%E2444 = RES%E2444+COEF*DX_P%E2444
+    RES%E3334 = RES%E3334+COEF*DX_P%E3334
+    RES%E3344 = RES%E3344+COEF*DX_P%E3344
+    RES%E3444 = RES%E3444+COEF*DX_P%E3444
+    RES%E4444 = RES%E4444+COEF*DX_P%E4444
+    ! Order 3
+    RES%E111 = RES%E111+COEF*DX_P%E111
+    RES%E112 = RES%E112+COEF*DX_P%E112
+    RES%E122 = RES%E122+COEF*DX_P%E122
+    RES%E222 = RES%E222+COEF*DX_P%E222
+    RES%E113 = RES%E113+COEF*DX_P%E113
+    RES%E123 = RES%E123+COEF*DX_P%E123
+    RES%E133 = RES%E133+COEF*DX_P%E133
+    RES%E223 = RES%E223+COEF*DX_P%E223
+    RES%E233 = RES%E233+COEF*DX_P%E233
+    RES%E333 = RES%E333+COEF*DX_P%E333
+    RES%E114 = RES%E114+COEF*DX_P%E114
+    RES%E124 = RES%E124+COEF*DX_P%E124
+    RES%E134 = RES%E134+COEF*DX_P%E134
+    RES%E144 = RES%E144+COEF*DX_P%E144
+    RES%E224 = RES%E224+COEF*DX_P%E224
+    RES%E234 = RES%E234+COEF*DX_P%E234
+    RES%E244 = RES%E244+COEF*DX_P%E244
+    RES%E334 = RES%E334+COEF*DX_P%E334
+    RES%E344 = RES%E344+COEF*DX_P%E344
+    RES%E444 = RES%E444+COEF*DX_P%E444
+    ! Order 2
+    RES%E11 = RES%E11+COEF*DX_P%E11
+    RES%E12 = RES%E12+COEF*DX_P%E12
+    RES%E22 = RES%E22+COEF*DX_P%E22
+    RES%E13 = RES%E13+COEF*DX_P%E13
+    RES%E23 = RES%E23+COEF*DX_P%E23
+    RES%E33 = RES%E33+COEF*DX_P%E33
+    RES%E14 = RES%E14+COEF*DX_P%E14
+    RES%E24 = RES%E24+COEF*DX_P%E24
+    RES%E34 = RES%E34+COEF*DX_P%E34
+    RES%E44 = RES%E44+COEF*DX_P%E44
+    ! DX_P = DX_P * DX
+    ! Order 4
+    DX_P%E1111 = DX_P%E111*DX%E1+DX_P%E11*DX%E11
+    DX_P%E1112 = DX_P%E112*DX%E1+DX_P%E111*DX%E2+ &
+              DX_P%E11*DX%E12+DX_P%E12*DX%E11
+    DX_P%E1122 = DX_P%E122*DX%E1+DX_P%E112*DX%E2+ &
+              DX_P%E11*DX%E22+DX_P%E12*DX%E12+DX_P%E22*DX%E11
+    DX_P%E1222 = DX_P%E222*DX%E1+DX_P%E122*DX%E2+ &
+              DX_P%E12*DX%E22+DX_P%E22*DX%E12
+    DX_P%E2222 = DX_P%E222*DX%E2+DX_P%E22*DX%E22
+    DX_P%E1113 = DX_P%E113*DX%E1+DX_P%E111*DX%E3+ &
+              DX_P%E11*DX%E13+DX_P%E13*DX%E11
+    DX_P%E1123 = DX_P%E123*DX%E1+DX_P%E113*DX%E2+ &
+              DX_P%E112*DX%E3+DX_P%E11*DX%E23+DX_P%E12*DX%E13+ &
+              DX_P%E13*DX%E12+DX_P%E23*DX%E11
+    DX_P%E1133 = DX_P%E133*DX%E1+DX_P%E113*DX%E3+ &
+              DX_P%E11*DX%E33+DX_P%E13*DX%E13+DX_P%E33*DX%E11
+    DX_P%E1223 = DX_P%E223*DX%E1+DX_P%E123*DX%E2+ &
+              DX_P%E122*DX%E3+DX_P%E12*DX%E23+DX_P%E22*DX%E13+ &
+              DX_P%E13*DX%E22+DX_P%E23*DX%E12
+    DX_P%E1233 = DX_P%E233*DX%E1+DX_P%E133*DX%E2+ &
+              DX_P%E123*DX%E3+DX_P%E12*DX%E33+DX_P%E13*DX%E23+ &
+              DX_P%E23*DX%E13+DX_P%E33*DX%E12
+    DX_P%E1333 = DX_P%E333*DX%E1+DX_P%E133*DX%E3+ &
+              DX_P%E13*DX%E33+DX_P%E33*DX%E13
+    DX_P%E2223 = DX_P%E223*DX%E2+DX_P%E222*DX%E3+ &
+              DX_P%E22*DX%E23+DX_P%E23*DX%E22
+    DX_P%E2233 = DX_P%E233*DX%E2+DX_P%E223*DX%E3+ &
+              DX_P%E22*DX%E33+DX_P%E23*DX%E23+DX_P%E33*DX%E22
+    DX_P%E2333 = DX_P%E333*DX%E2+DX_P%E233*DX%E3+ &
+              DX_P%E23*DX%E33+DX_P%E33*DX%E23
+    DX_P%E3333 = DX_P%E333*DX%E3+DX_P%E33*DX%E33
+    DX_P%E1114 = DX_P%E114*DX%E1+DX_P%E111*DX%E4+ &
+              DX_P%E11*DX%E14+DX_P%E14*DX%E11
+    DX_P%E1124 = DX_P%E124*DX%E1+DX_P%E114*DX%E2+ &
+              DX_P%E112*DX%E4+DX_P%E11*DX%E24+DX_P%E12*DX%E14+ &
+              DX_P%E14*DX%E12+DX_P%E24*DX%E11
+    DX_P%E1134 = DX_P%E134*DX%E1+DX_P%E114*DX%E3+ &
+              DX_P%E113*DX%E4+DX_P%E11*DX%E34+DX_P%E13*DX%E14+ &
+              DX_P%E14*DX%E13+DX_P%E34*DX%E11
+    DX_P%E1144 = DX_P%E144*DX%E1+DX_P%E114*DX%E4+ &
+              DX_P%E11*DX%E44+DX_P%E14*DX%E14+DX_P%E44*DX%E11
+    DX_P%E1224 = DX_P%E224*DX%E1+DX_P%E124*DX%E2+ &
+              DX_P%E122*DX%E4+DX_P%E12*DX%E24+DX_P%E22*DX%E14+ &
+              DX_P%E14*DX%E22+DX_P%E24*DX%E12
+    DX_P%E1234 = DX_P%E234*DX%E1+DX_P%E134*DX%E2+ &
+              DX_P%E124*DX%E3+DX_P%E123*DX%E4+DX_P%E12*DX%E34+ &
+              DX_P%E13*DX%E24+DX_P%E23*DX%E14+DX_P%E14*DX%E23+ &
+              DX_P%E24*DX%E13+DX_P%E34*DX%E12
+    DX_P%E1244 = DX_P%E244*DX%E1+DX_P%E144*DX%E2+ &
+              DX_P%E124*DX%E4+DX_P%E12*DX%E44+DX_P%E14*DX%E24+ &
+              DX_P%E24*DX%E14+DX_P%E44*DX%E12
+    DX_P%E1334 = DX_P%E334*DX%E1+DX_P%E134*DX%E3+ &
+              DX_P%E133*DX%E4+DX_P%E13*DX%E34+DX_P%E33*DX%E14+ &
+              DX_P%E14*DX%E33+DX_P%E34*DX%E13
+    DX_P%E1344 = DX_P%E344*DX%E1+DX_P%E144*DX%E3+ &
+              DX_P%E134*DX%E4+DX_P%E13*DX%E44+DX_P%E14*DX%E34+ &
+              DX_P%E34*DX%E14+DX_P%E44*DX%E13
+    DX_P%E1444 = DX_P%E444*DX%E1+DX_P%E144*DX%E4+ &
+              DX_P%E14*DX%E44+DX_P%E44*DX%E14
+    DX_P%E2224 = DX_P%E224*DX%E2+DX_P%E222*DX%E4+ &
+              DX_P%E22*DX%E24+DX_P%E24*DX%E22
+    DX_P%E2234 = DX_P%E234*DX%E2+DX_P%E224*DX%E3+ &
+              DX_P%E223*DX%E4+DX_P%E22*DX%E34+DX_P%E23*DX%E24+ &
+              DX_P%E24*DX%E23+DX_P%E34*DX%E22
+    DX_P%E2244 = DX_P%E244*DX%E2+DX_P%E224*DX%E4+ &
+              DX_P%E22*DX%E44+DX_P%E24*DX%E24+DX_P%E44*DX%E22
+    DX_P%E2334 = DX_P%E334*DX%E2+DX_P%E234*DX%E3+ &
+              DX_P%E233*DX%E4+DX_P%E23*DX%E34+DX_P%E33*DX%E24+ &
+              DX_P%E24*DX%E33+DX_P%E34*DX%E23
+    DX_P%E2344 = DX_P%E344*DX%E2+DX_P%E244*DX%E3+ &
+              DX_P%E234*DX%E4+DX_P%E23*DX%E44+DX_P%E24*DX%E34+ &
+              DX_P%E34*DX%E24+DX_P%E44*DX%E23
+    DX_P%E2444 = DX_P%E444*DX%E2+DX_P%E244*DX%E4+ &
+              DX_P%E24*DX%E44+DX_P%E44*DX%E24
+    DX_P%E3334 = DX_P%E334*DX%E3+DX_P%E333*DX%E4+ &
+              DX_P%E33*DX%E34+DX_P%E34*DX%E33
+    DX_P%E3344 = DX_P%E344*DX%E3+DX_P%E334*DX%E4+ &
+              DX_P%E33*DX%E44+DX_P%E34*DX%E34+DX_P%E44*DX%E33
+    DX_P%E3444 = DX_P%E444*DX%E3+DX_P%E344*DX%E4+ &
+              DX_P%E34*DX%E44+DX_P%E44*DX%E34
+    DX_P%E4444 = DX_P%E444*DX%E4+DX_P%E44*DX%E44
+    ! Order 3
+    DX_P%E111 = DX_P%E11*DX%E1
+    DX_P%E112 = DX_P%E12*DX%E1+DX_P%E11*DX%E2
+    DX_P%E122 = DX_P%E22*DX%E1+DX_P%E12*DX%E2
+    DX_P%E222 = DX_P%E22*DX%E2
+    DX_P%E113 = DX_P%E13*DX%E1+DX_P%E11*DX%E3
+    DX_P%E123 = DX_P%E23*DX%E1+DX_P%E13*DX%E2+ &
+             DX_P%E12*DX%E3
+    DX_P%E133 = DX_P%E33*DX%E1+DX_P%E13*DX%E3
+    DX_P%E223 = DX_P%E23*DX%E2+DX_P%E22*DX%E3
+    DX_P%E233 = DX_P%E33*DX%E2+DX_P%E23*DX%E3
+    DX_P%E333 = DX_P%E33*DX%E3
+    DX_P%E114 = DX_P%E14*DX%E1+DX_P%E11*DX%E4
+    DX_P%E124 = DX_P%E24*DX%E1+DX_P%E14*DX%E2+ &
+             DX_P%E12*DX%E4
+    DX_P%E134 = DX_P%E34*DX%E1+DX_P%E14*DX%E3+ &
+             DX_P%E13*DX%E4
+    DX_P%E144 = DX_P%E44*DX%E1+DX_P%E14*DX%E4
+    DX_P%E224 = DX_P%E24*DX%E2+DX_P%E22*DX%E4
+    DX_P%E234 = DX_P%E34*DX%E2+DX_P%E24*DX%E3+ &
+             DX_P%E23*DX%E4
+    DX_P%E244 = DX_P%E44*DX%E2+DX_P%E24*DX%E4
+    DX_P%E334 = DX_P%E34*DX%E3+DX_P%E33*DX%E4
+    DX_P%E344 = DX_P%E44*DX%E3+DX_P%E34*DX%E4
+    DX_P%E444 = DX_P%E44*DX%E4
+    
+    ! Sets order 3
+    FACTOR = FACTOR * 3
+    COEF = DER3 / FACTOR
+    ! RES = RES COEF * DX_P
+    ! Order 4
+    RES%E1111 = RES%E1111+COEF*DX_P%E1111
+    RES%E1112 = RES%E1112+COEF*DX_P%E1112
+    RES%E1122 = RES%E1122+COEF*DX_P%E1122
+    RES%E1222 = RES%E1222+COEF*DX_P%E1222
+    RES%E2222 = RES%E2222+COEF*DX_P%E2222
+    RES%E1113 = RES%E1113+COEF*DX_P%E1113
+    RES%E1123 = RES%E1123+COEF*DX_P%E1123
+    RES%E1133 = RES%E1133+COEF*DX_P%E1133
+    RES%E1223 = RES%E1223+COEF*DX_P%E1223
+    RES%E1233 = RES%E1233+COEF*DX_P%E1233
+    RES%E1333 = RES%E1333+COEF*DX_P%E1333
+    RES%E2223 = RES%E2223+COEF*DX_P%E2223
+    RES%E2233 = RES%E2233+COEF*DX_P%E2233
+    RES%E2333 = RES%E2333+COEF*DX_P%E2333
+    RES%E3333 = RES%E3333+COEF*DX_P%E3333
+    RES%E1114 = RES%E1114+COEF*DX_P%E1114
+    RES%E1124 = RES%E1124+COEF*DX_P%E1124
+    RES%E1134 = RES%E1134+COEF*DX_P%E1134
+    RES%E1144 = RES%E1144+COEF*DX_P%E1144
+    RES%E1224 = RES%E1224+COEF*DX_P%E1224
+    RES%E1234 = RES%E1234+COEF*DX_P%E1234
+    RES%E1244 = RES%E1244+COEF*DX_P%E1244
+    RES%E1334 = RES%E1334+COEF*DX_P%E1334
+    RES%E1344 = RES%E1344+COEF*DX_P%E1344
+    RES%E1444 = RES%E1444+COEF*DX_P%E1444
+    RES%E2224 = RES%E2224+COEF*DX_P%E2224
+    RES%E2234 = RES%E2234+COEF*DX_P%E2234
+    RES%E2244 = RES%E2244+COEF*DX_P%E2244
+    RES%E2334 = RES%E2334+COEF*DX_P%E2334
+    RES%E2344 = RES%E2344+COEF*DX_P%E2344
+    RES%E2444 = RES%E2444+COEF*DX_P%E2444
+    RES%E3334 = RES%E3334+COEF*DX_P%E3334
+    RES%E3344 = RES%E3344+COEF*DX_P%E3344
+    RES%E3444 = RES%E3444+COEF*DX_P%E3444
+    RES%E4444 = RES%E4444+COEF*DX_P%E4444
+    ! Order 3
+    RES%E111 = RES%E111+COEF*DX_P%E111
+    RES%E112 = RES%E112+COEF*DX_P%E112
+    RES%E122 = RES%E122+COEF*DX_P%E122
+    RES%E222 = RES%E222+COEF*DX_P%E222
+    RES%E113 = RES%E113+COEF*DX_P%E113
+    RES%E123 = RES%E123+COEF*DX_P%E123
+    RES%E133 = RES%E133+COEF*DX_P%E133
+    RES%E223 = RES%E223+COEF*DX_P%E223
+    RES%E233 = RES%E233+COEF*DX_P%E233
+    RES%E333 = RES%E333+COEF*DX_P%E333
+    RES%E114 = RES%E114+COEF*DX_P%E114
+    RES%E124 = RES%E124+COEF*DX_P%E124
+    RES%E134 = RES%E134+COEF*DX_P%E134
+    RES%E144 = RES%E144+COEF*DX_P%E144
+    RES%E224 = RES%E224+COEF*DX_P%E224
+    RES%E234 = RES%E234+COEF*DX_P%E234
+    RES%E244 = RES%E244+COEF*DX_P%E244
+    RES%E334 = RES%E334+COEF*DX_P%E334
+    RES%E344 = RES%E344+COEF*DX_P%E344
+    RES%E444 = RES%E444+COEF*DX_P%E444
+    ! DX_P = DX_P * DX
+    ! Order 4
+    DX_P%E1111 = DX_P%E111*DX%E1
+    DX_P%E1112 = DX_P%E112*DX%E1+DX_P%E111*DX%E2
+    DX_P%E1122 = DX_P%E122*DX%E1+DX_P%E112*DX%E2
+    DX_P%E1222 = DX_P%E222*DX%E1+DX_P%E122*DX%E2
+    DX_P%E2222 = DX_P%E222*DX%E2
+    DX_P%E1113 = DX_P%E113*DX%E1+DX_P%E111*DX%E3
+    DX_P%E1123 = DX_P%E123*DX%E1+DX_P%E113*DX%E2+ &
+              DX_P%E112*DX%E3
+    DX_P%E1133 = DX_P%E133*DX%E1+DX_P%E113*DX%E3
+    DX_P%E1223 = DX_P%E223*DX%E1+DX_P%E123*DX%E2+ &
+              DX_P%E122*DX%E3
+    DX_P%E1233 = DX_P%E233*DX%E1+DX_P%E133*DX%E2+ &
+              DX_P%E123*DX%E3
+    DX_P%E1333 = DX_P%E333*DX%E1+DX_P%E133*DX%E3
+    DX_P%E2223 = DX_P%E223*DX%E2+DX_P%E222*DX%E3
+    DX_P%E2233 = DX_P%E233*DX%E2+DX_P%E223*DX%E3
+    DX_P%E2333 = DX_P%E333*DX%E2+DX_P%E233*DX%E3
+    DX_P%E3333 = DX_P%E333*DX%E3
+    DX_P%E1114 = DX_P%E114*DX%E1+DX_P%E111*DX%E4
+    DX_P%E1124 = DX_P%E124*DX%E1+DX_P%E114*DX%E2+ &
+              DX_P%E112*DX%E4
+    DX_P%E1134 = DX_P%E134*DX%E1+DX_P%E114*DX%E3+ &
+              DX_P%E113*DX%E4
+    DX_P%E1144 = DX_P%E144*DX%E1+DX_P%E114*DX%E4
+    DX_P%E1224 = DX_P%E224*DX%E1+DX_P%E124*DX%E2+ &
+              DX_P%E122*DX%E4
+    DX_P%E1234 = DX_P%E234*DX%E1+DX_P%E134*DX%E2+ &
+              DX_P%E124*DX%E3+DX_P%E123*DX%E4
+    DX_P%E1244 = DX_P%E244*DX%E1+DX_P%E144*DX%E2+ &
+              DX_P%E124*DX%E4
+    DX_P%E1334 = DX_P%E334*DX%E1+DX_P%E134*DX%E3+ &
+              DX_P%E133*DX%E4
+    DX_P%E1344 = DX_P%E344*DX%E1+DX_P%E144*DX%E3+ &
+              DX_P%E134*DX%E4
+    DX_P%E1444 = DX_P%E444*DX%E1+DX_P%E144*DX%E4
+    DX_P%E2224 = DX_P%E224*DX%E2+DX_P%E222*DX%E4
+    DX_P%E2234 = DX_P%E234*DX%E2+DX_P%E224*DX%E3+ &
+              DX_P%E223*DX%E4
+    DX_P%E2244 = DX_P%E244*DX%E2+DX_P%E224*DX%E4
+    DX_P%E2334 = DX_P%E334*DX%E2+DX_P%E234*DX%E3+ &
+              DX_P%E233*DX%E4
+    DX_P%E2344 = DX_P%E344*DX%E2+DX_P%E244*DX%E3+ &
+              DX_P%E234*DX%E4
+    DX_P%E2444 = DX_P%E444*DX%E2+DX_P%E244*DX%E4
+    DX_P%E3334 = DX_P%E334*DX%E3+DX_P%E333*DX%E4
+    DX_P%E3344 = DX_P%E344*DX%E3+DX_P%E334*DX%E4
+    DX_P%E3444 = DX_P%E444*DX%E3+DX_P%E344*DX%E4
+    DX_P%E4444 = DX_P%E444*DX%E4
+    
+    ! Sets order 4
+    FACTOR = FACTOR * 4
+    COEF = DER4 / FACTOR
+    ! RES = RES COEF * DX_P
+    ! Order 4
+    RES%E1111 = RES%E1111+COEF*DX_P%E1111
+    RES%E1112 = RES%E1112+COEF*DX_P%E1112
+    RES%E1122 = RES%E1122+COEF*DX_P%E1122
+    RES%E1222 = RES%E1222+COEF*DX_P%E1222
+    RES%E2222 = RES%E2222+COEF*DX_P%E2222
+    RES%E1113 = RES%E1113+COEF*DX_P%E1113
+    RES%E1123 = RES%E1123+COEF*DX_P%E1123
+    RES%E1133 = RES%E1133+COEF*DX_P%E1133
+    RES%E1223 = RES%E1223+COEF*DX_P%E1223
+    RES%E1233 = RES%E1233+COEF*DX_P%E1233
+    RES%E1333 = RES%E1333+COEF*DX_P%E1333
+    RES%E2223 = RES%E2223+COEF*DX_P%E2223
+    RES%E2233 = RES%E2233+COEF*DX_P%E2233
+    RES%E2333 = RES%E2333+COEF*DX_P%E2333
+    RES%E3333 = RES%E3333+COEF*DX_P%E3333
+    RES%E1114 = RES%E1114+COEF*DX_P%E1114
+    RES%E1124 = RES%E1124+COEF*DX_P%E1124
+    RES%E1134 = RES%E1134+COEF*DX_P%E1134
+    RES%E1144 = RES%E1144+COEF*DX_P%E1144
+    RES%E1224 = RES%E1224+COEF*DX_P%E1224
+    RES%E1234 = RES%E1234+COEF*DX_P%E1234
+    RES%E1244 = RES%E1244+COEF*DX_P%E1244
+    RES%E1334 = RES%E1334+COEF*DX_P%E1334
+    RES%E1344 = RES%E1344+COEF*DX_P%E1344
+    RES%E1444 = RES%E1444+COEF*DX_P%E1444
+    RES%E2224 = RES%E2224+COEF*DX_P%E2224
+    RES%E2234 = RES%E2234+COEF*DX_P%E2234
+    RES%E2244 = RES%E2244+COEF*DX_P%E2244
+    RES%E2334 = RES%E2334+COEF*DX_P%E2334
+    RES%E2344 = RES%E2344+COEF*DX_P%E2344
+    RES%E2444 = RES%E2444+COEF*DX_P%E2444
+    RES%E3334 = RES%E3334+COEF*DX_P%E3334
+    RES%E3344 = RES%E3344+COEF*DX_P%E3344
+    RES%E3444 = RES%E3444+COEF*DX_P%E3444
+    RES%E4444 = RES%E4444+COEF*DX_P%E4444
+    
+  END FUNCTION ONUMM4N4_FEVAL
+
+
+  ! SUBROUTINE ONUMM4N4_PPRINT_M_R(X, FMT)
+  !     IMPLICIT NONE
+  !     REAL(DP),INTENT(IN) :: X(:,:)
+  !     INTEGER :: I, J
+  !     CHARACTER(*),INTENT(IN),OPTIONAL :: FMT
+  !     CHARACTER(:),ALLOCATABLE :: out_fmt
+      
+  !     IF (PRESENT(fmt)) THEN
+  !       out_fmt = fmt
+  !     ELSE
+  !       out_fmt = 'F10.4'
+  !     END IF
+      
+  !     write(*,'(A)',advance='no') "["
+      
+  !     DO I=1,SIZE(X,1)
+        
+  !       IF (I == 1) THEN
+  !         write(*,'(A)',advance='no') "["
+  !       ELSE
+  !         write(*,'(A)',advance='no') " ["
+  !       END IF 
+
+  !       DO J=1,SIZE(X,2)
+          
+  !         write(*,'('//trim(out_fmt)//')',advance='no') X(I,J)
+
+  !       END DO
+        
+  !       write(*,'(A)') "]"
+      
+  !     END DO
+
+  !     write(*,'(A)') "]"
+
+  ! END SUBROUTINE ONUMM4N4_PPRINT_M_R
+
+  ! SUBROUTINE ONUMM4N4_PPRINT_V_R(X, FMT)
+  !     IMPLICIT NONE
+  !     REAL(DP),INTENT(IN) :: X(:)
+  !     INTEGER :: I
+  !     CHARACTER(*),INTENT(IN),OPTIONAL :: FMT
+  !     CHARACTER(:),ALLOCATABLE :: out_fmt
+      
+  !     IF (PRESENT(fmt)) THEN
+  !       out_fmt = fmt
+  !     ELSE
+  !       out_fmt = 'F10.4'
+  !     END IF
+      
+  !     write(*,'(A)',advance='no') "["
+      
+  !     DO I=1,SIZE(X,1)
+
+  !       write(*,'('//trim(out_fmt)//')',advance='no') X(I)
+
+  !     END DO
+
+  !     write(*,'(A)') "]"
+
+  ! END SUBROUTINE ONUMM4N4_PPRINT_V_R
+
+  ! !***************************************************************************************************! 
+  ! !> @brief 2 x 2  matrix inversion.
+  ! !!
+  ! !! Taken from https://fortranwiki.org/fortran/show/Matrix+inversion
+  ! !!
+  ! !! @param[in] A: Matrix to be printed.
+  ! !! @param[out] B: inverse of A.
+  ! !!
+  ! !***************************************************************************************************!
+  ! PURE FUNCTION Rmatinv2x2(A,det) RESULT(B)
+
+  !   IMPLICIT NONE
+
+  !   REAL(dp), INTENT(IN) :: A(2,2)   !! Matrix
+  !   REAL(dp), INTENT(IN), OPTIONAL :: det
+  !   REAL(dp)             :: B(2,2)   !! Inverse matrix
+  !   REAL(dp)             :: detinv
+
+  !   IF ( PRESENT(det) ) THEN
+  !     detinv = 1.0d0 / det
+  !   ELSE
+  !     ! Calculate the inverse determinant of the matrix
+  !     detinv = 1.0d0 / det2x2(A)
+  !   END IF
+
+  !   ! Calculate the inverse of the matrix
+  !   B(1,1) =  detinv * A(2,2)
+  !   B(2,1) = -detinv * A(2,1)
+  !   B(1,2) = -detinv * A(1,2)
+  !   B(2,2) =  detinv * A(1,1)
+  ! END FUNCTION
+  ! !===================================================================================================! 
+  
+  ! !***************************************************************************************************! 
+  ! !> @brief 3 x 3  matrix inversion.
+  ! !!
+  ! !! Taken from https://fortranwiki.org/fortran/show/Matrix+inversion
+  ! !!
+  ! !! @param[in]  A: Matrix to be printed.
+  ! !! @param[out] B: inverse of A.
+  ! !!
+  ! !***************************************************************************************************!
+  ! PURE FUNCTION Rmatinv3x3(A,det) RESULT(B)
+      
+  !     IMPLICIT NONE
+
+  !     REAL(dp), INTENT(IN) :: A(3,3)   !! Matrix
+  !     REAL(dp), INTENT(IN), OPTIONAL :: det
+  !     REAL(dp)             :: B(3,3)   !! Inverse matrix
+  !     REAL(dp)             :: detinv
+
+  !     IF ( PRESENT(det) ) THEN
+  !        detinv = 1.0d0/det
+  !     ELSE
+  !        ! Calculate the inverse determinant of the matrix
+  !        detinv = 1.0d0/det3x3(A)
+  !     END IF 
+
+  !     ! Calculate the inverse of the matrix
+  !     B(1,1) = + detinv * (A(2,2)*A(3,3) - A(2,3)*A(3,2))
+  !     B(2,1) = - detinv * (A(2,1)*A(3,3) - A(2,3)*A(3,1))
+  !     B(3,1) = + detinv * (A(2,1)*A(3,2) - A(2,2)*A(3,1))
+  !     B(1,2) = - detinv * (A(1,2)*A(3,3) - A(1,3)*A(3,2))
+  !     B(2,2) = + detinv * (A(1,1)*A(3,3) - A(1,3)*A(3,1))
+  !     B(3,2) = - detinv * (A(1,1)*A(3,2) - A(1,2)*A(3,1))
+  !     B(1,3) = + detinv * (A(1,2)*A(2,3) - A(1,3)*A(2,2))
+  !     B(2,3) = - detinv * (A(1,1)*A(2,3) - A(1,3)*A(2,1))
+  !     B(3,3) = + detinv * (A(1,1)*A(2,2) - A(1,2)*A(2,1))
+
+  !  END FUNCTION
+  !  !===================================================================================================! 
+
+  !  !***************************************************************************************************! 
+  !  !> @brief 4 x 4  matrix inversion.
+  !  !!
+  !  !! Taken from https://fortranwiki.org/fortran/show/Matrix+inversion
+  !  !!
+  !  !! @param[in]  A: Matrix to be printed.
+  !  !! @param[in]  det: (optional) Determinant of A.
+  !  !! @param[out] B: inverse of A.
+  !  !!
+  !  !***************************************************************************************************!
+  !  PURE FUNCTION Rmatinv4x4(A,det) RESULT(B)
+      
+  !     IMPLICIT NONE
+
+  !     REAL(dp), INTENT(IN) :: A(4,4)   !! Matrix
+  !     REAL(dp), INTENT(IN), OPTIONAL :: det
+  !     REAL(dp)             :: B(4,4)   !! Inverse matrix
+  !     REAL(dp)             :: di  !! Determinant inverse
+
+  !     ! Calculate the inverse determinant of the matrix
+  !     IF ( PRESENT(det) ) THEN
+  !        di = 1.0d0/det
+  !     ELSE
+  !        di = 1.0d0/det4x4(A)
+  !     END IF 
+      
+  !     ! Calculate the inverse of the matrix
+  !     B(1,1) = di*(A(2,2)*(A(3,3)*A(4,4)-A(3,4)*A(4,3))+A(2,3)*(A(3,4)*A(4,2)-A(3,2)*A(4,4))+A(2,4)*(A(3,2)*A(4,3)-A(3,3)*A(4,2)))
+  !     B(2,1) = di*(A(2,1)*(A(3,4)*A(4,3)-A(3,3)*A(4,4))+A(2,3)*(A(3,1)*A(4,4)-A(3,4)*A(4,1))+A(2,4)*(A(3,3)*A(4,1)-A(3,1)*A(4,3)))
+  !     B(3,1) = di*(A(2,1)*(A(3,2)*A(4,4)-A(3,4)*A(4,2))+A(2,2)*(A(3,4)*A(4,1)-A(3,1)*A(4,4))+A(2,4)*(A(3,1)*A(4,2)-A(3,2)*A(4,1)))
+  !     B(4,1) = di*(A(2,1)*(A(3,3)*A(4,2)-A(3,2)*A(4,3))+A(2,2)*(A(3,1)*A(4,3)-A(3,3)*A(4,1))+A(2,3)*(A(3,2)*A(4,1)-A(3,1)*A(4,2)))
+  !     B(1,2) = di*(A(1,2)*(A(3,4)*A(4,3)-A(3,3)*A(4,4))+A(1,3)*(A(3,2)*A(4,4)-A(3,4)*A(4,2))+A(1,4)*(A(3,3)*A(4,2)-A(3,2)*A(4,3)))
+  !     B(2,2) = di*(A(1,1)*(A(3,3)*A(4,4)-A(3,4)*A(4,3))+A(1,3)*(A(3,4)*A(4,1)-A(3,1)*A(4,4))+A(1,4)*(A(3,1)*A(4,3)-A(3,3)*A(4,1)))
+  !     B(3,2) = di*(A(1,1)*(A(3,4)*A(4,2)-A(3,2)*A(4,4))+A(1,2)*(A(3,1)*A(4,4)-A(3,4)*A(4,1))+A(1,4)*(A(3,2)*A(4,1)-A(3,1)*A(4,2)))
+  !     B(4,2) = di*(A(1,1)*(A(3,2)*A(4,3)-A(3,3)*A(4,2))+A(1,2)*(A(3,3)*A(4,1)-A(3,1)*A(4,3))+A(1,3)*(A(3,1)*A(4,2)-A(3,2)*A(4,1)))
+  !     B(1,3) = di*(A(1,2)*(A(2,3)*A(4,4)-A(2,4)*A(4,3))+A(1,3)*(A(2,4)*A(4,2)-A(2,2)*A(4,4))+A(1,4)*(A(2,2)*A(4,3)-A(2,3)*A(4,2)))
+  !     B(2,3) = di*(A(1,1)*(A(2,4)*A(4,3)-A(2,3)*A(4,4))+A(1,3)*(A(2,1)*A(4,4)-A(2,4)*A(4,1))+A(1,4)*(A(2,3)*A(4,1)-A(2,1)*A(4,3)))
+  !     B(3,3) = di*(A(1,1)*(A(2,2)*A(4,4)-A(2,4)*A(4,2))+A(1,2)*(A(2,4)*A(4,1)-A(2,1)*A(4,4))+A(1,4)*(A(2,1)*A(4,2)-A(2,2)*A(4,1)))
+  !     B(4,3) = di*(A(1,1)*(A(2,3)*A(4,2)-A(2,2)*A(4,3))+A(1,2)*(A(2,1)*A(4,3)-A(2,3)*A(4,1))+A(1,3)*(A(2,2)*A(4,1)-A(2,1)*A(4,2)))
+  !     B(1,4) = di*(A(1,2)*(A(2,4)*A(3,3)-A(2,3)*A(3,4))+A(1,3)*(A(2,2)*A(3,4)-A(2,4)*A(3,2))+A(1,4)*(A(2,3)*A(3,2)-A(2,2)*A(3,3)))
+  !     B(2,4) = di*(A(1,1)*(A(2,3)*A(3,4)-A(2,4)*A(3,3))+A(1,3)*(A(2,4)*A(3,1)-A(2,1)*A(3,4))+A(1,4)*(A(2,1)*A(3,3)-A(2,3)*A(3,1)))
+  !     B(3,4) = di*(A(1,1)*(A(2,4)*A(3,2)-A(2,2)*A(3,4))+A(1,2)*(A(2,1)*A(3,4)-A(2,4)*A(3,1))+A(1,4)*(A(2,2)*A(3,1)-A(2,1)*A(3,2)))
+  !     B(4,4) = di*(A(1,1)*(A(2,2)*A(3,3)-A(2,3)*A(3,2))+A(1,2)*(A(2,3)*A(3,1)-A(2,1)*A(3,3))+A(1,3)*(A(2,1)*A(3,2)-A(2,2)*A(3,1)))
+  !  END FUNCTION
+  !  !===================================================================================================! 
+
+  !***************************************************************************************************! 
+  !> @brief 2 x 2  matrix determinant.
+  !!
+  !!
+  !! @param[in] A: Matrix to be printed.
+  !! @param[out] B: inverse of A.
+  !!
+  !***************************************************************************************************!
+  PURE FUNCTION ONUMM4N4_det2x2(A) RESULT(det)
+
+    IMPLICIT NONE
+
+    TYPE(ONUMM4N4), INTENT(IN) :: A(2,2)   !! Matrix
+    TYPE(ONUMM4N4)             :: det
+
+    ! Calculate the determinant of the matrix
+    det = (A(1,1)*A(2,2) - A(1,2)*A(2,1))
+
+  END FUNCTION
+  !===================================================================================================! 
+  
+  !***************************************************************************************************! 
+  !> @brief 3 x 3  matrix determinant.
+  !!
+  !!
+  !! @param[in]  A: Matrix to be printed.
+  !! @param[out] B: inverse of A.
+  !!
+  !***************************************************************************************************!
+  PURE FUNCTION ONUMM4N4_det3x3(A) RESULT(det)
+      
+    IMPLICIT NONE
+
+    TYPE(ONUMM4N4), INTENT(IN) :: A(3,3)   !! Matrix
+    TYPE(ONUMM4N4)             :: det
+
+    ! Calculate the inverse determinant of the matrix
+    det = (A(1,1)*A(2,2)*A(3,3) - A(1,1)*A(2,3)*A(3,2)&
+         - A(1,2)*A(2,1)*A(3,3) + A(1,2)*A(2,3)*A(3,1)&
+         + A(1,3)*A(2,1)*A(3,2) - A(1,3)*A(2,2)*A(3,1))
+
+  END FUNCTION
+  !===================================================================================================! 
+
+  !***************************************************************************************************! 
+  !> @brief 4 x 4  matrix determinant.
+  !!
+  !!
+  !! @param[in]  A: Matrix to be printed.
+  !! @param[out] B: inverse of A.
+  !!
+  !***************************************************************************************************!
+  PURE FUNCTION ONUMM4N4_det4x4(A) RESULT(det)
+      
+    IMPLICIT NONE
+
+    TYPE(ONUMM4N4), INTENT(IN) :: A(4,4)   !! Matrix
+    TYPE(ONUMM4N4)             :: det
+
+    ! Calculate the determinant of the matrix
+    det = &
+    (A(1,1)*(A(2,2)*(A(3,3)*A(4,4)-A(3,4)*A(4,3))+A(2,3)*(A(3,4)*A(4,2)-A(3,2)*A(4,4))+A(2,4)*(A(3,2)*A(4,3)-A(3,3)*A(4,2)))&
+   - A(1,2)*(A(2,1)*(A(3,3)*A(4,4)-A(3,4)*A(4,3))+A(2,3)*(A(3,4)*A(4,1)-A(3,1)*A(4,4))+A(2,4)*(A(3,1)*A(4,3)-A(3,3)*A(4,1)))&
+   + A(1,3)*(A(2,1)*(A(3,2)*A(4,4)-A(3,4)*A(4,2))+A(2,2)*(A(3,4)*A(4,1)-A(3,1)*A(4,4))+A(2,4)*(A(3,1)*A(4,2)-A(3,2)*A(4,1)))&
+   - A(1,4)*(A(2,1)*(A(3,2)*A(4,3)-A(3,3)*A(4,2))+A(2,2)*(A(3,3)*A(4,1)-A(3,1)*A(4,3))+A(2,3)*(A(3,1)*A(4,2)-A(3,2)*A(4,1))))
+
+  END FUNCTION
+  !===================================================================================================! 
+   
+  !***************************************************************************************************! 
+  !> @brief Cross product between two vectors.
+  !!
+  !! @param[in] a: Vector of 3 reals (rank 1).
+  !! @param[in] b: Vector of 3 reals (rank 1).
+  !!
+  !***************************************************************************************************!
+  PURE FUNCTION ONUMM4N4_cross3(a,b) RESULT(v)
+      
+    IMPLICIT NONE 
+
+    TYPE(ONUMM4N4), DIMENSION (3),INTENT(IN) :: a,b
+    TYPE(ONUMM4N4), DIMENSION (3) :: v
+    
+    v(1) = a(2) * b(3) - a(3) * b(2)
+    v(2) = a(3) * b(1) - a(1) * b(3)
+    v(3) = a(1) * b(2) - a(2) * b(1)
+
+  END FUNCTION ONUMM4N4_cross3
+  !===================================================================================================! 
+
+  !***************************************************************************************************! 
+  !> @brief Norm of a 3 element vector. # There is an intrinsic function named norm2.
+  !!
+  !! @param[in] a: Vector of 3 reals (rank 1).
+  !! @param[in] b: Vector of 3 reals (rank 1).
+  !!
+  !***************************************************************************************************!
+  FUNCTION ONUMM4N4_norm2_3(v) RESULT(n)
+     
+    IMPLICIT NONE 
+
+    TYPE(ONUMM4N4), INTENT(IN) :: v(3)
+    TYPE(ONUMM4N4) :: n
+     
+    n = SQRT( v(1)*v(1) + v(2)*v(2) + v(3)*v(3) )
+
+  END FUNCTION ONUMM4N4_norm2_3
+  !===================================================================================================! 
+
+  ELEMENTAL FUNCTION ONUMM4N4_DIVISION_OO(X,Y) RESULT(RES)
+      IMPLICIT NONE
+      ! REAL(DP) :: DERIVS(TORDER + 1) 
+      TYPE(ONUMM4N4), INTENT(IN) :: X
+      TYPE(ONUMM4N4), INTENT(IN) :: Y
+      TYPE(ONUMM4N4) :: RES
+
+      RES = X*(Y**(-1.d0))
+
+  END FUNCTION ONUMM4N4_DIVISION_OO
+
+  ELEMENTAL FUNCTION ONUMM4N4_DIVISION_OR(X,Y) RESULT(RES)
+      IMPLICIT NONE
+      ! REAL(DP) :: DERIVS(TORDER + 1) 
+      TYPE(ONUMM4N4), INTENT(IN) :: X
+      REAL(DP), INTENT(IN) :: Y
+      TYPE(ONUMM4N4) :: RES
+
+      RES = X*(Y**(-1.d0))
+
+  END FUNCTION ONUMM4N4_DIVISION_OR
+
+  ELEMENTAL FUNCTION ONUMM4N4_DIVISION_RO(X,Y) RESULT(RES)
+      IMPLICIT NONE
+      ! REAL(DP) :: DERIVS(TORDER + 1) 
+      REAL(DP), INTENT(IN) :: X
+      TYPE(ONUMM4N4), INTENT(IN) :: Y
+      TYPE(ONUMM4N4) :: RES
+
+      RES = X*(Y**(-1.d0))
+
+  END FUNCTION ONUMM4N4_DIVISION_RO
+
+  ELEMENTAL FUNCTION ONUMM4N4_REAL(X) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: X
+      REAL(DP) :: RES
+
+      RES = X%R
+
+  END FUNCTION ONUMM4N4_REAL
+
+  FUNCTION ONUMM4N4_SQRT(X) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: X
+      TYPE(ONUMM4N4) :: RES
+
+      RES = X**0.5_DP
+
+  END FUNCTION ONUMM4N4_SQRT
+
+  FUNCTION ONUMM4N4_MAX(X1,X2) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: X1, X2
+                                                
+      TYPE(ONUMM4N4) :: RES
+      RES = X1
+      IF (X2>RES) RES = X2  
+
+  END FUNCTION ONUMM4N4_MAX
+
+  FUNCTION ONUMM4N4_MIN(X1,X2) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: X1, X2
+                                                
+      TYPE(ONUMM4N4) :: RES
+      RES = X1
+      IF (X2<RES) RES = X2
+
+  END FUNCTION ONUMM4N4_MIN
+
+  FUNCTION ONUMM4N4_MAXLOC_R1(ARRAY, MASK, BACK) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:)
+      LOGICAL, INTENT(IN), OPTIONAL :: MASK(SIZE(ARRAY,1))
+      LOGICAL, INTENT(IN), OPTIONAL :: BACK  ! Search from the back
+      
+      INTEGER :: RES( 1)
+      
+      LOGICAL :: MASK_DEF(SIZE(ARRAY,1))
+      LOGICAL :: BACK_DEF
+      
+      ! Assign defaults.
+      MASK_DEF = .true.
+      BACK_DEF = .false.
+      
+      IF (PRESENT(MASK)) MASK_DEF = MASK
+      IF (PRESENT(BACK)) BACK_DEF = BACK
+
+      RES = MAXLOC(ARRAY%R, MASK = MASK_DEF)
+
+  END FUNCTION ONUMM4N4_MAXLOC_R1
+
+  FUNCTION ONUMM4N4_MAXLOC_R2(ARRAY, MASK, BACK) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:)
+      LOGICAL, INTENT(IN), OPTIONAL :: MASK(SIZE(ARRAY,1),SIZE(ARRAY,2))
+      LOGICAL, INTENT(IN), OPTIONAL :: BACK  ! Search from the back
+      
+      INTEGER :: RES( 2)
+      
+      LOGICAL :: MASK_DEF(SIZE(ARRAY,1),SIZE(ARRAY,2))
+      LOGICAL :: BACK_DEF
+      
+      ! Assign defaults.
+      MASK_DEF = .true.
+      BACK_DEF = .false.
+      
+      IF (PRESENT(MASK)) MASK_DEF = MASK
+      IF (PRESENT(BACK)) BACK_DEF = BACK
+      
+      RES = MAXLOC(ARRAY%R, MASK = MASK_DEF)
+
+  END FUNCTION ONUMM4N4_MAXLOC_R2
+  
+  FUNCTION ONUMM4N4_MAXLOC_R3(ARRAY, MASK, BACK) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:,:)
+      LOGICAL, INTENT(IN), OPTIONAL :: MASK(SIZE(ARRAY,1),SIZE(ARRAY,2),SIZE(ARRAY,3))
+      LOGICAL, INTENT(IN), OPTIONAL :: BACK  ! Search from the back
+      
+      INTEGER :: RES( 3)
+      
+      LOGICAL :: MASK_DEF(SIZE(ARRAY,1),SIZE(ARRAY,2),SIZE(ARRAY,3))
+      LOGICAL :: BACK_DEF
+      
+      
+      ! Assign defaults.
+      MASK_DEF = .true.
+      BACK_DEF = .false.
+      
+      IF (PRESENT(MASK)) MASK_DEF = MASK
+      IF (PRESENT(BACK)) BACK_DEF = BACK
+      
+      RES = MAXLOC(ARRAY%R, MASK = MASK_DEF)
+
+  END FUNCTION ONUMM4N4_MAXLOC_R3
+
+  FUNCTION ONUMM4N4_MAXLOC_R4(ARRAY, MASK, BACK) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:,:,:)
+      LOGICAL, INTENT(IN), OPTIONAL :: MASK(SIZE(ARRAY,1),SIZE(ARRAY,2),SIZE(ARRAY,3),SIZE(ARRAY,4))
+      LOGICAL, INTENT(IN), OPTIONAL :: BACK  ! Search from the back
+      
+      INTEGER :: RES( 4)
+      
+      LOGICAL :: MASK_DEF(SIZE(ARRAY,1),SIZE(ARRAY,2),SIZE(ARRAY,3),SIZE(ARRAY,4))
+      LOGICAL :: BACK_DEF
+      
+      ! Assign defaults.
+      MASK_DEF = .true.
+      BACK_DEF = .false.
+      
+      
+      IF (PRESENT(MASK)) MASK_DEF = MASK
+      IF (PRESENT(BACK)) BACK_DEF = BACK
+      
+
+      RES = MAXLOC(ARRAY%R, MASK = MASK_DEF)
+
+  END FUNCTION ONUMM4N4_MAXLOC_R4
+
+  
+  FUNCTION ONUMM4N4_MAXVAL_R1(ARRAY) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:)
+      INTEGER :: IDX( 1)
+      TYPE(ONUMM4N4) :: RES
+      
+
+      IDX = MAXLOC(ARRAY)
+      RES = ARRAY(IDX(1))
+
+  END FUNCTION ONUMM4N4_MAXVAL_R1
+
+  FUNCTION ONUMM4N4_MAXVAL_R2(ARRAY) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:)
+      INTEGER :: IDX( 2)
+      TYPE(ONUMM4N4) :: RES
+      
+
+      IDX = MAXLOC(ARRAY)
+      RES = ARRAY(IDX(1),IDX(2))
+
+  END FUNCTION ONUMM4N4_MAXVAL_R2
+
+  FUNCTION ONUMM4N4_MAXVAL_R3(ARRAY) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:,:)
+      INTEGER :: IDX( 3)
+      TYPE(ONUMM4N4) :: RES
+      
+
+      IDX = MAXLOC(ARRAY)
+      RES = ARRAY(IDX(1),IDX(2),IDX(3))
+
+  END FUNCTION ONUMM4N4_MAXVAL_R3
+
+  FUNCTION ONUMM4N4_MAXVAL_R4(ARRAY) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:,:,:)
+      INTEGER :: IDX( 4)
+      TYPE(ONUMM4N4) :: RES
+      
+
+      IDX = MAXLOC(ARRAY)
+      RES = ARRAY(IDX(1),IDX(2),IDX(3),IDX(4))
+
+  END FUNCTION ONUMM4N4_MAXVAL_R4
+
+
+    FUNCTION ONUMM4N4_MINLOC_R1(ARRAY, MASK, BACK) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:)
+      LOGICAL, INTENT(IN), OPTIONAL :: MASK(SIZE(ARRAY,1))
+      LOGICAL, INTENT(IN), OPTIONAL :: BACK  ! Search from the back
+      
+      INTEGER :: RES( 1)
+      
+      LOGICAL :: MASK_DEF(SIZE(ARRAY,1))
+      LOGICAL :: BACK_DEF
+      
+      ! Assign defaults.
+      MASK_DEF = .true.
+      BACK_DEF = .false.
+      
+      IF (PRESENT(MASK)) MASK_DEF = MASK
+      IF (PRESENT(BACK)) BACK_DEF = BACK
+
+      RES = MINLOC(ARRAY%R, MASK = MASK_DEF)
+
+  END FUNCTION ONUMM4N4_MINLOC_R1
+
+  FUNCTION ONUMM4N4_MINLOC_R2(ARRAY, MASK, BACK) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:)
+      LOGICAL, INTENT(IN), OPTIONAL :: MASK(SIZE(ARRAY,1),SIZE(ARRAY,2))
+      LOGICAL, INTENT(IN), OPTIONAL :: BACK  ! Search from the back
+      
+      INTEGER :: RES( 2)
+      
+      LOGICAL :: MASK_DEF(SIZE(ARRAY,1),SIZE(ARRAY,2))
+      LOGICAL :: BACK_DEF
+      
+      ! Assign defaults.
+      MASK_DEF = .true.
+      BACK_DEF = .false.
+      
+      IF (PRESENT(MASK)) MASK_DEF = MASK
+      IF (PRESENT(BACK)) BACK_DEF = BACK
+      
+      RES = MINLOC(ARRAY%R, MASK = MASK_DEF)
+
+  END FUNCTION ONUMM4N4_MINLOC_R2
+  
+  FUNCTION ONUMM4N4_MINLOC_R3(ARRAY, MASK, BACK) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:,:)
+      LOGICAL, INTENT(IN), OPTIONAL :: MASK(SIZE(ARRAY,1),SIZE(ARRAY,2),SIZE(ARRAY,3))
+      LOGICAL, INTENT(IN), OPTIONAL :: BACK  ! Search from the back
+      
+      INTEGER :: RES( 3)
+      
+      LOGICAL :: MASK_DEF(SIZE(ARRAY,1),SIZE(ARRAY,2),SIZE(ARRAY,3))
+      LOGICAL :: BACK_DEF
+      
+      
+      ! Assign defaults.
+      MASK_DEF = .true.
+      BACK_DEF = .false.
+      
+      IF (PRESENT(MASK)) MASK_DEF = MASK
+      IF (PRESENT(BACK)) BACK_DEF = BACK
+      
+      RES = MINLOC(ARRAY%R, MASK = MASK_DEF)
+
+  END FUNCTION ONUMM4N4_MINLOC_R3
+
+  FUNCTION ONUMM4N4_MINLOC_R4(ARRAY, MASK, BACK) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:,:,:)
+      LOGICAL, INTENT(IN), OPTIONAL :: MASK(SIZE(ARRAY,1),SIZE(ARRAY,2),SIZE(ARRAY,3),SIZE(ARRAY,4))
+      LOGICAL, INTENT(IN), OPTIONAL :: BACK  ! Search from the back
+      
+      INTEGER :: RES( 4)
+      
+      LOGICAL :: MASK_DEF(SIZE(ARRAY,1),SIZE(ARRAY,2),SIZE(ARRAY,3),SIZE(ARRAY,4))
+      LOGICAL :: BACK_DEF
+      
+      ! Assign defaults.
+      MASK_DEF = .true.
+      BACK_DEF = .false.
+      
+      
+      IF (PRESENT(MASK)) MASK_DEF = MASK
+      IF (PRESENT(BACK)) BACK_DEF = BACK
+      
+
+      RES = MINLOC(ARRAY%R, MASK = MASK_DEF)
+
+  END FUNCTION ONUMM4N4_MINLOC_R4
+
+
+
+  FUNCTION ONUMM4N4_MINVAL_R1(ARRAY) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:)
+      INTEGER :: IDX( 1)
+      TYPE(ONUMM4N4) :: RES
+      
+
+      IDX = MINLOC(ARRAY)
+      RES = ARRAY(IDX(1))
+
+  END FUNCTION ONUMM4N4_MINVAL_R1
+
+  FUNCTION ONUMM4N4_MINVAL_R2(ARRAY) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:)
+      INTEGER :: IDX( 2)
+      TYPE(ONUMM4N4) :: RES
+      
+
+      IDX = MINLOC(ARRAY)
+      RES = ARRAY(IDX(1),IDX(2))
+
+  END FUNCTION ONUMM4N4_MINVAL_R2
+
+  FUNCTION ONUMM4N4_MINVAL_R3(ARRAY) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:,:)
+      INTEGER :: IDX( 3)
+      TYPE(ONUMM4N4) :: RES
+      
+
+      IDX = MINLOC(ARRAY)
+      RES = ARRAY(IDX(1),IDX(2),IDX(3))
+
+  END FUNCTION ONUMM4N4_MINVAL_R3
+
+  FUNCTION ONUMM4N4_MINVAL_R4(ARRAY) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:,:,:)
+      INTEGER :: IDX( 4)
+      TYPE(ONUMM4N4) :: RES
+      
+
+      IDX = MINLOC(ARRAY)
+      RES = ARRAY(IDX(1),IDX(2),IDX(3),IDX(4))
+
+  END FUNCTION ONUMM4N4_MINVAL_R4
+
+  ! FUNCTION ONUMM4N4_MAXLOC_DIM_R1(ARRAY, DIM, MASK, KIND, BACK) RESULT(RES)
+  !     IMPLICIT NONE
+  !     TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:)
+  !     INTEGER, INTENT(IN) :: DIM  
+  !     LOGICAL, INTENT(IN), OPTIONAL :: MASK(SIZE(ARRAY,1))
+  !     INTEGER, INTENT(IN), OPTIONAL :: KIND  ! Not used in this case.
+  !     LOGICAL, INTENT(IN), OPTIONAL :: BACK  ! Search from the back
+      
+  !     INTEGER :: RES( 1)
+      
+  !     LOGICAL :: MASK_DEF(SIZE(ARRAY,1))
+  !     LOGICAL :: BACK_DEF
+      
+  !     ! Assign defaults.
+  !     MASK_DEF = .true.
+  !     BACK_DEF = .false.
+      
+  !     IF (PRESENT(MASK)) MASK_DEF = MASK
+  !     IF (PRESENT(BACK)) BACK_DEF = BACK
+
+  !     RES = MAXLOC(ARRAY%R, MASK = MASK_DEF)
+
+  ! END FUNCTION ONUMM4N4_MAXLOC_DIM_R1
+
+  ! FUNCTION ONUMM4N4_MAXLOC_DIM_R2(ARRAY, DIM, MASK, KIND, BACK) RESULT(RES)
+  !     IMPLICIT NONE
+  !     TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:)
+  !     INTEGER, INTENT(IN) :: DIM  
+  !     LOGICAL, INTENT(IN), OPTIONAL :: MASK(SIZE(ARRAY,1),SIZE(ARRAY,2))
+  !     INTEGER, INTENT(IN), OPTIONAL :: KIND  ! Not used in this case.
+  !     LOGICAL, INTENT(IN), OPTIONAL :: BACK  ! Search from the back
+      
+  !     INTEGER :: RES( 2)
+      
+  !     LOGICAL :: MASK_DEF(SIZE(ARRAY,1),SIZE(ARRAY,2))
+  !     LOGICAL :: BACK_DEF
+      
+  !     ! Assign defaults.
+  !     MASK_DEF = .true.
+  !     BACK_DEF = .false.
+      
+  !     IF (PRESENT(MASK)) MASK_DEF = MASK
+  !     IF (PRESENT(BACK)) BACK_DEF = BACK
+      
+  !     RES = MAXLOC(ARRAY%R, DIM, MASK = MASK_DEF)
+
+  ! END FUNCTION ONUMM4N4_MAXLOC_DIM_R2
+  
+  ! FUNCTION ONUMM4N4_MAXLOC_DIM_R3(ARRAY, DIM, MASK, KIND, BACK) RESULT(RES)
+  !     IMPLICIT NONE
+  !     TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:,:)
+  !     INTEGER, INTENT(IN) :: DIM  
+  !     LOGICAL, INTENT(IN), OPTIONAL :: MASK(SIZE(ARRAY,1),SIZE(ARRAY,2),SIZE(ARRAY,3))
+  !     INTEGER, INTENT(IN), OPTIONAL :: KIND  ! Not used in this case.
+  !     LOGICAL, INTENT(IN), OPTIONAL :: BACK  ! Search from the back
+      
+  !     INTEGER :: RES( 3)
+      
+  !     LOGICAL :: MASK_DEF(SIZE(ARRAY,1),SIZE(ARRAY,2),SIZE(ARRAY,3))
+  !     LOGICAL :: BACK_DEF
+      
+      
+  !     ! Assign defaults.
+  !     MASK_DEF = .true.
+  !     BACK_DEF = .false.
+      
+  !     IF (PRESENT(MASK)) MASK_DEF = MASK
+  !     IF (PRESENT(BACK)) BACK_DEF = BACK
+      
+  !     RES = MAXLOC(ARRAY%R, DIM, MASK = MASK_DEF)
+
+  ! END FUNCTION ONUMM4N4_MAXLOC_DIM_R3
+
+  ! FUNCTION ONUMM4N4_MAXLOC_DIM_R4(ARRAY, DIM, MASK, KIND, BACK) RESULT(RES)
+  !     IMPLICIT NONE
+  !     TYPE(ONUMM4N4), INTENT(IN) :: ARRAY(:,:,:,:)
+  !     INTEGER, INTENT(IN) :: DIM  
+  !     LOGICAL, INTENT(IN), OPTIONAL :: MASK(SIZE(ARRAY,1),SIZE(ARRAY,2),SIZE(ARRAY,3),SIZE(ARRAY,4))
+  !     INTEGER, INTENT(IN), OPTIONAL :: KIND  ! Not used in this case, just for compatibility.
+  !     LOGICAL, INTENT(IN), OPTIONAL :: BACK  ! Search from the back
+      
+  !     INTEGER :: RES( 4)
+      
+  !     LOGICAL :: MASK_DEF(SIZE(ARRAY,1),SIZE(ARRAY,2),SIZE(ARRAY,3),SIZE(ARRAY,4))
+  !     LOGICAL :: BACK_DEF
+      
+  !     ! Assign defaults.
+  !     MASK_DEF = .true.
+  !     BACK_DEF = .false.
+      
+      
+  !     IF (PRESENT(MASK)) MASK_DEF = MASK
+  !     IF (PRESENT(BACK)) BACK_DEF = BACK
+      
+
+  !     RES = MAXLOC(ARRAY%R, DIM, MASK = MASK_DEF)
+
+  ! END FUNCTION ONUMM4N4_MAXLOC_DIM_R4
+
+  ELEMENTAL FUNCTION ONUMM4N4_TAN(X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    REAL(DP) :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    
+    DER0 = TAN(X%R)
+    DER1 = TAN(X%R)**2 + 1
+    DER2 = 2*(TAN(X%R)**2 + 1)*TAN(X%R)
+    DER3 = 2*(TAN(X%R)**2 + 1)*(3*TAN(X%R)**2 + 1)
+    DER4 = 8*(TAN(X%R)**2 + 1)*(3*TAN(X%R)**2 + 2)*TAN(X%R)
+
+    RES = FEVAL(X,DER0,DER1,DER2,DER3,DER4)
+
+  END FUNCTION ONUMM4N4_TAN
+
+  ELEMENTAL FUNCTION ONUMM4N4_COS(X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    REAL(DP) :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    
+    DER0 = COS(X%R)
+    DER1 = -SIN(X%R)
+    DER2 = -COS(X%R)
+    DER3 = SIN(X%R)
+    DER4 = COS(X%R)
+
+    RES = FEVAL(X,DER0,DER1,DER2,DER3,DER4)
+
+  END FUNCTION ONUMM4N4_COS
+
+  ELEMENTAL FUNCTION ONUMM4N4_SIN(X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    REAL(DP) :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    
+    DER0 = SIN(X%R)
+    DER1 = COS(X%R)
+    DER2 = -SIN(X%R)
+    DER3 = -COS(X%R)
+    DER4 = SIN(X%R)
+
+    RES = FEVAL(X,DER0,DER1,DER2,DER3,DER4)
+
+  END FUNCTION ONUMM4N4_SIN
+
+  ELEMENTAL FUNCTION ONUMM4N4_ATAN(X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    REAL(DP) :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    
+    DER0 = ATAN(X%R)
+    DER1 = 1D0/(X%R**2 + 1)
+    DER2 = -2*X%R/(X%R**2 + 1)**2
+    DER3 = 2*(4*X%R**2/(X%R**2 + 1) - 1)/(X%R**2 + 1)**2
+    DER4 = 24*X%R*(-2*X%R**2/(X%R**2 + 1) + 1)/(X%R**2 + 1)**3
+
+    RES = FEVAL(X,DER0,DER1,DER2,DER3,DER4)
+
+  END FUNCTION ONUMM4N4_ATAN
+
+  ELEMENTAL FUNCTION ONUMM4N4_ACOS(X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    REAL(DP) :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    
+    DER0 = ACOS(X%R)
+    DER1 = -1/SQRT(1 - X%R**2)
+    DER2 = -X%R/(1 - X%R**2)**(3.0D0/2.0D0)
+    DER3 = -(3*X%R**2/(1 - X%R**2) + 1)/(1 - X%R**2)**(3.0D0/2.0D0)
+    DER4 = -3*X%R*(5*X%R**2/(1 - X%R**2) + 3)/(1 - X%R**2)**(5.0D0/2.0D0)
+
+    RES = FEVAL(X,DER0,DER1,DER2,DER3,DER4)
+
+  END FUNCTION ONUMM4N4_ACOS
+
+  ELEMENTAL FUNCTION ONUMM4N4_ASIN(X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    REAL(DP) :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    
+    DER0 = ASIN(X%R)
+    DER1 = 1/SQRT(1 - X%R**2)
+    DER2 = X%R/(1 - X%R**2)**(3.0D0/2.0D0)
+    DER3 = (3*X%R**2/(1 - X%R**2) + 1)/(1 - X%R**2)**(3.0D0/2.0D0)
+    DER4 = 3*X%R*(5*X%R**2/(1 - X%R**2) + 3)/(1 - X%R**2)**(5.0D0/2.0D0)
+
+    RES = FEVAL(X,DER0,DER1,DER2,DER3,DER4)
+
+  END FUNCTION ONUMM4N4_ASIN
+
+  ELEMENTAL FUNCTION ONUMM4N4_TANH(X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    REAL(DP) :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    
+    DER0 = TANH(X%R)
+    DER1 = 1 - TANH(X%R)**2
+    DER2 = 2*(TANH(X%R)**2 - 1)*TANH(X%R)
+    DER3 = -2*(TANH(X%R)**2 - 1)*(3*TANH(X%R)**2 - 1)
+    DER4 = 8*(TANH(X%R)**2 - 1)*(3*TANH(X%R)**2 - 2)*TANH(X%R)
+
+    RES = FEVAL(X,DER0,DER1,DER2,DER3,DER4)
+
+  END FUNCTION ONUMM4N4_TANH
+
+  ELEMENTAL FUNCTION ONUMM4N4_COSH(X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    REAL(DP) :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    
+    DER0 = COSH(X%R)
+    DER1 = SINH(X%R)
+    DER2 = COSH(X%R)
+    DER3 = SINH(X%R)
+    DER4 = COSH(X%R)
+
+    RES = FEVAL(X,DER0,DER1,DER2,DER3,DER4)
+
+  END FUNCTION ONUMM4N4_COSH
+
+  ELEMENTAL FUNCTION ONUMM4N4_SINH(X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    REAL(DP) :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    
+    DER0 = SINH(X%R)
+    DER1 = COSH(X%R)
+    DER2 = SINH(X%R)
+    DER3 = COSH(X%R)
+    DER4 = SINH(X%R)
+
+    RES = FEVAL(X,DER0,DER1,DER2,DER3,DER4)
+
+  END FUNCTION ONUMM4N4_SINH
+
+  ELEMENTAL FUNCTION ONUMM4N4_EXP(X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    REAL(DP) :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    
+    DER0 = EXP(X%R)
+    DER1 = EXP(X%R)
+    DER2 = EXP(X%R)
+    DER3 = EXP(X%R)
+    DER4 = EXP(X%R)
+
+    RES = FEVAL(X,DER0,DER1,DER2,DER3,DER4)
+
+  END FUNCTION ONUMM4N4_EXP
+
+  ELEMENTAL FUNCTION ONUMM4N4_LOG(X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    REAL(DP) :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    
+    DER0 = LOG(X%R)
+    DER1 = 1D0/X%R
+    DER2 = -1/X%R**2
+    DER3 = 2/X%R**3
+    DER4 = -6/X%R**4
+
+    RES = FEVAL(X,DER0,DER1,DER2,DER3,DER4)
+
+  END FUNCTION ONUMM4N4_LOG
+
+  ELEMENTAL FUNCTION ONUMM4N4_POW_OR(X,E) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    REAL(DP), INTENT(IN) :: E
+    REAL(DP) :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    
+    DER0=0.0d0
+    DER1=0.0d0
+    DER2=0.0d0
+    DER3=0.0d0
+    DER4=0.0d0
+    
+    DER0 = X%R**E
+    IF ((E-0)/=0.0d0) THEN
+      DER1 = E*X%R**(E - 1)
+      IF ((E-1)/=0.0d0) THEN
+        DER2 = E*X%R**(E - 2)*(E - 1)
+        IF ((E-2)/=0.0d0) THEN
+          DER3 = E*X%R**(E - 3)*(E**2 - 3*E + 2)
+          IF ((E-3)/=0.0d0) THEN
+            DER4 = E*X%R**(E - 4)*(E**3 - 6*E**2 + 11*E - 6)
+          END IF
+        END IF
+      END IF
+    END IF
+
+    RES = FEVAL(X,DER0,DER1,DER2,DER3,DER4)
+
+  END FUNCTION ONUMM4N4_POW_OR
+
+  ELEMENTAL FUNCTION ONUMM4N4_POW_RO(E,X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    REAL(DP), INTENT(IN) :: E
+    REAL(DP) :: DER0,DER1,DER2,DER3,DER4
+    TYPE(ONUMM4N4) :: RES
+    
+    
+    DER0 = E**X%R
+    DER1 = E**X%R*LOG(E)
+    DER2 = E**X%R*LOG(E)**2
+    DER3 = E**X%R*LOG(E)**3
+    DER4 = E**X%R*LOG(E)**4
+
+    RES = FEVAL(X,DER0,DER1,DER2,DER3,DER4)
+
+  END FUNCTION ONUMM4N4_POW_RO
+
+  ELEMENTAL FUNCTION ONUMM4N4_POW_I8O(E,X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    INTEGER(8), INTENT(IN) :: E
+    TYPE(ONUMM4N4) :: RES
+    
+    RES = ONUMM4N4_POW_RO(REAL(E,8),X)
+    
+  END FUNCTION 
+
+  ELEMENTAL FUNCTION ONUMM4N4_POW_I4O(E,X) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    INTEGER(4), INTENT(IN) :: E
+    TYPE(ONUMM4N4) :: RES
+    
+    RES = ONUMM4N4_POW_RO(REAL(E,8),X)
+    
+  END FUNCTION 
+
+  ELEMENTAL FUNCTION ONUMM4N4_POW_OI8(X,E) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    INTEGER(8), INTENT(IN) :: E
+    TYPE(ONUMM4N4) :: RES
+    
+    RES = ONUMM4N4_POW_OR(X,REAL(E,8))
+    
+  END FUNCTION 
+
+  ELEMENTAL FUNCTION ONUMM4N4_POW_OI4(X,E) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X
+    INTEGER(4), INTENT(IN) :: E
+    TYPE(ONUMM4N4) :: RES
+    
+    RES = ONUMM4N4_POW_OR(X,REAL(E,8))
+    
+  END FUNCTION 
+
+  ELEMENTAL FUNCTION ONUMM4N4_F2EVAL(X,Y,DER0_0,DER1_0,DER1_1, &
+                               DER2_0,DER2_1,DER2_2,DER3_0, &
+                               DER3_1,DER3_2,DER3_3,DER4_0, &
+                               DER4_1,DER4_2,DER4_3,DER4_4)&
+    RESULT(RES)
+    IMPLICIT NONE
+    !  Definitions
+    REAL(DP) :: COEF
+    TYPE(ONUMM4N4), INTENT(IN)  :: X,Y
+    REAL(DP), INTENT(IN)  :: DER0_0,DER1_0,DER1_1, &
+                             DER2_0,DER2_1,DER2_2,DER3_0, &
+                             DER3_1,DER3_2,DER3_3,DER4_0, &
+                             DER4_1,DER4_2,DER4_3,DER4_4
+    TYPE(ONUMM4N4) :: RES
+    TYPE(ONUMM4N4) :: DX, DY
+
+    COEF   = 0.0_DP
+    DX     = X
+    DY     = Y
+
+    !  Set real part of deltas zero.
+    DX%R = 0.0_dp
+    DY%R = 0.0_dp
+
+    ! Set real part
+    RES = DER0_0
+
+    ! Set order 1
+    COEF = DER1_0 / 1.0_DP
+    RES = RES + COEF*DX
+
+    COEF = DER1_1 / 1.0_DP
+    RES = RES + COEF*DY
+
+    
+
+    ! Set order 2
+    COEF = DER2_0 / 1.0_DP
+    RES = RES + COEF*DX*DX
+
+    COEF = DER2_1 / 1.0_DP
+    RES = RES + COEF*DX*DY
+
+    COEF = DER2_2 / 1.0_DP
+    RES = RES + COEF*DY*DY
+
+    
+
+    ! Set order 3
+    COEF = DER3_0 / 1.0_DP
+    RES = RES + COEF*DX*DX*DX
+
+    COEF = DER3_1 / 1.0_DP
+    RES = RES + COEF*DX*DX*DY
+
+    COEF = DER3_2 / 1.0_DP
+    RES = RES + COEF*DX*DY*DY
+
+    COEF = DER3_3 / 1.0_DP
+    RES = RES + COEF*DY*DY*DY
+
+    
+
+    ! Set order 4
+    COEF = DER4_0 / 1.0_DP
+    RES = RES + COEF*DX*DX*DX*DX
+
+    COEF = DER4_1 / 1.0_DP
+    RES = RES + COEF*DX*DX*DX*DY
+
+    COEF = DER4_2 / 1.0_DP
+    RES = RES + COEF*DX*DX*DY*DY
+
+    COEF = DER4_3 / 1.0_DP
+    RES = RES + COEF*DX*DY*DY*DY
+
+    COEF = DER4_4 / 1.0_DP
+    RES = RES + COEF*DY*DY*DY*DY
+
+    
+
+  END FUNCTION ONUMM4N4_F2EVAL
+
+
+  ELEMENTAL FUNCTION ONUMM4N4_POW_OO(X,Y) RESULT(RES)
+
+    TYPE(ONUMM4N4), INTENT(IN) :: X, Y
+    REAL(DP) :: DER0_0,DER1_0,DER1_1,DER2_0,DER2_1,DER2_2,DER3_0,DER3_1,DER3_2,DER3_3,DER4_0,DER4_1,DER4_2,DER4_3,DER4_4
+    TYPE(ONUMM4N4) :: RES
+    
+    DER0_0 = X%R**Y%R
+    DER1_0 = X%R**Y%R*Y%R/X%R
+    DER1_1 = X%R**Y%R*LOG(X%R)
+    DER2_0 = X%R**Y%R*Y%R*(Y%R - 1)/X%R**2
+    DER2_1 = X%R**Y%R*(Y%R*LOG(X%R) + 1)/X%R
+    DER2_2 = X%R**Y%R*LOG(X%R)**2
+    DER3_0 = X%R**Y%R*Y%R*(Y%R**2 - 3*Y%R + 2)/X%R**3
+    DER3_1 = X%R**Y%R*(Y%R**2*LOG(X%R) - Y%R*LOG(X%R) + 2*Y%R - 1)/X%R**2
+    DER3_2 = X%R**Y%R*(Y%R*LOG(X%R) + 2)*LOG(X%R)/X%R
+    DER3_3 = X%R**Y%R*LOG(X%R)**3
+    DER4_0 = X%R**Y%R*Y%R*(Y%R**3 - 6*Y%R**2 + 11*Y%R - 6)/X%R**4
+    DER4_1 = X%R**Y%R*(Y%R**3*LOG(X%R) - 3*Y%R**2*LOG(X%R) + 3*Y%R**2 + 2*Y% &
+      R*LOG(X%R) - 6*Y%R + 2)/X%R**3
+    DER4_2 = X%R**Y%R*(Y%R**2*LOG(X%R)**2 - Y%R*LOG(X%R)**2 + 4*Y%R*LOG(X%R &
+      ) - 2*LOG(X%R) + 2)/X%R**2
+    DER4_3 = X%R**Y%R*(Y%R*LOG(X%R) + 3)*LOG(X%R)**2/X%R
+    DER4_4 = X%R**Y%R*LOG(X%R)**4
+
+    RES = F2EVAL(X,Y,DER0_0,DER1_0,DER1_1,DER2_0,DER2_1,DER2_2,DER3_0,DER3_1,DER3_2,DER3_3,DER4_0,DER4_1,DER4_2,DER4_3,DER4_4)
+
+  END FUNCTION ONUMM4N4_POW_OO
+
+
+  FUNCTION ONUMM4N4_INV2X2(A,det)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4) , INTENT(IN) :: A(2,2) 
+    TYPE(ONUMM4N4) , INTENT(IN), OPTIONAL :: det
+    REAL(DP) :: detCalc
+    TYPE(ONUMM4N4) :: RES(SIZE(A,1),SIZE(A,2)) 
+
+    IF (PRESENT(det)) THEN
+      detCalc=det%R
+    ELSE
+      detCalc=det2x2(A%R)
+    END IF
+
+    ! Get real part 
+    RES%R=INV2X2(A%R,detCalc)
+
+    ! Order 1
+    RES%E1=-MATMUL(RES%R,(MATMUL(A%E1,RES%R)))
+    RES%E2=-MATMUL(RES%R,(MATMUL(A%E2,RES%R)))
+    RES%E3=-MATMUL(RES%R,(MATMUL(A%E3,RES%R)))
+    RES%E4=-MATMUL(RES%R,(MATMUL(A%E4,RES%R)))
+
+    ! Order 2
+    RES%E11=-MATMUL(RES%R,(MATMUL(A%E11,RES%R)+MATMUL(A%E1,RES%E1)))
+    RES%E12=-MATMUL(RES%R,(MATMUL(A%E12,RES%R)+MATMUL(A%E1,RES%E2)+&
+           MATMUL(A%E2,RES%E1)))
+    RES%E22=-MATMUL(RES%R,(MATMUL(A%E22,RES%R)+MATMUL(A%E2,RES%E2)))
+    RES%E13=-MATMUL(RES%R,(MATMUL(A%E13,RES%R)+MATMUL(A%E1,RES%E3)+&
+           MATMUL(A%E3,RES%E1)))
+    RES%E23=-MATMUL(RES%R,(MATMUL(A%E23,RES%R)+MATMUL(A%E2,RES%E3)+&
+           MATMUL(A%E3,RES%E2)))
+    RES%E33=-MATMUL(RES%R,(MATMUL(A%E33,RES%R)+MATMUL(A%E3,RES%E3)))
+    RES%E14=-MATMUL(RES%R,(MATMUL(A%E14,RES%R)+MATMUL(A%E1,RES%E4)+&
+           MATMUL(A%E4,RES%E1)))
+    RES%E24=-MATMUL(RES%R,(MATMUL(A%E24,RES%R)+MATMUL(A%E2,RES%E4)+&
+           MATMUL(A%E4,RES%E2)))
+    RES%E34=-MATMUL(RES%R,(MATMUL(A%E34,RES%R)+MATMUL(A%E3,RES%E4)+&
+           MATMUL(A%E4,RES%E3)))
+    RES%E44=-MATMUL(RES%R,(MATMUL(A%E44,RES%R)+MATMUL(A%E4,RES%E4)))
+
+    ! Order 3
+    RES%E111=-MATMUL(RES%R,(MATMUL(A%E111,RES%R)+MATMUL(A%E1,RES%E11)+&
+            MATMUL(A%E11,RES%E1)))
+    RES%E112=-MATMUL(RES%R,(MATMUL(A%E112,RES%R)+MATMUL(A%E1,RES%E12)+&
+            MATMUL(A%E12,RES%E1)+MATMUL(A%E2,RES%E11)+MATMUL(A%E11,RES%E2)))
+    RES%E122=-MATMUL(RES%R,(MATMUL(A%E122,RES%R)+MATMUL(A%E1,RES%E22)+&
+            MATMUL(A%E22,RES%E1)+MATMUL(A%E2,RES%E12)+MATMUL(A%E12,RES%E2)))
+    RES%E222=-MATMUL(RES%R,(MATMUL(A%E222,RES%R)+MATMUL(A%E2,RES%E22)+&
+            MATMUL(A%E22,RES%E2)))
+    RES%E113=-MATMUL(RES%R,(MATMUL(A%E113,RES%R)+MATMUL(A%E1,RES%E13)+&
+            MATMUL(A%E13,RES%E1)+MATMUL(A%E3,RES%E11)+MATMUL(A%E11,RES%E3)))
+    RES%E123=-MATMUL(RES%R,(MATMUL(A%E123,RES%R)+MATMUL(A%E1,RES%E23)+&
+            MATMUL(A%E23,RES%E1)+MATMUL(A%E2,RES%E13)+MATMUL(A%E13,RES%E2)+&
+            MATMUL(A%E3,RES%E12)+MATMUL(A%E12,RES%E3)))
+    RES%E133=-MATMUL(RES%R,(MATMUL(A%E133,RES%R)+MATMUL(A%E1,RES%E33)+&
+            MATMUL(A%E33,RES%E1)+MATMUL(A%E3,RES%E13)+MATMUL(A%E13,RES%E3)))
+    RES%E223=-MATMUL(RES%R,(MATMUL(A%E223,RES%R)+MATMUL(A%E2,RES%E23)+&
+            MATMUL(A%E23,RES%E2)+MATMUL(A%E3,RES%E22)+MATMUL(A%E22,RES%E3)))
+    RES%E233=-MATMUL(RES%R,(MATMUL(A%E233,RES%R)+MATMUL(A%E2,RES%E33)+&
+            MATMUL(A%E33,RES%E2)+MATMUL(A%E3,RES%E23)+MATMUL(A%E23,RES%E3)))
+    RES%E333=-MATMUL(RES%R,(MATMUL(A%E333,RES%R)+MATMUL(A%E3,RES%E33)+&
+            MATMUL(A%E33,RES%E3)))
+    RES%E114=-MATMUL(RES%R,(MATMUL(A%E114,RES%R)+MATMUL(A%E1,RES%E14)+&
+            MATMUL(A%E14,RES%E1)+MATMUL(A%E4,RES%E11)+MATMUL(A%E11,RES%E4)))
+    RES%E124=-MATMUL(RES%R,(MATMUL(A%E124,RES%R)+MATMUL(A%E1,RES%E24)+&
+            MATMUL(A%E24,RES%E1)+MATMUL(A%E2,RES%E14)+MATMUL(A%E14,RES%E2)+&
+            MATMUL(A%E4,RES%E12)+MATMUL(A%E12,RES%E4)))
+    RES%E134=-MATMUL(RES%R,(MATMUL(A%E134,RES%R)+MATMUL(A%E1,RES%E34)+&
+            MATMUL(A%E34,RES%E1)+MATMUL(A%E3,RES%E14)+MATMUL(A%E14,RES%E3)+&
+            MATMUL(A%E4,RES%E13)+MATMUL(A%E13,RES%E4)))
+    RES%E144=-MATMUL(RES%R,(MATMUL(A%E144,RES%R)+MATMUL(A%E1,RES%E44)+&
+            MATMUL(A%E44,RES%E1)+MATMUL(A%E4,RES%E14)+MATMUL(A%E14,RES%E4)))
+    RES%E224=-MATMUL(RES%R,(MATMUL(A%E224,RES%R)+MATMUL(A%E2,RES%E24)+&
+            MATMUL(A%E24,RES%E2)+MATMUL(A%E4,RES%E22)+MATMUL(A%E22,RES%E4)))
+    RES%E234=-MATMUL(RES%R,(MATMUL(A%E234,RES%R)+MATMUL(A%E2,RES%E34)+&
+            MATMUL(A%E34,RES%E2)+MATMUL(A%E3,RES%E24)+MATMUL(A%E24,RES%E3)+&
+            MATMUL(A%E4,RES%E23)+MATMUL(A%E23,RES%E4)))
+    RES%E244=-MATMUL(RES%R,(MATMUL(A%E244,RES%R)+MATMUL(A%E2,RES%E44)+&
+            MATMUL(A%E44,RES%E2)+MATMUL(A%E4,RES%E24)+MATMUL(A%E24,RES%E4)))
+    RES%E334=-MATMUL(RES%R,(MATMUL(A%E334,RES%R)+MATMUL(A%E3,RES%E34)+&
+            MATMUL(A%E34,RES%E3)+MATMUL(A%E4,RES%E33)+MATMUL(A%E33,RES%E4)))
+    RES%E344=-MATMUL(RES%R,(MATMUL(A%E344,RES%R)+MATMUL(A%E3,RES%E44)+&
+            MATMUL(A%E44,RES%E3)+MATMUL(A%E4,RES%E34)+MATMUL(A%E34,RES%E4)))
+    RES%E444=-MATMUL(RES%R,(MATMUL(A%E444,RES%R)+MATMUL(A%E4,RES%E44)+&
+            MATMUL(A%E44,RES%E4)))
+
+    ! Order 4
+    RES%E1111=-MATMUL(RES%R,(MATMUL(A%E1111,RES%R)+MATMUL(A%E1,RES%E111)+&
+             MATMUL(A%E111,RES%E1)+MATMUL(A%E11,RES%E11)))
+    RES%E1112=-MATMUL(RES%R,(MATMUL(A%E1112,RES%R)+MATMUL(A%E1,RES%E112)+&
+             MATMUL(A%E112,RES%E1)+MATMUL(A%E2,RES%E111)+MATMUL(A%E111,RES%E2)+&
+             MATMUL(A%E11,RES%E12)+MATMUL(A%E12,RES%E11)))
+    RES%E1122=-MATMUL(RES%R,(MATMUL(A%E1122,RES%R)+MATMUL(A%E1,RES%E122)+&
+             MATMUL(A%E122,RES%E1)+MATMUL(A%E2,RES%E112)+MATMUL(A%E112,RES%E2)+&
+             MATMUL(A%E11,RES%E22)+MATMUL(A%E12,RES%E12)+MATMUL(A%E22,RES%E11)))
+    RES%E1222=-MATMUL(RES%R,(MATMUL(A%E1222,RES%R)+MATMUL(A%E1,RES%E222)+&
+             MATMUL(A%E222,RES%E1)+MATMUL(A%E2,RES%E122)+MATMUL(A%E122,RES%E2)+&
+             MATMUL(A%E12,RES%E22)+MATMUL(A%E22,RES%E12)))
+    RES%E2222=-MATMUL(RES%R,(MATMUL(A%E2222,RES%R)+MATMUL(A%E2,RES%E222)+&
+             MATMUL(A%E222,RES%E2)+MATMUL(A%E22,RES%E22)))
+    RES%E1113=-MATMUL(RES%R,(MATMUL(A%E1113,RES%R)+MATMUL(A%E1,RES%E113)+&
+             MATMUL(A%E113,RES%E1)+MATMUL(A%E3,RES%E111)+MATMUL(A%E111,RES%E3)+&
+             MATMUL(A%E11,RES%E13)+MATMUL(A%E13,RES%E11)))
+    RES%E1123=-MATMUL(RES%R,(MATMUL(A%E1123,RES%R)+MATMUL(A%E1,RES%E123)+&
+             MATMUL(A%E123,RES%E1)+MATMUL(A%E2,RES%E113)+MATMUL(A%E113,RES%E2)+&
+             MATMUL(A%E3,RES%E112)+MATMUL(A%E112,RES%E3)+MATMUL(A%E11,RES%E23)+&
+             MATMUL(A%E12,RES%E13)+MATMUL(A%E13,RES%E12)+MATMUL(A%E23,RES%E11)))
+    RES%E1133=-MATMUL(RES%R,(MATMUL(A%E1133,RES%R)+MATMUL(A%E1,RES%E133)+&
+             MATMUL(A%E133,RES%E1)+MATMUL(A%E3,RES%E113)+MATMUL(A%E113,RES%E3)+&
+             MATMUL(A%E11,RES%E33)+MATMUL(A%E13,RES%E13)+MATMUL(A%E33,RES%E11)))
+    RES%E1223=-MATMUL(RES%R,(MATMUL(A%E1223,RES%R)+MATMUL(A%E1,RES%E223)+&
+             MATMUL(A%E223,RES%E1)+MATMUL(A%E2,RES%E123)+MATMUL(A%E123,RES%E2)+&
+             MATMUL(A%E3,RES%E122)+MATMUL(A%E122,RES%E3)+MATMUL(A%E12,RES%E23)+&
+             MATMUL(A%E22,RES%E13)+MATMUL(A%E13,RES%E22)+MATMUL(A%E23,RES%E12)))
+    RES%E1233=-MATMUL(RES%R,(MATMUL(A%E1233,RES%R)+MATMUL(A%E1,RES%E233)+&
+             MATMUL(A%E233,RES%E1)+MATMUL(A%E2,RES%E133)+MATMUL(A%E133,RES%E2)+&
+             MATMUL(A%E3,RES%E123)+MATMUL(A%E123,RES%E3)+MATMUL(A%E12,RES%E33)+&
+             MATMUL(A%E13,RES%E23)+MATMUL(A%E23,RES%E13)+MATMUL(A%E33,RES%E12)))
+    RES%E1333=-MATMUL(RES%R,(MATMUL(A%E1333,RES%R)+MATMUL(A%E1,RES%E333)+&
+             MATMUL(A%E333,RES%E1)+MATMUL(A%E3,RES%E133)+MATMUL(A%E133,RES%E3)+&
+             MATMUL(A%E13,RES%E33)+MATMUL(A%E33,RES%E13)))
+    RES%E2223=-MATMUL(RES%R,(MATMUL(A%E2223,RES%R)+MATMUL(A%E2,RES%E223)+&
+             MATMUL(A%E223,RES%E2)+MATMUL(A%E3,RES%E222)+MATMUL(A%E222,RES%E3)+&
+             MATMUL(A%E22,RES%E23)+MATMUL(A%E23,RES%E22)))
+    RES%E2233=-MATMUL(RES%R,(MATMUL(A%E2233,RES%R)+MATMUL(A%E2,RES%E233)+&
+             MATMUL(A%E233,RES%E2)+MATMUL(A%E3,RES%E223)+MATMUL(A%E223,RES%E3)+&
+             MATMUL(A%E22,RES%E33)+MATMUL(A%E23,RES%E23)+MATMUL(A%E33,RES%E22)))
+    RES%E2333=-MATMUL(RES%R,(MATMUL(A%E2333,RES%R)+MATMUL(A%E2,RES%E333)+&
+             MATMUL(A%E333,RES%E2)+MATMUL(A%E3,RES%E233)+MATMUL(A%E233,RES%E3)+&
+             MATMUL(A%E23,RES%E33)+MATMUL(A%E33,RES%E23)))
+    RES%E3333=-MATMUL(RES%R,(MATMUL(A%E3333,RES%R)+MATMUL(A%E3,RES%E333)+&
+             MATMUL(A%E333,RES%E3)+MATMUL(A%E33,RES%E33)))
+    RES%E1114=-MATMUL(RES%R,(MATMUL(A%E1114,RES%R)+MATMUL(A%E1,RES%E114)+&
+             MATMUL(A%E114,RES%E1)+MATMUL(A%E4,RES%E111)+MATMUL(A%E111,RES%E4)+&
+             MATMUL(A%E11,RES%E14)+MATMUL(A%E14,RES%E11)))
+    RES%E1124=-MATMUL(RES%R,(MATMUL(A%E1124,RES%R)+MATMUL(A%E1,RES%E124)+&
+             MATMUL(A%E124,RES%E1)+MATMUL(A%E2,RES%E114)+MATMUL(A%E114,RES%E2)+&
+             MATMUL(A%E4,RES%E112)+MATMUL(A%E112,RES%E4)+MATMUL(A%E11,RES%E24)+&
+             MATMUL(A%E12,RES%E14)+MATMUL(A%E14,RES%E12)+MATMUL(A%E24,RES%E11)))
+    RES%E1134=-MATMUL(RES%R,(MATMUL(A%E1134,RES%R)+MATMUL(A%E1,RES%E134)+&
+             MATMUL(A%E134,RES%E1)+MATMUL(A%E3,RES%E114)+MATMUL(A%E114,RES%E3)+&
+             MATMUL(A%E4,RES%E113)+MATMUL(A%E113,RES%E4)+MATMUL(A%E11,RES%E34)+&
+             MATMUL(A%E13,RES%E14)+MATMUL(A%E14,RES%E13)+MATMUL(A%E34,RES%E11)))
+    RES%E1144=-MATMUL(RES%R,(MATMUL(A%E1144,RES%R)+MATMUL(A%E1,RES%E144)+&
+             MATMUL(A%E144,RES%E1)+MATMUL(A%E4,RES%E114)+MATMUL(A%E114,RES%E4)+&
+             MATMUL(A%E11,RES%E44)+MATMUL(A%E14,RES%E14)+MATMUL(A%E44,RES%E11)))
+    RES%E1224=-MATMUL(RES%R,(MATMUL(A%E1224,RES%R)+MATMUL(A%E1,RES%E224)+&
+             MATMUL(A%E224,RES%E1)+MATMUL(A%E2,RES%E124)+MATMUL(A%E124,RES%E2)+&
+             MATMUL(A%E4,RES%E122)+MATMUL(A%E122,RES%E4)+MATMUL(A%E12,RES%E24)+&
+             MATMUL(A%E22,RES%E14)+MATMUL(A%E14,RES%E22)+MATMUL(A%E24,RES%E12)))
+    RES%E1234=-MATMUL(RES%R,(MATMUL(A%E1234,RES%R)+MATMUL(A%E1,RES%E234)+&
+             MATMUL(A%E234,RES%E1)+MATMUL(A%E2,RES%E134)+MATMUL(A%E134,RES%E2)+&
+             MATMUL(A%E3,RES%E124)+MATMUL(A%E124,RES%E3)+MATMUL(A%E4,RES%E123)+&
+             MATMUL(A%E123,RES%E4)+MATMUL(A%E12,RES%E34)+MATMUL(A%E13,RES%E24)+&
+             MATMUL(A%E23,RES%E14)+MATMUL(A%E14,RES%E23)+MATMUL(A%E24,RES%E13)+&
+             MATMUL(A%E34,RES%E12)))
+    RES%E1244=-MATMUL(RES%R,(MATMUL(A%E1244,RES%R)+MATMUL(A%E1,RES%E244)+&
+             MATMUL(A%E244,RES%E1)+MATMUL(A%E2,RES%E144)+MATMUL(A%E144,RES%E2)+&
+             MATMUL(A%E4,RES%E124)+MATMUL(A%E124,RES%E4)+MATMUL(A%E12,RES%E44)+&
+             MATMUL(A%E14,RES%E24)+MATMUL(A%E24,RES%E14)+MATMUL(A%E44,RES%E12)))
+    RES%E1334=-MATMUL(RES%R,(MATMUL(A%E1334,RES%R)+MATMUL(A%E1,RES%E334)+&
+             MATMUL(A%E334,RES%E1)+MATMUL(A%E3,RES%E134)+MATMUL(A%E134,RES%E3)+&
+             MATMUL(A%E4,RES%E133)+MATMUL(A%E133,RES%E4)+MATMUL(A%E13,RES%E34)+&
+             MATMUL(A%E33,RES%E14)+MATMUL(A%E14,RES%E33)+MATMUL(A%E34,RES%E13)))
+    RES%E1344=-MATMUL(RES%R,(MATMUL(A%E1344,RES%R)+MATMUL(A%E1,RES%E344)+&
+             MATMUL(A%E344,RES%E1)+MATMUL(A%E3,RES%E144)+MATMUL(A%E144,RES%E3)+&
+             MATMUL(A%E4,RES%E134)+MATMUL(A%E134,RES%E4)+MATMUL(A%E13,RES%E44)+&
+             MATMUL(A%E14,RES%E34)+MATMUL(A%E34,RES%E14)+MATMUL(A%E44,RES%E13)))
+    RES%E1444=-MATMUL(RES%R,(MATMUL(A%E1444,RES%R)+MATMUL(A%E1,RES%E444)+&
+             MATMUL(A%E444,RES%E1)+MATMUL(A%E4,RES%E144)+MATMUL(A%E144,RES%E4)+&
+             MATMUL(A%E14,RES%E44)+MATMUL(A%E44,RES%E14)))
+    RES%E2224=-MATMUL(RES%R,(MATMUL(A%E2224,RES%R)+MATMUL(A%E2,RES%E224)+&
+             MATMUL(A%E224,RES%E2)+MATMUL(A%E4,RES%E222)+MATMUL(A%E222,RES%E4)+&
+             MATMUL(A%E22,RES%E24)+MATMUL(A%E24,RES%E22)))
+    RES%E2234=-MATMUL(RES%R,(MATMUL(A%E2234,RES%R)+MATMUL(A%E2,RES%E234)+&
+             MATMUL(A%E234,RES%E2)+MATMUL(A%E3,RES%E224)+MATMUL(A%E224,RES%E3)+&
+             MATMUL(A%E4,RES%E223)+MATMUL(A%E223,RES%E4)+MATMUL(A%E22,RES%E34)+&
+             MATMUL(A%E23,RES%E24)+MATMUL(A%E24,RES%E23)+MATMUL(A%E34,RES%E22)))
+    RES%E2244=-MATMUL(RES%R,(MATMUL(A%E2244,RES%R)+MATMUL(A%E2,RES%E244)+&
+             MATMUL(A%E244,RES%E2)+MATMUL(A%E4,RES%E224)+MATMUL(A%E224,RES%E4)+&
+             MATMUL(A%E22,RES%E44)+MATMUL(A%E24,RES%E24)+MATMUL(A%E44,RES%E22)))
+    RES%E2334=-MATMUL(RES%R,(MATMUL(A%E2334,RES%R)+MATMUL(A%E2,RES%E334)+&
+             MATMUL(A%E334,RES%E2)+MATMUL(A%E3,RES%E234)+MATMUL(A%E234,RES%E3)+&
+             MATMUL(A%E4,RES%E233)+MATMUL(A%E233,RES%E4)+MATMUL(A%E23,RES%E34)+&
+             MATMUL(A%E33,RES%E24)+MATMUL(A%E24,RES%E33)+MATMUL(A%E34,RES%E23)))
+    RES%E2344=-MATMUL(RES%R,(MATMUL(A%E2344,RES%R)+MATMUL(A%E2,RES%E344)+&
+             MATMUL(A%E344,RES%E2)+MATMUL(A%E3,RES%E244)+MATMUL(A%E244,RES%E3)+&
+             MATMUL(A%E4,RES%E234)+MATMUL(A%E234,RES%E4)+MATMUL(A%E23,RES%E44)+&
+             MATMUL(A%E24,RES%E34)+MATMUL(A%E34,RES%E24)+MATMUL(A%E44,RES%E23)))
+    RES%E2444=-MATMUL(RES%R,(MATMUL(A%E2444,RES%R)+MATMUL(A%E2,RES%E444)+&
+             MATMUL(A%E444,RES%E2)+MATMUL(A%E4,RES%E244)+MATMUL(A%E244,RES%E4)+&
+             MATMUL(A%E24,RES%E44)+MATMUL(A%E44,RES%E24)))
+    RES%E3334=-MATMUL(RES%R,(MATMUL(A%E3334,RES%R)+MATMUL(A%E3,RES%E334)+&
+             MATMUL(A%E334,RES%E3)+MATMUL(A%E4,RES%E333)+MATMUL(A%E333,RES%E4)+&
+             MATMUL(A%E33,RES%E34)+MATMUL(A%E34,RES%E33)))
+    RES%E3344=-MATMUL(RES%R,(MATMUL(A%E3344,RES%R)+MATMUL(A%E3,RES%E344)+&
+             MATMUL(A%E344,RES%E3)+MATMUL(A%E4,RES%E334)+MATMUL(A%E334,RES%E4)+&
+             MATMUL(A%E33,RES%E44)+MATMUL(A%E34,RES%E34)+MATMUL(A%E44,RES%E33)))
+    RES%E3444=-MATMUL(RES%R,(MATMUL(A%E3444,RES%R)+MATMUL(A%E3,RES%E444)+&
+             MATMUL(A%E444,RES%E3)+MATMUL(A%E4,RES%E344)+MATMUL(A%E344,RES%E4)+&
+             MATMUL(A%E34,RES%E44)+MATMUL(A%E44,RES%E34)))
+    RES%E4444=-MATMUL(RES%R,(MATMUL(A%E4444,RES%R)+MATMUL(A%E4,RES%E444)+&
+             MATMUL(A%E444,RES%E4)+MATMUL(A%E44,RES%E44)))
+
+  END FUNCTION ONUMM4N4_INV2X2
+
+  FUNCTION ONUMM4N4_INV3X3(A,det)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4) , INTENT(IN) :: A(3,3) 
+    TYPE(ONUMM4N4) , INTENT(IN), OPTIONAL :: det
+    REAL(DP) :: detCalc
+    TYPE(ONUMM4N4) :: RES(SIZE(A,1),SIZE(A,2)) 
+
+    IF (PRESENT(det)) THEN
+      detCalc=det%R
+    ELSE
+      detCalc=det3x3(A%R)
+    END IF
+
+    ! Get real part 
+    RES%R=INV3X3(A%R,detCalc)
+
+    ! Order 1
+    RES%E1=-MATMUL(RES%R,(MATMUL(A%E1,RES%R)))
+    RES%E2=-MATMUL(RES%R,(MATMUL(A%E2,RES%R)))
+    RES%E3=-MATMUL(RES%R,(MATMUL(A%E3,RES%R)))
+    RES%E4=-MATMUL(RES%R,(MATMUL(A%E4,RES%R)))
+
+    ! Order 2
+    RES%E11=-MATMUL(RES%R,(MATMUL(A%E11,RES%R)+MATMUL(A%E1,RES%E1)))
+    RES%E12=-MATMUL(RES%R,(MATMUL(A%E12,RES%R)+MATMUL(A%E1,RES%E2)+&
+           MATMUL(A%E2,RES%E1)))
+    RES%E22=-MATMUL(RES%R,(MATMUL(A%E22,RES%R)+MATMUL(A%E2,RES%E2)))
+    RES%E13=-MATMUL(RES%R,(MATMUL(A%E13,RES%R)+MATMUL(A%E1,RES%E3)+&
+           MATMUL(A%E3,RES%E1)))
+    RES%E23=-MATMUL(RES%R,(MATMUL(A%E23,RES%R)+MATMUL(A%E2,RES%E3)+&
+           MATMUL(A%E3,RES%E2)))
+    RES%E33=-MATMUL(RES%R,(MATMUL(A%E33,RES%R)+MATMUL(A%E3,RES%E3)))
+    RES%E14=-MATMUL(RES%R,(MATMUL(A%E14,RES%R)+MATMUL(A%E1,RES%E4)+&
+           MATMUL(A%E4,RES%E1)))
+    RES%E24=-MATMUL(RES%R,(MATMUL(A%E24,RES%R)+MATMUL(A%E2,RES%E4)+&
+           MATMUL(A%E4,RES%E2)))
+    RES%E34=-MATMUL(RES%R,(MATMUL(A%E34,RES%R)+MATMUL(A%E3,RES%E4)+&
+           MATMUL(A%E4,RES%E3)))
+    RES%E44=-MATMUL(RES%R,(MATMUL(A%E44,RES%R)+MATMUL(A%E4,RES%E4)))
+
+    ! Order 3
+    RES%E111=-MATMUL(RES%R,(MATMUL(A%E111,RES%R)+MATMUL(A%E1,RES%E11)+&
+            MATMUL(A%E11,RES%E1)))
+    RES%E112=-MATMUL(RES%R,(MATMUL(A%E112,RES%R)+MATMUL(A%E1,RES%E12)+&
+            MATMUL(A%E12,RES%E1)+MATMUL(A%E2,RES%E11)+MATMUL(A%E11,RES%E2)))
+    RES%E122=-MATMUL(RES%R,(MATMUL(A%E122,RES%R)+MATMUL(A%E1,RES%E22)+&
+            MATMUL(A%E22,RES%E1)+MATMUL(A%E2,RES%E12)+MATMUL(A%E12,RES%E2)))
+    RES%E222=-MATMUL(RES%R,(MATMUL(A%E222,RES%R)+MATMUL(A%E2,RES%E22)+&
+            MATMUL(A%E22,RES%E2)))
+    RES%E113=-MATMUL(RES%R,(MATMUL(A%E113,RES%R)+MATMUL(A%E1,RES%E13)+&
+            MATMUL(A%E13,RES%E1)+MATMUL(A%E3,RES%E11)+MATMUL(A%E11,RES%E3)))
+    RES%E123=-MATMUL(RES%R,(MATMUL(A%E123,RES%R)+MATMUL(A%E1,RES%E23)+&
+            MATMUL(A%E23,RES%E1)+MATMUL(A%E2,RES%E13)+MATMUL(A%E13,RES%E2)+&
+            MATMUL(A%E3,RES%E12)+MATMUL(A%E12,RES%E3)))
+    RES%E133=-MATMUL(RES%R,(MATMUL(A%E133,RES%R)+MATMUL(A%E1,RES%E33)+&
+            MATMUL(A%E33,RES%E1)+MATMUL(A%E3,RES%E13)+MATMUL(A%E13,RES%E3)))
+    RES%E223=-MATMUL(RES%R,(MATMUL(A%E223,RES%R)+MATMUL(A%E2,RES%E23)+&
+            MATMUL(A%E23,RES%E2)+MATMUL(A%E3,RES%E22)+MATMUL(A%E22,RES%E3)))
+    RES%E233=-MATMUL(RES%R,(MATMUL(A%E233,RES%R)+MATMUL(A%E2,RES%E33)+&
+            MATMUL(A%E33,RES%E2)+MATMUL(A%E3,RES%E23)+MATMUL(A%E23,RES%E3)))
+    RES%E333=-MATMUL(RES%R,(MATMUL(A%E333,RES%R)+MATMUL(A%E3,RES%E33)+&
+            MATMUL(A%E33,RES%E3)))
+    RES%E114=-MATMUL(RES%R,(MATMUL(A%E114,RES%R)+MATMUL(A%E1,RES%E14)+&
+            MATMUL(A%E14,RES%E1)+MATMUL(A%E4,RES%E11)+MATMUL(A%E11,RES%E4)))
+    RES%E124=-MATMUL(RES%R,(MATMUL(A%E124,RES%R)+MATMUL(A%E1,RES%E24)+&
+            MATMUL(A%E24,RES%E1)+MATMUL(A%E2,RES%E14)+MATMUL(A%E14,RES%E2)+&
+            MATMUL(A%E4,RES%E12)+MATMUL(A%E12,RES%E4)))
+    RES%E134=-MATMUL(RES%R,(MATMUL(A%E134,RES%R)+MATMUL(A%E1,RES%E34)+&
+            MATMUL(A%E34,RES%E1)+MATMUL(A%E3,RES%E14)+MATMUL(A%E14,RES%E3)+&
+            MATMUL(A%E4,RES%E13)+MATMUL(A%E13,RES%E4)))
+    RES%E144=-MATMUL(RES%R,(MATMUL(A%E144,RES%R)+MATMUL(A%E1,RES%E44)+&
+            MATMUL(A%E44,RES%E1)+MATMUL(A%E4,RES%E14)+MATMUL(A%E14,RES%E4)))
+    RES%E224=-MATMUL(RES%R,(MATMUL(A%E224,RES%R)+MATMUL(A%E2,RES%E24)+&
+            MATMUL(A%E24,RES%E2)+MATMUL(A%E4,RES%E22)+MATMUL(A%E22,RES%E4)))
+    RES%E234=-MATMUL(RES%R,(MATMUL(A%E234,RES%R)+MATMUL(A%E2,RES%E34)+&
+            MATMUL(A%E34,RES%E2)+MATMUL(A%E3,RES%E24)+MATMUL(A%E24,RES%E3)+&
+            MATMUL(A%E4,RES%E23)+MATMUL(A%E23,RES%E4)))
+    RES%E244=-MATMUL(RES%R,(MATMUL(A%E244,RES%R)+MATMUL(A%E2,RES%E44)+&
+            MATMUL(A%E44,RES%E2)+MATMUL(A%E4,RES%E24)+MATMUL(A%E24,RES%E4)))
+    RES%E334=-MATMUL(RES%R,(MATMUL(A%E334,RES%R)+MATMUL(A%E3,RES%E34)+&
+            MATMUL(A%E34,RES%E3)+MATMUL(A%E4,RES%E33)+MATMUL(A%E33,RES%E4)))
+    RES%E344=-MATMUL(RES%R,(MATMUL(A%E344,RES%R)+MATMUL(A%E3,RES%E44)+&
+            MATMUL(A%E44,RES%E3)+MATMUL(A%E4,RES%E34)+MATMUL(A%E34,RES%E4)))
+    RES%E444=-MATMUL(RES%R,(MATMUL(A%E444,RES%R)+MATMUL(A%E4,RES%E44)+&
+            MATMUL(A%E44,RES%E4)))
+
+    ! Order 4
+    RES%E1111=-MATMUL(RES%R,(MATMUL(A%E1111,RES%R)+MATMUL(A%E1,RES%E111)+&
+             MATMUL(A%E111,RES%E1)+MATMUL(A%E11,RES%E11)))
+    RES%E1112=-MATMUL(RES%R,(MATMUL(A%E1112,RES%R)+MATMUL(A%E1,RES%E112)+&
+             MATMUL(A%E112,RES%E1)+MATMUL(A%E2,RES%E111)+MATMUL(A%E111,RES%E2)+&
+             MATMUL(A%E11,RES%E12)+MATMUL(A%E12,RES%E11)))
+    RES%E1122=-MATMUL(RES%R,(MATMUL(A%E1122,RES%R)+MATMUL(A%E1,RES%E122)+&
+             MATMUL(A%E122,RES%E1)+MATMUL(A%E2,RES%E112)+MATMUL(A%E112,RES%E2)+&
+             MATMUL(A%E11,RES%E22)+MATMUL(A%E12,RES%E12)+MATMUL(A%E22,RES%E11)))
+    RES%E1222=-MATMUL(RES%R,(MATMUL(A%E1222,RES%R)+MATMUL(A%E1,RES%E222)+&
+             MATMUL(A%E222,RES%E1)+MATMUL(A%E2,RES%E122)+MATMUL(A%E122,RES%E2)+&
+             MATMUL(A%E12,RES%E22)+MATMUL(A%E22,RES%E12)))
+    RES%E2222=-MATMUL(RES%R,(MATMUL(A%E2222,RES%R)+MATMUL(A%E2,RES%E222)+&
+             MATMUL(A%E222,RES%E2)+MATMUL(A%E22,RES%E22)))
+    RES%E1113=-MATMUL(RES%R,(MATMUL(A%E1113,RES%R)+MATMUL(A%E1,RES%E113)+&
+             MATMUL(A%E113,RES%E1)+MATMUL(A%E3,RES%E111)+MATMUL(A%E111,RES%E3)+&
+             MATMUL(A%E11,RES%E13)+MATMUL(A%E13,RES%E11)))
+    RES%E1123=-MATMUL(RES%R,(MATMUL(A%E1123,RES%R)+MATMUL(A%E1,RES%E123)+&
+             MATMUL(A%E123,RES%E1)+MATMUL(A%E2,RES%E113)+MATMUL(A%E113,RES%E2)+&
+             MATMUL(A%E3,RES%E112)+MATMUL(A%E112,RES%E3)+MATMUL(A%E11,RES%E23)+&
+             MATMUL(A%E12,RES%E13)+MATMUL(A%E13,RES%E12)+MATMUL(A%E23,RES%E11)))
+    RES%E1133=-MATMUL(RES%R,(MATMUL(A%E1133,RES%R)+MATMUL(A%E1,RES%E133)+&
+             MATMUL(A%E133,RES%E1)+MATMUL(A%E3,RES%E113)+MATMUL(A%E113,RES%E3)+&
+             MATMUL(A%E11,RES%E33)+MATMUL(A%E13,RES%E13)+MATMUL(A%E33,RES%E11)))
+    RES%E1223=-MATMUL(RES%R,(MATMUL(A%E1223,RES%R)+MATMUL(A%E1,RES%E223)+&
+             MATMUL(A%E223,RES%E1)+MATMUL(A%E2,RES%E123)+MATMUL(A%E123,RES%E2)+&
+             MATMUL(A%E3,RES%E122)+MATMUL(A%E122,RES%E3)+MATMUL(A%E12,RES%E23)+&
+             MATMUL(A%E22,RES%E13)+MATMUL(A%E13,RES%E22)+MATMUL(A%E23,RES%E12)))
+    RES%E1233=-MATMUL(RES%R,(MATMUL(A%E1233,RES%R)+MATMUL(A%E1,RES%E233)+&
+             MATMUL(A%E233,RES%E1)+MATMUL(A%E2,RES%E133)+MATMUL(A%E133,RES%E2)+&
+             MATMUL(A%E3,RES%E123)+MATMUL(A%E123,RES%E3)+MATMUL(A%E12,RES%E33)+&
+             MATMUL(A%E13,RES%E23)+MATMUL(A%E23,RES%E13)+MATMUL(A%E33,RES%E12)))
+    RES%E1333=-MATMUL(RES%R,(MATMUL(A%E1333,RES%R)+MATMUL(A%E1,RES%E333)+&
+             MATMUL(A%E333,RES%E1)+MATMUL(A%E3,RES%E133)+MATMUL(A%E133,RES%E3)+&
+             MATMUL(A%E13,RES%E33)+MATMUL(A%E33,RES%E13)))
+    RES%E2223=-MATMUL(RES%R,(MATMUL(A%E2223,RES%R)+MATMUL(A%E2,RES%E223)+&
+             MATMUL(A%E223,RES%E2)+MATMUL(A%E3,RES%E222)+MATMUL(A%E222,RES%E3)+&
+             MATMUL(A%E22,RES%E23)+MATMUL(A%E23,RES%E22)))
+    RES%E2233=-MATMUL(RES%R,(MATMUL(A%E2233,RES%R)+MATMUL(A%E2,RES%E233)+&
+             MATMUL(A%E233,RES%E2)+MATMUL(A%E3,RES%E223)+MATMUL(A%E223,RES%E3)+&
+             MATMUL(A%E22,RES%E33)+MATMUL(A%E23,RES%E23)+MATMUL(A%E33,RES%E22)))
+    RES%E2333=-MATMUL(RES%R,(MATMUL(A%E2333,RES%R)+MATMUL(A%E2,RES%E333)+&
+             MATMUL(A%E333,RES%E2)+MATMUL(A%E3,RES%E233)+MATMUL(A%E233,RES%E3)+&
+             MATMUL(A%E23,RES%E33)+MATMUL(A%E33,RES%E23)))
+    RES%E3333=-MATMUL(RES%R,(MATMUL(A%E3333,RES%R)+MATMUL(A%E3,RES%E333)+&
+             MATMUL(A%E333,RES%E3)+MATMUL(A%E33,RES%E33)))
+    RES%E1114=-MATMUL(RES%R,(MATMUL(A%E1114,RES%R)+MATMUL(A%E1,RES%E114)+&
+             MATMUL(A%E114,RES%E1)+MATMUL(A%E4,RES%E111)+MATMUL(A%E111,RES%E4)+&
+             MATMUL(A%E11,RES%E14)+MATMUL(A%E14,RES%E11)))
+    RES%E1124=-MATMUL(RES%R,(MATMUL(A%E1124,RES%R)+MATMUL(A%E1,RES%E124)+&
+             MATMUL(A%E124,RES%E1)+MATMUL(A%E2,RES%E114)+MATMUL(A%E114,RES%E2)+&
+             MATMUL(A%E4,RES%E112)+MATMUL(A%E112,RES%E4)+MATMUL(A%E11,RES%E24)+&
+             MATMUL(A%E12,RES%E14)+MATMUL(A%E14,RES%E12)+MATMUL(A%E24,RES%E11)))
+    RES%E1134=-MATMUL(RES%R,(MATMUL(A%E1134,RES%R)+MATMUL(A%E1,RES%E134)+&
+             MATMUL(A%E134,RES%E1)+MATMUL(A%E3,RES%E114)+MATMUL(A%E114,RES%E3)+&
+             MATMUL(A%E4,RES%E113)+MATMUL(A%E113,RES%E4)+MATMUL(A%E11,RES%E34)+&
+             MATMUL(A%E13,RES%E14)+MATMUL(A%E14,RES%E13)+MATMUL(A%E34,RES%E11)))
+    RES%E1144=-MATMUL(RES%R,(MATMUL(A%E1144,RES%R)+MATMUL(A%E1,RES%E144)+&
+             MATMUL(A%E144,RES%E1)+MATMUL(A%E4,RES%E114)+MATMUL(A%E114,RES%E4)+&
+             MATMUL(A%E11,RES%E44)+MATMUL(A%E14,RES%E14)+MATMUL(A%E44,RES%E11)))
+    RES%E1224=-MATMUL(RES%R,(MATMUL(A%E1224,RES%R)+MATMUL(A%E1,RES%E224)+&
+             MATMUL(A%E224,RES%E1)+MATMUL(A%E2,RES%E124)+MATMUL(A%E124,RES%E2)+&
+             MATMUL(A%E4,RES%E122)+MATMUL(A%E122,RES%E4)+MATMUL(A%E12,RES%E24)+&
+             MATMUL(A%E22,RES%E14)+MATMUL(A%E14,RES%E22)+MATMUL(A%E24,RES%E12)))
+    RES%E1234=-MATMUL(RES%R,(MATMUL(A%E1234,RES%R)+MATMUL(A%E1,RES%E234)+&
+             MATMUL(A%E234,RES%E1)+MATMUL(A%E2,RES%E134)+MATMUL(A%E134,RES%E2)+&
+             MATMUL(A%E3,RES%E124)+MATMUL(A%E124,RES%E3)+MATMUL(A%E4,RES%E123)+&
+             MATMUL(A%E123,RES%E4)+MATMUL(A%E12,RES%E34)+MATMUL(A%E13,RES%E24)+&
+             MATMUL(A%E23,RES%E14)+MATMUL(A%E14,RES%E23)+MATMUL(A%E24,RES%E13)+&
+             MATMUL(A%E34,RES%E12)))
+    RES%E1244=-MATMUL(RES%R,(MATMUL(A%E1244,RES%R)+MATMUL(A%E1,RES%E244)+&
+             MATMUL(A%E244,RES%E1)+MATMUL(A%E2,RES%E144)+MATMUL(A%E144,RES%E2)+&
+             MATMUL(A%E4,RES%E124)+MATMUL(A%E124,RES%E4)+MATMUL(A%E12,RES%E44)+&
+             MATMUL(A%E14,RES%E24)+MATMUL(A%E24,RES%E14)+MATMUL(A%E44,RES%E12)))
+    RES%E1334=-MATMUL(RES%R,(MATMUL(A%E1334,RES%R)+MATMUL(A%E1,RES%E334)+&
+             MATMUL(A%E334,RES%E1)+MATMUL(A%E3,RES%E134)+MATMUL(A%E134,RES%E3)+&
+             MATMUL(A%E4,RES%E133)+MATMUL(A%E133,RES%E4)+MATMUL(A%E13,RES%E34)+&
+             MATMUL(A%E33,RES%E14)+MATMUL(A%E14,RES%E33)+MATMUL(A%E34,RES%E13)))
+    RES%E1344=-MATMUL(RES%R,(MATMUL(A%E1344,RES%R)+MATMUL(A%E1,RES%E344)+&
+             MATMUL(A%E344,RES%E1)+MATMUL(A%E3,RES%E144)+MATMUL(A%E144,RES%E3)+&
+             MATMUL(A%E4,RES%E134)+MATMUL(A%E134,RES%E4)+MATMUL(A%E13,RES%E44)+&
+             MATMUL(A%E14,RES%E34)+MATMUL(A%E34,RES%E14)+MATMUL(A%E44,RES%E13)))
+    RES%E1444=-MATMUL(RES%R,(MATMUL(A%E1444,RES%R)+MATMUL(A%E1,RES%E444)+&
+             MATMUL(A%E444,RES%E1)+MATMUL(A%E4,RES%E144)+MATMUL(A%E144,RES%E4)+&
+             MATMUL(A%E14,RES%E44)+MATMUL(A%E44,RES%E14)))
+    RES%E2224=-MATMUL(RES%R,(MATMUL(A%E2224,RES%R)+MATMUL(A%E2,RES%E224)+&
+             MATMUL(A%E224,RES%E2)+MATMUL(A%E4,RES%E222)+MATMUL(A%E222,RES%E4)+&
+             MATMUL(A%E22,RES%E24)+MATMUL(A%E24,RES%E22)))
+    RES%E2234=-MATMUL(RES%R,(MATMUL(A%E2234,RES%R)+MATMUL(A%E2,RES%E234)+&
+             MATMUL(A%E234,RES%E2)+MATMUL(A%E3,RES%E224)+MATMUL(A%E224,RES%E3)+&
+             MATMUL(A%E4,RES%E223)+MATMUL(A%E223,RES%E4)+MATMUL(A%E22,RES%E34)+&
+             MATMUL(A%E23,RES%E24)+MATMUL(A%E24,RES%E23)+MATMUL(A%E34,RES%E22)))
+    RES%E2244=-MATMUL(RES%R,(MATMUL(A%E2244,RES%R)+MATMUL(A%E2,RES%E244)+&
+             MATMUL(A%E244,RES%E2)+MATMUL(A%E4,RES%E224)+MATMUL(A%E224,RES%E4)+&
+             MATMUL(A%E22,RES%E44)+MATMUL(A%E24,RES%E24)+MATMUL(A%E44,RES%E22)))
+    RES%E2334=-MATMUL(RES%R,(MATMUL(A%E2334,RES%R)+MATMUL(A%E2,RES%E334)+&
+             MATMUL(A%E334,RES%E2)+MATMUL(A%E3,RES%E234)+MATMUL(A%E234,RES%E3)+&
+             MATMUL(A%E4,RES%E233)+MATMUL(A%E233,RES%E4)+MATMUL(A%E23,RES%E34)+&
+             MATMUL(A%E33,RES%E24)+MATMUL(A%E24,RES%E33)+MATMUL(A%E34,RES%E23)))
+    RES%E2344=-MATMUL(RES%R,(MATMUL(A%E2344,RES%R)+MATMUL(A%E2,RES%E344)+&
+             MATMUL(A%E344,RES%E2)+MATMUL(A%E3,RES%E244)+MATMUL(A%E244,RES%E3)+&
+             MATMUL(A%E4,RES%E234)+MATMUL(A%E234,RES%E4)+MATMUL(A%E23,RES%E44)+&
+             MATMUL(A%E24,RES%E34)+MATMUL(A%E34,RES%E24)+MATMUL(A%E44,RES%E23)))
+    RES%E2444=-MATMUL(RES%R,(MATMUL(A%E2444,RES%R)+MATMUL(A%E2,RES%E444)+&
+             MATMUL(A%E444,RES%E2)+MATMUL(A%E4,RES%E244)+MATMUL(A%E244,RES%E4)+&
+             MATMUL(A%E24,RES%E44)+MATMUL(A%E44,RES%E24)))
+    RES%E3334=-MATMUL(RES%R,(MATMUL(A%E3334,RES%R)+MATMUL(A%E3,RES%E334)+&
+             MATMUL(A%E334,RES%E3)+MATMUL(A%E4,RES%E333)+MATMUL(A%E333,RES%E4)+&
+             MATMUL(A%E33,RES%E34)+MATMUL(A%E34,RES%E33)))
+    RES%E3344=-MATMUL(RES%R,(MATMUL(A%E3344,RES%R)+MATMUL(A%E3,RES%E344)+&
+             MATMUL(A%E344,RES%E3)+MATMUL(A%E4,RES%E334)+MATMUL(A%E334,RES%E4)+&
+             MATMUL(A%E33,RES%E44)+MATMUL(A%E34,RES%E34)+MATMUL(A%E44,RES%E33)))
+    RES%E3444=-MATMUL(RES%R,(MATMUL(A%E3444,RES%R)+MATMUL(A%E3,RES%E444)+&
+             MATMUL(A%E444,RES%E3)+MATMUL(A%E4,RES%E344)+MATMUL(A%E344,RES%E4)+&
+             MATMUL(A%E34,RES%E44)+MATMUL(A%E44,RES%E34)))
+    RES%E4444=-MATMUL(RES%R,(MATMUL(A%E4444,RES%R)+MATMUL(A%E4,RES%E444)+&
+             MATMUL(A%E444,RES%E4)+MATMUL(A%E44,RES%E44)))
+
+  END FUNCTION ONUMM4N4_INV3X3
+
+  FUNCTION ONUMM4N4_INV4X4(A,det)&
+    RESULT(RES)
+    IMPLICIT NONE
+    TYPE(ONUMM4N4) , INTENT(IN) :: A(4,4) 
+    TYPE(ONUMM4N4) , INTENT(IN), OPTIONAL :: det
+    REAL(DP) :: detCalc
+    TYPE(ONUMM4N4) :: RES(SIZE(A,1),SIZE(A,2)) 
+
+    IF (PRESENT(det)) THEN
+      detCalc=det%R
+    ELSE
+      detCalc=det4x4(A%R)
+    END IF
+
+    ! Get real part 
+    RES%R=INV4X4(A%R,detCalc)
+
+    ! Order 1
+    RES%E1=-MATMUL(RES%R,(MATMUL(A%E1,RES%R)))
+    RES%E2=-MATMUL(RES%R,(MATMUL(A%E2,RES%R)))
+    RES%E3=-MATMUL(RES%R,(MATMUL(A%E3,RES%R)))
+    RES%E4=-MATMUL(RES%R,(MATMUL(A%E4,RES%R)))
+
+    ! Order 2
+    RES%E11=-MATMUL(RES%R,(MATMUL(A%E11,RES%R)+MATMUL(A%E1,RES%E1)))
+    RES%E12=-MATMUL(RES%R,(MATMUL(A%E12,RES%R)+MATMUL(A%E1,RES%E2)+&
+           MATMUL(A%E2,RES%E1)))
+    RES%E22=-MATMUL(RES%R,(MATMUL(A%E22,RES%R)+MATMUL(A%E2,RES%E2)))
+    RES%E13=-MATMUL(RES%R,(MATMUL(A%E13,RES%R)+MATMUL(A%E1,RES%E3)+&
+           MATMUL(A%E3,RES%E1)))
+    RES%E23=-MATMUL(RES%R,(MATMUL(A%E23,RES%R)+MATMUL(A%E2,RES%E3)+&
+           MATMUL(A%E3,RES%E2)))
+    RES%E33=-MATMUL(RES%R,(MATMUL(A%E33,RES%R)+MATMUL(A%E3,RES%E3)))
+    RES%E14=-MATMUL(RES%R,(MATMUL(A%E14,RES%R)+MATMUL(A%E1,RES%E4)+&
+           MATMUL(A%E4,RES%E1)))
+    RES%E24=-MATMUL(RES%R,(MATMUL(A%E24,RES%R)+MATMUL(A%E2,RES%E4)+&
+           MATMUL(A%E4,RES%E2)))
+    RES%E34=-MATMUL(RES%R,(MATMUL(A%E34,RES%R)+MATMUL(A%E3,RES%E4)+&
+           MATMUL(A%E4,RES%E3)))
+    RES%E44=-MATMUL(RES%R,(MATMUL(A%E44,RES%R)+MATMUL(A%E4,RES%E4)))
+
+    ! Order 3
+    RES%E111=-MATMUL(RES%R,(MATMUL(A%E111,RES%R)+MATMUL(A%E1,RES%E11)+&
+            MATMUL(A%E11,RES%E1)))
+    RES%E112=-MATMUL(RES%R,(MATMUL(A%E112,RES%R)+MATMUL(A%E1,RES%E12)+&
+            MATMUL(A%E12,RES%E1)+MATMUL(A%E2,RES%E11)+MATMUL(A%E11,RES%E2)))
+    RES%E122=-MATMUL(RES%R,(MATMUL(A%E122,RES%R)+MATMUL(A%E1,RES%E22)+&
+            MATMUL(A%E22,RES%E1)+MATMUL(A%E2,RES%E12)+MATMUL(A%E12,RES%E2)))
+    RES%E222=-MATMUL(RES%R,(MATMUL(A%E222,RES%R)+MATMUL(A%E2,RES%E22)+&
+            MATMUL(A%E22,RES%E2)))
+    RES%E113=-MATMUL(RES%R,(MATMUL(A%E113,RES%R)+MATMUL(A%E1,RES%E13)+&
+            MATMUL(A%E13,RES%E1)+MATMUL(A%E3,RES%E11)+MATMUL(A%E11,RES%E3)))
+    RES%E123=-MATMUL(RES%R,(MATMUL(A%E123,RES%R)+MATMUL(A%E1,RES%E23)+&
+            MATMUL(A%E23,RES%E1)+MATMUL(A%E2,RES%E13)+MATMUL(A%E13,RES%E2)+&
+            MATMUL(A%E3,RES%E12)+MATMUL(A%E12,RES%E3)))
+    RES%E133=-MATMUL(RES%R,(MATMUL(A%E133,RES%R)+MATMUL(A%E1,RES%E33)+&
+            MATMUL(A%E33,RES%E1)+MATMUL(A%E3,RES%E13)+MATMUL(A%E13,RES%E3)))
+    RES%E223=-MATMUL(RES%R,(MATMUL(A%E223,RES%R)+MATMUL(A%E2,RES%E23)+&
+            MATMUL(A%E23,RES%E2)+MATMUL(A%E3,RES%E22)+MATMUL(A%E22,RES%E3)))
+    RES%E233=-MATMUL(RES%R,(MATMUL(A%E233,RES%R)+MATMUL(A%E2,RES%E33)+&
+            MATMUL(A%E33,RES%E2)+MATMUL(A%E3,RES%E23)+MATMUL(A%E23,RES%E3)))
+    RES%E333=-MATMUL(RES%R,(MATMUL(A%E333,RES%R)+MATMUL(A%E3,RES%E33)+&
+            MATMUL(A%E33,RES%E3)))
+    RES%E114=-MATMUL(RES%R,(MATMUL(A%E114,RES%R)+MATMUL(A%E1,RES%E14)+&
+            MATMUL(A%E14,RES%E1)+MATMUL(A%E4,RES%E11)+MATMUL(A%E11,RES%E4)))
+    RES%E124=-MATMUL(RES%R,(MATMUL(A%E124,RES%R)+MATMUL(A%E1,RES%E24)+&
+            MATMUL(A%E24,RES%E1)+MATMUL(A%E2,RES%E14)+MATMUL(A%E14,RES%E2)+&
+            MATMUL(A%E4,RES%E12)+MATMUL(A%E12,RES%E4)))
+    RES%E134=-MATMUL(RES%R,(MATMUL(A%E134,RES%R)+MATMUL(A%E1,RES%E34)+&
+            MATMUL(A%E34,RES%E1)+MATMUL(A%E3,RES%E14)+MATMUL(A%E14,RES%E3)+&
+            MATMUL(A%E4,RES%E13)+MATMUL(A%E13,RES%E4)))
+    RES%E144=-MATMUL(RES%R,(MATMUL(A%E144,RES%R)+MATMUL(A%E1,RES%E44)+&
+            MATMUL(A%E44,RES%E1)+MATMUL(A%E4,RES%E14)+MATMUL(A%E14,RES%E4)))
+    RES%E224=-MATMUL(RES%R,(MATMUL(A%E224,RES%R)+MATMUL(A%E2,RES%E24)+&
+            MATMUL(A%E24,RES%E2)+MATMUL(A%E4,RES%E22)+MATMUL(A%E22,RES%E4)))
+    RES%E234=-MATMUL(RES%R,(MATMUL(A%E234,RES%R)+MATMUL(A%E2,RES%E34)+&
+            MATMUL(A%E34,RES%E2)+MATMUL(A%E3,RES%E24)+MATMUL(A%E24,RES%E3)+&
+            MATMUL(A%E4,RES%E23)+MATMUL(A%E23,RES%E4)))
+    RES%E244=-MATMUL(RES%R,(MATMUL(A%E244,RES%R)+MATMUL(A%E2,RES%E44)+&
+            MATMUL(A%E44,RES%E2)+MATMUL(A%E4,RES%E24)+MATMUL(A%E24,RES%E4)))
+    RES%E334=-MATMUL(RES%R,(MATMUL(A%E334,RES%R)+MATMUL(A%E3,RES%E34)+&
+            MATMUL(A%E34,RES%E3)+MATMUL(A%E4,RES%E33)+MATMUL(A%E33,RES%E4)))
+    RES%E344=-MATMUL(RES%R,(MATMUL(A%E344,RES%R)+MATMUL(A%E3,RES%E44)+&
+            MATMUL(A%E44,RES%E3)+MATMUL(A%E4,RES%E34)+MATMUL(A%E34,RES%E4)))
+    RES%E444=-MATMUL(RES%R,(MATMUL(A%E444,RES%R)+MATMUL(A%E4,RES%E44)+&
+            MATMUL(A%E44,RES%E4)))
+
+    ! Order 4
+    RES%E1111=-MATMUL(RES%R,(MATMUL(A%E1111,RES%R)+MATMUL(A%E1,RES%E111)+&
+             MATMUL(A%E111,RES%E1)+MATMUL(A%E11,RES%E11)))
+    RES%E1112=-MATMUL(RES%R,(MATMUL(A%E1112,RES%R)+MATMUL(A%E1,RES%E112)+&
+             MATMUL(A%E112,RES%E1)+MATMUL(A%E2,RES%E111)+MATMUL(A%E111,RES%E2)+&
+             MATMUL(A%E11,RES%E12)+MATMUL(A%E12,RES%E11)))
+    RES%E1122=-MATMUL(RES%R,(MATMUL(A%E1122,RES%R)+MATMUL(A%E1,RES%E122)+&
+             MATMUL(A%E122,RES%E1)+MATMUL(A%E2,RES%E112)+MATMUL(A%E112,RES%E2)+&
+             MATMUL(A%E11,RES%E22)+MATMUL(A%E12,RES%E12)+MATMUL(A%E22,RES%E11)))
+    RES%E1222=-MATMUL(RES%R,(MATMUL(A%E1222,RES%R)+MATMUL(A%E1,RES%E222)+&
+             MATMUL(A%E222,RES%E1)+MATMUL(A%E2,RES%E122)+MATMUL(A%E122,RES%E2)+&
+             MATMUL(A%E12,RES%E22)+MATMUL(A%E22,RES%E12)))
+    RES%E2222=-MATMUL(RES%R,(MATMUL(A%E2222,RES%R)+MATMUL(A%E2,RES%E222)+&
+             MATMUL(A%E222,RES%E2)+MATMUL(A%E22,RES%E22)))
+    RES%E1113=-MATMUL(RES%R,(MATMUL(A%E1113,RES%R)+MATMUL(A%E1,RES%E113)+&
+             MATMUL(A%E113,RES%E1)+MATMUL(A%E3,RES%E111)+MATMUL(A%E111,RES%E3)+&
+             MATMUL(A%E11,RES%E13)+MATMUL(A%E13,RES%E11)))
+    RES%E1123=-MATMUL(RES%R,(MATMUL(A%E1123,RES%R)+MATMUL(A%E1,RES%E123)+&
+             MATMUL(A%E123,RES%E1)+MATMUL(A%E2,RES%E113)+MATMUL(A%E113,RES%E2)+&
+             MATMUL(A%E3,RES%E112)+MATMUL(A%E112,RES%E3)+MATMUL(A%E11,RES%E23)+&
+             MATMUL(A%E12,RES%E13)+MATMUL(A%E13,RES%E12)+MATMUL(A%E23,RES%E11)))
+    RES%E1133=-MATMUL(RES%R,(MATMUL(A%E1133,RES%R)+MATMUL(A%E1,RES%E133)+&
+             MATMUL(A%E133,RES%E1)+MATMUL(A%E3,RES%E113)+MATMUL(A%E113,RES%E3)+&
+             MATMUL(A%E11,RES%E33)+MATMUL(A%E13,RES%E13)+MATMUL(A%E33,RES%E11)))
+    RES%E1223=-MATMUL(RES%R,(MATMUL(A%E1223,RES%R)+MATMUL(A%E1,RES%E223)+&
+             MATMUL(A%E223,RES%E1)+MATMUL(A%E2,RES%E123)+MATMUL(A%E123,RES%E2)+&
+             MATMUL(A%E3,RES%E122)+MATMUL(A%E122,RES%E3)+MATMUL(A%E12,RES%E23)+&
+             MATMUL(A%E22,RES%E13)+MATMUL(A%E13,RES%E22)+MATMUL(A%E23,RES%E12)))
+    RES%E1233=-MATMUL(RES%R,(MATMUL(A%E1233,RES%R)+MATMUL(A%E1,RES%E233)+&
+             MATMUL(A%E233,RES%E1)+MATMUL(A%E2,RES%E133)+MATMUL(A%E133,RES%E2)+&
+             MATMUL(A%E3,RES%E123)+MATMUL(A%E123,RES%E3)+MATMUL(A%E12,RES%E33)+&
+             MATMUL(A%E13,RES%E23)+MATMUL(A%E23,RES%E13)+MATMUL(A%E33,RES%E12)))
+    RES%E1333=-MATMUL(RES%R,(MATMUL(A%E1333,RES%R)+MATMUL(A%E1,RES%E333)+&
+             MATMUL(A%E333,RES%E1)+MATMUL(A%E3,RES%E133)+MATMUL(A%E133,RES%E3)+&
+             MATMUL(A%E13,RES%E33)+MATMUL(A%E33,RES%E13)))
+    RES%E2223=-MATMUL(RES%R,(MATMUL(A%E2223,RES%R)+MATMUL(A%E2,RES%E223)+&
+             MATMUL(A%E223,RES%E2)+MATMUL(A%E3,RES%E222)+MATMUL(A%E222,RES%E3)+&
+             MATMUL(A%E22,RES%E23)+MATMUL(A%E23,RES%E22)))
+    RES%E2233=-MATMUL(RES%R,(MATMUL(A%E2233,RES%R)+MATMUL(A%E2,RES%E233)+&
+             MATMUL(A%E233,RES%E2)+MATMUL(A%E3,RES%E223)+MATMUL(A%E223,RES%E3)+&
+             MATMUL(A%E22,RES%E33)+MATMUL(A%E23,RES%E23)+MATMUL(A%E33,RES%E22)))
+    RES%E2333=-MATMUL(RES%R,(MATMUL(A%E2333,RES%R)+MATMUL(A%E2,RES%E333)+&
+             MATMUL(A%E333,RES%E2)+MATMUL(A%E3,RES%E233)+MATMUL(A%E233,RES%E3)+&
+             MATMUL(A%E23,RES%E33)+MATMUL(A%E33,RES%E23)))
+    RES%E3333=-MATMUL(RES%R,(MATMUL(A%E3333,RES%R)+MATMUL(A%E3,RES%E333)+&
+             MATMUL(A%E333,RES%E3)+MATMUL(A%E33,RES%E33)))
+    RES%E1114=-MATMUL(RES%R,(MATMUL(A%E1114,RES%R)+MATMUL(A%E1,RES%E114)+&
+             MATMUL(A%E114,RES%E1)+MATMUL(A%E4,RES%E111)+MATMUL(A%E111,RES%E4)+&
+             MATMUL(A%E11,RES%E14)+MATMUL(A%E14,RES%E11)))
+    RES%E1124=-MATMUL(RES%R,(MATMUL(A%E1124,RES%R)+MATMUL(A%E1,RES%E124)+&
+             MATMUL(A%E124,RES%E1)+MATMUL(A%E2,RES%E114)+MATMUL(A%E114,RES%E2)+&
+             MATMUL(A%E4,RES%E112)+MATMUL(A%E112,RES%E4)+MATMUL(A%E11,RES%E24)+&
+             MATMUL(A%E12,RES%E14)+MATMUL(A%E14,RES%E12)+MATMUL(A%E24,RES%E11)))
+    RES%E1134=-MATMUL(RES%R,(MATMUL(A%E1134,RES%R)+MATMUL(A%E1,RES%E134)+&
+             MATMUL(A%E134,RES%E1)+MATMUL(A%E3,RES%E114)+MATMUL(A%E114,RES%E3)+&
+             MATMUL(A%E4,RES%E113)+MATMUL(A%E113,RES%E4)+MATMUL(A%E11,RES%E34)+&
+             MATMUL(A%E13,RES%E14)+MATMUL(A%E14,RES%E13)+MATMUL(A%E34,RES%E11)))
+    RES%E1144=-MATMUL(RES%R,(MATMUL(A%E1144,RES%R)+MATMUL(A%E1,RES%E144)+&
+             MATMUL(A%E144,RES%E1)+MATMUL(A%E4,RES%E114)+MATMUL(A%E114,RES%E4)+&
+             MATMUL(A%E11,RES%E44)+MATMUL(A%E14,RES%E14)+MATMUL(A%E44,RES%E11)))
+    RES%E1224=-MATMUL(RES%R,(MATMUL(A%E1224,RES%R)+MATMUL(A%E1,RES%E224)+&
+             MATMUL(A%E224,RES%E1)+MATMUL(A%E2,RES%E124)+MATMUL(A%E124,RES%E2)+&
+             MATMUL(A%E4,RES%E122)+MATMUL(A%E122,RES%E4)+MATMUL(A%E12,RES%E24)+&
+             MATMUL(A%E22,RES%E14)+MATMUL(A%E14,RES%E22)+MATMUL(A%E24,RES%E12)))
+    RES%E1234=-MATMUL(RES%R,(MATMUL(A%E1234,RES%R)+MATMUL(A%E1,RES%E234)+&
+             MATMUL(A%E234,RES%E1)+MATMUL(A%E2,RES%E134)+MATMUL(A%E134,RES%E2)+&
+             MATMUL(A%E3,RES%E124)+MATMUL(A%E124,RES%E3)+MATMUL(A%E4,RES%E123)+&
+             MATMUL(A%E123,RES%E4)+MATMUL(A%E12,RES%E34)+MATMUL(A%E13,RES%E24)+&
+             MATMUL(A%E23,RES%E14)+MATMUL(A%E14,RES%E23)+MATMUL(A%E24,RES%E13)+&
+             MATMUL(A%E34,RES%E12)))
+    RES%E1244=-MATMUL(RES%R,(MATMUL(A%E1244,RES%R)+MATMUL(A%E1,RES%E244)+&
+             MATMUL(A%E244,RES%E1)+MATMUL(A%E2,RES%E144)+MATMUL(A%E144,RES%E2)+&
+             MATMUL(A%E4,RES%E124)+MATMUL(A%E124,RES%E4)+MATMUL(A%E12,RES%E44)+&
+             MATMUL(A%E14,RES%E24)+MATMUL(A%E24,RES%E14)+MATMUL(A%E44,RES%E12)))
+    RES%E1334=-MATMUL(RES%R,(MATMUL(A%E1334,RES%R)+MATMUL(A%E1,RES%E334)+&
+             MATMUL(A%E334,RES%E1)+MATMUL(A%E3,RES%E134)+MATMUL(A%E134,RES%E3)+&
+             MATMUL(A%E4,RES%E133)+MATMUL(A%E133,RES%E4)+MATMUL(A%E13,RES%E34)+&
+             MATMUL(A%E33,RES%E14)+MATMUL(A%E14,RES%E33)+MATMUL(A%E34,RES%E13)))
+    RES%E1344=-MATMUL(RES%R,(MATMUL(A%E1344,RES%R)+MATMUL(A%E1,RES%E344)+&
+             MATMUL(A%E344,RES%E1)+MATMUL(A%E3,RES%E144)+MATMUL(A%E144,RES%E3)+&
+             MATMUL(A%E4,RES%E134)+MATMUL(A%E134,RES%E4)+MATMUL(A%E13,RES%E44)+&
+             MATMUL(A%E14,RES%E34)+MATMUL(A%E34,RES%E14)+MATMUL(A%E44,RES%E13)))
+    RES%E1444=-MATMUL(RES%R,(MATMUL(A%E1444,RES%R)+MATMUL(A%E1,RES%E444)+&
+             MATMUL(A%E444,RES%E1)+MATMUL(A%E4,RES%E144)+MATMUL(A%E144,RES%E4)+&
+             MATMUL(A%E14,RES%E44)+MATMUL(A%E44,RES%E14)))
+    RES%E2224=-MATMUL(RES%R,(MATMUL(A%E2224,RES%R)+MATMUL(A%E2,RES%E224)+&
+             MATMUL(A%E224,RES%E2)+MATMUL(A%E4,RES%E222)+MATMUL(A%E222,RES%E4)+&
+             MATMUL(A%E22,RES%E24)+MATMUL(A%E24,RES%E22)))
+    RES%E2234=-MATMUL(RES%R,(MATMUL(A%E2234,RES%R)+MATMUL(A%E2,RES%E234)+&
+             MATMUL(A%E234,RES%E2)+MATMUL(A%E3,RES%E224)+MATMUL(A%E224,RES%E3)+&
+             MATMUL(A%E4,RES%E223)+MATMUL(A%E223,RES%E4)+MATMUL(A%E22,RES%E34)+&
+             MATMUL(A%E23,RES%E24)+MATMUL(A%E24,RES%E23)+MATMUL(A%E34,RES%E22)))
+    RES%E2244=-MATMUL(RES%R,(MATMUL(A%E2244,RES%R)+MATMUL(A%E2,RES%E244)+&
+             MATMUL(A%E244,RES%E2)+MATMUL(A%E4,RES%E224)+MATMUL(A%E224,RES%E4)+&
+             MATMUL(A%E22,RES%E44)+MATMUL(A%E24,RES%E24)+MATMUL(A%E44,RES%E22)))
+    RES%E2334=-MATMUL(RES%R,(MATMUL(A%E2334,RES%R)+MATMUL(A%E2,RES%E334)+&
+             MATMUL(A%E334,RES%E2)+MATMUL(A%E3,RES%E234)+MATMUL(A%E234,RES%E3)+&
+             MATMUL(A%E4,RES%E233)+MATMUL(A%E233,RES%E4)+MATMUL(A%E23,RES%E34)+&
+             MATMUL(A%E33,RES%E24)+MATMUL(A%E24,RES%E33)+MATMUL(A%E34,RES%E23)))
+    RES%E2344=-MATMUL(RES%R,(MATMUL(A%E2344,RES%R)+MATMUL(A%E2,RES%E344)+&
+             MATMUL(A%E344,RES%E2)+MATMUL(A%E3,RES%E244)+MATMUL(A%E244,RES%E3)+&
+             MATMUL(A%E4,RES%E234)+MATMUL(A%E234,RES%E4)+MATMUL(A%E23,RES%E44)+&
+             MATMUL(A%E24,RES%E34)+MATMUL(A%E34,RES%E24)+MATMUL(A%E44,RES%E23)))
+    RES%E2444=-MATMUL(RES%R,(MATMUL(A%E2444,RES%R)+MATMUL(A%E2,RES%E444)+&
+             MATMUL(A%E444,RES%E2)+MATMUL(A%E4,RES%E244)+MATMUL(A%E244,RES%E4)+&
+             MATMUL(A%E24,RES%E44)+MATMUL(A%E44,RES%E24)))
+    RES%E3334=-MATMUL(RES%R,(MATMUL(A%E3334,RES%R)+MATMUL(A%E3,RES%E334)+&
+             MATMUL(A%E334,RES%E3)+MATMUL(A%E4,RES%E333)+MATMUL(A%E333,RES%E4)+&
+             MATMUL(A%E33,RES%E34)+MATMUL(A%E34,RES%E33)))
+    RES%E3344=-MATMUL(RES%R,(MATMUL(A%E3344,RES%R)+MATMUL(A%E3,RES%E344)+&
+             MATMUL(A%E344,RES%E3)+MATMUL(A%E4,RES%E334)+MATMUL(A%E334,RES%E4)+&
+             MATMUL(A%E33,RES%E44)+MATMUL(A%E34,RES%E34)+MATMUL(A%E44,RES%E33)))
+    RES%E3444=-MATMUL(RES%R,(MATMUL(A%E3444,RES%R)+MATMUL(A%E3,RES%E444)+&
+             MATMUL(A%E444,RES%E3)+MATMUL(A%E4,RES%E344)+MATMUL(A%E344,RES%E4)+&
+             MATMUL(A%E34,RES%E44)+MATMUL(A%E44,RES%E34)))
+    RES%E4444=-MATMUL(RES%R,(MATMUL(A%E4444,RES%R)+MATMUL(A%E4,RES%E444)+&
+             MATMUL(A%E444,RES%E4)+MATMUL(A%E44,RES%E44)))
+
+  END FUNCTION ONUMM4N4_INV4X4
+
+
+  FUNCTION ONUMM4N4_ABS(A) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: A
+      TYPE(ONUMM4N4) :: RES
+      REAL(DP) :: SGN
+      RES%R = ABS(A%R)
+      IF (A%R > 0.0_dp) THEN
+        SGN = 1.0_dp
+      ELSE IF (A%R < 0.0_dp) THEN
+        SGN = -1.0_dp
+      ELSE
+        SGN = 0.0_dp
+      END IF
+      RES%E1 = SGN * A%E1
+      RES%E2 = SGN * A%E2
+      RES%E3 = SGN * A%E3
+      RES%E4 = SGN * A%E4
+      RES%E11 = SGN * A%E11
+      RES%E12 = SGN * A%E12
+      RES%E22 = SGN * A%E22
+      RES%E13 = SGN * A%E13
+      RES%E23 = SGN * A%E23
+      RES%E33 = SGN * A%E33
+      RES%E14 = SGN * A%E14
+      RES%E24 = SGN * A%E24
+      RES%E34 = SGN * A%E34
+      RES%E44 = SGN * A%E44
+      RES%E111 = SGN * A%E111
+      RES%E112 = SGN * A%E112
+      RES%E122 = SGN * A%E122
+      RES%E222 = SGN * A%E222
+      RES%E113 = SGN * A%E113
+      RES%E123 = SGN * A%E123
+      RES%E133 = SGN * A%E133
+      RES%E223 = SGN * A%E223
+      RES%E233 = SGN * A%E233
+      RES%E333 = SGN * A%E333
+      RES%E114 = SGN * A%E114
+      RES%E124 = SGN * A%E124
+      RES%E134 = SGN * A%E134
+      RES%E144 = SGN * A%E144
+      RES%E224 = SGN * A%E224
+      RES%E234 = SGN * A%E234
+      RES%E244 = SGN * A%E244
+      RES%E334 = SGN * A%E334
+      RES%E344 = SGN * A%E344
+      RES%E444 = SGN * A%E444
+      RES%E1111 = SGN * A%E1111
+      RES%E1112 = SGN * A%E1112
+      RES%E1122 = SGN * A%E1122
+      RES%E1222 = SGN * A%E1222
+      RES%E2222 = SGN * A%E2222
+      RES%E1113 = SGN * A%E1113
+      RES%E1123 = SGN * A%E1123
+      RES%E1133 = SGN * A%E1133
+      RES%E1223 = SGN * A%E1223
+      RES%E1233 = SGN * A%E1233
+      RES%E1333 = SGN * A%E1333
+      RES%E2223 = SGN * A%E2223
+      RES%E2233 = SGN * A%E2233
+      RES%E2333 = SGN * A%E2333
+      RES%E3333 = SGN * A%E3333
+      RES%E1114 = SGN * A%E1114
+      RES%E1124 = SGN * A%E1124
+      RES%E1134 = SGN * A%E1134
+      RES%E1144 = SGN * A%E1144
+      RES%E1224 = SGN * A%E1224
+      RES%E1234 = SGN * A%E1234
+      RES%E1244 = SGN * A%E1244
+      RES%E1334 = SGN * A%E1334
+      RES%E1344 = SGN * A%E1344
+      RES%E1444 = SGN * A%E1444
+      RES%E2224 = SGN * A%E2224
+      RES%E2234 = SGN * A%E2234
+      RES%E2244 = SGN * A%E2244
+      RES%E2334 = SGN * A%E2334
+      RES%E2344 = SGN * A%E2344
+      RES%E2444 = SGN * A%E2444
+      RES%E3334 = SGN * A%E3334
+      RES%E3344 = SGN * A%E3344
+      RES%E3444 = SGN * A%E3444
+      RES%E4444 = SGN * A%E4444
+  END FUNCTION ONUMM4N4_ABS
+
+  FUNCTION KOTI_NORM_ONUMM4N4(A) RESULT(RES)
+      IMPLICIT NONE
+      TYPE(ONUMM4N4), INTENT(IN) :: A
+      REAL(DP) :: RES
+      RES = SQRT(A%R*A%R + A%E1*A%E1 + A%E2*A%E2 + A%E3*A%E3 + A%E4*A%E4 + A%E11*A%E11 + A%E12*A%E12 + A%E22*A%E22 + A%E13*A%E13 + A%E23*A%E23 + A%E33*A%E33 + A%E14*A%E14 + A%E24*A%E24 + A%E34*A%E34 + A%E44*A%E44 + A%E111*A%E111 + A%E112*A%E112 + A%E122*A%E122 + A%E222*A%E222 + A%E113*A%E113 + A%E123*A%E123 + A%E133*A%E133 + A%E223*A%E223 + A%E233*A%E233 + A%E333*A%E333 + A%E114*A%E114 + A%E124*A%E124 + A%E134*A%E134 + A%E144*A%E144 + A%E224*A%E224 + A%E234*A%E234 + A%E244*A%E244 + A%E334*A%E334 + A%E344*A%E344 + A%E444*A%E444 + A%E1111*A%E1111 + A%E1112*A%E1112 + A%E1122*A%E1122 + A%E1222*A%E1222 + A%E2222*A%E2222 + A%E1113*A%E1113 + A%E1123*A%E1123 + A%E1133*A%E1133 + A%E1223*A%E1223 + A%E1233*A%E1233 + A%E1333*A%E1333 + A%E2223*A%E2223 + A%E2233*A%E2233 + A%E2333*A%E2333 + A%E3333*A%E3333 + A%E1114*A%E1114 + A%E1124*A%E1124 + A%E1134*A%E1134 + A%E1144*A%E1144 + A%E1224*A%E1224 + A%E1234*A%E1234 + A%E1244*A%E1244 + A%E1334*A%E1334 + A%E1344*A%E1344 + A%E1444*A%E1444 + A%E2224*A%E2224 + A%E2234*A%E2234 + A%E2244*A%E2244 + A%E2334*A%E2334 + A%E2344*A%E2344 + A%E2444*A%E2444 + A%E3334*A%E3334 + A%E3344*A%E3344 + A%E3444*A%E3444 + A%E4444*A%E4444)
+  END FUNCTION KOTI_NORM_ONUMM4N4
+END MODULE otim4n4
+
+! ===== code_imp_oti.f =====
+!**********************************************************************************
+!*  UMAT, FOR ABAQUS/STANDARD INCORPORATING ELASTIC-PLASTIC LINEAR               **
+!*  ISOTROPIC HARDENING. LARGE DEFORMATION FORMULATION FOR PLANE STRAIN          **
+!*  AND AXI-SYMMETRIC ELEMENTS. IMPLICIT INTEGRATION WITH CONSISTENT JACOBIAN    **
+!**********************************************************************************
+!**********************************************************************************
+!*
+!*
+!*
+!USER SUBROUTINE
+      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD, &
+     & RPL,DDSDDT,DRPLDE,DRPLDT, &
+     & STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,CMNAME, &
+     & NDI,NSHR,NTENS,NSTATV,PROPS,NPROPS,COORDS,DROT,PNEWDT, &
+     & CELENT,DFGRD0,DFGRD1,NOEL,NPT,LAYER,KSPT,KSTEP,KINC)
+      USE otim4n4, OTI_MODULE_DP => DP, OTI_E1 => E1, OTI_E2 => E2, &
+     & OTI_E3 => E3, OTI_E4 => E4
+!
+      INCLUDE 'ABA_PARAM.INC'
+!
+      CHARACTER*80 CMNAME
+!
+!
+      DIMENSION STRESS(NTENS),STATEV(NSTATV), &
+     & DDSDDE(NTENS,NTENS),DDSDDT(NTENS),DRPLDE(NTENS), &
+     & STRAN(NTENS),DSTRAN(NTENS),TIME(2),PREDEF(1),DPRED(1), &
+     & PROPS(NPROPS),COORDS(3),DROT(3,3),DFGRD0(3,3),DFGRD1(3,3)
+!
+!
+      PARAMETER (M=3,N=3,ID=3,ZERO=0.D0,ONE=1.D0,TWO=2.D0,THREE=3.D0, &
+     & SIX=6.D0, NINE=9.D0, TOLER=1.D-5)
+!
+      DIMENSION XIDEN(M,N),XNV(4),DPSTRAN(4), STRESSOLD(4), &
+     & DESTRAN(4), DSTRESS(4), XNDIR(M,N), &
+     & STR(M,N),DSTR(M,N), DPSTRN(M,N)          
+!
+!
+!
+!
+!
+!--------------------------------------------------------------------
+!
+!     SPECIFY MATERIAL PROPERTIES
+!
+!
+      INTEGER :: OTI_I, OTI_J, OTI_HI, OTI_HJ, OTI_HK
+      TYPE(ONUMM4N4) :: OTI_HX, OTI_HY, OTI_HTR
+      INTEGER :: IOTIHJ, IOTILN
+      CHARACTER(256) :: OTI_OUTDIR
+      TYPE(ONUMM4N4) :: DESTRAN_OTI(4)
+      TYPE(ONUMM4N4) :: DP_OTI
+      TYPE(ONUMM4N4) :: DPSTRAN_OTI(4)
+      TYPE(ONUMM4N4) :: DPSTRN_OTI(M, N)
+      TYPE(ONUMM4N4) :: DSTR_OTI(M, N)
+      TYPE(ONUMM4N4) :: DSTRAN_OTI(NTENS)
+      TYPE(ONUMM4N4) :: DSTRESS_OTI(4)
+      TYPE(ONUMM4N4) :: P_OTI
+      TYPE(ONUMM4N4) :: PJ_OTI
+      TYPE(ONUMM4N4) :: R_OTI
+      TYPE(ONUMM4N4) :: R0_OTI
+      TYPE(ONUMM4N4) :: RES_OTI
+      TYPE(ONUMM4N4) :: STATEV_OTI(NSTATV)
+      TYPE(ONUMM4N4) :: STR_OTI(M, N)
+      TYPE(ONUMM4N4) :: STRESS_OTI(NTENS)
+      TYPE(ONUMM4N4) :: STRESSOLD_OTI(4)
+      TYPE(ONUMM4N4) :: XIDEN_OTI(M, N)
+      TYPE(ONUMM4N4) :: ZY_OTI
+      E = 210000.0
+      XNUE = 0.3
+      SIGY0 = 240.
+      h = 1206.0
+!
+!    ZERO MATRICES WITH UNSPECIFIED COMPONENTS
+!
+!     OTIS seed initialization from GUI configuration
+      DO OTI_HI = 1, 4
+         DESTRAN_OTI(OTI_HI) = 0.0D0
+      END DO
+      DP_OTI = 0.0D0
+      DO OTI_HI = 1, 4
+         DPSTRAN_OTI(OTI_HI) = 0.0D0
+      END DO
+      DO OTI_HI = 1, M
+         DO OTI_HJ = 1, N
+            DPSTRN_OTI(OTI_HI,OTI_HJ) = 0.0D0
+         END DO
+      END DO
+      DO OTI_HI = 1, M
+         DO OTI_HJ = 1, N
+            DSTR_OTI(OTI_HI,OTI_HJ) = 0.0D0
+         END DO
+      END DO
+      DO OTI_HI = 1, NTENS
+         DSTRAN_OTI(OTI_HI) = 0.0D0
+      END DO
+      DO OTI_HI = 1, 4
+         DSTRESS_OTI(OTI_HI) = 0.0D0
+      END DO
+      P_OTI = 0.0D0
+      PJ_OTI = 0.0D0
+      R_OTI = 0.0D0
+      R0_OTI = 0.0D0
+      RES_OTI = 0.0D0
+      DO OTI_HI = 1, NSTATV
+         STATEV_OTI(OTI_HI) = 0.0D0
+      END DO
+      DO OTI_HI = 1, M
+         DO OTI_HJ = 1, N
+            STR_OTI(OTI_HI,OTI_HJ) = 0.0D0
+         END DO
+      END DO
+      DO OTI_HI = 1, NTENS
+         STRESS_OTI(OTI_HI) = 0.0D0
+      END DO
+      DO OTI_HI = 1, 4
+         STRESSOLD_OTI(OTI_HI) = 0.0D0
+      END DO
+      DO OTI_HI = 1, M
+         DO OTI_HJ = 1, N
+            XIDEN_OTI(OTI_HI,OTI_HJ) = 0.0D0
+         END DO
+      END DO
+      ZY_OTI = 0.0D0
+      DO OTI_I = 1, NTENS
+         DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      END DO
+      DO OTI_I = 1, NTENS
+         STRESS_OTI(OTI_I) = STRESS(OTI_I)
+      END DO
+      DO OTI_I = 1, NSTATV
+         STATEV_OTI(OTI_I) = STATEV(OTI_I)
+      END DO
+      DSTRAN_OTI(1) = DSTRAN_OTI(1) + OTI_E1
+      DSTRAN_OTI(2) = DSTRAN_OTI(2) + OTI_E2
+      DSTRAN_OTI(3) = DSTRAN_OTI(3) + OTI_E3
+      DSTRAN_OTI(4) = DSTRAN_OTI(4) + OTI_E4
+      DO I=1,M
+      DO J=1,N
+      STR_OTI(I,J)=0.0D0
+      END DO
+      END DO
+!
+!    RECOVER EFFECTIVE PLASTIC STRAIN, p, AND ISOTROPIC 
+!    HARDENING VARIABLE, r,FROM PREVIOUS TIME STEP
+!
+      P_OTI = STATEV_OTI(1)
+      R_OTI = STATEV_OTI(2)
+!
+! 
+!    SET UP ELASTICITY MATRIX
+!   
+      EBULK3 = E/(ONE-TWO*XNUE)
+      XK = EBULK3/THREE
+      EG2 = E/(ONE+XNUE)
+      EG = EG2/TWO
+      ELAM = (EBULK3-EG2)/THREE
+!
+!
+      DO K1 = 1, 3
+         DO K2 = 1, 3
+           DDSDDE(K2,K1) = ELAM
+         END DO
+        DDSDDE(K1,K1) = EG2 + ELAM
+      END DO
+!
+        DDSDDE(4,4) = EG
+!
+!     DEFINE IDENTITY MATRIX
+!
+      DO 50 I=1,M
+      DO 50 J=1,N
+        IF(I .EQ. J) THEN
+          XIDEN_OTI(I,J)=1.0D0
+        ELSE
+          XIDEN_OTI(I,J)=0.0D0
+        END IF
+  50  CONTINUE
+!
+!     SAVE STRESS_OTI AT BEGINNING OF TIME STEP IN STRESSOLD_OTI
+!
+      DO K=1,4
+      STRESSOLD_OTI(K) = STRESS_OTI(K)
+      END DO
+!
+!     OBTAIN TRIAL (ELASTIC) STRESS_OTI
+!
+!     OTIS inline pure arithmetic helper KMLT1
+      DO OTI_HI = 1, NTENS
+         OTI_HX = 0.0D0
+         DO OTI_HK = 1, NTENS
+            OTI_HY = DDSDDE(OTI_HI,OTI_HK)*DSTRAN_OTI(OTI_HK)
+            OTI_HX = OTI_HX + OTI_HY
+         END DO
+         DSTRESS_OTI(OTI_HI) = OTI_HX
+      END DO
+      DO K=1,NTENS
+      STRESS_OTI(K) = STRESS_OTI(K) + DSTRESS_OTI(K)
+      END DO
+!
+!     WRITE TRIAL STRESSES IN MATRIX FORM
+!      
+      DO K = 1,3
+      STR_OTI(K,K) = STRESS_OTI(K)
+      END DO
+      STR_OTI(1,2) = STRESS_OTI(4)
+      STR_OTI(2,1) = STRESS_OTI(4)
+!
+!     CALCULATE DEVIATORIC TRIAL STRESS_OTI
+! 
+!     OTIS inline pure arithmetic helper KDEVIA
+      OTI_HTR = 0.0D0
+      DO OTI_HI = 1, 3
+         OTI_HTR = OTI_HTR + STR_OTI(OTI_HI,OTI_HI)
+      END DO
+      DO OTI_HI = 1, 3
+         DO OTI_HJ = 1, 3
+            IF(OTI_HI .EQ. OTI_HJ) THEN
+               OTI_HY = (1.0D0/3.0D0)*OTI_HTR*XIDEN_OTI(OTI_HI,OTI_HJ)
+               DSTR_OTI(OTI_HI,OTI_HJ) = STR_OTI(OTI_HI,OTI_HJ)-OTI_HY
+            ELSE
+               DSTR_OTI(OTI_HI,OTI_HJ) = STR_OTI(OTI_HI,OTI_HJ)
+            END IF
+         END DO
+      END DO
+!
+!     CALCULATE EFFECTIVE TRIAL STRESS_OTI
+!
+!     OTIS inline pure arithmetic helper KEFFP
+      PJ_OTI = 0.0D0
+      OTI_HX = 0.0D0
+      DO OTI_HI = 1, 3
+         DO OTI_HJ = 1, 3
+            OTI_HY = DSTR_OTI(OTI_HI,OTI_HJ)*DSTR_OTI(OTI_HI,OTI_HJ)
+            OTI_HX = OTI_HX + OTI_HY
+         END DO
+      END DO
+      IF(REAL(OTI_HX) .GT. 0.0D0) THEN
+      PJ_OTI = SQRT((((MAX(REAL((3.0D0/2.0D0)*OTI_HX), 1.0D-30)) - &
+     & REAL((3.0D0/2.0D0)*OTI_HX)) + ((3.0D0/2.0D0)*OTI_HX)))
+      END IF
+!
+!    DETERMINE TRIAL FLOW DIRECTION FOR USE WITH THE JACOBIAN
+!
+      DO I=1,3
+      DO J=1,3
+      XNDIR(I,J) = REAL(DSTR_OTI(I,J)/PJ_OTI)
+      END DO
+      END DO
+!
+!    ...AND WRITE IN VOIGT NOTATION
+!
+      DO K=1,3
+      XNV(K) = XNDIR(K,K)
+      END DO
+      XNV(4) = XNDIR(1,2)
+!
+!    DETERMINE IF THE YIELD CONDITION IS SATISFIED
+!
+      ZY_OTI = PJ_OTI - R_OTI - SIGY0
+!
+      IF (REAL(ZY_OTI).GT.0.0D0) THEN
+!
+!     USE NEWTON ITERATION TO DETERMINE EFFECTIVE PLASTIC STRAIN INCREMENT
+! 
+      R0_OTI = R_OTI
+      DP_OTI = 0.0D0
+      DO KNEWT=1,10
+      RES_OTI = PJ_OTI-3.0D0*EG*DP_OTI-R_OTI-SIGY0
+      DP_OTI = DP_OTI + RES_OTI/(3.0D0*EG+h)
+      R_OTI = R0_OTI + h*DP_OTI
+      IF(ABS(REAL(RES_OTI)).LT.TOLER) GOTO 10
+      END DO
+   10 CONTINUE
+!
+!     DETERMINE THE INCREMENTS IN PLASTIC STRAIN
+!
+      DO I = 1,3
+       DO J = 1,3
+       DPSTRN_OTI(I,J) = (THREE/TWO)*DP_OTI*DSTR_OTI(I,J)/PJ_OTI
+       END DO
+      END DO
+!
+!     WRITE THE STRAIN INCREMENTS IN VOIGT NOTATION (WITH ENGG SHEARS)
+!
+      DO K=1,3
+      DPSTRAN_OTI(K) = DPSTRN_OTI(K,K)
+      END DO
+      DPSTRAN_OTI(4) = 2.0D0*DPSTRN_OTI(1,2)
+!      
+!     CALCULATE THE ELASTIC STRAIN INCREMENTS      
+!      
+      DO K=1,4
+      DESTRAN_OTI(K)=DSTRAN_OTI(K)-DPSTRAN_OTI(K)
+      END DO
+!
+!     DETERMINE STRESS_OTI INCREMENT
+!
+!     OTIS inline pure arithmetic helper KMLT1
+      DO OTI_HI = 1, NTENS
+         OTI_HX = 0.0D0
+         DO OTI_HK = 1, NTENS
+            OTI_HY = DDSDDE(OTI_HI,OTI_HK)*DESTRAN_OTI(OTI_HK)
+            OTI_HX = OTI_HX + OTI_HY
+         END DO
+         DSTRESS_OTI(OTI_HI) = OTI_HX
+      END DO
+!
+!      UPDATE THE STRESS, EFFECTIVE PLASTIC STRAIN
+!      (NOTE: ISOTROPIC HARDENING VARIABLE ALREADY UPDATED)
+!
+       DO K = 1,NTENS
+       STRESS_OTI(K) = STRESSOLD_OTI(K) + DSTRESS_OTI(K)
+       END DO
+!
+       P_OTI = P_OTI + DP_OTI
+!       
+!     STORE UPDATED STATE VARIABLES
+!
+       STATEV_OTI(1) = P_OTI
+       STATEV_OTI(2) = R_OTI
+!
+!
+!    DETERMINE JACOBIAN
+!
+      XR = REAL((PJ_OTI-3.0D0*EG*DP_OTI)/PJ_OTI)
+      Q = (ONE/(ONE+3.*EG/h)-XR)*THREE/TWO
+!     OTIS-SKIP: DO I=1,3
+!     OTIS-SKIP: DO J=1,3
+!     OTIS-SKIP: DDSDDE(I,J) = 2*EG*Q*XNV(I)*XNV(J)
+!     OTIS-SKIP: +  + (XK-EG*XR*TWO/THREE) + TWO*EG*XR*XIDEN(I,J)
+!     OTIS-SKIP: END DO
+!     OTIS-SKIP: END DO
+!     OTIS-SKIP: DO K=1,3
+!     OTIS-SKIP: DDSDDE(K,4) = TWO*EG*Q*XNV(K)*XNV(4)
+!     OTIS-SKIP: DDSDDE(4,K) = DDSDDE(K,4)
+!     OTIS-SKIP: END DO
+!     OTIS-SKIP: DDSDDE(4,4) = TWO*EG*Q*XNV(4)*XNV(4) + EG*XR
+!
+      END IF
+!     Copy real-valued OTIS outputs back to Abaqus arrays
+      DO OTI_I = 1, NTENS
+         STRESS(OTI_I) = REAL(STRESS_OTI(OTI_I))
+      END DO
+      DO OTI_I = 1, NSTATV
+         STATEV(OTI_I) = REAL(STATEV_OTI(OTI_I))
+      END DO
+!     OTIS DDSDDE extraction: DDSDDE(i,j) = d STRESS(i) / d DSTRAN(j)
+      DO OTI_I = 1, NTENS
+         DO OTI_J = 1, NTENS
+            DDSDDE(OTI_I,OTI_J) = &
+     & GETIM(STRESS_OTI(OTI_I),OTI_J)
+         END DO
+      END DO
+!     OTIS higher-order stress Jacobians (orders 2..4) -> oti_hjac.dat
+      CALL GETOUTDIR(OTI_OUTDIR, IOTILN)
+      OPEN(NEWUNIT=IOTIHJ,FILE=OTI_OUTDIR(1:IOTILN)// &
+     & '/oti_hjac.dat',POSITION='APPEND')
+      WRITE(IOTIHJ,*)'#',NOEL,NPT,KSTEP,KINC
+      DO OTI_I = 1, NTENS
+         WRITE(IOTIHJ,*)OTI_I,2,1,1,GETIM(STRESS_OTI(OTI_I),5)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,2,1,2,GETIM(STRESS_OTI(OTI_I),6)
+         WRITE(IOTIHJ,*)OTI_I,2,1,3,GETIM(STRESS_OTI(OTI_I),8)
+         WRITE(IOTIHJ,*)OTI_I,2,1,4,GETIM(STRESS_OTI(OTI_I),11)
+         WRITE(IOTIHJ,*)OTI_I,2,2,2,GETIM(STRESS_OTI(OTI_I),7)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,2,2,3,GETIM(STRESS_OTI(OTI_I),9)
+         WRITE(IOTIHJ,*)OTI_I,2,2,4,GETIM(STRESS_OTI(OTI_I),12)
+         WRITE(IOTIHJ,*)OTI_I,2,3,3,GETIM(STRESS_OTI(OTI_I),10)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,2,3,4,GETIM(STRESS_OTI(OTI_I),13)
+         WRITE(IOTIHJ,*)OTI_I,2,4,4,GETIM(STRESS_OTI(OTI_I),14)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,1,1,1,GETIM(STRESS_OTI(OTI_I),15)*6.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,1,1,2,GETIM(STRESS_OTI(OTI_I),16)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,1,1,3,GETIM(STRESS_OTI(OTI_I),19)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,1,1,4,GETIM(STRESS_OTI(OTI_I),25)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,1,2,2,GETIM(STRESS_OTI(OTI_I),17)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,1,2,3,GETIM(STRESS_OTI(OTI_I),20)
+         WRITE(IOTIHJ,*)OTI_I,3,1,2,4,GETIM(STRESS_OTI(OTI_I),26)
+         WRITE(IOTIHJ,*)OTI_I,3,1,3,3,GETIM(STRESS_OTI(OTI_I),21)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,1,3,4,GETIM(STRESS_OTI(OTI_I),27)
+         WRITE(IOTIHJ,*)OTI_I,3,1,4,4,GETIM(STRESS_OTI(OTI_I),28)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,2,2,2,GETIM(STRESS_OTI(OTI_I),18)*6.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,2,2,3,GETIM(STRESS_OTI(OTI_I),22)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,2,2,4,GETIM(STRESS_OTI(OTI_I),29)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,2,3,3,GETIM(STRESS_OTI(OTI_I),23)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,2,3,4,GETIM(STRESS_OTI(OTI_I),30)
+         WRITE(IOTIHJ,*)OTI_I,3,2,4,4,GETIM(STRESS_OTI(OTI_I),31)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,3,3,3,GETIM(STRESS_OTI(OTI_I),24)*6.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,3,3,4,GETIM(STRESS_OTI(OTI_I),32)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,3,4,4,GETIM(STRESS_OTI(OTI_I),33)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,3,4,4,4,GETIM(STRESS_OTI(OTI_I),34)*6.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,1,1,1,GETIM(STRESS_OTI(OTI_I),35)*24.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,1,1,2,GETIM(STRESS_OTI(OTI_I),36)*6.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,1,1,3,GETIM(STRESS_OTI(OTI_I),40)*6.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,1,1,4,GETIM(STRESS_OTI(OTI_I),50)*6.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,1,2,2,GETIM(STRESS_OTI(OTI_I),37)*4.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,1,2,3,GETIM(STRESS_OTI(OTI_I),41)*2.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,1,2,4,GETIM(STRESS_OTI(OTI_I),51)*2.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,1,3,3,GETIM(STRESS_OTI(OTI_I),42)*4.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,1,3,4,GETIM(STRESS_OTI(OTI_I),52)*2.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,1,4,4,GETIM(STRESS_OTI(OTI_I),53)*4.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,2,2,2,GETIM(STRESS_OTI(OTI_I),38)*6.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,2,2,3,GETIM(STRESS_OTI(OTI_I),43)*2.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,2,2,4,GETIM(STRESS_OTI(OTI_I),54)*2.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,2,3,3,GETIM(STRESS_OTI(OTI_I),44)*2.0D0
+         WRITE(IOTIHJ,*)OTI_I,4,1,2,3,4,GETIM(STRESS_OTI(OTI_I),55)
+      WRITE(IOTIHJ,*)OTI_I,4,1,2,4,4,GETIM(STRESS_OTI(OTI_I),56)*2.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,3,3,3,GETIM(STRESS_OTI(OTI_I),45)*6.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,3,3,4,GETIM(STRESS_OTI(OTI_I),57)*2.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,3,4,4,GETIM(STRESS_OTI(OTI_I),58)*2.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,1,4,4,4,GETIM(STRESS_OTI(OTI_I),59)*6.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,2,2,2,2,GETIM(STRESS_OTI(OTI_I),39)*24.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,2,2,2,3,GETIM(STRESS_OTI(OTI_I),46)*6.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,2,2,2,4,GETIM(STRESS_OTI(OTI_I),60)*6.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,2,2,3,3,GETIM(STRESS_OTI(OTI_I),47)*4.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,2,2,3,4,GETIM(STRESS_OTI(OTI_I),61)*2.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,2,2,4,4,GETIM(STRESS_OTI(OTI_I),62)*4.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,2,3,3,3,GETIM(STRESS_OTI(OTI_I),48)*6.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,2,3,3,4,GETIM(STRESS_OTI(OTI_I),63)*2.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,2,3,4,4,GETIM(STRESS_OTI(OTI_I),64)*2.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,2,4,4,4,GETIM(STRESS_OTI(OTI_I),65)*6.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,3,3,3,3,GETIM(STRESS_OTI(OTI_I),49)*24.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,3,3,3,4,GETIM(STRESS_OTI(OTI_I),66)*6.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,3,3,4,4,GETIM(STRESS_OTI(OTI_I),67)*4.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,3,4,4,4,GETIM(STRESS_OTI(OTI_I),68)*6.0D0
+      WRITE(IOTIHJ,*)OTI_I,4,4,4,4,4,GETIM(STRESS_OTI(OTI_I),69)*24.0D0
+      END DO
+      CLOSE(IOTIHJ)
+!
+      RETURN
+      END
+!*
+!**********************************************
+!*           UTILITY    SUBROUTINES           *
+!**********************************************
+!*
+!*
+!**************************************************
+!*         MULTIPLY 4X4 MATRIX WITH 4X1 VECTOR    *
+!**************************************************
+!USER SUBROUTINE
+      SUBROUTINE KMLT1(DM1,DM2,DM,NTENS)
+!      
+      INCLUDE 'ABA_PARAM.INC'
+!
+      PARAMETER (M=4)
+!
+      DIMENSION DM1(M,M),DM2(M),DM(M)
+!
+      DO 10 I=1,NTENS
+      X=0.0
+      DO 20 K=1,NTENS
+      Y=DM1(I,K)*DM2(K)
+      X=X+Y
+20    CONTINUE
+      DM(I)=X
+10    CONTINUE
+      RETURN
+      END
+!*
+!*
+!**************************************
+!*          EFFECTIVE STRESS          *
+!*   (CONTRACTED MATRIX CALCULATION)  *
+!**************************************
+!USER SUBROUTINE
+      SUBROUTINE KEFFP(EFF1,VAL1)
+!      
+      INCLUDE 'ABA_PARAM.INC'
+!
+      PARAMETER (M=3,N=3)
+      DIMENSION EFF1(M,N)
+!
+      X=0.0
+      DO 10 I=1,M
+      DO 10 J=1,N
+       X=X+EFF1(I,J)*EFF1(I,J)
+10    CONTINUE
+      IF(X .LE. 0.0) GO TO 20
+      VAL1=DSQRT((3.0/2.0)*X)
+20    RETURN
+      END
+!*
+!*
+!*
+!*******************************************
+!*         DOT PRODUCT OF TWO VECTORS      *
+!*******************************************
+!USER SUBROUTINE
+      SUBROUTINE DOTPROD(DM1,DM2,DM,NTENS)
+!      
+      INCLUDE 'ABA_PARAM.INC'
+!
+!      PARAMETER (M=4)
+!
+      DIMENSION DM1(4),DM2(4)
+!
+      Y=0.0
+      DO 20 K=1,NTENS
+      X=DM1(K)*DM2(K)
+      Y=X+Y
+   20 CONTINUE
+      DM=Y
+      RETURN
+      END
+!*
+      SUBROUTINE DYADICPROD(DM1,DM2,DM3,NTENS)
+!      
+      INCLUDE 'ABA_PARAM.INC'
+!
+!      PARAMETER (M=4)
+!
+      DIMENSION DM1(4),DM2(4),DM3(4,4)
+!
+      DO I=1,4
+       DO J=1,4
+        DM3(I,J) = DM1(I)*DM2(J)
+       END DO
+      END DO
+!  
+      RETURN
+      END
+!*
+!****************************************************
+!*   DEVIATORIC STRESS CALCULATION    *
+!****************************************************
+!USER SUBROUTINE
+      SUBROUTINE KDEVIA(STRSS,XIDENTY,DEVITO)
+!      
+      INCLUDE 'ABA_PARAM.INC'
+!
+      PARAMETER (M=3,N=3)
+      DIMENSION STRSS(M,N),XIDENTY(M,N),DEVITO(M,N)
+!
+      X=0.0
+      DO 10 I=1,M
+      DO 10 J=1,N
+      IF(I .EQ. J) THEN
+      X=X+STRSS(I,J)
+      ELSE
+      END IF
+10    CONTINUE
+!
+      DO 20 I=1,M
+      DO 20 J=1,N
+      IF(I .EQ. J) THEN
+        DEVITO(I,J)=STRSS(I,J)-((1./3.)*X*XIDENTY(I,J))
+      ELSE
+        DEVITO(I,J)=STRSS(I,J)
+      END IF
+20    CONTINUE
+      RETURN
+      END
+!*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
