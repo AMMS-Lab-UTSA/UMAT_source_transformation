@@ -91,7 +91,7 @@ def test_aggregate_uses_independent_observable_denominators(tmp_path: Path):
                 "comparison_settings": {"compare_outputs": compare_outputs},
                 "original_run_status": {"status": run_status},
                 "transformed_run_status": {"status": run_status},
-                "stress_comparison": {"status": "passed" if final_pass else "failed", "max_abs_difference": 0.0},
+                "stress_comparison": {"pass": final_pass, "max_abs_difference": 0.0},
                 "state_variable_comparison": {"status": "passed" if final_pass else "failed"},
                 "ddsdde_comparison": {"status": ddsdde_status, "max_abs_difference": 3000.0 if not final_pass else 0.0},
                 "convergence_comparison": {"status": "passed" if final_pass else "failed"},
@@ -119,6 +119,7 @@ def test_aggregate_uses_independent_observable_denominators(tmp_path: Path):
     assert failed["audit"]["transformed_final_ddsdde"] is None
     assert failed["audit"]["increments"] == []
     assert not (ddsdde["passed"] == 2 and aggregate["summary"]["total"] == 3)
+    assert aggregate["summary"]["observables"]["STRESS"]["passed"] == 2
 
 
 def test_aggregate_archives_source_and_increment_provenance(tmp_path: Path):
