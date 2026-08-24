@@ -24,8 +24,8 @@ every required part of it.
 | Claim status | Requirements |
 |---|---:|
 | `verified` | 1 |
-| `partially_implemented` | 11 |
-| `unimplemented` | 7 |
+| `partially_implemented` | 12 |
+| `unimplemented` | 6 |
 | `failed` | 1 |
 | `blocked_by_external_dependency` | 1 |
 | **total** | **21** |
@@ -161,16 +161,15 @@ every required part of it.
 
 | ID | Requirement | Repo | Stage | Implementation | Test | Evidence | Execution | Claim |
 |---|---|---|---|---|---|---|---|---|
-| `PIPE-ENGINE` | A first-class resumable stage engine with typed stage IO and a run manifest | UMAT_source_transformation | all | -- | -- | -- | `unimplemented` | `unimplemented` |
+| `PIPE-ENGINE` | A first-class resumable stage engine with typed stage IO and a run manifest | UMAT_source_transformation | all | `src/umat_oti/pipeline/engine.py` | `tests/test_pipeline_engine.py` | -- | `implemented` | `partially_implemented` |
 | `PIPE-ONE-BOUNDARY` | Exactly one normalization boundary shared by every front end | UMAT_source_transformation | contract normalization | `src/umat_oti/cli_json.py (de facto)` | -- | -- | `partially_implemented` | `partially_implemented` |
 
 **`PIPE-ENGINE`**
-- blocker: no stage engine exists; front ends call transforms directly
 - note: Stages must distinguish failure from not_requested, unsupported and blocked.
 
 **`PIPE-ONE-BOUNDARY`**
 - blocker: 4 distinct transform entry points are still in use
-- measured `distinct_transform_entry_points`: {"cli_json.run_config_transform": 16, "core.pipeline.transform_umat": 1, "semantic.transform_pipeline.transform_umat": 1, "transform.source_transform.transform_umat_to_oti_from_config": 8}
+- measured `distinct_transform_entry_points`: {"cli_json.run_config_transform": 18, "core.pipeline.transform_umat": 1, "semantic.transform_pipeline.transform_umat": 1, "transform.source_transform.transform_umat_to_oti_from_config": 8}
 
 ## Release metadata
 
