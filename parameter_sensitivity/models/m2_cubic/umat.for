@@ -1,0 +1,48 @@
+      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,
+     1 RPL,DDSDDT,DRPLDE,DRPLDT,
+     2 STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,CMNAME,
+     3 NDI,NSHR,NTENS,NSTATV,PROPS,NPROPS,COORDS,DROT,PNEWDT,
+     4 CELENT,DFGRD0,DFGRD1,NOEL,NPT,LAYER,KSPT,KSTEP,KINC)
+C     M2 reference UMAT: cubic linear elasticity. PROPS = C11, C12, C44.
+C     Original project source (owned). Small strain, Voigt 11,22,33,12,13,23.
+      INCLUDE 'ABA_PARAM.INC'
+      CHARACTER*80 CMNAME
+      DIMENSION STRESS(NTENS),STATEV(NSTATV),
+     1 DDSDDE(NTENS,NTENS),DDSDDT(NTENS),DRPLDE(NTENS),
+     2 STRAN(NTENS),DSTRAN(NTENS),TIME(2),PREDEF(1),DPRED(1),
+     3 PROPS(NPROPS),COORDS(3),DROT(3,3),DFGRD0(3,3),DFGRD1(3,3)
+      PARAMETER (ZERO=0.D0)
+      DIMENSION DDS(6,6), DSTRESS(6)
+      C11 = PROPS(1)
+      C12 = PROPS(2)
+      C44 = PROPS(3)
+      DO K1 = 1,6
+        DO K2 = 1,6
+          DDS(K2,K1) = ZERO
+        END DO
+      END DO
+      DO K1 = 1,3
+        DO K2 = 1,3
+          DDS(K2,K1) = C12
+        END DO
+        DDS(K1,K1) = C11
+      END DO
+      DDS(4,4) = C44
+      DDS(5,5) = C44
+      DDS(6,6) = C44
+      DO K1 = 1,NTENS
+        DSTRESS(K1) = ZERO
+        DO K2 = 1,NTENS
+          DSTRESS(K1) = DSTRESS(K1) + DDS(K1,K2)*DSTRAN(K2)
+        END DO
+      END DO
+      DO K1 = 1,NTENS
+        STRESS(K1) = STRESS(K1) + DSTRESS(K1)
+      END DO
+      DO K1 = 1,NTENS
+        DO K2 = 1,NTENS
+          DDSDDE(K1,K2) = DDS(K1,K2)
+        END DO
+      END DO
+      RETURN
+      END
