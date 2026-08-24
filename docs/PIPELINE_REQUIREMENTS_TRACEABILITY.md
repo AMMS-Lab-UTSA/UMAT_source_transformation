@@ -23,8 +23,8 @@ every required part of it.
 
 | Claim status | Requirements |
 |---|---:|
-| `verified` | 1 |
-| `partially_implemented` | 12 |
+| `verified` | 2 |
+| `partially_implemented` | 11 |
 | `unimplemented` | 6 |
 | `failed` | 1 |
 | `blocked_by_external_dependency` | 1 |
@@ -175,11 +175,10 @@ every required part of it.
 
 | ID | Requirement | Repo | Stage | Implementation | Test | Evidence | Execution | Claim |
 |---|---|---|---|---|---|---|---|---|
-| `META-VERSION` | One version across pyproject, CITATION.cff, codemeta.json and .zenodo.json | UMAT_source_transformation | evidence generation | -- | -- | -- | `partially_implemented` | `partially_implemented` |
+| `META-VERSION` | One version across pyproject, CITATION.cff, codemeta.json and .zenodo.json | UMAT_source_transformation | evidence generation | -- | -- | -- | `implemented` | `verified` |
 
 **`META-VERSION`**
-- blocker: version disagreement across metadata files: {'pyproject.toml': '1.1.0', 'CITATION.cff': '1.2.0', 'codemeta.json': '1.1.0', '.zenodo.json': '1.1.0'}
-- measured `versions`: {".zenodo.json": "1.1.0", "CITATION.cff": "1.2.0", "codemeta.json": "1.1.0", "pyproject.toml": "1.1.0"}
+- measured `versions`: {".zenodo.json": "1.1.0", "CITATION.cff": "1.1.0", "codemeta.json": "1.1.0", "pyproject.toml": "1.1.0", "src/umat_oti/__init__.py": "1.1.0"}
 
 ## Residual Assembler
 

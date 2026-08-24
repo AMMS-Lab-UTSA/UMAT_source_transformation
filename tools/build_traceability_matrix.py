@@ -350,14 +350,24 @@ def build_requirements() -> list[Requirement]:
             if line.strip().startswith("version"):
                 versions["pyproject.toml"] = line.split("=", 1)[1].strip().strip('"')
                 break
-    for rel, token in (("CITATION.cff", "version:"), ("codemeta.json", '"version"'),
-                       (".zenodo.json", '"version"')):
+    # CITATION.cff carries BOTH `cff-version` (the file-format version) and
+    # `version` (the software version). Anchoring at the start of the line keeps
+    # the format version from being read as the software version.
+    for rel, token in (("CITATION.cff", "version:"), ("codemeta.json", '  "version"'),
+                       (".zenodo.json", '  "version"')):
         path = root_for(U) / rel
         if not path.exists():
             continue
         for line in path.read_text(encoding="utf-8").splitlines():
-            if token in line:
-                versions[rel] = line.split(":", 1)[1].strip().strip(' ",')
+            if not line.startswith(token):
+                continue
+            versions[rel] = line.split(":", 1)[1].strip().strip(' ",')
+            break
+    init_path = root_for(U) / "src" / "umat_oti" / "__init__.py"
+    if init_path.exists():
+        for line in init_path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("__version__"):
+                versions["src/umat_oti/__init__.py"] = line.split("=", 1)[1].strip().strip('"')
                 break
     distinct_versions = {v for v in versions.values() if v}
     add(Requirement(
