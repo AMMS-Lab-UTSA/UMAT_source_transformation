@@ -5,10 +5,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from umat_oti.cli_json import run_config_transform
 from umat_oti.core.config_loader import load_project_config_json
-from umat_oti.core.transformation_anchors import anchor_completion_status
-from umat_oti.core.transformation_anchors import merge_completed_anchors_into_config
-from umat_oti.transform.source_transform import transform_umat_to_oti_from_config
 from umat_oti.validation.abaqus_runner import extract_results, run_both_jobs
 from umat_oti.validation.compare_results import compare_validation_results
 from umat_oti.validation.job_builder import DEFAULT_ABAQUS_MODULES, DEFAULT_ABAQUS_RUN_PREFIX, build_validation_workspace
@@ -38,46 +36,44 @@ def main() -> int:
             continue
         config = load_project_config_json(config_path.read_bytes(), origin_path=config_path)
         name = config_path.stem
-        source_path = Path(str(config.get("source", {}).get("selected_umat_file", "")))
-        source_text = source_path.read_text(encoding="utf-8", errors="replace") if source_path.is_file() else ""
-        if source_text:
-            config = merge_completed_anchors_into_config(config, source_text)
-        ntens = _as_int((config.get("transformation_settings", {}) or {}).get("ntens"))
-        completion = anchor_completion_status(config)
+        transform_dir = transform_root / name
+        transform_summary, transform_exit_code = run_config_transform(config_path, transform_dir)
+        source_path = Path(str(transform_summary.get("source", "")))
+        ntens = _as_int(transform_summary.get("ntens"))
+        anchor_status = str(transform_summary.get("anchor_status", ""))
         row: dict[str, Any] = {
             "config": config_path.name,
             "umat": name,
             "source": str(source_path),
-            "anchor_status": completion.get("status"),
-            "completion_issues": completion.get("completion_issues", []),
-            "transform_success": False,
+            "anchor_status": anchor_status,
+            "completion_issues": transform_summary.get("completion_issues", []),
+            "transform_success": bool(transform_summary.get("transform_success")),
             "validation_status": "not_run",
+            "derivative_requests": transform_summary.get("derivative_requests", []),
         }
-        if completion.get("status") == "needs_json_completion":
+        if anchor_status == "needs_json_completion":
             row["category"] = "needs_json_completion"
-            row["status"] = "; ".join(str(issue.get("message", issue)) for issue in completion.get("completion_issues", []) if isinstance(issue, dict))
+            row["status"] = "; ".join(str(issue.get("message", issue)) for issue in row["completion_issues"] if isinstance(issue, dict))
             results.append(row)
             continue
-        transform_dir = transform_root / name
-        transform = transform_umat_to_oti_from_config(source_text, config, transform_dir, ntens)
         row.update(
             {
-                "transform_success": transform.success,
-                "transform_report": str(transform.report_path or ""),
-                "transformed_source": str(transform.transformed_source_path or ""),
-                "blockers": transform.blockers,
-                "warnings": transform.warnings,
-                "semantic_checks": transform.report.get("semantic_checks", {}),
+                "transform_report": str(transform_summary.get("report_path", "")),
+                "transformed_source": str(transform_summary.get("transformed_source", "")),
+                "blockers": transform_summary.get("blockers", []),
+                "warnings": transform_summary.get("warnings", []),
+                "semantic_checks": transform_summary.get("semantic_checks", {}),
             }
         )
-        if transform.blockers:
-            row["category"] = "blocked_by_user_marked_unsafe" if any("marked unsafe" in blocker for blocker in transform.blockers) else "needs_json_completion" if any("JSON completion" in blocker for blocker in transform.blockers) else "transformation_generated_invalid_code"
-            row["status"] = "; ".join(transform.blockers)
+        blocker_messages = _messages(row["blockers"])
+        if blocker_messages:
+            row["category"] = "blocked_by_user_marked_unsafe" if any("marked unsafe" in message for message in blocker_messages) else "needs_json_completion" if any("JSON completion" in message for message in blocker_messages) else "transformation_generated_invalid_code"
+            row["status"] = "; ".join(blocker_messages)
             results.append(row)
             continue
-        if not transform.success:
+        if transform_exit_code != 0 or not row["transform_success"]:
             row["category"] = "transformation_generated_invalid_code"
-            row["status"] = "; ".join(transform.warnings)
+            row["status"] = "; ".join(_messages(row["warnings"])) or str(transform_summary.get("error", "Transformation failed."))
             results.append(row)
             continue
         row["category"] = "ready_with_json_contract"
@@ -92,7 +88,7 @@ def main() -> int:
                     build_validation_workspace(
                         validation_dir=validation_dir,
                         original_umat=source_path,
-                        transformed_umat=Path(transform.transformed_source_path or ""),
+                        transformed_umat=Path(str(transform_summary.get("transformed_source", ""))),
                         generated_dir=transform_dir,
                         ntens=ntens,
                         abaqus_command=args.abaqus_command,
@@ -126,6 +122,12 @@ def main() -> int:
     for row in results:
         print(f"{row['config']}\t{row['category']}\t{row.get('status','')}")
     return 0
+
+
+def _messages(values: Any) -> list[str]:
+    if not isinstance(values, list):
+        return []
+    return [str(value.get("message", value)) if isinstance(value, dict) else str(value) for value in values]
 
 
 def _write_reports(batch_dir: Path, results: list[dict[str, Any]]) -> None:

@@ -331,14 +331,16 @@ def build_compact_project_config(config: dict[str, Any], *, base_path: str | Pat
 def _is_compact_project_config(config: dict[str, Any]) -> bool:
     source = config.get("source")
     source_path = str(source).strip() if isinstance(source, str) else str(_dict_or_empty(source).get("file", "")).strip()
+    if source_path and str(config.get("schema_version", "")).strip() == "1.1" and "derivatives" in config:
+        return True
     return bool(source_path) and any(
         key in config for key in ("name", "case_name", "jacobian", "promote", "constant", "real", "replace", "ntens", "order", "validation")
     )
 
 
 def _expand_compact_project_config(config: dict[str, Any], *, origin_path: str | Path | None = None) -> dict[str, Any]:
-    _validate_required_compact_project_config(config)
     normalized = _normalize_compact_project_config(config)
+    _validate_required_compact_project_config(normalized)
     source = _compact_source_payload(normalized)
     source_path = _resolve_source_path(str(source.get("file", "")), origin_path=origin_path)
     if not source_path.is_file():
@@ -1094,6 +1096,8 @@ def _normalize_index_list(value: Any) -> list[int]:
 
 
 def _validate_required_compact_project_config(config: dict[str, Any]) -> None:
+    if str(config.get("schema_version", "")).strip() == "1.1" and "derivatives" in config:
+        return
     missing: list[str] = []
     if not str(config.get("name", config.get("case_name", ""))).strip():
         missing.append("name")
@@ -1322,6 +1326,8 @@ def _normalize_compact_project_config(config: dict[str, Any]) -> dict[str, Any]:
     normalized = copy.deepcopy(config)
     if "name" in normalized and "case_name" not in normalized:
         normalized["case_name"] = normalized["name"]
+    if str(normalized.get("schema_version", "")).strip() == "1.1" and "derivatives" in normalized:
+        normalized = _normalize_unified_project_config(normalized)
     source = normalized.get("source")
     if isinstance(source, str):
         normalized["source"] = {"file": source}
@@ -1362,6 +1368,34 @@ def _normalize_compact_project_config(config: dict[str, Any]) -> dict[str, Any]:
         normalized["helper_output_surfaces"] = copy.deepcopy(normalized["helper_surfaces"])
     if "validation" in normalized and "validation_settings" not in normalized:
         normalized["validation_settings"] = _expand_simple_validation(normalized.get("validation"))
+    return normalized
+
+
+def _normalize_unified_project_config(config: dict[str, Any]) -> dict[str, Any]:
+    normalized = copy.deepcopy(config)
+    source = normalized.get("source")
+    if isinstance(source, str):
+        normalized["source"] = {"file": source}
+    elif isinstance(source, dict):
+        normalized["source"] = copy.deepcopy(source)
+    else:
+        raise ValueError("Unified configuration source must be a file path or object.")
+
+    entry_routine = str(normalized.get("entry_routine", "")).strip()
+    if entry_routine:
+        normalized["source"].setdefault("umat", entry_routine)
+
+    derivatives = normalized.get("derivatives")
+    if not isinstance(derivatives, list) or not derivatives:
+        raise ValueError("Unified configuration derivatives must be a non-empty list.")
+    orders: list[int] = []
+    for index, derivative in enumerate(derivatives):
+        if not isinstance(derivative, dict):
+            raise ValueError(f"Unified configuration derivatives[{index}] must be an object.")
+        orders.append(_positive_int(derivative.get("order", 1), f"derivatives[{index}].order"))
+    otis = _dict_or_empty(normalized.get("otis"))
+    otis.setdefault("order", max(orders))
+    normalized["otis"] = otis
     return normalized
 
 
@@ -1688,6 +1722,12 @@ def _compact_transformation_settings(
         fallback_ntens=DEFAULT_GENERATED_NTENS,
         output_dir=Path(project.get("workdir", Path.cwd() / "umat_oti_workspace")) / output_dir if output_dir and not Path(output_dir).is_absolute() else output_dir or None,
     )
+    is_unified = str(config.get("schema_version", "")).strip() == "1.1" and "derivatives" in config
+    if is_unified and otis.get("ntens") in (None, "") and settings.get("ntens_confidence") != "high":
+        raise ValueError(
+            "Unified configuration could not infer NTENS with high confidence; define top-level ntens explicitly. "
+            f"Inference source: {settings.get('ntens_source', 'unknown')}."
+        )
     if "ntens" in otis and otis.get("ntens") not in (None, ""):
         ntens = _positive_int(otis.get("ntens"), "otis.ntens")
         settings["ntens"] = ntens
