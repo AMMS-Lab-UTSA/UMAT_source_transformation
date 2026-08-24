@@ -1,0 +1,11 @@
+{
+  "schema": "resasm_umat_transform_v2",
+  "source": {"entry_point": "UMAT", "main_file": "umat.for"},
+  "kinematics": "small_strain",
+  "dimensions": {"ntens": 6, "nprops": 2, "nstatev": 0},
+  "parameters": [{"name": "lambda", "props_index": 1}, {"name": "mu", "props_index": 2}],
+  "derivative": {"response": "STRESS", "export": "DSIGMA_DP"},
+  "history": {"state": "STATEV", "export": "DSTATEV_DP", "propagate": false},
+  "output": {"object": "umat_sweep_lame_elastic_oti.obj", "contract": "umat_sweep_lame_elastic_oti.json"},
+  "validation": {"props_values": [120000.0, 80000.0]}
+}

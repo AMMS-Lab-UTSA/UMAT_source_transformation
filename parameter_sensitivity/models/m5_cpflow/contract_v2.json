@@ -1,0 +1,18 @@
+{
+  "schema": "resasm_umat_transform_v2",
+  "source": {"main_file": "umat.for"},
+  "kinematics": "small_strain",
+  "dimensions": {"ntens": 6, "nprops": 8, "nstatev": 1},
+  "parameters": [
+    {"name": "tau0", "props_index": 3},
+    {"name": "dG",   "props_index": 4},
+    {"name": "q",    "props_index": 6},
+    {"name": "p",    "props_index": 5},
+    {"name": "gam0", "props_index": 7},
+    {"name": "H",    "props_index": 8}
+  ],
+  "derivative": {"of": "STRESS", "wrt": "PROPS", "order": 1},
+  "history": {"path_dependent": true, "state": ["EQPLAS"]},
+  "output": {"object": "umat_m5_cpflow_oti.obj", "contract": "umat_m5_cpflow_oti.json"},
+  "validation": {"props_values": [200000.0, 0.3, 1500.0, 25.0, 0.4, 1.6, 0.1, 60000.0]}
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "resasm_umat_transform_v2",
+  "source": {"entry_point": "UMAT", "main_file": "umat.for", "additional_files": []},
+  "interface": {"preserve_standard_inputs": true, "preserve_standard_outputs": true,
+                "ntens": 6, "nprops": 2, "nstatev": 0, "kinematics": "small_strain"},
+  "oti": {"order": 1, "number_of_directions": 2},
+  "derivative_requests": [{
+    "id": "stress_material_parameter_derivatives",
+    "seed": {"argument": "PROPS", "components": [
+      {"index": 1, "name": "E", "units": "MPa", "oti_direction": 1},
+      {"index": 2, "name": "nu", "units": "-", "oti_direction": 2}]},
+    "response": {"argument": "STRESS", "components": "all"},
+    "export": {"name": "DSIGMA_DP", "dtype": "float64", "shape": ["NTENS", "NPARAM"],
+               "layout": "stress_component_parameter"}
+  }],
+  "history": {"argument": "STATEV", "propagate_parameter_coefficients": false,
+              "export_derivatives_as": "DSTATEV_DP"},
+  "transformation_hints": {"force_promote": ["PROPS","E","ENU","ELAM","EG","DDS","DSTRESS","STRESS"],
+                           "keep_real": [], "intrinsic_replacements": {}, "external_oti_procedures": {}},
+  "resasm_provider": {"tangent_variable": "DDS", "stress_update_line": 41,
+                      "ddsdde_block": "44-46", "props_values": [210000.0, 0.3]}
+}

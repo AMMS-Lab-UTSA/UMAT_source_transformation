@@ -1,0 +1,15 @@
+{
+  "schema": "resasm_umat_transform_v2",
+  "source": {"entry_point": "UMAT", "main_file": "umat.for"},
+  "kinematics": "small_strain",
+  "dimensions": {"ntens": 6, "nprops": 3, "nstatev": 0},
+  "parameters": [
+    {"name": "E", "props_index": 1},
+    {"name": "nu", "props_index": 2},
+    {"name": "alpha", "props_index": 3}
+  ],
+  "derivative": {"response": "STRESS", "export": "DSIGMA_DP"},
+  "history": {"state": "STATEV", "export": "DSTATEV_DP", "propagate": false},
+  "output": {"object": "umat_sweep_thermoelastic_oti.obj", "contract": "umat_sweep_thermoelastic_oti.json"},
+  "validation": {"props_values": [210000.0, 0.3, 1.2e-5]}
+}
