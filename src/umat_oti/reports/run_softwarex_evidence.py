@@ -52,6 +52,8 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Optional
 
+from umat_oti.cli_json import run_config_transform
+
 from umat_oti import __version__ as _umat_oti_version
 from umat_oti.core.derivative_request import (
     DerivativeRequest,
@@ -702,6 +704,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         type=Path,
         default=REPO_ROOT / "paper_results",
     )
+    parser.add_argument("--config", type=Path, help="Run one canonical UMAT-OTI contract as an evidence artifact.")
+    parser.add_argument("--compile-generated", action="store_true", help="Compile generated Fortran for --config evidence.")
     parser.add_argument(
         "--gfortran",
         default="gfortran",
@@ -720,6 +724,22 @@ def main(argv: Optional[list[str]] = None) -> int:
     )
     args = parser.parse_args(argv)
     args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.config is not None:
+        summary, exit_code = run_config_transform(
+            args.config,
+            args.output_dir / "canonical_transform",
+            compile_generated=args.compile_generated,
+        )
+        evidence_summary = {
+            "evidence_kind": "canonical_config_transform",
+            "status": "verified_from_generic_transformed_source" if exit_code == 0 else "failed",
+            "transform": summary,
+        }
+        summary_path = args.output_dir / "canonical_transform_evidence.json"
+        summary_path.write_text(json.dumps(evidence_summary, indent=2, sort_keys=True), encoding="utf-8")
+        print(json.dumps({**evidence_summary, "evidence_summary": str(summary_path)}, indent=2, sort_keys=True))
+        return exit_code
 
     env = detect_environment(abaqus_command="abaqus")
     fd = _run_fd_reference(args.output_dir)

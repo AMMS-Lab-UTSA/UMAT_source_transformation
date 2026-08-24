@@ -20,6 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
     config = subparsers.add_parser("config", help="Generate artifacts from a canonical UMAT-OTI JSON contract.")
     config.add_argument("config", type=Path, help="Path to a schema 1.1 or legacy project contract.")
     config.add_argument("--out", type=Path, required=True, help="Output directory for generated files.")
+    config.add_argument("--compile", action="store_true", help="Compile the generated Fortran units with gfortran.")
     return parser
 
 
@@ -50,7 +51,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0 if result.validation_report.get("status") != "failed" else 1
     if args.command == "config":
-        summary, exit_code = run_config_transform(args.config, args.out)
+        summary, exit_code = run_config_transform(args.config, args.out, compile_generated=args.compile)
         print(json.dumps(summary, indent=2, sort_keys=True))
         return exit_code
     parser.error(f"Unhandled command {args.command}")
