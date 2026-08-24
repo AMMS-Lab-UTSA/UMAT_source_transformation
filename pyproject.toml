@@ -67,3 +67,6 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+markers = [
+	"slow: exercises a real transform/compile; minutes rather than milliseconds",
+]

@@ -12,7 +12,9 @@ from typing import Any, Sequence
 
 import mpmath as mp
 
-from umat_oti.cli_json import run_config_transform
+from umat_oti.services.transformation import (
+    TransformationOptions, run_transformation,
+)
 from umat_oti.oti.oti_directions import deriv_factor
 from umat_oti.validation.actual_umat_higher_order import _read_oti_higher_order
 
@@ -42,7 +44,8 @@ FD_STEP = 4.0e-5
 
 def run_code_imp_higher_order_evidence(config_path: Path, output_dir: Path) -> dict[str, Any]:
     output_dir = output_dir.resolve()
-    summary, exit_code = run_config_transform(config_path, output_dir, compile_generated=True)
+    summary, exit_code = run_transformation(config_path, output_dir,
+                                          TransformationOptions(compile_generated=True))
     if exit_code != 0:
         raise RuntimeError(f"Canonical transform/compile failed: {summary}")
 

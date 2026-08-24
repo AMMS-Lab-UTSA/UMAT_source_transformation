@@ -52,7 +52,9 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Optional
 
-from umat_oti.cli_json import run_config_transform
+from umat_oti.services.transformation import (
+    TransformationOptions, run_transformation,
+)
 
 from umat_oti import __version__ as _umat_oti_version
 from umat_oti.core.derivative_request import (
@@ -726,10 +728,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     if args.config is not None:
-        summary, exit_code = run_config_transform(
+        summary, exit_code = run_transformation(
             args.config,
             args.output_dir / "canonical_transform",
-            compile_generated=args.compile_generated,
+            TransformationOptions(compile_generated=args.compile_generated),
         )
         evidence_summary = {
             "evidence_kind": "canonical_config_transform",

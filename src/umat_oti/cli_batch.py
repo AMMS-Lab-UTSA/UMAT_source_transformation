@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from umat_oti.cli_json import run_config_transform
+from umat_oti.services.transformation import run_transformation
 from umat_oti.core.config_loader import load_project_config_json
 from umat_oti.validation.abaqus_runner import extract_results, run_both_jobs
 from umat_oti.validation.compare_results import compare_validation_results
@@ -37,7 +37,7 @@ def main() -> int:
         config = load_project_config_json(config_path.read_bytes(), origin_path=config_path)
         name = config_path.stem
         transform_dir = transform_root / name
-        transform_summary, transform_exit_code = run_config_transform(config_path, transform_dir)
+        transform_summary, transform_exit_code = run_transformation(config_path, transform_dir)
         source_path = Path(str(transform_summary.get("source", "")))
         ntens = _as_int(transform_summary.get("ntens"))
         anchor_status = str(transform_summary.get("anchor_status", ""))

@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from umat_oti.cli_json import run_config_transform
+from umat_oti.services.transformation import TransformationOptions, run_transformation
 from umat_oti.core.pipeline import transform_umat
 from umat_oti.validation.material_point import load_material_point_config
 
@@ -51,7 +51,9 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0 if result.validation_report.get("status") != "failed" else 1
     if args.command == "config":
-        summary, exit_code = run_config_transform(args.config, args.out, compile_generated=args.compile)
+        summary, exit_code = run_transformation(
+            args.config, args.out,
+            TransformationOptions(compile_generated=args.compile))
         print(json.dumps(summary, indent=2, sort_keys=True))
         return exit_code
     parser.error(f"Unhandled command {args.command}")
