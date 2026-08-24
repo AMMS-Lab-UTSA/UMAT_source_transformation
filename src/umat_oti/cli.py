@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
+from umat_oti.cli_json import run_config_transform
 from umat_oti.core.pipeline import transform_umat
 from umat_oti.validation.material_point import load_material_point_config
 
@@ -16,6 +17,9 @@ def build_parser() -> argparse.ArgumentParser:
     transform.add_argument("--out", type=Path, required=True, help="Output directory for generated files.")
     transform.add_argument("--config", type=Path, help="Optional material_point.json validation config.")
     transform.add_argument("--no-validation", action="store_true", help="Generate files without running validation.")
+    config = subparsers.add_parser("config", help="Generate artifacts from a canonical UMAT-OTI JSON contract.")
+    config.add_argument("config", type=Path, help="Path to a schema 1.1 or legacy project contract.")
+    config.add_argument("--out", type=Path, required=True, help="Output directory for generated files.")
     return parser
 
 
@@ -45,6 +49,10 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         return 0 if result.validation_report.get("status") != "failed" else 1
+    if args.command == "config":
+        summary, exit_code = run_config_transform(args.config, args.out)
+        print(json.dumps(summary, indent=2, sort_keys=True))
+        return exit_code
     parser.error(f"Unhandled command {args.command}")
     return 2
 

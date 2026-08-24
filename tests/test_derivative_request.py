@@ -19,10 +19,12 @@ from pathlib import Path
 
 import pytest
 
+from umat_oti.cli_json import run_config_transform
 from umat_oti.core.config_loader import load_project_config_json
 from umat_oti.core.derivative_request import (
     DerivativeRequest,
     DerivativeRequestError,
+    KIND_HIGHER_ORDER,
     KIND_LOCAL_JACOBIAN,
     KIND_MATERIAL_TANGENT,
     KIND_PARAMETER_SENSITIVITY,
@@ -205,6 +207,120 @@ def test_unified_contract_round_trips_j2_example():
     )
     assert dstate.kind == KIND_STATE_SENSITIVITY
     assert dstate.state_map == (("EQPLAS", 1),)
+
+
+def test_unified_project_config_expands_with_explicit_ntens():
+    source = REPO_ROOT / "UMATs" / "UMATs" / "ICP" / "UMAT_PCLK.for"
+    payload = {
+        "schema_version": UNIFIED_SCHEMA_VERSION,
+        "name": "pclk_order_four",
+        "source": str(source),
+        "entry_routine": "UMAT",
+        "ntens": 6,
+        "parameters": [],
+        "state_variables": [],
+        "derivatives": [
+            {
+                "id": "material_tangent_order_four",
+                "target": "DDSDDE4",
+                "seed": "DSTRAN",
+                "response": "STRESS",
+                "order": 4,
+            }
+        ],
+    }
+
+    config = load_project_config_json(json.dumps(payload).encode(), origin_path=REPO_ROOT)
+
+    assert config["schema_version"] == UNIFIED_SCHEMA_VERSION
+    assert config["derivatives"] == payload["derivatives"]
+    assert config["source"]["selected_umat_name"] == "UMAT"
+    assert config["transformation_settings"]["ntens"] == 6
+    assert config["transformation_settings"]["order"] == 4
+
+
+def test_unified_project_config_rejects_ambiguous_ntens_inference():
+    source = REPO_ROOT / "UMATs" / "UMATs" / "ICP" / "UMAT_PCLK.for"
+    payload = {
+        "schema_version": UNIFIED_SCHEMA_VERSION,
+        "name": "pclk_ambiguous_ntens",
+        "source": str(source),
+        "entry_routine": "UMAT",
+        "derivatives": [
+            {
+                "id": "material_tangent",
+                "target": "DDSDDE",
+                "seed": "DSTRAN",
+                "response": "STRESS",
+                "order": 1,
+            }
+        ],
+    }
+
+    with pytest.raises(ValueError, match="could not infer NTENS with high confidence"):
+        load_project_config_json(json.dumps(payload).encode(), origin_path=REPO_ROOT)
+
+
+def test_literal_unified_project_runs_canonical_transform(tmp_path: Path):
+    source = REPO_ROOT / "UMATs" / "UMATs" / "ICP" / "UMAT_PCLK.for"
+    payload = {
+        "schema_version": UNIFIED_SCHEMA_VERSION,
+        "name": "pclk_literal_contract",
+        "source": str(source),
+        "entry_routine": "UMAT",
+        "ntens": 6,
+        "parameters": [],
+        "state_variables": [],
+        "derivatives": [
+            {
+                "id": "material_tangent",
+                "target": "DDSDDE",
+                "seed": "DSTRAN",
+                "response": "STRESS",
+                "order": 1,
+            }
+        ],
+    }
+    config_path = tmp_path / "request.json"
+    config_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    summary, exit_code = run_config_transform(config_path, tmp_path / "generated")
+
+    assert exit_code == 0, summary
+    assert summary["transform_success"] is True
+    assert summary["derivative_requests"][0]["target"] == "DDSDDE"
+    assert Path(summary["artifacts"]["abaqus_umat"]["source"]).is_file()
+
+
+def test_combined_unified_project_preserves_all_request_families():
+    source = REPO_ROOT / "UMATs" / "UMATs" / "ICP" / "UMAT_PCLK.for"
+    payload = {
+        "schema_version": UNIFIED_SCHEMA_VERSION,
+        "name": "combined_request_contract",
+        "source": str(source),
+        "entry_routine": "UMAT",
+        "ntens": 6,
+        "parameters": [{"name": "E", "props_index": 1}],
+        "state_variables": [{"name": "EQPLAS", "statev_index": 1}],
+        "derivatives": [
+            {"id": "tangent_order_four", "target": "DDSDDE", "seed": "DSTRAN", "response": "STRESS", "order": 4},
+            {"id": "local_newton", "target": "FJAC", "seed": "DGAMMA", "response": "RESID", "order": 1, "scope": "NEWTON"},
+            {"id": "stress_parameter", "target": "DSIGMA_DP", "seed": "E", "response": "STRESS", "order": 1},
+            {"id": "state_parameter", "target": "DSTATEV_DP", "seed": "E", "response": "STATEV", "order": 1},
+        ],
+    }
+
+    config = load_project_config_json(json.dumps(payload).encode(), origin_path=REPO_ROOT)
+    requests = load_project_derivative_requests(config)
+
+    assert config["transformation_settings"]["order"] == 4
+    assert [request.target for request in requests] == ["DDSDDE", "FJAC", "DSIGMA_DP", "DSTATEV_DP"]
+    assert [request.kind for request in requests] == [
+        KIND_HIGHER_ORDER,
+        KIND_LOCAL_JACOBIAN,
+        KIND_PARAMETER_SENSITIVITY,
+        KIND_STATE_SENSITIVITY,
+    ]
 
 
 def test_load_unified_contract_rejects_wrong_schema_version():
