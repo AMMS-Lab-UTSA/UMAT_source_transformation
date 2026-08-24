@@ -264,3 +264,40 @@ def test_an_unlicensed_source_is_not_treated_as_redistributable(tmp_path):
     licenses = manifest.stages["license_classification"].outputs["licenses"]
     assert licenses[0]["tier"] is None
     assert licenses[0]["redistributable_as_fixture"] is False
+
+
+# --------------------------------------------------------------------------- #
+# CLI
+# --------------------------------------------------------------------------- #
+def test_cli_lists_stages_without_a_contract(capsys):
+    from umat_oti.pipeline.cli import main
+    assert main(["--list-stages"]) == 0
+    out = capsys.readouterr().out
+    assert "source_acquisition" in out and "distributable_package" in out
+
+
+def test_cli_reports_missing_arguments_rather_than_crashing(capsys):
+    from umat_oti.pipeline.cli import main
+    assert main(["--config", "nope.json"]) == 1
+    assert "--work-dir" in capsys.readouterr().err
+
+
+def test_cli_reports_a_missing_contract(tmp_path, capsys):
+    from umat_oti.pipeline.cli import main
+    assert main(["--config", str(tmp_path / "absent.json"),
+                 "--work-dir", str(tmp_path / "w")]) == 1
+    assert "not found" in capsys.readouterr().err
+
+
+def test_cli_runs_the_graph_and_writes_a_manifest(tmp_path, capsys):
+    """A contract whose source is absent must fail at acquisition, not later."""
+    from umat_oti.pipeline.cli import main
+    contract = tmp_path / "c.json"
+    contract.write_text(json.dumps({"source": "does_not_exist.f"}), encoding="utf-8")
+    work = tmp_path / "w"
+    assert main(["--config", str(contract), "--work-dir", str(work), "--json"]) == 1
+    manifest = json.loads((work / "run_manifest.json").read_text())
+    assert manifest["stages"]["source_acquisition"]["status"] == "failed"
+    # everything downstream is not_requested, and the problem list has one entry
+    assert manifest["stages"]["source_inventory"]["status"] == "not_requested"
+    assert [p["stage"] for p in manifest["summary"]["problems"]] == ["source_acquisition"]
