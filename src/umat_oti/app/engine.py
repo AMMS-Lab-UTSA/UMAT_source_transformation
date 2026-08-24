@@ -145,7 +145,7 @@ def _build_contract(name: str, seed: str, output: str, target: str, ntens: int, 
 def transform_single(source_text: str, name: str, seed: str, output: str, target: str,
                      ntens: int, order: int) -> dict:
     """Original config pipeline, with an auto-scaffolded contract."""
-    from umat_oti.cli_json import run_config_transform
+    from umat_oti.services.transformation import run_transformation
     cleaned = _head_and_called(source_text, name)
     with tempfile.TemporaryDirectory() as td:
         src = Path(td) / f"{name}.f"
@@ -153,7 +153,7 @@ def transform_single(source_text: str, name: str, seed: str, output: str, target
         cfg, finite = _build_contract(name, seed, output, target, ntens, order, src)
         cfgpath = Path(td) / "contract.json"
         cfgpath.write_text(json.dumps(cfg, indent=2))
-        report, _ = run_config_transform(cfgpath, Path(td) / "out")
+        report, _ = run_transformation(cfgpath, Path(td) / "out")
         ok = bool(report.get("transform_success"))
         transformed = ""
         ts = report.get("transformed_source")
@@ -169,7 +169,7 @@ def validate_in_abaqus(source_text: str, name: str, seed: str, output: str, targ
                        work_root: str) -> dict:
     """Transform to a persistent dir, then build the Abaqus validation workspace, run
     the ORIGINAL and OTI jobs, extract and compare DDSDDE. Returns the comparison."""
-    from umat_oti.cli_json import run_config_transform
+    from umat_oti.services.transformation import run_transformation
     from umat_oti.core.config_loader import load_project_config_json
     from umat_oti.validation.abaqus_runner import run_both_jobs, extract_results, abaqus_available
     from umat_oti.validation.compare_results import compare_validation_results
@@ -183,7 +183,7 @@ def validate_in_abaqus(source_text: str, name: str, seed: str, output: str, targ
     cfg, finite = _build_contract(name, seed, output, target, ntens, order, src)
     cfgpath = work / "contract.json"
     cfgpath.write_text(json.dumps(cfg, indent=2))
-    summary, _ = run_config_transform(cfgpath, work / "out")
+    summary, _ = run_transformation(cfgpath, work / "out")
     code = ""
     ts = summary.get("transformed_source")
     if ts and Path(ts).exists():

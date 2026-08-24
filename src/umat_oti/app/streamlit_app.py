@@ -25,7 +25,7 @@ from umat_oti.app.derivative_editor import (
     mapping_editor_rows,
     request_editor_rows,
 )
-from umat_oti.cli_json import run_config_transform
+from umat_oti.services.transformation import run_transformation
 from umat_oti.core.config_loader import load_project_config_json
 from umat_oti.core.derivative_request import DerivativeRequestError
 from umat_oti.validation.abaqus_runner import (
@@ -339,7 +339,7 @@ def _tab_transform() -> None:
                     out_dir.mkdir(parents=True, exist_ok=True)
                     config_path = out_dir / "gui_unified_config.json"
                     config_path.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
-                    transform_summary, exit_code = run_config_transform(config_path, out_dir)
+                    transform_summary, exit_code = run_transformation(config_path, out_dir)
                 st.session_state.transform_dir = str(out_dir)
                 st.session_state.transform_report = _read_json(transform_summary.get("report_path", ""))
                 # locate transformed file (named like <Name>_oti.for or umat_<name>_oti.for)

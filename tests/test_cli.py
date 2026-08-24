@@ -33,12 +33,13 @@ def test_main_cli_config_uses_canonical_dispatch(monkeypatch: pytest.MonkeyPatch
 
     calls: list[tuple[Path, Path]] = []
 
-    def fake_run_config_transform(config_path: Path, out_dir: Path, *, compile_generated: bool = False):
+    def fake_run_config_transform(config_path: Path, out_dir: Path, options=None):
         calls.append((config_path, out_dir))
-        assert compile_generated is True
+        # --compile must reach the service as a typed option, not a stray kwarg
+        assert options is not None and options.compile_generated is True
         return {"transform_success": True, "schema_version": "1.1"}, 0
 
-    monkeypatch.setattr(cli, "run_config_transform", fake_run_config_transform)
+    monkeypatch.setattr(cli, "run_transformation", fake_run_config_transform)
 
     exit_code = cli.main(["config", "request.json", "--out", "generated", "--compile"])
 
@@ -70,7 +71,7 @@ def test_batch_cli_uses_canonical_dispatch(tmp_path: Path, monkeypatch: pytest.M
             "derivative_requests": [{"target": "DDSDDE", "order": 4}],
         }, 0
 
-    monkeypatch.setattr(cli_batch, "run_config_transform", fake_run_config_transform)
+    monkeypatch.setattr(cli_batch, "run_transformation", fake_run_config_transform)
     monkeypatch.setattr(
         "sys.argv",
         ["umat-oti-batch", "--config-dir", str(config_dir), "--batch-dir", str(batch_dir)],

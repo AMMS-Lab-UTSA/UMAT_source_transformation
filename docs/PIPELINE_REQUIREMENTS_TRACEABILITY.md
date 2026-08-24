@@ -169,7 +169,7 @@ every required part of it.
 
 **`PIPE-ONE-BOUNDARY`**
 - blocker: 4 distinct transform entry points are still in use
-- measured `distinct_transform_entry_points`: {"cli_json.run_config_transform": 18, "core.pipeline.transform_umat": 1, "semantic.transform_pipeline.transform_umat": 1, "transform.source_transform.transform_umat_to_oti_from_config": 8}
+- measured `distinct_transform_entry_points`: {"cli_json.run_config_transform": 4, "core.pipeline.transform_umat": 1, "semantic.transform_pipeline.transform_umat": 1, "transform.source_transform.transform_umat_to_oti_from_config": 8}
 
 ## Release metadata
 

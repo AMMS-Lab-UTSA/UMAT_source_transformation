@@ -31,7 +31,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Sequence
 
-from umat_oti.cli_json import run_config_transform
+from umat_oti.services.transformation import (
+    TransformationOptions, run_transformation,
+)
 from umat_oti.validation.actual_legacy_higher_order import CODE_IMP_INCREMENTS
 from umat_oti.validation.actual_umat_higher_order import _read_oti_higher_order
 
@@ -545,7 +547,8 @@ def build_model_artifacts(spec: ModelSpec, work_dir: Path) -> dict[str, Any]:
     work_dir = work_dir.resolve()
     work_dir.mkdir(parents=True, exist_ok=True)
 
-    summary, exit_code = run_config_transform(spec.config_path, work_dir, compile_generated=True)
+    summary, exit_code = run_transformation(spec.config_path, work_dir,
+                                          TransformationOptions(compile_generated=True))
     if exit_code != 0:
         raise RuntimeError(f"canonical transform failed for {spec.key}: {summary}")
 
