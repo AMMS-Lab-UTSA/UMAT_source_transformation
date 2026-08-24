@@ -25,6 +25,119 @@ from umat_oti.pipeline.engine import FunctionStage, RunContext, StageOutcome
 from umat_oti.pipeline.manifest import Artifact, sha256_file
 from umat_oti.pipeline.status import require
 
+def _resolve_declared_sources(ctx: RunContext) -> list[Path]:
+    """Resolve the contract's declared sources without running the stage.
+
+    Shared by the stage and by its cache key so the two cannot disagree about
+    which files matter.
+    """
+    declared = ctx.contract.get("sources") or (
+        [ctx.contract["source"]] if ctx.contract.get("source") else []
+    )
+    base = Path(ctx.contract.get("_base_dir") or ctx.repo_root)
+    resolved = []
+    for entry in declared:
+        path = Path(entry)
+        resolved.append((path if path.is_absolute() else base / path).resolve())
+    return resolved
+
+
+def _hash_paths(paths) -> dict[str, str | None]:
+    """SHA256 per path; ``None`` for a path that does not exist.
+
+    A missing file hashing to None rather than being omitted means that deleting
+    a dependency changes the key, which is exactly what must invalidate a cache.
+    """
+    out: dict[str, str | None] = {}
+    for path in sorted({str(Path(p)) for p in paths}):
+        candidate = Path(path)
+        out[path] = sha256_file(candidate) if candidate.is_file() else None
+    return out
+
+
+def _referenced_files(paths) -> list[Path]:
+    """INCLUDE targets reachable from the given sources, resolved next to them."""
+    found: list[Path] = []
+    for entry in paths:
+        path = Path(entry)
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for name in _INCLUDE.findall(text):
+            candidate = (path.parent / name)
+            found.append(candidate.resolve() if candidate.exists() else Path(name))
+    return found
+
+
+def _acquisition_cache_inputs(ctx: RunContext) -> dict:
+    """Paths *and contents*.
+
+    Keying on paths alone was a correctness bug: editing a Fortran source
+    without touching the contract left every downstream stage reusing artifacts
+    built from the previous text.
+    """
+    sources = _resolve_declared_sources(ctx)
+    return {
+        "declared": [str(p) for p in sources],
+        "source_hashes": _hash_paths(sources),
+        # Included files are dependencies even though the contract never names
+        # them, so adding, editing or deleting one has to invalidate the run.
+        "included_hashes": _hash_paths(_referenced_files(sources)),
+    }
+
+
+def _closure_cache_inputs(ctx: RunContext) -> dict:
+    """Hash every file the dependency closure actually reached."""
+    inventory = ctx.results.get("source_inventory") or {}
+    files = [item["path"] for item in inventory.get("files", [])]
+    return {"closure_candidates": _hash_paths(files + [str(p) for p in _referenced_files(files)])}
+
+
+def _transformation_cache_inputs(ctx: RunContext) -> dict:
+    """Options and every input file the transform reads."""
+    closure = ctx.results.get("dependency_closure") or {}
+    inventory = ctx.results.get("source_inventory") or {}
+    files = closure.get("files_in_closure") or [i["path"] for i in inventory.get("files", [])]
+    config_path = ctx.options.get("config_path")
+    return {
+        "options": transformation_options(ctx).cache_identity(),
+        "inputs": _hash_paths(files + [str(p) for p in _referenced_files(files)]),
+        # The contract's *contents*, independent of where the file lives.
+        "contract_file": (sha256_file(Path(config_path))
+                          if config_path and Path(config_path).is_file() else None),
+    }
+
+
+def _compilation_cache_inputs(ctx: RunContext) -> dict:
+    """Compiler identity decides the objects as much as the sources do."""
+    from umat_oti.services.transformation import compiler_version_string
+
+    compiler = str(ctx.options.get("compiler", "gfortran"))
+    return {
+        "compiler": compiler,
+        "compiler_version": compiler_version_string(compiler),
+        "compiler_flags": list(ctx.options.get("compiler_flags", ()) or ()),
+        "compile_requested": bool(ctx.options.get("compile", False)),
+    }
+
+
+def transformation_options(ctx: RunContext):
+    """Build the service options from the run's options mapping.
+
+    Defined once so the stage that *runs* the transformation and the cache key
+    that *describes* it cannot drift apart.
+    """
+    from umat_oti.services.transformation import TransformationOptions
+
+    return TransformationOptions(
+        compile_generated=bool(ctx.options.get("compile", False)),
+        compiler=str(ctx.options.get("compiler", "gfortran")),
+        compiler_flags=tuple(ctx.options.get("compiler_flags", ()) or ()),
+        backend=str(ctx.options.get("backend", "otilib_static")),
+        validation_policy=str(ctx.options.get("validation_policy", "none")),
+    )
+
+
 FIXED_FORM_SUFFIXES = {".f", ".for", ".f77", ".fpp"}
 FREE_FORM_SUFFIXES = {".f90", ".f95", ".f03", ".f08"}
 
@@ -326,8 +439,13 @@ def _derivative_request_normalization(ctx: RunContext) -> StageOutcome:
 # 8-10. transformation, OTI support generation, compilation
 # --------------------------------------------------------------------------- #
 def _source_transformation(ctx: RunContext) -> StageOutcome:
-    """Run the canonical transform, writing into this stage's directory."""
-    from umat_oti.cli_json import run_config_transform
+    """Run the canonical transform, writing into this stage's directory.
+
+    Calls the pure service. The pipeline must never reach into a CLI: that would
+    make the core depend on argument parsing and give the same operation two
+    implementations.
+    """
+    from umat_oti.services.transformation import run_transformation
 
     config_path = ctx.options.get("config_path")
     if not config_path:
@@ -335,9 +453,8 @@ def _source_transformation(ctx: RunContext) -> StageOutcome:
             "the engine currently drives the transform from a contract file on disk; "
             "pass options['config_path']")
     out_dir = ctx.stage_dir("source_transformation")
-    summary, exit_code = run_config_transform(
-        Path(config_path), out_dir,
-        compile_generated=bool(ctx.options.get("compile", False)))
+    summary, exit_code = run_transformation(
+        Path(config_path), out_dir, transformation_options(ctx))
     if exit_code != 0:
         return StageOutcome.failed(
             f"transform returned {exit_code}: {summary.get('error') or summary}")
@@ -373,9 +490,19 @@ def _oti_support_generation(ctx: RunContext) -> StageOutcome:
 
 
 def _compilation(ctx: RunContext) -> StageOutcome:
-    if not shutil.which("gfortran"):
+    """Four distinct outcomes, never collapsed into one.
+
+    Not asking for objects is not a failure to produce them, and a missing
+    compiler is not a defect in this repository.
+    """
+    compiler = str(ctx.options.get("compiler", "gfortran"))
+    if not ctx.options.get("compile", False):
+        return StageOutcome.not_requested(
+            "compilation was not requested; pass --compile to build the generated "
+            "Fortran. No objects exist, and none are claimed to")
+    if not shutil.which(compiler):
         return StageOutcome.blocked(
-            "gfortran is not on PATH; the generated Fortran cannot be compiled here")
+            f"{compiler} is not on PATH; the generated Fortran cannot be compiled here")
     out_dir = Path(ctx.output_of("source_transformation")["out_dir"])
     units = ctx.output_of("oti_support_generation")["compile_order"]
     objects = []
@@ -387,7 +514,7 @@ def _compilation(ctx: RunContext) -> StageOutcome:
                 break
     if not objects:
         return StageOutcome.failed(
-            "no object files were produced; run the transform with compile enabled")
+            "compilation was requested but produced no object files")
     return StageOutcome(
         status=StageOutcome.ok().status,
         outputs={"objects": objects, "object_count": len(objects)},
@@ -406,23 +533,25 @@ def _unsupported(reason: str):
 
 CANONICAL_STAGES: tuple[FunctionStage, ...] = (
     FunctionStage("source_acquisition", _source_acquisition,
-                  cache_inputs_fn=lambda ctx: ctx.contract.get("sources")
-                  or ctx.contract.get("source")),
+                  cache_inputs_fn=_acquisition_cache_inputs),
     FunctionStage("source_inventory", _source_inventory, ("source_acquisition",)),
     FunctionStage("license_classification", _license_classification, ("source_inventory",)),
     FunctionStage("entry_routine_detection", _entry_routine_detection, ("source_inventory",)),
     FunctionStage("dependency_closure", _dependency_closure,
-                  ("source_inventory", "entry_routine_detection")),
+                  ("source_inventory", "entry_routine_detection"),
+                  cache_inputs_fn=_closure_cache_inputs),
     FunctionStage("contract_inference", _contract_inference,
                   ("source_inventory", "dependency_closure")),
     FunctionStage("derivative_request_normalization", _derivative_request_normalization,
                   ("contract_inference",)),
     FunctionStage("source_transformation", _source_transformation,
-                  ("derivative_request_normalization",)),
+                  ("derivative_request_normalization",),
+                  cache_inputs_fn=_transformation_cache_inputs),
     FunctionStage("oti_support_generation", _oti_support_generation,
                   ("source_transformation",)),
     FunctionStage("compilation", _compilation,
-                  ("oti_support_generation",)),
+                  ("oti_support_generation",),
+                  cache_inputs_fn=_compilation_cache_inputs),
     FunctionStage("material_point_execution",
                   _unsupported("the engine does not yet build and run the material-point "
                                "driver; umat_oti.validation drives that today"),
