@@ -301,3 +301,148 @@ def test_cli_runs_the_graph_and_writes_a_manifest(tmp_path, capsys):
     # everything downstream is not_requested, and the problem list has one entry
     assert manifest["stages"]["source_inventory"]["status"] == "not_requested"
     assert [p["stage"] for p in manifest["summary"]["problems"]] == ["source_acquisition"]
+
+
+# --------------------------------------------------------------------------- #
+# Dependency direction
+# --------------------------------------------------------------------------- #
+FORBIDDEN_IMPORTS = ("umat_oti.cli", "umat_oti.cli_json", "umat_oti.cli_batch",
+                     "umat_oti.app", "umat_oti.corpus", "streamlit")
+
+
+def test_the_pipeline_never_imports_a_front_end():
+    """The core must not depend on a CLI, a UI or the corpus runner.
+
+    An inverted dependency gives the same operation two implementations and
+    makes the core unusable without argument parsing.
+    """
+    package = REPO_ROOT / "src" / "umat_oti" / "pipeline"
+    offenders = []
+    for module in sorted(package.glob("*.py")):
+        text = module.read_text(encoding="utf-8")
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not (stripped.startswith("import ") or stripped.startswith("from ")):
+                continue
+            for forbidden in FORBIDDEN_IMPORTS:
+                if forbidden in stripped:
+                    offenders.append(f"{module.name}: {stripped}")
+    assert not offenders, "pipeline imports a front end: " + "; ".join(offenders)
+
+
+def test_the_legacy_wrapper_delegates_and_warns(tmp_path):
+    """cli_json.run_config_transform must not be a second implementation."""
+    import warnings as _warnings
+    from umat_oti import cli_json
+
+    source = (REPO_ROOT / "src" / "umat_oti" / "cli_json.py").read_text(encoding="utf-8")
+    assert "run_transformation" in source, "the wrapper must delegate to the service"
+    assert "transform_umat_to_oti_from_config" not in source, (
+        "cli_json still contains transformation logic; it must only delegate")
+
+    with _warnings.catch_warnings(record=True) as caught:
+        _warnings.simplefilter("always")
+        cli_json.run_config_transform(tmp_path / "absent.json", tmp_path / "out")
+    assert any(issubclass(w.category, DeprecationWarning) for w in caught)
+
+
+# --------------------------------------------------------------------------- #
+# Selection, timestamps and reuse provenance
+# --------------------------------------------------------------------------- #
+def test_only_pulls_in_the_transitive_dependency_closure(tmp_path):
+    """Selecting a stage must not starve it of its own dependencies."""
+    engine = _engine(
+        FunctionStage("a", lambda ctx: StageOutcome.ok()),
+        FunctionStage("b", lambda ctx: StageOutcome.ok(), ("a",)),
+        FunctionStage("c", lambda ctx: StageOutcome.ok(), ("b",)),
+        FunctionStage("side", lambda ctx: StageOutcome.ok()),
+    )
+    manifest = engine.run(contract={}, work_dir=tmp_path, only=["c"])
+    for name in ("a", "b", "c"):
+        assert manifest.stages[name].status is StageStatus.SUCCEEDED, name
+    # a stage outside the closure is genuinely not requested
+    assert manifest.stages["side"].status is StageStatus.NOT_REQUESTED
+
+
+def test_only_rejects_an_unknown_stage_name(tmp_path):
+    engine = _engine(FunctionStage("a", lambda ctx: StageOutcome.ok()))
+    with pytest.raises(ValueError, match="unknown stage"):
+        engine.run(contract={}, work_dir=tmp_path, only=["nope"])
+
+
+def test_every_attempted_stage_records_start_and_finish(tmp_path):
+    engine = _engine(FunctionStage("a", lambda ctx: StageOutcome.ok()))
+    manifest = engine.run(contract={}, work_dir=tmp_path)
+    record = manifest.stages["a"]
+    assert record.started_at and record.finished_at
+    assert record.finished_at >= record.started_at
+    assert record.duration_seconds is not None
+
+
+def test_a_stage_records_its_version_and_implementation(tmp_path):
+    engine = _engine(FunctionStage("a", lambda ctx: StageOutcome.ok(), version="7"))
+    record = engine.run(contract={}, work_dir=tmp_path).stages["a"]
+    assert record.stage_version == "7"
+    assert "test_pipeline_engine" in record.implementation
+
+
+def test_bumping_a_stage_version_invalidates_its_cache(tmp_path):
+    calls: list[int] = []
+
+    def run(ctx):
+        calls.append(1)
+        return StageOutcome.ok()
+
+    PipelineEngine([FunctionStage("a", run, version="1")],
+                   repo_root=REPO_ROOT).run(contract={}, work_dir=tmp_path)
+    PipelineEngine([FunctionStage("a", run, version="2")],
+                   repo_root=REPO_ROOT).run(contract={}, work_dir=tmp_path)
+    assert len(calls) == 2
+
+
+def test_a_reused_stage_names_the_run_it_came_from(tmp_path):
+    engine = _engine(FunctionStage("a", lambda ctx: StageOutcome.ok()))
+    engine.run(contract={}, work_dir=tmp_path, run_id="first")
+    record = engine.run(contract={}, work_dir=tmp_path, run_id="second").stages["a"]
+    assert record.reused_from_cache is True
+    assert record.reused_from_run_id == "first"
+    assert record.reused_from_recorded_at
+
+
+def test_a_stage_records_the_inputs_behind_its_cache_key(tmp_path):
+    engine = _engine(FunctionStage("a", lambda ctx: StageOutcome.ok()))
+    digest = engine.run(contract={"k": 1}, work_dir=tmp_path).stages["a"].input_digest
+    assert digest["contract_hash"]
+    assert "resolved_inputs" in digest and "upstream_cache_keys" in digest
+
+
+def test_an_earlier_manifest_is_archived_rather_than_overwritten(tmp_path):
+    engine = _engine(FunctionStage("a", lambda ctx: StageOutcome.ok()))
+    engine.run(contract={}, work_dir=tmp_path, run_id="first")
+    engine.run(contract={}, work_dir=tmp_path, run_id="second")
+    history = sorted((tmp_path / "history").glob("*.json"))
+    assert history, "the first run's manifest must survive the second run"
+    archived = json.loads(history[0].read_text())
+    assert archived["run_id"] == "first"
+
+
+def test_compilation_reports_not_requested_rather_than_failed(tmp_path):
+    """Not asking for objects is not a failure to produce them."""
+    from umat_oti.pipeline.stages import _compilation
+    ctx = RunContext(contract={}, work_dir=tmp_path, repo_root=REPO_ROOT,
+                     manifest=RunManifest.create(run_id="t", contract={},
+                                                 repo_root=REPO_ROOT),
+                     options={"compile": False})
+    outcome = _compilation(ctx)
+    assert outcome.status is StageStatus.NOT_REQUESTED
+    assert "not requested" in outcome.reason
+
+
+def test_compilation_reports_blocked_when_the_compiler_is_absent(tmp_path):
+    from umat_oti.pipeline.stages import _compilation
+    ctx = RunContext(contract={}, work_dir=tmp_path, repo_root=REPO_ROOT,
+                     manifest=RunManifest.create(run_id="t", contract={},
+                                                 repo_root=REPO_ROOT),
+                     options={"compile": True, "compiler": "definitely-absent-fc"})
+    outcome = _compilation(ctx)
+    assert outcome.status is StageStatus.BLOCKED_BY_EXTERNAL_DEPENDENCY

@@ -76,6 +76,17 @@ class StageRecord:
     duration_seconds: float | None = None
     cache_key: str | None = None
     reused_from_cache: bool = False
+    #: Which earlier run a reused result came from, so a cached row is traceable
+    #: to the execution that actually produced it rather than appearing to have
+    #: run now.
+    reused_from_run_id: str | None = None
+    reused_from_recorded_at: str | None = None
+    #: Stage identity: bump the version to invalidate every cached result.
+    stage_version: str | None = None
+    implementation: str | None = None
+    #: Digest of the resolved cache inputs (source, dependency, contract,
+    #: compiler and environment hashes) that produced ``cache_key``.
+    input_digest: dict[str, Any] | None = None
     outputs: dict[str, Any] = field(default_factory=dict)
     artifacts: list[Artifact] = field(default_factory=list)
     diagnostics: list[str] = field(default_factory=list)
@@ -156,6 +167,30 @@ class RunManifest:
     def record(self, result: StageRecord) -> None:
         self.stages[result.stage] = result
         self.updated_at = _utcnow()
+
+    @staticmethod
+    def archive_previous(manifest_path: Path) -> Path | None:
+        """Move an existing manifest into history rather than overwriting it.
+
+        Replacing the only record of an earlier run destroys the evidence that a
+        result was ever produced differently.
+        """
+        manifest_path = Path(manifest_path)
+        if not manifest_path.exists():
+            return None
+        try:
+            previous = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except Exception:
+            return None
+        stamp = str(previous.get("updated_at") or "unknown").replace(":", "").replace("-", "")
+        run = str(previous.get("run_id") or "run")
+        history = manifest_path.parent / "history"
+        history.mkdir(parents=True, exist_ok=True)
+        target = history / f"run_manifest_{run}_{stamp}.json"
+        if not target.exists():
+            target.write_text(json.dumps(previous, indent=2, sort_keys=True) + "\n",
+                              encoding="utf-8")
+        return target
 
     def status_of(self, stage: str) -> StageStatus | None:
         record = self.stages.get(stage)

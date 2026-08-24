@@ -35,6 +35,33 @@ from umat_oti.pipeline.manifest import (
 from umat_oti.pipeline.status import MissingData, StageStatus
 
 
+def _now() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds")
+
+
+def _implementation_of(stage: Any) -> str:
+    """Where a stage's behaviour actually comes from."""
+    fn = getattr(stage, "run_fn", None) or getattr(stage, "run", None)
+    module = getattr(fn, "__module__", "?")
+    name = getattr(fn, "__qualname__", getattr(fn, "__name__", "?"))
+    return f"{module}.{name}"
+
+
+def _input_digest(stage: Any, ctx: "RunContext", upstream: dict[str, str]) -> dict[str, Any]:
+    """The resolved inputs behind a cache key, kept for provenance."""
+    try:
+        inputs = stage.cache_inputs(ctx)
+    except Exception as exc:  # noqa: BLE001 -- provenance must not break a run
+        inputs = {"unavailable_reason": f"{type(exc).__name__}: {exc}"}
+    return {
+        "stage_version": stage.version,
+        "contract_hash": ctx.manifest.contract_hash,
+        "upstream_cache_keys": {name: upstream.get(name) for name in stage.requires},
+        "resolved_inputs": inputs,
+    }
+
+
 @dataclass
 class RunContext:
     """Everything a stage may read, and where it may write."""
@@ -207,13 +234,16 @@ class PipelineEngine:
             except Exception:
                 previous = None
 
+        archived = RunManifest.archive_previous(manifest_path)
         manifest = RunManifest.create(run_id=run_id, contract=contract,
                                       repo_root=self.repo_root)
+        if archived is not None:
+            manifest.provenance["previous_manifest_archived_to"] = str(archived)
         ctx = RunContext(contract=contract, work_dir=work_dir,
                          repo_root=self.repo_root, manifest=manifest,
                          options=dict(options or {}))
 
-        selected = set(only) if only else None
+        selected = self._closure_of(only) if only else None
         upstream_keys: dict[str, str] = {}
 
         for stage in self.stages:
@@ -238,6 +268,11 @@ class PipelineEngine:
                 record = StageRecord(
                     stage=stage.name, status=StageStatus.SUCCEEDED,
                     reason=None, cache_key=cache_key, reused_from_cache=True,
+                    reused_from_run_id=previous.run_id if previous else None,
+                    reused_from_recorded_at=reused.finished_at or reused.started_at,
+                    stage_version=stage.version,
+                    implementation=_implementation_of(stage),
+                    input_digest=_input_digest(stage, ctx, upstream_keys),
                     outputs=reused.outputs, artifacts=list(reused.artifacts),
                     diagnostics=list(reused.diagnostics),
                     started_at=reused.started_at, finished_at=reused.finished_at,
@@ -249,7 +284,7 @@ class PipelineEngine:
                 continue
 
             started = time.time()
-            started_at = manifest.updated_at
+            started_at = _now()
             try:
                 outcome = stage.run(ctx)
             except MissingData as exc:
@@ -261,8 +296,12 @@ class PipelineEngine:
 
             record = StageRecord(
                 stage=stage.name, status=outcome.status, reason=outcome.reason,
-                started_at=started_at, duration_seconds=round(elapsed, 6),
-                cache_key=cache_key, outputs=outcome.outputs,
+                started_at=started_at, finished_at=_now(),
+                duration_seconds=round(elapsed, 6),
+                cache_key=cache_key, stage_version=stage.version,
+                implementation=_implementation_of(stage),
+                input_digest=_input_digest(stage, ctx, upstream_keys),
+                outputs=outcome.outputs,
                 artifacts=list(outcome.artifacts), diagnostics=list(outcome.diagnostics),
             )
             if outcome.status is StageStatus.SUCCEEDED:
@@ -272,6 +311,26 @@ class PipelineEngine:
 
         manifest.write(manifest_path)
         return manifest
+
+    def _closure_of(self, names: Iterable[str]) -> set[str]:
+        """A selection plus everything it transitively depends on.
+
+        Selecting a stage without its dependencies would mark those dependencies
+        not_requested and then refuse to run the very stage that was asked for.
+        """
+        by_name = {stage.name: stage for stage in self.stages}
+        unknown = sorted(set(names) - set(by_name))
+        if unknown:
+            raise ValueError(f"unknown stage(s): {', '.join(unknown)}")
+        wanted: set[str] = set()
+        frontier = list(names)
+        while frontier:
+            current = frontier.pop()
+            if current in wanted:
+                continue
+            wanted.add(current)
+            frontier.extend(by_name[current].requires)
+        return wanted
 
     @staticmethod
     def _upstream_block(stage: Stage, manifest: RunManifest) -> StageRecord | None:
