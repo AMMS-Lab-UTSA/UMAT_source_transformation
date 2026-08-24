@@ -1,0 +1,147 @@
+{
+  "compiler": {
+    "name": "/usr/bin/gfortran",
+    "version": "GNU Fortran (GCC) 8.5.0 20210514 (Red Hat 8.5.0-28)"
+  },
+  "convention": {
+    "coefficient_vs_derivative": "recovered_derivative = OTI_coefficient * product_of_factorials(direction_multiplicities)",
+    "recovery_factors": {
+      "stress_strain_order_four": 24
+    }
+  },
+  "derivatives": [
+    {
+      "id": "stress_strain_order_four",
+      "kind": "higher_order",
+      "order": 4,
+      "output_layout": "jacobian",
+      "parameters": [
+        {
+          "name": "E",
+          "props_index": 1
+        },
+        {
+          "name": "XNU",
+          "props_index": 2
+        },
+        {
+          "name": "SIGY0",
+          "props_index": 3
+        },
+        {
+          "name": "H",
+          "props_index": 4
+        }
+      ],
+      "recovery_factor": 24,
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "unified",
+      "state_variables": [
+        {
+          "name": "EQPLAS",
+          "statev_index": 1
+        }
+      ],
+      "target": "DDSDDE4"
+    }
+  ],
+  "dimensions": {
+    "nprops": 4,
+    "nstatv": 1,
+    "ntens": 6,
+    "ntens_inference": {
+      "confidence": "configured",
+      "source": "compact JSON otis.ntens",
+      "warning": ""
+    }
+  },
+  "direction_order": {
+    "convention": "canonical_graded_lex",
+    "direction_count": 6,
+    "reference": "umat_oti.oti.oti_directions"
+  },
+  "execution": {
+    "command": [
+      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/compile_hint.sh"
+    ],
+    "returncode": 0,
+    "status": "compiled",
+    "stderr": "",
+    "stdout": ""
+  },
+  "generated_at": "2026-08-24T14:19:03+00:00",
+  "generated_sources": [
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/master_parameters.f90",
+      "sha256": "2baddb13f26a7b01e40692a31866bbbd84db97139e52016ca73058bfd4911781"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/real_utils.f90",
+      "sha256": "20ad619211d89d527f2b7368f16e415a8253e12eca1649164d842a74a34bb93b"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/otim6n4.f90",
+      "sha256": "c476ca61afb4cfe2f5f1c3ffa035ec1c6ef097ffe875b3caa80f584e0810360c"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/compile_order.txt",
+      "sha256": "fd47acb2043bc4fecd8cc09d3deb5f6ef412855188cc019d0250530d23586de3"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/compile_hint.sh",
+      "sha256": "65efb22f96f707a3bdbf9a71e9911a25df79ee890b26859622a562a2bd9cc806"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/higher_order_directions.csv",
+      "sha256": "de91eb31d86227d3bd4e70194723fb0a510fe2c61c4c247a7e930a80b6b1e3bb"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/j2_props_oti.f",
+      "sha256": "554d9df051a3fcae38cd35a1a1c85c8b6238dfffe5081dae75e4758a28be8ce6"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/transform_report.json",
+      "sha256": "018d92138431134e1c103faf4820b6d19d79550fa42d38aa573808a831ec6842"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/j2_props_oti_combined.f90",
+      "sha256": "c41b7a073714a61420d40669c571a3e848cc61eece5d07edb1423b232ffc9936"
+    }
+  ],
+  "parameters": [
+    {
+      "name": "E",
+      "props_index": 1
+    },
+    {
+      "name": "XNU",
+      "props_index": 2
+    },
+    {
+      "name": "SIGY0",
+      "props_index": 3
+    },
+    {
+      "name": "H",
+      "props_index": 4
+    }
+  ],
+  "schema": "umat-oti-derivative-manifest/1",
+  "source": {
+    "entry_routine": "UMAT",
+    "git_commit": "f18306fcd4e2e028d9c5abdf07b61d6278d04e94",
+    "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/generic_ps/j2_props.f",
+    "sha256": "4362e759c4642cb2f74e20c50b86a9472b1e80d6a7fef663bf8faa3dfa8de1c8"
+  },
+  "state_variables": [
+    {
+      "name": "EQPLAS",
+      "statev_index": 1
+    }
+  ],
+  "umat_oti_version": "1.1.0",
+  "warnings": []
+}

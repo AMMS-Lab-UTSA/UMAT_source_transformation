@@ -1,0 +1,194 @@
+{
+  "artifacts": [
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_oti.f",
+      "sha256": "dcb8f9393b924eafe2cbba2e4911f9689a0e1d8dfb33697cf068444b9341c048"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/otim4n4.f90",
+      "sha256": "e598124363fd6b2aae47fd5b7db48e07fb569b4bf0ce256ba865614fac374d6c"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_higher_order_driver.f90",
+      "sha256": "371860a17692b9042611ed1845f74232d696567a8eb97ec38c38327e27a16cbd"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_reference_driver.f90",
+      "sha256": "ee9bb86623d416e8eaa8141196550065a080c91159a776a58de94c29aaf7d08e"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/oti_hjac.dat",
+      "sha256": "ce7a0f62958480e87ca223857c4285b287fd92a3dd960658746df38a29c79306"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_higher_order_comparison.csv",
+      "sha256": "196c33f7a09059362b37a821397180cc5dab97ddf9ca836adde7d80029779ec7"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/table4_higher_order_code_imp.csv",
+      "sha256": "fa6e25718825da45b376a44c86075b472d7d3ba957fe52f9b29a4c95d94374a1"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_primal.csv",
+      "sha256": "81db35546c57e493e8d0487686438cbdeaf3554f0ee41485695cbe120aaf3740"
+    }
+  ],
+  "branch_history": [
+    {
+      "branch": "elastic",
+      "effective_plastic_strain": 0.0,
+      "hardening_variable": 0.0,
+      "increment": 1
+    },
+    {
+      "branch": "plastic",
+      "effective_plastic_strain": 0.000355081109203435,
+      "hardening_variable": 0.42822781769934265,
+      "increment": 2
+    },
+    {
+      "branch": "plastic",
+      "effective_plastic_strain": 0.0016093686890864087,
+      "hardening_variable": 1.9408986390382088,
+      "increment": 3
+    },
+    {
+      "branch": "plastic",
+      "effective_plastic_strain": 0.0020318954949969836,
+      "hardening_variable": 2.4504659669663624,
+      "increment": 4
+    }
+  ],
+  "canonical_manifest": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/derivative_manifest.json",
+  "comparison": {
+    "absolute_tolerances_by_order": {
+      "2": 0.002,
+      "3": 5.0,
+      "4": 40000.0
+    },
+    "csv": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_higher_order_comparison.csv",
+    "failed_rows": 0,
+    "max_absolute_error": 19666079.65625,
+    "max_relative_error": 1.0,
+    "max_relative_error_when_absolute_tolerance_exceeded": 3.4876621328268337e-06,
+    "passed_rows": 96,
+    "publication_table": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/table4_higher_order_code_imp.csv",
+    "relative_tolerance": 2e-05,
+    "rows": 96
+  },
+  "directions": [
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      2
+    ],
+    [
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      2,
+      2
+    ]
+  ],
+  "factorial_recovery": "OTI coefficients are multiplied by product factorials before oti_hjac.dat output.",
+  "increments": [
+    [
+      0.000750000006519258,
+      -0.0003214285825379193,
+      0.0,
+      0.0
+    ],
+    [
+      0.000750000006519258,
+      -0.00047676003305241466,
+      0.0,
+      0.0
+    ],
+    [
+      0.0011249999515712261,
+      -0.0010704351589083672,
+      0.0,
+      0.0
+    ],
+    [
+      0.0003750000614672899,
+      -0.0003618698101490736,
+      0.0,
+      0.0
+    ]
+  ],
+  "model": "code_imp_legacy_umat",
+  "normalized_request": [
+    {
+      "id": "stress_strain_order_four",
+      "kind": "higher_order",
+      "order": 4,
+      "output_layout": "jacobian",
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "unified",
+      "state_variables": [
+        {
+          "name": "P",
+          "statev_index": 1
+        },
+        {
+          "name": "R",
+          "statev_index": 2
+        }
+      ],
+      "target": "DDSDDE4"
+    }
+  ],
+  "reference": {
+    "compile_command": [
+      "gfortran",
+      "-O1",
+      "-std=legacy",
+      "-ffixed-form",
+      "-ffixed-line-length-none",
+      "-I",
+      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp",
+      "-c",
+      "/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
+      "-o",
+      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/original_code_imp.o"
+    ],
+    "compile_returncode": 0,
+    "driver_compile_returncode": 0,
+    "method": "independently compiled original code_imp UMAT replayed for each tensor-product centered finite-difference stencil",
+    "near_zero_error_policy": "Absolute tolerances cover measured double-precision cancellation for analytically zero elastic derivatives; substantive derivatives must satisfy the relative tolerance.",
+    "stencil": "9-point centered per active strain component",
+    "step": 4e-05
+  },
+  "schema": "umat-oti-actual-higher-order-evidence/1",
+  "source": {
+    "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
+    "sha256": "82defecdce46a577087674977be175b3b9881be8afafaa1d88545c8534563672"
+  },
+  "status": "verified_from_generic_transformed_source",
+  "transformed_execution": {
+    "compile_returncode": 0,
+    "run_returncode": 0
+  }
+}

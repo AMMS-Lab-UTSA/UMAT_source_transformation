@@ -3953,9 +3953,10 @@ def _integer_literals_normalized_in_oti_expressions(source: str) -> bool:
     for _, line in _active_lines_with_numbers(source):
         if "_OTI" not in line.upper():
             continue
-        if re.search(r"(?<![A-Za-z0-9_.)])\d+(?![A-Za-z0-9_.])\s*[*\/]", line):
+        statement = line[6:] if len(line) > 6 and not line[:5].strip() and line[5] not in {" ", "0"} else line
+        if re.search(r"(?<![A-Za-z0-9_.)])\d+(?![A-Za-z0-9_.])\s*[*\/]", statement):
             return False
-        if re.search(r"[*\/]\s*\d+(?![A-Za-z0-9_.])", line):
+        if re.search(r"[*\/]\s*\d+(?![A-Za-z0-9_.])", statement):
             return False
     return True
 

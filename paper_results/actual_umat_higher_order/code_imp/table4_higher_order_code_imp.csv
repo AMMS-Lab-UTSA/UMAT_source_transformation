@@ -1,0 +1,7 @@
+model,branch,order,comparison_rows,passed_rows,failed_rows,max_absolute_error,max_relative_error_when_absolute_tolerance_exceeded,absolute_tolerance,relative_tolerance,reference_method
+code_imp_legacy_umat,elastic,2,8,8,0,1.4185905456542969e-05,0.0,0.002,2e-05,independently_compiled_original_umat_centered_finite_difference
+code_imp_legacy_umat,elastic,3,8,8,0,0.603515625,0.0,5.0,2e-05,independently_compiled_original_umat_centered_finite_difference
+code_imp_legacy_umat,elastic,4,8,8,0,33211.546875,0.0,40000.0,2e-05,independently_compiled_original_umat_centered_finite_difference
+code_imp_legacy_umat,plastic,2,24,24,0,8.01699773222208,2.296202064970266e-06,0.002,2e-05,independently_compiled_original_umat_centered_finite_difference
+code_imp_legacy_umat,plastic,3,24,24,0,11635.817686080933,3.4876621328268337e-06,5.0,2e-05,independently_compiled_original_umat_centered_finite_difference
+code_imp_legacy_umat,plastic,4,24,24,0,19666079.65625,2.734603158976211e-06,40000.0,2e-05,independently_compiled_original_umat_centered_finite_difference

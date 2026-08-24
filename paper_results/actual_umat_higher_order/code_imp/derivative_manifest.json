@@ -1,0 +1,120 @@
+{
+  "compiler": {
+    "name": "/usr/bin/gfortran",
+    "version": "GNU Fortran (GCC) 8.5.0 20210514 (Red Hat 8.5.0-28)"
+  },
+  "convention": {
+    "coefficient_vs_derivative": "recovered_derivative = OTI_coefficient * product_of_factorials(direction_multiplicities)",
+    "recovery_factors": {
+      "stress_strain_order_four": 24
+    }
+  },
+  "derivatives": [
+    {
+      "id": "stress_strain_order_four",
+      "kind": "higher_order",
+      "order": 4,
+      "output_layout": "jacobian",
+      "recovery_factor": 24,
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "unified",
+      "state_variables": [
+        {
+          "name": "P",
+          "statev_index": 1
+        },
+        {
+          "name": "R",
+          "statev_index": 2
+        }
+      ],
+      "target": "DDSDDE4"
+    }
+  ],
+  "dimensions": {
+    "nprops": 0,
+    "nstatv": 2,
+    "ntens": 4,
+    "ntens_inference": {
+      "confidence": "configured",
+      "source": "compact JSON otis.ntens",
+      "warning": ""
+    }
+  },
+  "direction_order": {
+    "convention": "canonical_graded_lex",
+    "direction_count": 4,
+    "reference": "umat_oti.oti.oti_directions"
+  },
+  "execution": {
+    "command": [
+      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/compile_hint.sh"
+    ],
+    "returncode": 0,
+    "status": "compiled",
+    "stderr": "",
+    "stdout": ""
+  },
+  "generated_at": "2026-08-24T14:24:18+00:00",
+  "generated_sources": [
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/master_parameters.f90",
+      "sha256": "2baddb13f26a7b01e40692a31866bbbd84db97139e52016ca73058bfd4911781"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/real_utils.f90",
+      "sha256": "20ad619211d89d527f2b7368f16e415a8253e12eca1649164d842a74a34bb93b"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/otim4n4.f90",
+      "sha256": "e598124363fd6b2aae47fd5b7db48e07fb569b4bf0ce256ba865614fac374d6c"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/compile_order.txt",
+      "sha256": "b4987bd888a4a4da370c99dfdbf60b2ce7856e40d105d569e5eeb950f403bee2"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/compile_hint.sh",
+      "sha256": "78b0e911fbae6a5e245e6c94f6e16cd730cbd7244d84f7069377f6273ca9bd86"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/higher_order_directions.csv",
+      "sha256": "7102fa399834245069ba9c259477f4a7c788368472499f47320de9ec8d8bb4ee"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_oti.f",
+      "sha256": "dcb8f9393b924eafe2cbba2e4911f9689a0e1d8dfb33697cf068444b9341c048"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/transform_report.json",
+      "sha256": "9d64537aa8804c6a008a815bb62975fb0154e53b6b4f8c4a96aa8f49f06090e3"
+    },
+    {
+      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/code_imp/code_imp_oti_combined.f90",
+      "sha256": "b41d4c6fc38aa1e83ff157f62b45bb00932e66fc1f99af58419dc7a1d535fda1"
+    }
+  ],
+  "parameters": [],
+  "schema": "umat-oti-derivative-manifest/1",
+  "source": {
+    "entry_routine": "UMAT",
+    "git_commit": "f18306fcd4e2e028d9c5abdf07b61d6278d04e94",
+    "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/ICP/plasticity_imp/code_imp.f",
+    "sha256": "82defecdce46a577087674977be175b3b9881be8afafaa1d88545c8534563672"
+  },
+  "state_variables": [
+    {
+      "name": "P",
+      "statev_index": 1
+    },
+    {
+      "name": "R",
+      "statev_index": 2
+    }
+  ],
+  "umat_oti_version": "1.1.0",
+  "warnings": []
+}
