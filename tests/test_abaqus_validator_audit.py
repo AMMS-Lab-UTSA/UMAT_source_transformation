@@ -228,3 +228,22 @@ def test_claim_matrix_promotes_only_observed_corpus_stages():
     assert by_id["corpus_regression_round_metrics"]["status"] == "verified"
     assert by_id["corpus_primal_parity"]["status"] == "pending"
     assert by_id["corpus_derivative_verification"]["status"] == "pending"
+
+
+def test_archived_abaqus_evidence_never_claims_18_of_19_ddsdde_passed():
+    repo_root = Path(__file__).resolve().parents[1]
+    aggregate = json.loads(
+        (repo_root / "paper_results" / "arc_791506" / "table2_abaqus_paired.json").read_text(encoding="utf-8")
+    )
+    ddsdde = aggregate["summary"]["observables"]["DDSDDE"]
+
+    assert ddsdde == {
+        "requested": 18,
+        "available": 17,
+        "compared": 17,
+        "passed": 17,
+        "failed": 0,
+        "not_requested": 1,
+        "unavailable": 1,
+    }
+    assert not (ddsdde["passed"] == 18 and aggregate["summary"]["total"] == 19)

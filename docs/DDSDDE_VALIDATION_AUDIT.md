@@ -4,7 +4,18 @@
 
 The former all-zero aggregate table was a reporting defect, not evidence that all transformed tangents were bitwise identical. The original aggregator read `comparison_report.json`, which could contain only an overall status, requested metric keys named `max_absolute_difference` / `max_relative_difference`, while the validator emits `max_abs_difference` / `max_rel_difference`, and allowed absent values to appear as zero in downstream reporting. Commit `cf6530d` corrected the source to the complete `validation_report.json` and the emitted key names.
 
-The corrected real Abaqus collection contains 18 passing manuscript cases and one additional failed-execution case. Nonzero DDSDDE differences include:
+The corrected real Abaqus collection contains 18 overall passing cases and one additional failed-execution case. Observable-specific accounting is:
+
+| Observable | Requested | Available | Compared | Passed | Failed | Not requested | Unavailable |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| STRESS | 19 | 18 | 18 | 18 | 0 | 0 | 1 |
+| STATEV | 19 | 18 | 18 | 18 | 0 | 0 | 1 |
+| DDSDDE | 18 | 17 | 17 | 17 | 0 | 1 | 1 |
+| CONVERGENCE | 19 | 18 | 18 | 18 | 0 | 0 | 1 |
+
+Thus the DDSDDE result is 17 of 17 available comparisons passed. It is not 18 of 19: `spin_elas_def` did not request DDSDDE, and `UMAT_VPDCL_R` did not produce a valid paired execution.
+
+Nonzero DDSDDE differences among the 17 comparisons include:
 
 | Case | Maximum absolute difference | Maximum relative difference |
 |---|---:|---:|
@@ -16,7 +27,7 @@ The corrected real Abaqus collection contains 18 passing manuscript cases and on
 
 `spin_elas_def` is not a zero-difference result. Its archived run did not request DDSDDE comparison, so its DDSDDE metrics are `null` and status is `not_requested`. Both result readers nevertheless exported four distinct 6x6 increment matrices, now retained in the audit record.
 
-`UMAT_VPDCL_R` is the nineteenth additional case. Both paired executions do not form a valid passing comparison; it remains `failed_execution` and is not counted in the 18-case manuscript set.
+`UMAT_VPDCL_R` is the nineteenth additional case. Both paired executions failed and do not form a valid comparison. Its requested observables are `unavailable`, with the original/transformed run statuses retained as the reason. Comparison metrics, matrices, and increment differences are `null` or empty rather than fabricated from partial outputs.
 
 ## Adversarial proof
 
@@ -49,5 +60,7 @@ The incorrect generated source was temporary and was not committed. The archived
 - distinct result-file identities
 - original/transformed DDSDDE matrices for every paired increment
 - element-wise absolute and relative differences and per-increment maxima
+
+Matrices and differences are present only when both executions completed. Failed-execution cases retain source, job, command, log, and result-file identities without exposing partial matrices as comparison evidence.
 
 The historical execution provenance is Slurm job `791506`, node `c015`, execution commit `13e98cafe38c30242a6139cec0bb6c27e477a40a`. Re-aggregation never relabels this execution with the current code commit.
