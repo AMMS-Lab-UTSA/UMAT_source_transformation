@@ -33,13 +33,14 @@ def test_main_cli_config_uses_canonical_dispatch(monkeypatch: pytest.MonkeyPatch
 
     calls: list[tuple[Path, Path]] = []
 
-    def fake_run_config_transform(config_path: Path, out_dir: Path):
+    def fake_run_config_transform(config_path: Path, out_dir: Path, *, compile_generated: bool = False):
         calls.append((config_path, out_dir))
+        assert compile_generated is True
         return {"transform_success": True, "schema_version": "1.1"}, 0
 
     monkeypatch.setattr(cli, "run_config_transform", fake_run_config_transform)
 
-    exit_code = cli.main(["config", "request.json", "--out", "generated"])
+    exit_code = cli.main(["config", "request.json", "--out", "generated", "--compile"])
 
     assert exit_code == 0
     assert calls == [(Path("request.json"), Path("generated"))]

@@ -78,6 +78,11 @@ def build_manifest(
     generated_at: Optional[str] = None,
     git_commit: Optional[str] = None,
     direction_count: Optional[int] = None,
+    generated_files: Iterable[Path | str] = (),
+    ntens_source: str = "",
+    ntens_confidence: str = "",
+    ntens_warning: str = "",
+    execution_status: str = "not_executed",
 ) -> dict[str, Any]:
     """Assemble a manifest dict for a transformation run.
 
@@ -110,7 +115,16 @@ def build_manifest(
             "git_commit": git_commit,
             "entry_routine": entry_routine.upper(),
         },
-        "dimensions": {"ntens": ntens, "nstatv": nstatv, "nprops": nprops},
+        "dimensions": {
+            "ntens": ntens,
+            "nstatv": nstatv,
+            "nprops": nprops,
+            "ntens_inference": {
+                "source": ntens_source,
+                "confidence": ntens_confidence,
+                "warning": ntens_warning,
+            },
+        },
         "parameters": [
             {"name": name, "props_index": idx} for name, idx in parameters
         ],
@@ -130,6 +144,8 @@ def build_manifest(
             "recovery_factors": _recovery_factors_table(request_records),
         },
         "compiler": {"name": compiler_name, "version": compiler_version},
+        "generated_sources": _generated_file_records(generated_files),
+        "execution": {"status": execution_status},
         "warnings": list(warnings),
     }
     return manifest
@@ -150,6 +166,15 @@ def _request_record(request: DerivativeRequest) -> dict[str, Any]:
     record = request.to_dict()
     record["recovery_factor"] = _recovery_factor_for(request)
     return record
+
+
+def _generated_file_records(paths: Iterable[Path | str]) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for value in paths:
+        path = Path(value)
+        if path.is_file():
+            records.append({"path": str(path), "sha256": sha256_of_file(path)})
+    return records
 
 
 def _recovery_factor_for(request: DerivativeRequest) -> int:

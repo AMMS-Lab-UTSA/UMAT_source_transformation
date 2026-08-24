@@ -93,7 +93,10 @@ def test_manifest_records_all_required_fields(tmp_path: Path):
     assert manifest["schema"] == MANIFEST_SCHEMA
     assert manifest["source"]["sha256"]
     assert manifest["source"]["entry_routine"] == "UMAT"
-    assert manifest["dimensions"] == {"ntens": 6, "nstatv": 1, "nprops": 4}
+    assert manifest["dimensions"]["ntens"] == 6
+    assert manifest["dimensions"]["nstatv"] == 1
+    assert manifest["dimensions"]["nprops"] == 4
+    assert manifest["dimensions"]["ntens_inference"] == {"source": "", "confidence": "", "warning": ""}
     assert manifest["parameters"] == [
         {"name": "E", "props_index": 1},
         {"name": "NU", "props_index": 2},

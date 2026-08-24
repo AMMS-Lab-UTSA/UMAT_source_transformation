@@ -127,7 +127,7 @@ def transform_umat_for_parameter_sensitivity(
         raise ValueError("parameter_values length must match parameters length")
 
     source_text = contract.umat_source_path.read_text(encoding="utf-8", errors="replace")
-    _reject_integer_parameter_paths(source_text, contract.parameters)
+    validate_parameter_paths(source_text, contract.parameters)
 
     module_result = generate_otilib_module(
         output_dir=output_dir, ntens=n_param, order=1
@@ -240,7 +240,7 @@ def _parse_umat_source(path: Path) -> ParsedFortranSource:
     )
 
 
-def _reject_integer_parameter_paths(source_text: str, parameters: tuple[tuple[str, int], ...]) -> None:
+def validate_parameter_paths(source_text: str, parameters: tuple[tuple[str, int], ...]) -> None:
     selected_indices = {index for _, index in parameters}
     explicit_real = _declared_names(source_text, r"^\s*(?:REAL(?:\s*\*\s*\d+|\s*\([^)]*\))?|DOUBLE\s+PRECISION)\b")
     explicit_integer = _declared_names(source_text, r"^\s*INTEGER(?:\s*\*\s*\d+|\s*\([^)]*\))?\b")

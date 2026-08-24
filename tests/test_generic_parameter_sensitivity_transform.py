@@ -29,6 +29,7 @@ from typing import Iterable
 
 import pytest
 
+from umat_oti.cli_json import run_config_transform
 from umat_oti.transform.parameter_sensitivity_transform import (
     GenericPSContract,
     NonDifferentiableParameterPathError,
@@ -239,6 +240,43 @@ def test_generic_transform_rejects_integer_parameter_path(tmp_path: Path, assign
 
     assert "Declare MEXP as REAL(8)" in exc_info.value.suggested_patch
     assert assignment in source.read_text(encoding="utf-8")
+
+
+def test_literal_schema_rejects_implicit_integer_props_path(tmp_path: Path):
+    real_source = REPO_ROOT / "UMATs" / "UMATs" / "generic_ps" / "perzyna_vp_props.f"
+    source = tmp_path / "perzyna_implicit_integer.f"
+    source.write_text(
+        real_source.read_text(encoding="utf-8").replace("      REAL*8  MEXP\n", ""),
+        encoding="utf-8",
+    )
+    payload = {
+        "schema_version": "1.1",
+        "name": "perzyna_integer_parameter",
+        "source": str(source),
+        "entry_routine": "UMAT",
+        "ntens": 6,
+        "parameters": [{"name": "MEXP", "props_index": 5, "value": 2.0}],
+        "state_variables": [],
+        "derivatives": [
+            {"id": "stress_parameter", "target": "DSIGMA_DP", "seed": "MEXP", "response": "STRESS", "order": 1}
+        ],
+        "material_point_driver": {
+            "nstatv": 1,
+            "ndi": 3,
+            "nshr": 3,
+            "dstran_per_increment": [1.0e-4, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "n_increments": 1,
+        },
+    }
+    config_path = tmp_path / "request.json"
+    config_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    summary, exit_code = run_config_transform(config_path, tmp_path / "generated")
+
+    assert exit_code == 1
+    assert summary["status_category"] == "non_differentiable_integer_parameter_path"
+    assert summary["blockers"][0]["code"] == "non_differentiable_integer_parameter_path"
+    assert "Declare MEXP as REAL(8)" in summary["blockers"][0]["suggested_patch"]
 
 
 @REQUIRES_GFORTRAN

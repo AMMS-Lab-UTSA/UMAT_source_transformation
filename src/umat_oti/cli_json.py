@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -13,15 +15,17 @@ from umat_oti.core.derivative_request import (
     validate_derivative_requests,
 )
 from umat_oti.core.transformation_anchors import anchor_completion_status, merge_completed_anchors_into_config
+from umat_oti.reports.manifest import build_manifest, write_manifest
 from umat_oti.transform.parameter_sensitivity_transform import (
     GenericPSContract,
     NonDifferentiableParameterPathError,
     transform_umat_for_parameter_sensitivity,
+    validate_parameter_paths,
 )
 from umat_oti.transform.source_transform import transform_umat_to_oti_from_config
 
 
-def run_config_transform(config_path: Path, out_dir: Path) -> tuple[dict[str, Any], int]:
+def run_config_transform(config_path: Path, out_dir: Path, *, compile_generated: bool = False) -> tuple[dict[str, Any], int]:
     config_path = config_path.expanduser().resolve()
     out_dir = out_dir.expanduser().resolve()
 
@@ -41,6 +45,21 @@ def run_config_transform(config_path: Path, out_dir: Path) -> tuple[dict[str, An
     request_errors = validate_derivative_requests(derivative_requests)
     if request_errors:
         return {"config": str(config_path), "errors": request_errors, "status_category": "invalid_derivative_request"}, 1
+    parameter_requests = [
+        request
+        for request in derivative_requests
+        if request.kind in {KIND_PARAMETER_SENSITIVITY, KIND_STATE_SENSITIVITY}
+    ]
+    if parameter_requests:
+        parameter_map = tuple(dict.fromkeys(item for request in parameter_requests for item in request.parameter_map))
+        try:
+            validate_parameter_paths(source_text, parameter_map)
+        except NonDifferentiableParameterPathError as exc:
+            return {
+                "config": str(config_path),
+                "blockers": [{"code": exc.code, "message": str(exc), "suggested_patch": exc.suggested_patch}],
+                "status_category": exc.code,
+            }, 1
     completion = anchor_completion_status(config)
     settings = config.get("transformation_settings", {}) if isinstance(config.get("transformation_settings"), dict) else {}
     ntens = int(settings.get("ntens") or 0)
@@ -62,11 +81,6 @@ def run_config_transform(config_path: Path, out_dir: Path) -> tuple[dict[str, An
     result = transform_umat_to_oti_from_config(source_text, config, out_dir, ntens)
     combined = _write_combined_source(out_dir, result.transformed_source_path) if result.success else None
     parameter_artifact: dict[str, Any] | None = None
-    parameter_requests = [
-        request
-        for request in derivative_requests
-        if request.kind in {KIND_PARAMETER_SENSITIVITY, KIND_STATE_SENSITIVITY}
-    ]
     if result.success and parameter_requests:
         try:
             parameter_artifact = _generate_parameter_sensitivity_artifact(
@@ -94,6 +108,39 @@ def run_config_transform(config_path: Path, out_dir: Path) -> tuple[dict[str, An
                 }
             )
             return summary, 1
+    manifest_path: Path | None = None
+    compile_result: dict[str, Any] = {"status": "not_requested"}
+    if result.success:
+        compiler_name, compiler_version = _compiler_identity()
+        if compile_generated:
+            compile_result = _compile_generated_sources(out_dir, compiler_name)
+        driver = config.get("material_point_driver") if isinstance(config.get("material_point_driver"), dict) else {}
+        parameters = _indexed_names(config.get("parameters"), "props_index")
+        state_variables = _indexed_names(config.get("state_variables"), "statev_index")
+        manifest = build_manifest(
+            source_path=source_path,
+            entry_routine=str(source.get("selected_umat_name") or source.get("detected_umat_name") or "UMAT"),
+            ntens=ntens,
+            nstatv=int(driver.get("nstatv") or max((index for _, index in state_variables), default=0)),
+            nprops=max((index for _, index in parameters), default=0),
+            requests=derivative_requests,
+            parameters=parameters,
+            state_variables=state_variables,
+            compiler_name=compiler_name,
+            compiler_version=compiler_version,
+            warnings=result.warnings,
+            direction_count=int(result.report.get("oti_directions") or ntens),
+            generated_files=[*result.generated_files, *([combined] if combined else [])],
+            ntens_source=str(settings.get("ntens_source", "")),
+            ntens_confidence=str(settings.get("ntens_confidence", "")),
+            ntens_warning=str(settings.get("ntens_warning", "")),
+            execution_status=str(compile_result["status"] if compile_generated else "generated_not_compiled"),
+        )
+        if compile_generated:
+            manifest["execution"].update(compile_result)
+        else:
+            manifest["execution"]["compilation"] = compile_result
+        manifest_path = write_manifest(manifest, out_dir / "derivative_manifest.json")
     summary.update(
         {
             "transform_success": result.success,
@@ -102,6 +149,8 @@ def run_config_transform(config_path: Path, out_dir: Path) -> tuple[dict[str, An
             "report_path": str(result.report_path or ""),
             "transformed_source": str(result.transformed_source_path or ""),
             "combined_source": str(combined or ""),
+            "manifest": str(manifest_path or ""),
+            "compilation": compile_result,
             "artifacts": {
                 "abaqus_umat": {
                     "abi": "standard_real_umat",
@@ -114,7 +163,45 @@ def run_config_transform(config_path: Path, out_dir: Path) -> tuple[dict[str, An
             "status_category": _classify_outcome(result),
         }
     )
-    return summary, 0 if result.success else 1
+    compiled_ok = not compile_generated or compile_result.get("status") == "compiled"
+    return summary, 0 if result.success and compiled_ok else 1
+
+
+def _indexed_names(raw: Any, index_key: str) -> list[tuple[str, int]]:
+    if not isinstance(raw, list):
+        return []
+    return [
+        (str(entry.get("name", "")).upper(), int(entry[index_key]))
+        for entry in raw
+        if isinstance(entry, dict) and str(entry.get("name", "")).strip() and entry.get(index_key) is not None
+    ]
+
+
+def _compiler_identity() -> tuple[str, str]:
+    compiler = shutil.which("gfortran")
+    if compiler is None:
+        return "", ""
+    result = subprocess.run([compiler, "--version"], check=False, capture_output=True, text=True)
+    first_line = result.stdout.splitlines()[0] if result.stdout.splitlines() else ""
+    return compiler, first_line
+
+
+def _compile_generated_sources(out_dir: Path, compiler_name: str) -> dict[str, Any]:
+    script = out_dir / "compile_hint.sh"
+    command = [str(script)]
+    if not compiler_name:
+        return {"status": "compiler_unavailable", "command": command, "returncode": None}
+    from umat_oti.corpus.cli import _write_aba_param_stub
+
+    _write_aba_param_stub(out_dir)
+    result = subprocess.run(command, cwd=out_dir, check=False, capture_output=True, text=True)
+    return {
+        "status": "compiled" if result.returncode == 0 else "compile_failed",
+        "command": command,
+        "returncode": result.returncode,
+        "stdout": result.stdout,
+        "stderr": result.stderr,
+    }
 
 
 def _generate_parameter_sensitivity_artifact(
@@ -236,6 +323,7 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         help="Output directory. Defaults to ./umat_oti_workspace/new_user_runs/<config-stem>.",
     )
+    parser.add_argument("--compile", action="store_true", help="Compile the generated Fortran units with gfortran.")
     return parser
 
 
@@ -245,7 +333,7 @@ def main(argv: list[str] | None = None) -> int:
     config_path = args.config.expanduser().resolve()
     out_dir = args.out.expanduser().resolve() if args.out is not None else (Path.cwd() / "umat_oti_workspace" / "new_user_runs" / config_path.stem)
 
-    summary, exit_code = run_config_transform(config_path, out_dir)
+    summary, exit_code = run_config_transform(config_path, out_dir, compile_generated=args.compile)
     print(json.dumps(summary, indent=2, sort_keys=True))
     return exit_code
 
