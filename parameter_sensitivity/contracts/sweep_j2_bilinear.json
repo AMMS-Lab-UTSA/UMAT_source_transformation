@@ -2,7 +2,10 @@
   "_adapter_notes": [],
   "_generated_by": "tools/run_parameter_sensitivity_sweep.py via umat_oti.services.contract_adapter; edit contract_v2.json, not this file",
   "_unmapped_v2_keys": [
-    "output"
+    "dimensions.nprops",
+    "history.propagate",
+    "output.contract",
+    "output.object"
   ],
   "derivatives": [
     {
@@ -46,21 +49,25 @@
   "parameters": [
     {
       "name": "E",
+      "oti_direction": 1,
       "props_index": 1,
       "value": 200000.0
     },
     {
       "name": "nu",
+      "oti_direction": 2,
       "props_index": 2,
       "value": 0.3
     },
     {
       "name": "SIGY0",
+      "oti_direction": 3,
       "props_index": 3,
       "value": 250.0
     },
     {
       "name": "Et",
+      "oti_direction": 4,
       "props_index": 4,
       "value": 20000.0
     }
@@ -75,7 +82,7 @@
   "source": "../models/sweep_j2_bilinear/umat.for",
   "state_variables": [
     {
-      "name": "STATEV_1",
+      "name": "STATEV",
       "statev_index": 1
     }
   ]

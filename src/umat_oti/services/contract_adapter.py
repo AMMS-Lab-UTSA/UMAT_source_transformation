@@ -178,20 +178,61 @@ def _requests(v2: dict[str, Any], kinematics: str) -> tuple[list[dict[str, Any]]
 
 
 def _state_variables(v2: dict[str, Any]) -> list[dict[str, Any]]:
-    nstatev = _dimensions(v2).get("nstatev") or 0
-    name = (v2.get("history") or {}).get("state") or "STATEV"
-    return [{"name": f"{name}_{i}", "statev_index": i} for i in range(1, int(nstatev) + 1)]
+    """State-variable names, handling ``history.state`` being a list.
+
+    Three contracts give ``history.state`` as a list (``["EQPLAS"]``,
+    ``["g_alpha"]``). Interpolating that directly produced names like
+    ``"['EQPLAS']_1"``, which flowed into the generated driver's CSV headers and
+    into the derivative manifest as the canonical state-variable name.
+    """
+    nstatev = int(_dimensions(v2).get("nstatev") or 0)
+    raw = (v2.get("history") or {}).get("state")
+    if isinstance(raw, (list, tuple)):
+        names = [str(n) for n in raw if n]
+    elif raw:
+        names = [str(raw)]
+    else:
+        names = []
+    base = names[0] if names else "STATEV"
+    out = []
+    for index in range(1, nstatev + 1):
+        if len(names) >= nstatev:
+            name = names[index - 1]
+        elif nstatev == 1:
+            # A single slot takes the bare name; suffixing it would invent a
+            # component index the model does not have.
+            name = base
+        else:
+            name = f"{base}_{index}"
+        out.append({"name": name, "statev_index": index})
+    return out
 
 
 def _collect_unmapped(v2: dict[str, Any], mapped: set[str]) -> dict[str, Any]:
+    """Every v2 leaf with no canonical destination, by dotted path.
+
+    This previously compared top-level keys only, so nested information --
+    ``history.propagate`` in 17 contracts, ``history.path_dependent`` in 3,
+    ``dimensions.nprops`` in 20 -- disappeared while the module claimed nothing
+    was silently dropped. Walking leaves is what makes that claim true.
+    """
     unmapped: dict[str, Any] = {}
-    for key, value in v2.items():
-        if key in mapped:
-            continue
-        unmapped[key] = {
-            "value": value,
-            "reason": DELIBERATELY_DROPPED.get(key, "no canonical equivalent"),
+
+    def walk(node: Any, path: str) -> None:
+        if path in mapped:
+            return
+        if isinstance(node, dict) and node:
+            for key, value in node.items():
+                walk(value, f"{path}.{key}" if path else key)
+            return
+        if not path:
+            return
+        unmapped[path] = {
+            "value": node,
+            "reason": DELIBERATELY_DROPPED.get(path, "no canonical equivalent"),
         }
+
+    walk(v2, "")
     return unmapped
 
 
@@ -239,14 +280,45 @@ def adapt_v2_contract(v2: dict[str, Any], *, model: str,
         },
     }
 
+    # The full PROPS vector, not only the seeded parameters. A model may declare
+    # more properties than it differentiates; without these the driver would run
+    # with them unassigned. Emitted by the adapter so any caller gets it, not
+    # only the sweep runner.
+    props_values = (v2.get("validation") or {}).get("props_values") or \
+        (v2.get("resasm_provider") or {}).get("props_values") or []
+    if props_values:
+        contract.setdefault("material_point_driver", {})["static_props"] = [
+            float(value) for value in props_values]
+        seeded = {p["props_index"] for p in parameters if p.get("props_index")}
+        unseeded = sorted(set(range(1, len(props_values) + 1)) - seeded)
+        if unseeded:
+            notes.append(
+                f"PROPS {unseeded} are declared but not differentiated; their values "
+                f"are carried in material_point_driver.static_props so the driver does "
+                f"not run with them unassigned")
+
+    # Direction order is list order, not PROPS order: the transformer assigns OTI
+    # direction k to parameters[k-1]. Recording it removes any doubt about which
+    # column of DSIGMA_DP belongs to which parameter.
+    for direction, parameter in enumerate(parameters, start=1):
+        parameter["oti_direction"] = direction
+
     additional = (v2.get("source") or {}).get("additional_files")
     if additional:
         contract["sources"] = [source_path, *additional]
         notes.append(f"{len(additional)} additional source file(s) declared")
 
-    mapped = {"schema", "source", "kinematics", "dimensions", "interface",
-              "parameters", "derivative", "derivative_requests", "history",
-              "validation"}
+    # Dotted paths whose information reaches the canonical contract. Anything
+    # not listed here is reported as unmapped, including nested leaves.
+    mapped = {
+        "schema", "kinematics", "parameters", "validation",
+        "source.main_file", "source.entry_point", "source.additional_files",
+        "dimensions.ntens", "interface.ntens", "interface.kinematics",
+        "dimensions.nstatev", "interface.nstatev",
+        "derivative", "derivative_requests",
+        "history.state", "history.argument",
+        "history.export", "history.export_derivatives_as",
+    }
     unmapped = _collect_unmapped(v2, mapped)
 
     nstatev = dimensions.get("nstatev") or 0
