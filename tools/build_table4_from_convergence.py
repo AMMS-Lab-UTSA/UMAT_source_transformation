@@ -68,6 +68,22 @@ def _load(model: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     return dataset, rows
 
 
+def _load_or_failure(model: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Like :func:`_load`, but tolerate a model that produced no rows at all.
+
+    A model whose transformed build aborts contributes zero rows. That is a
+    result, not a missing file, and it must appear in the summary rather than
+    stopping the build.
+    """
+    directory = CONVERGENCE_ROOT / model
+    dataset_path = directory / "convergence_evidence.json"
+    if dataset_path.exists() and not (directory / "convergence_rows.csv").exists():
+        dataset = json.loads(dataset_path.read_text(encoding="utf-8"))
+        if dataset.get("status") == "failed_transformed_execution":
+            return dataset, []
+    return _load(model)
+
+
 def _float_or_none(text: str) -> float | None:
     return float(text) if text not in ("", "None") else None
 
@@ -77,8 +93,21 @@ def build(models: list[str]) -> dict[str, Any]:
     per_model: dict[str, Any] = {}
 
     for model in models:
-        dataset, rows = _load(model)
+        dataset, rows = _load_or_failure(model)
         model_name = dataset["model"]
+        if not rows:
+            per_model[model] = {
+                "model": model_name,
+                "rows": 0,
+                "classification_counts": {name: 0 for name in ALL_CLASSIFICATIONS},
+                "rows_admitted_to_table4": 0,
+                "rows_withheld_from_table4": 0,
+                "defensible": False,
+                "status": dataset.get("status", "no_rows"),
+                "finding": dataset.get("finding"),
+                "withheld_rows": [],
+            }
+            continue
         reference = dataset["reference"]
 
         for branch in sorted({row["branch"] for row in rows}):
@@ -90,7 +119,7 @@ def build(models: list[str]) -> dict[str, Any]:
                 if not selected:
                     continue
                 counts = Counter(row["reference_classification"] for row in selected)
-                admitted = sum(counts[name] for name in SUPPORTING)
+                admitted = sum(1 for row in selected if row["supports_verification"] == "True")
                 resolved_errors = [
                     _float_or_none(row["relative_error"]) for row in selected
                     if row["reference_classification"] == RESOLVED
@@ -113,7 +142,7 @@ def build(models: list[str]) -> dict[str, Any]:
                 })
 
         counts = Counter(row["reference_classification"] for row in rows)
-        admitted = sum(counts[name] for name in SUPPORTING)
+        admitted = sum(1 for row in rows if row["supports_verification"] == "True")
         withheld_rows = [
             {
                 "increment": int(row["increment"]),
@@ -123,9 +152,10 @@ def build(models: list[str]) -> dict[str, Any]:
                 "directions": row["directions"],
                 "direction_pattern": row["direction_pattern"],
                 "classification": row["reference_classification"],
+                "agrees_with_reference": row.get("agrees_with_reference"),
                 "reason": row["reference_justification"],
             }
-            for row in rows if row["reference_classification"] not in SUPPORTING
+            for row in rows if row["supports_verification"] != "True"
         ]
         per_model[model] = {
             "model": model_name,
@@ -137,7 +167,19 @@ def build(models: list[str]) -> dict[str, Any]:
             "reference": reference,
             "normalization": dataset["normalization"],
             "withheld_rows": withheld_rows,
+            "rows_disagreeing_with_reference": sum(
+                1 for row in rows
+                if row["reference_classification"] in SUPPORTING
+                and row.get("agrees_with_reference") == "False"
+            ),
+            "primal_consistency": dataset.get("primal_consistency", {}).get("agrees"),
         }
+        entry = per_model[model]
+        entry["defensible"] = (
+            entry["rows_withheld_from_table4"] == 0
+            and entry["rows_disagreeing_with_reference"] == 0
+            and entry["primal_consistency"] is not False
+        )
 
     return {"table": table, "per_model": per_model}
 
@@ -180,6 +222,20 @@ def _write_markdown(path: Path, table: list[dict[str, Any]], per_model: dict[str
             "",
             f"- rows: {entry['rows']}; admitted to Table 4: {entry['rows_admitted_to_table4']}; "
             f"withheld: {entry['rows_withheld_from_table4']}",
+        ]
+        if entry.get("rows_disagreeing_with_reference"):
+            lines.append(f"- **{entry['rows_disagreeing_with_reference']} rows disagree with a "
+                         f"resolved reference** - this is a discrepancy, not a reference-quality gap")
+        if entry.get("primal_consistency") is False:
+            lines.append("- **primal stress diverges from the independently compiled original "
+                         "build**, so derivative comparisons on the affected increment are not "
+                         "statements about differentiation")
+        if entry.get("finding"):
+            lines += ["- finding: " + entry["finding"]["what"], "- " + entry["finding"]["discriminator"]]
+        if not entry.get("reference"):
+            lines.append("")
+            continue
+        lines += [
             f"- reference: {entry['reference']['method']}",
             f"- precision: {entry['reference']['precision']}",
             f"- published step: {entry['reference']['published_step']:.3e}; "
@@ -212,7 +268,8 @@ def _write_markdown(path: Path, table: list[dict[str, Any]], per_model: dict[str
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--models", nargs="+", default=["j2", "code_imp"])
+    parser.add_argument("--models", nargs="+",
+                        default=["j2", "code_imp", "UMAT_PCL", "UMAT_PCLK", "visco_imp"])
     parser.add_argument("--out", type=Path, default=CONVERGENCE_ROOT)
     args = parser.parse_args(argv)
 
@@ -257,9 +314,17 @@ def main(argv: list[str] | None = None) -> int:
     summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
 
     for entry in built["per_model"].values():
-        marker = "OK " if entry["defensible"] else "HOLD"
+        marker = "OK  " if entry["defensible"] else "HOLD"
+        extra = []
+        if entry.get("rows_disagreeing_with_reference"):
+            extra.append(f"{entry['rows_disagreeing_with_reference']} disagree with reference")
+        if entry.get("primal_consistency") is False:
+            extra.append("primal stress diverges from the original build")
+        if entry.get("status"):
+            extra.append(entry["status"])
+        note = ("; " + ", ".join(extra)) if extra else ""
         print(f"{marker} {entry['model']}: {entry['rows_admitted_to_table4']}/{entry['rows']} "
-              f"rows admitted; withheld {entry['rows_withheld_from_table4']}")
+              f"rows admitted; withheld {entry['rows_withheld_from_table4']}{note}")
     print(f"wrote {table_path}")
     print(f"wrote {markdown_path}")
     print(f"wrote {summary_path}")

@@ -1,10 +1,361 @@
 {
-  "all_models_defensible": true,
+  "all_models_defensible": false,
   "artifact_sha256": {
-    "TABLE4_REFERENCE_QUALITY.md": "96891e091bd030383cc2b9947d1cfe01a2e579e1c4b82ac98655b1ad870108c0",
-    "table4_higher_order_convergence.csv": "4617403d50150ab802fb90df50b3922ad7bb0ebbfc19d6b72b9701ed9059a955"
+    "TABLE4_REFERENCE_QUALITY.md": "18fa4a7f1b0318d0a9637ccb362ff771af6be8740b65d82dcd9be91786f86ffc",
+    "table4_higher_order_convergence.csv": "3181753244062eef09ae83e192c1e71fec277a91fbbb61dd82fe108baf420295"
   },
   "models": {
+    "UMAT_PCL": {
+      "classification_counts": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 0,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "defensible": false,
+      "finding": {
+        "consequence": "UMAT_PCL contributes no higher-order verification evidence. Transforming and compiling are not verification.",
+        "discriminator": "The ORIGINAL UMAT_PCL, compiled independently from the same file with the same driver and the same load path, runs to completion and returns a physically sensible stress. The abort is a property of the transformed build, not of the model or the load path.",
+        "original_final_stress": [
+          290.70362874357187,
+          -10.061576052599804,
+          123.36644730902795,
+          6.56750930129298
+        ],
+        "original_source_runs": true,
+        "reproduce": "python -m umat_oti.validation.actual_umat_higher_order_generic --model UMAT_PCL --probe",
+        "root_cause": null,
+        "root_cause_reason": "not yet isolated",
+        "ruled_out": "Argument types at the lifted-helper boundary match: the caller passes TYPE(ONUMM4N4) actuals and kniehard_oti declares them via 'implicit type(ONUMM4N4) (a-h,o-z)'. UMAT_PCLK also lifts a helper and does not abort, so helper lifting alone does not explain it. Bounds checking (-fcheck=bounds,pointer) reports no violation before the abort.",
+        "what": "The canonical order-4 transform of UMAT_PCL transforms and compiles cleanly, but the resulting executable aborts at run time with glibc 'double free or corruption (out)' (SIGABRT) during the transformed UMAT call."
+      },
+      "model": "UMAT_PCL",
+      "rows": 0,
+      "rows_admitted_to_table4": 0,
+      "rows_withheld_from_table4": 0,
+      "status": "failed_transformed_execution",
+      "withheld_rows": []
+    },
+    "UMAT_PCLK": {
+      "classification_counts": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 24,
+        "reference_unresolved": 0,
+        "resolved": 72
+      },
+      "defensible": false,
+      "model": "UMAT_PCLK",
+      "normalization": {
+        "normalized_quantity": "D_hat_n = (d^n sigma / d eps^n) * strain_scale**n / stress_scale",
+        "normalized_units": "dimensionless",
+        "strain_scale": 0.001,
+        "strain_scale_meaning": "characteristic strain-increment magnitude of the load path",
+        "strain_units": "dimensionless",
+        "stress_scale": 240.0,
+        "stress_scale_meaning": "initial yield stress SIG0 = PROPS(3)",
+        "stress_units": "MPa"
+      },
+      "primal_consistency": false,
+      "reference": {
+        "method": "independently compiled original UMAT_PCLK UMAT replayed for each tensor-product centred finite-difference stencil node",
+        "precision": "IEEE double precision (compiled Fortran, gfortran)",
+        "published_step": 4e-05,
+        "stencil": "9-point centred per active strain component",
+        "step_factors": [
+          16.0,
+          8.0,
+          4.0,
+          2.0,
+          1.0,
+          0.5,
+          0.25,
+          0.125,
+          0.0625
+        ],
+        "steps": [
+          0.00064,
+          0.00032,
+          0.00016,
+          8e-05,
+          4e-05,
+          2e-05,
+          1e-05,
+          5e-06,
+          2.5e-06
+        ],
+        "zero_support": "structural stencil invariance and exact local affineness at amplitudes 1.600e-04, 8.000e-05, 4.000e-05; the reference is a double-precision executable, so no higher-precision recomputation is available for this model"
+      },
+      "rows": 96,
+      "rows_admitted_to_table4": 72,
+      "rows_disagreeing_with_reference": 24,
+      "rows_withheld_from_table4": 24,
+      "withheld_rows": [
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "repeated",
+          "directions": "1|1",
+          "increment": 4,
+          "order": 2,
+          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 2.92e-07 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 1
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "repeated",
+          "directions": "1|1",
+          "increment": 4,
+          "order": 2,
+          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 3.00e-08 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 2
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "repeated",
+          "directions": "1|1",
+          "increment": 4,
+          "order": 2,
+          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 1.84e-07 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 3
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "repeated",
+          "directions": "1|1",
+          "increment": 4,
+          "order": 2,
+          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 1.46e-07 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 4
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "repeated",
+          "directions": "1|1|1",
+          "increment": 4,
+          "order": 3,
+          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 5.09e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 1
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "repeated",
+          "directions": "1|1|1",
+          "increment": 4,
+          "order": 3,
+          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 4.11e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 2
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "repeated",
+          "directions": "1|1|1",
+          "increment": 4,
+          "order": 3,
+          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 7.49e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 3
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "repeated",
+          "directions": "1|1|1",
+          "increment": 4,
+          "order": 3,
+          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 8.90e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 4
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "repeated",
+          "directions": "1|1|1|1",
+          "increment": 4,
+          "order": 4,
+          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 2.35e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 1
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "repeated",
+          "directions": "1|1|1|1",
+          "increment": 4,
+          "order": 4,
+          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 5.56e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 2
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "repeated",
+          "directions": "1|1|1|1",
+          "increment": 4,
+          "order": 4,
+          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 1.18e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 3
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "repeated",
+          "directions": "1|1|1|1",
+          "increment": 4,
+          "order": 4,
+          "reason": "7 consecutive steps from 2.500e-06 to 1.600e-04 agree to 1.37e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 4
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "mixed",
+          "directions": "1|1|2",
+          "increment": 4,
+          "order": 3,
+          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 1.83e-06 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 1
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "mixed",
+          "directions": "1|1|2",
+          "increment": 4,
+          "order": 3,
+          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 8.70e-08 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 2
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "mixed",
+          "directions": "1|1|2",
+          "increment": 4,
+          "order": 3,
+          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 1.31e-07 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 3
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "mixed",
+          "directions": "1|1|2",
+          "increment": 4,
+          "order": 3,
+          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 1.37e-08 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 4
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "mixed",
+          "directions": "1|1|2|2",
+          "increment": 4,
+          "order": 4,
+          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 2.64e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 1
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "mixed",
+          "directions": "1|1|2|2",
+          "increment": 4,
+          "order": 4,
+          "reason": "5 consecutive steps from 5.000e-06 to 8.000e-05 agree to 1.66e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 2
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "mixed",
+          "directions": "1|1|2|2",
+          "increment": 4,
+          "order": 4,
+          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 5.43e-04 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 3
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "mixed",
+          "directions": "1|1|2|2",
+          "increment": 4,
+          "order": 4,
+          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 9.20e-05 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 4
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "mixed",
+          "directions": "1|2",
+          "increment": 4,
+          "order": 2,
+          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 2.29e-09 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 1
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "mixed",
+          "directions": "1|2",
+          "increment": 4,
+          "order": 2,
+          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 6.00e-09 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 2
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "mixed",
+          "directions": "1|2",
+          "increment": 4,
+          "order": 2,
+          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 2.02e-09 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 3
+        },
+        {
+          "agrees_with_reference": "False",
+          "branch": "inelastic",
+          "classification": "resolved",
+          "direction_pattern": "mixed",
+          "directions": "1|2",
+          "increment": 4,
+          "order": 2,
+          "reason": "6 consecutive steps from 2.500e-06 to 8.000e-05 agree to 5.57e-09 relative; the plateau is a genuine independent estimate and its own spread sets the agreement tolerance.",
+          "stress_component": 4
+        }
+      ]
+    },
     "code_imp": {
       "classification_counts": {
         "cancellation_limited": 0,
@@ -24,6 +375,7 @@
         "stress_scale_meaning": "initial yield stress SIGY0 hard-coded in code_imp.f",
         "stress_units": "MPa"
       },
+      "primal_consistency": null,
       "reference": {
         "method": "independently compiled original code_imp UMAT replayed for each tensor-product centred finite-difference stencil node",
         "precision": "IEEE double precision (compiled Fortran, gfortran)",
@@ -55,6 +407,7 @@
       },
       "rows": 96,
       "rows_admitted_to_table4": 96,
+      "rows_disagreeing_with_reference": 0,
       "rows_withheld_from_table4": 0,
       "withheld_rows": []
     },
@@ -77,6 +430,7 @@
         "stress_scale_meaning": "initial yield stress SIGY0 of the controlled J2 model",
         "stress_units": "MPa"
       },
+      "primal_consistency": null,
       "reference": {
         "method": "independent tensor-product finite differences of validation.j2_reference.integrate_increment evaluated in mpmath at 80 decimal digits",
         "precision": "mpmath, 80 decimal digits",
@@ -108,8 +462,131 @@
       },
       "rows": 108,
       "rows_admitted_to_table4": 108,
+      "rows_disagreeing_with_reference": 0,
       "rows_withheld_from_table4": 0,
       "withheld_rows": []
+    },
+    "visco_imp": {
+      "classification_counts": {
+        "cancellation_limited": 4,
+        "expected_zero_independently_supported": 24,
+        "reference_unresolved": 2,
+        "resolved": 66
+      },
+      "defensible": false,
+      "model": "visco_imp",
+      "normalization": {
+        "normalized_quantity": "D_hat_n = (d^n sigma / d eps^n) * strain_scale**n / stress_scale",
+        "normalized_units": "dimensionless",
+        "strain_scale": 0.01,
+        "strain_scale_meaning": "characteristic strain-increment magnitude of the load path",
+        "strain_units": "dimensionless",
+        "stress_scale": 10.0,
+        "stress_scale_meaning": "hard-coded YIELD = 10 in visco_imp.f",
+        "stress_units": "MPa"
+      },
+      "primal_consistency": true,
+      "reference": {
+        "method": "independently compiled original visco_imp UMAT replayed for each tensor-product centred finite-difference stencil node",
+        "precision": "IEEE double precision (compiled Fortran, gfortran)",
+        "published_step": 0.0004,
+        "stencil": "9-point centred per active strain component",
+        "step_factors": [
+          16.0,
+          8.0,
+          4.0,
+          2.0,
+          1.0,
+          0.5,
+          0.25,
+          0.125,
+          0.0625
+        ],
+        "steps": [
+          0.0064,
+          0.0032,
+          0.0016,
+          0.0008,
+          0.0004,
+          0.0002,
+          0.0001,
+          5e-05,
+          2.5e-05
+        ],
+        "zero_support": "structural stencil invariance and exact local affineness at amplitudes 1.600e-03, 8.000e-04, 4.000e-04; the reference is a double-precision executable, so no higher-precision recomputation is available for this model"
+      },
+      "rows": 96,
+      "rows_admitted_to_table4": 90,
+      "rows_disagreeing_with_reference": 0,
+      "rows_withheld_from_table4": 6,
+      "withheld_rows": [
+        {
+          "agrees_with_reference": "",
+          "branch": "inelastic",
+          "classification": "reference_unresolved",
+          "direction_pattern": "repeated",
+          "directions": "1|1",
+          "increment": 2,
+          "order": 2,
+          "reason": "The finite-difference sweep is at the zero threshold (normalized 7.335e-10) but no independent structural or high-precision support establishes the derivative as zero, so the reference cannot verify this row.",
+          "stress_component": 2
+        },
+        {
+          "agrees_with_reference": "",
+          "branch": "inelastic",
+          "classification": "cancellation_limited",
+          "direction_pattern": "repeated",
+          "directions": "1|1|1|1",
+          "increment": 2,
+          "order": 4,
+          "reason": "The steadiest 3-step window still spreads by 1.58e-03 relative, above the 1.0e-03 resolved threshold. Round-off cancellation dominates the order-4 reference at every step tried, so it bounds the magnitude but cannot verify the value.",
+          "stress_component": 2
+        },
+        {
+          "agrees_with_reference": "",
+          "branch": "inelastic",
+          "classification": "cancellation_limited",
+          "direction_pattern": "mixed",
+          "directions": "1|1|2|2",
+          "increment": 2,
+          "order": 4,
+          "reason": "The steadiest 3-step window still spreads by 1.67e-02 relative, above the 1.0e-03 resolved threshold. Round-off cancellation dominates the order-4 reference at every step tried, so it bounds the magnitude but cannot verify the value.",
+          "stress_component": 1
+        },
+        {
+          "agrees_with_reference": "",
+          "branch": "inelastic",
+          "classification": "cancellation_limited",
+          "direction_pattern": "mixed",
+          "directions": "1|1|2|2",
+          "increment": 2,
+          "order": 4,
+          "reason": "The steadiest 3-step window still spreads by 8.60e-03 relative, above the 1.0e-03 resolved threshold. Round-off cancellation dominates the order-4 reference at every step tried, so it bounds the magnitude but cannot verify the value.",
+          "stress_component": 2
+        },
+        {
+          "agrees_with_reference": "",
+          "branch": "inelastic",
+          "classification": "cancellation_limited",
+          "direction_pattern": "mixed",
+          "directions": "1|1|2|2",
+          "increment": 2,
+          "order": 4,
+          "reason": "The steadiest 3-step window still spreads by 6.25e-03 relative, above the 1.0e-03 resolved threshold. Round-off cancellation dominates the order-4 reference at every step tried, so it bounds the magnitude but cannot verify the value.",
+          "stress_component": 3
+        },
+        {
+          "agrees_with_reference": "",
+          "branch": "inelastic",
+          "classification": "reference_unresolved",
+          "direction_pattern": "mixed",
+          "directions": "1|2",
+          "increment": 2,
+          "order": 2,
+          "reason": "The finite-difference sweep is at the zero threshold (normalized 7.334e-10) but no independent structural or high-precision support establishes the derivative as zero, so the reference cannot verify this row.",
+          "stress_component": 1
+        }
+      ]
     }
   },
   "policy": "A row enters Table 4 only when an independent reference resolves it, or when it is zero with support that does not come from the OTI result. Rows below a large absolute tolerance are never admitted on that basis.",

@@ -1,0 +1,60 @@
+{
+  "finding": {
+    "consequence": "UMAT_PCL contributes no higher-order verification evidence. Transforming and compiling are not verification.",
+    "discriminator": "The ORIGINAL UMAT_PCL, compiled independently from the same file with the same driver and the same load path, runs to completion and returns a physically sensible stress. The abort is a property of the transformed build, not of the model or the load path.",
+    "original_final_stress": [
+      290.70362874357187,
+      -10.061576052599804,
+      123.36644730902795,
+      6.56750930129298
+    ],
+    "original_source_runs": true,
+    "reproduce": "python -m umat_oti.validation.actual_umat_higher_order_generic --model UMAT_PCL --probe",
+    "root_cause": null,
+    "root_cause_reason": "not yet isolated",
+    "ruled_out": "Argument types at the lifted-helper boundary match: the caller passes TYPE(ONUMM4N4) actuals and kniehard_oti declares them via 'implicit type(ONUMM4N4) (a-h,o-z)'. UMAT_PCLK also lifts a helper and does not abort, so helper lifting alone does not explain it. Bounds checking (-fcheck=bounds,pointer) reports no violation before the abort.",
+    "what": "The canonical order-4 transform of UMAT_PCL transforms and compiles cleanly, but the resulting executable aborts at run time with glibc 'double free or corruption (out)' (SIGABRT) during the transformed UMAT call."
+  },
+  "increments": [
+    [
+      0.00075,
+      -0.00032143,
+      0.0,
+      0.0
+    ],
+    [
+      0.00075,
+      -0.00047676,
+      0.0,
+      0.0001
+    ],
+    [
+      0.001125,
+      -0.0010704,
+      0.0,
+      0.00015
+    ],
+    [
+      0.000375,
+      -0.00036187,
+      0.0,
+      5e-05
+    ]
+  ],
+  "model": "UMAT_PCL",
+  "properties": [
+    210000.0,
+    0.3,
+    240.0,
+    150.0,
+    0.8,
+    100.0
+  ],
+  "schema": "umat-oti-higher-order-convergence/1",
+  "status": "failed_transformed_execution",
+  "summary": {
+    "note": "No rows exist: the transformed build aborts before producing any higher-order output, so there is nothing to classify.",
+    "rows": 0,
+    "verified": false
+  }
+}

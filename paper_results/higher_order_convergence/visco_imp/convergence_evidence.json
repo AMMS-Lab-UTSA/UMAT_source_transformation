@@ -1,0 +1,431 @@
+{
+  "artifact_hashes": {
+    "generated_module": "e598124363fd6b2aae47fd5b7db48e07fb569b4bf0ce256ba865614fac374d6c",
+    "original_source": "33663a26b6a5def92ddba8e86438fe2c980d874605da2a663370036b5276392b",
+    "oti_higher_order_output": "9297d2c4256223f1904810a268423fb061441c5d330cd739a907ad0b22d5c4e8",
+    "reference_driver": "50206f3be115d38e5ff7c5e8c5e21c63953b11647680391be4d9af074814dd88",
+    "transformed_driver": "daafb0f0d00a44fb13088ee042f9acca66ba5a08d86c472c66660143233aab21",
+    "transformed_source": "241478f5539e2603cce6204830d03f26c1ca8cb1b86e748376b1cc65954b4422"
+  },
+  "artifact_sha256": {
+    "convergence_evidence.json": "50c91ce86b4b52be8102abc0d4deed94e652e84add3738ed4b5509cfd1632a2f",
+    "convergence_rows.csv": "4b83a2590ab10ee8476d1a44c8efe4617273744d236dbe3fabe5f10312878107",
+    "convergence_sweep.csv": "c8e439e5c8aec03fbc967424640ed283dea0da65b14e28770712604ee567d066"
+  },
+  "artifacts": {
+    "rows_csv": "paper_results/higher_order_convergence/visco_imp/convergence_rows.csv",
+    "sweep_csv": "paper_results/higher_order_convergence/visco_imp/convergence_sweep.csv"
+  },
+  "branch_history": [
+    {
+      "branch": "elastic",
+      "increment": 1,
+      "inelastic_marker": 0.0,
+      "statev": [
+        0.0,
+        0.0,
+        -4.1396681589432225
+      ],
+      "stress": [
+        6.593423212962225,
+        3.865803858582595e-05,
+        1.978038639900434,
+        0.0
+      ]
+    },
+    {
+      "branch": "inelastic",
+      "increment": 2,
+      "inelastic_marker": 6.805611766167872e-08,
+      "statev": [
+        6.805611766167872e-08,
+        6.805611766167872e-06,
+        2.4482504045508886
+      ],
+      "stress": [
+        12.469854905280886,
+        -1.6727480575251399,
+        3.239143988870002,
+        0.30769036388036286
+      ]
+    },
+    {
+      "branch": "inelastic",
+      "increment": 3,
+      "inelastic_marker": 6.424842917594578e-07,
+      "statev": [
+        6.424842917594578e-07,
+        6.424842917594577e-05,
+        14.09786079483499
+      ],
+      "stress": [
+        19.644357081669742,
+        -8.007869788818825,
+        3.491013608818398,
+        0.7692076638706992
+      ]
+    },
+    {
+      "branch": "inelastic",
+      "increment": 4,
+      "inelastic_marker": 1.5614918844895097e-06,
+      "statev": [
+        1.5614918844895097e-06,
+        0.00015614918844895095,
+        18.02057623221133
+      ],
+      "stress": [
+        22.01198740254247,
+        -10.173636754811195,
+        3.5516502695842607,
+        0.9230188849081318
+      ]
+    }
+  ],
+  "classification_policy": {
+    "agreement_relative_floor": 1e-06,
+    "agreement_uncertainty_multiple": 4.0,
+    "cancellation_relative_spread": 0.1,
+    "classifications": [
+      "resolved",
+      "expected_zero_independently_supported",
+      "cancellation_limited",
+      "reference_unresolved"
+    ],
+    "note": "A row is never passed for being below a large absolute tolerance. Only resolved rows agreeing with their plateau, and zero rows with independent support, count as verification evidence.",
+    "plateau_min_points": 3,
+    "resolved_relative_spread": 0.001,
+    "supporting": [
+      "expected_zero_independently_supported",
+      "resolved"
+    ],
+    "zero_normalized_threshold": 1e-09
+  },
+  "dataset_path": "/home/ammslab3/softwarex_work/UMAT_source_transformation/paper_results/higher_order_convergence/visco_imp/convergence_evidence.json",
+  "directions": [
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      2
+    ],
+    [
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      2,
+      2
+    ]
+  ],
+  "factorial_recovery": "OTI coefficients are multiplied by product factorials before oti_hjac.dat output.",
+  "increments": [
+    [
+      0.006,
+      -0.0025714,
+      0.0,
+      0.0
+    ],
+    [
+      0.006,
+      -0.0038141,
+      0.0,
+      0.0008
+    ],
+    [
+      0.009,
+      -0.0085635,
+      0.0,
+      0.0012
+    ],
+    [
+      0.003,
+      -0.002895,
+      0.0,
+      0.0004
+    ]
+  ],
+  "model": "visco_imp",
+  "normalization": {
+    "normalized_quantity": "D_hat_n = (d^n sigma / d eps^n) * strain_scale**n / stress_scale",
+    "normalized_units": "dimensionless",
+    "strain_scale": 0.01,
+    "strain_scale_meaning": "characteristic strain-increment magnitude of the load path",
+    "strain_units": "dimensionless",
+    "stress_scale": 10.0,
+    "stress_scale_meaning": "hard-coded YIELD = 10 in visco_imp.f",
+    "stress_units": "MPa"
+  },
+  "primal_consistency": {
+    "agrees": true,
+    "per_increment": [
+      {
+        "agrees": true,
+        "branch": "elastic",
+        "increment": 1,
+        "max_absolute_difference": 0.0,
+        "max_relative_difference": 0.0,
+        "original_stress": [
+          6.593423212962225,
+          3.865803858582595e-05,
+          1.978038639900434,
+          0.0
+        ],
+        "transformed_stress": [
+          6.593423212962225,
+          3.865803858582595e-05,
+          1.978038639900434,
+          0.0
+        ]
+      },
+      {
+        "agrees": true,
+        "branch": "inelastic",
+        "increment": 2,
+        "max_absolute_difference": 0.0,
+        "max_relative_difference": 0.0,
+        "original_stress": [
+          12.469854905280886,
+          -1.6727480575251399,
+          3.239143988870002,
+          0.30769036388036286
+        ],
+        "transformed_stress": [
+          12.469854905280886,
+          -1.6727480575251399,
+          3.239143988870002,
+          0.30769036388036286
+        ]
+      },
+      {
+        "agrees": true,
+        "branch": "inelastic",
+        "increment": 3,
+        "max_absolute_difference": 0.0,
+        "max_relative_difference": 0.0,
+        "original_stress": [
+          19.644357081669742,
+          -8.007869788818825,
+          3.491013608818398,
+          0.7692076638706992
+        ],
+        "transformed_stress": [
+          19.644357081669742,
+          -8.007869788818825,
+          3.491013608818398,
+          0.7692076638706992
+        ]
+      },
+      {
+        "agrees": true,
+        "branch": "inelastic",
+        "increment": 4,
+        "max_absolute_difference": 0.0,
+        "max_relative_difference": 0.0,
+        "original_stress": [
+          22.01198740254247,
+          -10.173636754811195,
+          3.5516502695842607,
+          0.9230188849081318
+        ],
+        "transformed_stress": [
+          22.01198740254247,
+          -10.173636754811195,
+          3.5516502695842607,
+          0.9230188849081318
+        ]
+      }
+    ],
+    "policy": "The transformed build must reproduce the original build's stress along the same path before any of its derivatives are believed. Where the primal responses differ, a derivative disagreement is not evidence about differentiation -- the two builds are not the same model there.",
+    "relative_tolerance": 1e-09
+  },
+  "properties": [
+    0.0
+  ],
+  "reference": {
+    "method": "independently compiled original visco_imp UMAT replayed for each tensor-product centred finite-difference stencil node",
+    "precision": "IEEE double precision (compiled Fortran, gfortran)",
+    "published_step": 0.0004,
+    "stencil": "9-point centred per active strain component",
+    "step_factors": [
+      16.0,
+      8.0,
+      4.0,
+      2.0,
+      1.0,
+      0.5,
+      0.25,
+      0.125,
+      0.0625
+    ],
+    "steps": [
+      0.0064,
+      0.0032,
+      0.0016,
+      0.0008,
+      0.0004,
+      0.0002,
+      0.0001,
+      5e-05,
+      2.5e-05
+    ],
+    "zero_support": "structural stencil invariance and exact local affineness at amplitudes 1.600e-03, 8.000e-04, 4.000e-04; the reference is a double-precision executable, so no higher-precision recomputation is available for this model"
+  },
+  "schema": "umat-oti-higher-order-convergence/1",
+  "source": {
+    "path": "UMATs/UMATs/ICP/visco/visco_imp.f",
+    "sha256": "33663a26b6a5def92ddba8e86438fe2c980d874605da2a663370036b5276392b"
+  },
+  "summary": {
+    "classification_counts": {
+      "cancellation_limited": 4,
+      "expected_zero_independently_supported": 24,
+      "reference_unresolved": 2,
+      "resolved": 66
+    },
+    "classification_counts_by_order": {
+      "2": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 8,
+        "reference_unresolved": 2,
+        "resolved": 22
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 8,
+        "reference_unresolved": 0,
+        "resolved": 24
+      },
+      "4": {
+        "cancellation_limited": 4,
+        "expected_zero_independently_supported": 8,
+        "reference_unresolved": 0,
+        "resolved": 20
+      }
+    },
+    "max_relative_error_on_resolved_rows": 8.67363263347962e-05,
+    "rows": 96,
+    "rows_supporting_verification": 90,
+    "rows_with_reference_but_disagreeing": 0,
+    "rows_without_usable_reference": 6,
+    "verified": false
+  },
+  "summary_views": {
+    "by_branch": {
+      "elastic": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 24,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "inelastic": {
+        "cancellation_limited": 4,
+        "expected_zero_independently_supported": 0,
+        "reference_unresolved": 2,
+        "resolved": 66
+      }
+    },
+    "by_direction_pattern": {
+      "mixed": {
+        "cancellation_limited": 3,
+        "expected_zero_independently_supported": 12,
+        "reference_unresolved": 1,
+        "resolved": 32
+      },
+      "repeated": {
+        "cancellation_limited": 1,
+        "expected_zero_independently_supported": 12,
+        "reference_unresolved": 1,
+        "resolved": 34
+      }
+    },
+    "by_increment": {
+      "1": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 24,
+        "reference_unresolved": 0,
+        "resolved": 0
+      },
+      "2": {
+        "cancellation_limited": 4,
+        "expected_zero_independently_supported": 0,
+        "reference_unresolved": 2,
+        "resolved": 18
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 0,
+        "reference_unresolved": 0,
+        "resolved": 24
+      },
+      "4": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 0,
+        "reference_unresolved": 0,
+        "resolved": 24
+      }
+    },
+    "by_order": {
+      "2": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 8,
+        "reference_unresolved": 2,
+        "resolved": 22
+      },
+      "3": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 8,
+        "reference_unresolved": 0,
+        "resolved": 24
+      },
+      "4": {
+        "cancellation_limited": 4,
+        "expected_zero_independently_supported": 8,
+        "reference_unresolved": 0,
+        "resolved": 20
+      }
+    },
+    "by_stress_component": {
+      "1": {
+        "cancellation_limited": 1,
+        "expected_zero_independently_supported": 6,
+        "reference_unresolved": 1,
+        "resolved": 16
+      },
+      "2": {
+        "cancellation_limited": 2,
+        "expected_zero_independently_supported": 6,
+        "reference_unresolved": 1,
+        "resolved": 15
+      },
+      "3": {
+        "cancellation_limited": 1,
+        "expected_zero_independently_supported": 6,
+        "reference_unresolved": 0,
+        "resolved": 17
+      },
+      "4": {
+        "cancellation_limited": 0,
+        "expected_zero_independently_supported": 6,
+        "reference_unresolved": 0,
+        "resolved": 18
+      }
+    }
+  }
+}
