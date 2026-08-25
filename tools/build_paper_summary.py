@@ -207,7 +207,9 @@ def main(argv: list[str] | None = None) -> int:
         f"Generated {datetime.now(timezone.utc).isoformat()} from commit `{commit}`.",
         "",
         "Every sentence is rendered from a generated evidence file. No number here "
-        "was transcribed from the manuscript and none was written by hand.", "",
+        "was transcribed from the manuscript and none was written by hand. Each "
+        f"cites its artefact; all of them were produced at commit `{commit}`.",
+        "",
         "The vocabulary is deliberately separate: *compiled* is not *executed*, "
         "*executed* is not *primal-parity verified*, and neither is *derivative "
         "verified*. *Reference unresolved* is its own outcome and is never folded "
@@ -222,8 +224,11 @@ def main(argv: list[str] | None = None) -> int:
     for section, items in grouped.items():
         lines += [f"## {section}", ""]
         for sentence, artefact in items:
-            lines += [f"> {sentence}", "",
-                      f"Source: `{artefact}` at commit `{commit[:12]}`.", ""]
+            # The commit is stated once in the header. Repeating it on every
+            # citation makes the document differ from itself whenever it is
+            # regenerated at a different commit, which is not a change in any
+            # measurement.
+            lines += [f"> {sentence}", "", f"Source: `{artefact}`.", ""]
 
     args.out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     try:
