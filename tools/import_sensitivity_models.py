@@ -22,13 +22,17 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SOURCE = Path("/home/ammslab3/Documents/UMAT_source_transformation")
+#: Where the authors' working tree of models lives. There is no portable
+#: default -- it is a location on whoever's machine performed the import -- so
+#: it comes from the environment or --source and the tool refuses to guess.
+SOURCE_ENV = "UMAT_OTI_MODEL_IMPORT_SOURCE"
 DEST = REPO_ROOT / "parameter_sensitivity" / "models"
 MANIFEST = REPO_ROOT / "parameter_sensitivity" / "IMPORT_PROVENANCE.json"
 
@@ -162,7 +166,11 @@ def write(records: list[dict], *, dry_run: bool) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
+    parser.add_argument(
+        "--source", type=Path, default=None,
+        help=(f"the working tree to import models from; defaults to ${SOURCE_ENV}. "
+              "There is no portable default: this is a path on the machine that "
+              "holds the authors' model tree."))
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--check", action="store_true",
                         help="verify imported files still match the recorded hashes")
@@ -188,6 +196,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"all {len(manifest['models'])} imported models match their recorded hashes")
         return 0
 
+    source = args.source or (
+        Path(os.environ[SOURCE_ENV]) if os.environ.get(SOURCE_ENV) else None)
+    if source is None:
+        parser.error(
+            f"no import source: pass --source or set {SOURCE_ENV}. This tool "
+            "copies models out of the authors' working tree, whose location is "
+            "specific to the machine holding it.")
+    args.source = source
     records, problems = collect(args.source)
     write(records, dry_run=args.dry_run)
 

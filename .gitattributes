@@ -1,0 +1,21 @@
+# Normalise line endings so a Windows checkout does not produce spurious diffs
+# in evidence files or break fixed-form Fortran column alignment.
+* text=auto eol=lf
+
+# Fortran is column-sensitive in fixed form: never let a filter touch it.
+*.for   text eol=lf
+*.f     text eol=lf
+*.f77   text eol=lf
+*.f90   text eol=lf
+*.inc   text eol=lf
+*.INC   text eol=lf
+
+# Generated evidence. Marking it as such keeps diffs of a regenerated round out
+# of code review by default; the round summary is what a reviewer should read.
+paper_results/**            linguist-generated=true
+parameter_sensitivity/contracts/**  linguist-generated=true
+
+# Binary artefacts that may legitimately appear in an evidence archive.
+*.odb   binary
+*.png   binary
+*.pdf   binary

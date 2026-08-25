@@ -2,34 +2,113 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ["main", "feature/**"]
   pull_request:
-    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Nothing in CI may reach for a source whose licence has not been granted.
+  # The restricted submodule tiers use `update = none`, so a default
+  # initialisation cannot fetch them; this makes the intent explicit too.
+  UMAT_OTI_ALLOW_NETWORK_CORPUS: "0"
 
 jobs:
+  audit:
+    name: Repository audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: python -m pip install -e ".[test]"
+      - name: Repository standards
+        run: python tools/audit_repository_standards.py
+      - name: Documented commands resolve
+        run: python tools/audit_documentation_commands.py
+
   test:
-    name: Test (Python ${{ matrix.python-version }} on ${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: Tests (py${{ matrix.python }})
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ["3.10", "3.11", "3.12"]
-
+        python: ["3.10", "3.11", "3.12"]
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
-
-      - name: Install package with test extras
+          python-version: ${{ matrix.python }}
+      - name: Install gfortran
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[test]"
+          sudo apt-get update
+          sudo apt-get install -y gfortran
+          gfortran --version
+      - name: Install
+        run: python -m pip install -e ".[test]"
+      - name: Unit and integration tests
+        # Abaqus and ARC tests cannot run on a public runner. Excluding them by
+        # marker keeps the offline suite whole: a missing Abaqus must not
+        # silently shrink what is tested.
+        run: python -m pytest -q -m "not abaqus and not arc and not network"
 
-      - name: Run test suite
-        run: python -m pytest -q
+  reproduce:
+    name: Offline reproduction
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install gfortran
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran
+      - name: Install
+        run: python -m pip install -e ".[test]"
+      - name: Smoke profile
+        run: python -m umat_oti.reproduce --profile smoke
+      - name: Reproduction artefacts are complete
+        run: |
+          for name in run_manifest.json environment.json claim_matrix.json \
+                      artifact_checksums.sha256 reproduction_summary.md; do
+            test -f "reproduce/smoke/$name" || { echo "missing $name"; exit 1; }
+          done
+          cat reproduce/smoke/reproduction_summary.md
+      - name: Published evidence was not modified
+        # A reproduction profile reads published evidence; it must never
+        # overwrite it. A dirty tree here means a partial round landed on
+        # paper_results/.
+        run: |
+          if [ -n "$(git status --porcelain paper_results/)" ]; then
+            echo "a reproduction profile modified published evidence:"
+            git status --porcelain paper_results/
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reproduce-smoke
+          path: reproduce/smoke/
+
+  clean-clone:
+    name: Clean-clone acceptance
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install gfortran
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran
+      - name: Clone into a temporary directory and reproduce there
+        run: ./scripts/clean_clone_acceptance.sh --branch "${GITHUB_REF_NAME}"

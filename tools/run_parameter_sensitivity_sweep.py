@@ -290,6 +290,14 @@ def _execute_and_verify(model: str, contract: dict, out: Path, record: dict) -> 
         record["furthest_stage"] = "derivatives_verified"
 
 
+def _display(path: Path) -> str:
+    """Repository-relative when it can be, absolute otherwise."""
+    try:
+        return str(path.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(path)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -297,6 +305,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--work-dir", type=Path,
                         default=REPO_ROOT / "umat_oti_workspace" / "parameter_sensitivity")
+    parser.add_argument(
+        "--results-dir", type=Path, default=None,
+        help=("where to write the round and its tables. Defaults to the published "
+              "location, which a partial run must not overwrite: a --model "
+              "subset writes elsewhere unless this is given explicitly."))
     args = parser.parse_args(argv)
 
     if args.list:
@@ -305,6 +318,19 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     models = args.models or list(REQUIRED)
+    # A subset run produces a round covering only that subset. Writing it to the
+    # published location would silently replace the full Table 6 evidence with a
+    # partial one that still looks complete, so a subset defaults elsewhere and
+    # has to be pointed at the published path deliberately.
+    results_dir = args.results_dir
+    if results_dir is None:
+        results_dir = RESULTS if not args.models else args.work_dir / "results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    if results_dir != RESULTS:
+        print(f"partial round ({len(models)} of {len(REQUIRED)} models): "
+              f"writing to {results_dir}, leaving the published round untouched",
+              flush=True)
+
     records = [run_model(m, args.work_dir) for m in models]
 
     def count(stage: str) -> int:
@@ -354,14 +380,14 @@ def main(argv: list[str] | None = None) -> int:
         "failure_taxonomy": taxonomy,
         "models": records,
     }
-    RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / "parameter_sensitivity_round.json").write_text(
+    results_dir.mkdir(parents=True, exist_ok=True)
+    (results_dir / "parameter_sensitivity_round.json").write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     # Table 6 as measured. Every model stays in the table with the stage it
     # actually reached; a model that got no further than compiling says so.
     import csv as _csv
-    table = RESULTS / "table6_parameter_sensitivity.csv"
+    table = results_dir / "table6_parameter_sensitivity.csv"
     with table.open("w", newline="", encoding="utf-8") as handle:
         writer = _csv.writer(handle, lineterminator="\n")
         writer.writerow(["model", "parameter_directions", "parameters",
@@ -392,9 +418,9 @@ def main(argv: list[str] | None = None) -> int:
                 dv.get("elastic_increments", ""), dv.get("inelastic_increments", ""),
                 r["furthest_stage"], reason,
             ])
-    print(f"wrote {table.relative_to(REPO_ROOT)}")
+    print(f"wrote {_display(table)}")
 
-    raw = RESULTS / "table6_comparison_rows.csv"
+    raw = results_dir / "table6_comparison_rows.csv"
     with raw.open("w", newline="", encoding="utf-8") as handle:
         writer = _csv.writer(handle, lineterminator="\n")
         writer.writerow(["model", "increment", "array", "component", "parameter",
@@ -408,13 +434,13 @@ def main(argv: list[str] | None = None) -> int:
                                  row["oti_direction"], row["oti"], row["reference"],
                                  row["absolute_error"], row["relative_error"],
                                  row["judged_by"], row["agrees"], row["branch"]])
-    print(f"wrote {raw.relative_to(REPO_ROOT)}")
+    print(f"wrote {_display(raw)}")
 
     # Rows live in the CSV; keep the round JSON readable. Done only *after* the
     # CSV is written -- popping first silently produced an empty raw-row file.
     for record in payload["models"]:
         record.pop("comparison_rows", None)
-    (RESULTS / "parameter_sensitivity_round.json").write_text(
+    (results_dir / "parameter_sensitivity_round.json").write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     print(json.dumps(funnel, indent=2))

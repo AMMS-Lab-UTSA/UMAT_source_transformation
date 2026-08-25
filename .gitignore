@@ -50,3 +50,6 @@ paper_results/arc_*/evidence/oti_higher_order_build/
 paper_results/arc_*/evidence.stdout.json
 paper_results/arc_*/system.txt
 logs/
+
+# Shared objects produced by the Fortran builds
+*.so
