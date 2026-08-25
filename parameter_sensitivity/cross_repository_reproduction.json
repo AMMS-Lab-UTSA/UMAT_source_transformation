@@ -1,0 +1,52 @@
+{
+  "_comment": [
+    "Cross-repository reproduction manifest.",
+    "",
+    "The corpus round reads sources that live outside this repository. Nothing",
+    "here assumes a particular checkout layout: the pinned commits are named,",
+    "and scripts/bootstrap_corpus.sh obtains them into a directory you choose.",
+    "",
+    "Every commit is a 40-character SHA. A reviewer who runs the bootstrap gets",
+    "byte-identical sources to the ones the published evidence was produced",
+    "from, and a reviewer who does not gets an exact command rather than a",
+    "confusing per-file error."
+  ],
+  "schema": "umat-oti-cross-repository-reproduction/1",
+  "companion_repository": {
+    "url": "https://github.com/AMMS-Lab-UTSA/Residual_Assembler.git",
+    "commit_sha": "30dcdfc02c8fe1857ed189bdd450cab2a2007433",
+    "role": "hosts the pinned corpus submodules and the residual-assembly bridge"
+  },
+  "corpus_repositories": [
+    {
+      "id": "jgomezc1_ABAQUS-US",
+      "url": "https://github.com/jgomezc1/ABAQUS-US.git",
+      "commit_sha": "54181407aa7aa23055e33d354d0b2a3abc266365",
+      "default_branch_at_pin": "master",
+      "license_spdx": "MIT"
+    },
+    {
+      "id": "ngrilli_Oxford_Crystal_Plasticity",
+      "url": "https://github.com/ngrilli/Oxford_Crystal_Plasticity.git",
+      "commit_sha": "85102ed35dc4592edc5fd4aaec542fa63e7162fd",
+      "default_branch_at_pin": "main",
+      "license_spdx": "MIT"
+    },
+    {
+      "id": "bibekanandadatta_Abaqus-UEL-Elasticity",
+      "url": "https://github.com/bibekananda-datta/Abaqus-UEL-Elasticity.git",
+      "commit_sha": "9187e54a4069ed0e6196a29e97e92185d14724a5",
+      "default_branch_at_pin": "main",
+      "license_spdx": "BSD-3-Clause",
+      "note": "UEL library; provides no SUBROUTINE UMAT and is not a UMAT-corpus candidate"
+    },
+    {
+      "id": "bibekanandadatta_Abaqus-UEL-Hyperelasticity",
+      "url": "https://github.com/bibekananda-datta/Abaqus-UEL-Hyperelasticity.git",
+      "commit_sha": "ba5bf018b71e0717d3a3136a351637a27e6ff0ed",
+      "default_branch_at_pin": "main",
+      "license_spdx": "BSD-3-Clause",
+      "note": "UEL library; provides no SUBROUTINE UMAT and is not a UMAT-corpus candidate"
+    }
+  ]
+}

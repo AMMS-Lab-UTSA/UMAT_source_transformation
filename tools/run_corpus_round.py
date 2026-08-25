@@ -37,16 +37,43 @@ MANIFEST = REPO_ROOT / "parameter_sensitivity" / "corpus_snapshot.json"
 RESULTS = REPO_ROOT / "paper_results" / "corpus"
 
 
-def snapshot_root(manifest: dict) -> Path:
+def snapshot_root(manifest: dict, explicit: Path | None = None) -> Path:
+    """Where the pinned sources live, in order of precedence.
+
+    The default is a sibling checkout, which is convenient here and is not
+    something a reviewer's layout has to match. An explicit --snapshot-root or
+    the environment variable overrides it, and a missing root produces the exact
+    command to obtain one rather than a confusing per-file error.
+    """
+    if explicit is not None:
+        return Path(explicit).resolve()
     override = os.environ.get(manifest["snapshot_root_environment_variable"])
     if override:
-        return Path(override)
+        return Path(override).resolve()
     return (REPO_ROOT / manifest["default_snapshot_root"]).resolve()
+
+
+def repository_base(root: Path, repository: dict) -> Path:
+    """Locate a repository under either a submodule tree or an acquisition cache.
+
+    Three layouts are legitimate snapshot roots and all are tried, so a reviewer
+    is never required to reshape a tree to match one of them:
+
+    ``permissive/<id>``          the Residual_Assembler submodule tree
+    ``<id>``                     scripts/bootstrap_corpus.sh
+    ``<id>/<sha12>``             the tools/acquire_corpus.py cache
+    """
+    for candidate in (root / repository["path"],
+                      root / repository["id"],
+                      root / repository["id"] / repository["commit_sha"][:12]):
+        if candidate.is_dir():
+            return candidate
+    return root / repository["path"]
 
 
 def build_candidate(entry: dict, repositories: dict, root: Path) -> Candidate | dict:
     repository = repositories[entry["repository"]]
-    base = root / repository["path"]
+    base = repository_base(root, repository)
     source = base / entry["source"]
     if repository.get("metadata_only"):
         return {"id": entry["id"], "bucket": "metadata_only",
@@ -91,6 +118,11 @@ def main(argv: list[str] | None = None) -> int:
                         default=REPO_ROOT / "build" / "corpus")
     parser.add_argument("--results-dir", type=Path, default=None)
     parser.add_argument("--allow-network", action="store_true")
+    parser.add_argument(
+        "--snapshot-root", type=Path, default=None,
+        help=("directory holding the pinned sources: either a bootstrap "
+              "submodule tree or a cache written by tools/acquire_corpus.py. "
+              "Overrides the sibling-checkout default."))
     args = parser.parse_args(argv)
 
     if args.mode == "live":
@@ -103,7 +135,15 @@ def main(argv: list[str] | None = None) -> int:
 
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     repositories = {r["id"]: r for r in manifest["repositories"]}
-    root = snapshot_root(manifest)
+    root = snapshot_root(manifest, args.snapshot_root)
+    if not root.is_dir():
+        print(f"snapshot root {root} does not exist. Obtain the pinned sources "
+              "with either:\n"
+              "  scripts/bootstrap_corpus.sh            (clones both repositories "
+              "at their pinned commits)\n"
+              "  tools/acquire_corpus.py --allow-network --cache-root DIR\n"
+              "then re-run with --snapshot-root DIR.", file=sys.stderr)
+        return 2
     work = args.work_dir
     work.mkdir(parents=True, exist_ok=True)
     results = args.results_dir
