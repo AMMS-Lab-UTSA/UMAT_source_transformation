@@ -509,6 +509,10 @@ def _wrap_condition_with_real_tokens(line: str, oti_names: set[str]) -> str:
 def _real_wrapped_tokens(condition: str, oti_names: set[str]) -> str:
     if not oti_names:
         return condition
+    # A promoted variable can share a name with an exponent letter -- models do
+    # declare variables called D and D0 -- so mask literals before substituting
+    # identifiers, or ``1.D-12`` becomes ``1.REAL(D)-12``.
+    condition, literals = mask_real_literals(condition)
     pattern = re.compile(
         r"\b(" + "|".join(re.escape(name) for name in sorted(oti_names, key=len, reverse=True)) + r")\b(?:\([^()]*\))?",
         re.IGNORECASE,
@@ -521,13 +525,50 @@ def _real_wrapped_tokens(condition: str, oti_names: set[str]) -> str:
             return token
         return f"REAL({token})"
 
-    return pattern.sub(replacement, condition)
+    return unmask_real_literals(pattern.sub(replacement, condition), literals)
 
 
 def _normalize_typed_intrinsics(line: str, oti_names: set[str]) -> str:
     if not _contains_oti_name(line, oti_names):
         return line
     return _TYPED_INTRINSIC_RE.sub(lambda match: _TYPED_INTRINSIC_MAP[match.group(1).upper()], line)
+
+
+#: A complete Fortran real literal, including any D/E exponent. These are atomic
+#: tokens: nothing inside one may be rewritten. Two separate defects came from
+#: not treating them that way -- a variable named ``D`` matched the ``D`` inside
+#: ``1.D-12``, and the bare-integer promoter appended ``.0D0`` to the exponent
+#: digits of ``1.0D-6``, producing ``1.0D-6.0D0``.
+_REAL_LITERAL_RE = re.compile(
+    r"(?<![A-Za-z0-9_])"
+    r"(?:(?:\d+\.\d*|\.\d+|\d+)[dDeE][+-]?\d+"   # with an exponent
+    r"|(?:\d+\.\d*|\.\d+))"                        # plain real
+)
+#: Private-use code points: no ASCII letters or digits, so no downstream pattern
+#: matching identifiers or integers can see inside a masked literal.
+_MASK_BASE = 0xE000
+
+
+def mask_real_literals(text: str) -> tuple[str, list[str]]:
+    """Replace every real literal with an inert placeholder."""
+    store: list[str] = []
+
+    def capture(match: re.Match[str]) -> str:
+        store.append(match.group(0))
+        return chr(_MASK_BASE + len(store) - 1)
+
+    return _REAL_LITERAL_RE.sub(capture, text), store
+
+
+def unmask_real_literals(text: str, store: list[str]) -> str:
+    """Restore literals masked by :func:`mask_real_literals`."""
+    if not store:
+        return text
+    return "".join(
+        store[ord(char) - _MASK_BASE]
+        if _MASK_BASE <= ord(char) < _MASK_BASE + len(store) else char
+        for char in text
+    )
 
 
 def _normalize_numeric_literals(line: str, oti_names: set[str]) -> str:
@@ -545,9 +586,13 @@ def _normalize_numeric_literals(line: str, oti_names: set[str]) -> str:
         lambda match: match.group(1).rstrip(".") + (".0" if match.group(1).endswith(".") else "") + "D0",
         normalized,
     )
+    # From here on only *bare integers* are promoted. Mask the complete real
+    # literals first so their exponent digits are not mistaken for one.
+    normalized, literals = mask_real_literals(normalized)
     normalized = re.sub(r"(?<![A-Za-z0-9_.)])(\d+)(?![A-Za-z0-9_.])(?=\s*[*\/])", r"\1.0D0", normalized)
     normalized = re.sub(r"([*\/])\s*(\d+)(?![A-Za-z0-9_.])", r"\1\2.0D0", normalized)
-    return _promote_bare_integers_for_oti(normalized)
+    normalized = _promote_bare_integers_for_oti(normalized)
+    return unmask_real_literals(normalized, literals)
 
 
 def _contains_oti_name(line: str, oti_names: set[str]) -> bool:

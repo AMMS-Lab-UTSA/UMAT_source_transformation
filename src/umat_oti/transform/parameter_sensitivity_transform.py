@@ -37,6 +37,8 @@ reference fixture that this transformer's output is compared against.
 
 from __future__ import annotations
 
+from umat_oti.oti.oti_directions import member_name
+
 import re
 import shutil
 import subprocess
@@ -329,8 +331,12 @@ def _emit_driver(
     for k, ((_name, props_index), value) in enumerate(
         zip(contract.parameters, contract.parameter_values), start=1
     ):
+        # The OTI module names basis directions in base 36 -- direction 10 is
+        # EA, not E10 -- so ask the same helper the module generator uses.
+        # Writing f"E{k}" silently worked up to nine parameters and then emitted
+        # a symbol that does not exist.
         seed_lines.append(
-            f"  PROPS({props_index}) = {value:.17e}_DP + E{k}"
+            f"  PROPS({props_index}) = {value:.17e}_DP + {member_name([k])}"
         )
         seen_indices.add(props_index)
     for j, val in enumerate(contract.static_props, start=1):
