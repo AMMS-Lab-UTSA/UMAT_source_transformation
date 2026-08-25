@@ -24,6 +24,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
+from umat_oti.corpus.identity import closure_identity, content_identity  # noqa: E402
+from umat_oti.transform.dependency_resolution import (  # noqa: E402
+    DependencyResolutionError, resolve_closure,
+)
 from umat_oti.validation.actual_umat_higher_order_generic import MODELS  # noqa: E402
 
 MODELS_DIR = REPO_ROOT / "parameter_sensitivity" / "models"
@@ -156,7 +160,14 @@ def build_rows() -> list[dict]:
         comparison = candidate.get("comparison") or {}
         stages = candidate.get("stages") or {}
         verification = stages.get("derivatives_verified", {}).get("status")
+        corpus_identity = (
+            candidate.get("identity", {}).get("canonical_source_id")
+            or (canonical_identity(source).canonical_source_id
+                if source.is_file() else candidate["id"]))
         rows.append({
+            "canonical_source_id": corpus_identity,
+            "identity_kind": candidate.get("identity", {}).get(
+                "identity_kind", "single_file"),
             "identity": candidate["id"],
             "origin": "external corpus (pinned snapshot)",
             "provenance": f"{candidate.get('repository_url','')} @ "
@@ -280,7 +291,10 @@ def _row(*, identity, origin, provenance, license, source, contract, v2,
                 blocker = f"internal_jacobian/{name}: {entry['reason']}"
                 break
 
+    canonical = canonical_identity(source, roots=[source.parent])
     return {
+        "canonical_source_id": canonical.canonical_source_id,
+        "identity_kind": canonical.kind,
         "identity": identity,
         "origin": origin,
         "provenance": provenance,
@@ -316,6 +330,72 @@ def _row(*, identity, origin, provenance, license, source, contract, v2,
     }
 
 
+def canonical_identity(source: Path, roots=()):
+    """The implementation's identity, independent of where the copy was found."""
+    try:
+        graph = resolve_closure(source, entry="UMAT", roots=roots)
+    except (DependencyResolutionError, OSError, ValueError):
+        return content_identity(source)
+    if graph.missing or not graph.is_multi_file:
+        return content_identity(source)
+    return closure_identity(graph)
+
+
+def collapse_to_canonical_rows(rows: list[dict]) -> list[dict]:
+    """One row per implementation, with every appearance kept as an event.
+
+    Each of the twelve ICP UMATs is normalised-identical to a file in the pinned
+    upstream snapshot, so a matrix keyed on where a copy was found reports one
+    implementation as several. Rows are merged on canonical identity and the
+    origins and validation events they came from are listed on the surviving
+    row, so nothing is lost and nothing is counted twice.
+    """
+    merged: dict[str, dict] = {}
+    order: list[str] = []
+    for row in rows:
+        key = row.get("canonical_source_id") or row["identity"]
+        if key not in merged:
+            row = dict(row)
+            row["origins"] = [row["origin"]]
+            row["aliases"] = [row["identity"]]
+            row["validation_events"] = [
+                f"{row['origin']}:{row['highest_stage_reached']}"]
+            merged[key] = row
+            order.append(key)
+            continue
+        target = merged[key]
+        if row["origin"] not in target["origins"]:
+            target["origins"].append(row["origin"])
+        if row["identity"] not in target["aliases"]:
+            target["aliases"].append(row["identity"])
+        target["validation_events"].append(
+            f"{row['origin']}:{row['highest_stage_reached']}")
+        # Keep the strongest outcome observed. A source verified in one round is
+        # verified; a later appearance that merely did not attempt it must not
+        # erase that.
+        for column in ("numerical_verification", "primal_parity", "compilation",
+                       "transformation", "internal_jacobian",
+                       "higher_order_verified"):
+            if row.get(column) == "succeeded":
+                target[column] = "succeeded"
+            elif target.get(column) in (UNAVAILABLE, "", None) and row.get(column):
+                target[column] = row[column]
+        if target.get("abaqus") == BLOCKED and row.get("abaqus") != BLOCKED:
+            target["abaqus"] = row["abaqus"]
+        if row.get("file_layout") == "multi_file":
+            target["file_layout"] = "multi_file"
+        if not target.get("constitutive_class") and row.get("constitutive_class"):
+            target["constitutive_class"] = row["constitutive_class"]
+    out = []
+    for key in order:
+        row = merged[key]
+        row["origin"] = ";".join(row.pop("origins"))
+        row["aliases"] = ";".join(row["aliases"])
+        row["validation_events"] = ";".join(sorted(set(row["validation_events"])))
+        out.append(row)
+    return out
+
+
 def main(argv: list[str] | None = None) -> int:
     import argparse
 
@@ -329,6 +409,7 @@ def main(argv: list[str] | None = None) -> int:
     out = args.out_dir
 
     rows = build_rows()
+    rows = collapse_to_canonical_rows(rows)
     out.mkdir(parents=True, exist_ok=True)
     columns = list(rows[0].keys())
     with (out / "generality_matrix.csv").open("w", newline="", encoding="utf-8") as handle:
@@ -342,9 +423,21 @@ def main(argv: list[str] | None = None) -> int:
             counts[str(row[key])] = counts.get(str(row[key]), 0) + 1
         return dict(sorted(counts.items()))
 
+    identity_registry = _load(OUT / "source_identity.json")
+    merged = [row for row in rows if ";" in row.get("origin", "")]
     summary = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "sources": len(rows),
+        "counting_policy": (
+            "One row per implementation. Rows are merged on canonical source "
+            "identity -- normalised content for a single file, resolved routine "
+            "closure for a multi-file source -- so a UMAT reachable from both the "
+            "in-repository archive and the pinned upstream snapshot is one source "
+            "with several origins and several validation events, not several "
+            "sources."),
+        "rows_merged_from_more_than_one_origin": len(merged),
+        "merged_rows": sorted(row["aliases"] for row in merged),
+        "identity_registry_counts": identity_registry.get("counts", {}),
         "by_constitutive_class": tally("constitutive_class"),
         "by_source_form": tally("source_form"),
         "by_kinematics": tally("kinematics"),

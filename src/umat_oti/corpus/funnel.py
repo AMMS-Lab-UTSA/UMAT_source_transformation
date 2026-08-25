@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional, Sequence
 
+from umat_oti.corpus.identity import closure_identity, content_identity
 from umat_oti.transform.dependency_resolution import (
     DependencyResolutionError,
     combined_source,
@@ -280,6 +281,15 @@ def run_funnel(candidate: Candidate, work_dir: Path, *,
                   multi_file=graph.is_multi_file,
                   external_files=sorted({
                       str(d.path.name) for d in graph.external_definitions}))
+
+    # Identity is recorded here, where the resolved closure is available. A
+    # multi-file source must hash as its closure everywhere it appears, or the
+    # same implementation registers once as a closure and once as a single file
+    # and is counted twice.
+    identity = (closure_identity(graph) if graph.is_multi_file
+                else content_identity(candidate.source_path))
+    record.extra["identity"] = identity.as_dict()
+    record.extra["canonical_source_id"] = identity.canonical_source_id
 
     prepared = work_dir / f"{candidate.id}_resolved.for"
     prepared.write_text(combined_source(graph), encoding="utf-8")

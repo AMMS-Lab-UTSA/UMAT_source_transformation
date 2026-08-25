@@ -1,11 +1,11 @@
 {
   "by_abaqus": {
-    "blocked_by_external_dependency": 30,
+    "blocked_by_external_dependency": 22,
     "failed_execution (slurm 791506)": 1,
-    "passed (slurm 791506)": 18
+    "passed (slurm 791506)": 17
   },
   "by_constitutive_class": {
-    "": 10,
+    "": 8,
     "Cosserat elasticity": 1,
     "J2 plasticity, bilinear isotropic hardening": 1,
     "J2 plasticity, combined isotropic/kinematic hardening": 1,
@@ -14,56 +14,87 @@
     "anisotropic elasticity (cubic)": 1,
     "anisotropic elasticity (orthotropic)": 1,
     "anisotropic elasticity (transversely isotropic)": 1,
-    "classical J2 plasticity, isotropic hardening": 1,
     "crystal plasticity, FCC slip systems": 1,
     "crystal plasticity, finite strain, COMMON-block state": 1,
     "elasticity with scalar damage": 1,
     "hyperelasticity (Mooney-Rivlin, small strain)": 1,
-    "isotropic elasticity": 4,
+    "isotropic elasticity": 3,
     "linear viscoelasticity": 1,
     "plasticity, combined hardening": 1,
-    "plasticity, combined isotropic/kinematic hardening": 2,
+    "plasticity, combined isotropic/kinematic hardening": 1,
     "plasticity, isotropic hardening": 1,
     "plasticity, kinematic hardening": 1,
     "pressure-dependent plasticity": 1,
-    "reduced Cosserat couple-stress plasticity": 1,
     "see the study's model notes": 3,
     "thermoelasticity": 2,
-    "viscoplastic damage, Cosserat, thermomechanical": 1,
-    "viscoplastic damage, classical theory": 2,
+    "viscoplastic damage, classical theory": 1,
     "viscoplastic damage, combined hardening": 1,
-    "viscoplastic damage, combined hardening, thermomechanical": 1,
     "viscoplastic damage, combined nonlinear isotropic/kinematic hardening, thermomechanical": 1,
     "viscoplastic flow (crystal-plasticity flow rule)": 1,
     "viscoplasticity (Perzyna)": 1
   },
   "by_existing_tangent": {
-    "present": 49
+    "present": 40
   },
   "by_internal_jacobian": {
-    "blocked:not_started": 6,
-    "no_local_solve": 22,
-    "not_attempted": 13,
-    "succeeded": 8
+    "blocked:not_started": 2,
+    "no_local_solve": 21,
+    "not_attempted": 11,
+    "succeeded": 6
   },
   "by_kinematics": {
-    "": 17,
-    "small_strain": 32
+    "": 14,
+    "small_strain": 26
   },
   "by_numerical_verification": {
-    "not_attempted": 26,
+    "not_attempted": 17,
     "succeeded": 22,
     "unresolved": 1
   },
   "by_source_form": {
-    "fixed": 49
+    "fixed": 40
   },
-  "generated_at": "2026-08-25T19:40:58.545665+00:00",
-  "multi_file_verified": [
-    "jgomezc1_UMAT_ECO",
-    "jgomezc1_UMAT_PCO",
-    "jgomezc1_UMAT_VPDCO"
+  "counting_policy": "One row per implementation. Rows are merged on canonical source identity -- normalised content for a single file, resolved routine closure for a multi-file source -- so a UMAT reachable from both the in-repository archive and the pinned upstream snapshot is one source with several origins and several validation events, not several sources.",
+  "generated_at": "2026-08-25T20:21:55.564709+00:00",
+  "identity_registry_counts": {
+    "content_deduplicated_sources": 42,
+    "independent_upstream_repositories": 2,
+    "note": "content_deduplicated_sources counts implementations, not appearances. A source found both locally and upstream is one source with two origins and however many validation events were run against it.",
+    "raw_discovered_files": 51,
+    "sources_found_at_more_than_one_origin": 40,
+    "unique_constitutive_models": 24,
+    "unique_dependency_closures": 3,
+    "validation_events_by_kind": {
+      "CORPUS offline round": 8,
+      "TABLE-2 paired Abaqus": 19,
+      "TABLE-3 internal Jacobian": 36,
+      "TABLE-4 higher order": 4,
+      "TABLE-6 parameter sensitivity": 18
+    },
+    "verified_unique_sources": 34,
+    "verified_unique_sources_by_event": {
+      "CORPUS offline round": 5,
+      "TABLE-2 paired Abaqus": 17,
+      "TABLE-3 internal Jacobian": 6,
+      "TABLE-6 parameter sensitivity": 17
+    }
+  },
+  "merged_rows": [
+    "UMAT_NKH_1.02;jgomezc1_UMAT_NKH_1.02",
+    "UMAT_PCL;jgomezc1_UMAT_PCL",
+    "UMAT_PCLK;jgomezc1_UMAT_PCLK",
+    "UMAT_PCO;jgomezc1_UMAT_PCO",
+    "UMAT_VPDCL;jgomezc1_UMAT_VPDCL",
+    "UMAT_VPDCO;jgomezc1_UMAT_VPDCO",
+    "jgomezc1_UMAT_ECO;UMAT_ECO",
+    "visco_imp;visco_beam"
   ],
-  "sources": 49,
+  "multi_file_verified": [
+    "UMAT_PCO",
+    "UMAT_VPDCO",
+    "jgomezc1_UMAT_ECO"
+  ],
+  "rows_merged_from_more_than_one_origin": 8,
+  "sources": 40,
   "structural_diversity_caveat": "Every parameter-sensitivity benchmark row is single-file, fixed-form and small-strain with at most one helper routine, so that set alone demonstrates breadth of constitutive class rather than of source structure. The external corpus rows supply the multi-file evidence: candidates whose helper closure spans sibling files are resolved, compiled and verified. Free-form and finite-strain sources are still not represented anywhere in this matrix."
 }

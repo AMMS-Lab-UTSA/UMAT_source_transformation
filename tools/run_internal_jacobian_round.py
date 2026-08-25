@@ -34,6 +34,7 @@ from run_parameter_sensitivity_sweep import generate_contract  # noqa: E402
 from umat_oti.transform.dependency_resolution import (  # noqa: E402
     DependencyResolutionError, combined_source, resolve_closure,
 )
+from umat_oti.corpus.identity import closure_identity, content_identity  # noqa: E402
 from umat_oti.transform.internal_jacobian import discover_local_solves  # noqa: E402
 from umat_oti.validation.actual_umat_higher_order_generic import MODELS  # noqa: E402
 from umat_oti.validation.internal_jacobian_validation import (  # noqa: E402
@@ -56,6 +57,25 @@ def _repo_models() -> list[str]:
                   if (d / "contract_v2.json").is_file())
 
 
+
+def _canonical_identity(source: Path, roots):
+    """Identity that does not depend on which round happened to look at the source.
+
+    A multi-file source must hash as its closure everywhere. Computing a
+    single-file identity in one branch and a closure identity in another made
+    UMAT_PCO, UMAT_VPDCO and UMAT_ECO each register as two "unique
+    implementations", which is precisely the double counting this layer exists
+    to prevent.
+    """
+    try:
+        graph = resolve_closure(source, entry="UMAT", roots=roots)
+    except DependencyResolutionError:
+        return content_identity(source), None
+    if graph.missing or not graph.is_multi_file:
+        return content_identity(source), graph
+    return closure_identity(graph), graph
+
+
 def run_repo_model(model: str, work_root: Path) -> dict:
     source = MODELS_DIR / model / "umat.for"
     record: dict = {
@@ -64,6 +84,12 @@ def run_repo_model(model: str, work_root: Path) -> dict:
         "source": f"parameter_sensitivity/models/{model}/umat.for",
         "source_sha256": _sha256(source),
     }
+    # Identity is computed for every candidate, including those that stop
+    # immediately: the counts are about distinct implementations, and a source
+    # with no local solve is still one of them.
+    _identity, _ = _canonical_identity(source, [source.parent])
+    record["identity"] = _identity.as_dict()
+    record["canonical_source_id"] = _identity.canonical_source_id
     solves = discover_local_solves(source.read_text(errors="replace"))
     record["local_solves_discovered"] = [s.as_dict() for s in solves]
     if not solves:
@@ -92,7 +118,10 @@ def run_repo_model(model: str, work_root: Path) -> dict:
         nshr=int(contract.get("nshr", max(int(contract["ntens"]) - 3, 0))),
         state_names=tuple(s["name"] for s in contract["state_variables"]),
     )
+    declared_source = record["source"]
     record.update(verify_internal_jacobian(case, work_root / model))
+    record["executed_source"] = record.get("source")
+    record["source"] = declared_source
     record["bucket"] = _bucket(record)
     return record
 
@@ -121,6 +150,9 @@ def run_external(entry: dict, work_root: Path) -> dict:
         record["reason"] = f"declared source {entry['path']} is not present"
         return record
     record["source_sha256"] = _sha256(source)
+    _identity, _ = _canonical_identity(source, [source.parent])
+    record["identity"] = _identity.as_dict()
+    record["canonical_source_id"] = _identity.canonical_source_id
     solves = discover_local_solves(source.read_text(errors="replace"))
     record["local_solves_discovered"] = [s.as_dict() for s in solves]
     if not solves:
@@ -192,6 +224,10 @@ def run_corpus_candidate(entry: dict, repository: dict, root: Path,
         record["reason"] = "the pinned snapshot is not checked out"
         return record
     record["source_sha256"] = _sha256(source)
+    _roots = [base / r for r in entry.get("dependency_roots", [])]
+    _identity, _ = _canonical_identity(source, _roots)
+    record["identity"] = _identity.as_dict()
+    record["canonical_source_id"] = _identity.canonical_source_id
     solves = discover_local_solves(source.read_text(errors="replace"))
     record["local_solves_discovered"] = [s.as_dict() for s in solves]
     if not solves:
@@ -224,6 +260,14 @@ def run_corpus_candidate(entry: dict, repository: dict, root: Path,
     record["dependency_closure"] = sorted(graph.resolved)
     record["multi_file"] = graph.is_multi_file
     record["material_data_source"] = material["provenance"]
+    record["material_properties"] = list(material["props"])
+    record["loading_history"] = {
+        "dstran_per_increment": list(material["dstran_per_increment"]),
+        "n_increments": int(material["n_increments"]),
+    }
+    record["entry_source_sha256"] = _sha256(source)
+    record["dependency_closure_sha256"] = _identity.content_sha256
+    declared_source = record["source"]
     ntens = int(entry["ntens"])
     record.update(verify_internal_jacobian(
         InternalJacobianCase(
@@ -234,16 +278,25 @@ def run_corpus_candidate(entry: dict, repository: dict, root: Path,
             ntens=ntens, nstatv=int(entry["nstatv"]),
             ndi=int(entry.get("ndi", 3)), nshr=int(entry.get("nshr", 1))),
         work))
+    record["executed_source"] = record.get("source")
+    record["source"] = declared_source
     record["bucket"] = _bucket(record)
     return record
 
 
 def write_table3(records: list[dict], path: Path) -> None:
-    """Table 3 rows. Only executed comparisons appear; nothing is imputed."""
-    columns = ["model", "origin", "iterate", "residual", "jacobian_variable",
-               "increment", "converged_iterate", "oti", "finite_difference",
-               "hand_coded", "oti_vs_fd_relative", "hand_coded_vs_fd_relative",
-               "verdict"]
+    """Table 3 rows. Only executed comparisons appear; nothing is imputed.
+
+    A row is one *execution*. The canonical source id is carried explicitly
+    because the same implementation is reachable from more than one origin --
+    every ICP UMAT is normalised-identical to a file in the pinned upstream
+    snapshot -- and two executions of one source with different upstream
+    material are two validation events, not two models.
+    """
+    columns = ["canonical_source_id", "model", "origin", "iterate", "residual",
+               "jacobian_variable", "increment", "converged_iterate", "oti",
+               "finite_difference", "hand_coded", "oti_vs_fd_relative",
+               "hand_coded_vs_fd_relative", "material_provenance", "verdict"]
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=columns)
         writer.writeheader()
@@ -255,6 +308,7 @@ def write_table3(records: list[dict], path: Path) -> None:
             fd = extracted["finite_difference"]
             denominator = max(abs(fd), 1e-300)
             writer.writerow({
+                "canonical_source_id": record.get("canonical_source_id", ""),
                 "model": record["id"],
                 "origin": record["origin"],
                 "iterate": solve.get("iteration_variable"),
@@ -268,6 +322,7 @@ def write_table3(records: list[dict], path: Path) -> None:
                 "oti_vs_fd_relative": f"{abs(extracted['oti'] - fd) / denominator:.6e}",
                 "hand_coded_vs_fd_relative":
                     f"{abs(extracted['hand_coded'] - fd) / denominator:.6e}",
+                "material_provenance": record.get("material_data_source", ""),
                 "verdict": record["bucket"],
             })
 
@@ -327,11 +382,26 @@ def main(argv: list[str] | None = None) -> int:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "funnel": {
             "candidate_sources": len(records),
+            "unique_source_implementations": len(
+                {r["canonical_source_id"] for r in records
+                 if r.get("canonical_source_id")}),
             "sources_with_a_local_solve": len(with_solve),
-            "extracted_and_verified": counts.get("verified", 0),
+            "unique_sources_with_a_local_solve": len(
+                {r["canonical_source_id"] for r in with_solve
+                 if r.get("canonical_source_id")}),
+            "verification_executions": counts.get("verified", 0),
+            "unique_sources_verified": len(
+                {r["canonical_source_id"] for r in records
+                 if r.get("bucket") == "verified" and r.get("canonical_source_id")}),
             "extracted_and_disagreeing": counts.get("failed", 0),
             "blocked": counts.get("blocked", 0),
             "no_local_solve": counts.get("no_local_solve", 0),
+            "_note": ("candidate_sources counts appearances; "
+                      "unique_source_implementations counts distinct code. The "
+                      "same UMAT is reachable from the in-repository archive and "
+                      "from the pinned upstream snapshot, and running it from "
+                      "both with different upstream material is two validation "
+                      "events against one implementation."),
         },
         "records": records,
     }
