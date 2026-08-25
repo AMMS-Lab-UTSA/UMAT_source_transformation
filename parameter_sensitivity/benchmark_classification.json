@@ -1,0 +1,96 @@
+{
+  "_comment": [
+    "Constitutive classification of the benchmark sources, used to build the",
+    "generality matrix. Each entry records the source feature the class was read",
+    "from, so the classification can be checked against the code rather than",
+    "taken on trust. Structural facts -- source form, file count, helper",
+    "routines, include files, dimensions, existing tangent -- are NOT declared",
+    "here: the matrix derives those from the sources and contracts directly."
+  ],
+  "models": {
+    "m1_elastic": {
+      "classified_from": "DDSDDE built from two Lame constants; no yield surface or state",
+      "constitutive_class": "isotropic elasticity"
+    },
+    "m2_cubic": {
+      "classified_from": "three independent stiffness constants C11, C12, C44",
+      "constitutive_class": "anisotropic elasticity (cubic)"
+    },
+    "m2_elastic3d": {
+      "classified_from": "full 3D isotropic stiffness, no inelastic branch",
+      "constitutive_class": "isotropic elasticity"
+    },
+    "m3_j2": {
+      "classified_from": "EQPLAS state and a Mises yield check drive a radial return",
+      "constitutive_class": "J2 plasticity, isotropic hardening"
+    },
+    "m5_cpflow": {
+      "classified_from": "GDOT activation-energy flow rule solved by a local Newton iteration on DEQPL",
+      "constitutive_class": "viscoplastic flow (crystal-plasticity flow rule)"
+    },
+    "m6_fcc": {
+      "classified_from": "Schmid factors over slip systems with per-system GDOT",
+      "constitutive_class": "crystal plasticity, FCC slip systems"
+    },
+    "sweep_aniso_ortho": {
+      "classified_from": "13 independent DDSDDE assignments, nine engineering constants",
+      "constitutive_class": "anisotropic elasticity (orthotropic)"
+    },
+    "sweep_damage_elastic": {
+      "classified_from": "stiffness scaled by a damage variable carried in STATEV",
+      "constitutive_class": "elasticity with scalar damage"
+    },
+    "sweep_drucker_prager": {
+      "classified_from": "Drucker-Prager yield with a pressure term",
+      "constitutive_class": "pressure-dependent plasticity"
+    },
+    "sweep_eco": {
+      "classified_from": "reduced elastic model from the ECO archive source",
+      "constitutive_class": "isotropic elasticity"
+    },
+    "sweep_j2_bilinear": {
+      "classified_from": "EQPLAS with a constant plastic modulus",
+      "constitutive_class": "J2 plasticity, bilinear isotropic hardening"
+    },
+    "sweep_j2_combined": {
+      "classified_from": "back stress ALPHA plus isotropic EQPLAS hardening",
+      "constitutive_class": "J2 plasticity, combined isotropic/kinematic hardening"
+    },
+    "sweep_j2_kinematic": {
+      "classified_from": "back stress ALPHA with no isotropic term",
+      "constitutive_class": "J2 plasticity, kinematic hardening"
+    },
+    "sweep_lame_elastic": {
+      "classified_from": "Lame parameterisation of the elastic stiffness",
+      "constitutive_class": "isotropic elasticity"
+    },
+    "sweep_maxwell_ve": {
+      "classified_from": "Maxwell branch relaxed over DTIME; the only model with a helper subroutine",
+      "constitutive_class": "linear viscoelasticity"
+    },
+    "sweep_mooney_small": {
+      "classified_from": "Mooney-Rivlin constants in a small-strain stiffness",
+      "constitutive_class": "hyperelasticity (Mooney-Rivlin, small strain)"
+    },
+    "sweep_perzyna_linear": {
+      "classified_from": "rate-dependent overstress divided by a viscosity",
+      "constitutive_class": "viscoplasticity (Perzyna)"
+    },
+    "sweep_real_ECL_TEMP": {
+      "classified_from": "temperature-dependent stiffness driven by TEMP/DTEMP",
+      "constitutive_class": "thermoelasticity"
+    },
+    "sweep_real_PCO": {
+      "classified_from": "EQPLAS-driven yield surface",
+      "constitutive_class": "J2 plasticity, isotropic hardening"
+    },
+    "sweep_thermoelastic": {
+      "classified_from": "thermal expansion ALPHA times DTEMP subtracted from the strain increment",
+      "constitutive_class": "thermoelasticity"
+    },
+    "sweep_transiso": {
+      "classified_from": "13 DDSDDE assignments with a single symmetry axis",
+      "constitutive_class": "anisotropic elasticity (transversely isotropic)"
+    }
+  }
+}
