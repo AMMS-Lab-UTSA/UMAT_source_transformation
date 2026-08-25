@@ -32,6 +32,7 @@ from typing import Any, Optional, Sequence
 
 from umat_oti.transform.internal_jacobian import LocalSolve, discover_local_solves
 from umat_oti.transform.local_jacobian_probe import (
+    PROBE_SENTINEL,
     ProbeInjectionError,
     inject_local_solve_probe,
     plan_probe_slots,
@@ -64,6 +65,7 @@ STAGE_ORDER = (
     "recording_is_non_perturbing",
     "converged_iterate_located",
     "compiled_original_probe",
+    "probe_took_effect",
     "compiled_oti_probe",
     "primal_parity",
     "fd_reference_resolved",
@@ -72,6 +74,9 @@ STAGE_ORDER = (
 )
 
 SEED_NAME = "GSEED"
+
+#: Offsets past the declared NSTATV to try when placing the probe block.
+SLOT_OFFSETS = (0, 8, 32)
 
 
 @dataclass
@@ -131,20 +136,7 @@ def verify_internal_jacobian(case: InternalJacobianCase, out_dir: Path) -> dict:
     record["solve"] = solve.as_dict()
     _stage(record, "solve_discovered", "succeeded")
 
-    slots = plan_probe_slots(nstatv=case.nstatv, nprops=case.nprops)
-    record["slots"] = slots.as_dict()
-
-    # ---- inject: an observing pass and a seeding pass ---------------------
-    try:
-        observe = inject_local_solve_probe(
-            text, solve, slots, target_increment=1, override_iterate=False)
-    except ProbeInjectionError as exc:
-        _stage(record, "probe_injected", "unsupported", reason=exc.detail, code=exc.code)
-        return record
-    observe_path = out_dir / "umat_probe_observe.for"
-    observe_path.write_text(observe.source, encoding="utf-8")
-
-    # ---- control: recording must not change the primal response -----------
+    # ---- control: the untransformed source, with no injection at all ------
     reference_dir = out_dir / "original_reference"
     try:
         plain_exe = build_original_driver(
@@ -152,14 +144,65 @@ def verify_internal_jacobian(case: InternalJacobianCase, out_dir: Path) -> dict:
             nstatv=case.nstatv, nprops=case.nprops)
         plain = replay(plain_exe, case.props, case.path,
                        ntens=case.ntens, nstatv=case.nstatv)
-        observe_exe = build_original_driver(
-            observe_path, reference_dir / "observe", ntens=case.ntens,
-            nstatv=slots.nstatv, nprops=slots.nprops)
-        observed = replay(observe_exe, list(case.props) + [0.0], case.path,
-                          ntens=case.ntens, nstatv=slots.nstatv)
     except RuntimeError as exc:
         _stage(record, "probe_injected", "failed", reason=str(exc)[:400])
         return record
+
+    # ---- inject, relocating the probe block until it survives -------------
+    # A declared NSTATV is not a reliable upper bound on the indices a source
+    # addresses, so probe slots placed immediately past it can be overwritten by
+    # the model's own state writes. The sentinel says whether that happened.
+    attempts: list[dict] = []
+    slots = observe = observe_exe = observed = None
+    for offset in SLOT_OFFSETS:
+        candidate = plan_probe_slots(
+            nstatv=case.nstatv, nprops=case.nprops, offset=offset)
+        try:
+            injection = inject_local_solve_probe(
+                text, solve, candidate, target_increment=1, override_iterate=False)
+        except ProbeInjectionError as exc:
+            _stage(record, "probe_injected", "unsupported",
+                   reason=exc.detail, code=exc.code)
+            return record
+        path = out_dir / f"umat_probe_observe_offset{offset}.for"
+        path.write_text(injection.source, encoding="utf-8")
+        try:
+            exe = build_original_driver(
+                path, reference_dir / f"observe{offset}", ntens=case.ntens,
+                nstatv=candidate.nstatv, nprops=candidate.nprops)
+            run = replay(exe, list(case.props) + [0.0], case.path,
+                         ntens=case.ntens, nstatv=candidate.nstatv)
+        except RuntimeError as exc:
+            _stage(record, "probe_injected", "failed", reason=str(exc)[:400])
+            return record
+        # Guard both ends of the probe block. The sentinel is its highest slot,
+        # so a source that writes over the block from below -- a back-stress
+        # array running past the declared NSTATV -- leaves the sentinel intact
+        # while destroying the records. The counter is the lowest slot and is
+        # written only by the probe, so a live counter proves the low end
+        # survived too.
+        intact = sum(1 for row in run.statev
+                     if row[candidate.sentinel - 1] == PROBE_SENTINEL)
+        counted = sum(1 for row in run.statev if row[candidate.counter - 1] >= 1.0)
+        attempts.append({
+            "offset": offset,
+            "increments_with_intact_sentinel": intact,
+            "increments_with_live_counter": counted,
+        })
+        if intact and counted:
+            slots, observe, observe_exe, observed = candidate, injection, exe, run
+            break
+    record["slot_placement_attempts"] = attempts
+    if slots is None:
+        _stage(record, "probe_injected", "unsupported",
+               reason=("the probe sentinel did not survive at any tried offset: the "
+                       "local solve either never executed along this loading path, "
+                       "or this source addresses state slots beyond every offset "
+                       "tried and overwrote the probe block"),
+               offsets_tried=list(SLOT_OFFSETS))
+        return record
+    record["slots"] = slots.as_dict()
+    observe_path = out_dir / f"umat_probe_observe_offset{slots.offset}.for"
     _stage(record, "probe_injected", "succeeded")
 
     drift = max(
@@ -184,17 +227,24 @@ def verify_internal_jacobian(case: InternalJacobianCase, out_dir: Path) -> dict:
     iterates = [row[slots.iterate - 1] for row in observed.statev]
     residuals = [row[slots.residual - 1] for row in observed.statev]
     hand_coded = [row[slots.jacobian - 1] for row in observed.statev]
+    # Only increments that actually evaluated the residual are candidates.
+    # A non-zero iterate is not sufficient evidence: STATEV persists, so an
+    # increment that never entered the solve still reports the previous
+    # increment's iterate.
+    evaluations = [row[slots.counter - 1] for row in observed.statev]
+    record["residual_evaluations_per_increment"] = evaluations
     if case.target_increment is not None:
         target = case.target_increment
     else:
-        entered = [(abs(v), i + 1) for i, v in enumerate(iterates) if v != 0.0]
+        entered = [(abs(iterates[i]), i + 1) for i in range(len(iterates))
+                   if evaluations[i] >= 2.0 and iterates[i] != 0.0]
         target = max(entered)[1] if entered else 0
-    if not 1 <= target <= len(iterates) or iterates[target - 1] == 0.0:
+    if not 1 <= target <= len(iterates) or evaluations[target - 1] < 2.0:
         _stage(record, "converged_iterate_located", "unsupported",
-               reason=("the local solve was never entered with a non-zero iterate "
-                       "along this loading path, so there is no converged iterate "
-                       "to differentiate about"),
-               iterates=iterates)
+               reason=("no increment along this loading path evaluated the local "
+                       "residual more than once, so there is no converged iterate "
+                       "at which a residual derivative can be observed"),
+               iterates=iterates, residual_evaluations=evaluations)
         return record
     gamma = iterates[target - 1]
     record["target_increment"] = target
@@ -233,8 +283,34 @@ def verify_internal_jacobian(case: InternalJacobianCase, out_dir: Path) -> dict:
     # no-op if the probe really does replace the update rather than the physics.
     probe_residual = seeded_run.statev[target - 1][slots.residual - 1]
     probe_jacobian = seeded_run.statev[target - 1][slots.jacobian - 1]
+    probe_iterate = seeded_run.statev[target - 1][slots.iterate - 1]
+    probe_evaluations = seeded_run.statev[target - 1][slots.counter - 1]
     record["probe_residual_at_iterate"] = probe_residual
     record["probe_hand_coded_jacobian"] = probe_jacobian
+    record["probe_evaluations"] = probe_evaluations
+
+    # The recorded residual must belong to the *seeded* iterate. A solve that
+    # terminates on its first trip round the loop never re-evaluates the
+    # residual after the override, so what it recorded predates the seed and
+    # does not depend on it at all. The extracted coefficient would then be
+    # exactly zero -- and so would the finite-difference reference, because both
+    # builds share that insensitivity. Zero would equal zero and the case would
+    # report as verified while nothing had been differentiated. Requiring the
+    # recorded iterate to be the value that was injected closes that hole.
+    took_effect = (
+        probe_evaluations >= 2.0
+        and abs(probe_iterate - gamma) <= 1.0e-12 * max(abs(gamma), 1.0)
+    )
+    _stage(record, "probe_took_effect",
+           "succeeded" if took_effect else "unsupported",
+           residual_evaluations_at_seeded_iterate=probe_evaluations,
+           recorded_iterate=probe_iterate, seeded_iterate=gamma,
+           reason=None if took_effect else (
+               "this local solve terminated before re-evaluating its residual at "
+               "the seeded iterate, so the recorded residual does not depend on "
+               "the seed and no internal Jacobian can be extracted from it"))
+    if not took_effect:
+        return record
 
     # ---- OTI build of the same injected source ----------------------------
     ps_dir = out_dir / "oti_probe"

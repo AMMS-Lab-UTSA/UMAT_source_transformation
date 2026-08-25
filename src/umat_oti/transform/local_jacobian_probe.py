@@ -69,6 +69,11 @@ class ProbeInjectionError(RuntimeError):
         super().__init__(f"{code}: {detail}")
 
 
+#: Written into the sentinel slot at every residual evaluation. Any exactly
+#: representable, implausible value works; it is compared for bit equality.
+PROBE_SENTINEL = 123456789.0
+
+
 @dataclass(frozen=True)
 class ProbeSlots:
     """Where the probe reads its iterate from and writes its outputs to."""
@@ -77,9 +82,11 @@ class ProbeSlots:
     residual: int
     jacobian: int
     counter: int
+    sentinel: int
     nstatv: int
     seed_props: int
     nprops: int
+    offset: int = 0
 
     def as_dict(self) -> dict[str, int]:
         return {
@@ -87,9 +94,11 @@ class ProbeSlots:
             "statev_residual": self.residual,
             "statev_jacobian": self.jacobian,
             "statev_counter": self.counter,
+            "statev_sentinel": self.sentinel,
             "nstatv_extended": self.nstatv,
             "props_seed": self.seed_props,
             "nprops_extended": self.nprops,
+            "offset_past_declared_nstatv": self.offset,
         }
 
 
@@ -118,23 +127,31 @@ class ProbeInjection:
         }
 
 
-def plan_probe_slots(*, nstatv: int, nprops: int) -> ProbeSlots:
+def plan_probe_slots(*, nstatv: int, nprops: int, offset: int = 0) -> ProbeSlots:
     """Append probe slots past the contract's declared state and property sizes.
 
-    Appending (rather than reusing a gap) keeps the injection safe for sources
-    that sweep their own state with ``DO K=1,NSTATV``: the extra slots live
-    beyond anything the original routine addresses.
+    ``offset`` pushes the block further out.  A contract's declared ``NSTATV``
+    is not always an upper bound on the indices a source addresses -- a UMAT
+    whose back-stress block runs to ``2*NTENS+NTENS+1`` writes past a declared
+    size that only counted the slots Abaqus is told about -- and such a source
+    silently overwrites probe slots placed immediately after it.  The sentinel
+    slot detects that at run time so the caller can retry further out.
     """
     if nstatv < 0 or nprops < 0:
         raise ValueError("nstatv and nprops must be non-negative")
+    if offset < 0:
+        raise ValueError("offset must be non-negative")
+    base = nstatv + offset
     return ProbeSlots(
-        iterate=nstatv + 1,
-        residual=nstatv + 2,
-        jacobian=nstatv + 3,
-        counter=nstatv + 4,
-        nstatv=nstatv + 4,
+        iterate=base + 1,
+        residual=base + 2,
+        jacobian=base + 3,
+        counter=base + 4,
+        sentinel=base + 5,
+        nstatv=base + 5,
         seed_props=nprops + 1,
         nprops=nprops + 1,
+        offset=offset,
     )
 
 
@@ -261,20 +278,25 @@ def inject_local_solve_probe(
         )
 
     it, res, jac = solve.iterate, solve.residual, solve.jacobian
+    # The counter is unconditional and resets once per entry to the loop, so it
+    # reports how many times the residual was evaluated on *this* increment.
+    # That distinguishes an increment that genuinely ran the solve from one that
+    # merely inherited a stale iterate: STATEV persists across increments, so
+    # the recorded iterate alone cannot tell those apart.
     record = [
+        _stmt(f"STATEV({slots.counter})=STATEV({slots.counter})+1.0D0", fixed=fixed),
         _stmt(f"STATEV({slots.iterate})={it}", fixed=fixed),
         _stmt(f"STATEV({slots.residual})={res}", fixed=fixed),
         _stmt(f"STATEV({slots.jacobian})={jac}", fixed=fixed),
+        _stmt(f"STATEV({slots.sentinel})={PROBE_SENTINEL!r}D0".replace(".0D0", ".0D0"),
+              fixed=fixed),
     ]
+    reset = [_stmt(f"STATEV({slots.counter})=0.0D0", fixed=fixed)]
 
     edits: list[tuple[int, list[str], str]] = []
     if override_iterate:
         block = list(record)
         block.append(_stmt(f"IF (KINC.EQ.{target_increment}) THEN", fixed=fixed))
-        block.append(
-            _stmt(f"STATEV({slots.counter})=STATEV({slots.counter})+1.0D0",
-                  fixed=fixed, indent=2)
-        )
         if force_exit:
             # The residual has already been recorded above.  Zeroing it after the
             # probe evaluation makes the solve's own convergence test succeed, so
@@ -289,12 +311,9 @@ def inject_local_solve_probe(
         block.append(update_line)
         block.append(_stmt("END IF", fixed=fixed))
         edits.append((update_index, block, "record+seed"))
-        edits.append(
-            (loop_index, [_stmt(f"STATEV({slots.counter})=0.0D0", fixed=fixed)],
-             "counter-reset")
-        )
     else:
         edits.append((update_index, record + [update_line], "record"))
+    edits.append((loop_index, reset, "counter-reset"))
 
     out = list(lines)
     for index, block, _kind in sorted(edits, key=lambda e: e[0], reverse=True):
