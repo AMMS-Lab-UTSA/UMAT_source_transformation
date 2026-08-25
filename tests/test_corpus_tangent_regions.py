@@ -59,7 +59,9 @@ def test_commented_assignments_are_ignored():
         assert find_tangent_ranges(f"{prefix}     DDSDDE(1,1) = A\n") == []
     assert is_code_line("      DDSDDE = 1") is True
     assert is_code_line("C     DDSDDE = 1") is False
-    assert is_code_line("      ! trailing") is True
+    # a line whose only content is a comment is a comment, whatever the indent
+    assert is_code_line("      ! whole-line comment") is False
+    assert is_code_line("") is False
 
 
 def test_a_source_with_no_tangent_says_so():
