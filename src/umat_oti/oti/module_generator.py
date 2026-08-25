@@ -86,14 +86,25 @@ def generate_otilib_module(
 
 
 def _find_support_dir(explicit: Path | None) -> Path:
+    """Locate the OTI support files that module generation copies and imports.
+
+    They ship *inside the package* rather than beside it at the repository root.
+    Resolving them by walking up from this file worked only for an editable
+    install: from a wheel, ``parents[3]`` lands in site-packages and the files
+    are simply absent, so a pip-installed umat_oti could not generate an OTI
+    module at all. The repository-root locations remain as a fallback for older
+    checkouts.
+    """
     if explicit is not None:
         return explicit
+    packaged = Path(__file__).resolve().parent / "support"
+    if (packaged / "fmod_writer.py").is_file():
+        return packaged
     project_root = Path(__file__).resolve().parents[3]
-    candidates = [project_root / "OTI", project_root / "UMATs" / "OTI"]
-    for candidate in candidates:
+    for candidate in (project_root / "OTI", project_root / "UMATs" / "OTI"):
         if (candidate / "fmod_writer.py").is_file():
             return candidate
-    return candidates[0]
+    return packaged
 
 
 def _find_template_dir() -> Path | None:
