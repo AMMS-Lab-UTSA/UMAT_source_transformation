@@ -103,10 +103,26 @@ step "10. confirm nothing in the clone depends on the development tree"
 # Any reference to the developer's working directories would mean the clone is
 # not self-contained. Archived run records are exempt for the reasons stated in
 # tools/repository_standards.json, and the audit above already enforced that.
+# The exempt prefixes come from tools/repository_standards.json so this check
+# and the audit cannot drift apart. Each exemption there states why the path is
+# a record of a past run rather than an input to a reproduction.
+mapfile -t EXEMPT < <("$VENV_PY" - "$CLONE" <<'PYEOF'
+import json, sys
+from pathlib import Path
+config = Path(sys.argv[1]) / "tools" / "repository_standards.json"
+for entry in json.loads(config.read_text())["absolute_path_exemptions"]:
+    print(entry["prefix"])
+PYEOF
+)
+printf '    exempt prefixes: %s\n' "${EXEMPT[*]}"
+
 leaks="$(grep -rIl --exclude-dir=.git \
     -e "$REPO_ROOT" -e "$HOME/softwarex_work" -e "$HOME/Documents" \
-    -e "$HOME/Desktop" "$CLONE" 2>/dev/null \
-    | grep -v '^.*/paper_results/arc_' || true)"
+    -e "$HOME/Desktop" "$CLONE" 2>/dev/null || true)"
+for prefix in "${EXEMPT[@]}"; do
+  leaks="$(printf '%s\n' "$leaks" | grep -v "^$CLONE/$prefix" || true)"
+done
+leaks="$(printf '%s\n' "$leaks" | sed '/^$/d')"
 if [[ -n "$leaks" ]]; then
   echo "    FAILED: these files reference the development tree:" >&2
   echo "$leaks" | sed 's/^/      /' >&2
