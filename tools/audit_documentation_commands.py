@@ -36,16 +36,27 @@ _PY_SCRIPT = re.compile(r"python[0-9.]*\s+((?:tools|scripts|src)/[\w./-]+\.py)")
 _SH_SCRIPT = re.compile(r"(?:^|\s)(\./(?:scripts|tools)/[\w./-]+\.sh)")
 _MAKE = re.compile(r"(?:^|\s)make\s+([a-z][\w-]*)")
 _LINK = re.compile(r"\[[^\]]*\]\(([^)#:]+?)(?:#[^)]*)?\)")
+#: A backticked path that looks repository-relative. Only checked when its first
+#: segment is an existing top-level entry, which keeps illustrative paths and
+#: paths inside other projects from being reported.
+_INLINE_PATH = re.compile(r"`([A-Za-z_][\w.-]*/[\w./-]+)`")
 
 #: Modules named in documentation that are third-party or standard-library
 #: rather than part of this package.
 EXTERNAL_MODULES = {"venv", "pip", "pytest", "build", "twine"}
 
 
+#: Development records cite paths as they stood when the evidence was gathered,
+#: including paths in other checkouts. They are not reviewer-facing instructions,
+#: and the repository audit exempts them from the same-shaped path check.
+EXEMPT_PREFIXES = ("docs/development/",)
+
+
 def doc_files() -> list[Path]:
     out = subprocess.run(["git", "ls-files", "-z", "*.md"], cwd=REPO_ROOT,
                          capture_output=True, text=True, check=True)
-    return [REPO_ROOT / name for name in out.stdout.split("\0") if name]
+    return [REPO_ROOT / name for name in out.stdout.split("\0")
+            if name and not name.startswith(EXEMPT_PREFIXES)]
 
 
 def _make_targets() -> set[str]:
@@ -63,6 +74,23 @@ def audit() -> list[dict]:
     for doc in doc_files():
         relative = doc.relative_to(REPO_ROOT)
         text = doc.read_text(encoding="utf-8", errors="replace")
+
+        for match in _INLINE_PATH.finditer(text):
+            candidate = match.group(1).rstrip("/")
+            root = candidate.split("/", 1)[0]
+            if not (REPO_ROOT / root).exists():
+                continue
+            # A path in a subdirectory's README is normally relative to that
+            # directory, not to the repository root: new_user_umat_starter's
+            # `scripts/check_config.py` is its own, and resolving only against
+            # the root would report a correct reference as stale.
+            if (doc.parent / candidate).exists() or (REPO_ROOT / candidate).exists():
+                continue
+            # A path with a wildcard or placeholder is a pattern, not a file.
+            if any(ch in candidate for ch in "*<>{}"):
+                continue
+            problems.append({"doc": str(relative), "kind": "stale_path_reference",
+                             "detail": candidate})
 
         for link in _LINK.finditer(text):
             target = link.group(1).strip()

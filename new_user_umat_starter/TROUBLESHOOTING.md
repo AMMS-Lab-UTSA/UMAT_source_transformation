@@ -155,7 +155,7 @@ Fix:
 
 If the main `DDSDDE = d STRESS / d DSTRAN` contract is not enough:
 
-- start from `templates/new_umat_advanced_template.json`,
+- start from `templates/new_umat_constitutive_template.json`,
 - add `constitutive_jacobians` only where needed,
 - add `helper_surfaces` only when helper-call data must be declared explicitly.
 

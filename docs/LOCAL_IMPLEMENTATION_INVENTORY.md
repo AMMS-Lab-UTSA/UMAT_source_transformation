@@ -27,7 +27,7 @@ Three copies hold work the active branches do not:
    sensitivity, a 3D solid element kernel, derivative-field exporters and a
    project pipeline. Shares the active tip; its local `main` is divergent work.
 3. `~/Desktop/framework_repos (2)/framework_repos/umat-oti` — **web-corpus
-   tooling** (`tools/corpus/`: scrape, scan, batch, normalize, plot). Unrelated
+   tooling** (the `framework_repos/umat-oti/tools/corpus/` tree of the separate framework_repos checkout: scrape, scan, batch, normalize, plot). Unrelated
    git history; a separate packaging.
 
 Plus two external dependencies and one benchmark: `~/otilib` (the real OTILib),
@@ -113,7 +113,7 @@ factorization reuse) and it largely already exists here.
 | Relationship | **Unrelated history** — root `e272a66` ≠ our `938b821`. A separate packaging/export, not a fork. |
 | Verdict | Mine for the corpus tooling only. |
 
-Reusable: `tools/corpus/{scrape_umats,corpus_scan,corpus_batch,umat_normalize,plot_corpus_summary}.py`
+Reusable, in the separate framework_repos checkout: `framework_repos/umat-oti/tools/corpus/{scrape_umats,corpus_scan,corpus_batch,umat_normalize,plot_corpus_summary}.py`
 — the only web-acquisition code found anywhere, and the §8 gap. Also carries its
 own `oti_provider/` and an `INTERFACE.md`.
 

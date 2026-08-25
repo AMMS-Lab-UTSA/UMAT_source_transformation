@@ -32,7 +32,7 @@ and the completed 19-case benchmark set transforms successfully from here.
 - `new_user_umat_starter/`: starter docs, templates, examples, and helper scripts.
 - `tools/run_completed_json_batch.py`: batch transform runner.
 - `docs/`: user manual and design notes.
-- `vendor/_otilib_upstream/`: bundled pyoti template files used to generate complete OTI Fortran modules inside the standalone package.
+- `src/umat_oti/oti/support/pyoti_templates/`: bundled pyoti template files used to generate complete OTI Fortran modules inside the standalone package.
 
 ## Intended Usage Model
 
