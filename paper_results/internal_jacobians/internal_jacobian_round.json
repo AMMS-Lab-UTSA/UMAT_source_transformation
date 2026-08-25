@@ -1,17 +1,30 @@
 {
   "funnel": {
+    "_note": "candidate_sources counts appearances; unique_source_implementations counts distinct code. The same UMAT is reachable from the in-repository archive and from the pinned upstream snapshot, and running it from both with different upstream material is two validation events against one implementation.",
     "blocked": 6,
     "candidate_sources": 36,
     "extracted_and_disagreeing": 0,
-    "extracted_and_verified": 8,
     "no_local_solve": 22,
-    "sources_with_a_local_solve": 14
+    "sources_with_a_local_solve": 14,
+    "unique_source_implementations": 29,
+    "unique_sources_verified": 6,
+    "unique_sources_with_a_local_solve": 8,
+    "verification_executions": 8
   },
-  "generated_at": "2026-08-25T19:36:51.103042+00:00",
+  "generated_at": "2026-08-25T20:19:00.763946+00:00",
   "records": [
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "3b49f7a8e1283beb882aeac1f015506a",
       "id": "m1_elastic",
+      "identity": {
+        "canonical_source_id": "3b49f7a8e1283beb882aeac1f015506a",
+        "closure_size": 1,
+        "code_only_sha256": "377edf47b602aead510fa578e04b037265b1b94fefb5bfb2ca492232b6ff9732",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "be6919b61ada7ee9053f615bc3fae7ee6a98f194220da0c941eff9b5f4f3dc4b"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -20,7 +33,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "091c09013e39650379c85f0f9d2d9516",
       "id": "m2_cubic",
+      "identity": {
+        "canonical_source_id": "091c09013e39650379c85f0f9d2d9516",
+        "closure_size": 1,
+        "code_only_sha256": "a95a7affa51cbeaacc92f25c613de0e2894c56c8e63b667aeae5636c0e1a4e3c",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "a3de9ad8ba987a12fd57bc2f71bcc32cec022c2721f0933f54e170472340c90d"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -29,7 +51,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "3b49f7a8e1283beb882aeac1f015506a",
       "id": "m2_elastic3d",
+      "identity": {
+        "canonical_source_id": "3b49f7a8e1283beb882aeac1f015506a",
+        "closure_size": 1,
+        "code_only_sha256": "377edf47b602aead510fa578e04b037265b1b94fefb5bfb2ca492232b6ff9732",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "be6919b61ada7ee9053f615bc3fae7ee6a98f194220da0c941eff9b5f4f3dc4b"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -38,7 +69,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "da51e7fdcbfd680871de159674f93622",
       "id": "m3_j2",
+      "identity": {
+        "canonical_source_id": "da51e7fdcbfd680871de159674f93622",
+        "closure_size": 1,
+        "code_only_sha256": "03cae42cafaa0e5f251125dad86779df82f2df06e421e83d71294bce808e5cd4",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "571fb0b6df392acb7c089ffed95185681c8473533aeaf0ea3faac2e654722d5a"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -47,9 +87,12 @@
     },
     {
       "bucket": "verified",
+      "canonical_source_id": "5a550f33156c3dbcc686d3086b2997f8",
       "converged_iterate": 3.050757889861489e-05,
+      "executed_source": "umat.for",
       "extracted": {
         "finite_difference": 1.1424307840768504,
+        "finite_difference_at_converged_step": 1.1424307840768504,
         "hand_coded": 1.1424307840812775,
         "oti": 1.142430784081278
       },
@@ -61,6 +104,14 @@
       },
       "hand_coded_jacobian": 1.1424307840812775,
       "id": "m5_cpflow",
+      "identity": {
+        "canonical_source_id": "5a550f33156c3dbcc686d3086b2997f8",
+        "closure_size": 1,
+        "code_only_sha256": "11e0d8b9752302f9a08172eb0093efaa3287c620294d51ef78b1fc6b9cbadcf5",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "ad84d2770122e24fb81705429f51b3c928ec439df9f62bac85de36c19410b8a6"
+      },
       "injection": {
         "edits": [
           {
@@ -119,6 +170,32 @@
       "probe_evaluations": 60.0,
       "probe_hand_coded_jacobian": 1.1424307840812775,
       "probe_residual_at_iterate": 0.0,
+      "reference_convergence": {
+        "converged_reference": 1.1424307840768504,
+        "converged_relative_step": 0.0001,
+        "default_relative_step": 0.0001,
+        "hand_coded_vs_converged_reference_relative": 3.87518035639476e-12,
+        "oti_vs_converged_reference_absolute": 4.427569422205124e-12,
+        "oti_vs_converged_reference_relative": 3.875569079471939e-12,
+        "policy": "the finite-difference reference is evaluated over a step ladder; agreement is reported at the step where consecutive answers are flattest, not at a step fixed in advance",
+        "relative_steps": [
+          0.01,
+          0.001,
+          0.0001,
+          1e-05,
+          1e-06,
+          1e-07
+        ],
+        "residual_uncertainty": 2.9919222654939404e-10,
+        "values": [
+          1.1424308136195065,
+          1.1424307843760426,
+          1.1424307840768504,
+          1.1424307841373775,
+          1.1424307845482948,
+          1.1424307788287722
+        ]
+      },
       "residual_at_iterate": 0.0,
       "residual_evaluations_per_increment": [
         60.0,
@@ -189,7 +266,7 @@
         "update_line": 107,
         "update_sign": "-"
       },
-      "source": "umat.for",
+      "source": "parameter_sensitivity/models/m5_cpflow/umat.for",
       "source_sha256": "d5e057b265ba2c1277c819fa0ac755aa478e40c464e6de8c044f5f2317843a34",
       "stages": {
         "compiled_original_probe": {
@@ -246,7 +323,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "1f31504c6afc8c3372afce0879e01ec8",
       "id": "m6_fcc",
+      "identity": {
+        "canonical_source_id": "1f31504c6afc8c3372afce0879e01ec8",
+        "closure_size": 1,
+        "code_only_sha256": "fbc9bfe9ae314ee9561faffed622790cc26851806a86712853d0508b2d7876e5",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "b6a87b731f2cba1df0febc022541401c5a5138be0082b27559497bc6322d1aa3"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -255,7 +341,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "5d1da093ccd09b1b8a3c6c8e2a3a4292",
       "id": "sweep_aniso_ortho",
+      "identity": {
+        "canonical_source_id": "5d1da093ccd09b1b8a3c6c8e2a3a4292",
+        "closure_size": 1,
+        "code_only_sha256": "aaff8ba141d2a82ae63fe36e780d33ee458b85c86e5e7b16e8dcbcf3123a5e92",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "858f6dd0dad977f687767db5a75a8edaaa4f09198596c58d45dd0f957293b722"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -264,7 +359,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "3c37009efba9d24a2cb45f32e8af3d78",
       "id": "sweep_damage_elastic",
+      "identity": {
+        "canonical_source_id": "3c37009efba9d24a2cb45f32e8af3d78",
+        "closure_size": 1,
+        "code_only_sha256": "6d6e405f89bbf51988b0a5a5024ba04ddc6fa165f89c42dec3b425acc6e9beeb",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "90263a04409e5b3917b53b9cf1d51251f7a92fcdd60e82d9df59dae045495221"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -273,7 +377,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "271c0c7a32eb17eaf6abf2524f4fbe62",
       "id": "sweep_drucker_prager",
+      "identity": {
+        "canonical_source_id": "271c0c7a32eb17eaf6abf2524f4fbe62",
+        "closure_size": 1,
+        "code_only_sha256": "73c531678f83173526205eff9a3f406a51284ce9fb04d73bd619644670337f10",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "3609383308c33ec07c9870d48bd7583b8759a6c7e0b81645736ce8914c1e5845"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -282,7 +395,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "6a54167f4f04ecf17fad16c9df9b2f5b",
       "id": "sweep_eco",
+      "identity": {
+        "canonical_source_id": "6a54167f4f04ecf17fad16c9df9b2f5b",
+        "closure_size": 1,
+        "code_only_sha256": "e5bbcaec275fc9a106f58481076be3cb22f66e2bee39f33592a6eab85fdf0076",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "ca7f29d140c5ce6ddf4de52012f68867822db97697e37f1f290878a32b3b8343"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -291,7 +413,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "ed92657c6b8d26fa96a1fb0ef26a8b1e",
       "id": "sweep_j2_bilinear",
+      "identity": {
+        "canonical_source_id": "ed92657c6b8d26fa96a1fb0ef26a8b1e",
+        "closure_size": 1,
+        "code_only_sha256": "c90eb26376eee6ec0dcade4a132c922cb89d8d37f965eafc4562f21feb643f2a",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "f23f4d97cb3efcb5165fb8c41ec0b0a001f7c62c684206947696161fffb979e9"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -300,7 +431,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "0ede6ade0029316290ec1b458a3f7cb6",
       "id": "sweep_j2_combined",
+      "identity": {
+        "canonical_source_id": "0ede6ade0029316290ec1b458a3f7cb6",
+        "closure_size": 1,
+        "code_only_sha256": "5ff885b6d73fb25cd7f93e26a03717f76da7bd6a92f9d9eeaa3013b814d14c62",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "de96c9ac90f52c7b7860c426812784fda06e6ee0f7964245d47d01b278af735e"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -309,7 +449,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "ad85f2b455cec37e75bfa0f39194418f",
       "id": "sweep_j2_kinematic",
+      "identity": {
+        "canonical_source_id": "ad85f2b455cec37e75bfa0f39194418f",
+        "closure_size": 1,
+        "code_only_sha256": "a501bb2e725aee83edb6c04dbf1bfd975fb9219defcbbef3e9a0717c75713933",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "2132d500960dde8fe0aca64c3a64586c1ee93d0b5e084b727be3a204a9fc27b9"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -318,7 +467,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "f6e93b7b4a0ad488fc1f30892808196e",
       "id": "sweep_lame_elastic",
+      "identity": {
+        "canonical_source_id": "f6e93b7b4a0ad488fc1f30892808196e",
+        "closure_size": 1,
+        "code_only_sha256": "37a5d3691c45261b144e749191a82fab1d2e54d0994b59559e04c95ae2a165a3",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "83fc105250a8b3f2ee646e8e5b8586711e10e16d247bc3b9bef346c7b2b704e4"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -327,7 +485,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "dc956b716edc088fbac7c0f525bbf832",
       "id": "sweep_maxwell_ve",
+      "identity": {
+        "canonical_source_id": "dc956b716edc088fbac7c0f525bbf832",
+        "closure_size": 1,
+        "code_only_sha256": "223ce1acb0d40dc4a795986804e3263eb80cb401a372a5662db35b6029ec33e0",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "6b2fa17f9681b8c9fe3005094f456ac33e7c252aa1fc0d07f32e006f74bccc15"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -336,7 +503,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "855af2b7c3dacb9d067e01c6304138c5",
       "id": "sweep_mooney_small",
+      "identity": {
+        "canonical_source_id": "855af2b7c3dacb9d067e01c6304138c5",
+        "closure_size": 1,
+        "code_only_sha256": "d5a8bda65d85ba265d4ff91bf0932b0bf17e2120a7d4bac3faec88521b28baa0",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "30e80bfbea805a1eb9d4f3167400465bff374ba91867928531368444950f5544"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -345,7 +521,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "610d0b66cf3a1bf4cd7cb6cc7cfdb327",
       "id": "sweep_perzyna_linear",
+      "identity": {
+        "canonical_source_id": "610d0b66cf3a1bf4cd7cb6cc7cfdb327",
+        "closure_size": 1,
+        "code_only_sha256": "760eed961c093168fae1f84b257664d6be22fd0b9fb5abb79a2cb90fa957c9cb",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "7905990f588f177f1176eb42f7d0cf2261e0c97c1dc6b28d11d9e706f5cef5bb"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -354,7 +539,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "e81602f2cdc49b11407956d6b3342b8e",
       "id": "sweep_real_ECL_TEMP",
+      "identity": {
+        "canonical_source_id": "e81602f2cdc49b11407956d6b3342b8e",
+        "closure_size": 1,
+        "code_only_sha256": "5e611865065a13abea883060ec908ba5b6f2cf8ea08c9f0b0d7ef6ce63982bab",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "ca14e404587345c6c7e326cbc4009aea04bbb4ca56989d8a2d5c9cf547419cbf"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -363,7 +557,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "3e75c0c0a08f04676d546ec724284954",
       "id": "sweep_real_PCO",
+      "identity": {
+        "canonical_source_id": "3e75c0c0a08f04676d546ec724284954",
+        "closure_size": 1,
+        "code_only_sha256": "0a56082ddb0c2882ea0b1b42170cbb207ed6b50dcb2f600ccd55d8099ca4e782",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "a70c744770b630b72ec27e14bb135f72c185b82101bf62d926ad5cc628da4376"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -372,7 +575,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "580f20805d5b7b89e08a19084b90a379",
       "id": "sweep_thermoelastic",
+      "identity": {
+        "canonical_source_id": "580f20805d5b7b89e08a19084b90a379",
+        "closure_size": 1,
+        "code_only_sha256": "dfa81bc50d7f818695ff8f3127eaa6e52657410dae68dece767bc8356203a8c9",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "083d094e27da28f1036b0d103db77b0cc7ba6131758de9f42489c8442f99c202"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -381,7 +593,16 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "d2d3202099e586c7c1d438205111859e",
       "id": "sweep_transiso",
+      "identity": {
+        "canonical_source_id": "d2d3202099e586c7c1d438205111859e",
+        "closure_size": 1,
+        "code_only_sha256": "fac33a069c8b060cd72c567ab35a645ed1c7378da9371b2a169dd00fa700183d",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "5abc12382555846b99eb4abc4dfbc411c89c23ff4cd361c1626cf47ab2e64532"
+      },
       "local_solves_discovered": [],
       "origin": "repository",
       "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
@@ -390,10 +611,12 @@
     },
     {
       "bucket": "verified",
+      "canonical_source_id": "e1fc2b536d647ecd7cb64d10a2c895fe",
       "constitutive_class": "plasticity, combined isotropic/kinematic hardening",
       "converged_iterate": 0.0007447621532820338,
       "extracted": {
         "finite_difference": -168437.3272995645,
+        "finite_difference_at_converged_step": -168437.3272995645,
         "hand_coded": -168437.32729949366,
         "oti": -168437.3272994937
       },
@@ -405,6 +628,14 @@
       },
       "hand_coded_jacobian": -168437.32729949366,
       "id": "UMAT_PCL",
+      "identity": {
+        "canonical_source_id": "e1fc2b536d647ecd7cb64d10a2c895fe",
+        "closure_size": 1,
+        "code_only_sha256": "b68b3e2fa9acd49c06ab6f89304cd8f7014307d143888e9fdaba329fdd84fa45",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "b29e21d6ddcd297011554ec012954df2d4fb1f3f314f466e1e4746f42c9fe720"
+      },
       "injection": {
         "edits": [
           {
@@ -466,6 +697,32 @@
       "probe_hand_coded_jacobian": -168437.32729949366,
       "probe_residual_at_iterate": 2.6145382037157106e-07,
       "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
+      "reference_convergence": {
+        "converged_reference": -168437.3272995645,
+        "converged_relative_step": 0.0001,
+        "default_relative_step": 0.0001,
+        "hand_coded_vs_converged_reference_relative": 4.2056428030173923e-13,
+        "oti_vs_converged_reference_absolute": 7.078051567077637e-08,
+        "oti_vs_converged_reference_relative": 4.2021870570822917e-13,
+        "policy": "the finite-difference reference is evaluated over a step ladder; agreement is reported at the step where consecutive answers are flattest, not at a step fixed in advance",
+        "relative_steps": [
+          0.01,
+          0.001,
+          0.0001,
+          1e-05,
+          1e-06,
+          1e-07
+        ],
+        "residual_uncertainty": 4.178786184638739e-06,
+        "values": [
+          -168437.3277246725,
+          -168437.32730374328,
+          -168437.3272995645,
+          -168437.32730051855,
+          -168437.3273043348,
+          -168437.32722801052
+        ]
+      },
       "residual_at_iterate": 2.6145382037157106e-07,
       "residual_evaluations_per_increment": [
         0.0,
@@ -582,10 +839,12 @@
     },
     {
       "bucket": "verified",
+      "canonical_source_id": "63d29dc059c518af8e0abf8b4554b1b4",
       "constitutive_class": "plasticity, kinematic hardening",
       "converged_iterate": 0.0007502701529374778,
       "extracted": {
         "finite_difference": -167381.4339688808,
+        "finite_difference_at_converged_step": -167381.4339688808,
         "hand_coded": -167381.43396888944,
         "oti": -167381.4339688895
       },
@@ -597,6 +856,14 @@
       },
       "hand_coded_jacobian": -167381.43396888944,
       "id": "UMAT_PCLK",
+      "identity": {
+        "canonical_source_id": "63d29dc059c518af8e0abf8b4554b1b4",
+        "closure_size": 1,
+        "code_only_sha256": "4e3f92dbb8385927da81cb6c4b8c0df25c72ddebb4b2d92c26a28ee2f0b55f8c",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "0deebd0de0d8def5a1054ec12fb1681a1c8765416d5ca3f175aa373ff5a34f3e"
+      },
       "injection": {
         "edits": [
           {
@@ -658,6 +925,32 @@
       "probe_hand_coded_jacobian": -167381.43396888944,
       "probe_residual_at_iterate": 8.672316198499175e-10,
       "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
+      "reference_convergence": {
+        "converged_reference": -167381.4339688808,
+        "converged_relative_step": 0.0001,
+        "default_relative_step": 0.0001,
+        "hand_coded_vs_converged_reference_relative": 5.1641555701195354e-14,
+        "oti_vs_converged_reference_absolute": 8.702045306563377e-09,
+        "oti_vs_converged_reference_relative": 5.1989310285041786e-14,
+        "policy": "the finite-difference reference is evaluated over a step ladder; agreement is reported at the step where consecutive answers are flattest, not at a step fixed in advance",
+        "relative_steps": [
+          0.01,
+          0.001,
+          0.0001,
+          1e-05,
+          1e-06,
+          1e-07
+        ],
+        "residual_uncertainty": 9.470677468925714e-07,
+        "values": [
+          -167381.43398184213,
+          -167381.43396900393,
+          -167381.4339688808,
+          -167381.43396982786,
+          -167381.43400865688,
+          -167381.43405600934
+        ]
+      },
       "residual_at_iterate": 8.672316198499175e-10,
       "residual_evaluations_per_increment": [
         0.0,
@@ -770,8 +1063,17 @@
     {
       "blocked_by": "material_data_unavailable",
       "bucket": "blocked",
+      "canonical_source_id": "71d6e827ce64823a571212c35ba42752",
       "constitutive_class": "viscoplastic damage, combined nonlinear isotropic/kinematic hardening, thermomechanical",
       "id": "UMAT_NKH_1.02",
+      "identity": {
+        "canonical_source_id": "71d6e827ce64823a571212c35ba42752",
+        "closure_size": 1,
+        "code_only_sha256": "259fc3419802a8fca83c6b202f963703ceb5cc6f0705f082340e11f203b75f31",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "c8d5506060d4cd359adadb2ae7633f206e68db8da215c50f0a564e8bc57ce1d3"
+      },
       "license": "not stated in the source header; distributed under this repository's licence",
       "local_solves_discovered": [
         {
@@ -796,8 +1098,31 @@
     {
       "blocked_by": "material_data_unavailable",
       "bucket": "blocked",
+      "canonical_source_id": "a676f0c974bb289877a569eac3c812f2",
       "constitutive_class": "plasticity, combined hardening",
       "id": "UMAT_PCO",
+      "identity": {
+        "canonical_source_id": "a676f0c974bb289877a569eac3c812f2",
+        "closure_routines": [
+          "KCLEAR",
+          "KCLEARV",
+          "KMATSUB",
+          "KMAVEC",
+          "KMMULT",
+          "KMTRAN",
+          "KPROYECTOR",
+          "KSMULT",
+          "KSPECTRAL",
+          "KUHARD",
+          "KUPDVEC",
+          "UMAT"
+        ],
+        "closure_size": 12,
+        "code_only_sha256": "01c107eac198b4c2588c7fce5ba8a34bd4592e3949e797ded86c185629f2d9d0",
+        "entry_routine": "UMAT",
+        "identity_kind": "dependency_closure",
+        "normalised_content_sha256": "a69f98cb2a4a113669917cb02124f635cce1e6d361c82bfd8d46c8f63de85c73"
+      },
       "license": "not stated in the source header; distributed under this repository's licence",
       "local_solves_discovered": [
         {
@@ -821,10 +1146,12 @@
     },
     {
       "bucket": "verified",
+      "canonical_source_id": "419dad1b5328f82526e6bf3bcb5734a8",
       "constitutive_class": "viscoplastic damage, classical theory",
       "converged_iterate": 0.0008161616631137955,
       "extracted": {
         "finite_difference": -4000.484746689092,
+        "finite_difference_at_converged_step": -4000.48474668746,
         "hand_coded": -4000.4847466873234,
         "oti": -4000.484746687323
       },
@@ -836,6 +1163,14 @@
       },
       "hand_coded_jacobian": -4000.4847466873234,
       "id": "UMAT_VPDCL",
+      "identity": {
+        "canonical_source_id": "419dad1b5328f82526e6bf3bcb5734a8",
+        "closure_size": 1,
+        "code_only_sha256": "6f50e1d3c278309312e8542d471cdc510250e4f46bd72ad1a52c5307c5d4048d",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "139355773a2819ed69e41500269dafb980214f0dd4b36d0ac7bbab0d1f91198e"
+      },
       "injection": {
         "edits": [
           {
@@ -898,6 +1233,32 @@
       "probe_hand_coded_jacobian": -4000.4847466873234,
       "probe_residual_at_iterate": 3.617690494750094e-07,
       "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
+      "reference_convergence": {
+        "converged_reference": -4000.48474668746,
+        "converged_relative_step": 0.001,
+        "default_relative_step": 0.0001,
+        "hand_coded_vs_converged_reference_relative": 3.410191861846323e-14,
+        "oti_vs_converged_reference_absolute": 1.368789526168257e-10,
+        "oti_vs_converged_reference_relative": 3.421559168052477e-14,
+        "policy": "the finite-difference reference is evaluated over a step ladder; agreement is reported at the step where consecutive answers are flattest, not at a step fixed in advance",
+        "relative_steps": [
+          0.01,
+          0.001,
+          0.0001,
+          1e-05,
+          1e-06,
+          1e-07
+        ],
+        "residual_uncertainty": 1.7130332707893103e-09,
+        "values": [
+          -4000.484746687379,
+          -4000.48474668746,
+          -4000.484746689092,
+          -4000.484746713578,
+          -4000.4847467951963,
+          -4000.484746251077
+        ]
+      },
       "residual_at_iterate": 3.617690494750094e-07,
       "residual_evaluations_per_increment": [
         2.0,
@@ -1010,8 +1371,17 @@
     {
       "blocked_by": "material_data_unavailable",
       "bucket": "blocked",
+      "canonical_source_id": "597eaeddf4ffd757e848ed8588fdea75",
       "constitutive_class": "plasticity, isotropic hardening",
       "id": "UMAT_PCLI",
+      "identity": {
+        "canonical_source_id": "597eaeddf4ffd757e848ed8588fdea75",
+        "closure_size": 1,
+        "code_only_sha256": "633d872bceeeebd0c496d67a7f337764fc9e3f3b6d6f523a7a15b025f752571d",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "54f8e6672bee8568295b695c397d75bb316b240997bed4a185b4acaa02568169"
+      },
       "license": "not stated in the source header; distributed under this repository's licence",
       "local_solves_discovered": [
         {
@@ -1036,8 +1406,33 @@
     {
       "blocked_by": "material_data_unavailable",
       "bucket": "blocked",
+      "canonical_source_id": "8603a12db0823e1114a32931d95f9fcf",
       "constitutive_class": "viscoplastic damage, combined hardening",
       "id": "UMAT_VPDCO",
+      "identity": {
+        "canonical_source_id": "8603a12db0823e1114a32931d95f9fcf",
+        "closure_routines": [
+          "KCLEAR",
+          "KCLEARV",
+          "KDAMACAL",
+          "KMATSUB",
+          "KMAVEC",
+          "KMMULT",
+          "KMTRAN",
+          "KPROYECTOR",
+          "KSMULT",
+          "KSPECTRAL",
+          "KUHARDNLIN",
+          "KUPDVEC",
+          "UMAT",
+          "VSPRATE"
+        ],
+        "closure_size": 14,
+        "code_only_sha256": "3745237ca799922dad909c49a70ea091a9fc6fefd15a7cb025f18f9c2ea4f39f",
+        "entry_routine": "UMAT",
+        "identity_kind": "dependency_closure",
+        "normalised_content_sha256": "d0c061d2f10e52275feddf9b94744e9767c3a6e9683cf364125e76ee049998f7"
+      },
       "license": "not stated in the source header; distributed under this repository's licence",
       "local_solves_discovered": [
         {
@@ -1061,6 +1456,7 @@
     },
     {
       "bucket": "verified",
+      "canonical_source_id": "a676f0c974bb289877a569eac3c812f2",
       "constitutive_class": "reduced Cosserat couple-stress plasticity",
       "converged_iterate": 1.7501589997072749e-06,
       "dependency_closure": [
@@ -1077,8 +1473,12 @@
         "KUPDVEC",
         "UMAT"
       ],
+      "dependency_closure_sha256": "a69f98cb2a4a113669917cb02124f635cce1e6d361c82bfd8d46c8f63de85c73",
+      "entry_source_sha256": "c4a850ca89c6cbdef4d94d379d2afce41feea9214d792d0a3d75b91ead9d3862",
+      "executed_source": "jgomezc1_UMAT_PCO_resolved.for",
       "extracted": {
         "finite_difference": -6047612.648081645,
+        "finite_difference_at_converged_step": -6047612.645158535,
         "hand_coded": -6029120.763508761,
         "oti": -6047612.644928333
       },
@@ -1090,6 +1490,28 @@
       },
       "hand_coded_jacobian": -6029120.763508761,
       "id": "jgomezc1_UMAT_PCO",
+      "identity": {
+        "canonical_source_id": "a676f0c974bb289877a569eac3c812f2",
+        "closure_routines": [
+          "KCLEAR",
+          "KCLEARV",
+          "KMATSUB",
+          "KMAVEC",
+          "KMMULT",
+          "KMTRAN",
+          "KPROYECTOR",
+          "KSMULT",
+          "KSPECTRAL",
+          "KUHARD",
+          "KUPDVEC",
+          "UMAT"
+        ],
+        "closure_size": 12,
+        "code_only_sha256": "01c107eac198b4c2588c7fce5ba8a34bd4592e3949e797ded86c185629f2d9d0",
+        "entry_routine": "UMAT",
+        "identity_kind": "dependency_closure",
+        "normalised_content_sha256": "a69f98cb2a4a113669917cb02124f635cce1e6d361c82bfd8d46c8f63de85c73"
+      },
       "injection": {
         "edits": [
           {
@@ -1130,6 +1552,17 @@
         "target_increment": 5
       },
       "license": "MIT",
+      "loading_history": {
+        "dstran_per_increment": [
+          0.0001,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "n_increments": 20
+      },
       "local_solves_discovered": [
         {
           "convergence_tolerance": "TOLER",
@@ -1145,6 +1578,16 @@
         }
       ],
       "material_data_source": "INPUT_FILES/UNIUSER_COS.inp, *UEL PROPERTY with *USER ELEMENT PROPERTIES=8",
+      "material_properties": [
+        220000.0,
+        0.3,
+        0.005,
+        900000.0,
+        56.0,
+        0.0,
+        343.5,
+        0.25
+      ],
       "model": "jgomezc1_UMAT_PCO",
       "multi_file": true,
       "origin": "external corpus (pinned snapshot)",
@@ -1152,6 +1595,32 @@
       "probe_hand_coded_jacobian": -6029120.763508761,
       "probe_residual_at_iterate": 0.12343260797925382,
       "provenance": "https://github.com/jgomezc1/ABAQUS-US.git @ 54181407aa7a",
+      "reference_convergence": {
+        "converged_reference": -6047612.645158535,
+        "converged_relative_step": 1e-05,
+        "default_relative_step": 0.0001,
+        "hand_coded_vs_converged_reference_relative": 0.003057715950868215,
+        "oti_vs_converged_reference_absolute": 0.00023020152002573013,
+        "oti_vs_converged_reference_relative": 3.806485857026902e-11,
+        "policy": "the finite-difference reference is evaluated over a step ladder; agreement is reported at the step where consecutive answers are flattest, not at a step fixed in advance",
+        "relative_steps": [
+          0.01,
+          0.001,
+          0.0001,
+          1e-05,
+          1e-06,
+          1e-07
+        ],
+        "residual_uncertainty": 0.003532090224325657,
+        "values": [
+          -6047643.983250594,
+          -6047612.9583089,
+          -6047612.648081645,
+          -6047612.645158535,
+          -6047612.644549555,
+          -6047612.610040614
+        ]
+      },
       "residual_at_iterate": 0.1384288427135445,
       "residual_evaluations_per_increment": [
         0.0,
@@ -1222,7 +1691,7 @@
         "update_line": 185,
         "update_sign": "-"
       },
-      "source": "jgomezc1_UMAT_PCO_resolved.for",
+      "source": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_PCO.for",
       "source_sha256": "c4a850ca89c6cbdef4d94d379d2afce41feea9214d792d0a3d75b91ead9d3862",
       "stages": {
         "compiled_original_probe": {
@@ -1279,6 +1748,7 @@
     },
     {
       "bucket": "verified",
+      "canonical_source_id": "8603a12db0823e1114a32931d95f9fcf",
       "constitutive_class": "viscoplastic damage, Cosserat, thermomechanical",
       "converged_iterate": 3.6192934108243137e-06,
       "dependency_closure": [
@@ -1297,8 +1767,12 @@
         "UMAT",
         "VSPRATE"
       ],
+      "dependency_closure_sha256": "d0c061d2f10e52275feddf9b94744e9767c3a6e9683cf364125e76ee049998f7",
+      "entry_source_sha256": "7bdae900d1dbf02b96336a7d4379011138d9780aa2f8abad759934f9dfb3dbb0",
+      "executed_source": "jgomezc1_UMAT_VPDCO_resolved.for",
       "extracted": {
         "finite_difference": -637353.4692151409,
+        "finite_difference_at_converged_step": -637353.4691807866,
         "hand_coded": -620816.8449783465,
         "oti": -637353.4691386975
       },
@@ -1310,6 +1784,30 @@
       },
       "hand_coded_jacobian": -620954.9595342566,
       "id": "jgomezc1_UMAT_VPDCO",
+      "identity": {
+        "canonical_source_id": "8603a12db0823e1114a32931d95f9fcf",
+        "closure_routines": [
+          "KCLEAR",
+          "KCLEARV",
+          "KDAMACAL",
+          "KMATSUB",
+          "KMAVEC",
+          "KMMULT",
+          "KMTRAN",
+          "KPROYECTOR",
+          "KSMULT",
+          "KSPECTRAL",
+          "KUHARDNLIN",
+          "KUPDVEC",
+          "UMAT",
+          "VSPRATE"
+        ],
+        "closure_size": 14,
+        "code_only_sha256": "3745237ca799922dad909c49a70ea091a9fc6fefd15a7cb025f18f9c2ea4f39f",
+        "entry_routine": "UMAT",
+        "identity_kind": "dependency_closure",
+        "normalised_content_sha256": "d0c061d2f10e52275feddf9b94744e9767c3a6e9683cf364125e76ee049998f7"
+      },
       "injection": {
         "edits": [
           {
@@ -1350,6 +1848,17 @@
         "target_increment": 8
       },
       "license": "MIT",
+      "loading_history": {
+        "dstran_per_increment": [
+          0.0001,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "n_increments": 20
+      },
       "local_solves_discovered": [
         {
           "convergence_tolerance": "TOLER",
@@ -1365,6 +1874,34 @@
         }
       ],
       "material_data_source": "SAMPLE/material_co.inp, each constant documented in SAMPLE/material_template.txt and consumed in order by SUBROUTINE VSPRATE",
+      "material_properties": [
+        295.15,
+        62.0,
+        -0.067,
+        24.28,
+        -0.029,
+        76.944,
+        -0.1883,
+        5.7e-06,
+        13.6,
+        457.9,
+        37.47,
+        -0.0748,
+        383.3,
+        45000000.0,
+        48.8,
+        3.18e-07,
+        1.38e-20,
+        0.015,
+        3.34,
+        1.67,
+        44700000.0,
+        8314.0,
+        6.023e+23,
+        20140.0,
+        0.0003,
+        10.0
+      ],
       "model": "jgomezc1_UMAT_VPDCO",
       "multi_file": true,
       "origin": "external corpus (pinned snapshot)",
@@ -1372,6 +1909,32 @@
       "probe_hand_coded_jacobian": -620816.8449783465,
       "probe_residual_at_iterate": -0.002834348069325422,
       "provenance": "https://github.com/jgomezc1/ABAQUS-US.git @ 54181407aa7a",
+      "reference_convergence": {
+        "converged_reference": -637353.4691807866,
+        "converged_relative_step": 1e-05,
+        "default_relative_step": 0.0001,
+        "hand_coded_vs_converged_reference_relative": 0.02594576636367142,
+        "oti_vs_converged_reference_absolute": 4.2089144699275494e-05,
+        "oti_vs_converged_reference_relative": 6.603736660188606e-11,
+        "policy": "the finite-difference reference is evaluated over a step ladder; agreement is reported at the step where consecutive answers are flattest, not at a step fixed in advance",
+        "relative_steps": [
+          0.01,
+          0.001,
+          0.0001,
+          1e-05,
+          1e-06,
+          1e-07
+        ],
+        "residual_uncertainty": 0.0002944573061540723,
+        "values": [
+          -637354.1997845374,
+          -637353.4764451466,
+          -637353.4692151409,
+          -637353.4691807866,
+          -637353.4694752439,
+          -637353.4792914059
+        ]
+      },
       "residual_at_iterate": 0.02518911746547209,
       "residual_evaluations_per_increment": [
         0.0,
@@ -1442,7 +2005,7 @@
         "update_line": 205,
         "update_sign": "-"
       },
-      "source": "jgomezc1_UMAT_VPDCO_resolved.for",
+      "source": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_VPDCO.for",
       "source_sha256": "7bdae900d1dbf02b96336a7d4379011138d9780aa2f8abad759934f9dfb3dbb0",
       "stages": {
         "compiled_original_probe": {
@@ -1499,6 +2062,7 @@
     },
     {
       "bucket": "verified",
+      "canonical_source_id": "e1fc2b536d647ecd7cb64d10a2c895fe",
       "constitutive_class": "classical J2 plasticity, isotropic hardening",
       "converged_iterate": 8.16496580927728e-05,
       "dependency_closure": [
@@ -1508,8 +2072,12 @@
         "KPROYECTOR",
         "UMAT"
       ],
+      "dependency_closure_sha256": "b29e21d6ddcd297011554ec012954df2d4fb1f3f314f466e1e4746f42c9fe720",
+      "entry_source_sha256": "a1e8dcbd06f5a5d87b5b5d4d02505553c422c721f3140e653def61050b071d66",
+      "executed_source": "jgomezc1_UMAT_PCL_resolved.for",
       "extracted": {
         "finite_difference": -169230.76923071317,
+        "finite_difference_at_converged_step": -169230.76923076756,
         "hand_coded": -169230.76923076922,
         "oti": -169230.7692307692
       },
@@ -1521,6 +2089,14 @@
       },
       "hand_coded_jacobian": -169230.76923076922,
       "id": "jgomezc1_UMAT_PCL",
+      "identity": {
+        "canonical_source_id": "e1fc2b536d647ecd7cb64d10a2c895fe",
+        "closure_size": 1,
+        "code_only_sha256": "b68b3e2fa9acd49c06ab6f89304cd8f7014307d143888e9fdaba329fdd84fa45",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "b29e21d6ddcd297011554ec012954df2d4fb1f3f314f466e1e4746f42c9fe720"
+      },
       "injection": {
         "edits": [
           {
@@ -1561,6 +2137,15 @@
         "target_increment": 20
       },
       "license": "MIT",
+      "loading_history": {
+        "dstran_per_increment": [
+          0.0001,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "n_increments": 20
+      },
       "local_solves_discovered": [
         {
           "convergence_tolerance": "TOLER",
@@ -1576,6 +2161,14 @@
         }
       ],
       "material_data_source": "INPUT_FILES/UNIUSER_CLA.inp, *UEL PROPERTY",
+      "material_properties": [
+        220000.0,
+        0.3,
+        56.0,
+        0.0,
+        343.5,
+        0.25
+      ],
       "model": "jgomezc1_UMAT_PCL",
       "multi_file": false,
       "origin": "external corpus (pinned snapshot)",
@@ -1583,6 +2176,32 @@
       "probe_hand_coded_jacobian": -169230.76923076922,
       "probe_residual_at_iterate": 0.0,
       "provenance": "https://github.com/jgomezc1/ABAQUS-US.git @ 54181407aa7a",
+      "reference_convergence": {
+        "converged_reference": -169230.76923076756,
+        "converged_relative_step": 0.001,
+        "default_relative_step": 0.0001,
+        "hand_coded_vs_converged_reference_relative": 9.802699258381767e-15,
+        "oti_vs_converged_reference_absolute": 1.6298145055770874e-09,
+        "oti_vs_converged_reference_relative": 9.630722078410157e-15,
+        "policy": "the finite-difference reference is evaluated over a step ladder; agreement is reported at the step where consecutive answers are flattest, not at a step fixed in advance",
+        "relative_steps": [
+          0.01,
+          0.001,
+          0.0001,
+          1e-05,
+          1e-06,
+          1e-07
+        ],
+        "residual_uncertainty": 5.657784640789032e-08,
+        "values": [
+          -169230.76923076974,
+          -169230.76923076756,
+          -169230.76923071317,
+          -169230.76923223608,
+          -169230.7692300605,
+          -169230.7692735722
+        ]
+      },
       "residual_at_iterate": 0.0,
       "residual_evaluations_per_increment": [
         0.0,
@@ -1653,7 +2272,7 @@
         "update_line": 157,
         "update_sign": "-"
       },
-      "source": "jgomezc1_UMAT_PCL_resolved.for",
+      "source": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_PCL.for",
       "source_sha256": "a1e8dcbd06f5a5d87b5b5d4d02505553c422c721f3140e653def61050b071d66",
       "stages": {
         "compiled_original_probe": {
@@ -1710,6 +2329,7 @@
     },
     {
       "bucket": "verified",
+      "canonical_source_id": "63d29dc059c518af8e0abf8b4554b1b4",
       "constitutive_class": "plasticity, combined isotropic/kinematic hardening",
       "converged_iterate": 6.639617509949012e-05,
       "dependency_closure": [
@@ -1719,8 +2339,12 @@
         "KUHARDNLIN",
         "UMAT"
       ],
+      "dependency_closure_sha256": "0deebd0de0d8def5a1054ec12fb1681a1c8765416d5ca3f175aa373ff5a34f3e",
+      "entry_source_sha256": "d37eb3f20208c50dceff9198a05d69e47b65e7834a08b8791a0950d3eb83bcb4",
+      "executed_source": "jgomezc1_UMAT_PCLK_resolved.for",
       "extracted": {
         "finite_difference": -38734.34749568485,
+        "finite_difference_at_converged_step": -38734.34749568485,
         "hand_coded": -38734.347495788,
         "oti": -38734.34749578801
       },
@@ -1732,6 +2356,14 @@
       },
       "hand_coded_jacobian": -38734.347495788,
       "id": "jgomezc1_UMAT_PCLK",
+      "identity": {
+        "canonical_source_id": "63d29dc059c518af8e0abf8b4554b1b4",
+        "closure_size": 1,
+        "code_only_sha256": "4e3f92dbb8385927da81cb6c4b8c0df25c72ddebb4b2d92c26a28ee2f0b55f8c",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "0deebd0de0d8def5a1054ec12fb1681a1c8765416d5ca3f175aa373ff5a34f3e"
+      },
       "injection": {
         "edits": [
           {
@@ -1772,6 +2404,15 @@
         "target_increment": 20
       },
       "license": "MIT",
+      "loading_history": {
+        "dstran_per_increment": [
+          0.0001,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "n_increments": 20
+      },
       "local_solves_discovered": [
         {
           "convergence_tolerance": "TOLER",
@@ -1787,6 +2428,14 @@
         }
       ],
       "material_data_source": "INPUT_FILES/UNIUSER_CLA_KIN.inp, *USER MATERIAL CONSTANTS=6",
+      "material_properties": [
+        42340.0,
+        0.342,
+        21.77,
+        15.54,
+        383.3,
+        6227.4
+      ],
       "model": "jgomezc1_UMAT_PCLK",
       "multi_file": false,
       "origin": "external corpus (pinned snapshot)",
@@ -1794,6 +2443,32 @@
       "probe_hand_coded_jacobian": -38734.347495788,
       "probe_residual_at_iterate": 0.0021213764452046036,
       "provenance": "https://github.com/jgomezc1/ABAQUS-US.git @ 54181407aa7a",
+      "reference_convergence": {
+        "converged_reference": -38734.34749568485,
+        "converged_relative_step": 0.0001,
+        "default_relative_step": 0.0001,
+        "hand_coded_vs_converged_reference_relative": 2.6630434682750203e-12,
+        "oti_vs_converged_reference_absolute": 1.0315852705389261e-07,
+        "oti_vs_converged_reference_relative": 2.66323131079941e-12,
+        "policy": "the finite-difference reference is evaluated over a step ladder; agreement is reported at the step where consecutive answers are flattest, not at a step fixed in advance",
+        "relative_steps": [
+          0.01,
+          0.001,
+          0.0001,
+          1e-05,
+          1e-06,
+          1e-07
+        ],
+        "residual_uncertainty": 1.9062208593823016e-06,
+        "values": [
+          -38734.34751761336,
+          -38734.3474960059,
+          -38734.34749568485,
+          -38734.34749759107,
+          -38734.34749290914,
+          -38734.34742602438
+        ]
+      },
       "residual_at_iterate": 0.0021213764452046036,
       "residual_evaluations_per_increment": [
         0.0,
@@ -1864,7 +2539,7 @@
         "update_line": 167,
         "update_sign": "-"
       },
-      "source": "jgomezc1_UMAT_PCLK_resolved.for",
+      "source": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_PCLK.for",
       "source_sha256": "d37eb3f20208c50dceff9198a05d69e47b65e7834a08b8791a0950d3eb83bcb4",
       "stages": {
         "compiled_original_probe": {
@@ -1921,8 +2596,23 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "1ce179da0c49ddf450f8efb19a198b41",
       "constitutive_class": "Cosserat elasticity",
       "id": "jgomezc1_UMAT_ECO",
+      "identity": {
+        "canonical_source_id": "1ce179da0c49ddf450f8efb19a198b41",
+        "closure_routines": [
+          "KCLEARV",
+          "KMAVEC",
+          "KUPDVEC",
+          "UMAT"
+        ],
+        "closure_size": 4,
+        "code_only_sha256": "35b6a34e650d492d89ad55ed6821c00109dbdf2f565a32213190388ab9afe359",
+        "entry_routine": "UMAT",
+        "identity_kind": "dependency_closure",
+        "normalised_content_sha256": "04cee22b1b40c88313b37eba3a40e02cc5fb66cfe07409836cac1b22ffe6441d"
+      },
       "license": "MIT",
       "local_solves_discovered": [],
       "origin": "external corpus (pinned snapshot)",
@@ -1933,8 +2623,17 @@
     {
       "blocked_by": "material_data_unavailable",
       "bucket": "blocked",
+      "canonical_source_id": "419dad1b5328f82526e6bf3bcb5734a8",
       "constitutive_class": "viscoplastic damage, classical theory",
       "id": "jgomezc1_UMAT_VPDCL",
+      "identity": {
+        "canonical_source_id": "419dad1b5328f82526e6bf3bcb5734a8",
+        "closure_size": 1,
+        "code_only_sha256": "6f50e1d3c278309312e8542d471cdc510250e4f46bd72ad1a52c5307c5d4048d",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "139355773a2819ed69e41500269dafb980214f0dd4b36d0ac7bbab0d1f91198e"
+      },
       "license": "MIT",
       "local_solves_discovered": [
         {
@@ -1959,8 +2658,17 @@
     {
       "blocked_by": "material_data_unavailable",
       "bucket": "blocked",
+      "canonical_source_id": "71d6e827ce64823a571212c35ba42752",
       "constitutive_class": "viscoplastic damage, combined hardening, thermomechanical",
       "id": "jgomezc1_UMAT_NKH_1.02",
+      "identity": {
+        "canonical_source_id": "71d6e827ce64823a571212c35ba42752",
+        "closure_size": 1,
+        "code_only_sha256": "259fc3419802a8fca83c6b202f963703ceb5cc6f0705f082340e11f203b75f31",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "c8d5506060d4cd359adadb2ae7633f206e68db8da215c50f0a564e8bc57ce1d3"
+      },
       "license": "MIT",
       "local_solves_discovered": [
         {
@@ -1984,8 +2692,17 @@
     },
     {
       "bucket": "no_local_solve",
+      "canonical_source_id": "7907e09d7212c8e9914c68df56ca1beb",
       "constitutive_class": "crystal plasticity, finite strain, COMMON-block state",
       "id": "ngrilli_umat",
+      "identity": {
+        "canonical_source_id": "7907e09d7212c8e9914c68df56ca1beb",
+        "closure_size": 1,
+        "code_only_sha256": "6fbb4c84dfc965bd756284da1d39165c9430e6a876767ef52e4c02a90907837f",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "cd7f7c0baa970cde5118ef35a69e4e77f3232cdff47ceed736dc6df33f9adf00"
+      },
       "license": "MIT",
       "local_solves_discovered": [],
       "origin": "external corpus (pinned snapshot)",

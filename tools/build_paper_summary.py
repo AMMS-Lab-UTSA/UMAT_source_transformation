@@ -79,13 +79,17 @@ def sentences() -> list[tuple[str, str, str]]:
         artefact = "paper_results/internal_jacobians/internal_jacobian_round.json"
         out.append((
             "Internal constitutive Jacobians (Table 3)",
-            f"Of {funnel['candidate_sources']} candidate sources, "
-            f"{funnel['sources_with_a_local_solve']} carry a local Newton solve; "
-            f"{funnel['extracted_and_verified']} had their internal Jacobian "
-            f"extracted and verified against centred differences of the residual "
-            f"at the identical local state, and none disagreed. The remaining "
-            f"{funnel['no_local_solve']} integrate their law without a local "
-            "iteration and so have no internal Jacobian to extract.",
+            f"Of {funnel['unique_source_implementations']} distinct UMAT "
+            f"implementations examined, "
+            f"{funnel['unique_sources_with_a_local_solve']} carry a local Newton "
+            f"solve; {funnel['unique_sources_verified']} had their internal "
+            "Jacobian extracted and verified against centred differences of the "
+            "residual at the identical local state, over "
+            f"{funnel['verification_executions']} separate executions, and none "
+            "disagreed. Counts are of implementations rather than appearances: "
+            "the same UMAT is reachable from more than one origin, and running it "
+            "from each with different upstream material is repeated validation of "
+            "one model.",
             artefact))
         drift = []
         for record in jac.get("records", []):

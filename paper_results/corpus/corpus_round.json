@@ -2,6 +2,7 @@
   "candidates": [
     {
       "blocker": null,
+      "canonical_source_id": "a676f0c974bb289877a569eac3c812f2",
       "commit_sha": "54181407aa7aa23055e33d354d0b2a3abc266365",
       "comparison": {
         "agreeing": 800,
@@ -892,6 +893,28 @@
       "entry_routine": "UMAT",
       "furthest_stage": "derivatives_verified",
       "id": "jgomezc1_UMAT_PCO",
+      "identity": {
+        "canonical_source_id": "a676f0c974bb289877a569eac3c812f2",
+        "closure_routines": [
+          "KCLEAR",
+          "KCLEARV",
+          "KMATSUB",
+          "KMAVEC",
+          "KMMULT",
+          "KMTRAN",
+          "KPROYECTOR",
+          "KSMULT",
+          "KSPECTRAL",
+          "KUHARD",
+          "KUPDVEC",
+          "UMAT"
+        ],
+        "closure_size": 12,
+        "code_only_sha256": "01c107eac198b4c2588c7fce5ba8a34bd4592e3949e797ded86c185629f2d9d0",
+        "entry_routine": "UMAT",
+        "identity_kind": "dependency_closure",
+        "normalised_content_sha256": "a69f98cb2a4a113669917cb02124f635cce1e6d361c82bfd8d46c8f63de85c73"
+      },
       "inferred_dimensions": {
         "literal_statev_index": 4,
         "minimum_nstatv_for": {
@@ -1011,6 +1034,7 @@
     },
     {
       "blocker": null,
+      "canonical_source_id": "8603a12db0823e1114a32931d95f9fcf",
       "commit_sha": "54181407aa7aa23055e33d354d0b2a3abc266365",
       "comparison": {
         "agreeing": 1120,
@@ -2064,6 +2088,30 @@
       "entry_routine": "UMAT",
       "furthest_stage": "derivatives_verified",
       "id": "jgomezc1_UMAT_VPDCO",
+      "identity": {
+        "canonical_source_id": "8603a12db0823e1114a32931d95f9fcf",
+        "closure_routines": [
+          "KCLEAR",
+          "KCLEARV",
+          "KDAMACAL",
+          "KMATSUB",
+          "KMAVEC",
+          "KMMULT",
+          "KMTRAN",
+          "KPROYECTOR",
+          "KSMULT",
+          "KSPECTRAL",
+          "KUHARDNLIN",
+          "KUPDVEC",
+          "UMAT",
+          "VSPRATE"
+        ],
+        "closure_size": 14,
+        "code_only_sha256": "3745237ca799922dad909c49a70ea091a9fc6fefd15a7cb025f18f9c2ea4f39f",
+        "entry_routine": "UMAT",
+        "identity_kind": "dependency_closure",
+        "normalised_content_sha256": "d0c061d2f10e52275feddf9b94744e9767c3a6e9683cf364125e76ee049998f7"
+      },
       "inferred_dimensions": {
         "literal_statev_index": 22,
         "minimum_nstatv_for": {
@@ -2201,6 +2249,7 @@
     },
     {
       "blocker": null,
+      "canonical_source_id": "e1fc2b536d647ecd7cb64d10a2c895fe",
       "commit_sha": "54181407aa7aa23055e33d354d0b2a3abc266365",
       "comparison": {
         "agreeing": 680,
@@ -2556,6 +2605,14 @@
       "entry_routine": "UMAT",
       "furthest_stage": "derivatives_verified",
       "id": "jgomezc1_UMAT_PCL",
+      "identity": {
+        "canonical_source_id": "e1fc2b536d647ecd7cb64d10a2c895fe",
+        "closure_size": 1,
+        "code_only_sha256": "b68b3e2fa9acd49c06ab6f89304cd8f7014307d143888e9fdaba329fdd84fa45",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "b29e21d6ddcd297011554ec012954df2d4fb1f3f314f466e1e4746f42c9fe720"
+      },
       "inferred_dimensions": {
         "literal_statev_index": null,
         "minimum_nstatv_for": {
@@ -2669,6 +2726,7 @@
     },
     {
       "blocker": null,
+      "canonical_source_id": "63d29dc059c518af8e0abf8b4554b1b4",
       "commit_sha": "54181407aa7aa23055e33d354d0b2a3abc266365",
       "comparison": {
         "agreeing": 720,
@@ -3065,6 +3123,14 @@
       "entry_routine": "UMAT",
       "furthest_stage": "derivatives_verified",
       "id": "jgomezc1_UMAT_PCLK",
+      "identity": {
+        "canonical_source_id": "63d29dc059c518af8e0abf8b4554b1b4",
+        "closure_size": 1,
+        "code_only_sha256": "4e3f92dbb8385927da81cb6c4b8c0df25c72ddebb4b2d92c26a28ee2f0b55f8c",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "0deebd0de0d8def5a1054ec12fb1681a1c8765416d5ca3f175aa373ff5a34f3e"
+      },
       "inferred_dimensions": {
         "literal_statev_index": null,
         "minimum_nstatv_for": {
@@ -3178,6 +3244,7 @@
     },
     {
       "blocker": null,
+      "canonical_source_id": "1ce179da0c49ddf450f8efb19a198b41",
       "commit_sha": "54181407aa7aa23055e33d354d0b2a3abc266365",
       "comparison": {
         "agreeing": 140,
@@ -3441,6 +3508,20 @@
       "entry_routine": "UMAT",
       "furthest_stage": "derivatives_verified",
       "id": "jgomezc1_UMAT_ECO",
+      "identity": {
+        "canonical_source_id": "1ce179da0c49ddf450f8efb19a198b41",
+        "closure_routines": [
+          "KCLEARV",
+          "KMAVEC",
+          "KUPDVEC",
+          "UMAT"
+        ],
+        "closure_size": 4,
+        "code_only_sha256": "35b6a34e650d492d89ad55ed6821c00109dbdf2f565a32213190388ab9afe359",
+        "entry_routine": "UMAT",
+        "identity_kind": "dependency_closure",
+        "normalised_content_sha256": "04cee22b1b40c88313b37eba3a40e02cc5fb66cfe07409836cac1b22ffe6441d"
+      },
       "inferred_dimensions": {
         "literal_statev_index": null,
         "minimum_nstatv_for": {
@@ -3553,6 +3634,7 @@
     },
     {
       "blocker": "contract_constructed: no material property vector or loading history is available for this source; upstream provides none and none may be invented",
+      "canonical_source_id": "419dad1b5328f82526e6bf3bcb5734a8",
       "commit_sha": "54181407aa7aa23055e33d354d0b2a3abc266365",
       "constitutive_class": "viscoplastic damage, classical theory",
       "content_sha256": "dc9dad48aa26add40616e4d861c902e02343039f78e82dc6e58dc8295fc48b64",
@@ -4159,6 +4241,14 @@
       "entry_routine": "UMAT",
       "furthest_stage": "dependencies_resolved",
       "id": "jgomezc1_UMAT_VPDCL",
+      "identity": {
+        "canonical_source_id": "419dad1b5328f82526e6bf3bcb5734a8",
+        "closure_size": 1,
+        "code_only_sha256": "6f50e1d3c278309312e8542d471cdc510250e4f46bd72ad1a52c5307c5d4048d",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "139355773a2819ed69e41500269dafb980214f0dd4b36d0ac7bbab0d1f91198e"
+      },
       "inferred_dimensions": {
         "literal_statev_index": 16,
         "minimum_nstatv_for": {
@@ -4211,6 +4301,7 @@
     },
     {
       "blocker": "contract_constructed: no material property vector or loading history is available for this source; upstream provides none and none may be invented",
+      "canonical_source_id": "71d6e827ce64823a571212c35ba42752",
       "commit_sha": "54181407aa7aa23055e33d354d0b2a3abc266365",
       "constitutive_class": "viscoplastic damage, combined hardening, thermomechanical",
       "content_sha256": "1a2835983e161003ac3f3664a9800a17404be92fdcdecb9e77e5a4c5abc5b6a6",
@@ -4895,6 +4986,14 @@
       "entry_routine": "UMAT",
       "furthest_stage": "dependencies_resolved",
       "id": "jgomezc1_UMAT_NKH_1.02",
+      "identity": {
+        "canonical_source_id": "71d6e827ce64823a571212c35ba42752",
+        "closure_size": 1,
+        "code_only_sha256": "259fc3419802a8fca83c6b202f963703ceb5cc6f0705f082340e11f203b75f31",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "c8d5506060d4cd359adadb2ae7633f206e68db8da215c50f0a564e8bc57ce1d3"
+      },
       "inferred_dimensions": {
         "literal_statev_index": 16,
         "minimum_nstatv_for": {
@@ -5457,7 +5556,7 @@
     "reached_transformed": 5,
     "reached_transformed_executed": 5
   },
-  "generated_at": "2026-08-25T19:28:50.805256+00:00",
+  "generated_at": "2026-08-25T20:21:15.512329+00:00",
   "mode": "offline",
   "repositories": [
     {

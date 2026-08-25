@@ -41,6 +41,10 @@ from umat_oti.transform.parameter_sensitivity_transform import (
     GenericPSContract,
     transform_umat_for_parameter_sensitivity,
 )
+from umat_oti.validation.reference_resolution import (
+    converged_value,
+    measure_reference_resolution,
+)
 from umat_oti.validation.parameter_sensitivity_validation import (
     DEFAULT_REL_STEP,
     build_original_driver,
@@ -395,10 +399,41 @@ def verify_internal_jacobian(case: InternalJacobianCase, out_dir: Path) -> dict:
         _stage(record, "jacobian_extracted", "failed",
                reason=f"the OTI output carries no {SEED_NAME} direction")
         return record
+    # The reference is only as good as its step. A single centred difference at
+    # a fixed step carries truncation error that no noise-floor model accounts
+    # for, so the same coefficient is re-evaluated across a ladder and the
+    # agreement is checked at the step where the method is best converged.
+    ladder = measure_reference_resolution(
+        seeded_exe, probe_props, case.path, ntens=case.ntens,
+        nstatv=slots.nstatv, props_index=slots.seed_props, array="DSTATEV_DP")
+    converged = converged_value(ladder, target, slots.residual)
+    convergence = {
+        "relative_steps": list(ladder.steps),
+        "values": list(ladder.values.get((target, slots.residual), ())),
+        "default_relative_step": case.rel_step,
+        "policy": ("the finite-difference reference is evaluated over a step "
+                   "ladder; agreement is reported at the step where consecutive "
+                   "answers are flattest, not at a step fixed in advance"),
+    }
+    if converged is not None:
+        value, step, uncertainty = converged
+        convergence.update({
+            "converged_relative_step": step,
+            "converged_reference": value,
+            "residual_uncertainty": uncertainty,
+            "oti_vs_converged_reference_absolute": abs(oti_value - value),
+            "oti_vs_converged_reference_relative": (
+                abs(oti_value - value) / abs(value) if value else None),
+            "hand_coded_vs_converged_reference_relative": (
+                abs(probe_jacobian - value) / abs(value) if value else None),
+        })
+    record["reference_convergence"] = convergence
+
     record["extracted"] = {
         "oti": oti_value,
         "finite_difference": fd_value,
         "hand_coded": probe_jacobian,
+        "finite_difference_at_converged_step": convergence.get("converged_reference"),
     }
     _stage(record, "jacobian_extracted", "succeeded", value=oti_value)
 
