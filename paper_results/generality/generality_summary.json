@@ -35,10 +35,10 @@
     "present": 41
   },
   "by_internal_jacobian": {
-    "blocked:not_started": 5,
+    "blocked:not_started": 4,
     "no_local_solve": 20,
     "not_attempted": 13,
-    "succeeded": 3
+    "succeeded": 4
   },
   "by_kinematics": {
     "": 17,
@@ -52,7 +52,7 @@
   "by_source_form": {
     "fixed": 41
   },
-  "generated_at": "2026-08-25T15:53:31.070027+00:00",
+  "generated_at": "2026-08-25T16:42:26.950096+00:00",
   "sources": 41,
   "structural_diversity_caveat": "Every parameter-sensitivity benchmark row is single-file, fixed-form and small-strain with at most one helper routine. Breadth of constitutive class is therefore better demonstrated than breadth of source-code structure; free-form, multi-file and finite-strain sources are not represented in this set."
 }

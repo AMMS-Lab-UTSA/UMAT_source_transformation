@@ -8,11 +8,16 @@
     "material_data.status is the discriminator:",
     "  higher_order_registry -- a property vector and loading path already exist",
     "      in umat_oti.validation.actual_umat_higher_order_generic.MODELS, which",
-    "      is where the higher-order studies took theirs from. Reusing it means",
-    "      the internal-Jacobian round runs the same material as the published",
-    "      higher-order evidence rather than inventing one.",
-    "  unavailable -- no property vector for this source exists in either",
-    "      repository. The round reports blocked_by_external_dependency; it does",
+    "      is where the higher-order studies took theirs from.",
+    "  abaqus_validation_probe -- the property vector is the one the archived",
+    "      Abaqus paired validation (Table 2) ran this model with. These decks",
+    "      hold PROBE vectors, not physical materials: every archived deck uses",
+    "      unit constants apart from a 0.3 Poisson ratio in PCL and PCLK. A",
+    "      parity or derivative comparison is still valid, because both builds",
+    "      see identical inputs, but nothing here demonstrates behaviour on a",
+    "      physical material and the evidence must not be read that way.",
+    "  unavailable -- no property vector for this source exists anywhere that was",
+    "      searched. The round reports blocked_by_external_dependency; it does",
     "      not fabricate a material to make the row appear.",
     "",
     "Paths are repository-relative. No absolute path appears here."
@@ -25,7 +30,10 @@
       "license": "not stated in the source header; distributed under this repository's licence",
       "constitutive_class": "plasticity, combined isotropic/kinematic hardening",
       "kinematics": "small_strain",
-      "material_data": {"status": "higher_order_registry", "key": "UMAT_PCL"}
+      "material_data": {
+        "status": "higher_order_registry",
+        "key": "UMAT_PCL"
+      }
     },
     {
       "id": "UMAT_PCLK",
@@ -34,7 +42,10 @@
       "license": "not stated in the source header; distributed under this repository's licence",
       "constitutive_class": "plasticity, kinematic hardening",
       "kinematics": "small_strain",
-      "material_data": {"status": "higher_order_registry", "key": "UMAT_PCLK"}
+      "material_data": {
+        "status": "higher_order_registry",
+        "key": "UMAT_PCLK"
+      }
     },
     {
       "id": "UMAT_NKH_1.02",
@@ -56,7 +67,10 @@
       "license": "not stated in the source header; distributed under this repository's licence",
       "constitutive_class": "plasticity, combined hardening",
       "kinematics": "small_strain",
-      "material_data": {"status": "unavailable", "reason": "no property vector for this source exists in either repository"}
+      "material_data": {
+        "status": "unavailable",
+        "reason": "no property vector for this source exists in either repository"
+      }
     },
     {
       "id": "UMAT_VPDCL",
@@ -65,7 +79,56 @@
       "license": "not stated in the source header; distributed under this repository's licence",
       "constitutive_class": "viscoplastic damage, classical theory",
       "kinematics": "small_strain",
-      "material_data": {"status": "unavailable", "reason": "no property vector for this source exists in either repository"}
+      "material_data": {
+        "status": "abaqus_validation_probe",
+        "props_values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "dstran_per_increment": [
+          0.001,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "n_increments": 4,
+        "provenance": {
+          "deck": "umat_oti_workspace/validate_all/UMAT_VPDCL/out/validation/original_umat_validation.inp",
+          "deck_sha256": "26390d3503f32ab02d8bda236854fe66771fd577e00340cb514c5b38bbdbaa32",
+          "held_in": "the authors' separate working tree; the vector is transcribed here so the round needs no path outside this repository",
+          "abaqus_job": "slurm 791506",
+          "abaqus_verdict": "passed (DDSDDE, stress, statev, convergence)",
+          "nature": "probe vector of unit constants, not a physical material"
+        },
+        "loading_path_note": "the archived deck drives a 3.0e-3 uniaxial displacement over four static increments; the material-point path here is the equivalent uniaxial strain increment, declared rather than imported"
+      },
+      "ntens": 4,
+      "ndi": 3,
+      "nshr": 1,
+      "nstatv": 16,
+      "nprops": 24
     },
     {
       "id": "UMAT_PCLI",
@@ -74,7 +137,10 @@
       "license": "not stated in the source header; distributed under this repository's licence",
       "constitutive_class": "plasticity, isotropic hardening",
       "kinematics": "small_strain",
-      "material_data": {"status": "unavailable", "reason": "no property vector for this source exists in either repository"}
+      "material_data": {
+        "status": "unavailable",
+        "reason": "no property vector for this source exists in either repository"
+      }
     },
     {
       "id": "UMAT_VPDCO",
@@ -83,7 +149,10 @@
       "license": "not stated in the source header; distributed under this repository's licence",
       "constitutive_class": "viscoplastic damage, combined hardening",
       "kinematics": "small_strain",
-      "material_data": {"status": "unavailable", "reason": "no property vector for this source exists in either repository"}
+      "material_data": {
+        "status": "unavailable",
+        "reason": "no property vector for this source exists in either repository"
+      }
     }
   ]
 }

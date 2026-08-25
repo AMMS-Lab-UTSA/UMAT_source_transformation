@@ -121,7 +121,7 @@ def driver_source(*, ntens: int, nstatv: int, nprops: int) -> str:
     CALL UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,RPL,DDSDDT,DRPLDE,DRPLDT, &
       STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,CMNAME,NDI,NSHR,NTENS,NSTATV, &
       PROPS,NPROPS,COORDS,DROT,PNEWDT,CELENT,DFGRD0,DFGRD1,NOEL,NPT,LAYER,KSPT,KSTEP,KINC)
-    WRITE(*,'({ntens + nsv}(ES25.17,1X))') STRESS,STATEV
+    WRITE(*,'({ntens + nsv}(ES26.17E3,1X))') STRESS,STATEV
     STRAN=STRAN+DSTRAN;TIME=TIME+DTIME
   END DO
 END PROGRAM original_reference_driver
@@ -182,7 +182,19 @@ def replay(executable: Path, props: Sequence[float],
     stress, statev = [], []
     nsv = max(nstatv, 1)
     for line in result.stdout.strip().splitlines():
-        values = [float(v) for v in line.split()]
+        try:
+            values = [float(v) for v in line.split()]
+        except ValueError as exc:
+            # Fortran drops the "E" when an exponent will not fit the field, so
+            # "1.0E+207" prints as "1.0+207". Seeing that means the model
+            # produced a value around 1e100 or larger, which is divergence, not
+            # a formatting curiosity -- say so rather than surfacing a bare
+            # float() error from deep inside the parser.
+            raise RuntimeError(
+                "the original UMAT produced a value too large to represent: "
+                f"{exc}. This is numerical divergence along the requested "
+                "loading path, not a reporting problem; the property vector or "
+                "the path is not usable for this model.") from exc
         if len(values) != ntens + nsv:
             raise RuntimeError(
                 f"reference driver returned {len(values)} values, expected {ntens + nsv}")

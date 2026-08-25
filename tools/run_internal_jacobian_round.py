@@ -123,27 +123,42 @@ def run_external(entry: dict, work_root: Path) -> dict:
         return record
 
     material = entry.get("material_data", {})
-    if material.get("status") != "higher_order_registry":
+    status = material.get("status")
+    if status == "higher_order_registry":
+        spec = MODELS[material["key"]]
+        record["material_data_source"] = (
+            "umat_oti.validation.actual_umat_higher_order_generic.MODELS"
+            f"[{material['key']!r}] -- the same property vector and loading path "
+            "the higher-order study for this model used")
+        case = InternalJacobianCase(
+            model=entry["id"], source_path=source.resolve(),
+            props=tuple(spec.props),
+            dstran_per_increment=tuple(spec.increments[0]),
+            n_increments=len(spec.increments),
+            ntens=spec.ntens, nstatv=spec.nstatv,
+            ndi=3, nshr=max(spec.ntens - 3, 0))
+    elif status == "abaqus_validation_probe":
+        provenance = material["provenance"]
+        record["material_data_source"] = (
+            f"the property vector the archived Abaqus paired validation ran this "
+            f"model with ({provenance['abaqus_job']}, deck sha256 "
+            f"{provenance['deck_sha256'][:16]}...). {provenance['nature']}.")
+        record["material_is_physical"] = False
+        case = InternalJacobianCase(
+            model=entry["id"], source_path=source.resolve(),
+            props=tuple(material["props_values"]),
+            dstran_per_increment=tuple(material["dstran_per_increment"]),
+            n_increments=int(material["n_increments"]),
+            ntens=int(entry["ntens"]), nstatv=int(entry["nstatv"]),
+            ndi=int(entry["ndi"]), nshr=int(entry["nshr"]))
+    else:
         record["bucket"] = "blocked"
         record["blocked_by"] = "material_data_unavailable"
         record["reason"] = material.get(
             "reason", "no property vector is available for this source")
         return record
 
-    spec = MODELS[material["key"]]
-    record["material_data_source"] = (
-        "umat_oti.validation.actual_umat_higher_order_generic.MODELS"
-        f"[{material['key']!r}] -- the same property vector and loading path the "
-        "higher-order study for this model used")
-    record.update(verify_internal_jacobian(
-        InternalJacobianCase(
-            model=entry["id"], source_path=source.resolve(),
-            props=tuple(spec.props),
-            dstran_per_increment=tuple(spec.increments[0]),
-            n_increments=len(spec.increments),
-            ntens=spec.ntens, nstatv=spec.nstatv,
-            ndi=3, nshr=max(spec.ntens - 3, 0)),
-        work_root / entry["id"]))
+    record.update(verify_internal_jacobian(case, work_root / entry["id"]))
     record["bucket"] = _bucket(record)
     return record
 
