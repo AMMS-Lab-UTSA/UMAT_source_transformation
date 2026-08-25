@@ -119,3 +119,58 @@ def test_a_umat_using_E1_transforms_compiles_and_runs(tmp_path):
     assert result.dsigma_csv.is_file()
     rows = result.dsigma_csv.read_text(encoding="utf-8").strip().splitlines()
     assert len(rows) > 1, "the run produced no stress-sensitivity rows"
+
+
+MIXED_INTRINSIC_UMAT = COLLIDING_UMAT.replace(
+    "      ENU=PROPS(2)",
+    "      ENU=MIN(PROPS(2),ENUMAX)").replace(
+    "      EMOD=PROPS(1)",
+    "      ENUMAX=0.4999D0\n      EMOD=MAX(PROPS(1),1.0D0)")
+
+
+@pytest.mark.slow
+@pytest.mark.fortran
+@pytest.mark.regression
+@pytest.mark.skipif(shutil.which("gfortran") is None, reason="gfortran not on PATH")
+def test_mixed_oti_and_real_min_max_compile_and_run(tmp_path):
+    """Regression: MIN(oti, real) had no matching specific interface.
+
+    The generated OTI module defines MIN and MAX for two OTI operands only, but
+    clamping against a REAL constant is an everyday UMAT idiom --
+    ``ENU=MIN(PROPS(2),ENUMAX)`` is what exposed it in UMAT_PCO. gfortran
+    reported the generic as not matching any specific intrinsic interface, which
+    reads like a transformation bug and is a missing overload.
+    """
+    source = tmp_path / "mixed.for"
+    source.write_text(MIXED_INTRINSIC_UMAT, encoding="utf-8")
+    contract = GenericPSContract(
+        name="mixed", umat_source_path=source,
+        parameters=(("EMOD", 1), ("ENU", 2)),
+        parameter_values=(200000.0, 0.3),
+        state_variables=(("SHEAR", 1),),
+        ntens=6, nstatv=1, ndi=3, nshr=3,
+        dstran_per_increment=(1.0e-4, 0.0, 0.0, 0.0, 0.0, 0.0),
+        n_increments=3, static_props=(200000.0, 0.3))
+    layout = transform_umat_for_parameter_sensitivity(
+        contract=contract, output_dir=tmp_path / "out")
+    assert (layout.root / "oti_intrinsics.f90").is_file()
+
+    executable = compile_generic_ps(layout)
+    result = run_generic_ps(executable)
+    assert result.returncode == 0, result.stderr
+    rows = result.dsigma_csv.read_text(encoding="utf-8").strip().splitlines()
+    assert len(rows) > 1
+
+
+def test_intrinsic_extension_module_declares_the_mixed_forms(tmp_path):
+    from umat_oti.transform.parameter_sensitivity_transform import (
+        _emit_intrinsic_extensions,
+    )
+
+    text = _emit_intrinsic_extensions("otim2n1", "ONUMM2N1")
+    for name in ("oti_min_or", "oti_min_ro", "oti_max_or", "oti_max_ro",
+                 "oti_sign_oo", "oti_sign_or"):
+        assert name in text, name
+    # A real constant contributes no derivative, so the selected operand is
+    # returned whole rather than rebuilt from its real part.
+    assert "RES = B" in text and "RES = A" in text

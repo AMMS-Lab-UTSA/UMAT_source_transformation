@@ -1,0 +1,377 @@
+{
+  "_comment": [
+    "Immutable snapshot of the external UMAT corpus.",
+    "",
+    "Every repository is pinned to a commit SHA, never to a branch. A moving ref",
+    "such as 'main' would make an offline replay depend on when it ran rather",
+    "than on what it contains, and the previous manifest pinned exactly that.",
+    "",
+    "The snapshots themselves are the git submodules of the Residual_Assembler",
+    "repository, which already carry these SHAs as gitlinks. Nothing is vendored",
+    "here: this file records provenance and the material data needed to drive",
+    "each candidate, and the sources are read from the pinned submodule tree.",
+    "",
+    "Restricted tiers are listed so they stay in the denominator, and are marked",
+    "metadata_only. They are never fetched, executed, or redistributed.",
+    "",
+    "Material properties and loading histories are taken from upstream example",
+    "decks. Where upstream provides none, the candidate records that as its",
+    "blocker; no material is invented to move a source through the funnel."
+  ],
+  "snapshot_root_environment_variable": "UMAT_OTI_CORPUS_ROOT",
+  "default_snapshot_root": "../Residual_Assembler/sources",
+  "repositories": [
+    {
+      "id": "jgomezc1_ABAQUS-US",
+      "url": "https://github.com/jgomezc1/ABAQUS-US.git",
+      "commit_sha": "54181407aa7aa23055e33d354d0b2a3abc266365",
+      "tier": "permissive",
+      "path": "permissive/jgomezc1_ABAQUS-US",
+      "license_spdx": "MIT",
+      "license_source": "LICENSE.md: 'Copyright (c) [2015] [Juan Gomez]' followed by the MIT permission notice",
+      "redistribution_permitted": true,
+      "description": "Abaqus user subroutines from Universidad EAFIT: classical, Cosserat and viscoplastic-damage plasticity UMATs plus matching UELs and example decks."
+    },
+    {
+      "id": "ngrilli_Oxford_Crystal_Plasticity",
+      "url": "https://github.com/ngrilli/Oxford_Crystal_Plasticity.git",
+      "commit_sha": "85102ed35dc4592edc5fd4aaec542fa63e7162fd",
+      "tier": "permissive",
+      "path": "permissive/ngrilli_Oxford_Crystal_Plasticity",
+      "license_spdx": "MIT",
+      "license_source": "LICENSE",
+      "redistribution_permitted": true,
+      "description": "Oxford crystal-plasticity UMAT with a large helper closure across separate files and COMMON-block state."
+    },
+    {
+      "id": "bibekanandadatta_Abaqus-UEL-Elasticity",
+      "url": "https://github.com/bibekananda-datta/Abaqus-UEL-Elasticity.git",
+      "commit_sha": "9187e54a4069ed0e6196a29e97e92185d14724a5",
+      "tier": "permissive",
+      "path": "permissive/bibekanandadatta_Abaqus-UEL-Elasticity",
+      "license_spdx": "BSD-3-Clause",
+      "license_source": "LICENSE",
+      "redistribution_permitted": true,
+      "description": "User ELEMENT (UEL) library. Provides no SUBROUTINE UMAT, so it is discovered and classified but has no UMAT entry to transform."
+    },
+    {
+      "id": "bibekanandadatta_Abaqus-UEL-Hyperelasticity",
+      "url": "https://github.com/bibekananda-datta/Abaqus-UEL-Hyperelasticity.git",
+      "commit_sha": "ba5bf018b71e0717d3a3136a351637a27e6ff0ed",
+      "tier": "permissive",
+      "path": "permissive/bibekanandadatta_Abaqus-UEL-Hyperelasticity",
+      "license_spdx": "BSD-3-Clause",
+      "license_source": "LICENSE",
+      "redistribution_permitted": true,
+      "description": "Hyperelastic UEL library, PK1 and PK2 formulations. No SUBROUTINE UMAT."
+    },
+    {
+      "id": "ICAMS_Crystal_Plasticity_UMAT",
+      "url": "https://github.com/ICAMS/crystal_plasticity_UMAT.git",
+      "commit_sha": "469464b646a6f250d996828559342b81a1dfbbd7",
+      "tier": "copyleft",
+      "path": "copyleft/ICAMS_Crystal_Plasticity_UMAT",
+      "license_spdx": "AGPL-3.0",
+      "license_source": "upstream LICENSE",
+      "redistribution_permitted": false,
+      "metadata_only": true,
+      "description": "AGPL crystal plasticity. Never fetched by setup and never executed here; listed so it stays in the denominator."
+    },
+    {
+      "id": "TarletonGroup_CrystalPlasticity",
+      "url": "https://github.com/TarletonGroup/CrystalPlasticity.git",
+      "commit_sha": "2f0909472f4cdf1b0b71da6ba97db900dacc6f05",
+      "tier": "license-unknown",
+      "path": "license-unknown/TarletonGroup_CrystalPlasticity",
+      "license_spdx": "NOASSERTION",
+      "license_source": "no LICENSE file present upstream",
+      "redistribution_permitted": false,
+      "metadata_only": true,
+      "description": "No licence granted. Reference only."
+    }
+  ],
+  "candidates": [
+    {
+      "id": "jgomezc1_UMAT_PCO",
+      "repository": "jgomezc1_ABAQUS-US",
+      "source": "UMATS/UMAT_PCO.for",
+      "dependency_roots": [
+        "UMATS"
+      ],
+      "constitutive_class": "reduced Cosserat couple-stress plasticity",
+      "ntens": 6,
+      "ndi": 3,
+      "nshr": 3,
+      "nstatv": 14,
+      "material": {
+        "props": [
+          220000.0,
+          0.3,
+          0.005,
+          900000.0,
+          56.0,
+          0.0,
+          343.5,
+          0.25
+        ],
+        "provenance": "INPUT_FILES/UNIUSER_COS.inp, *UEL PROPERTY with *USER ELEMENT PROPERTIES=8",
+        "meaning": "E, nu, Cosserat length scale, penalty, then KUHARD TABLE(2,2) = (56.0, 0.0) and (343.5, 0.25)",
+        "dstran_per_increment": [
+          0.0001,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "n_increments": 20,
+        "parameters": [
+          {
+            "name": "EMOD",
+            "props_index": 1
+          },
+          {
+            "name": "ENU",
+            "props_index": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "jgomezc1_UMAT_VPDCO",
+      "repository": "jgomezc1_ABAQUS-US",
+      "source": "UMATS/UMAT_VPDCO.for",
+      "dependency_roots": [
+        "UMATS"
+      ],
+      "constitutive_class": "viscoplastic damage, Cosserat, thermomechanical",
+      "ntens": 6,
+      "ndi": 3,
+      "nshr": 3,
+      "nstatv": 22,
+      "material": {
+        "props": [
+          295.15,
+          62.0,
+          -0.067,
+          24.28,
+          -0.029,
+          76.944,
+          -0.1883,
+          5.7e-06,
+          13.6,
+          457.9,
+          37.47,
+          -0.0748,
+          383.3,
+          45000000.0,
+          48.8,
+          3.18e-07,
+          1.38e-20,
+          0.015,
+          3.34,
+          1.67,
+          44700000.0,
+          8314.0,
+          6.023e+23,
+          20140.0,
+          0.0003,
+          10.0
+        ],
+        "provenance": "SAMPLE/material_co.inp, each constant documented in SAMPLE/material_template.txt and consumed in order by SUBROUTINE VSPRATE",
+        "meaning": "TETA, E0, E1, G0, G1, SIGY0, SIGY1, CTE, H', GAMMA, R0, R1, C, A, D0, b, k, d, p, n, Q, R, N0, ms, l, Ga",
+        "dstran_per_increment": [
+          0.0001,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "n_increments": 20,
+        "parameters": [
+          {
+            "name": "E0",
+            "props_index": 2
+          },
+          {
+            "name": "SIGY0",
+            "props_index": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "jgomezc1_UMAT_PCL",
+      "repository": "jgomezc1_ABAQUS-US",
+      "source": "UMATS/UMAT_PCL.for",
+      "dependency_roots": [
+        "UMATS"
+      ],
+      "constitutive_class": "classical J2 plasticity, isotropic hardening",
+      "ntens": 4,
+      "ndi": 3,
+      "nshr": 1,
+      "nstatv": 13,
+      "material": {
+        "props": [
+          220000.0,
+          0.3,
+          56.0,
+          0.0,
+          343.5,
+          0.25
+        ],
+        "provenance": "INPUT_FILES/UNIUSER_CLA.inp, *UEL PROPERTY",
+        "meaning": "E, nu, then a two-point hardening table",
+        "dstran_per_increment": [
+          0.0001,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "n_increments": 20,
+        "parameters": [
+          {
+            "name": "EMOD",
+            "props_index": 1
+          },
+          {
+            "name": "ENU",
+            "props_index": 2
+          }
+        ]
+      },
+      "_nstatv_note": "UMAT_PCL copies its back stress with DO K1=10,2*NTENS+5, so NSTATV must be at least 13 at NTENS=4; 9 reads past the array"
+    },
+    {
+      "id": "jgomezc1_UMAT_PCLK",
+      "repository": "jgomezc1_ABAQUS-US",
+      "source": "UMATS/UMAT_PCLK.for",
+      "dependency_roots": [
+        "UMATS"
+      ],
+      "constitutive_class": "plasticity, combined isotropic/kinematic hardening",
+      "ntens": 4,
+      "ndi": 3,
+      "nshr": 1,
+      "nstatv": 14,
+      "material": {
+        "props": [
+          42340.0,
+          0.342,
+          21.77,
+          15.54,
+          383.3,
+          6227.4
+        ],
+        "provenance": "INPUT_FILES/UNIUSER_CLA_KIN.inp, *USER MATERIAL CONSTANTS=6",
+        "meaning": "E, nu, then kinematic and isotropic hardening constants",
+        "dstran_per_increment": [
+          0.0001,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "n_increments": 20,
+        "parameters": [
+          {
+            "name": "EMOD",
+            "props_index": 1
+          },
+          {
+            "name": "ENU",
+            "props_index": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "jgomezc1_UMAT_ECO",
+      "repository": "jgomezc1_ABAQUS-US",
+      "source": "UMATS/UMAT_ECO.for",
+      "dependency_roots": [
+        "UMATS"
+      ],
+      "constitutive_class": "Cosserat elasticity",
+      "ntens": 6,
+      "ndi": 3,
+      "nshr": 3,
+      "nstatv": 1,
+      "material": {
+        "props": [
+          220000.0,
+          0.3,
+          5e-05,
+          220000.0
+        ],
+        "provenance": "INPUT_FILES/UNIUSER_COS_ELA.inp, *UEL PROPERTY",
+        "meaning": "E, nu, Cosserat length scale, couple modulus",
+        "dstran_per_increment": [
+          0.0001,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "n_increments": 10,
+        "parameters": [
+          {
+            "name": "EMOD",
+            "props_index": 1
+          },
+          {
+            "name": "ENU",
+            "props_index": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "jgomezc1_UMAT_VPDCL",
+      "repository": "jgomezc1_ABAQUS-US",
+      "source": "UMATS/UMAT_VPDCL.for",
+      "dependency_roots": [
+        "UMATS"
+      ],
+      "constitutive_class": "viscoplastic damage, classical theory",
+      "ntens": 4,
+      "ndi": 3,
+      "nshr": 1,
+      "nstatv": 16,
+      "material": null,
+      "material_blocker": "upstream provides no 24-constant deck for this model; TEST_INDENT_UMAT.inp references MATERIAL_NKH.inp which is absent from the upstream repository"
+    },
+    {
+      "id": "jgomezc1_UMAT_NKH_1.02",
+      "repository": "jgomezc1_ABAQUS-US",
+      "source": "UMATS/UMAT_NKH_1.02.for",
+      "dependency_roots": [
+        "UMATS"
+      ],
+      "constitutive_class": "viscoplastic damage, combined hardening, thermomechanical",
+      "ntens": 4,
+      "ndi": 3,
+      "nshr": 1,
+      "nstatv": 16,
+      "material": null,
+      "material_blocker": "INPUT_FILES/TEST_INDENT_UMAT.inp declares CONSTANTS=24 and includes MATERIAL_NKH.inp, which is not present anywhere in the pinned upstream snapshot"
+    },
+    {
+      "id": "ngrilli_umat",
+      "repository": "ngrilli_Oxford_Crystal_Plasticity",
+      "source": "umat.for",
+      "dependency_roots": [
+        "."
+      ],
+      "constitutive_class": "crystal plasticity, finite strain, COMMON-block state",
+      "ntens": 6,
+      "ndi": 3,
+      "nshr": 3,
+      "nstatv": 0,
+      "material": null,
+      "material_blocker": "dimensions and material vector not yet established from the upstream example decks"
+    }
+  ]
+}

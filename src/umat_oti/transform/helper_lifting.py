@@ -190,9 +190,18 @@ def _routine_callees(routine: ParsedSubroutine, form: str, source_lines: list[st
     return tuple(ordered)
 
 
-# Trivial utility helpers inlined directly inside lifted helper bodies (so they
-# need no source definition and are never lifted). KCLEAR(X,NR,NC) zeroes X.
-_LIFTED_BODY_INLINED = frozenset({"KCLEAR"})
+# Nothing is inlined any more. KCLEAR used to be: its calls were rewritten as an
+# explicit zeroing loop so no definition was needed. That is a stub standing in
+# for an arithmetic helper, and it was wrong. KCLEAR(A,N,M) declares A(N,M) and
+# relies on Fortran sequence association, so the same call site legitimately
+# passes a rank-1 array, a rank-2 array, or a rank-2 array whose second extent
+# is 1. The inliner guessed the rank from whether the third argument was
+# literally "1", which produced SINVAR(mclr1) for a variable declared
+# SINVAR(1,1) and a rank-mismatch error. No fixed rank can be right for all
+# callers; the real routine already handles them all, so it is lifted like any
+# other helper and the dependency resolver finds it when it lives in a sibling
+# file.
+_LIFTED_BODY_INLINED = frozenset()
 
 _KCLEAR_CALL_RE = re.compile(
     r"^\s*CALL\s+KCLEAR\s*\(\s*([A-Za-z_]\w*)\s*,\s*([^,]+?)\s*,\s*([^)]+?)\s*\)\s*$",
@@ -372,7 +381,7 @@ def _lift_helper_routine(
     lines.extend(data_assignments)
     for raw in body:
         label_prefix, statement = _split_label_and_statement(raw, form)
-        kclear_lines = _kclear_inline_lines(statement)
+        kclear_lines = None
         if kclear_lines is not None:
             lines.extend(kclear_lines)
             continue

@@ -1,0 +1,9 @@
+candidate,repository,commit_sha,license,constitutive_class,multi_file,closure_size,furthest_stage,primal_parity,substantive_rows,worst_substantive_relative_error,blocker
+jgomezc1_UMAT_PCO,jgomezc1_ABAQUS-US,54181407aa7a,MIT,reduced Cosserat couple-stress plasticity,True,12,derivatives_verified,6.064072777217682e-16,121,2.4795998987632716e-08,
+jgomezc1_UMAT_VPDCO,jgomezc1_ABAQUS-US,54181407aa7a,MIT,"viscoplastic damage, Cosserat, thermomechanical",True,14,derivatives_verified,1.8207975009476274e-15,237,9.882134011334415e-07,
+jgomezc1_UMAT_PCL,jgomezc1_ABAQUS-US,54181407aa7a,MIT,"classical J2 plasticity, isotropic hardening",False,5,derivatives_verified,1.4739002297530164e-15,80,2.4795998987632716e-08,
+jgomezc1_UMAT_PCLK,jgomezc1_ABAQUS-US,54181407aa7a,MIT,"plasticity, combined isotropic/kinematic hardening",False,5,derivatives_verified,4.505492983027024e-16,177,4.9564841925061615e-08,
+jgomezc1_UMAT_ECO,jgomezc1_ABAQUS-US,54181407aa7a,MIT,Cosserat elasticity,True,4,derivatives_verified,3.598852817486222e-16,31,2.4797663721207738e-08,
+jgomezc1_UMAT_VPDCL,jgomezc1_ABAQUS-US,54181407aa7a,MIT,"viscoplastic damage, classical theory",False,8,dependencies_resolved,,,,contract_constructed: no material property vector or loading history is available for this source; upstream provides none and none may be invented
+jgomezc1_UMAT_NKH_1.02,jgomezc1_ABAQUS-US,54181407aa7a,MIT,"viscoplastic damage, combined hardening, thermomechanical",False,10,dependencies_resolved,,,,contract_constructed: no material property vector or loading history is available for this source; upstream provides none and none may be invented
+ngrilli_umat,ngrilli_Oxford_Crystal_Plasticity,85102ed35dc4,MIT,"crystal plasticity, finite strain, COMMON-block state",True,25,entry_detected,,,,dependencies_resolved: DGETRF is called by LAPINVERSE but no source under 2 searched root(s) defines it; DGETRI is called by LAPINVERSE but no source under 2 searched root(s) defines it

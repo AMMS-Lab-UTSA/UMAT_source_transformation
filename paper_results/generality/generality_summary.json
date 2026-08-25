@@ -1,11 +1,12 @@
 {
   "by_abaqus": {
-    "blocked_by_external_dependency": 22,
+    "blocked_by_external_dependency": 30,
     "failed_execution (slurm 791506)": 1,
     "passed (slurm 791506)": 18
   },
   "by_constitutive_class": {
     "": 10,
+    "Cosserat elasticity": 1,
     "J2 plasticity, bilinear isotropic hardening": 1,
     "J2 plasticity, combined isotropic/kinematic hardening": 1,
     "J2 plasticity, isotropic hardening": 2,
@@ -13,46 +14,56 @@
     "anisotropic elasticity (cubic)": 1,
     "anisotropic elasticity (orthotropic)": 1,
     "anisotropic elasticity (transversely isotropic)": 1,
+    "classical J2 plasticity, isotropic hardening": 1,
     "crystal plasticity, FCC slip systems": 1,
+    "crystal plasticity, finite strain, COMMON-block state": 1,
     "elasticity with scalar damage": 1,
     "hyperelasticity (Mooney-Rivlin, small strain)": 1,
     "isotropic elasticity": 4,
     "linear viscoelasticity": 1,
     "plasticity, combined hardening": 1,
-    "plasticity, combined isotropic/kinematic hardening": 1,
+    "plasticity, combined isotropic/kinematic hardening": 2,
     "plasticity, isotropic hardening": 1,
     "plasticity, kinematic hardening": 1,
     "pressure-dependent plasticity": 1,
+    "reduced Cosserat couple-stress plasticity": 1,
     "see the study's model notes": 3,
     "thermoelasticity": 2,
-    "viscoplastic damage, classical theory": 1,
+    "viscoplastic damage, Cosserat, thermomechanical": 1,
+    "viscoplastic damage, classical theory": 2,
     "viscoplastic damage, combined hardening": 1,
+    "viscoplastic damage, combined hardening, thermomechanical": 1,
     "viscoplastic damage, combined nonlinear isotropic/kinematic hardening, thermomechanical": 1,
     "viscoplastic flow (crystal-plasticity flow rule)": 1,
     "viscoplasticity (Perzyna)": 1
   },
   "by_existing_tangent": {
-    "present": 41
+    "present": 49
   },
   "by_internal_jacobian": {
     "blocked:not_started": 4,
     "no_local_solve": 20,
-    "not_attempted": 13,
+    "not_attempted": 21,
     "succeeded": 4
   },
   "by_kinematics": {
     "": 17,
-    "small_strain": 24
+    "small_strain": 32
   },
   "by_numerical_verification": {
-    "not_attempted": 23,
-    "succeeded": 17,
+    "not_attempted": 26,
+    "succeeded": 22,
     "unresolved": 1
   },
   "by_source_form": {
-    "fixed": 41
+    "fixed": 49
   },
-  "generated_at": "2026-08-25T17:29:01.352134+00:00",
-  "sources": 41,
-  "structural_diversity_caveat": "Every parameter-sensitivity benchmark row is single-file, fixed-form and small-strain with at most one helper routine. Breadth of constitutive class is therefore better demonstrated than breadth of source-code structure; free-form, multi-file and finite-strain sources are not represented in this set."
+  "generated_at": "2026-08-25T19:28:51.215642+00:00",
+  "multi_file_verified": [
+    "jgomezc1_UMAT_ECO",
+    "jgomezc1_UMAT_PCO",
+    "jgomezc1_UMAT_VPDCO"
+  ],
+  "sources": 49,
+  "structural_diversity_caveat": "Every parameter-sensitivity benchmark row is single-file, fixed-form and small-strain with at most one helper routine, so that set alone demonstrates breadth of constitutive class rather than of source structure. The external corpus rows supply the multi-file evidence: candidates whose helper closure spans sibling files are resolved, compiled and verified. Free-form and finite-strain sources are still not represented anywhere in this matrix."
 }
