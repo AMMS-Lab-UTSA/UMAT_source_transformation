@@ -60,7 +60,17 @@ def generate_otilib_module(
 
     template_dir = _find_template_dir()
     if template_dir is None:
-        warnings.append("Using minimal local pyoti templates because upstream pyoti templates were not found.")
+        # The fallback wrote empty placeholder templates and carried on. What
+        # came out was a module whose generic interfaces named procedures that
+        # were never generated, so it failed to compile with dozens of "is
+        # neither function nor subroutine" errors far from the real cause. An
+        # unavailable input must not be turned into an artefact that looks
+        # generated.
+        raise OtilibGenerationError(
+            "OTILIB module generation unavailable: the pyoti Fortran templates "
+            "(core_functions.f90, base_derivs_fortran.f90) were not found. They "
+            "ship with the package at umat_oti/oti/support/pyoti_templates; set "
+            "OTILIB_TEMPLATE_DIR to override the location.")
 
     try:
         _run_fmod_writer(
@@ -112,6 +122,10 @@ def _find_template_dir() -> Path | None:
     candidates: list[Path] = []
     if env_value:
         candidates.append(Path(env_value))
+    # Packaged first: a wheel ships only what lives under src/, so templates
+    # kept in a top-level vendor/ directory are absent from an installed
+    # package even though a source checkout has them.
+    candidates.append(Path(__file__).resolve().parent / "support" / "pyoti_templates")
     project_root = Path(__file__).resolve().parents[3]
     search_roots = [project_root, *project_root.parents]
     for root in search_roots:

@@ -68,7 +68,15 @@ where = ["src"]
 # The OTI support sources are read at run time by module generation. Without
 # this they are omitted from a wheel and a pip-installed package raises
 # "OTILIB module generation unavailable" on first use.
-"umat_oti.oti.support" = ["*.f90", "*.py"]
+# Keyed on a real package: support/ and its templates hold no __init__.py, so
+# packages.find never sees them and a key naming them directly would not match.
+"umat_oti.oti" = [
+	"support/*.f90",
+	"support/*.py",
+	"support/pyoti_templates/*.f90",
+	"support/pyoti_templates/LICENSE",
+	"support/pyoti_templates/*.md",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
