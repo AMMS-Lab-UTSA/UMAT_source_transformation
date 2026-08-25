@@ -1,0 +1,401 @@
+{
+  "funnel": {
+    "blocked": 5,
+    "candidate_sources": 26,
+    "extracted_and_disagreeing": 0,
+    "extracted_and_verified": 1,
+    "no_local_solve": 20,
+    "sources_with_a_local_solve": 6
+  },
+  "generated_at": "2026-08-25T14:59:24.605927+00:00",
+  "records": [
+    {
+      "bucket": "no_local_solve",
+      "id": "m1_elastic",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/m1_elastic/umat.for",
+      "source_sha256": "ad9681e53588b47e0ae863e23d85249a1336c08566bc47fc5dc317bd116bb852"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "m2_cubic",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/m2_cubic/umat.for",
+      "source_sha256": "5fd0b940e167b0eae2345fa8268d366269b6617632abedaf2bf5534485528806"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "m2_elastic3d",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/m2_elastic3d/umat.for",
+      "source_sha256": "ad9681e53588b47e0ae863e23d85249a1336c08566bc47fc5dc317bd116bb852"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "m3_j2",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/m3_j2/umat.for",
+      "source_sha256": "9b779f0c6cadf9c493068d84cd18bbf91f91ae14cb08aa0e7c8ac4ca119a9b40"
+    },
+    {
+      "bucket": "verified",
+      "converged_iterate": 3.050757889861489e-05,
+      "extracted": {
+        "finite_difference": 1.1424307840768504,
+        "hand_coded": 1.1424307840812775,
+        "oti": 1.142430784081278
+      },
+      "furthest_stage": "jacobian_verified",
+      "hand_coded_audit": {
+        "absolute_difference": 4.427125332995274e-12,
+        "note": "the source's own Jacobian is audited against the same reference; it is never used as the reference for the extracted value",
+        "relative_difference": 3.87518035639476e-12
+      },
+      "hand_coded_jacobian": 1.1424307840812775,
+      "id": "m5_cpflow",
+      "injection": {
+        "edits": [
+          {
+            "kind": "counter-reset",
+            "line": 88
+          },
+          {
+            "kind": "record+seed",
+            "line": 107
+          }
+        ],
+        "enclosing_routine": "UMAT",
+        "forced_exit": true,
+        "override_iterate": true,
+        "slots": {
+          "nprops_extended": 9,
+          "nstatv_extended": 5,
+          "props_seed": 9,
+          "statev_counter": 5,
+          "statev_iterate": 2,
+          "statev_jacobian": 4,
+          "statev_residual": 3
+        },
+        "solve": {
+          "convergence_tolerance": null,
+          "convergence_variable": null,
+          "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+          "hand_coded_jacobian_variable": "DF",
+          "iteration_variable": "DEQPL",
+          "loop_end_line": 110,
+          "loop_start_line": 88,
+          "residual_variable": "F",
+          "update_line": 107,
+          "update_sign": "-"
+        },
+        "target_increment": 20
+      },
+      "local_solves_discovered": [
+        {
+          "convergence_tolerance": null,
+          "convergence_variable": null,
+          "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+          "hand_coded_jacobian_variable": "DF",
+          "iteration_variable": "DEQPL",
+          "loop_end_line": 110,
+          "loop_start_line": 88,
+          "residual_variable": "F",
+          "update_line": 107,
+          "update_sign": "-"
+        }
+      ],
+      "model": "m5_cpflow",
+      "origin": "repository",
+      "probe_hand_coded_jacobian": 1.1424307840812775,
+      "probe_residual_at_iterate": 0.0,
+      "residual_at_iterate": 0.0,
+      "rows": [
+        {
+          "absolute_error": 4.427569422205124e-12,
+          "agrees": true,
+          "array": "DSTATEV_DP",
+          "branch": "local_solve",
+          "component": 3,
+          "increment": 20,
+          "judged_by": "within_reference_resolution",
+          "oti": 1.142430784081278,
+          "oti_direction": 0,
+          "parameter": "GSEED",
+          "props_index": 9,
+          "reference": 1.1424307840768504,
+          "relative_error": 3.875569079471939e-12
+        }
+      ],
+      "slots": {
+        "nprops_extended": 9,
+        "nstatv_extended": 5,
+        "props_seed": 9,
+        "statev_counter": 5,
+        "statev_iterate": 2,
+        "statev_jacobian": 4,
+        "statev_residual": 3
+      },
+      "solve": {
+        "convergence_tolerance": null,
+        "convergence_variable": null,
+        "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+        "hand_coded_jacobian_variable": "DF",
+        "iteration_variable": "DEQPL",
+        "loop_end_line": 110,
+        "loop_start_line": 88,
+        "residual_variable": "F",
+        "update_line": 107,
+        "update_sign": "-"
+      },
+      "source": "umat.for",
+      "source_sha256": "d5e057b265ba2c1277c819fa0ac755aa478e40c464e6de8c044f5f2317843a34",
+      "stages": {
+        "compiled_original_probe": {
+          "status": "succeeded"
+        },
+        "compiled_oti_probe": {
+          "status": "succeeded"
+        },
+        "converged_iterate_located": {
+          "increment": 20,
+          "iterate": 3.050757889861489e-05,
+          "residual": 0.0,
+          "status": "succeeded"
+        },
+        "fd_reference_resolved": {
+          "status": "succeeded",
+          "step": 3.0507578898614893e-09,
+          "value": 1.1424307840768504
+        },
+        "jacobian_extracted": {
+          "status": "succeeded",
+          "value": 1.142430784081278
+        },
+        "jacobian_verified": {
+          "reason": null,
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 3.017795740819877e-16
+        },
+        "probe_injected": {
+          "status": "succeeded"
+        },
+        "recording_is_non_perturbing": {
+          "max_state_drift": 0.0,
+          "max_stress_drift": 0.0,
+          "reason": null,
+          "status": "succeeded"
+        },
+        "solve_discovered": {
+          "status": "succeeded"
+        }
+      },
+      "target_increment": 20
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "m6_fcc",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/m6_fcc/umat.for",
+      "source_sha256": "b478dc5668e5d54a24e551fbb1ab17423752726ae542f7f1678becd9e1759e97"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_aniso_ortho",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_aniso_ortho/umat.for",
+      "source_sha256": "4d4b47042db8a56bd628b51c388bafce6794a0a4b81b6fb5ca8445ac2c0950c1"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_damage_elastic",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_damage_elastic/umat.for",
+      "source_sha256": "6dfe488f746599d385fead57cc05e9a95198ab9323cf6f39fd3ba3663a2d2a9d"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_drucker_prager",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_drucker_prager/umat.for",
+      "source_sha256": "4f2da87f5dd18e59cd84d0c74f9482550d7ed9911ca7536d9264045403d80b57"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_eco",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_eco/umat.for",
+      "source_sha256": "c9276c90a7115840ea11a2b882b58848ff7ad5a8a596a0a8e78ffd3dff7ec33f"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_j2_bilinear",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_j2_bilinear/umat.for",
+      "source_sha256": "7c478b3296aa0d30953b69325ab60ced696e4fb0918e2baa2936c182dd6d69a7"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_j2_combined",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_j2_combined/umat.for",
+      "source_sha256": "beedc521fb56bb314c1c700ec0ef07683d4163ea978a33239a2e2e71a5ed4c0d"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_j2_kinematic",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_j2_kinematic/umat.for",
+      "source_sha256": "80bede9a4f207d861ff9444f7685773244923c8e1d9533ffe8fd3747eadaec82"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_lame_elastic",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_lame_elastic/umat.for",
+      "source_sha256": "ddd5d88b0ff315668af06f2942fe948629c317eb181a96e4b30e7b09d6d8793f"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_maxwell_ve",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_maxwell_ve/umat.for",
+      "source_sha256": "f6a790911f1089cfd5917d066761f67ee20c37db4472c8c9153425722f5737d8"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_mooney_small",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_mooney_small/umat.for",
+      "source_sha256": "6ebda54bf6b98680161bd50fd37169100aa45c61460df94887e406be56444a32"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_perzyna_linear",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_perzyna_linear/umat.for",
+      "source_sha256": "737c8cc9ea2efa7856852bb2c73e0de7538c79347ce7e3a4463eb53659b2d8f2"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_real_ECL_TEMP",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_real_ECL_TEMP/umat.for",
+      "source_sha256": "2333424b4479f2844cc348d210dfda9889515a09a9d7141ee27d50246f108595"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_real_PCO",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_real_PCO/umat.for",
+      "source_sha256": "7233f36376051fe8b93657f789083adc7b38d3749d2760a5d08946e7c360da10"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_thermoelastic",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_thermoelastic/umat.for",
+      "source_sha256": "8252525be0837b3d5c8fadb1f3b2df506fd4286e82da5a4677564e5c5295229f"
+    },
+    {
+      "bucket": "no_local_solve",
+      "id": "sweep_transiso",
+      "local_solves_discovered": [],
+      "origin": "repository",
+      "reason": "this model integrates its constitutive law without a local Newton iteration, so it has no internal Jacobian",
+      "source": "parameter_sensitivity/models/sweep_transiso/umat.for",
+      "source_sha256": "65a47c944079ab6929b5a4b47295fc11222ebf72dd4ce3559babb74bd59543a8"
+    },
+    {
+      "bucket": "blocked",
+      "constitutive_class": "viscoplastic damage, combined nonlinear isotropic/kinematic hardening, thermomechanical",
+      "id": "icp_UMAT_NKH_1.02",
+      "license": "not stated in the source header",
+      "origin": "external",
+      "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
+      "reason": "UMAT_OTI_EXTERNAL_SOURCES is unset, so this non-redistributable source was not resolved; set it to the directory holding these files to include them in the round",
+      "source": "ICP/UMAT_NKH_1.02.for"
+    },
+    {
+      "bucket": "blocked",
+      "constitutive_class": "plasticity, combined hardening",
+      "id": "icp_UMAT_PCO",
+      "license": "not stated in the source header",
+      "origin": "external",
+      "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
+      "reason": "UMAT_OTI_EXTERNAL_SOURCES is unset, so this non-redistributable source was not resolved; set it to the directory holding these files to include them in the round",
+      "source": "ICP/UMAT_PCO.for"
+    },
+    {
+      "bucket": "blocked",
+      "constitutive_class": "viscoplastic damage, classical theory",
+      "id": "icp_UMAT_VPDCL",
+      "license": "not stated in the source header",
+      "origin": "external",
+      "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
+      "reason": "UMAT_OTI_EXTERNAL_SOURCES is unset, so this non-redistributable source was not resolved; set it to the directory holding these files to include them in the round",
+      "source": "ICP/UMAT_VPDCL.for"
+    },
+    {
+      "bucket": "blocked",
+      "constitutive_class": "plasticity, classical",
+      "id": "icp_UMAT_PCL",
+      "license": "not stated in the source header",
+      "origin": "external",
+      "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
+      "reason": "UMAT_OTI_EXTERNAL_SOURCES is unset, so this non-redistributable source was not resolved; set it to the directory holding these files to include them in the round",
+      "source": "ICP/UMAT_PCL.for"
+    },
+    {
+      "bucket": "blocked",
+      "constitutive_class": "plasticity, kinematic hardening",
+      "id": "icp_UMAT_PCLK",
+      "license": "not stated in the source header",
+      "origin": "external",
+      "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
+      "reason": "UMAT_OTI_EXTERNAL_SOURCES is unset, so this non-redistributable source was not resolved; set it to the directory holding these files to include them in the round",
+      "source": "ICP/UMAT_PCLK.for"
+    }
+  ]
+}
