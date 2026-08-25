@@ -73,6 +73,11 @@ class GenericPSContract:
     dstran_per_increment: tuple[float, ...]
     n_increments: int
     static_props: tuple[float, ...] = field(default_factory=tuple)
+    #: Row-major 3x3 added to the deformation gradient each increment. Required
+    #: for a finite-strain UMAT: one that computes its stress from DFGRD1 sees
+    #: an unchanging identity otherwise and returns zero stress for every
+    #: increment, which looks like a successful run with trivial output.
+    deformation_gradient_increment: tuple[float, ...] = field(default_factory=tuple)
 
 
 @dataclass
@@ -454,6 +459,7 @@ def _emit_driver(
     lines.append(f"  TYPE({type_name}) :: PNEWDT, CELENT")
     lines.append(f"  TYPE({type_name}) :: DFGRD0(3,3), DFGRD1(3,3)")
     lines.append(f"  TYPE({type_name}) :: TIME(2), DTIME, TEMP, DTEMP, PREDEF(1), DPRED(1)")
+    lines.append(f"  TYPE({type_name}) :: DFGRDINC(3,3)")
     lines.append(f"  TYPE({type_name}) :: COORDS(3), DROT(3,3)")
     lines.append("  CHARACTER(len=80) :: CMNAME")
     lines.append("  INTEGER :: NOEL, NPT, LAYER, KSPT, KSTEP, KINC")
@@ -486,6 +492,7 @@ def _emit_driver(
     lines.append("     DFGRD0(I,I) = 1.0_DP")
     lines.append("     DFGRD1(I,I) = 1.0_DP")
     lines.append("  END DO")
+    lines.append("  DFGRDINC = 0.0_DP")
     lines.append("  PNEWDT = 1.0_DP; CELENT = 1.0_DP")
     lines.append('  CMNAME = "MATERIAL_OTI"')
     lines.append("  NOEL = 1; NPT = 1; LAYER = 1; KSPT = 1; KSTEP = 1; KINC = 1")
@@ -499,12 +506,26 @@ def _emit_driver(
     lines.append(f'  WRITE(U_STATE, \'(A)\') "{header_state}"')
     lines.append("")
     lines.append("  ! -- Loading loop ---------------------------------------------")
+    increment = contract.deformation_gradient_increment
+    if increment:
+        if len(increment) != 9:
+            raise ValueError(
+                "deformation_gradient_increment must hold nine row-major values")
+        lines.append("  ! -- Finite-strain deformation gradient increment -------------")
+        for index, value in enumerate(increment):
+            row, column = divmod(index, 3)
+            lines.append(f"  DFGRDINC({row + 1},{column + 1}) = {value:.17e}_DP")
+        lines.append("")
+
     lines.append("  DO INC = 1, N_INC")
     # The increment number is a UMAT argument that models legitimately branch on
     # (first-increment initialisation, step-dependent logic).  Pinning it at 1
     # would make the transformed build see a different loading history from the
     # untransformed reference and silently break primal parity for such models.
     lines.append("     KINC = INC")
+    if increment:
+        lines.append("     DFGRD0 = DFGRD1")
+        lines.append("     DFGRD1 = DFGRD1 + DFGRDINC")
     lines.append(dstran_lines)
     lines.append("")
     lines.append("     CALL umat_oti(STRESS, STATEV, DDSDDE, SSE, SPD, SCD, &")
@@ -618,7 +639,7 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         # any scope that renamed them away to avoid colliding with a UMAT's own
         # variables of the same name.
         "  PRIVATE",
-        "  PUBLIC :: MIN, MAX, SIGN",
+        "  PUBLIC :: MIN, MAX, SIGN, OPERATOR(+)",
         "  INTERFACE MIN",
         "    MODULE PROCEDURE oti_min_or, oti_min_ro",
         "  END INTERFACE MIN",
@@ -628,6 +649,13 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "  INTERFACE SIGN",
         "    MODULE PROCEDURE oti_sign_oo, oti_sign_or",
         "  END INTERFACE SIGN",
+        # Unary plus. The generated module defines the binary operators but not
+        # this one, so an expression like COFACTOR(2,2) = +(A(1,1)*A(3,3)-...)
+        # -- ordinary in cofactor and adjugate code, and legal Fortran -- fails
+        # with "Operand of unary numeric operator '+' is UNKNOWN".
+        "  INTERFACE OPERATOR(+)",
+        "    MODULE PROCEDURE oti_unary_plus",
+        "  END INTERFACE",
         "CONTAINS",
     ]
 
@@ -678,6 +706,12 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "      RES = ABS(A)",
         "    END IF",
         "  END FUNCTION oti_sign_or",
+        "  FUNCTION oti_unary_plus(A) RESULT(RES)",
+        "    IMPLICIT NONE",
+        f"    TYPE({type_name}), INTENT(IN) :: A",
+        f"    TYPE({type_name}) :: RES",
+        "    RES = A",
+        "  END FUNCTION oti_unary_plus",
         "END MODULE oti_intrinsics",
         "",
     ]

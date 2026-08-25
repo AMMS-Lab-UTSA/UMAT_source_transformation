@@ -330,6 +330,43 @@ def _row(*, identity, origin, provenance, license, source, contract, v2,
     }
 
 
+def _structural_caveat(rows: list[dict]) -> str:
+    """State the coverage the matrix actually has, computed from the rows.
+
+    A caveat written once and left alone becomes wrong the moment coverage
+    changes, and a stale caveat understating the evidence is as misleading as
+    one overstating it.
+    """
+    def verified(predicate) -> list[str]:
+        return sorted(row["identity"] for row in rows
+                      if predicate(row) and row.get("numerical_verification")
+                      == "succeeded")
+
+    multi = verified(lambda r: r.get("file_layout") == "multi_file")
+    finite = verified(lambda r: "finite" in (r.get("constitutive_class") or "").lower())
+    free_form = verified(lambda r: r.get("source_form") == "free")
+    parts = [
+        "The parameter-sensitivity benchmark set is uniform by construction: "
+        "single-file, fixed-form, small-strain, at most one helper routine. On "
+        "its own it demonstrates breadth of constitutive class rather than of "
+        "source structure.",
+    ]
+    parts.append(
+        f"Multi-file closures are demonstrated by {len(multi)} verified "
+        f"sources ({', '.join(multi)})." if multi else
+        "No multi-file source has been verified.")
+    parts.append(
+        f"Finite-strain kinematics are demonstrated by {len(finite)} verified "
+        f"sources ({', '.join(finite)}), driven through the deformation "
+        "gradient rather than the strain increment." if finite else
+        "No finite-strain source has been verified.")
+    parts.append(
+        f"Free-form sources: {len(free_form)} verified." if free_form else
+        "Free-form and module-based sources are still unrepresented; every row "
+        "in this matrix is fixed-form.")
+    return " ".join(parts)
+
+
 def canonical_identity(source: Path, roots=()):
     """The implementation's identity, independent of where the copy was found."""
     try:
@@ -445,14 +482,7 @@ def main(argv: list[str] | None = None) -> int:
         "by_numerical_verification": tally("numerical_verification"),
         "by_internal_jacobian": tally("internal_jacobian"),
         "by_abaqus": tally("abaqus"),
-        "structural_diversity_caveat": (
-            "Every parameter-sensitivity benchmark row is single-file, fixed-form "
-            "and small-strain with at most one helper routine, so that set alone "
-            "demonstrates breadth of constitutive class rather than of source "
-            "structure. The external corpus rows supply the multi-file evidence: "
-            "candidates whose helper closure spans sibling files are resolved, "
-            "compiled and verified. Free-form and finite-strain sources are still "
-            "not represented anywhere in this matrix."),
+        "structural_diversity_caveat": _structural_caveat(rows),
         "multi_file_verified": sorted(
             row["identity"] for row in rows
             if row.get("file_layout") == "multi_file"

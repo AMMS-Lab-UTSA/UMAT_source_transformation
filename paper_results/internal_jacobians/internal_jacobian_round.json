@@ -2,16 +2,16 @@
   "funnel": {
     "_note": "candidate_sources counts appearances; unique_source_implementations counts distinct code. The same UMAT is reachable from the in-repository archive and from the pinned upstream snapshot, and running it from both with different upstream material is two validation events against one implementation.",
     "blocked": 6,
-    "candidate_sources": 36,
+    "candidate_sources": 39,
     "extracted_and_disagreeing": 0,
-    "no_local_solve": 22,
+    "no_local_solve": 25,
     "sources_with_a_local_solve": 14,
-    "unique_source_implementations": 29,
+    "unique_source_implementations": 32,
     "unique_sources_verified": 6,
     "unique_sources_with_a_local_solve": 8,
     "verification_executions": 8
   },
-  "generated_at": "2026-08-25T20:19:00.763946+00:00",
+  "generated_at": "2026-08-25T20:56:19.198670+00:00",
   "records": [
     {
       "bucket": "no_local_solve",
@@ -2692,16 +2692,43 @@
     },
     {
       "bucket": "no_local_solve",
-      "canonical_source_id": "7907e09d7212c8e9914c68df56ca1beb",
+      "canonical_source_id": "adbf5968a37861c3ff2ec07fd8f47006",
       "constitutive_class": "crystal plasticity, finite strain, COMMON-block state",
       "id": "ngrilli_umat",
       "identity": {
-        "canonical_source_id": "7907e09d7212c8e9914c68df56ca1beb",
-        "closure_size": 1,
-        "code_only_sha256": "6fbb4c84dfc965bd756284da1d39165c9430e6a876767ef52e4c02a90907837f",
+        "canonical_source_id": "adbf5968a37861c3ff2ec07fd8f47006",
+        "closure_routines": [
+          "KCRSS",
+          "KCURLET",
+          "KDETER",
+          "KDIRNS",
+          "KDOTPROD",
+          "KFINDNEIGHBOURHOOD",
+          "KGMATVEC6",
+          "KGNDL2ET",
+          "KHARDENING",
+          "KMAT",
+          "KMATERIALPARAM",
+          "KMATVEC6",
+          "KRHOTWININIT",
+          "KSLIP0",
+          "KSLIP5ET",
+          "KSLIP6ET",
+          "KSLIPPOWERLAW",
+          "KTWINROT",
+          "KTWINVOLFRACINTEGRAL",
+          "KVECMAT6",
+          "KVECPROD",
+          "LAPINVERSE",
+          "ROTORD4SIG",
+          "TRACE",
+          "UMAT"
+        ],
+        "closure_size": 25,
+        "code_only_sha256": "d11ec99edc2045ed9963ac42c4ea8b1d7b262e03eae49c69f150d42113a69b7f",
         "entry_routine": "UMAT",
-        "identity_kind": "single_file",
-        "normalised_content_sha256": "cd7f7c0baa970cde5118ef35a69e4e77f3232cdff47ceed736dc6df33f9adf00"
+        "identity_kind": "dependency_closure",
+        "normalised_content_sha256": "16f788bf072126966698ef3c453792a15139c22a4798c94155f493e8d1169223"
       },
       "license": "MIT",
       "local_solves_discovered": [],
@@ -2709,6 +2736,66 @@
       "provenance": "https://github.com/ngrilli/Oxford_Crystal_Plasticity.git @ 85102ed35dc4",
       "source": "permissive/ngrilli_Oxford_Crystal_Plasticity/umat.for",
       "source_sha256": "0732d6432730e20089416f1485343229b7eeacbc8b3a18853705b3b882f1526d"
+    },
+    {
+      "bucket": "no_local_solve",
+      "canonical_source_id": "fb23d6963fe5971aaba22f4fa6e82a9a",
+      "constitutive_class": "neo-Hookean hyperelasticity, finite strain",
+      "id": "lucarini_neohookean",
+      "identity": {
+        "canonical_source_id": "fb23d6963fe5971aaba22f4fa6e82a9a",
+        "closure_size": 1,
+        "code_only_sha256": "56d90c1a85672b1428a7be2d4a3445199488ddae847e660c79e282f6d269e374",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "100d0d514d12a70225654eb6a2e3ce20f7aaa791ce1c7012a985754bbdeaa361"
+      },
+      "license": "MIT",
+      "local_solves_discovered": [],
+      "origin": "external corpus (pinned snapshot)",
+      "provenance": "https://github.com/sergiolucarini/UMAT4COMSOL.git @ e62506fd8426",
+      "source": "permissive/sergiolucarini_UMAT4COMSOL/neohookean/umat.f",
+      "source_sha256": "513cb6a98be7f433c306ae1bc600de8910816d84022ad112dee447dd91fe16f8"
+    },
+    {
+      "bucket": "no_local_solve",
+      "canonical_source_id": "4497f62852c0db7d48f73f40b1c03ef2",
+      "constitutive_class": "finite-strain J2 elastoplasticity, linear hardening",
+      "id": "lucarini_elastoplastic",
+      "identity": {
+        "canonical_source_id": "4497f62852c0db7d48f73f40b1c03ef2",
+        "closure_size": 1,
+        "code_only_sha256": "5be6a09f5c3cb79447c1234aa41d0594f2a711ae16f5181b68023a92335057e9",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "c3b2510f7f2f4dbff225b624f11fd8bb5ca9e2010b3200d035c1ac36a56a7b3d"
+      },
+      "license": "MIT",
+      "local_solves_discovered": [],
+      "origin": "external corpus (pinned snapshot)",
+      "provenance": "https://github.com/sergiolucarini/UMAT4COMSOL.git @ e62506fd8426",
+      "source": "permissive/sergiolucarini_UMAT4COMSOL/elastoplastic/umat.f",
+      "source_sha256": "dafd083b99b2dc3fa14a9332505e6a69ccaee5c0d9d0e58edf1738718dfb2015"
+    },
+    {
+      "bucket": "no_local_solve",
+      "canonical_source_id": "108518e08678d2939acf0eac4859de80",
+      "constitutive_class": "crystal plasticity (Huang/Kysar lineage)",
+      "id": "lucarini_crystalplasticity",
+      "identity": {
+        "canonical_source_id": "108518e08678d2939acf0eac4859de80",
+        "closure_size": 1,
+        "code_only_sha256": "18ba966c0b49984f6aa2c7b5ed93f92ec615935e3a6da4c187203601059ffec5",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "2790661de6f4493d5ed64bf8001fb672230144d03d5d36c2a4e46f7baf0412c5"
+      },
+      "license": "MIT",
+      "local_solves_discovered": [],
+      "origin": "external corpus (pinned snapshot)",
+      "provenance": "https://github.com/sergiolucarini/UMAT4COMSOL.git @ e62506fd8426",
+      "source": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+      "source_sha256": "8e17d7614676e8b4afb99c5e90548b09b493f3a9371c437cf1ef4fb4035ab784"
     }
   ]
 }

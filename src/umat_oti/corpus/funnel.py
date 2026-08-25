@@ -89,12 +89,22 @@ class MaterialData:
     provenance: str
     parameters: tuple[tuple[str, int], ...] = ()
     is_physical: bool = True
+    #: Row-major 3x3 added to the deformation gradient each increment. Required
+    #: by a finite-strain UMAT; absent for a small-strain one.
+    deformation_gradient_increment: tuple[float, ...] = ()
+
+    @property
+    def finite_strain(self) -> bool:
+        return bool(self.deformation_gradient_increment)
 
     def as_dict(self) -> dict:
         return {
             "props": list(self.props),
             "dstran_per_increment": list(self.dstran_per_increment),
             "n_increments": self.n_increments,
+            "finite_strain": self.finite_strain,
+            "deformation_gradient_increment":
+                list(self.deformation_gradient_increment),
             "provenance": self.provenance,
             "parameters": [{"name": n, "props_index": i} for n, i in self.parameters],
             "material_is_physical": self.is_physical,
@@ -120,6 +130,11 @@ class Candidate:
     material: Optional[MaterialData] = None
     retrieved_at: str = ""
     notes: str = ""
+    #: Absolute paths to numerical libraries the closure needs at link time.
+    #: These are mathematics, not glue: DGETRF and friends are used as-is rather
+    #: than stubbed, because a stub would silently change the results.
+    link_libraries: tuple[str, ...] = ()
+    exclude_path_fragments: tuple[str, ...] = ()
     #: Path as it should appear in evidence: relative to the pinned snapshot
     #: root, not to this machine. The snapshot lives in a sibling checkout, so
     #: an absolute path here would make every generated artefact
@@ -249,7 +264,8 @@ def run_funnel(candidate: Candidate, work_dir: Path, *,
     # --- entry + dependency closure --------------------------------------
     try:
         graph = resolve_closure(candidate.source_path, entry=candidate.entry,
-                                roots=candidate.dependency_roots)
+                                roots=candidate.dependency_roots,
+                                exclude=candidate.exclude_path_fragments)
     except DependencyResolutionError as exc:
         record.stopped("entry_detected", exc.detail, code=exc.code)
         return record.as_dict()
@@ -341,7 +357,9 @@ def run_funnel(candidate: Candidate, work_dir: Path, *,
     try:
         executable = build_original_driver(
             prepared, reference_dir, ntens=candidate.ntens,
-            nstatv=candidate.nstatv, nprops=len(material.props))
+            nstatv=candidate.nstatv, nprops=len(material.props),
+            finite_strain=material.finite_strain,
+            link_libraries=candidate.link_libraries)
     except RuntimeError as exc:
         record.stopped("original_compiled", str(exc)[:600])
         return record.as_dict()
@@ -359,7 +377,9 @@ def run_funnel(candidate: Candidate, work_dir: Path, *,
         ndi=candidate.ndi, nshr=candidate.nshr,
         dstran_per_increment=tuple(material.dstran_per_increment),
         n_increments=material.n_increments,
-        static_props=tuple(material.props))
+        static_props=tuple(material.props),
+        deformation_gradient_increment=tuple(
+            material.deformation_gradient_increment))
     try:
         transform_umat_for_parameter_sensitivity(contract=contract, output_dir=ps_dir)
     except Exception as exc:  # noqa: BLE001 - reported, never swallowed
@@ -376,8 +396,12 @@ def run_funnel(candidate: Candidate, work_dir: Path, *,
 
     # --- execute both -----------------------------------------------------
     try:
-        original = replay(executable, list(material.props), path,
-                          ntens=candidate.ntens, nstatv=candidate.nstatv)
+        original = replay(
+            executable, list(material.props), path,
+            ntens=candidate.ntens, nstatv=candidate.nstatv,
+            deformation_gradient_increment=(
+                list(material.deformation_gradient_increment)
+                if material.finite_strain else None))
     except RuntimeError as exc:
         record.stopped("original_executed", str(exc)[:600])
         return record.as_dict()
@@ -412,9 +436,13 @@ def run_funnel(candidate: Candidate, work_dir: Path, *,
     # --- independent reference -------------------------------------------
     indices = [i for _, i in parameters]
     try:
-        reference = centered_fd(executable, list(material.props), path,
-                                ntens=candidate.ntens, nstatv=candidate.nstatv,
-                                props_indices=indices)
+        reference = centered_fd(
+            executable, list(material.props), path,
+            ntens=candidate.ntens, nstatv=candidate.nstatv,
+            props_indices=indices,
+            deformation_gradient_increment=(
+                list(material.deformation_gradient_increment)
+                if material.finite_strain else None))
     except RuntimeError as exc:
         record.stopped("reference_resolved", str(exc)[:400])
         return record.as_dict()
@@ -439,9 +467,12 @@ def run_funnel(candidate: Candidate, work_dir: Path, *,
         record.stopped("derivatives_verified", "no comparable derivative rows")
         return record.as_dict()
 
-    rows = _readjudicate(rows, executable=executable, props=list(material.props),
-                         path=path, candidate=candidate, parameters=parameters,
-                         ps_dir=ps_dir, tolerance=relative_tolerance)
+    rows = _readjudicate(
+        rows, executable=executable, props=list(material.props), path=path,
+        candidate=candidate, parameters=parameters, ps_dir=ps_dir,
+        tolerance=relative_tolerance,
+        gradient=(list(material.deformation_gradient_increment)
+                  if material.finite_strain else None))
     agreeing = [r for r in rows if r.agrees is True]
     disagreeing = [r for r in rows if r.agrees is False]
     unresolved = [r for r in rows if r.agrees is None]
@@ -482,7 +513,7 @@ def run_funnel(candidate: Candidate, work_dir: Path, *,
 
 
 def _readjudicate(rows, *, executable, props, path, candidate, parameters,
-                  ps_dir, tolerance):
+                  ps_dir, tolerance, gradient=None):
     """Re-judge disagreeing rows against a converged step, as the sweep does."""
     failing = [r for r in rows if r.agrees is False]
     if not failing:
@@ -497,7 +528,8 @@ def _readjudicate(rows, *, executable, props, path, candidate, parameters,
             continue
         ladder = measure_reference_resolution(
             executable, props, path, ntens=candidate.ntens,
-            nstatv=candidate.nstatv, props_index=index, array=array)
+            nstatv=candidate.nstatv, props_index=index, array=array,
+            deformation_gradient_increment=gradient)
         table = read_oti_csv(source_csv)
         for row in failing:
             if (row.parameter, row.array) != (parameter_name, array):

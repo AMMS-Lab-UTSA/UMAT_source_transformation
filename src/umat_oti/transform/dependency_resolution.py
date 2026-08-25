@@ -72,6 +72,19 @@ _END_RE = re.compile(
 
 #: Routines supplied by the Abaqus runtime rather than by any source file. They
 #: are not missing dependencies; a standalone build stubs or omits them.
+#: Symbols supplied by a numerical library rather than by any source file.
+#: These are mathematics, not glue: stubbing them would silently change results,
+#: so they are recorded as a link requirement and the real library is used.
+EXTERNAL_LIBRARY_ROUTINES: dict[str, str] = {
+    # LAPACK
+    "DGETRF": "lapack", "DGETRI": "lapack", "DGETRS": "lapack",
+    "DGESV": "lapack", "DGEEV": "lapack", "DSYEV": "lapack",
+    "DPOTRF": "lapack", "DGELS": "lapack", "DGESVD": "lapack",
+    # BLAS
+    "DGEMM": "blas", "DGEMV": "blas", "DAXPY": "blas", "DDOT": "blas",
+    "DSCAL": "blas", "DNRM2": "blas", "DCOPY": "blas",
+}
+
 ABAQUS_RUNTIME_ROUTINES = frozenset({
     "XIT", "STDB_ABQERR", "GETOUTDIR", "GETJOBNAME", "GETNUMCPUS",
     "SPRINC", "SPRIND", "ROTSIG", "SINV", "GETPARTINFO", "GETVRM",
@@ -226,8 +239,10 @@ class DependencyGraph:
     missing: tuple[MissingDependency, ...] = ()
     duplicates: tuple[DuplicateDefinition, ...] = ()
     runtime_calls: tuple[str, ...] = ()
+    library_calls: dict[str, str] = field(default_factory=dict)
     includes: tuple[str, ...] = ()
     searched_roots: tuple[Path, ...] = ()
+    excluded_fragments: tuple[str, ...] = ()
 
     @property
     def external_definitions(self) -> tuple[RoutineDefinition, ...]:
@@ -257,6 +272,7 @@ class DependencyGraph:
             "entry_path": rel(self.entry_path),
             "multi_file": self.is_multi_file,
             "searched_roots": [rel(r) for r in self.searched_roots],
+            "excluded_path_fragments": list(self.excluded_fragments),
             "resolved": {name: d.as_dict(relative_to=relative_to)
                          for name, d in sorted(self.resolved.items())},
             "external_files": sorted({rel(d.path) for d in self.external_definitions}),
@@ -266,6 +282,8 @@ class DependencyGraph:
             "duplicates": [d.as_dict(relative_to=relative_to) for d in self.duplicates],
             "conflicts": [d.symbol for d in self.conflicts],
             "abaqus_runtime_calls": list(self.runtime_calls),
+            "external_library_calls": dict(sorted(self.library_calls.items())),
+            "required_libraries": sorted(set(self.library_calls.values())),
             "includes": list(self.includes),
         }
 
@@ -325,12 +343,21 @@ def _make_definition(name: str, kind: str, path: Path, start: int, end: int,
         fixed_form=fixed)
 
 
-def index_sources(roots: Iterable[Path]) -> SourceIndex:
+def index_sources(roots: Iterable[Path],
+                  exclude: Sequence[str] = ()) -> SourceIndex:
     """Index every Fortran routine definition under ``roots``, deterministically.
 
     Roots are searched in the order given and files within a root in sorted
     order, so the same inputs always produce the same index and therefore the
     same donor choice.
+
+    ``exclude`` drops paths whose repository-relative form contains any of the
+    given fragments. Some repositories ship alternative variants of a routine
+    beside the canonical one -- the Oxford crystal-plasticity code keeps
+    per-example copies of kmat.f and kMaterialParam.f under ExampleInputFiles --
+    and those are different physics, not duplicates. Excluding them is a
+    declaration about which tree is canonical, and it is recorded in the graph
+    rather than applied silently.
     """
     index = SourceIndex()
     root_list: list[Path] = []
@@ -345,6 +372,8 @@ def index_sources(roots: Iterable[Path]) -> SourceIndex:
                 p for p in root.rglob("*")
                 if p.is_file() and p.suffix in FORTRAN_SUFFIXES)
         for path in candidates:
+            if any(fragment in str(path) for fragment in exclude):
+                continue
             files.append(path)
             for definition in _definitions_in(path):
                 index.definitions.setdefault(definition.name, []).append(definition)
@@ -398,7 +427,8 @@ def _referenced_symbols(definition: RoutineDefinition,
 
 
 def resolve_closure(entry_path: Path, *, entry: str = "UMAT",
-                    roots: Sequence[Path] = ()) -> DependencyGraph:
+                    roots: Sequence[Path] = (),
+                    exclude: Sequence[str] = ()) -> DependencyGraph:
     """Build the transitive routine closure of ``entry`` across ``roots``.
 
     The entry file is always searched first and implicitly, so a self-contained
@@ -407,7 +437,7 @@ def resolve_closure(entry_path: Path, *, entry: str = "UMAT",
     """
     entry_path = Path(entry_path)
     search_roots = [entry_path, *[Path(r) for r in roots]]
-    index = index_sources(search_roots)
+    index = index_sources(search_roots, exclude=exclude)
 
     entry_definitions = [d for d in index.get(entry) if d.path == entry_path]
     if not entry_definitions:
@@ -418,11 +448,13 @@ def resolve_closure(entry_path: Path, *, entry: str = "UMAT",
 
     graph = DependencyGraph(entry=entry.upper(), entry_path=entry_path,
                             searched_roots=tuple(Path(r) for r in search_roots))
+    graph.excluded_fragments = tuple(exclude)
     graph.resolved[entry.upper()] = entry_definitions[0]
 
     missing: dict[str, set[str]] = {}
     duplicates: dict[str, DuplicateDefinition] = {}
     runtime: set[str] = set()
+    libraries: dict[str, str] = {}
     includes: set[str] = set()
     pending = [entry.upper()]
     visited: set[str] = set()
@@ -444,6 +476,9 @@ def resolve_closure(entry_path: Path, *, entry: str = "UMAT",
                 continue
             if symbol in ABAQUS_RUNTIME_ROUTINES:
                 runtime.add(symbol)
+                continue
+            if symbol in EXTERNAL_LIBRARY_ROUTINES:
+                libraries[symbol] = EXTERNAL_LIBRARY_ROUTINES[symbol]
                 continue
             candidates = index.get(symbol)
             if not candidates:
@@ -480,6 +515,7 @@ def resolve_closure(entry_path: Path, *, entry: str = "UMAT",
         for symbol, callers in sorted(missing.items()))
     graph.duplicates = tuple(duplicates[s] for s in sorted(duplicates))
     graph.runtime_calls = tuple(sorted(runtime))
+    graph.library_calls = dict(sorted(libraries.items()))
     graph.includes = tuple(sorted(includes))
     return graph
 

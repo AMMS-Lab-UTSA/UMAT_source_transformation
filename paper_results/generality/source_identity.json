@@ -1,28 +1,28 @@
 {
   "counts": {
-    "content_deduplicated_sources": 42,
-    "independent_upstream_repositories": 2,
+    "content_deduplicated_sources": 45,
+    "independent_upstream_repositories": 3,
     "note": "content_deduplicated_sources counts implementations, not appearances. A source found both locally and upstream is one source with two origins and however many validation events were run against it.",
-    "raw_discovered_files": 51,
-    "sources_found_at_more_than_one_origin": 40,
-    "unique_constitutive_models": 24,
-    "unique_dependency_closures": 3,
+    "raw_discovered_files": 54,
+    "sources_found_at_more_than_one_origin": 43,
+    "unique_constitutive_models": 27,
+    "unique_dependency_closures": 4,
     "validation_events_by_kind": {
-      "CORPUS offline round": 8,
+      "CORPUS offline round": 11,
       "TABLE-2 paired Abaqus": 19,
-      "TABLE-3 internal Jacobian": 36,
+      "TABLE-3 internal Jacobian": 39,
       "TABLE-4 higher order": 4,
       "TABLE-6 parameter sensitivity": 18
     },
-    "verified_unique_sources": 34,
+    "verified_unique_sources": 36,
     "verified_unique_sources_by_event": {
-      "CORPUS offline round": 5,
+      "CORPUS offline round": 7,
       "TABLE-2 paired Abaqus": 17,
       "TABLE-3 internal Jacobian": 6,
       "TABLE-6 parameter sensitivity": 17
     }
   },
-  "generated_at": "2026-08-25T20:21:18.488288+00:00",
+  "generated_at": "2026-08-25T20:56:21.086788+00:00",
   "policy": "Identity is computed from normalised source content (single file) or from the resolved routine closure (multi-file). Paths are excluded: the same closure lives at different relative paths in different origins, and hashing layout would make identical code hash differently.",
   "schema": "umat-oti-source-identity/1",
   "sources": {
@@ -201,6 +201,47 @@
       "verified_by": [
         "TABLE-2 paired Abaqus"
       ]
+    },
+    "108518e08678d2939acf0eac4859de80": {
+      "canonical_source_id": "108518e08678d2939acf0eac4859de80",
+      "closure_size": 1,
+      "code_only_sha256": "18ba966c0b49984f6aa2c7b5ed93f92ec615935e3a6da4c187203601059ffec5",
+      "constitutive_models": [
+        "crystal plasticity (Huang/Kysar lineage)"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "lucarini_crystalplasticity"
+      ],
+      "normalised_content_sha256": "2790661de6f4493d5ed64bf8001fb672230144d03d5d36c2a4e46f7baf0412c5",
+      "origins": [
+        "external corpus: https://github.com/sergiolucarini/UMAT4COMSOL.git@e62506fd8426",
+        "internal-Jacobian round (external corpus (pinned snapshot))"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [
+        "https://github.com/sergiolucarini/UMAT4COMSOL.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "lucarini_crystalplasticity",
+          "origin": "external corpus: https://github.com/sergiolucarini/UMAT4COMSOL.git@e62506fd8426",
+          "verified": false
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "lucarini_crystalplasticity",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": false
+        }
+      ],
+      "verified_by": []
     },
     "1aa21df0267c34b3dcd4f541f480de25": {
       "canonical_source_id": "1aa21df0267c34b3dcd4f541f480de25",
@@ -588,6 +629,49 @@
       "verified_by": [
         "TABLE-3 internal Jacobian",
         "TABLE-2 paired Abaqus"
+      ]
+    },
+    "4497f62852c0db7d48f73f40b1c03ef2": {
+      "canonical_source_id": "4497f62852c0db7d48f73f40b1c03ef2",
+      "closure_size": 1,
+      "code_only_sha256": "5be6a09f5c3cb79447c1234aa41d0594f2a711ae16f5181b68023a92335057e9",
+      "constitutive_models": [
+        "finite-strain J2 elastoplasticity, linear hardening"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "lucarini_elastoplastic"
+      ],
+      "normalised_content_sha256": "c3b2510f7f2f4dbff225b624f11fd8bb5ca9e2010b3200d035c1ac36a56a7b3d",
+      "origins": [
+        "external corpus: https://github.com/sergiolucarini/UMAT4COMSOL.git@e62506fd8426",
+        "internal-Jacobian round (external corpus (pinned snapshot))"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [
+        "https://github.com/sergiolucarini/UMAT4COMSOL.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "lucarini_elastoplastic",
+          "origin": "external corpus: https://github.com/sergiolucarini/UMAT4COMSOL.git@e62506fd8426",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "lucarini_elastoplastic",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "CORPUS offline round"
       ]
     },
     "580f20805d5b7b89e08a19084b90a379": {
@@ -1026,47 +1110,6 @@
         "TABLE-2 paired Abaqus"
       ]
     },
-    "7907e09d7212c8e9914c68df56ca1beb": {
-      "canonical_source_id": "7907e09d7212c8e9914c68df56ca1beb",
-      "closure_size": 1,
-      "code_only_sha256": "6fbb4c84dfc965bd756284da1d39165c9430e6a876767ef52e4c02a90907837f",
-      "constitutive_models": [
-        "crystal plasticity, finite strain, COMMON-block state"
-      ],
-      "entry_routine": "UMAT",
-      "identity_kind": "single_file",
-      "labels": [
-        "ngrilli_umat"
-      ],
-      "normalised_content_sha256": "cd7f7c0baa970cde5118ef35a69e4e77f3232cdff47ceed736dc6df33f9adf00",
-      "origins": [
-        "external corpus: https://github.com/ngrilli/Oxford_Crystal_Plasticity.git@85102ed35dc4",
-        "internal-Jacobian round (external corpus (pinned snapshot))"
-      ],
-      "source_structures": [
-        "dependency_closure"
-      ],
-      "upstream_repositories": [
-        "https://github.com/ngrilli/Oxford_Crystal_Plasticity.git"
-      ],
-      "validation_events": [
-        {
-          "event": "CORPUS offline round",
-          "execution_environment": "local gfortran material-point driver",
-          "label": "ngrilli_umat",
-          "origin": "external corpus: https://github.com/ngrilli/Oxford_Crystal_Plasticity.git@85102ed35dc4",
-          "verified": false
-        },
-        {
-          "event": "TABLE-3 internal Jacobian",
-          "execution_environment": "local gfortran material-point driver",
-          "label": "ngrilli_umat",
-          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
-          "verified": false
-        }
-      ],
-      "verified_by": []
-    },
     "7b8ba70f5c395df8d9f85726de298183": {
       "canonical_source_id": "7b8ba70f5c395df8d9f85726de298183",
       "closure_size": 1,
@@ -1336,6 +1379,74 @@
       "verified_by": [
         "TABLE-6 parameter sensitivity"
       ]
+    },
+    "adbf5968a37861c3ff2ec07fd8f47006": {
+      "canonical_source_id": "adbf5968a37861c3ff2ec07fd8f47006",
+      "closure_routines": [
+        "KCRSS",
+        "KCURLET",
+        "KDETER",
+        "KDIRNS",
+        "KDOTPROD",
+        "KFINDNEIGHBOURHOOD",
+        "KGMATVEC6",
+        "KGNDL2ET",
+        "KHARDENING",
+        "KMAT",
+        "KMATERIALPARAM",
+        "KMATVEC6",
+        "KRHOTWININIT",
+        "KSLIP0",
+        "KSLIP5ET",
+        "KSLIP6ET",
+        "KSLIPPOWERLAW",
+        "KTWINROT",
+        "KTWINVOLFRACINTEGRAL",
+        "KVECMAT6",
+        "KVECPROD",
+        "LAPINVERSE",
+        "ROTORD4SIG",
+        "TRACE",
+        "UMAT"
+      ],
+      "closure_size": 25,
+      "code_only_sha256": "d11ec99edc2045ed9963ac42c4ea8b1d7b262e03eae49c69f150d42113a69b7f",
+      "constitutive_models": [
+        "crystal plasticity, finite strain, COMMON-block state"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "dependency_closure",
+      "labels": [
+        "ngrilli_umat"
+      ],
+      "normalised_content_sha256": "16f788bf072126966698ef3c453792a15139c22a4798c94155f493e8d1169223",
+      "origins": [
+        "external corpus: https://github.com/ngrilli/Oxford_Crystal_Plasticity.git@85102ed35dc4",
+        "internal-Jacobian round (external corpus (pinned snapshot))"
+      ],
+      "source_structures": [
+        "dependency_closure"
+      ],
+      "upstream_repositories": [
+        "https://github.com/ngrilli/Oxford_Crystal_Plasticity.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "ngrilli_umat",
+          "origin": "external corpus: https://github.com/ngrilli/Oxford_Crystal_Plasticity.git@85102ed35dc4",
+          "verified": false
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "ngrilli_umat",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": false
+        }
+      ],
+      "verified_by": []
     },
     "b48f625e738a6ae568dbd65799c0a228": {
       "canonical_source_id": "b48f625e738a6ae568dbd65799c0a228",
@@ -1798,6 +1909,49 @@
       ],
       "verified_by": [
         "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "fb23d6963fe5971aaba22f4fa6e82a9a": {
+      "canonical_source_id": "fb23d6963fe5971aaba22f4fa6e82a9a",
+      "closure_size": 1,
+      "code_only_sha256": "56d90c1a85672b1428a7be2d4a3445199488ddae847e660c79e282f6d269e374",
+      "constitutive_models": [
+        "neo-Hookean hyperelasticity, finite strain"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "lucarini_neohookean"
+      ],
+      "normalised_content_sha256": "100d0d514d12a70225654eb6a2e3ce20f7aaa791ce1c7012a985754bbdeaa361",
+      "origins": [
+        "external corpus: https://github.com/sergiolucarini/UMAT4COMSOL.git@e62506fd8426",
+        "internal-Jacobian round (external corpus (pinned snapshot))"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [
+        "https://github.com/sergiolucarini/UMAT4COMSOL.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "lucarini_neohookean",
+          "origin": "external corpus: https://github.com/sergiolucarini/UMAT4COMSOL.git@e62506fd8426",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "lucarini_neohookean",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "CORPUS offline round"
       ]
     }
   }

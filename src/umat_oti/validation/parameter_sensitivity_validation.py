@@ -30,7 +30,7 @@ import math
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Optional, Sequence
 
 ABA_PARAM = "      IMPLICIT REAL*8(A-H,O-Z)\n      PARAMETER (NPRECD=2)\n"
 
@@ -89,13 +89,26 @@ class ValidationRow:
         return self.__dict__.copy()
 
 
-def driver_source(*, ntens: int, nstatv: int, nprops: int) -> str:
+def driver_source(*, ntens: int, nstatv: int, nprops: int,
+                  finite_strain: bool = False) -> str:
     """A driver that replays a path through the ORIGINAL UMAT.
 
     Reads NPROPS values then the increment count and each DSTRAN row from stdin,
     so one compiled executable serves every perturbation without recompiling.
+
+    With ``finite_strain`` the deformation gradient is driven as well. Holding
+    DFGRD at the identity is correct only for a small-strain model: a
+    hyperelastic UMAT computes its stress from DFGRD1 alone and would return
+    zero stress for every increment, which looks like a working run producing
+    trivial output. Each increment then reads nine additional values, the
+    row-major increment of F, and advances DFGRD0 -> DFGRD1 by it.
     """
     nsv = max(nstatv, 1)
+    read_gradient = ("    READ(*,*) DFGRDINC\n"
+                     "    DFGRD0=DFGRD1\n"
+                     "    DFGRD1=DFGRD1+RESHAPE(DFGRDINC,[3,3],ORDER=[2,1])\n"
+                     if finite_strain else "")
+    declare_gradient = ("  REAL(8) :: DFGRDINC(9)\n" if finite_strain else "")
     return f"""PROGRAM original_reference_driver
   IMPLICIT NONE
   INTEGER, PARAMETER :: NTENS={ntens}, NSTATV={nsv}, NPROPS={max(nprops, 1)}
@@ -104,7 +117,7 @@ def driver_source(*, ntens: int, nstatv: int, nprops: int) -> str:
   REAL(8) :: TIME(2),DTIME,TEMP,DTEMP,PREDEF(1),DPRED(1),PROPS(NPROPS),COORDS(3)
   REAL(8) :: DROT(3,3),PNEWDT,CELENT,DFGRD0(3,3),DFGRD1(3,3)
   INTEGER :: NDI,NSHR,NOEL,NPT,LAYER,KSPT,KSTEP,KINC,I,NINC
-  CHARACTER(80) :: CMNAME
+{declare_gradient}  CHARACTER(80) :: CMNAME
   STRESS=0.0_8;STATEV=0.0_8;DDSDDE=0.0_8;STRAN=0.0_8;DSTRAN=0.0_8
   SSE=0.0_8;SPD=0.0_8;SCD=0.0_8;RPL=0.0_8;DDSDDT=0.0_8;DRPLDE=0.0_8;DRPLDT=0.0_8
   TIME=0.0_8;DTIME=1.0_8;TEMP=293.15_8;DTEMP=0.0_8;PREDEF=0.0_8;DPRED=0.0_8
@@ -118,7 +131,7 @@ def driver_source(*, ntens: int, nstatv: int, nprops: int) -> str:
   READ(*,*) NINC
   DO KINC=1,NINC
     READ(*,*) DSTRAN
-    CALL UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,RPL,DDSDDT,DRPLDE,DRPLDT, &
+{read_gradient}    CALL UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,RPL,DDSDDT,DRPLDE,DRPLDT, &
       STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,CMNAME,NDI,NSHR,NTENS,NSTATV, &
       PROPS,NPROPS,COORDS,DROT,PNEWDT,CELENT,DFGRD0,DFGRD1,NOEL,NPT,LAYER,KSPT,KSTEP,KINC)
     WRITE(*,'({ntens + nsv}(ES26.17E3,1X))') STRESS,STATEV
@@ -138,7 +151,10 @@ END SUBROUTINE XIT
 
 
 def build_original_driver(source: Path, out_dir: Path, *, ntens: int, nstatv: int,
-                          nprops: int, compiler: str = "gfortran") -> Path:
+                          nprops: int, compiler: str = "gfortran",
+                          finite_strain: bool = False,
+                          link_libraries: Sequence[str] = (),
+                          extra_sources: Sequence[Path] = ()) -> Path:
     """Compile the untransformed source into a replayable reference executable."""
     out_dir.mkdir(parents=True, exist_ok=True)
     for name in ("aba_param.inc", "ABA_PARAM.INC", "ABA_PARAM.inc", "aba_param.INC"):
@@ -156,12 +172,33 @@ def build_original_driver(source: Path, out_dir: Path, *, ntens: int, nstatv: in
         raise RuntimeError(f"original UMAT compile failed:\n{compile_umat.stderr[:3000]}")
 
     driver = out_dir / "original_reference_driver.f90"
-    driver.write_text(driver_source(ntens=ntens, nstatv=nstatv, nprops=nprops),
-                      encoding="utf-8")
+    driver.write_text(
+        driver_source(ntens=ntens, nstatv=nstatv, nprops=nprops,
+                      finite_strain=finite_strain),
+        encoding="utf-8")
+
+    extra_objects = []
+    for index, extra in enumerate(extra_sources):
+        extra = Path(extra)
+        extra_object = out_dir / f"extra_{index}.o"
+        extra_fixed = extra.suffix.lower() in {".f", ".for", ".f77"}
+        extra_form = (["-ffixed-form", "-ffixed-line-length-none"] if extra_fixed
+                      else ["-ffree-line-length-none"])
+        built = subprocess.run(
+            [compiler, "-O1", "-std=legacy", *extra_form, "-I", str(out_dir),
+             "-c", str(extra), "-o", str(extra_object)],
+            cwd=out_dir, capture_output=True, text=True)
+        if built.returncode != 0:
+            raise RuntimeError(
+                f"supporting source {extra.name} failed to compile:\n"
+                f"{built.stderr[:2000]}")
+        extra_objects.append(str(extra_object))
+
     executable = out_dir / "original_reference_driver"
     link = subprocess.run(
         [compiler, "-O1", "-std=legacy", "-ffree-line-length-none",
-         str(driver), str(obj), "-o", str(executable)],
+         str(driver), str(obj), *extra_objects, *link_libraries,
+         "-o", str(executable)],
         cwd=out_dir, capture_output=True, text=True)
     if link.returncode != 0:
         raise RuntimeError(f"reference driver link failed:\n{link.stderr[:3000]}")
@@ -169,11 +206,24 @@ def build_original_driver(source: Path, out_dir: Path, *, ntens: int, nstatv: in
 
 
 def replay(executable: Path, props: Sequence[float],
-           path: Sequence[Sequence[float]], *, ntens: int, nstatv: int) -> ReplayResult:
-    """Run the original UMAT over the path with the given PROPS."""
+           path: Sequence[Sequence[float]], *, ntens: int, nstatv: int,
+           deformation_gradient_increment: Optional[Sequence[float]] = None
+           ) -> ReplayResult:
+    """Run the original UMAT over the path with the given PROPS.
+
+    ``deformation_gradient_increment`` is a row-major 3x3 added to F each
+    increment, for drivers built with ``finite_strain=True``.
+    """
     payload = " ".join(f"{v:.17e}" for v in props) + "\n"
     payload += f"{len(path)}\n"
-    payload += "\n".join(" ".join(f"{v:.17e}" for v in row) for row in path) + "\n"
+    rows = []
+    for entry in path:
+        line = " ".join(f"{v:.17e}" for v in entry)
+        if deformation_gradient_increment is not None:
+            line += "\n" + " ".join(
+                f"{v:.17e}" for v in deformation_gradient_increment)
+        rows.append(line)
+    payload += "\n".join(rows) + "\n"
     result = subprocess.run([str(executable)], input=payload,
                             capture_output=True, text=True)
     if result.returncode != 0:
@@ -206,7 +256,9 @@ def replay(executable: Path, props: Sequence[float],
 def centered_fd(executable: Path, props: Sequence[float],
                 path: Sequence[Sequence[float]], *, ntens: int, nstatv: int,
                 props_indices: Sequence[int],
-                rel_step: float = DEFAULT_REL_STEP) -> dict[int, dict[str, list]]:
+                rel_step: float = DEFAULT_REL_STEP,
+                deformation_gradient_increment: Optional[Sequence[float]] = None
+                ) -> dict[int, dict[str, list]]:
     """Centred differences of the ORIGINAL UMAT w.r.t. each seeded property.
 
     Two extra replays per parameter, at ``p*(1+h)`` and ``p*(1-h)``. A property
@@ -220,8 +272,10 @@ def centered_fd(executable: Path, props: Sequence[float],
         plus, minus = list(props), list(props)
         plus[index - 1] = base + step
         minus[index - 1] = base - step
-        high = replay(executable, plus, path, ntens=ntens, nstatv=nstatv)
-        low = replay(executable, minus, path, ntens=ntens, nstatv=nstatv)
+        high = replay(executable, plus, path, ntens=ntens, nstatv=nstatv,
+                      deformation_gradient_increment=deformation_gradient_increment)
+        low = replay(executable, minus, path, ntens=ntens, nstatv=nstatv,
+                     deformation_gradient_increment=deformation_gradient_increment)
         denominator = 2.0 * step
         out[index] = {
             "step": step,
