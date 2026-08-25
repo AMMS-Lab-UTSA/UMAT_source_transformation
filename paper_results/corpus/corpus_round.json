@@ -779,14 +779,17 @@
         },
         "entry": "UMAT",
         "entry_path": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_PCO.for",
+        "excluded_path_fragments": [],
         "external_files": [
           "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_ECL_TEMP.for"
         ],
+        "external_library_calls": {},
         "includes": [
           "ABA_PARAM.INC"
         ],
         "missing": [],
         "multi_file": true,
+        "required_libraries": [],
         "resolved": {
           "KCLEAR": {
             "body_sha256": "06fcf9c39270eb24680c504fc94891b6050a8f5796fd4bb1d864addb2ce01ddf",
@@ -940,6 +943,7 @@
       "stages": {
         "contract_constructed": {
           "material": {
+            "deformation_gradient_increment": [],
             "dstran_per_increment": [
               0.0001,
               0.0,
@@ -948,6 +952,7 @@
               0.0,
               0.0
             ],
+            "finite_strain": false,
             "material_is_physical": true,
             "n_increments": 20,
             "parameters": [
@@ -1958,14 +1963,17 @@
         },
         "entry": "UMAT",
         "entry_path": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_VPDCO.for",
+        "excluded_path_fragments": [],
         "external_files": [
           "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_ECL_TEMP.for"
         ],
+        "external_library_calls": {},
         "includes": [
           "ABA_PARAM.INC"
         ],
         "missing": [],
         "multi_file": true,
+        "required_libraries": [],
         "resolved": {
           "KCLEAR": {
             "body_sha256": "06fcf9c39270eb24680c504fc94891b6050a8f5796fd4bb1d864addb2ce01ddf",
@@ -2137,6 +2145,7 @@
       "stages": {
         "contract_constructed": {
           "material": {
+            "deformation_gradient_increment": [],
             "dstran_per_increment": [
               0.0001,
               0.0,
@@ -2145,6 +2154,7 @@
               0.0,
               0.0
             ],
+            "finite_strain": false,
             "material_is_physical": true,
             "n_increments": 20,
             "parameters": [
@@ -2549,12 +2559,15 @@
         },
         "entry": "UMAT",
         "entry_path": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_PCL.for",
+        "excluded_path_fragments": [],
         "external_files": [],
+        "external_library_calls": {},
         "includes": [
           "ABA_PARAM.INC"
         ],
         "missing": [],
         "multi_file": false,
+        "required_libraries": [],
         "resolved": {
           "KCLEAR": {
             "body_sha256": "06fcf9c39270eb24680c504fc94891b6050a8f5796fd4bb1d864addb2ce01ddf",
@@ -2638,12 +2651,14 @@
       "stages": {
         "contract_constructed": {
           "material": {
+            "deformation_gradient_increment": [],
             "dstran_per_increment": [
               0.0001,
               0.0,
               0.0,
               0.0
             ],
+            "finite_strain": false,
             "material_is_physical": true,
             "n_increments": 20,
             "parameters": [
@@ -3067,12 +3082,15 @@
         },
         "entry": "UMAT",
         "entry_path": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_PCLK.for",
+        "excluded_path_fragments": [],
         "external_files": [],
+        "external_library_calls": {},
         "includes": [
           "ABA_PARAM.INC"
         ],
         "missing": [],
         "multi_file": false,
+        "required_libraries": [],
         "resolved": {
           "KCLEAR": {
             "body_sha256": "06fcf9c39270eb24680c504fc94891b6050a8f5796fd4bb1d864addb2ce01ddf",
@@ -3156,12 +3174,14 @@
       "stages": {
         "contract_constructed": {
           "material": {
+            "deformation_gradient_increment": [],
             "dstran_per_increment": [
               0.0001,
               0.0,
               0.0,
               0.0
             ],
+            "finite_strain": false,
             "material_is_physical": true,
             "n_increments": 20,
             "parameters": [
@@ -3458,14 +3478,17 @@
         },
         "entry": "UMAT",
         "entry_path": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_ECO.for",
+        "excluded_path_fragments": [],
         "external_files": [
           "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_ECL_TEMP.for"
         ],
+        "external_library_calls": {},
         "includes": [
           "ABA_PARAM.INC"
         ],
         "missing": [],
         "multi_file": true,
+        "required_libraries": [],
         "resolved": {
           "KCLEARV": {
             "body_sha256": "4c16ed6ef88eecbd60ee8838844fbfbe8ec4e65578f56ecff69fc06d7563eafe",
@@ -3544,6 +3567,7 @@
       "stages": {
         "contract_constructed": {
           "material": {
+            "deformation_gradient_increment": [],
             "dstran_per_increment": [
               0.0001,
               0.0,
@@ -3552,6 +3576,7 @@
               0.0,
               0.0
             ],
+            "finite_strain": false,
             "material_is_physical": true,
             "n_increments": 10,
             "parameters": [
@@ -4161,12 +4186,15 @@
         },
         "entry": "UMAT",
         "entry_path": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_VPDCL.for",
+        "excluded_path_fragments": [],
         "external_files": [],
+        "external_library_calls": {},
         "includes": [
           "ABA_PARAM.INC"
         ],
         "missing": [],
         "multi_file": false,
+        "required_libraries": [],
         "resolved": {
           "KCLEAR": {
             "body_sha256": "06fcf9c39270eb24680c504fc94891b6050a8f5796fd4bb1d864addb2ce01ddf",
@@ -4890,12 +4918,15 @@
         },
         "entry": "UMAT",
         "entry_path": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_NKH_1.02.for",
+        "excluded_path_fragments": [],
         "external_files": [],
+        "external_library_calls": {},
         "includes": [
           "ABA_PARAM.INC"
         ],
         "missing": [],
         "multi_file": false,
+        "required_libraries": [],
         "resolved": {
           "KCLEAR": {
             "body_sha256": "06fcf9c39270eb24680c504fc94891b6050a8f5796fd4bb1d864addb2ce01ddf",
@@ -5045,7 +5076,7 @@
       }
     },
     {
-      "blocker": "dependencies_resolved: DGETRF is called by LAPINVERSE but no source under 2 searched root(s) defines it; DGETRI is called by LAPINVERSE but no source under 2 searched root(s) defines it",
+      "blocker": "dependencies_resolved: these helpers have differing definitions in different files and none is local, so choosing one would change the numerics: KMAT, KMATERIALPARAM",
       "commit_sha": "85102ed35dc4592edc5fd4aaec542fa63e7162fd",
       "constitutive_class": "crystal plasticity, finite strain, COMMON-block state",
       "content_sha256": "0732d6432730e20089416f1485343229b7eeacbc8b3a18853705b3b882f1526d",
@@ -5223,6 +5254,7 @@
         },
         "entry": "UMAT",
         "entry_path": "permissive/ngrilli_Oxford_Crystal_Plasticity/umat.for",
+        "excluded_path_fragments": [],
         "external_files": [
           "permissive/ngrilli_Oxford_Crystal_Plasticity/ExampleInputFiles/DiscreteTwin/kMaterialParam.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/ExampleInputFiles/HomogeneousTwin/kmat.f",
@@ -5240,6 +5272,10 @@
           "permissive/ngrilli_Oxford_Crystal_Plasticity/ktwinrot.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/utils.f"
         ],
+        "external_library_calls": {
+          "DGETRF": "lapack",
+          "DGETRI": "lapack"
+        },
         "includes": [
           "ABA_PARAM.INC",
           "aba_param.inc",
@@ -5259,33 +5295,11 @@
           "xTwinDirAlphaUranium.f",
           "xTwinNormAlphaUranium.f"
         ],
-        "missing": [
-          {
-            "called_by": [
-              "LAPINVERSE"
-            ],
-            "diagnostic": "DGETRF is called by LAPINVERSE but no source under 2 searched root(s) defines it",
-            "near_misses": [],
-            "searched_roots": [
-              "permissive/ngrilli_Oxford_Crystal_Plasticity/umat.for",
-              "permissive/ngrilli_Oxford_Crystal_Plasticity"
-            ],
-            "symbol": "DGETRF"
-          },
-          {
-            "called_by": [
-              "LAPINVERSE"
-            ],
-            "diagnostic": "DGETRI is called by LAPINVERSE but no source under 2 searched root(s) defines it",
-            "near_misses": [],
-            "searched_roots": [
-              "permissive/ngrilli_Oxford_Crystal_Plasticity/umat.for",
-              "permissive/ngrilli_Oxford_Crystal_Plasticity"
-            ],
-            "symbol": "DGETRI"
-          }
-        ],
+        "missing": [],
         "multi_file": true,
+        "required_libraries": [
+          "lapack"
+        ],
         "resolved": {
           "KCRSS": {
             "body_sha256": "b71e20520bd64547e8573a7a67de4c1e68c821944590c8f6aec2677ed02e67f0",
@@ -5507,11 +5521,11 @@
       "source_path": "permissive/ngrilli_Oxford_Crystal_Plasticity/umat.for",
       "stages": {
         "dependencies_resolved": {
-          "missing": [
-            "DGETRF",
-            "DGETRI"
+          "ambiguous": [
+            "KMAT",
+            "KMATERIALPARAM"
           ],
-          "reason": "DGETRF is called by LAPINVERSE but no source under 2 searched root(s) defines it; DGETRI is called by LAPINVERSE but no source under 2 searched root(s) defines it",
+          "reason": "these helpers have differing definitions in different files and none is local, so choosing one would change the numerics: KMAT, KMATERIALPARAM",
           "status": "failed"
         },
         "discovered": {
@@ -5529,34 +5543,1204 @@
           "status": "succeeded"
         }
       }
+    },
+    {
+      "blocker": null,
+      "canonical_source_id": "fb23d6963fe5971aaba22f4fa6e82a9a",
+      "commit_sha": "e62506fd842611566bac5b19ae1041b52b40ddc6",
+      "comparison": {
+        "agreeing": 140,
+        "disagreeing": 0,
+        "reference_unresolved": 0,
+        "rows": 140,
+        "rows_by_judgement": {
+          "within_reference_resolution": 140
+        },
+        "substantive_rows": 0,
+        "worst_substantive_relative_error": null
+      },
+      "constitutive_class": "neo-Hookean hyperelasticity, finite strain",
+      "content_sha256": "513cb6a98be7f433c306ae1bc600de8910816d84022ad112dee447dd91fe16f8",
+      "dependency_graph": {
+        "abaqus_runtime_calls": [],
+        "conflicts": [],
+        "duplicates": [],
+        "edges": {
+          "UMAT": []
+        },
+        "entry": "UMAT",
+        "entry_path": "permissive/sergiolucarini_UMAT4COMSOL/neohookean/umat.f",
+        "excluded_path_fragments": [],
+        "external_files": [],
+        "external_library_calls": {},
+        "includes": [
+          "ABA_PARAM.INC"
+        ],
+        "missing": [],
+        "multi_file": false,
+        "required_libraries": [],
+        "resolved": {
+          "UMAT": {
+            "body_sha256": "fa46f8c4c904d771245703d8aeadfc8cda4fff48166c505feaf4fbfab84d0dbb",
+            "end_line": 83,
+            "kind": "subroutine",
+            "name": "UMAT",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/neohookean/umat.f",
+            "start_line": 5
+          }
+        },
+        "searched_roots": [
+          "permissive/sergiolucarini_UMAT4COMSOL/neohookean/umat.f",
+          "permissive/sergiolucarini_UMAT4COMSOL/neohookean"
+        ]
+      },
+      "entry_routine": "UMAT",
+      "furthest_stage": "derivatives_verified",
+      "id": "lucarini_neohookean",
+      "identity": {
+        "canonical_source_id": "fb23d6963fe5971aaba22f4fa6e82a9a",
+        "closure_size": 1,
+        "code_only_sha256": "56d90c1a85672b1428a7be2d4a3445199488ddae847e660c79e282f6d269e374",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "100d0d514d12a70225654eb6a2e3ce20f7aaa791ce1c7012a985754bbdeaa361"
+      },
+      "inferred_dimensions": {
+        "literal_statev_index": null,
+        "minimum_nstatv_for": {
+          "3": 0,
+          "4": 0,
+          "6": 0
+        },
+        "minimum_ntens": 6,
+        "note": "minimum_ntens is the largest literal index written into a tensor-shaped argument; driving the source with a smaller NTENS writes out of bounds",
+        "statev_terms": []
+      },
+      "license_source": "LICENSE (SPDX MIT, reported by the GitHub licence API)",
+      "license_spdx": "MIT",
+      "notes": "neo-Hookean hyperelasticity, finite strain",
+      "redistribution_permitted": true,
+      "repository": "sergiolucarini_UMAT4COMSOL",
+      "repository_url": "https://github.com/sergiolucarini/UMAT4COMSOL.git",
+      "retrieved_at": "pinned at e62506fd8426",
+      "source_path": "permissive/sergiolucarini_UMAT4COMSOL/neohookean/umat.f",
+      "stages": {
+        "contract_constructed": {
+          "material": {
+            "deformation_gradient_increment": [],
+            "dstran_per_increment": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "finite_strain": false,
+            "material_is_physical": true,
+            "n_increments": 10,
+            "parameters": [
+              {
+                "name": "EMOD",
+                "props_index": 1
+              },
+              {
+                "name": "ENU",
+                "props_index": 2
+              }
+            ],
+            "props": [
+              1000000.0,
+              0.3
+            ],
+            "provenance": "neohookean/neohookean.inp, *User Material, constants=2"
+          },
+          "nprops": 2,
+          "nstatv": 1,
+          "ntens": 6,
+          "parameters": [
+            "EMOD",
+            "ENU"
+          ],
+          "status": "succeeded"
+        },
+        "dependencies_resolved": {
+          "closure_size": 1,
+          "external_files": [],
+          "multi_file": false,
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "rows": 140,
+          "status": "succeeded"
+        },
+        "discovered": {
+          "content_sha256": "513cb6a98be7f433c306ae1bc600de8910816d84022ad112dee447dd91fe16f8",
+          "status": "succeeded"
+        },
+        "entry_detected": {
+          "entry": "UMAT",
+          "status": "succeeded"
+        },
+        "generated_compiled": {
+          "status": "succeeded"
+        },
+        "license_classified": {
+          "license_source": "LICENSE (SPDX MIT, reported by the GitHub licence API)",
+          "license_spdx": "MIT",
+          "redistribution_permitted": true,
+          "status": "succeeded"
+        },
+        "original_compiled": {
+          "status": "succeeded"
+        },
+        "original_executed": {
+          "increments": 10,
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "status": "succeeded",
+          "worst_relative_difference": 0.0
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transformed": {
+          "status": "succeeded"
+        },
+        "transformed_executed": {
+          "status": "succeeded"
+        }
+      }
+    },
+    {
+      "blocker": null,
+      "canonical_source_id": "4497f62852c0db7d48f73f40b1c03ef2",
+      "commit_sha": "e62506fd842611566bac5b19ae1041b52b40ddc6",
+      "comparison": {
+        "agreeing": 260,
+        "disagreeing": 0,
+        "reference_unresolved": 0,
+        "rows": 260,
+        "rows_by_judgement": {
+          "within_reference_resolution": 260
+        },
+        "substantive_rows": 0,
+        "worst_substantive_relative_error": null
+      },
+      "constitutive_class": "finite-strain J2 elastoplasticity, linear hardening",
+      "content_sha256": "dafd083b99b2dc3fa14a9332505e6a69ccaee5c0d9d0e58edf1738718dfb2015",
+      "dependency_graph": {
+        "abaqus_runtime_calls": [],
+        "conflicts": [],
+        "duplicates": [
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "b57fb5910e953b2f4ef306b220aeb06f03fb4342b37770e6b4925c8476678351",
+                "end_line": 237,
+                "kind": "subroutine",
+                "name": "M33INV",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/elastoplastic/umat.f",
+                "start_line": 214
+              },
+              {
+                "body_sha256": "b57fb5910e953b2f4ef306b220aeb06f03fb4342b37770e6b4925c8476678351",
+                "end_line": 237,
+                "kind": "subroutine",
+                "name": "M33INV",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/elastoplastic/umat.f",
+                "start_line": 214
+              }
+            ],
+            "distinct_bodies": [
+              "b57fb5910e953b2f"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "M33INV"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "c428151ee7f593f90ba2a012630272de87ea14f8c49d66694331bded0897079f",
+                "end_line": 3203,
+                "kind": "subroutine",
+                "name": "M66INV",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/elastoplastic/umat.f",
+                "start_line": 240
+              },
+              {
+                "body_sha256": "c428151ee7f593f90ba2a012630272de87ea14f8c49d66694331bded0897079f",
+                "end_line": 3203,
+                "kind": "subroutine",
+                "name": "M66INV",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/elastoplastic/umat.f",
+                "start_line": 240
+              }
+            ],
+            "distinct_bodies": [
+              "c428151ee7f593f9"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "M66INV"
+          }
+        ],
+        "edges": {
+          "M33INV": [],
+          "M66INV": [],
+          "UMAT": [
+            "M33INV",
+            "M66INV"
+          ]
+        },
+        "entry": "UMAT",
+        "entry_path": "permissive/sergiolucarini_UMAT4COMSOL/elastoplastic/umat.f",
+        "excluded_path_fragments": [],
+        "external_files": [],
+        "external_library_calls": {},
+        "includes": [
+          "ABA_PARAM.INC"
+        ],
+        "missing": [],
+        "multi_file": false,
+        "required_libraries": [],
+        "resolved": {
+          "M33INV": {
+            "body_sha256": "b57fb5910e953b2f4ef306b220aeb06f03fb4342b37770e6b4925c8476678351",
+            "end_line": 237,
+            "kind": "subroutine",
+            "name": "M33INV",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/elastoplastic/umat.f",
+            "start_line": 214
+          },
+          "M66INV": {
+            "body_sha256": "c428151ee7f593f90ba2a012630272de87ea14f8c49d66694331bded0897079f",
+            "end_line": 3203,
+            "kind": "subroutine",
+            "name": "M66INV",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/elastoplastic/umat.f",
+            "start_line": 240
+          },
+          "UMAT": {
+            "body_sha256": "ec902eb7a5600085e18a1905b4e5fab5e018977070c341f5a3a718f4627210b0",
+            "end_line": 211,
+            "kind": "subroutine",
+            "name": "UMAT",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/elastoplastic/umat.f",
+            "start_line": 5
+          }
+        },
+        "searched_roots": [
+          "permissive/sergiolucarini_UMAT4COMSOL/elastoplastic/umat.f",
+          "permissive/sergiolucarini_UMAT4COMSOL/elastoplastic"
+        ]
+      },
+      "entry_routine": "UMAT",
+      "furthest_stage": "derivatives_verified",
+      "id": "lucarini_elastoplastic",
+      "identity": {
+        "canonical_source_id": "4497f62852c0db7d48f73f40b1c03ef2",
+        "closure_size": 1,
+        "code_only_sha256": "5be6a09f5c3cb79447c1234aa41d0594f2a711ae16f5181b68023a92335057e9",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "c3b2510f7f2f4dbff225b624f11fd8bb5ca9e2010b3200d035c1ac36a56a7b3d"
+      },
+      "inferred_dimensions": {
+        "literal_statev_index": 7,
+        "minimum_nstatv_for": {
+          "3": 7,
+          "4": 7,
+          "6": 7
+        },
+        "minimum_ntens": 3,
+        "note": "minimum_ntens is the largest literal index written into a tensor-shaped argument; driving the source with a smaller NTENS writes out of bounds",
+        "statev_terms": []
+      },
+      "license_source": "LICENSE (SPDX MIT, reported by the GitHub licence API)",
+      "license_spdx": "MIT",
+      "notes": "finite-strain J2 elastoplasticity, linear hardening",
+      "redistribution_permitted": true,
+      "repository": "sergiolucarini_UMAT4COMSOL",
+      "repository_url": "https://github.com/sergiolucarini/UMAT4COMSOL.git",
+      "retrieved_at": "pinned at e62506fd8426",
+      "source_path": "permissive/sergiolucarini_UMAT4COMSOL/elastoplastic/umat.f",
+      "stages": {
+        "contract_constructed": {
+          "material": {
+            "deformation_gradient_increment": [],
+            "dstran_per_increment": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "finite_strain": false,
+            "material_is_physical": true,
+            "n_increments": 10,
+            "parameters": [
+              {
+                "name": "EMOD",
+                "props_index": 1
+              },
+              {
+                "name": "SY",
+                "props_index": 3
+              }
+            ],
+            "props": [
+              70000.0,
+              0.2,
+              243.0,
+              2171.0
+            ],
+            "provenance": "elastoplastic/elastoplastic.inp, *User Material, constants=4"
+          },
+          "nprops": 4,
+          "nstatv": 7,
+          "ntens": 6,
+          "parameters": [
+            "EMOD",
+            "SY"
+          ],
+          "status": "succeeded"
+        },
+        "dependencies_resolved": {
+          "closure_size": 3,
+          "external_files": [],
+          "multi_file": false,
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "rows": 260,
+          "status": "succeeded"
+        },
+        "discovered": {
+          "content_sha256": "dafd083b99b2dc3fa14a9332505e6a69ccaee5c0d9d0e58edf1738718dfb2015",
+          "status": "succeeded"
+        },
+        "entry_detected": {
+          "entry": "UMAT",
+          "status": "succeeded"
+        },
+        "generated_compiled": {
+          "status": "succeeded"
+        },
+        "license_classified": {
+          "license_source": "LICENSE (SPDX MIT, reported by the GitHub licence API)",
+          "license_spdx": "MIT",
+          "redistribution_permitted": true,
+          "status": "succeeded"
+        },
+        "original_compiled": {
+          "status": "succeeded"
+        },
+        "original_executed": {
+          "increments": 10,
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "status": "succeeded",
+          "worst_relative_difference": 0.0
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transformed": {
+          "status": "succeeded"
+        },
+        "transformed_executed": {
+          "status": "succeeded"
+        }
+      }
+    },
+    {
+      "blocker": "contract_constructed: no material property vector or loading history is available for this source; upstream provides none and none may be invented",
+      "canonical_source_id": "108518e08678d2939acf0eac4859de80",
+      "commit_sha": "e62506fd842611566bac5b19ae1041b52b40ddc6",
+      "constitutive_class": "crystal plasticity (Huang/Kysar lineage)",
+      "content_sha256": "8e17d7614676e8b4afb99c5e90548b09b493f3a9371c437cf1ef4fb4035ab784",
+      "dependency_graph": {
+        "abaqus_runtime_calls": [],
+        "conflicts": [],
+        "duplicates": [
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "adb47d9f5b3b9132c37d2b40f34b8bd3a361d21b59cd7e02cf52ab409c0b552e",
+                "end_line": 2076,
+                "kind": "function",
+                "name": "DFDX",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2063
+              },
+              {
+                "body_sha256": "adb47d9f5b3b9132c37d2b40f34b8bd3a361d21b59cd7e02cf52ab409c0b552e",
+                "end_line": 2076,
+                "kind": "function",
+                "name": "DFDX",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2063
+              }
+            ],
+            "distinct_bodies": [
+              "adb47d9f5b3b9132"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "DFDX"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "cbd77081ca819017538b9211e72672a05e3125e71024272812a21ae1cc89fac9",
+                "end_line": 2730,
+                "kind": "function",
+                "name": "DHLATN",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2630
+              },
+              {
+                "body_sha256": "cbd77081ca819017538b9211e72672a05e3125e71024272812a21ae1cc89fac9",
+                "end_line": 2730,
+                "kind": "function",
+                "name": "DHLATN",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2630
+              }
+            ],
+            "distinct_bodies": [
+              "cbd77081ca819017"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "DHLATN"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "2091b7c62f7f6c8e26324345ca6aa83dc4d4dca5364289b373f53dbb2f1650f9",
+                "end_line": 2622,
+                "kind": "function",
+                "name": "DHSELF",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2536
+              },
+              {
+                "body_sha256": "2091b7c62f7f6c8e26324345ca6aa83dc4d4dca5364289b373f53dbb2f1650f9",
+                "end_line": 2622,
+                "kind": "function",
+                "name": "DHSELF",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2536
+              }
+            ],
+            "distinct_bodies": [
+              "2091b7c62f7f6c8e"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "DHSELF"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "c72479649ecadf22c6514e5b42004c734d6d87d51dafa943fe9a137e4e59bd27",
+                "end_line": 2055,
+                "kind": "function",
+                "name": "F",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2041
+              },
+              {
+                "body_sha256": "c72479649ecadf22c6514e5b42004c734d6d87d51dafa943fe9a137e4e59bd27",
+                "end_line": 2055,
+                "kind": "function",
+                "name": "F",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2041
+              }
+            ],
+            "distinct_bodies": [
+              "c72479649ecadf22"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "F"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "a2c439d9114f0302f080f9712d047778105333fcf65b8c8182395b01972b64fd",
+                "end_line": 1963,
+                "kind": "function",
+                "name": "GSLP0",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1950
+              },
+              {
+                "body_sha256": "a2c439d9114f0302f080f9712d047778105333fcf65b8c8182395b01972b64fd",
+                "end_line": 1963,
+                "kind": "function",
+                "name": "GSLP0",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1950
+              }
+            ],
+            "distinct_bodies": [
+              "a2c439d9114f0302"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "GSLP0"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "4ee937a31b21123080f64771cce50c530237a0713106164f127413f9ef4e26db",
+                "end_line": 1942,
+                "kind": "subroutine",
+                "name": "GSLPINIT",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1875
+              },
+              {
+                "body_sha256": "4ee937a31b21123080f64771cce50c530237a0713106164f127413f9ef4e26db",
+                "end_line": 1942,
+                "kind": "subroutine",
+                "name": "GSLPINIT",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1875
+              }
+            ],
+            "distinct_bodies": [
+              "4ee937a31b211230"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "GSLPINIT"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "26c636c009088aab6797ea727b08ed4d8ba86fe43837b8b924bf3799f4f66341",
+                "end_line": 2378,
+                "kind": "function",
+                "name": "HLATNT",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2306
+              },
+              {
+                "body_sha256": "26c636c009088aab6797ea727b08ed4d8ba86fe43837b8b924bf3799f4f66341",
+                "end_line": 2378,
+                "kind": "function",
+                "name": "HLATNT",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2306
+              }
+            ],
+            "distinct_bodies": [
+              "26c636c009088aab"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "HLATNT"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "6e3564db396edc12817abc1453cb6ce94b87026addab1a5e95bf3bfa2690b983",
+                "end_line": 2298,
+                "kind": "function",
+                "name": "HSELF",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2241
+              },
+              {
+                "body_sha256": "6e3564db396edc12817abc1453cb6ce94b87026addab1a5e95bf3bfa2690b983",
+                "end_line": 2298,
+                "kind": "function",
+                "name": "HSELF",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2241
+              }
+            ],
+            "distinct_bodies": [
+              "6e3564db396edc12"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "HSELF"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "1c94b4c3f741d05329a0e7f9225de165fe352901d4fdaa6bc6a3359c653de1ca",
+                "end_line": 2528,
+                "kind": "subroutine",
+                "name": "ITERATION",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2384
+              },
+              {
+                "body_sha256": "1c94b4c3f741d05329a0e7f9225de165fe352901d4fdaa6bc6a3359c653de1ca",
+                "end_line": 2528,
+                "kind": "subroutine",
+                "name": "ITERATION",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2384
+              }
+            ],
+            "distinct_bodies": [
+              "1c94b4c3f741d053"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "ITERATION"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "ec364ebe3bfd73911aa2e73e90f6595ab33b0afd1af5dc2e4a9af7ff812745c7",
+                "end_line": 2233,
+                "kind": "subroutine",
+                "name": "LATENTHARDEN",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2082
+              },
+              {
+                "body_sha256": "ec364ebe3bfd73911aa2e73e90f6595ab33b0afd1af5dc2e4a9af7ff812745c7",
+                "end_line": 2233,
+                "kind": "subroutine",
+                "name": "LATENTHARDEN",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2082
+              }
+            ],
+            "distinct_bodies": [
+              "ec364ebe3bfd7391"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "LATENTHARDEN"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "be49ac356aff2678f7240640774bb5f5d24e8a27580557067bc7daf719fcb826",
+                "end_line": 1838,
+                "kind": "subroutine",
+                "name": "LINE",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1815
+              },
+              {
+                "body_sha256": "be49ac356aff2678f7240640774bb5f5d24e8a27580557067bc7daf719fcb826",
+                "end_line": 1838,
+                "kind": "subroutine",
+                "name": "LINE",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1815
+              }
+            ],
+            "distinct_bodies": [
+              "be49ac356aff2678"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "LINE"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "9c1d34a21f3545d6b1b02fe2a03828a046b37997c72faffb85a3697c5b59b2bb",
+                "end_line": 1869,
+                "kind": "subroutine",
+                "name": "LINE1",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1844
+              },
+              {
+                "body_sha256": "9c1d34a21f3545d6b1b02fe2a03828a046b37997c72faffb85a3697c5b59b2bb",
+                "end_line": 1869,
+                "kind": "subroutine",
+                "name": "LINE1",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1844
+              }
+            ],
+            "distinct_bodies": [
+              "9c1d34a21f3545d6"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "LINE1"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "e08b86e967acf59bdfe65cacdf1d03f59e6b29a81e22f5195e42d28ffc863928",
+                "end_line": 2856,
+                "kind": "subroutine",
+                "name": "LUBKSB",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2817
+              },
+              {
+                "body_sha256": "e08b86e967acf59bdfe65cacdf1d03f59e6b29a81e22f5195e42d28ffc863928",
+                "end_line": 2856,
+                "kind": "subroutine",
+                "name": "LUBKSB",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2817
+              }
+            ],
+            "distinct_bodies": [
+              "e08b86e967acf59b"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "LUBKSB"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "a8a03aa4ee548c2cd6a3d7c1b0b0e525ac378ba9606088a3d969089e312695a8",
+                "end_line": 2811,
+                "kind": "subroutine",
+                "name": "LUDCMP",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2736
+              },
+              {
+                "body_sha256": "a8a03aa4ee548c2cd6a3d7c1b0b0e525ac378ba9606088a3d969089e312695a8",
+                "end_line": 2811,
+                "kind": "subroutine",
+                "name": "LUDCMP",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 2736
+              }
+            ],
+            "distinct_bodies": [
+              "a8a03aa4ee548c2c"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "LUDCMP"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "6832e876bbd639f017dc1ff565414e23275445b2d612a7df8ac0e2cdd1065a63",
+                "end_line": 1464,
+                "kind": "subroutine",
+                "name": "ROTATION",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1409
+              },
+              {
+                "body_sha256": "6832e876bbd639f017dc1ff565414e23275445b2d612a7df8ac0e2cdd1065a63",
+                "end_line": 1464,
+                "kind": "subroutine",
+                "name": "ROTATION",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1409
+              }
+            ],
+            "distinct_bodies": [
+              "6832e876bbd639f0"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "ROTATION"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "f0a56d28f56fcf40ed40e17ce79346dbf16b8fbef465559cb5ad1dc028ee1e18",
+                "end_line": 1809,
+                "kind": "subroutine",
+                "name": "SLIPSYS",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1524
+              },
+              {
+                "body_sha256": "f0a56d28f56fcf40ed40e17ce79346dbf16b8fbef465559cb5ad1dc028ee1e18",
+                "end_line": 1809,
+                "kind": "subroutine",
+                "name": "SLIPSYS",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1524
+              }
+            ],
+            "distinct_bodies": [
+              "f0a56d28f56fcf40"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "SLIPSYS"
+          },
+          {
+            "bodies_agree": true,
+            "count": 2,
+            "definitions": [
+              {
+                "body_sha256": "ac4a783a23eae93371dc557d15c6461150803eb69a517d360f4da590aa607959",
+                "end_line": 2033,
+                "kind": "subroutine",
+                "name": "STRAINRATE",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1969
+              },
+              {
+                "body_sha256": "ac4a783a23eae93371dc557d15c6461150803eb69a517d360f4da590aa607959",
+                "end_line": 2033,
+                "kind": "subroutine",
+                "name": "STRAINRATE",
+                "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+                "start_line": 1969
+              }
+            ],
+            "distinct_bodies": [
+              "ac4a783a23eae933"
+            ],
+            "note": "the entry file defines this routine itself, so the other definitions are never compiled and cannot affect the result",
+            "resolution": "local",
+            "symbol": "STRAINRATE"
+          }
+        ],
+        "edges": {
+          "DFDX": [],
+          "DHLATN": [],
+          "DHSELF": [],
+          "F": [],
+          "GSLP0": [],
+          "GSLPINIT": [
+            "GSLP0"
+          ],
+          "HLATNT": [],
+          "HSELF": [],
+          "ITERATION": [
+            "DHLATN",
+            "DHSELF"
+          ],
+          "LATENTHARDEN": [
+            "HLATNT",
+            "HSELF"
+          ],
+          "LINE": [],
+          "LINE1": [],
+          "LUBKSB": [],
+          "LUDCMP": [],
+          "ROTATION": [],
+          "SLIPSYS": [
+            "LINE",
+            "LINE1"
+          ],
+          "STRAINRATE": [
+            "DFDX",
+            "F"
+          ],
+          "UMAT": [
+            "F",
+            "GSLPINIT",
+            "ITERATION",
+            "LATENTHARDEN",
+            "LUBKSB",
+            "LUDCMP",
+            "ROTATION",
+            "SLIPSYS",
+            "STRAINRATE"
+          ]
+        },
+        "entry": "UMAT",
+        "entry_path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+        "excluded_path_fragments": [],
+        "external_files": [],
+        "external_library_calls": {},
+        "includes": [
+          "aba_param.inc"
+        ],
+        "missing": [],
+        "multi_file": false,
+        "required_libraries": [],
+        "resolved": {
+          "DFDX": {
+            "body_sha256": "adb47d9f5b3b9132c37d2b40f34b8bd3a361d21b59cd7e02cf52ab409c0b552e",
+            "end_line": 2076,
+            "kind": "function",
+            "name": "DFDX",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 2063
+          },
+          "DHLATN": {
+            "body_sha256": "cbd77081ca819017538b9211e72672a05e3125e71024272812a21ae1cc89fac9",
+            "end_line": 2730,
+            "kind": "function",
+            "name": "DHLATN",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 2630
+          },
+          "DHSELF": {
+            "body_sha256": "2091b7c62f7f6c8e26324345ca6aa83dc4d4dca5364289b373f53dbb2f1650f9",
+            "end_line": 2622,
+            "kind": "function",
+            "name": "DHSELF",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 2536
+          },
+          "F": {
+            "body_sha256": "c72479649ecadf22c6514e5b42004c734d6d87d51dafa943fe9a137e4e59bd27",
+            "end_line": 2055,
+            "kind": "function",
+            "name": "F",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 2041
+          },
+          "GSLP0": {
+            "body_sha256": "a2c439d9114f0302f080f9712d047778105333fcf65b8c8182395b01972b64fd",
+            "end_line": 1963,
+            "kind": "function",
+            "name": "GSLP0",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 1950
+          },
+          "GSLPINIT": {
+            "body_sha256": "4ee937a31b21123080f64771cce50c530237a0713106164f127413f9ef4e26db",
+            "end_line": 1942,
+            "kind": "subroutine",
+            "name": "GSLPINIT",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 1875
+          },
+          "HLATNT": {
+            "body_sha256": "26c636c009088aab6797ea727b08ed4d8ba86fe43837b8b924bf3799f4f66341",
+            "end_line": 2378,
+            "kind": "function",
+            "name": "HLATNT",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 2306
+          },
+          "HSELF": {
+            "body_sha256": "6e3564db396edc12817abc1453cb6ce94b87026addab1a5e95bf3bfa2690b983",
+            "end_line": 2298,
+            "kind": "function",
+            "name": "HSELF",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 2241
+          },
+          "ITERATION": {
+            "body_sha256": "1c94b4c3f741d05329a0e7f9225de165fe352901d4fdaa6bc6a3359c653de1ca",
+            "end_line": 2528,
+            "kind": "subroutine",
+            "name": "ITERATION",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 2384
+          },
+          "LATENTHARDEN": {
+            "body_sha256": "ec364ebe3bfd73911aa2e73e90f6595ab33b0afd1af5dc2e4a9af7ff812745c7",
+            "end_line": 2233,
+            "kind": "subroutine",
+            "name": "LATENTHARDEN",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 2082
+          },
+          "LINE": {
+            "body_sha256": "be49ac356aff2678f7240640774bb5f5d24e8a27580557067bc7daf719fcb826",
+            "end_line": 1838,
+            "kind": "subroutine",
+            "name": "LINE",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 1815
+          },
+          "LINE1": {
+            "body_sha256": "9c1d34a21f3545d6b1b02fe2a03828a046b37997c72faffb85a3697c5b59b2bb",
+            "end_line": 1869,
+            "kind": "subroutine",
+            "name": "LINE1",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 1844
+          },
+          "LUBKSB": {
+            "body_sha256": "e08b86e967acf59bdfe65cacdf1d03f59e6b29a81e22f5195e42d28ffc863928",
+            "end_line": 2856,
+            "kind": "subroutine",
+            "name": "LUBKSB",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 2817
+          },
+          "LUDCMP": {
+            "body_sha256": "a8a03aa4ee548c2cd6a3d7c1b0b0e525ac378ba9606088a3d969089e312695a8",
+            "end_line": 2811,
+            "kind": "subroutine",
+            "name": "LUDCMP",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 2736
+          },
+          "ROTATION": {
+            "body_sha256": "6832e876bbd639f017dc1ff565414e23275445b2d612a7df8ac0e2cdd1065a63",
+            "end_line": 1464,
+            "kind": "subroutine",
+            "name": "ROTATION",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 1409
+          },
+          "SLIPSYS": {
+            "body_sha256": "f0a56d28f56fcf40ed40e17ce79346dbf16b8fbef465559cb5ad1dc028ee1e18",
+            "end_line": 1809,
+            "kind": "subroutine",
+            "name": "SLIPSYS",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 1524
+          },
+          "STRAINRATE": {
+            "body_sha256": "ac4a783a23eae93371dc557d15c6461150803eb69a517d360f4da590aa607959",
+            "end_line": 2033,
+            "kind": "subroutine",
+            "name": "STRAINRATE",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 1969
+          },
+          "UMAT": {
+            "body_sha256": "4f833621b394fa64788e789ea5ff509ce4e22fba5e279ba5f9e9dbfffcbd9037",
+            "end_line": 1403,
+            "kind": "subroutine",
+            "name": "UMAT",
+            "path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+            "start_line": 1
+          }
+        },
+        "searched_roots": [
+          "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+          "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity"
+        ]
+      },
+      "entry_routine": "UMAT",
+      "furthest_stage": "dependencies_resolved",
+      "id": "lucarini_crystalplasticity",
+      "identity": {
+        "canonical_source_id": "108518e08678d2939acf0eac4859de80",
+        "closure_size": 1,
+        "code_only_sha256": "18ba966c0b49984f6aa2c7b5ed93f92ec615935e3a6da4c187203601059ffec5",
+        "entry_routine": "UMAT",
+        "identity_kind": "single_file",
+        "normalised_content_sha256": "2790661de6f4493d5ed64bf8001fb672230144d03d5d36c2a4e46f7baf0412c5"
+      },
+      "inferred_dimensions": {
+        "literal_statev_index": 21,
+        "minimum_nstatv_for": {
+          "3": 21,
+          "4": 21,
+          "6": 21
+        },
+        "minimum_ntens": 3,
+        "note": "minimum_ntens is the largest literal index written into a tensor-shaped argument; driving the source with a smaller NTENS writes out of bounds",
+        "statev_terms": []
+      },
+      "license_source": "LICENSE (SPDX MIT, reported by the GitHub licence API)",
+      "license_spdx": "MIT",
+      "material_blocker": "byte-identical to coupled/umat.f in the same repository, so it is one implementation reachable at two paths; its 160-constant deck has not been mapped to the source's PROPS layout",
+      "notes": "crystal plasticity (Huang/Kysar lineage)",
+      "redistribution_permitted": true,
+      "repository": "sergiolucarini_UMAT4COMSOL",
+      "repository_url": "https://github.com/sergiolucarini/UMAT4COMSOL.git",
+      "retrieved_at": "pinned at e62506fd8426",
+      "source_path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
+      "stages": {
+        "contract_constructed": {
+          "reason": "no material property vector or loading history is available for this source; upstream provides none and none may be invented",
+          "status": "blocked_by_missing_material_data"
+        },
+        "dependencies_resolved": {
+          "closure_size": 18,
+          "external_files": [],
+          "multi_file": false,
+          "status": "succeeded"
+        },
+        "discovered": {
+          "content_sha256": "8e17d7614676e8b4afb99c5e90548b09b493f3a9371c437cf1ef4fb4035ab784",
+          "status": "succeeded"
+        },
+        "entry_detected": {
+          "entry": "UMAT",
+          "status": "succeeded"
+        },
+        "license_classified": {
+          "license_source": "LICENSE (SPDX MIT, reported by the GitHub licence API)",
+          "license_spdx": "MIT",
+          "redistribution_permitted": true,
+          "status": "succeeded"
+        }
+      }
     }
   ],
   "failure_taxonomy": {
     "contract_constructed": [
       "jgomezc1_UMAT_NKH_1.02",
-      "jgomezc1_UMAT_VPDCL"
+      "jgomezc1_UMAT_VPDCL",
+      "lucarini_crystalplasticity"
     ],
     "dependencies_resolved": [
       "ngrilli_umat"
     ]
   },
   "funnel": {
-    "candidates": 8,
-    "reached_contract_constructed": 5,
-    "reached_dependencies_resolved": 7,
-    "reached_derivatives_verified": 5,
-    "reached_discovered": 8,
-    "reached_entry_detected": 8,
-    "reached_generated_compiled": 5,
-    "reached_license_classified": 8,
-    "reached_original_compiled": 5,
-    "reached_original_executed": 5,
-    "reached_primal_parity": 5,
-    "reached_reference_resolved": 5,
-    "reached_transformed": 5,
-    "reached_transformed_executed": 5
+    "candidates": 11,
+    "reached_contract_constructed": 7,
+    "reached_dependencies_resolved": 10,
+    "reached_derivatives_verified": 7,
+    "reached_discovered": 11,
+    "reached_entry_detected": 11,
+    "reached_generated_compiled": 7,
+    "reached_license_classified": 11,
+    "reached_original_compiled": 7,
+    "reached_original_executed": 7,
+    "reached_primal_parity": 7,
+    "reached_reference_resolved": 7,
+    "reached_transformed": 7,
+    "reached_transformed_executed": 7
   },
-  "generated_at": "2026-08-25T20:39:30.790263+00:00",
+  "generated_at": "2026-08-25T20:53:46.513206+00:00",
   "mode": "offline",
   "repositories": [
     {
@@ -5626,6 +6810,17 @@
       "redistribution_permitted": false,
       "tier": "license-unknown",
       "url": "https://github.com/TarletonGroup/CrystalPlasticity.git"
+    },
+    {
+      "commit_sha": "e62506fd842611566bac5b19ae1041b52b40ddc6",
+      "description": "Abaqus-compatible UMATs published with the UMAT4COMSOL paper: neo-Hookean hyperelasticity, finite-strain elastoplasticity, and a crystal-plasticity model. Independently authored and not present in any other collection here, and the first finite-strain sources in the corpus.",
+      "id": "sergiolucarini_UMAT4COMSOL",
+      "license_source": "LICENSE (SPDX MIT, reported by the GitHub licence API)",
+      "license_spdx": "MIT",
+      "path": "permissive/sergiolucarini_UMAT4COMSOL",
+      "redistribution_permitted": true,
+      "tier": "permissive",
+      "url": "https://github.com/sergiolucarini/UMAT4COMSOL.git"
     }
   ],
   "schema": "umat-oti-corpus-round/1",

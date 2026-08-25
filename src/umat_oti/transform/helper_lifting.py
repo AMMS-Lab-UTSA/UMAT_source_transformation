@@ -177,6 +177,20 @@ def lift_helper_set_source(
     return LiftedHelperSet(helper_names=ordered, source=body + ("\n" if body else ""))
 
 
+
+#: Shapes the Abaqus UMAT interface fixes for its dummy arguments. A source is
+#: free to omit a DIMENSION for an argument it never touches -- UMAT4COMSOL's
+#: elastoplastic model declares most of them and leaves out COORDS and DROT --
+#: and after lifting that argument becomes an implicitly typed scalar. The
+#: driver then fails with "Rank mismatch in argument 'coords' (scalar and
+#: rank-1)". The shape comes from the interface, not from the source.
+UMAT_ARGUMENT_SHAPES: dict[str, str] = {
+    "STRESS": "NTENS", "STATEV": "NSTATV", "DDSDDE": "NTENS,NTENS",
+    "DDSDDT": "NTENS", "DRPLDE": "NTENS", "STRAN": "NTENS", "DSTRAN": "NTENS",
+    "TIME": "2", "PREDEF": "1", "DPRED": "1", "PROPS": "NPROPS",
+    "COORDS": "3", "DROT": "3,3", "DFGRD0": "3,3", "DFGRD1": "3,3",
+}
+
 def _routine_callees(routine: ParsedSubroutine, form: str, source_lines: list[str]) -> tuple[str, ...]:
     seen: set[str] = set()
     ordered: list[str] = []
@@ -354,6 +368,27 @@ def _lift_helper_routine(
         declaration_oti_names.add(caller_variable)
 
     declared_non_oti = integer_names | character_names | logical_names | parameter_names
+    # The Abaqus UMAT interface fixes CMNAME as a character string, and a source
+    # is entitled to leave it undeclared and never use it -- UMAT4COMSOL's
+    # neo-Hookean model does exactly that. Under "implicit type(oti) (a-h,o-z)"
+    # an undeclared CMNAME becomes an OTI number and the driver then fails to
+    # link with "passed CHARACTER(1) to TYPE(onumm2n1)". Its type comes from the
+    # interface, not from the source, so it is asserted here.
+    if "CMNAME" in {arg.upper() for arg in args}:
+        declared_non_oti = declared_non_oti | {"CMNAME"}
+        if "CMNAME" not in character_names:
+            prelude.append("    character(len=80) :: CMNAME")
+    # Supply the interface's shape for any array argument the source left
+    # undeclared, so it is lifted as an array rather than a scalar.
+    if original_name.upper() == "UMAT":
+        for name, shape in UMAT_ARGUMENT_SHAPES.items():
+            if name not in {arg.upper() for arg in args}:
+                continue
+            if name in declaration_oti_names or name in declared_non_oti:
+                continue
+            prelude.append(f"    type({type_name}) :: {name}({shape})")
+            declaration_oti_names.add(name)
+
     oti_names = set(declaration_oti_names)
     for arg in args:
         upper = arg.upper()

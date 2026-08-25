@@ -88,6 +88,17 @@
       "redistribution_permitted": false,
       "metadata_only": true,
       "description": "No licence granted. Reference only."
+    },
+    {
+      "id": "sergiolucarini_UMAT4COMSOL",
+      "url": "https://github.com/sergiolucarini/UMAT4COMSOL.git",
+      "commit_sha": "e62506fd842611566bac5b19ae1041b52b40ddc6",
+      "tier": "permissive",
+      "path": "permissive/sergiolucarini_UMAT4COMSOL",
+      "license_spdx": "MIT",
+      "license_source": "LICENSE (SPDX MIT, reported by the GitHub licence API)",
+      "redistribution_permitted": true,
+      "description": "Abaqus-compatible UMATs published with the UMAT4COMSOL paper: neo-Hookean hyperelasticity, finite-strain elastoplasticity, and a crystal-plasticity model. Independently authored and not present in any other collection here, and the first finite-strain sources in the corpus."
     }
   ],
   "candidates": [
@@ -372,6 +383,127 @@
       "nstatv": 0,
       "material": null,
       "material_blocker": "dimensions and material vector not yet established from the upstream example decks"
+    },
+    {
+      "id": "lucarini_neohookean",
+      "repository": "sergiolucarini_UMAT4COMSOL",
+      "source": "neohookean/umat.f",
+      "dependency_roots": [
+        "neohookean"
+      ],
+      "constitutive_class": "neo-Hookean hyperelasticity, finite strain",
+      "ntens": 6,
+      "ndi": 3,
+      "nshr": 3,
+      "nstatv": 1,
+      "material": {
+        "props": [
+          1000000.0,
+          0.3
+        ],
+        "provenance": "neohookean/neohookean.inp, *User Material, constants=2",
+        "meaning": "E, nu",
+        "dstran_per_increment": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "n_increments": 10,
+        "deformation_gradient_increment": [
+          0.001,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "loading_path_note": "this model computes its stress from DFGRD1 alone, so the driver must advance the deformation gradient; DSTRAN is unused. The uniaxial stretch increment is declared here rather than imported: the upstream deck is a full finite-element model, not a material-point history.",
+        "parameters": [
+          {
+            "name": "EMOD",
+            "props_index": 1
+          },
+          {
+            "name": "ENU",
+            "props_index": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "lucarini_elastoplastic",
+      "repository": "sergiolucarini_UMAT4COMSOL",
+      "source": "elastoplastic/umat.f",
+      "dependency_roots": [
+        "elastoplastic"
+      ],
+      "constitutive_class": "finite-strain J2 elastoplasticity, linear hardening",
+      "ntens": 6,
+      "ndi": 3,
+      "nshr": 3,
+      "nstatv": 7,
+      "material": {
+        "props": [
+          70000.0,
+          0.2,
+          243.0,
+          2171.0
+        ],
+        "provenance": "elastoplastic/elastoplastic.inp, *User Material, constants=4",
+        "meaning": "E, nu, initial yield stress, hardening modulus",
+        "dstran_per_increment": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "n_increments": 10,
+        "deformation_gradient_increment": [
+          0.001,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "loading_path_note": "finite strain; the deformation-gradient increment is declared here for the same reason as the neo-Hookean case.",
+        "parameters": [
+          {
+            "name": "EMOD",
+            "props_index": 1
+          },
+          {
+            "name": "SY",
+            "props_index": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "lucarini_crystalplasticity",
+      "repository": "sergiolucarini_UMAT4COMSOL",
+      "source": "crystalplasticity/umat.f",
+      "dependency_roots": [
+        "crystalplasticity"
+      ],
+      "constitutive_class": "crystal plasticity (Huang/Kysar lineage)",
+      "ntens": 6,
+      "ndi": 3,
+      "nshr": 3,
+      "nstatv": 21,
+      "material": null,
+      "material_blocker": "byte-identical to coupled/umat.f in the same repository, so it is one implementation reachable at two paths; its 160-constant deck has not been mapped to the source's PROPS layout"
     }
   ]
 }

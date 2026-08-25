@@ -130,6 +130,7 @@ def measure_reference_resolution(
     props_index: int,
     array: str = "DSIGMA_DP",
     ladder: Sequence[float] = DEFAULT_LADDER,
+    deformation_gradient_increment: Optional[Sequence[float]] = None,
 ) -> ResolutionLadder:
     """Evaluate one parameter's derivative across a ladder of step sizes."""
     key = "dsigma" if array == "DSIGMA_DP" else "dstatev"
@@ -139,7 +140,8 @@ def measure_reference_resolution(
         try:
             reference = centered_fd(
                 executable, props, path, ntens=ntens, nstatv=nstatv,
-                props_indices=[props_index], rel_step=relative_step)
+                props_indices=[props_index], rel_step=relative_step,
+                deformation_gradient_increment=deformation_gradient_increment)
         except RuntimeError:
             # A step that drives the model out of its valid range contributes
             # nothing; it must not silently become a zero.
