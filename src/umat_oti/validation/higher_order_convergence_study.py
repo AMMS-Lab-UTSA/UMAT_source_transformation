@@ -826,7 +826,10 @@ def _write_outputs(*, output_dir: Path, model: str, rows: list[dict[str, Any]],
     dataset_path.write_text(json.dumps(dataset, indent=2, sort_keys=True), encoding="utf-8")
 
     dataset["rows"] = rows
-    dataset["dataset_path"] = str(dataset_path)
+    # Record where the evidence lives relative to the repository. An absolute
+    # path here names the machine that produced it and cannot be resolved by
+    # anyone else, so it is not usable provenance.
+    dataset["dataset_path"] = _relative(dataset_path)
     return dataset
 
 

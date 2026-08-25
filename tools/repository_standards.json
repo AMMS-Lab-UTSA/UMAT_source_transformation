@@ -1,0 +1,43 @@
+{
+  "_comment": [
+    "Configuration for tools/audit_repository_standards.py.",
+    "",
+    "The absolute-path check asks one question: can a fresh clone run without",
+    "any path under someone's home directory existing? Code, documentation,",
+    "contracts and configuration must therefore never name one -- they are what",
+    "a reviewer executes.",
+    "",
+    "Records of runs that already happened are a different thing. An archived",
+    "Slurm job's log names the directory it ran in; that is provenance, and",
+    "rewriting it would falsify the record. Those directories are exempt, each",
+    "with the reason below. The exemption is narrow, path-prefixed, and does not",
+    "extend to anything a reproduction reads as input.",
+    "",
+    "The authoritative proof of clean-clone independence is",
+    "scripts/clean_clone_acceptance.sh, which runs the pipeline in a temporary",
+    "clone with no access to this machine's directories. This check is the",
+    "cheap lint that keeps new violations out of reviewer-facing files."
+  ],
+  "absolute_path_exemptions": [
+    {
+      "prefix": "paper_results/arc_",
+      "reason": "archived HPC evidence: these files record where a real Slurm job ran, including its working directory. They are inputs to no reproduction and must not be rewritten."
+    },
+    {
+      "prefix": "paper_results/actual_umat_higher_order/",
+      "reason": "generated evidence that recorded its own absolute output directory. The emitter now writes repository-relative paths; these files predate that fix and will clear when the studies are next regenerated."
+    },
+    {
+      "prefix": "paper_results/higher_order_convergence/",
+      "reason": "as above: a self-referential dataset_path recorded before the emitter was corrected."
+    },
+    {
+      "prefix": "parameter_sensitivity/IMPORT_PROVENANCE.json",
+      "reason": "records where each imported model came from on the machine that performed the import. That origin is the provenance; the imported copies themselves are addressed by repository-relative path and SHA-256."
+    },
+    {
+      "prefix": "docs/development/",
+      "reason": "development records, not reviewer-facing documentation. They cite the machine-local paths that evidence was gathered from at the time."
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+name: Abaqus paired validation (ARC)
+
+# Abaqus cannot run on a public GitHub runner: it needs a licence and the
+# documented HPC environment. This workflow therefore never executes here. It
+# exists so the ARC procedure is public, reviewable and version-controlled even
+# though only someone with access can run it.
+#
+# Outside ARC every step reports blocked_by_external_dependency. That is a
+# distinct outcome from a failure and from a pass, and it is recorded as such in
+# the claim matrix.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type RUN-ON-ARC to acknowledge this cannot run here"
+        required: true
+
+jobs:
+  explain:
+    name: Why this does not run here
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Report the external dependency
+        run: |
+          cat <<'MSG'
+          Abaqus paired validation is Tier C. It requires:
+
+            - a licensed Abaqus installation
+            - the documented ARC module environment
+            - the Slurm submission script in scripts/
+
+          Public CI has none of these, so this job reports the dependency rather
+          than pretending to check it.
+
+          The archived evidence from the last real run is in the repository and
+          needs no licence to read:
+
+            paper_results/arc_791506/table2_abaqus_paired.json
+
+          It records the Slurm job id, hostname, compiler version, the commit
+          that produced it, and SHA-256 of every input and output.
+          MSG
+          test -f paper_results/arc_791506/table2_abaqus_paired.json
+          python -c "
+          import json
+          d = json.load(open('paper_results/arc_791506/table2_abaqus_paired.json'))
+          print('archived rows:', len(d['rows']))
+          print('summary:', json.dumps(d['summary'])[:200])
+          "
