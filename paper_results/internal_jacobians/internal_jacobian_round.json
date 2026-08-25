@@ -1,13 +1,13 @@
 {
   "funnel": {
-    "blocked": 5,
+    "blocked": 4,
     "candidate_sources": 28,
     "extracted_and_disagreeing": 0,
-    "extracted_and_verified": 3,
+    "extracted_and_verified": 4,
     "no_local_solve": 20,
     "sources_with_a_local_solve": 8
   },
-  "generated_at": "2026-08-25T15:08:50.120417+00:00",
+  "generated_at": "2026-08-25T16:37:05.722488+00:00",
   "records": [
     {
       "bucket": "no_local_solve",
@@ -820,10 +820,61 @@
       "source_sha256": "440cf8a9253411e8f56ec08bc34c4bdd49340453b35bca38febecd5577eac8ee"
     },
     {
-      "blocked_by": "material_data_unavailable",
-      "bucket": "blocked",
+      "bucket": "verified",
       "constitutive_class": "viscoplastic damage, classical theory",
+      "converged_iterate": 0.0008161616631137955,
+      "extracted": {
+        "finite_difference": -4000.484746689092,
+        "hand_coded": -4000.4847466873234,
+        "oti": -4000.484746687323
+      },
+      "furthest_stage": "jacobian_verified",
+      "hand_coded_audit": {
+        "absolute_difference": 1.768512447597459e-09,
+        "note": "the source's own Jacobian is audited against the same reference; it is never used as the reference for the extracted value",
+        "relative_difference": 4.420745383571646e-13
+      },
+      "hand_coded_jacobian": -4000.4847466873234,
       "id": "UMAT_VPDCL",
+      "injection": {
+        "edits": [
+          {
+            "kind": "counter-reset",
+            "line": 184
+          },
+          {
+            "kind": "record+seed",
+            "line": 197
+          }
+        ],
+        "enclosing_routine": "UMAT",
+        "forced_exit": true,
+        "override_iterate": true,
+        "slots": {
+          "nprops_extended": 25,
+          "nstatv_extended": 21,
+          "offset_past_declared_nstatv": 0,
+          "props_seed": 25,
+          "statev_counter": 20,
+          "statev_iterate": 17,
+          "statev_jacobian": 19,
+          "statev_residual": 18,
+          "statev_sentinel": 21
+        },
+        "solve": {
+          "convergence_tolerance": "TOLER",
+          "convergence_variable": "FGAM",
+          "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+          "hand_coded_jacobian_variable": "FJAC",
+          "iteration_variable": "GAM_PAR",
+          "loop_end_line": 213,
+          "loop_start_line": 184,
+          "residual_variable": "FGAM",
+          "update_line": 197,
+          "update_sign": "-"
+        },
+        "target_increment": 4
+      },
       "license": "not stated in the source header; distributed under this repository's licence",
       "local_solves_discovered": [
         {
@@ -839,11 +890,122 @@
           "update_sign": "-"
         }
       ],
+      "material_data_source": "the property vector the archived Abaqus paired validation ran this model with (slurm 791506, deck sha256 26390d3503f32ab0...). probe vector of unit constants, not a physical material.",
+      "material_is_physical": false,
+      "model": "UMAT_VPDCL",
       "origin": "repository_umat_archive",
+      "probe_evaluations": 2.0,
+      "probe_hand_coded_jacobian": -4000.4847466873234,
+      "probe_residual_at_iterate": 3.617690494750094e-07,
       "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
-      "reason": "no property vector for this source exists in either repository",
-      "source": "UMATs/UMATs/ICP/UMAT_VPDCL.for",
-      "source_sha256": "039945bdd1a4d04ea8b7d24f0e935eeb6ba64405673c05ebb757c8a4a4df070e"
+      "residual_at_iterate": 3.617690494750094e-07,
+      "residual_evaluations_per_increment": [
+        2.0,
+        2.0,
+        2.0,
+        2.0
+      ],
+      "rows": [
+        {
+          "absolute_error": 1.7689671949483454e-09,
+          "agrees": true,
+          "array": "DSTATEV_DP",
+          "branch": "local_solve",
+          "component": 18,
+          "increment": 4,
+          "judged_by": "within_reference_resolution",
+          "oti": -4000.484746687323,
+          "oti_direction": 0,
+          "parameter": "GSEED",
+          "props_index": 25,
+          "reference": -4000.484746689092,
+          "relative_error": 4.421882114192261e-13
+        }
+      ],
+      "slot_placement_attempts": [
+        {
+          "increments_with_intact_sentinel": 4,
+          "increments_with_live_counter": 4,
+          "offset": 0
+        }
+      ],
+      "slots": {
+        "nprops_extended": 25,
+        "nstatv_extended": 21,
+        "offset_past_declared_nstatv": 0,
+        "props_seed": 25,
+        "statev_counter": 20,
+        "statev_iterate": 17,
+        "statev_jacobian": 19,
+        "statev_residual": 18,
+        "statev_sentinel": 21
+      },
+      "solve": {
+        "convergence_tolerance": "TOLER",
+        "convergence_variable": "FGAM",
+        "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+        "hand_coded_jacobian_variable": "FJAC",
+        "iteration_variable": "GAM_PAR",
+        "loop_end_line": 213,
+        "loop_start_line": 184,
+        "residual_variable": "FGAM",
+        "update_line": 197,
+        "update_sign": "-"
+      },
+      "source": "UMAT_VPDCL.for",
+      "source_sha256": "039945bdd1a4d04ea8b7d24f0e935eeb6ba64405673c05ebb757c8a4a4df070e",
+      "stages": {
+        "compiled_original_probe": {
+          "status": "succeeded"
+        },
+        "compiled_oti_probe": {
+          "status": "succeeded"
+        },
+        "converged_iterate_located": {
+          "increment": 4,
+          "iterate": 0.0008161616631137955,
+          "residual": 3.617690494750094e-07,
+          "status": "succeeded"
+        },
+        "fd_reference_resolved": {
+          "status": "succeeded",
+          "step": 8.161616631137956e-08,
+          "value": -4000.484746689092
+        },
+        "jacobian_extracted": {
+          "status": "succeeded",
+          "value": -4000.484746687323
+        },
+        "jacobian_verified": {
+          "reason": null,
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 2.2715933310738146e-13
+        },
+        "probe_injected": {
+          "status": "succeeded"
+        },
+        "probe_took_effect": {
+          "reason": null,
+          "recorded_iterate": 0.0008161616631137955,
+          "residual_evaluations_at_seeded_iterate": 2.0,
+          "seeded_iterate": 0.0008161616631137955,
+          "status": "succeeded"
+        },
+        "recording_is_non_perturbing": {
+          "max_state_drift": 0.0,
+          "max_stress_drift": 0.0,
+          "reason": null,
+          "status": "succeeded"
+        },
+        "solve_discovered": {
+          "status": "succeeded"
+        }
+      },
+      "target_increment": 4
     },
     {
       "blocked_by": "material_data_unavailable",

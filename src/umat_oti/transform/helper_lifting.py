@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import re
-from typing import Any, Iterable
+from typing import Any, Iterable, Sequence
 
 from umat_oti.core.model import ParsedFortranSource, ParsedSubroutine
 from umat_oti.fortran.parser import split_top_level
@@ -200,6 +200,35 @@ _KCLEAR_CALL_RE = re.compile(
 )
 
 
+
+_MODULE_DIRECTIONS_RE = re.compile(r"otim(\d+)n(\d+)", re.IGNORECASE)
+_LIFT_IDENTIFIER_RE = re.compile(r"(?<![A-Za-z0-9_])([A-Za-z_]\w*)")
+
+
+def direction_renames(module_name: str, statements: Sequence[str]) -> str:
+    """USE-clause renames for direction constants the routine uses as its own.
+
+    The OTI module exports E1, E2, ... for its imaginary directions, and those
+    are ordinary names for elastic moduli in a UMAT. Importing the module
+    unqualified into a routine that assigns to its own E1 makes that assignment
+    a write to a named constant, which gfortran rejects. Renaming on import
+    keeps the constant reachable under another name while freeing the original.
+
+    Returns "" when nothing collides, so untouched sources keep byte-identical
+    output.
+    """
+    match = _MODULE_DIRECTIONS_RE.search(module_name)
+    if not match:
+        return ""
+    count = int(match.group(1))
+    used: set[str] = set()
+    for statement in statements:
+        used.update(name.upper() for name in _LIFT_IDENTIFIER_RE.findall(statement))
+    collisions = [f"E{index}" for index in range(1, count + 1)
+                  if f"E{index}" in used]
+    return "".join(f", OTI_{name} => {name}" for name in collisions)
+
+
 def _kclear_inline_lines(statement: str) -> list[str] | None:
     """Inline a CALL KCLEAR(target, nr, nc) as an explicit zeroing loop.
 
@@ -330,9 +359,12 @@ def _lift_helper_routine(
         )
     )
 
+    _renames = direction_renames(
+        module_name,
+        [_split_label_and_statement(raw, form)[1] for raw in body] + list(args))
     lines = [
         f"subroutine {original_name.lower()}_oti({', '.join(arg.lower() for arg in args)})",
-        f"    use {module_name}, OTI_HELPER_DP => DP",
+        f"    use {module_name}, OTI_HELPER_DP => DP{_renames}",
         f"    implicit type({type_name}) (a-h,o-z)",
         "    implicit integer (i-n)",
     ]
