@@ -45,14 +45,14 @@
     "small_strain": 24
   },
   "by_numerical_verification": {
-    "failed": 1,
     "not_attempted": 23,
-    "succeeded": 17
+    "succeeded": 17,
+    "unresolved": 1
   },
   "by_source_form": {
     "fixed": 41
   },
-  "generated_at": "2026-08-25T16:42:26.950096+00:00",
+  "generated_at": "2026-08-25T17:29:01.352134+00:00",
   "sources": 41,
   "structural_diversity_caveat": "Every parameter-sensitivity benchmark row is single-file, fixed-form and small-strain with at most one helper routine. Breadth of constitutive class is therefore better demonstrated than breadth of source-code structure; free-form, multi-file and finite-strain sources are not represented in this set."
 }
