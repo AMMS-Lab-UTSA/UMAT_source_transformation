@@ -20,7 +20,6 @@ import argparse
 import csv
 import hashlib
 import json
-import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -32,6 +31,7 @@ sys.path.insert(0, str(REPO_ROOT / "tools"))
 from run_parameter_sensitivity_sweep import generate_contract  # noqa: E402
 
 from umat_oti.transform.internal_jacobian import discover_local_solves  # noqa: E402
+from umat_oti.validation.actual_umat_higher_order_generic import MODELS  # noqa: E402
 from umat_oti.validation.internal_jacobian_validation import (  # noqa: E402
     InternalJacobianCase,
     verify_internal_jacobian,
@@ -101,26 +101,19 @@ def _bucket(record: dict) -> str:
 
 
 def run_external(entry: dict, work_root: Path) -> dict:
+    """Run one source that lives outside the parameter-sensitivity model set."""
     record: dict = {
         "id": entry["id"],
-        "origin": "external",
-        "source": entry["relative_path"],
+        "origin": "repository_umat_archive",
+        "source": entry["path"],
         "provenance": entry.get("provenance"),
         "license": entry.get("license"),
         "constitutive_class": entry.get("constitutive_class"),
     }
-    root = os.environ.get("UMAT_OTI_EXTERNAL_SOURCES")
-    if not root:
-        record["bucket"] = "blocked"
-        record["reason"] = (
-            "UMAT_OTI_EXTERNAL_SOURCES is unset, so this non-redistributable "
-            "source was not resolved; set it to the directory holding these files "
-            "to include them in the round")
-        return record
-    source = Path(root) / entry["relative_path"]
+    source = REPO_ROOT / entry["path"]
     if not source.is_file():
         record["bucket"] = "blocked"
-        record["reason"] = f"declared source not found under UMAT_OTI_EXTERNAL_SOURCES"
+        record["reason"] = f"declared source {entry['path']} is not present"
         return record
     record["source_sha256"] = _sha256(source)
     solves = discover_local_solves(source.read_text(errors="replace"))
@@ -128,21 +121,28 @@ def run_external(entry: dict, work_root: Path) -> dict:
     if not solves:
         record["bucket"] = "no_local_solve"
         return record
+
     material = entry.get("material_data", {})
-    if material.get("status") != "available":
+    if material.get("status") != "higher_order_registry":
         record["bucket"] = "blocked"
+        record["blocked_by"] = "material_data_unavailable"
         record["reason"] = material.get(
             "reason", "no property vector is available for this source")
-        record["blocked_by"] = "material_data_unavailable"
         return record
+
+    spec = MODELS[material["key"]]
+    record["material_data_source"] = (
+        "umat_oti.validation.actual_umat_higher_order_generic.MODELS"
+        f"[{material['key']!r}] -- the same property vector and loading path the "
+        "higher-order study for this model used")
     record.update(verify_internal_jacobian(
         InternalJacobianCase(
             model=entry["id"], source_path=source.resolve(),
-            props=tuple(material["props_values"]),
-            dstran_per_increment=tuple(material["dstran_per_increment"]),
-            n_increments=int(material["n_increments"]),
-            ntens=int(entry["ntens"]), nstatv=int(entry["nstatv"]),
-            ndi=int(entry["ndi"]), nshr=int(entry["nshr"])),
+            props=tuple(spec.props),
+            dstran_per_increment=tuple(spec.increments[0]),
+            n_increments=len(spec.increments),
+            ntens=spec.ntens, nstatv=spec.nstatv,
+            ndi=3, nshr=max(spec.ntens - 3, 0)),
         work_root / entry["id"]))
     record["bucket"] = _bucket(record)
     return record

@@ -161,6 +161,10 @@ def transform_umat_for_parameter_sensitivity(
         encoding="utf-8",
     )
 
+    stubs = _required_utility_stubs(source_text)
+    (output_dir / "abaqus_stubs.f90").write_text(
+        "".join(_STUBBABLE_UTILITIES[name] for name in stubs), encoding="utf-8")
+
     (output_dir / "Makefile").write_text(
         _emit_makefile(module_result.module_name), encoding="utf-8"
     )
@@ -490,6 +494,54 @@ def _emit_driver(
     return "\n".join(lines) + "\n"
 
 
+#: Abaqus utility routines that a UMAT may call but that no standalone build
+#: provides. Only routines whose contract is independent of the OTI arithmetic
+#: can be stubbed here: XIT takes no arguments and only aborts. Routines that
+#: consume or return material quantities (SPRINC, ROTSIG, SINV) would need
+#: OTI-aware implementations, so they are reported as unsupported rather than
+#: given a stub that silently returns wrong values.
+_STUBBABLE_UTILITIES = {
+    "XIT": """SUBROUTINE XIT
+  WRITE(0,'(A)') 'UMAT called XIT (the model aborted the increment)'
+  STOP 3
+END SUBROUTINE XIT
+""",
+}
+
+_UNSUPPORTED_UTILITIES = ("SPRINC", "SPRIND", "ROTSIG", "SINV", "STDB_ABQERR")
+
+_CALL_RE = re.compile(r"(?:^|\W)CALL\s+([A-Za-z_]\w*)", re.IGNORECASE)
+_DEFINITION_RE = re.compile(
+    r"^\s*(?:\d+\s+)?(?:RECURSIVE\s+|PURE\s+|ELEMENTAL\s+)*SUBROUTINE\s+([A-Za-z_]\w*)",
+    re.IGNORECASE | re.MULTILINE)
+
+
+class UnsupportedAbaqusUtilityError(RuntimeError):
+    """The source calls an Abaqus utility that cannot be stubbed faithfully."""
+
+    code = "unsupported_abaqus_utility"
+
+
+def _required_utility_stubs(source_text: str) -> tuple[str, ...]:
+    """Utility routines the source calls but neither defines nor can obtain.
+
+    A standalone material-point build has no Abaqus runtime to link against, so
+    any such call is an unresolved symbol at link time. Detecting it here turns
+    a raw linker error into a named, actionable outcome.
+    """
+    defined = {m.group(1).upper() for m in _DEFINITION_RE.finditer(source_text)}
+    called = {m.group(1).upper() for m in _CALL_RE.finditer(source_text)}
+    missing = called - defined
+    blocked = sorted(missing.intersection(_UNSUPPORTED_UTILITIES))
+    if blocked:
+        raise UnsupportedAbaqusUtilityError(
+            f"{UnsupportedAbaqusUtilityError.code}: this source calls "
+            f"{', '.join(blocked)}, which operate on material quantities and "
+            "would have to be reimplemented in OTI arithmetic; stubbing them "
+            "would silently return wrong values")
+    return tuple(sorted(missing.intersection(_STUBBABLE_UTILITIES)))
+
+
 def _emit_makefile(module_name: str) -> str:
     return f"""FC      ?= gfortran
 FCFLAGS ?= -O1 -std=legacy -ffree-line-length-none -fno-align-commons
@@ -512,7 +564,10 @@ umat_oti_lifted.o: umat_oti_lifted.f90 {module_name}.o
 ps_driver.o: ps_driver.f90 umat_oti_lifted.o {module_name}.o
 \t$(FC) $(FCFLAGS) -c $<
 
-ps_driver: master_parameters.o real_utils.o {module_name}.o umat_oti_lifted.o ps_driver.o
+abaqus_stubs.o: abaqus_stubs.f90
+\t$(FC) $(FCFLAGS) -c $<
+
+ps_driver: master_parameters.o real_utils.o {module_name}.o umat_oti_lifted.o abaqus_stubs.o ps_driver.o
 \t$(FC) $(FCFLAGS) $^ -o $@
 
 clean:
