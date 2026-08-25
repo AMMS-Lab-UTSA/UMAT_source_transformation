@@ -10,12 +10,12 @@ Bundled files remain the copyright of their original authors.
 
 ## 1. OTIlib / pyoti (Order Truncated Imaginary numbers library)
 
-**Location in this repository:** `vendor/_otilib_upstream/`
+**Location in this repository:** `src/umat_oti/oti/support/pyoti_templates/`
 
 Files:
 
-- `vendor/_otilib_upstream/src/python/pyoti/python/base_derivs_fortran.f90`
-- `vendor/_otilib_upstream/src/python/pyoti/python/core_functions.f90`
+- `src/umat_oti/oti/support/pyoti_templates/base_derivs_fortran.f90`
+- `src/umat_oti/oti/support/pyoti_templates/core_functions.f90`
 
 These are Fortran template files taken from the OTIlib / pyoti library, an
 open-source algebra of Order Truncated Imaginary (OTI) numbers for efficient
@@ -28,7 +28,7 @@ Upstream reference:
 - Project: OTIlib / pyoti
 - Author: Mauricio Aristizabal (UTSA; HYPAD group, https://ceid.utsa.edu/HYPAD/)
 - URL: https://github.com/mauriaristi/otilib
-- Upstream license: **GPL-3.0** (see `vendor/_otilib_upstream/LICENSE`)
+- Upstream license: **GPL-3.0** (see `src/umat_oti/oti/support/pyoti_templates/LICENSE`)
 - Version vendored: from the upstream `master` branch; a specific commit SHA
   was not recorded at the time of vendoring.
 
@@ -40,7 +40,7 @@ Upstream reference:
 > below), which is the simplest path to compatibility: the UMAT-OTI authors'
 > own files are GPL-compatible and are distributed as part of the GPL-licensed
 > whole. A verbatim copy of the upstream license is included at
-> `vendor/_otilib_upstream/LICENSE`.
+> `src/umat_oti/oti/support/pyoti_templates/LICENSE`.
 >
 > Alternatives that were considered but not adopted:
 >
