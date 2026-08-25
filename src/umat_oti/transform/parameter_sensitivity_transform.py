@@ -451,6 +451,11 @@ def _emit_driver(
     lines.append("")
     lines.append("  ! -- Loading loop ---------------------------------------------")
     lines.append("  DO INC = 1, N_INC")
+    # The increment number is a UMAT argument that models legitimately branch on
+    # (first-increment initialisation, step-dependent logic).  Pinning it at 1
+    # would make the transformed build see a different loading history from the
+    # untransformed reference and silently break primal parity for such models.
+    lines.append("     KINC = INC")
     lines.append(dstran_lines)
     lines.append("")
     lines.append("     CALL umat_oti(STRESS, STATEV, DDSDDE, SSE, SPD, SCD, &")
@@ -472,6 +477,12 @@ def _emit_driver(
     lines.append("     DO I = 1, NTENS_")
     lines.append("        STRAN(I) = STRAN(I) + DSTRAN(I)")
     lines.append("     END DO")
+    # The untransformed reference driver advances step and total time together
+    # with the strain.  Rate- and time-dependent models read TIME directly, so
+    # leaving it at zero here would drive the two builds along different
+    # loading histories and make primal parity compare unlike responses.
+    lines.append("     TIME(1) = TIME(1) + DTIME")
+    lines.append("     TIME(2) = TIME(2) + DTIME")
     lines.append("  END DO")
     lines.append("")
     lines.append("  CLOSE(U_PRIMAL); CLOSE(U_SIGMA); CLOSE(U_STATE)")

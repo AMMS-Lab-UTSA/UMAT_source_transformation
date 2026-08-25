@@ -1,0 +1,81 @@
+{
+  "_comment": [
+    "External UMAT sources that contain a local Newton solve but are not",
+    "redistributable from this repository. They are declared here by provenance",
+    "so the internal-Jacobian round reports them in its denominator instead of",
+    "silently omitting them.",
+    "",
+    "Resolution is deliberate and opt-in: set UMAT_OTI_EXTERNAL_SOURCES to the",
+    "directory holding these files. With the variable unset -- the default, and",
+    "the state of any clean clone or CI runner -- every entry reports",
+    "blocked_by_external_dependency rather than being skipped.",
+    "",
+    "No absolute path appears in this file; the machine-specific part lives in",
+    "the environment variable alone."
+  ],
+  "environment_variable": "UMAT_OTI_EXTERNAL_SOURCES",
+  "sources": [
+    {
+      "id": "icp_UMAT_NKH_1.02",
+      "relative_path": "ICP/UMAT_NKH_1.02.for",
+      "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
+      "license": "not stated in the source header",
+      "constitutive_class": "viscoplastic damage, combined nonlinear isotropic/kinematic hardening, thermomechanical",
+      "kinematics": "small_strain",
+      "ntens": 4, "ndi": 3, "nshr": 1, "nstatv": 16, "nprops": 24,
+      "material_data": {
+        "status": "unavailable",
+        "expected_file": "MATERIAL_NKH.inp",
+        "reason": "the input deck that supplies this model's 24 material constants is referenced by an archived Abaqus job manifest but is not present on this machine; no property vector for it exists in either repository"
+      }
+    },
+    {
+      "id": "icp_UMAT_PCO",
+      "relative_path": "ICP/UMAT_PCO.for",
+      "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
+      "license": "not stated in the source header",
+      "constitutive_class": "plasticity, combined hardening",
+      "kinematics": "small_strain",
+      "material_data": {
+        "status": "unavailable",
+        "reason": "no property vector for this source is present in either repository"
+      }
+    },
+    {
+      "id": "icp_UMAT_VPDCL",
+      "relative_path": "ICP/UMAT_VPDCL.for",
+      "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
+      "license": "not stated in the source header",
+      "constitutive_class": "viscoplastic damage, classical theory",
+      "kinematics": "small_strain",
+      "material_data": {
+        "status": "unavailable",
+        "reason": "no property vector for this source is present in either repository"
+      }
+    },
+    {
+      "id": "icp_UMAT_PCL",
+      "relative_path": "ICP/UMAT_PCL.for",
+      "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
+      "license": "not stated in the source header",
+      "constitutive_class": "plasticity, classical",
+      "kinematics": "small_strain",
+      "material_data": {
+        "status": "unavailable",
+        "reason": "no property vector for this source is present in either repository"
+      }
+    },
+    {
+      "id": "icp_UMAT_PCLK",
+      "relative_path": "ICP/UMAT_PCLK.for",
+      "provenance": "Universidad EAFIT, Laboratorio de Mecanica Aplicada",
+      "license": "not stated in the source header",
+      "constitutive_class": "plasticity, kinematic hardening",
+      "kinematics": "small_strain",
+      "material_data": {
+        "status": "unavailable",
+        "reason": "no property vector for this source is present in either repository"
+      }
+    }
+  ]
+}
