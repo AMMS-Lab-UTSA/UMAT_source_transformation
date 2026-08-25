@@ -21,7 +21,40 @@ REQUIRED_PACKAGE_DATA = (
     "umat_oti/oti/support/fmod_writer.py",
     "umat_oti/oti/support/master_parameters.f90",
     "umat_oti/oti/support/real_utils.f90",
+    "umat_oti/oti/support/pyoti_templates/core_functions.f90",
+    "umat_oti/oti/support/pyoti_templates/base_derivs_fortran.f90",
+    "umat_oti/oti/support/pyoti_templates/LICENSE",
 )
+
+
+def test_pyoti_templates_resolve_inside_the_package():
+    """Regression: absent templates produced an uncompilable module, not an error.
+
+    The generator fell back to empty placeholder templates and only warned. The
+    module it emitted declared generic interfaces over procedures that were
+    never written, so gfortran rejected it with dozens of "is neither function
+    nor subroutine" errors that pointed nowhere near the real cause.
+    """
+    from umat_oti.oti.module_generator import _find_template_dir
+    import umat_oti
+
+    templates = _find_template_dir()
+    assert templates is not None, "the packaged pyoti templates were not found"
+    package_root = Path(umat_oti.__file__).resolve().parent
+    assert templates.is_relative_to(package_root)
+    for name in ("core_functions.f90", "base_derivs_fortran.f90"):
+        assert (templates / name).is_file(), name
+
+
+def test_missing_templates_raise_rather_than_emit_a_broken_module(monkeypatch, tmp_path):
+    """An unavailable input must not become an artefact that looks generated."""
+    from umat_oti.oti import module_generator
+
+    monkeypatch.setattr(module_generator, "_find_template_dir", lambda: None)
+    with pytest.raises(module_generator.OtilibGenerationError) as excinfo:
+        module_generator.generate_otilib_module(
+            output_dir=tmp_path, ntens=4, order=1)
+    assert "templates" in str(excinfo.value)
 
 
 def test_support_files_resolve_inside_the_package():
