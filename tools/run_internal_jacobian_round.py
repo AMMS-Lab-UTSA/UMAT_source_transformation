@@ -202,10 +202,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--model", action="append", dest="models")
     parser.add_argument("--work-dir", type=Path,
                         default=REPO_ROOT / "build" / "internal_jacobians")
+    parser.add_argument(
+        "--results-dir", type=Path, default=None,
+        help=("where to write the round and Table 3. Defaults to the published "
+              "location for a full round; a --model subset writes beside its "
+              "work directory instead, so a partial round cannot replace "
+              "published evidence."))
     args = parser.parse_args(argv)
 
     work = args.work_dir
     work.mkdir(parents=True, exist_ok=True)
+    results = args.results_dir
+    if results is None:
+        results = RESULTS if not args.models else work / "results"
+    if results != RESULTS:
+        print(f"partial or redirected round: writing to {results}, leaving the "
+              "published round untouched", flush=True)
     records: list[dict] = []
 
     for model in (args.models or _repo_models()):
@@ -235,10 +247,10 @@ def main(argv: list[str] | None = None) -> int:
         },
         "records": records,
     }
-    RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / "internal_jacobian_round.json").write_text(
+    results.mkdir(parents=True, exist_ok=True)
+    (results / "internal_jacobian_round.json").write_text(
         json.dumps(round_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    write_table3(records, RESULTS / "table3_internal_jacobians.csv")
+    write_table3(records, results / "table3_internal_jacobians.csv")
 
     print("\n" + json.dumps(round_payload["funnel"], indent=2))
     return 0 if counts.get("failed", 0) == 0 else 1

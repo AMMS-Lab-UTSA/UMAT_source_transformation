@@ -78,8 +78,19 @@ def test_summary_states_the_benchmark_set_structural_limits():
 
 
 @pytest.mark.slow
-def test_matrix_regenerates_identically_except_for_its_timestamp(tmp_path):
+def test_matrix_regenerates_identically_and_leaves_published_evidence_alone(tmp_path):
+    """Regression: this test used to regenerate straight into paper_results/.
+
+    A test that rewrites published evidence to check it can be reproduced is
+    indistinguishable from one that quietly replaces it, so the tool now takes
+    an explicit output directory and the published copy must be untouched.
+    """
     before = MATRIX.read_text(encoding="utf-8")
-    subprocess.run([sys.executable, str(REPO_ROOT / "tools" / "build_generality_matrix.py")],
-                   cwd=REPO_ROOT, check=True, capture_output=True)
-    assert MATRIX.read_text(encoding="utf-8") == before
+    subprocess.run(
+        [sys.executable, str(REPO_ROOT / "tools" / "build_generality_matrix.py"),
+         "--out-dir", str(tmp_path)],
+        cwd=REPO_ROOT, check=True, capture_output=True)
+    assert MATRIX.read_text(encoding="utf-8") == before, \
+        "the published matrix was modified by a test"
+    regenerated = (tmp_path / "generality_matrix.csv").read_text(encoding="utf-8")
+    assert regenerated == before

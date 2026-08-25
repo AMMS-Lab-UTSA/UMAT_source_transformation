@@ -1,0 +1,56 @@
+name: Archived Abaqus evidence audit
+
+# This workflow does NOT run Abaqus and must not be read as validation. It
+# audits the archived evidence of a paired Abaqus run that already happened:
+# that the artefacts are present, parseable and self-consistent.
+#
+# Naming it "Abaqus validation" would have been the more flattering label and
+# the wrong one -- a green tick here says the archive is intact, not that any
+# solver agreed with anything.
+#
+# The real execution lives in scripts/run_abaqus_arc.sbatch, which needs a
+# licensed Abaqus and the documented HPC environment. Public GitHub runners
+# have neither.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type AUDIT-ONLY to acknowledge this does not run Abaqus"
+        required: true
+
+jobs:
+  explain:
+    name: Audit the archived artefacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit the archive
+        run: |
+          cat <<'MSG'
+          This job audits archived evidence only; it runs no solver.
+
+          Real paired Abaqus validation is Tier C. It requires:
+
+            - a licensed Abaqus installation
+            - the documented ARC module environment
+            - scripts/run_abaqus_arc.sbatch
+
+          Public CI has none of these. What follows is an integrity check of the
+          archive, not a verification of the solver results it records.
+
+          The archived evidence from the last real run is in the repository and
+          needs no licence to read:
+
+            paper_results/arc_791506/table2_abaqus_paired.json
+
+          It records the Slurm job id, hostname, compiler version, the commit
+          that produced it, and SHA-256 of every input and output.
+          MSG
+          test -f paper_results/arc_791506/table2_abaqus_paired.json
+          python -c "
+          import json
+          d = json.load(open('paper_results/arc_791506/table2_abaqus_paired.json'))
+          print('archived rows:', len(d['rows']))
+          print('summary:', json.dumps(d['summary'])[:200])
+          "
