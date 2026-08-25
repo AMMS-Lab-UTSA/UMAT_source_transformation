@@ -31,19 +31,34 @@ in its own repository and is versioned independently; see §11.
 
 ## 3. What requires Abaqus
 
-Only the paired Abaqus validation behind Table 2. Everything else — the source
+Only the paired Abaqus validation behind Table 2. Everything else -- the source
 transformation, compilation, material-point execution, primal parity, and every
-numerical verification against finite differences — runs with Python and
+numerical verification against finite differences -- runs with Python and
 `gfortran` alone.
 
 A reviewer without Abaqus can therefore check the central claim of the paper:
-that the transformation produces derivatives that agree with an independent
+that the transformation produces derivatives agreeing with an independent
 reference. What they cannot check locally is that the transformed subroutine
-behaves identically *inside Abaqus*, which is what Table 2 reports. The archived
-evidence for that run is in the repository and readable without a licence:
-`paper_results/arc_791506/table2_abaqus_paired.json`, recording the Slurm job
-id, hostname, compiler version, originating commit, and SHA-256 of every input
-and output.
+behaves identically *inside Abaqus*, which is what Table 2 reports.
+
+The archived evidence for that run is in the repository and readable without a
+licence: `paper_results/arc_791506/table2_abaqus_paired.json`, recording the
+Slurm job id, hostname, compiler version, originating commit, and SHA-256 of
+every input and output.
+
+**What Table 2 does and does not show.** Every one of the nineteen archived
+decks drives its model with a *probe* property vector -- unit constants, apart
+from a 0.3 Poisson ratio in `UMAT_PCL` and `UMAT_PCLK`. The comparison is sound,
+because the original and transformed builds receive identical inputs, but it
+demonstrates agreement between two builds of each source rather than correct
+behaviour on a physical material. Read it as a transformation-fidelity result,
+not as a materials result.
+
+`python -m umat_oti.reproduce --profile abaqus` reports whether Abaqus is usable
+here, and records how it decided: the resolved executable, the probe command and
+its exit status, the parsed version, and the licence count. A command named
+`abaqus` that prints something is not proof of a usable installation, so an
+installation with no reachable licence is reported as blocked with that reason.
 
 ## 4. Installing
 
@@ -74,7 +89,7 @@ with the virtual environment active.
 
 | Result | Command | Artefact | Tier |
 |---|---|---|---|
-| Table 2 — Abaqus paired | `python -m umat_oti.reproduce --profile abaqus` | `paper_results/arc_791506/table2_abaqus_paired.json` | C |
+| Table 2 — Abaqus paired | `sbatch scripts/run_abaqus_arc.sbatch` (ARC), archived at `paper_results/arc_791506/table2_abaqus_paired.json` | `paper_results/arc_791506/` | C |
 | Table 3 — internal Jacobians | `python tools/run_internal_jacobian_round.py` | `paper_results/internal_jacobians/table3_internal_jacobians.csv` | A |
 | Table 4 — higher orders | `python tools/build_table4_from_convergence.py` | `paper_results/higher_order_convergence/table4_reference_quality_summary.json` | A |
 | Table 5 — J2 sensitivities | `python tools/validate_table5.py` | `paper_results/parameter_sensitivity/` | A |
@@ -89,13 +104,24 @@ round that produced it.
 
 ## 7. Runtime and disk
 
-| Profile | Time | Disk |
-|---|---|---|
-| `smoke` | seconds | a few MB |
-| `offline` | a few minutes, dominated by the test suite | tens of MB |
-| `paper` | a few minutes | tens of MB |
-| `corpus` | depends on the network and upstream availability | varies |
-| `abaqus` | ARC scheduling plus solve time | GB, mostly ODBs |
+Measured on the development machine (Ubuntu 20.04, Python 3.11.7,
+gfortran 9.4.0, 8-core x86-64), wall clock from `/usr/bin/time`:
+
+| Profile | Wall clock | Peak RSS | Output |
+|---|---|---|---|
+| `smoke` | 5.6 s | 110 MB | 1.5 MB |
+| `offline` | 126 s | 1.7 GB | 1.5 MB |
+| `paper` | 216 s | 1.7 GB | 1.5 MB plus the regenerated evidence |
+| `corpus` | not measured | — | depends on the network and upstream availability |
+| `abaqus` | not measured here | — | GB, mostly ODBs |
+
+`offline` and `paper` are dominated by the test suite (about 120 s). Within
+`paper`, the parameter-sensitivity round takes 74 s, the internal-Jacobian round
+14 s, and the generality matrix under a second.
+
+The two unmeasured rows are labelled as such deliberately: `corpus` depends on
+third-party availability and `abaqus` on scheduler queueing, so any figure given
+here would be invention rather than measurement.
 
 ## 8. What to inspect
 

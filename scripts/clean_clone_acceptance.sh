@@ -57,8 +57,17 @@ if [[ "$ACTUAL" != "$EXPECTED" ]]; then
   echo "    The clean clone tests what is pushed, not what is uncommitted." >&2
 fi
 
-step "2. initialise permissive submodules (restricted tiers must stay empty)"
-git -C "$CLONE" submodule update --init --recursive 2>&1 | sed 's/^/    /' || true
+step "2. initialise submodules"
+# No "|| true" here. A required dependency that fails to arrive must stop the
+# run: swallowing the error is how a clean-clone test comes to pass against a
+# checkout that is missing something a reviewer would need. This repository has
+# no required submodules of its own, so an empty result is correct and an actual
+# failure is not.
+if [ -f "$CLONE/.gitmodules" ]; then
+  git -C "$CLONE" submodule update --init --recursive 2>&1 | sed 's/^/    /'
+else
+  echo "    no .gitmodules: nothing to initialise"
+fi
 
 step "3. create a fresh virtual environment"
 "${PYTHON:-python3}" -m venv "$WORK/venv"

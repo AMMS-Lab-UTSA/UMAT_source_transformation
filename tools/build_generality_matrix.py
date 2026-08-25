@@ -265,11 +265,22 @@ def _row(*, identity, origin, provenance, license, source, contract, v2,
     }
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--out-dir", type=Path, default=OUT,
+        help=("where to write the matrix. Defaults to the published location; "
+              "tests and trial runs must pass somewhere else so a partial or "
+              "experimental run cannot overwrite published evidence."))
+    args = parser.parse_args(argv)
+    out = args.out_dir
+
     rows = build_rows()
-    OUT.mkdir(parents=True, exist_ok=True)
+    out.mkdir(parents=True, exist_ok=True)
     columns = list(rows[0].keys())
-    with (OUT / "generality_matrix.csv").open("w", newline="", encoding="utf-8") as handle:
+    with (out / "generality_matrix.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=columns)
         writer.writeheader()
         writer.writerows(rows)
@@ -297,7 +308,7 @@ def main() -> int:
             "source-code structure; free-form, multi-file and finite-strain "
             "sources are not represented in this set."),
     }
-    (OUT / "generality_summary.json").write_text(
+    (out / "generality_summary.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2, sort_keys=True))
     return 0
