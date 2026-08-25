@@ -33,7 +33,9 @@ def test_every_sentence_cites_an_artefact_and_commit(text):
     sources = [line for line in text.splitlines() if line.startswith("Source: ")]
     assert quotes and len(quotes) == len(sources)
     for line in sources:
-        assert re.search(r"`[^`]+` at commit `[0-9a-f]{12}`", line), line
+        assert re.search(r"Source: `[^`]+`\.", line), line
+    # The commit is stated once, in the header.
+    assert re.search(r"produced at commit `[0-9a-f]{7,40}`", text)
 
 
 def test_numbers_match_the_executed_sweep(text):
@@ -83,7 +85,14 @@ def test_regenerates_identically_except_for_its_timestamp(tmp_path):
         cwd=REPO_ROOT, check=True, capture_output=True)
 
     def strip(value: str) -> str:
-        return re.sub(r"Generated \S+ from commit `[0-9a-f]+`\.", "", value)
+        """Remove everything that legitimately varies between regenerations.
+
+        The commit appears twice in the header. A clean clone regenerates at a
+        different HEAD, so leaving either in place makes the document differ
+        from itself for a reason that is not a change in any measurement.
+        """
+        value = re.sub(r"Generated \S+ from commit `[0-9a-f]+`\.", "", value)
+        return re.sub(r"produced at commit `[0-9a-f]+`", "", value)
 
     assert strip(out.read_text(encoding="utf-8")) == strip(
         SUMMARY.read_text(encoding="utf-8"))
