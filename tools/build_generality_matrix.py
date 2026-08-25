@@ -185,7 +185,8 @@ def build_rows() -> list[dict]:
             "primal_parity": stages.get("primal_parity", {}).get("status", UNAVAILABLE),
             "numerical_verification": verification or UNAVAILABLE,
             "higher_order_verified": UNAVAILABLE,
-            "internal_jacobian": UNAVAILABLE,
+            "internal_jacobian": _internal_jacobian_status(
+                jac_by_id.get(candidate["id"], {})),
             "abaqus": BLOCKED,
             "failure_category_and_blocker": (candidate.get("blocker")
                                              or candidate.get("material_blocker")
@@ -211,6 +212,18 @@ def build_rows() -> list[dict]:
             stages={}, record={}, jrecord=jac_by_id.get(case_name, {}),
             higher_order=None, spec=MODELS.get(case_name), paired=result))
     return rows
+
+
+def _internal_jacobian_status(record: dict) -> str:
+    """One vocabulary for the internal-Jacobian column, wherever the row came from."""
+    verdict = (record.get("stages") or {}).get("jacobian_verified")
+    if verdict:
+        return verdict["status"]
+    if record.get("bucket") == "no_local_solve":
+        return "no_local_solve"
+    if record:
+        return f"blocked:{record.get('furthest_stage') or 'not_started'}"
+    return UNAVAILABLE
 
 
 def _stage(stages: dict, name: str) -> str:
@@ -250,15 +263,7 @@ def _row(*, identity, origin, provenance, license, source, contract, v2,
     elif nstatv:
         path_dependent = "yes (carries state)"
 
-    jverdict = jrecord.get("stages", {}).get("jacobian_verified")
-    if jverdict:
-        internal = jverdict["status"]
-    elif jrecord.get("bucket") == "no_local_solve":
-        internal = "no_local_solve"
-    elif jrecord:
-        internal = f"blocked:{jrecord.get('furthest_stage') or 'not_started'}"
-    else:
-        internal = UNAVAILABLE
+    internal = _internal_jacobian_status(jrecord)
 
     blocker = ""
     for name in ("derivatives_verified", "primal_parity", "executed_oti",

@@ -20,6 +20,7 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -30,6 +31,9 @@ sys.path.insert(0, str(REPO_ROOT / "tools"))
 
 from run_parameter_sensitivity_sweep import generate_contract  # noqa: E402
 
+from umat_oti.transform.dependency_resolution import (  # noqa: E402
+    DependencyResolutionError, combined_source, resolve_closure,
+)
 from umat_oti.transform.internal_jacobian import discover_local_solves  # noqa: E402
 from umat_oti.validation.actual_umat_higher_order_generic import MODELS  # noqa: E402
 from umat_oti.validation.internal_jacobian_validation import (  # noqa: E402
@@ -38,6 +42,7 @@ from umat_oti.validation.internal_jacobian_validation import (  # noqa: E402
 )
 
 MODELS_DIR = REPO_ROOT / "parameter_sensitivity" / "models"
+CORPUS_SNAPSHOT = REPO_ROOT / "parameter_sensitivity" / "corpus_snapshot.json"
 EXTERNAL = REPO_ROOT / "parameter_sensitivity" / "internal_jacobian_sources.json"
 RESULTS = REPO_ROOT / "paper_results" / "internal_jacobians"
 
@@ -163,6 +168,76 @@ def run_external(entry: dict, work_root: Path) -> dict:
     return record
 
 
+
+def run_corpus_candidate(entry: dict, repository: dict, root: Path,
+                         work_root: Path) -> dict:
+    """A pinned external candidate, resolved across sibling files if need be.
+
+    The corpus and the internal-Jacobian round share the dependency resolver, so
+    a helper-heavy source is not a special case here either: UMAT_PCO defines
+    none of the seven helpers it calls, and its closure is assembled the same
+    way the corpus funnel assembles it.
+    """
+    base = root / repository["path"]
+    source = base / entry["source"]
+    record: dict = {
+        "id": entry["id"], "origin": "external corpus (pinned snapshot)",
+        "source": f"{repository['path']}/{entry['source']}",
+        "provenance": f"{repository['url']} @ {repository['commit_sha'][:12]}",
+        "license": repository["license_spdx"],
+        "constitutive_class": entry.get("constitutive_class"),
+    }
+    if not source.is_file():
+        record["bucket"] = "blocked"
+        record["reason"] = "the pinned snapshot is not checked out"
+        return record
+    record["source_sha256"] = _sha256(source)
+    solves = discover_local_solves(source.read_text(errors="replace"))
+    record["local_solves_discovered"] = [s.as_dict() for s in solves]
+    if not solves:
+        record["bucket"] = "no_local_solve"
+        return record
+    material = entry.get("material")
+    if not material:
+        record["bucket"] = "blocked"
+        record["blocked_by"] = "material_data_unavailable"
+        record["reason"] = entry.get("material_blocker",
+                                     "upstream provides no property vector")
+        return record
+    try:
+        graph = resolve_closure(source, entry="UMAT",
+                                roots=[base / r for r in entry.get("dependency_roots", [])])
+    except DependencyResolutionError as exc:
+        record["bucket"] = "blocked"
+        record["reason"] = exc.detail
+        return record
+    if graph.missing or graph.conflicts:
+        record["bucket"] = "blocked"
+        record["reason"] = ("unresolved closure: "
+                            + ", ".join(m.symbol for m in graph.missing)
+                            + ", ".join(d.symbol for d in graph.conflicts))
+        return record
+    work = work_root / entry["id"]
+    work.mkdir(parents=True, exist_ok=True)
+    resolved = work / f"{entry['id']}_resolved.for"
+    resolved.write_text(combined_source(graph), encoding="utf-8")
+    record["dependency_closure"] = sorted(graph.resolved)
+    record["multi_file"] = graph.is_multi_file
+    record["material_data_source"] = material["provenance"]
+    ntens = int(entry["ntens"])
+    record.update(verify_internal_jacobian(
+        InternalJacobianCase(
+            model=entry["id"], source_path=resolved,
+            props=tuple(float(v) for v in material["props"]),
+            dstran_per_increment=tuple(material["dstran_per_increment"]),
+            n_increments=int(material["n_increments"]),
+            ntens=ntens, nstatv=int(entry["nstatv"]),
+            ndi=int(entry.get("ndi", 3)), nshr=int(entry.get("nshr", 1))),
+        work))
+    record["bucket"] = _bucket(record)
+    return record
+
+
 def write_table3(records: list[dict], path: Path) -> None:
     """Table 3 rows. Only executed comparisons appear; nothing is imputed."""
     columns = ["model", "origin", "iterate", "residual", "jacobian_variable",
@@ -229,6 +304,19 @@ def main(argv: list[str] | None = None) -> int:
         for entry in external["sources"]:
             print(f"[external] {entry['id']}", flush=True)
             records.append(run_external(entry, work))
+
+        if CORPUS_SNAPSHOT.is_file():
+            snapshot = json.loads(CORPUS_SNAPSHOT.read_text(encoding="utf-8"))
+            repositories = {r["id"]: r for r in snapshot["repositories"]}
+            override = os.environ.get(snapshot["snapshot_root_environment_variable"])
+            root = (Path(override) if override
+                    else (REPO_ROOT / snapshot["default_snapshot_root"]).resolve())
+            for entry in snapshot["candidates"]:
+                repository = repositories[entry["repository"]]
+                if repository.get("metadata_only"):
+                    continue
+                print(f"[corpus]   {entry['id']}", flush=True)
+                records.append(run_corpus_candidate(entry, repository, root, work))
 
     counts: dict[str, int] = {}
     for record in records:

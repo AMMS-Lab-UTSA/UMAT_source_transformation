@@ -1,13 +1,13 @@
 {
   "funnel": {
-    "blocked": 4,
-    "candidate_sources": 28,
+    "blocked": 6,
+    "candidate_sources": 36,
     "extracted_and_disagreeing": 0,
-    "extracted_and_verified": 4,
-    "no_local_solve": 20,
-    "sources_with_a_local_solve": 8
+    "extracted_and_verified": 8,
+    "no_local_solve": 22,
+    "sources_with_a_local_solve": 14
   },
-  "generated_at": "2026-08-25T19:19:01.531643+00:00",
+  "generated_at": "2026-08-25T19:36:51.103042+00:00",
   "records": [
     {
       "bucket": "no_local_solve",
@@ -1058,6 +1058,940 @@
       "reason": "no property vector for this source exists in either repository",
       "source": "UMATs/UMATs/ICP/UMAT_VPDCO.for",
       "source_sha256": "f1041a127b53d8123278ad72606c8f6729d196d2b4111ef8cc12b6431705034d"
+    },
+    {
+      "bucket": "verified",
+      "constitutive_class": "reduced Cosserat couple-stress plasticity",
+      "converged_iterate": 1.7501589997072749e-06,
+      "dependency_closure": [
+        "KCLEAR",
+        "KCLEARV",
+        "KMATSUB",
+        "KMAVEC",
+        "KMMULT",
+        "KMTRAN",
+        "KPROYECTOR",
+        "KSMULT",
+        "KSPECTRAL",
+        "KUHARD",
+        "KUPDVEC",
+        "UMAT"
+      ],
+      "extracted": {
+        "finite_difference": -6047612.648081645,
+        "hand_coded": -6029120.763508761,
+        "oti": -6047612.644928333
+      },
+      "furthest_stage": "jacobian_verified",
+      "hand_coded_audit": {
+        "absolute_difference": 18491.884572884068,
+        "note": "the source's own Jacobian is audited against the same reference; it is never used as the reference for the extracted value",
+        "relative_difference": 0.003057716432739761
+      },
+      "hand_coded_jacobian": -6029120.763508761,
+      "id": "jgomezc1_UMAT_PCO",
+      "injection": {
+        "edits": [
+          {
+            "kind": "counter-reset",
+            "line": 165
+          },
+          {
+            "kind": "record+seed",
+            "line": 185
+          }
+        ],
+        "enclosing_routine": "UMAT",
+        "forced_exit": true,
+        "override_iterate": true,
+        "slots": {
+          "nprops_extended": 9,
+          "nstatv_extended": 19,
+          "offset_past_declared_nstatv": 0,
+          "props_seed": 9,
+          "statev_counter": 18,
+          "statev_iterate": 15,
+          "statev_jacobian": 17,
+          "statev_residual": 16,
+          "statev_sentinel": 19
+        },
+        "solve": {
+          "convergence_tolerance": "TOLER",
+          "convergence_variable": "FGAM",
+          "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+          "hand_coded_jacobian_variable": "FJAC",
+          "iteration_variable": "GAM_PAR",
+          "loop_end_line": 200,
+          "loop_start_line": 165,
+          "residual_variable": "FGAM",
+          "update_line": 185,
+          "update_sign": "-"
+        },
+        "target_increment": 5
+      },
+      "license": "MIT",
+      "local_solves_discovered": [
+        {
+          "convergence_tolerance": "TOLER",
+          "convergence_variable": "FGAM",
+          "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+          "hand_coded_jacobian_variable": "FJAC",
+          "iteration_variable": "GAM_PAR",
+          "loop_end_line": 200,
+          "loop_start_line": 165,
+          "residual_variable": "FGAM",
+          "update_line": 185,
+          "update_sign": "-"
+        }
+      ],
+      "material_data_source": "INPUT_FILES/UNIUSER_COS.inp, *UEL PROPERTY with *USER ELEMENT PROPERTIES=8",
+      "model": "jgomezc1_UMAT_PCO",
+      "multi_file": true,
+      "origin": "external corpus (pinned snapshot)",
+      "probe_evaluations": 2.0,
+      "probe_hand_coded_jacobian": -6029120.763508761,
+      "probe_residual_at_iterate": 0.12343260797925382,
+      "provenance": "https://github.com/jgomezc1/ABAQUS-US.git @ 54181407aa7a",
+      "residual_at_iterate": 0.1384288427135445,
+      "residual_evaluations_per_increment": [
+        0.0,
+        0.0,
+        0.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ],
+      "rows": [
+        {
+          "absolute_error": 0.0031533120200037956,
+          "agrees": true,
+          "array": "DSTATEV_DP",
+          "branch": "local_solve",
+          "component": 16,
+          "increment": 5,
+          "judged_by": "relative",
+          "oti": -6047612.644928333,
+          "oti_direction": 0,
+          "parameter": "GSEED",
+          "props_index": 9,
+          "reference": -6047612.648081645,
+          "relative_error": 5.214143503393944e-10
+        }
+      ],
+      "slot_placement_attempts": [
+        {
+          "increments_with_intact_sentinel": 17,
+          "increments_with_live_counter": 17,
+          "offset": 0
+        }
+      ],
+      "slots": {
+        "nprops_extended": 9,
+        "nstatv_extended": 19,
+        "offset_past_declared_nstatv": 0,
+        "props_seed": 9,
+        "statev_counter": 18,
+        "statev_iterate": 15,
+        "statev_jacobian": 17,
+        "statev_residual": 16,
+        "statev_sentinel": 19
+      },
+      "solve": {
+        "convergence_tolerance": "TOLER",
+        "convergence_variable": "FGAM",
+        "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+        "hand_coded_jacobian_variable": "FJAC",
+        "iteration_variable": "GAM_PAR",
+        "loop_end_line": 200,
+        "loop_start_line": 165,
+        "residual_variable": "FGAM",
+        "update_line": 185,
+        "update_sign": "-"
+      },
+      "source": "jgomezc1_UMAT_PCO_resolved.for",
+      "source_sha256": "c4a850ca89c6cbdef4d94d379d2afce41feea9214d792d0a3d75b91ead9d3862",
+      "stages": {
+        "compiled_original_probe": {
+          "status": "succeeded"
+        },
+        "compiled_oti_probe": {
+          "status": "succeeded"
+        },
+        "converged_iterate_located": {
+          "increment": 5,
+          "iterate": 1.7501589997072749e-06,
+          "residual": 0.1384288427135445,
+          "status": "succeeded"
+        },
+        "fd_reference_resolved": {
+          "status": "succeeded",
+          "step": 1.750158999707275e-10,
+          "value": -6047612.648081645
+        },
+        "jacobian_extracted": {
+          "status": "succeeded",
+          "value": -6047612.644928333
+        },
+        "jacobian_verified": {
+          "reason": null,
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 4.7617816422353625e-11
+        },
+        "probe_injected": {
+          "status": "succeeded"
+        },
+        "probe_took_effect": {
+          "reason": null,
+          "recorded_iterate": 1.7501589997072749e-06,
+          "residual_evaluations_at_seeded_iterate": 2.0,
+          "seeded_iterate": 1.7501589997072749e-06,
+          "status": "succeeded"
+        },
+        "recording_is_non_perturbing": {
+          "max_state_drift": 0.0,
+          "max_stress_drift": 0.0,
+          "reason": null,
+          "status": "succeeded"
+        },
+        "solve_discovered": {
+          "status": "succeeded"
+        }
+      },
+      "target_increment": 5
+    },
+    {
+      "bucket": "verified",
+      "constitutive_class": "viscoplastic damage, Cosserat, thermomechanical",
+      "converged_iterate": 3.6192934108243137e-06,
+      "dependency_closure": [
+        "KCLEAR",
+        "KCLEARV",
+        "KDAMACAL",
+        "KMATSUB",
+        "KMAVEC",
+        "KMMULT",
+        "KMTRAN",
+        "KPROYECTOR",
+        "KSMULT",
+        "KSPECTRAL",
+        "KUHARDNLIN",
+        "KUPDVEC",
+        "UMAT",
+        "VSPRATE"
+      ],
+      "extracted": {
+        "finite_difference": -637353.4692151409,
+        "hand_coded": -620816.8449783465,
+        "oti": -637353.4691386975
+      },
+      "furthest_stage": "jacobian_verified",
+      "hand_coded_audit": {
+        "absolute_difference": 16536.62423679442,
+        "note": "the source's own Jacobian is audited against the same reference; it is never used as the reference for the extracted value",
+        "relative_difference": 0.02594576641617436
+      },
+      "hand_coded_jacobian": -620954.9595342566,
+      "id": "jgomezc1_UMAT_VPDCO",
+      "injection": {
+        "edits": [
+          {
+            "kind": "counter-reset",
+            "line": 179
+          },
+          {
+            "kind": "record+seed",
+            "line": 205
+          }
+        ],
+        "enclosing_routine": "UMAT",
+        "forced_exit": true,
+        "override_iterate": true,
+        "slots": {
+          "nprops_extended": 27,
+          "nstatv_extended": 27,
+          "offset_past_declared_nstatv": 0,
+          "props_seed": 27,
+          "statev_counter": 26,
+          "statev_iterate": 23,
+          "statev_jacobian": 25,
+          "statev_residual": 24,
+          "statev_sentinel": 27
+        },
+        "solve": {
+          "convergence_tolerance": "TOLER",
+          "convergence_variable": "FGAM",
+          "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+          "hand_coded_jacobian_variable": "FJAC",
+          "iteration_variable": "GAM_PAR",
+          "loop_end_line": 221,
+          "loop_start_line": 179,
+          "residual_variable": "FGAM",
+          "update_line": 205,
+          "update_sign": "-"
+        },
+        "target_increment": 8
+      },
+      "license": "MIT",
+      "local_solves_discovered": [
+        {
+          "convergence_tolerance": "TOLER",
+          "convergence_variable": "FGAM",
+          "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+          "hand_coded_jacobian_variable": "FJAC",
+          "iteration_variable": "GAM_PAR",
+          "loop_end_line": 221,
+          "loop_start_line": 179,
+          "residual_variable": "FGAM",
+          "update_line": 205,
+          "update_sign": "-"
+        }
+      ],
+      "material_data_source": "SAMPLE/material_co.inp, each constant documented in SAMPLE/material_template.txt and consumed in order by SUBROUTINE VSPRATE",
+      "model": "jgomezc1_UMAT_VPDCO",
+      "multi_file": true,
+      "origin": "external corpus (pinned snapshot)",
+      "probe_evaluations": 2.0,
+      "probe_hand_coded_jacobian": -620816.8449783465,
+      "probe_residual_at_iterate": -0.002834348069325422,
+      "provenance": "https://github.com/jgomezc1/ABAQUS-US.git @ 54181407aa7a",
+      "residual_at_iterate": 0.02518911746547209,
+      "residual_evaluations_per_increment": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ],
+      "rows": [
+        {
+          "absolute_error": 7.644342258572578e-05,
+          "agrees": true,
+          "array": "DSTATEV_DP",
+          "branch": "local_solve",
+          "component": 24,
+          "increment": 8,
+          "judged_by": "relative",
+          "oti": -637353.4691386975,
+          "oti_direction": 0,
+          "parameter": "GSEED",
+          "props_index": 27,
+          "reference": -637353.4692151409,
+          "relative_error": 1.1993881931773408e-10
+        }
+      ],
+      "slot_placement_attempts": [
+        {
+          "increments_with_intact_sentinel": 14,
+          "increments_with_live_counter": 14,
+          "offset": 0
+        }
+      ],
+      "slots": {
+        "nprops_extended": 27,
+        "nstatv_extended": 27,
+        "offset_past_declared_nstatv": 0,
+        "props_seed": 27,
+        "statev_counter": 26,
+        "statev_iterate": 23,
+        "statev_jacobian": 25,
+        "statev_residual": 24,
+        "statev_sentinel": 27
+      },
+      "solve": {
+        "convergence_tolerance": "TOLER",
+        "convergence_variable": "FGAM",
+        "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+        "hand_coded_jacobian_variable": "FJAC",
+        "iteration_variable": "GAM_PAR",
+        "loop_end_line": 221,
+        "loop_start_line": 179,
+        "residual_variable": "FGAM",
+        "update_line": 205,
+        "update_sign": "-"
+      },
+      "source": "jgomezc1_UMAT_VPDCO_resolved.for",
+      "source_sha256": "7bdae900d1dbf02b96336a7d4379011138d9780aa2f8abad759934f9dfb3dbb0",
+      "stages": {
+        "compiled_original_probe": {
+          "status": "succeeded"
+        },
+        "compiled_oti_probe": {
+          "status": "succeeded"
+        },
+        "converged_iterate_located": {
+          "increment": 8,
+          "iterate": 3.6192934108243137e-06,
+          "residual": 0.02518911746547209,
+          "status": "succeeded"
+        },
+        "fd_reference_resolved": {
+          "status": "succeeded",
+          "step": 3.619293410824314e-10,
+          "value": -637353.4692151409
+        },
+        "jacobian_extracted": {
+          "status": "succeeded",
+          "value": -637353.4691386975
+        },
+        "jacobian_verified": {
+          "reason": null,
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 9.947843889232145e-12
+        },
+        "probe_injected": {
+          "status": "succeeded"
+        },
+        "probe_took_effect": {
+          "reason": null,
+          "recorded_iterate": 3.6192934108243137e-06,
+          "residual_evaluations_at_seeded_iterate": 2.0,
+          "seeded_iterate": 3.6192934108243137e-06,
+          "status": "succeeded"
+        },
+        "recording_is_non_perturbing": {
+          "max_state_drift": 0.0,
+          "max_stress_drift": 0.0,
+          "reason": null,
+          "status": "succeeded"
+        },
+        "solve_discovered": {
+          "status": "succeeded"
+        }
+      },
+      "target_increment": 8
+    },
+    {
+      "bucket": "verified",
+      "constitutive_class": "classical J2 plasticity, isotropic hardening",
+      "converged_iterate": 8.16496580927728e-05,
+      "dependency_closure": [
+        "KCLEAR",
+        "KMMULT",
+        "KNIEHARD",
+        "KPROYECTOR",
+        "UMAT"
+      ],
+      "extracted": {
+        "finite_difference": -169230.76923071317,
+        "hand_coded": -169230.76923076922,
+        "oti": -169230.7692307692
+      },
+      "furthest_stage": "jacobian_verified",
+      "hand_coded_audit": {
+        "absolute_difference": 5.605397745966911e-08,
+        "note": "the source's own Jacobian is audited against the same reference; it is never used as the reference for the extracted value",
+        "relative_difference": 3.3122804862542724e-13
+      },
+      "hand_coded_jacobian": -169230.76923076922,
+      "id": "jgomezc1_UMAT_PCL",
+      "injection": {
+        "edits": [
+          {
+            "kind": "counter-reset",
+            "line": 149
+          },
+          {
+            "kind": "record+seed",
+            "line": 157
+          }
+        ],
+        "enclosing_routine": "UMAT",
+        "forced_exit": true,
+        "override_iterate": true,
+        "slots": {
+          "nprops_extended": 7,
+          "nstatv_extended": 18,
+          "offset_past_declared_nstatv": 0,
+          "props_seed": 7,
+          "statev_counter": 17,
+          "statev_iterate": 14,
+          "statev_jacobian": 16,
+          "statev_residual": 15,
+          "statev_sentinel": 18
+        },
+        "solve": {
+          "convergence_tolerance": "TOLER",
+          "convergence_variable": "FGAM",
+          "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+          "hand_coded_jacobian_variable": "FJAC",
+          "iteration_variable": "GAM_PAR",
+          "loop_end_line": 173,
+          "loop_start_line": 149,
+          "residual_variable": "FGAM",
+          "update_line": 157,
+          "update_sign": "-"
+        },
+        "target_increment": 20
+      },
+      "license": "MIT",
+      "local_solves_discovered": [
+        {
+          "convergence_tolerance": "TOLER",
+          "convergence_variable": "FGAM",
+          "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+          "hand_coded_jacobian_variable": "FJAC",
+          "iteration_variable": "GAM_PAR",
+          "loop_end_line": 173,
+          "loop_start_line": 149,
+          "residual_variable": "FGAM",
+          "update_line": 157,
+          "update_sign": "-"
+        }
+      ],
+      "material_data_source": "INPUT_FILES/UNIUSER_CLA.inp, *UEL PROPERTY",
+      "model": "jgomezc1_UMAT_PCL",
+      "multi_file": false,
+      "origin": "external corpus (pinned snapshot)",
+      "probe_evaluations": 2.0,
+      "probe_hand_coded_jacobian": -169230.76923076922,
+      "probe_residual_at_iterate": 0.0,
+      "provenance": "https://github.com/jgomezc1/ABAQUS-US.git @ 54181407aa7a",
+      "residual_at_iterate": 0.0,
+      "residual_evaluations_per_increment": [
+        0.0,
+        0.0,
+        0.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0
+      ],
+      "rows": [
+        {
+          "absolute_error": 5.602487362921238e-08,
+          "agrees": true,
+          "array": "DSTATEV_DP",
+          "branch": "local_solve",
+          "component": 15,
+          "increment": 20,
+          "judged_by": "within_reference_resolution",
+          "oti": -169230.7692307692,
+          "oti_direction": 0,
+          "parameter": "GSEED",
+          "props_index": 7,
+          "reference": -169230.76923071317,
+          "relative_error": 3.310560714454556e-13
+        }
+      ],
+      "slot_placement_attempts": [
+        {
+          "increments_with_intact_sentinel": 17,
+          "increments_with_live_counter": 17,
+          "offset": 0
+        }
+      ],
+      "slots": {
+        "nprops_extended": 7,
+        "nstatv_extended": 18,
+        "offset_past_declared_nstatv": 0,
+        "props_seed": 7,
+        "statev_counter": 17,
+        "statev_iterate": 14,
+        "statev_jacobian": 16,
+        "statev_residual": 15,
+        "statev_sentinel": 18
+      },
+      "solve": {
+        "convergence_tolerance": "TOLER",
+        "convergence_variable": "FGAM",
+        "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+        "hand_coded_jacobian_variable": "FJAC",
+        "iteration_variable": "GAM_PAR",
+        "loop_end_line": 173,
+        "loop_start_line": 149,
+        "residual_variable": "FGAM",
+        "update_line": 157,
+        "update_sign": "-"
+      },
+      "source": "jgomezc1_UMAT_PCL_resolved.for",
+      "source_sha256": "a1e8dcbd06f5a5d87b5b5d4d02505553c422c721f3140e653def61050b071d66",
+      "stages": {
+        "compiled_original_probe": {
+          "status": "succeeded"
+        },
+        "compiled_oti_probe": {
+          "status": "succeeded"
+        },
+        "converged_iterate_located": {
+          "increment": 20,
+          "iterate": 8.16496580927728e-05,
+          "residual": 0.0,
+          "status": "succeeded"
+        },
+        "fd_reference_resolved": {
+          "status": "succeeded",
+          "step": 8.16496580927728e-09,
+          "value": -169230.76923071317
+        },
+        "jacobian_extracted": {
+          "status": "succeeded",
+          "value": -169230.7692307692
+        },
+        "jacobian_verified": {
+          "reason": null,
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 2.629864197897624e-13
+        },
+        "probe_injected": {
+          "status": "succeeded"
+        },
+        "probe_took_effect": {
+          "reason": null,
+          "recorded_iterate": 8.16496580927728e-05,
+          "residual_evaluations_at_seeded_iterate": 2.0,
+          "seeded_iterate": 8.16496580927728e-05,
+          "status": "succeeded"
+        },
+        "recording_is_non_perturbing": {
+          "max_state_drift": 0.0,
+          "max_stress_drift": 0.0,
+          "reason": null,
+          "status": "succeeded"
+        },
+        "solve_discovered": {
+          "status": "succeeded"
+        }
+      },
+      "target_increment": 20
+    },
+    {
+      "bucket": "verified",
+      "constitutive_class": "plasticity, combined isotropic/kinematic hardening",
+      "converged_iterate": 6.639617509949012e-05,
+      "dependency_closure": [
+        "KCLEAR",
+        "KMMULT",
+        "KPROYECTOR",
+        "KUHARDNLIN",
+        "UMAT"
+      ],
+      "extracted": {
+        "finite_difference": -38734.34749568485,
+        "hand_coded": -38734.347495788,
+        "oti": -38734.34749578801
+      },
+      "furthest_stage": "jacobian_verified",
+      "hand_coded_audit": {
+        "absolute_difference": 1.0315125109627843e-07,
+        "note": "the source's own Jacobian is audited against the same reference; it is never used as the reference for the extracted value",
+        "relative_difference": 2.6630434682750203e-12
+      },
+      "hand_coded_jacobian": -38734.347495788,
+      "id": "jgomezc1_UMAT_PCLK",
+      "injection": {
+        "edits": [
+          {
+            "kind": "counter-reset",
+            "line": 159
+          },
+          {
+            "kind": "record+seed",
+            "line": 167
+          }
+        ],
+        "enclosing_routine": "UMAT",
+        "forced_exit": true,
+        "override_iterate": true,
+        "slots": {
+          "nprops_extended": 7,
+          "nstatv_extended": 19,
+          "offset_past_declared_nstatv": 0,
+          "props_seed": 7,
+          "statev_counter": 18,
+          "statev_iterate": 15,
+          "statev_jacobian": 17,
+          "statev_residual": 16,
+          "statev_sentinel": 19
+        },
+        "solve": {
+          "convergence_tolerance": "TOLER",
+          "convergence_variable": "FGAM",
+          "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+          "hand_coded_jacobian_variable": "FJAC",
+          "iteration_variable": "GAM_PAR",
+          "loop_end_line": 183,
+          "loop_start_line": 159,
+          "residual_variable": "FGAM",
+          "update_line": 167,
+          "update_sign": "-"
+        },
+        "target_increment": 20
+      },
+      "license": "MIT",
+      "local_solves_discovered": [
+        {
+          "convergence_tolerance": "TOLER",
+          "convergence_variable": "FGAM",
+          "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+          "hand_coded_jacobian_variable": "FJAC",
+          "iteration_variable": "GAM_PAR",
+          "loop_end_line": 183,
+          "loop_start_line": 159,
+          "residual_variable": "FGAM",
+          "update_line": 167,
+          "update_sign": "-"
+        }
+      ],
+      "material_data_source": "INPUT_FILES/UNIUSER_CLA_KIN.inp, *USER MATERIAL CONSTANTS=6",
+      "model": "jgomezc1_UMAT_PCLK",
+      "multi_file": false,
+      "origin": "external corpus (pinned snapshot)",
+      "probe_evaluations": 2.0,
+      "probe_hand_coded_jacobian": -38734.347495788,
+      "probe_residual_at_iterate": 0.0021213764452046036,
+      "provenance": "https://github.com/jgomezc1/ABAQUS-US.git @ 54181407aa7a",
+      "residual_at_iterate": 0.0021213764452046036,
+      "residual_evaluations_per_increment": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0
+      ],
+      "rows": [
+        {
+          "absolute_error": 1.0315852705389261e-07,
+          "agrees": true,
+          "array": "DSTATEV_DP",
+          "branch": "local_solve",
+          "component": 16,
+          "increment": 20,
+          "judged_by": "within_reference_resolution",
+          "oti": -38734.34749578801,
+          "oti_direction": 0,
+          "parameter": "GSEED",
+          "props_index": 7,
+          "reference": -38734.34749568485,
+          "relative_error": 2.66323131079941e-12
+        }
+      ],
+      "slot_placement_attempts": [
+        {
+          "increments_with_intact_sentinel": 14,
+          "increments_with_live_counter": 14,
+          "offset": 0
+        }
+      ],
+      "slots": {
+        "nprops_extended": 7,
+        "nstatv_extended": 19,
+        "offset_past_declared_nstatv": 0,
+        "props_seed": 7,
+        "statev_counter": 18,
+        "statev_iterate": 15,
+        "statev_jacobian": 17,
+        "statev_residual": 16,
+        "statev_sentinel": 19
+      },
+      "solve": {
+        "convergence_tolerance": "TOLER",
+        "convergence_variable": "FGAM",
+        "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+        "hand_coded_jacobian_variable": "FJAC",
+        "iteration_variable": "GAM_PAR",
+        "loop_end_line": 183,
+        "loop_start_line": 159,
+        "residual_variable": "FGAM",
+        "update_line": 167,
+        "update_sign": "-"
+      },
+      "source": "jgomezc1_UMAT_PCLK_resolved.for",
+      "source_sha256": "d37eb3f20208c50dceff9198a05d69e47b65e7834a08b8791a0950d3eb83bcb4",
+      "stages": {
+        "compiled_original_probe": {
+          "status": "succeeded"
+        },
+        "compiled_oti_probe": {
+          "status": "succeeded"
+        },
+        "converged_iterate_located": {
+          "increment": 20,
+          "iterate": 6.639617509949012e-05,
+          "residual": 0.0021213764452046036,
+          "status": "succeeded"
+        },
+        "fd_reference_resolved": {
+          "status": "succeeded",
+          "step": 6.639617509949012e-09,
+          "value": -38734.34749568485
+        },
+        "jacobian_extracted": {
+          "status": "succeeded",
+          "value": -38734.34749578801
+        },
+        "jacobian_verified": {
+          "reason": null,
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 1.9366442348317258e-13
+        },
+        "probe_injected": {
+          "status": "succeeded"
+        },
+        "probe_took_effect": {
+          "reason": null,
+          "recorded_iterate": 6.639617509949012e-05,
+          "residual_evaluations_at_seeded_iterate": 2.0,
+          "seeded_iterate": 6.639617509949012e-05,
+          "status": "succeeded"
+        },
+        "recording_is_non_perturbing": {
+          "max_state_drift": 0.0,
+          "max_stress_drift": 0.0,
+          "reason": null,
+          "status": "succeeded"
+        },
+        "solve_discovered": {
+          "status": "succeeded"
+        }
+      },
+      "target_increment": 20
+    },
+    {
+      "bucket": "no_local_solve",
+      "constitutive_class": "Cosserat elasticity",
+      "id": "jgomezc1_UMAT_ECO",
+      "license": "MIT",
+      "local_solves_discovered": [],
+      "origin": "external corpus (pinned snapshot)",
+      "provenance": "https://github.com/jgomezc1/ABAQUS-US.git @ 54181407aa7a",
+      "source": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_ECO.for",
+      "source_sha256": "3949ecd8a952ca1a99aff466911764930f866d41734307a62c5ccba410511a9e"
+    },
+    {
+      "blocked_by": "material_data_unavailable",
+      "bucket": "blocked",
+      "constitutive_class": "viscoplastic damage, classical theory",
+      "id": "jgomezc1_UMAT_VPDCL",
+      "license": "MIT",
+      "local_solves_discovered": [
+        {
+          "convergence_tolerance": "TOLER",
+          "convergence_variable": "FGAM",
+          "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+          "hand_coded_jacobian_variable": "FJAC",
+          "iteration_variable": "GAM_PAR",
+          "loop_end_line": 213,
+          "loop_start_line": 184,
+          "residual_variable": "FGAM",
+          "update_line": 197,
+          "update_sign": "-"
+        }
+      ],
+      "origin": "external corpus (pinned snapshot)",
+      "provenance": "https://github.com/jgomezc1/ABAQUS-US.git @ 54181407aa7a",
+      "reason": "upstream provides no 24-constant deck for this model; TEST_INDENT_UMAT.inp references MATERIAL_NKH.inp which is absent from the upstream repository",
+      "source": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_VPDCL.for",
+      "source_sha256": "dc9dad48aa26add40616e4d861c902e02343039f78e82dc6e58dc8295fc48b64"
+    },
+    {
+      "blocked_by": "material_data_unavailable",
+      "bucket": "blocked",
+      "constitutive_class": "viscoplastic damage, combined hardening, thermomechanical",
+      "id": "jgomezc1_UMAT_NKH_1.02",
+      "license": "MIT",
+      "local_solves_discovered": [
+        {
+          "convergence_tolerance": "TOLER",
+          "convergence_variable": "FGAM",
+          "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used",
+          "hand_coded_jacobian_variable": "FJAC",
+          "iteration_variable": "GAM_PAR",
+          "loop_end_line": 259,
+          "loop_start_line": 213,
+          "residual_variable": "FGAM",
+          "update_line": 224,
+          "update_sign": "-"
+        }
+      ],
+      "origin": "external corpus (pinned snapshot)",
+      "provenance": "https://github.com/jgomezc1/ABAQUS-US.git @ 54181407aa7a",
+      "reason": "INPUT_FILES/TEST_INDENT_UMAT.inp declares CONSTANTS=24 and includes MATERIAL_NKH.inp, which is not present anywhere in the pinned upstream snapshot",
+      "source": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_NKH_1.02.for",
+      "source_sha256": "1a2835983e161003ac3f3664a9800a17404be92fdcdecb9e77e5a4c5abc5b6a6"
+    },
+    {
+      "bucket": "no_local_solve",
+      "constitutive_class": "crystal plasticity, finite strain, COMMON-block state",
+      "id": "ngrilli_umat",
+      "license": "MIT",
+      "local_solves_discovered": [],
+      "origin": "external corpus (pinned snapshot)",
+      "provenance": "https://github.com/ngrilli/Oxford_Crystal_Plasticity.git @ 85102ed35dc4",
+      "source": "permissive/ngrilli_Oxford_Crystal_Plasticity/umat.for",
+      "source_sha256": "0732d6432730e20089416f1485343229b7eeacbc8b3a18853705b3b882f1526d"
     }
   ]
 }
