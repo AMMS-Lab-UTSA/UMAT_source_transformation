@@ -64,6 +64,12 @@ umat-oti-pipeline = "umat_oti.pipeline.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+# The OTI support sources are read at run time by module generation. Without
+# this they are omitted from a wheel and a pip-installed package raises
+# "OTILIB module generation unavailable" on first use.
+"umat_oti.oti.support" = ["*.f90", "*.py"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"

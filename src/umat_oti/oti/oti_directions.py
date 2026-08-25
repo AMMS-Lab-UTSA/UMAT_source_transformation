@@ -23,7 +23,7 @@ from itertools import combinations_with_replacement
 from math import comb, factorial
 from typing import Iterator, Sequence
 
-# Must match UMATs/OTI/fmod_writer.py `valid_chars` exactly: '0'..'9' then 'A'..'Z'.
+# Must match umat_oti/oti/support/fmod_writer.py `valid_chars` exactly: '0'..'9' then 'A'..'Z'.
 # A basis index b (1-indexed) is rendered as VALID_CHARS[b]; member names are
 # "E" followed by the rendered bases, e.g. E1, E2 (order 1), E11, E12, E22 (order 2).
 VALID_CHARS = [chr(i) for i in range(48, 58)] + [chr(i) for i in range(65, 91)]
