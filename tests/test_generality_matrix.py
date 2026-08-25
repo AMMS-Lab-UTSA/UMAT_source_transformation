@@ -1,0 +1,85 @@
+"""The generality matrix must report evidence, never assert capability."""
+
+from __future__ import annotations
+
+import csv
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+MATRIX = REPO_ROOT / "paper_results" / "generality" / "generality_matrix.csv"
+SUMMARY = REPO_ROOT / "paper_results" / "generality" / "generality_summary.json"
+ROUND = (REPO_ROOT / "paper_results" / "parameter_sensitivity"
+         / "parameter_sensitivity_round.json")
+JACOBIANS = (REPO_ROOT / "paper_results" / "internal_jacobians"
+             / "internal_jacobian_round.json")
+
+REQUIRED_COLUMNS = {
+    "identity", "provenance", "license", "source_form", "file_layout",
+    "helper_routines", "include_files", "kinematics", "ntens", "nstatv",
+    "nprops", "path_dependent", "constitutive_class", "existing_tangent",
+    "derivative_families_requested", "highest_stage_reached", "transformation",
+    "compilation", "primal_parity", "numerical_verification",
+    "internal_jacobian", "abaqus", "failure_category_and_blocker",
+}
+
+
+@pytest.fixture(scope="module")
+def rows() -> list[dict]:
+    if not MATRIX.is_file():
+        pytest.skip("generality matrix has not been generated")
+    return list(csv.DictReader(MATRIX.open(encoding="utf-8")))
+
+
+def test_matrix_carries_every_required_column(rows):
+    assert REQUIRED_COLUMNS.issubset(set(rows[0]))
+
+
+def test_every_verified_row_traces_to_an_executed_round(rows):
+    """A 'succeeded' in the matrix must exist in the round that produced it.
+
+    The matrix joins evidence; it must never be the only place a result lives.
+    """
+    verified = {r["identity"] for r in rows if r["numerical_verification"] == "succeeded"}
+    payload = json.loads(ROUND.read_text(encoding="utf-8"))
+    executed = {m["model"] for m in payload["models"]
+                if m["stages"].get("derivatives_verified", {}).get("status") == "succeeded"}
+    assert verified == executed
+
+
+def test_internal_jacobian_column_matches_the_jacobian_round(rows):
+    matrix = {r["identity"] for r in rows if r["internal_jacobian"] == "succeeded"}
+    payload = json.loads(JACOBIANS.read_text(encoding="utf-8"))
+    executed = {r["id"] for r in payload["records"] if r["bucket"] == "verified"}
+    assert matrix == executed
+
+
+def test_abaqus_is_blocked_unless_an_archived_job_says_otherwise(rows):
+    """No row may claim an Abaqus result without a Slurm job to point at."""
+    for row in rows:
+        value = row["abaqus"]
+        assert value == "blocked_by_external_dependency" or "slurm" in value
+
+
+def test_summary_states_the_benchmark_set_structural_limits():
+    """Breadth of constitutive class is not breadth of source structure.
+
+    Every parameter-sensitivity benchmark is single-file fixed-form small-strain,
+    and the summary has to say so rather than let a headline count imply wider
+    coverage than was demonstrated.
+    """
+    summary = json.loads(SUMMARY.read_text(encoding="utf-8"))
+    assert summary["structural_diversity_caveat"]
+    assert summary["by_source_form"].keys() == {"fixed"}
+
+
+@pytest.mark.slow
+def test_matrix_regenerates_identically_except_for_its_timestamp(tmp_path):
+    before = MATRIX.read_text(encoding="utf-8")
+    subprocess.run([sys.executable, str(REPO_ROOT / "tools" / "build_generality_matrix.py")],
+                   cwd=REPO_ROOT, check=True, capture_output=True)
+    assert MATRIX.read_text(encoding="utf-8") == before
