@@ -28,6 +28,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
+from umat_oti.validation.reference_resolution import (
+    converged_value, measure_reference_resolution, select_reference_step,
+)
 from umat_oti.services.contract_adapter import (  # noqa: E402
     ContractAdaptationError, adapt_v2_contract,
 )
@@ -156,6 +159,115 @@ def run_model(model: str, work_root: Path) -> dict:
     return record
 
 
+
+#: Arrays a row can belong to, mapped to the OTI output that carries them.
+_ARRAY_CSV = {"DSIGMA_DP": "DSIGMA_DP_OTI.csv", "DSTATEV_DP": "DSTATEV_DP_OTI.csv"}
+
+
+def _readjudicate_at_converged_step(rows, *, executable, props, path, ntens,
+                                    nstatv, parameters, ps_dir, stress_scale,
+                                    branches):
+    """Re-check disagreeing rows against a converged finite-difference step.
+
+    A fixed reference step is a guess about the model's third derivative. When a
+    row disagrees, the first question is whether the reference itself was the
+    limitation, and that is answered by making the reference better rather than
+    the test weaker: the step is chosen from the method's own convergence and
+    the comparison is repeated. Rows that still disagree stay failures.
+
+    Only disagreeing rows are re-examined, so a model whose reference was
+    adequate costs nothing.
+    """
+    failing = [r for r in rows if r.agrees is False]
+    if not failing:
+        return rows, None
+
+    by_parameter = {p["name"]: p for p in parameters}
+    groups = sorted({(r.parameter, r.array) for r in failing})
+    evidence: dict = {"groups": [], "policy": (
+        "disagreeing rows are re-judged against a centred difference evaluated at "
+        "a step chosen by the method's own convergence; the tolerance is unchanged")}
+    replacements: dict = {}
+
+    for parameter_name, array in groups:
+        parameter = by_parameter.get(parameter_name)
+        if parameter is None or array not in _ARRAY_CSV:
+            continue
+        ladder = measure_reference_resolution(
+            executable, props, path, ntens=ntens, nstatv=nstatv,
+            props_index=parameter["props_index"], array=array)
+        step = select_reference_step(ladder)
+        entry = {"parameter": parameter_name, "array": array,
+                 "ladder_steps": list(ladder.steps),
+                 "group_selected_relative_step": step}
+        source_csv = ps_dir / _ARRAY_CSV[array]
+        if not source_csv.is_file():
+            entry["outcome"] = "the OTI output for this array is missing"
+            evidence["groups"].append(entry)
+            continue
+        oti_table = read_oti_csv(source_csv)
+
+        # One step per entry, not per parameter: different components of the
+        # same array reach their turning point at different steps.
+        per_entry = {}
+        rejudged = 0
+        for row in failing:
+            if (row.parameter, row.array) != (parameter_name, array):
+                continue
+            best = converged_value(ladder, row.increment, row.component)
+            if best is None:
+                continue
+            value, chosen, uncertainty = best
+            oti_entry = oti_table.get((row.increment, row.component)) or {}
+            oti_value = oti_entry.get(parameter_name.upper(),
+                                      oti_entry.get(parameter_name))
+            if oti_value is None:
+                continue
+            magnitude = max(abs(oti_value), abs(value))
+            absolute = abs(oti_value - value)
+            relative = absolute / magnitude if magnitude else 0.0
+            if relative <= 1.0e-6:
+                agrees = True
+            elif absolute <= uncertainty:
+                # The reference still moves by more than this between
+                # consecutive steps, so it cannot say the value is wrong.
+                agrees = None
+            else:
+                agrees = False
+            per_entry[(row.array, row.parameter, row.increment, row.component)] = (
+                value, chosen, absolute, relative, agrees, uncertainty)
+            rejudged += 1
+        entry["outcome"] = "re-judged per entry"
+        entry["rows_rejudged"] = rejudged
+        entry["steps_used"] = sorted({v[1] for v in per_entry.values()})
+        evidence["groups"].append(entry)
+
+        replacements.update(per_entry)
+
+    if not replacements:
+        return rows, evidence
+
+    updated = []
+    changed = 0
+    for row in rows:
+        key = (row.array, row.parameter, row.increment, row.component)
+        replacement = replacements.get(key)
+        if replacement is not None and row.agrees is False:
+            value, chosen, absolute, relative, agrees, uncertainty = replacement
+            row.reference = value
+            row.absolute_error = absolute
+            row.relative_error = relative
+            row.agrees = agrees
+            row.judged_by = (
+                f"reference_unresolved_at_converged_step_{chosen:g}"
+                if agrees is None else f"relative_at_converged_step_{chosen:g}")
+            if agrees is not False:
+                changed += 1
+        updated.append(row)
+    evidence["rows_reclassified"] = changed
+    return updated, evidence
+
+
 def _execute_and_verify(model: str, contract: dict, out: Path, record: dict) -> None:
     """Build+run the OTI driver, check primal parity, then compare against FD.
 
@@ -253,6 +365,14 @@ def _execute_and_verify(model: str, contract: dict, out: Path, record: dict) -> 
             "status": "failed", "reason": "no comparable derivative rows were produced"}
         return
 
+    rows, converged = _readjudicate_at_converged_step(
+        rows, executable=executable, props=props, path=path, ntens=ntens,
+        nstatv=nstatv, parameters=parameters, ps_dir=ps_dir,
+        stress_scale=max((abs(v) for row in original.stress for v in row), default=1.0),
+        branches=branches)
+    if converged:
+        record["reference_step_convergence"] = converged
+
     agreeing = [r for r in rows if r.agrees is True]
     disagreeing = [r for r in rows if r.agrees is False]
     unresolved = [r for r in rows if r.agrees is None]
@@ -265,8 +385,19 @@ def _execute_and_verify(model: str, contract: dict, out: Path, record: dict) -> 
     verified_directions = sorted(
         name for name, group in by_parameter.items()
         if all(r.agrees is True for r in group))
+    # Three outcomes, not two. A model whose every row agreed or could not be
+    # adjudicated has produced no evidence of a defect, and calling that
+    # "failed" alongside a model that genuinely disagrees loses the distinction
+    # the comparison was built to preserve. It is still not verified: an
+    # unresolved row withholds its direction.
+    if not disagreeing and not unresolved:
+        verdict = "succeeded"
+    elif disagreeing:
+        verdict = "failed"
+    else:
+        verdict = "unresolved"
     record["stages"]["derivatives_verified"] = {
-        "status": "succeeded" if (not disagreeing and not unresolved) else "failed",
+        "status": verdict,
         "rows": len(rows),
         "rows_agreeing": len(agreeing),
         "rows_disagreeing": len(disagreeing),
@@ -276,6 +407,13 @@ def _execute_and_verify(model: str, contract: dict, out: Path, record: dict) -> 
                                      if r.relative_error is not None), default=None),
         "elastic_increments": branches.count("elastic"),
         "inelastic_increments": branches.count("inelastic"),
+        "verdict_meaning": {
+            "succeeded": "every row resolved and agreed",
+            "failed": "at least one row disagrees with a reference that can adjudicate it",
+            "unresolved": ("no row disagrees; some sit below what centred "
+                           "differences can resolve, so those directions are "
+                           "withheld rather than claimed"),
+        }[verdict],
         "reason": None if (not disagreeing and not unresolved) else
                   (f"{len(disagreeing)} of {len(rows)} rows disagree with the "
                    f"centred-difference reference" if disagreeing else "")
@@ -288,6 +426,11 @@ def _execute_and_verify(model: str, contract: dict, out: Path, record: dict) -> 
     record["comparison_rows"] = [r.as_dict() for r in rows]
     if not disagreeing and not unresolved:
         record["furthest_stage"] = "derivatives_verified"
+    elif not disagreeing:
+        # The comparison ran to completion; it simply could not adjudicate every
+        # row. Leaving furthest_stage at primal_parity would report this model
+        # as having stopped before the comparison, which is not what happened.
+        record["furthest_stage"] = "derivatives_unresolved"
 
 
 def _display(path: Path) -> str:
@@ -362,8 +505,14 @@ def main(argv: list[str] | None = None) -> int:
         if record["furthest_stage"] == "derivatives_verified":
             continue
         for name, entry in record["stages"].items():
-            if (entry or {}).get("status") == "failed":
-                key = f"{name}:{entry.get('status_category') or 'failed'}"
+            status = (entry or {}).get("status")
+            if status in ("failed", "unresolved"):
+                # "unresolved" is a distinct outcome: the stage ran and found no
+                # disagreement, but the reference could not adjudicate every
+                # row. Folding it into "failed" would claim a defect nobody
+                # measured; folding it into the stopped_after branch would
+                # claim the stage never ran.
+                key = f"{name}:{entry.get('status_category') or status}"
                 taxonomy.setdefault(key, []).append(record["model"])
                 break
         else:

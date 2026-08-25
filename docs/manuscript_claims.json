@@ -1,0 +1,68 @@
+{
+  "_comment": [
+    "Claims transcribed from the manuscript, with the sentence each came from so",
+    "the transcription can be checked. These are REQUIREMENTS and CONTEXT, never",
+    "reference answers: where a measurement differs, the measurement wins and the",
+    "manuscript is what gets revised.",
+    "",
+    "No value in this file is read by any comparison, tolerance or test. It is",
+    "used only to render the reconciliation table alongside measured evidence."
+  ],
+  "source_document": {
+    "name": "UMAT_OTI_SoftwareX_V4.docx",
+    "sha256": "a04b5bc05e1bb06578d469f057cd9ba7fccd6e2f0de5f39c7159880b5dd7a30e",
+    "held_outside_the_repository": true,
+    "note": "the authors' manuscript; not redistributed here"
+  },
+  "claims": [
+    {
+      "id": "TABLE-2",
+      "table": "Table 2",
+      "statement": "Material tangent validation across 18 UMAT examples; twelve models show zero difference, three differ because the original approximates some derivative terms, and one (spin_elas_def.f) by too much, traced to an error in the original UMAT.",
+      "required_denominator": 18,
+      "evidence": "paper_results/arc_791506/table2_abaqus_paired.json"
+    },
+    {
+      "id": "TABLE-3",
+      "table": "Table 3",
+      "statement": "Internal Jacobian verification. Nineteen entries were checked, fourteen exactly and five within tolerance, across the members of the tangent-verification set that carry out a nonlinear solve inside the material update.",
+      "required_denominator": 19,
+      "evidence": "paper_results/internal_jacobians/internal_jacobian_round.json"
+    },
+    {
+      "id": "TABLE-4",
+      "table": "Table 4",
+      "statement": "Higher-order verification across representative nonlinear models: order 1 against analytical derivatives, orders 2-4 against finite-difference references.",
+      "required_denominator": null,
+      "evidence": "paper_results/higher_order_convergence/table4_reference_quality_summary.json"
+    },
+    {
+      "id": "TABLE-5",
+      "table": "Table 5",
+      "statement": "J2 verification of the exported sensitivity arrays against centred finite differences; largest difference 5.98e-11 over 24 stress-sensitivity entries and 1.37e-10 over 4 state-sensitivity entries.",
+      "required_denominator": 28,
+      "evidence": "paper_results/parameter_sensitivity/"
+    },
+    {
+      "id": "TABLE-6",
+      "table": "Table 6",
+      "statement": "Stress-sensitivity verification across 18 models and 76 parameter directions against centred finite differences; largest difference 1.6e-7 for the crystal-plasticity model with twelve slip systems, the rest between 1e-11 and 1e-9.",
+      "required_denominator": 76,
+      "evidence": "paper_results/parameter_sensitivity/parameter_sensitivity_round.json"
+    },
+    {
+      "id": "CORPUS",
+      "table": "Web corpus",
+      "statement": "Corpus discovery, transformation and verification over publicly available UMAT sources.",
+      "required_denominator": null,
+      "evidence": "paper_results/arc_791506/evidence/corpus_round_metrics.json"
+    },
+    {
+      "id": "GENERALITY",
+      "table": "Generality",
+      "statement": "Generality checked beyond the single J2 model on a further 18 material models covering elasticity, plasticity, viscoplasticity, damage, crystal plasticity, Cosserat, hyperelastic, viscoelastic and thermoelastic behaviour.",
+      "required_denominator": 18,
+      "evidence": "paper_results/generality/generality_matrix.csv"
+    }
+  ]
+}
