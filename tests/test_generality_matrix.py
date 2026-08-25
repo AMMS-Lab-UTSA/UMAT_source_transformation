@@ -42,13 +42,27 @@ def test_matrix_carries_every_required_column(rows):
 def test_every_verified_row_traces_to_an_executed_round(rows):
     """A 'succeeded' in the matrix must exist in the round that produced it.
 
-    The matrix joins evidence; it must never be the only place a result lives.
+    The matrix joins several rounds, so each origin is checked against its own
+    source of truth. It must never be the only place a result lives.
     """
-    verified = {r["identity"] for r in rows if r["numerical_verification"] == "succeeded"}
     payload = json.loads(ROUND.read_text(encoding="utf-8"))
-    executed = {m["model"] for m in payload["models"]
-                if m["stages"].get("derivatives_verified", {}).get("status") == "succeeded"}
-    assert verified == executed
+    sweep_verified = {m["model"] for m in payload["models"]
+                      if m["stages"].get("derivatives_verified", {}).get("status")
+                      == "succeeded"}
+    from_sweep = {r["identity"] for r in rows
+                  if r["numerical_verification"] == "succeeded"
+                  and r["origin"] == "parameter_sensitivity benchmark set"}
+    assert from_sweep == sweep_verified
+
+    corpus_file = (REPO_ROOT / "paper_results" / "corpus" / "corpus_round.json")
+    if corpus_file.is_file():
+        corpus = json.loads(corpus_file.read_text(encoding="utf-8"))
+        corpus_verified = {c["id"] for c in corpus["candidates"]
+                           if c.get("furthest_stage") == "derivatives_verified"}
+        from_corpus = {r["identity"] for r in rows
+                       if r["numerical_verification"] == "succeeded"
+                       and r["origin"].startswith("external corpus")}
+        assert from_corpus == corpus_verified
 
 
 def test_internal_jacobian_column_matches_the_jacobian_round(rows):

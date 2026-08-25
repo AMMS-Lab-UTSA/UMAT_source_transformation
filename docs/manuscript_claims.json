@@ -55,7 +55,7 @@
       "table": "Web corpus",
       "statement": "Corpus discovery, transformation and verification over publicly available UMAT sources.",
       "required_denominator": null,
-      "evidence": "paper_results/arc_791506/evidence/corpus_round_metrics.json"
+      "evidence": "paper_results/corpus/corpus_round.json"
     },
     {
       "id": "GENERALITY",

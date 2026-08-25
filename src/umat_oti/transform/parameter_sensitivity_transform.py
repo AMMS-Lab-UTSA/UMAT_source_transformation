@@ -162,6 +162,10 @@ def transform_umat_for_parameter_sensitivity(
         encoding="utf-8",
     )
 
+    (output_dir / "oti_intrinsics.f90").write_text(
+        _emit_intrinsic_extensions(module_result.module_name,
+                                   module_result.type_name), encoding="utf-8")
+
     stubs = _required_utility_stubs(source_text)
     (output_dir / "abaqus_stubs.f90").write_text(
         "".join(_STUBBABLE_UTILITIES[name] for name in stubs), encoding="utf-8")
@@ -353,6 +357,7 @@ def _wrap_lifted_in_module(body: str, *, module_name: str, n_param: int = 0) -> 
         "MODULE umat_oti_lifted_mod\n"
         "  USE master_parameters, ONLY: DP\n"
         f"{use_line}"
+        "  USE oti_intrinsics\n"
         "  IMPLICIT NONE\n"
         "  PUBLIC\n"
         "CONTAINS\n\n"
@@ -582,6 +587,103 @@ def _required_utility_stubs(source_text: str) -> tuple[str, ...]:
     return tuple(sorted(missing.intersection(_STUBBABLE_UTILITIES)))
 
 
+
+def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
+    """Mixed OTI/real forms of MIN, MAX and SIGN.
+
+    The generated OTI module defines MIN and MAX only for two OTI operands, but
+    UMATs routinely clamp against a real constant -- ``ENU=MIN(PROPS(2),ENUMAX)``
+    with ENUMAX a REAL parameter is the idiom that first exposed this. gfortran
+    then reports the generic as not matching any specific interface, which reads
+    like a transformation bug and is really a missing overload.
+
+    The semantics are the ones the mathematics requires rather than a
+    convenience: MIN and MAX are piecewise, so the result carries the derivative
+    of whichever operand was selected, and a real constant contributes a zero
+    derivative. Generic interfaces are additive across modules, so declaring
+    these here extends MIN and MAX rather than shadowing them.
+    """
+    lines = [
+        "!===============================================================",
+        "! Mixed OTI/real intrinsic overloads. Generic interfaces are",
+        "! additive across modules, so these extend MIN/MAX/SIGN.",
+        "!===============================================================",
+        f"MODULE oti_intrinsics",
+        "  USE master_parameters, ONLY: DP",
+        f"  USE {module_name}",
+        "  IMPLICIT NONE",
+        # PRIVATE by default, then only the generics are re-exported. A blanket
+        # PUBLIC would re-export everything this module imports, including the
+        # direction constants E1, E2, ... -- which puts them straight back into
+        # any scope that renamed them away to avoid colliding with a UMAT's own
+        # variables of the same name.
+        "  PRIVATE",
+        "  PUBLIC :: MIN, MAX, SIGN",
+        "  INTERFACE MIN",
+        "    MODULE PROCEDURE oti_min_or, oti_min_ro",
+        "  END INTERFACE MIN",
+        "  INTERFACE MAX",
+        "    MODULE PROCEDURE oti_max_or, oti_max_ro",
+        "  END INTERFACE MAX",
+        "  INTERFACE SIGN",
+        "    MODULE PROCEDURE oti_sign_oo, oti_sign_or",
+        "  END INTERFACE SIGN",
+        "CONTAINS",
+    ]
+
+    def selector(name: str, first: str, second: str, comparison: str) -> list[str]:
+        a_type = f"TYPE({type_name})" if first == "o" else "REAL(DP)"
+        b_type = f"TYPE({type_name})" if second == "o" else "REAL(DP)"
+        a_value = "A%R" if first == "o" else "A"
+        b_value = "B%R" if second == "o" else "B"
+        return [
+            f"  FUNCTION {name}(A, B) RESULT(RES)",
+            "    IMPLICIT NONE",
+            f"    {a_type}, INTENT(IN) :: A",
+            f"    {b_type}, INTENT(IN) :: B",
+            f"    TYPE({type_name}) :: RES",
+            f"    IF ({b_value} {comparison} {a_value}) THEN",
+            "      RES = B",
+            "    ELSE",
+            "      RES = A",
+            "    END IF",
+            f"  END FUNCTION {name}",
+        ]
+
+    lines += selector("oti_min_or", "o", "r", "<")
+    lines += selector("oti_min_ro", "r", "o", "<")
+    lines += selector("oti_max_or", "o", "r", ">")
+    lines += selector("oti_max_ro", "r", "o", ">")
+    # SIGN(a, b) is |a| with the sign of b; b contributes no derivative because
+    # only its sign is used.
+    lines += [
+        "  FUNCTION oti_sign_oo(A, B) RESULT(RES)",
+        "    IMPLICIT NONE",
+        f"    TYPE({type_name}), INTENT(IN) :: A, B",
+        f"    TYPE({type_name}) :: RES",
+        "    IF (B%R < 0.0_DP) THEN",
+        "      RES = -ABS(A)",
+        "    ELSE",
+        "      RES = ABS(A)",
+        "    END IF",
+        "  END FUNCTION oti_sign_oo",
+        "  FUNCTION oti_sign_or(A, B) RESULT(RES)",
+        "    IMPLICIT NONE",
+        f"    TYPE({type_name}), INTENT(IN) :: A",
+        "    REAL(DP), INTENT(IN) :: B",
+        f"    TYPE({type_name}) :: RES",
+        "    IF (B < 0.0_DP) THEN",
+        "      RES = -ABS(A)",
+        "    ELSE",
+        "      RES = ABS(A)",
+        "    END IF",
+        "  END FUNCTION oti_sign_or",
+        "END MODULE oti_intrinsics",
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def _emit_makefile(module_name: str) -> str:
     return f"""FC      ?= gfortran
 FCFLAGS ?= -O1 -std=legacy -ffree-line-length-none -fno-align-commons
@@ -598,7 +700,10 @@ real_utils.o: real_utils.f90 master_parameters.o
 {module_name}.o: {module_name}.f90 master_parameters.o real_utils.o
 \t$(FC) $(FCFLAGS) -c $<
 
-umat_oti_lifted.o: umat_oti_lifted.f90 {module_name}.o
+oti_intrinsics.o: oti_intrinsics.f90 {module_name}.o master_parameters.o
+\t$(FC) $(FCFLAGS) -c $<
+
+umat_oti_lifted.o: umat_oti_lifted.f90 {module_name}.o oti_intrinsics.o
 \t$(FC) $(FCFLAGS) -c $<
 
 ps_driver.o: ps_driver.f90 umat_oti_lifted.o {module_name}.o
@@ -607,7 +712,7 @@ ps_driver.o: ps_driver.f90 umat_oti_lifted.o {module_name}.o
 abaqus_stubs.o: abaqus_stubs.f90
 \t$(FC) $(FCFLAGS) -c $<
 
-ps_driver: master_parameters.o real_utils.o {module_name}.o umat_oti_lifted.o abaqus_stubs.o ps_driver.o
+ps_driver: master_parameters.o real_utils.o {module_name}.o oti_intrinsics.o umat_oti_lifted.o abaqus_stubs.o ps_driver.o
 \t$(FC) $(FCFLAGS) $^ -o $@
 
 clean:

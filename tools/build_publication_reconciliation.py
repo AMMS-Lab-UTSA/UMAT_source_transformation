@@ -156,9 +156,38 @@ def generality_row() -> tuple[dict, list[str]]:
 
 
 def corpus_row() -> tuple[dict, list[str]]:
+    """Prefer the executed round; fall back to the archived metrics."""
+    executed = _load(RESULTS / "corpus" / "corpus_round.json")
+    if executed:
+        funnel = executed["funnel"]
+        row = _blank()
+        row.update({
+            "attempted": funnel.get("candidates"),
+            "transformed": funnel.get("reached_transformed"),
+            "compiled": funnel.get("reached_generated_compiled"),
+            "executed": funnel.get("reached_transformed_executed"),
+            "primal_parity": funnel.get("reached_primal_parity"),
+            "reference_resolved": funnel.get("reached_reference_resolved"),
+            "verified": funnel.get("reached_derivatives_verified"),
+            "blocked": funnel.get("candidates", 0) - funnel.get("reached_contract_constructed", 0),
+        })
+        notes = [
+            f"Executed {executed['generated_at'][:10]} in {executed['mode']} mode "
+            f"from the pinned snapshot in {executed['snapshot_manifest']}.",
+            "Every repository is pinned to a commit SHA, so the round replays "
+            "offline without depending on live upstream state.",
+        ]
+        verified = [c["id"] for c in executed["candidates"]
+                    if c.get("furthest_stage") == "derivatives_verified"]
+        if verified:
+            notes.append("Numerically verified: " + ", ".join(sorted(verified)) + ".")
+        for key, names in sorted(executed.get("failure_taxonomy", {}).items()):
+            notes.append(f"Stopped at {key}: {', '.join(names)}.")
+        return row, notes
+
     metrics = _load(RESULTS / "arc_791506" / "evidence" / "corpus_round_metrics.json")
     if not metrics:
-        return _blank(), ["no corpus round metrics are present"]
+        return _blank(), ["no corpus round has been executed"]
     counts = metrics.get("cumulative_stage_counts", {})
     row = _blank()
     row.update({
@@ -170,10 +199,7 @@ def corpus_row() -> tuple[dict, list[str]]:
         "verified": counts.get("derivatives_numerically_verified"),
         "failed": metrics.get("failed"),
     })
-    return row, [
-        "Archived round. No corpus source has yet reached execution, primal parity "
-        "or numerical verification; the funnel stops at compilation.",
-    ]
+    return row, ["Archived round only; no source reached execution."]
 
 
 def table4_row() -> tuple[dict, list[str]]:
