@@ -1,23 +1,24 @@
 {
   "failure_taxonomy": {
     "derivatives_verified:unresolved": [
-      "m6_fcc"
+      "m6_fcc",
+      "sweep_drucker_prager"
     ]
   },
   "funnel": {
-    "attempted": 18,
-    "comparison_rows_agreeing": 13415,
-    "comparison_rows_total": 13420,
-    "compiled_oti": 18,
-    "contract_complete": 18,
-    "derivatives_verified": 17,
-    "executed_original": 18,
-    "executed_oti": 18,
-    "parameter_directions_declared": 76,
-    "parameter_directions_verified": 72,
-    "primal_parity": 18,
-    "reference_resolved": 18,
-    "transformed": 18
+    "attempted": 20,
+    "comparison_rows_agreeing": 14507,
+    "comparison_rows_total": 14540,
+    "compiled_oti": 20,
+    "contract_complete": 20,
+    "derivatives_verified": 18,
+    "executed_original": 20,
+    "executed_oti": 20,
+    "parameter_directions_declared": 84,
+    "parameter_directions_verified": 76,
+    "primal_parity": 20,
+    "reference_resolved": 20,
+    "transformed": 20
   },
   "models": [
     {
@@ -40,12 +41,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 0,
           "reason": null,
           "rows": 240,
           "rows_agreeing": 240,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 63,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -69,7 +73,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.587,
+          "seconds": 1.569,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -105,12 +109,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 0,
           "reason": null,
           "rows": 360,
           "rows_agreeing": 360,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 7,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -134,7 +141,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.14,
+          "seconds": 1.103,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -172,12 +179,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 15,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 5,
           "reason": null,
           "rows": 560,
           "rows_agreeing": 560,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 75,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -201,7 +211,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.242,
+          "seconds": 1.158,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -241,12 +251,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 0,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 20,
           "reason": null,
           "rows": 840,
           "rows_agreeing": 840,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 244,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -270,7 +283,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.235,
+          "seconds": 1.188,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -432,15 +445,18 @@
         },
         "derivatives_verified": {
           "elastic_increments": 2,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 18,
           "reason": "5 of 3600 rows sit at the centred-difference noise floor and cannot be resolved by it",
           "rows": 3600,
           "rows_agreeing": 3595,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 5,
+          "rows_reference_unresolved_at_noise_floor": 5,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 1008,
           "status": "unresolved",
-          "verdict_meaning": "no row disagrees; some sit below what centred differences can resolve, so those directions are withheld rather than claimed",
+          "verdict_meaning": "no row disagrees; some cannot be adjudicated by centred differences, so those directions are withheld rather than claimed",
           "worst_relative_error": 8.194703070708744e-07
         },
         "executed_original": {
@@ -461,7 +477,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.284,
+          "seconds": 1.17,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -506,12 +522,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 0,
           "reason": null,
           "rows": 1080,
           "rows_agreeing": 1080,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 3,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -535,7 +554,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.15,
+          "seconds": 1.134,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -578,12 +597,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 0,
           "reason": null,
           "rows": 360,
           "rows_agreeing": 360,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 60,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -607,7 +629,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.201,
+          "seconds": 1.22,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -622,6 +644,74 @@
         "d",
         "nu"
       ]
+    },
+    {
+      "furthest_stage": "derivatives_unresolved",
+      "model": "sweep_drucker_prager",
+      "parameter_count": 4,
+      "parameters": [
+        "E",
+        "nu",
+        "k",
+        "beta"
+      ],
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity/contracts/sweep_drucker_prager.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 10,
+          "increments_with_branch_crossing": [
+            10
+          ],
+          "inelastic_increments": 10,
+          "reason": "28 of 560 rows sit on a branch boundary (increment 10), where the centred difference straddles the kink and returns a secant rather than the derivative on the branch the increment took",
+          "rows": 560,
+          "rows_agreeing": 532,
+          "rows_disagreeing": 0,
+          "rows_reference_unresolved": 28,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 28,
+          "rows_substantive": 90,
+          "status": "unresolved",
+          "verdict_meaning": "no row disagrees; some cannot be adjudicated by centred differences, so those directions are withheld rather than claimed",
+          "worst_relative_error": 1.1828840306909155e-08
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 2.143878944103751e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 1.138,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": []
     },
     {
       "furthest_stage": "derivatives_verified",
@@ -643,12 +733,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 0,
           "reason": null,
           "rows": 240,
           "rows_agreeing": 240,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 67,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -672,7 +765,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.15,
+          "seconds": 1.196,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -709,12 +802,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 16,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 4,
           "reason": null,
           "rows": 560,
           "rows_agreeing": 560,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 72,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -738,7 +834,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.217,
+          "seconds": 1.21,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -778,12 +874,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 16,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 4,
           "reason": null,
           "rows": 1300,
           "rows_agreeing": 1300,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 84,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -807,7 +906,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.245,
+          "seconds": 1.22,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -847,12 +946,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 16,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 4,
           "reason": null,
           "rows": 960,
           "rows_agreeing": 960,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 84,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -876,7 +978,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.188,
+          "seconds": 1.176,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -913,12 +1015,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 0,
           "reason": null,
           "rows": 240,
           "rows_agreeing": 240,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 14,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -942,7 +1047,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.182,
+          "seconds": 1.188,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -978,12 +1083,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 0,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 20,
           "reason": null,
           "rows": 720,
           "rows_agreeing": 720,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 208,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -1007,7 +1115,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.262,
+          "seconds": 1.232,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -1043,12 +1151,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 0,
           "reason": null,
           "rows": 240,
           "rows_agreeing": 240,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 9,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -1072,7 +1183,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.135,
+          "seconds": 1.146,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -1085,6 +1196,77 @@
       "verified_parameter_directions": [
         "kappa",
         "mu"
+      ]
+    },
+    {
+      "furthest_stage": "derivatives_verified",
+      "model": "sweep_perzyna_linear",
+      "parameter_count": 4,
+      "parameters": [
+        "E",
+        "nu",
+        "SIGY0",
+        "eta"
+      ],
+      "stages": {
+        "compile": {
+          "compiler_status": "compiled",
+          "reason": null,
+          "status": "succeeded"
+        },
+        "contract": {
+          "path": "parameter_sensitivity/contracts/sweep_perzyna_linear.json",
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "elastic_increments": 16,
+          "increments_with_branch_crossing": [],
+          "inelastic_increments": 4,
+          "reason": null,
+          "rows": 560,
+          "rows_agreeing": 560,
+          "rows_disagreeing": 0,
+          "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
+          "rows_substantive": 66,
+          "status": "succeeded",
+          "verdict_meaning": "every row resolved and agreed",
+          "worst_relative_error": 2.4796331934347723e-08
+        },
+        "executed_original": {
+          "increments": 20,
+          "status": "succeeded"
+        },
+        "executed_oti": {
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "reason": null,
+          "status": "succeeded",
+          "worst_relative_difference": 2.6391587328232284e-16
+        },
+        "reference_resolved": {
+          "status": "succeeded"
+        },
+        "transform": {
+          "exit_code": 0,
+          "reason": null,
+          "seconds": 1.177,
+          "status": "succeeded",
+          "status_category": "succeeded",
+          "warnings": 0
+        }
+      },
+      "targets": [
+        "DSIGMA_DP",
+        "DSTATEV_DP"
+      ],
+      "verified_parameter_directions": [
+        "E",
+        "SIGY0",
+        "eta",
+        "nu"
       ]
     },
     {
@@ -1110,12 +1292,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 0,
           "reason": null,
           "rows": 600,
           "rows_agreeing": 600,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 240,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -1139,7 +1324,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.121,
+          "seconds": 1.112,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -1179,12 +1364,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 15,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 5,
           "reason": null,
           "rows": 560,
           "rows_agreeing": 560,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 75,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -1208,7 +1396,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.224,
+          "seconds": 1.27,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -1246,12 +1434,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 0,
           "reason": null,
           "rows": 360,
           "rows_agreeing": 360,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 67,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -1275,7 +1466,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.153,
+          "seconds": 1.191,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -1314,12 +1505,15 @@
         },
         "derivatives_verified": {
           "elastic_increments": 20,
+          "increments_with_branch_crossing": [],
           "inelastic_increments": 0,
           "reason": null,
           "rows": 600,
           "rows_agreeing": 600,
           "rows_disagreeing": 0,
           "rows_reference_unresolved": 0,
+          "rows_reference_unresolved_at_noise_floor": 0,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 146,
           "status": "succeeded",
           "verdict_meaning": "every row resolved and agreed",
@@ -1343,7 +1537,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.197,
+          "seconds": 1.057,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0

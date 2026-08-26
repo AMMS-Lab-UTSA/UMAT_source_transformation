@@ -84,6 +84,10 @@ class ValidationRow:
     #: nor failed.
     agrees: bool | None
     branch: str
+    #: True when the perturbed replays that produced the reference did not all
+    #: take the branch the unperturbed increment took. The reference is then a
+    #: secant across a kink, not an estimate of the derivative on either side.
+    branch_crossing: bool = False
 
     def as_dict(self) -> dict[str, Any]:
         return self.__dict__.copy()
@@ -205,6 +209,27 @@ def build_original_driver(source: Path, out_dir: Path, *, ntens: int, nstatv: in
     return executable
 
 
+#: A state slot whose growth marks inelastic response, and the size that counts
+#: as growth. The same rule must decide the branch everywhere, or the nominal
+#: branch and the perturbed branches are not comparable.
+INELASTIC_MARKER_SLOT = 1
+INELASTIC_MARKER_THRESHOLD = 1.0e-12
+
+#: The only labels ``branch_history`` produces. A caller that passes anything
+#: else -- the internal-Jacobian path labels every increment "local_solve",
+#: because there the state array holds probe slots rather than an inelasticity
+#: marker -- is not tracking branches on a comparable basis, and no crossing
+#: can be inferred from comparing the two vocabularies.
+BRANCH_LABELS = frozenset({"elastic", "inelastic"})
+
+
+def branch_history(statev: Sequence[Sequence[float]]) -> list[str]:
+    """The branch each increment took, read from the inelasticity marker."""
+    slot = INELASTIC_MARKER_SLOT - 1
+    return ["inelastic" if (row and abs(row[slot]) > INELASTIC_MARKER_THRESHOLD)
+            else "elastic" for row in statev]
+
+
 def replay(executable: Path, props: Sequence[float],
            path: Sequence[Sequence[float]], *, ntens: int, nstatv: int,
            deformation_gradient_increment: Optional[Sequence[float]] = None
@@ -277,12 +302,21 @@ def centered_fd(executable: Path, props: Sequence[float],
         low = replay(executable, minus, path, ntens=ntens, nstatv=nstatv,
                      deformation_gradient_increment=deformation_gradient_increment)
         denominator = 2.0 * step
+        # A stencil that straddles a yield or unloading boundary estimates the
+        # secant across a kink, not the derivative on the branch the increment
+        # actually took. Recording which increments that happened on lets such
+        # a row be reported as one the reference cannot adjudicate, instead of
+        # being blamed on the transformation.
+        high_branch = branch_history(high.statev)
+        low_branch = branch_history(low.statev)
         out[index] = {
             "step": step,
             "dsigma": [[(h - l) / denominator for h, l in zip(hs, ls)]
                        for hs, ls in zip(high.stress, low.stress)],
             "dstatev": [[(h - l) / denominator for h, l in zip(hs, ls)]
                         for hs, ls in zip(high.statev, low.statev)],
+            "high_branch": high_branch,
+            "low_branch": low_branch,
         }
     return out
 
@@ -327,6 +361,15 @@ def compare(oti: dict[tuple[int, int], dict[str, float]],
     Counting such a row as agreement would inflate the verified total; counting
     it as disagreement would blame the transformation for the reference's
     limits.
+
+    A stencil that straddles a branch is unresolved for a different reason, and
+    is marked as such rather than pooled with the noise-floor rows. Its
+    reference is a secant across a kink: on the increment where a Drucker-Prager
+    model first yields, the centred difference returns exactly half the
+    inelastic sensitivity, being the average of the elastic and inelastic
+    one-sided derivatives. The OTI value is the derivative on the branch the
+    increment actually took, and calling it wrong there would be blaming it for
+    answering the question that was asked.
     """
     key = "dsigma" if array == "DSIGMA_DP" else "dstatev"
     scale: dict[str, float] = {}
@@ -347,13 +390,22 @@ def compare(oti: dict[tuple[int, int], dict[str, float]],
             oti_value = by_name.get(name.upper(), by_name.get(name))
             if oti_value is None:
                 continue
-            reference_value = reference[parameter["props_index"]][key][increment - 1][component - 1]
+            entry = reference[parameter["props_index"]]
+            reference_value = entry[key][increment - 1][component - 1]
             absolute = abs(oti_value - reference_value)
+            nominal = (branches[increment - 1]
+                       if increment <= len(branches) else "unknown")
+            crossing = _crosses_branch(entry, increment, nominal)
             column_scale = scale[name]
             magnitude = max(abs(oti_value), abs(reference_value))
             noise = floor[name]
 
-            if absolute <= noise:
+            if crossing:
+                relative = (absolute / abs(reference_value)
+                            if abs(reference_value) > 0.0 else None)
+                agrees = None
+                judged = "reference_unresolved_branch_crossing"
+            elif absolute <= noise:
                 # The two values differ by less than the centred difference can
                 # distinguish. This is the reference's own uncertainty acting as
                 # the agreement tolerance, exactly as a plateau spread does for
@@ -386,10 +438,26 @@ def compare(oti: dict[tuple[int, int], dict[str, float]],
                 oti_direction=parameter.get("oti_direction", 0),
                 oti=oti_value, reference=reference_value,
                 absolute_error=absolute, relative_error=relative,
-                judged_by=judged, agrees=agrees,
-                branch=branches[increment - 1] if increment <= len(branches) else "unknown",
+                judged_by=judged, agrees=agrees, branch=nominal,
+                branch_crossing=crossing,
             ))
     return rows
+
+
+def _crosses_branch(entry: dict, increment: int, nominal: str) -> bool:
+    """Did either perturbed replay leave the branch the increment took?
+
+    Absent branch records the answer is no, so a reference produced before this
+    was measured keeps its previous classification rather than silently
+    becoming unresolved.
+    """
+    high = entry.get("high_branch") or []
+    low = entry.get("low_branch") or []
+    if increment > len(high) or increment > len(low):
+        return False
+    if nominal not in BRANCH_LABELS:
+        return False
+    return high[increment - 1] != nominal or low[increment - 1] != nominal
 
 
 def primal_parity(original: ReplayResult, oti_primal_csv: Path, *,
