@@ -140,12 +140,15 @@ def panel_jacobians(axis, rows: list[dict]) -> dict:
     points.sort(key=lambda p: p[2])
 
     positions = np.arange(len(points))
-    axis.scatter([p[1] for p in points], positions, s=34, marker=MARKERS[0],
-                 facecolor="none", edgecolor=PALETTE[0], linewidth=1.2,
+    # Where the two agree the markers coincide, so the outer one has to be
+    # large enough for the inner one to sit inside it. Equal sizes hid the OTI
+    # marker completely on the four sources whose hand-coded Jacobian is right.
+    axis.scatter([p[1] for p in points], positions, s=90, marker=MARKERS[0],
+                 facecolor="none", edgecolor=PALETTE[0], linewidth=1.3,
                  label="extracted by OTI", zorder=3)
-    axis.scatter([p[2] for p in points], positions, s=40, marker=MARKERS[1],
-                 facecolor="none", edgecolor=PALETTE[1], linewidth=1.2,
-                 label="hand-coded in the source", zorder=3)
+    axis.scatter([p[2] for p in points], positions, s=26, marker=MARKERS[1],
+                 facecolor="none", edgecolor=PALETTE[1], linewidth=1.3,
+                 label="hand-coded in the source", zorder=4)
     for position, (_name, oti, hand) in zip(positions, points):
         axis.plot([min(oti, hand), max(oti, hand)], [position, position],
                   color="0.75", linewidth=0.9, zorder=2)

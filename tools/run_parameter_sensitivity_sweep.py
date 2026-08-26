@@ -136,9 +136,7 @@ def run_model(model: str, work_root: Path) -> dict:
         "exit_code": exit_code,
         "seconds": elapsed,
         "status_category": summary.get("status_category"),
-        "reason": (summary.get("error")
-                   or (summary.get("blockers") or [{}])[0].get("message")
-                   if not transformed else None),
+        "reason": _failure_reason(summary) if not transformed else None,
         "warnings": len(summary.get("warnings") or []),
     }
     if not transformed:
@@ -266,6 +264,28 @@ def _readjudicate_at_converged_step(rows, *, executable, props, path, ntens,
         updated.append(row)
     evidence["rows_reclassified"] = changed
     return updated, evidence
+
+
+def _failure_reason(summary: dict) -> str | None:
+    """Why the transformation failed, whatever shape the blocker took.
+
+    Blockers are sometimes dicts carrying a message and sometimes plain
+    strings. Assuming a dict made the reporter itself raise on the failure
+    path, so a run that failed for one reason ended with a traceback about
+    something else entirely and the real reason was never printed.
+    """
+    error = summary.get("error")
+    if error:
+        return str(error)
+    for blocker in summary.get("blockers") or []:
+        if isinstance(blocker, dict):
+            message = blocker.get("message") or blocker.get("reason")
+            if message:
+                return str(message)
+        elif blocker:
+            return str(blocker)
+    category = summary.get("status_category")
+    return f"transformation failed ({category})" if category else None
 
 
 def _unresolved_reason(rows, disagreeing, unresolved) -> str | None:

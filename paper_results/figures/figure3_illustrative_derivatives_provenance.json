@@ -1,8 +1,8 @@
 {
   "command": "python tools/figures/build_figure3_illustrative.py",
-  "commit": "652bb5f27033bc7a89f621cf285447762f9480e5",
+  "commit": "e41b2f767977099eed31d03e280b8e9035b0043d",
   "figure": "figure3_illustrative_derivatives",
-  "generated_at": "2026-08-26T15:21:41.073626+00:00",
+  "generated_at": "2026-08-26T15:43:15.685590+00:00",
   "inputs": [
     {
       "bytes": 38071,
@@ -19,9 +19,9 @@
   "outputs": {
     "height_inches": 6.44,
     "pdf": "paper_results/figures/figure3_illustrative_derivatives.pdf",
-    "pdf_sha256": "7e0f6d935563e8c2d8e065a541ebf77e0fe940c988767b149844ffdd8ec4e140",
+    "pdf_sha256": "bfcbbbfb87f3dc3882def847479435da2eef2b474b13f260beb47a126ffb56b0",
     "png": "paper_results/figures/figure3_illustrative_derivatives.png",
-    "png_sha256": "b07f93a99a9b3fd901cdc517c3e3a261b6107415f891f56da7deb90d0cf8227a",
+    "png_sha256": "e1a6bfa0e409d7b015b1c24e8b704025caf88625f45fee4968fd1841a8741295",
     "width_inches": 7.0
   },
   "plotted_filters": {
