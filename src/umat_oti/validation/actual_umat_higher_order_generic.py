@@ -472,16 +472,24 @@ def _transformed_driver_source(spec: ModelSpec) -> str:
     return f"""PROGRAM higher_order_driver
   IMPLICIT NONE
 {_declarations(spec)}  REAL(8) :: PATH(NTENS,{n})
-  INTEGER :: INC,U
+  INTEGER :: INC,U,UT,IR,IC
   DATA PATH / {_path_data(spec)} /
 {_initialization(spec)}  OPEN(NEWUNIT=U,FILE='{spec.key}_primal.csv',STATUS='REPLACE',ACTION='WRITE')
   WRITE(U,'(A)') 'increment,stress_1,stress_2,stress_3,stress_4,{statev_header}'
+  OPEN(NEWUNIT=UT,FILE='{spec.key}_ddsdde.csv',STATUS='REPLACE',ACTION='WRITE')
+  WRITE(UT,'(A)') 'increment,row,column,value'
   DO INC=1,{n}
     DSTRAN=PATH(:,INC);KINC=INC
 {_umat_call()}    WRITE(U,'(I0,{fields}(",",ES24.16))') INC,STRESS,STATEV
+    DO IR=1,NTENS
+      DO IC=1,NTENS
+        WRITE(UT,'(I0,",",I0,",",I0,",",ES24.16)') INC,IR,IC,DDSDDE(IR,IC)
+      END DO
+    END DO
     STRAN=STRAN+DSTRAN;TIME=TIME+DTIME
   END DO
   CLOSE(U)
+  CLOSE(UT)
 END PROGRAM higher_order_driver
 {_abaqus_utility_stubs()}"""
 
