@@ -1,0 +1,85 @@
+{
+  "number": 1,
+  "slug": "software_inputs_outputs",
+  "caption": "Inputs the software accepts and artefacts it produces. The product and outcome vocabularies are read from the request schema, so this table cannot describe a capability the code does not expose.",
+  "columns": [
+    "Item",
+    "Direction",
+    "Content",
+    "Notes"
+  ],
+  "rows": [
+    {
+      "Item": "Entry source",
+      "Direction": "input",
+      "Content": "one Fortran file declaring SUBROUTINE UMAT",
+      "Notes": "fixed or free form; the form is detected, not declared"
+    },
+    {
+      "Item": "Dependency roots",
+      "Direction": "input",
+      "Content": "zero or more directories",
+      "Notes": "helper routines and INCLUDE files are resolved to a closure"
+    },
+    {
+      "Item": "Tensor dimensions",
+      "Direction": "input",
+      "Content": "NTENS, NDI, NSHR, NSTATV",
+      "Notes": "checked against the indices the source actually addresses"
+    },
+    {
+      "Item": "Material properties",
+      "Direction": "input",
+      "Content": "PROPS vector with a named mapping",
+      "Notes": "each differentiated parameter names its PROPS index"
+    },
+    {
+      "Item": "State variable names",
+      "Direction": "input",
+      "Content": "one name per STATEV slot",
+      "Notes": "used to label the exported state sensitivities"
+    },
+    {
+      "Item": "Loading history",
+      "Direction": "input",
+      "Content": "strain increment and increment count",
+      "Notes": "or a deformation gradient increment for a finite-strain source"
+    },
+    {
+      "Item": "Requested products",
+      "Direction": "input",
+      "Content": "DDSDDE, INTERNAL_JACOBIAN, HIGHER_ORDER_STRESS, DSIGMA_DP, DSTATEV_DP",
+      "Notes": "any subset; an unrequested product is reported as such"
+    },
+    {
+      "Item": "Transformed source",
+      "Direction": "output",
+      "Content": "Fortran 90 with OTI arithmetic",
+      "Notes": "compiles against the generated OTI module"
+    },
+    {
+      "Item": "Derivative arrays",
+      "Direction": "output",
+      "Content": "one CSV per requested product",
+      "Notes": "per increment, component and parameter"
+    },
+    {
+      "Item": "Primal response",
+      "Direction": "output",
+      "Content": "stress and state per increment",
+      "Notes": "compared between the two builds before any derivative is judged"
+    },
+    {
+      "Item": "Comparison report",
+      "Direction": "output",
+      "Content": "per-row verdicts and their reasons",
+      "Notes": "outcomes: verified, failed, unresolved, blocked, unsupported, not_requested, compiled"
+    },
+    {
+      "Item": "Run manifest",
+      "Direction": "output",
+      "Content": "JSON recording every stage",
+      "Notes": "each gate carries its own status and reason"
+    }
+  ]
+}

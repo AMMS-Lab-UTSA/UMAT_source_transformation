@@ -1,0 +1,7 @@
+Branch,Order,Rows,Passed,Failed,Max abs error,Max rel error where significant,Abs tolerance
+elastic,2,12,12,0,1.958e-70,0,1.000e-05
+elastic,3,12,12,0,1.039e-65,0,0.02
+elastic,4,12,12,0,5.163e-60,0,0.1
+plastic,2,24,24,0,5.131e-06,0,1.000e-05
+plastic,3,24,24,0,6.47,1.937e-09,0.02
+plastic,4,24,24,0,1.23e+04,1.679e-09,0.1

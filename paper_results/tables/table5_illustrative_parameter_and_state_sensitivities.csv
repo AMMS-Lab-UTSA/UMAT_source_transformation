@@ -1,0 +1,4 @@
+Family,Entries,Measured,Exact zero,Within reference,Disagreeing,Worst measured rel error,Reference
+DDSDDE,108,42,66,0,0,2.518e-15,closed form and 80-digit difference
+DSIGMA_DP,480,75,330,75,0,2.480e-08,centred differences of the untransformed build
+DSTATEV_DP,80,0,60,20,0,not measured,centred differences of the untransformed build

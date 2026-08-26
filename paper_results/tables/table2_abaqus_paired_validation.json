@@ -1,0 +1,187 @@
+{
+  "number": 2,
+  "slug": "abaqus_paired_validation",
+  "caption": "Paired Abaqus validation. Each case ran the untransformed and the transformed UMAT as separate jobs on the same deck and compared stress, state, tangent and convergence. Failed cases are listed with the rest.",
+  "columns": [
+    "Case",
+    "Overall",
+    "Stress max abs diff",
+    "DDSDDE max abs diff",
+    "DDSDDE verdict",
+    "STATEV verdict",
+    "Convergence verdict"
+  ],
+  "rows": [
+    {
+      "Case": "UMAT_ECL_TEMP",
+      "Overall": "passed",
+      "Stress max abs diff": "0",
+      "DDSDDE max abs diff": "0",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "UMAT_ECO",
+      "Overall": "passed",
+      "Stress max abs diff": "0",
+      "DDSDDE max abs diff": "0",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "UMAT_HIN",
+      "Overall": "passed",
+      "Stress max abs diff": "0",
+      "DDSDDE max abs diff": "0",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "UMAT_NKH_1.02",
+      "Overall": "passed",
+      "Stress max abs diff": "7.796e-06",
+      "DDSDDE max abs diff": "0.723",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "UMAT_PCL",
+      "Overall": "passed",
+      "Stress max abs diff": "0",
+      "DDSDDE max abs diff": "0",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "UMAT_PCLI",
+      "Overall": "passed",
+      "Stress max abs diff": "0",
+      "DDSDDE max abs diff": "0",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "UMAT_PCLI_R",
+      "Overall": "passed",
+      "Stress max abs diff": "0",
+      "DDSDDE max abs diff": "0",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "UMAT_PCLK",
+      "Overall": "passed",
+      "Stress max abs diff": "0",
+      "DDSDDE max abs diff": "0",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "UMAT_PCO",
+      "Overall": "passed",
+      "Stress max abs diff": "0",
+      "DDSDDE max abs diff": "0",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "UMAT_VPDCL",
+      "Overall": "passed",
+      "Stress max abs diff": "1.609e-06",
+      "DDSDDE max abs diff": "0.237",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "UMAT_VPDCO",
+      "Overall": "passed",
+      "Stress max abs diff": "2.966e-09",
+      "DDSDDE max abs diff": "0.372",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "code_exp",
+      "Overall": "passed",
+      "Stress max abs diff": "4.885e-15",
+      "DDSDDE max abs diff": "0.0312",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "code_imp",
+      "Overall": "passed",
+      "Stress max abs diff": "7.629e-06",
+      "DDSDDE max abs diff": "0.0156",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "elastic",
+      "Overall": "passed",
+      "Stress max abs diff": "0",
+      "DDSDDE max abs diff": "0",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "spin_elas_def",
+      "Overall": "passed",
+      "Stress max abs diff": "6.104e-05",
+      "DDSDDE max abs diff": "not measured",
+      "DDSDDE verdict": "not_requested",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "spin_elastic",
+      "Overall": "passed",
+      "Stress max abs diff": "0",
+      "DDSDDE max abs diff": "0",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "visco_beam",
+      "Overall": "passed",
+      "Stress max abs diff": "0",
+      "DDSDDE max abs diff": "0",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "visco_imp",
+      "Overall": "passed",
+      "Stress max abs diff": "0",
+      "DDSDDE max abs diff": "0",
+      "DDSDDE verdict": "passed",
+      "STATEV verdict": "passed",
+      "Convergence verdict": "passed"
+    },
+    {
+      "Case": "UMAT_VPDCL_R",
+      "Overall": "failed_execution",
+      "Stress max abs diff": "not measured",
+      "DDSDDE max abs diff": "not measured",
+      "DDSDDE verdict": "unavailable",
+      "STATEV verdict": "unavailable",
+      "Convergence verdict": "unavailable"
+    }
+  ]
+}

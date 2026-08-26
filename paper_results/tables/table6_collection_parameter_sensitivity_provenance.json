@@ -1,0 +1,28 @@
+{
+  "column_count": 8,
+  "command": "python tools/tables/build_paper_tables.py",
+  "commit": "ecf969e4b9237ee7b705efe0b836b58265ff03d4",
+  "filters": {
+    "excluded": [
+      "j2",
+      "m3_j2"
+    ],
+    "exclusion_reason": "reported only in the illustrative tables"
+  },
+  "generated_at": "2026-08-26T15:06:29.194169+00:00",
+  "inputs": [
+    {
+      "bytes": 42733,
+      "path": "paper_results/parameter_sensitivity/parameter_sensitivity_round.json",
+      "sha256": "c1df5616fcd50bafe2ffa54fa5cdeee16121c0b429665198ad9119f2918cf3f5"
+    }
+  ],
+  "notes": "",
+  "outputs": {
+    "csv": "paper_results/tables/table6_collection_parameter_sensitivity.csv",
+    "json": "paper_results/tables/table6_collection_parameter_sensitivity.json"
+  },
+  "row_count": 19,
+  "table": "table6_collection_parameter_sensitivity",
+  "unavailable_marker": "not measured"
+}

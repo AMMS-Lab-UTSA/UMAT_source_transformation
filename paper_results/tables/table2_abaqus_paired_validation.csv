@@ -1,0 +1,20 @@
+Case,Overall,Stress max abs diff,DDSDDE max abs diff,DDSDDE verdict,STATEV verdict,Convergence verdict
+UMAT_ECL_TEMP,passed,0,0,passed,passed,passed
+UMAT_ECO,passed,0,0,passed,passed,passed
+UMAT_HIN,passed,0,0,passed,passed,passed
+UMAT_NKH_1.02,passed,7.796e-06,0.723,passed,passed,passed
+UMAT_PCL,passed,0,0,passed,passed,passed
+UMAT_PCLI,passed,0,0,passed,passed,passed
+UMAT_PCLI_R,passed,0,0,passed,passed,passed
+UMAT_PCLK,passed,0,0,passed,passed,passed
+UMAT_PCO,passed,0,0,passed,passed,passed
+UMAT_VPDCL,passed,1.609e-06,0.237,passed,passed,passed
+UMAT_VPDCO,passed,2.966e-09,0.372,passed,passed,passed
+code_exp,passed,4.885e-15,0.0312,passed,passed,passed
+code_imp,passed,7.629e-06,0.0156,passed,passed,passed
+elastic,passed,0,0,passed,passed,passed
+spin_elas_def,passed,6.104e-05,not measured,not_requested,passed,passed
+spin_elastic,passed,0,0,passed,passed,passed
+visco_beam,passed,0,0,passed,passed,passed
+visco_imp,passed,0,0,passed,passed,passed
+UMAT_VPDCL_R,failed_execution,not measured,not measured,unavailable,unavailable,unavailable

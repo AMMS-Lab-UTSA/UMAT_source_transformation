@@ -1,0 +1,22 @@
+{
+  "column_count": 7,
+  "command": "python tools/tables/build_paper_tables.py",
+  "commit": "ecf969e4b9237ee7b705efe0b836b58265ff03d4",
+  "filters": {},
+  "generated_at": "2026-08-26T15:06:29.064168+00:00",
+  "inputs": [
+    {
+      "bytes": 7534,
+      "path": "paper_results/arc_791506/table2_abaqus_paired.csv",
+      "sha256": "66be9d631bde276a1941070f2b092a97cd25b3cc53e0001894ce4f61b8c128eb"
+    }
+  ],
+  "notes": "The Abaqus release used by this archived round was not recorded at execution time, so these results cannot be attributed to a specific version.",
+  "outputs": {
+    "csv": "paper_results/tables/table2_abaqus_paired_validation.csv",
+    "json": "paper_results/tables/table2_abaqus_paired_validation.json"
+  },
+  "row_count": 19,
+  "table": "table2_abaqus_paired_validation",
+  "unavailable_marker": "not measured"
+}

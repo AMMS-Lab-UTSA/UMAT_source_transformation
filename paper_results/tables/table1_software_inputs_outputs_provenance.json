@@ -1,0 +1,22 @@
+{
+  "column_count": 4,
+  "command": "python tools/tables/build_paper_tables.py",
+  "commit": "ecf969e4b9237ee7b705efe0b836b58265ff03d4",
+  "filters": {},
+  "generated_at": "2026-08-26T15:06:29.053628+00:00",
+  "inputs": [
+    {
+      "bytes": 21438,
+      "path": "src/umat_oti/services/workbench.py",
+      "sha256": "15a67e46691de6d58ea1466bb69e044491d4520ef19c73fc1e662c81a00877ed"
+    }
+  ],
+  "notes": "Generated from umat_oti.services.workbench.PRODUCTS and OUTCOMES.",
+  "outputs": {
+    "csv": "paper_results/tables/table1_software_inputs_outputs.csv",
+    "json": "paper_results/tables/table1_software_inputs_outputs.json"
+  },
+  "row_count": 12,
+  "table": "table1_software_inputs_outputs",
+  "unavailable_marker": "not measured"
+}

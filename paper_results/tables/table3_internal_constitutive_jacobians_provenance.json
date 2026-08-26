@@ -1,0 +1,24 @@
+{
+  "column_count": 7,
+  "command": "python tools/tables/build_paper_tables.py",
+  "commit": "ecf969e4b9237ee7b705efe0b836b58265ff03d4",
+  "filters": {
+    "deduplication": "one row per canonical source identity"
+  },
+  "generated_at": "2026-08-26T15:06:29.072170+00:00",
+  "inputs": [
+    {
+      "bytes": 2853,
+      "path": "paper_results/internal_jacobians/table3_internal_jacobians.csv",
+      "sha256": "f870f427fc036bfbd542b5788c48a50229aea8743157573dfc0523db764de23c"
+    }
+  ],
+  "notes": "Two sources carry a hand-coded Jacobian that differs from the reference by far more than the extracted one does.",
+  "outputs": {
+    "csv": "paper_results/tables/table3_internal_constitutive_jacobians.csv",
+    "json": "paper_results/tables/table3_internal_constitutive_jacobians.json"
+  },
+  "row_count": 6,
+  "table": "table3_internal_constitutive_jacobians",
+  "unavailable_marker": "not measured"
+}

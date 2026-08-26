@@ -1,0 +1,24 @@
+{
+  "column_count": 8,
+  "command": "python tools/tables/build_paper_tables.py",
+  "commit": "ecf969e4b9237ee7b705efe0b836b58265ff03d4",
+  "filters": {
+    "model": "controlled_j2_actual_umat (illustrative example)"
+  },
+  "generated_at": "2026-08-26T15:06:29.080206+00:00",
+  "inputs": [
+    {
+      "bytes": 1022,
+      "path": "paper_results/actual_umat_higher_order/j2/table4_higher_order_actual_umat.csv",
+      "sha256": "0239f8d5b50b1c1f4aee770750d4b490319a305a3d0291e54b2a1273e4d67960"
+    }
+  ],
+  "notes": "",
+  "outputs": {
+    "csv": "paper_results/tables/table4_higher_order_derivative_verification.csv",
+    "json": "paper_results/tables/table4_higher_order_derivative_verification.json"
+  },
+  "row_count": 6,
+  "table": "table4_higher_order_derivative_verification",
+  "unavailable_marker": "not measured"
+}
