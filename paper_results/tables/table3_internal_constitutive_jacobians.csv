@@ -1,0 +1,7 @@
+Source,Jacobian,Iterate,Residual,OTI vs reference (rel),Hand-coded vs reference (rel),Verdict
+jgomezc1_UMAT_VPDCO,FJAC,GAM_PAR,FGAM,1.199e-10,0.0259,verified
+jgomezc1_UMAT_PCO,FJAC,GAM_PAR,FGAM,5.214e-10,0.00306,verified
+m5_cpflow,DF,DEQPL,F,3.876e-12,3.875e-12,verified
+UMAT_VPDCL,FJAC,GAM_PAR,FGAM,4.422e-13,4.421e-13,verified
+UMAT_PCL,FJAC,GAM_PAR,FGAM,4.202e-13,4.206e-13,verified
+UMAT_PCLK,FJAC,GAM_PAR,FGAM,5.199e-14,5.164e-14,verified

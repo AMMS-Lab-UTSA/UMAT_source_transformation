@@ -1,0 +1,207 @@
+{
+  "number": 6,
+  "slug": "collection_parameter_sensitivity",
+  "caption": "Parameter and state sensitivities across the model collection. Rows the reference cannot adjudicate are split by reason: those below what a centred difference resolves, and those whose stencil straddles a branch boundary. Every attempted model is listed, verified or not.",
+  "columns": [
+    "Model",
+    "Verdict",
+    "Rows",
+    "Agreeing",
+    "Disagreeing",
+    "Unresolved (noise floor)",
+    "Unresolved (branch crossing)",
+    "Worst rel error"
+  ],
+  "rows": [
+    {
+      "Model": "m6_fcc",
+      "Verdict": "unresolved",
+      "Rows": 3600,
+      "Agreeing": 3595,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 5,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "8.195e-07"
+    },
+    {
+      "Model": "sweep_drucker_prager",
+      "Verdict": "unresolved",
+      "Rows": 560,
+      "Agreeing": 532,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 28,
+      "Worst rel error": "1.183e-08"
+    },
+    {
+      "Model": "m1_elastic",
+      "Verdict": "succeeded",
+      "Rows": 240,
+      "Agreeing": 240,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "2.480e-08"
+    },
+    {
+      "Model": "m2_cubic",
+      "Verdict": "succeeded",
+      "Rows": 360,
+      "Agreeing": 360,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "3.103e-12"
+    },
+    {
+      "Model": "m5_cpflow",
+      "Verdict": "succeeded",
+      "Rows": 840,
+      "Agreeing": 840,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "5.927e-07"
+    },
+    {
+      "Model": "sweep_aniso_ortho",
+      "Verdict": "succeeded",
+      "Rows": 1080,
+      "Agreeing": 1080,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "2.181e-12"
+    },
+    {
+      "Model": "sweep_damage_elastic",
+      "Verdict": "succeeded",
+      "Rows": 360,
+      "Agreeing": 360,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "2.479e-08"
+    },
+    {
+      "Model": "sweep_eco",
+      "Verdict": "succeeded",
+      "Rows": 240,
+      "Agreeing": 240,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "2.480e-08"
+    },
+    {
+      "Model": "sweep_j2_bilinear",
+      "Verdict": "succeeded",
+      "Rows": 560,
+      "Agreeing": 560,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "2.480e-08"
+    },
+    {
+      "Model": "sweep_j2_combined",
+      "Verdict": "succeeded",
+      "Rows": 1300,
+      "Agreeing": 1300,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "2.480e-08"
+    },
+    {
+      "Model": "sweep_j2_kinematic",
+      "Verdict": "succeeded",
+      "Rows": 960,
+      "Agreeing": 960,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "2.480e-08"
+    },
+    {
+      "Model": "sweep_lame_elastic",
+      "Verdict": "succeeded",
+      "Rows": 240,
+      "Agreeing": 240,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "7.594e-12"
+    },
+    {
+      "Model": "sweep_maxwell_ve",
+      "Verdict": "succeeded",
+      "Rows": 720,
+      "Agreeing": 720,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "2.359e-08"
+    },
+    {
+      "Model": "sweep_mooney_small",
+      "Verdict": "succeeded",
+      "Rows": 240,
+      "Agreeing": 240,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "3.887e-12"
+    },
+    {
+      "Model": "sweep_perzyna_linear",
+      "Verdict": "succeeded",
+      "Rows": 560,
+      "Agreeing": 560,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "2.480e-08"
+    },
+    {
+      "Model": "sweep_real_ECL_TEMP",
+      "Verdict": "succeeded",
+      "Rows": 600,
+      "Agreeing": 600,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "3.042e-07"
+    },
+    {
+      "Model": "sweep_real_PCO",
+      "Verdict": "succeeded",
+      "Rows": 560,
+      "Agreeing": 560,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "2.480e-08"
+    },
+    {
+      "Model": "sweep_thermoelastic",
+      "Verdict": "succeeded",
+      "Rows": 360,
+      "Agreeing": 360,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "2.480e-08"
+    },
+    {
+      "Model": "sweep_transiso",
+      "Verdict": "succeeded",
+      "Rows": 600,
+      "Agreeing": 600,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "1.047e-08"
+    }
+  ]
+}

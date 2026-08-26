@@ -1,0 +1,22 @@
+{
+  "column_count": 8,
+  "command": "python tools/tables/build_paper_tables.py",
+  "commit": "ecf969e4b9237ee7b705efe0b836b58265ff03d4",
+  "filters": {},
+  "generated_at": "2026-08-26T15:06:29.200775+00:00",
+  "inputs": [
+    {
+      "bytes": 2535,
+      "path": "paper_results/corpus/corpus_funnel.csv",
+      "sha256": "69193b2f485698466cb991529b86e3a0ae78bd2d5b6f49f5fdd58a210b6b91db"
+    }
+  ],
+  "notes": "",
+  "outputs": {
+    "csv": "paper_results/tables/table7_external_web_corpus.csv",
+    "json": "paper_results/tables/table7_external_web_corpus.json"
+  },
+  "row_count": 11,
+  "table": "table7_external_web_corpus",
+  "unavailable_marker": "not measured"
+}

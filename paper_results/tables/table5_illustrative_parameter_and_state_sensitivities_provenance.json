@@ -1,0 +1,29 @@
+{
+  "column_count": 8,
+  "command": "python tools/tables/build_paper_tables.py",
+  "commit": "ecf969e4b9237ee7b705efe0b836b58265ff03d4",
+  "filters": {
+    "model": "the illustrative J2 example only"
+  },
+  "generated_at": "2026-08-26T15:06:29.173863+00:00",
+  "inputs": [
+    {
+      "bytes": 38071,
+      "path": "paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv",
+      "sha256": "b8d5293d6634119d134efe10a6de62eab8c6b4794113c9f0667e145f62b42d01"
+    },
+    {
+      "bytes": 1847975,
+      "path": "paper_results/parameter_sensitivity/table6_comparison_rows.csv",
+      "sha256": "684cd82e2c4e302cd1a9029fe9b466c5f8b8d2039692de0034266c284138737e"
+    }
+  ],
+  "notes": "",
+  "outputs": {
+    "csv": "paper_results/tables/table5_illustrative_parameter_and_state_sensitivities.csv",
+    "json": "paper_results/tables/table5_illustrative_parameter_and_state_sensitivities.json"
+  },
+  "row_count": 3,
+  "table": "table5_illustrative_parameter_and_state_sensitivities",
+  "unavailable_marker": "not measured"
+}

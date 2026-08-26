@@ -1,0 +1,127 @@
+{
+  "number": 7,
+  "slug": "external_web_corpus",
+  "caption": "External sources acquired from public repositories at a pinned commit. Every source that entered the funnel is listed with the stage it reached and, where it stopped, why. Licences were classified from the repository's own licence text.",
+  "columns": [
+    "Source",
+    "Repository",
+    "Commit",
+    "Licence",
+    "Multi-file",
+    "Furthest stage",
+    "Worst rel error",
+    "Blocker"
+  ],
+  "rows": [
+    {
+      "Source": "jgomezc1_UMAT_ECO",
+      "Repository": "jgomezc1_ABAQUS-US",
+      "Commit": "54181407aa7a",
+      "Licence": "MIT",
+      "Multi-file": "yes",
+      "Furthest stage": "derivatives_verified",
+      "Worst rel error": "2.480e-08",
+      "Blocker": "none"
+    },
+    {
+      "Source": "jgomezc1_UMAT_PCL",
+      "Repository": "jgomezc1_ABAQUS-US",
+      "Commit": "54181407aa7a",
+      "Licence": "MIT",
+      "Multi-file": "no",
+      "Furthest stage": "derivatives_verified",
+      "Worst rel error": "2.480e-08",
+      "Blocker": "none"
+    },
+    {
+      "Source": "jgomezc1_UMAT_PCLK",
+      "Repository": "jgomezc1_ABAQUS-US",
+      "Commit": "54181407aa7a",
+      "Licence": "MIT",
+      "Multi-file": "no",
+      "Furthest stage": "derivatives_verified",
+      "Worst rel error": "4.956e-08",
+      "Blocker": "none"
+    },
+    {
+      "Source": "jgomezc1_UMAT_PCO",
+      "Repository": "jgomezc1_ABAQUS-US",
+      "Commit": "54181407aa7a",
+      "Licence": "MIT",
+      "Multi-file": "yes",
+      "Furthest stage": "derivatives_verified",
+      "Worst rel error": "2.480e-08",
+      "Blocker": "none"
+    },
+    {
+      "Source": "jgomezc1_UMAT_VPDCO",
+      "Repository": "jgomezc1_ABAQUS-US",
+      "Commit": "54181407aa7a",
+      "Licence": "MIT",
+      "Multi-file": "yes",
+      "Furthest stage": "derivatives_verified",
+      "Worst rel error": "9.882e-07",
+      "Blocker": "none"
+    },
+    {
+      "Source": "lucarini_elastoplastic",
+      "Repository": "sergiolucarini_UMAT4COMSOL",
+      "Commit": "e62506fd8426",
+      "Licence": "MIT",
+      "Multi-file": "no",
+      "Furthest stage": "derivatives_verified",
+      "Worst rel error": "not measured",
+      "Blocker": "none"
+    },
+    {
+      "Source": "lucarini_neohookean",
+      "Repository": "sergiolucarini_UMAT4COMSOL",
+      "Commit": "e62506fd8426",
+      "Licence": "MIT",
+      "Multi-file": "no",
+      "Furthest stage": "derivatives_verified",
+      "Worst rel error": "not measured",
+      "Blocker": "none"
+    },
+    {
+      "Source": "jgomezc1_UMAT_NKH_1.02",
+      "Repository": "jgomezc1_ABAQUS-US",
+      "Commit": "54181407aa7a",
+      "Licence": "MIT",
+      "Multi-file": "no",
+      "Furthest stage": "dependencies_resolved",
+      "Worst rel error": "not measured",
+      "Blocker": "contract_constructed: no material property vector or loading history is available for this"
+    },
+    {
+      "Source": "jgomezc1_UMAT_VPDCL",
+      "Repository": "jgomezc1_ABAQUS-US",
+      "Commit": "54181407aa7a",
+      "Licence": "MIT",
+      "Multi-file": "no",
+      "Furthest stage": "dependencies_resolved",
+      "Worst rel error": "not measured",
+      "Blocker": "contract_constructed: no material property vector or loading history is available for this"
+    },
+    {
+      "Source": "lucarini_crystalplasticity",
+      "Repository": "sergiolucarini_UMAT4COMSOL",
+      "Commit": "e62506fd8426",
+      "Licence": "MIT",
+      "Multi-file": "no",
+      "Furthest stage": "dependencies_resolved",
+      "Worst rel error": "not measured",
+      "Blocker": "contract_constructed: no material property vector or loading history is available for this"
+    },
+    {
+      "Source": "ngrilli_umat",
+      "Repository": "ngrilli_Oxford_Crystal_Plasticity",
+      "Commit": "85102ed35dc4",
+      "Licence": "MIT",
+      "Multi-file": "yes",
+      "Furthest stage": "entry_detected",
+      "Worst rel error": "not measured",
+      "Blocker": "dependencies_resolved: these helpers have differing definitions in different files and non"
+    }
+  ]
+}

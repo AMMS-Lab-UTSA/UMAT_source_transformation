@@ -1,0 +1,70 @@
+{
+  "number": 3,
+  "slug": "internal_constitutive_jacobians",
+  "caption": "Internal constitutive Jacobians extracted from the local Newton solve and checked against centred differences of the independently compiled untransformed build. The source's own hand-coded Jacobian is audited against the same reference and is never used as the reference.",
+  "columns": [
+    "Source",
+    "Jacobian",
+    "Iterate",
+    "Residual",
+    "OTI vs reference (rel)",
+    "Hand-coded vs reference (rel)",
+    "Verdict"
+  ],
+  "rows": [
+    {
+      "Source": "jgomezc1_UMAT_VPDCO",
+      "Jacobian": "FJAC",
+      "Iterate": "GAM_PAR",
+      "Residual": "FGAM",
+      "OTI vs reference (rel)": "1.199e-10",
+      "Hand-coded vs reference (rel)": "0.0259",
+      "Verdict": "verified"
+    },
+    {
+      "Source": "jgomezc1_UMAT_PCO",
+      "Jacobian": "FJAC",
+      "Iterate": "GAM_PAR",
+      "Residual": "FGAM",
+      "OTI vs reference (rel)": "5.214e-10",
+      "Hand-coded vs reference (rel)": "0.00306",
+      "Verdict": "verified"
+    },
+    {
+      "Source": "m5_cpflow",
+      "Jacobian": "DF",
+      "Iterate": "DEQPL",
+      "Residual": "F",
+      "OTI vs reference (rel)": "3.876e-12",
+      "Hand-coded vs reference (rel)": "3.875e-12",
+      "Verdict": "verified"
+    },
+    {
+      "Source": "UMAT_VPDCL",
+      "Jacobian": "FJAC",
+      "Iterate": "GAM_PAR",
+      "Residual": "FGAM",
+      "OTI vs reference (rel)": "4.422e-13",
+      "Hand-coded vs reference (rel)": "4.421e-13",
+      "Verdict": "verified"
+    },
+    {
+      "Source": "UMAT_PCL",
+      "Jacobian": "FJAC",
+      "Iterate": "GAM_PAR",
+      "Residual": "FGAM",
+      "OTI vs reference (rel)": "4.202e-13",
+      "Hand-coded vs reference (rel)": "4.206e-13",
+      "Verdict": "verified"
+    },
+    {
+      "Source": "UMAT_PCLK",
+      "Jacobian": "FJAC",
+      "Iterate": "GAM_PAR",
+      "Residual": "FGAM",
+      "OTI vs reference (rel)": "5.199e-14",
+      "Hand-coded vs reference (rel)": "5.164e-14",
+      "Verdict": "verified"
+    }
+  ]
+}

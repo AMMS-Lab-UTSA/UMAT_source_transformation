@@ -1,0 +1,13 @@
+Item,Direction,Content,Notes
+Entry source,input,one Fortran file declaring SUBROUTINE UMAT,"fixed or free form; the form is detected, not declared"
+Dependency roots,input,zero or more directories,helper routines and INCLUDE files are resolved to a closure
+Tensor dimensions,input,"NTENS, NDI, NSHR, NSTATV",checked against the indices the source actually addresses
+Material properties,input,PROPS vector with a named mapping,each differentiated parameter names its PROPS index
+State variable names,input,one name per STATEV slot,used to label the exported state sensitivities
+Loading history,input,strain increment and increment count,or a deformation gradient increment for a finite-strain source
+Requested products,input,"DDSDDE, INTERNAL_JACOBIAN, HIGHER_ORDER_STRESS, DSIGMA_DP, DSTATEV_DP",any subset; an unrequested product is reported as such
+Transformed source,output,Fortran 90 with OTI arithmetic,compiles against the generated OTI module
+Derivative arrays,output,one CSV per requested product,"per increment, component and parameter"
+Primal response,output,stress and state per increment,compared between the two builds before any derivative is judged
+Comparison report,output,per-row verdicts and their reasons,"outcomes: verified, failed, unresolved, blocked, unsupported, not_requested, compiled"
+Run manifest,output,JSON recording every stage,each gate carries its own status and reason

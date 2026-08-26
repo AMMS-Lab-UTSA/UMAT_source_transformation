@@ -1,0 +1,12 @@
+Source,Repository,Commit,Licence,Multi-file,Furthest stage,Worst rel error,Blocker
+jgomezc1_UMAT_ECO,jgomezc1_ABAQUS-US,54181407aa7a,MIT,yes,derivatives_verified,2.480e-08,none
+jgomezc1_UMAT_PCL,jgomezc1_ABAQUS-US,54181407aa7a,MIT,no,derivatives_verified,2.480e-08,none
+jgomezc1_UMAT_PCLK,jgomezc1_ABAQUS-US,54181407aa7a,MIT,no,derivatives_verified,4.956e-08,none
+jgomezc1_UMAT_PCO,jgomezc1_ABAQUS-US,54181407aa7a,MIT,yes,derivatives_verified,2.480e-08,none
+jgomezc1_UMAT_VPDCO,jgomezc1_ABAQUS-US,54181407aa7a,MIT,yes,derivatives_verified,9.882e-07,none
+lucarini_elastoplastic,sergiolucarini_UMAT4COMSOL,e62506fd8426,MIT,no,derivatives_verified,not measured,none
+lucarini_neohookean,sergiolucarini_UMAT4COMSOL,e62506fd8426,MIT,no,derivatives_verified,not measured,none
+jgomezc1_UMAT_NKH_1.02,jgomezc1_ABAQUS-US,54181407aa7a,MIT,no,dependencies_resolved,not measured,contract_constructed: no material property vector or loading history is available for this
+jgomezc1_UMAT_VPDCL,jgomezc1_ABAQUS-US,54181407aa7a,MIT,no,dependencies_resolved,not measured,contract_constructed: no material property vector or loading history is available for this
+lucarini_crystalplasticity,sergiolucarini_UMAT4COMSOL,e62506fd8426,MIT,no,dependencies_resolved,not measured,contract_constructed: no material property vector or loading history is available for this
+ngrilli_umat,ngrilli_Oxford_Crystal_Plasticity,85102ed35dc4,MIT,yes,entry_detected,not measured,dependencies_resolved: these helpers have differing definitions in different files and non

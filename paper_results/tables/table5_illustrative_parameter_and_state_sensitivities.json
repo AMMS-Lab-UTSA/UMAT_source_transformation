@@ -1,0 +1,47 @@
+{
+  "number": 5,
+  "slug": "illustrative_parameter_and_state_sensitivities",
+  "caption": "Every derivative family verified for the illustrative example. \"Measured\" counts entries with a defined relative error; \"exact zero\" counts entries that are exactly zero on both sides, which are verified but measure nothing; \"within reference\" counts entries the reference could not separate from the value. The three add to the entry count, so nothing is dropped.",
+  "columns": [
+    "Family",
+    "Entries",
+    "Measured",
+    "Exact zero",
+    "Within reference",
+    "Disagreeing",
+    "Worst measured rel error",
+    "Reference"
+  ],
+  "rows": [
+    {
+      "Family": "DDSDDE",
+      "Entries": 108,
+      "Measured": 42,
+      "Exact zero": 66,
+      "Within reference": 0,
+      "Disagreeing": 0,
+      "Worst measured rel error": "2.518e-15",
+      "Reference": "closed form and 80-digit difference"
+    },
+    {
+      "Family": "DSIGMA_DP",
+      "Entries": 480,
+      "Measured": 75,
+      "Exact zero": 330,
+      "Within reference": 75,
+      "Disagreeing": 0,
+      "Worst measured rel error": "2.480e-08",
+      "Reference": "centred differences of the untransformed build"
+    },
+    {
+      "Family": "DSTATEV_DP",
+      "Entries": 80,
+      "Measured": 0,
+      "Exact zero": 60,
+      "Within reference": 20,
+      "Disagreeing": 0,
+      "Worst measured rel error": "not measured",
+      "Reference": "centred differences of the untransformed build"
+    }
+  ]
+}
