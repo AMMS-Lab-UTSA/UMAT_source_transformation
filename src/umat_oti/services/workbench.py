@@ -386,22 +386,71 @@ def run_workbench(request: WorkbenchRequest, work_dir: Path) -> WorkbenchResult:
         result.products["INTERNAL_JACOBIAN"] = _internal_jacobian(
             request, analysis, work_dir, parity_ok, blocker)
 
-    for product in ("DDSDDE", "HIGHER_ORDER_STRESS"):
-        if product in requested:
-            result.products[product] = ProductOutcome(
-                product, "unsupported",
-                "this front end drives the parameter-sensitivity and internal-"
-                "Jacobian paths. The consistent tangent and higher-order stress "
-                "derivatives are produced by the contract pipeline "
-                "(umat_oti.services.transformation) and are not yet wired into "
-                "this request; asking for them here reports unsupported rather "
-                "than silently returning nothing.")
+    if "DDSDDE" in requested:
+        result.products["DDSDDE"] = _consistent_tangent(request, work_dir)
+
+    if "HIGHER_ORDER_STRESS" in requested:
+        result.products["HIGHER_ORDER_STRESS"] = ProductOutcome(
+            "HIGHER_ORDER_STRESS", "unsupported",
+            "stress derivatives of order two and above are produced by the "
+            "contract pipeline (umat_oti.services.transformation) and are not "
+            "yet wired into this request; asking for them here reports "
+            "unsupported rather than silently returning nothing.")
 
     manifest = work_dir / "workbench_result.json"
     manifest.write_text(json.dumps(result.as_dict(), indent=2, sort_keys=True) + "\n",
                         encoding="utf-8")
     result.artifacts["result_manifest"] = str(manifest)
     return result
+
+
+def _consistent_tangent(request: WorkbenchRequest, work_dir: Path) -> ProductOutcome:
+    """Check the tangent the OTI build returns against the original build.
+
+    This runs its own strain-seeded transformation. The parameter-sensitivity
+    build seeds PROPS, so the DDSDDE it returns is whatever the source
+    hand-coded rather than an OTI result; seeding DSTRAN is what makes the
+    tangent a derivative the transformation produced.
+    """
+    from umat_oti.validation.tangent_validation import (  # noqa: PLC0415
+        TangentCase, verify_tangent, write_tangent_evidence,
+    )
+
+    case = TangentCase(
+        name=request.name, source_path=Path(request.source_path),
+        props=tuple(request.props),
+        dstran_per_increment=tuple(request.loading.dstran_per_increment),
+        n_increments=request.loading.n_increments,
+        ntens=request.ntens, nstatv=request.nstatv,
+        ndi=request.ndi, nshr=request.nshr, entry=request.entry,
+        parameters=tuple(request.parameters),
+        state_names=tuple(request.state_names))
+    out_dir = work_dir / "tangent"
+    try:
+        outcome = verify_tangent(case, out_dir)
+    except Exception as error:  # noqa: BLE001 - reported, never swallowed
+        return ProductOutcome("DDSDDE", "failed",
+                              f"{type(error).__name__}: {error}"[:400])
+    write_tangent_evidence(outcome, out_dir)
+
+    stages = outcome.stages
+    if stages.get("tangent_verified", {}).get("status") == "succeeded":
+        return ProductOutcome("DDSDDE", "verified", detail=outcome.summary)
+    if stages.get("tangent_verified", {}).get("status") == "failed":
+        return ProductOutcome("DDSDDE", "failed", outcome.blocker,
+                              detail=outcome.summary)
+    if stages.get("reference_resolved", {}).get("status") == "failed":
+        return ProductOutcome("DDSDDE", "unresolved", outcome.blocker,
+                              detail=outcome.summary)
+    reached = outcome.furthest_stage
+    if reached in ("generated_compiled", "transformed_executed",
+                   "original_executed", "original_compiled"):
+        return ProductOutcome(
+            "DDSDDE", "compiled",
+            (outcome.blocker or "the run stopped before the tangent comparison")
+            + ". Compiling is not verification: nothing has been checked "
+              "numerically.")
+    return ProductOutcome("DDSDDE", "blocked", outcome.blocker)
 
 
 def _internal_jacobian(request: WorkbenchRequest, analysis: dict, work_dir: Path,

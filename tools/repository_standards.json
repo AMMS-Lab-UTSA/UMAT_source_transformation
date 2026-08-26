@@ -38,6 +38,10 @@
     {
       "prefix": "docs/development/",
       "reason": "development records, not reviewer-facing documentation. They cite the machine-local paths that evidence was gathered from at the time."
+    },
+    {
+      "prefix": "paper_results/frozen/",
+      "reason": "a frozen snapshot is a byte-exact copy of evidence files that are already exempt above, and it records a SHA-256 for each one. Rewriting a path inside a snapshot would both falsify the archived record and break the checksums that let a reviewer verify the snapshot from a clean clone. The paths it carries come from the Slurm logs of the original HPC runs, not from anything a reproduction reads as input."
     }
   ]
 }

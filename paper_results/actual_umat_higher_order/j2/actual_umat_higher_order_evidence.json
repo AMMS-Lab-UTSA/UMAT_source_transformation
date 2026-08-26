@@ -1,36 +1,44 @@
 {
   "artifacts": [
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/j2_props_oti.f",
+      "path": "<work>/j2_props_oti.f",
       "sha256": "554d9df051a3fcae38cd35a1a1c85c8b6238dfffe5081dae75e4758a28be8ce6"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/otim6n4.f90",
+      "path": "<work>/otim6n4.f90",
       "sha256": "c476ca61afb4cfe2f5f1c3ffa035ec1c6ef097ffe875b3caa80f584e0810360c"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/actual_umat_higher_order_driver.f90",
-      "sha256": "9624876cf1fe19dd730e9b80ce9163c8879b06e20792b9864d3eb08241632b91"
+      "path": "<work>/actual_umat_higher_order_driver.f90",
+      "sha256": "dab7b51e4fa20a34250c837d7a5813dd41990ee92650ba74ea6c4182f6c1bbab"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/actual_umat_higher_order_driver",
-      "sha256": "aa0f077c72740c33fbb70365a635cb03a7fc898536c52e55acf7dae0e005a2f3"
+      "path": "<work>/actual_umat_higher_order_driver",
+      "sha256": "1894f2ccbf8090f25167254997a20d4666d95a68d9e947ef76bed44484872053"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/oti_hjac.dat",
+      "path": "<work>/oti_hjac.dat",
       "sha256": "1f47baba5a79d50333b1bea77c576ccbfa7ed096a2f9c1ae0f1f7ed58187e6fd"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/actual_umat_higher_order_comparison.csv",
+      "path": "<work>/actual_umat_higher_order_comparison.csv",
       "sha256": "0558485f01398580707357b72ba929c15a235b651411e797d32973d6fd23cfd5"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/table4_higher_order_actual_umat.csv",
+      "path": "<work>/table4_higher_order_actual_umat.csv",
       "sha256": "0239f8d5b50b1c1f4aee770750d4b490319a305a3d0291e54b2a1273e4d67960"
     },
     {
-      "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/actual_umat_primal.csv",
+      "path": "<work>/actual_umat_primal.csv",
       "sha256": "a89579696d887f7de09a8b4b736cc77a9123de68ba82cd446f7ee3ddfff5c23b"
+    },
+    {
+      "path": "<work>/actual_umat_ddsdde.csv",
+      "sha256": "bba500f36d48fa07058e0feadc9b786e30ad3a872c6c4f92a8d415f0e3ccf540"
+    },
+    {
+      "path": "<work>/table2_ddsdde_illustrative.csv",
+      "sha256": "b8d5293d6634119d134efe10a6de62eab8c6b4794113c9f0667e145f62b42d01"
     }
   ],
   "branch_history": [
@@ -56,26 +64,26 @@
       "yielded": true
     }
   ],
-  "canonical_manifest": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/derivative_manifest.json",
+  "canonical_manifest": "<work>/derivative_manifest.json",
   "comparison": {
     "absolute_tolerances_by_order": {
       "2": 1e-05,
       "3": 0.02,
       "4": 0.1
     },
-    "csv": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/actual_umat_higher_order_comparison.csv",
+    "csv": "<work>/actual_umat_higher_order_comparison.csv",
     "failed_rows": 0,
     "max_absolute_error": 12320.98046875,
     "max_relative_error": 1.0013220965779142,
     "max_relative_error_when_absolute_tolerance_exceeded": 1.9367542501703836e-09,
     "passed_rows": 108,
-    "publication_table": "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/table4_higher_order_actual_umat.csv",
+    "publication_table": "<work>/table4_higher_order_actual_umat.csv",
     "relative_tolerance": 1e-07,
     "rows": 108
   },
   "compiler": {
     "command": [
-      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/compile_hint.sh"
+      "<work>/compile_hint.sh"
     ],
     "returncode": 0,
     "status": "compiled",
@@ -121,14 +129,14 @@
       "-std=legacy",
       "-ffree-line-length-none",
       "-I",
-      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2",
-      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/actual_umat_higher_order_driver.f90",
-      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/master_parameters.o",
-      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/real_utils.o",
-      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/otim6n4.o",
-      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/transformed_umat.o",
+      "<work>/.",
+      "<work>/actual_umat_higher_order_driver.f90",
+      "<work>/master_parameters.o",
+      "<work>/real_utils.o",
+      "<work>/otim6n4.o",
+      "<work>/transformed_umat.o",
       "-o",
-      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/actual_umat_higher_order_driver"
+      "<work>/actual_umat_higher_order_driver"
     ],
     "returncode": 0,
     "stderr": "",
@@ -136,7 +144,7 @@
   },
   "execution": {
     "command": [
-      "/home/vfn333/softwarex_work/UMAT_source_transformation/paper_results/actual_umat_higher_order/j2/actual_umat_higher_order_driver"
+      "<work>/actual_umat_higher_order_driver"
     ],
     "returncode": 0
   },
@@ -245,8 +253,26 @@
   },
   "schema": "umat-oti-actual-higher-order-evidence/1",
   "source": {
-    "path": "/home/vfn333/softwarex_work/UMAT_source_transformation/UMATs/UMATs/generic_ps/j2_props.f",
+    "path": "UMATs/UMATs/generic_ps/j2_props.f",
     "sha256": "4362e759c4642cb2f74e20c50b86a9472b1e80d6a7fef663bf8faa3dfa8de1c8"
   },
-  "status": "verified_from_generic_transformed_source"
+  "status": "verified_from_generic_transformed_source",
+  "tangent": {
+    "agreeing": 108,
+    "csv": "<work>/table2_ddsdde_illustrative.csv",
+    "disagreeing": 0,
+    "entries": 108,
+    "measured": 42,
+    "reference_unresolved": 0,
+    "references": [
+      "closed-form elastoplastic consistent tangent from umat_oti.validation.j2_reference",
+      "80-digit centred difference of the independent integrator umat_oti.validation.actual_umat_higher_order._integrate_increment_mp"
+    ],
+    "relative_tolerance": 1e-09,
+    "resolved": 108,
+    "structural_zeros": 66,
+    "structural_zeros_disagreeing": 0,
+    "worst_measured_relative_error": 2.517698407641461e-15,
+    "worst_reference_spread_relative_where_measured": 4.770094035526686e-14
+  }
 }

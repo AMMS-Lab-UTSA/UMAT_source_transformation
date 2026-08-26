@@ -16,6 +16,8 @@ from umat_oti.services.transformation import (
     TransformationOptions, run_transformation,
 )
 from umat_oti.oti.oti_directions import deriv_factor
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
 from umat_oti.validation.j2_reference import J2Parameters, J2State, integrate_increment
 
 
@@ -74,6 +76,9 @@ def run_actual_j2_higher_order_evidence(config_path: Path, output_dir: Path) -> 
     oti_values = _read_oti_higher_order(higher_output)
     primal_rows = _read_primal(output_dir / "actual_umat_primal.csv")
     comparisons, branch_history = _compare_with_finite_difference(oti_values)
+    tangent_rows = _compare_tangent(_read_tangent(output_dir / "actual_umat_ddsdde.csv"))
+    tangent_path = output_dir / "table2_ddsdde_illustrative.csv"
+    _write_comparisons(tangent_path, tangent_rows)
     comparison_path = output_dir / "actual_umat_higher_order_comparison.csv"
     _write_comparisons(comparison_path, comparisons)
     table_path = output_dir / "table4_higher_order_actual_umat.csv"
@@ -89,6 +94,8 @@ def run_actual_j2_higher_order_evidence(config_path: Path, output_dir: Path) -> 
         comparison_path,
         table_path,
         output_dir / "actual_umat_primal.csv",
+        output_dir / "actual_umat_ddsdde.csv",
+        tangent_path,
     ]
     max_abs = max(row["absolute_error"] for row in comparisons)
     max_rel = max(row["relative_error"] for row in comparisons)
@@ -134,13 +141,18 @@ def run_actual_j2_higher_order_evidence(config_path: Path, output_dir: Path) -> 
             "csv": str(comparison_path),
             "publication_table": str(table_path),
         },
+        "tangent": _tangent_summary(tangent_rows, tangent_path),
         "primal_rows": primal_rows,
         "artifacts": [
             {"path": str(path), "sha256": _sha256(path)} for path in generated_paths
         ],
     }
+    # The written record is portable; the returned one keeps absolute paths,
+    # because callers in this process still have to open those files.
     evidence_path = output_dir / "actual_umat_higher_order_evidence.json"
-    evidence_path.write_text(json.dumps(evidence, indent=2, sort_keys=True), encoding="utf-8")
+    evidence_path.write_text(
+        json.dumps(_relative_paths(evidence, output_dir), indent=2, sort_keys=True),
+        encoding="utf-8")
     evidence["evidence_path"] = str(evidence_path)
     return evidence
 
@@ -202,6 +214,210 @@ def _compare_with_finite_difference(
             reference_stress, reference_eqplas, dstran
         )
     return rows, history
+
+
+#: Relative agreement demanded of a tangent entry the references resolve.
+TANGENT_RELATIVE_TOLERANCE = 1.0e-9
+
+#: Below this fraction of the largest entry of the same tangent, an entry is
+#: not a small number -- it is a zero of the matrix. Without a scale the zero
+#: test has nothing to compare against, and the 1e-75 rounding dust the
+#: extended-precision reference leaves at a structural zero reads as a 100%
+#: disagreement with the closed form's exact 0. That is an artefact of dividing
+#: dust by dust, not a finding about the tangent.
+TANGENT_ZERO_FRACTION = 1.0e-12
+
+
+def _relative_paths(value: Any, work_dir: Path) -> Any:
+    """Rewrite absolute paths so the record can be committed and compared.
+
+    This evidence is published. An absolute path pins it to one account on one
+    machine -- the committed copy of this file carried a home directory from a
+    different user entirely -- and it makes two runs of the same round differ
+    for no scientific reason. Paths inside the repository become repository
+    relative; paths inside the scratch build become "<work>/name".
+    """
+    if isinstance(value, dict):
+        return {key: _relative_paths(item, work_dir) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_relative_paths(item, work_dir) for item in value]
+    if not isinstance(value, str) or not value.startswith("/"):
+        return value
+    candidate = Path(value)
+    for root, prefix in ((work_dir.resolve(), "<work>"),
+                         (REPO_ROOT, "")):
+        try:
+            relative = candidate.relative_to(root)
+        except ValueError:
+            continue
+        return f"{prefix}/{relative}" if prefix else str(relative)
+    return candidate.name
+
+
+def _tangent_summary(rows: list[dict[str, Any]], path: Path) -> dict[str, Any]:
+    resolved = [r for r in rows if r["reference_classification"] == "resolved"]
+    measured = [r for r in resolved if r["judged_by"] == "relative"]
+    return {
+        "entries": len(rows),
+        "resolved": len(resolved),
+        "reference_unresolved":
+            sum(1 for r in rows
+                if r["reference_classification"] == "reference_unresolved"),
+        "structural_zeros": len(resolved) - len(measured),
+        "structural_zeros_disagreeing":
+            sum(1 for r in resolved
+                if r["judged_by"] == "structural_zero" and r["agrees"] is False),
+        "measured": len(measured),
+        "agreeing": sum(1 for r in resolved if r["agrees"]),
+        "disagreeing": sum(1 for r in resolved if r["agrees"] is False),
+        "worst_measured_relative_error":
+            max((r["relative_error"] for r in measured), default=None),
+        # Only over the entries the spread actually adjudicates. At a
+        # structural zero the ratio is dust over dust and is always about 1,
+        # which would make the references look far worse than they are.
+        "worst_reference_spread_relative_where_measured":
+            max((r["reference_spread_relative"] for r in measured), default=None),
+        "relative_tolerance": TANGENT_RELATIVE_TOLERANCE,
+        "references": [
+            "closed-form elastoplastic consistent tangent from "
+            "umat_oti.validation.j2_reference",
+            "80-digit centred difference of the independent integrator "
+            "umat_oti.validation.actual_umat_higher_order._integrate_increment_mp",
+        ],
+        "csv": str(path),
+    }
+
+
+def _read_tangent(path: Path) -> dict[tuple[int, int, int], float]:
+    with path.open(newline="", encoding="utf-8") as handle:
+        return {(int(row["increment"]), int(row["row"]), int(row["column"])):
+                float(row["value"]) for row in csv.DictReader(handle)}
+
+
+def _compare_tangent(
+    tangent: dict[tuple[int, int, int], float],
+) -> list[dict[str, Any]]:
+    """Check the consistent tangent against two independent references.
+
+    Nothing previously checked DDSDDE numerically for this model: the Abaqus
+    paired runs compare the tangent between two builds that carry the same one,
+    and the higher-order study starts at order two. A tangent both builds got
+    wrong identically would have passed.
+
+    Two references are used because they fail differently. The closed-form
+    elastoplastic consistent tangent is exact but only correct if the algorithm
+    it was derived for is the algorithm the UMAT implements. The 80-digit
+    difference of the independent integrator makes no such assumption but is a
+    difference, so it carries truncation. Agreement with both is what makes the
+    check meaningful; where they disagree with each other, the entry is
+    reported as unresolved rather than adjudicated.
+    """
+    params = J2Parameters(E=200000.0, nu=0.3, SIGY0=250.0, H=2000.0)
+    state = J2State()
+    mp.mp.dps = 80
+    reference_stress = tuple(mp.mpf("0") for _ in range(6))
+    reference_eqplas = mp.mpf("0")
+    rows: list[dict[str, Any]] = []
+
+    for increment, dstran in enumerate(J2_INCREMENTS, start=1):
+        baseline = integrate_increment(params, state, dstran)
+        branch = "plastic" if baseline.yielded else "elastic"
+        analytic = baseline.ddsdde
+        columns = {
+            column: _finite_difference_response(
+                reference_stress, reference_eqplas, dstran, (column,),
+                step=mp.mpf("0.00002"))
+            for column in range(1, 7)
+        }
+        matrix_scale = max(
+            max(abs(float(analytic[i][j])) for j in range(6)) for i in range(6))
+        matrix_scale = max(
+            matrix_scale,
+            max(abs(value) for column in columns.values() for value in column))
+        for row_index in range(1, 7):
+            for column in range(1, 7):
+                oti_value = tangent.get((increment, row_index, column))
+                analytic_value = float(analytic[row_index - 1][column - 1])
+                numeric_value = columns[column][row_index - 1]
+                rows.append(_tangent_row(increment, branch, row_index, column,
+                                         oti_value, analytic_value, numeric_value,
+                                         matrix_scale))
+        state = J2State(stress=baseline.stress, statev=baseline.statev,
+                        stran=baseline.stran)
+        reference_stress, reference_eqplas, _, _ = _integrate_increment_mp(
+            reference_stress, reference_eqplas, dstran)
+    return rows
+
+
+def _tangent_row(increment: int, branch: str, row_index: int, column: int,
+                 oti_value: float | None, analytic: float, numeric: float,
+                 matrix_scale: float) -> dict[str, Any]:
+    """Adjudicate one tangent entry, or record why it cannot be adjudicated."""
+    scale = max(abs(analytic), abs(numeric))
+    floor = matrix_scale * TANGENT_ZERO_FRACTION
+    # How far the two independent references sit from each other bounds how
+    # finely they can adjudicate anything. Reporting an error smaller than that
+    # spread would be claiming precision the references do not have.
+    spread = abs(analytic - numeric)
+    row: dict[str, Any] = {
+        "increment": increment,
+        "branch": branch,
+        "row": row_index,
+        "column": column,
+        "oti": oti_value,
+        "analytic_reference": analytic,
+        "extended_precision_reference": numeric,
+        "reference_spread": spread,
+        "reference_spread_relative": spread / scale if scale else 0.0,
+        "matrix_scale": matrix_scale,
+        "structural_zero_floor": floor,
+        "relative_tolerance": TANGENT_RELATIVE_TOLERANCE,
+    }
+    if oti_value is None:
+        row.update({"absolute_error": None, "relative_error": None,
+                    "reference_classification": "unresolved", "agrees": None,
+                    "judged_by": None,
+                    "justification": "the transformed build emitted no value here"})
+        return row
+
+    absolute = abs(oti_value - analytic)
+    denominator = max(abs(analytic), abs(oti_value))
+    row["absolute_error"] = absolute
+    row["relative_error"] = absolute / denominator if denominator else 0.0
+
+    if scale <= floor:
+        # Both references put this entry at zero on the scale of the matrix it
+        # belongs to. The value must be zero there too -- an OTI entry that is
+        # not is a real disagreement, and is reported as one.
+        row["reference_classification"] = "resolved"
+        row["judged_by"] = "structural_zero"
+        row["agrees"] = abs(oti_value) <= floor
+        row["justification"] = (
+            f"both references place this entry below {floor:.3e}, which is "
+            f"{TANGENT_ZERO_FRACTION:.0e} of the largest entry of the same "
+            f"tangent ({matrix_scale:.6e}), so it is a zero of the matrix; the "
+            f"value is {abs(oti_value):.3e}")
+        return row
+
+    if scale and spread / scale > TANGENT_RELATIVE_TOLERANCE:
+        row.update({"reference_classification": "reference_unresolved",
+                    "agrees": None, "judged_by": None,
+                    "justification":
+                        f"the two references differ from each other by "
+                        f"{spread / scale:.3e} relative, which is coarser than "
+                        f"the {TANGENT_RELATIVE_TOLERANCE:.0e} being asked of "
+                        "the value, so neither can adjudicate this entry"})
+        return row
+
+    row["reference_classification"] = "resolved"
+    row["judged_by"] = "relative"
+    row["agrees"] = row["relative_error"] <= TANGENT_RELATIVE_TOLERANCE
+    row["justification"] = (
+        f"relative error against the closed-form consistent tangent, with a "
+        f"denominator of max(|reference|,|oti|) = {denominator:.6e}; the "
+        f"extended-precision difference confirms the reference to "
+        f"{spread / scale:.3e} relative")
+    return row
 
 
 def _finite_difference_response(
@@ -351,6 +567,7 @@ def _driver_source() -> str:
   REAL(8) :: PNEWDT, CELENT, DFGRD0(3,3), DFGRD1(3,3)
   REAL(8) :: PATH(NTENS,NINC)
   INTEGER :: NDI, NSHR, NOEL, NPT, LAYER, KSPT, KSTEP, KINC, I, INC, U
+  INTEGER :: UT, IR, IC
   CHARACTER(80) :: CMNAME
   DATA PATH / {increments} /
   STRESS=0.0_8; STATEV=0.0_8; DDSDDE=0.0_8; STRAN=0.0_8; DSTRAN=0.0_8
@@ -366,6 +583,8 @@ def _driver_source() -> str:
   NDI=3; NSHR=3; NOEL=1; NPT=1; LAYER=1; KSPT=1; KSTEP=1
   OPEN(NEWUNIT=U,FILE='actual_umat_primal.csv',STATUS='REPLACE',ACTION='WRITE')
   WRITE(U,'(A)') 'increment,stress_1,stress_2,stress_3,stress_4,stress_5,stress_6,eqplas'
+  OPEN(NEWUNIT=UT,FILE='actual_umat_ddsdde.csv',STATUS='REPLACE',ACTION='WRITE')
+  WRITE(UT,'(A)') 'increment,row,column,value'
   DO INC=1,NINC
     DSTRAN=PATH(:,INC); KINC=INC
     CALL UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,RPL,DDSDDT,DRPLDE,DRPLDT, &
@@ -373,9 +592,15 @@ def _driver_source() -> str:
       NTENS,NSTATV,PROPS,NPROPS,COORDS,DROT,PNEWDT,CELENT,DFGRD0,DFGRD1, &
       NOEL,NPT,LAYER,KSPT,KSTEP,KINC)
     WRITE(U,'(I0,7(",",ES24.16))') INC,STRESS,STATEV(1)
+    DO IR=1,NTENS
+      DO IC=1,NTENS
+        WRITE(UT,'(I0,",",I0,",",I0,",",ES24.16)') INC,IR,IC,DDSDDE(IR,IC)
+      END DO
+    END DO
     STRAN=STRAN+DSTRAN; TIME(1)=TIME(1)+DTIME; TIME(2)=TIME(2)+DTIME
   END DO
   CLOSE(U)
+  CLOSE(UT)
 END PROGRAM actual_umat_higher_order_driver
 
 SUBROUTINE GETOUTDIR(PATH,NCHAR)
