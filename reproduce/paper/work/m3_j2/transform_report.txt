@@ -1,0 +1,51 @@
+============================================================================
+  UMAT to OTI/HYPAD TRANSFORMATION REPORT  --  UMAT
+============================================================================
+
+Source file       : /home/ammslab3/softwarex_work/UMAT_source_transformation/parameter_sensitivity/models/m3_j2/umat.for
+Transformation    : SUCCESS
+Anchor completion : ready_with_json_contract
+Blockers/Warnings : none
+
+-- OTI configuration -------------------------------------------------------
+ntens = 6   order = 1   type = ONUMM6N1   module = otim6n1
+OTI directions required: 6
+
+-- Variable roles ----------------------------------------------------------
+Seeded          :   1   DSTRAN
+Promoted to OTI :   9   DEQPL, EQPLAS, FLOW, SHYDRO, SMISES, STATEV, STRESS, SYIEL0, SYIELD
+Kept constant   :  24   COORDS, DPRED, DROT, DTEMP, DTIME, EBULK3, EG, EG2, EG3, ELAM, EMOD, ENU ...
+Kept real       :  31   CELENT, CMNAME, DDSDDE, DDSDDT, DFGRD0, DFGRD1, DRPLDE, DRPLDT, EFFG, EFFG2, EFFG3, EFFHRD ...
+
+-- Main tangent (DDSDDE) ---------------------------------------------------
+Contract : DDSDDE(i,j) = d STRESS(i) / d DSTRAN(j)
+seed = DSTRAN   output = STRESS   target = DDSDDE
+Old tangent blocks replaced: 1  (lines 86-108)
+Stress-update regions transformed: 3
+
+-- Semantic checks (16/16 passed) ----------------------------------------
+    [PASS] ddsdde_extraction_after_final_selected_stress_update
+    [PASS] ddsdde_extraction_after_selected_stress_regions
+    [PASS] ddsdde_output_present
+    [PASS] dstran_initialization_before_seed
+    [PASS] dstran_initialization_before_stress_use
+    [PASS] dstran_seed_before_stress_update
+    [PASS] dstran_seed_before_transformed_stress_update
+    [PASS] finite_strain_path_uses_oti_versions
+    [PASS] fixed_form_line_lengths_ok
+    [PASS] integer_literals_normalized_in_oti_expressions
+    [PASS] no_extraction_in_tangent_helper_region
+    [PASS] old_ddsdde_assignments_disabled
+    [PASS] promoted_dfgrd_variables_initialized_before_use
+    [PASS] real_stress_extraction_before_ddsdde_extraction
+    [PASS] stress_oti_update_before_ddsdde_extraction
+    [PASS] stress_oti_update_before_real_stress_extraction
+
+-- Generated files ---------------------------------------------------------
+    master_parameters.f90
+    real_utils.f90
+    otim6n1.f90
+    compile_order.txt
+    compile_hint.sh
+    umat_oti.for
+

@@ -289,18 +289,27 @@ def step_fortran_smoke(out_dir: Path) -> StepResult:
                              "against centred differences of the original build")
 
 
+#: Steps that only read committed evidence and re-render it. They need no
+#: compiler, so a machine without gfortran can still rebuild every figure and
+#: table from the frozen numbers.
+_NEEDS_NO_COMPILER = frozenset({
+    "generality_matrix", "source_identity_registry", "paper_figures",
+    "paper_tables", "paper_summary",
+})
+
+
 def _tool_step(name: str, script: str, supports: tuple[str, ...],
-               artifact: str) -> Step:
+               artifact: str, arguments: tuple[str, ...] = ()) -> Step:
     def run(out_dir: Path) -> StepResult:
         missing = _need_repository(name)
         if missing:
             return missing
         blocked = _need_gfortran()
-        if blocked and name != "generality_matrix":
+        if blocked and name not in _NEEDS_NO_COMPILER:
             return StepResult(name, blocked.status, reason=blocked.reason)
         log = out_dir / f"{name}.log"
-        proc = subprocess.run([sys.executable, script], capture_output=True,
-                              text=True, cwd=REPO_ROOT)
+        proc = subprocess.run([sys.executable, script, *arguments],
+                              capture_output=True, text=True, cwd=REPO_ROOT)
         log.write_text(proc.stdout + proc.stderr, encoding="utf-8")
         if proc.returncode != 0:
             return StepResult(name, StageStatus.FAILED.value, supports=supports,
@@ -384,6 +393,52 @@ def step_corpus(out_dir: Path) -> StepResult:
                 "an external blocker."))
 
 
+#: The figures that are rendered from committed evidence. The two GUI
+#: screenshots are not here: they need a browser and a live Streamlit server,
+#: and a reproduction that cannot start one should report that rather than fail.
+_FIGURE_SCRIPTS = (
+    ("figure3", "tools/figures/build_figure3_illustrative.py",
+     "paper_results/figures/figure3_illustrative_derivatives.png"),
+    ("figure4", "tools/figures/build_figure4_sensitivities.py",
+     "paper_results/figures/figure4_parameter_sensitivities.png"),
+    ("figure5", "tools/figures/build_figure5_collection.py",
+     "paper_results/figures/figure5_collection_verification.png"),
+)
+
+
+def step_paper_figures(out_dir: Path) -> StepResult:
+    """Re-render the data figures from whatever this run just produced."""
+    missing = _need_repository("paper_figures")
+    if missing:
+        return missing
+    try:
+        import matplotlib  # noqa: F401,PLC0415
+    except ImportError:
+        return StepResult(
+            "paper_figures", StageStatus.BLOCKED.value, supports=("FIGURES",),
+            reason="matplotlib is not installed, so the figures cannot be "
+                   "rendered; install the paper extra to include them")
+    log, produced, failed = out_dir / "paper_figures.log", [], []
+    text = ""
+    for name, script, artifact in _FIGURE_SCRIPTS:
+        proc = subprocess.run([sys.executable, script], capture_output=True,
+                              text=True, cwd=REPO_ROOT)
+        text += f"$ {script}\n{proc.stdout}{proc.stderr}\n"
+        if proc.returncode != 0 or not (REPO_ROOT / artifact).is_file():
+            failed.append(name)
+        else:
+            produced.append(artifact)
+    log.write_text(text, encoding="utf-8")
+    if failed:
+        return StepResult("paper_figures", StageStatus.FAILED.value,
+                          supports=("FIGURES",),
+                          reason=f"{', '.join(failed)} did not render; see "
+                                 f"{log.name}")
+    return StepResult("paper_figures", StageStatus.SUCCEEDED.value,
+                      supports=("FIGURES",),
+                      detail=f"rendered {len(produced)} figures from this run")
+
+
 def build_steps(profile: str, allow_network: bool) -> list[Step]:
     smoke = [
         Step("import_package", ("INSTALL",), step_import_package),
@@ -400,6 +455,9 @@ def build_steps(profile: str, allow_network: bool) -> list[Step]:
         return offline
 
     if profile == "paper":
+        # The order matters: every later step reads what an earlier one wrote,
+        # so the figures and tables in a reproduction are rendered from that
+        # run's own numbers rather than from the committed ones.
         return offline + [
             _tool_step("parameter_sensitivity_round",
                        "tools/run_parameter_sensitivity_sweep.py", ("TABLE-6",),
@@ -407,9 +465,28 @@ def build_steps(profile: str, allow_network: bool) -> list[Step]:
             _tool_step("internal_jacobian_round",
                        "tools/run_internal_jacobian_round.py", ("TABLE-3",),
                        "paper_results/internal_jacobians/table3_internal_jacobians.csv"),
+            _tool_step("tangent_round", "tools/run_tangent_round.py",
+                       ("TABLE-2", "TABLE-5"),
+                       "paper_results/actual_umat_higher_order/j2/"
+                       "table2_ddsdde_illustrative.csv",
+                       arguments=("--work-dir", "reproduce/tangent",
+                                  "--results-dir",
+                                  "paper_results/actual_umat_higher_order/j2")),
+            _tool_step("source_identity_registry",
+                       "tools/build_source_identity_registry.py",
+                       ("GENERALITY",),
+                       "paper_results/generality/source_identity.csv"),
             _tool_step("generality_matrix",
                        "tools/build_generality_matrix.py", ("GENERALITY",),
                        "paper_results/generality/generality_matrix.csv"),
+            Step("paper_figures", ("FIGURES",), step_paper_figures),
+            _tool_step("paper_tables", "tools/tables/build_paper_tables.py",
+                       ("TABLE-1", "TABLE-2", "TABLE-3", "TABLE-4", "TABLE-5",
+                        "TABLE-6", "TABLE-7"),
+                       "paper_results/tables/paper_tables.docx"),
+            _tool_step("paper_summary", "tools/build_paper_summary.py",
+                       ("SUMMARY",),
+                       "paper_results/PAPER_READY_SUMMARY.md"),
             Step("abaqus_paired_validation", ("TABLE-2",), step_abaqus),
         ]
 

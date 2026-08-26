@@ -1,0 +1,103 @@
+{
+  "by_abaqus": {
+    "blocked_by_external_dependency": 25,
+    "failed_execution (slurm 791506)": 1,
+    "passed (slurm 791506)": 17
+  },
+  "by_constitutive_class": {
+    "": 8,
+    "Cosserat elasticity": 1,
+    "J2 plasticity, bilinear isotropic hardening": 1,
+    "J2 plasticity, combined isotropic/kinematic hardening": 1,
+    "J2 plasticity, isotropic hardening": 2,
+    "J2 plasticity, kinematic hardening": 1,
+    "anisotropic elasticity (cubic)": 1,
+    "anisotropic elasticity (orthotropic)": 1,
+    "anisotropic elasticity (transversely isotropic)": 1,
+    "crystal plasticity (Huang/Kysar lineage)": 1,
+    "crystal plasticity, FCC slip systems": 1,
+    "crystal plasticity, finite strain, COMMON-block state": 1,
+    "elasticity with scalar damage": 1,
+    "finite-strain J2 elastoplasticity, linear hardening": 1,
+    "hyperelasticity (Mooney-Rivlin, small strain)": 1,
+    "isotropic elasticity": 3,
+    "linear viscoelasticity": 1,
+    "neo-Hookean hyperelasticity, finite strain": 1,
+    "plasticity, combined hardening": 1,
+    "plasticity, combined isotropic/kinematic hardening": 1,
+    "plasticity, isotropic hardening": 1,
+    "plasticity, kinematic hardening": 1,
+    "pressure-dependent plasticity": 1,
+    "see the study's model notes": 3,
+    "thermoelasticity": 2,
+    "viscoplastic damage, classical theory": 1,
+    "viscoplastic damage, combined hardening": 1,
+    "viscoplastic damage, combined nonlinear isotropic/kinematic hardening, thermomechanical": 1,
+    "viscoplastic flow (crystal-plasticity flow rule)": 1,
+    "viscoplasticity (Perzyna)": 1
+  },
+  "by_existing_tangent": {
+    "present": 43
+  },
+  "by_internal_jacobian": {
+    "blocked:not_started": 2,
+    "no_local_solve": 24,
+    "not_attempted": 11,
+    "succeeded": 6
+  },
+  "by_kinematics": {
+    "": 14,
+    "small_strain": 29
+  },
+  "by_numerical_verification": {
+    "not_attempted": 16,
+    "succeeded": 25,
+    "unresolved": 2
+  },
+  "by_source_form": {
+    "fixed": 43
+  },
+  "counting_policy": "One row per implementation. Rows are merged on canonical source identity -- normalised content for a single file, resolved routine closure for a multi-file source -- so a UMAT reachable from both the in-repository archive and the pinned upstream snapshot is one source with several origins and several validation events, not several sources.",
+  "generated_at": "2026-08-26T14:52:00.428036+00:00",
+  "identity_registry_counts": {
+    "content_deduplicated_sources": 45,
+    "independent_upstream_repositories": 3,
+    "note": "content_deduplicated_sources counts implementations, not appearances. A source found both locally and upstream is one source with two origins and however many validation events were run against it.",
+    "raw_discovered_files": 54,
+    "sources_found_at_more_than_one_origin": 43,
+    "unique_constitutive_models": 27,
+    "unique_dependency_closures": 4,
+    "validation_events_by_kind": {
+      "CORPUS offline round": 11,
+      "TABLE-2 paired Abaqus": 19,
+      "TABLE-3 internal Jacobian": 39,
+      "TABLE-4 higher order": 4,
+      "TABLE-6 parameter sensitivity": 20
+    },
+    "verified_unique_sources": 37,
+    "verified_unique_sources_by_event": {
+      "CORPUS offline round": 7,
+      "TABLE-2 paired Abaqus": 17,
+      "TABLE-3 internal Jacobian": 6,
+      "TABLE-6 parameter sensitivity": 18
+    }
+  },
+  "merged_rows": [
+    "UMAT_NKH_1.02;jgomezc1_UMAT_NKH_1.02",
+    "UMAT_PCL;jgomezc1_UMAT_PCL",
+    "UMAT_PCLK;jgomezc1_UMAT_PCLK",
+    "UMAT_PCO;jgomezc1_UMAT_PCO",
+    "UMAT_VPDCL;jgomezc1_UMAT_VPDCL",
+    "UMAT_VPDCO;jgomezc1_UMAT_VPDCO",
+    "jgomezc1_UMAT_ECO;UMAT_ECO",
+    "visco_imp;visco_beam"
+  ],
+  "multi_file_verified": [
+    "UMAT_PCO",
+    "UMAT_VPDCO",
+    "jgomezc1_UMAT_ECO"
+  ],
+  "rows_merged_from_more_than_one_origin": 8,
+  "sources": 43,
+  "structural_diversity_caveat": "The parameter-sensitivity benchmark set is uniform by construction: single-file, fixed-form, small-strain, at most one helper routine. On its own it demonstrates breadth of constitutive class rather than of source structure. Multi-file closures are demonstrated by 3 verified sources (UMAT_PCO, UMAT_VPDCO, jgomezc1_UMAT_ECO). Finite-strain kinematics are demonstrated by 2 verified sources (lucarini_elastoplastic, lucarini_neohookean), driven through the deformation gradient rather than the strain increment. Free-form and module-based sources are still unrepresented; every row in this matrix is fixed-form."
+}

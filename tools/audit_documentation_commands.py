@@ -67,6 +67,10 @@ def _make_targets() -> set[str]:
                           re.MULTILINE))
 
 
+#: Paths that documented commands produce rather than paths that are tracked.
+GENERATED_PREFIXES = ("reproduce/", "build/", "dist/")
+
+
 def audit() -> list[dict]:
     problems: list[dict] = []
     targets = _make_targets()
@@ -88,6 +92,12 @@ def audit() -> list[dict]:
                 continue
             # A path with a wildcard or placeholder is a pattern, not a file.
             if any(ch in candidate for ch in "*<>{}"):
+                continue
+            # Output a documented command creates. Whether it exists depends on
+            # what has been run in this working tree, so its absence is not a
+            # stale reference -- and treating it as one made the audit pass or
+            # fail according to which profile happened to be run last.
+            if any(candidate.startswith(prefix) for prefix in GENERATED_PREFIXES):
                 continue
             problems.append({"doc": str(relative), "kind": "stale_path_reference",
                              "detail": candidate})

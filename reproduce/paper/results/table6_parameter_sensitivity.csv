@@ -1,0 +1,2 @@
+model,parameter_directions,parameters,contract_generated,transformed,compiled,executed,numerically_verified,furthest_stage,targets,failure_reason
+m3_j2,4,E|nu|SIGY0|H,True,True,True,True,True,True,True,True,4,560,2.4796033119496132e-08,15,5,derivatives_verified,
