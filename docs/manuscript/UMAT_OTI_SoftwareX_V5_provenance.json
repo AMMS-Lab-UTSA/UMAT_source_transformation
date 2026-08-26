@@ -1,6 +1,6 @@
 {
   "command": "python tools/manuscript/build_v5_manuscript.py",
-  "commit": "652bb5f27033bc7a89f621cf285447762f9480e5",
+  "commit": "44b48078d9d42b47d423eb0961721df5e9ef5b25",
   "figure_count": 5,
   "figures": [
     "figure1_gui_request.png",
@@ -9,10 +9,10 @@
     "figure4_parameter_sensitivities.png",
     "figure5_collection_verification.png"
   ],
-  "generated_at": "2026-08-26T15:39:19.253461+00:00",
+  "generated_at": "2026-08-26T15:52:28.629198+00:00",
   "manuscript": "docs/manuscript/UMAT_OTI_SoftwareX_V5.docx",
   "note": "V4 is not read, edited or copied by this script. Every numerical claim is substituted from the evidence; a claim the evidence does not support raises rather than producing a placeholder.",
-  "sha256": "507dfbdcd850a9b4fdb61de359978af71803a33446787f2b15c9dc70dd7e5a5b",
+  "sha256": "c89d44216e3b8a19d467db108fe74aee9060aff88deabfb89f2723d1fd9a6b7e",
   "substituted_values": {
     "abaqus_cases": {
       "source": "paper_results/arc_791506/table2_abaqus_paired.csv",
