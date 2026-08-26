@@ -1,0 +1,63 @@
+{
+  "command": "python tools/figures/build_figure5_collection.py",
+  "commit": "e41b2f767977099eed31d03e280b8e9035b0043d",
+  "figure": "figure5_collection_verification",
+  "generated_at": "2026-08-26T15:44:17.845720+00:00",
+  "inputs": [
+    {
+      "bytes": 33097,
+      "path": "paper_results/generality/generality_matrix.csv",
+      "sha256": "19aa17c889a05fd80b2d30e92f08b8e458a8e13efd377a2b3ff6bf0a87fb9cef"
+    },
+    {
+      "bytes": 2853,
+      "path": "paper_results/internal_jacobians/table3_internal_jacobians.csv",
+      "sha256": "f870f427fc036bfbd542b5788c48a50229aea8743157573dfc0523db764de23c"
+    }
+  ],
+  "notes": "Panel (a) counts against the whole collection, so a source never put through the offline route shows as not attempted rather than as a failure. Panel (b) is what stops that from understating the evidence.",
+  "outputs": {
+    "height_inches": 6.02,
+    "pdf": "paper_results/figures/figure5_collection_verification.pdf",
+    "pdf_sha256": "5307e7acc70a6c15c7c8e1baa257b3547f1c56c13ce0be47760165220445a45f",
+    "png": "paper_results/figures/figure5_collection_verification.png",
+    "png_sha256": "0c586dd3eb1d43101e6ff2ae9348c51bd7c0a20ce5cbd5fa80b76a2e309d7f40",
+    "width_inches": 7.0
+  },
+  "plotted_filters": {
+    "deduplication": "one row per canonical source identity: normalised content for a single file, resolved routine closure for a multi-file source",
+    "excluded": [
+      "j2",
+      "m3_j2"
+    ],
+    "exclusion_reason": "the illustrative example is reported only in the illustrative section, and appears in no count, table or panel here",
+    "panel_c": "verdict == verified, deduplicated on canonical_source_id"
+  },
+  "row_counts": {
+    "by_route": {
+      "Abaqus only": 12,
+      "both routes": 5,
+      "neither": 5,
+      "offline only": 19
+    },
+    "collection_rows": 41,
+    "excluded_rows": 2,
+    "internal_jacobians": {
+      "hand_coded_beyond_1e-6": [
+        "jgomezc1_UMAT_PCO",
+        "jgomezc1_UMAT_VPDCO"
+      ],
+      "unique_sources": 6
+    },
+    "jacobian_validation_events": 8,
+    "matrix_rows": 43,
+    "offline_route": {
+      "attempted offline": 26,
+      "both builds compiled": 26,
+      "derivative verified": 24,
+      "primal parity": 26,
+      "reference resolved": 26,
+      "transformed": 26
+    }
+  }
+}
