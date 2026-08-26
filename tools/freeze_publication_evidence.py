@@ -44,8 +44,28 @@ EVIDENCE = (
     "generality/generality_summary.json",
     "generality/source_identity.json",
     "generality/source_identity.csv",
-    "higher_order_convergence/table4_reference_quality_summary.json",
+    "arc_791506/table2_abaqus_paired.csv",
     "arc_791506/table2_abaqus_paired.json",
+    # The illustrative example's own derivative evidence, which the tangent and
+    # higher-order figures and tables are read from.
+    "actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv",
+    "actual_umat_higher_order/j2/actual_umat_ddsdde.csv",
+    "actual_umat_higher_order/j2/actual_umat_higher_order_comparison.csv",
+    "actual_umat_higher_order/j2/table4_higher_order_actual_umat.csv",
+    "actual_umat_higher_order/j2/actual_umat_higher_order_evidence.json",
+    "higher_order_convergence/table4_reference_quality_summary.json",
+    # The publication figures and tables, so a snapshot carries the artefacts a
+    # reader actually sees and not only the files they were computed from.
+    "figures/figure1_gui_request.png",
+    "figures/figure2_gui_results.png",
+    "figures/figure3_illustrative_derivatives.png",
+    "figures/figure4_parameter_sensitivities.png",
+    "figures/figure5_collection_verification.png",
+    "figures/gui_screenshots_provenance.json",
+    "figures/figure3_illustrative_derivatives_provenance.json",
+    "figures/figure4_parameter_sensitivities_provenance.json",
+    "figures/figure5_collection_verification_provenance.json",
+    "tables/paper_tables.docx",
     "PAPER_READY_SUMMARY.md",
 )
 
