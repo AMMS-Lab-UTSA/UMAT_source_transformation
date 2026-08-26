@@ -1,0 +1,1958 @@
+{
+  "counts": {
+    "content_deduplicated_sources": 45,
+    "independent_upstream_repositories": 3,
+    "note": "content_deduplicated_sources counts implementations, not appearances. A source found both locally and upstream is one source with two origins and however many validation events were run against it.",
+    "raw_discovered_files": 54,
+    "sources_found_at_more_than_one_origin": 43,
+    "unique_constitutive_models": 27,
+    "unique_dependency_closures": 4,
+    "validation_events_by_kind": {
+      "CORPUS offline round": 11,
+      "TABLE-2 paired Abaqus": 19,
+      "TABLE-3 internal Jacobian": 39,
+      "TABLE-4 higher order": 4,
+      "TABLE-6 parameter sensitivity": 18
+    },
+    "verified_unique_sources": 36,
+    "verified_unique_sources_by_event": {
+      "CORPUS offline round": 7,
+      "TABLE-2 paired Abaqus": 17,
+      "TABLE-3 internal Jacobian": 6,
+      "TABLE-6 parameter sensitivity": 17
+    }
+  },
+  "generated_at": "2026-08-25T20:56:21.086788+00:00",
+  "policy": "Identity is computed from normalised source content (single file) or from the resolved routine closure (multi-file). Paths are excluded: the same closure lives at different relative paths in different origins, and hashing layout would make identical code hash differently.",
+  "schema": "umat-oti-source-identity/1",
+  "sources": {
+    "019a2d21f8fecc0da884dc11d0b427ca": {
+      "canonical_source_id": "019a2d21f8fecc0da884dc11d0b427ca",
+      "closure_size": 1,
+      "code_only_sha256": "4f73bac4396627f54bf282e58e47b60b1b118c33eee0bc734a44577bc9f89ba4",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "code_exp"
+      ],
+      "normalised_content_sha256": "36a1dfff3a677385f0cf7f0ea83e3f8c1ad3ba857dec8d609f9b3e3d77717cc6",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "code_exp",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "0274d7910de61f0bc749aa6861c4e0fe": {
+      "canonical_source_id": "0274d7910de61f0bc749aa6861c4e0fe",
+      "closure_size": 1,
+      "code_only_sha256": "5ec14f7ee9b96cae37b77ccba6da982494bef7931012ca0c81db1a617cefbd08",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "j2_props",
+        "j2"
+      ],
+      "normalised_content_sha256": "dfe1bd980570db6cd2abd29ebcdce03786aea1adbb0b895dbe8c01e307721c3a",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "higher-order convergence study"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-4 higher order",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "j2",
+          "origin": "higher-order convergence study"
+        }
+      ],
+      "verified_by": []
+    },
+    "091c09013e39650379c85f0f9d2d9516": {
+      "canonical_source_id": "091c09013e39650379c85f0f9d2d9516",
+      "closure_size": 1,
+      "code_only_sha256": "a95a7affa51cbeaacc92f25c613de0e2894c56c8e63b667aeae5636c0e1a4e3c",
+      "constitutive_models": [
+        "anisotropic elasticity (cubic)"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "m2_cubic"
+      ],
+      "normalised_content_sha256": "a3de9ad8ba987a12fd57bc2f71bcc32cec022c2721f0933f54e170472340c90d",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "m2_cubic",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "m2_cubic",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "0ede6ade0029316290ec1b458a3f7cb6": {
+      "canonical_source_id": "0ede6ade0029316290ec1b458a3f7cb6",
+      "closure_size": 1,
+      "code_only_sha256": "5ff885b6d73fb25cd7f93e26a03717f76da7bd6a92f9d9eeaa3013b814d14c62",
+      "constitutive_models": [
+        "J2 plasticity, combined isotropic/kinematic hardening"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_j2_combined"
+      ],
+      "normalised_content_sha256": "de96c9ac90f52c7b7860c426812784fda06e6ee0f7964245d47d01b278af735e",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_j2_combined",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_j2_combined",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "100938ef530d1fa7688f9fd57c5fe3a2": {
+      "canonical_source_id": "100938ef530d1fa7688f9fd57c5fe3a2",
+      "closure_size": 1,
+      "code_only_sha256": "212efe140efdc369615fd606fd23ec7907be8463ac9059e28f9f441aff1b1150",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "spin_elastic"
+      ],
+      "normalised_content_sha256": "ca870aa7a8089b9eef285bfadd7168a840327ff281fff6d9f0b2108bbf72d0aa",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "spin_elastic",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "108518e08678d2939acf0eac4859de80": {
+      "canonical_source_id": "108518e08678d2939acf0eac4859de80",
+      "closure_size": 1,
+      "code_only_sha256": "18ba966c0b49984f6aa2c7b5ed93f92ec615935e3a6da4c187203601059ffec5",
+      "constitutive_models": [
+        "crystal plasticity (Huang/Kysar lineage)"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "lucarini_crystalplasticity"
+      ],
+      "normalised_content_sha256": "2790661de6f4493d5ed64bf8001fb672230144d03d5d36c2a4e46f7baf0412c5",
+      "origins": [
+        "external corpus: https://github.com/sergiolucarini/UMAT4COMSOL.git@e62506fd8426",
+        "internal-Jacobian round (external corpus (pinned snapshot))"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [
+        "https://github.com/sergiolucarini/UMAT4COMSOL.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "lucarini_crystalplasticity",
+          "origin": "external corpus: https://github.com/sergiolucarini/UMAT4COMSOL.git@e62506fd8426",
+          "verified": false
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "lucarini_crystalplasticity",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": false
+        }
+      ],
+      "verified_by": []
+    },
+    "1aa21df0267c34b3dcd4f541f480de25": {
+      "canonical_source_id": "1aa21df0267c34b3dcd4f541f480de25",
+      "closure_size": 1,
+      "code_only_sha256": "9a39efab11f387da79efa48774a1b701dd557f3df83d54bb863ea1f9588f5a5b",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "elastic"
+      ],
+      "normalised_content_sha256": "4247cb8cababce4bc3107832548e53152ac525f386ab2789874f3003a30786fb",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "elastic",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "1ce179da0c49ddf450f8efb19a198b41": {
+      "canonical_source_id": "1ce179da0c49ddf450f8efb19a198b41",
+      "closure_routines": [
+        "KCLEARV",
+        "KMAVEC",
+        "KUPDVEC",
+        "UMAT"
+      ],
+      "closure_size": 4,
+      "code_only_sha256": "35b6a34e650d492d89ad55ed6821c00109dbdf2f565a32213190388ab9afe359",
+      "constitutive_models": [
+        "Cosserat elasticity"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "dependency_closure",
+      "labels": [
+        "UMAT_ECO",
+        "jgomezc1_UMAT_ECO"
+      ],
+      "normalised_content_sha256": "04cee22b1b40c88313b37eba3a40e02cc5fb66cfe07409836cac1b22ffe6441d",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+        "internal-Jacobian round (external corpus (pinned snapshot))",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "dependency_closure"
+      ],
+      "upstream_repositories": [
+        "https://github.com/jgomezc1/ABAQUS-US.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_ECO",
+          "origin": "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_ECO",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": false
+        },
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "UMAT_ECO",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "CORPUS offline round",
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "1f31504c6afc8c3372afce0879e01ec8": {
+      "canonical_source_id": "1f31504c6afc8c3372afce0879e01ec8",
+      "closure_size": 1,
+      "code_only_sha256": "fbc9bfe9ae314ee9561faffed622790cc26851806a86712853d0508b2d7876e5",
+      "constitutive_models": [
+        "crystal plasticity, FCC slip systems"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "m6_fcc"
+      ],
+      "normalised_content_sha256": "b6a87b731f2cba1df0febc022541401c5a5138be0082b27559497bc6322d1aa3",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "m6_fcc",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": false
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "m6_fcc",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": []
+    },
+    "271c0c7a32eb17eaf6abf2524f4fbe62": {
+      "canonical_source_id": "271c0c7a32eb17eaf6abf2524f4fbe62",
+      "closure_size": 1,
+      "code_only_sha256": "73c531678f83173526205eff9a3f406a51284ce9fb04d73bd619644670337f10",
+      "constitutive_models": [
+        "pressure-dependent plasticity"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_drucker_prager"
+      ],
+      "normalised_content_sha256": "3609383308c33ec07c9870d48bd7583b8759a6c7e0b81645736ce8914c1e5845",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_drucker_prager",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": []
+    },
+    "2e7527f28aea68024080d02fec0e2c6d": {
+      "canonical_source_id": "2e7527f28aea68024080d02fec0e2c6d",
+      "closure_size": 1,
+      "code_only_sha256": "034efd0179cb84aaa9e066bdd4159522247918a4a3a48802a5a4930c795ec24f",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "UMAT_ECL_TEMP"
+      ],
+      "normalised_content_sha256": "21f634c3b0c235fa2bcfd4d25258aa86c7ad1d442e045e9bb4c639fd4c143a70",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "UMAT_ECL_TEMP",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "3b49f7a8e1283beb882aeac1f015506a": {
+      "canonical_source_id": "3b49f7a8e1283beb882aeac1f015506a",
+      "closure_size": 1,
+      "code_only_sha256": "377edf47b602aead510fa578e04b037265b1b94fefb5bfb2ca492232b6ff9732",
+      "constitutive_models": [
+        "isotropic elasticity"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "m1_elastic",
+        "m2_elastic3d"
+      ],
+      "normalised_content_sha256": "be6919b61ada7ee9053f615bc3fae7ee6a98f194220da0c941eff9b5f4f3dc4b",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "m1_elastic",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "m1_elastic",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "m2_elastic3d",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "3c37009efba9d24a2cb45f32e8af3d78": {
+      "canonical_source_id": "3c37009efba9d24a2cb45f32e8af3d78",
+      "closure_size": 1,
+      "code_only_sha256": "6d6e405f89bbf51988b0a5a5024ba04ddc6fa165f89c42dec3b425acc6e9beeb",
+      "constitutive_models": [
+        "elasticity with scalar damage"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_damage_elastic"
+      ],
+      "normalised_content_sha256": "90263a04409e5b3917b53b9cf1d51251f7a92fcdd60e82d9df59dae045495221",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_damage_elastic",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_damage_elastic",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "3e75c0c0a08f04676d546ec724284954": {
+      "canonical_source_id": "3e75c0c0a08f04676d546ec724284954",
+      "closure_size": 1,
+      "code_only_sha256": "0a56082ddb0c2882ea0b1b42170cbb207ed6b50dcb2f600ccd55d8099ca4e782",
+      "constitutive_models": [
+        "J2 plasticity, isotropic hardening"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_real_PCO"
+      ],
+      "normalised_content_sha256": "a70c744770b630b72ec27e14bb135f72c185b82101bf62d926ad5cc628da4376",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_real_PCO",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_real_PCO",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "419dad1b5328f82526e6bf3bcb5734a8": {
+      "canonical_source_id": "419dad1b5328f82526e6bf3bcb5734a8",
+      "closure_size": 1,
+      "code_only_sha256": "6f50e1d3c278309312e8542d471cdc510250e4f46bd72ad1a52c5307c5d4048d",
+      "constitutive_models": [
+        "viscoplastic damage, classical theory"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "UMAT_VPDCL",
+        "jgomezc1_UMAT_VPDCL"
+      ],
+      "normalised_content_sha256": "139355773a2819ed69e41500269dafb980214f0dd4b36d0ac7bbab0d1f91198e",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+        "internal-Jacobian round (repository_umat_archive)",
+        "internal-Jacobian round (external corpus (pinned snapshot))",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [
+        "https://github.com/jgomezc1/ABAQUS-US.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_VPDCL",
+          "origin": "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+          "verified": false
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "UMAT_VPDCL",
+          "origin": "internal-Jacobian round (repository_umat_archive)",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_VPDCL",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": false
+        },
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "UMAT_VPDCL",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "TABLE-3 internal Jacobian",
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "4497f62852c0db7d48f73f40b1c03ef2": {
+      "canonical_source_id": "4497f62852c0db7d48f73f40b1c03ef2",
+      "closure_size": 1,
+      "code_only_sha256": "5be6a09f5c3cb79447c1234aa41d0594f2a711ae16f5181b68023a92335057e9",
+      "constitutive_models": [
+        "finite-strain J2 elastoplasticity, linear hardening"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "lucarini_elastoplastic"
+      ],
+      "normalised_content_sha256": "c3b2510f7f2f4dbff225b624f11fd8bb5ca9e2010b3200d035c1ac36a56a7b3d",
+      "origins": [
+        "external corpus: https://github.com/sergiolucarini/UMAT4COMSOL.git@e62506fd8426",
+        "internal-Jacobian round (external corpus (pinned snapshot))"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [
+        "https://github.com/sergiolucarini/UMAT4COMSOL.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "lucarini_elastoplastic",
+          "origin": "external corpus: https://github.com/sergiolucarini/UMAT4COMSOL.git@e62506fd8426",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "lucarini_elastoplastic",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "CORPUS offline round"
+      ]
+    },
+    "580f20805d5b7b89e08a19084b90a379": {
+      "canonical_source_id": "580f20805d5b7b89e08a19084b90a379",
+      "closure_size": 1,
+      "code_only_sha256": "dfa81bc50d7f818695ff8f3127eaa6e52657410dae68dece767bc8356203a8c9",
+      "constitutive_models": [
+        "thermoelasticity"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_thermoelastic"
+      ],
+      "normalised_content_sha256": "083d094e27da28f1036b0d103db77b0cc7ba6131758de9f42489c8442f99c202",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_thermoelastic",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_thermoelastic",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "597eaeddf4ffd757e848ed8588fdea75": {
+      "canonical_source_id": "597eaeddf4ffd757e848ed8588fdea75",
+      "closure_size": 1,
+      "code_only_sha256": "633d872bceeeebd0c496d67a7f337764fc9e3f3b6d6f523a7a15b025f752571d",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "UMAT_PCLI"
+      ],
+      "normalised_content_sha256": "54f8e6672bee8568295b695c397d75bb316b240997bed4a185b4acaa02568169",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "internal-Jacobian round (repository_umat_archive)",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "UMAT_PCLI",
+          "origin": "internal-Jacobian round (repository_umat_archive)",
+          "verified": false
+        },
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "UMAT_PCLI",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "5a550f33156c3dbcc686d3086b2997f8": {
+      "canonical_source_id": "5a550f33156c3dbcc686d3086b2997f8",
+      "closure_size": 1,
+      "code_only_sha256": "11e0d8b9752302f9a08172eb0093efaa3287c620294d51ef78b1fc6b9cbadcf5",
+      "constitutive_models": [
+        "viscoplastic flow (crystal-plasticity flow rule)"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "m5_cpflow"
+      ],
+      "normalised_content_sha256": "ad84d2770122e24fb81705429f51b3c928ec439df9f62bac85de36c19410b8a6",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "m5_cpflow",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "m5_cpflow",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity",
+        "TABLE-3 internal Jacobian"
+      ]
+    },
+    "5d1da093ccd09b1b8a3c6c8e2a3a4292": {
+      "canonical_source_id": "5d1da093ccd09b1b8a3c6c8e2a3a4292",
+      "closure_size": 1,
+      "code_only_sha256": "aaff8ba141d2a82ae63fe36e780d33ee458b85c86e5e7b16e8dcbcf3123a5e92",
+      "constitutive_models": [
+        "anisotropic elasticity (orthotropic)"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_aniso_ortho"
+      ],
+      "normalised_content_sha256": "858f6dd0dad977f687767db5a75a8edaaa4f09198596c58d45dd0f957293b722",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_aniso_ortho",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_aniso_ortho",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "610d0b66cf3a1bf4cd7cb6cc7cfdb327": {
+      "canonical_source_id": "610d0b66cf3a1bf4cd7cb6cc7cfdb327",
+      "closure_size": 1,
+      "code_only_sha256": "760eed961c093168fae1f84b257664d6be22fd0b9fb5abb79a2cb90fa957c9cb",
+      "constitutive_models": [
+        "viscoplasticity (Perzyna)"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_perzyna_linear"
+      ],
+      "normalised_content_sha256": "7905990f588f177f1176eb42f7d0cf2261e0c97c1dc6b28d11d9e706f5cef5bb",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_perzyna_linear",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": []
+    },
+    "616699c08d50aab2e657aa92159fee4d": {
+      "canonical_source_id": "616699c08d50aab2e657aa92159fee4d",
+      "closure_size": 1,
+      "code_only_sha256": "5d06d437e6972174954e13c2c0cb9958a8898d8328f352b2e34fe6fa5baa2a11",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "visco_beam",
+        "visco_imp"
+      ],
+      "normalised_content_sha256": "da82aaf52243d20647765a0a21c5ca0721bf45df2d14fefb26c8d9acb94f7f29",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "higher-order convergence study",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-4 higher order",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "visco_imp",
+          "origin": "higher-order convergence study"
+        },
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "visco_beam",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        },
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "visco_imp",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "63d29dc059c518af8e0abf8b4554b1b4": {
+      "canonical_source_id": "63d29dc059c518af8e0abf8b4554b1b4",
+      "closure_size": 1,
+      "code_only_sha256": "4e3f92dbb8385927da81cb6c4b8c0df25c72ddebb4b2d92c26a28ee2f0b55f8c",
+      "constitutive_models": [
+        "plasticity, combined isotropic/kinematic hardening"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "UMAT_PCLK",
+        "jgomezc1_UMAT_PCLK"
+      ],
+      "normalised_content_sha256": "0deebd0de0d8def5a1054ec12fb1681a1c8765416d5ca3f175aa373ff5a34f3e",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+        "internal-Jacobian round (repository_umat_archive)",
+        "internal-Jacobian round (external corpus (pinned snapshot))",
+        "higher-order convergence study",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [
+        "https://github.com/jgomezc1/ABAQUS-US.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_PCLK",
+          "origin": "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "UMAT_PCLK",
+          "origin": "internal-Jacobian round (repository_umat_archive)",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_PCLK",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": true
+        },
+        {
+          "event": "TABLE-4 higher order",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "UMAT_PCLK",
+          "origin": "higher-order convergence study"
+        },
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "UMAT_PCLK",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "CORPUS offline round",
+        "TABLE-3 internal Jacobian",
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "6a54167f4f04ecf17fad16c9df9b2f5b": {
+      "canonical_source_id": "6a54167f4f04ecf17fad16c9df9b2f5b",
+      "closure_size": 1,
+      "code_only_sha256": "e5bbcaec275fc9a106f58481076be3cb22f66e2bee39f33592a6eab85fdf0076",
+      "constitutive_models": [
+        "isotropic elasticity"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_eco"
+      ],
+      "normalised_content_sha256": "ca7f29d140c5ce6ddf4de52012f68867822db97697e37f1f290878a32b3b8343",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_eco",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_eco",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "700abc565157ebbf8f8f602eba31cfa5": {
+      "canonical_source_id": "700abc565157ebbf8f8f602eba31cfa5",
+      "closure_size": 1,
+      "code_only_sha256": "834f352eda3190953a31ce63fd862fa08d279ff7644db9adc17cccb2c74c7797",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "perzyna_vp_props"
+      ],
+      "normalised_content_sha256": "6a1fca9175aca48ea185b2c9b80b630fd8297d85925c1e82363cd23d66d0b796",
+      "origins": [
+        "UMATs archive (in-repository copy)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [],
+      "verified_by": []
+    },
+    "71d6e827ce64823a571212c35ba42752": {
+      "canonical_source_id": "71d6e827ce64823a571212c35ba42752",
+      "closure_size": 1,
+      "code_only_sha256": "259fc3419802a8fca83c6b202f963703ceb5cc6f0705f082340e11f203b75f31",
+      "constitutive_models": [
+        "viscoplastic damage, combined hardening, thermomechanical"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "UMAT_NKH_1.02",
+        "jgomezc1_UMAT_NKH_1.02"
+      ],
+      "normalised_content_sha256": "c8d5506060d4cd359adadb2ae7633f206e68db8da215c50f0a564e8bc57ce1d3",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+        "internal-Jacobian round (repository_umat_archive)",
+        "internal-Jacobian round (external corpus (pinned snapshot))",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [
+        "https://github.com/jgomezc1/ABAQUS-US.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_NKH_1.02",
+          "origin": "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+          "verified": false
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "UMAT_NKH_1.02",
+          "origin": "internal-Jacobian round (repository_umat_archive)",
+          "verified": false
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_NKH_1.02",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": false
+        },
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "UMAT_NKH_1.02",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "7b8ba70f5c395df8d9f85726de298183": {
+      "canonical_source_id": "7b8ba70f5c395df8d9f85726de298183",
+      "closure_size": 1,
+      "code_only_sha256": "a6eba4e937d859c2d138709640a2b9242c86f5d3ed3b800d8ea07fa0c7e52573",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "spin_elas_def"
+      ],
+      "normalised_content_sha256": "907817439df88169d5518c3cf670ad1a1e69ad50edaa7fe5506e2097b364e088",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "spin_elas_def",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "855af2b7c3dacb9d067e01c6304138c5": {
+      "canonical_source_id": "855af2b7c3dacb9d067e01c6304138c5",
+      "closure_size": 1,
+      "code_only_sha256": "d5a8bda65d85ba265d4ff91bf0932b0bf17e2120a7d4bac3faec88521b28baa0",
+      "constitutive_models": [
+        "hyperelasticity (Mooney-Rivlin, small strain)"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_mooney_small"
+      ],
+      "normalised_content_sha256": "30e80bfbea805a1eb9d4f3167400465bff374ba91867928531368444950f5544",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_mooney_small",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_mooney_small",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "8603a12db0823e1114a32931d95f9fcf": {
+      "canonical_source_id": "8603a12db0823e1114a32931d95f9fcf",
+      "closure_routines": [
+        "KCLEAR",
+        "KCLEARV",
+        "KDAMACAL",
+        "KMATSUB",
+        "KMAVEC",
+        "KMMULT",
+        "KMTRAN",
+        "KPROYECTOR",
+        "KSMULT",
+        "KSPECTRAL",
+        "KUHARDNLIN",
+        "KUPDVEC",
+        "UMAT",
+        "VSPRATE"
+      ],
+      "closure_size": 14,
+      "code_only_sha256": "3745237ca799922dad909c49a70ea091a9fc6fefd15a7cb025f18f9c2ea4f39f",
+      "constitutive_models": [
+        "viscoplastic damage, Cosserat, thermomechanical"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "dependency_closure",
+      "labels": [
+        "UMAT_VPDCO",
+        "jgomezc1_UMAT_VPDCO"
+      ],
+      "normalised_content_sha256": "d0c061d2f10e52275feddf9b94744e9767c3a6e9683cf364125e76ee049998f7",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+        "internal-Jacobian round (repository_umat_archive)",
+        "internal-Jacobian round (external corpus (pinned snapshot))",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "dependency_closure"
+      ],
+      "upstream_repositories": [
+        "https://github.com/jgomezc1/ABAQUS-US.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_VPDCO",
+          "origin": "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "UMAT_VPDCO",
+          "origin": "internal-Jacobian round (repository_umat_archive)",
+          "verified": false
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_VPDCO",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": true
+        },
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "UMAT_VPDCO",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "CORPUS offline round",
+        "TABLE-3 internal Jacobian",
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "a676f0c974bb289877a569eac3c812f2": {
+      "canonical_source_id": "a676f0c974bb289877a569eac3c812f2",
+      "closure_routines": [
+        "KCLEAR",
+        "KCLEARV",
+        "KMATSUB",
+        "KMAVEC",
+        "KMMULT",
+        "KMTRAN",
+        "KPROYECTOR",
+        "KSMULT",
+        "KSPECTRAL",
+        "KUHARD",
+        "KUPDVEC",
+        "UMAT"
+      ],
+      "closure_size": 12,
+      "code_only_sha256": "01c107eac198b4c2588c7fce5ba8a34bd4592e3949e797ded86c185629f2d9d0",
+      "constitutive_models": [
+        "reduced Cosserat couple-stress plasticity"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "dependency_closure",
+      "labels": [
+        "UMAT_PCO",
+        "jgomezc1_UMAT_PCO"
+      ],
+      "normalised_content_sha256": "a69f98cb2a4a113669917cb02124f635cce1e6d361c82bfd8d46c8f63de85c73",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+        "internal-Jacobian round (repository_umat_archive)",
+        "internal-Jacobian round (external corpus (pinned snapshot))",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "dependency_closure"
+      ],
+      "upstream_repositories": [
+        "https://github.com/jgomezc1/ABAQUS-US.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_PCO",
+          "origin": "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "UMAT_PCO",
+          "origin": "internal-Jacobian round (repository_umat_archive)",
+          "verified": false
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_PCO",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": true
+        },
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "UMAT_PCO",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "CORPUS offline round",
+        "TABLE-3 internal Jacobian",
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "ad85f2b455cec37e75bfa0f39194418f": {
+      "canonical_source_id": "ad85f2b455cec37e75bfa0f39194418f",
+      "closure_size": 1,
+      "code_only_sha256": "a501bb2e725aee83edb6c04dbf1bfd975fb9219defcbbef3e9a0717c75713933",
+      "constitutive_models": [
+        "J2 plasticity, kinematic hardening"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_j2_kinematic"
+      ],
+      "normalised_content_sha256": "2132d500960dde8fe0aca64c3a64586c1ee93d0b5e084b727be3a204a9fc27b9",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_j2_kinematic",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_j2_kinematic",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "adbf5968a37861c3ff2ec07fd8f47006": {
+      "canonical_source_id": "adbf5968a37861c3ff2ec07fd8f47006",
+      "closure_routines": [
+        "KCRSS",
+        "KCURLET",
+        "KDETER",
+        "KDIRNS",
+        "KDOTPROD",
+        "KFINDNEIGHBOURHOOD",
+        "KGMATVEC6",
+        "KGNDL2ET",
+        "KHARDENING",
+        "KMAT",
+        "KMATERIALPARAM",
+        "KMATVEC6",
+        "KRHOTWININIT",
+        "KSLIP0",
+        "KSLIP5ET",
+        "KSLIP6ET",
+        "KSLIPPOWERLAW",
+        "KTWINROT",
+        "KTWINVOLFRACINTEGRAL",
+        "KVECMAT6",
+        "KVECPROD",
+        "LAPINVERSE",
+        "ROTORD4SIG",
+        "TRACE",
+        "UMAT"
+      ],
+      "closure_size": 25,
+      "code_only_sha256": "d11ec99edc2045ed9963ac42c4ea8b1d7b262e03eae49c69f150d42113a69b7f",
+      "constitutive_models": [
+        "crystal plasticity, finite strain, COMMON-block state"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "dependency_closure",
+      "labels": [
+        "ngrilli_umat"
+      ],
+      "normalised_content_sha256": "16f788bf072126966698ef3c453792a15139c22a4798c94155f493e8d1169223",
+      "origins": [
+        "external corpus: https://github.com/ngrilli/Oxford_Crystal_Plasticity.git@85102ed35dc4",
+        "internal-Jacobian round (external corpus (pinned snapshot))"
+      ],
+      "source_structures": [
+        "dependency_closure"
+      ],
+      "upstream_repositories": [
+        "https://github.com/ngrilli/Oxford_Crystal_Plasticity.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "ngrilli_umat",
+          "origin": "external corpus: https://github.com/ngrilli/Oxford_Crystal_Plasticity.git@85102ed35dc4",
+          "verified": false
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "ngrilli_umat",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": false
+        }
+      ],
+      "verified_by": []
+    },
+    "b48f625e738a6ae568dbd65799c0a228": {
+      "canonical_source_id": "b48f625e738a6ae568dbd65799c0a228",
+      "closure_size": 1,
+      "code_only_sha256": "f2b26ced1c7a17c18c3ca5687faf460ac15ff67bd9cc20d739de8aad61ae3b89",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "UMAT_HIN"
+      ],
+      "normalised_content_sha256": "4db63af313cc9694fd57dcd1f8f0190b062ea7d78515cd70040f1202c9711a0b",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "UMAT_HIN",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "be15267d2ec831a907d34e0c86e41782": {
+      "canonical_source_id": "be15267d2ec831a907d34e0c86e41782",
+      "closure_size": 1,
+      "code_only_sha256": "abb2d85db3303fa9accf5e1b6044e0c29f93b5669c43dfb206e97e23334cde9a",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "elastic_props"
+      ],
+      "normalised_content_sha256": "810039f30911afedaf353a44caacb37a2645487b87ec97203f4c15dfab164183",
+      "origins": [
+        "UMATs archive (in-repository copy)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [],
+      "verified_by": []
+    },
+    "be8b5c72058158fa0ab78674394f95de": {
+      "canonical_source_id": "be8b5c72058158fa0ab78674394f95de",
+      "closure_size": 1,
+      "code_only_sha256": "a5ebf99117cf2973cd41b1a67b4afd222a02a1c85a715f21e6f394ee23a6a18f",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "UMAT_VPDCL_R"
+      ],
+      "normalised_content_sha256": "9ade2c446c729b35f25c59f030b60a1a673998bc131c8c4e0c476344b0694330",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "UMAT_VPDCL_R",
+          "origin": "archived paired Abaqus campaign",
+          "verified": false
+        }
+      ],
+      "verified_by": []
+    },
+    "d2d3202099e586c7c1d438205111859e": {
+      "canonical_source_id": "d2d3202099e586c7c1d438205111859e",
+      "closure_size": 1,
+      "code_only_sha256": "fac33a069c8b060cd72c567ab35a645ed1c7378da9371b2a169dd00fa700183d",
+      "constitutive_models": [
+        "anisotropic elasticity (transversely isotropic)"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_transiso"
+      ],
+      "normalised_content_sha256": "5abc12382555846b99eb4abc4dfbc411c89c23ff4cd361c1626cf47ab2e64532",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_transiso",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_transiso",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "da51e7fdcbfd680871de159674f93622": {
+      "canonical_source_id": "da51e7fdcbfd680871de159674f93622",
+      "closure_size": 1,
+      "code_only_sha256": "03cae42cafaa0e5f251125dad86779df82f2df06e421e83d71294bce808e5cd4",
+      "constitutive_models": [
+        "J2 plasticity, isotropic hardening"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "m3_j2"
+      ],
+      "normalised_content_sha256": "571fb0b6df392acb7c089ffed95185681c8473533aeaf0ea3faac2e654722d5a",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "m3_j2",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "m3_j2",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "dc956b716edc088fbac7c0f525bbf832": {
+      "canonical_source_id": "dc956b716edc088fbac7c0f525bbf832",
+      "closure_size": 1,
+      "code_only_sha256": "223ce1acb0d40dc4a795986804e3263eb80cb401a372a5662db35b6029ec33e0",
+      "constitutive_models": [
+        "linear viscoelasticity"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_maxwell_ve"
+      ],
+      "normalised_content_sha256": "6b2fa17f9681b8c9fe3005094f456ac33e7c252aa1fc0d07f32e006f74bccc15",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_maxwell_ve",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_maxwell_ve",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "e1fc2b536d647ecd7cb64d10a2c895fe": {
+      "canonical_source_id": "e1fc2b536d647ecd7cb64d10a2c895fe",
+      "closure_size": 1,
+      "code_only_sha256": "b68b3e2fa9acd49c06ab6f89304cd8f7014307d143888e9fdaba329fdd84fa45",
+      "constitutive_models": [
+        "classical J2 plasticity, isotropic hardening"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "UMAT_PCL",
+        "jgomezc1_UMAT_PCL"
+      ],
+      "normalised_content_sha256": "b29e21d6ddcd297011554ec012954df2d4fb1f3f314f466e1e4746f42c9fe720",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+        "internal-Jacobian round (repository_umat_archive)",
+        "internal-Jacobian round (external corpus (pinned snapshot))",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [
+        "https://github.com/jgomezc1/ABAQUS-US.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_PCL",
+          "origin": "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "UMAT_PCL",
+          "origin": "internal-Jacobian round (repository_umat_archive)",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "jgomezc1_UMAT_PCL",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": true
+        },
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "UMAT_PCL",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "CORPUS offline round",
+        "TABLE-3 internal Jacobian",
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "e81602f2cdc49b11407956d6b3342b8e": {
+      "canonical_source_id": "e81602f2cdc49b11407956d6b3342b8e",
+      "closure_size": 1,
+      "code_only_sha256": "5e611865065a13abea883060ec908ba5b6f2cf8ea08c9f0b0d7ef6ce63982bab",
+      "constitutive_models": [
+        "thermoelasticity"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_real_ECL_TEMP"
+      ],
+      "normalised_content_sha256": "ca14e404587345c6c7e326cbc4009aea04bbb4ca56989d8a2d5c9cf547419cbf",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_real_ECL_TEMP",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_real_ECL_TEMP",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "ed92657c6b8d26fa96a1fb0ef26a8b1e": {
+      "canonical_source_id": "ed92657c6b8d26fa96a1fb0ef26a8b1e",
+      "closure_size": 1,
+      "code_only_sha256": "c90eb26376eee6ec0dcade4a132c922cb89d8d37f965eafc4562f21feb643f2a",
+      "constitutive_models": [
+        "J2 plasticity, bilinear isotropic hardening"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_j2_bilinear"
+      ],
+      "normalised_content_sha256": "f23f4d97cb3efcb5165fb8c41ec0b0a001f7c62c684206947696161fffb979e9",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_j2_bilinear",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_j2_bilinear",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "f0951dbacc1e257f19b746056ab2a8d2": {
+      "canonical_source_id": "f0951dbacc1e257f19b746056ab2a8d2",
+      "closure_size": 1,
+      "code_only_sha256": "3848c18bbc5f211e96ac967419bbb76959db07a3b6b98c139ba66540912f6810",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "UMAT_PCLI_R"
+      ],
+      "normalised_content_sha256": "3d96801660fe94a4de34b6ce745111a4f53a1e0f4a67b32cfb8d42dd33347b61",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "UMAT_PCLI_R",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "f16ab8d2cd6fd6ec2377b26f8ed9238b": {
+      "canonical_source_id": "f16ab8d2cd6fd6ec2377b26f8ed9238b",
+      "closure_size": 1,
+      "code_only_sha256": "ea1fd87b58bc94303ed2ff46bbc77269e88b9af0401439ee21e4b84c2e0ce0f7",
+      "constitutive_models": [],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "code_imp"
+      ],
+      "normalised_content_sha256": "115b8a1a36f7d243dd8507189188bb5f0540d194ab609d259d31df1f13ff931b",
+      "origins": [
+        "UMATs archive (in-repository copy)",
+        "higher-order convergence study",
+        "archived paired Abaqus campaign"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-4 higher order",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "code_imp",
+          "origin": "higher-order convergence study"
+        },
+        {
+          "event": "TABLE-2 paired Abaqus",
+          "execution_environment": "Slurm job 791506 on c015 with GNU Fortran (GCC) 13.3.0; Abaqus version not recorded",
+          "label": "code_imp",
+          "origin": "archived paired Abaqus campaign",
+          "verified": true
+        }
+      ],
+      "verified_by": [
+        "TABLE-2 paired Abaqus"
+      ]
+    },
+    "f6e93b7b4a0ad488fc1f30892808196e": {
+      "canonical_source_id": "f6e93b7b4a0ad488fc1f30892808196e",
+      "closure_size": 1,
+      "code_only_sha256": "37a5d3691c45261b144e749191a82fab1d2e54d0994b59559e04c95ae2a165a3",
+      "constitutive_models": [
+        "isotropic elasticity"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "sweep_lame_elastic"
+      ],
+      "normalised_content_sha256": "83fc105250a8b3f2ee646e8e5b8586711e10e16d247bc3b9bef346c7b2b704e4",
+      "origins": [
+        "parameter_sensitivity benchmark set",
+        "internal-Jacobian round (repository)"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [],
+      "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_lame_elastic",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_lame_elastic",
+          "origin": "internal-Jacobian round (repository)",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
+    },
+    "fb23d6963fe5971aaba22f4fa6e82a9a": {
+      "canonical_source_id": "fb23d6963fe5971aaba22f4fa6e82a9a",
+      "closure_size": 1,
+      "code_only_sha256": "56d90c1a85672b1428a7be2d4a3445199488ddae847e660c79e282f6d269e374",
+      "constitutive_models": [
+        "neo-Hookean hyperelasticity, finite strain"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "single_file",
+      "labels": [
+        "lucarini_neohookean"
+      ],
+      "normalised_content_sha256": "100d0d514d12a70225654eb6a2e3ce20f7aaa791ce1c7012a985754bbdeaa361",
+      "origins": [
+        "external corpus: https://github.com/sergiolucarini/UMAT4COMSOL.git@e62506fd8426",
+        "internal-Jacobian round (external corpus (pinned snapshot))"
+      ],
+      "source_structures": [
+        "single_file"
+      ],
+      "upstream_repositories": [
+        "https://github.com/sergiolucarini/UMAT4COMSOL.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "lucarini_neohookean",
+          "origin": "external corpus: https://github.com/sergiolucarini/UMAT4COMSOL.git@e62506fd8426",
+          "verified": true
+        },
+        {
+          "event": "TABLE-3 internal Jacobian",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "lucarini_neohookean",
+          "origin": "internal-Jacobian round (external corpus (pinned snapshot))",
+          "verified": false
+        }
+      ],
+      "verified_by": [
+        "CORPUS offline round"
+      ]
+    }
+  }
+}
