@@ -290,6 +290,14 @@ def _row(*, identity, origin, provenance, license, source, contract, v2,
             if entry["status"] != "succeeded" and entry.get("reason"):
                 blocker = f"internal_jacobian/{name}: {entry['reason']}"
                 break
+    if not blocker and paired and not str(paired["status"]).startswith("passed"):
+        # A source whose only validation route was the Abaqus paired round, and
+        # which failed there, was reporting no blocker at all -- the one row in
+        # the collection that looked unexplained.
+        blocker = (f"abaqus: the paired round recorded "
+                   f"{paired['status']} for this source (slurm "
+                   f"{paired['slurm_job_id']}), and it has not been run through "
+                   "the offline pipeline")
 
     canonical = canonical_identity(source, roots=[source.parent])
     return {

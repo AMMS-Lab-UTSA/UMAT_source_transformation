@@ -12,17 +12,17 @@
       "TABLE-2 paired Abaqus": 19,
       "TABLE-3 internal Jacobian": 39,
       "TABLE-4 higher order": 4,
-      "TABLE-6 parameter sensitivity": 18
+      "TABLE-6 parameter sensitivity": 20
     },
-    "verified_unique_sources": 36,
+    "verified_unique_sources": 37,
     "verified_unique_sources_by_event": {
       "CORPUS offline round": 7,
       "TABLE-2 paired Abaqus": 17,
       "TABLE-3 internal Jacobian": 6,
-      "TABLE-6 parameter sensitivity": 17
+      "TABLE-6 parameter sensitivity": 18
     }
   },
-  "generated_at": "2026-08-25T20:56:21.086788+00:00",
+  "generated_at": "2026-08-26T14:51:59.511076+00:00",
   "policy": "Identity is computed from normalised source content (single file) or from the resolved routine closure (multi-file). Paths are excluded: the same closure lives at different relative paths in different origins, and hashing layout would make identical code hash differently.",
   "schema": "umat-oti-source-identity/1",
   "sources": {
@@ -396,6 +396,13 @@
       ],
       "upstream_repositories": [],
       "validation_events": [
+        {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_drucker_prager",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": false
+        },
         {
           "event": "TABLE-3 internal Jacobian",
           "execution_environment": "local gfortran material-point driver",
@@ -861,6 +868,13 @@
       "upstream_repositories": [],
       "validation_events": [
         {
+          "event": "TABLE-6 parameter sensitivity",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "sweep_perzyna_linear",
+          "origin": "parameter_sensitivity benchmark set",
+          "verified": true
+        },
+        {
           "event": "TABLE-3 internal Jacobian",
           "execution_environment": "local gfortran material-point driver",
           "label": "sweep_perzyna_linear",
@@ -868,7 +882,9 @@
           "verified": false
         }
       ],
-      "verified_by": []
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
     },
     "616699c08d50aab2e657aa92159fee4d": {
       "canonical_source_id": "616699c08d50aab2e657aa92159fee4d",

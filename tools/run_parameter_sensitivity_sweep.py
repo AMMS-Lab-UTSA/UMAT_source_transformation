@@ -48,11 +48,11 @@ RESULTS = REPO_ROOT / "paper_results" / "parameter_sensitivity"
 
 REQUIRED = (
     "m1_elastic", "m2_cubic", "m3_j2", "m5_cpflow", "m6_fcc",
-    "sweep_aniso_ortho", "sweep_damage_elastic", "sweep_eco",
-    "sweep_j2_bilinear", "sweep_j2_combined", "sweep_j2_kinematic",
-    "sweep_lame_elastic", "sweep_maxwell_ve", "sweep_mooney_small",
-    "sweep_real_ECL_TEMP", "sweep_real_PCO", "sweep_thermoelastic",
-    "sweep_transiso",
+    "sweep_aniso_ortho", "sweep_damage_elastic", "sweep_drucker_prager",
+    "sweep_eco", "sweep_j2_bilinear", "sweep_j2_combined",
+    "sweep_j2_kinematic", "sweep_lame_elastic", "sweep_maxwell_ve",
+    "sweep_mooney_small", "sweep_perzyna_linear", "sweep_real_ECL_TEMP",
+    "sweep_real_PCO", "sweep_thermoelastic", "sweep_transiso",
 )
 
 
@@ -268,6 +268,38 @@ def _readjudicate_at_converged_step(rows, *, executable, props, path, ntens,
     return updated, evidence
 
 
+def _unresolved_reason(rows, disagreeing, unresolved) -> str | None:
+    """Say which of the two reasons a reference could not adjudicate applies.
+
+    They are different findings. A noise-floor row means the difference is
+    smaller than the method can measure. A branch-crossing row means the
+    stencil straddled a kink and measured a secant across it -- which is a
+    statement about where the model yields, not about resolution. Reporting
+    both as "sit at the noise floor" put a discontinuity finding under a
+    precision heading.
+    """
+    if not disagreeing and not unresolved:
+        return None
+    parts = []
+    if disagreeing:
+        parts.append(f"{len(disagreeing)} of {len(rows)} rows disagree with the "
+                     "centred-difference reference")
+    crossing = [r for r in unresolved if r.branch_crossing]
+    noise = [r for r in unresolved if not r.branch_crossing]
+    if noise:
+        parts.append(f"{len(noise)} of {len(rows)} rows sit at the "
+                     "centred-difference noise floor and cannot be resolved by it")
+    if crossing:
+        increments = sorted({r.increment for r in crossing})
+        where = ", ".join(str(i) for i in increments)
+        parts.append(
+            f"{len(crossing)} of {len(rows)} rows sit on a branch boundary "
+            f"(increment{'s' if len(increments) > 1 else ''} {where}), where the "
+            "centred difference straddles the kink and returns a secant rather "
+            "than the derivative on the branch the increment took")
+    return "; ".join(parts)
+
+
 def _execute_and_verify(model: str, contract: dict, out: Path, record: dict) -> None:
     """Build+run the OTI driver, check primal parity, then compare against FD.
 
@@ -402,6 +434,16 @@ def _execute_and_verify(model: str, contract: dict, out: Path, record: dict) -> 
         "rows_agreeing": len(agreeing),
         "rows_disagreeing": len(disagreeing),
         "rows_reference_unresolved": len(unresolved),
+        # Split out, because the two reasons a reference cannot adjudicate are
+        # different findings: one says the difference is too small to measure,
+        # the other says the stencil crossed a kink and measured the wrong
+        # thing. Pooling them hides which increments carry a discontinuity.
+        "rows_reference_unresolved_at_noise_floor":
+            sum(1 for r in unresolved if not r.branch_crossing),
+        "rows_reference_unresolved_by_branch_crossing":
+            sum(1 for r in unresolved if r.branch_crossing),
+        "increments_with_branch_crossing":
+            sorted({r.increment for r in rows if r.branch_crossing}),
         "rows_substantive": len(substantive),
         "worst_relative_error": max((r.relative_error for r in substantive
                                      if r.relative_error is not None), default=None),
@@ -410,17 +452,11 @@ def _execute_and_verify(model: str, contract: dict, out: Path, record: dict) -> 
         "verdict_meaning": {
             "succeeded": "every row resolved and agreed",
             "failed": "at least one row disagrees with a reference that can adjudicate it",
-            "unresolved": ("no row disagrees; some sit below what centred "
-                           "differences can resolve, so those directions are "
+            "unresolved": ("no row disagrees; some cannot be adjudicated by "
+                           "centred differences, so those directions are "
                            "withheld rather than claimed"),
         }[verdict],
-        "reason": None if (not disagreeing and not unresolved) else
-                  (f"{len(disagreeing)} of {len(rows)} rows disagree with the "
-                   f"centred-difference reference" if disagreeing else "")
-                  + ("; " if disagreeing and unresolved else "")
-                  + (f"{len(unresolved)} of {len(rows)} rows sit at the "
-                     f"centred-difference noise floor and cannot be resolved by it"
-                     if unresolved else ""),
+        "reason": _unresolved_reason(rows, disagreeing, unresolved),
     }
     record["verified_parameter_directions"] = verified_directions
     record["comparison_rows"] = [r.as_dict() for r in rows]
@@ -470,9 +506,10 @@ def main(argv: list[str] | None = None) -> int:
         results_dir = RESULTS if not args.models else args.work_dir / "results"
     results_dir.mkdir(parents=True, exist_ok=True)
     if results_dir != RESULTS:
-        print(f"partial round ({len(models)} of {len(REQUIRED)} models): "
-              f"writing to {results_dir}, leaving the published round untouched",
-              flush=True)
+        scope = ("full round" if len(models) == len(REQUIRED)
+                 else f"partial round ({len(models)} of {len(REQUIRED)} models)")
+        print(f"{scope}: writing to {results_dir}, leaving the published round "
+              "untouched", flush=True)
 
     records = [run_model(m, args.work_dir) for m in models]
 
@@ -575,14 +612,15 @@ def main(argv: list[str] | None = None) -> int:
         writer.writerow(["model", "increment", "array", "component", "parameter",
                          "props_index", "oti_direction", "oti", "reference",
                          "absolute_error", "relative_error", "judged_by",
-                         "agrees", "branch"])
+                         "agrees", "branch", "branch_crossing"])
         for r in records:
             for row in r.get("comparison_rows", []):
                 writer.writerow([r["model"], row["increment"], row["array"],
                                  row["component"], row["parameter"], row["props_index"],
                                  row["oti_direction"], row["oti"], row["reference"],
                                  row["absolute_error"], row["relative_error"],
-                                 row["judged_by"], row["agrees"], row["branch"]])
+                                 row["judged_by"], row["agrees"], row["branch"],
+                                 row.get("branch_crossing", False)])
     print(f"wrote {_display(raw)}")
 
     # Rows live in the CSV; keep the round JSON readable. Done only *after* the

@@ -61,16 +61,33 @@ def sentences() -> list[tuple[str, str, str]]:
             f"{funnel['parameter_directions_verified']} of "
             f"{funnel['parameter_directions_declared']} directions were verified.",
             artefact))
-        unresolved = sum(m["stages"].get("derivatives_verified", {})
-                         .get("rows_reference_unresolved", 0)
-                         for m in sweep.get("models", []))
+        stages = [m["stages"].get("derivatives_verified", {})
+                  for m in sweep.get("models", [])]
+        unresolved = sum(s.get("rows_reference_unresolved", 0) for s in stages)
+        noise = sum(s.get("rows_reference_unresolved_at_noise_floor", 0)
+                    for s in stages)
+        crossing = sum(s.get("rows_reference_unresolved_by_branch_crossing", 0)
+                       for s in stages)
         if unresolved:
+            # The two reasons a reference cannot adjudicate are different
+            # findings, and pooling them once described a set of rows sitting on
+            # a yield surface as rows too small to measure.
+            reasons = []
+            if noise:
+                reasons.append(
+                    f"{noise} carry quantities below what a centred difference "
+                    "can resolve at any step size")
+            if crossing:
+                reasons.append(
+                    f"{crossing} sit on a branch boundary, where the stencil "
+                    "straddles the kink and returns a secant across it rather "
+                    "than the derivative on the branch the increment took")
             out.append((
                 "Parameter sensitivities (Table 6)",
                 f"The remaining {unresolved} comparisons are withheld rather than "
-                "claimed: their quantities sit below what a centred difference can "
-                "resolve at any step size, so the reference cannot adjudicate them "
-                "and the affected directions are not counted as verified.",
+                "claimed: " + "; ".join(reasons) + ". In neither case can the "
+                "reference adjudicate the value, so the affected directions are "
+                "not counted as verified.",
                 artefact))
 
     jac = _load(RESULTS / "internal_jacobians" / "internal_jacobian_round.json")
