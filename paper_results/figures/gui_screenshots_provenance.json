@@ -1,73 +1,131 @@
 {
   "app": "src/umat_oti/app/workbench_app.py",
-  "captured_at": "2026-08-26T15:35:17.452042+00:00",
-  "commit": "652bb5f27033bc7a89f621cf285447762f9480e5",
-  "device_scale_factor": 2,
-  "example_project": "parameter_sensitivity/models/m3_j2/umat.for",
-  "note": "Captured from the tested interface driving the real backend. Paths are repository-relative and the example project ships with the repository, so no personal path appears in the figures or in this record.",
-  "page_reported_derivative_products": true,
-  "page_reported_outcomes": {
-    "DDSDDE": "NOT REQUESTED",
-    "DSIGMA_DP": "PASS",
-    "DSTATEV_DP": "PASS",
-    "HIGHER_ORDER_STRESS": "NOT REQUESTED",
-    "INTERNAL_JACOBIAN": "UNSUPPORTED"
-  },
-  "page_reported_primal_parity": true,
-  "regions": {
-    "figure1_gui_request": {
-      "omitted": [
-        "detected source information"
+  "command": "python tools/figures/capture_gui_screenshots.py",
+  "commit": "5cafff2898c9d9bcfeb697182672de774bd38e6f",
+  "example": "parameter_sensitivity/models/m3_j2/umat.for",
+  "generated_at": "2026-08-26T18:30:54.803265+00:00",
+  "minimum_required_pt": 9.0,
+  "note": "Each screenshot is one step of the guided workflow, captured whole. Nothing is composited and nothing is cropped away except the browser chrome. The example ships with the repository, so no personal path appears.",
+  "placed_width_in": 6.2,
+  "screenshots": {
+    "figure_gui_material": {
+      "overflow": {
+        "clientWidth": 820,
+        "overflowing": [],
+        "scrollWidth": 820
+      },
+      "pdf": "paper_results/figures/figure_gui_material.pdf",
+      "pixels": [
+        1604,
+        2134
       ],
-      "shown": [
-        "source and dependencies",
-        "dimensions, properties and state",
-        "derivative products and loading history"
-      ]
+      "placed_height_in": 8.25,
+      "png": "paper_results/figures/figure_gui_material.png",
+      "png_sha256": "bb9961cb036d32b8ac88e5473006abb1f67051d363b16d085927af4ef8adfcba",
+      "purpose": "The material description, prefilled from the example's committed contract.",
+      "region": "div.block-container",
+      "smallest_text_printed_pt": 9.25,
+      "step_heading": "2. Material model",
+      "visible_text_head": "UMAT-OTI workbench\n\nGenerate and verify derivatives of an Abaqus UMAT, without editing the subroutine.\n\n1. Source\n2. Material model\n3. Derivatives and loading\n4. Run and results\n\nm3_j2 \u00b7 fixed form \u00b7 1 routine \u00b7 0 local Newton solves \u00b7 NTENS 6 \u00b7 NSTATV 1 \u00b7 4 constants\n\n2. Material model\n\nDescribe the material the subroutine expects.\n\nMaterial constants\n\nPROPS is the vector of constants the subrout"
     },
-    "figure2_gui_results": {
-      "omitted": [
-        "artifacts",
-        "comparison summary"
+    "figure_gui_products": {
+      "overflow": {
+        "clientWidth": 820,
+        "overflowing": [],
+        "scrollWidth": 820
+      },
+      "pdf": "paper_results/figures/figure_gui_products.pdf",
+      "pixels": [
+        1572,
+        636
       ],
-      "shown": [
-        "pipeline stages",
-        "primal parity",
-        "derivative products"
-      ]
+      "placed_height_in": 2.51,
+      "png": "paper_results/figures/figure_gui_products.png",
+      "png_sha256": "ca384698844fa6096d66a4d2f65257dffb65d4284b8009b94a4ebe6147c6e683",
+      "purpose": "One card per derivative product, each with its outcome word, what that word means, and the numbers behind it.",
+      "region": ".st-key-results_products",
+      "smallest_text_printed_pt": 9.25,
+      "step_heading": "4. Run and results",
+      "visible_text_head": "Derivative products\n\nStress sens.\n\nState sens.\n\nInternal Jac.\n\nTangent\n\nHigher order\n\nPASS \u00a0 Stress sensitivity to material parameters \u00b7 DSIGMA_DP\n\nChecked numerically against an independent reference and agreed.\n\nrows\n\n560\n\nagreeing\n\n560\n\nreference unresolved\n\n0\n\nsubstantive rows\n\n75\n\nkeyboard_arrow_right\n\nAll reported numbers for this product"
+    },
+    "figure_gui_request": {
+      "overflow": {
+        "clientWidth": 820,
+        "overflowing": [],
+        "scrollWidth": 820
+      },
+      "pdf": "paper_results/figures/figure_gui_request.pdf",
+      "pixels": [
+        1604,
+        2042
+      ],
+      "placed_height_in": 7.89,
+      "png": "paper_results/figures/figure_gui_request.png",
+      "png_sha256": "135d5ab3b091e921f32fb8e855069e17506cf556123e5045515b207497f243d8",
+      "purpose": "Choosing what to compute, with an unsupported product reported before the run rather than after it.",
+      "region": "div.block-container",
+      "smallest_text_printed_pt": 9.25,
+      "step_heading": "3. Derivatives and loading",
+      "visible_text_head": "UMAT-OTI workbench\n\nGenerate and verify derivatives of an Abaqus UMAT, without editing the subroutine.\n\n1. Source\n2. Material model\n3. Derivatives and loading\n4. Run and results\n\nm3_j2 \u00b7 fixed form \u00b7 1 routine \u00b7 0 local Newton solves \u00b7 NTENS 6 \u00b7 NSTATV 1 \u00b7 4 constants\n\n3. Derivatives and loading\n\nChoose what to compute, and how to load it.\n\nWhat should be computed?\n\nConsistent tangent \u00b7 DDSDDE\n\nIn"
+    },
+    "figure_gui_results": {
+      "overflow": {
+        "clientWidth": 820,
+        "overflowing": [],
+        "scrollWidth": 820
+      },
+      "pdf": "paper_results/figures/figure_gui_results.pdf",
+      "pixels": [
+        1572,
+        1582
+      ],
+      "placed_height_in": 6.24,
+      "png": "paper_results/figures/figure_gui_results.png",
+      "png_sha256": "7758feba362ed30a6ac2dbbddfbc6229806a229c9d22a64cc153c6a012db8bf8",
+      "purpose": "The completed run: every stage, its duration, and whether the two builds agree before any derivative is compared.",
+      "region": ".st-key-results_summary",
+      "smallest_text_printed_pt": 9.25,
+      "step_heading": "4. Run and results",
+      "visible_text_head": "Results\n\nPipeline stages\n\nFurthest stage reached: Derivatives compared\n\nDo the two builds agree before any derivative is compared?\n\nPASS \u00a0 Stress and state agree between the independently compiled original and transformed builds. Worst relative difference 2.011e-16. The derivative comparisons below are therefore between comparable quantities."
+    },
+    "figure_gui_source": {
+      "overflow": {
+        "clientWidth": 820,
+        "overflowing": [],
+        "scrollWidth": 820
+      },
+      "pdf": "paper_results/figures/figure_gui_source.pdf",
+      "pixels": [
+        1604,
+        1598
+      ],
+      "placed_height_in": 6.18,
+      "png": "paper_results/figures/figure_gui_source.png",
+      "png_sha256": "6ab5e66f50ee64a277f22c17e74ae4ddbd742b4b409cd95453217d68f240e906",
+      "purpose": "Choosing the UMAT and reading what the analysis found in it.",
+      "region": "div.block-container",
+      "smallest_text_printed_pt": 9.25,
+      "step_heading": "1. Source",
+      "visible_text_head": "UMAT-OTI workbench\n\nGenerate and verify derivatives of an Abaqus UMAT, without editing the subroutine.\n\n1. Source\n2. Material model\n3. Derivatives and loading\n4. Run and results\n1. Source\n\nChoose the UMAT subroutine to differentiate.\n\nWhich UMAT do you want to differentiate?\n\nparameter_sensitivity/models/m3_j2/umat.for \u2014 prefilled from parameter_sensitivity/contracts/m3_j2.json\n\nkeyboard_arrow_rig"
     }
   },
-  "requested_products": [
-    "DSIGMA_DP",
-    "DSTATEV_DP",
-    "INTERNAL_JACOBIAN"
-  ],
-  "screenshots": {
-    "figure1_gui_request": {
-      "bytes": 145938,
-      "path": "paper_results/figures/figure1_gui_request.png",
-      "pdf": "paper_results/figures/figure1_gui_request.pdf",
-      "pdf_sha256": "2c2d66a120b91a9b6fcf514fca4357411e24148a7a537cedffdbd433fcbd0022",
-      "pixels": [
-        1424,
-        1763
-      ],
-      "sha256": "77a2fd313add060836ea43c352744830a5c81fce3dcf9c783d6ed0cae75352bd"
+  "smallest_text_css_px": 17,
+  "smallest_text_printed_pt": 9.25,
+  "supported_viewports": {
+    "1366x768": {
+      "clientWidth": 1366,
+      "overflowing": [],
+      "scrollWidth": 1366
     },
-    "figure2_gui_results": {
-      "bytes": 190368,
-      "path": "paper_results/figures/figure2_gui_results.png",
-      "pdf": "paper_results/figures/figure2_gui_results.pdf",
-      "pdf_sha256": "c6894c69ada0920475a9e834b02142f1f0b704060b721dac7654610c9ee36b52",
-      "pixels": [
-        1424,
-        1545
-      ],
-      "sha256": "4cb71ad6fb3ee48cb2caa3b9b8840bd357e43abf557f8ad94828c131e48955d4"
+    "1440x900": {
+      "clientWidth": 1440,
+      "overflowing": [],
+      "scrollWidth": 1440
     }
   },
   "viewport": {
-    "height": 1200,
-    "width": 720
+    "device_scale_factor": 2,
+    "height": 1400,
+    "width": 820
   }
 }

@@ -1,18 +1,19 @@
 {
   "command": "python tools/manuscript/build_v5_manuscript.py",
-  "commit": "44b48078d9d42b47d423eb0961721df5e9ef5b25",
-  "figure_count": 5,
+  "commit": "5cafff2898c9d9bcfeb697182672de774bd38e6f",
+  "figure_count": 6,
   "figures": [
-    "figure1_gui_request.png",
-    "figure2_gui_results.png",
-    "figure3_illustrative_derivatives.png",
-    "figure4_parameter_sensitivities.png",
-    "figure5_collection_verification.png"
+    "figure_gui_request.png",
+    "figure_gui_results.png",
+    "figure_tangent_verification.png",
+    "figure_higher_order_verification.png",
+    "figure_sensitivities.png",
+    "figure_collection_coverage.png"
   ],
-  "generated_at": "2026-08-26T15:52:28.629198+00:00",
+  "generated_at": "2026-08-26T18:35:47.221074+00:00",
   "manuscript": "docs/manuscript/UMAT_OTI_SoftwareX_V5.docx",
   "note": "V4 is not read, edited or copied by this script. Every numerical claim is substituted from the evidence; a claim the evidence does not support raises rather than producing a placeholder.",
-  "sha256": "c89d44216e3b8a19d467db108fe74aee9060aff88deabfb89f2723d1fd9a6b7e",
+  "sha256": "c0c2ae1b450d97e0acaf4e86fce86570b080177bc47f412f5e2c60fd63938778",
   "substituted_values": {
     "abaqus_cases": {
       "source": "paper_results/arc_791506/table2_abaqus_paired.csv",
@@ -203,6 +204,13 @@
       "value": 24
     }
   },
-  "word_count": 1713,
+  "supplementary_figure_count": 4,
+  "supplementary_figures": [
+    "figure_gui_source.png",
+    "figure_gui_material.png",
+    "figure_gui_products.png",
+    "figure_verification_routes.png"
+  ],
+  "word_count": 1809,
   "word_limit": 3000
 }

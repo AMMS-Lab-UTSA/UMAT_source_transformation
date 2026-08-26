@@ -1,0 +1,47 @@
+{
+  "number": 8,
+  "slug": "illustrative_row_adjudication",
+  "caption": "How every compared row of the illustrative example was adjudicated. The counts are identical at every increment within a branch, so the table carries the same information the per-increment breakdown did. An exact zero is a row where both the generated value and the reference are exactly zero; a row within the reference's resolution is one the reference cannot separate from the value.",
+  "columns": [
+    "Branch",
+    "Increments",
+    "Rows",
+    "Exact zero",
+    "Within reference",
+    "Measured",
+    "Disagreeing",
+    "Worst measured rel error"
+  ],
+  "rows": [
+    {
+      "Branch": "elastic",
+      "Increments": "1-15",
+      "Rows": 420,
+      "Exact zero": 330,
+      "Within reference": 45,
+      "Measured": 45,
+      "Disagreeing": 0,
+      "Worst measured rel error": "2.480e-08"
+    },
+    {
+      "Branch": "inelastic",
+      "Increments": "16-20",
+      "Rows": 140,
+      "Exact zero": 60,
+      "Within reference": 50,
+      "Measured": 30,
+      "Disagreeing": 0,
+      "Worst measured rel error": "2.252e-08"
+    },
+    {
+      "Branch": "all",
+      "Increments": "1-20",
+      "Rows": 560,
+      "Exact zero": 390,
+      "Within reference": 95,
+      "Measured": 75,
+      "Disagreeing": 0,
+      "Worst measured rel error": "2.480e-08"
+    }
+  ]
+}

@@ -57,9 +57,13 @@ PRODUCTS = (
 )
 
 #: Every outcome a product can have. "compiled" is deliberately distinct from
-#: "verified", and "not_requested" is distinct from "blocked".
+#: "verified", "not_requested" is distinct from "blocked", and "partial" exists
+#: because a product whose comparison left some entries unadjudicated was
+#: reporting "verified" on the strength of the entries that were: agreement on
+#: part of an array is not agreement on the array.
 OUTCOMES = (
     "verified",
+    "partial",
     "failed",
     "unresolved",
     "blocked",
@@ -202,6 +206,9 @@ class WorkbenchResult:
     comparison: dict = field(default_factory=dict)
     dependency_graph: dict = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
+    #: The last stage that succeeded. Read by the interface; without it every
+    #: reader of `result.furthest_stage` silently got None.
+    furthest_stage: Optional[str] = None
 
     @property
     def ok(self) -> bool:
@@ -217,6 +224,7 @@ class WorkbenchResult:
             "comparison": self.comparison,
             "products": {k: v.as_dict() for k, v in sorted(self.products.items())},
             "artifacts": self.artifacts,
+            "furthest_stage": self.furthest_stage,
             "errors": self.errors,
         }
 
@@ -335,6 +343,7 @@ def run_workbench(request: WorkbenchRequest, work_dir: Path) -> WorkbenchResult:
     result.stages = record.get("stages", {})
     result.comparison = record.get("comparison", {})
     result.primal_parity = result.stages.get("primal_parity", {})
+    result.furthest_stage = record.get("furthest_stage")
 
     for name, relative in (
             ("resolved_source", f"pipeline/{request.name}_resolved.for"),
@@ -354,12 +363,22 @@ def run_workbench(request: WorkbenchRequest, work_dir: Path) -> WorkbenchResult:
 
     for product in sensitivity:
         if verdict.get("status") == "succeeded":
-            outcome = ProductOutcome(
-                product, "verified",
-                detail={"rows": result.comparison.get("rows"),
-                        "substantive_rows": result.comparison.get("substantive_rows"),
-                        "worst_substantive_relative_error":
-                            result.comparison.get("worst_substantive_relative_error")})
+            unresolved = int(result.comparison.get("reference_unresolved") or 0)
+            detail = {"rows": result.comparison.get("rows"),
+                      "agreeing": result.comparison.get("agreeing"),
+                      "reference_unresolved": unresolved,
+                      "substantive_rows": result.comparison.get("substantive_rows"),
+                      "worst_substantive_relative_error":
+                          result.comparison.get("worst_substantive_relative_error")}
+            if unresolved:
+                outcome = ProductOutcome(
+                    product, "partial",
+                    f"{unresolved} of {result.comparison.get('rows')} entries "
+                    "could not be adjudicated by the reference, so they are "
+                    "withheld rather than counted either way",
+                    detail=detail)
+            else:
+                outcome = ProductOutcome(product, "verified", detail=detail)
         elif verdict.get("status") == "unresolved":
             outcome = ProductOutcome(
                 product, "unresolved", verdict.get("reason"),

@@ -9,5 +9,5 @@ Requested products,input,"DDSDDE, INTERNAL_JACOBIAN, HIGHER_ORDER_STRESS, DSIGMA
 Transformed source,output,Fortran 90 with OTI arithmetic,compiles against the generated OTI module
 Derivative arrays,output,one CSV per requested product,"per increment, component and parameter"
 Primal response,output,stress and state per increment,compared between the two builds before any derivative is judged
-Comparison report,output,per-row verdicts and their reasons,"outcomes: verified, failed, unresolved, blocked, unsupported, not_requested, compiled"
+Comparison report,output,per-row verdicts and their reasons,"outcomes: verified, partial, failed, unresolved, blocked, unsupported, not_requested, compiled"
 Run manifest,output,JSON recording every stage,each gate carries its own status and reason

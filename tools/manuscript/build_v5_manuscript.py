@@ -62,33 +62,63 @@ def _omission_sentence(stem: str) -> str:
 
 
 FIGURE_FILES = [
-    ("figure1_gui_request.png",
-     "Figure 1. The interface constructing a request: the entry source and "
-     "dependency roots, the tensor and state dimensions, the mapping of "
-     "material parameters onto PROPS, the requested derivative products, and "
-     "the supplied loading history."),
-    ("figure2_gui_results.png",
-     "Figure 2. The same interface after a real run. Every pipeline stage "
-     "carries its own status; primal parity is reported above the derivative "
-     "section; each product carries an outcome word rather than a colour. "
-     "INTERNAL_JACOBIAN is reported unsupported for this model, with the "
-     "reason, because it integrates its law without a local Newton iteration."),
-    ("figure3_illustrative_derivatives.png",
-     "Figure 3. Derivative validation for the illustrative example. (a) the "
-     "consistent tangent against the closed-form reference; (b) repeated and "
-     "(c) mixed higher-order stress derivatives against an independent "
-     "80-digit reference; (d) where the error sits in each family relative to "
-     "the agreement demanded of it."),
-    ("figure4_parameter_sensitivities.png",
-     "Figure 4. Parameter and state sensitivities over the complete loading "
-     "path, each curve scaled by its own parameter so all stress curves carry "
-     "MPa. (a) DSIGMA_DP; (b) DSTATEV_DP; (c) how every compared row was "
-     "adjudicated, increment by increment."),
-    ("figure5_collection_verification.png",
-     "Figure 5. Verification across the deduplicated collection, excluding the "
-     "illustrative example. (a) the offline route against the whole "
-     "collection; (b) how many sources each route verified; (c) extracted and "
-     "hand-coded internal Jacobians against the same independent reference."),
+    ("figure_gui_request.png",
+     "Figure 1. Configuring a derivative request in the interface. The four "
+     "steps are numbered and shown one at a time; the strip beneath them "
+     "carries what the earlier steps settled. Each product is named in plain "
+     "language with its Abaqus name beside it. The internal Jacobian was asked "
+     "for and is refused before the run, with the reason, because this source "
+     "integrates its law without a local Newton iteration; the rest of the "
+     "request still runs."),
+    ("figure_gui_results.png",
+     "Figure 2. The same run, completed. Every pipeline stage carries its own "
+     "outcome and duration, and the question the derivative comparisons depend "
+     "on -- whether the two independently compiled builds agree on stress and "
+     "state -- is answered above them with the number it rests on. Building is "
+     "never reported as verification."),
+    ("figure_tangent_verification.png",
+     "Figure 3. The generated consistent tangent against a closed-form "
+     "reference, entry by entry and across five decades of stiffness. Every "
+     "entry agrees far inside what was required of it, and the agreement does "
+     "not weaken for the smaller entries. Entries that are exactly zero on "
+     "both sides carry no relative difference and are counted rather than "
+     "plotted."),
+    ("figure_higher_order_verification.png",
+     "Figure 4. Stress derivatives of order two to four against an independent "
+     "80-digit reference, separated by whether the differentiation directions "
+     "repeat. Agreement does not degrade with order, and every point lies "
+     "below the resolution of the reference itself, which is the limit of what "
+     "this comparison can establish."),
+    ("figure_sensitivities.png",
+     "Figure 5. What the material point's response depends on, along the whole "
+     "loading path. Each curve is scaled by its own material constant, so the "
+     "upper panel is a stress in MPa and the lower a strain, and the four "
+     "constants are comparable. Both axes are linear, so the exact zeros "
+     "before yield sit where they belong: before the material yields the "
+     "stress does not depend on the yield stress or the hardening modulus, and "
+     "the plastic strain depends on nothing."),
+    ("figure_collection_coverage.png",
+     "Figure 6. How far the collected corpus reached, from the files found to "
+     "the sources verified. Counting is by implementation rather than by file, "
+     "and every attempt stays in the denominator. Transformation, compilation "
+     "and primal parity are one bar because no source failed any of them."),
+]
+
+#: Figures that support the main text without competing with it.
+SUPPLEMENTARY_FILES = [
+    ("figure_gui_source.png",
+     "Figure S1. Step 1: choosing the source, and what the analysis found in "
+     "it before anything is transformed."),
+    ("figure_gui_material.png",
+     "Figure S2. Step 2: the material description, prefilled from the "
+     "example's committed contract, with each value labelled by where it came "
+     "from."),
+    ("figure_gui_products.png",
+     "Figure S3. One card per derivative product, each carrying its outcome "
+     "word, what that word means, and the numbers behind it."),
+    ("figure_verification_routes.png",
+     "Figure S4. Which of the two verification routes reached each collection "
+     "source, and how much they overlap."),
 ]
 
 SECTIONS: list[tuple[str, list[str]]] = [
@@ -177,7 +207,8 @@ SECTIONS: list[tuple[str, list[str]]] = [
         "resolution of the reference, and only then the derivative comparison. "
         "A case failing an earlier gate contributes no verified derivative "
         "rows, and compiling is never reported as verification. Figures 1 and 2 "
-        "show the interface constructing a request and reporting one such run."]),
+        "show the interface constructing a request and reporting one such run; "
+        "Table 1 lists what the software accepts and what it produces."]),
     ("3. Illustrative example", [
         "One three-dimensional small-strain J2 plasticity model with linear "
         "isotropic hardening runs through every derivative product. It has six "
@@ -198,7 +229,8 @@ SECTIONS: list[tuple[str, list[str]]] = [
         "through order {higher_order_max_order}, {higher_order_failed} "
         "failures, worst relative difference "
         "{higher_order_worst_relative} where the quantity is large enough for a "
-        "relative error to mean anything. Figure 3 collects these.",
+        "relative error to mean anything. Figures 3 and 4 collect these, and "
+        "Table 4 gives the counts by branch and order.",
         "The parameter sensitivities perturb the material constants rather than "
         "the strain. DSIGMA_DP holds the derivative of each stress component "
         "with respect to each material parameter and DSTATEV_DP the derivative "
@@ -212,8 +244,10 @@ SECTIONS: list[tuple[str, list[str]]] = [
         "exactly zero on both sides: before yield the stress does not depend on "
         "the yield stress or the hardening modulus, and the equivalent plastic "
         "strain depends on nothing. Those are structural zeros of the model, "
-        "read from the raw values rather than inferred from a plot. Figure 4 "
-        "shows both arrays over the path."]),
+        "read from the raw values rather than inferred from a plot. Figure 5 "
+        "shows both arrays over the path, Table 5 collects every derivative "
+        "family verified for this example, and Table 8 accounts for how each "
+        "of the {j2_sensitivity_rows} compared rows was adjudicated."]),
     ("4. Verification across the collection", [
         "Sources are counted after global identity reconciliation. A UMAT "
         "reachable both from the in-repository archive and from a pinned "
@@ -232,7 +266,8 @@ SECTIONS: list[tuple[str, list[str]]] = [
         "{verified_neither} are kept in the denominator with a recorded reason: "
         "an ambiguous helper closure, an absent upstream property vector, a "
         "failed execution in the archived Abaqus round, and two whose reference "
-        "cannot adjudicate every row.",
+        "cannot adjudicate every row. Figure 6 shows the coverage and Table 2 "
+        "the paired Abaqus round case by case.",
         "Across {collection_models} models the sweep produced "
         "{collection_rows} comparisons, {collection_agreeing} agreeing and "
         "{collection_disagreeing} disagreeing, with a worst relative difference "
@@ -243,7 +278,10 @@ SECTIONS: list[tuple[str, list[str]]] = [
         "where a Drucker-Prager model first yields, where the stencil straddles "
         "the kink and returns a secant across it rather than the derivative on "
         "the branch the increment took. Those rows withhold their directions "
-        "rather than being counted either way.",
+        "rather than being counted either way. Table 6 lists every collection "
+        "model with the rows it contributed and the reason where a direction "
+        "is withheld, and Table 7 the external sources with the stage each one "
+        "reached.",
         "Extracting a model's internal Jacobian also audits the one it ships. "
         "Across {jacobian_sources} sources carrying a local Newton solve, the "
         "extracted coefficient agrees with centred differences of the "
@@ -255,7 +293,8 @@ SECTIONS: list[tuple[str, list[str]]] = [
         "{jacobian_second_hand_coded_percent} in "
         "{jacobian_second_hand_coded_model}. Both models converge and produce "
         "plausible stress, so the drift is invisible without a derivative that "
-        "follows the implementation. Figure 5 collects the collection results."]),
+        "follows the implementation. Table 3 gives every extracted Jacobian "
+        "with both comparisons."]),
     ("5. Impact", [
         "UMAT-OTI changes how derivative implementations are maintained. A "
         "change to a material model traditionally requires a fresh manual "
@@ -380,11 +419,26 @@ def build(out_path: Path) -> dict:
             _add_figures(document, FIGURE_FILES[:2], Inches, Pt,
                          WD_ALIGN_PARAGRAPH)
         elif heading.startswith("3."):
-            _add_figures(document, FIGURE_FILES[2:4], Inches, Pt,
+            _add_figures(document, FIGURE_FILES[2:5], Inches, Pt,
                          WD_ALIGN_PARAGRAPH)
         elif heading.startswith("4."):
-            _add_figures(document, FIGURE_FILES[4:], Inches, Pt,
+            _add_figures(document, FIGURE_FILES[5:], Inches, Pt,
                          WD_ALIGN_PARAGRAPH)
+
+    # Supplementary material, after the main text and outside the word count.
+    document.add_page_break()
+    heading = document.add_paragraph()
+    heading_run = heading.add_run("Supplementary figures")
+    heading_run.bold = True
+    heading_run.font.size = Pt(12)
+    supplementary = document.add_paragraph()
+    supplementary_run = supplementary.add_run(
+        "These support the main text without competing with it: the two "
+        "workflow steps that precede the request, the per-product detail "
+        "behind the run summary, and the overlap between the two verification "
+        "routes.")
+    supplementary_run.italic = True
+    _add_figures(document, SUPPLEMENTARY_FILES, Inches, Pt, WD_ALIGN_PARAGRAPH)
 
     words = _word_count(body)
     document.add_paragraph()
@@ -400,8 +454,9 @@ def build(out_path: Path) -> dict:
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     document.save(str(out_path))
-    return {"words": words, "figures": len(FIGURE_FILES), "values": values,
-            "body": body}
+    return {"words": words, "figures": len(FIGURE_FILES),
+            "supplementary_figures": len(SUPPLEMENTARY_FILES),
+            "values": values, "body": body}
 
 
 #: "1.23x10^-15" as the evidence formats it, so the exponent can become a real
@@ -467,6 +522,8 @@ def main(argv: list[str] | None = None) -> int:
         "word_limit": WORD_LIMIT,
         "figure_count": result["figures"],
         "figures": [name for name, _ in FIGURE_FILES],
+        "supplementary_figure_count": result["supplementary_figures"],
+        "supplementary_figures": [name for name, _ in SUPPLEMENTARY_FILES],
         "substituted_values": {
             key: {"value": value.value, "source": value.source}
             for key, value in sorted(values.items())},
@@ -479,7 +536,8 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"  {shown}")
     print(f"  {result['words']} words of {WORD_LIMIT}; "
-          f"{result['figures']} figures")
+          f"{result['figures']} main figures, "
+          f"{result['supplementary_figures']} supplementary")
     print(f"  {len(values)} values substituted from evidence")
     if result["words"] > WORD_LIMIT:
         print(f"  OVER the SoftwareX limit by {result['words'] - WORD_LIMIT} "

@@ -306,10 +306,76 @@ def table7_corpus() -> Table:
          "Furthest stage", "Worst rel error", "Blocker"], rows, [source])
 
 
+def table8_adjudication() -> Table:
+    """How every compared row of the illustrative example was adjudicated.
+
+    This was a twenty-bar histogram stacked under the response curves, where it
+    competed with them for attention while answering a different question. The
+    counts are identical at every increment within a branch, so the whole
+    histogram is two rows without losing anything.
+    """
+    source = RESULTS / "parameter_sensitivity" / "table6_comparison_rows.csv"
+    rows_in = [r for r in _csv(source) if r["model"] == "m3_j2"]
+
+    def kind(row: dict) -> str:
+        if float(row["oti"]) == 0.0 and float(row["reference"]) == 0.0:
+            return "exact zero on both sides"
+        if row["judged_by"] == "relative":
+            return "measured on relative error"
+        return "within the reference's resolution"
+
+    branches: dict[str, list[dict]] = {}
+    for row in rows_in:
+        label = ("elastic" if row["branch"] == "elastic" else "inelastic")
+        branches.setdefault(label, []).append(row)
+
+    rows = []
+    for label in ("elastic", "inelastic"):
+        selected = branches.get(label) or []
+        if not selected:
+            continue
+        increments = sorted({int(r["increment"]) for r in selected})
+        counts: dict[str, int] = {}
+        for row in selected:
+            counts[kind(row)] = counts.get(kind(row), 0) + 1
+        worst = max((float(r["relative_error"]) for r in selected
+                     if r["judged_by"] == "relative"), default=None)
+        rows.append([
+            label, f"{min(increments)}-{max(increments)}", len(selected),
+            counts.get("exact zero on both sides", 0),
+            counts.get("within the reference's resolution", 0),
+            counts.get("measured on relative error", 0),
+            sum(1 for r in selected if r["agrees"] != "True"),
+            _number(worst),
+        ])
+    total = len(rows_in)
+    rows.append(["all", f"1-{max(int(r['increment']) for r in rows_in)}", total,
+                 sum(int(r[3]) for r in rows[:2]),
+                 sum(int(r[4]) for r in rows[:2]),
+                 sum(int(r[5]) for r in rows[:2]),
+                 sum(int(r[6]) for r in rows[:2]),
+                 _number(max((float(r["relative_error"]) for r in rows_in
+                              if r["judged_by"] == "relative"), default=None))])
+    return Table(
+        8, "illustrative_row_adjudication",
+        "How every compared row of the illustrative example was adjudicated. "
+        "The counts are identical at every increment within a branch, so the "
+        "table carries the same information the per-increment breakdown did. "
+        "An exact zero is a row where both the generated value and the "
+        "reference are exactly zero; a row within the reference's resolution "
+        "is one the reference cannot separate from the value.",
+        ["Branch", "Increments", "Rows", "Exact zero", "Within reference",
+         "Measured", "Disagreeing", "Worst measured rel error"],
+        rows, [source],
+        filters={"model": "m3_j2, the illustrative example"},
+        notes=("The three categories add to the row count, so no comparison "
+               "leaves the table uncounted."))
+
+
 BUILDERS: Sequence[Callable[[], Table]] = (
     table1_metadata, table2_abaqus, table3_internal_jacobians,
     table4_higher_order, table5_illustrative, table6_collection,
-    table7_corpus,
+    table7_corpus, table8_adjudication,
 )
 
 
