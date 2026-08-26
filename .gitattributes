@@ -19,3 +19,9 @@ parameter_sensitivity/contracts/**  linguist-generated=true
 *.odb   binary
 *.png   binary
 *.pdf   binary
+
+# Frozen publication evidence is checksummed. Git must store it byte for byte:
+# an eol filter rewrites the bytes in the object, so a clean clone would fail
+# `sha256sum -c SHA256SUMS` even though the working tree that produced it
+# verified. Never let a filter touch a snapshot.
+paper_results/frozen/**     -text
