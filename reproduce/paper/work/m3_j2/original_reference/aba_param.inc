@@ -1,2 +1,0 @@
-      IMPLICIT REAL*8(A-H,O-Z)
-      PARAMETER (NPRECD=2)
