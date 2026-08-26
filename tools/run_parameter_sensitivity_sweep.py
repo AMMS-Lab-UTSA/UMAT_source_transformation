@@ -596,10 +596,17 @@ def main(argv: list[str] | None = None) -> int:
     table = results_dir / "table6_parameter_sensitivity.csv"
     with table.open("w", newline="", encoding="utf-8") as handle:
         writer = _csv.writer(handle, lineterminator="\n")
-        writer.writerow(["model", "parameter_directions", "parameters",
-                         "contract_generated", "transformed", "compiled",
-                         "executed", "numerically_verified", "furthest_stage",
-                         "targets", "failure_reason"])
+        # One name per field. The header carried eleven names for eighteen
+        # fields, so every column after "parameters" was labelled with the
+        # wrong name and the file could not be read by column at all.
+        writer.writerow([
+            "model", "parameter_directions_declared", "parameters",
+            "contract_generated", "transformed", "compiled",
+            "executed_oti", "executed_original", "primal_parity",
+            "reference_resolved", "numerically_verified",
+            "parameter_directions_verified", "comparison_rows",
+            "worst_relative_error", "elastic_increments",
+            "inelastic_increments", "furthest_stage", "failure_reason"])
         for r in records:
             st = r["stages"]
             def ok(name):

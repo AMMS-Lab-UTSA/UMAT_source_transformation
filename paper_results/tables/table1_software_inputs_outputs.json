@@ -73,7 +73,7 @@
       "Item": "Comparison report",
       "Direction": "output",
       "Content": "per-row verdicts and their reasons",
-      "Notes": "outcomes: verified, failed, unresolved, blocked, unsupported, not_requested, compiled"
+      "Notes": "outcomes: verified, partial, failed, unresolved, blocked, unsupported, not_requested, compiled"
     },
     {
       "Item": "Run manifest",

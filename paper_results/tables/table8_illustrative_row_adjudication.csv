@@ -1,0 +1,4 @@
+Branch,Increments,Rows,Exact zero,Within reference,Measured,Disagreeing,Worst measured rel error
+elastic,1-15,420,330,45,45,0,2.480e-08
+inelastic,16-20,140,60,50,30,0,2.252e-08
+all,1-20,560,390,95,75,0,2.480e-08

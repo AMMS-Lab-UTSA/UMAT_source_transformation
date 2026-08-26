@@ -1,0 +1,24 @@
+{
+  "column_count": 8,
+  "command": "python tools/tables/build_paper_tables.py",
+  "commit": "5cafff2898c9d9bcfeb697182672de774bd38e6f",
+  "filters": {
+    "model": "m3_j2, the illustrative example"
+  },
+  "generated_at": "2026-08-26T18:18:49.241841+00:00",
+  "inputs": [
+    {
+      "bytes": 1847975,
+      "path": "paper_results/parameter_sensitivity/table6_comparison_rows.csv",
+      "sha256": "684cd82e2c4e302cd1a9029fe9b466c5f8b8d2039692de0034266c284138737e"
+    }
+  ],
+  "notes": "The three categories add to the row count, so no comparison leaves the table uncounted.",
+  "outputs": {
+    "csv": "paper_results/tables/table8_illustrative_row_adjudication.csv",
+    "json": "paper_results/tables/table8_illustrative_row_adjudication.json"
+  },
+  "row_count": 3,
+  "table": "table8_illustrative_row_adjudication",
+  "unavailable_marker": "not measured"
+}

@@ -21,6 +21,7 @@ import hashlib
 import json
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -193,13 +194,25 @@ class _Record:
         self.furthest = None
         self.blocker: Optional[str] = None
         self.extra: dict[str, Any] = {}
+        # Wall clock since the previous stage closed. Reported so a reader can
+        # see which stage a run spends its time in; a stage that took no
+        # measurable time reports 0.0 rather than being omitted.
+        self._since = time.perf_counter()
+
+    def _elapsed(self) -> float:
+        now = time.perf_counter()
+        seconds = now - self._since
+        self._since = now
+        return round(seconds, 3)
 
     def passed(self, name: str, **detail) -> None:
-        self.stages[name] = FunnelStage(name, "succeeded", detail=detail)
+        self.stages[name] = FunnelStage(name, "succeeded",
+                                        detail={"seconds": self._elapsed(), **detail})
         self.furthest = name
 
     def stopped(self, name: str, reason: str, status: str = "failed", **detail):
-        self.stages[name] = FunnelStage(name, status, reason=reason, detail=detail)
+        self.stages[name] = FunnelStage(name, status, reason=reason,
+                                        detail={"seconds": self._elapsed(), **detail})
         self.blocker = f"{name}: {reason}"
 
     def as_dict(self) -> dict:

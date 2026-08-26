@@ -1,0 +1,72 @@
+{
+  "answers": "Which verification route reached each collection source, and how much do the two routes overlap?",
+  "command": "python tools/figures/build_collection_figures.py",
+  "commit": "5cafff2898c9d9bcfeb697182672de774bd38e6f",
+  "figure": "figure_verification_routes",
+  "generated_at": "2026-08-26T18:37:12.371705+00:00",
+  "inputs": [
+    {
+      "bytes": 33097,
+      "path": "paper_results/generality/generality_matrix.csv",
+      "sha256": "19aa17c889a05fd80b2d30e92f08b8e458a8e13efd377a2b3ff6bf0a87fb9cef"
+    }
+  ],
+  "layout": {
+    "configured_font_sizes": {
+      "axes.labelsize": 10.0,
+      "axes.titlesize": 11.0,
+      "figure.titlesize": 12.0,
+      "font.size": 10.0,
+      "legend.fontsize": 9.5,
+      "xtick.labelsize": 9.5,
+      "ytick.labelsize": 9.5
+    },
+    "figure_width_in": 6.2,
+    "minimum_rendered_pt": 9.0
+  },
+  "notes": "",
+  "outputs": {
+    "axes": [
+      {
+        "axes": 0,
+        "title": "",
+        "xlabel": "unique collection sources (of 41 eligible)",
+        "xscale": "linear",
+        "ylabel": "",
+        "yscale": "linear"
+      }
+    ],
+    "height_inches": 2.9,
+    "pdf": "paper_results/figures/figure_verification_routes.pdf",
+    "pdf_sha256": "7378bcfc35dbbc2ba0f17c8e364c6fe73f552dad7f2a1d0bc68e04e82b0a81f3",
+    "png": "paper_results/figures/figure_verification_routes.png",
+    "png_sha256": "90f1ae87c1718224ed4a5ea4c6dd43c9f6e4dc5f15eb1e25a78db456b6ff4474",
+    "smallest_configured_pt": 9.5,
+    "smallest_printed_pt": 9.5,
+    "width_inches": 6.2
+  },
+  "plotted_filters": {
+    "abaqus_route": "abaqus starts with 'passed'",
+    "denominator": "41 eligible collection sources, the same denominator as the coverage figure",
+    "excluded": [
+      "j2",
+      "m3_j2"
+    ],
+    "offline_route": "numerical_verification == 'succeeded'"
+  },
+  "row_counts": {
+    "Abaqus route only": 12,
+    "both routes": 5,
+    "eligible": 41,
+    "neither route": 5,
+    "offline route only": 19,
+    "unverified_with_reasons": [
+      "derivatives_verified: 5 of 3600 rows sit at the centred-difference noise floor and cannot be resolved by it",
+      "derivatives_verified: 28 of 560 rows sit on a branch boundary (increment 10), where the centred difference straddles the",
+      "dependencies_resolved: these helpers have differing definitions in different files and none is local, so choosing one wo",
+      "contract_constructed: no material property vector or loading history is available for this source; upstream provides non",
+      "abaqus: the paired round recorded failed_execution for this source (slurm 791506), and it has not been run through the o"
+    ],
+    "verified_by_at_least_one": 36
+  }
+}

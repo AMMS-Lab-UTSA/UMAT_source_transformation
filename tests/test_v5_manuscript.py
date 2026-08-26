@@ -71,10 +71,35 @@ def test_no_placeholder_survived_into_the_document():
 def test_the_figures_are_the_real_ones():
     from docx import Document
 
+    record = _record()
     document = Document(str(MANUSCRIPT))
-    assert len(document.inline_shapes) == _record()["figure_count"]
-    for name in _record()["figures"]:
+    expected = record["figure_count"] + record["supplementary_figure_count"]
+    assert len(document.inline_shapes) == expected
+    for name in record["figures"] + record["supplementary_figures"]:
         assert (REPO_ROOT / "paper_results" / "figures" / name).is_file(), name
+
+
+def test_every_main_figure_is_cited_in_the_prose():
+    """A figure nobody points at is a figure nobody reads."""
+    from docx import Document
+
+    text = " ".join(p.text for p in Document(str(MANUSCRIPT)).paragraphs)
+    for number in range(1, _record()["figure_count"] + 1):
+        assert f"Figure {number}" in text, f"Figure {number} is never cited"
+
+
+def test_every_table_is_cited_in_the_prose():
+    """The manuscript cited none of its eight tables."""
+    import csv as _csv
+
+    from docx import Document
+
+    tables = sorted((REPO_ROOT / "paper_results" / "tables").glob("table*.csv"))
+    text = " ".join(p.text for p in Document(str(MANUSCRIPT)).paragraphs)
+    uncited = [t.name for t in tables
+               if f"Table {t.name.split('_')[0].removeprefix('table')}"
+               not in text]
+    assert not uncited, f"never cited: {uncited}"
 
 
 def test_it_does_not_read_or_write_v4():
