@@ -31,13 +31,42 @@ DEFAULT_OUT = REPO_ROOT / "docs" / "manuscript" / "UMAT_OTI_SoftwareX_V5.docx"
 #: SoftwareX limits the main text; the count excludes captions and references.
 WORD_LIMIT = 3000
 
+#: Where the parts of the interface a figure could not fit are reported.
+OMITTED_ELSEWHERE = {
+    "figure1_gui_request": "the run manifest",
+    "figure2_gui_results": "Table 5 and the run manifest",
+}
+
+
+def _omission_sentence(stem: str) -> str:
+    """Name what a GUI figure could not fit, from the capture's own record.
+
+    Written from the provenance rather than by hand, so a caption cannot go on
+    claiming to show a panel that a later capture had to drop.
+    """
+    record = FIGURES / "gui_screenshots_provenance.json"
+    if not record.is_file():
+        return ""
+    regions = json.loads(record.read_text(encoding="utf-8")).get("regions", {})
+    omitted = (regions.get(stem) or {}).get("omitted") or []
+    if not omitted:
+        return ""
+    names = sorted(omitted)
+    listed = (names[0] if len(names) == 1
+              else " and ".join([", ".join(names[:-1]), names[-1]]))
+    where = OMITTED_ELSEWHERE.get(stem, "the run manifest")
+    plural = "panels are" if len(omitted) > 1 else "panel is"
+    return (f" The {listed} {plural} not shown: the figure is cropped so its "
+            f"text prints at readable size, and that content is reported in "
+            f"{where}.")
+
+
 FIGURE_FILES = [
     ("figure1_gui_request.png",
-     "Figure 1. The interface constructing a request: entry source and "
-     "dependency roots, the source information detected from the file, the "
-     "tensor and state dimensions, the mapping of material parameters onto "
-     "PROPS, the requested derivative products, and the supplied loading "
-     "history."),
+     "Figure 1. The interface constructing a request: the entry source and "
+     "dependency roots, the tensor and state dimensions, the mapping of "
+     "material parameters onto PROPS, the requested derivative products, and "
+     "the supplied loading history."),
     ("figure2_gui_results.png",
      "Figure 2. The same interface after a real run. Every pipeline stage "
      "carries its own status; primal parity is reported above the derivative "
@@ -345,7 +374,7 @@ def build(out_path: Path) -> dict:
         for paragraph in paragraphs:
             filled = _fill(paragraph, substitutions)
             body.append(filled)
-            document.add_paragraph(filled)
+            _add_text(document.add_paragraph(), filled)
 
         if heading.startswith("2."):
             _add_figures(document, FIGURE_FILES[:2], Inches, Pt,
@@ -375,6 +404,27 @@ def build(out_path: Path) -> dict:
             "body": body}
 
 
+#: "1.23x10^-15" as the evidence formats it, so the exponent can become a real
+#: superscript instead of printing a caret in a manuscript.
+_EXPONENT = re.compile(r"(×10)\^(-?\d+)")
+
+
+def _add_text(paragraph, text: str):
+    """Write a paragraph, rendering exponents as superscripts."""
+    text = text.replace(" -- ", " \u2014 ")
+    position = 0
+    for match in _EXPONENT.finditer(text):
+        if match.start() > position:
+            paragraph.add_run(text[position:match.start()])
+        paragraph.add_run(match.group(1))
+        exponent = paragraph.add_run(match.group(2))
+        exponent.font.superscript = True
+        position = match.end()
+    if position < len(text):
+        paragraph.add_run(text[position:])
+    return paragraph
+
+
 def _add_figures(document, entries, Inches, Pt, alignment) -> None:
     for name, caption in entries:
         path = FIGURES / name
@@ -385,10 +435,11 @@ def _add_figures(document, entries, Inches, Pt, alignment) -> None:
         paragraph = document.add_paragraph()
         paragraph.alignment = alignment.CENTER
         paragraph.add_run().add_picture(str(path), width=Inches(6.2))
-        caption_paragraph = document.add_paragraph()
-        caption_run = caption_paragraph.add_run(caption)
-        caption_run.font.size = Pt(9)
-        caption_run.italic = True
+        caption = caption + _omission_sentence(path.stem)
+        caption_paragraph = _add_text(document.add_paragraph(), caption)
+        for caption_run in caption_paragraph.runs:
+            caption_run.font.size = Pt(9)
+            caption_run.italic = True
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -398,9 +449,17 @@ def main(argv: list[str] | None = None) -> int:
 
     result = build(args.out)
     values = result["values"]
+    out_path = args.out.resolve()
+    try:
+        shown = out_path.relative_to(REPO_ROOT)
+    except ValueError:
+        # An out-of-tree build, as a test does. Naming the absolute path in a
+        # record that may be committed is what the sanitiser elsewhere exists
+        # to prevent, so the file name alone is recorded.
+        shown = Path(out_path.name)
     provenance = args.out.with_name(f"{args.out.stem}_provenance.json")
     provenance.write_text(json.dumps({
-        "manuscript": str(args.out.relative_to(REPO_ROOT)),
+        "manuscript": str(shown),
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "commit": _commit(),
         "command": "python tools/manuscript/build_v5_manuscript.py",
@@ -418,7 +477,7 @@ def main(argv: list[str] | None = None) -> int:
                  "a placeholder."),
     }, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
 
-    print(f"  {args.out.relative_to(REPO_ROOT)}")
+    print(f"  {shown}")
     print(f"  {result['words']} words of {WORD_LIMIT}; "
           f"{result['figures']} figures")
     print(f"  {len(values)} values substituted from evidence")

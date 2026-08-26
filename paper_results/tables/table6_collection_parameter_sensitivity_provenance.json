@@ -1,7 +1,7 @@
 {
   "column_count": 8,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "ecf969e4b9237ee7b705efe0b836b58265ff03d4",
+  "commit": "652bb5f27033bc7a89f621cf285447762f9480e5",
   "filters": {
     "excluded": [
       "j2",
@@ -9,12 +9,12 @@
     ],
     "exclusion_reason": "reported only in the illustrative tables"
   },
-  "generated_at": "2026-08-26T15:06:29.194169+00:00",
+  "generated_at": "2026-08-26T15:21:46.195346+00:00",
   "inputs": [
     {
-      "bytes": 42733,
+      "bytes": 42738,
       "path": "paper_results/parameter_sensitivity/parameter_sensitivity_round.json",
-      "sha256": "c1df5616fcd50bafe2ffa54fa5cdeee16121c0b429665198ad9119f2918cf3f5"
+      "sha256": "9d969ccdd0eba37791ba46847446c7652689d0285e618745422961a26039a779"
     }
   ],
   "notes": "",

@@ -1,8 +1,8 @@
 {
   "command": "python tools/figures/build_figure5_collection.py",
-  "commit": "1b4a88cefcbe160be639ad5a63b90d34a53b4fd3",
+  "commit": "652bb5f27033bc7a89f621cf285447762f9480e5",
   "figure": "figure5_collection_verification",
-  "generated_at": "2026-08-26T14:52:14.923845+00:00",
+  "generated_at": "2026-08-26T15:21:45.810121+00:00",
   "inputs": [
     {
       "bytes": 33097,
@@ -19,7 +19,7 @@
   "outputs": {
     "height_inches": 6.02,
     "pdf": "paper_results/figures/figure5_collection_verification.pdf",
-    "pdf_sha256": "3073c1b892095c8bd100373d4bb76db9d773ea926a5bf55da17d119967490a5c",
+    "pdf_sha256": "82539554c66c269e83e8737a2ad87c9c58e5f8e7bb6c9cf2b1ddeafe6dc5509a",
     "png": "paper_results/figures/figure5_collection_verification.png",
     "png_sha256": "039832b364e577b38695df6faddbdfd5f387c9842e89e07044adbb3b8d0317ec",
     "width_inches": 7.0

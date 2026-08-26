@@ -58,7 +58,7 @@
     "fixed": 43
   },
   "counting_policy": "One row per implementation. Rows are merged on canonical source identity -- normalised content for a single file, resolved routine closure for a multi-file source -- so a UMAT reachable from both the in-repository archive and the pinned upstream snapshot is one source with several origins and several validation events, not several sources.",
-  "generated_at": "2026-08-26T14:52:00.428036+00:00",
+  "generated_at": "2026-08-26T15:21:38.268428+00:00",
   "identity_registry_counts": {
     "content_deduplicated_sources": 45,
     "independent_upstream_repositories": 3,
