@@ -1,0 +1,73 @@
+{
+  "app": "src/umat_oti/app/workbench_app.py",
+  "captured_at": "2026-08-26T15:35:17.452042+00:00",
+  "commit": "652bb5f27033bc7a89f621cf285447762f9480e5",
+  "device_scale_factor": 2,
+  "example_project": "parameter_sensitivity/models/m3_j2/umat.for",
+  "note": "Captured from the tested interface driving the real backend. Paths are repository-relative and the example project ships with the repository, so no personal path appears in the figures or in this record.",
+  "page_reported_derivative_products": true,
+  "page_reported_outcomes": {
+    "DDSDDE": "NOT REQUESTED",
+    "DSIGMA_DP": "PASS",
+    "DSTATEV_DP": "PASS",
+    "HIGHER_ORDER_STRESS": "NOT REQUESTED",
+    "INTERNAL_JACOBIAN": "UNSUPPORTED"
+  },
+  "page_reported_primal_parity": true,
+  "regions": {
+    "figure1_gui_request": {
+      "omitted": [
+        "detected source information"
+      ],
+      "shown": [
+        "source and dependencies",
+        "dimensions, properties and state",
+        "derivative products and loading history"
+      ]
+    },
+    "figure2_gui_results": {
+      "omitted": [
+        "artifacts",
+        "comparison summary"
+      ],
+      "shown": [
+        "pipeline stages",
+        "primal parity",
+        "derivative products"
+      ]
+    }
+  },
+  "requested_products": [
+    "DSIGMA_DP",
+    "DSTATEV_DP",
+    "INTERNAL_JACOBIAN"
+  ],
+  "screenshots": {
+    "figure1_gui_request": {
+      "bytes": 145938,
+      "path": "paper_results/figures/figure1_gui_request.png",
+      "pdf": "paper_results/figures/figure1_gui_request.pdf",
+      "pdf_sha256": "2c2d66a120b91a9b6fcf514fca4357411e24148a7a537cedffdbd433fcbd0022",
+      "pixels": [
+        1424,
+        1763
+      ],
+      "sha256": "77a2fd313add060836ea43c352744830a5c81fce3dcf9c783d6ed0cae75352bd"
+    },
+    "figure2_gui_results": {
+      "bytes": 190368,
+      "path": "paper_results/figures/figure2_gui_results.png",
+      "pdf": "paper_results/figures/figure2_gui_results.pdf",
+      "pdf_sha256": "c6894c69ada0920475a9e834b02142f1f0b704060b721dac7654610c9ee36b52",
+      "pixels": [
+        1424,
+        1545
+      ],
+      "sha256": "4cb71ad6fb3ee48cb2caa3b9b8840bd357e43abf557f8ad94828c131e48955d4"
+    }
+  },
+  "viewport": {
+    "height": 1200,
+    "width": 720
+  }
+}
