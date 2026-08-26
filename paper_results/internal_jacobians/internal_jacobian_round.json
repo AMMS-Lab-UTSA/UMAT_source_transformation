@@ -11,7 +11,7 @@
     "unique_sources_with_a_local_solve": 8,
     "verification_executions": 8
   },
-  "generated_at": "2026-08-26T15:21:01.021716+00:00",
+  "generated_at": "2026-08-26T18:46:06.361840+00:00",
   "records": [
     {
       "bucket": "no_local_solve",

@@ -1,9 +1,9 @@
 {
   "answers": "How does the material point's response depend on each material constant, along the whole loading path?",
   "command": "python tools/figures/build_sensitivity_figure.py",
-  "commit": "5cafff2898c9d9bcfeb697182672de774bd38e6f",
+  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
   "figure": "figure_sensitivities",
-  "generated_at": "2026-08-26T18:37:11.094798+00:00",
+  "generated_at": "2026-08-26T18:46:47.134679+00:00",
   "inputs": [
     {
       "bytes": 1847975,
@@ -67,7 +67,7 @@
     ],
     "height_inches": 5.6,
     "pdf": "paper_results/figures/figure_sensitivities.pdf",
-    "pdf_sha256": "59e3938250a669ae1a54506b4ea97a1a3e7fa7b36a51f80bef4dd610950393bb",
+    "pdf_sha256": "64541dce78116acaf97d47e08203d99497b681c9e5ab8fd3d408a6540bdfa306",
     "png": "paper_results/figures/figure_sensitivities.png",
     "png_sha256": "3e720d0ff15bc1506a602edc79637c46c1914ed58031ebdc21162c75ab60449f",
     "smallest_configured_pt": 9.5,

@@ -294,7 +294,7 @@ def step_fortran_smoke(out_dir: Path) -> StepResult:
 #: table from the frozen numbers.
 _NEEDS_NO_COMPILER = frozenset({
     "generality_matrix", "source_identity_registry", "paper_figures",
-    "paper_tables", "paper_summary",
+    "paper_tables", "paper_summary", "manuscript",
 })
 
 
@@ -397,12 +397,14 @@ def step_corpus(out_dir: Path) -> StepResult:
 #: screenshots are not here: they need a browser and a live Streamlit server,
 #: and a reproduction that cannot start one should report that rather than fail.
 _FIGURE_SCRIPTS = (
-    ("figure3", "tools/figures/build_figure3_illustrative.py",
-     "paper_results/figures/figure3_illustrative_derivatives.png"),
-    ("figure4", "tools/figures/build_figure4_sensitivities.py",
-     "paper_results/figures/figure4_parameter_sensitivities.png"),
-    ("figure5", "tools/figures/build_figure5_collection.py",
-     "paper_results/figures/figure5_collection_verification.png"),
+    ("tangent", "tools/figures/build_tangent_figure.py",
+     "paper_results/figures/figure_tangent_verification.png"),
+    ("higher_order", "tools/figures/build_higher_order_figure.py",
+     "paper_results/figures/figure_higher_order_verification.png"),
+    ("sensitivities", "tools/figures/build_sensitivity_figure.py",
+     "paper_results/figures/figure_sensitivities.png"),
+    ("collection", "tools/figures/build_collection_figures.py",
+     "paper_results/figures/figure_collection_coverage.png"),
 )
 
 
@@ -437,6 +439,70 @@ def step_paper_figures(out_dir: Path) -> StepResult:
     return StepResult("paper_figures", StageStatus.SUCCEEDED.value,
                       supports=("FIGURES",),
                       detail=f"rendered {len(produced)} figures from this run")
+
+
+def step_gui_screenshots(out_dir: Path) -> StepResult:
+    """Recapture the interface figures by driving the real application."""
+    missing = _need_repository("gui_screenshots")
+    if missing:
+        return missing
+    try:
+        import playwright  # noqa: F401,PLC0415
+    except ImportError:
+        return StepResult(
+            "gui_screenshots", StageStatus.BLOCKED.value, supports=("FIGURES",),
+            reason="playwright is not installed, so the interface figures "
+                   "cannot be recaptured; install the screenshots extra and "
+                   "run `playwright install chromium`")
+    log = out_dir / "gui_screenshots.log"
+    proc = subprocess.run(
+        [sys.executable, "tools/figures/capture_gui_screenshots.py"],
+        capture_output=True, text=True, cwd=REPO_ROOT)
+    log.write_text(proc.stdout + proc.stderr, encoding="utf-8")
+    if proc.returncode != 0:
+        return StepResult("gui_screenshots", StageStatus.FAILED.value,
+                          supports=("FIGURES",),
+                          reason=f"capture exited {proc.returncode}; see {log.name}")
+    return StepResult("gui_screenshots", StageStatus.SUCCEEDED.value,
+                      supports=("FIGURES",),
+                      detail="recaptured the interface figures from a real run")
+
+
+def step_render_manuscript(out_dir: Path) -> StepResult:
+    """Render the manuscript to PDF and page images, for visual inspection.
+
+    A manuscript that has not been looked at is a manuscript nobody has
+    checked, and its figures are only as good as they are at printed size.
+    """
+    missing = _need_repository("manuscript_render")
+    if missing:
+        return missing
+    soffice = shutil.which("libreoffice") or shutil.which("soffice")
+    if soffice is None:
+        return StepResult(
+            "manuscript_render", StageStatus.BLOCKED.value,
+            supports=("MANUSCRIPT",),
+            reason="libreoffice is not on PATH, so the manuscript cannot be "
+                   "rendered for inspection")
+    docx = REPO_ROOT / "docs" / "manuscript" / "UMAT_OTI_SoftwareX_V5.docx"
+    render_dir = out_dir / "manuscript"
+    render_dir.mkdir(parents=True, exist_ok=True)
+    convert = subprocess.run(
+        [soffice, "--headless", "--convert-to", "pdf", "--outdir",
+         str(render_dir), str(docx)], capture_output=True, text=True,
+        timeout=600)
+    pdf = render_dir / f"{docx.stem}.pdf"
+    if convert.returncode != 0 or not pdf.is_file():
+        return StepResult("manuscript_render", StageStatus.FAILED.value,
+                          supports=("MANUSCRIPT",),
+                          reason=f"conversion failed: {convert.stderr[-300:]}")
+    if shutil.which("pdftoppm"):
+        subprocess.run(["pdftoppm", "-png", "-r", "150", str(pdf),
+                        str(render_dir / "page")], capture_output=True)
+    pages = sorted(render_dir.glob("page-*.png"))
+    return StepResult("manuscript_render", StageStatus.SUCCEEDED.value,
+                      supports=("MANUSCRIPT",),
+                      detail=f"rendered {len(pages)} pages for inspection")
 
 
 def build_steps(profile: str, allow_network: bool) -> list[Step]:
@@ -487,6 +553,12 @@ def build_steps(profile: str, allow_network: bool) -> list[Step]:
             _tool_step("paper_summary", "tools/build_paper_summary.py",
                        ("SUMMARY",),
                        "paper_results/PAPER_READY_SUMMARY.md"),
+            Step("gui_screenshots", ("FIGURES",), step_gui_screenshots),
+            _tool_step("manuscript",
+                       "tools/manuscript/build_v5_manuscript.py",
+                       ("MANUSCRIPT",),
+                       "docs/manuscript/UMAT_OTI_SoftwareX_V5.docx"),
+            Step("manuscript_render", ("MANUSCRIPT",), step_render_manuscript),
             Step("abaqus_paired_validation", ("TABLE-2",), step_abaqus),
         ]
 

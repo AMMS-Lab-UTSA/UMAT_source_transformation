@@ -74,10 +74,12 @@ def main(argv: list[str] | None = None) -> int:
 
     axis.axhline(tolerance, color="0.35", linestyle=(0, (5, 3)), linewidth=1.1,
                  zorder=2)
+    # Right of the line, opposite the legend. Both at the left edge, they
+    # overlapped and neither could be read.
     axis.annotate(f"agreement required: {tolerance:.0e}",
-                  xy=(0.015, tolerance), xycoords=("axes fraction", "data"),
-                  xytext=(0, -4), textcoords="offset points",
-                  ha="left", va="top", fontsize=ANNOTATION_PT, color="0.3")
+                  xy=(0.985, tolerance), xycoords=("axes fraction", "data"),
+                  xytext=(0, -5), textcoords="offset points",
+                  ha="right", va="top", fontsize=ANNOTATION_PT, color="0.3")
     worst_error = max(float(r["relative_error"]) for r in measured)
     decades = np.log10(tolerance / worst_error)
     # Placed in the empty upper right, which is empty because every entry sits
@@ -87,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
         f"{decades:.0f} decades inside what was required\n\n"
         f"{len(zeros)} further entries are exactly zero on both\n"
         f"sides, where a relative difference is undefined",
-        xy=(0.98, 0.62), xycoords="axes fraction", ha="right", va="top",
+        xy=(0.98, 0.52), xycoords="axes fraction", ha="right", va="top",
         fontsize=ANNOTATION_PT, color="0.3")
 
     axis.set_xscale("log")
@@ -97,7 +99,9 @@ def main(argv: list[str] | None = None) -> int:
     axis.set_ylabel("relative difference from\nthe reference  (dimensionless)")
     axis.set_title("Generated consistent tangent against the closed-form "
                    "reference", loc="left")
-    axis.legend(loc="upper left", ncol=1, handletextpad=0.4, borderpad=0.3)
+    # Below the tolerance line, which runs the full width at the top.
+    axis.legend(loc="upper left", bbox_to_anchor=(0.01, 0.93), ncol=1,
+                handletextpad=0.4, borderpad=0.3)
 
     outputs = save(fig, "figure_tangent_verification", args.out_dir)
     worst = max(float(r["relative_error"]) for r in measured)
