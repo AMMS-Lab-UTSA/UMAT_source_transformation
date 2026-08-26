@@ -1,8 +1,8 @@
 {
   "command": "python tools/figures/build_figure4_sensitivities.py",
-  "commit": "1b4a88cefcbe160be639ad5a63b90d34a53b4fd3",
+  "commit": "652bb5f27033bc7a89f621cf285447762f9480e5",
   "figure": "figure4_parameter_sensitivities",
-  "generated_at": "2026-08-26T14:52:13.058496+00:00",
+  "generated_at": "2026-08-26T15:21:43.796168+00:00",
   "inputs": [
     {
       "bytes": 1847975,
@@ -14,7 +14,7 @@
   "outputs": {
     "height_inches": 8.05,
     "pdf": "paper_results/figures/figure4_parameter_sensitivities.pdf",
-    "pdf_sha256": "e2bc972015d60d60050ec99342a17d28e36e61e19fbf0b793cb8e36626485b85",
+    "pdf_sha256": "be1c3a884b8dd3bdb498b569def03ae1d4bdb583e5faad43e90889e7b73f6559",
     "png": "paper_results/figures/figure4_parameter_sensitivities.png",
     "png_sha256": "294902d70a6b87d208b7474da215133bae5ebc999f5febc0f74a72be0afdcef1",
     "width_inches": 7.0

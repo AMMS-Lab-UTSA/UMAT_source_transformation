@@ -66,11 +66,18 @@ installation with no reachable licence is reported as blocked with that reason.
 git clone https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git
 cd UMAT_source_transformation
 python -m venv .venv && . .venv/bin/activate
-pip install -e ".[test]"
+pip install -e ".[test,paper]"
 ```
 
 Requires Python 3.10+ and `gfortran`. CI runs 3.10, 3.11 and 3.12 on
 Ubuntu with the distribution `gfortran`.
+
+The `paper` extra adds `matplotlib`, `python-docx` and `pillow`, which the
+figures and tables need and the library itself does not. Without it everything
+still runs; the figure and table steps report that they were blocked rather
+than being skipped silently. The `screenshots` extra adds Playwright for the
+two interface figures, and also needs a browser (`playwright install
+chromium`).
 
 ## 5. The smallest example
 
@@ -84,6 +91,32 @@ non-zero if they disagree. Read `reproduce/smoke/reproduction_summary.md`.
 
 ## 6. Reproducing each result
 
+### One command
+
+```bash
+make reproduce-paper          # or: python -m umat_oti.reproduce --profile paper
+```
+
+That regenerates every artefact the paper shows, in dependency order: the
+parameter-sensitivity round, the internal-Jacobian round, the tangent round,
+the identity registry, the generality matrix, the three data figures, the seven
+tables and the evidence summary. Each later step reads what the earlier ones
+wrote, so the figures and tables in a reproduction are rendered from that run's
+own numbers rather than from the committed ones. Read
+`reproduce/paper/reproduction_summary.md` afterwards.
+
+The two interface figures are not in that profile: they need a browser and a
+live Streamlit server. Regenerate them with
+
+```bash
+python tools/figures/capture_gui_screenshots.py
+```
+
+which drives the real application, reads the outcome word back off the page
+into its provenance record, and reports the point size its text will print at.
+
+### One result at a time
+
 Every row is one command and one artefact. Commands run from the repository root
 with the virtual environment active.
 
@@ -93,7 +126,13 @@ with the virtual environment active.
 | Table 3 — internal Jacobians | `python tools/run_internal_jacobian_round.py` | `paper_results/internal_jacobians/table3_internal_jacobians.csv` | A |
 | Table 4 — higher orders | `python tools/build_table4_from_convergence.py` | `paper_results/higher_order_convergence/table4_reference_quality_summary.json` | A |
 | Table 5 — J2 sensitivities | `python tools/validate_table5.py` | `paper_results/parameter_sensitivity/` | A |
-| Table 6 — 18-model sweep | `python tools/run_parameter_sensitivity_sweep.py` | `paper_results/parameter_sensitivity/table6_parameter_sensitivity.csv` | A |
+| Table 6 — 20-model sweep | `python tools/run_parameter_sensitivity_sweep.py` | `paper_results/parameter_sensitivity/table6_parameter_sensitivity.csv` | A |
+| Illustrative tangent | `python tools/run_tangent_round.py --work-dir reproduce/tangent --results-dir paper_results/actual_umat_higher_order/j2` | `paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv` | A |
+| Source identity registry | `python tools/build_source_identity_registry.py` | `paper_results/generality/source_identity.csv` | A |
+| Figures 3-5 | `python tools/figures/build_figure3_illustrative.py` (and `..._figure4_...`, `..._figure5_...`) | `paper_results/figures/` | A |
+| Figures 1-2 | `python tools/figures/capture_gui_screenshots.py` | `paper_results/figures/` | A |
+| Tables 1-7 | `python tools/tables/build_paper_tables.py` | `paper_results/tables/paper_tables.docx` | A |
+| The manuscript | `python tools/manuscript/build_v5_manuscript.py` | `docs/manuscript/UMAT_OTI_SoftwareX_V5.docx` | A |
 | Generality matrix | `python tools/build_generality_matrix.py` | `paper_results/generality/generality_matrix.csv` | A |
 | Traceability matrix | `python tools/build_traceability_matrix.py` | `docs/PIPELINE_REQUIREMENTS_TRACEABILITY.md` | A |
 | Everything reproducible | `python -m umat_oti.reproduce --profile paper` | `reproduce/paper/` | A |
@@ -110,20 +149,40 @@ gfortran 9.4.0, 8-core x86-64), wall clock from `/usr/bin/time`:
 | Profile | Wall clock | Peak RSS | Output |
 |---|---|---|---|
 | `smoke` | 5.6 s | 110 MB | 1.5 MB |
-| `offline` | 126 s | 1.7 GB | 1.5 MB |
-| `paper` | 216 s | 1.7 GB | 1.5 MB plus the regenerated evidence |
+| `offline` | 154 s | 1.7 GB | 1.5 MB |
+| `paper` | 317 s | 1.7 GB | 1.5 MB plus the regenerated evidence |
 | `corpus` | not measured | — | depends on the network and upstream availability |
 | `abaqus` | not measured here | — | GB, mostly ODBs |
 
-`offline` and `paper` are dominated by the test suite (about 120 s). Within
-`paper`, the parameter-sensitivity round takes 74 s, the internal-Jacobian round
-14 s, and the generality matrix under a second.
+`offline` and `paper` are dominated by the test suite (149 s). Within `paper`,
+the parameter-sensitivity round takes 85 s, the internal-Jacobian round 30 s,
+the tangent round 34 s, the identity registry 2 s, and the generality matrix,
+figures, tables and summary under 9 s together.
 
 The two unmeasured rows are labelled as such deliberately: `corpus` depends on
 third-party availability and `abaqus` on scheduler queueing, so any figure given
 here would be invention rather than measurement.
 
-## 8. What to inspect
+## 8. The frozen snapshot
+
+`paper_results/frozen/` holds immutable snapshots, one per publication run,
+named by the commit of each repository. Each carries the evidence files, a
+`MANIFEST.json` recording the environment, the tolerances and their
+justification, the seven verification gates and the regeneration commands, and
+a `SHA256SUMS` covering every file in it.
+
+```bash
+cd paper_results/frozen/<snapshot> && sha256sum -c SHA256SUMS
+```
+
+A snapshot is refused if either repository is dirty, and the tree is marked
+`-text` in `.gitattributes` so git stores it byte for byte: an end-of-line
+filter once rewrote two CSVs inside the object database, and the snapshot then
+verified here and failed in a clean clone, which is the only place the check
+matters. `tests/test_frozen_evidence_integrity.py` reads the committed blobs
+rather than the working tree, so that failure cannot recur unnoticed.
+
+## 9. What to inspect
 
 Start with `reproduce/<profile>/reproduction_summary.md`. Then:
 
@@ -134,7 +193,7 @@ Start with `reproduce/<profile>/reproduction_summary.md`. Then:
 - `paper_results/generality/generality_matrix.csv` — one row per source,
   showing exactly how far each one got and what blocked it.
 
-## 9. How pass and fail are decided
+## 10. How pass and fail are decided
 
 A derivative is **verified** only when it agrees with centred differences of the
 *independently compiled untransformed* subroutine, evaluated on the same loading
@@ -161,7 +220,7 @@ A model's own hand-written Jacobian is never used as a reference. Where it
 appears (Table 3), it is a third, *audited* column checked against the same
 finite-difference reference as everything else.
 
-## 10. Reproducibility tiers
+## 11. Reproducibility tiers
 
 **Tier A — public, offline.** Needs the repository, Python, `gfortran` and the
 redistributable examples. Reproduces the transformations and every numerical
@@ -176,7 +235,7 @@ snapshots. Run deliberately:
 environment. The scripts and the archived provenance stay public even though
 execution does not.
 
-## 11. Versions and compatibility
+## 12. Versions and compatibility
 
 | Component | Version |
 |---|---|
@@ -187,7 +246,7 @@ execution does not.
 The two repositories are separate products connected by a versioned contract.
 Exchanged artefacts are validated against the published schema.
 
-## 12. Reporting a reproduction problem
+## 13. Reporting a reproduction problem
 
 Open an issue at
 <https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation/issues> with:
@@ -199,7 +258,7 @@ Open an issue at
 A derivative that disagrees with the reference is a real finding and we want to
 know about it. Please include the contract and the source that produced it.
 
-## 13. Which commit corresponds to the manuscript
+## 14. Which commit corresponds to the manuscript
 
 `CITATION.cff` carries the released version, and each release is tagged. The
 evidence files record the commit that produced them: `run_manifest.json` and

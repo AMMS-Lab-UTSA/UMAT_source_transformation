@@ -29,10 +29,46 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 APP = REPO_ROOT / "src" / "umat_oti" / "app" / "workbench_app.py"
 OUT = REPO_ROOT / "paper_results" / "figures"
 
-VIEWPORT = {"width": 1600, "height": 1200}
+# The printed size of the text is set by how much of the figure's width one
+# CSS pixel occupies, not by the capture resolution. Streamlit's body text is
+# 14 CSS px, and a figure placed at FIGURE_WIDTH_IN inches prints that as
+# 14 / width * FIGURE_WIDTH_IN inches. At the 1600 px a desktop browser opens
+# with, that is under 4 pt -- sharp and unreadable. This width keeps it above
+# the 9 pt the manuscript requires; the page becomes tall instead, which the
+# column composition below handles.
+VIEWPORT = {"width": 720, "height": 1200}
 SCALE = 2
 # Single-column figure width used by the manuscript, in inches.
-FIGURE_WIDTH_IN = 7.0  # publication resolution
+FIGURE_WIDTH_IN = 7.0
+
+#: Streamlit's body text size, which sets what the figure prints at.
+BODY_TEXT_CSS_PX = 14
+
+# Regions are listed in page order and carry a separate drop priority, because
+# the two are not the same. The derivative request is the point of Figure 1 and
+# must survive; the source information above it is the first thing to lose. A
+# single "most important first" list would have to choose between showing the
+# page in its own order and dropping the right thing.
+#: (label, text that starts the region, text that ends it or None, priority)
+#: where a higher priority number is dropped sooner.
+REQUEST_REGIONS = (
+    ("source and dependencies", "1. Source and dependencies", None, 1),
+    ("detected source information", "2. Detected source information", None, 3),
+    ("dimensions, properties and state", "3. Dimensions, properties and state",
+     None, 2),
+    ("derivative products and loading history",
+     "4. Derivative products and loading history", "5. Run", 0),
+)
+
+#: The verification evidence outranks the artefact list: a reader who sees only
+#: part of this figure must see the part that says whether anything was checked.
+RESULT_REGIONS = (
+    ("pipeline stages", "Pipeline stages", None, 2),
+    ("primal parity", "Primal parity", None, 0),
+    ("derivative products", "Derivative products", None, 1),
+    ("comparison summary", "Comparison summary", None, 3),
+    ("artifacts", "Artifacts", None, 4),
+)  # publication resolution
 
 
 def _free_port() -> int:
@@ -89,12 +125,50 @@ def capture(out_dir: Path, keep_running: bool = False) -> dict:
             page.goto(url, wait_until="networkidle")
             # Hide Streamlit's own chrome. It is not part of the software being
             # described and it carries a Deploy button that means nothing here.
+            # The vertical rhythm is tightened rather than the text shrunk.
+            # A figure's printed text size is fixed by how many CSS pixels
+            # span its width, so the only way to fit more of the page at a
+            # readable size is to make the page shorter -- not smaller.
             page.add_style_tag(content="""
                 header[data-testid="stHeader"] {display: none !important;}
                 div[data-testid="stToolbar"] {display: none !important;}
                 div[data-testid="stDecoration"] {display: none !important;}
                 footer {display: none !important;}
                 .stApp {padding-top: 0 !important;}
+                .block-container {padding-top: 0.4rem !important;
+                                  padding-bottom: 0.4rem !important;}
+                div[data-testid="stVerticalBlock"] {gap: 0.35rem !important;}
+                div[data-testid="stElementContainer"] {margin-bottom: 0 !important;}
+                h2, h3 {margin-top: 0.5rem !important;
+                        margin-bottom: 0.25rem !important;
+                        padding-top: 0 !important; padding-bottom: 0 !important;}
+                textarea {min-height: 0 !important;}
+                div[data-testid="stTextArea"] textarea {height: 74px !important;}
+                div[data-testid="stCaptionContainer"] {margin: 0 !important;}
+                div[data-testid="stMarkdownContainer"] p {margin-bottom: 0.2rem
+                                                          !important;}
+                div[data-testid="stCheckbox"] {margin-bottom: -0.35rem
+                                               !important;}
+                hr {margin: 0.3rem 0 !important;}
+                /* Lists and button stacks are the tallest things on the
+                   results page, and they are lists rather than prose: setting
+                   them in columns costs nothing and removes several inches. */
+                div[data-testid="stMarkdownContainer"] ul {margin: 0.1rem 0
+                    !important; padding-left: 1.1rem !important;}
+                div[data-testid="stMarkdownContainer"] li {margin: 0 !important;}
+                div[data-testid="stDownloadButton"] button {padding: 0.1rem
+                    0.4rem !important;}
+                /* Tall enough for the four-line property and parameter
+                   lists. Shorter than this and the last value is scrolled out
+                   of the figure, which hides data rather than saving space. */
+                div[data-testid="stTextArea"] textarea {height: 74px
+                    !important; line-height: 1.2 !important;
+                    padding: 0.2rem 0.5rem !important;}
+                div[data-testid="stNumberInput"] input {padding: 0.15rem 0.5rem
+                    !important;}
+                div[data-testid="stSelectbox"] div {min-height: 0 !important;}
+                label {margin-bottom: 0.05rem !important;}
+                div[data-testid="stMetric"] {padding: 0 !important;}
             """)
             page.wait_for_timeout(2500)
 
@@ -105,8 +179,10 @@ def capture(out_dir: Path, keep_running: bool = False) -> dict:
                 _check(page, product)
             page.wait_for_timeout(2500)
             first = out_dir / "figure1_gui_request.png"
-            _clip(page, first, "1. Source and dependencies", "5. Run")
+            shown_first = _compose_regions(page, first, REQUEST_REGIONS,
+                                           MAX_CONTENT_CSS_PIXELS)
             _write_pdf(first)
+            _report_size(first, "figure1")
             captured["figure1_gui_request"] = first
 
             # --- Figure 2: execution and evidence ----------------------------
@@ -122,8 +198,10 @@ def capture(out_dir: Path, keep_running: bool = False) -> dict:
                     page.wait_for_timeout(2000)
                 page.wait_for_timeout(2500)
             second = out_dir / "figure2_gui_results.png"
-            _clip(page, second, "6. Results", None)
+            shown_second = _compose_regions(page, second, RESULT_REGIONS,
+                                            MAX_CONTENT_CSS_PIXELS)
             _write_pdf(second)
+            _report_size(second, "figure2")
             captured["figure2_gui_results"] = second
 
             body_text = page.inner_text("body")
@@ -148,6 +226,8 @@ def capture(out_dir: Path, keep_running: bool = False) -> dict:
         "page_reported_primal_parity": "Primal parity" in body_text,
         "page_reported_derivative_products": "Derivative products" in body_text,
         "page_reported_outcomes": _outcomes(body_text),
+        "regions": {"figure1_gui_request": shown_first,
+                    "figure2_gui_results": shown_second},
         "note": ("Captured from the tested interface driving the real backend. "
                  "Paths are repository-relative and the example project ships "
                  "with the repository, so no personal path appears in the "
@@ -191,6 +271,145 @@ def _describe(path: Path) -> dict:
     except Exception:  # pragma: no cover - Pillow is a capture-time dependency
         pass
     return record
+
+
+#: How tall a captured page may be before it cannot be printed legibly. A
+#: figure's text size is set by CSS pixels per printed inch: at VIEWPORT width
+#: and FIGURE_WIDTH_IN, body text prints at about 9.8 pt, and the figure is
+#: then FIGURE_WIDTH_IN * height / width inches tall. Beyond this the figure no
+#: longer fits a page, and the capture says so rather than shipping a figure
+#: whose text has been shrunk to fit.
+# A SoftwareX page leaves about 9.4 inches of text height. At FIGURE_WIDTH_IN
+# wide, a figure of this height fills a page; its caption then sits below it or
+# at the top of the next, which is ordinary for a full-page figure.
+MAX_CONTENT_CSS_PIXELS = 980
+
+#: Gutter between composed columns, in pixels of the source image.
+GUTTER = 40
+
+
+def _compose_regions(page, path: Path, regions, budget: int):
+    """Stack crops of named regions, dropping the lowest-priority ones that
+    will not fit a page.
+
+    A screenshot's printed text size is fixed by how many CSS pixels span the
+    figure's width, so the only way to keep it readable is to show less of the
+    page rather than to shrink it. The regions are listed in priority order and
+    the ones that do not fit are reported, so a caption can say what is not
+    shown instead of a reader assuming they are seeing the whole interface.
+    """
+    from PIL import Image, ImageDraw
+
+    page.wait_for_timeout(400)
+    content = page.evaluate(
+        "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight,"
+        " ...[...document.querySelectorAll('section, .stApp, [data-testid]')]"
+        ".map(e => e.scrollHeight || 0))")
+    page.set_viewport_size({"width": VIEWPORT["width"],
+                            "height": min(int(content) + 200, 14000)})
+    page.wait_for_timeout(1200)
+    full = path.with_suffix(".full.png")
+    page.screenshot(path=str(full), full_page=True)
+
+    def _y(text: str):
+        found = page.get_by_text(text, exact=True)
+        return found.first.bounding_box()["y"] if found.count() else None
+
+    bounds, missing = [], []
+    for label, start_text, end_text, priority in regions:
+        top = _y(start_text)
+        if top is None:
+            missing.append(label)
+            continue
+        bottom = _y(end_text) if end_text else None
+        # No headroom: any reach above the heading pulls in the tail of the
+        # region above and leaves a sliver of unrelated text at the seam. Each
+        # crop is trimmed to its own content below, which is what gives the
+        # clean edge.
+        bounds.append([label, top, bottom, priority, top])
+
+    image = Image.open(full)
+    scale = SCALE
+    page_bottom = image.height / scale
+    for index, entry in enumerate(bounds):
+        if entry[2] is None:
+            entry[2] = (bounds[index + 1][4] if index + 1 < len(bounds)
+                        else page_bottom)
+
+    # Drop by priority, then lay out what survives in page order.
+    surviving = list(bounds)
+    dropped: list[str] = []
+    while surviving and sum(max(e[2] - e[1], 0) for e in surviving) > budget:
+        victim = max(surviving, key=lambda e: (e[3], e[2] - e[1]))
+        if len(surviving) == 1:
+            break
+        surviving.remove(victim)
+        dropped.append(victim[0])
+    surviving.sort(key=lambda e: e[1])
+
+    kept, crops = [], []
+    for label, top, bottom, _priority, _raw in surviving:
+        crop = image.crop((0, int(top * scale), image.width,
+                           int(min(bottom, page_bottom) * scale)))
+        # Trim each region to its own content. Without this a crop carries the
+        # descenders of the heading above it as a sliver of unrelated text.
+        box = crop.convert("L").point(lambda v: 0 if v >= 246 else 255).getbbox()
+        if box is not None:
+            pad = int(4 * scale)
+            crop = crop.crop((0, max(box[1] - pad, 0), crop.width,
+                              min(box[3] + pad, crop.height)))
+        kept.append(label)
+        crops.append(crop)
+
+    left, right = None, None
+    for crop in crops:
+        box = crop.convert("L").point(lambda v: 0 if v >= 246 else 255).getbbox()
+        if box is None:
+            continue
+        left = box[0] if left is None else min(left, box[0])
+        right = box[2] if right is None else max(right, box[2])
+    margin = int(12 * scale)
+    left = max((left or 0) - margin, 0)
+    right = min((right or image.width) + margin, image.width)
+
+    gap = int(14 * scale)
+    width = right - left
+    total = sum(crop.height for crop in crops) + gap * max(len(crops) - 1, 0)
+    canvas = Image.new("RGB", (width, total), "white")
+    draw = ImageDraw.Draw(canvas)
+    offset = 0
+    for index, crop in enumerate(crops):
+        canvas.paste(crop.crop((left, 0, right, crop.height)), (0, offset))
+        offset += crop.height
+        if index < len(crops) - 1:
+            draw.line([(0, offset + gap // 2), (width, offset + gap // 2)],
+                      fill="#d0d0d0", width=2)
+            offset += gap
+    canvas.save(path)
+    full.unlink(missing_ok=True)
+    return {"shown": kept, "omitted": dropped + missing}
+
+
+def _report_size(path: Path, name: str) -> None:
+    """Say what this figure's text will print at, and complain if it is small.
+
+    The size follows from geometry, not from the capture resolution: a body
+    text of BODY_TEXT_CSS_PX in a VIEWPORT-wide page, printed FIGURE_WIDTH_IN
+    inches wide, lands at BODY_TEXT_CSS_PX / VIEWPORT * FIGURE_WIDTH_IN * 72
+    points. Capturing at a higher device scale makes it sharper, never bigger.
+    """
+    from PIL import Image
+    with Image.open(path) as image:
+        width, height = image.size
+    points = BODY_TEXT_CSS_PX / VIEWPORT["width"] * FIGURE_WIDTH_IN * 72
+    inches = FIGURE_WIDTH_IN * height / width
+    print(f"    {name}: body text prints at {points:.1f} pt, "
+          f"figure {FIGURE_WIDTH_IN:.1f} x {inches:.1f} in")
+    if points < 9.0:
+        print(f"    WARNING: {name} prints below 9 pt")
+    if height / SCALE > MAX_CONTENT_CSS_PIXELS:
+        print(f"    WARNING: {name} is {inches:.1f} in tall; it will not fit a "
+              "page beside its caption")
 
 
 def _write_pdf(png: Path) -> Path:
@@ -264,23 +483,28 @@ def _clip(page, path: Path, start_heading: str, end_heading: str | None) -> None
 
     image = Image.open(full)
     scale = SCALE
-    left = int(50 * scale)
-    right = image.width - int(40 * scale)
     upper = max(int(top * scale), 0)
     lower = image.height if bottom is None else min(int(bottom * scale), image.height)
     if lower - upper < 200 * scale:
         lower = image.height
-    cropped = image.crop((left, upper, right, lower))
-    # Trim uniform trailing whitespace so the figure is not a quarter blank.
-    grey = cropped.convert("L")
-    width, height = grey.size
-    last = height
-    for row in range(height - 1, 0, -1):
-        line = grey.crop((0, row, width, row + 1)).getextrema()
-        if line[0] < 245:
-            last = min(row + 40, height)
-            break
-    cropped.crop((0, 0, width, last)).save(path)
+
+    # The horizontal bounds are measured, not assumed. Fixed margins were tuned
+    # to one viewport width and sliced the section numbers off the headings as
+    # soon as the viewport changed.
+    band = image.crop((0, upper, image.width, lower))
+    ink = band.convert("L").point(lambda value: 0 if value >= 246 else 255)
+    box = ink.getbbox()
+    if box is None:
+        band.save(path)
+        full.unlink(missing_ok=True)
+        return
+    margin = int(12 * scale)
+    left = max(box[0] - margin, 0)
+    right = min(box[2] + margin, band.width)
+    # box[3] trims the uniform trailing whitespace at the same time, so the
+    # figure is not a quarter blank.
+    bottom_edge = min(box[3] + margin, band.height)
+    band.crop((left, 0, right, bottom_edge)).save(path)
     full.unlink(missing_ok=True)
 
 

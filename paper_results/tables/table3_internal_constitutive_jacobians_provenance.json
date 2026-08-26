@@ -1,11 +1,11 @@
 {
   "column_count": 7,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "ecf969e4b9237ee7b705efe0b836b58265ff03d4",
+  "commit": "652bb5f27033bc7a89f621cf285447762f9480e5",
   "filters": {
     "deduplication": "one row per canonical source identity"
   },
-  "generated_at": "2026-08-26T15:06:29.072170+00:00",
+  "generated_at": "2026-08-26T15:21:46.049209+00:00",
   "inputs": [
     {
       "bytes": 2853,
