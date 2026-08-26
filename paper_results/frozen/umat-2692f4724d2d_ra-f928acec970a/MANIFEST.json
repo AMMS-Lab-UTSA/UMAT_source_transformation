@@ -1,0 +1,392 @@
+{
+  "environment": {
+    "_pip_freeze_first_line": "altair==6.2.2",
+    "abaqus": {
+      "available": true,
+      "details": {
+        "licence_command": [
+          "/usr/bin/abaqus",
+          "licensing",
+          "lmstat",
+          "-a"
+        ],
+        "licence_returncode": 0,
+        "licences_in_use": 0,
+        "licences_issued": 314,
+        "probe_output_head": [
+          "Abaqus JOB abaqus",
+          "Abaqus 2021.HF5",
+          "Abaqus Site ID: 200000000017647",
+          "Abaqus is located in the directory /usr/SIMULIA/EstProducts/2021 /usr/SIMULIA/EstProducts/2021/linux_a64 /usr/SIMULIA/EstProducts/2021/linux_a64/code /usr/SIMULIA/EstProducts/2021/linux_a64/code/bin /usr/SIMULIA/EstProducts/2021/linux_a64/code/bin/SMAExternal /usr/SIMULIA/EstProducts/2021/linux_a64/CAEresources /usr/SIMULIA/EstProducts/2021/linux_a64/SMA"
+        ]
+      },
+      "executable": "/usr/bin/abaqus",
+      "name": "abaqus",
+      "probe_command": [
+        "/usr/bin/abaqus",
+        "information=release"
+      ],
+      "probe_returncode": 0,
+      "resolved_from": "/usr/SIMULIA/EstProducts/2021/linux_a64/code/bin/ABQLauncher",
+      "version": "2021.HF5"
+    },
+    "captured_at": "2026-08-26T18:56:24.790386+00:00",
+    "dependency_lock": [
+      "-e git+https://github.com/AMMS-Lab-UTSA/Residual_Assembler.git@f928acec970acf68670eba9102e6b962dabb094c#egg=residual_assembler",
+      "-e git+https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git@2692f4724d2d0e6487b70daa42455b2542c5d89b#egg=umat_oti",
+      "Jinja2==3.1.6",
+      "MarkupSafe==3.0.3",
+      "PyYAML==6.0.3",
+      "Pygments==2.21.0",
+      "altair==6.2.2",
+      "anyio==4.14.2",
+      "attrs==26.1.0",
+      "blinker==1.9.0",
+      "brotli==1.2.0",
+      "build==1.5.0",
+      "certifi==2026.7.22",
+      "charset-normalizer==3.5.1",
+      "click==8.4.2",
+      "contourpy==1.3.3",
+      "cycler==0.12.1",
+      "fonttools==4.63.0",
+      "greenlet==3.5.5",
+      "h11==0.16.0",
+      "httptools==0.8.0",
+      "idna==3.19",
+      "iniconfig==2.3.0",
+      "itsdangerous==2.2.0",
+      "jsonschema-specifications==2025.9.1",
+      "jsonschema==4.26.0",
+      "kiwisolver==1.5.0",
+      "lxml==6.1.2",
+      "matplotlib==3.11.1",
+      "mpmath==1.3.0",
+      "narwhals==2.25.0",
+      "numpy==2.4.6",
+      "packaging==26.3",
+      "pandas==3.0.5",
+      "pillow==12.3.0",
+      "playwright==1.62.0",
+      "pluggy==1.6.0",
+      "protobuf==7.36.0",
+      "pyarrow==25.0.1",
+      "pydeck==0.9.3",
+      "pyee==13.0.1",
+      "pyparsing==3.3.2",
+      "pyproject_hooks==1.2.0",
+      "pytest==9.1.1",
+      "python-dateutil==2.9.0.post0",
+      "python-docx==1.2.0",
+      "python-multipart==0.0.32",
+      "referencing==0.37.0",
+      "requests==2.34.2",
+      "rpds-py==2026.6.3",
+      "six==1.17.0",
+      "starlette==1.6.0",
+      "streamlit==1.62.0",
+      "sympy==1.14.0",
+      "toml==0.10.2",
+      "typing_extensions==4.16.0",
+      "urllib3==2.7.0",
+      "uvicorn==0.52.4",
+      "watchdog==6.0.0",
+      "websockets==16.1.1"
+    ],
+    "dependency_lock_note": "pip freeze of the interpreter that produced this snapshot",
+    "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
+    "fortran_flags": {
+      "material_point_original": "-O1 -std=legacy -ffixed-form -ffixed-line-length-none",
+      "oti_module_and_driver": "-O1 -std=legacy -ffree-line-length-none -fno-align-commons"
+    },
+    "machine": "x86_64",
+    "make": "GNU Make 4.2.1",
+    "operating_system": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+    "python_implementation": "CPython",
+    "python_version": "3.11.7"
+  },
+  "evidence_files": [
+    {
+      "bytes": 42738,
+      "path": "parameter_sensitivity/parameter_sensitivity_round.json",
+      "sha256": "c813ab0c1af0cc382b3a15a866c865d474ecfe25af921a8e3f27f0e733580102"
+    },
+    {
+      "bytes": 2880,
+      "path": "parameter_sensitivity/table6_parameter_sensitivity.csv",
+      "sha256": "37e609d9fe660025f1346cbef42763144936218195b8e4512cb8d95b2cde5513"
+    },
+    {
+      "bytes": 1847975,
+      "path": "parameter_sensitivity/table6_comparison_rows.csv",
+      "sha256": "684cd82e2c4e302cd1a9029fe9b466c5f8b8d2039692de0034266c284138737e"
+    },
+    {
+      "bytes": 102502,
+      "path": "internal_jacobians/internal_jacobian_round.json",
+      "sha256": "4c3b50c07ff645b53fe1dc2c691a4465eec148991e4baf1cf5965ab03a334764"
+    },
+    {
+      "bytes": 2853,
+      "path": "internal_jacobians/table3_internal_jacobians.csv",
+      "sha256": "f870f427fc036bfbd542b5788c48a50229aea8743157573dfc0523db764de23c"
+    },
+    {
+      "bytes": 266664,
+      "path": "corpus/corpus_round.json",
+      "sha256": "5c7b17beb225555e084e654333a87b5d18f98831fd7176970a01715b52c1eb54"
+    },
+    {
+      "bytes": 2535,
+      "path": "corpus/corpus_funnel.csv",
+      "sha256": "69193b2f485698466cb991529b86e3a0ae78bd2d5b6f49f5fdd58a210b6b91db"
+    },
+    {
+      "bytes": 33097,
+      "path": "generality/generality_matrix.csv",
+      "sha256": "19aa17c889a05fd80b2d30e92f08b8e458a8e13efd377a2b3ff6bf0a87fb9cef"
+    },
+    {
+      "bytes": 4455,
+      "path": "generality/generality_summary.json",
+      "sha256": "0127c207a691fba1caff8fcc44edb8b50d97381e7e62dc2d512303af2cd3692c"
+    },
+    {
+      "bytes": 69720,
+      "path": "generality/source_identity.json",
+      "sha256": "9f2f522543a97e70a30c3676766f1e1cb6e22d537cf9e9a2b3ebfdc7e7848f39"
+    },
+    {
+      "bytes": 12351,
+      "path": "generality/source_identity.csv",
+      "sha256": "7d87f47bba1e93bc077f1ea88d94a921e2cb5820ca0212d47675de4f5d3aedb0"
+    },
+    {
+      "bytes": 7534,
+      "path": "arc_791506/table2_abaqus_paired.csv",
+      "sha256": "66be9d631bde276a1941070f2b092a97cd25b3cc53e0001894ce4f61b8c128eb"
+    },
+    {
+      "bytes": 519695,
+      "path": "arc_791506/table2_abaqus_paired.json",
+      "sha256": "955ba2bebbe0612c8555f8ab21548cfcfb725e264487b5f4e3cca48f3ece001c"
+    },
+    {
+      "bytes": 38071,
+      "path": "actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv",
+      "sha256": "b8d5293d6634119d134efe10a6de62eab8c6b4794113c9f0667e145f62b42d01"
+    },
+    {
+      "bytes": 3375,
+      "path": "actual_umat_higher_order/j2/actual_umat_ddsdde.csv",
+      "sha256": "bba500f36d48fa07058e0feadc9b786e30ad3a872c6c4f92a8d415f0e3ccf540"
+    },
+    {
+      "bytes": 9096,
+      "path": "actual_umat_higher_order/j2/actual_umat_higher_order_comparison.csv",
+      "sha256": "0558485f01398580707357b72ba929c15a235b651411e797d32973d6fd23cfd5"
+    },
+    {
+      "bytes": 1022,
+      "path": "actual_umat_higher_order/j2/table4_higher_order_actual_umat.csv",
+      "sha256": "0239f8d5b50b1c1f4aee770750d4b490319a305a3d0291e54b2a1273e4d67960"
+    },
+    {
+      "bytes": 6976,
+      "path": "actual_umat_higher_order/j2/actual_umat_higher_order_evidence.json",
+      "sha256": "b715a8ddfc6e27082a1c310901f5f2bb571b8a71aadd16f3429279dbfa716f54"
+    },
+    {
+      "bytes": 27456,
+      "path": "higher_order_convergence/table4_reference_quality_summary.json",
+      "sha256": "b5ade96a1a5874b6b99bc0b5e94c7c10498bcee7248bf5cc17033f2a5a1a5911"
+    },
+    {
+      "bytes": 137994,
+      "path": "figures/figure_gui_source.png",
+      "sha256": "6ab5e66f50ee64a277f22c17e74ae4ddbd742b4b409cd95453217d68f240e906"
+    },
+    {
+      "bytes": 162787,
+      "path": "figures/figure_gui_material.png",
+      "sha256": "bb9961cb036d32b8ac88e5473006abb1f67051d363b16d085927af4ef8adfcba"
+    },
+    {
+      "bytes": 220950,
+      "path": "figures/figure_gui_request.png",
+      "sha256": "135d5ab3b091e921f32fb8e855069e17506cf556123e5045515b207497f243d8"
+    },
+    {
+      "bytes": 143138,
+      "path": "figures/figure_gui_results.png",
+      "sha256": "8478b205c0d3d19813f0fe661a3726f06534262b23072f83df9efcbf0937627c"
+    },
+    {
+      "bytes": 52552,
+      "path": "figures/figure_gui_products.png",
+      "sha256": "ca384698844fa6096d66a4d2f65257dffb65d4284b8009b94a4ebe6147c6e683"
+    },
+    {
+      "bytes": 255917,
+      "path": "figures/figure_tangent_verification.png",
+      "sha256": "fb526fdc0de18af9dba713d5276cb138ccdf34b4ed69a60ea7ff8eef7a1a5b7e"
+    },
+    {
+      "bytes": 218565,
+      "path": "figures/figure_higher_order_verification.png",
+      "sha256": "eecbae7fa7829c298975f203f2774378d33fada1da591479ea851fd97aaf10c8"
+    },
+    {
+      "bytes": 346907,
+      "path": "figures/figure_sensitivities.png",
+      "sha256": "3e720d0ff15bc1506a602edc79637c46c1914ed58031ebdc21162c75ab60449f"
+    },
+    {
+      "bytes": 178250,
+      "path": "figures/figure_collection_coverage.png",
+      "sha256": "0d51e9463f01fdfa833d5f5f572efdf3b8150e4664e09e3fe9aa7dc4d19902f3"
+    },
+    {
+      "bytes": 146012,
+      "path": "figures/figure_verification_routes.png",
+      "sha256": "dd51a9db85b67471ca088c09bfc8216f9b022243ddbea452c93f8f9427b66626"
+    },
+    {
+      "bytes": 6592,
+      "path": "figures/gui_screenshots_provenance.json",
+      "sha256": "a0a45fa4aae53f54b81e09fe5660fa3c6b8c4a05d5015c51a9c5cb9e1f7d68cf"
+    },
+    {
+      "bytes": 2753,
+      "path": "figures/figure_tangent_verification_provenance.json",
+      "sha256": "d73263037f8f41e5922a0ef44b05453abaf8569691926d7c51e2e272444f7a6e"
+    },
+    {
+      "bytes": 3703,
+      "path": "figures/figure_higher_order_verification_provenance.json",
+      "sha256": "13af6a617d0cfa7d4f5227b81241099efac4ead2138fb0a1e811df5e3f6ee4a0"
+    },
+    {
+      "bytes": 3971,
+      "path": "figures/figure_sensitivities_provenance.json",
+      "sha256": "ba7afbd65e16e69d1cc0a29e6acd243bf9f38603ed8a8827b19e04f100625f7b"
+    },
+    {
+      "bytes": 3503,
+      "path": "figures/figure_collection_coverage_provenance.json",
+      "sha256": "f4367efe72caede470b2f640dae20a4f6913eb8c40a4d686a695c8216ad43339"
+    },
+    {
+      "bytes": 2679,
+      "path": "figures/figure_verification_routes_provenance.json",
+      "sha256": "1197eb6fb05649940f273a4e633cbd484848c31789413f541ff737a0b5760510"
+    },
+    {
+      "bytes": 41685,
+      "path": "tables/paper_tables.docx",
+      "sha256": "634bf3d9116929d9c94d1503f149d8674e2f07333cdbd7fc9361d9efc7cd1449"
+    },
+    {
+      "bytes": 5723,
+      "path": "PAPER_READY_SUMMARY.md",
+      "sha256": "efa19a87c664ff78fafa13743574b2bf6ca758513589b0aa4cc9c0a2eddf9cde"
+    }
+  ],
+  "evidence_files_absent": [],
+  "frozen_at": "2026-08-26T18:56:22.979907+00:00",
+  "policy": "Every figure and table in the manuscript is generated from the files in this directory. A number that appears in the paper and not here has no provenance and must not be published.",
+  "regeneration_commands": [
+    "python tools/run_parameter_sensitivity_sweep.py",
+    "python tools/run_internal_jacobian_round.py",
+    "python tools/run_corpus_round.py",
+    "python tools/build_source_identity_registry.py",
+    "python tools/build_generality_matrix.py",
+    "python tools/build_publication_reconciliation.py",
+    "python tools/build_paper_summary.py",
+    "python tools/freeze_publication_evidence.py"
+  ],
+  "repositories": {
+    "residual_assembler": {
+      "branch": "feature/umat-oti-residual-bridge",
+      "commit": "f928acec970acf68670eba9102e6b962dabb094c",
+      "dirty_check_note": "paper_results/frozen/ is excluded: it is this tool's own output",
+      "dirty_paths": [],
+      "path_name": "Residual_Assembler",
+      "url": "https://github.com/AMMS-Lab-UTSA/Residual_Assembler.git",
+      "worktree_dirty": false
+    },
+    "umat_source_transformation": {
+      "branch": "feature/softwarex-unified-umat-oti",
+      "commit": "2692f4724d2d0e6487b70daa42455b2542c5d89b",
+      "dirty_check_note": "paper_results/frozen/ is excluded: it is this tool's own output",
+      "dirty_paths": [],
+      "path_name": "UMAT_source_transformation",
+      "url": "https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git",
+      "worktree_dirty": false
+    }
+  },
+  "schema": "umat-oti-frozen-evidence/1",
+  "snapshot_name": "umat-2692f4724d2d_ra-f928acec970a",
+  "tolerances": {
+    "derivative_relative_tolerance": {
+      "applies_to": "OTI derivative against its independent reference",
+      "justification": "A centred difference at a well-chosen step resolves a smooth derivative to roughly 1e-8 relative; 1e-6 leaves two decades of margin for the reference's own truncation without admitting a genuine transformation error. It is never widened to recover a result: a row the reference cannot resolve at this tolerance is reported as unresolved, not as agreement.",
+      "value": 1e-06
+    },
+    "finite_difference_default_relative_step": {
+      "applies_to": "first-pass centred-difference reference",
+      "justification": "A first pass only. Where a row disagrees, the step is chosen from the method's own convergence over a ladder spanning 1e-2 to 1e-7 rather than fixed in advance, because a fixed step is a guess about the model's third derivative.",
+      "value": 0.0001
+    },
+    "finite_difference_noise_floor": {
+      "applies_to": "whether the reference can adjudicate a row at all",
+      "expression": "eps * max(|response_scale|, 1) / (2h)",
+      "justification": "Models cancellation only. Truncation is handled separately by the step-convergence study, because the two dominate in opposite step regimes."
+    },
+    "primal_parity_relative_tolerance": {
+      "applies_to": "stress and state of the original vs transformed build",
+      "justification": "The two builds run the same algorithm in different arithmetic, so they should agree to near machine precision; 1e-9 catches a genuine divergence while tolerating reassociation. Measured values sit at 1e-14 to 1e-16, far inside it.",
+      "value": 1e-09
+    }
+  },
+  "verification_gates": [
+    {
+      "gate": 1,
+      "meaning": "the source is identified by content and its helper closure resolves with no missing or ambiguous definitions",
+      "name": "source identity and dependency closure"
+    },
+    {
+      "gate": 2,
+      "meaning": "the OTI source was generated",
+      "name": "transformation"
+    },
+    {
+      "gate": 3,
+      "meaning": "original and transformed compiled independently",
+      "name": "compilation of both implementations"
+    },
+    {
+      "gate": 4,
+      "meaning": "both ran the path",
+      "name": "execution of both"
+    },
+    {
+      "gate": 5,
+      "meaning": "stress and state agree, so the derivatives are comparable",
+      "name": "primal parity"
+    },
+    {
+      "gate": 6,
+      "meaning": "an independent reference can determine the value",
+      "name": "reference resolution"
+    },
+    {
+      "gate": 7,
+      "meaning": "the extracted derivative agrees with that reference",
+      "name": "derivative comparison"
+    },
+    {
+      "_policy": "A case failing an earlier gate contributes no verified derivative rows. Compilation is not verification."
+    }
+  ]
+}

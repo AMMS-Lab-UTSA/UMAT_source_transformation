@@ -1,0 +1,138 @@
+{
+  "answers": "How does the material point's response depend on each material constant, along the whole loading path?",
+  "command": "python tools/figures/build_sensitivity_figure.py",
+  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "figure": "figure_sensitivities",
+  "generated_at": "2026-08-26T18:46:47.134679+00:00",
+  "inputs": [
+    {
+      "bytes": 1847975,
+      "path": "paper_results/parameter_sensitivity/table6_comparison_rows.csv",
+      "sha256": "684cd82e2c4e302cd1a9029fe9b466c5f8b8d2039692de0034266c284138737e"
+    },
+    {
+      "bytes": 2111,
+      "path": "parameter_sensitivity/contracts/m3_j2.json",
+      "sha256": "22cedb70d2e7bab4ccb97fd65d062c334f30ddc70a0c2f11c6e74824f33d795d"
+    }
+  ],
+  "layout": {
+    "configured_font_sizes": {
+      "axes.labelsize": 10.0,
+      "axes.titlesize": 11.0,
+      "figure.titlesize": 12.0,
+      "font.size": 10.0,
+      "legend.fontsize": 9.5,
+      "xtick.labelsize": 9.5,
+      "ytick.labelsize": 9.5
+    },
+    "figure_width_in": 6.2,
+    "minimum_rendered_pt": 9.0
+  },
+  "notes": "Row-adjudication counts are reported in the validation table, not here: they answer how many comparisons the reference could settle, which is a different question from how the material responds.",
+  "outputs": {
+    "axes": [
+      {
+        "axes": 0,
+        "title": "",
+        "xlabel": "",
+        "xscale": "linear",
+        "ylabel": "$p\\,\\partial\\sigma_{11}/\\partial p$  (MPa)",
+        "yscale": "linear"
+      },
+      {
+        "axes": 1,
+        "title": "",
+        "xlabel": "increment along the loading path",
+        "xscale": "linear",
+        "ylabel": "$p\\,\\partial\\bar\\varepsilon^{\\,p}/\\partial p$  (dimensionless)",
+        "yscale": "linear"
+      },
+      {
+        "axes": 2,
+        "title": "",
+        "xlabel": "",
+        "xscale": "linear",
+        "ylabel": "$H$ only (right axis)",
+        "yscale": "linear"
+      },
+      {
+        "axes": 3,
+        "title": "",
+        "xlabel": "",
+        "xscale": "linear",
+        "ylabel": "$H$ only (right axis)",
+        "yscale": "linear"
+      }
+    ],
+    "height_inches": 5.6,
+    "pdf": "paper_results/figures/figure_sensitivities.pdf",
+    "pdf_sha256": "64541dce78116acaf97d47e08203d99497b681c9e5ab8fd3d408a6540bdfa306",
+    "png": "paper_results/figures/figure_sensitivities.png",
+    "png_sha256": "3e720d0ff15bc1506a602edc79637c46c1914ed58031ebdc21162c75ab60449f",
+    "smallest_configured_pt": 9.5,
+    "smallest_printed_pt": 9.5,
+    "width_inches": 6.2
+  },
+  "plotted_filters": {
+    "axis_scale": "linear in both panels; no logarithmic axis is used, so the exact zeros before yield are plotted where they belong",
+    "curve_definition": "parameter-scaled: p * d(response)/dp, with p read from the committed contract",
+    "increments": "1-20, the complete path, no selection",
+    "model": "m3_j2",
+    "parameter_values_from_contract": {
+      "E": 210000.0,
+      "H": 2000.0,
+      "SIGY0": 250.0,
+      "nu": 0.3
+    },
+    "second_axis": {
+      "panel_a": [
+        "H"
+      ],
+      "panel_b": [
+        "H"
+      ]
+    },
+    "state_component": 1,
+    "stress_component": 1
+  },
+  "row_counts": {
+    "disagreeing_rows": 0,
+    "first_inelastic_increment": 16,
+    "model_rows": 560,
+    "panel_a": {
+      "largest_absolute_value": {
+        "E": 424.03846153846126,
+        "H": 0.3955595809883948,
+        "SIGY0": 165.30226700251893,
+        "nu": 524.6843850922218
+      },
+      "on_second_axis": [
+        "H"
+      ],
+      "plotted": {
+        "E": 20,
+        "H": 20,
+        "SIGY0": 20,
+        "nu": 20
+      }
+    },
+    "panel_b": {
+      "largest_absolute_value": {
+        "E": 0.001025748450278855,
+        "H": 2.448702168023398e-06,
+        "SIGY0": 0.001023299748110832,
+        "nu": 0.0002367111808335811
+      },
+      "on_second_axis": [
+        "H"
+      ],
+      "plotted": {
+        "E": 20,
+        "H": 20,
+        "SIGY0": 20,
+        "nu": 20
+      }
+    }
+  }
+}
