@@ -1,0 +1,102 @@
+{
+  "answers": "How much of the collected UMAT corpus reached numerical verification, and where did the rest stop?",
+  "command": "python tools/figures/build_collection_figures.py",
+  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "figure": "figure_collection_coverage",
+  "generated_at": "2026-08-26T18:48:39.824144+00:00",
+  "inputs": [
+    {
+      "bytes": 33097,
+      "path": "paper_results/generality/generality_matrix.csv",
+      "sha256": "19aa17c889a05fd80b2d30e92f08b8e458a8e13efd377a2b3ff6bf0a87fb9cef"
+    },
+    {
+      "bytes": 4455,
+      "path": "paper_results/generality/generality_summary.json",
+      "sha256": "0127c207a691fba1caff8fcc44edb8b50d97381e7e62dc2d512303af2cd3692c"
+    },
+    {
+      "bytes": 12351,
+      "path": "paper_results/generality/source_identity.csv",
+      "sha256": "7d87f47bba1e93bc077f1ea88d94a921e2cb5820ca0212d47675de4f5d3aedb0"
+    }
+  ],
+  "layout": {
+    "configured_font_sizes": {
+      "axes.labelsize": 10.0,
+      "axes.titlesize": 11.0,
+      "figure.titlesize": 12.0,
+      "font.size": 10.0,
+      "legend.fontsize": 9.5,
+      "xtick.labelsize": 9.5,
+      "ytick.labelsize": 9.5
+    },
+    "figure_width_in": 6.2,
+    "minimum_rendered_pt": 9.0
+  },
+  "notes": "",
+  "outputs": {
+    "axes": [
+      {
+        "axes": 0,
+        "title": "",
+        "xlabel": "UMAT sources (from 54 discovered files; every attempt kept)",
+        "xscale": "linear",
+        "ylabel": "",
+        "yscale": "linear"
+      }
+    ],
+    "height_inches": 4.2,
+    "pdf": "paper_results/figures/figure_collection_coverage.pdf",
+    "pdf_sha256": "93e6a36e11dd8beb2f49ddae89de39b0a56e677afed52815fa2022933e2fe37d",
+    "png": "paper_results/figures/figure_collection_coverage.png",
+    "png_sha256": "0d51e9463f01fdfa833d5f5f572efdf3b8150e4664e09e3fe9aa7dc4d19902f3",
+    "smallest_configured_pt": 9.5,
+    "smallest_printed_pt": 9.5,
+    "width_inches": 6.2
+  },
+  "plotted_filters": {
+    "denominator": "41 eligible collection sources; the bars above it count files and implementations, which is why they are larger",
+    "equal_stages": "transformation, compilation and primal parity are one bar because no source failed any of them; drawing three equal bars would imply attrition that did not occur",
+    "excluded": [
+      "j2",
+      "m3_j2"
+    ],
+    "exclusion_reason": "the illustrative example is reported only in the illustrative section",
+    "two_step_deduction": "45 distinct implementations minus the property decks that carry no entry routine gives 43 matrix rows, minus 2 illustrative rows gives 41"
+  },
+  "row_counts": {
+    "attempted offline": {
+      "count": 26,
+      "note": "the rest took the Abaqus route only"
+    },
+    "derivative verified offline": {
+      "count": 24,
+      "note": "two are withheld by their reference"
+    },
+    "distinct implementations": {
+      "count": 45,
+      "note": "after global identity reconciliation"
+    },
+    "eligible collection sources": {
+      "count": 41,
+      "note": "the illustrative example excluded"
+    },
+    "files discovered": {
+      "count": 54,
+      "note": "everything the acquisition returned"
+    },
+    "in the verification matrix": {
+      "count": 43,
+      "note": "property decks carry no entry routine"
+    },
+    "transformed, compiled and primal-parity checked": {
+      "count": 26,
+      "note": "no source failed any of these three"
+    },
+    "verified in Abaqus": {
+      "count": 17,
+      "note": "a separate route, not a later stage"
+    }
+  }
+}

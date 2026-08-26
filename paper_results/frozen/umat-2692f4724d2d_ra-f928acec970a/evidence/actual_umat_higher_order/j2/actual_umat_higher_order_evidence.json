@@ -1,0 +1,278 @@
+{
+  "artifacts": [
+    {
+      "path": "<work>/j2_props_oti.f",
+      "sha256": "554d9df051a3fcae38cd35a1a1c85c8b6238dfffe5081dae75e4758a28be8ce6"
+    },
+    {
+      "path": "<work>/otim6n4.f90",
+      "sha256": "c476ca61afb4cfe2f5f1c3ffa035ec1c6ef097ffe875b3caa80f584e0810360c"
+    },
+    {
+      "path": "<work>/actual_umat_higher_order_driver.f90",
+      "sha256": "dab7b51e4fa20a34250c837d7a5813dd41990ee92650ba74ea6c4182f6c1bbab"
+    },
+    {
+      "path": "<work>/actual_umat_higher_order_driver",
+      "sha256": "00d403ccf18d6d09d825cceef45acd708532cc7e9d5c981e5214ac9a4e63b783"
+    },
+    {
+      "path": "<work>/oti_hjac.dat",
+      "sha256": "1f47baba5a79d50333b1bea77c576ccbfa7ed096a2f9c1ae0f1f7ed58187e6fd"
+    },
+    {
+      "path": "<work>/actual_umat_higher_order_comparison.csv",
+      "sha256": "0558485f01398580707357b72ba929c15a235b651411e797d32973d6fd23cfd5"
+    },
+    {
+      "path": "<work>/table4_higher_order_actual_umat.csv",
+      "sha256": "0239f8d5b50b1c1f4aee770750d4b490319a305a3d0291e54b2a1273e4d67960"
+    },
+    {
+      "path": "<work>/actual_umat_primal.csv",
+      "sha256": "a89579696d887f7de09a8b4b736cc77a9123de68ba82cd446f7ee3ddfff5c23b"
+    },
+    {
+      "path": "<work>/actual_umat_ddsdde.csv",
+      "sha256": "bba500f36d48fa07058e0feadc9b786e30ad3a872c6c4f92a8d415f0e3ccf540"
+    },
+    {
+      "path": "<work>/table2_ddsdde_illustrative.csv",
+      "sha256": "b8d5293d6634119d134efe10a6de62eab8c6b4794113c9f0667e145f62b42d01"
+    }
+  ],
+  "branch_history": [
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0,
+      "eqplas_before": 0.0,
+      "increment": 1,
+      "yielded": false
+    },
+    {
+      "dgamma": 0.00031394580304031734,
+      "eqplas_after": 0.00031394580304031734,
+      "eqplas_before": 0.0,
+      "increment": 2,
+      "yielded": true
+    },
+    {
+      "dgamma": 0.00023757536285034934,
+      "eqplas_after": 0.0005515211658906667,
+      "eqplas_before": 0.00031394580304031734,
+      "increment": 3,
+      "yielded": true
+    }
+  ],
+  "canonical_manifest": "<work>/derivative_manifest.json",
+  "comparison": {
+    "absolute_tolerances_by_order": {
+      "2": 1e-05,
+      "3": 0.02,
+      "4": 0.1
+    },
+    "csv": "<work>/actual_umat_higher_order_comparison.csv",
+    "failed_rows": 0,
+    "max_absolute_error": 12320.98046875,
+    "max_relative_error": 1.0013220965779142,
+    "max_relative_error_when_absolute_tolerance_exceeded": 1.9367542501703836e-09,
+    "passed_rows": 108,
+    "publication_table": "<work>/table4_higher_order_actual_umat.csv",
+    "relative_tolerance": 1e-07,
+    "rows": 108
+  },
+  "compiler": {
+    "command": [
+      "<work>/compile_hint.sh"
+    ],
+    "returncode": 0,
+    "status": "compiled",
+    "stderr": "",
+    "stdout": ""
+  },
+  "directions": [
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      2
+    ],
+    [
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      2,
+      2
+    ]
+  ],
+  "driver_compile": {
+    "command": [
+      "gfortran",
+      "-O1",
+      "-std=legacy",
+      "-ffree-line-length-none",
+      "-I",
+      "<work>/.",
+      "<work>/actual_umat_higher_order_driver.f90",
+      "<work>/master_parameters.o",
+      "<work>/real_utils.o",
+      "<work>/otim6n4.o",
+      "<work>/transformed_umat.o",
+      "-o",
+      "<work>/actual_umat_higher_order_driver"
+    ],
+    "returncode": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  "execution": {
+    "command": [
+      "<work>/actual_umat_higher_order_driver"
+    ],
+    "returncode": 0
+  },
+  "factorial_recovery": "OTI coefficients are multiplied by product factorials before oti_hjac.dat output.",
+  "increments": [
+    [
+      0.0001,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.002,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0003,
+      -0.0001,
+      0.0,
+      0.0002,
+      0.0,
+      0.0
+    ]
+  ],
+  "model": "controlled_j2_actual_umat",
+  "normalized_request": [
+    {
+      "id": "stress_strain_order_four",
+      "kind": "higher_order",
+      "order": 4,
+      "output_layout": "jacobian",
+      "parameters": [
+        {
+          "name": "E",
+          "props_index": 1
+        },
+        {
+          "name": "XNU",
+          "props_index": 2
+        },
+        {
+          "name": "SIGY0",
+          "props_index": 3
+        },
+        {
+          "name": "H",
+          "props_index": 4
+        }
+      ],
+      "response": "STRESS",
+      "seed": [
+        "DSTRAN"
+      ],
+      "source_contract": "unified",
+      "state_variables": [
+        {
+          "name": "EQPLAS",
+          "statev_index": 1
+        }
+      ],
+      "target": "DDSDDE4"
+    }
+  ],
+  "primal_rows": [
+    {
+      "eqplas": "  0.0000000000000000E+00",
+      "increment": "1",
+      "stress_1": "  2.6923076923076927E+01",
+      "stress_2": "  1.1538461538461538E+01",
+      "stress_3": "  1.1538461538461538E+01",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  3.1394580304031739E-04",
+      "increment": "2",
+      "stress_1": "  5.1708526107072043E+02",
+      "stress_2": "  2.6645736946463978E+02",
+      "stress_3": "  2.6645736946463978E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  5.5152116589066603E-04",
+      "increment": "3",
+      "stress_1": "  5.4993969739918111E+02",
+      "stress_2": "  2.9371637463356285E+02",
+      "stress_3": "  3.0634392796725598E+02",
+      "stress_4": "  1.2627553333693180E+01",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    }
+  ],
+  "reference": {
+    "method": "independent tensor-product finite differences of validation.j2_reference.integrate_increment",
+    "stencil": "9-point centered per active strain component",
+    "step": 2e-05
+  },
+  "schema": "umat-oti-actual-higher-order-evidence/1",
+  "source": {
+    "path": "UMATs/UMATs/generic_ps/j2_props.f",
+    "sha256": "4362e759c4642cb2f74e20c50b86a9472b1e80d6a7fef663bf8faa3dfa8de1c8"
+  },
+  "status": "verified_from_generic_transformed_source",
+  "tangent": {
+    "agreeing": 108,
+    "csv": "<work>/table2_ddsdde_illustrative.csv",
+    "disagreeing": 0,
+    "entries": 108,
+    "measured": 42,
+    "reference_unresolved": 0,
+    "references": [
+      "closed-form elastoplastic consistent tangent from umat_oti.validation.j2_reference",
+      "80-digit centred difference of the independent integrator umat_oti.validation.actual_umat_higher_order._integrate_increment_mp"
+    ],
+    "relative_tolerance": 1e-09,
+    "resolved": 108,
+    "structural_zeros": 66,
+    "structural_zeros_disagreeing": 0,
+    "worst_measured_relative_error": 2.517698407641461e-15,
+    "worst_reference_spread_relative_where_measured": 4.770094035526686e-14
+  }
+}

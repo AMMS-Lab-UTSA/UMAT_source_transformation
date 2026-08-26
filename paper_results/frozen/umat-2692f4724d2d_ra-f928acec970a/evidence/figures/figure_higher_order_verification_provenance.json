@@ -1,0 +1,99 @@
+{
+  "answers": "Does the agreement with an independent reference hold as the derivative order rises, and does it depend on whether the differentiation directions repeat?",
+  "command": "python tools/figures/build_higher_order_figure.py",
+  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "figure": "figure_higher_order_verification",
+  "generated_at": "2026-08-26T18:49:48.377849+00:00",
+  "inputs": [
+    {
+      "bytes": 49517,
+      "path": "paper_results/higher_order_convergence/j2/convergence_rows.csv",
+      "sha256": "13f0431bbf977837858e03f92b2931ab1ecfc3d722a69798b97316bc207ce51c"
+    }
+  ],
+  "layout": {
+    "configured_font_sizes": {
+      "axes.labelsize": 10.0,
+      "axes.titlesize": 11.0,
+      "figure.titlesize": 12.0,
+      "font.size": 10.0,
+      "legend.fontsize": 9.5,
+      "xtick.labelsize": 9.5,
+      "ytick.labelsize": 9.5
+    },
+    "figure_width_in": 6.2,
+    "minimum_rendered_pt": 9.0
+  },
+  "notes": "",
+  "outputs": {
+    "axes": [
+      {
+        "axes": 0,
+        "title": "",
+        "xlabel": "derivative order of the stress with respect to the strain increment",
+        "xscale": "linear",
+        "ylabel": "relative difference from the\n80-digit reference (dimensionless)",
+        "yscale": "log"
+      }
+    ],
+    "height_inches": 3.4,
+    "pdf": "paper_results/figures/figure_higher_order_verification.pdf",
+    "pdf_sha256": "e40f6d19b8d463ce6ffbb0c3552364f6d28144bd2165238564d4b55527f5ad7e",
+    "png": "paper_results/figures/figure_higher_order_verification.png",
+    "png_sha256": "eecbae7fa7829c298975f203f2774378d33fada1da591479ea851fd97aaf10c8",
+    "smallest_configured_pt": 9.5,
+    "smallest_printed_pt": 9.5,
+    "width_inches": 6.2
+  },
+  "plotted_filters": {
+    "axis_scale": "logarithmic in the error; no zero is placed on it",
+    "direction_classes": "as labelled by the study's own direction_pattern column",
+    "error_definition": "|generated - reference| / max(|generated|, |reference|)",
+    "model": "controlled_j2_actual_umat (the illustrative example)",
+    "not_plotted": "77 comparisons the reference independently shows to be zero, and 0 the reference cannot resolve",
+    "plotted": "comparisons whose absolute difference exceeds their absolute tolerance, so a relative error is meaningful",
+    "reference_method": "independent tensor-product finite differences of umat_oti.validation.j2_reference evaluated at 80 decimal digits",
+    "shaded_band": "the reference's own relative resolution, the widest plateau_relative_uncertainty over the resolved rows; below it the reference cannot distinguish the two values"
+  },
+  "row_counts": {
+    "by_group": {
+      "order 2, mixed": {
+        "comparisons": 18,
+        "independently_shown_to_be_zero": 12,
+        "resolved": 6
+      },
+      "order 2, repeated": {
+        "comparisons": 18,
+        "independently_shown_to_be_zero": 14,
+        "resolved": 4
+      },
+      "order 3, mixed": {
+        "comparisons": 18,
+        "independently_shown_to_be_zero": 12,
+        "resolved": 6
+      },
+      "order 3, repeated": {
+        "comparisons": 18,
+        "independently_shown_to_be_zero": 14,
+        "resolved": 4
+      },
+      "order 4, mixed": {
+        "comparisons": 18,
+        "independently_shown_to_be_zero": 11,
+        "resolved": 7
+      },
+      "order 4, repeated": {
+        "comparisons": 18,
+        "independently_shown_to_be_zero": 14,
+        "resolved": 4
+      }
+    },
+    "comparisons": 108,
+    "disagreeing": 0,
+    "independently_shown_to_be_zero": 77,
+    "reference_relative_resolution": 8.349305707578356e-06,
+    "reference_unresolved": 0,
+    "resolved": 31,
+    "worst_resolved_relative_error": 3.018419325837293e-11
+  }
+}

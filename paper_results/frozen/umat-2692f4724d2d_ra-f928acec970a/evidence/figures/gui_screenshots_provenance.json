@@ -1,0 +1,131 @@
+{
+  "app": "src/umat_oti/app/workbench_app.py",
+  "command": "python tools/figures/capture_gui_screenshots.py",
+  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "example": "parameter_sensitivity/models/m3_j2/umat.for",
+  "generated_at": "2026-08-26T18:47:18.523488+00:00",
+  "minimum_required_pt": 9.0,
+  "note": "Each screenshot is one step of the guided workflow, captured whole. Nothing is composited and nothing is cropped away except the browser chrome. The example ships with the repository, so no personal path appears.",
+  "placed_width_in": 6.2,
+  "screenshots": {
+    "figure_gui_material": {
+      "overflow": {
+        "clientWidth": 820,
+        "overflowing": [],
+        "scrollWidth": 820
+      },
+      "pdf": "paper_results/figures/figure_gui_material.pdf",
+      "pixels": [
+        1604,
+        2134
+      ],
+      "placed_height_in": 8.25,
+      "png": "paper_results/figures/figure_gui_material.png",
+      "png_sha256": "bb9961cb036d32b8ac88e5473006abb1f67051d363b16d085927af4ef8adfcba",
+      "purpose": "The material description, prefilled from the example's committed contract.",
+      "region": "div.block-container",
+      "smallest_text_printed_pt": 9.25,
+      "step_heading": "2. Material model",
+      "visible_text_head": "UMAT-OTI workbench\n\nGenerate and verify derivatives of an Abaqus UMAT, without editing the subroutine.\n\n1. Source\n2. Material model\n3. Derivatives and loading\n4. Run and results\n\nm3_j2 \u00b7 fixed form \u00b7 1 routine \u00b7 0 local Newton solves \u00b7 NTENS 6 \u00b7 NSTATV 1 \u00b7 4 constants\n\n2. Material model\n\nDescribe the material the subroutine expects.\n\nMaterial constants\n\nPROPS is the vector of constants the subrout"
+    },
+    "figure_gui_products": {
+      "overflow": {
+        "clientWidth": 820,
+        "overflowing": [],
+        "scrollWidth": 820
+      },
+      "pdf": "paper_results/figures/figure_gui_products.pdf",
+      "pixels": [
+        1572,
+        636
+      ],
+      "placed_height_in": 2.51,
+      "png": "paper_results/figures/figure_gui_products.png",
+      "png_sha256": "ca384698844fa6096d66a4d2f65257dffb65d4284b8009b94a4ebe6147c6e683",
+      "purpose": "One card per derivative product, each with its outcome word, what that word means, and the numbers behind it.",
+      "region": ".st-key-results_products",
+      "smallest_text_printed_pt": 9.25,
+      "step_heading": "4. Run and results",
+      "visible_text_head": "Derivative products\n\nStress sens.\n\nState sens.\n\nInternal Jac.\n\nTangent\n\nHigher order\n\nPASS \u00a0 Stress sensitivity to material parameters \u00b7 DSIGMA_DP\n\nChecked numerically against an independent reference and agreed.\n\nrows\n\n560\n\nagreeing\n\n560\n\nreference unresolved\n\n0\n\nsubstantive rows\n\n75\n\nkeyboard_arrow_right\n\nAll reported numbers for this product"
+    },
+    "figure_gui_request": {
+      "overflow": {
+        "clientWidth": 820,
+        "overflowing": [],
+        "scrollWidth": 820
+      },
+      "pdf": "paper_results/figures/figure_gui_request.pdf",
+      "pixels": [
+        1604,
+        2042
+      ],
+      "placed_height_in": 7.89,
+      "png": "paper_results/figures/figure_gui_request.png",
+      "png_sha256": "135d5ab3b091e921f32fb8e855069e17506cf556123e5045515b207497f243d8",
+      "purpose": "Choosing what to compute, with an unsupported product reported before the run rather than after it.",
+      "region": "div.block-container",
+      "smallest_text_printed_pt": 9.25,
+      "step_heading": "3. Derivatives and loading",
+      "visible_text_head": "UMAT-OTI workbench\n\nGenerate and verify derivatives of an Abaqus UMAT, without editing the subroutine.\n\n1. Source\n2. Material model\n3. Derivatives and loading\n4. Run and results\n\nm3_j2 \u00b7 fixed form \u00b7 1 routine \u00b7 0 local Newton solves \u00b7 NTENS 6 \u00b7 NSTATV 1 \u00b7 4 constants\n\n3. Derivatives and loading\n\nChoose what to compute, and how to load it.\n\nWhat should be computed?\n\nConsistent tangent \u00b7 DDSDDE\n\nIn"
+    },
+    "figure_gui_results": {
+      "overflow": {
+        "clientWidth": 820,
+        "overflowing": [],
+        "scrollWidth": 820
+      },
+      "pdf": "paper_results/figures/figure_gui_results.pdf",
+      "pixels": [
+        1572,
+        1582
+      ],
+      "placed_height_in": 6.24,
+      "png": "paper_results/figures/figure_gui_results.png",
+      "png_sha256": "8478b205c0d3d19813f0fe661a3726f06534262b23072f83df9efcbf0937627c",
+      "purpose": "The completed run: every stage, its duration, and whether the two builds agree before any derivative is compared.",
+      "region": ".st-key-results_summary",
+      "smallest_text_printed_pt": 9.25,
+      "step_heading": "4. Run and results",
+      "visible_text_head": "Results\n\nPipeline stages\n\nFurthest stage reached: Derivatives compared\n\nDo the two builds agree before any derivative is compared?\n\nPASS \u00a0 Stress and state agree between the independently compiled original and transformed builds. Worst relative difference 2.011e-16. The derivative comparisons below are therefore between comparable quantities."
+    },
+    "figure_gui_source": {
+      "overflow": {
+        "clientWidth": 820,
+        "overflowing": [],
+        "scrollWidth": 820
+      },
+      "pdf": "paper_results/figures/figure_gui_source.pdf",
+      "pixels": [
+        1604,
+        1598
+      ],
+      "placed_height_in": 6.18,
+      "png": "paper_results/figures/figure_gui_source.png",
+      "png_sha256": "6ab5e66f50ee64a277f22c17e74ae4ddbd742b4b409cd95453217d68f240e906",
+      "purpose": "Choosing the UMAT and reading what the analysis found in it.",
+      "region": "div.block-container",
+      "smallest_text_printed_pt": 9.25,
+      "step_heading": "1. Source",
+      "visible_text_head": "UMAT-OTI workbench\n\nGenerate and verify derivatives of an Abaqus UMAT, without editing the subroutine.\n\n1. Source\n2. Material model\n3. Derivatives and loading\n4. Run and results\n1. Source\n\nChoose the UMAT subroutine to differentiate.\n\nWhich UMAT do you want to differentiate?\n\nparameter_sensitivity/models/m3_j2/umat.for \u2014 prefilled from parameter_sensitivity/contracts/m3_j2.json\n\nkeyboard_arrow_rig"
+    }
+  },
+  "smallest_text_css_px": 17,
+  "smallest_text_printed_pt": 9.25,
+  "supported_viewports": {
+    "1366x768": {
+      "clientWidth": 1366,
+      "overflowing": [],
+      "scrollWidth": 1366
+    },
+    "1440x900": {
+      "clientWidth": 1440,
+      "overflowing": [],
+      "scrollWidth": 1440
+    }
+  },
+  "viewport": {
+    "device_scale_factor": 2,
+    "height": 1400,
+    "width": 820
+  }
+}
