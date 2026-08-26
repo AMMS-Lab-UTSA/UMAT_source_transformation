@@ -103,7 +103,7 @@ def _decade_ticks(threshold: float, scale: float) -> list[float]:
     if high < low:
         return [-scale, 0.0, scale]
     stride = max(1, (high - low) // 3)
-    decades = sorted({d for d in range(high, low - 1, -stride)})[-3:]
+    decades = sorted({d for d in range(high, low - 1, -stride)})[-2:]
     positive = [10.0 ** d for d in decades]
     return [-value for value in reversed(positive)] + [0.0] + positive
 

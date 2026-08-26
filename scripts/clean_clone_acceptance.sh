@@ -70,12 +70,36 @@ else
 fi
 
 step "3. create a fresh virtual environment"
-"${PYTHON:-python3}" -m venv "$WORK/venv"
+# The interpreter has to satisfy the floor pyproject.toml declares. Left to
+# find `python3` on PATH this picked up a 3.9 that the install then rejected
+# several steps later, which reads like a repository fault rather than a
+# missing interpreter.
+CLONE_PYTHON="${PYTHON:-}"
+if [ -z "$CLONE_PYTHON" ]; then
+  for candidate in python3.12 python3.11 python3.10 python3; do
+    # Version alone is not enough: a locally built interpreter can be missing
+    # ctypes or venv, and the failure then surfaces several steps later as a
+    # test collection error that reads like a repository fault.
+    if command -v "$candidate" >/dev/null 2>&1 && \
+       "$candidate" -c 'import sys, ctypes, venv; sys.exit(0 if sys.version_info >= (3, 10) else 1)' \
+       >/dev/null 2>&1; then
+      CLONE_PYTHON="$candidate"
+      break
+    fi
+  done
+fi
+if [ -z "$CLONE_PYTHON" ]; then
+  echo "    no Python 3.10 or newer on PATH; pyproject.toml requires >=3.10." >&2
+  echo "    Set PYTHON=/path/to/python3.11 and run again." >&2
+  exit 3
+fi
+echo "    using $($CLONE_PYTHON -c 'import sys; print(sys.version.split()[0])') ($CLONE_PYTHON)"
+"$CLONE_PYTHON" -m venv "$WORK/venv"
 VENV_PY="$WORK/venv/bin/python"
 "$VENV_PY" -m pip install --quiet --upgrade pip
 
 step "4. install from pyproject.toml alone"
-"$VENV_PY" -m pip install --quiet -e "$CLONE[test]"
+"$VENV_PY" -m pip install --quiet -e "$CLONE[test,paper]"
 "$VENV_PY" -c "import umat_oti; print('    umat_oti imported from', umat_oti.__file__)"
 
 step "5. run the $PROFILE reproduction profile"
