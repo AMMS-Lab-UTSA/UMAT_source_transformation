@@ -1,0 +1,978 @@
+{
+  "anchor_completion": {
+    "completion_issues": [],
+    "status": "ready_with_json_contract"
+  },
+  "blockers": [],
+  "branch_conditions": [
+    {
+      "condition": "SMISES.GT.SYIEL0",
+      "is_convergence_check": false,
+      "line_numbers": [
+        66
+      ],
+      "text": "IF (SMISES.GT.SYIEL0) THEN",
+      "tokens": [
+        "SMISES",
+        "SYIEL0"
+      ]
+    }
+  ],
+  "constant_variables": [
+    "COORDS",
+    "DPRED",
+    "DROT",
+    "DTEMP",
+    "DTIME",
+    "EBULK3",
+    "EG",
+    "EG2",
+    "EG3",
+    "ELAM",
+    "EMOD",
+    "ENU",
+    "HARD",
+    "ONE",
+    "PREDEF",
+    "PROPS",
+    "SIGY0",
+    "SIX",
+    "STRAN",
+    "TEMP",
+    "THREE",
+    "TIME",
+    "TWO",
+    "ZERO"
+  ],
+  "directions_required": {
+    "ddsdde_directions": 6,
+    "extra_directions": 0,
+    "slot_assignments": [],
+    "total_directions": 6
+  },
+  "extra_jacobian_contracts": [],
+  "extraction_inserted_after_stress_update": true,
+  "extraction_insertion_region_id": "TANGENT-005",
+  "extraction_method": "GETIM(STRESS_OTI(i), j)",
+  "finite_strain": {
+    "dfgrd0_executable_uses": [],
+    "dfgrd1_executable_uses": [],
+    "dfgrd_driven_stress_update": false,
+    "executable_dfgrd_use": false
+  },
+  "finite_strain_mode": {
+    "categories": {},
+    "enabled": false,
+    "promoted_kinematic_variables": [],
+    "reason": "No executable finite-strain kinematics detected on stress path"
+  },
+  "generated_files": [
+    "/home/ammslab3/softwarex_work/UMAT_source_transformation/reproduce/paper/work/m3_j2/master_parameters.f90",
+    "/home/ammslab3/softwarex_work/UMAT_source_transformation/reproduce/paper/work/m3_j2/real_utils.f90",
+    "/home/ammslab3/softwarex_work/UMAT_source_transformation/reproduce/paper/work/m3_j2/otim6n1.f90",
+    "/home/ammslab3/softwarex_work/UMAT_source_transformation/reproduce/paper/work/m3_j2/compile_order.txt",
+    "/home/ammslab3/softwarex_work/UMAT_source_transformation/reproduce/paper/work/m3_j2/compile_hint.sh",
+    "/home/ammslab3/softwarex_work/UMAT_source_transformation/reproduce/paper/work/m3_j2/umat_oti.for"
+  ],
+  "helper_policy": {
+    "default": "pass_through",
+    "helper_calls": [],
+    "notes": "Stress-path helper names are not readiness blockers. Compilation and validation determine whether pass-through is valid."
+  },
+  "jacobian_artifacts": [],
+  "jacobian_contract": {
+    "constant_material_parameters": [
+      "PROPS"
+    ],
+    "contract": "DDSDDE(i,j) = d STRESS(i) / d DSTRAN(j)",
+    "dependent_variable": "STRESS",
+    "independent_variable": "DSTRAN",
+    "notes": "For Abaqus DDSDDE extraction, seed DSTRAN. PROPS affect the stress response but remain constants during derivative extraction.",
+    "output_variable": "DDSDDE"
+  },
+  "keep_real_variables": [
+    "CELENT",
+    "CMNAME",
+    "DDSDDE",
+    "DDSDDT",
+    "DFGRD0",
+    "DFGRD1",
+    "DRPLDE",
+    "DRPLDT",
+    "EFFG",
+    "EFFG2",
+    "EFFG3",
+    "EFFHRD",
+    "EFFLAM",
+    "K1",
+    "K2",
+    "KINC",
+    "KSPT",
+    "KSTEP",
+    "LAYER",
+    "NDI",
+    "NOEL",
+    "NPROPS",
+    "NPT",
+    "NSHR",
+    "NSTATV",
+    "NTENS",
+    "PNEWDT",
+    "RPL",
+    "SCD",
+    "SPD",
+    "SSE"
+  ],
+  "ntens": 6,
+  "old_tangent_regions_replaced": [
+    {
+      "classification": "DDSDDE output replacement, replace with GETIM extraction",
+      "end_line": 108,
+      "preview": "        EFFG=EG*SYIELD/SMISES\n        EFFG2=TWO*EFFG\n        EFFG3=THREE/TWO*EFFG2\n        EFFLAM=(EBULK3-EFFG2)/THREE\n...\n          DO K2=1,NTENS\n            DDSDDE(K2,K1)=DDSDDE(K2,K1)+EFFHRD*FLOW(K2)*FLOW(K1)\n          END DO",
+      "reason": "EFFG feeds only the old DDSDDE/tangent block; EFFG2 feeds only the old DDSDDE/tangent block; EFFG3 feeds only the old DDSDDE/tangent block; EFFLAM feeds only the old DDSDDE/tangent block; EFFHRD feeds only the old DDSDDE/tangent block; assignment to DDSDDE old tangent/Jacobian output",
+      "region_id": "TANGENT-005",
+      "role": "ddsdde_output_replace",
+      "start_line": 86,
+      "variables": [
+        "DDSDDE",
+        "EBULK3",
+        "EFFG",
+        "EFFG2",
+        "EFFG3",
+        "EFFHRD",
+        "EFFLAM",
+        "EG",
+        "EG3",
+        "FLOW",
+        "HARD",
+        "K1",
+        "K2",
+        "SMISES",
+        "SYIELD",
+        "THREE",
+        "TWO",
+        "ZERO"
+      ]
+    }
+  ],
+  "oti_module_name": "otim6n1",
+  "oti_order": 1,
+  "oti_type_name": "ONUMM6N1",
+  "plasticity_indicators": {
+    "by_category": {
+      "flow": [
+        {
+          "executable": false,
+          "line_numbers": [
+            23
+          ],
+          "text": "DIMENSION FLOW(6)",
+          "tokens": [
+            "DIMENSION",
+            "FLOW"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            70
+          ],
+          "text": "FLOW(K1)=(STRESS(K1)-SHYDRO)/SMISES",
+          "tokens": [
+            "FLOW",
+            "K1",
+            "SHYDRO",
+            "SMISES",
+            "STRESS"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            73
+          ],
+          "text": "FLOW(K1)=STRESS(K1)/SMISES",
+          "tokens": [
+            "FLOW",
+            "K1",
+            "SMISES",
+            "STRESS"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            79
+          ],
+          "text": "STRESS(K1)=FLOW(K1)*SYIELD+SHYDRO",
+          "tokens": [
+            "FLOW",
+            "K1",
+            "SHYDRO",
+            "STRESS",
+            "SYIELD"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            82
+          ],
+          "text": "STRESS(K1)=FLOW(K1)*SYIELD",
+          "tokens": [
+            "FLOW",
+            "K1",
+            "STRESS",
+            "SYIELD"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            107
+          ],
+          "text": "DDSDDE(K2,K1)=DDSDDE(K2,K1)+EFFHRD*FLOW(K2)*FLOW(K1)",
+          "tokens": [
+            "DDSDDE",
+            "EFFHRD",
+            "FLOW",
+            "K1",
+            "K2"
+          ]
+        }
+      ],
+      "gamma": [],
+      "hardening": [
+        {
+          "executable": true,
+          "line_numbers": [
+            29
+          ],
+          "text": "HARD=PROPS(4)",
+          "tokens": [
+            "HARD",
+            "PROPS"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            64
+          ],
+          "text": "SYIEL0=SIGY0+HARD*EQPLAS",
+          "tokens": [
+            "EQPLAS",
+            "HARD",
+            "SIGY0",
+            "SYIEL0"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            76
+          ],
+          "text": "DEQPL=(SMISES-SYIEL0)/(EG3+HARD)",
+          "tokens": [
+            "DEQPL",
+            "EG3",
+            "HARD",
+            "SMISES",
+            "SYIEL0"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            77
+          ],
+          "text": "SYIELD=SYIEL0+HARD*DEQPL",
+          "tokens": [
+            "DEQPL",
+            "HARD",
+            "SYIEL0",
+            "SYIELD"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            90
+          ],
+          "text": "EFFHRD=EG3*HARD/(EG3+HARD)-EFFG3",
+          "tokens": [
+            "EFFG3",
+            "EFFHRD",
+            "EG3",
+            "HARD"
+          ]
+        }
+      ],
+      "lambda": [],
+      "newton_iteration": [],
+      "plastic_strain": [
+        {
+          "executable": true,
+          "line_numbers": [
+            56
+          ],
+          "text": "EQPLAS=STATEV(1)",
+          "tokens": [
+            "EQPLAS",
+            "STATEV"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            64
+          ],
+          "text": "SYIEL0=SIGY0+HARD*EQPLAS",
+          "tokens": [
+            "EQPLAS",
+            "HARD",
+            "SIGY0",
+            "SYIEL0"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            84
+          ],
+          "text": "EQPLAS=EQPLAS+DEQPL",
+          "tokens": [
+            "DEQPL",
+            "EQPLAS"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            111
+          ],
+          "text": "STATEV(1)=EQPLAS",
+          "tokens": [
+            "EQPLAS",
+            "STATEV"
+          ]
+        }
+      ],
+      "residual": [],
+      "return_mapping": [],
+      "yield": [
+        {
+          "executable": true,
+          "line_numbers": [
+            28
+          ],
+          "text": "SIGY0=PROPS(3)",
+          "tokens": [
+            "PROPS",
+            "SIGY0"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            64
+          ],
+          "text": "SYIEL0=SIGY0+HARD*EQPLAS",
+          "tokens": [
+            "EQPLAS",
+            "HARD",
+            "SIGY0",
+            "SYIEL0"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            66
+          ],
+          "text": "IF (SMISES.GT.SYIEL0) THEN",
+          "tokens": [
+            "SMISES",
+            "SYIEL0"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            76
+          ],
+          "text": "DEQPL=(SMISES-SYIEL0)/(EG3+HARD)",
+          "tokens": [
+            "DEQPL",
+            "EG3",
+            "HARD",
+            "SMISES",
+            "SYIEL0"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            77
+          ],
+          "text": "SYIELD=SYIEL0+HARD*DEQPL",
+          "tokens": [
+            "DEQPL",
+            "HARD",
+            "SYIEL0",
+            "SYIELD"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            79
+          ],
+          "text": "STRESS(K1)=FLOW(K1)*SYIELD+SHYDRO",
+          "tokens": [
+            "FLOW",
+            "K1",
+            "SHYDRO",
+            "STRESS",
+            "SYIELD"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            82
+          ],
+          "text": "STRESS(K1)=FLOW(K1)*SYIELD",
+          "tokens": [
+            "FLOW",
+            "K1",
+            "STRESS",
+            "SYIELD"
+          ]
+        },
+        {
+          "executable": true,
+          "line_numbers": [
+            86
+          ],
+          "text": "EFFG=EG*SYIELD/SMISES",
+          "tokens": [
+            "EFFG",
+            "EG",
+            "SMISES",
+            "SYIELD"
+          ]
+        }
+      ]
+    },
+    "categories_present": [
+      "flow",
+      "hardening",
+      "plastic_strain",
+      "yield"
+    ],
+    "decisive_categories_present": [
+      "hardening",
+      "plastic_strain",
+      "yield"
+    ],
+    "is_plasticity_candidate": true,
+    "variables": [
+      "DDSDDE",
+      "DEQPL",
+      "DIMENSION",
+      "EFFG",
+      "EFFG3",
+      "EFFHRD",
+      "EG",
+      "EG3",
+      "EQPLAS",
+      "FLOW",
+      "HARD",
+      "K1",
+      "K2",
+      "PROPS",
+      "SHYDRO",
+      "SIGY0",
+      "SMISES",
+      "STATEV",
+      "STRESS",
+      "SYIEL0",
+      "SYIELD"
+    ]
+  },
+  "promoted_variables": [
+    "DEQPL",
+    "EQPLAS",
+    "FLOW",
+    "SHYDRO",
+    "SMISES",
+    "STATEV",
+    "STRESS",
+    "SYIEL0",
+    "SYIELD"
+  ],
+  "seed_variables": [
+    "DSTRAN"
+  ],
+  "selected_umat": "UMAT",
+  "semantic_checks": {
+    "ddsdde_extraction_after_final_selected_stress_update": true,
+    "ddsdde_extraction_after_selected_stress_regions": true,
+    "ddsdde_output_present": true,
+    "dstran_initialization_before_seed": true,
+    "dstran_initialization_before_stress_use": true,
+    "dstran_seed_before_stress_update": true,
+    "dstran_seed_before_transformed_stress_update": true,
+    "finite_strain_path_uses_oti_versions": true,
+    "fixed_form_line_lengths_ok": true,
+    "integer_literals_normalized_in_oti_expressions": true,
+    "no_extraction_in_tangent_helper_region": true,
+    "old_ddsdde_assignments_disabled": true,
+    "promoted_dfgrd_variables_initialized_before_use": true,
+    "real_stress_extraction_before_ddsdde_extraction": true,
+    "stress_oti_update_before_ddsdde_extraction": true,
+    "stress_oti_update_before_real_stress_extraction": true
+  },
+  "shared_setup_regions_kept": [
+    {
+      "classification": "Shared setup, keep real before transformed path",
+      "end_line": 34,
+      "preview": "      EMOD=PROPS(1)\n      ENU=PROPS(2)\n      SIGY0=PROPS(3)\n      HARD=PROPS(4)\n...\n      EG=EG2/TWO\n      EG3=THREE*EG\n      ELAM=(EBULK3-EG2)/THREE",
+      "reason": "EMOD provides setup used before stress/tangent handling; ENU provides setup used before stress/tangent handling; SIGY0 provides setup used before stress/tangent handling; HARD provides setup used before stress/tangent handling; EBULK3 provides setup used before stress/tangent handling; EG2 provides setup used before stress/tangent handling; EG provides setup used before stress/tangent handling; EG3 provides setup used before stress/tangent handling; ELAM provides setup used before stress/tangent handling",
+      "region_id": "SHARED-SETUP-001",
+      "role": "keep_real",
+      "start_line": 26,
+      "variables": [
+        "EBULK3",
+        "EG",
+        "EG2",
+        "EG3",
+        "ELAM",
+        "EMOD",
+        "ENU",
+        "HARD",
+        "ONE",
+        "PROPS",
+        "SIGY0",
+        "THREE",
+        "TWO"
+      ]
+    },
+    {
+      "classification": "Needed by both stress update and old tangent",
+      "end_line": 49,
+      "preview": "        DO K2=1,NTENS\n          DDSDDE(K2,K1)=ZERO\n        END DO\n      END DO\n...\n      DO K1=NDI+1,NTENS\n        DDSDDE(K1,K1)=EG\n      END DO",
+      "reason": "DDSDDE setup is consumed by a stress-path helper before final tangent replacement",
+      "region_id": "SHARED-SETUP-002",
+      "role": "keep_real",
+      "start_line": 37,
+      "variables": [
+        "DDSDDE",
+        "EG",
+        "EG2",
+        "ELAM",
+        "ZERO"
+      ]
+    },
+    {
+      "classification": "DDSDDE setup required by stress update, keep real",
+      "end_line": 48,
+      "preview": "",
+      "reason": "DDSDDE is assembled before the stress update and is used as real stiffness/setup data; do not skip this block.",
+      "region_id": "DDSDDE-SETUP-KEEP-REAL",
+      "role": "keep_real_required_by_stress_update",
+      "start_line": 38,
+      "variables": [
+        "DDSDDE"
+      ]
+    }
+  ],
+  "source_file": "/home/ammslab3/softwarex_work/UMAT_source_transformation/parameter_sensitivity/models/m3_j2/umat.for",
+  "statev_accesses": {
+    "read_count": 1,
+    "reads": [
+      {
+        "line_numbers": [
+          56
+        ],
+        "text": "EQPLAS=STATEV(1)"
+      }
+    ],
+    "write_count": 1,
+    "writes": [
+      {
+        "line_numbers": [
+          111
+        ],
+        "text": "STATEV(1)=EQPLAS"
+      }
+    ]
+  },
+  "stress_path_helpers": [],
+  "stress_regions_transformed": [
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 64,
+      "preview": "        DO K2=1,NTENS\n          STRESS(K2)=STRESS(K2)+DDSDDE(K2,K1)*DSTRAN(K1)\n        END DO\n      END DO\n...\n      END DO\n      SMISES=SQRT(SMISES/TWO)\n      SYIEL0=SIGY0+HARD*EQPLAS",
+      "reason": "STRESS is on the DSTRAN to STRESS propagation path; EQPLAS is on the DSTRAN to STRESS propagation path; SMISES is on the DSTRAN to STRESS propagation path; SYIEL0 is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-003",
+      "role": "transform_with_oti",
+      "start_line": 52,
+      "variables": [
+        "C",
+        "DDSDDE",
+        "DSTRAN",
+        "EQPLAS",
+        "EQUIVALENT",
+        "HARD",
+        "K1",
+        "K2",
+        "MISES",
+        "OF",
+        "PREDICTOR",
+        "SIGY0",
+        "SIX",
+        "SMISES",
+        "STATEV",
+        "STRESS",
+        "SYIEL0",
+        "THE",
+        "TWO"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 84,
+      "preview": "        SHYDRO=(STRESS(1)+STRESS(2)+STRESS(3))/THREE\n        DO K1=1,NDI\n          FLOW(K1)=(STRESS(K1)-SHYDRO)/SMISES\n        END DO\n...\n          STRESS(K1)=FLOW(K1)*SYIELD\n        END DO\n        EQPLAS=EQPLAS+DEQPL",
+      "reason": "SHYDRO is on the DSTRAN to STRESS propagation path; FLOW is on the DSTRAN to STRESS propagation path; DEQPL is on the DSTRAN to STRESS propagation path; SYIELD is on the DSTRAN to STRESS propagation path; STRESS is on the DSTRAN to STRESS propagation path; EQPLAS is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-004",
+      "role": "transform_with_oti",
+      "start_line": 68,
+      "variables": [
+        "C",
+        "CLOSED",
+        "DEQPL",
+        "EG3",
+        "EQPLAS",
+        "FLOW",
+        "FOR",
+        "FORM",
+        "HARD",
+        "HARDENING",
+        "K1",
+        "LINEAR",
+        "SHYDRO",
+        "SMISES",
+        "STRESS",
+        "SYIEL0",
+        "SYIELD",
+        "THREE"
+      ]
+    },
+    {
+      "classification": "Main stress update, transform with OTIS",
+      "end_line": 111,
+      "preview": "      STATEV(1)=EQPLAS",
+      "reason": "STATEV is on the DSTRAN to STRESS propagation path",
+      "region_id": "STRESS-006",
+      "role": "transform_with_oti",
+      "start_line": 111,
+      "variables": [
+        "EQPLAS",
+        "STATEV"
+      ]
+    }
+  ],
+  "success": true,
+  "tangent_helper_regions_skipped": [],
+  "tangent_output_regions_replaced": [
+    {
+      "classification": "DDSDDE output replacement, replace with GETIM extraction",
+      "end_line": 108,
+      "preview": "        EFFG=EG*SYIELD/SMISES\n        EFFG2=TWO*EFFG\n        EFFG3=THREE/TWO*EFFG2\n        EFFLAM=(EBULK3-EFFG2)/THREE\n...\n          DO K2=1,NTENS\n            DDSDDE(K2,K1)=DDSDDE(K2,K1)+EFFHRD*FLOW(K2)*FLOW(K1)\n          END DO",
+      "reason": "EFFG feeds only the old DDSDDE/tangent block; EFFG2 feeds only the old DDSDDE/tangent block; EFFG3 feeds only the old DDSDDE/tangent block; EFFLAM feeds only the old DDSDDE/tangent block; EFFHRD feeds only the old DDSDDE/tangent block; assignment to DDSDDE old tangent/Jacobian output",
+      "region_id": "TANGENT-005",
+      "role": "ddsdde_output_replace",
+      "start_line": 86,
+      "variables": [
+        "DDSDDE",
+        "EBULK3",
+        "EFFG",
+        "EFFG2",
+        "EFFG3",
+        "EFFHRD",
+        "EFFLAM",
+        "EG",
+        "EG3",
+        "FLOW",
+        "HARD",
+        "K1",
+        "K2",
+        "SMISES",
+        "SYIELD",
+        "THREE",
+        "TWO",
+        "ZERO"
+      ]
+    }
+  ],
+  "transformation_anchors": {
+    "branch_regions": [
+      {
+        "condition": "SMISES.GT.SYIEL0",
+        "end_line": 66,
+        "reason": "Branch condition is preserved; promoted variables are normalized if present.",
+        "region_id": "BRANCH-001",
+        "role": "preserve_branch_condition",
+        "start_line": 66,
+        "text": "IF (SMISES.GT.SYIEL0) THEN",
+        "tokens": [
+          "SMISES",
+          "SYIEL0"
+        ]
+      }
+    ],
+    "completion_issues": [],
+    "ddsdde_extraction": {
+      "insert_after_line": 111,
+      "insert_at_region": "TANGENT-005",
+      "reason": "Insert GETIM DDSDDE extraction at the explicit old tangent output region or after the stress update when DDSDDE setup is kept real."
+    },
+    "file_io_regions": [],
+    "helper_call_regions": [],
+    "old_tangent": {
+      "helper_regions": [],
+      "output_region": {
+        "classification": "DDSDDE output replacement, replace with GETIM extraction",
+        "end_line": 108,
+        "preview": "        EFFG=EG*SYIELD/SMISES\n        EFFG2=TWO*EFFG\n        EFFG3=THREE/TWO*EFFG2\n        EFFLAM=(EBULK3-EFFG2)/THREE\n...\n          DO K2=1,NTENS\n            DDSDDE(K2,K1)=DDSDDE(K2,K1)+EFFHRD*FLOW(K2)*FLOW(K1)\n          END DO",
+        "reason": "EFFG feeds only the old DDSDDE/tangent block; EFFG2 feeds only the old DDSDDE/tangent block; EFFG3 feeds only the old DDSDDE/tangent block; EFFLAM feeds only the old DDSDDE/tangent block; EFFHRD feeds only the old DDSDDE/tangent block; assignment to DDSDDE old tangent/Jacobian output",
+        "region_id": "TANGENT-005",
+        "role": "ddsdde_output_replace",
+        "start_line": 86,
+        "variables": [
+          "DDSDDE",
+          "EBULK3",
+          "EFFG",
+          "EFFG2",
+          "EFFG3",
+          "EFFHRD",
+          "EFFLAM",
+          "EG",
+          "EG3",
+          "FLOW",
+          "HARD",
+          "K1",
+          "K2",
+          "SMISES",
+          "SYIELD",
+          "THREE",
+          "TWO",
+          "ZERO"
+        ]
+      },
+      "output_regions": [
+        {
+          "classification": "DDSDDE output replacement, replace with GETIM extraction",
+          "end_line": 108,
+          "preview": "        EFFG=EG*SYIELD/SMISES\n        EFFG2=TWO*EFFG\n        EFFG3=THREE/TWO*EFFG2\n        EFFLAM=(EBULK3-EFFG2)/THREE\n...\n          DO K2=1,NTENS\n            DDSDDE(K2,K1)=DDSDDE(K2,K1)+EFFHRD*FLOW(K2)*FLOW(K1)\n          END DO",
+          "reason": "EFFG feeds only the old DDSDDE/tangent block; EFFG2 feeds only the old DDSDDE/tangent block; EFFG3 feeds only the old DDSDDE/tangent block; EFFLAM feeds only the old DDSDDE/tangent block; EFFHRD feeds only the old DDSDDE/tangent block; assignment to DDSDDE old tangent/Jacobian output",
+          "region_id": "TANGENT-005",
+          "role": "ddsdde_output_replace",
+          "start_line": 86,
+          "variables": [
+            "DDSDDE",
+            "EBULK3",
+            "EFFG",
+            "EFFG2",
+            "EFFG3",
+            "EFFHRD",
+            "EFFLAM",
+            "EG",
+            "EG3",
+            "FLOW",
+            "HARD",
+            "K1",
+            "K2",
+            "SMISES",
+            "SYIELD",
+            "THREE",
+            "TWO",
+            "ZERO"
+          ]
+        }
+      ],
+      "reason": "Explicit DDSDDE-region contract. Helper regions are skipped only when the role says skip_only; keep-real setup is preserved."
+    },
+    "real_output_extraction": {
+      "insert_after_line": 111,
+      "reason": "Copy real STRESS/STATEV after the last transformed stress update."
+    },
+    "schema_version": 1,
+    "seed_insertion": {
+      "line_before": 52,
+      "reason": "Insert OTIS shadow initialization before the first user-confirmed stress-update line."
+    },
+    "selected_umat": "UMAT",
+    "selected_umat_span": {
+      "end_line": 113,
+      "start_line": 13
+    },
+    "shared_setup_regions_to_keep": [
+      {
+        "classification": "Shared setup, keep real before transformed path",
+        "end_line": 34,
+        "preview": "      EMOD=PROPS(1)\n      ENU=PROPS(2)\n      SIGY0=PROPS(3)\n      HARD=PROPS(4)\n...\n      EG=EG2/TWO\n      EG3=THREE*EG\n      ELAM=(EBULK3-EG2)/THREE",
+        "reason": "EMOD provides setup used before stress/tangent handling; ENU provides setup used before stress/tangent handling; SIGY0 provides setup used before stress/tangent handling; HARD provides setup used before stress/tangent handling; EBULK3 provides setup used before stress/tangent handling; EG2 provides setup used before stress/tangent handling; EG provides setup used before stress/tangent handling; EG3 provides setup used before stress/tangent handling; ELAM provides setup used before stress/tangent handling",
+        "region_id": "SHARED-SETUP-001",
+        "role": "keep_real",
+        "start_line": 26,
+        "variables": [
+          "EBULK3",
+          "EG",
+          "EG2",
+          "EG3",
+          "ELAM",
+          "EMOD",
+          "ENU",
+          "HARD",
+          "ONE",
+          "PROPS",
+          "SIGY0",
+          "THREE",
+          "TWO"
+        ]
+      },
+      {
+        "classification": "Needed by both stress update and old tangent",
+        "end_line": 49,
+        "preview": "        DO K2=1,NTENS\n          DDSDDE(K2,K1)=ZERO\n        END DO\n      END DO\n...\n      DO K1=NDI+1,NTENS\n        DDSDDE(K1,K1)=EG\n      END DO",
+        "reason": "DDSDDE setup is consumed by a stress-path helper before final tangent replacement",
+        "region_id": "SHARED-SETUP-002",
+        "role": "keep_real",
+        "start_line": 37,
+        "variables": [
+          "DDSDDE",
+          "EG",
+          "EG2",
+          "ELAM",
+          "ZERO"
+        ]
+      },
+      {
+        "classification": "DDSDDE setup required by stress update, keep real",
+        "end_line": 48,
+        "reason": "DDSDDE is assembled before the stress update and is used as real stiffness/setup data; do not skip this block.",
+        "region_id": "DDSDDE-SETUP-KEEP-REAL",
+        "role": "keep_real_required_by_stress_update",
+        "start_line": 38,
+        "variables": [
+          "DDSDDE"
+        ]
+      }
+    ],
+    "statev_read_regions": [
+      {
+        "end_line": 56,
+        "preview": "      EQPLAS=STATEV(1)",
+        "reason": "Detected STATEV read in selected UMAT.",
+        "region_id": "STATEV-READS-001",
+        "role": "read_statev_shadow_or_real",
+        "start_line": 56,
+        "text": "EQPLAS=STATEV(1)"
+      }
+    ],
+    "statev_write_regions": [
+      {
+        "end_line": 111,
+        "preview": "      STATEV(1)=EQPLAS",
+        "reason": "Detected STATEV write in selected UMAT.",
+        "region_id": "STATEV-WRITES-001",
+        "role": "promote_statev",
+        "start_line": 111,
+        "text": "STATEV(1)=EQPLAS"
+      }
+    ],
+    "status": "ready_with_json_contract",
+    "stress_update": {
+      "reason": "Explicit source lines to transform with OTIS roles; generated from detected/user-selected regions and UMAT-local helper-call stress updates.",
+      "regions": [
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 64,
+          "preview": "        DO K2=1,NTENS\n          STRESS(K2)=STRESS(K2)+DDSDDE(K2,K1)*DSTRAN(K1)\n        END DO\n      END DO\n...\n      END DO\n      SMISES=SQRT(SMISES/TWO)\n      SYIEL0=SIGY0+HARD*EQPLAS",
+          "reason": "STRESS is on the DSTRAN to STRESS propagation path; EQPLAS is on the DSTRAN to STRESS propagation path; SMISES is on the DSTRAN to STRESS propagation path; SYIEL0 is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-003",
+          "role": "transform_with_oti",
+          "start_line": 52,
+          "variables": [
+            "C",
+            "DDSDDE",
+            "DSTRAN",
+            "EQPLAS",
+            "EQUIVALENT",
+            "HARD",
+            "K1",
+            "K2",
+            "MISES",
+            "OF",
+            "PREDICTOR",
+            "SIGY0",
+            "SIX",
+            "SMISES",
+            "STATEV",
+            "STRESS",
+            "SYIEL0",
+            "THE",
+            "TWO"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 84,
+          "preview": "        SHYDRO=(STRESS(1)+STRESS(2)+STRESS(3))/THREE\n        DO K1=1,NDI\n          FLOW(K1)=(STRESS(K1)-SHYDRO)/SMISES\n        END DO\n...\n          STRESS(K1)=FLOW(K1)*SYIELD\n        END DO\n        EQPLAS=EQPLAS+DEQPL",
+          "reason": "SHYDRO is on the DSTRAN to STRESS propagation path; FLOW is on the DSTRAN to STRESS propagation path; DEQPL is on the DSTRAN to STRESS propagation path; SYIELD is on the DSTRAN to STRESS propagation path; STRESS is on the DSTRAN to STRESS propagation path; EQPLAS is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-004",
+          "role": "transform_with_oti",
+          "start_line": 68,
+          "variables": [
+            "C",
+            "CLOSED",
+            "DEQPL",
+            "EG3",
+            "EQPLAS",
+            "FLOW",
+            "FOR",
+            "FORM",
+            "HARD",
+            "HARDENING",
+            "K1",
+            "LINEAR",
+            "SHYDRO",
+            "SMISES",
+            "STRESS",
+            "SYIEL0",
+            "SYIELD",
+            "THREE"
+          ]
+        },
+        {
+          "classification": "Main stress update, transform with OTIS",
+          "end_line": 111,
+          "preview": "      STATEV(1)=EQPLAS",
+          "reason": "STATEV is on the DSTRAN to STRESS propagation path",
+          "region_id": "STRESS-006",
+          "role": "transform_with_oti",
+          "start_line": 111,
+          "variables": [
+            "EQPLAS",
+            "STATEV"
+          ]
+        }
+      ]
+    },
+    "tangent_helper_regions_to_skip": []
+  },
+  "warnings": []
+}

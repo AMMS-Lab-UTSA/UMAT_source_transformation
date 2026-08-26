@@ -1,0 +1,50 @@
+{
+  "app": "src/umat_oti/app/workbench_app.py",
+  "captured_at": "2026-08-26T14:04:32.718771+00:00",
+  "commit": "700ceceeb7adef9b895f96cb407b35411f5a0112",
+  "device_scale_factor": 2,
+  "example_project": "parameter_sensitivity/models/m3_j2/umat.for",
+  "note": "Captured from the tested interface driving the real backend. Paths are repository-relative and the example project ships with the repository, so no personal path appears in the figures or in this record.",
+  "page_reported_derivative_products": true,
+  "page_reported_outcomes": {
+    "DDSDDE": "NOT REQUESTED",
+    "DSIGMA_DP": "PASS",
+    "DSTATEV_DP": "PASS",
+    "HIGHER_ORDER_STRESS": "NOT REQUESTED",
+    "INTERNAL_JACOBIAN": "UNSUPPORTED"
+  },
+  "page_reported_primal_parity": true,
+  "requested_products": [
+    "DSIGMA_DP",
+    "DSTATEV_DP",
+    "INTERNAL_JACOBIAN"
+  ],
+  "screenshots": {
+    "figure1_gui_request": {
+      "bytes": 215627,
+      "path": "paper_results/figures/figure1_gui_request.png",
+      "pdf": "paper_results/figures/figure1_gui_request.pdf",
+      "pdf_sha256": "14a72af3557dd48224f4dee2aa4b0d3900c002b40982afa3522284429822f901",
+      "pixels": [
+        3020,
+        3129
+      ],
+      "sha256": "51100537377a76fa4058a5abb34be350151184b38230bdd446a0a106783aba41"
+    },
+    "figure2_gui_results": {
+      "bytes": 357175,
+      "path": "paper_results/figures/figure2_gui_results.png",
+      "pdf": "paper_results/figures/figure2_gui_results.pdf",
+      "pdf_sha256": "afc5d792436bf5393c545a8767f0c799ba389fae9e53e0c097f2415387c05db3",
+      "pixels": [
+        3020,
+        4495
+      ],
+      "sha256": "e707ff783a2cb05c6663c70c3bbc4388a4ffd6385679b1f388a638e99cdec7ca"
+    }
+  },
+  "viewport": {
+    "height": 1200,
+    "width": 1600
+  }
+}

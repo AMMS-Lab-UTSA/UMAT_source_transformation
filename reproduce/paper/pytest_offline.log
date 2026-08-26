@@ -1,0 +1,85 @@
+........................................................................ [ 15%]
+....................................................................F... [ 31%]
+........................................................................ [ 47%]
+........................................................................ [ 63%]
+........................................................................ [ 78%]
+...............F........................................................ [ 94%]
+.........................                                                [100%]
+=================================== FAILURES ===================================
+_ test_committed_snapshot_matches_its_checksums[umat-2a19bdd07be3_ra-f928acec970a] _
+
+snapshot = PosixPath('/home/ammslab3/softwarex_work/UMAT_source_transformation/paper_results/frozen/umat-2a19bdd07be3_ra-f928acec970a')
+
+    @pytest.mark.parametrize("snapshot", _snapshots(), ids=lambda p: p.name)
+    def test_committed_snapshot_matches_its_checksums(snapshot: Path) -> None:
+        if not (REPO_ROOT / ".git").exists():
+            pytest.skip("not a git checkout, so there are no committed blobs to read")
+    
+        prefix = snapshot.relative_to(REPO_ROOT).as_posix()
+        entries = []
+        for line in (snapshot / "SHA256SUMS").read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            digest, name = line.split(None, 1)
+            entries.append((digest, name.strip().lstrip("*")))
+        assert entries, "the snapshot records no checksums"
+    
+        missing, wrong = [], []
+        for digest, name in entries:
+            data = _blob(f"{prefix}/{name}")
+            if data is None:
+                missing.append(name)
+            elif hashlib.sha256(data).hexdigest() != digest:
+                wrong.append(name)
+    
+>       assert not missing, f"not committed: {missing}"
+E       AssertionError: not committed: ['evidence/parameter_sensitivity/parameter_sensitivity_round.json', 'evidence/parameter_sensitivity/table6_parameter_sensitivity.csv', 'evidence/parameter_sensitivity/table6_comparison_rows.csv', 'evidence/internal_jacobians/internal_jacobian_round.json', 'evidence/internal_jacobians/table3_internal_jacobians.csv', 'evidence/corpus/corpus_round.json', 'evidence/corpus/corpus_funnel.csv', 'evidence/generality/generality_matrix.csv', 'evidence/generality/generality_summary.json', 'evidence/generality/source_identity.json', 'evidence/generality/source_identity.csv', 'evidence/arc_791506/table2_abaqus_paired.csv', 'evidence/arc_791506/table2_abaqus_paired.json', 'evidence/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv', 'evidence/actual_umat_higher_order/j2/actual_umat_ddsdde.csv', 'evidence/actual_umat_higher_order/j2/actual_umat_higher_order_comparison.csv', 'evidence/actual_umat_higher_order/j2/table4_higher_order_actual_umat.csv', 'evidence/actual_umat_higher_order/j2/actual_umat_higher_order_evidence.json', 'evidence/higher_order_convergence/table4_reference_quality_summary.json', 'evidence/figures/figure1_gui_request.png', 'evidence/figures/figure2_gui_results.png', 'evidence/figures/figure3_illustrative_derivatives.png', 'evidence/figures/figure4_parameter_sensitivities.png', 'evidence/figures/figure5_collection_verification.png', 'evidence/figures/gui_screenshots_provenance.json', 'evidence/figures/figure3_illustrative_derivatives_provenance.json', 'evidence/figures/figure4_parameter_sensitivities_provenance.json', 'evidence/figures/figure5_collection_verification_provenance.json', 'evidence/tables/paper_tables.docx', 'evidence/PAPER_READY_SUMMARY.md', 'MANIFEST.json']
+E       assert not ['evidence/parameter_sensitivity/parameter_sensitivity_round.json', 'evidence/parameter_sensitivity/table6_parameter_s...ian_round.json', 'evidence/internal_jacobians/table3_internal_jacobians.csv', 'evidence/corpus/corpus_round.json', ...]
+
+tests/test_frozen_evidence_integrity.py:55: AssertionError
+__________________ test_documented_commands_and_links_resolve __________________
+
+    def test_documented_commands_and_links_resolve():
+        proc = _run("audit_documentation_commands.py")
+        problems = json.loads(proc.stdout)["problems"]
+>       assert problems == [], json.dumps(problems, indent=2)
+E       AssertionError: [
+E           {
+E             "doc": "START_HERE.md",
+E             "kind": "stale_path_reference",
+E             "detail": "reproduce/smoke"
+E           },
+E           {
+E             "doc": "docs/SOFTWAREX_REPRODUCTION.md",
+E             "kind": "stale_path_reference",
+E             "detail": "reproduce/smoke/reproduction_summary.md"
+E           }
+E         ]
+E       assert [{'doc': 'STA..._summary.md'}] == []
+E         
+E         Left contains 2 more items, first extra item: {'doc': 'START_HERE.md', 'kind': 'stale_path_reference', 'detail': 'reproduce/smoke'}
+E         Use -v to get more diff
+
+tests/test_repository_standards.py:31: AssertionError
+=============================== warnings summary ===============================
+tests/test_derivative_request.py::test_literal_unified_project_runs_canonical_transform
+  /home/ammslab3/softwarex_work/UMAT_source_transformation/tests/test_derivative_request.py:287: DeprecationWarning: umat_oti.cli_json.run_config_transform is deprecated; call umat_oti.services.transformation.run_transformation, or run the pipeline (umat_oti.pipeline), which is the single execution path.
+    summary, exit_code = run_config_transform(config_path, tmp_path / "generated")
+
+tests/test_generic_parameter_sensitivity_transform.py::test_literal_schema_rejects_implicit_integer_props_path
+  /home/ammslab3/softwarex_work/UMAT_source_transformation/tests/test_generic_parameter_sensitivity_transform.py:274: DeprecationWarning: umat_oti.cli_json.run_config_transform is deprecated; call umat_oti.services.transformation.run_transformation, or run the pipeline (umat_oti.pipeline), which is the single execution path.
+    summary, exit_code = run_config_transform(config_path, tmp_path / "generated")
+
+tests/test_transform_smoke.py::test_elastic_minimal_transform_succeeds
+  /home/ammslab3/softwarex_work/UMAT_source_transformation/tests/test_transform_smoke.py:26: DeprecationWarning: umat_oti.cli_json.run_config_transform is deprecated; call umat_oti.services.transformation.run_transformation, or run the pipeline (umat_oti.pipeline), which is the single execution path.
+    summary, exit_code = run_config_transform(config, tmp_path / "elastic_out")
+
+tests/test_transform_smoke.py::test_order_four_transform_emits_direction_metadata
+  /home/ammslab3/softwarex_work/UMAT_source_transformation/tests/test_transform_smoke.py:55: DeprecationWarning: umat_oti.cli_json.run_config_transform is deprecated; call umat_oti.services.transformation.run_transformation, or run the pipeline (umat_oti.pipeline), which is the single execution path.
+    summary, exit_code = run_config_transform(config_path, tmp_path / "elastic_order4_out")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_frozen_evidence_integrity.py::test_committed_snapshot_matches_its_checksums[umat-2a19bdd07be3_ra-f928acec970a]
+FAILED tests/test_repository_standards.py::test_documented_commands_and_links_resolve
+2 failed, 455 passed, 1 deselected, 4 warnings in 145.78s (0:02:25)

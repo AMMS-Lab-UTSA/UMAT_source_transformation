@@ -49,6 +49,21 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=7"]
+# Everything the publication artefacts need and the library itself does not.
+# Kept optional so a user who only wants to transform a UMAT does not install a
+# plotting stack, and so a reproduction that lacks them reports which artefact
+# it could not build rather than failing outright.
+paper = [
+	"matplotlib>=3.8",
+	"python-docx>=1.1",
+	"pillow>=10",
+]
+# Browser automation for the two GUI screenshots. Separate because it also
+# needs a downloaded browser, which pip alone does not provide.
+screenshots = [
+	"playwright>=1.40",
+	"pillow>=10",
+]
 
 [project.urls]
 Homepage = "https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation"
