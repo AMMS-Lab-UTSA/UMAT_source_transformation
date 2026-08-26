@@ -68,14 +68,26 @@ def _git(repo: Path, *args: str) -> str | None:
 
 
 def repository_state(repo: Path) -> dict:
-    dirty = _git(repo, "status", "--porcelain")
+    """Branch, commit and whether anything uncommitted could affect the result.
+
+    The snapshot directory this tool is in the middle of writing is excluded
+    from the dirty check. Counting it would make every freeze report a dirty
+    tree because of its own output, which says nothing about whether the code
+    that produced the evidence was committed.
+    """
+    dirty_lines = (_git(repo, "status", "--porcelain") or "").splitlines()
+    dirty_lines = [line for line in dirty_lines
+                   if "paper_results/frozen/" not in line]
+    dirty = "\n".join(dirty_lines)
     return {
         "path_name": repo.name,
         "url": _git(repo, "remote", "get-url", "origin"),
         "branch": _git(repo, "rev-parse", "--abbrev-ref", "HEAD"),
         "commit": _git(repo, "rev-parse", "HEAD"),
-        "worktree_dirty": bool(dirty),
-        "dirty_paths": (dirty.splitlines() if dirty else []),
+        "worktree_dirty": bool(dirty_lines),
+        "dirty_paths": dirty_lines,
+        "dirty_check_note": ("paper_results/frozen/ is excluded: it is this "
+                             "tool's own output"),
     }
 
 
