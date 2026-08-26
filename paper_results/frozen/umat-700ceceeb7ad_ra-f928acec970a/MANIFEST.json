@@ -1,0 +1,265 @@
+{
+  "environment": {
+    "_pip_freeze_first_line": "altair==6.2.2",
+    "abaqus": {
+      "available": true,
+      "details": {
+        "licence_command": [
+          "/usr/bin/abaqus",
+          "licensing",
+          "lmstat",
+          "-a"
+        ],
+        "licence_returncode": 0,
+        "licences_in_use": 104,
+        "licences_issued": 314,
+        "probe_output_head": [
+          "Abaqus JOB abaqus",
+          "Abaqus 2021.HF5",
+          "Abaqus Site ID: 200000000017647",
+          "Abaqus is located in the directory /usr/SIMULIA/EstProducts/2021 /usr/SIMULIA/EstProducts/2021/linux_a64 /usr/SIMULIA/EstProducts/2021/linux_a64/code /usr/SIMULIA/EstProducts/2021/linux_a64/code/bin /usr/SIMULIA/EstProducts/2021/linux_a64/code/bin/SMAExternal /usr/SIMULIA/EstProducts/2021/linux_a64/CAEresources /usr/SIMULIA/EstProducts/2021/linux_a64/SMA"
+        ]
+      },
+      "executable": "/usr/bin/abaqus",
+      "name": "abaqus",
+      "probe_command": [
+        "/usr/bin/abaqus",
+        "information=release"
+      ],
+      "probe_returncode": 0,
+      "resolved_from": "/usr/SIMULIA/EstProducts/2021/linux_a64/code/bin/ABQLauncher",
+      "version": "2021.HF5"
+    },
+    "captured_at": "2026-08-26T13:48:24.777128+00:00",
+    "dependency_lock": [
+      "-e git+https://github.com/AMMS-Lab-UTSA/Residual_Assembler.git@f928acec970acf68670eba9102e6b962dabb094c#egg=residual_assembler",
+      "-e git+https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git@700ceceeb7adef9b895f96cb407b35411f5a0112#egg=umat_oti",
+      "Jinja2==3.1.6",
+      "MarkupSafe==3.0.3",
+      "PyYAML==6.0.3",
+      "Pygments==2.21.0",
+      "altair==6.2.2",
+      "anyio==4.14.2",
+      "attrs==26.1.0",
+      "blinker==1.9.0",
+      "build==1.5.0",
+      "certifi==2026.7.22",
+      "charset-normalizer==3.5.1",
+      "click==8.4.2",
+      "h11==0.16.0",
+      "httptools==0.8.0",
+      "idna==3.19",
+      "iniconfig==2.3.0",
+      "itsdangerous==2.2.0",
+      "jsonschema-specifications==2025.9.1",
+      "jsonschema==4.26.0",
+      "mpmath==1.3.0",
+      "narwhals==2.25.0",
+      "numpy==2.4.6",
+      "packaging==26.3",
+      "pandas==3.0.5",
+      "pillow==12.3.0",
+      "pluggy==1.6.0",
+      "protobuf==7.36.0",
+      "pyarrow==25.0.1",
+      "pydeck==0.9.3",
+      "pyproject_hooks==1.2.0",
+      "pytest==9.1.1",
+      "python-dateutil==2.9.0.post0",
+      "python-multipart==0.0.32",
+      "referencing==0.37.0",
+      "requests==2.34.2",
+      "rpds-py==2026.6.3",
+      "six==1.17.0",
+      "starlette==1.6.0",
+      "streamlit==1.62.0",
+      "sympy==1.14.0",
+      "toml==0.10.2",
+      "typing_extensions==4.16.0",
+      "urllib3==2.7.0",
+      "uvicorn==0.52.4",
+      "watchdog==6.0.0",
+      "websockets==16.1.1"
+    ],
+    "dependency_lock_note": "pip freeze of the interpreter that produced this snapshot",
+    "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
+    "fortran_flags": {
+      "material_point_original": "-O1 -std=legacy -ffixed-form -ffixed-line-length-none",
+      "oti_module_and_driver": "-O1 -std=legacy -ffree-line-length-none -fno-align-commons"
+    },
+    "machine": "x86_64",
+    "make": "GNU Make 4.2.1",
+    "operating_system": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+    "python_implementation": "CPython",
+    "python_version": "3.11.7"
+  },
+  "evidence_files": [
+    {
+      "bytes": 35584,
+      "path": "parameter_sensitivity/parameter_sensitivity_round.json",
+      "sha256": "ce30e9d2723c090e0e1bba4a22abebd17d9581e2839cc61bacf119c674bab3e6"
+    },
+    {
+      "bytes": 2448,
+      "path": "parameter_sensitivity/table6_parameter_sensitivity.csv",
+      "sha256": "58f6860c8036db728a2745fc8dd8752ea56599b0b22305b8244f376d83a89d64"
+    },
+    {
+      "bytes": 1627019,
+      "path": "parameter_sensitivity/table6_comparison_rows.csv",
+      "sha256": "dda813c0828f47b3b450f2eb494a7f49e05137ae747c6b8478ca0a9c48489416"
+    },
+    {
+      "bytes": 102214,
+      "path": "internal_jacobians/internal_jacobian_round.json",
+      "sha256": "ba62cb33b5ebf3c7efd3d1e3506b704b31aa85ecb754fcf1139226729e90c3de"
+    },
+    {
+      "bytes": 2853,
+      "path": "internal_jacobians/table3_internal_jacobians.csv",
+      "sha256": "f870f427fc036bfbd542b5788c48a50229aea8743157573dfc0523db764de23c"
+    },
+    {
+      "bytes": 266664,
+      "path": "corpus/corpus_round.json",
+      "sha256": "5c7b17beb225555e084e654333a87b5d18f98831fd7176970a01715b52c1eb54"
+    },
+    {
+      "bytes": 2535,
+      "path": "corpus/corpus_funnel.csv",
+      "sha256": "69193b2f485698466cb991529b86e3a0ae78bd2d5b6f49f5fdd58a210b6b91db"
+    },
+    {
+      "bytes": 32851,
+      "path": "generality/generality_matrix.csv",
+      "sha256": "2520d3868626f89c9aace7ffbc298edfc050a11ae1aee857290a09f3ee1cd381"
+    },
+    {
+      "bytes": 4455,
+      "path": "generality/generality_summary.json",
+      "sha256": "9523038304957db69a17dbcfbc69fc861fb1f3928b878b80d9fd909479dbc1aa"
+    },
+    {
+      "bytes": 69118,
+      "path": "generality/source_identity.json",
+      "sha256": "acf7ee054e6c657d7c24da89e3015851f12c83b7cb7251e927cb04af99e277ab"
+    },
+    {
+      "bytes": 12262,
+      "path": "generality/source_identity.csv",
+      "sha256": "ab1a2b36462daed3c0eef5b8510186085915913ceab05183e2ad9fe964e54edc"
+    },
+    {
+      "bytes": 27456,
+      "path": "higher_order_convergence/table4_reference_quality_summary.json",
+      "sha256": "b5ade96a1a5874b6b99bc0b5e94c7c10498bcee7248bf5cc17033f2a5a1a5911"
+    },
+    {
+      "bytes": 519695,
+      "path": "arc_791506/table2_abaqus_paired.json",
+      "sha256": "955ba2bebbe0612c8555f8ab21548cfcfb725e264487b5f4e3cca48f3ece001c"
+    },
+    {
+      "bytes": 5551,
+      "path": "PAPER_READY_SUMMARY.md",
+      "sha256": "92e277e0f0c1f9a4bfa1bee056c9690411bcf61b3c70ec622152ec007ae645d1"
+    }
+  ],
+  "evidence_files_absent": [],
+  "frozen_at": "2026-08-26T13:48:22.879676+00:00",
+  "policy": "Every figure and table in the manuscript is generated from the files in this directory. A number that appears in the paper and not here has no provenance and must not be published.",
+  "regeneration_commands": [
+    "python tools/run_parameter_sensitivity_sweep.py",
+    "python tools/run_internal_jacobian_round.py",
+    "python tools/run_corpus_round.py",
+    "python tools/build_source_identity_registry.py",
+    "python tools/build_generality_matrix.py",
+    "python tools/build_publication_reconciliation.py",
+    "python tools/build_paper_summary.py",
+    "python tools/freeze_publication_evidence.py"
+  ],
+  "repositories": {
+    "residual_assembler": {
+      "branch": "feature/umat-oti-residual-bridge",
+      "commit": "f928acec970acf68670eba9102e6b962dabb094c",
+      "dirty_check_note": "paper_results/frozen/ is excluded: it is this tool's own output",
+      "dirty_paths": [],
+      "path_name": "Residual_Assembler",
+      "url": "https://github.com/AMMS-Lab-UTSA/Residual_Assembler.git",
+      "worktree_dirty": false
+    },
+    "umat_source_transformation": {
+      "branch": "feature/softwarex-unified-umat-oti",
+      "commit": "700ceceeb7adef9b895f96cb407b35411f5a0112",
+      "dirty_check_note": "paper_results/frozen/ is excluded: it is this tool's own output",
+      "dirty_paths": [],
+      "path_name": "UMAT_source_transformation",
+      "url": "https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git",
+      "worktree_dirty": false
+    }
+  },
+  "schema": "umat-oti-frozen-evidence/1",
+  "snapshot_name": "umat-700ceceeb7ad_ra-f928acec970a",
+  "tolerances": {
+    "derivative_relative_tolerance": {
+      "applies_to": "OTI derivative against its independent reference",
+      "justification": "A centred difference at a well-chosen step resolves a smooth derivative to roughly 1e-8 relative; 1e-6 leaves two decades of margin for the reference's own truncation without admitting a genuine transformation error. It is never widened to recover a result: a row the reference cannot resolve at this tolerance is reported as unresolved, not as agreement.",
+      "value": 1e-06
+    },
+    "finite_difference_default_relative_step": {
+      "applies_to": "first-pass centred-difference reference",
+      "justification": "A first pass only. Where a row disagrees, the step is chosen from the method's own convergence over a ladder spanning 1e-2 to 1e-7 rather than fixed in advance, because a fixed step is a guess about the model's third derivative.",
+      "value": 0.0001
+    },
+    "finite_difference_noise_floor": {
+      "applies_to": "whether the reference can adjudicate a row at all",
+      "expression": "eps * max(|response_scale|, 1) / (2h)",
+      "justification": "Models cancellation only. Truncation is handled separately by the step-convergence study, because the two dominate in opposite step regimes."
+    },
+    "primal_parity_relative_tolerance": {
+      "applies_to": "stress and state of the original vs transformed build",
+      "justification": "The two builds run the same algorithm in different arithmetic, so they should agree to near machine precision; 1e-9 catches a genuine divergence while tolerating reassociation. Measured values sit at 1e-14 to 1e-16, far inside it.",
+      "value": 1e-09
+    }
+  },
+  "verification_gates": [
+    {
+      "gate": 1,
+      "meaning": "the source is identified by content and its helper closure resolves with no missing or ambiguous definitions",
+      "name": "source identity and dependency closure"
+    },
+    {
+      "gate": 2,
+      "meaning": "the OTI source was generated",
+      "name": "transformation"
+    },
+    {
+      "gate": 3,
+      "meaning": "original and transformed compiled independently",
+      "name": "compilation of both implementations"
+    },
+    {
+      "gate": 4,
+      "meaning": "both ran the path",
+      "name": "execution of both"
+    },
+    {
+      "gate": 5,
+      "meaning": "stress and state agree, so the derivatives are comparable",
+      "name": "primal parity"
+    },
+    {
+      "gate": 6,
+      "meaning": "an independent reference can determine the value",
+      "name": "reference resolution"
+    },
+    {
+      "gate": 7,
+      "meaning": "the extracted derivative agrees with that reference",
+      "name": "derivative comparison"
+    },
+    {
+      "_policy": "A case failing an earlier gate contributes no verified derivative rows. Compilation is not verification."
+    }
+  ]
+}
