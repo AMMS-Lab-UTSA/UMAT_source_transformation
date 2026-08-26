@@ -53,3 +53,8 @@ logs/
 
 # Shared objects produced by the Fortran builds
 *.so
+
+# Reproduction output. Each run writes its own directory here, carrying the
+# absolute paths of the machine that produced it; the durable record is the
+# frozen snapshot under paper_results/frozen/, not this scratch area.
+reproduce/
