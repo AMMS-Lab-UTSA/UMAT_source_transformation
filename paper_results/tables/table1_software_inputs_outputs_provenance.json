@@ -1,14 +1,14 @@
 {
   "column_count": 4,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "5cafff2898c9d9bcfeb697182672de774bd38e6f",
+  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
   "filters": {},
-  "generated_at": "2026-08-26T18:18:49.008249+00:00",
+  "generated_at": "2026-08-26T18:46:48.854857+00:00",
   "inputs": [
     {
-      "bytes": 22258,
+      "bytes": 22545,
       "path": "src/umat_oti/services/workbench.py",
-      "sha256": "e0112eb3d326c8979d4fc71fe9aafc387692c0b9cb5b454b34a78fc0a4831c35"
+      "sha256": "765ae01e790babb4002b0370ccbfab36e2eac40325573cebffec04ab01915977"
     }
   ],
   "notes": "Generated from umat_oti.services.workbench.PRODUCTS and OUTCOMES.",

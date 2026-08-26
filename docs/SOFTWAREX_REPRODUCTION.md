@@ -99,21 +99,25 @@ make reproduce-paper          # or: python -m umat_oti.reproduce --profile paper
 
 That regenerates every artefact the paper shows, in dependency order: the
 parameter-sensitivity round, the internal-Jacobian round, the tangent round,
-the identity registry, the generality matrix, the three data figures, the seven
-tables and the evidence summary. Each later step reads what the earlier ones
+the identity registry, the generality matrix, the four data figures, the four
+interface screenshots, the eight tables, the evidence summary, the manuscript,
+and a PDF with page images of it for visual inspection. Each later step reads what the earlier ones
 wrote, so the figures and tables in a reproduction are rendered from that run's
 own numbers rather than from the committed ones. Read
 `reproduce/paper/reproduction_summary.md` afterwards.
 
-The two interface figures are not in that profile: they need a browser and a
-live Streamlit server. Regenerate them with
+The interface figures need a browser. If Playwright is installed the profile
+captures them; without it the step reports that it was blocked rather than
+leaving stale images in place. To capture them alone:
 
 ```bash
 python tools/figures/capture_gui_screenshots.py
 ```
 
-which drives the real application, reads the outcome word back off the page
-into its provenance record, and reports the point size its text will print at.
+That drives the real application through all four steps, photographs each one,
+reads the outcome word back off the page into the provenance record, reports
+the point size each figure's text will print at, and checks that nothing
+overflows horizontally at 1366x768 or 1440x900.
 
 ### One result at a time
 
@@ -129,9 +133,9 @@ with the virtual environment active.
 | Table 6 — 20-model sweep | `python tools/run_parameter_sensitivity_sweep.py` | `paper_results/parameter_sensitivity/table6_parameter_sensitivity.csv` | A |
 | Illustrative tangent | `python tools/run_tangent_round.py --work-dir reproduce/tangent --results-dir paper_results/actual_umat_higher_order/j2` | `paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv` | A |
 | Source identity registry | `python tools/build_source_identity_registry.py` | `paper_results/generality/source_identity.csv` | A |
-| Figures 3-5 | `python tools/figures/build_figure3_illustrative.py` (and `..._figure4_...`, `..._figure5_...`) | `paper_results/figures/` | A |
-| Figures 1-2 | `python tools/figures/capture_gui_screenshots.py` | `paper_results/figures/` | A |
-| Tables 1-7 | `python tools/tables/build_paper_tables.py` | `paper_results/tables/paper_tables.docx` | A |
+| Data figures | `python tools/figures/build_tangent_figure.py` (and `..._higher_order_...`, `..._sensitivity_...`, `..._collection_...`) | `paper_results/figures/` | A |
+| Interface figures | `python tools/figures/capture_gui_screenshots.py` | `paper_results/figures/` | A |
+| Tables 1-8 | `python tools/tables/build_paper_tables.py` | `paper_results/tables/paper_tables.docx` | A |
 | The manuscript | `python tools/manuscript/build_v5_manuscript.py` | `docs/manuscript/UMAT_OTI_SoftwareX_V5.docx` | A |
 | Generality matrix | `python tools/build_generality_matrix.py` | `paper_results/generality/generality_matrix.csv` | A |
 | Traceability matrix | `python tools/build_traceability_matrix.py` | `docs/PIPELINE_REQUIREMENTS_TRACEABILITY.md` | A |
@@ -150,14 +154,15 @@ gfortran 9.4.0, 8-core x86-64), wall clock from `/usr/bin/time`:
 |---|---|---|---|
 | `smoke` | 5.6 s | 110 MB | 1.5 MB |
 | `offline` | 154 s | 1.7 GB | 1.5 MB |
-| `paper` | 317 s | 1.7 GB | 1.5 MB plus the regenerated evidence |
+| `paper` | 360 s | 1.7 GB | 1.5 MB plus the regenerated evidence |
 | `corpus` | not measured | — | depends on the network and upstream availability |
 | `abaqus` | not measured here | — | GB, mostly ODBs |
 
-`offline` and `paper` are dominated by the test suite (149 s). Within `paper`,
+`offline` and `paper` are dominated by the test suite (158 s). Within `paper`,
 the parameter-sensitivity round takes 85 s, the internal-Jacobian round 30 s,
-the tangent round 34 s, the identity registry 2 s, and the generality matrix,
-figures, tables and summary under 9 s together.
+the tangent round 34 s, the interface screenshots 29 s, the identity registry
+2 s, and the four data figures, eight tables, evidence summary, manuscript and
+its render under 16 s together.
 
 The two unmeasured rows are labelled as such deliberately: `corpus` depends on
 third-party availability and `abaqus` on scheduler queueing, so any figure given

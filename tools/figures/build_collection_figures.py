@@ -99,17 +99,16 @@ def build_funnel(out_dir: Path) -> dict:
     # The count and the note each get their own column. Offsetting the note
     # from the end of its bar put it on top of the count whenever the bar was
     # long, which was most of them.
-    # Counts share one right-aligned column and notes another. Placing a count
-    # at the end of its own bar put the longest one on top of its note.
-    count_x, note_x = discovered * 1.06, discovered * 1.12
+    # The count sits just past its bar. The per-stage notes moved to the
+    # caption: at a readable size the longest of them ran past the right edge
+    # of the figure and was cut in half.
     for position, (label, count, note) in zip(positions, stages):
-        axis.text(count_x, position, str(count), va="center", ha="right",
-                  fontsize=ANNOTATION_PT, fontweight="bold")
-        axis.text(note_x, position, note, va="center", ha="left",
-                  fontsize=ANNOTATION_PT, color="0.4")
+        axis.text(count + discovered * 0.015, position, str(count),
+                  va="center", ha="left", fontsize=ANNOTATION_PT,
+                  fontweight="bold")
     axis.set_yticks(positions)
     axis.set_yticklabels([label for label, _, _ in stages])
-    axis.set_xlim(0, discovered * 2.20)
+    axis.set_xlim(0, discovered * 1.12)
     axis.set_xticks([0, 10, 20, 30, 40, 50])
     axis.set_xlabel(f"UMAT sources (from {discovered} discovered files; every "
                     "attempt kept)")
@@ -139,7 +138,8 @@ def build_funnel(out_dir: Path) -> dict:
                             "drawing three equal bars would imply attrition "
                             "that did not occur",
         },
-        rows={label.replace("\n", " "): count for label, count, _ in stages},
+        rows={label.replace("\n", " "): {"count": count, "note": note}
+              for label, count, note in stages},
         command="python tools/figures/build_collection_figures.py")
     return {"stages": {l.replace("\n", " "): c for l, c, _ in stages},
             "outputs": outputs}
@@ -156,7 +156,7 @@ def build_routes(out_dir: Path) -> dict:
               ("neither route", neither)]
 
     use_publication_style()
-    fig, axis = figure(2.9)
+    fig, axis = figure(3.1)
     positions = np.arange(len(groups))[::-1]
     counts = [len(entries) for _, entries in groups]
     colours = [PALETTE[0], PALETTE[2], PALETTE[1], PALETTE[6]]
@@ -170,14 +170,14 @@ def build_routes(out_dir: Path) -> dict:
     axis.set_yticklabels([label for label, _ in groups])
     axis.set_xlim(0, total * 0.72)
     axis.set_xlabel(f"unique collection sources (of {total} eligible)")
-    axis.set_title("Which route verified each source", loc="left", pad=24)
+    axis.set_title("Which route verified each source", loc="left", pad=34)
     axis.grid(axis="y", visible=False)
     # Above the bars, not among them: placed inside the axes it landed on the
     # "neither route" row and its own count.
+    # Two short lines. One long one ran past the right edge of the figure.
     axis.annotate(
-        f"{total - len(neither)} of {total} sources are verified by at least "
-        f"one route; the {len(neither)} that are not stay in the denominator, "
-        "each with a recorded reason",
+        f"{total - len(neither)} of {total} verified by at least one route;\n"
+        f"the {len(neither)} that are not keep their place in the denominator",
         xy=(0.0, 1.015), xycoords="axes fraction", ha="left", va="bottom",
         fontsize=ANNOTATION_PT, color="0.35")
 

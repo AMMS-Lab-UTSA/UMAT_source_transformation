@@ -145,13 +145,6 @@ def main(argv: list[str] | None = None) -> int:
             f"no comparison at order {order}\nexceeds its absolute tolerance",
             xy=(orders.index(order), 0.30), xycoords=("data", "axes fraction"),
             ha="center", va="center", fontsize=ANNOTATION_PT, color="0.45")
-    axis.annotate(
-        f"{len(expected_zero)} of {len(rows)} comparisons are independently\n"
-        f"shown to be zero, where a relative error is not\na measurement; "
-        f"{len(unresolved)} are unresolved",
-        xy=(0.02, 0.30), xycoords="axes fraction", ha="left", va="bottom",
-        fontsize=ANNOTATION_PT, color="0.35")
-
     axis.set_xticks(range(len(orders)))
     axis.set_xticklabels([f"order {o}" for o in orders])
     axis.set_xlim(-0.55, len(orders) - 0.45)
@@ -161,7 +154,9 @@ def main(argv: list[str] | None = None) -> int:
                     "(dimensionless)")
     axis.set_title("Higher-order stress derivatives against an independent "
                    "reference", loc="left")
-    axis.legend(loc="upper left", handletextpad=0.4, borderpad=0.3)
+    # Below the resolution line, which spans the full width at the top.
+    axis.legend(loc="upper left", bbox_to_anchor=(0.01, 0.80),
+                handletextpad=0.4, borderpad=0.3)
     axis.grid(axis="x", visible=False)
 
     outputs = save(fig, "figure_higher_order_verification", args.out_dir)

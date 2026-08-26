@@ -106,4 +106,5 @@ markers = [
 	"abaqus: needs a licensed Abaqus installation; cannot run in public CI",
 	"arc: needs the documented HPC environment and its scheduler",
 	"publication: regenerates or checks a published table or figure",
+	"browser: drives the interface in a real browser; needs Playwright and a downloaded Chromium",
 ]

@@ -1,9 +1,9 @@
 {
   "answers": "Which verification route reached each collection source, and how much do the two routes overlap?",
   "command": "python tools/figures/build_collection_figures.py",
-  "commit": "5cafff2898c9d9bcfeb697182672de774bd38e6f",
+  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
   "figure": "figure_verification_routes",
-  "generated_at": "2026-08-26T18:37:12.371705+00:00",
+  "generated_at": "2026-08-26T18:48:40.168095+00:00",
   "inputs": [
     {
       "bytes": 33097,
@@ -36,11 +36,11 @@
         "yscale": "linear"
       }
     ],
-    "height_inches": 2.9,
+    "height_inches": 3.1,
     "pdf": "paper_results/figures/figure_verification_routes.pdf",
-    "pdf_sha256": "7378bcfc35dbbc2ba0f17c8e364c6fe73f552dad7f2a1d0bc68e04e82b0a81f3",
+    "pdf_sha256": "d171056926440d60178df70e1400ff759d6897c686a1b8c0c4a3b195f325bfc4",
     "png": "paper_results/figures/figure_verification_routes.png",
-    "png_sha256": "90f1ae87c1718224ed4a5ea4c6dd43c9f6e4dc5f15eb1e25a78db456b6ff4474",
+    "png_sha256": "dd51a9db85b67471ca088c09bfc8216f9b022243ddbea452c93f8f9427b66626",
     "smallest_configured_pt": 9.5,
     "smallest_printed_pt": 9.5,
     "width_inches": 6.2

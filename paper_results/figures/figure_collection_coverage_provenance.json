@@ -1,9 +1,9 @@
 {
   "answers": "How much of the collected UMAT corpus reached numerical verification, and where did the rest stop?",
   "command": "python tools/figures/build_collection_figures.py",
-  "commit": "5cafff2898c9d9bcfeb697182672de774bd38e6f",
+  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
   "figure": "figure_collection_coverage",
-  "generated_at": "2026-08-26T18:37:12.080235+00:00",
+  "generated_at": "2026-08-26T18:48:39.824144+00:00",
   "inputs": [
     {
       "bytes": 33097,
@@ -13,7 +13,7 @@
     {
       "bytes": 4455,
       "path": "paper_results/generality/generality_summary.json",
-      "sha256": "be2a56eb99121b95e1adfa2cf1198a71ada108f62b62c3cf8abab4b0957453a6"
+      "sha256": "0127c207a691fba1caff8fcc44edb8b50d97381e7e62dc2d512303af2cd3692c"
     },
     {
       "bytes": 12351,
@@ -48,9 +48,9 @@
     ],
     "height_inches": 4.2,
     "pdf": "paper_results/figures/figure_collection_coverage.pdf",
-    "pdf_sha256": "2569029f3ab55eb2f90cf740430f80a3841291461e76c0a03bfaca274419ef32",
+    "pdf_sha256": "93e6a36e11dd8beb2f49ddae89de39b0a56e677afed52815fa2022933e2fe37d",
     "png": "paper_results/figures/figure_collection_coverage.png",
-    "png_sha256": "4ec086a834bb6f7170843aad69b96da93a539f7150972b2e539e502b8b58d13b",
+    "png_sha256": "0d51e9463f01fdfa833d5f5f572efdf3b8150e4664e09e3fe9aa7dc4d19902f3",
     "smallest_configured_pt": 9.5,
     "smallest_printed_pt": 9.5,
     "width_inches": 6.2
@@ -66,13 +66,37 @@
     "two_step_deduction": "45 distinct implementations minus the property decks that carry no entry routine gives 43 matrix rows, minus 2 illustrative rows gives 41"
   },
   "row_counts": {
-    "attempted offline": 26,
-    "derivative verified offline": 24,
-    "distinct implementations": 45,
-    "eligible collection sources": 41,
-    "files discovered": 54,
-    "in the verification matrix": 43,
-    "transformed, compiled and primal-parity checked": 26,
-    "verified in Abaqus": 17
+    "attempted offline": {
+      "count": 26,
+      "note": "the rest took the Abaqus route only"
+    },
+    "derivative verified offline": {
+      "count": 24,
+      "note": "two are withheld by their reference"
+    },
+    "distinct implementations": {
+      "count": 45,
+      "note": "after global identity reconciliation"
+    },
+    "eligible collection sources": {
+      "count": 41,
+      "note": "the illustrative example excluded"
+    },
+    "files discovered": {
+      "count": 54,
+      "note": "everything the acquisition returned"
+    },
+    "in the verification matrix": {
+      "count": 43,
+      "note": "property decks carry no entry routine"
+    },
+    "transformed, compiled and primal-parity checked": {
+      "count": 26,
+      "note": "no source failed any of these three"
+    },
+    "verified in Abaqus": {
+      "count": 17,
+      "note": "a separate route, not a later stage"
+    }
   }
 }

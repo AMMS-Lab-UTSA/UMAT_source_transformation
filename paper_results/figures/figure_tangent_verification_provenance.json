@@ -1,9 +1,9 @@
 {
   "answers": "Does the generated consistent tangent match an independent reference, and does the agreement hold across magnitudes?",
   "command": "python tools/figures/build_tangent_figure.py",
-  "commit": "5cafff2898c9d9bcfeb697182672de774bd38e6f",
+  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
   "figure": "figure_tangent_verification",
-  "generated_at": "2026-08-26T18:37:08.005594+00:00",
+  "generated_at": "2026-08-26T18:50:15.208242+00:00",
   "inputs": [
     {
       "bytes": 38071,
@@ -38,9 +38,9 @@
     ],
     "height_inches": 3.5,
     "pdf": "paper_results/figures/figure_tangent_verification.pdf",
-    "pdf_sha256": "25608ae42a8223a3e5a70f03b8460cead5307075e845d2b5a8bf5a83871e22e8",
+    "pdf_sha256": "4c8d70d568179e81e53948842ce51a012423218ed816d03b2ed5f9b55848a2b0",
     "png": "paper_results/figures/figure_tangent_verification.png",
-    "png_sha256": "762693b21de393a15c13e38d85e753ea6f99aa7dff1cc98419faf147544420a1",
+    "png_sha256": "fb526fdc0de18af9dba713d5276cb138ccdf34b4ed69a60ea7ff8eef7a1a5b7e",
     "smallest_configured_pt": 9.5,
     "smallest_printed_pt": 9.5,
     "width_inches": 6.2

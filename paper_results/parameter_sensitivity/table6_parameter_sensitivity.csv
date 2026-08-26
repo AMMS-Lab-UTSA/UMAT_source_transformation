@@ -1,4 +1,4 @@
-model,parameter_directions,parameters,contract_generated,transformed,compiled,executed,numerically_verified,furthest_stage,targets,failure_reason
+model,parameter_directions_declared,parameters,contract_generated,transformed,compiled,executed_oti,executed_original,primal_parity,reference_resolved,numerically_verified,parameter_directions_verified,comparison_rows,worst_relative_error,elastic_increments,inelastic_increments,furthest_stage,failure_reason
 m1_elastic,2,E|nu,True,True,True,True,True,True,True,True,2,240,2.479752759394021e-08,20,0,derivatives_verified,
 m2_cubic,3,C11|C12|C44,True,True,True,True,True,True,True,True,3,360,3.102986617643885e-12,20,0,derivatives_verified,
 m3_j2,4,E|nu|SIGY0|H,True,True,True,True,True,True,True,True,4,560,2.4796033119496132e-08,15,5,derivatives_verified,

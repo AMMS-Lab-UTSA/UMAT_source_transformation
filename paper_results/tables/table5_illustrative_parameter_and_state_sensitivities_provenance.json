@@ -1,11 +1,11 @@
 {
   "column_count": 8,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "5cafff2898c9d9bcfeb697182672de774bd38e6f",
+  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
   "filters": {
     "model": "the illustrative J2 example only"
   },
-  "generated_at": "2026-08-26T18:18:49.124181+00:00",
+  "generated_at": "2026-08-26T18:46:48.974329+00:00",
   "inputs": [
     {
       "bytes": 38071,

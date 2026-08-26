@@ -88,7 +88,9 @@ FIGURE_FILES = [
      "80-digit reference, separated by whether the differentiation directions "
      "repeat. Agreement does not degrade with order, and every point lies "
      "below the resolution of the reference itself, which is the limit of what "
-     "this comparison can establish."),
+     "this comparison can establish. Of the 108 comparisons, 31 are plotted; "
+     "the other 77 are ones the reference independently shows to be zero, "
+     "where a relative error is not a measurement, and none is unresolved."),
     ("figure_sensitivities.png",
      "Figure 5. What the material point's response depends on, along the whole "
      "loading path. Each curve is scaled by its own material constant, so the "
@@ -99,9 +101,16 @@ FIGURE_FILES = [
      "the plastic strain depends on nothing."),
     ("figure_collection_coverage.png",
      "Figure 6. How far the collected corpus reached, from the files found to "
-     "the sources verified. Counting is by implementation rather than by file, "
-     "and every attempt stays in the denominator. Transformation, compilation "
-     "and primal parity are one bar because no source failed any of them."),
+     "the sources verified. The first three bars count files and "
+     "implementations rather than eligible sources: 54 discovered files reduce "
+     "to 45 distinct implementations, of which two are property decks carrying "
+     "no entry routine, and two more are the illustrative example, leaving 41. "
+     "Of those, 26 were put through the offline route and 15 took the Abaqus "
+     "route only. Transformation, compilation and primal parity are one bar "
+     "because no source failed any of them; the two sources missing from the "
+     "derivative bar are withheld by their reference rather than disagreeing. "
+     "Abaqus is a separate route, not a later stage, and every attempt stays "
+     "in the denominator."),
 ]
 
 #: Figures that support the main text without competing with it.
@@ -118,7 +127,9 @@ SUPPLEMENTARY_FILES = [
      "word, what that word means, and the numbers behind it."),
     ("figure_verification_routes.png",
      "Figure S4. Which of the two verification routes reached each collection "
-     "source, and how much they overlap."),
+     "source, and how much they overlap. The denominator is the same 41 "
+     "eligible sources as Figure 6; the five verified by neither are listed "
+     "with their reasons in the figure's provenance record."),
 ]
 
 SECTIONS: list[tuple[str, list[str]]] = [

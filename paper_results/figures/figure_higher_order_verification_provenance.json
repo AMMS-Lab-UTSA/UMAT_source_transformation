@@ -1,9 +1,9 @@
 {
   "answers": "Does the agreement with an independent reference hold as the derivative order rises, and does it depend on whether the differentiation directions repeat?",
   "command": "python tools/figures/build_higher_order_figure.py",
-  "commit": "5cafff2898c9d9bcfeb697182672de774bd38e6f",
+  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
   "figure": "figure_higher_order_verification",
-  "generated_at": "2026-08-26T18:37:09.281633+00:00",
+  "generated_at": "2026-08-26T18:49:48.377849+00:00",
   "inputs": [
     {
       "bytes": 49517,
@@ -38,9 +38,9 @@
     ],
     "height_inches": 3.4,
     "pdf": "paper_results/figures/figure_higher_order_verification.pdf",
-    "pdf_sha256": "bcc22d84123d847b207c1b2682766fa3850a60f54c9aea39d06f420108ae91fd",
+    "pdf_sha256": "e40f6d19b8d463ce6ffbb0c3552364f6d28144bd2165238564d4b55527f5ad7e",
     "png": "paper_results/figures/figure_higher_order_verification.png",
-    "png_sha256": "804dc2bb2f2cac775030deabafabcb04c35c23027f0d376f53c794396c1f9605",
+    "png_sha256": "eecbae7fa7829c298975f203f2774378d33fada1da591479ea851fd97aaf10c8",
     "smallest_configured_pt": 9.5,
     "smallest_printed_pt": 9.5,
     "width_inches": 6.2
