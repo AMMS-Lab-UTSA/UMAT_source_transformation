@@ -6,7 +6,7 @@ import re
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 from umat_oti.validation.compiler_check import run_gfortran_smoke, write_compile_script
 
@@ -66,6 +66,7 @@ def build_validation_workspace(
     abaqus_modules: str = DEFAULT_ABAQUS_MODULES,
     run_prefix: str = DEFAULT_ABAQUS_RUN_PREFIX,
     material_test_mode: str = "single element tension",
+    material_props: Sequence[float] | None = None,
     nstatv: int | None = None,
     nprops: int | None = None,
     statev_name: str = "STATEV",
@@ -113,8 +114,8 @@ def build_validation_workspace(
             comparable_constitutive_artifacts,
         )
     )
-    files["original_inp"] = str(_write_input_deck(validation_dir / "original_umat_validation.inp", validation_ntens, material_test_mode, validation_nstatv, nprops, source_text))
-    files["otis_inp"] = str(_write_input_deck(validation_dir / "otis_umat_validation.inp", validation_ntens, material_test_mode, validation_nstatv, nprops, source_text))
+    files["original_inp"] = str(_write_input_deck(validation_dir / "original_umat_validation.inp", validation_ntens, material_test_mode, validation_nstatv, nprops, source_text, material_props))
+    files["otis_inp"] = str(_write_input_deck(validation_dir / "otis_umat_validation.inp", validation_ntens, material_test_mode, validation_nstatv, nprops, source_text, material_props))
     files["combined_oti_user"] = str(
         _write_combined_oti_user(
             validation_dir,
@@ -176,6 +177,11 @@ def build_validation_workspace(
         "abaqus_status": abaqus_status,
         "load_case": load_case,
         "material_test_mode": material_test_mode,
+        "material_constants_source": ("declared by the source's contract"
+                                      if material_props else
+                                      "placeholder (1.0, with 0.3 for a Poisson-like name); "
+                                      "the source declares no material vector"),
+        "material_constants": [float(v) for v in material_props] if material_props else None,
         "ntens": ntens,
         "validation_ntens": validation_ntens,
         "validation_ntens_source": validation_ntens_source,
@@ -1080,17 +1086,20 @@ def _safe_integer_expression(expression: str, symbol_values: dict[str, int]) -> 
     return rounded if abs(value - rounded) < 1.0e-9 else None
 
 
-def _write_input_deck(path: Path, ntens: int, mode: str, nstatv: int, nprops: int, source_text: str) -> Path:
-    deck = _plane_strain_deck(mode, nstatv, nprops, source_text) if ntens == 4 else _three_dimensional_deck(mode, nstatv, nprops, source_text)
+def _write_input_deck(path: Path, ntens: int, mode: str, nstatv: int, nprops: int, source_text: str,
+                      material_props: Sequence[float] | None = None) -> Path:
+    deck = (_plane_strain_deck(mode, nstatv, nprops, source_text, material_props) if ntens == 4
+            else _three_dimensional_deck(mode, nstatv, nprops, source_text, material_props))
     path.write_text(deck, encoding="utf-8")
     return path
 
 
-def _plane_strain_deck(mode: str, nstatv: int, nprops: int, source_text: str) -> str:
+def _plane_strain_deck(mode: str, nstatv: int, nprops: int, source_text: str,
+                       material_props: Sequence[float] | None = None) -> str:
     load_case = _load_case(mode)
     boundary = _plane_boundary_conditions(mode, load_case)
     depvar = f"*Depvar\n{nstatv}\n" if nstatv > 0 else ""
-    props = _props_lines(nprops, source_text)
+    props = _props_lines(nprops, source_text, material_props)
     return f"""*Heading
 UMAT OTIS validation scaffold: CPE4 single element
 *Preprint, echo=NO, model=NO, history=NO, contact=NO
@@ -1125,11 +1134,12 @@ U
 """
 
 
-def _three_dimensional_deck(mode: str, nstatv: int, nprops: int, source_text: str) -> str:
+def _three_dimensional_deck(mode: str, nstatv: int, nprops: int, source_text: str,
+                            material_props: Sequence[float] | None = None) -> str:
     load_case = _load_case(mode)
     boundary = _three_dimensional_boundary_conditions(mode, load_case)
     depvar = f"*Depvar\n{nstatv}\n" if nstatv > 0 else ""
-    props = _props_lines(nprops, source_text)
+    props = _props_lines(nprops, source_text, material_props)
     return f"""*Heading
 UMAT OTIS validation scaffold: C3D8 single element
 *Preprint, echo=NO, model=NO, history=NO, contact=NO
@@ -1241,10 +1251,28 @@ def _load_case(
     }
 
 
-def _props_lines(nprops: int, source_text: str) -> str:
-    values = ["1.0"] * max(nprops, 1)
-    for index in _poisson_ratio_prop_indices(source_text, len(values)):
-        values[index - 1] = "0.3"
+def _props_lines(nprops: int, source_text: str,
+                 material_props: Sequence[float] | None = None) -> str:
+    """The *User Material block, from the source's own constants where known.
+
+    Without a declared vector every constant is 1.0, with 0.3 wherever a name
+    reads like a Poisson ratio. That is enough to compare two builds of the
+    same subroutine against each other, but it is not the material: a yield
+    stress of 1.0 puts the model into plasticity on contact, or never, and the
+    deck ends up exercising one branch of a law written for several. Passing
+    the vector the contract already pins makes the paired run exercise what
+    the offline round exercises. Nothing is invented here -- absent a declared
+    vector the placeholder is used and the report says so.
+    """
+    if material_props:
+        values = [repr(float(v)) for v in material_props]
+        if len(values) < max(nprops, 1):
+            values += ["1.0"] * (max(nprops, 1) - len(values))
+        values = values[:max(nprops, 1)]
+    else:
+        values = ["1.0"] * max(nprops, 1)
+        for index in _poisson_ratio_prop_indices(source_text, len(values)):
+            values[index - 1] = "0.3"
     lines = []
     for index in range(0, len(values), 8):
         lines.append(", ".join(values[index : index + 8]) + ",")

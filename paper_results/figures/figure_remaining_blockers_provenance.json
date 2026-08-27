@@ -1,14 +1,14 @@
 {
   "answers": "What is actually blocking each eligible source that no route has verified?",
   "command": "python tools/figures/build_acquisition_figures.py",
-  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "commit": "48f12c6d4945169551cabd2858f839df38d37aa3",
   "figure": "figure_remaining_blockers",
-  "generated_at": "2026-08-27T17:06:04.229632+00:00",
+  "generated_at": "2026-08-27T18:45:23.668607+00:00",
   "inputs": [
     {
-      "bytes": 32969,
+      "bytes": 33278,
       "path": "paper_results/generality/generality_matrix.csv",
-      "sha256": "2f88ea8c845fc0a19332ca7a68476f7b3a569207762e0dc74b279d9dfc0ea67e"
+      "sha256": "5895d52d4a5ea8c2d35079d5559a554230ee2d8b2a12f72bc76b6426f5a8b885"
     }
   ],
   "layout": {
@@ -38,9 +38,9 @@
     ],
     "height_inches": 2.6,
     "pdf": "paper_results/figures/figure_remaining_blockers.pdf",
-    "pdf_sha256": "eb8bafb2a0950d8689beb817ae63849b48d268718506b2e7c748159ec991caab",
+    "pdf_sha256": "bcdf5cef99db14cff81b5c23b78ed9d223f157f7299074e3127d6d6e331ce704",
     "png": "paper_results/figures/figure_remaining_blockers.png",
-    "png_sha256": "22f86e4ad0da009f7567422dcd8d594afc5adc12def61d286e58f809a3b13749",
+    "png_sha256": "c86909bdc1a40a8e592968c9ce7ed6ea82bcfa25f0f70c617925cbb64168aee4",
     "smallest_configured_pt": 12.0,
     "smallest_printed_pt": 12.0,
     "width_inches": 6.2
@@ -69,9 +69,6 @@
     "No established contract": [
       "ngrilli_umat"
     ],
-    "Reference could not be resolved": [
-      "m6_fcc"
-    ],
-    "unverified_total": 3
+    "unverified_total": 2
   }
 }

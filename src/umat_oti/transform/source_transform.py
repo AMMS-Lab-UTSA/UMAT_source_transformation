@@ -13,7 +13,7 @@ from umat_oti.fortran.normalize import detect_source_form
 from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines, split_top_level
 from umat_oti.fortran.regions import INTRINSIC_TOKEN_NAMES, _is_executable_line
 from umat_oti.oti.module_generator import OtilibGenerationError, generate_otilib_module
-from umat_oti.transform.helper_lifting import HelperLiftingError, helper_lift_closure, lift_helper_set_source
+from umat_oti.transform.helper_lifting import HelperLiftingError, helper_lift_closure, lift_helper_set_source, wrap_free_form
 
 
 INLINEABLE_HELPERS = {"DOTPROD", "DYADICPROD", "KCLEAR", "KDAMACAL", "KDEVIA", "KEFFP", "KINVER", "KMATSUB", "KMAVEC", "KMLT", "KMLT1", "KMMULT", "KMTRAN", "KPROYECTOR", "KSMULT", "KTRACE", "KTRANS", "KUPDVEC", "VSPRATE"}
@@ -182,7 +182,14 @@ def transform_umat_to_oti_from_config(
             helper_output_surfaces=_helper_output_surfaces(config),
         )
         helper_source_path = output_dir / "umat_oti_helpers.f90"
-        helper_source_path.write_text(lifted_helpers.source, encoding="utf-8")
+        # Wrapped before it is written. gfortran is given
+        # -ffree-line-length-none and would take the file as it stands, but
+        # Abaqus compiles user subroutines with ifort, which truncates at 7200
+        # characters; stitching a source's fixed-form continuations into single
+        # free-form statements produced one line of 14858. The wrap only moves
+        # line breaks, so the statement text is unchanged.
+        helper_source_path.write_text(
+            wrap_free_form(lifted_helpers.source), encoding="utf-8")
 
     compile_order = output_dir / "compile_order.txt"
     compile_units = ["master_parameters.f90", "real_utils.f90", f"{module_result.module_name}.f90"]

@@ -79,11 +79,40 @@ def test_internal_jacobian_column_matches_the_jacobian_round(rows):
     assert executed <= matrix, executed - matrix
 
 
-def test_abaqus_is_blocked_unless_an_archived_job_says_otherwise(rows):
-    """No row may claim an Abaqus result without a Slurm job to point at."""
+def test_abaqus_is_blocked_unless_an_executed_job_says_otherwise(rows):
+    """No row may claim an Abaqus result without an executed job behind it.
+
+    The point has always been that an Abaqus verdict is traceable to a run
+    that happened, not that the run happened on a cluster. There are now two
+    places one can come from -- the archived cluster round, which names its
+    Slurm job, and the local paired round, which writes
+    paper_results/abaqus_paired/. Both name themselves in the cell. Anything
+    else is a verdict with nothing behind it.
+    """
+    allowed_provenance = ("slurm", "local paired round")
     for row in rows:
         value = row["abaqus"]
-        assert value == "blocked_by_external_dependency" or "slurm" in value
+        assert (value == "blocked_by_external_dependency"
+                or any(token in value for token in allowed_provenance)), (
+            f"{row['identity']}: abaqus={value!r} names no executed job")
+
+
+def test_every_local_abaqus_claim_is_backed_by_a_row_in_that_round(rows):
+    """And the run it points at has to actually say it passed."""
+    round_path = (REPO_ROOT / "paper_results" / "abaqus_paired"
+                  / "abaqus_paired_round.json")
+    claiming = [r for r in rows if "local paired round" in r["abaqus"]]
+    if not claiming:
+        pytest.skip("no row claims the local paired round")
+    assert round_path.is_file(), (
+        "rows cite the local paired round but its results are not published")
+    passed = {r["model"] for r in json.loads(round_path.read_text(encoding="utf-8"))["rows"]
+              if r["status"] == "passed"}
+    for row in claiming:
+        aliases = set(row["aliases"].split(";")) | {row["identity"]}
+        assert aliases & passed, (
+            f"{row['identity']} claims a local Abaqus pass, but that round "
+            f"records no passing row for it")
 
 
 def test_summary_states_the_benchmark_set_structural_limits():

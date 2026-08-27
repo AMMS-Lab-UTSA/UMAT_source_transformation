@@ -1,19 +1,19 @@
 {
   "answers": "How much of the collected UMAT corpus reached numerical verification, and where did the rest stop?",
   "command": "python tools/figures/build_collection_figures.py",
-  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "commit": "48f12c6d4945169551cabd2858f839df38d37aa3",
   "figure": "figure_collection_coverage",
-  "generated_at": "2026-08-27T17:06:05.239379+00:00",
+  "generated_at": "2026-08-27T18:53:40.122111+00:00",
   "inputs": [
     {
-      "bytes": 32969,
+      "bytes": 33278,
       "path": "paper_results/generality/generality_matrix.csv",
-      "sha256": "2f88ea8c845fc0a19332ca7a68476f7b3a569207762e0dc74b279d9dfc0ea67e"
+      "sha256": "5895d52d4a5ea8c2d35079d5559a554230ee2d8b2a12f72bc76b6426f5a8b885"
     },
     {
-      "bytes": 4455,
+      "bytes": 4493,
       "path": "paper_results/generality/generality_summary.json",
-      "sha256": "8ec7b9f8cb30b3b7ff21d48fee745d2ecbabb730fb4afe2a572fd83a11f63520"
+      "sha256": "395572563bac321d3dfbe41cd68ea9ed0026049311f288235e47f8504ab34acf"
     },
     {
       "bytes": 12491,
@@ -48,9 +48,9 @@
     ],
     "height_inches": 4.2,
     "pdf": "paper_results/figures/figure_collection_coverage.pdf",
-    "pdf_sha256": "3cec6aa99f26bcba165e69eb4607e4c55f98ce3abef3145b733264f5f90dfc71",
+    "pdf_sha256": "5ed5f244aff10a5060daf34f35d3d4a58413f87ea494817a2f50c7c8fcc4c45c",
     "png": "paper_results/figures/figure_collection_coverage.png",
-    "png_sha256": "91338c22584cc6f5ab1384b6e3f59263ade53585e89ded6edf6bf1dd0599574a",
+    "png_sha256": "aa9a27507c9cb0e65eef1e9e8c6a2b799b8a96deca743f9a549f735b6de019d5",
     "smallest_configured_pt": 12.0,
     "smallest_printed_pt": 12.0,
     "width_inches": 6.2
@@ -95,7 +95,7 @@
       "note": "no source failed any of these three"
     },
     "verified in Abaqus": {
-      "count": 17,
+      "count": 34,
       "note": "a separate route, not a later stage"
     }
   }

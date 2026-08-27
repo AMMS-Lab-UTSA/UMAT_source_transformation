@@ -9,6 +9,12 @@ from typing import Any
 from umat_oti.validation.job_builder import update_validation_report
 
 
+#: Relative resolution of an IEEE single-precision float, the format Abaqus
+#: stores SDV field output in. Recorded beside a state comparison so that a
+#: difference can be read against what the channel can carry; never used as a
+#: tolerance.
+_SINGLE_PRECISION_EPS = 1.1920929e-07
+
 DEFAULT_STRESS_ABS_TOLERANCE = 1.0e-5
 DEFAULT_STRESS_REL_TOLERANCE = 1.0e-7
 DEFAULT_DDSDDE_ABS_TOLERANCE = 5.0e-2
@@ -115,7 +121,9 @@ def compare_validation_results(
         _write_reports(json_path, md_path, report)
         update_validation_report(validation_dir, {"comparison_status": report, "errors": all_errors, "final_pass": False, "status": "failed"})
         return ComparisonResult(report["status"], False, json_path, md_path, errors=all_errors)
-    warnings: list[str] = []
+    # Seeded, not empty: a run that only survived because the teardown abort
+    # was discounted must say so wherever its result is read.
+    warnings: list[str] = environment_caveats(validation_report)
     stress_comparison = _vector_comparison(original_stress, otis_stress, abs_tolerance, rel_tolerance) if "STRESS" in compare_outputs else _skipped_comparison("Stress comparison not requested.")
     state_comparison = _state_comparison(original, otis, abs_tolerance, rel_tolerance, warnings) if "STATEV" in compare_outputs else _skipped_comparison("State variable comparison not requested.")
     convergence_comparison = _convergence_comparison(validation_dir) if "CONVERGENCE" in compare_outputs else _skipped_comparison("Convergence comparison not requested.")
@@ -220,6 +228,18 @@ def _state_vector(result: dict[str, Any]) -> list[float]:
     return [float(value) for value in values]
 
 
+#: A job that finished its analysis and wrote its results, then aborted while
+#: Abaqus shut itself down. The runner only assigns this when the .dat carries
+#: Abaqus's own completion statement AND the crash is inside a teardown frame,
+#: so it cannot be reached by an analysis that stopped early. The exit status
+#: describes the installation; the results describe the model.
+TEARDOWN_ABORT_STATUS = "completed_after_teardown_abort"
+
+#: Statuses that mean the step produced what the comparison needs.
+_USABLE_RUN_STATUSES = frozenset(
+    {"completed", "configured", "not_run", TEARDOWN_ABORT_STATUS})
+
+
 def _execution_status_errors(validation_report: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     for field, label in (
@@ -232,18 +252,50 @@ def _execution_status_errors(validation_report: dict[str, Any]) -> list[str]:
             continue
         raw_status = str(payload.get("status") or "").strip()
         status = raw_status.lower()
+        # Checked before the return code, because this is precisely the case
+        # where a non-zero return code is not evidence about the analysis.
+        if status == TEARDOWN_ABORT_STATUS:
+            continue
         returncode = payload.get("returncode")
         if isinstance(returncode, int) and returncode != 0:
             errors.append(f"{label} did not complete successfully (status={raw_status or 'unknown'}, returncode={returncode}).")
             continue
-        if raw_status and status not in {"completed", "configured", "not_run"}:
+        if raw_status and status not in _USABLE_RUN_STATUSES:
             errors.append(f"{label} did not complete successfully (status={raw_status}).")
     return errors
 
 
+def environment_caveats(validation_report: dict[str, Any]) -> list[str]:
+    """Conditions that did not invalidate the run but must travel with it.
+
+    Kept separate from errors on purpose: these are things a reader has to
+    know when judging the result, not reasons to withhold it.
+    """
+    caveats: list[str] = []
+    for field, label in (
+        ("original_run_status", "Original Abaqus validation job"),
+        ("transformed_run_status", "Transformed Abaqus validation job"),
+    ):
+        payload = validation_report.get(field)
+        if not isinstance(payload, dict):
+            continue
+        if str(payload.get("status") or "").strip().lower() == TEARDOWN_ABORT_STATUS:
+            caveats.append(f"{label}: {payload.get('message') or TEARDOWN_ABORT_STATUS}")
+    return caveats
+
+
 def _vector_comparison(left: list[float], right: list[float], abs_tolerance: float, rel_tolerance: float) -> dict[str, Any]:
     differences = [abs(left_value - right_value) for left_value, right_value in zip(left, right)]
-    rel_differences = [diff / max(abs(left_value), abs(right_value), 1.0) for diff, left_value, right_value in zip(differences, left, right)]
+    # Each component is judged against the size of the tensor it belongs to,
+    # not against itself and a floor of 1.0. A component that is nearly zero
+    # beside a neighbour of several hundred is a zero of that tensor: dividing
+    # its rounding dust by 1.0 reported a transverse stress of 0.12 next to an
+    # axial 526 as a twelve per cent error, when it is two parts in ten
+    # thousand of the stress that is actually there. The floor stays, so an
+    # all-zero vector still cannot divide by zero.
+    scale = max([abs(v) for v in (*left, *right)] or [0.0])
+    denominator = max(scale, 1.0)
+    rel_differences = [diff / denominator for diff in differences]
     max_abs = max(differences, default=0.0)
     max_rel = max(rel_differences, default=0.0)
     worst_component_index = differences.index(max_abs) if differences else None
@@ -252,6 +304,10 @@ def _vector_comparison(left: list[float], right: list[float], abs_tolerance: flo
         "otis_values": right,
         "max_abs_difference": max_abs,
         "max_rel_difference": max_rel,
+        "comparison_scale": denominator,
+        "comparison_scale_meaning": (
+            "the largest magnitude in either vector, so a component is judged "
+            "against the tensor it belongs to rather than against itself"),
         "worst_component_index": worst_component_index,
         "worst_original_value": left[worst_component_index] if worst_component_index is not None else None,
         "worst_otis_value": right[worst_component_index] if worst_component_index is not None else None,
@@ -281,6 +337,21 @@ def _state_comparison(
         }
     comparison = _vector_comparison(original_state, otis_state, abs_tolerance, rel_tolerance)
     comparison["status"] = "passed" if comparison["pass"] else "failed"
+    # State comes back through Abaqus's SDV field output, which is stored in
+    # single precision. Recording what that channel can resolve, next to the
+    # tolerance being asked of it, so a reader can tell a real disagreement
+    # from one the channel could never have shown to be smaller. This changes
+    # no verdict: the tolerance is untouched and the comparison stands as it
+    # was judged.
+    scale = comparison.get("comparison_scale") or 1.0
+    floor = scale * _SINGLE_PRECISION_EPS
+    comparison["single_precision_floor"] = floor
+    comparison["single_precision_note"] = (
+        "Abaqus stores SDV field output in single precision, so one storage "
+        f"round-trip of a value of this size is worth about {floor:.3e} "
+        f"absolute ({_SINGLE_PRECISION_EPS:.1e} relative). A difference near "
+        "or below that is the channel, not the model; a difference well above "
+        "it is not explained by storage.")
     return comparison
 
 

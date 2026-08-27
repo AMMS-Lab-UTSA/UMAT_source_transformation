@@ -36,6 +36,63 @@ class AbaqusRunResult:
         }
 
 
+#: Abaqus's own statement, in the job's .dat, that the analysis finished. It is
+#: the only thing that settles whether results exist; the process exit status
+#: does not, because the solver can complete and then die in teardown.
+ANALYSIS_COMPLETED_MARK = "THE ANALYSIS HAS BEEN COMPLETED"
+
+#: Frames that only appear once the solve is over and Abaqus is shutting down.
+#: A crash inside one of these happened after the analysis, not during it.
+_TEARDOWN_FRAMES = (
+    "SMAAspSupport_finalize",
+    "SMAAspBcu_finalize",
+    "bcu_cleanup",
+)
+
+
+def analysis_completed(validation_dir: Path, job_name: str) -> bool:
+    """Did Abaqus itself say the analysis finished?"""
+    dat = Path(validation_dir) / f"{job_name}.dat"
+    if not dat.is_file():
+        return False
+    return ANALYSIS_COMPLETED_MARK in dat.read_text(errors="replace")
+
+
+def teardown_abort(validation_dir: Path, job_name: str) -> str:
+    """The crash report for a job that died shutting down, or "".
+
+    Abaqus 2021's bundled Intel Fortran runtime calls ``for_inquire`` from its
+    own cleanup, and against a glibc built with ``_FORTIFY_SOURCE`` that path
+    reaches ``__chk_fail`` and aborts. It happens after the solve, after the
+    results are written and after the ODB is closed, so the analysis is
+    unaffected -- but the process exits non-zero and every job on the machine
+    looks like a failed run.
+
+    Returning the frame that proves it, rather than a bare flag, so a report
+    can say why a non-zero exit was not counted against the model.
+    """
+    directory = Path(validation_dir)
+    for candidate in sorted(directory.glob(f"{job_name}.*.exception")):
+        text = candidate.read_text(errors="replace")
+        for frame in _TEARDOWN_FRAMES:
+            if frame in text:
+                return f"{candidate.name}: aborted inside {frame}"
+    return ""
+
+
+def completed_despite_teardown_abort(validation_dir: Path,
+                                     job_name: str) -> str:
+    """Evidence that a non-zero exit is an environment defect, or "".
+
+    Both halves are required. Without the completion mark this says nothing:
+    an analysis that stopped early and then crashed in cleanup is a failed
+    analysis, and must stay one.
+    """
+    if not analysis_completed(validation_dir, job_name):
+        return ""
+    return teardown_abort(validation_dir, job_name)
+
+
 def abaqus_available(abaqus_command: str) -> bool:
     tokens = _command_tokens(abaqus_command)
     return bool(tokens and shutil.which(tokens[0]))
@@ -48,7 +105,7 @@ def run_original_job(
     run_prefix: str = DEFAULT_ABAQUS_RUN_PREFIX,
     timeout_seconds: int = 1800,
 ) -> AbaqusRunResult:
-    result = _run_generated_script(validation_dir, "run_original_abaqus.sh", abaqus_command, abaqus_modules, run_prefix, "original_abaqus_stdout.log", "original_abaqus_stderr.log", timeout_seconds)
+    result = _run_generated_script(validation_dir, "run_original_abaqus.sh", abaqus_command, abaqus_modules, run_prefix, "original_abaqus_stdout.log", "original_abaqus_stderr.log", timeout_seconds, job_name="original_umat_validation")
     _update_run_report(validation_dir, "original_run_status", result)
     return result
 
@@ -60,7 +117,7 @@ def run_transformed_job(
     run_prefix: str = DEFAULT_ABAQUS_RUN_PREFIX,
     timeout_seconds: int = 1800,
 ) -> AbaqusRunResult:
-    result = _run_generated_script(validation_dir, "run_otis_abaqus.sh", abaqus_command, abaqus_modules, run_prefix, "otis_abaqus_stdout.log", "otis_abaqus_stderr.log", timeout_seconds)
+    result = _run_generated_script(validation_dir, "run_otis_abaqus.sh", abaqus_command, abaqus_modules, run_prefix, "otis_abaqus_stdout.log", "otis_abaqus_stderr.log", timeout_seconds, job_name="otis_umat_validation")
     _update_run_report(validation_dir, "transformed_run_status", result)
     return result
 
@@ -141,6 +198,7 @@ def _run_generated_script(
     stdout_name: str,
     stderr_name: str,
     timeout_seconds: int,
+    job_name: str = "",
 ) -> AbaqusRunResult:
     validation_dir = Path(validation_dir)
     script = validation_dir / script_name
@@ -162,8 +220,28 @@ def _run_generated_script(
         return AbaqusRunResult("timeout", command, validation_dir, None, stdout_path, stderr_path, f"Abaqus job timed out after {timeout_seconds} seconds.", _excerpt(exc.stdout or ""), _excerpt(exc.stderr or ""))
     stdout_path.write_text(process.stdout, encoding="utf-8")
     stderr_path.write_text(process.stderr, encoding="utf-8")
-    status = "completed" if process.returncode == 0 else "failed"
     message = _runner_message(process.stderr + "\n" + process.stdout)
+    if process.returncode == 0:
+        status = "completed"
+    else:
+        # A non-zero exit is not automatically a failed analysis. Ask the job
+        # what happened: if Abaqus recorded that the analysis completed and the
+        # only crash is in its own shutdown, the results on disk are real and
+        # the exit status is describing the machine, not the model. Both halves
+        # are required, so an analysis that stopped early stays failed.
+        teardown = completed_despite_teardown_abort(validation_dir, job_name) if job_name else ""
+        if teardown:
+            status = "completed_after_teardown_abort"
+            message = (
+                "The analysis completed and wrote its results, then the "
+                f"process aborted while shutting down ({teardown}). This is a "
+                "defect in the Abaqus installation, not in the model or the "
+                "transformation: it reproduces on this machine for a job with "
+                "no user subroutine at all. The results are read from the "
+                "files the completed analysis wrote."
+            ) + (f" Runner note: {message}" if message else "")
+        else:
+            status = "failed"
     return AbaqusRunResult(status, command, validation_dir, process.returncode, stdout_path, stderr_path, message, _excerpt(process.stdout), _excerpt(process.stderr))
 
 

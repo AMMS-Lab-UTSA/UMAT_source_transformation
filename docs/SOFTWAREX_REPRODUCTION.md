@@ -132,6 +132,7 @@ with the virtual environment active.
 | Table 5 — J2 sensitivities | `python tools/validate_table5.py` | `paper_results/parameter_sensitivity/` | A |
 | Table 6 — 20-model sweep | `python tools/run_parameter_sensitivity_sweep.py` | `paper_results/parameter_sensitivity/table6_parameter_sensitivity.csv` | A |
 | Illustrative tangent | `python tools/run_tangent_round.py --work-dir reproduce/tangent --results-dir paper_results/actual_umat_higher_order/j2` | `paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv` | A |
+| Paired Abaqus round (local) | `python tools/run_abaqus_paired_round.py --work-dir /tmp/abq --results-dir paper_results/abaqus_paired` | `paper_results/abaqus_paired/abaqus_paired_round.csv` | C |
 | Source identity registry | `python tools/build_source_identity_registry.py` | `paper_results/generality/source_identity.csv` | A |
 | Data figures | `python tools/figures/build_tangent_figure.py`, `python tools/figures/build_higher_order_figure.py`, `python tools/figures/build_sensitivity_figure.py`, `python tools/figures/build_collection_figures.py`, `python tools/figures/build_acquisition_figures.py` | `paper_results/figures/` | A |
 | Table previews | `python tools/tables/render_table_previews.py` | `paper_results/tables/previews/` | A |
@@ -238,9 +239,25 @@ subject to their licences and upstream availability. Uses immutable commit
 snapshots. Run deliberately:
 `python -m umat_oti.reproduce --profile corpus --allow-network`.
 
-**Tier C — Abaqus / ARC.** Needs a licensed Abaqus and the documented HPC
-environment. The scripts and the archived provenance stay public even though
-execution does not.
+**Tier C — Abaqus.** Needs a licensed Abaqus. Two rounds live here. The
+archived cluster round (`paper_results/arc_*`) covers third-party sources and
+was executed on the documented HPC environment; its scripts and provenance
+stay public even though execution does not. The paired round
+(`tools/run_abaqus_paired_round.py`) runs the same original-versus-transformed
+comparison on a workstation, over the benchmark sources, using each source's
+own declared material constants and a load case chosen by the same plasticity
+scan that grades the result.
+
+One environment note, because it decides whether that round can be believed
+anywhere else. On the development workstation every Abaqus/Standard job --
+including Abaqus's own verification deck, with no user subroutine -- completes
+its analysis and then aborts with signal 6 while shutting down, inside
+`SMAAspSupport_finalize` where the bundled Intel Fortran runtime calls
+`for_inquire` and glibc's fortify check aborts. The analysis, the results and
+the ODB are unaffected. The runner therefore reads the job's own completion
+statement out of the `.dat` rather than trusting the exit status, and records
+the abort as a caveat on every result it produces. A machine without that
+defect will produce the same numbers with no caveat attached.
 
 ## 12. Versions and compatibility
 

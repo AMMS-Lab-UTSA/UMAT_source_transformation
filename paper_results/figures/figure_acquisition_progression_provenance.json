@@ -1,19 +1,19 @@
 {
   "answers": "How does the corpus go from the files that were acquired to the sources that were verified, and where does the denominator change?",
   "command": "python tools/figures/build_acquisition_figures.py",
-  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "commit": "48f12c6d4945169551cabd2858f839df38d37aa3",
   "figure": "figure_acquisition_progression",
-  "generated_at": "2026-08-27T17:06:03.956148+00:00",
+  "generated_at": "2026-08-27T18:45:23.332108+00:00",
   "inputs": [
     {
-      "bytes": 32969,
+      "bytes": 33278,
       "path": "paper_results/generality/generality_matrix.csv",
-      "sha256": "2f88ea8c845fc0a19332ca7a68476f7b3a569207762e0dc74b279d9dfc0ea67e"
+      "sha256": "5895d52d4a5ea8c2d35079d5559a554230ee2d8b2a12f72bc76b6426f5a8b885"
     },
     {
-      "bytes": 4455,
+      "bytes": 4493,
       "path": "paper_results/generality/generality_summary.json",
-      "sha256": "8ec7b9f8cb30b3b7ff21d48fee745d2ecbabb730fb4afe2a572fd83a11f63520"
+      "sha256": "395572563bac321d3dfbe41cd68ea9ed0026049311f288235e47f8504ab34acf"
     }
   ],
   "layout": {
@@ -43,9 +43,9 @@
     ],
     "height_inches": 3.9,
     "pdf": "paper_results/figures/figure_acquisition_progression.pdf",
-    "pdf_sha256": "e83ba8ab08136299bb91a6157d76a492fadc5df2705414d3c5a46cc683b7c859",
+    "pdf_sha256": "ccf27b0339fdb10981ca667702766baef2b6f2206005dc3a0ae52c1bc2c812f1",
     "png": "paper_results/figures/figure_acquisition_progression.png",
-    "png_sha256": "cb49ea6bf6ef45d9f316d5217f8cbef8dc39f680cc55b082148d241f6fd19252",
+    "png_sha256": "760a8b6afd8f39639a2f23854098021f834be251409676e65565fdc114e7eee0",
     "smallest_configured_pt": 12.0,
     "smallest_printed_pt": 12.0,
     "width_inches": 6.2
@@ -81,15 +81,15 @@
       "unit": "sources"
     },
     "not verified": {
-      "count": 3,
+      "count": 2,
       "unit": "sources"
     },
     "verified by at least one route": {
-      "count": 38,
+      "count": 39,
       "unit": "sources"
     },
     "verified in Abaqus": {
-      "count": 17,
+      "count": 34,
       "unit": "sources"
     },
     "verified offline": {

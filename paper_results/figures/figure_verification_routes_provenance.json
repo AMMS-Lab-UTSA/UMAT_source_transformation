@@ -1,14 +1,14 @@
 {
   "answers": "Which verification route reached each collection source, and how much do the two routes overlap?",
   "command": "python tools/figures/build_collection_figures.py",
-  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "commit": "48f12c6d4945169551cabd2858f839df38d37aa3",
   "figure": "figure_verification_routes",
-  "generated_at": "2026-08-27T17:06:05.617265+00:00",
+  "generated_at": "2026-08-27T18:53:40.513684+00:00",
   "inputs": [
     {
-      "bytes": 32969,
+      "bytes": 33278,
       "path": "paper_results/generality/generality_matrix.csv",
-      "sha256": "2f88ea8c845fc0a19332ca7a68476f7b3a569207762e0dc74b279d9dfc0ea67e"
+      "sha256": "5895d52d4a5ea8c2d35079d5559a554230ee2d8b2a12f72bc76b6426f5a8b885"
     }
   ],
   "layout": {
@@ -24,7 +24,7 @@
     "figure_width_in": 6.2,
     "minimum_rendered_pt": 9.0
   },
-  "notes": "38 of 41 sources are verified by at least one route. The 3 that are not keep their place in the denominator and are shown as their own bar; the four bars sum to the denominator. This belongs in the caption rather than on the figure, where at a readable size it overlapped the first row of bars.",
+  "notes": "39 of 41 sources are verified by at least one route. The 2 that are not keep their place in the denominator and are shown as their own bar; the four bars sum to the denominator. This belongs in the caption rather than on the figure, where at a readable size it overlapped the first row of bars.",
   "outputs": {
     "axes": [
       {
@@ -38,9 +38,9 @@
     ],
     "height_inches": 3.1,
     "pdf": "paper_results/figures/figure_verification_routes.pdf",
-    "pdf_sha256": "8d0b5f6a73682931bc21ef9c1b86ae1ef8836ebe08b6e3bacec7f1c7a9aab3e7",
+    "pdf_sha256": "6bd4c896a8c7ff06d3e1d09f6cdd05b90216eb96febf095ae59502ef37c08688",
     "png": "paper_results/figures/figure_verification_routes.png",
-    "png_sha256": "8f6af4acc618383bdae6dfc869061904bd2aacc8e166e605b551833e82a45971",
+    "png_sha256": "12ab0e40c539b42e0bdd5abdccc56c5a6c5bd41cb6956a13a46217b7dc379a65",
     "smallest_configured_pt": 12.0,
     "smallest_printed_pt": 12.0,
     "width_inches": 6.2
@@ -55,16 +55,15 @@
     "offline_route": "numerical_verification == 'succeeded'"
   },
   "row_counts": {
-    "Abaqus route only": 11,
-    "both routes": 6,
+    "Abaqus route only": 12,
+    "both routes": 22,
     "eligible": 41,
-    "neither route": 3,
-    "offline route only": 21,
+    "neither route": 2,
+    "offline route only": 5,
     "unverified_with_reasons": [
-      "derivatives_verified: 1 of 3600 rows sit at the centred-difference noise floor and cannot be resolved by it",
       "contract_constructed: the declared dimensions are too small for what this source addresses: it needs NTENS >= 0 and, at ",
       "abaqus: the paired round recorded failed_execution for this source (slurm 791506), and it has not been run through the o"
     ],
-    "verified_by_at_least_one": 38
+    "verified_by_at_least_one": 39
   }
 }
