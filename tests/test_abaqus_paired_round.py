@@ -36,14 +36,26 @@ def test_a_short_declared_vector_is_padded_not_silently_truncated():
     assert values[:2] == ["7.0", "8.0"] and len(values) == 4
 
 
-def test_every_shipped_contract_declares_its_material():
-    """The round can only run what the repository already pins."""
-    contracts = sorted((REPO_ROOT / "parameter_sensitivity" / "contracts").glob("*.json"))
-    assert contracts, "no contracts found"
-    undeclared = [c.stem for c in contracts if _declared(c.stem) is None]
+def test_every_benchmark_model_declares_its_material():
+    """The round can only run what the repository already pins.
+
+    Scoped to the benchmark set the sweep declares, not to whatever files
+    happen to be in the contracts directory: contracts are generated, and a
+    run of the tools can leave one there for a model outside that set. Such a
+    contract is handled correctly -- reported as having no declared material
+    rather than given one -- which is what
+    ``test_a_source_with_no_declared_material_is_recorded_not_invented``
+    pins. What matters here is that nothing in the shipped set is missing one.
+    """
+    import run_abaqus_paired_round as rnd  # noqa: PLC0415
+    sys.path.insert(0, str(REPO_ROOT / "tools"))
+    from run_parameter_sensitivity_sweep import REQUIRED  # noqa: PLC0415
+
+    assert REQUIRED, "the benchmark set is empty"
+    undeclared = [m for m in REQUIRED if rnd._declared(m) is None]
     assert not undeclared, (
-        f"these contracts declare no material vector, so the round would have "
-        f"to invent one or skip them: {undeclared}")
+        f"these benchmark models declare no material vector, so the round "
+        f"would have to invent one or skip them: {undeclared}")
 
 
 def test_the_deck_and_the_check_ask_the_same_question(tmp_path: Path):
@@ -254,3 +266,150 @@ def test_a_call_is_not_read_as_an_unshaped_array():
     assert "F" in _defined_function_names(source)
     assert "STRESS" not in _defined_function_names(source), (
         "an array must not be mistaken for a function")
+
+
+def test_the_deck_is_sized_by_the_declared_state_not_an_inferred_one(tmp_path: Path):
+    """Builds a deck and reads *Depvar out of it.
+
+    An earlier version of this test only asserted that the parameter existed
+    in a signature, which stays green if the value is accepted and ignored.
+    The Huang/Kysar crystal-plasticity lineage sizes its state as
+    10*NSLPTL + 5, which no static reading of the text can see: inference
+    returned 1 where the source pins 172, and the untransformed UMAT wrote
+    past the end of a 37-slot array.
+    """
+    import re
+
+    from umat_oti.validation.job_builder import _write_input_deck
+
+    source = ("      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,NTENS,NSTATV,PROPS)\n"
+              "      STATEV(1)=0.0\n"
+              "      END\n")
+    # _write_input_deck is handed the total the workspace already sized,
+    # instrumentation included, and must write exactly that.
+    for requested in (172 + 6 * 6, 7 + 6 * 6):
+        deck = _write_input_deck(tmp_path / f"d{requested}.inp", 6,
+                                 "single element tension", requested, 4, source)
+        written = int(re.search(r"\*Depvar\s*\n\s*(\d+)", deck.read_text())[1])
+        assert written == requested, f"*Depvar is {written}, asked for {requested}"
+
+    # And the workspace must never shrink below what inference found, or a
+    # contract that under-declares reintroduces the out-of-bounds write.
+    from umat_oti.validation.job_builder import (  # noqa: PLC0415
+        infer_validation_dimensions_from_source,
+    )
+    inferred_nstatv, _ = infer_validation_dimensions_from_source(
+        source, statev_name="STATEV", ntens=6)
+    assert max(0, inferred_nstatv) == inferred_nstatv
+
+
+def test_the_declared_material_reaches_the_deck_untruncated(tmp_path: Path):
+    """The whole vector, not as many as inference guessed the source wanted.
+
+    UMAT_PCO declares eight constants; the deck carried five, so the source
+    read PROPS(8) past the end of the array and divided by it. Both builds got
+    the same truncated deck, so the comparison was still like for like -- but
+    the row claimed the contract's material had been used when it had not.
+    """
+    import re
+
+    from umat_oti.validation.job_builder import _write_input_deck
+
+    props = [220000.0, 0.3, 0.005, 900000.0, 56.0, 0.0, 343.5, 0.25]
+    deck = _write_input_deck(tmp_path / "props.inp", 6, "single element tension",
+                             1, len(props), "      SUBROUTINE UMAT()\n      END\n",
+                             props)
+    text = deck.read_text()
+    assert re.search(r"\*User Material, constants=8", text)
+    for value in props:
+        assert repr(value) in text, f"{value} never reached the deck"
+
+
+
+def test_a_commented_out_statement_is_never_stitched_into_code():
+    """The most dangerous rewrite found: a comment turned into a statement.
+
+    This source carries "C      IF (STATEV(1).EQ.0.) THEN" as a note about a
+    condition its author deliberately removed. Stitching continuations dropped
+    the marker, the line then read as a promoted branch, and the transform
+    emitted it live. It failed to compile, which is luck: a commented-out
+    statement that happened to compile would have put a condition back into
+    the model with nothing to show for it.
+
+    Asserted against the stitchers themselves rather than against
+    ``_is_commented``, which would stay green with every guard deleted.
+    """
+    from umat_oti.transform.source_transform import (
+        _is_commented, _logical_assignment_line, _logical_branch_line,
+        _logical_helper_call_line,
+    )
+
+    lines = [
+        "      X = 1.0",
+        "C      IF (STATEV(1).EQ.0.) THEN Modified by author",
+        "C      DSTRESS(1) = TRVAL",
+        "     &   + 1.0",
+        "C      CALL KMLT(DSTRESS,",
+        "     &   TRVAL)",
+    ]
+    for index, line in enumerate(lines, start=1):
+        if not _is_commented(line):
+            continue
+        # Every stitcher must decline a comment. These mirror the three call
+        # sites in the transform loop; a comment reaching any of them comes
+        # back as executable text with its marker gone.
+        for stitch in (_logical_branch_line, _logical_assignment_line,
+                       _logical_helper_call_line):
+            stitched, _ = stitch(lines, index, "fixed")
+            if stitched:
+                assert stitched.lstrip()[:1] in "Cc*!", (
+                    f"{stitch.__name__} turned a comment into code: "
+                    f"{stitched.strip()[:60]!r}")
+
+
+def test_an_intrinsic_is_never_classified_as_a_variable_to_promote():
+    """FLOAT(NSLPTL) became FLOAT_OTI(NSLPTL), declared nowhere."""
+    from umat_oti.core.roles import INTRINSIC_CALL_NAMES, defined_function_names
+
+    for name in ("FLOAT", "SQRT", "SIGN", "MOD", "MAX", "DBLE"):
+        assert name in INTRINSIC_CALL_NAMES
+
+    source = (
+        "      SUBROUTINE UMAT(STRESS)\n"
+        "      X = GSLP0(1.0)\n"
+        "      END\n"
+        "      REAL*8 FUNCTION GSLP0(A)\n"
+        "      GSLP0 = A\n"
+        "      END\n")
+    assert "GSLP0" in defined_function_names(source)
+    assert "UMAT" not in defined_function_names(source), (
+        "a subroutine is not a function subprogram")
+
+
+def test_the_seed_check_follows_the_variable_that_was_actually_seeded():
+    """Regression: a finite-strain source seeds DFGRD1, not DSTRAN.
+
+    Looking only for DSTRAN_OTI consumers found none in a finite-strain
+    transform, which turned "nothing consumes the seed" -- the condition these
+    checks exist to catch -- into the verdict for a source that had been
+    seeding correctly all along, and broke lucarini_neohookean, which had
+    passed in Abaqus the run before.
+    """
+    from umat_oti.transform.source_transform import _seed_consuming_stress_lines
+
+    finite_lines = [
+        (10, "      PK2_OTI(I) = PK2_OTI(I) + C_OTI(I,J)*DFGRD1_OTI(J)"),
+        (11, "      X_OTI = Y_OTI + 1.0D0"),
+    ]
+    assert _seed_consuming_stress_lines(finite_lines, {"DSTRAN"}) == [], (
+        "this is the state that used to be reported, and it is why the "
+        "check has to be told which variable carries the seed")
+    assert _seed_consuming_stress_lines(finite_lines, {"DSTRAN", "DFGRD1"}) == [10]
+
+    small_strain = [(20, "      STRESS_OTI(I)=STRESS_OTI(I)+D_OTI(I,J)*DSTRAN_OTI(J)")]
+    assert _seed_consuming_stress_lines(small_strain, {"DSTRAN"}) == [20]
+
+    # And the condition it exists to catch still fires.
+    assert _seed_consuming_stress_lines(
+        [(30, "      X_OTI = Y_OTI * 2.0D0")], {"DSTRAN", "DFGRD1"}) == []
+    assert _seed_consuming_stress_lines(small_strain, set()) == []

@@ -127,6 +127,31 @@ def implicit_integer_letters(source_text: str) -> frozenset[str]:
 
 
 
+#: Intrinsics that appear as ``NAME(...)``. A call is not a variable, and a
+#: promoted intrinsic gets renamed like one: FLOAT(NSLPTL) became
+#: FLOAT_OTI(NSLPTL), which is not declared anywhere and does not compile.
+INTRINSIC_CALL_NAMES = frozenset({
+    "ABS", "ACOS", "AIMAG", "AINT", "ANINT", "ASIN", "ATAN", "ATAN2", "COS",
+    "COSH", "DABS", "DBLE", "DEXP", "DFLOAT", "DIM", "DLOG", "DMAX1", "DMIN1",
+    "DSIGN", "DSQRT", "EXP", "FLOAT", "IABS", "IDINT", "IDNINT", "INT", "LOG",
+    "LOG10", "MAX", "MAX0", "MAX1", "MIN", "MIN0", "MIN1", "MOD", "NINT",
+    "REAL", "SIGN", "SIN", "SINH", "SQRT", "TAN", "TANH", "CMPLX", "CONJG",
+})
+
+
+def defined_function_names(source_text: str) -> frozenset[str]:
+    """Names this source defines as FUNCTIONs. Calls, not arrays or variables."""
+    try:
+        from umat_oti.fortran.parser import (  # noqa: PLC0415
+            logical_lines_from_text, parse_function_subprograms,
+        )
+        lines = logical_lines_from_text(source_text, "fixed")
+        return frozenset(f.upper_name for f in parse_function_subprograms(lines))
+    except Exception:
+        return frozenset()
+
+
+
 def suggest_variable_roles(analysis: dict[str, Any],
                            source_text: str | None = None) -> list[dict[str, object]]:
     """Classify each variable. ``source_text`` enables implicit-typing checks.
@@ -152,6 +177,8 @@ def _suggest_variable_roles(analysis: dict[str, Any],
     statev_path_names = set(region_summary.get("statev_path_variables", []))
     integer_letters = (implicit_integer_letters(source_text)
                        if source_text is not None else frozenset())
+    not_variables = (INTRINSIC_CALL_NAMES | defined_function_names(source_text)
+                     if source_text is not None else frozenset())
     helper_local_names = _pure_helper_local_variables(analysis)
     helper_output_names = _pure_helper_output_variables(analysis)
     plasticity = analysis.get("plasticity_indicators", {}) or {}
@@ -174,7 +201,22 @@ def _suggest_variable_roles(analysis: dict[str, Any],
             helper_local_names,
             helper_output_names,
         )
-        if role in ("Promote", "Seed") and _is_implicitly_integer(
+        # The same escape hatch _is_implicitly_integer uses: an explicit
+        # declaration always wins. A source may legally name a variable DIM or
+        # AINT, and demoting a declared one would wrap it in REAL() and take
+        # its derivative silently to zero.
+        if (role in ("Promote", "Seed") and name in not_variables
+                and str(detected_type or "").strip().lower() in ("", "unknown")
+                and not str(variable.get("detected_shape") or "").strip()):
+            role = "Keep real"
+            notes = (
+                f"{name} is a call, not a variable -- "
+                + ("a Fortran intrinsic" if name in INTRINSIC_CALL_NAMES
+                   else "a function this source defines")
+                + ". Promoting it renames the call itself, and the renamed "
+                  "name is declared nowhere."
+            )
+        elif role in ("Promote", "Seed") and _is_implicitly_integer(
                 name, detected_type, variable, integer_letters):
             role = "Keep real"
             notes = (

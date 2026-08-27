@@ -155,7 +155,21 @@ def run_one(model: str, work_root: Path, abaqus_cmd: str,
         seed="DSTRAN", output="STRESS", target="DDSDDE",
         ntens=declared["ntens"], order=1, abaqus_cmd=abaqus_cmd,
         test_mode=mode, work_root=str(work_root / model),
-        material_props=declared["props"])
+        material_props=declared["props"],
+        # The declared count, not an inferred one. A crystal-plasticity source
+        # sizes its state as 10*NSLPTL+5, which no static reading of the text
+        # can see: inference returned 1 where the source pins 172, the deck
+        # was built with 37 slots, and the untransformed UMAT wrote past the
+        # end of the array and segfaulted before any comparison could happen.
+        nstatv=declared["nstatv"],
+        # And the number of constants. Without it the deck was sized by
+        # inference and the vector was truncated to fit: UMAT_PCO declares
+        # eight constants and the deck carried five, so the source read
+        # PROPS(8) past the end of the array and divided by it. Both builds
+        # got the same truncated deck, so the comparison was still like for
+        # like -- but the row claimed the contract's material had been used
+        # when it had not, and the run depended on uninitialised memory.
+        nprops=len(declared["props"]))
 
     stage = str(outcome.get("stage") or "")
     vdir = Path(str(outcome.get("vdir") or work_root / model))
