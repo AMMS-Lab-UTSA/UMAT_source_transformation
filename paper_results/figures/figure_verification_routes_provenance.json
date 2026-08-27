@@ -1,9 +1,9 @@
 {
   "answers": "Which verification route reached each collection source, and how much do the two routes overlap?",
   "command": "python tools/figures/build_collection_figures.py",
-  "commit": "0f9381f69c17f5f327867eacb12758b2122780e9",
+  "commit": "489806911fe5ddc5a9ac1ede812a0c7e84a98e81",
   "figure": "figure_verification_routes",
-  "generated_at": "2026-08-27T19:57:12.021149+00:00",
+  "generated_at": "2026-08-27T22:14:22.956765+00:00",
   "inputs": [
     {
       "bytes": 33275,

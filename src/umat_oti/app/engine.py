@@ -171,7 +171,9 @@ def transform_single(source_text: str, name: str, seed: str, output: str, target
 
 def validate_in_abaqus(source_text: str, name: str, seed: str, output: str, target: str,
                        ntens: int, order: int, abaqus_cmd: str, test_mode: str,
-                       work_root: str, material_props=None) -> dict:
+                       work_root: str, material_props=None,
+                       nstatv: int | None = None,
+                       nprops: int | None = None) -> dict:
     """Transform to a persistent dir, then build the Abaqus validation workspace, run
     the ORIGINAL and OTI jobs, extract and compare DDSDDE. Returns the comparison."""
     from umat_oti.services.transformation import run_transformation
@@ -206,7 +208,8 @@ def validate_in_abaqus(source_text: str, name: str, seed: str, output: str, targ
                                generated_dir=transform_dir, project_config=config, ntens=int(ntens),
                                abaqus_command=abaqus_cmd, abaqus_modules="", run_prefix="",
                                material_test_mode=test_mode, run_compile_smoke=True,
-                               material_props=material_props)
+                               material_props=material_props, nstatv=nstatv,
+                               nprops=nprops)
     run_both_jobs(vdir, abaqus_cmd, "", "", timeout_seconds=1800)
     extract_results(vdir, abaqus_cmd, "", "", timeout_seconds=600)
     compare_validation_results(vdir)                  # writes the full report files

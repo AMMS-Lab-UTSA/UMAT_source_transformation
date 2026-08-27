@@ -86,8 +86,12 @@ def build_validation_workspace(
     source_text = original_umat.read_text(encoding="utf-8", errors="replace") if original_umat.is_file() else ""
     validation_ntens, validation_ntens_source = infer_validation_ntens_from_source(source_text, fallback_ntens=ntens)
     inferred_nstatv, inferred_nprops = infer_validation_dimensions_from_source(source_text, statev_name=statev_name, ntens=validation_ntens)
-    nstatv = inferred_nstatv if nstatv is None or nstatv < 1 else nstatv
-    nprops = inferred_nprops if nprops is None or nprops < 1 else nprops
+    # The larger of the two, never the caller's outright. A declared count is
+    # authoritative where inference cannot see the size a source computes at
+    # run time, but a contract that under-declares would shrink the deck and
+    # reintroduce the out-of-bounds write this exists to prevent.
+    nstatv = max(int(nstatv or 0), int(inferred_nstatv or 0), 1)
+    nprops = max(int(nprops or 0), int(inferred_nprops or 0), 1)
     ddsdde_slot_count = max(validation_ntens, 0) * max(validation_ntens, 0)
     normalized_compare_outputs = [str(value).upper() for value in (compare_outputs or ["STRESS", "STATEV", "DDSDDE", "convergence"])]
     constitutive_validation = _constitutive_validation_artifacts(project_config, source_text, nstatv, ddsdde_slot_count)

@@ -1,7 +1,7 @@
 {
   "command": "python tools/tables/render_table_previews.py",
-  "commit": "0f9381f69c17f5f327867eacb12758b2122780e9",
-  "generated_at": "2026-08-27T19:57:18.777397+00:00",
+  "commit": "489806911fe5ddc5a9ac1ede812a0c7e84a98e81",
+  "generated_at": "2026-08-27T22:14:29.871686+00:00",
   "note": "Previews are pictures of the canonical CSVs, for visual review only. The CSV is what becomes the manuscript table; a preview recomputes nothing and so cannot disagree with it. A cell longer than 58 characters is elided here and kept in full in the CSV.",
   "previews": [
     {

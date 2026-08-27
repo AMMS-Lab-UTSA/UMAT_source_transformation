@@ -543,6 +543,7 @@ def _lift_helper_routine(
     lines = [
         header,
         f"    use {module_name}, OTI_HELPER_DP => DP{_renames}",
+        "    use oti_intrinsics",
         f"    implicit type({type_name}) (a-h,o-z)",
         "    implicit integer (i-n)",
     ]

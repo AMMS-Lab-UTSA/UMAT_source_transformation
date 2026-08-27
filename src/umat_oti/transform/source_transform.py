@@ -14,6 +14,11 @@ from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines, 
 from umat_oti.fortran.regions import INTRINSIC_TOKEN_NAMES, _is_executable_line
 from umat_oti.oti.module_generator import OtilibGenerationError, generate_otilib_module
 from umat_oti.transform.helper_lifting import HelperLiftingError, helper_lift_closure, lift_helper_set_source, wrap_free_form
+# The intrinsic extension module is generated in one place and used by
+# both transform paths; no cycle, that module imports nothing from here.
+from umat_oti.transform.parameter_sensitivity_transform import (
+    _emit_intrinsic_extensions,
+)
 
 
 INLINEABLE_HELPERS = {"DOTPROD", "DYADICPROD", "KCLEAR", "KDAMACAL", "KDEVIA", "KEFFP", "KINVER", "KMATSUB", "KMAVEC", "KMLT", "KMLT1", "KMMULT", "KMTRAN", "KPROYECTOR", "KSMULT", "KTRACE", "KTRANS", "KUPDVEC", "VSPRATE"}
@@ -191,8 +196,20 @@ def transform_umat_to_oti_from_config(
         helper_source_path.write_text(
             wrap_free_form(lifted_helpers.source), encoding="utf-8")
 
+    # The extension module that supplies what the vendored algebra leaves out:
+    # SIGN, SQRT, MIN, MAX and the mixed-kind arithmetic Fortran would have
+    # done itself before the type was replaced. The parameter-sensitivity path
+    # has always emitted it; this one never did, so a source calling SIGN or
+    # SQRT on a differentiated value compiled there and failed here.
+    intrinsics_path = output_dir / "oti_intrinsics.f90"
+    intrinsics_path.write_text(
+        _emit_intrinsic_extensions(module_result.module_name,
+                                   module_result.type_name),
+        encoding="utf-8")
+
     compile_order = output_dir / "compile_order.txt"
-    compile_units = ["master_parameters.f90", "real_utils.f90", f"{module_result.module_name}.f90"]
+    compile_units = ["master_parameters.f90", "real_utils.f90",
+                     f"{module_result.module_name}.f90", "oti_intrinsics.f90"]
     if helper_source_path is not None:
         compile_units.append(helper_source_path.name)
     compile_units.append(transformed_name)
@@ -206,6 +223,7 @@ def transform_umat_to_oti_from_config(
         'gfortran -c -ffree-form -ffree-line-length-none master_parameters.f90 -J"$OBJDIR" -o "$OBJDIR/master_parameters.o"',
         'gfortran -c -ffree-form -ffree-line-length-none -I"$OBJDIR" real_utils.f90 -J"$OBJDIR" -o "$OBJDIR/real_utils.o"',
         f'gfortran -c -ffree-form -ffree-line-length-none -I"$OBJDIR" {module_result.module_name}.f90 -J"$OBJDIR" -o "$OBJDIR/{module_result.module_name}.o"',
+        'gfortran -c -ffree-form -ffree-line-length-none -I"$OBJDIR" oti_intrinsics.f90 -J"$OBJDIR" -o "$OBJDIR/oti_intrinsics.o"',
     ]
     if helper_source_path is not None:
         compile_lines.append('gfortran -c -ffree-form -ffree-line-length-none -I"$OBJDIR" umat_oti_helpers.f90 -J"$OBJDIR" -o "$OBJDIR/umat_oti_helpers.o"')
@@ -902,31 +920,11 @@ def _first_finite_path_assignment_line(source_text: str, analysis: dict[str, Any
     return 0
 
 
-#: Intrinsics that appear as ``NAME(...)`` and are not arrays. Only the ones
-#: that can plausibly be mistaken for a promoted variable are listed; the point
-#: is to stop a call being read as an unshaped array, not to enumerate Fortran.
-_INTRINSIC_CALLS = frozenset({
-    "ABS", "ACOS", "AIMAG", "AINT", "ANINT", "ASIN", "ATAN", "ATAN2", "COS",
-    "COSH", "DABS", "DBLE", "DEXP", "DFLOAT", "DIM", "DLOG", "DMAX1", "DMIN1",
-    "DSIGN", "DSQRT", "EXP", "FLOAT", "IABS", "IDINT", "IDNINT", "INT", "LOG",
-    "LOG10", "MAX", "MAX0", "MAX1", "MIN", "MIN0", "MIN1", "MOD", "NINT",
-    "REAL", "SIGN", "SIN", "SINH", "SQRT", "TAN", "TANH",
-})
-
-
-def _defined_function_names(source_text: str) -> set[str]:
-    """Names this source defines as FUNCTIONs, which are calls and not arrays."""
-    from umat_oti.fortran.parser import (  # noqa: PLC0415
-        logical_lines_from_text, parse_function_subprograms,
-    )
-
-    try:
-        lines = logical_lines_from_text(source_text, "fixed")
-        return {f.upper_name for f in parse_function_subprograms(lines)}
-    except Exception:
-        # A source this parser cannot read is not made better by refusing to
-        # look: fall back to the intrinsic list alone.
-        return set()
+# One definition, in core.roles, so the classifier and this check cannot drift
+# apart about what counts as a call rather than a variable.
+from umat_oti.core.roles import (  # noqa: E402
+    INTRINSIC_CALL_NAMES as _INTRINSIC_CALLS, defined_function_names as _defined_function_names,
+)
 
 
 def _shape_blockers(
@@ -1115,7 +1113,15 @@ def _transform_source_text(
             output.append(_comment_old_line(form, line))
             continue
         logical_branch_line, branch_continuation_lines = _logical_branch_line(lines, line_number, form)
-        if _line_in_span(line_number, selected_routine_span) and _is_promoted_branch_line(logical_branch_line or line, replacement_names):
+        # Never rewrite a comment into code. A commented-out branch still reads
+        # as one once the marker is dropped while stitching continuations, and
+        # this source carries "C      IF (STATEV(1).EQ.0.) THEN" as a note
+        # about a change its author made. Emitting that as a live statement is
+        # not a formatting slip: it puts a condition the author deliberately
+        # removed back into the model.
+        if (_line_in_span(line_number, selected_routine_span)
+                and not _is_commented(line)
+                and _is_promoted_branch_line(logical_branch_line or line, replacement_names)):
             output[-1] = _transform_executable_line(logical_branch_line or line, replacement_names, type_name, lifted_helper_names)
             helper_continuation_skip_lines.update(branch_continuation_lines)
             if real_output_insert_after_line == line_number and not real_extraction_inserted:
@@ -1208,13 +1214,22 @@ def _transform_source_text(
                 )
                 helper_continuation_skip_lines.update(projected_dstres_skip_lines)
                 continue
-            logical_assignment_line, assignment_continuation_lines = _logical_assignment_line(lines, line_number, form)
+            # Same guard as the branch stitcher above: stitching drops the
+            # fixed-form comment marker, so a commented-out assignment reads
+            # as a live one. A plain comment still falls through to
+            # _transform_executable_line below, which keeps its marker while
+            # renaming tokens inside it -- that is harmless and is left alone.
+            logical_assignment_line, assignment_continuation_lines = (
+                (None, []) if _is_commented(line)
+                else _logical_assignment_line(lines, line_number, form))
             if logical_assignment_line:
                 output[-1] = _transform_executable_line(logical_assignment_line, replacement_names, type_name, lifted_helper_names)
                 shadow_sync_dirty_names.difference_update(_assigned_shadow_names(logical_assignment_line, helper_call_sync_names))
                 helper_continuation_skip_lines.update(assignment_continuation_lines)
                 continue
-            helper_call_line, continuation_lines = _logical_helper_call_line(lines, line_number, form)
+            helper_call_line, continuation_lines = (
+                (None, []) if _is_commented(line)
+                else _logical_helper_call_line(lines, line_number, form))
             projected_ddstra_capture = _capture_projected_ddstra_helper_call(helper_call_line or line, replacement_names, ntens)
             if projected_ddstra_capture is not None:
                 input_name, output_name = projected_ddstra_capture
@@ -2417,6 +2432,13 @@ def _is_continuation_line(line: str, form: str) -> bool:
 
 
 def _logical_helper_call_line(lines: list[str], start_line: int, form: str) -> tuple[str, list[int]]:
+    # A comment is never a statement. _statement_line_segment strips the
+    # fixed-form marker along with the label field, so without this a
+    # commented-out branch, assignment or CALL is stitched into executable
+    # text and rewritten as code. Guarded here rather than only at the call
+    # sites, so a future caller inherits the guard instead of the bug.
+    if _is_commented(lines[start_line - 1]):
+        return "", []
     first_segment = _statement_line_segment(lines[start_line - 1], form)
     if not re.match(r"^\s*CALL\s+\w+\s*\(", first_segment, flags=re.IGNORECASE):
         return "", []
@@ -2537,6 +2559,13 @@ def _inline_projected_dstres_from_dstran(
 
 
 def _logical_branch_line(lines: list[str], start_line: int, form: str) -> tuple[str, list[int]]:
+    # A comment is never a statement. _statement_line_segment strips the
+    # fixed-form marker along with the label field, so without this a
+    # commented-out branch, assignment or CALL is stitched into executable
+    # text and rewritten as code. Guarded here rather than only at the call
+    # sites, so a future caller inherits the guard instead of the bug.
+    if _is_commented(lines[start_line - 1]):
+        return "", []
     first_segment = _statement_line_segment(lines[start_line - 1], form)
     if not re.match(r"^\s*(?:ELSE\s*)?IF\s*\(", first_segment, flags=re.IGNORECASE):
         return "", []
@@ -2561,6 +2590,13 @@ def _logical_branch_line(lines: list[str], start_line: int, form: str) -> tuple[
 
 
 def _logical_assignment_line(lines: list[str], start_line: int, form: str) -> tuple[str, list[int]]:
+    # A comment is never a statement. _statement_line_segment strips the
+    # fixed-form marker along with the label field, so without this a
+    # commented-out branch, assignment or CALL is stitched into executable
+    # text and rewritten as code. Guarded here rather than only at the call
+    # sites, so a future caller inherits the guard instead of the bug.
+    if _is_commented(lines[start_line - 1]):
+        return "", []
     first_segment = _statement_line_segment(lines[start_line - 1], form)
     if re.match(r"^\s*(?:CALL|(?:ELSE\s*)?IF|DO|RETURN|END\b|GOTO\b)", first_segment, flags=re.IGNORECASE):
         return "", []
@@ -3571,12 +3607,34 @@ def _semantic_checks(
         stress=stress,
         ddsdde=ddsdde,
     )
+    # Whichever variable was actually seeded. A finite-strain transform seeds
+    # the deformation gradient, not the strain increment, and looking only for
+    # DSTRAN_OTI found no consumers at all there -- which turned "nothing
+    # consumes the seed", the condition these checks exist to catch, into the
+    # verdict for a source that was seeding correctly all along.
+    dfgrd1_seed_lines = [number for number, line in selected_active_lines
+                         if _is_finite_dfgrd1_seed_line(line)]
+    seed_names = {dstran} | ({"DFGRD1"} if dfgrd1_seed_lines else set())
+    seed_lines = sorted(dstran_seed_lines + dfgrd1_seed_lines)
+    seed_consuming_lines = _seed_consuming_stress_lines(stress_expression_lines, seed_names)
     real_stress_extraction_line = _first_line_matching(selected_active_lines, lambda line: _is_real_stress_extraction_line(line, stress))
     helper_region_ids = {str(region.get("region_id", "")) for region in tangent_context.helper_regions}
     semantic_checks = {
         "dstran_initialization_before_seed": bool(dstran_init_line and dstran_seed_lines and dstran_init_line < min(dstran_seed_lines)),
-        "dstran_initialization_before_stress_use": bool(dstran_init_line and first_stress_expression_line and dstran_init_line < first_stress_expression_line),
-        "dstran_seed_before_stress_update": bool(dstran_seed_lines and first_stress_expression_line and max(dstran_seed_lines) < first_stress_expression_line),
+        # The ordering is asked of every stress expression, not only of the
+        # ones that name the seed. Restricting it to consumers is strictly
+        # weaker -- consumers are a subset -- and it would pass a promoted
+        # variable fed from the un-renamed argument before the seed and read
+        # downstream afterwards. The seed set is the one that was actually
+        # seeded, which is what the finite-strain fix bought; the consumption
+        # check below is an addition beside it, not a replacement for it.
+        "dstran_initialization_before_stress_use": bool(
+            dstran_init_line and first_stress_expression_line
+            and dstran_init_line < first_stress_expression_line),
+        "stress_path_consumes_the_seed": bool(seed_consuming_lines),
+        "dstran_seed_before_stress_update": bool(
+            seed_lines and first_stress_expression_line
+            and max(seed_lines) < first_stress_expression_line),
         "dstran_seed_before_transformed_stress_update": bool(dstran_seed_lines and last_stress_update_line and max(dstran_seed_lines) < last_stress_update_line),
         "stress_oti_update_before_real_stress_extraction": bool(last_stress_update_line and real_stress_extraction_line and last_stress_update_line < real_stress_extraction_line),
         "ddsdde_output_present": bool(ddsdde_output_line),
@@ -3690,6 +3748,34 @@ def _last_line_matching(lines: list[tuple[int, str]], predicate) -> int:
 
 def _is_dstran_initialization_line(line: str, dstran: str) -> bool:
     return bool(re.search(rf"\b{re.escape(dstran)}_OTI\s*\(\s*OTI_I\s*\)\s*=\s*{re.escape(dstran)}\s*\(\s*OTI_I\s*\)", line, flags=re.IGNORECASE))
+
+
+def _seed_consuming_stress_lines(
+    stress_expression_lines: list[tuple[int, str]], seed_names: set[str],
+) -> list[int]:
+    """Stress expressions that actually read the seeded variable.
+
+    The invariant worth checking is that the seed is established before
+    everything that consumes it, and that something does consume it. Comparing
+    against the first line touching *any* promoted variable checks neither: a
+    source that builds its elastic stiffness out of material constants before
+    it looks at the strain increment trips it while being perfectly correct,
+    and a transform that seeded a variable nothing ever reads -- the failure
+    that yields a silently zero derivative -- sails through it.
+
+    After transformation the consumer is the OTI-typed name, not the original
+    argument: the crystal-plasticity source mentions DSTRAN three times, all
+    of them the signature, the declaration and the initialisation, and does
+    its work on DSTRAN_OTI.
+    """
+    if not seed_names:
+        return []
+    pattern = re.compile(
+        r"\b(?:" + "|".join(re.escape(name) for name in sorted(seed_names))
+        + r")_OTI\b", re.IGNORECASE)
+    return [number for number, line in stress_expression_lines
+            if pattern.search(line)]
+
 
 
 def _is_dstran_seed_line(line: str, dstran: str) -> bool:
@@ -3976,6 +4062,15 @@ def _old_ddsdde_assignments_disabled(
             for line_number, text in active
             if line_number >= last_stress_update_line
         ]
+    # No dominance escape hatch. An earlier version accepted a surviving
+    # assignment when the OTI extraction appeared to dominate every RETURN,
+    # but that analysis only recognised a statement-initial RETURN: a one-line
+    # "IF (KSTEP.EQ.0) RETURN", a GO TO, a computed GO TO, an ENTRY, an
+    # arithmetic IF or a SELECT CASE all slipped past it, and it answered
+    # "dominates" while the old assignment was live on that path. A guard that
+    # fails open is worse than one that fails noisily, and the only source it
+    # bought cannot execute here anyway. Real dominance would have to fail
+    # closed on every form it does not model.
     return not any(text and text in expected_disabled for _, text in active)
 
 
@@ -4704,7 +4799,8 @@ def _transformed_filename(source_file: str) -> str:
 def _module_use_line(form: str, module_name: str, ntens: int) -> str:
     renamed_seeds = ", ".join(f"{_seed_basis_name(direction)} => E{direction}" for direction in range(1, max(ntens, 0) + 1))
     suffix = f", {renamed_seeds}" if renamed_seeds else ""
-    return _stmt(form, f"USE {module_name}, OTI_MODULE_DP => DP{suffix}")
+    return (_stmt(form, f"USE {module_name}, OTI_MODULE_DP => DP{suffix}")
+            + "\n" + _stmt(form, "USE oti_intrinsics"))
 
 
 def _seed_basis_name(direction: int) -> str:
