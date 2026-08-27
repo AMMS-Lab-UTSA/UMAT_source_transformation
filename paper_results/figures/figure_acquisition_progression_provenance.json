@@ -1,19 +1,19 @@
 {
   "answers": "How does the corpus go from the files that were acquired to the sources that were verified, and where does the denominator change?",
   "command": "python tools/figures/build_acquisition_figures.py",
-  "commit": "48f12c6d4945169551cabd2858f839df38d37aa3",
+  "commit": "0f9381f69c17f5f327867eacb12758b2122780e9",
   "figure": "figure_acquisition_progression",
-  "generated_at": "2026-08-27T18:45:23.332108+00:00",
+  "generated_at": "2026-08-27T19:57:10.128811+00:00",
   "inputs": [
     {
-      "bytes": 33278,
+      "bytes": 33275,
       "path": "paper_results/generality/generality_matrix.csv",
-      "sha256": "5895d52d4a5ea8c2d35079d5559a554230ee2d8b2a12f72bc76b6426f5a8b885"
+      "sha256": "fefc53cc3706ef846bd7946547808f8f46ca3ffdbaaaae4970519852f140b9d3"
     },
     {
       "bytes": 4493,
       "path": "paper_results/generality/generality_summary.json",
-      "sha256": "395572563bac321d3dfbe41cd68ea9ed0026049311f288235e47f8504ab34acf"
+      "sha256": "dd799c51b77de5431a3a5b9b8e65585e23cc7b31c7a4391823d10e9b3426e83f"
     }
   ],
   "layout": {
@@ -43,9 +43,9 @@
     ],
     "height_inches": 3.9,
     "pdf": "paper_results/figures/figure_acquisition_progression.pdf",
-    "pdf_sha256": "ccf27b0339fdb10981ca667702766baef2b6f2206005dc3a0ae52c1bc2c812f1",
+    "pdf_sha256": "4d1a38fb701ca8fae8c64bb50bd226a128a00712b65005537ee01ce184ba7f8e",
     "png": "paper_results/figures/figure_acquisition_progression.png",
-    "png_sha256": "760a8b6afd8f39639a2f23854098021f834be251409676e65565fdc114e7eee0",
+    "png_sha256": "dd4ee3314557dcd6210a2fde47274d1674f1f9fc10af69ca7e8146d515034982",
     "smallest_configured_pt": 12.0,
     "smallest_printed_pt": 12.0,
     "width_inches": 6.2
@@ -89,7 +89,7 @@
       "unit": "sources"
     },
     "verified in Abaqus": {
-      "count": 34,
+      "count": 35,
       "unit": "sources"
     },
     "verified offline": {

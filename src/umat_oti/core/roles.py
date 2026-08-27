@@ -60,7 +60,88 @@ FINITE_STRAIN_CONSTANTS = {"DFGRD0", "DFGRD1"}
 LOOP_COUNTER_NAMES = {"I", "J", "K", "K1", "K2", "K3", "L", "M", "N", "II", "JJ", "KK", "ITER", "IT", "COUNT"}
 
 
-def suggest_variable_roles(analysis: dict[str, Any]) -> list[dict[str, object]]:
+#: Fortran's own default: a name that is never declared takes its type from
+#: its first letter, and I through N are INTEGER. Nearly every UMAT either
+#: relies on that default or includes ABA_PARAM.INC, whose
+#: ``implicit real*8(a-h,o-z)`` leaves the integer range exactly where the
+#: default puts it.
+_DEFAULT_IMPLICIT_INTEGER = frozenset("IJKLMN")
+
+_IMPLICIT_STATEMENT = re.compile(
+    r"^\s*IMPLICIT\s+(.*)$", re.IGNORECASE)
+_IMPLICIT_SPEC = re.compile(
+    r"(?P<type>[A-Z][A-Z0-9_*()\s]*?)\s*\((?P<letters>[^)]*)\)", re.IGNORECASE)
+
+
+def implicit_integer_letters(source_text: str) -> frozenset[str]:
+    """Which first letters make an undeclared name an INTEGER.
+
+    A variable the source never declares is not untyped, and treating it as
+    one is how an integer ends up promoted to a differentiated type: the
+    Oxford-lineage crystal plasticity source computes ``IJ2 = I + J - 2`` and
+    asks ``MOD(IJ2,2)``, and promoting IJ2 turns an integer parity test into
+    an unsupported intrinsic on a derived type. Read the source's own IMPLICIT
+    statements where it has them, and fall back to Fortran's default -- which
+    is also what ABA_PARAM.INC's ``implicit real*8(a-h,o-z)`` leaves in place.
+    """
+    letters: set[str] = set()
+    saw_specification = False
+    for line in source_text.splitlines():
+        if line[:1] in "Cc*!":
+            continue
+        match = _IMPLICIT_STATEMENT.match(line[6:] if len(line) > 6 else line)
+        if not match:
+            continue
+        remainder = match.group(1)
+        if remainder.strip().upper().startswith("NONE"):
+            return frozenset()
+        for spec in _IMPLICIT_SPEC.finditer(remainder):
+            saw_specification = True
+            is_integer = spec.group("type").strip().upper().startswith("INTEGER")
+            for group in spec.group("letters").split(","):
+                bounds = [b.strip().upper() for b in group.split("-")]
+                if not bounds or not bounds[0]:
+                    continue
+                start = bounds[0][0]
+                end = bounds[-1][0] if len(bounds) > 1 else start
+                covered = {chr(c) for c in range(ord(start), ord(end) + 1)}
+                if is_integer:
+                    letters |= covered
+                else:
+                    letters -= covered
+    if not saw_specification:
+        return _DEFAULT_IMPLICIT_INTEGER
+    # Letters no IMPLICIT statement mentioned keep the language default.
+    mentioned: set[str] = set()
+    for line in source_text.splitlines():
+        match = _IMPLICIT_STATEMENT.match(line[6:] if len(line) > 6 else line)
+        if match:
+            for spec in _IMPLICIT_SPEC.finditer(match.group(1)):
+                for group in spec.group("letters").split(","):
+                    bounds = [b.strip().upper() for b in group.split("-")]
+                    if bounds and bounds[0]:
+                        start = bounds[0][0]
+                        end = bounds[-1][0] if len(bounds) > 1 else start
+                        mentioned |= {chr(c) for c in range(ord(start), ord(end) + 1)}
+    return frozenset(letters | (_DEFAULT_IMPLICIT_INTEGER - mentioned))
+
+
+
+def suggest_variable_roles(analysis: dict[str, Any],
+                           source_text: str | None = None) -> list[dict[str, object]]:
+    """Classify each variable. ``source_text`` enables implicit-typing checks.
+
+    Optional, and left out by callers that cannot supply it, because guessing
+    the implicit rule would be worse than not applying it: a source declaring
+    ``IMPLICIT REAL*8 (A-Z)`` has no implicit integers at all, and refusing to
+    promote its real variables because their names begin with I would be a
+    regression, not a fix.
+    """
+    return _suggest_variable_roles(analysis, source_text)
+
+
+def _suggest_variable_roles(analysis: dict[str, Any],
+                            source_text: str | None = None) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     variables = analysis.get("detected_variables", [])
     region_summary = analysis.get("region_summary", {})
@@ -69,6 +150,8 @@ def suggest_variable_roles(analysis: dict[str, Any]) -> list[dict[str, object]]:
     constant_names = set(region_summary.get("constant_variables", []))
     ignored_or_unused_names = set(region_summary.get("ignored_or_unused_variables", []))
     statev_path_names = set(region_summary.get("statev_path_variables", []))
+    integer_letters = (implicit_integer_letters(source_text)
+                       if source_text is not None else frozenset())
     helper_local_names = _pure_helper_local_variables(analysis)
     helper_output_names = _pure_helper_output_variables(analysis)
     plasticity = analysis.get("plasticity_indicators", {}) or {}
@@ -91,6 +174,16 @@ def suggest_variable_roles(analysis: dict[str, Any]) -> list[dict[str, object]]:
             helper_local_names,
             helper_output_names,
         )
+        if role in ("Promote", "Seed") and _is_implicitly_integer(
+                name, detected_type, variable, integer_letters):
+            role = "Keep real"
+            notes = (
+                f"Undeclared and implicitly INTEGER ({name[0]} is in the "
+                "integer range for this source), so it carries no derivative "
+                "and must not be promoted: an integer promoted to the "
+                "differentiated type turns index and parity arithmetic into "
+                "unsupported operations on a derived type."
+            )
         rows.append(
             {
                 "appears in UMAT arguments yes/no": "yes" if variable.get("appears_in_umat_arguments") else "no",
@@ -189,6 +282,23 @@ def apply_bulk_action(rows: list[dict[str, object]], action: str) -> list[dict[s
         elif action == "reset":
             row["user-selected OTIS role"] = row.get("suggested OTIS role", "Unknown")
     return result
+
+
+def _is_implicitly_integer(name: str, detected_type: str, variable: dict[str, Any],
+                           integer_letters: frozenset[str]) -> bool:
+    """An undeclared name whose first letter makes it an INTEGER.
+
+    Only undeclared names: an explicit declaration always wins, and a variable
+    the scanner typed is not being guessed at here.
+    """
+    if not name or not integer_letters:
+        return False
+    if name[0].upper() not in integer_letters:
+        return False
+    if str(detected_type or "").strip().lower() not in ("", "unknown"):
+        return False
+    return not str(variable.get("detected_shape") or "").strip()
+
 
 
 def role_summary(rows: list[dict[str, object]]) -> dict[str, list[str]]:

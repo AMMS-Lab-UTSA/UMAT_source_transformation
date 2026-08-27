@@ -902,6 +902,33 @@ def _first_finite_path_assignment_line(source_text: str, analysis: dict[str, Any
     return 0
 
 
+#: Intrinsics that appear as ``NAME(...)`` and are not arrays. Only the ones
+#: that can plausibly be mistaken for a promoted variable are listed; the point
+#: is to stop a call being read as an unshaped array, not to enumerate Fortran.
+_INTRINSIC_CALLS = frozenset({
+    "ABS", "ACOS", "AIMAG", "AINT", "ANINT", "ASIN", "ATAN", "ATAN2", "COS",
+    "COSH", "DABS", "DBLE", "DEXP", "DFLOAT", "DIM", "DLOG", "DMAX1", "DMIN1",
+    "DSIGN", "DSQRT", "EXP", "FLOAT", "IABS", "IDINT", "IDNINT", "INT", "LOG",
+    "LOG10", "MAX", "MAX0", "MAX1", "MIN", "MIN0", "MIN1", "MOD", "NINT",
+    "REAL", "SIGN", "SIN", "SINH", "SQRT", "TAN", "TANH",
+})
+
+
+def _defined_function_names(source_text: str) -> set[str]:
+    """Names this source defines as FUNCTIONs, which are calls and not arrays."""
+    from umat_oti.fortran.parser import (  # noqa: PLC0415
+        logical_lines_from_text, parse_function_subprograms,
+    )
+
+    try:
+        lines = logical_lines_from_text(source_text, "fixed")
+        return {f.upper_name for f in parse_function_subprograms(lines)}
+    except Exception:
+        # A source this parser cannot read is not made better by refusing to
+        # look: fall back to the intrinsic list alone.
+        return set()
+
+
 def _shape_blockers(
     source_text: str,
     roles: dict[str, set[str]],
@@ -912,8 +939,14 @@ def _shape_blockers(
     blockers: list[str] = []
     region_text = _selected_region_text(source_text, regions["stress"])
     mapped_arrays = {mappings.get("dstran"), mappings.get("stress"), mappings.get("statev")}
+    # NAME(...) is indexing only if NAME is an array. A call to an intrinsic,
+    # or to a function the source itself defines, reads identically and was
+    # being reported as a promoted array with no shape -- FLOAT(NSLPTL) and a
+    # crystal-plasticity flow rule named F both blocked a source that has
+    # nothing wrong with it.
+    not_arrays = _INTRINSIC_CALLS | _defined_function_names(source_text)
     for name in sorted(roles["seed"] | roles["promote"]):
-        if name in mapped_arrays:
+        if name in mapped_arrays or name.upper() in not_arrays:
             continue
         shape = variable_shapes.get(name, "")
         if not shape and re.search(rf"\b{re.escape(name)}\s*\(", region_text, flags=re.IGNORECASE):

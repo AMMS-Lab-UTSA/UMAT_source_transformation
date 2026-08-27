@@ -16,7 +16,7 @@
       "ntens": 6,
       "plasticity_expected": false,
       "plasticity_reached": "",
-      "seconds": 39.4,
+      "seconds": 39.77,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -58,7 +58,7 @@
       "ntens": 6,
       "plasticity_expected": true,
       "plasticity_reached": true,
-      "seconds": 39.52,
+      "seconds": 39.83,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -79,7 +79,7 @@
       "ntens": 6,
       "plasticity_expected": true,
       "plasticity_reached": true,
-      "seconds": 40.01,
+      "seconds": 39.8,
       "statev_pass": true,
       "status": "tangent_not_comparable",
       "stress_pass": false
@@ -100,7 +100,7 @@
       "ntens": 6,
       "plasticity_expected": false,
       "plasticity_reached": "",
-      "seconds": 39.96,
+      "seconds": 40.23,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -121,7 +121,7 @@
       "ntens": 6,
       "plasticity_expected": false,
       "plasticity_reached": "",
-      "seconds": 39.08,
+      "seconds": 39.48,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -142,7 +142,7 @@
       "ntens": 6,
       "plasticity_expected": false,
       "plasticity_reached": "",
-      "seconds": 38.9,
+      "seconds": 38.89,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -163,7 +163,7 @@
       "ntens": 6,
       "plasticity_expected": true,
       "plasticity_reached": true,
-      "seconds": 39.54,
+      "seconds": 39.37,
       "statev_pass": true,
       "status": "tangent_not_comparable",
       "stress_pass": false
@@ -184,7 +184,7 @@
       "ntens": 6,
       "plasticity_expected": false,
       "plasticity_reached": "",
-      "seconds": 38.91,
+      "seconds": 39.06,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -205,7 +205,7 @@
       "ntens": 6,
       "plasticity_expected": true,
       "plasticity_reached": true,
-      "seconds": 39.57,
+      "seconds": 39.53,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -226,7 +226,7 @@
       "ntens": 6,
       "plasticity_expected": true,
       "plasticity_reached": true,
-      "seconds": 39.89,
+      "seconds": 39.9,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -247,7 +247,7 @@
       "ntens": 6,
       "plasticity_expected": true,
       "plasticity_reached": true,
-      "seconds": 39.82,
+      "seconds": 39.85,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -268,7 +268,7 @@
       "ntens": 6,
       "plasticity_expected": false,
       "plasticity_reached": "",
-      "seconds": 39.28,
+      "seconds": 39.01,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -289,7 +289,7 @@
       "ntens": 6,
       "plasticity_expected": false,
       "plasticity_reached": "",
-      "seconds": 39.49,
+      "seconds": 39.45,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -310,7 +310,7 @@
       "ntens": 6,
       "plasticity_expected": false,
       "plasticity_reached": "",
-      "seconds": 39.02,
+      "seconds": 39.14,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -331,7 +331,7 @@
       "ntens": 6,
       "plasticity_expected": true,
       "plasticity_reached": true,
-      "seconds": 39.88,
+      "seconds": 39.44,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -352,7 +352,7 @@
       "ntens": 6,
       "plasticity_expected": false,
       "plasticity_reached": "",
-      "seconds": 39.21,
+      "seconds": 39.31,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -373,7 +373,7 @@
       "ntens": 6,
       "plasticity_expected": true,
       "plasticity_reached": true,
-      "seconds": 39.57,
+      "seconds": 39.51,
       "statev_pass": true,
       "status": "tangent_not_comparable",
       "stress_pass": false
@@ -394,7 +394,7 @@
       "ntens": 6,
       "plasticity_expected": false,
       "plasticity_reached": "",
-      "seconds": 39.08,
+      "seconds": 38.97,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -415,7 +415,7 @@
       "ntens": 6,
       "plasticity_expected": false,
       "plasticity_reached": "",
-      "seconds": 39.21,
+      "seconds": 38.85,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -436,7 +436,7 @@
       "ntens": 6,
       "plasticity_expected": false,
       "plasticity_reached": "",
-      "seconds": 39.0,
+      "seconds": 39.13,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -457,7 +457,7 @@
       "ntens": 4,
       "plasticity_expected": true,
       "plasticity_reached": true,
-      "seconds": 37.2,
+      "seconds": 37.41,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -478,7 +478,7 @@
       "ntens": 4,
       "plasticity_expected": true,
       "plasticity_reached": true,
-      "seconds": 35.43,
+      "seconds": 35.69,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -499,7 +499,7 @@
       "ntens": 4,
       "plasticity_expected": true,
       "plasticity_reached": true,
-      "seconds": 35.43,
+      "seconds": 35.12,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -520,7 +520,7 @@
       "ntens": 6,
       "plasticity_expected": true,
       "plasticity_reached": true,
-      "seconds": 40.79,
+      "seconds": 40.78,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -541,7 +541,7 @@
       "ntens": 4,
       "plasticity_expected": true,
       "plasticity_reached": true,
-      "seconds": 35.74,
+      "seconds": 35.51,
       "statev_pass": false,
       "status": "failed",
       "stress_pass": true
@@ -583,31 +583,31 @@
       "ntens": 6,
       "plasticity_expected": true,
       "plasticity_reached": "",
-      "seconds": 0.47,
+      "seconds": 0.87,
       "statev_pass": "",
       "status": "transform_failed",
       "stress_pass": ""
     },
     {
       "activation_pass": true,
-      "blocker": "Abaqus ran but DDSDDE could not be extracted from one of the jobs.",
+      "blocker": "",
       "convergence_pass": true,
       "ddsdde_pass": true,
-      "environment_caveat": "",
+      "environment_caveat": "Original Abaqus validation job: The analysis completed and wrote its results, then the process aborted while shutting do; Transformed Abaqus validation job: The analysis completed and wrote its results, then the process aborted while shutting",
       "load_case": "single element plastic probe",
       "material_constants_source": "declared by the source's contract",
-      "max_abs_difference": "",
-      "max_rel_difference": "",
+      "max_abs_difference": 0.0,
+      "max_rel_difference": 0.0,
       "model": "lucarini_elastoplastic",
       "nprops": 4,
       "nstatv": 7,
       "ntens": 6,
       "plasticity_expected": true,
-      "plasticity_reached": "",
-      "seconds": 75.53,
+      "plasticity_reached": true,
+      "seconds": 88.04,
       "statev_pass": true,
-      "status": "failed_execution",
-      "stress_pass": false
+      "status": "passed",
+      "stress_pass": true
     },
     {
       "activation_pass": true,
@@ -625,7 +625,7 @@
       "ntens": 6,
       "plasticity_expected": false,
       "plasticity_reached": "",
-      "seconds": 39.25,
+      "seconds": 38.97,
       "statev_pass": true,
       "status": "passed",
       "stress_pass": true
@@ -633,13 +633,13 @@
   ],
   "summary": {
     "declared_material": 29,
-    "not_passed": 7,
-    "passed": 23,
+    "not_passed": 6,
+    "passed": 24,
     "plasticity_expected": 16,
-    "plasticity_reached": 14,
+    "plasticity_reached": 15,
     "sources": 30,
     "tangent_not_comparable": 3,
-    "with_environment_caveat": 28,
+    "with_environment_caveat": 29,
     "worst_relative_difference": 0.380952392578125
   }
 }

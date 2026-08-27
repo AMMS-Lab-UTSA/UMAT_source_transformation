@@ -208,3 +208,49 @@ def test_a_state_or_convergence_disagreement_is_never_excused():
                "activation_pass": True, "ddsdde_pass": False, broken: False}
         assert not _only_the_tangent_differs(row, predictor_source), (
             f"{broken} False must not be filed as a tangent-comparability question")
+
+
+def test_an_undeclared_integer_is_not_promoted():
+    """Fortran types an undeclared name by its first letter.
+
+    The Oxford-lineage crystal plasticity source computes IJ2 = I + J - 2 and
+    asks MOD(IJ2,2). Promoting IJ2 to the differentiated type turned an
+    integer parity test into an unsupported intrinsic on a derived type and
+    blocked the whole source.
+    """
+    from umat_oti.core.roles import implicit_integer_letters
+
+    assert implicit_integer_letters("      X = 1\n") == frozenset("IJKLMN"), (
+        "with no IMPLICIT statement, Fortran's own default applies")
+    assert implicit_integer_letters(
+        "      IMPLICIT REAL*8 (A-H,O-Z)\n") == frozenset("IJKLMN"), (
+        "the usual UMAT declaration leaves the integer range where it was")
+    assert implicit_integer_letters("      IMPLICIT REAL*8 (A-Z)\n") == frozenset(), (
+        "a source that types every letter real has no implicit integers, and "
+        "refusing to promote its reals would be a regression")
+    assert implicit_integer_letters("      IMPLICIT NONE\n") == frozenset()
+
+
+def test_a_call_is_not_read_as_an_unshaped_array():
+    """NAME(...) is indexing only when NAME is an array.
+
+    FLOAT(NSLPTL) is an intrinsic and F(X,PROP) is a function the source
+    defines; both were reported as promoted arrays with no confirmed shape,
+    blocking a source with nothing wrong with it.
+    """
+    from umat_oti.transform.source_transform import (
+        _INTRINSIC_CALLS, _defined_function_names,
+    )
+
+    assert "FLOAT" in _INTRINSIC_CALLS and "MOD" in _INTRINSIC_CALLS
+
+    source = (
+        "      SUBROUTINE UMAT(STRESS)\n"
+        "      X = F(1.0)\n"
+        "      END\n"
+        "      REAL*8 FUNCTION F(A)\n"
+        "      F = A\n"
+        "      END\n")
+    assert "F" in _defined_function_names(source)
+    assert "STRESS" not in _defined_function_names(source), (
+        "an array must not be mistaken for a function")

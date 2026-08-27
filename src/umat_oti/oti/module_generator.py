@@ -370,6 +370,16 @@ def _extra_overloads(ntens: int, order: int = 1) -> tuple[str, str]:
         "  INTERFACE KOTI_NORM\n"
         f"    MODULE PROCEDURE KOTI_NORM_{type_name}\n"
         "  END INTERFACE KOTI_NORM\n"
+        # The generated algebra defines a unary minus and no unary plus, so
+        # "+(X - Y)" has no defined operation while "-(X - Y)" does. gfortran
+        # accepts the plus anyway; ifort, which is what Abaqus compiles user
+        # subroutines with, correctly rejects it, and a source that writes its
+        # cofactors with alternating signs fails to build for that reason
+        # alone. This is the identity, and it is added here rather than to the
+        # vendored writer so the vendored file stays untouched.
+        "  INTERFACE OPERATOR(+)\n"
+        f"    MODULE PROCEDURE {type_name}_UNARY_PLUS\n"
+        "  END INTERFACE OPERATOR(+)\n"
     )
     body = f"""
   FUNCTION {type_name}_ABS(A) RESULT(RES)
@@ -394,5 +404,12 @@ def _extra_overloads(ntens: int, order: int = 1) -> tuple[str, str]:
       REAL(DP) :: RES
       RES = SQRT({norm_terms})
   END FUNCTION KOTI_NORM_{type_name}
+
+  ELEMENTAL FUNCTION {type_name}_UNARY_PLUS(A) RESULT(RES)
+      IMPLICIT NONE
+      TYPE({type_name}), INTENT(IN) :: A
+      TYPE({type_name}) :: RES
+      RES = A
+  END FUNCTION {type_name}_UNARY_PLUS
 """
     return interface_block, body
