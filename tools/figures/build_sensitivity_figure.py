@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-"""How does the material point's response depend on its material constants?
+"""What the material point's response depends on, with the reference over it.
 
-Two aligned panels, one physical quantity each: stress in the upper, the state
-variable in the lower. Both are shown along the whole loading path, and the
-increment where the material yields is marked once.
+One row per material constant, one colour per stress component, the generated
+derivative as a line and the independently replayed finite difference as open
+markers sitting on it. Agreement is then something a reader sees rather than a
+number they have to interpret; the numbers themselves are in Table 5 and
+Table 8, where they can be read exactly.
 
-Every curve is scaled by its own parameter, p*d(response)/dp, taken from the
-committed contract that drove the run. That makes each stress curve a stress in
-MPa and each state curve a strain, so the four constants are comparable rather
-than being ranked by the size of the numbers used to write them down. The
-parameter values are read from the contract, never written here: an earlier
-version of this figure carried E = 200000 MPa while the run used 210000, and
-nothing could notice.
+Giving each constant its own row is also what makes the scales work. The
+hardening modulus moves the stress by a thousandth of what the elastic
+constants do, and on a shared axis it is a flat line at zero; on its own row it
+is a curve with a shape. No second axis, no rescaling, nothing to explain.
 
-Row-adjudication counts are deliberately absent. They answer a different
-question -- how many comparisons the reference could settle -- and they are
-reported in the validation table instead of competing with the response curves.
+Every curve is scaled by its own constant, p d(response)/dp, with p read from
+the committed contract -- so each stress row is a stress in MPa and the four
+constants are comparable. An earlier version of this figure carried
+E = 200000 MPa while the run used 210000; nothing is written here that the
+contract does not say.
 """
 from __future__ import annotations
 
@@ -30,8 +31,10 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from figure_style import (  # noqa: E402
-    ANNOTATION_PT, LINESTYLES, MARKERS, PALETTE, REPO_ROOT, figure, save,
-    use_publication_style, write_provenance,
+    ANNOTATION_PT, REPO_ROOT, save, use_publication_style, write_provenance,
+)
+from overlay_style import (  # noqa: E402
+    draw_overlay, method_legend, row_label, series_colour,
 )
 
 ROWS = (REPO_ROOT / "paper_results" / "parameter_sensitivity"
@@ -40,163 +43,63 @@ CONTRACT = REPO_ROOT / "parameter_sensitivity" / "contracts" / "m3_j2.json"
 DEFAULT_OUT = REPO_ROOT / "paper_results" / "figures"
 
 MODEL = "m3_j2"
-STRESS_COMPONENT = 1
-STATE_COMPONENT = 1
-
-#: Printed name for each contract parameter, and the unit of p*d(sigma)/dp.
 MATHS = {"E": "$E$", "nu": r"$\nu$", "SIGY0": r"$\sigma_{y0}$", "H": "$H$"}
-
-#: A curve whose largest value is below this fraction of the panel's largest is
-#: drawn against its own axis on the right. Sharing one linear axis would draw
-#: it flat on zero; sharing a logarithmic one would put its exact zeros
-#: nowhere at all.
-SECOND_AXIS_FRACTION = 0.02
+COMPONENTS = {1: r"$\sigma_{11}$", 2: r"$\sigma_{22}$", 3: r"$\sigma_{33}$",
+              4: r"$\sigma_{12}$", 5: r"$\sigma_{13}$", 6: r"$\sigma_{23}$"}
+STATE_LABEL = r"$\bar\varepsilon^{\,p}$"
 
 
-def _read_rows() -> list[dict]:
+def _read() -> list[dict]:
     with ROWS.open(newline="", encoding="utf-8") as handle:
         return [r for r in csv.DictReader(handle) if r["model"] == MODEL]
 
 
-def _contract_parameters() -> list[tuple[str, int, float]]:
-    """Name, PROPS index and value, in PROPS order, from the committed contract."""
-    contract = json.loads(CONTRACT.read_text(encoding="utf-8"))
+def _contract() -> tuple[list[tuple[str, int, float]], list[float]]:
+    data = json.loads(CONTRACT.read_text(encoding="utf-8"))
+    driver = data.get("material_point_driver") or {}
+    static = driver.get("static_props") or []
     entries = []
-    static = (contract.get("material_point_driver") or {}).get("static_props") or []
-    for parameter in contract["parameters"]:
+    for parameter in data["parameters"]:
         index = int(parameter["props_index"])
         value = parameter.get("value")
         if value is None and index <= len(static):
             value = static[index - 1]
         if value is None:
-            raise SystemExit(
-                f"the contract gives no value for {parameter['name']!r}; a "
-                "scaled curve cannot be drawn without one, and inventing one "
-                "would be worse than leaving the parameter out")
+            raise SystemExit(f"the contract gives no value for {parameter['name']!r}")
         entries.append((str(parameter["name"]), index, float(value)))
-    return sorted(entries, key=lambda e: e[1])
+    return sorted(entries, key=lambda e: e[1]), list(
+        driver.get("dstran_per_increment") or [])
 
 
-def _series(rows: list[dict], array: str, parameter: str, component: int):
-    selected = sorted(
-        (r for r in rows if r["array"] == array and r["parameter"] == parameter
-         and int(r["component"]) == component),
-        key=lambda r: int(r["increment"]))
-    return ([int(r["increment"]) for r in selected],
-            [float(r["oti"]) for r in selected])
+def _strain_axis(rows: list[dict], dstran: list[float]) -> tuple[list[float], str]:
+    """Applied strain in per cent, which is what the reader is loading with.
+
+    Falls back to the increment index only if the contract records no strain
+    increment, and says so on the axis rather than silently relabelling.
+    """
+    increments = sorted({int(r["increment"]) for r in rows})
+    driving = max((abs(v) for v in dstran), default=0.0)
+    if driving > 0:
+        return [i * driving * 100.0 for i in increments], "applied strain  (%)"
+    return [float(i) for i in increments], "increment along the loading path"
 
 
-def _yield_increment(rows: list[dict]) -> int | None:
+def _series(rows, array, parameter, component):
+    selected = sorted((r for r in rows if r["array"] == array
+                       and r["parameter"] == parameter
+                       and int(r["component"]) == component),
+                      key=lambda r: int(r["increment"]))
+    return ([float(r["oti"]) for r in selected],
+            [float(r["reference"]) for r in selected])
+
+
+def _yield_strain(rows, x, increments):
     inelastic = sorted({int(r["increment"]) for r in rows
                         if r["branch"] != "elastic"})
-    return inelastic[0] if inelastic else None
-
-
-def _mark_yield(axis, yield_increment: int | None, label: bool) -> None:
-    """One thin rule where the material yields, and no background shading."""
-    if yield_increment is None:
-        return
-    axis.axvline(yield_increment - 0.5, color="0.35", linewidth=1.0,
-                 linestyle=(0, (4, 3)), zorder=1)
-    if label:
-        axis.annotate(f"yields at increment {yield_increment}",
-                      xy=(yield_increment - 0.5, 0.5),
-                      xycoords=axis.get_xaxis_transform(),
-                      xytext=(-6, 0), textcoords="offset points",
-                      ha="right", va="center", rotation=90,
-                      fontsize=ANNOTATION_PT, color="0.3")
-
-
-def _direct_label(axis, x, y, text, colour, dy=0.0) -> None:
-    axis.annotate(text, xy=(x[-1], y[-1]), xytext=(5, dy),
-                  textcoords="offset points", ha="left", va="center",
-                  fontsize=ANNOTATION_PT, color=colour, fontweight="bold",
-                  annotation_clip=False)
-
-
-def _align_zero(axis, twin, low_value: float, high_value: float) -> None:
-    """Put the two axes' zeros at the same height, without squashing the data.
-
-    Two things go wrong if this is left to matplotlib. The right-hand curve's
-    zero lands wherever its own data puts it, so a curve that is exactly zero
-    until the material yields gets drawn along the top of the panel and reads
-    as the largest response rather than the smallest. And sizing the axis from
-    the larger of the two extents inflates it: the hardening curve reached 0.4
-    on an axis that ran to 9.
-
-    The limits are computed from the data instead: the span is whatever is
-    needed to hold both ends once zero is pinned at the required fraction.
-    """
-    low, high = axis.get_ylim()
-    if high <= low:
-        return
-    fraction = min(max((0.0 - low) / (high - low), 0.02), 0.98)
-    above = max(high_value, 0.0) * 1.08
-    below = min(low_value, 0.0) * 1.08
-    span = max(above / (1.0 - fraction) if above > 0 else 0.0,
-               -below / fraction if below < 0 else 0.0)
-    if span <= 0:
-        return
-    twin.set_ylim(-span * fraction, span * (1.0 - fraction))
-
-
-def _panel(axis, rows, parameters, array, component, ylabel, title,
-           yield_increment, label_yield):
-    """One physical quantity, with any far smaller curve on its own axis."""
-    scaled: dict[str, tuple[list[int], list[float]]] = {}
-    for name, _index, value in parameters:
-        increments, raw = _series(rows, array, name, component)
-        if increments:
-            scaled[name] = (increments, [value * v for v in raw])
-    if not scaled:
-        return {}
-
-    largest = {name: max(abs(v) for v in values)
-               for name, (_, values) in scaled.items()}
-    panel_scale = max(largest.values()) or 1.0
-    minor = [n for n, m in largest.items() if m < panel_scale * SECOND_AXIS_FRACTION]
-    major = [n for n in scaled if n not in minor]
-
-    _mark_yield(axis, yield_increment, label_yield)
-    for index, name in enumerate(major):
-        increments, values = scaled[name]
-        axis.plot(increments, values, color=PALETTE[index],
-                  linestyle=LINESTYLES[index], marker=MARKERS[index],
-                  markevery=4, markerfacecolor="none")
-        _direct_label(axis, increments, values, MATHS.get(name, name),
-                      PALETTE[index])
-
-    twin = None
-    if minor:
-        twin = axis.twinx()
-        twin.grid(False)
-        twin.spines["top"].set_visible(False)
-        for offset, name in enumerate(minor):
-            colour = PALETTE[len(major) + offset]
-            increments, values = scaled[name]
-            twin.plot(increments, values, color=colour,
-                      linestyle=LINESTYLES[(len(major) + offset) % len(LINESTYLES)],
-                      marker=MARKERS[(len(major) + offset) % len(MARKERS)],
-                      markevery=4, markerfacecolor="none")
-            _direct_label(twin, increments, values, MATHS.get(name, name),
-                          colour, dy=-13)
-        twin.set_ylabel(f"{', '.join(MATHS.get(n, n) for n in minor)} only "
-                        f"(right axis)", fontsize=ANNOTATION_PT,
-                        color=PALETTE[len(major)])
-        twin.tick_params(axis="y", labelsize=ANNOTATION_PT,
-                         colors=PALETTE[len(major)])
-        twin.ticklabel_format(axis="y", style="sci", scilimits=(-2, 3),
-                              useMathText=True)
-        minor_values = [v for name in minor for v in scaled[name][1]]
-        _align_zero(axis, twin, min(minor_values), max(minor_values))
-
-    axis.set_ylabel(ylabel)
-    axis.set_title(title, loc="left")
-    axis.ticklabel_format(axis="y", style="sci", scilimits=(-2, 3),
-                          useMathText=True)
-    return {"plotted": {n: len(v[0]) for n, v in scaled.items()},
-            "on_second_axis": minor,
-            "largest_absolute_value": {n: float(m) for n, m in largest.items()}}
+    if not inelastic:
+        return None
+    position = increments.index(inelastic[0])
+    return (x[position] + x[position - 1]) / 2 if position else x[0]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -208,68 +111,141 @@ def main(argv: list[str] | None = None) -> int:
             print(f"missing evidence: {path}")
             return 1
 
-    rows = _read_rows()
-    parameters = _contract_parameters()
-    yield_increment = _yield_increment(rows)
+    rows = _read()
+    parameters, dstran = _contract()
+    increments = sorted({int(r["increment"]) for r in rows})
+    x, x_label = _strain_axis(rows, dstran)
+    yield_x = _yield_strain(rows, x, increments)
+
+    # Components that never move are dropped and counted. Under uniaxial
+    # strain the shear sensitivities are identically zero for every constant,
+    # and three more flat lines on the axis carry no information while costing
+    # three legend entries.
+    all_components = sorted({int(r["component"]) for r in rows
+                             if r["array"] == "DSIGMA_DP"})
+    stress_components, flat_components = [], []
+    for component in all_components:
+        moves = any(float(r["oti"]) != 0.0 for r in rows
+                    if r["array"] == "DSIGMA_DP"
+                    and int(r["component"]) == component)
+        (stress_components if moves else flat_components).append(component)
+    colours = [series_colour(i) for i in range(len(stress_components))]
 
     use_publication_style()
-    fig, axes = plt.subplots(2, 1, figsize=(6.2, 5.6), sharex=True)
-    upper = _panel(
-        axes[0], rows, parameters, "DSIGMA_DP", STRESS_COMPONENT,
-        r"$p\,\partial\sigma_{11}/\partial p$  (MPa)",
-        "(a) Stress response to each material constant",
-        yield_increment, label_yield=True)
-    lower = _panel(
-        axes[1], rows, parameters, "DSTATEV_DP", STATE_COMPONENT,
-        r"$p\,\partial\bar\varepsilon^{\,p}/\partial p$  (dimensionless)",
-        "(b) Equivalent plastic strain response to each material constant",
-        yield_increment, label_yield=False)
-    axes[1].set_xlabel("increment along the loading path")
-    axes[1].set_xticks(range(2, max(int(r["increment"]) for r in rows) + 1, 2))
-    for axis in axes:
-        # Room at the right for the direct labels, which sit outside the axes.
-        axis.margins(x=0.10)
+    # Constrained layout is turned off here: the shared legend sits below the
+    # axes and its height has to be reserved by hand, which constrained layout
+    # refuses to combine with.
+    plt.rcParams["figure.constrained_layout.use"] = False
+    # Two by two rather than a strip. Four panels across a 6.2 in page leaves
+    # each one an inch and a half wide, which is why the labels were
+    # unreadable; two by two doubles that and lets the type grow with it.
+    columns = 2
+    rows_needed = -(-len(parameters) // columns)
+    figure, grid = plt.subplots(rows_needed, columns, figsize=(6.2, 6.0),
+                                sharex=True)
+    axes = list(grid.flat)
+    counts: dict[str, dict] = {}
 
-    outputs = save(fig, "figure_sensitivities", args.out_dir)
+    for axis, (name, _index, value) in zip(axes, parameters):
+        axis.set_title(MATHS.get(name, name), loc="center", pad=6)
+        drawn: list[list[float]] = []
+        style_index = 0
+        for colour, component in zip(colours, stress_components):
+            oti, reference = _series(rows, "DSIGMA_DP", name, component)
+            if not oti:
+                continue
+            scaled = [value * v for v in oti]
+            # Two components can coincide exactly -- transverse symmetry makes
+            # sigma_22 and sigma_33 equal under uniaxial strain -- and the one
+            # drawn second hides the first completely. The earlier curve is
+            # widened so both remain visible.
+            coincides = any(
+                all(abs(a - b) <= 1e-12 * max(abs(a), abs(b), 1.0)
+                    for a, b in zip(scaled, previous)) for previous in drawn)
+            if coincides:
+                axis.plot(x, scaled, color=colour, zorder=2, linewidth=5.5,
+                          alpha=0.5)
+            else:
+                draw_overlay(axis, x, scaled, [value * v for v in reference],
+                             colour, style=style_index)
+            drawn.append(scaled)
+            style_index += 1
+        if yield_x is not None:
+            axis.axvline(yield_x, color="0.55", linewidth=1.0,
+                         linestyle=(0, (4, 3)), zorder=1)
+        axis.ticklabel_format(axis="y", style="sci", scilimits=(-3, 4),
+                              useMathText=True)
+        counts[name] = {"components": len(stress_components),
+                        "points": len(x)}
 
-    values = {name: value for name, _index, value in parameters}
+    for axis in axes[len(parameters):]:
+        axis.set_visible(False)
+    for axis in axes[max(0, len(parameters) - columns):len(parameters)]:
+        axis.set_xlabel(x_label)
+    axes[0].set_ylabel(r"$p\,\partial\sigma_{ij}/\partial p$  (MPa)")
+    if len(axes) > columns:
+        axes[columns].set_ylabel(r"$p\,\partial\sigma_{ij}/\partial p$  (MPa)")
+
+    figure.suptitle(r"DSIGMA_DP per increment,  $p\,\partial\sigma/\partial p$"
+                    "  (MPa)", fontsize=ANNOTATION_PT + 3.5, y=0.985)
+    if yield_x is not None:
+        # Inside the first row, in the space the curve vacates after yield.
+        axes[0].annotate("yields here", xy=(yield_x, 0.97),
+                         xycoords=axes[0].get_xaxis_transform(),
+                         xytext=(5, 0), textcoords="offset points",
+                         ha="left", va="top", fontsize=ANNOTATION_PT,
+                         color="0.4")
+
+    method_legend(figure, axes,
+                  [COMPONENTS.get(c, str(c)) for c in stress_components],
+                  colours, ncol=3, y=0.006,
+                  reference_label="centred finite difference")
+    if flat_components:
+        omitted = ", ".join(COMPONENTS.get(c, str(c)) for c in flat_components)
+        figure.text(0.5, 0.935, f"{omitted} are identically zero for every "
+                    "constant and are not drawn", ha="center", va="top",
+                    fontsize=ANNOTATION_PT - 1.5, color="0.45")
+    figure.subplots_adjust(left=0.135, right=0.975, top=0.865, bottom=0.205,
+                           hspace=0.34, wspace=0.30)
+
+    outputs = save(figure, "figure_sensitivities", args.out_dir)
     disagreeing = sum(1 for r in rows if r["agrees"] != "True")
     write_provenance(
         "figure_sensitivities", args.out_dir, inputs=[ROWS, CONTRACT],
         outputs=outputs,
         question="How does the material point's response depend on each "
-                 "material constant, along the whole loading path?",
+                 "material constant along the loading path, and does the "
+                 "independent reference agree?",
         filters={
             "model": MODEL,
-            "stress_component": STRESS_COMPONENT,
-            "state_component": STATE_COMPONENT,
-            "increments": f"1-{max(int(r['increment']) for r in rows)}, the "
-                          "complete path, no selection",
-            "curve_definition": "parameter-scaled: p * d(response)/dp, with p "
+            "rows": "one per material constant for the stress, plus one for "
+                    "the state variable",
+            "stress_components_plotted": stress_components,
+            "stress_components_omitted_as_identically_zero": flat_components,
+            "layout": "two by two, one panel per material constant",
+            "curve_definition": "parameter-scaled: p d(response)/dp, with p "
                                 "read from the committed contract",
-            "parameter_values_from_contract": values,
-            "second_axis": {"panel_a": upper.get("on_second_axis"),
-                            "panel_b": lower.get("on_second_axis")},
-            "axis_scale": "linear in both panels; no logarithmic axis is used, "
-                          "so the exact zeros before yield are plotted where "
-                          "they belong",
+            "parameter_values_from_contract": {n: v for n, _i, v in parameters},
+            "generated": "line", "reference": "open markers, every second point",
+            "reference_method": "centred differences of the independently "
+                                "compiled untransformed build",
+            "axis_scale": "linear in every row; each row has its own scale, "
+                          "which is why no second axis or rescaling is used",
         },
-        rows={"model_rows": len(rows),
-              "first_inelastic_increment": yield_increment,
-              "disagreeing_rows": disagreeing,
-              "panel_a": upper, "panel_b": lower},
+        rows={"model_rows": len(rows), "increments": len(increments),
+              "disagreeing_rows": disagreeing, "per_parameter": counts},
         command="python tools/figures/build_sensitivity_figure.py",
-        notes=("Row-adjudication counts are reported in the validation table, "
-               "not here: they answer how many comparisons the reference could "
-               "settle, which is a different question from how the material "
-               "responds."))
+        notes=("Agreement is shown by overlay rather than as an error "
+               "statistic; the errors are reported exactly in Table 5 and the "
+               "row accounting in Table 8."))
     print(f"  {outputs['png']}  ({outputs['width_inches']} x "
           f"{outputs['height_inches']} in)")
-    print(f"  parameters from contract: {values}")
-    print(f"  second axis: (a) {upper.get('on_second_axis')} "
-          f"(b) {lower.get('on_second_axis')}")
-    print(f"  {len(rows)} rows, yields at {yield_increment}, "
-          f"{disagreeing} disagreeing")
+    print(f"  {len(parameters)} constant panels, "
+          f"{len(stress_components)} stress components plotted "
+          f"({len(flat_components)} identically zero, not drawn), "
+          f"{len(x)} increments")
+    print(f"  parameters from contract: {{{', '.join(f'{n}={v:g}' for n, _i, v in parameters)}}}")
+    print(f"  disagreeing rows: {disagreeing}")
     return 0
 
 

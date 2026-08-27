@@ -1,21 +1,20 @@
 {
   "failure_taxonomy": {
     "derivatives_verified:unresolved": [
-      "m6_fcc",
-      "sweep_drucker_prager"
+      "m6_fcc"
     ]
   },
   "funnel": {
     "attempted": 20,
-    "comparison_rows_agreeing": 14507,
+    "comparison_rows_agreeing": 14539,
     "comparison_rows_total": 14540,
     "compiled_oti": 20,
     "contract_complete": 20,
-    "derivatives_verified": 18,
+    "derivatives_verified": 19,
     "executed_original": 20,
     "executed_oti": 20,
     "parameter_directions_declared": 84,
-    "parameter_directions_verified": 76,
+    "parameter_directions_verified": 83,
     "primal_parity": 20,
     "reference_resolved": 20,
     "transformed": 20
@@ -73,7 +72,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.587,
+          "seconds": 1.601,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -141,7 +140,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.145,
+          "seconds": 1.271,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -211,7 +210,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.199,
+          "seconds": 1.149,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -283,7 +282,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.231,
+          "seconds": 1.205,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -321,76 +320,96 @@
         "groups": [
           {
             "array": "DSIGMA_DP",
-            "group_selected_relative_step": 1e-07,
+            "group_selected_relative_step": 1e-05,
             "ladder_steps": [
               0.01,
+              0.0031622776601683794,
               0.001,
+              0.00031622776601683794,
               0.0001,
+              3.1622776601683795e-05,
               1e-05,
+              3.162277660168379e-06,
               1e-06,
+              3.162277660168379e-07,
               1e-07
             ],
             "outcome": "re-judged per entry",
             "parameter": "C11",
             "rows_rejudged": 6,
             "steps_used": [
-              1e-06,
-              1e-05
+              0.0001,
+              0.00031622776601683794
             ]
           },
           {
             "array": "DSTATEV_DP",
-            "group_selected_relative_step": 1e-07,
+            "group_selected_relative_step": 3.162277660168379e-07,
             "ladder_steps": [
               0.01,
+              0.0031622776601683794,
               0.001,
+              0.00031622776601683794,
               0.0001,
+              3.1622776601683795e-05,
               1e-05,
+              3.162277660168379e-06,
               1e-06,
+              3.162277660168379e-07,
               1e-07
             ],
             "outcome": "re-judged per entry",
             "parameter": "C11",
             "rows_rejudged": 36,
             "steps_used": [
-              1e-06
+              3.1622776601683795e-05
             ]
           },
           {
             "array": "DSIGMA_DP",
-            "group_selected_relative_step": 0.0001,
+            "group_selected_relative_step": 0.00031622776601683794,
             "ladder_steps": [
               0.01,
+              0.0031622776601683794,
               0.001,
+              0.00031622776601683794,
               0.0001,
+              3.1622776601683795e-05,
               1e-05,
+              3.162277660168379e-06,
               1e-06,
+              3.162277660168379e-07,
               1e-07
             ],
             "outcome": "re-judged per entry",
             "parameter": "C12",
             "rows_rejudged": 3,
             "steps_used": [
-              1e-06,
-              1e-05
+              0.0001,
+              0.00031622776601683794
             ]
           },
           {
             "array": "DSTATEV_DP",
-            "group_selected_relative_step": 1e-07,
+            "group_selected_relative_step": 1e-06,
             "ladder_steps": [
               0.01,
+              0.0031622776601683794,
               0.001,
+              0.00031622776601683794,
               0.0001,
+              3.1622776601683795e-05,
               1e-05,
+              3.162277660168379e-06,
               1e-06,
+              3.162277660168379e-07,
               1e-07
             ],
             "outcome": "re-judged per entry",
             "parameter": "C12",
             "rows_rejudged": 24,
             "steps_used": [
-              1e-06
+              0.0001
             ]
           },
           {
@@ -398,17 +417,22 @@
             "group_selected_relative_step": 0.0001,
             "ladder_steps": [
               0.01,
+              0.0031622776601683794,
               0.001,
+              0.00031622776601683794,
               0.0001,
+              3.1622776601683795e-05,
               1e-05,
+              3.162277660168379e-06,
               1e-06,
+              3.162277660168379e-07,
               1e-07
             ],
             "outcome": "re-judged per entry",
             "parameter": "g0",
             "rows_rejudged": 1,
             "steps_used": [
-              0.0001
+              0.001
             ]
           },
           {
@@ -416,17 +440,22 @@
             "group_selected_relative_step": 1e-05,
             "ladder_steps": [
               0.01,
+              0.0031622776601683794,
               0.001,
+              0.00031622776601683794,
               0.0001,
+              3.1622776601683795e-05,
               1e-05,
+              3.162277660168379e-06,
               1e-06,
+              3.162277660168379e-07,
               1e-07
             ],
             "outcome": "re-judged per entry",
             "parameter": "gsat",
             "rows_rejudged": 1,
             "steps_used": [
-              0.001
+              0.0031622776601683794
             ]
           }
         ],
@@ -447,12 +476,12 @@
           "elastic_increments": 2,
           "increments_with_branch_crossing": [],
           "inelastic_increments": 18,
-          "reason": "5 of 3600 rows sit at the centred-difference noise floor and cannot be resolved by it",
+          "reason": "1 of 3600 rows sit at the centred-difference noise floor and cannot be resolved by it",
           "rows": 3600,
-          "rows_agreeing": 3595,
+          "rows_agreeing": 3599,
           "rows_disagreeing": 0,
-          "rows_reference_unresolved": 5,
-          "rows_reference_unresolved_at_noise_floor": 5,
+          "rows_reference_unresolved": 1,
+          "rows_reference_unresolved_at_noise_floor": 1,
           "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 1008,
           "status": "unresolved",
@@ -477,7 +506,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.331,
+          "seconds": 1.31,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -487,8 +516,11 @@
         "DSIGMA_DP"
       ],
       "verified_parameter_directions": [
+        "C11",
+        "C12",
         "C44",
         "a",
+        "g0",
         "gd0",
         "h0",
         "m",
@@ -554,7 +586,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.075,
+          "seconds": 1.196,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -629,7 +661,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.126,
+          "seconds": 1.211,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -646,7 +678,7 @@
       ]
     },
     {
-      "furthest_stage": "derivatives_unresolved",
+      "furthest_stage": "derivatives_verified",
       "model": "sweep_drucker_prager",
       "parameter_count": 4,
       "parameters": [
@@ -671,16 +703,16 @@
             10
           ],
           "inelastic_increments": 10,
-          "reason": "28 of 560 rows sit on a branch boundary (increment 10), where the centred difference straddles the kink and returns a secant rather than the derivative on the branch the increment took",
+          "reason": null,
           "rows": 560,
-          "rows_agreeing": 532,
+          "rows_agreeing": 560,
           "rows_disagreeing": 0,
-          "rows_reference_unresolved": 28,
+          "rows_reference_unresolved": 0,
           "rows_reference_unresolved_at_noise_floor": 0,
-          "rows_reference_unresolved_by_branch_crossing": 28,
+          "rows_reference_unresolved_by_branch_crossing": 0,
           "rows_substantive": 90,
-          "status": "unresolved",
-          "verdict_meaning": "no row disagrees; some cannot be adjudicated by centred differences, so those directions are withheld rather than claimed",
+          "status": "succeeded",
+          "verdict_meaning": "every row resolved and agreed",
           "worst_relative_error": 1.1828840306909155e-08
         },
         "executed_original": {
@@ -701,7 +733,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.159,
+          "seconds": 1.152,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -711,7 +743,12 @@
         "DSIGMA_DP",
         "DSTATEV_DP"
       ],
-      "verified_parameter_directions": []
+      "verified_parameter_directions": [
+        "E",
+        "beta",
+        "k",
+        "nu"
+      ]
     },
     {
       "furthest_stage": "derivatives_verified",
@@ -765,7 +802,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.097,
+          "seconds": 1.21,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -834,7 +871,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.226,
+          "seconds": 1.243,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -906,7 +943,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.199,
+          "seconds": 1.248,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -978,7 +1015,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.199,
+          "seconds": 1.265,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -1047,7 +1084,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.137,
+          "seconds": 1.165,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -1115,7 +1152,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.191,
+          "seconds": 1.272,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -1183,7 +1220,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.149,
+          "seconds": 1.162,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -1252,7 +1289,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.259,
+          "seconds": 1.173,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -1324,7 +1361,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.118,
+          "seconds": 1.289,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -1396,7 +1433,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.203,
+          "seconds": 1.309,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -1466,7 +1503,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.191,
+          "seconds": 1.172,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0
@@ -1537,7 +1574,7 @@
         "transform": {
           "exit_code": 0,
           "reason": null,
-          "seconds": 1.163,
+          "seconds": 1.206,
           "status": "succeeded",
           "status_category": "succeeded",
           "warnings": 0

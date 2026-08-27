@@ -223,6 +223,20 @@ INELASTIC_MARKER_THRESHOLD = 1.0e-12
 BRANCH_LABELS = frozenset({"elastic", "inelastic"})
 
 
+def _one_sided(base, near, far, step: float) -> list[list[float]]:
+    """Second-order one-sided difference from three points on the same side.
+
+        f'(x) = (-3 f(x) + 4 f(x+h) - f(x+2h)) / (2h)
+
+    Same order of accuracy as the centred difference, so a value judged
+    against it can be held to the same agreement. Used only where the centred
+    stencil would cross a branch.
+    """
+    return [[(-3.0 * b + 4.0 * n - f) / (2.0 * step)
+             for b, n, f in zip(bs, ns, fs)]
+            for bs, ns, fs in zip(base, near, far)]
+
+
 def branch_history(statev: Sequence[Sequence[float]]) -> list[str]:
     """The branch each increment took, read from the inelasticity marker."""
     slot = INELASTIC_MARKER_SLOT - 1
@@ -230,15 +244,10 @@ def branch_history(statev: Sequence[Sequence[float]]) -> list[str]:
             else "elastic" for row in statev]
 
 
-def replay(executable: Path, props: Sequence[float],
-           path: Sequence[Sequence[float]], *, ntens: int, nstatv: int,
-           deformation_gradient_increment: Optional[Sequence[float]] = None
-           ) -> ReplayResult:
-    """Run the original UMAT over the path with the given PROPS.
-
-    ``deformation_gradient_increment`` is a row-major 3x3 added to F each
-    increment, for drivers built with ``finite_strain=True``.
-    """
+def _driver_payload(props: Sequence[float], path: Sequence[Sequence[float]],
+                    deformation_gradient_increment: Optional[Sequence[float]]
+                    ) -> str:
+    """The stdin the reference driver reads: PROPS, the increment count, rows."""
     payload = " ".join(f"{v:.17e}" for v in props) + "\n"
     payload += f"{len(path)}\n"
     rows = []
@@ -249,16 +258,47 @@ def replay(executable: Path, props: Sequence[float],
                 f"{v:.17e}" for v in deformation_gradient_increment)
         rows.append(line)
     payload += "\n".join(rows) + "\n"
-    result = subprocess.run([str(executable)], input=payload,
-                            capture_output=True, text=True)
+    return payload
+
+
+def _run_driver(executable: Path, props: Sequence[float],
+                path: Sequence[Sequence[float]],
+                deformation_gradient_increment: Optional[Sequence[float]]
+                ) -> str:
+    """One execution of the reference driver; returns its raw stdout."""
+    result = subprocess.run(
+        [str(executable)],
+        input=_driver_payload(props, path, deformation_gradient_increment),
+        capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"original driver failed (rc={result.returncode}): "
                            f"{result.stderr[:800]}")
-    stress, statev = [], []
+    return result.stdout
+
+
+def _parse_driver_output(stdout: str, *, increments: int, ntens: int,
+                         nstatv: int) -> ReplayResult:
+    """Split the driver's stdout into data rows and the model's own messages.
+
+    The driver writes exactly one fixed-format row of ``ntens + nstatv`` numbers
+    per increment, so a line with a different field count cannot be a data row:
+    it is something the UMAT itself printed. Those lines are collected rather
+    than treated as corrupt data, because a model may print a warning and carry
+    on, and because when the model instead stops early they are the explanation
+    for why.
+    """
     nsv = max(nstatv, 1)
-    for line in result.stdout.strip().splitlines():
+    width = ntens + nsv
+    rows: list[list[float]] = []
+    messages: list[str] = []
+    for line in stdout.splitlines():
+        fields = line.split()
+        if len(fields) != width:
+            if line.strip():
+                messages.append(line.strip())
+            continue
         try:
-            values = [float(v) for v in line.split()]
+            rows.append([float(v) for v in fields])
         except ValueError as exc:
             # Fortran drops the "E" when an exponent will not fit the field, so
             # "1.0E+207" prints as "1.0+207". Seeing that means the model
@@ -270,12 +310,114 @@ def replay(executable: Path, props: Sequence[float],
                 f"{exc}. This is numerical divergence along the requested "
                 "loading path, not a reporting problem; the property vector or "
                 "the path is not usable for this model.") from exc
-        if len(values) != ntens + nsv:
-            raise RuntimeError(
-                f"reference driver returned {len(values)} values, expected {ntens + nsv}")
-        stress.append(values[:ntens])
-        statev.append(values[ntens:])
-    return ReplayResult(stress=stress, statev=statev)
+    if len(rows) != increments:
+        # The driver writes an increment's row only after UMAT returns, so a
+        # short run means the model stopped inside the increment after the last
+        # row written. A UMAT that aborts does not always do it through XIT --
+        # CALL EXIT and a bare STOP both leave the process with status 0 -- so
+        # the row count, not the exit status, is what establishes that the path
+        # was never completed.
+        detail = (" The model's own output was: " + " | ".join(messages[:6])
+                  if messages else
+                  " The model printed no diagnostic explaining the stop.")
+        raise RuntimeError(
+            f"the original UMAT completed {len(rows)} of {increments} "
+            f"increments and then stopped, so it never produced the response "
+            f"this reference needs.{detail}")
+    return ReplayResult(stress=[r[:ntens] for r in rows],
+                        statev=[r[ntens:] for r in rows])
+
+
+def replay(executable: Path, props: Sequence[float],
+           path: Sequence[Sequence[float]], *, ntens: int, nstatv: int,
+           deformation_gradient_increment: Optional[Sequence[float]] = None
+           ) -> ReplayResult:
+    """Run the original UMAT over the path with the given PROPS.
+
+    ``deformation_gradient_increment`` is a row-major 3x3 added to F each
+    increment, for drivers built with ``finite_strain=True``.
+    """
+    stdout = _run_driver(executable, props, path,
+                         deformation_gradient_increment)
+    return _parse_driver_output(stdout, increments=len(path), ntens=ntens,
+                                nstatv=nstatv)
+
+
+def replay_reproducibly(executable: Path, props: Sequence[float],
+                        path: Sequence[Sequence[float]], *, ntens: int,
+                        nstatv: int,
+                        deformation_gradient_increment: Optional[Sequence[float]] = None
+                        ) -> ReplayResult:
+    """Replay the same point twice and require the two runs to be identical.
+
+    Everything downstream reads the reference build as a function of PROPS:
+    primal parity compares one evaluation against another build's, and a centred
+    difference divides the gap between two evaluations by a step of order 1e-5.
+    Neither means anything unless the same input reproduces the same output. A
+    build that reads uninitialised memory still returns a full set of plausible
+    numbers, so asking once cannot tell the difference; the only way to find out
+    is to ask twice.
+
+    Reproducibility is checked before the run is required to have completed, so
+    that a model which stops early for the same reason every time is reported as
+    the abort it is, while one that answers differently each time is reported as
+    the non-function it is. The two runs must agree bit for bit: this is a
+    precondition, not a tolerance, because a run-to-run gap of the same order as
+    the perturbation would otherwise be divided by the step and returned as a
+    derivative.
+    """
+    first = _run_driver(executable, props, path,
+                        deformation_gradient_increment)
+    second = _run_driver(executable, props, path,
+                         deformation_gradient_increment)
+    if first != second:
+        # The verdict and the evidence for it are separated on purpose. Where
+        # the two runs happen to diverge is itself different every time -- that
+        # is the defect -- so putting those values in the message would make
+        # every artefact quoting it change on every run, and the published
+        # evidence is hashed and frozen. The stable finding is recorded; the
+        # run-specific divergence rides along on the exception for whoever is
+        # watching the round, and re-running reproduces a fresh instance of it.
+        raise NonReproducibleBuild(
+            "the original build, as compiled here, is not reproducible: two "
+            "replays of the same material vector along the same path returned "
+            "different output. "
+            "Its response is not a function of PROPS, so a centred difference "
+            "over a perturbed property would divide run-to-run variation by "
+            "the step and report it as a derivative.",
+            detail=_first_difference(first, second))
+    return _parse_driver_output(first, increments=len(path), ntens=ntens,
+                                nstatv=nstatv)
+
+
+class NonReproducibleBuild(RuntimeError):
+    """A build that answers differently when asked the same question twice.
+
+    Carries the stable finding as its message and the run-specific divergence
+    as ``detail``, so an artefact can record the first without being made
+    irreproducible by the second.
+    """
+
+    def __init__(self, message: str, *, detail: str = "") -> None:
+        super().__init__(message)
+        self.detail = detail
+
+
+def _first_difference(left: str, right: str) -> str:
+    """Where two driver outputs first disagree, in the driver's own terms."""
+    left_lines, right_lines = left.splitlines(), right.splitlines()
+    for index, (a, b) in enumerate(zip(left_lines, right_lines), start=1):
+        if a == b:
+            continue
+        a_fields, b_fields = a.split(), b.split()
+        if len(a_fields) == len(b_fields):
+            for column, (x, y) in enumerate(zip(a_fields, b_fields), start=1):
+                if x != y:
+                    return (f"line {index} column {column}: "
+                            f"{x} in the first run, {y} in the second")
+        return f"line {index}: {a.strip()[:60]!r} then {b.strip()[:60]!r}"
+    return (f"the first run wrote {len(left_lines)} lines, "
+            f"the second wrote {len(right_lines)}")
 
 
 def centered_fd(executable: Path, props: Sequence[float],
@@ -291,6 +433,7 @@ def centered_fd(executable: Path, props: Sequence[float],
     would not perturb it at all.
     """
     out: dict[int, dict[str, list]] = {}
+    base_run: Optional[ReplayResult] = None
     for index in props_indices:
         base = float(props[index - 1])
         step = rel_step * abs(base) if base != 0.0 else rel_step
@@ -301,6 +444,19 @@ def centered_fd(executable: Path, props: Sequence[float],
                       deformation_gradient_increment=deformation_gradient_increment)
         low = replay(executable, minus, path, ntens=ntens, nstatv=nstatv,
                      deformation_gradient_increment=deformation_gradient_increment)
+        # Two further points, one on each side at twice the step. They carry
+        # the one-sided estimates used where the centred stencil crosses a
+        # branch: a three-point one-sided difference is second-order accurate,
+        # so it can be held to the same agreement as the centred one. The
+        # two-point version cannot -- it is first-order, and asking 1e-6 of it
+        # reports truncation as disagreement.
+        far_plus, far_minus = list(props), list(props)
+        far_plus[index - 1] = base + 2.0 * step
+        far_minus[index - 1] = base - 2.0 * step
+        high2 = replay(executable, far_plus, path, ntens=ntens, nstatv=nstatv,
+                       deformation_gradient_increment=deformation_gradient_increment)
+        low2 = replay(executable, far_minus, path, ntens=ntens, nstatv=nstatv,
+                      deformation_gradient_increment=deformation_gradient_increment)
         denominator = 2.0 * step
         # A stencil that straddles a yield or unloading boundary estimates the
         # secant across a kink, not the derivative on the branch the increment
@@ -309,6 +465,12 @@ def centered_fd(executable: Path, props: Sequence[float],
         # being blamed on the transformation.
         high_branch = branch_history(high.statev)
         low_branch = branch_history(low.statev)
+        # The unperturbed replay, for the one-sided estimate below. It is the
+        # same for every parameter, so it is computed once.
+        if base_run is None:
+            base_run = replay(
+                executable, props, path, ntens=ntens, nstatv=nstatv,
+                deformation_gradient_increment=deformation_gradient_increment)
         out[index] = {
             "step": step,
             "dsigma": [[(h - l) / denominator for h, l in zip(hs, ls)]
@@ -317,6 +479,22 @@ def centered_fd(executable: Path, props: Sequence[float],
                         for hs, ls in zip(high.statev, low.statev)],
             "high_branch": high_branch,
             "low_branch": low_branch,
+            # One-sided differences, kept alongside. At an increment where the
+            # centred stencil crosses a branch, the two-sided estimate is not
+            # the derivative of either branch, but the one-sided estimate taken
+            # from whichever side stayed on the branch the increment took still
+            # is. It is only first-order accurate, so it is used only where the
+            # centred one cannot be, and never in preference to it.
+            "forward_dsigma": _one_sided(base_run.stress, high.stress,
+                                         high2.stress, step),
+            "backward_dsigma": _one_sided(base_run.stress, low.stress,
+                                          low2.stress, -step),
+            "forward_dstatev": _one_sided(base_run.statev, high.statev,
+                                          high2.statev, step),
+            "backward_dstatev": _one_sided(base_run.statev, low.statev,
+                                           low2.statev, -step),
+            "forward_far_branch": branch_history(high2.statev),
+            "backward_far_branch": branch_history(low2.statev),
         }
     return out
 
@@ -400,7 +578,24 @@ def compare(oti: dict[tuple[int, int], dict[str, float]],
             magnitude = max(abs(oti_value), abs(reference_value))
             noise = floor[name]
 
+            # Where the centred stencil crossed a kink, the derivative on the
+            # branch this increment took is still defined, and a three-point
+            # one-sided stencil from inside that branch measures it to the same
+            # order of accuracy. Swapping the reference value in here rather
+            # than adjudicating separately means the near-zero and noise-floor
+            # rules below apply to it too: judged on its own, six structural
+            # zeros were called disagreements because 0 against 6e-11 of
+            # round-off is a relative error of exactly 1.
+            side = None
             if crossing:
+                one_sided = _within_branch_reference(entry, increment,
+                                                     component, key, nominal)
+                if one_sided is not None:
+                    reference_value, side = one_sided
+                    absolute = abs(oti_value - reference_value)
+                    magnitude = max(abs(oti_value), abs(reference_value))
+
+            if crossing and side is None:
                 relative = (absolute / abs(reference_value)
                             if abs(reference_value) > 0.0 else None)
                 agrees = None
@@ -432,6 +627,8 @@ def compare(oti: dict[tuple[int, int], dict[str, float]],
                 # not against an arbitrary constant.
                 agrees = absolute <= max(column_scale, 1.0) * relative_tolerance
                 judged = "absolute_near_zero"
+            if side is not None:
+                judged = f"one_sided_within_branch_{side}:{judged}"
             rows.append(ValidationRow(
                 increment=increment, array=array, component=component,
                 parameter=name, props_index=parameter["props_index"],
@@ -442,6 +639,47 @@ def compare(oti: dict[tuple[int, int], dict[str, float]],
                 branch_crossing=crossing,
             ))
     return rows
+
+
+def _within_branch_reference(entry: dict, increment: int, component: int,
+                             key: str, nominal: str):
+    """A one-sided difference taken from the side that stayed on the branch.
+
+    At the increment where a material first yields, the centred difference
+    straddles the kink and returns the average of the two one-sided
+    derivatives, which is the derivative of neither branch. The value under
+    test is the derivative on the branch the unperturbed increment actually
+    took, and that derivative is still defined: it is the one-sided limit from
+    inside that branch.
+
+    Returns ``None`` when neither side stayed on the branch, or when the
+    one-sided values were not recorded, so the row stays unresolved rather than
+    being adjudicated by something that is not the same quantity.
+    """
+    high = (entry.get("high_branch") or [])
+    low = (entry.get("low_branch") or [])
+    if increment > len(high) or increment > len(low):
+        return None
+    far_high = (entry.get("forward_far_branch") or [])
+    far_low = (entry.get("backward_far_branch") or [])
+    for side, branches, far, field in (
+            ("forward", high, far_high, f"forward_{key}"),
+            ("backward", low, far_low, f"backward_{key}")):
+        if branches[increment - 1] != nominal:
+            continue
+        # The far point has to stay on the branch too: a three-point stencil
+        # that reaches across the kink at its outer point is no better than
+        # the centred one it replaces.
+        if increment > len(far) or far[increment - 1] != nominal:
+            continue
+        table = entry.get(field)
+        if not table or increment > len(table):
+            continue
+        row = table[increment - 1]
+        if component > len(row):
+            continue
+        return row[component - 1], side
+    return None
 
 
 def _crosses_branch(entry: dict, increment: int, nominal: str) -> bool:

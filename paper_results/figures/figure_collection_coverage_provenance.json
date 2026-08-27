@@ -1,35 +1,35 @@
 {
   "answers": "How much of the collected UMAT corpus reached numerical verification, and where did the rest stop?",
   "command": "python tools/figures/build_collection_figures.py",
-  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
   "figure": "figure_collection_coverage",
-  "generated_at": "2026-08-26T18:48:39.824144+00:00",
+  "generated_at": "2026-08-27T17:06:05.239379+00:00",
   "inputs": [
     {
-      "bytes": 33097,
+      "bytes": 32969,
       "path": "paper_results/generality/generality_matrix.csv",
-      "sha256": "19aa17c889a05fd80b2d30e92f08b8e458a8e13efd377a2b3ff6bf0a87fb9cef"
+      "sha256": "2f88ea8c845fc0a19332ca7a68476f7b3a569207762e0dc74b279d9dfc0ea67e"
     },
     {
       "bytes": 4455,
       "path": "paper_results/generality/generality_summary.json",
-      "sha256": "0127c207a691fba1caff8fcc44edb8b50d97381e7e62dc2d512303af2cd3692c"
+      "sha256": "8ec7b9f8cb30b3b7ff21d48fee745d2ecbabb730fb4afe2a572fd83a11f63520"
     },
     {
-      "bytes": 12351,
+      "bytes": 12491,
       "path": "paper_results/generality/source_identity.csv",
-      "sha256": "7d87f47bba1e93bc077f1ea88d94a921e2cb5820ca0212d47675de4f5d3aedb0"
+      "sha256": "5ba9cf977d552f9073a48ff0f203f98d466a2d02c2f05b87539de6bfdb12c440"
     }
   ],
   "layout": {
     "configured_font_sizes": {
-      "axes.labelsize": 10.0,
-      "axes.titlesize": 11.0,
-      "figure.titlesize": 12.0,
-      "font.size": 10.0,
-      "legend.fontsize": 9.5,
-      "xtick.labelsize": 9.5,
-      "ytick.labelsize": 9.5
+      "axes.labelsize": 13.0,
+      "axes.titlesize": 15.0,
+      "figure.titlesize": 16.0,
+      "font.size": 13.0,
+      "legend.fontsize": 12.0,
+      "xtick.labelsize": 12.0,
+      "ytick.labelsize": 12.0
     },
     "figure_width_in": 6.2,
     "minimum_rendered_pt": 9.0
@@ -40,7 +40,7 @@
       {
         "axes": 0,
         "title": "",
-        "xlabel": "UMAT sources (from 54 discovered files; every attempt kept)",
+        "xlabel": "UMAT sources, of 54 files discovered\n(every attempt is kept in the count)",
         "xscale": "linear",
         "ylabel": "",
         "yscale": "linear"
@@ -48,11 +48,11 @@
     ],
     "height_inches": 4.2,
     "pdf": "paper_results/figures/figure_collection_coverage.pdf",
-    "pdf_sha256": "93e6a36e11dd8beb2f49ddae89de39b0a56e677afed52815fa2022933e2fe37d",
+    "pdf_sha256": "3cec6aa99f26bcba165e69eb4607e4c55f98ce3abef3145b733264f5f90dfc71",
     "png": "paper_results/figures/figure_collection_coverage.png",
-    "png_sha256": "0d51e9463f01fdfa833d5f5f572efdf3b8150e4664e09e3fe9aa7dc4d19902f3",
-    "smallest_configured_pt": 9.5,
-    "smallest_printed_pt": 9.5,
+    "png_sha256": "91338c22584cc6f5ab1384b6e3f59263ade53585e89ded6edf6bf1dd0599574a",
+    "smallest_configured_pt": 12.0,
+    "smallest_printed_pt": 12.0,
     "width_inches": 6.2
   },
   "plotted_filters": {
@@ -63,19 +63,19 @@
       "m3_j2"
     ],
     "exclusion_reason": "the illustrative example is reported only in the illustrative section",
-    "two_step_deduction": "45 distinct implementations minus the property decks that carry no entry routine gives 43 matrix rows, minus 2 illustrative rows gives 41"
+    "two_step_deduction": "46 distinct implementations minus the property decks that carry no entry routine gives 43 matrix rows, minus 2 illustrative rows gives 41"
   },
   "row_counts": {
     "attempted offline": {
-      "count": 26,
+      "count": 29,
       "note": "the rest took the Abaqus route only"
     },
     "derivative verified offline": {
-      "count": 24,
+      "count": 27,
       "note": "two are withheld by their reference"
     },
     "distinct implementations": {
-      "count": 45,
+      "count": 46,
       "note": "after global identity reconciliation"
     },
     "eligible collection sources": {
@@ -91,7 +91,7 @@
       "note": "property decks carry no entry routine"
     },
     "transformed, compiled and primal-parity checked": {
-      "count": 26,
+      "count": 28,
       "note": "no source failed any of these three"
     },
     "verified in Abaqus": {

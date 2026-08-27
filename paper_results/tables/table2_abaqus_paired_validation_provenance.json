@@ -1,9 +1,16 @@
 {
+  "caption": "Paired Abaqus validation. Each case ran the untransformed and the transformed UMAT as separate jobs on the same deck and compared stress, state, tangent and convergence. Failed cases are listed with the rest.",
   "column_count": 7,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "environment": {
+    "abaqus": "Abaqus JOB abaqus",
+    "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
+    "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+    "python": "3.11.7"
+  },
   "filters": {},
-  "generated_at": "2026-08-26T18:46:48.860777+00:00",
+  "generated_at": "2026-08-27T17:06:06.198360+00:00",
   "inputs": [
     {
       "bytes": 7534,
@@ -18,5 +25,13 @@
   },
   "row_count": 19,
   "table": "table2_abaqus_paired_validation",
+  "unavailable_and_failed": {
+    "cells_with_no_measurement": 3,
+    "marker": "not measured",
+    "policy": "An absent measurement is printed as the marker and never as zero; a failed or withheld case keeps its row and its place in the denominator.",
+    "rows_recording_a_failure_or_withheld_result": [
+      "UMAT_VPDCL_R"
+    ]
+  },
   "unavailable_marker": "not measured"
 }

@@ -28,8 +28,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from figure_style import (  # noqa: E402
-    ANNOTATION_PT, PALETTE, REPO_ROOT, figure, save, use_publication_style,
-    write_provenance,
+    ANNOTATION_PT, PALETTE, REPO_ROOT, figure, page_title, save,
+    use_publication_style, write_provenance,
 )
 
 RESULTS = REPO_ROOT / "paper_results"
@@ -110,9 +110,9 @@ def build_funnel(out_dir: Path) -> dict:
     axis.set_yticklabels([label for label, _, _ in stages])
     axis.set_xlim(0, discovered * 1.12)
     axis.set_xticks([0, 10, 20, 30, 40, 50])
-    axis.set_xlabel(f"UMAT sources (from {discovered} discovered files; every "
-                    "attempt kept)")
-    axis.set_title("How far the collected corpus reached", loc="left")
+    axis.set_xlabel(f"UMAT sources, of {discovered} files discovered\n"
+                    "(every attempt is kept in the count)")
+    page_title(fig, "How far the collected corpus reached")
     axis.grid(axis="y", visible=False)
 
     outputs = save(fig, "figure_collection_coverage", out_dir)
@@ -170,16 +170,8 @@ def build_routes(out_dir: Path) -> dict:
     axis.set_yticklabels([label for label, _ in groups])
     axis.set_xlim(0, total * 0.72)
     axis.set_xlabel(f"unique collection sources (of {total} eligible)")
-    axis.set_title("Which route verified each source", loc="left", pad=34)
+    page_title(fig, "Which route verified each source")
     axis.grid(axis="y", visible=False)
-    # Above the bars, not among them: placed inside the axes it landed on the
-    # "neither route" row and its own count.
-    # Two short lines. One long one ran past the right edge of the figure.
-    axis.annotate(
-        f"{total - len(neither)} of {total} verified by at least one route;\n"
-        f"the {len(neither)} that are not keep their place in the denominator",
-        xy=(0.0, 1.015), xycoords="axes fraction", ha="left", va="bottom",
-        fontsize=ANNOTATION_PT, color="0.35")
 
     outputs = save(fig, "figure_verification_routes", out_dir)
     write_provenance(
@@ -198,7 +190,13 @@ def build_routes(out_dir: Path) -> dict:
            "verified_by_at_least_one": total - len(neither),
            "unverified_with_reasons":
                [r["failure_category_and_blocker"][:120] for r in neither]},
-        command="python tools/figures/build_collection_figures.py")
+        command="python tools/figures/build_collection_figures.py",
+        notes=(f"{total - len(neither)} of {total} sources are verified by at "
+               f"least one route. The {len(neither)} that are not keep their "
+               "place in the denominator and are shown as their own bar; the "
+               "four bars sum to the denominator. This belongs in the caption "
+               "rather than on the figure, where at a readable size it "
+               "overlapped the first row of bars."))
     return {"groups": {l: len(e) for l, e in groups}, "outputs": outputs}
 
 

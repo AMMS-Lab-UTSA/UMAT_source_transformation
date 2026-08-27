@@ -1,0 +1,100 @@
+{
+  "answers": "How does the corpus go from the files that were acquired to the sources that were verified, and where does the denominator change?",
+  "command": "python tools/figures/build_acquisition_figures.py",
+  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "figure": "figure_acquisition_progression",
+  "generated_at": "2026-08-27T17:06:03.956148+00:00",
+  "inputs": [
+    {
+      "bytes": 32969,
+      "path": "paper_results/generality/generality_matrix.csv",
+      "sha256": "2f88ea8c845fc0a19332ca7a68476f7b3a569207762e0dc74b279d9dfc0ea67e"
+    },
+    {
+      "bytes": 4455,
+      "path": "paper_results/generality/generality_summary.json",
+      "sha256": "8ec7b9f8cb30b3b7ff21d48fee745d2ecbabb730fb4afe2a572fd83a11f63520"
+    }
+  ],
+  "layout": {
+    "configured_font_sizes": {
+      "axes.labelsize": 13.0,
+      "axes.titlesize": 15.0,
+      "figure.titlesize": 16.0,
+      "font.size": 13.0,
+      "legend.fontsize": 12.0,
+      "xtick.labelsize": 12.0,
+      "ytick.labelsize": 12.0
+    },
+    "figure_width_in": 6.2,
+    "minimum_rendered_pt": 9.0
+  },
+  "notes": "",
+  "outputs": {
+    "axes": [
+      {
+        "axes": 0,
+        "title": "",
+        "xlabel": "count (the unit changes down the chart)",
+        "xscale": "linear",
+        "ylabel": "",
+        "yscale": "linear"
+      }
+    ],
+    "height_inches": 3.9,
+    "pdf": "paper_results/figures/figure_acquisition_progression.pdf",
+    "pdf_sha256": "e83ba8ab08136299bb91a6157d76a492fadc5df2705414d3c5a46cc683b7c859",
+    "png": "paper_results/figures/figure_acquisition_progression.png",
+    "png_sha256": "cb49ea6bf6ef45d9f316d5217f8cbef8dc39f680cc55b082148d241f6fd19252",
+    "smallest_configured_pt": 12.0,
+    "smallest_printed_pt": 12.0,
+    "width_inches": 6.2
+  },
+  "plotted_filters": {
+    "denominator_changes": {
+      "eligible sources onward": "all against the same 41 eligible sources",
+      "files -> implementations": "content deduplication: a source found at two origins is one implementation",
+      "implementations -> eligible sources": "property decks carry no entry routine, and the illustrative example is reported only in its own section"
+    },
+    "excluded": [
+      "j2",
+      "m3_j2"
+    ],
+    "not_the_publication_denominator": "an earlier exploratory acquisition round is reported separately and is not this progression",
+    "units": {
+      "files": "files on disk",
+      "implementations": "distinct implementations",
+      "sources": "eligible collection sources"
+    }
+  },
+  "row_counts": {
+    "discovered files": {
+      "count": 54,
+      "unit": "files"
+    },
+    "distinct implementations": {
+      "count": 46,
+      "unit": "implementations"
+    },
+    "eligible collection sources": {
+      "count": 41,
+      "unit": "sources"
+    },
+    "not verified": {
+      "count": 3,
+      "unit": "sources"
+    },
+    "verified by at least one route": {
+      "count": 38,
+      "unit": "sources"
+    },
+    "verified in Abaqus": {
+      "count": 17,
+      "unit": "sources"
+    },
+    "verified offline": {
+      "count": 27,
+      "unit": "sources"
+    }
+  }
+}

@@ -1,21 +1,28 @@
 {
+  "caption": "Every derivative family verified for the illustrative example. \"Measured\" counts entries with a defined relative error; \"exact zero\" counts entries that are exactly zero on both sides, which are verified but measure nothing; \"within reference\" counts entries the reference could not separate from the value. The three add to the entry count, so nothing is dropped.",
   "column_count": 8,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "environment": {
+    "abaqus": "Abaqus JOB abaqus",
+    "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
+    "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+    "python": "3.11.7"
+  },
   "filters": {
     "model": "the illustrative J2 example only"
   },
-  "generated_at": "2026-08-26T18:46:48.974329+00:00",
+  "generated_at": "2026-08-27T17:06:07.333393+00:00",
   "inputs": [
     {
-      "bytes": 38071,
+      "bytes": 184741,
       "path": "paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv",
-      "sha256": "b8d5293d6634119d134efe10a6de62eab8c6b4794113c9f0667e145f62b42d01"
+      "sha256": "7e4edf371b8a384eb05a0aca25d4ed2bf0af9598de96d08c0db980cdff56ba36"
     },
     {
-      "bytes": 1847975,
+      "bytes": 1848832,
       "path": "paper_results/parameter_sensitivity/table6_comparison_rows.csv",
-      "sha256": "684cd82e2c4e302cd1a9029fe9b466c5f8b8d2039692de0034266c284138737e"
+      "sha256": "fdbfdb0a63474aae9518d665efabef5cf93b4d38e16e4e2ce9075a542c62a589"
     }
   ],
   "notes": "",
@@ -25,5 +32,11 @@
   },
   "row_count": 3,
   "table": "table5_illustrative_parameter_and_state_sensitivities",
+  "unavailable_and_failed": {
+    "cells_with_no_measurement": 1,
+    "marker": "not measured",
+    "policy": "An absent measurement is printed as the marker and never as zero; a failed or withheld case keeps its row and its place in the denominator.",
+    "rows_recording_a_failure_or_withheld_result": []
+  },
   "unavailable_marker": "not measured"
 }

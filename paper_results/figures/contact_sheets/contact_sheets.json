@@ -1,0 +1,53 @@
+{
+  "command": "python tools/figures/build_contact_sheets.py",
+  "generated_at": "2026-08-27T17:06:14.501977+00:00",
+  "sheets": {
+    "figures": {
+      "sheet": "paper_results/figures/contact_sheets/contact_sheet_figures.png",
+      "size": [
+        1672,
+        2835
+      ],
+      "tiles": [
+        "figure_acquisition_progression.png",
+        "figure_collection_coverage.png",
+        "figure_higher_order_verification.png",
+        "figure_remaining_blockers.png",
+        "figure_sensitivities.png",
+        "figure_tangent_verification.png",
+        "figure_verification_routes.png"
+      ]
+    },
+    "screenshots": {
+      "sheet": "paper_results/figures/contact_sheets/contact_sheet_screenshots.png",
+      "size": [
+        2494,
+        2033
+      ],
+      "tiles": [
+        "figure_gui_material.png",
+        "figure_gui_products.png",
+        "figure_gui_request.png",
+        "figure_gui_results.png",
+        "figure_gui_source.png"
+      ]
+    },
+    "tables": {
+      "sheet": "paper_results/figures/contact_sheets/contact_sheet_tables.png",
+      "size": [
+        1460,
+        1252
+      ],
+      "tiles": [
+        "table1_software_inputs_outputs_preview.png",
+        "table2_abaqus_paired_validation_preview.png",
+        "table3_internal_constitutive_jacobians_preview.png",
+        "table4_higher_order_derivative_verification_preview.png",
+        "table5_illustrative_parameter_and_state_sensitivities_preview.png",
+        "table6_collection_parameter_sensitivity_preview.png",
+        "table7_external_web_corpus_preview.png",
+        "table8_illustrative_row_adjudication_preview.png"
+      ]
+    }
+  }
+}

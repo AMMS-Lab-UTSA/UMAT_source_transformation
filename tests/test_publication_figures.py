@@ -178,3 +178,99 @@ def test_every_screenshot_shows_a_numbered_step():
 def test_no_figure_or_provenance_names_a_home_directory():
     for path in _provenances():
         assert "/home/" not in path.read_text(encoding="utf-8"), path.name
+
+
+# --------------------------------------------------------------------------- #
+# The canvas is fixed at the placement width and nothing clips to it visibly:
+# a title too long for the page is simply cut off at the edge, and the file is
+# still written, still the right size, and still passes every other check
+# here. These pin the guard that measures each text artist against the canvas.
+# --------------------------------------------------------------------------- #
+def _one_axis_figure(title: str):
+    import matplotlib
+    matplotlib.use("Agg")
+    from figure_style import figure, use_publication_style
+    use_publication_style()
+    fig, axis = figure(3.0)
+    axis.plot([0, 1], [0, 1])
+    axis.set_title(title, loc="left")
+    return fig
+
+
+def test_a_title_that_runs_off_the_page_is_refused(tmp_path: Path):
+    from figure_style import save
+    figure_object = _one_axis_figure("x" * 400)
+    with pytest.raises(RuntimeError) as caught:
+        save(figure_object, "overlong", tmp_path)
+    assert "run off" in str(caught.value)
+    assert not (tmp_path / "overlong.png").exists(), (
+        "a figure whose text is cut off must not be left on disk for a later "
+        "step to pick up")
+
+
+def test_a_title_that_fits_is_accepted(tmp_path: Path):
+    from figure_style import save
+    outputs = save(_one_axis_figure("a short title"), "fits", tmp_path)
+    assert (tmp_path / "fits.png").exists()
+    assert outputs["width_inches"] == FIGURE_WIDTH_IN
+
+
+def test_labels_of_ticks_outside_the_view_are_not_reported_as_clipped(tmp_path: Path):
+    """A tick just past the end of an axis keeps a label it never draws.
+
+    Those labels sit beyond the axis where nothing renders them. Counting them
+    as clipped text made the guard fire on figures whose saved files were
+    perfectly intact, which is the fastest way to get a guard switched off.
+    """
+    from figure_style import save
+    figure_object = _one_axis_figure("fine")
+    axis = figure_object.axes[0]
+    axis.set_xticks([0.0, 0.5, 1.0, 4000.0])
+    axis.set_xlim(0.0, 1.0)
+    save(figure_object, "outside_view", tmp_path)
+    assert (tmp_path / "outside_view.png").exists()
+
+
+def test_a_figure_regenerates_byte_for_byte(tmp_path: Path):
+    """Two runs of the same script must produce the same files.
+
+    The PDF backend stamps the wall clock into ``/CreationDate``, so every
+    figure differed between runs in two bytes -- enough that the figures could
+    not be shown to come from the evidence they claim, which is the whole
+    point of shipping them with provenance.
+    """
+    from figure_style import save
+    first, second = tmp_path / "first", tmp_path / "second"
+    save(_one_axis_figure("stable"), "repeat", first)
+    save(_one_axis_figure("stable"), "repeat", second)
+    for suffix in ("png", "pdf"):
+        assert (first / f"repeat.{suffix}").read_bytes() == \
+               (second / f"repeat.{suffix}").read_bytes(), (
+            f"the {suffix} differs between two runs of the same figure")
+
+
+def test_a_blocker_is_not_classified_by_a_substring_of_a_stage_name():
+    """Blocker causes are matched by pattern, and stage names are prose too.
+
+    ``contract_constructed`` contains the word "construct", so a source held up
+    because no material vector exists for it was filed on the figure under
+    "Unsupported Fortran construct" -- a different, and wrong, explanation of
+    why the pipeline could not verify it.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "tools" / "figures"))
+    from build_acquisition_figures import _classify  # noqa: PLC0415
+
+    contract = ("contract_constructed: the declared dimensions are too small "
+                "for what this source addresses: it needs NTENS >= 0 and, at "
+                "NTENS=6, NSTATV >= 125, but the contract declares NTENS=6 "
+                "and NSTATV=0")
+    assert _classify(contract) == "No established contract"
+
+    fortran = "transformed: unsupported Fortran construct in the entry routine"
+    assert _classify(fortran) == "Unsupported Fortran construct"
+
+    # And every cause must still be reachable by something, so a pattern that
+    # stops matching anything is visible rather than silently inert.
+    from build_acquisition_figures import CAUSES  # noqa: PLC0415
+    assert len({label for label, _, _ in CAUSES}) == len(CAUSES), (
+        "two causes share a label; the figure would merge them")

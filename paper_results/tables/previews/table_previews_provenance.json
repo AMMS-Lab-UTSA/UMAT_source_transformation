@@ -1,0 +1,72 @@
+{
+  "command": "python tools/tables/render_table_previews.py",
+  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "generated_at": "2026-08-27T17:06:12.593888+00:00",
+  "note": "Previews are pictures of the canonical CSVs, for visual review only. The CSV is what becomes the manuscript table; a preview recomputes nothing and so cannot disagree with it. A cell longer than 58 characters is elided here and kept in full in the CSV.",
+  "previews": [
+    {
+      "columns": 4,
+      "csv": "paper_results/tables/table1_software_inputs_outputs.csv",
+      "csv_sha256": "4a94813f18333c5f6c997dd58c20b9753d5959216db1540b5e9c468d3da83938",
+      "preview": "paper_results/tables/previews/table1_software_inputs_outputs_preview.png",
+      "preview_sha256": "d5f4ce9b9846f8e00723f987e97c9214bcf08fefe2816c10a818af2d3f7bd4c5",
+      "rows": 12
+    },
+    {
+      "columns": 7,
+      "csv": "paper_results/tables/table2_abaqus_paired_validation.csv",
+      "csv_sha256": "5b95300d2743ff5c8b6c2d562a5b2dd023c1212a704e70bb05d8af08c493228c",
+      "preview": "paper_results/tables/previews/table2_abaqus_paired_validation_preview.png",
+      "preview_sha256": "92b957ee14a65631aa3e8d8a2a16ce215c800d1a37f24d3d7b94775257d7d087",
+      "rows": 19
+    },
+    {
+      "columns": 7,
+      "csv": "paper_results/tables/table3_internal_constitutive_jacobians.csv",
+      "csv_sha256": "0d3b4eba0adacefc1d89b358bb330caea74044c5ffac27991c479c27c49d482b",
+      "preview": "paper_results/tables/previews/table3_internal_constitutive_jacobians_preview.png",
+      "preview_sha256": "2ae3aef48449245c7cee3b7c1541934d6b050aa60cd0775a07ae3c9ee6c994e4",
+      "rows": 6
+    },
+    {
+      "columns": 9,
+      "csv": "paper_results/tables/table4_higher_order_derivative_verification.csv",
+      "csv_sha256": "35ba7a439bbb9547d039c1113b18e1f4c3637004c90bb22b00d921df965b72d8",
+      "preview": "paper_results/tables/previews/table4_higher_order_derivative_verification_preview.png",
+      "preview_sha256": "8ff581c8c5d93d330243217e78bbea166d81bf311a6d5edad702ca0dfa8f0ae2",
+      "rows": 6
+    },
+    {
+      "columns": 8,
+      "csv": "paper_results/tables/table5_illustrative_parameter_and_state_sensitivities.csv",
+      "csv_sha256": "cb0ce49f60231f86f26b636014b6d2e1a7045b06c3b2a5d2ed2deeaf1412b8c6",
+      "preview": "paper_results/tables/previews/table5_illustrative_parameter_and_state_sensitivities_preview.png",
+      "preview_sha256": "f2f43b9f53c2a2ad2c900f9f95ad2800f67daf4e963365ce3b5c0178d12260cc",
+      "rows": 3
+    },
+    {
+      "columns": 8,
+      "csv": "paper_results/tables/table6_collection_parameter_sensitivity.csv",
+      "csv_sha256": "416682e614f88e0f43dcffbb7170c37982a633ae683bc92fde791920ee97d036",
+      "preview": "paper_results/tables/previews/table6_collection_parameter_sensitivity_preview.png",
+      "preview_sha256": "d826639ba254170acf76d2fad2ccda4b7b3627edd5305f182e40d9c5e03b484f",
+      "rows": 19
+    },
+    {
+      "columns": 8,
+      "csv": "paper_results/tables/table7_external_web_corpus.csv",
+      "csv_sha256": "b22a2a5bb8b1419d496cdcf0e7d8e5ef3bf972a31ad7157ed3c4e9a89fefedf8",
+      "preview": "paper_results/tables/previews/table7_external_web_corpus_preview.png",
+      "preview_sha256": "40ef6f932cb9c0d7282257ac1dfbb522cc4f59df3b202ed9ed4c104a48a86967",
+      "rows": 11
+    },
+    {
+      "columns": 8,
+      "csv": "paper_results/tables/table8_illustrative_row_adjudication.csv",
+      "csv_sha256": "771d84f9793bd9013c60e525cc0b3fccd00b64dfcc2fe408e064e6ad672a0284",
+      "preview": "paper_results/tables/previews/table8_illustrative_row_adjudication_preview.png",
+      "preview_sha256": "e3fbc17a0d2d14b3a66cbea32c75cfdd9554a1a8e7dee95a2930bc75ee6a0b49",
+      "rows": 3
+    }
+  ]
+}

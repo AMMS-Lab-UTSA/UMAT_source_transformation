@@ -1,12 +1,12 @@
 {
   "counts": {
-    "content_deduplicated_sources": 45,
+    "content_deduplicated_sources": 46,
     "independent_upstream_repositories": 3,
     "note": "content_deduplicated_sources counts implementations, not appearances. A source found both locally and upstream is one source with two origins and however many validation events were run against it.",
     "raw_discovered_files": 54,
-    "sources_found_at_more_than_one_origin": 43,
+    "sources_found_at_more_than_one_origin": 42,
     "unique_constitutive_models": 27,
-    "unique_dependency_closures": 4,
+    "unique_dependency_closures": 5,
     "validation_events_by_kind": {
       "CORPUS offline round": 11,
       "TABLE-2 paired Abaqus": 19,
@@ -14,15 +14,15 @@
       "TABLE-4 higher order": 4,
       "TABLE-6 parameter sensitivity": 20
     },
-    "verified_unique_sources": 37,
+    "verified_unique_sources": 39,
     "verified_unique_sources_by_event": {
-      "CORPUS offline round": 7,
+      "CORPUS offline round": 9,
       "TABLE-2 paired Abaqus": 17,
       "TABLE-3 internal Jacobian": 6,
-      "TABLE-6 parameter sensitivity": 18
+      "TABLE-6 parameter sensitivity": 19
     }
   },
-  "generated_at": "2026-08-26T18:46:41.846604+00:00",
+  "generated_at": "2026-08-27T17:06:03.058039+00:00",
   "policy": "Identity is computed from normalised source content (single file) or from the resolved routine closure (multi-file). Paths are excluded: the same closure lives at different relative paths in different origins, and hashing layout would make identical code hash differently.",
   "schema": "umat-oti-source-identity/1",
   "sources": {
@@ -231,7 +231,7 @@
           "execution_environment": "local gfortran material-point driver",
           "label": "lucarini_crystalplasticity",
           "origin": "external corpus: https://github.com/sergiolucarini/UMAT4COMSOL.git@e62506fd8426",
-          "verified": false
+          "verified": true
         },
         {
           "event": "TABLE-3 internal Jacobian",
@@ -241,7 +241,9 @@
           "verified": false
         }
       ],
-      "verified_by": []
+      "verified_by": [
+        "CORPUS offline round"
+      ]
     },
     "1aa21df0267c34b3dcd4f541f480de25": {
       "canonical_source_id": "1aa21df0267c34b3dcd4f541f480de25",
@@ -401,7 +403,7 @@
           "execution_environment": "local gfortran material-point driver",
           "label": "sweep_drucker_prager",
           "origin": "parameter_sensitivity benchmark set",
-          "verified": false
+          "verified": true
         },
         {
           "event": "TABLE-3 internal Jacobian",
@@ -411,7 +413,9 @@
           "verified": false
         }
       ],
-      "verified_by": []
+      "verified_by": [
+        "TABLE-6 parameter sensitivity"
+      ]
     },
     "2e7527f28aea68024080d02fec0e2c6d": {
       "canonical_source_id": "2e7527f28aea68024080d02fec0e2c6d",
@@ -609,7 +613,7 @@
           "execution_environment": "local gfortran material-point driver",
           "label": "jgomezc1_UMAT_VPDCL",
           "origin": "external corpus: https://github.com/jgomezc1/ABAQUS-US.git@54181407aa7a",
-          "verified": false
+          "verified": true
         },
         {
           "event": "TABLE-3 internal Jacobian",
@@ -634,6 +638,7 @@
         }
       ],
       "verified_by": [
+        "CORPUS offline round",
         "TABLE-3 internal Jacobian",
         "TABLE-2 paired Abaqus"
       ]
@@ -1126,6 +1131,67 @@
         "TABLE-2 paired Abaqus"
       ]
     },
+    "7a9020f367817e4a0679b864fb78bc7e": {
+      "canonical_source_id": "7a9020f367817e4a0679b864fb78bc7e",
+      "closure_routines": [
+        "KCRSS",
+        "KCURLET",
+        "KDETER",
+        "KDIRNS",
+        "KDOTPROD",
+        "KFINDNEIGHBOURHOOD",
+        "KGMATVEC6",
+        "KGNDL2ET",
+        "KHARDENING",
+        "KMAT",
+        "KMATERIALPARAM",
+        "KMATVEC6",
+        "KRHOTWININIT",
+        "KSLIP0",
+        "KSLIP5ET",
+        "KSLIP6ET",
+        "KSLIPCREEPPOWERLAW",
+        "KSLIPPOWERLAW",
+        "KTWINROT",
+        "KTWINVOLFRACINTEGRAL",
+        "KVECMAT6",
+        "KVECPROD",
+        "LAPINVERSE",
+        "ROTORD4SIG",
+        "TRACE",
+        "UMAT"
+      ],
+      "closure_size": 26,
+      "code_only_sha256": "16db1b9b58409ec840d1a15c493d3c7ee4cc24c36e17943a419ea267424a7911",
+      "constitutive_models": [
+        "crystal plasticity, finite strain, COMMON-block state"
+      ],
+      "entry_routine": "UMAT",
+      "identity_kind": "dependency_closure",
+      "labels": [
+        "ngrilli_umat"
+      ],
+      "normalised_content_sha256": "7642cf67b96a9394dfcf7c0265129eee4216ca6ded46575111267397e669e9b0",
+      "origins": [
+        "external corpus: https://github.com/ngrilli/Oxford_Crystal_Plasticity.git@85102ed35dc4"
+      ],
+      "source_structures": [
+        "dependency_closure"
+      ],
+      "upstream_repositories": [
+        "https://github.com/ngrilli/Oxford_Crystal_Plasticity.git"
+      ],
+      "validation_events": [
+        {
+          "event": "CORPUS offline round",
+          "execution_environment": "local gfortran material-point driver",
+          "label": "ngrilli_umat",
+          "origin": "external corpus: https://github.com/ngrilli/Oxford_Crystal_Plasticity.git@85102ed35dc4",
+          "verified": false
+        }
+      ],
+      "verified_by": []
+    },
     "7b8ba70f5c395df8d9f85726de298183": {
       "canonical_source_id": "7b8ba70f5c395df8d9f85726de298183",
       "closure_size": 1,
@@ -1398,38 +1464,9 @@
     },
     "adbf5968a37861c3ff2ec07fd8f47006": {
       "canonical_source_id": "adbf5968a37861c3ff2ec07fd8f47006",
-      "closure_routines": [
-        "KCRSS",
-        "KCURLET",
-        "KDETER",
-        "KDIRNS",
-        "KDOTPROD",
-        "KFINDNEIGHBOURHOOD",
-        "KGMATVEC6",
-        "KGNDL2ET",
-        "KHARDENING",
-        "KMAT",
-        "KMATERIALPARAM",
-        "KMATVEC6",
-        "KRHOTWININIT",
-        "KSLIP0",
-        "KSLIP5ET",
-        "KSLIP6ET",
-        "KSLIPPOWERLAW",
-        "KTWINROT",
-        "KTWINVOLFRACINTEGRAL",
-        "KVECMAT6",
-        "KVECPROD",
-        "LAPINVERSE",
-        "ROTORD4SIG",
-        "TRACE",
-        "UMAT"
-      ],
       "closure_size": 25,
       "code_only_sha256": "d11ec99edc2045ed9963ac42c4ea8b1d7b262e03eae49c69f150d42113a69b7f",
-      "constitutive_models": [
-        "crystal plasticity, finite strain, COMMON-block state"
-      ],
+      "constitutive_models": [],
       "entry_routine": "UMAT",
       "identity_kind": "dependency_closure",
       "labels": [
@@ -1437,23 +1474,11 @@
       ],
       "normalised_content_sha256": "16f788bf072126966698ef3c453792a15139c22a4798c94155f493e8d1169223",
       "origins": [
-        "external corpus: https://github.com/ngrilli/Oxford_Crystal_Plasticity.git@85102ed35dc4",
         "internal-Jacobian round (external corpus (pinned snapshot))"
       ],
-      "source_structures": [
-        "dependency_closure"
-      ],
-      "upstream_repositories": [
-        "https://github.com/ngrilli/Oxford_Crystal_Plasticity.git"
-      ],
+      "source_structures": [],
+      "upstream_repositories": [],
       "validation_events": [
-        {
-          "event": "CORPUS offline round",
-          "execution_environment": "local gfortran material-point driver",
-          "label": "ngrilli_umat",
-          "origin": "external corpus: https://github.com/ngrilli/Oxford_Crystal_Plasticity.git@85102ed35dc4",
-          "verified": false
-        },
         {
           "event": "TABLE-3 internal Jacobian",
           "execution_environment": "local gfortran material-point driver",

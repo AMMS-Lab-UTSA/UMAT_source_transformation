@@ -289,9 +289,65 @@ def _rewrite_rank_of_array_in_decls(source: str) -> str:
     return _FUNCTION_BLOCK_RE.sub(_rewrite_body, source)
 
 
+#: The first-order ``X**Y`` derivative block the generator emits, both operands
+#: differentiated. It is the same three lines in every module it writes at order
+#: one, whatever the direction count.
+_POW_OO_FIRST_ORDER_RE = re.compile(
+    r"(?P<indent>[ \t]*)DER0_0 = X%R\*\*Y%R\n"
+    r"[ \t]*DER1_0 = X%R\*\*Y%R\*Y%R/X%R\n"
+    r"[ \t]*DER1_1 = X%R\*\*Y%R\*LOG\(X%R\)\n"
+    r"(?![ \t]*DER)"
+)
+
+
+def _guard_pow_at_zero_base(source: str) -> str:
+    """Make ``X**Y`` evaluable at a zero base when both operands are OTI.
+
+    The generated algebra reads the first partial off the value -- ``x**y*y/x``
+    -- and the second as ``x**y*log(x)``. Both are correct away from zero and
+    both are indeterminate at ``x = 0``, where the value ``0**y`` is perfectly
+    well defined. The resulting NaN does not stay in the derivative: the
+    evaluator multiplies each coefficient by a delta whose real part is zero, and
+    ``NaN * 0`` is NaN, so the *real part* of the result is poisoned too. A
+    viscoplastic flow rule evaluates ``(|tau|/g)**n`` on the first increment of
+    any load path that starts from zero stress, so the primal came out NaN and
+    the solve reported a singular matrix.
+
+    The partials are evaluated from their closed forms instead of by dividing the
+    value by the base: ``d/dx = y*x**(y-1)`` directly, and ``d/dy = x**y*log(x)``,
+    whose limit as ``x`` approaches zero from above is zero for positive ``y``.
+    Nothing is clamped: a genuinely unbounded derivative -- ``0 < y < 1`` -- still
+    comes out infinite. The guard is entered only when the base is exactly zero,
+    so every other evaluation keeps the bit pattern it had before.
+
+    Higher-order modules carry more coefficients and are left untouched; the
+    pattern requires the block to end after the two first-order lines.
+    """
+    replacement = (
+        "\\g<indent>DER0_0 = X%R**Y%R\n"
+        "\\g<indent>IF (X%R == 0.0_DP) THEN\n"
+        "\\g<indent>  IF (Y%R == 0.0_DP) THEN\n"
+        "\\g<indent>    DER1_0 = 0.0_DP\n"
+        "\\g<indent>  ELSE\n"
+        "\\g<indent>    DER1_0 = Y%R*X%R**(Y%R - 1.0_DP)\n"
+        "\\g<indent>  END IF\n"
+        "\\g<indent>  IF (Y%R > 0.0_DP) THEN\n"
+        "\\g<indent>    DER1_1 = 0.0_DP\n"
+        "\\g<indent>  ELSE\n"
+        "\\g<indent>    DER1_1 = X%R**Y%R*LOG(X%R)\n"
+        "\\g<indent>  END IF\n"
+        "\\g<indent>ELSE\n"
+        "\\g<indent>  DER1_0 = X%R**Y%R*Y%R/X%R\n"
+        "\\g<indent>  DER1_1 = X%R**Y%R*LOG(X%R)\n"
+        "\\g<indent>END IF\n"
+    )
+    return _POW_OO_FIRST_ORDER_RE.sub(replacement, source, count=1)
+
+
 def _post_fix_module(source: str, ntens: int, order: int = 1) -> str:
     source = _BACK_KW_RE.sub("", source)
     source = _rewrite_rank_of_array_in_decls(source)
+    source = _guard_pow_at_zero_base(source)
     source = _MASTER_PARAMETERS_USE_RE.sub(lambda match: f"{match.group(1)}USE master_parameters, ONLY: DP", source, count=1)
     source = _REAL_UTILS_USE_RE.sub(lambda match: f"{match.group(1)}USE real_utils, ONLY: {_REAL_UTILS_ONLY}", source, count=1)
     interface_block, body = _extra_overloads(ntens, order)

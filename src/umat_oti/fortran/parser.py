@@ -129,6 +129,64 @@ def parse_subroutines(logical_lines: tuple[FortranLogicalLine, ...]) -> tuple[Pa
     return tuple(routines)
 
 
+#: A function subprogram header, with or without a leading type-spec and with
+#: or without a RESULT clause. Fortran's other program units are found by
+#: :func:`parse_subroutines`; functions are parsed separately so that adding
+#: them here cannot change what any existing caller of ``subroutines`` sees.
+FUNCTION_HEADER_RE = re.compile(
+    rf"^\s*(?:(?P<type>{TYPE_PATTERN})\s+)?"
+    r"(?:(?:recursive|pure|elemental)\s+)*"
+    r"function\s+(?P<name>\w+)\s*"
+    r"(?:\(\s*(?P<args>[^)]*)\)\s*)?"
+    r"(?:result\s*\(\s*(?P<result>\w+)\s*\)\s*)?$",
+    flags=re.IGNORECASE,
+)
+
+
+def parse_function_subprograms(
+    logical_lines: tuple[FortranLogicalLine, ...],
+) -> tuple[ParsedSubroutine, ...]:
+    """Function subprograms, in the same shape as :class:`ParsedSubroutine`.
+
+    A UMAT is free to put part of its constitutive law in a FUNCTION rather than
+    a SUBROUTINE -- the Huang/Kysar crystal-plasticity lineage puts the flow
+    rule and both hardening moduli there -- and a closure walk that only follows
+    CALL statements never sees them. They are returned as ordinary routines so
+    the lifter can treat them uniformly; the header text carries the FUNCTION
+    keyword, so a consumer that needs the distinction still has it.
+    """
+    routines: list[ParsedSubroutine] = []
+    index = 0
+    while index < len(logical_lines):
+        line = logical_lines[index]
+        match = FUNCTION_HEADER_RE.match(line.text)
+        if not match:
+            index += 1
+            continue
+        name = match.group("name")
+        raw_args = match.group("args") or ""
+        args = tuple(arg.strip() for arg in split_top_level(raw_args) if arg.strip())
+        routine_lines = [line]
+        index += 1
+        while index < len(logical_lines):
+            routine_lines.append(logical_lines[index])
+            if re.match(
+                r"^\s*end\s*(function(\s+\w+)?)?\s*$",
+                logical_lines[index].text,
+                flags=re.IGNORECASE,
+            ):
+                break
+            index += 1
+        declarations = tuple(
+            declaration
+            for declaration in (parse_declaration_line(item) for item in routine_lines)
+            if declaration is not None
+        )
+        routines.append(ParsedSubroutine(name, args, tuple(routine_lines), declarations))
+        index += 1
+    return tuple(routines)
+
+
 def parse_declaration_line(line: FortranLogicalLine | str) -> Declaration | None:
     if isinstance(line, FortranLogicalLine):
         text = line.text

@@ -19,12 +19,12 @@ those rows are reported and **not** counted as evidence.
 
 | Model | Branch | Order | Rows | Resolved | Zero (proved) | Zero (sampled only) | Cancellation-limited | Unresolved | Admitted | Max rel. err. (resolved) |
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| controlled_j2_actual_umat | elastic | 2 | 12 | 0 | 12 | 0 | 0 | 0 | 12 | - |
-| controlled_j2_actual_umat | elastic | 3 | 12 | 0 | 12 | 0 | 0 | 0 | 12 | - |
-| controlled_j2_actual_umat | elastic | 4 | 12 | 0 | 12 | 0 | 0 | 0 | 12 | - |
-| controlled_j2_actual_umat | plastic | 2 | 24 | 10 | 14 | 0 | 0 | 0 | 24 | 4.14e-14 |
-| controlled_j2_actual_umat | plastic | 3 | 24 | 10 | 14 | 0 | 0 | 0 | 24 | 3.02e-11 |
-| controlled_j2_actual_umat | plastic | 4 | 24 | 11 | 13 | 0 | 0 | 0 | 24 | 2.62e-11 |
+| controlled_j2_actual_umat | elastic | 2 | 96 | 0 | 96 | 0 | 0 | 0 | 96 | - |
+| controlled_j2_actual_umat | elastic | 3 | 96 | 0 | 96 | 0 | 0 | 0 | 96 | - |
+| controlled_j2_actual_umat | elastic | 4 | 96 | 0 | 96 | 0 | 0 | 0 | 96 | - |
+| controlled_j2_actual_umat | plastic | 2 | 84 | 20 | 64 | 0 | 0 | 0 | 84 | 5.12e-14 |
+| controlled_j2_actual_umat | plastic | 3 | 84 | 20 | 64 | 0 | 0 | 0 | 84 | 2.96e-11 |
+| controlled_j2_actual_umat | plastic | 4 | 84 | 26 | 58 | 0 | 0 | 0 | 84 | 2.56e-11 |
 | code_imp | elastic | 2 | 8 | 0 | 8 | 0 | 0 | 0 | 8 | - |
 | code_imp | elastic | 3 | 8 | 0 | 8 | 0 | 0 | 0 | 8 | - |
 | code_imp | elastic | 4 | 8 | 0 | 8 | 0 | 0 | 0 | 8 | - |
@@ -48,7 +48,7 @@ those rows are reported and **not** counted as evidence.
 
 ### controlled_j2_actual_umat - defensible
 
-- rows: 108; admitted to Table 4: 108; withheld: 0
+- rows: 540; admitted to Table 4: 540; withheld: 0
 - reference: independent tensor-product finite differences of validation.j2_reference.integrate_increment evaluated in mpmath at 80 decimal digits
 - precision: mpmath, 80 decimal digits
 - published step: 2.000e-05; swept over factors [16.0, 8.0, 4.0, 2.0, 1.0, 0.5, 0.25, 0.125, 0.0625]

@@ -53,7 +53,9 @@ from umat_oti.oti.module_generator import generate_otilib_module
 from umat_oti.transform.helper_lifting import (
     HelperLiftingError,
     _routine_callees,
+    function_names,
     lift_helper_set_source,
+    routines_by_name,
 )
 
 
@@ -289,7 +291,8 @@ def _declared_names(source_text: str, declaration_pattern: str) -> set[str]:
 
 
 def _closure_including_umat(parsed: ParsedFortranSource) -> tuple[str, ...]:
-    routines = {r.upper_name: r for r in parsed.subroutines}
+    routines = routines_by_name(parsed)
+    defined_functions = function_names(parsed)
     if "UMAT" not in routines:
         raise RuntimeError(
             "the source does not contain SUBROUTINE UMAT; this transformer "
@@ -308,7 +311,8 @@ def _closure_including_umat(parsed: ParsedFortranSource) -> tuple[str, ...]:
         routine = routines.get(current)
         if routine is None:
             continue
-        for callee in _routine_callees(routine, parsed.form, source_lines):
+        for callee in _routine_callees(routine, parsed.form, source_lines,
+                                       function_names=defined_functions):
             if callee not in seen and callee in routines:
                 pending.append(callee)
     return tuple(ordered)
@@ -639,7 +643,8 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         # any scope that renamed them away to avoid colliding with a UMAT's own
         # variables of the same name.
         "  PRIVATE",
-        "  PUBLIC :: MIN, MAX, SIGN, OPERATOR(+)",
+        "  PUBLIC :: MIN, MAX, SIGN, NINT, INT, ASSIGNMENT(=)",
+        "  PUBLIC :: OPERATOR(+), OPERATOR(-), OPERATOR(*), OPERATOR(/)",
         "  INTERFACE MIN",
         "    MODULE PROCEDURE oti_min_or, oti_min_ro",
         "  END INTERFACE MIN",
@@ -647,14 +652,56 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "    MODULE PROCEDURE oti_max_or, oti_max_ro",
         "  END INTERFACE MAX",
         "  INTERFACE SIGN",
-        "    MODULE PROCEDURE oti_sign_oo, oti_sign_or",
+        "    MODULE PROCEDURE oti_sign_oo, oti_sign_or, oti_sign_ro",
         "  END INTERFACE SIGN",
+        # NINT of a differentiated value. A rounded value is piecewise
+        # constant, so its derivative is zero wherever it is defined and the
+        # integer it returns carries none. Without this a source that reads a
+        # count out of its own state array -- NSLPTL=NINT(STATEV(...)) in a
+        # crystal-plasticity model, which is how many slip systems there are --
+        # fails to compile with "argument of NINT must be REAL".
+        "  INTERFACE NINT",
+        "    MODULE PROCEDURE oti_nint",
+        "  END INTERFACE NINT",
+        "  INTERFACE INT",
+        "    MODULE PROCEDURE oti_int",
+        "  END INTERFACE INT",
         # Unary plus. The generated module defines the binary operators but not
         # this one, so an expression like COFACTOR(2,2) = +(A(1,1)*A(3,3)-...)
         # -- ordinary in cofactor and adjugate code, and legal Fortran -- fails
         # with "Operand of unary numeric operator '+' is UNKNOWN".
         "  INTERFACE OPERATOR(+)",
-        "    MODULE PROCEDURE oti_unary_plus",
+        "    MODULE PROCEDURE oti_unary_plus, oti_add_io, oti_add_oi, oti_add_so, oti_add_os",
+        "  END INTERFACE",
+        # Integer meets differentiated value. Fortran's own mixed-mode rule
+        # converts the integer and evaluates in the real type, and retyping the
+        # real operand to a derived type takes that rule away: SLPNOR(K,N) =
+        # IWKNOR(K,J)/RMONOR -- an integer Miller index over the norm of one --
+        # stops the build with "Unexpected derived-type entities in binary
+        # intrinsic numeric operator". The conversion is what the language would
+        # have done, and an integer carries no derivative, so nothing but the
+        # missing overload is being supplied here. (** already has integer forms
+        # in the generated algebra.)
+        "  INTERFACE OPERATOR(-)",
+        "    MODULE PROCEDURE oti_sub_io, oti_sub_oi, oti_sub_so, oti_sub_os",
+        "  END INTERFACE",
+        "  INTERFACE OPERATOR(*)",
+        "    MODULE PROCEDURE oti_mul_io, oti_mul_oi, oti_mul_so, oti_mul_os",
+        "  END INTERFACE",
+        "  INTERFACE OPERATOR(/)",
+        "    MODULE PROCEDURE oti_div_io, oti_div_oi, oti_div_so, oti_div_os",
+        "  END INTERFACE",
+        # Mixed-kind assignment. The generated algebra assigns from REAL(DP)
+        # only, so a REAL(4)-valued expression -- FLOAT(N), the F77 spelling of
+        # an integer-to-real conversion, and anything built on one -- stops the
+        # build with "Cannot convert REAL(4) to TYPE(...)". Widening the value
+        # is exactly what the source's own REAL*8 assignment did with it, so the
+        # number that reaches the variable is bit-for-bit the one the original
+        # build stores. Rewriting FLOAT to DBLE instead would have computed the
+        # expression in double and changed it: on this corpus that moved the
+        # primal 8.9e-9, nine times the parity gate.
+        "  INTERFACE ASSIGNMENT(=)",
+        "    MODULE PROCEDURE oti_assign_s, oti_assign_i",
         "  END INTERFACE",
         "CONTAINS",
     ]
@@ -678,10 +725,39 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
             f"  END FUNCTION {name}",
         ]
 
+    def mixed_operand(name: str, operator: str, other: str, other_first: bool) -> list[str]:
+        a_type = other if other_first else f"TYPE({type_name})"
+        b_type = f"TYPE({type_name})" if other_first else other
+        a_value = "DBLE(A)" if other_first else "A"
+        b_value = "B" if other_first else "DBLE(B)"
+        return [
+            f"  ELEMENTAL FUNCTION {name}(A, B) RESULT(RES)",
+            "    IMPLICIT NONE",
+            f"    {a_type}, INTENT(IN) :: A",
+            f"    {b_type}, INTENT(IN) :: B",
+            f"    TYPE({type_name}) :: RES",
+            f"    RES = {a_value} {operator} {b_value}",
+            f"  END FUNCTION {name}",
+        ]
+
     lines += selector("oti_min_or", "o", "r", "<")
     lines += selector("oti_min_ro", "r", "o", "<")
     lines += selector("oti_max_or", "o", "r", ">")
     lines += selector("oti_max_ro", "r", "o", ">")
+    for suffix, operator in (("add", "+"), ("sub", "-"), ("mul", "*"), ("div", "/")):
+        lines += mixed_operand(f"oti_{suffix}_io", operator, "INTEGER", True)
+        lines += mixed_operand(f"oti_{suffix}_oi", operator, "INTEGER", False)
+        lines += mixed_operand(f"oti_{suffix}_so", operator, "REAL(KIND=4)", True)
+        lines += mixed_operand(f"oti_{suffix}_os", operator, "REAL(KIND=4)", False)
+    for name, other in (("oti_assign_s", "REAL(KIND=4)"), ("oti_assign_i", "INTEGER")):
+        lines += [
+            f"  ELEMENTAL SUBROUTINE {name}(RES, LHS)",
+            "    IMPLICIT NONE",
+            f"    {other}, INTENT(IN) :: LHS",
+            f"    TYPE({type_name}), INTENT(OUT) :: RES",
+            "    RES = DBLE(LHS)",
+            f"  END SUBROUTINE {name}",
+        ]
     # SIGN(a, b) is |a| with the sign of b; b contributes no derivative because
     # only its sign is used.
     lines += [
@@ -706,6 +782,33 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "      RES = ABS(A)",
         "    END IF",
         "  END FUNCTION oti_sign_or",
+        # SIGN(real, differentiated). The magnitude is a real constant and the
+        # sign is piecewise constant, so the result is a real number with no
+        # derivative to carry -- SIGN(1.D0, FSLIP(J)) is the usual way a flow
+        # rule asks which way a slip system is going.
+        "  FUNCTION oti_sign_ro(A, B) RESULT(RES)",
+        "    IMPLICIT NONE",
+        "    REAL(DP), INTENT(IN) :: A",
+        f"    TYPE({type_name}), INTENT(IN) :: B",
+        "    REAL(DP) :: RES",
+        "    IF (B%R < 0.0_DP) THEN",
+        "      RES = -ABS(A)",
+        "    ELSE",
+        "      RES = ABS(A)",
+        "    END IF",
+        "  END FUNCTION oti_sign_ro",
+        "  FUNCTION oti_nint(A) RESULT(RES)",
+        "    IMPLICIT NONE",
+        f"    TYPE({type_name}), INTENT(IN) :: A",
+        "    INTEGER :: RES",
+        "    RES = NINT(A%R)",
+        "  END FUNCTION oti_nint",
+        "  FUNCTION oti_int(A) RESULT(RES)",
+        "    IMPLICIT NONE",
+        f"    TYPE({type_name}), INTENT(IN) :: A",
+        "    INTEGER :: RES",
+        "    RES = INT(A%R)",
+        "  END FUNCTION oti_int",
         "  FUNCTION oti_unary_plus(A) RESULT(RES)",
         "    IMPLICIT NONE",
         f"    TYPE({type_name}), INTENT(IN) :: A",

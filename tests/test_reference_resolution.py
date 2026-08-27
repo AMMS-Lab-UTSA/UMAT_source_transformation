@@ -38,6 +38,50 @@ def test_default_ladder_spans_truncation_and_cancellation():
     assert len(DEFAULT_LADDER) >= 4
 
 
+def test_ladder_spacing_samples_the_turning_point():
+    """The ladder has to land on the turn, not step over it.
+
+    Every estimate in this module is read off consecutive ladder entries, so
+    the spacing decides whether the turning point is ever evaluated. Between
+    two rungs a ratio ``r`` apart a centred difference changes its truncation
+    by ``r**2`` and its round-off by ``r``; once Richardson has removed the
+    leading term those become ``r**4`` and ``r``. At the decade spacing this
+    module used to ship, ``r**4`` is 1e4 per rung: the minimum of the
+    extrapolated sequence falls between two rungs and is never evaluated, the
+    flattest pair straddles it, and the gap between two straddling entries
+    reports how far apart they are without saying which one is nearer.
+
+    Too fine is its own failure and the bound below is two-sided. As ``r``
+    approaches 1 consecutive answers separate by less than the round-off
+    between them, and the closest pair becomes a coincidence down in the
+    cancellation region rather than a plateau -- exactly what ``resolution``
+    exists to avoid.
+    """
+    ratios = {round(DEFAULT_LADDER[i] / DEFAULT_LADDER[i + 1], 9)
+              for i in range(len(DEFAULT_LADDER) - 1)}
+    assert len(ratios) == 1, (
+        f"richardson() extrapolates only on a constant ratio; got {sorted(ratios)}")
+    ratio = ratios.pop()
+    assert ratio ** 4 <= 100.0 + 1e-6, (
+        f"ratio {ratio:g} moves the extrapolated truncation by {ratio ** 4:g} per "
+        "rung, which steps over the turning point instead of sampling it")
+    assert ratio >= 3.0, (
+        f"ratio {ratio:g} is fine enough that consecutive answers differ by less "
+        "than their own round-off, and the flattest pair becomes a coincidence")
+
+
+def test_ladder_refines_the_decade_rungs_rather_than_moving_them():
+    """Refining the spacing must add evidence, not relocate the measurement.
+
+    Keeping every decade rung means the finer ladder cannot reach a different
+    answer by having looked somewhere else; it can only reach one by having
+    looked in more places.
+    """
+    for decade in (1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7):
+        assert any(abs(step / decade - 1.0) < 1e-9 for step in DEFAULT_LADDER), \
+            f"the decade rung {decade:g} is no longer evaluated"
+
+
 def test_converged_value_beats_the_default_step_on_the_measured_curve():
     """Regression: 71 rows were reported as disagreements that were not.
 
@@ -56,11 +100,19 @@ def test_converged_value_beats_the_default_step_on_the_measured_curve():
 
 
 def test_selection_ignores_an_accidental_coincidence_in_the_noise():
-    """Two steps deep in cancellation can coincide and look perfectly converged."""
+    """Two steps deep in cancellation can coincide and look perfectly converged.
+
+    What must not happen is that the coincident pair down in the noise is
+    mistaken for convergence. The assertion is therefore about which part of
+    the ladder the estimate comes from, not about a particular arithmetic:
+    a plain midpoint and a Richardson extrapolation of the same plateau give
+    slightly different numbers, and both are correct answers to this question.
+    """
     series = (1.0, 0.5, 0.30, 0.3000001, 0.9, 0.9)   # last pair identical by chance
     ladder = _ladder(series)
     value, step, uncertainty = converged_value(ladder, 1, 1)
-    assert value == pytest.approx(0.3, abs=1e-3), value
+    assert 0.28 < value < 0.32, f"the estimate came from the noise, not the plateau: {value}"
+    assert not (0.85 < value < 0.95), "the coincident noise pair was taken as converged"
     assert uncertainty > 0.0, "a zero uncertainty would claim infinite precision"
 
 

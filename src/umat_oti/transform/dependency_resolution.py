@@ -14,6 +14,14 @@ their bodies are compared, and a choice is only made silently when the
 candidates agree. Where they disagree the resolver refuses and says which files
 differ.
 
+**Declared donors.** A source may already have settled the question for
+itself. Fixed-form projects that ship no makefile name the files they compile
+with in a file-scope INCLUDE manifest between program units, and a Fortran
+INCLUDE is resolved next to the file that writes it. When a source names its
+donor, the compiler splices in that file and nothing else on disk can take
+part, so a sweep of sibling directories has no standing against it. Only a
+symbol the source never named can be ambiguous.
+
 **Diagnostics.** A missing symbol is reported with the routine that calls it,
 every root that was searched, and any near-miss candidates, because "undefined
 reference to kmmult_" tells the user nothing they can act on.
@@ -41,6 +49,7 @@ __all__ = [
     "DuplicateDefinition",
     "DependencyGraph",
     "SourceIndex",
+    "declared_donor_files",
     "index_sources",
     "resolve_closure",
     "DependencyResolutionError",
@@ -197,10 +206,11 @@ class DuplicateDefinition:
     bodies_agree: bool
     #: How the ambiguity was settled. "local" means the entry file defines the
     #: routine itself, so whatever other files contain is irrelevant -- the
-    #: compiler would never see them. "identical" means every candidate has the
-    #: same body. "ambiguous" means a real choice had to be made between
-    #: differing bodies, which can change the numbers and is the only case that
-    #: should block.
+    #: compiler would never see them. "declared" means the source names the file
+    #: it takes this routine from, so the others are never compiled either.
+    #: "identical" means every candidate has the same body. "ambiguous" means a
+    #: real choice had to be made between differing bodies, which can change the
+    #: numbers and is the only case that should block.
     resolution: str = "identical"
 
     @property
@@ -220,6 +230,10 @@ class DuplicateDefinition:
                 "local": ("the entry file defines this routine itself, so the "
                           "other definitions are never compiled and cannot "
                           "affect the result"),
+                "declared": ("the source names the file it takes this routine "
+                             "from in its own INCLUDE manifest, so the other "
+                             "definitions are never compiled either; the choice "
+                             "was made upstream, not here"),
                 "identical": ("all definitions are textually identical once "
                               "comments and spacing are removed, so the choice "
                               "cannot change the numbers"),
@@ -241,6 +255,9 @@ class DependencyGraph:
     runtime_calls: tuple[str, ...] = ()
     library_calls: dict[str, str] = field(default_factory=dict)
     includes: tuple[str, ...] = ()
+    #: Files the source names for itself, in the order first named. These are
+    #: the only files besides the entry that the compiler would ever see.
+    declared_donors: tuple[Path, ...] = ()
     searched_roots: tuple[Path, ...] = ()
     excluded_fragments: tuple[str, ...] = ()
 
@@ -285,6 +302,7 @@ class DependencyGraph:
             "external_library_calls": dict(sorted(self.library_calls.items())),
             "required_libraries": sorted(set(self.library_calls.values())),
             "includes": list(self.includes),
+            "declared_donors": [rel(p) for p in self.declared_donors],
         }
 
 
@@ -343,6 +361,76 @@ def _make_definition(name: str, kind: str, path: Path, start: int, end: int,
         fixed_form=fixed)
 
 
+def _include_targets(path: Path) -> list[str]:
+    """Every INCLUDE target a file names, at file scope as well as inside a body.
+
+    ``_referenced_symbols`` only ever reads between a routine's SUBROUTINE line
+    and its END, and that is precisely where a Fortran source says nothing about
+    its own build. A project assembled without a makefile writes its manifest
+    *between* program units instead, so scanning bodies alone discards it.
+
+    Fixed-form comment and continuation lines are skipped for the same reason
+    ``_definitions_in`` skips them: a commented-out include is not a declaration,
+    and column 6 marks a continuation of the previous statement rather than a new
+    one. A cpp ``#include <...>`` is not matched and is not one of these: it is
+    resolved by the preprocessor's search path, not next to this file.
+    """
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    fixed = path.suffix.lower() in {".for", ".f", ".f77"}
+    targets: list[str] = []
+    for raw in text.splitlines():
+        if fixed:
+            if raw[:1] in {"C", "c", "*", "!"}:
+                continue
+            if len(raw) > 5 and raw[5] not in {" ", "0"}:
+                continue
+            raw = raw[:72]
+        match = _INCLUDE_RE.match(raw)
+        if match:
+            targets.append(match.group(1))
+    return targets
+
+
+def declared_donor_files(entry_path: Path) -> tuple[Path, ...]:
+    """The files a source names for itself, resolved next to whichever names them.
+
+    A Fortran INCLUDE is resolved relative to the directory of the file
+    containing it, and the compiler then splices in exactly those files. Nothing
+    else on disk can take part in that build, whatever a directory sweep turns
+    up. So this is the source's own answer to "which definition do I mean", and
+    it is followed transitively because an included file may name further files.
+
+    Returned in the order first named, which keeps the donor choice
+    deterministic. A target that is not on disk is dropped rather than reported:
+    an unresolvable include is a fact for the compiler to state, not a
+    dependency-resolution decision, and reporting it here would turn a build
+    diagnostic into a resolution failure.
+    """
+    entry_path = Path(entry_path)
+    declared: list[Path] = []
+    seen: set[Path] = {entry_path.resolve()}
+    queue: list[Path] = [entry_path]
+    while queue:
+        current = queue.pop(0)
+        for target in _include_targets(current):
+            resolved = current.parent / target
+            try:
+                key = resolved.resolve()
+            except OSError:
+                continue
+            if key in seen:
+                continue
+            seen.add(key)
+            if not resolved.is_file():
+                continue
+            declared.append(resolved)
+            queue.append(resolved)
+    return tuple(declared)
+
+
 def index_sources(roots: Iterable[Path],
                   exclude: Sequence[str] = ()) -> SourceIndex:
     """Index every Fortran routine definition under ``roots``, deterministically.
@@ -358,6 +446,10 @@ def index_sources(roots: Iterable[Path],
     and those are different physics, not duplicates. Excluding them is a
     declaration about which tree is canonical, and it is recorded in the graph
     rather than applied silently.
+
+    It is the blunt instrument, and the second-best one: where the source names
+    its own donors, ``declared_donor_files`` settles the same question from the
+    source itself and no declaration from outside is needed.
     """
     index = SourceIndex()
     root_list: list[Path] = []
@@ -449,7 +541,24 @@ def resolve_closure(entry_path: Path, *, entry: str = "UMAT",
     graph = DependencyGraph(entry=entry.upper(), entry_path=entry_path,
                             searched_roots=tuple(Path(r) for r in search_roots))
     graph.excluded_fragments = tuple(exclude)
+    graph.declared_donors = declared_donor_files(entry_path)
     graph.resolved[entry.upper()] = entry_definitions[0]
+
+    declared_keys = {path.resolve() for path in graph.declared_donors}
+    resolved_paths: dict[Path, Path] = {}
+
+    def is_declared(path: Path) -> bool:
+        """Whether ``path`` is one of the files the source named for itself."""
+        if not declared_keys:
+            return False
+        key = resolved_paths.get(path)
+        if key is None:
+            try:
+                key = path.resolve()
+            except OSError:
+                key = path
+            resolved_paths[path] = key
+        return key in declared_keys
 
     missing: dict[str, set[str]] = {}
     duplicates: dict[str, DuplicateDefinition] = {}
@@ -484,16 +593,25 @@ def resolve_closure(entry_path: Path, *, entry: str = "UMAT",
             if not candidates:
                 missing.setdefault(symbol, set()).add(current)
                 continue
-            # Prefer a definition in the entry file, then the first root that
-            # supplies one; within a file, the first definition. Deterministic.
+            # Prefer a definition in the entry file, then one in a file the
+            # source names for itself, then the first root that supplies one;
+            # within a file, the first definition. Deterministic throughout.
             local = [c for c in candidates if c.path == entry_path]
-            chosen = (local or candidates)[0]
+            named = [c for c in candidates if is_declared(c.path)]
+            chosen = (local or named or candidates)[0]
             if len(candidates) > 1:
                 agree = len({c.body_sha256 for c in candidates}) == 1
                 if local:
                     resolution = "local"
                 elif agree:
                     resolution = "identical"
+                elif named and len({c.body_sha256 for c in named}) == 1:
+                    # The source names one donor for this routine. The others
+                    # are never compiled, so their disagreeing with it is not a
+                    # choice anyone here has to make. Two *named* donors that
+                    # disagree still are: the source contradicted itself and
+                    # falls through to "ambiguous" below.
+                    resolution = "declared"
                 else:
                     resolution = "ambiguous"
                 duplicates[symbol] = DuplicateDefinition(

@@ -19,12 +19,33 @@ from umat_oti.oti.oti_directions import deriv_factor
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 from umat_oti.validation.j2_reference import J2Parameters, J2State, integrate_increment
+from umat_oti.validation.higher_order_convergence import NormalizationScale
 
 
+# Strain-increment path for the illustrative J2 example.
+#
+# The first twelve steps are a uniform uniaxial ramp. With E=200000, nu=0.3 and
+# SIGY0=250 the von Mises stress reaches initial yield at a uniaxial strain of
+# 1.625e-3, so the ramp crosses the yield surface inside step seven and leaves
+# six converged elastic states and six converged plastic states rather than a
+# single point on each branch. Step 13 is a multiaxial plastic probe, step 14
+# unloads elastically from the plastic state, and step 15 reloads multiaxially
+# with shear while staying elastic. That covers loading, the yield transition,
+# hardening, unloading and reversed multiaxial response.
+#
+# Every step is positioned so that the widest reference stencil (+/-4 nodes at
+# the base step of 2e-5) stays on one side of the yield surface; the closest
+# case is step 6, whose 19.2 MPa margin is 1.6x the 12.3 MPa the stencil moves.
+# Steps that do cross anyway are rejected by the branch guard, not averaged
+# across the kink.
+_J2_UNIAXIAL_RAMP = (2.5e-4, 0.0, 0.0, 0.0, 0.0, 0.0)
 J2_INCREMENTS = (
-    (1.0e-4, 0.0, 0.0, 0.0, 0.0, 0.0),
-    (2.0e-3, 0.0, 0.0, 0.0, 0.0, 0.0),
-    (3.0e-4, -1.0e-4, 0.0, 2.0e-4, 0.0, 0.0),
+    (_J2_UNIAXIAL_RAMP,) * 12
+    + (
+        (3.0e-4, -1.0e-4, 0.0, 2.0e-4, 0.0, 0.0),   # multiaxial, plastic
+        (-1.0e-3, 0.0, 0.0, 0.0, 0.0, 0.0),         # elastic unloading
+        (5.0e-4, 0.0, 0.0, -2.0e-4, 0.0, 0.0),      # multiaxial elastic reload
+    )
 )
 SELECTED_DIRECTIONS = (
     (1, 1),
@@ -36,6 +57,25 @@ SELECTED_DIRECTIONS = (
 )
 ABSOLUTE_TOLERANCES = {2: 1.0e-5, 3: 2.0e-2, 4: 1.0e-1}
 RELATIVE_TOLERANCE = 1.0e-7
+
+#: Below this fraction of the largest derivative of the same order at the same
+#: increment, an entry is not a small number -- it is a zero of that derivative
+#: family, and both sides of the comparison are rounding dust. Dividing dust by
+#: dust yields a relative error near one, which says nothing about the
+#: derivative; and the fixed absolute tolerances above cannot separate the two
+#: cases, because they are constants unrelated to the magnitude of what is
+#: being differentiated. On this path they let entries at 2.6e-13 of their
+#: family through while stopping entries at 1.3e-12, which is an accident of
+#: where the constants happen to fall rather than a finding.
+#:
+#: The measured separation is wide enough that the exact value does not matter:
+#: no entry anywhere in the study lies between 2.3e-12 and 1.9e-05 of its
+#: family scale, so every fraction across those seven decades classifies every
+#: row identically. This one sits near the middle of that empty gap, and
+#: ``test_the_structural_zero_gap_is_wide_enough_that_the_fraction_does_not_matter``
+#: fails if the separation ever narrows to where the choice starts to matter.
+#: The same rule, with the same reasoning, adjudicates the tangent below.
+HIGHER_ORDER_ZERO_FRACTION = 1.0e-8
 
 
 def run_actual_j2_higher_order_evidence(config_path: Path, output_dir: Path) -> dict[str, Any]:
@@ -75,7 +115,15 @@ def run_actual_j2_higher_order_evidence(config_path: Path, output_dir: Path) -> 
 
     oti_values = _read_oti_higher_order(higher_output)
     primal_rows = _read_primal(output_dir / "actual_umat_primal.csv")
-    comparisons, branch_history = _compare_with_finite_difference(oti_values)
+    contract = json.loads(Path(config_path).read_text(encoding="utf-8"))
+    validation = contract.get("validation", {})
+    scales = NormalizationScale(
+        stress_scale=float(validation["stress_scale"]),
+        strain_scale=float(validation["strain_scale"]),
+        stress_scale_meaning=validation.get("stress_scale_meaning", ""),
+        strain_scale_meaning=validation.get("strain_scale_meaning", ""),
+    )
+    comparisons, branch_history = _compare_with_finite_difference(oti_values, scales)
     tangent_rows = _compare_tangent(_read_tangent(output_dir / "actual_umat_ddsdde.csv"))
     tangent_path = output_dir / "table2_ddsdde_illustrative.csv"
     _write_comparisons(tangent_path, tangent_rows)
@@ -99,10 +147,17 @@ def run_actual_j2_higher_order_evidence(config_path: Path, output_dir: Path) -> 
     ]
     max_abs = max(row["absolute_error"] for row in comparisons)
     max_rel = max(row["relative_error"] for row in comparisons)
+    # Rows judged as a zero of their derivative family are excluded: their
+    # relative error is dust divided by dust, which is near one however well
+    # the derivative was recovered. Including them made this statistic report
+    # 1.0 while every row in it agreed. Those rows are counted separately, and
+    # a generated value that is not zero at a structural zero is still a
+    # failure -- it is caught by the classification, not hidden by it.
     significant_relative_errors = [
         row["relative_error"]
         for row in comparisons
-        if row["absolute_error"] > row["absolute_tolerance"]
+        if row["judged_by"] == "tolerance"
+        and row["absolute_error"] > row["absolute_tolerance"]
     ]
     failed_rows = sum(1 for row in comparisons if not row["passed"])
     evidence = {
@@ -136,6 +191,11 @@ def run_actual_j2_higher_order_evidence(config_path: Path, output_dir: Path) -> 
             "max_absolute_error": max_abs,
             "max_relative_error": max_rel,
             "max_relative_error_when_absolute_tolerance_exceeded": max(significant_relative_errors, default=0.0),
+            "rows_judged_by_tolerance": sum(
+                1 for row in comparisons if row["judged_by"] == "tolerance"),
+            "rows_that_are_zeros_of_their_family": sum(
+                1 for row in comparisons if row["judged_by"] == "structural_zero"),
+            "structural_zero_fraction": HIGHER_ORDER_ZERO_FRACTION,
             "absolute_tolerances_by_order": ABSOLUTE_TOLERANCES,
             "relative_tolerance": RELATIVE_TOLERANCE,
             "csv": str(comparison_path),
@@ -159,6 +219,7 @@ def run_actual_j2_higher_order_evidence(config_path: Path, output_dir: Path) -> 
 
 def _compare_with_finite_difference(
     oti_values: dict[tuple[int, int, tuple[int, ...], int], float],
+    scales: NormalizationScale,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     params = J2Parameters(E=200000.0, nu=0.3, SIGY0=250.0, H=2000.0)
     state = J2State()
@@ -178,6 +239,7 @@ def _compare_with_finite_difference(
                 "dgamma": baseline.dgamma,
             }
         )
+        measured: list[dict[str, Any]] = []
         for directions in SELECTED_DIRECTIONS:
             reference = _finite_difference_response(
                 reference_stress,
@@ -189,26 +251,79 @@ def _compare_with_finite_difference(
             factor = deriv_factor(directions)
             for component, reference_value in enumerate(reference, start=1):
                 oti_value = oti_values[(increment, len(directions), directions, component)]
-                absolute_error = abs(oti_value - reference_value)
-                relative_error = absolute_error / max(abs(oti_value), abs(reference_value), 1.0e-300)
-                passed = absolute_error <= ABSOLUTE_TOLERANCES[len(directions)] or relative_error <= RELATIVE_TOLERANCE
-                rows.append(
-                    {
-                        "increment": increment,
-                        "branch": "plastic" if baseline.yielded else "elastic",
-                        "stress_component": component,
-                        "order": len(directions),
-                        "directions": "|".join(str(value) for value in directions),
-                        "recovery_factor": factor,
-                        "oti_derivative": oti_value,
-                        "fd_reference": reference_value,
-                        "absolute_error": absolute_error,
-                        "relative_error": relative_error,
-                        "absolute_tolerance": ABSOLUTE_TOLERANCES[len(directions)],
-                        "relative_tolerance": RELATIVE_TOLERANCE,
-                        "passed": passed,
-                    }
-                )
+                measured.append({
+                    "order": len(directions),
+                    "directions": "|".join(str(value) for value in directions),
+                    "recovery_factor": factor,
+                    "stress_component": component,
+                    "oti_derivative": oti_value,
+                    "fd_reference": reference_value,
+                })
+
+        # The scale a structural zero is measured against is the magnitude a
+        # derivative of that order has in this problem -- the contract's own
+        # stress and strain scales, the same pair the convergence study
+        # normalizes by. Using the largest value observed at the increment
+        # instead is degenerate exactly where it matters most: on an elastic
+        # increment the response is linear, every derivative of order two and
+        # above is genuinely zero, and the largest of them is rounding dust,
+        # so each one sits above a floor derived from its neighbours and gets
+        # compared against dust with a relative error of one.
+        family_scale = {order: scales.stress_scale / scales.strain_scale ** order
+                        for order in {entry["order"] for entry in measured}}
+
+        for entry in measured:
+            order = entry["order"]
+            oti_value = entry["oti_derivative"]
+            reference_value = entry["fd_reference"]
+            absolute_error = abs(oti_value - reference_value)
+            relative_error = absolute_error / max(abs(oti_value), abs(reference_value), 1.0e-300)
+            scale = family_scale[order]
+            floor = scale * HIGHER_ORDER_ZERO_FRACTION
+            if max(abs(oti_value), abs(reference_value)) <= floor:
+                # Both sides put this derivative at zero on the scale of the
+                # family it belongs to. The generated value has to be zero
+                # there too; one that is not is a real disagreement and is
+                # reported as one.
+                judged_by = "structural_zero"
+                passed = abs(oti_value) <= floor
+                justification = (
+                    f"both the generated value and the reference lie below "
+                    f"{floor:.3e}, which is {HIGHER_ORDER_ZERO_FRACTION:.0e} "
+                    f"of the magnitude an order-{order} derivative has in "
+                    f"this problem ({scale:.6e}, from the contract's stress "
+                    f"scale {scales.stress_scale:g} and strain scale "
+                    f"{scales.strain_scale:g}), so this is a zero of that "
+                    f"family; the generated value is {abs(oti_value):.3e}")
+            else:
+                judged_by = "tolerance"
+                passed = (absolute_error <= ABSOLUTE_TOLERANCES[order]
+                          or relative_error <= RELATIVE_TOLERANCE)
+                justification = (
+                    f"absolute error {absolute_error:.3e} against a tolerance "
+                    f"of {ABSOLUTE_TOLERANCES[order]:.0e}, relative error "
+                    f"{relative_error:.3e} against {RELATIVE_TOLERANCE:.0e}")
+            rows.append(
+                {
+                    "increment": increment,
+                    "branch": "plastic" if baseline.yielded else "elastic",
+                    "stress_component": entry["stress_component"],
+                    "order": order,
+                    "directions": entry["directions"],
+                    "recovery_factor": entry["recovery_factor"],
+                    "oti_derivative": oti_value,
+                    "fd_reference": reference_value,
+                    "absolute_error": absolute_error,
+                    "relative_error": relative_error,
+                    "absolute_tolerance": ABSOLUTE_TOLERANCES[order],
+                    "relative_tolerance": RELATIVE_TOLERANCE,
+                    "family_scale": scale,
+                    "structural_zero_floor": floor,
+                    "judged_by": judged_by,
+                    "passed": passed,
+                    "justification": justification,
+                }
+            )
         state = J2State(stress=baseline.stress, statev=baseline.statev, stran=baseline.stran)
         reference_stress, reference_eqplas, _, _ = _integrate_increment_mp(
             reference_stress, reference_eqplas, dstran
@@ -527,7 +642,11 @@ def _write_summary_table(path: Path, rows: list[dict[str, Any]]) -> None:
     for branch in ("elastic", "plastic"):
         for order in (2, 3, 4):
             selected = [row for row in rows if row["branch"] == branch and row["order"] == order]
-            significant = [row["relative_error"] for row in selected if row["absolute_error"] > row["absolute_tolerance"]]
+            significant = [row["relative_error"] for row in selected
+                           if row["judged_by"] == "tolerance"
+                           and row["absolute_error"] > row["absolute_tolerance"]]
+            structural = [row for row in selected
+                          if row["judged_by"] == "structural_zero"]
             summary.append(
                 {
                     "model": "controlled_j2_actual_umat",
@@ -538,6 +657,9 @@ def _write_summary_table(path: Path, rows: list[dict[str, Any]]) -> None:
                     "failed_rows": sum(1 for row in selected if not row["passed"]),
                     "max_absolute_error": max((row["absolute_error"] for row in selected), default=0.0),
                     "max_relative_error_when_absolute_tolerance_exceeded": max(significant, default=0.0),
+                    "rows_judged_by_tolerance": len(selected) - len(structural),
+                    "rows_that_are_zeros_of_their_family": len(structural),
+                    "structural_zero_fraction": HIGHER_ORDER_ZERO_FRACTION,
                     "absolute_tolerance": ABSOLUTE_TOLERANCES[order],
                     "relative_tolerance": RELATIVE_TOLERANCE,
                     "reference_method": "independent_high_precision_centered_finite_difference",
@@ -559,7 +681,7 @@ def _driver_source() -> str:
     )
     return f'''PROGRAM actual_umat_higher_order_driver
   IMPLICIT NONE
-  INTEGER, PARAMETER :: NTENS=6, NSTATV=1, NPROPS=4, NINC=3
+  INTEGER, PARAMETER :: NTENS=6, NSTATV=1, NPROPS=4, NINC={len(J2_INCREMENTS)}
   REAL(8) :: STRESS(NTENS), STATEV(NSTATV), DDSDDE(NTENS,NTENS)
   REAL(8) :: SSE, SPD, SCD, RPL, DDSDDT(NTENS), DRPLDE(NTENS), DRPLDT
   REAL(8) :: STRAN(NTENS), DSTRAN(NTENS), TIME(2), DTIME, TEMP, DTEMP
