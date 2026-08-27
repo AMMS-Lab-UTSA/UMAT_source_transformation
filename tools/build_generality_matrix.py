@@ -91,6 +91,25 @@ def build_rows() -> list[dict]:
                 "statev": row.get("statev_status"),
             }
 
+    # The locally executed paired round, for sources the archived cluster round
+    # never covered. Only rows the round actually passed are joined: a run it
+    # declined to adjudicate, or one that failed, leaves the source where it
+    # was rather than overwriting a blocked entry with a softer word. An
+    # archived result is never overwritten -- it was a different machine and a
+    # different Abaqus, and having both is worth more than having the newer.
+    local_round = _load(RESULTS / "abaqus_paired" / "abaqus_paired_round.json")
+    for row in local_round.get("rows", []) if local_round else []:
+        name = row.get("model")
+        if not name or name in paired or row.get("status") != "passed":
+            continue
+        paired[name] = {
+            "status": "passed",
+            "slurm_job_id": "local",
+            "stress": "passed" if row.get("stress_pass") else "",
+            "ddsdde": "passed" if row.get("ddsdde_pass") else "",
+            "statev": "passed" if row.get("statev_pass") else "",
+        }
+
     higher_order = {}
     for directory in sorted((RESULTS / "higher_order_convergence").glob("*/")):
         evidence = directory / "convergence_evidence.json"
@@ -113,7 +132,8 @@ def build_rows() -> list[dict]:
             license="this repository's licence (GPL-3.0)",
             source=source, contract=contract, v2=v2,
             classification=classification.get(model, {}),
-            stages=stages, record=record, jrecord=jrecord, higher_order=None))
+            stages=stages, record=record, jrecord=jrecord, higher_order=None,
+            paired=paired.get(model)))
 
     for entry_id, entry in sorted(archive.items()):
         source = REPO_ROOT / entry["path"]
@@ -198,7 +218,12 @@ def build_rows() -> list[dict]:
             "higher_order_verified": UNAVAILABLE,
             "internal_jacobian": _internal_jacobian_status(
                 jac_by_id.get(candidate["id"], {})),
-            "abaqus": BLOCKED,
+            "abaqus": (
+                (f"{_corpus_paired['status']} (local paired round)"
+                 if _corpus_paired.get("slurm_job_id") == "local"
+                 else f"{_corpus_paired['status']} "
+                      f"(slurm {_corpus_paired['slurm_job_id']})")
+                if (_corpus_paired := paired.get(candidate["id"])) else BLOCKED),
             "failure_category_and_blocker": (candidate.get("blocker")
                                              or candidate.get("material_blocker")
                                              or "none"),
@@ -332,8 +357,11 @@ def _row(*, identity, origin, provenance, license, source, contract, v2,
             "verified" if (higher_order or {}).get("summary", {}).get("verified")
             else ("not_verified" if higher_order else UNAVAILABLE)),
         "internal_jacobian": internal,
-        "abaqus": (f"{paired['status']} (slurm {paired['slurm_job_id']})"
-                   if paired else BLOCKED),
+        "abaqus": (
+            (f"{paired['status']} (local paired round)"
+             if paired.get("slurm_job_id") == "local"
+             else f"{paired['status']} (slurm {paired['slurm_job_id']})")
+            if paired else BLOCKED),
         "failure_category_and_blocker": blocker or "none",
     }
 

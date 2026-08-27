@@ -1044,6 +1044,62 @@ def _expand_fixed_form_tabs(raw: str) -> str:
     return "      " + raw[1:]
 
 
+#: The widest source line the emitted free-form Fortran may contain.
+#: gfortran is given ``-ffree-line-length-none`` and does not care, but Abaqus
+#: compiles user subroutines with ifort, which truncates at 7200 characters and
+#: then fails on the wreckage. A source whose fixed-form continuations are
+#: stitched into one free-form statement can exceed that easily: a symbolic
+#: 6x6 determinant came out as a single line of 14858 characters. 120 is well
+#: inside every limit and keeps the output readable.
+FREE_FORM_LINE_WIDTH = 120
+
+
+def wrap_free_form(source: str, width: int = FREE_FORM_LINE_WIDTH) -> str:
+    """Re-wrap over-long free-form statements onto continuation lines.
+
+    Splits only outside character literals, and only after a character that
+    can legally end a fragment, so a name, a number or a string is never cut
+    in half. A line that cannot be split safely is left as it is: emitting it
+    whole and letting the compiler complain is better than emitting something
+    subtly different.
+    """
+    out: list[str] = []
+    for line in source.splitlines():
+        if len(line) <= width or line.lstrip().startswith("!"):
+            out.append(line)
+            continue
+        out.extend(_split_statement(line, width))
+    return "\n".join(out) + ("\n" if source.endswith("\n") else "")
+
+
+def _split_statement(line: str, width: int) -> list[str]:
+    indent = line[: len(line) - len(line.lstrip())]
+    body = line[len(indent):]
+    continuation_indent = indent + "  "
+    pieces: list[str] = []
+    current = indent
+    quote: str | None = None
+    last_break = -1          # index in `current` just past the last safe split
+    for index, char in enumerate(body):
+        if quote:
+            if char == quote:
+                quote = None
+        elif char in "'\"":
+            quote = char
+        current += char
+        # Safe to break after an operator or separator at depth-agnostic level;
+        # breaking after ")" or a name would risk splitting a keyword pair.
+        if quote is None and char in "+-*/,=)":
+            last_break = len(current)
+        if len(current) >= width and last_break > len(indent) + 1:
+            pieces.append(current[:last_break].rstrip() + " &")
+            current = continuation_indent + current[last_break:].lstrip()
+            last_break = -1
+    if current.strip():
+        pieces.append(current)
+    return pieces or [line]
+
+
 def _continuation_stitch(lines: list[str], form: str) -> list[str]:
     if form != "fixed":
         return [line for line in lines if _statement_text(line, form)]
