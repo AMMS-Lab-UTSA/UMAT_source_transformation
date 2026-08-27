@@ -82,8 +82,20 @@ def test_intrinsic_module_supplies_unary_plus():
     The generated module defines the binary operators and unary minus, but not
     unary plus, so an ordinary cofactor expression failed to compile.
     """
+    # Unary plus now comes from the generated algebra, beside the unary minus
+    # it was always missing next to, so that it exists on every path rather
+    # than only where this extension module is emitted. Defining it in both
+    # places made the generic ambiguous and nothing compiled.
+    from umat_oti.oti.module_generator import _extra_overloads  # noqa: PLC0415
+
+    interface_block, body = _extra_overloads(2, 1)
+    assert "ONUMM2N1_UNARY_PLUS" in interface_block
+    assert "OPERATOR(+)" in interface_block
+    assert "RES = A" in body
+
     text = _emit_intrinsic_extensions("otim2n1", "ONUMM2N1")
-    assert "oti_unary_plus" in text
+    assert "oti_unary_plus" not in text, (
+        "two definitions of unary plus make the generic ambiguous")
     assert "OPERATOR(+)" in text
 
     # The export list stays restricted. An earlier version re-exported the

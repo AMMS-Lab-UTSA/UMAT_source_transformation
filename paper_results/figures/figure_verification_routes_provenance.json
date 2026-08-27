@@ -1,14 +1,14 @@
 {
   "answers": "Which verification route reached each collection source, and how much do the two routes overlap?",
   "command": "python tools/figures/build_collection_figures.py",
-  "commit": "48f12c6d4945169551cabd2858f839df38d37aa3",
+  "commit": "0f9381f69c17f5f327867eacb12758b2122780e9",
   "figure": "figure_verification_routes",
-  "generated_at": "2026-08-27T18:53:40.513684+00:00",
+  "generated_at": "2026-08-27T19:57:12.021149+00:00",
   "inputs": [
     {
-      "bytes": 33278,
+      "bytes": 33275,
       "path": "paper_results/generality/generality_matrix.csv",
-      "sha256": "5895d52d4a5ea8c2d35079d5559a554230ee2d8b2a12f72bc76b6426f5a8b885"
+      "sha256": "fefc53cc3706ef846bd7946547808f8f46ca3ffdbaaaae4970519852f140b9d3"
     }
   ],
   "layout": {
@@ -38,9 +38,9 @@
     ],
     "height_inches": 3.1,
     "pdf": "paper_results/figures/figure_verification_routes.pdf",
-    "pdf_sha256": "6bd4c896a8c7ff06d3e1d09f6cdd05b90216eb96febf095ae59502ef37c08688",
+    "pdf_sha256": "1597643a0159497d65960755746b6cf651b0d1c4c48c5b1420873484e57a1c03",
     "png": "paper_results/figures/figure_verification_routes.png",
-    "png_sha256": "12ab0e40c539b42e0bdd5abdccc56c5a6c5bd41cb6956a13a46217b7dc379a65",
+    "png_sha256": "6f201f359b1a9d1a1875f687b4a945fb0bde06d1bfb6ebca51325995419debc5",
     "smallest_configured_pt": 12.0,
     "smallest_printed_pt": 12.0,
     "width_inches": 6.2
@@ -56,10 +56,10 @@
   },
   "row_counts": {
     "Abaqus route only": 12,
-    "both routes": 22,
+    "both routes": 23,
     "eligible": 41,
     "neither route": 2,
-    "offline route only": 5,
+    "offline route only": 4,
     "unverified_with_reasons": [
       "contract_constructed: the declared dimensions are too small for what this source addresses: it needs NTENS >= 0 and, at ",
       "abaqus: the paired round recorded failed_execution for this source (slurm 791506), and it has not been run through the o"

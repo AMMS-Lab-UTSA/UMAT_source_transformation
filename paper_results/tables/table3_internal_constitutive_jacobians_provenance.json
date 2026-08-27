@@ -2,7 +2,7 @@
   "caption": "Internal constitutive Jacobians extracted from the local Newton solve and checked against centred differences of the independently compiled untransformed build. The source's own hand-coded Jacobian is audited against the same reference and is never used as the reference.",
   "column_count": 7,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "48f12c6d4945169551cabd2858f839df38d37aa3",
+  "commit": "0f9381f69c17f5f327867eacb12758b2122780e9",
   "environment": {
     "abaqus": "Abaqus JOB abaqus",
     "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
@@ -12,7 +12,7 @@
   "filters": {
     "deduplication": "one row per canonical source identity"
   },
-  "generated_at": "2026-08-27T18:45:26.175306+00:00",
+  "generated_at": "2026-08-27T19:57:12.898699+00:00",
   "inputs": [
     {
       "bytes": 2853,

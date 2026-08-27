@@ -126,7 +126,12 @@ def _build_contract(name: str, seed: str, output: str, target: str, ntens: int, 
     from umat_oti.core.roles import suggest_variable_roles, role_summary
     analysis = _analyze(src_path)
     finite = _is_finite(analysis) if seed == "auto" else (seed == "DFGRD1")
-    summ = role_summary(suggest_variable_roles(analysis))
+    # The source text goes in so the classifier can apply Fortran's implicit
+    # typing rule: an undeclared name in the integer range carries no
+    # derivative, and promoting one turns index and parity arithmetic into
+    # unsupported operations on a derived type.
+    summ = role_summary(suggest_variable_roles(
+        analysis, src_path.read_text(errors="replace")))
     promote = list(dict.fromkeys(summ["promoted_variables"] + [output] + (["DFGRD1"] if finite else [])))
     cfg = {
         "case_name": name,

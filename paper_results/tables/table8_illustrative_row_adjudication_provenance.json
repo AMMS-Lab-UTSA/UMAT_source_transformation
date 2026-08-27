@@ -2,7 +2,7 @@
   "caption": "How every compared row of the illustrative example was adjudicated. The counts are identical at every increment within a branch, so the table carries the same information the per-increment breakdown did. An exact zero is a row where both the generated value and the reference are exactly zero; a row within the reference's resolution is one the reference cannot separate from the value.",
   "column_count": 8,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "48f12c6d4945169551cabd2858f839df38d37aa3",
+  "commit": "0f9381f69c17f5f327867eacb12758b2122780e9",
   "environment": {
     "abaqus": "Abaqus JOB abaqus",
     "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
@@ -12,7 +12,7 @@
   "filters": {
     "model": "m3_j2, the illustrative example"
   },
-  "generated_at": "2026-08-27T18:45:28.112529+00:00",
+  "generated_at": "2026-08-27T19:57:14.800437+00:00",
   "inputs": [
     {
       "bytes": 1848832,

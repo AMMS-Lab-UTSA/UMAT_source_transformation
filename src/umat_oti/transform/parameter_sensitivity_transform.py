@@ -671,7 +671,12 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         # -- ordinary in cofactor and adjugate code, and legal Fortran -- fails
         # with "Operand of unary numeric operator '+' is UNKNOWN".
         "  INTERFACE OPERATOR(+)",
-        "    MODULE PROCEDURE oti_unary_plus, oti_add_io, oti_add_oi, oti_add_so, oti_add_os",
+        # Unary plus is not here. It belongs beside the unary minus, in the
+        # generated algebra that defines the type, so that it is available on
+        # every path rather than only where this extension module is emitted --
+        # the corpus and Abaqus paths never emit it. Defining it in both places
+        # makes the generic ambiguous and nothing compiles.
+        "    MODULE PROCEDURE oti_add_io, oti_add_oi, oti_add_so, oti_add_os",
         "  END INTERFACE",
         # Integer meets differentiated value. Fortran's own mixed-mode rule
         # converts the integer and evaluates in the real type, and retyping the
@@ -809,12 +814,6 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "    INTEGER :: RES",
         "    RES = INT(A%R)",
         "  END FUNCTION oti_int",
-        "  FUNCTION oti_unary_plus(A) RESULT(RES)",
-        "    IMPLICIT NONE",
-        f"    TYPE({type_name}), INTENT(IN) :: A",
-        f"    TYPE({type_name}) :: RES",
-        "    RES = A",
-        "  END FUNCTION oti_unary_plus",
         "END MODULE oti_intrinsics",
         "",
     ]

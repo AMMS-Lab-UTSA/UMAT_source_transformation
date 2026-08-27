@@ -1,8 +1,8 @@
 {
   "by_abaqus": {
-    "blocked_by_external_dependency": 7,
+    "blocked_by_external_dependency": 6,
     "failed_execution (slurm 791506)": 1,
-    "passed (local paired round)": 19,
+    "passed (local paired round)": 20,
     "passed (slurm 791506)": 16
   },
   "by_constitutive_class": {
@@ -59,7 +59,7 @@
     "fixed": 43
   },
   "counting_policy": "One row per implementation. Rows are merged on canonical source identity -- normalised content for a single file, resolved routine closure for a multi-file source -- so a UMAT reachable from both the in-repository archive and the pinned upstream snapshot is one source with several origins and several validation events, not several sources.",
-  "generated_at": "2026-08-27T18:43:04.740536+00:00",
+  "generated_at": "2026-08-27T19:57:01.458252+00:00",
   "identity_registry_counts": {
     "content_deduplicated_sources": 46,
     "independent_upstream_repositories": 3,
