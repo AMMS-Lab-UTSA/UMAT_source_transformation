@@ -1,0 +1,77 @@
+{
+  "answers": "What is actually blocking each eligible source that no route has verified?",
+  "command": "python tools/figures/build_acquisition_figures.py",
+  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "figure": "figure_remaining_blockers",
+  "generated_at": "2026-08-27T17:06:04.229632+00:00",
+  "inputs": [
+    {
+      "bytes": 32969,
+      "path": "paper_results/generality/generality_matrix.csv",
+      "sha256": "2f88ea8c845fc0a19332ca7a68476f7b3a569207762e0dc74b279d9dfc0ea67e"
+    }
+  ],
+  "layout": {
+    "configured_font_sizes": {
+      "axes.labelsize": 13.0,
+      "axes.titlesize": 15.0,
+      "figure.titlesize": 16.0,
+      "font.size": 13.0,
+      "legend.fontsize": 12.0,
+      "xtick.labelsize": 12.0,
+      "ytick.labelsize": 12.0
+    },
+    "figure_width_in": 6.2,
+    "minimum_rendered_pt": 9.0
+  },
+  "notes": "",
+  "outputs": {
+    "axes": [
+      {
+        "axes": 0,
+        "title": "",
+        "xlabel": "eligible sources, of 41\nnot verified by either route",
+        "xscale": "linear",
+        "ylabel": "",
+        "yscale": "linear"
+      }
+    ],
+    "height_inches": 2.6,
+    "pdf": "paper_results/figures/figure_remaining_blockers.pdf",
+    "pdf_sha256": "eb8bafb2a0950d8689beb817ae63849b48d268718506b2e7c748159ec991caab",
+    "png": "paper_results/figures/figure_remaining_blockers.png",
+    "png_sha256": "22f86e4ad0da009f7567422dcd8d594afc5adc12def61d286e58f809a3b13749",
+    "smallest_configured_pt": 12.0,
+    "smallest_printed_pt": 12.0,
+    "width_inches": 6.2
+  },
+  "plotted_filters": {
+    "causes": [
+      "Ambiguous helper dependency",
+      "No upstream material properties",
+      "No loading history",
+      "No established contract",
+      "Unsupported Fortran construct",
+      "Reference could not be resolved",
+      "Abaqus failed or unavailable"
+    ],
+    "classification": "regular expressions over the recorded blocker text; anything unmatched is reported as unclassified rather than folded into a neighbouring cause",
+    "denominator": "41 eligible collection sources",
+    "excluded": [
+      "j2",
+      "m3_j2"
+    ]
+  },
+  "row_counts": {
+    "Abaqus failed or unavailable": [
+      "UMAT_VPDCL_R"
+    ],
+    "No established contract": [
+      "ngrilli_umat"
+    ],
+    "Reference could not be resolved": [
+      "m6_fcc"
+    ],
+    "unverified_total": 3
+  }
+}

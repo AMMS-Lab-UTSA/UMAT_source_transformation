@@ -54,6 +54,16 @@
       "Blocker": "none"
     },
     {
+      "Source": "jgomezc1_UMAT_VPDCL",
+      "Repository": "jgomezc1_ABAQUS-US",
+      "Commit": "54181407aa7a",
+      "Licence": "MIT",
+      "Multi-file": "no",
+      "Furthest stage": "derivatives_verified",
+      "Worst rel error": "4.156e-07",
+      "Blocker": "none"
+    },
+    {
       "Source": "jgomezc1_UMAT_VPDCO",
       "Repository": "jgomezc1_ABAQUS-US",
       "Commit": "54181407aa7a",
@@ -61,6 +71,16 @@
       "Multi-file": "yes",
       "Furthest stage": "derivatives_verified",
       "Worst rel error": "9.882e-07",
+      "Blocker": "none"
+    },
+    {
+      "Source": "lucarini_crystalplasticity",
+      "Repository": "sergiolucarini_UMAT4COMSOL",
+      "Commit": "e62506fd8426",
+      "Licence": "MIT",
+      "Multi-file": "no",
+      "Furthest stage": "derivatives_verified",
+      "Worst rel error": "7.107e-07",
       "Blocker": "none"
     },
     {
@@ -89,29 +109,9 @@
       "Commit": "54181407aa7a",
       "Licence": "MIT",
       "Multi-file": "no",
-      "Furthest stage": "dependencies_resolved",
+      "Furthest stage": "generated_compiled",
       "Worst rel error": "not measured",
-      "Blocker": "contract_constructed: no material property vector or loading history is available for this"
-    },
-    {
-      "Source": "jgomezc1_UMAT_VPDCL",
-      "Repository": "jgomezc1_ABAQUS-US",
-      "Commit": "54181407aa7a",
-      "Licence": "MIT",
-      "Multi-file": "no",
-      "Furthest stage": "dependencies_resolved",
-      "Worst rel error": "not measured",
-      "Blocker": "contract_constructed: no material property vector or loading history is available for this"
-    },
-    {
-      "Source": "lucarini_crystalplasticity",
-      "Repository": "sergiolucarini_UMAT4COMSOL",
-      "Commit": "e62506fd8426",
-      "Licence": "MIT",
-      "Multi-file": "no",
-      "Furthest stage": "dependencies_resolved",
-      "Worst rel error": "not measured",
-      "Blocker": "contract_constructed: no material property vector or loading history is available for this"
+      "Blocker": "original_executed: the original build, as compiled here, is not reproducible: two replays "
     },
     {
       "Source": "ngrilli_umat",
@@ -119,9 +119,9 @@
       "Commit": "85102ed35dc4",
       "Licence": "MIT",
       "Multi-file": "yes",
-      "Furthest stage": "entry_detected",
+      "Furthest stage": "dependencies_resolved",
       "Worst rel error": "not measured",
-      "Blocker": "dependencies_resolved: these helpers have differing definitions in different files and non"
+      "Blocker": "contract_constructed: the declared dimensions are too small for what this source addresses"
     }
   ]
 }

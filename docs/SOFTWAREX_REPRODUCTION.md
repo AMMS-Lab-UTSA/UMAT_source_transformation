@@ -133,7 +133,9 @@ with the virtual environment active.
 | Table 6 — 20-model sweep | `python tools/run_parameter_sensitivity_sweep.py` | `paper_results/parameter_sensitivity/table6_parameter_sensitivity.csv` | A |
 | Illustrative tangent | `python tools/run_tangent_round.py --work-dir reproduce/tangent --results-dir paper_results/actual_umat_higher_order/j2` | `paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv` | A |
 | Source identity registry | `python tools/build_source_identity_registry.py` | `paper_results/generality/source_identity.csv` | A |
-| Data figures | `python tools/figures/build_tangent_figure.py` (and `..._higher_order_...`, `..._sensitivity_...`, `..._collection_...`) | `paper_results/figures/` | A |
+| Data figures | `python tools/figures/build_tangent_figure.py`, `python tools/figures/build_higher_order_figure.py`, `python tools/figures/build_sensitivity_figure.py`, `python tools/figures/build_collection_figures.py`, `python tools/figures/build_acquisition_figures.py` | `paper_results/figures/` | A |
+| Table previews | `python tools/tables/render_table_previews.py` | `paper_results/tables/previews/` | A |
+| Contact sheets | `python tools/figures/build_contact_sheets.py --out-dir paper_results/figures/contact_sheets` | `paper_results/figures/contact_sheets/` | A |
 | Interface figures | `python tools/figures/capture_gui_screenshots.py` | `paper_results/figures/` | A |
 | Tables 1-8 | `python tools/tables/build_paper_tables.py` | `paper_results/tables/paper_tables.docx` | A |
 | The manuscript | `python tools/manuscript/build_v5_manuscript.py` | `docs/manuscript/UMAT_OTI_SoftwareX_V5.docx` | A |

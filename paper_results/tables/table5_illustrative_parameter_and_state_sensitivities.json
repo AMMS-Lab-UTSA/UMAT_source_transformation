@@ -15,12 +15,12 @@
   "rows": [
     {
       "Family": "DDSDDE",
-      "Entries": 108,
-      "Measured": 42,
-      "Exact zero": 66,
+      "Entries": 540,
+      "Measured": 186,
+      "Exact zero": 354,
       "Within reference": 0,
       "Disagreeing": 0,
-      "Worst measured rel error": "2.518e-15",
+      "Worst measured rel error": "2.188e-15",
       "Reference": "closed form and 80-digit difference"
     },
     {

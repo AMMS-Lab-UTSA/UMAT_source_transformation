@@ -25,10 +25,55 @@ from typing import Optional, Sequence
 from umat_oti.validation.parameter_sensitivity_validation import centered_fd
 
 __all__ = ["ResolutionLadder", "measure_reference_resolution",
-           "select_reference_step", "DEFAULT_LADDER"]
+           "select_reference_step", "converged_value", "richardson",
+           "DEFAULT_LADDER"]
 
-#: Relative step sizes spanning truncation-dominated to cancellation-dominated.
-DEFAULT_LADDER = (1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7)
+#: Relative step sizes spanning truncation-dominated to cancellation-dominated,
+#: spaced a half-decade apart.
+#:
+#: The span is what it always was; only the spacing is finer, so every step the
+#: decade-spaced ladder used is still evaluated and rungs are added between
+#: them. The spacing is not cosmetic. Everything below reads the turning point
+#: off consecutive entries, which requires the ladder to *sample* that point
+#: rather than step over it. Between two rungs a ratio ``r`` apart, a centred
+#: difference changes its truncation by ``r^2`` and its round-off by ``r``;
+#: after Richardson has removed the leading term those become ``r^4`` and
+#: ``r``. At ``r=10`` that is a factor of 1e4 per rung, so the minimum of the
+#: extrapolated sequence falls between two rungs and is never evaluated: the
+#: flattest pair straddles it, and the gap between two straddling entries says
+#: how far apart they are without saying which one is nearer. Halving the
+#: spacing puts ``r^4`` at 1e2 and lands rungs inside the turn.
+#:
+#: Finer is not uniformly better and the ladder is not spaced as finely as
+#: possible. As ``r`` approaches 1 consecutive answers differ by less than the
+#: round-off between them, and the closest pair is then a coincidence deep in
+#: the cancellation region rather than a plateau -- the failure mode
+#: ``resolution`` is written to avoid. A half decade is the coarsest spacing
+#: that resolves the turn.
+#: Measured, so that this constant is not taken on the argument alone. Running
+#: the four m6_fcc DSIGMA_DP entries that sit nearest the reference's limit
+#: across seven spacings over the same span gives, as relative difference from
+#: the generated value (* = inside the unchanged 1e-6 tolerance):
+#:
+#:     ratio   rungs   C12 i4c1    C11 i4c2    g0 i4c1     gsat i5c1
+#:     10.00     6     4.33e-06    4.24e-07*   1.82e-07*   3.19e-03
+#:      5.00     8     5.84e-08*   7.14e-08*   8.85e-07*   6.48e-04
+#:      3.162    11    8.09e-08*   1.06e-07*   1.84e-08*   9.66e-04   <- this one
+#:      3.00     11    3.01e-08*   2.05e-07*   2.10e-07*   3.30e-03
+#:      2.154    16    4.71e-08*   2.04e-08*   2.00e-08*   1.55e-03
+#:      1.778    21    1.01e-07*   1.47e-07*   4.99e-08*   1.29e-03
+#:      2.00     17    3.80e-05    3.56e-07*   2.75e-07*   1.14e-04
+#:
+#: Every spacing between about 1.8 and 5 resolves the same three entries, so
+#: the value below is not carrying the result -- a band is. Only the decade
+#: spacing steps over the turn, and ratio 2 fails it in the other direction:
+#: past a point, consecutive answers differ by less than the round-off between
+#: them and the closest pair becomes a coincidence in the cancellation region,
+#: which is the failure this module exists to avoid. And no spacing resolves
+#: gsat, which is the separate finding that the reference, not the transform,
+#: is that row's limit.
+DEFAULT_LADDER = (1e-2, 10**-2.5, 1e-3, 10**-3.5, 1e-4, 10**-4.5,
+                  1e-5, 10**-5.5, 1e-6, 10**-6.5, 1e-7)
 
 
 @dataclass
@@ -231,4 +276,67 @@ def converged_value(ladder: ResolutionLadder, increment: int,
     chunk = series[bounds[0]:bounds[1]]
     spread = max(chunk) - min(chunk)
     middle = bounds[0] + len(chunk) // 2
-    return series[middle], ladder.steps[middle], spread
+    plain = (series[middle], ladder.steps[middle], spread)
+
+    extrapolated = richardson(ladder, increment, component)
+    if extrapolated is None:
+        return plain
+    # Richardson is accepted only when it actually pins the value down better.
+    # Cancelling the leading truncation term amplifies round-off, so on a
+    # ladder that has already reached the cancellation region it can be worse
+    # than the plain estimate; taking it unconditionally would trade a real
+    # improvement for a silent one.
+    return extrapolated if extrapolated[2] < spread else plain
+
+
+def richardson(ladder: ResolutionLadder, increment: int,
+               component: int) -> Optional[tuple[float, float, float]]:
+    """Richardson extrapolation of the centred differences on this ladder.
+
+    A centred difference carries a truncation error in ``h^2``. Two evaluations
+    a factor ``r`` apart therefore determine that term, and removing it leaves
+    an estimate accurate to ``h^4``:
+
+        D = (r^2 * D(h/r) - D(h)) / (r^2 - 1)
+
+    That matters where the reference is the limit. Five m6_fcc entries had the
+    generated value and the reference agreeing to about 3e-6 relative while the
+    reference's own residual was the same size as the gap, so it could neither
+    confirm nor deny them. Reducing the reference's residual is the only honest
+    way to settle such a row: widening the tolerance would settle it by
+    assumption instead.
+
+    Returns ``None`` when the ladder is too short, when its steps are not in a
+    constant ratio, or when the extrapolation cannot be checked against a
+    third point.
+    """
+    series = ladder.values.get((increment, component))
+    steps = ladder.steps
+    if not series or len(series) < 3 or len(steps) != len(series):
+        return None
+
+    estimates: list[tuple[float, float]] = []
+    for index in range(len(steps) - 1):
+        coarse, fine = steps[index], steps[index + 1]
+        if fine <= 0 or coarse <= 0 or fine >= coarse:
+            return None
+        ratio = coarse / fine
+        denominator = ratio * ratio - 1.0
+        if denominator <= 0:
+            return None
+        value = (ratio * ratio * series[index + 1] - series[index]) / denominator
+        estimates.append((value, fine))
+    if len(estimates) < 2:
+        return None
+
+    # The residual is how far the extrapolated estimates still move between
+    # consecutive pairs: the same self-consistency measure the plain ladder
+    # uses, so the two are comparable.
+    values = [value for value, _ in estimates]
+    best, width = 0, None
+    for start in range(len(values) - 1):
+        chunk = values[start:start + 2]
+        spread = max(chunk) - min(chunk)
+        if width is None or spread < width:
+            best, width = start, spread
+    return estimates[best][0], estimates[best][1], width

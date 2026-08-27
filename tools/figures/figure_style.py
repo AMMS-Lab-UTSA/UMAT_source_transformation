@@ -27,7 +27,8 @@ from typing import Any, Sequence
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
+import matplotlib.text as mtext  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT / "src") not in sys.path:
@@ -50,12 +51,12 @@ LINESTYLES = ("-", "--", "-.", ":", (0, (3, 1, 1, 1)), (0, (5, 2)))
 #: floor rather than trusting that somebody checked.
 FONT_SIZES: dict[str, float] = {
     "font.size": BODY_TEXT_PT,
-    "axes.titlesize": BODY_TEXT_PT + 1.0,
+    "axes.titlesize": BODY_TEXT_PT + 2.0,
     "axes.labelsize": BODY_TEXT_PT,
-    "xtick.labelsize": CAPTION_PT + 0.5,
-    "ytick.labelsize": CAPTION_PT + 0.5,
-    "legend.fontsize": CAPTION_PT + 0.5,
-    "figure.titlesize": BODY_TEXT_PT + 2.0,
+    "xtick.labelsize": CAPTION_PT,
+    "ytick.labelsize": CAPTION_PT,
+    "legend.fontsize": CAPTION_PT,
+    "figure.titlesize": BODY_TEXT_PT + 3.0,
 }
 
 #: The smallest size any annotation added by a figure script may use. Below
@@ -75,8 +76,10 @@ def use_publication_style() -> None:
         "axes.spines.top": False,
         "axes.spines.right": False,
         "axes.axisbelow": True,
-        "lines.linewidth": 1.6,
-        "lines.markersize": 5.5,
+        # Heavier strokes to match the larger type: a 1.6 pt line under 13 pt
+        # text reads as a hairline.
+        "lines.linewidth": 2.2,
+        "lines.markersize": 7.5,
         "figure.constrained_layout.use": True,
         # Not "tight": a tight bounding box grows the canvas past the declared
         # figsize, which is exactly how the authored width drifted away from
@@ -93,6 +96,22 @@ def figure(height_in: float, width_in: float = FIGURE_WIDTH_IN):
             f"a figure {height_in:.2f} in tall cannot share a page with its "
             f"caption; the limit is {MAX_FIGURE_HEIGHT_IN} in")
     return plt.subplots(figsize=(width_in, height_in))
+
+
+def page_title(figure_object, text: str) -> None:
+    """Title anchored to the page, not to the axes.
+
+    ``set_title(loc="left")`` anchors at the left edge of the axes box, and a
+    chart whose categories are named on the y axis has that box pushed well to
+    the right -- so the title starts a third of the way across the page and
+    runs off the other side. Anchoring to the figure gives it the full width.
+
+    No explicit ``y``: constrained layout reserves vertical space for a
+    suptitle it positions itself, and setting the coordinate by hand opts out
+    of that, leaving the title sitting on top of the first row of the chart.
+    """
+    figure_object.suptitle(text, x=0.014, ha="left",
+                           fontsize=FONT_SIZES["axes.titlesize"] + 1)
 
 
 def commit() -> str:
@@ -116,6 +135,63 @@ def relative(path: Path) -> str:
         return path.name
 
 
+def _overflowing_text(figure_object) -> list[str]:
+    """Every text artist drawn wholly or partly outside the canvas.
+
+    The canvas is fixed at the placement width and nothing clips to it
+    visibly: a title too long for the page is simply cut off at the edge, and
+    the file is still written, still the right size, and still passes every
+    other check. Only comparing each artist's extent against the figure finds
+    it.
+    """
+    # Draw first, and with the figure's own dpi. Text has no laid-out position
+    # until something draws it, and the renderer savefig leaves behind is at
+    # the save dpi while ``figure.bbox`` is at the figure dpi -- measuring one
+    # against the other scales every extent by their ratio and reports text
+    # that fits comfortably as running off the page.
+    # Twice: constrained layout reserves room for decorations from what the
+    # previous draw measured, so the first pass still has the axes at their
+    # default box and every long tick label hanging off the left edge. The
+    # second pass settles them, and measuring after only one reports those
+    # labels as clipped when the saved file shows them sitting comfortably.
+    figure_object.canvas.draw()
+    figure_object.canvas.draw()
+    renderer = figure_object.canvas.get_renderer()
+    canvas = figure_object.bbox
+
+    # Ticks just outside the view keep their label objects, positioned past
+    # the end of the axis where they are never drawn. They are not clipped
+    # text, so they must not be reported as such.
+    unshown = set()
+    for axes in figure_object.axes:
+        for axis in (axes.xaxis, axes.yaxis):
+            low, high = sorted(axis.get_view_interval())
+            for tick in axis.get_major_ticks() + axis.get_minor_ticks():
+                if not low <= tick.get_loc() <= high:
+                    unshown.update((id(tick.label1), id(tick.label2)))
+
+    offenders = []
+    for text in figure_object.findobj(mtext.Text):
+        if id(text) in unshown:
+            continue
+        if not text.get_visible() or not text.get_text().strip():
+            continue
+        try:
+            extent = text.get_window_extent(renderer=renderer)
+        except (RuntimeError, ValueError):
+            continue
+        if extent.width == 0 or extent.height == 0:
+            continue
+        # A pixel of slack: glyph extents and the canvas edge routinely differ
+        # by less than one device pixel without anything being cut off.
+        over = max(canvas.x0 - extent.x0, extent.x1 - canvas.x1,
+                   canvas.y0 - extent.y0, extent.y1 - canvas.y1)
+        if over > 1.0:
+            flat = " ".join(text.get_text().split())
+            offenders.append(f"{over:6.1f} px beyond the canvas: {flat!r}")
+    return offenders
+
+
 def save(figure_object, stem: str, out_dir: Path) -> dict[str, Any]:
     """Write PNG and PDF at the declared size, and check that size held."""
     out_dir = Path(out_dir)
@@ -123,8 +199,22 @@ def save(figure_object, stem: str, out_dir: Path) -> dict[str, Any]:
     declared = float(figure_object.get_figwidth())
     png = out_dir / f"{stem}.png"
     pdf = out_dir / f"{stem}.pdf"
+    # Checked before the files are written, so a clipped figure is never left
+    # on disk for a later step to pick up.
+    overflowing = _overflowing_text(figure_object)
+    if overflowing:
+        plt.close(figure_object)
+        raise RuntimeError(
+            f"{stem}: {len(overflowing)} text object(s) run off the "
+            f"{declared:.2f} in canvas and would be cut off in the saved "
+            f"file:\n  " + "\n  ".join(overflowing))
     figure_object.savefig(png)
-    figure_object.savefig(pdf)
+    # The PDF backend stamps the wall-clock time into /CreationDate, so two
+    # runs of the same script produced two different files and the figures
+    # could not be shown to regenerate identically. Dropping the field is
+    # enough: the generation time is already recorded, to the second and
+    # against the inputs it was generated from, in the provenance sidecar.
+    figure_object.savefig(pdf, metadata={"CreationDate": None})
     height = float(figure_object.get_figheight())
 
     # Recorded from the axes themselves, so the provenance says what the

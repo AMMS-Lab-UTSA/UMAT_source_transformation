@@ -85,7 +85,20 @@ def test_intrinsic_module_supplies_unary_plus():
     text = _emit_intrinsic_extensions("otim2n1", "ONUMM2N1")
     assert "oti_unary_plus" in text
     assert "OPERATOR(+)" in text
-    assert "PUBLIC :: MIN, MAX, SIGN, OPERATOR(+)" in text
+
+    # The export list stays restricted. An earlier version re-exported the
+    # generated module's direction constants and collided with a source's own
+    # E1 and E2, so what matters is that only intrinsic names leave the module
+    # -- not that the list has one particular length. Every PUBLIC line counts,
+    # not just the first: reading one line would let a second line export
+    # anything at all.
+    names = {name.strip()
+             for line in text.splitlines() if line.strip().startswith("PUBLIC ::")
+             for name in line.split("::", 1)[1].split(",")}
+    assert names <= {"MIN", "MAX", "SIGN", "NINT", "INT", "ABS", "SQRT",
+                     "ASSIGNMENT(=)", "OPERATOR(+)", "OPERATOR(-)",
+                     "OPERATOR(*)", "OPERATOR(/)"}, f"unexpected export: {names}"
+    assert {"MIN", "MAX", "SIGN", "OPERATOR(+)"} <= names
 
 
 @pytest.mark.slow

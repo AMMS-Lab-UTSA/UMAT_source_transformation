@@ -5,7 +5,12 @@ import re
 from typing import Any, Iterable, Sequence
 
 from umat_oti.core.model import ParsedFortranSource, ParsedSubroutine
-from umat_oti.fortran.parser import split_top_level
+from umat_oti.fortran.normalize import strip_inline_comment
+from umat_oti.fortran.parser import (
+    FUNCTION_HEADER_RE,
+    parse_function_subprograms,
+    split_top_level,
+)
 
 
 class HelperLiftingError(ValueError):
@@ -27,9 +32,17 @@ _REAL_RE = re.compile(r"^\s*(?:REAL(?:\s*\*\s*\d+|\s*\([^)]*\))?|DOUBLE\s+PRECIS
 _CHARACTER_RE = re.compile(r"^\s*CHARACTER(?:\s*\*\s*\d+|\s*\([^)]*\))?\s*(?:::)?\s*(.*)$", re.IGNORECASE)
 _LOGICAL_RE = re.compile(r"^\s*LOGICAL(?:\s*\*\s*\d+|\s*\([^)]*\))?\s*(?:::)?\s*(.*)$", re.IGNORECASE)
 _DATA_RE = re.compile(r"^\s*DATA\s+(.*)$", re.IGNORECASE)
+_EXTERNAL_RE = re.compile(r"^\s*EXTERNAL\s*(?:::)?\s*(.*)$", re.IGNORECASE)
 _TOKEN_RE = re.compile(r"\b([A-Z_][A-Z0-9_]*)\b", re.IGNORECASE)
 _LHS_ASSIGN_RE = re.compile(r"^\s*([A-Z_][A-Z0-9_]*)\s*(?:\([^=]*\))?\s*=", re.IGNORECASE)
 _IF_RE = re.compile(r"^(\s*(?:\d+\s+)?(?:ELSE\s+)?IF\s*)\(", re.IGNORECASE)
+#: Statements whose integers are statement labels, not values. Promoting a bare
+#: integer to a real literal is right for ``X = 1`` and wrong for ``GO TO 1000``,
+#: which became ``GO TO 1000.0D0`` and stopped the build with "Syntax error in
+#: GOTO statement". No arithmetic appears in these statements -- a computed GO
+#: TO's selector is an integer expression -- so the whole statement is left
+#: alone rather than trying to tell a label from a value inside it.
+_LABEL_REFERENCE_STATEMENT_RE = re.compile(r"^\s*(?:GO\s*TO|ASSIGN)\b", re.IGNORECASE)
 _TYPED_INTRINSIC_MAP = {
     "DABS": "ABS",
     "DACOS": "ACOS",
@@ -102,13 +115,34 @@ _INTRINSIC_NAMES = {
 _IMPLICIT_INTEGER_FIRST_LETTERS = frozenset("IJKLMN")
 
 
+def routines_by_name(parsed: ParsedFortranSource) -> dict[str, ParsedSubroutine]:
+    """Every program unit the lifter can lift, keyed by upper-case name.
+
+    Subroutines and function subprograms both. A UMAT is free to put part of its
+    constitutive law in a FUNCTION, and a closure walk over CALL statements alone
+    never reaches one: the lifted module then calls an unlifted external with OTI
+    arguments and the build fails at link with an undefined reference.
+    """
+    units = {routine.upper_name: routine for routine in parsed.subroutines}
+    for function in parse_function_subprograms(parsed.logical_lines):
+        units.setdefault(function.upper_name, function)
+    return units
+
+
+def function_names(parsed: ParsedFortranSource) -> frozenset[str]:
+    """Names this source defines as function subprograms."""
+    return frozenset(f.upper_name for f in parse_function_subprograms(parsed.logical_lines))
+
+
 def helper_lift_closure(
     parsed: ParsedFortranSource,
     helper_roots: Iterable[str],
     *,
     selected_umat: str,
 ) -> tuple[str, ...]:
-    routines = {routine.upper_name: routine for routine in parsed.subroutines if routine.upper_name != selected_umat.upper()}
+    routines = {name: routine for name, routine in routines_by_name(parsed).items()
+                if name != selected_umat.upper()}
+    defined_functions = function_names(parsed)
     source_lines = parsed.text.splitlines()
     pending = [str(name).upper() for name in helper_roots if str(name).strip()]
     if not pending:
@@ -127,7 +161,8 @@ def helper_lift_closure(
         seen.add(current)
         ordered.append(current)
         routine = routines[current]
-        for callee in _routine_callees(routine, parsed.form, source_lines):
+        for callee in _routine_callees(routine, parsed.form, source_lines,
+                                       function_names=defined_functions):
             if callee == selected_umat.upper():
                 continue
             if callee in _LIFTED_BODY_INLINED:
@@ -154,13 +189,14 @@ def lift_helper_set_source(
     helper_output_copies: dict[str, list[dict[str, Any]]] | None = None,
     helper_output_surfaces: dict[str, list[dict[str, Any]]] | None = None,
 ) -> LiftedHelperSet:
-    routines = {routine.upper_name: routine for routine in parsed.subroutines}
+    routines = routines_by_name(parsed)
     source_lines = parsed.text.splitlines()
     ordered = tuple(dict.fromkeys(str(name).upper() for name in helper_names if str(name).strip()))
     missing = [name for name in ordered if name not in routines]
     if missing:
         raise HelperLiftingError(f"Helper lifting could not find parsed routines for {missing}.")
     lifted_set = set(ordered)
+    lifted_functions = set(ordered) & set(function_names(parsed))
     body = "\n\n".join(
         _lift_helper_routine(
             routines[name],
@@ -169,6 +205,7 @@ def lift_helper_set_source(
             lifted_set,
             module_name,
             type_name,
+            lifted_function_names=lifted_functions,
             helper_output_copies=(helper_output_copies or {}).get(name, []),
             helper_output_surfaces=(helper_output_surfaces or {}).get(name, []),
         )
@@ -191,17 +228,75 @@ UMAT_ARGUMENT_SHAPES: dict[str, str] = {
     "COORDS": "3", "DROT": "3,3", "DFGRD0": "3,3", "DFGRD1": "3,3",
 }
 
-def _routine_callees(routine: ParsedSubroutine, form: str, source_lines: list[str]) -> tuple[str, ...]:
+def _routine_callees(
+    routine: ParsedSubroutine,
+    form: str,
+    source_lines: list[str],
+    *,
+    function_names: Iterable[str] = (),
+) -> tuple[str, ...]:
+    """Program units this routine invokes: CALL targets and function references.
+
+    ``function_names`` is the set of names the *source* defines as function
+    subprograms. Only those are looked for, so a reference to something this
+    source does not define -- an intrinsic, an Abaqus utility -- stays invisible
+    exactly as before and cannot turn into a new "undefined callee" failure.
+    """
+    candidates = {str(name).upper() for name in function_names}
+    candidates.discard(routine.upper_name)
+    candidates -= {arg.upper() for arg in routine.args}
     seen: set[str] = set()
     ordered: list[str] = []
-    for raw in _continuation_stitch(_routine_source_lines(source_lines, routine), form):
+    statements = list(_continuation_stitch(_routine_source_lines(source_lines, routine), form))
+    arrays = _routine_array_names(statements, form)
+    for raw in statements:
         statement = _statement_text(raw, form)
         for match in _CALL_RE.finditer(statement):
             callee = match.group(1).upper()
             if callee not in seen:
                 seen.add(callee)
                 ordered.append(callee)
+        for name in _referenced_function_names(statement, candidates - arrays):
+            if name not in seen:
+                seen.add(name)
+                ordered.append(name)
     return tuple(ordered)
+
+
+def _referenced_function_names(statement: str, candidates: set[str]) -> tuple[str, ...]:
+    """Names from ``candidates`` used as ``NAME(`` in this statement."""
+    if not candidates:
+        return ()
+    masked, _literals = mask_character_literals(statement)
+    found = [name for name in candidates
+             if re.search(rf"(?<![A-Za-z0-9_]){re.escape(name)}\s*\(", masked, re.IGNORECASE)]
+    return tuple(sorted(found))
+
+
+def _routine_array_names(statements: Sequence[str], form: str) -> set[str]:
+    """Names this routine declares *with a shape*.
+
+    That is exactly what separates ``F(I)`` the array element from ``F(I)`` the
+    function reference. A scalar type declaration is not disqualifying: declaring
+    the type of an external function is the ordinary way to call one.
+    """
+    names: set[str] = set()
+    for raw in statements[1:]:
+        stripped = _statement_text(raw, form)
+        if not stripped:
+            continue
+        for regex in (_DIMENSION_RE, _INTEGER_RE, _REAL_RE, _CHARACTER_RE, _LOGICAL_RE):
+            match = regex.match(stripped)
+            if match:
+                names.update(_declared_array_names(match.group(1)))
+                break
+    return names
+
+
+def _declared_array_names(payload: str) -> set[str]:
+    return {entry.strip().split("(", 1)[0].strip().upper()
+            for entry in split_top_level(payload)
+            if "(" in entry and entry.strip().split("(", 1)[0].strip()}
 
 
 # Nothing is inlined any more. KCLEAR used to be: its calls were rewritten as an
@@ -282,6 +377,7 @@ def _lift_helper_routine(
     type_name: str,
     helper_output_copies: list[dict[str, Any]],
     helper_output_surfaces: list[dict[str, Any]],
+    lifted_function_names: set[str] | None = None,
 ) -> str:
     raw_lines = _routine_source_lines(source_lines, routine)
     if not raw_lines:
@@ -289,11 +385,23 @@ def _lift_helper_routine(
     stitched_lines = _continuation_stitch(raw_lines, form)
     if not stitched_lines:
         raise HelperLiftingError(f"Routine {routine.name} did not produce any stitched source lines.")
-    header_match = _HEADER_RE.match(_statement_text(stitched_lines[0], form))
-    if not header_match:
+    lifted_function_names = set(lifted_function_names or ())
+    header_text = _statement_text(stitched_lines[0], form)
+    header_match = _HEADER_RE.match(header_text)
+    function_match = None if header_match else FUNCTION_HEADER_RE.match(header_text)
+    if header_match:
+        original_name = header_match.group(1).upper()
+        raw_args = header_match.group(2)
+        result_name = ""
+        declared_result_type = ""
+    elif function_match:
+        original_name = function_match.group("name").upper()
+        raw_args = function_match.group("args") or ""
+        result_name = (function_match.group("result") or original_name).upper()
+        declared_result_type = (function_match.group("type") or "").strip()
+    else:
         raise HelperLiftingError(f"Cannot parse helper header for {routine.name}: {stitched_lines[0]!r}")
-    original_name = header_match.group(1).upper()
-    args = [arg.strip() for arg in split_top_level(header_match.group(2)) if arg.strip()]
+    args = [arg.strip() for arg in split_top_level(raw_args) if arg.strip()]
     existing_arg_names = {arg.upper() for arg in args}
     args.extend(
         spec["caller_variable"]
@@ -356,6 +464,18 @@ def _lift_helper_routine(
         if data_match:
             data_assignments.extend(f"    {assignment}" for assignment in _data_to_assignments(data_match.group(1)))
             continue
+        external_match = _EXTERNAL_RE.match(stripped)
+        if external_match:
+            # EXTERNAL is a specification statement, so it belongs in the
+            # prelude and not among the executable lines. A name that is being
+            # lifted is a module procedure now, not an external one, and its
+            # references have been renamed, so it is dropped from the list; a
+            # genuinely external name is kept and still declared.
+            kept = [entry.strip() for entry in split_top_level(external_match.group(1))
+                    if entry.strip() and entry.strip().upper() not in lifted_names]
+            if kept:
+                prelude.append(f"    external :: {', '.join(kept)}")
+            continue
         body.append(raw)
 
     for spec in helper_output_surfaces:
@@ -403,16 +523,36 @@ def _lift_helper_routine(
         )
     )
 
+    # Function references to rewrite in this body: every lifted function except
+    # one this routine has shadowed with an array or a dummy argument of its own,
+    # and except its own name, which inside a function is the result variable.
+    body_statements = [_split_label_and_statement(raw, form)[1] for raw in body]
+    shadowed = _routine_array_names(stitched_lines, form) | {arg.upper() for arg in args}
+    function_call_names = {name for name in lifted_function_names
+                           if name != original_name and name not in shadowed}
+
     _renames = direction_renames(
         module_name,
-        [_split_label_and_statement(raw, form)[1] for raw in body] + list(args))
+        body_statements + list(args))
+    signature = f"{original_name.lower()}_oti({', '.join(arg.lower() for arg in args)})"
+    unit = "function" if function_match else "subroutine"
+    if function_match:
+        header = f"function {signature} result({result_name.lower()})"
+    else:
+        header = f"subroutine {signature}"
     lines = [
-        f"subroutine {original_name.lower()}_oti({', '.join(arg.lower() for arg in args)})",
+        header,
         f"    use {module_name}, OTI_HELPER_DP => DP{_renames}",
         f"    implicit type({type_name}) (a-h,o-z)",
         "    implicit integer (i-n)",
     ]
     lines.extend(prelude)
+    if function_match and result_name not in declaration_oti_names and result_name not in declared_non_oti:
+        # The result variable's type comes from the header's type-spec when it
+        # has one and from the implicit rule otherwise. It is stated explicitly
+        # because the lifted body's implicit rules are not the source's: a REAL
+        # function whose name begins with I-N would silently become an integer.
+        lines.append(f"    {_result_type_spec(declared_result_type, result_name, type_name)} :: {result_name.lower()}")
     lines.extend(data_assignments)
     for raw in body:
         label_prefix, statement = _split_label_and_statement(raw, form)
@@ -420,14 +560,33 @@ def _lift_helper_routine(
         if kclear_lines is not None:
             lines.extend(kclear_lines)
             continue
-        rewritten = _rewrite_helper_executable_line(statement, lifted_names, oti_names)
+        rewritten = _rewrite_helper_executable_line(statement, lifted_names, oti_names,
+                                                   function_call_names)
         if re.match(r"^\s*RETURN\b", rewritten, re.IGNORECASE) and helper_output_surfaces:
             lines.extend(_helper_output_surface_lines(helper_output_surfaces))
         if re.match(r"^\s*RETURN\b", rewritten, re.IGNORECASE) and helper_output_copies:
             lines.extend(_helper_output_copy_lines(helper_output_copies))
         lines.append(f"    {label_prefix}{rewritten}")
-    lines.append(f"end subroutine {original_name.lower()}_oti")
+    lines.append(f"end {unit} {original_name.lower()}_oti")
     return "\n".join(lines)
+
+
+def _result_type_spec(declared_type: str, result_name: str, type_name: str) -> str:
+    """Type-spec for a lifted function's result variable.
+
+    A real-valued result is the differentiated one and becomes the OTI type. An
+    integer, logical or character result carries no derivative and keeps the type
+    the source gave it, written through verbatim so a legacy ``INTEGER*4`` or
+    ``CHARACTER*8`` survives as itself.
+    """
+    text = declared_type.strip()
+    if not text:
+        return "integer" if _is_implicit_integer_name(result_name) else f"type({type_name})"
+    head = re.match(r"^[A-Za-z]+", text)
+    keyword = head.group(0).upper() if head else ""
+    if keyword in {"INTEGER", "LOGICAL", "CHARACTER"}:
+        return text
+    return f"type({type_name})"
 
 
 def _helper_output_surface_lines(helper_output_surfaces: list[dict[str, Any]]) -> list[str]:
@@ -540,11 +699,35 @@ def _implicit_oti_names(
     return result
 
 
-def _rewrite_helper_executable_line(line: str, lifted_names: set[str], oti_names: set[str]) -> str:
+def _rewrite_helper_executable_line(
+    line: str,
+    lifted_names: set[str],
+    oti_names: set[str],
+    function_call_names: set[str] | None = None,
+) -> str:
     rewritten = _rewrite_lifted_call(line, lifted_names)
     rewritten = _wrap_condition_with_real_tokens(rewritten, oti_names)
     rewritten = _normalize_typed_intrinsics(rewritten, oti_names)
-    return _normalize_numeric_literals(rewritten, oti_names)
+    rewritten = _normalize_numeric_literals(rewritten, oti_names)
+    # Last, so every rewrite above still sees the source's own names.
+    return _rewrite_lifted_function_references(rewritten, function_call_names or set())
+
+
+def _rewrite_lifted_function_references(line: str, function_call_names: set[str]) -> str:
+    """Point ``NAME(`` at the lifted ``NAME_OTI``.
+
+    Character literals are masked first: a name inside a FORMAT string or an
+    error message is text, not a reference.
+    """
+    if not function_call_names:
+        return line
+    masked, literals = mask_character_literals(line)
+    pattern = re.compile(
+        r"(?<![A-Za-z0-9_])(" + "|".join(re.escape(name) for name in sorted(function_call_names, key=len, reverse=True))
+        + r")(?=\s*\()",
+        re.IGNORECASE,
+    )
+    return unmask_character_literals(pattern.sub(lambda m: f"{m.group(1).upper()}_OTI", masked), literals)
 
 
 def _rewrite_lifted_call(line: str, lifted_names: set[str]) -> str:
@@ -647,10 +830,41 @@ def unmask_real_literals(text: str, store: list[str]) -> str:
     )
 
 
+#: A complete character literal, single- or double-quoted, doubled quotes
+#: included. Masking these keeps identifier rewrites out of FORMAT strings and
+#: error messages, where a name is text and not a reference.
+_CHARACTER_LITERAL_RE = re.compile(r"'(?:''|[^'])*'|\"(?:\"\"|[^\"])*\"")
+_CHARACTER_MASK_BASE = 0xE800
+
+
+def mask_character_literals(text: str) -> tuple[str, list[str]]:
+    """Replace every character literal with an inert placeholder."""
+    store: list[str] = []
+
+    def capture(match: re.Match[str]) -> str:
+        store.append(match.group(0))
+        return chr(_CHARACTER_MASK_BASE + len(store) - 1)
+
+    return _CHARACTER_LITERAL_RE.sub(capture, text), store
+
+
+def unmask_character_literals(text: str, store: list[str]) -> str:
+    """Restore literals masked by :func:`mask_character_literals`."""
+    if not store:
+        return text
+    return "".join(
+        store[ord(char) - _CHARACTER_MASK_BASE]
+        if _CHARACTER_MASK_BASE <= ord(char) < _CHARACTER_MASK_BASE + len(store) else char
+        for char in text
+    )
+
+
 def _normalize_numeric_literals(line: str, oti_names: set[str]) -> str:
     if not _contains_oti_name(line, oti_names):
         return line
     if re.match(r"^\s*STOP\b", line, re.IGNORECASE):
+        return line
+    if _LABEL_REFERENCE_STATEMENT_RE.match(line):
         return line
     normalized = re.sub(
         r"(?<!\w)(\d+\.\d*|\.\d+|\d+)[eE]([+-]?\d+)",
@@ -789,13 +1003,13 @@ def _routine_source_lines(source_lines: list[str], routine: ParsedSubroutine) ->
 
 def _statement_text(raw: str, form: str) -> str:
     if form != "fixed":
-        return raw.split("!", 1)[0].strip()
+        return strip_inline_comment(raw).strip()
     return _split_label_and_statement(raw, form)[1]
 
 
 def _split_label_and_statement(raw: str, form: str) -> tuple[str, str]:
     if form != "fixed":
-        return "", raw.split("!", 1)[0].strip()
+        return "", strip_inline_comment(raw).strip()
     clean = _strip_fixed_form_comment(raw)
     if not clean:
         return "", ""
@@ -807,13 +1021,19 @@ def _split_label_and_statement(raw: str, form: str) -> tuple[str, str]:
 
 
 def _strip_fixed_form_comment(line: str) -> str:
+    """Drop a trailing comment, leaving character literals intact.
+
+    A bang inside a quoted string does not start a comment. Splitting on the
+    first bang regardless truncated ``'...slip planes!'`` mid-literal and the
+    lifted source then failed with "Unterminated character constant". The
+    quote-aware scanner in :mod:`umat_oti.fortran.normalize` is the one the
+    logical-line parser already uses, so both see the same statement text.
+    """
     if not line:
         return ""
     if line[0] in {"C", "c", "*", "!"}:
         return ""
-    if "!" in line:
-        return line.split("!", 1)[0]
-    return line
+    return strip_inline_comment(line)
 
 
 def _expand_fixed_form_tabs(raw: str) -> str:

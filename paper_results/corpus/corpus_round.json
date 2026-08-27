@@ -23,6 +23,7 @@
           "XIT"
         ],
         "conflicts": [],
+        "declared_donors": [],
         "duplicates": [
           {
             "bodies_agree": true,
@@ -984,6 +985,7 @@
             "EMOD",
             "ENU"
           ],
+          "seconds": 0.005,
           "status": "succeeded"
         },
         "dependencies_resolved": {
@@ -992,21 +994,26 @@
             "UMAT_ECL_TEMP.for"
           ],
           "multi_file": true,
+          "seconds": 0.001,
           "status": "succeeded"
         },
         "derivatives_verified": {
           "rows": 800,
+          "seconds": 0.008,
           "status": "succeeded"
         },
         "discovered": {
           "content_sha256": "c4a850ca89c6cbdef4d94d379d2afce41feea9214d792d0a3d75b91ead9d3862",
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "entry_detected": {
           "entry": "UMAT",
+          "seconds": 0.038,
           "status": "succeeded"
         },
         "generated_compiled": {
+          "seconds": 2.404,
           "status": "succeeded"
         },
         "license_classified": {
@@ -1016,23 +1023,29 @@
           "status": "succeeded"
         },
         "original_compiled": {
+          "seconds": 0.326,
           "status": "succeeded"
         },
         "original_executed": {
           "increments": 20,
+          "seconds": 0.011,
           "status": "succeeded"
         },
         "primal_parity": {
+          "seconds": 0.001,
           "status": "succeeded",
           "worst_relative_difference": 6.064072777217682e-16
         },
         "reference_resolved": {
+          "seconds": 0.052,
           "status": "succeeded"
         },
         "transformed": {
+          "seconds": 0.566,
           "status": "succeeded"
         },
         "transformed_executed": {
+          "seconds": 0.01,
           "status": "succeeded"
         }
       }
@@ -1048,8 +1061,12 @@
         "rows": 1120,
         "rows_by_judgement": {
           "relative": 109,
-          "relative_at_converged_step_1e-05": 2,
-          "relative_at_converged_step_1e-06": 126,
+          "relative_at_converged_step_0.0001": 10,
+          "relative_at_converged_step_0.000316228": 4,
+          "relative_at_converged_step_1e-05": 1,
+          "relative_at_converged_step_1e-06": 1,
+          "relative_at_converged_step_3.16228e-05": 110,
+          "relative_at_converged_step_3.16228e-06": 2,
           "within_reference_resolution": 883
         },
         "substantive_rows": 237,
@@ -1062,6 +1079,7 @@
           "XIT"
         ],
         "conflicts": [],
+        "declared_donors": [],
         "duplicates": [
           {
             "bodies_agree": true,
@@ -2204,6 +2222,7 @@
             "E0",
             "SIGY0"
           ],
+          "seconds": 0.009,
           "status": "succeeded"
         },
         "dependencies_resolved": {
@@ -2212,21 +2231,26 @@
             "UMAT_ECL_TEMP.for"
           ],
           "multi_file": true,
+          "seconds": 0.001,
           "status": "succeeded"
         },
         "derivatives_verified": {
           "rows": 1120,
+          "seconds": 0.711,
           "status": "succeeded"
         },
         "discovered": {
           "content_sha256": "7bdae900d1dbf02b96336a7d4379011138d9780aa2f8abad759934f9dfb3dbb0",
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "entry_detected": {
           "entry": "UMAT",
+          "seconds": 0.074,
           "status": "succeeded"
         },
         "generated_compiled": {
+          "seconds": 2.558,
           "status": "succeeded"
         },
         "license_classified": {
@@ -2236,23 +2260,29 @@
           "status": "succeeded"
         },
         "original_compiled": {
+          "seconds": 0.37,
           "status": "succeeded"
         },
         "original_executed": {
           "increments": 20,
+          "seconds": 0.012,
           "status": "succeeded"
         },
         "primal_parity": {
+          "seconds": 0.002,
           "status": "succeeded",
           "worst_relative_difference": 1.8207975009476274e-15
         },
         "reference_resolved": {
+          "seconds": 0.057,
           "status": "succeeded"
         },
         "transformed": {
+          "seconds": 0.104,
           "status": "succeeded"
         },
         "transformed_executed": {
+          "seconds": 0.011,
           "status": "succeeded"
         }
       }
@@ -2280,6 +2310,7 @@
           "XIT"
         ],
         "conflicts": [],
+        "declared_donors": [],
         "duplicates": [
           {
             "bodies_agree": true,
@@ -2688,27 +2719,33 @@
             "EMOD",
             "ENU"
           ],
+          "seconds": 0.006,
           "status": "succeeded"
         },
         "dependencies_resolved": {
           "closure_size": 5,
           "external_files": [],
           "multi_file": false,
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "derivatives_verified": {
           "rows": 680,
+          "seconds": 0.007,
           "status": "succeeded"
         },
         "discovered": {
           "content_sha256": "a1e8dcbd06f5a5d87b5b5d4d02505553c422c721f3140e653def61050b071d66",
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "entry_detected": {
           "entry": "UMAT",
+          "seconds": 0.068,
           "status": "succeeded"
         },
         "generated_compiled": {
+          "seconds": 2.494,
           "status": "succeeded"
         },
         "license_classified": {
@@ -2718,23 +2755,29 @@
           "status": "succeeded"
         },
         "original_compiled": {
+          "seconds": 0.373,
           "status": "succeeded"
         },
         "original_executed": {
           "increments": 20,
+          "seconds": 0.007,
           "status": "succeeded"
         },
         "primal_parity": {
+          "seconds": 0.001,
           "status": "succeeded",
           "worst_relative_difference": 1.4739002297530164e-15
         },
         "reference_resolved": {
+          "seconds": 0.039,
           "status": "succeeded"
         },
         "transformed": {
+          "seconds": 0.089,
           "status": "succeeded"
         },
         "transformed_executed": {
+          "seconds": 0.004,
           "status": "succeeded"
         }
       }
@@ -2762,6 +2805,7 @@
           "XIT"
         ],
         "conflicts": [],
+        "declared_donors": [],
         "duplicates": [
           {
             "bodies_agree": true,
@@ -3211,27 +3255,33 @@
             "EMOD",
             "ENU"
           ],
+          "seconds": 0.008,
           "status": "succeeded"
         },
         "dependencies_resolved": {
           "closure_size": 5,
           "external_files": [],
           "multi_file": false,
+          "seconds": 0.001,
           "status": "succeeded"
         },
         "derivatives_verified": {
           "rows": 720,
+          "seconds": 0.009,
           "status": "succeeded"
         },
         "discovered": {
           "content_sha256": "d37eb3f20208c50dceff9198a05d69e47b65e7834a08b8791a0950d3eb83bcb4",
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "entry_detected": {
           "entry": "UMAT",
+          "seconds": 0.078,
           "status": "succeeded"
         },
         "generated_compiled": {
+          "seconds": 2.371,
           "status": "succeeded"
         },
         "license_classified": {
@@ -3241,23 +3291,29 @@
           "status": "succeeded"
         },
         "original_compiled": {
+          "seconds": 0.35,
           "status": "succeeded"
         },
         "original_executed": {
           "increments": 20,
+          "seconds": 0.011,
           "status": "succeeded"
         },
         "primal_parity": {
+          "seconds": 0.001,
           "status": "succeeded",
           "worst_relative_difference": 4.505492983027024e-16
         },
         "reference_resolved": {
+          "seconds": 0.048,
           "status": "succeeded"
         },
         "transformed": {
+          "seconds": 0.061,
           "status": "succeeded"
         },
         "transformed_executed": {
+          "seconds": 0.007,
           "status": "succeeded"
         }
       }
@@ -3283,6 +3339,7 @@
       "dependency_graph": {
         "abaqus_runtime_calls": [],
         "conflicts": [],
+        "declared_donors": [],
         "duplicates": [
           {
             "bodies_agree": true,
@@ -3604,6 +3661,7 @@
             "EMOD",
             "ENU"
           ],
+          "seconds": 0.003,
           "status": "succeeded"
         },
         "dependencies_resolved": {
@@ -3612,21 +3670,26 @@
             "UMAT_ECL_TEMP.for"
           ],
           "multi_file": true,
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "derivatives_verified": {
           "rows": 140,
+          "seconds": 0.002,
           "status": "succeeded"
         },
         "discovered": {
           "content_sha256": "3949ecd8a952ca1a99aff466911764930f866d41734307a62c5ccba410511a9e",
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "entry_detected": {
           "entry": "UMAT",
+          "seconds": 0.064,
           "status": "succeeded"
         },
         "generated_compiled": {
+          "seconds": 2.22,
           "status": "succeeded"
         },
         "license_classified": {
@@ -3636,31 +3699,53 @@
           "status": "succeeded"
         },
         "original_compiled": {
+          "seconds": 0.233,
           "status": "succeeded"
         },
         "original_executed": {
           "increments": 10,
+          "seconds": 0.008,
           "status": "succeeded"
         },
         "primal_parity": {
+          "seconds": 0.001,
           "status": "succeeded",
           "worst_relative_difference": 3.598852817486222e-16
         },
         "reference_resolved": {
+          "seconds": 0.036,
           "status": "succeeded"
         },
         "transformed": {
+          "seconds": 0.076,
           "status": "succeeded"
         },
         "transformed_executed": {
+          "seconds": 0.004,
           "status": "succeeded"
         }
       }
     },
     {
-      "blocker": "contract_constructed: no material property vector or loading history is available for this source; upstream provides none and none may be invented",
+      "blocker": null,
       "canonical_source_id": "419dad1b5328f82526e6bf3bcb5734a8",
       "commit_sha": "54181407aa7aa23055e33d354d0b2a3abc266365",
+      "comparison": {
+        "agreeing": 800,
+        "disagreeing": 0,
+        "reference_unresolved": 0,
+        "rows": 800,
+        "rows_by_judgement": {
+          "relative": 55,
+          "relative_at_converged_step_0.0001": 8,
+          "relative_at_converged_step_0.000316228": 24,
+          "relative_at_converged_step_1e-05": 36,
+          "relative_at_converged_step_3.16228e-05": 36,
+          "within_reference_resolution": 641
+        },
+        "substantive_rows": 159,
+        "worst_substantive_relative_error": 4.156038108896968e-07
+      },
       "constitutive_class": "viscoplastic damage, classical theory",
       "content_sha256": "dc9dad48aa26add40616e4d861c902e02343039f78e82dc6e58dc8295fc48b64",
       "dependency_graph": {
@@ -3668,6 +3753,7 @@
           "XIT"
         ],
         "conflicts": [],
+        "declared_donors": [],
         "duplicates": [
           {
             "bodies_agree": true,
@@ -4267,7 +4353,7 @@
         ]
       },
       "entry_routine": "UMAT",
-      "furthest_stage": "dependencies_resolved",
+      "furthest_stage": "derivatives_verified",
       "id": "jgomezc1_UMAT_VPDCL",
       "identity": {
         "canonical_source_id": "419dad1b5328f82526e6bf3bcb5734a8",
@@ -4293,7 +4379,6 @@
       },
       "license_source": "LICENSE.md: 'Copyright (c) [2015] [Juan Gomez]' followed by the MIT permission notice",
       "license_spdx": "MIT",
-      "material_blocker": "upstream provides no 24-constant deck for this model; TEST_INDENT_UMAT.inp references MATERIAL_NKH.inp which is absent from the upstream repository",
       "notes": "viscoplastic damage, classical theory",
       "redistribution_permitted": true,
       "repository": "jgomezc1_ABAQUS-US",
@@ -4302,21 +4387,89 @@
       "source_path": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_VPDCL.for",
       "stages": {
         "contract_constructed": {
-          "reason": "no material property vector or loading history is available for this source; upstream provides none and none may be invented",
-          "status": "blocked_by_missing_material_data"
+          "material": {
+            "deformation_gradient_increment": [],
+            "dstran_per_increment": [
+              0.0001,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "finite_strain": false,
+            "material_is_physical": true,
+            "n_increments": 20,
+            "parameters": [
+              {
+                "name": "E0",
+                "props_index": 2
+              },
+              {
+                "name": "SIGY0",
+                "props_index": 6
+              }
+            ],
+            "props": [
+              295.15,
+              52.1,
+              -0.1059,
+              19.44,
+              -0.0395,
+              60.069,
+              -0.14,
+              5.7e-06,
+              13.6,
+              457.9,
+              37.47,
+              -0.0748,
+              383.3,
+              7600000000.0,
+              48.8,
+              3.18e-07,
+              1.38e-20,
+              0.0106,
+              3.34,
+              1.67,
+              44700000.0,
+              8314.0,
+              6.023e+23,
+              20140.0
+            ],
+            "provenance": "SAMPLE/material_template.txt lines 30-32: the 24-constant example block whose names, order and units are documented in lines 1-28 of the same file and which SUBROUTINE VSPRATE consumes in that order. Twenty-four values for the twenty-four PROPS indices this source addresses. INPUT_FILES/TEST_INDENT_UMAT.inp independently declares CONSTANTS=24 and DEPVAR 16 for this family. It is an upstream template-plus-example file rather than a deck card: SAMPLE/material_co.inp holds 26 values and is used for UMAT_VPDCO, which reads 26; truncating it to 24 here would be a transformation this pipeline does not perform. The strain path and DTIME are declared by the pipeline, not by upstream."
+          },
+          "nprops": 24,
+          "nstatv": 16,
+          "ntens": 4,
+          "parameters": [
+            "E0",
+            "SIGY0"
+          ],
+          "seconds": 0.005,
+          "status": "succeeded"
         },
         "dependencies_resolved": {
           "closure_size": 8,
           "external_files": [],
           "multi_file": false,
+          "seconds": 0.0,
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "rows": 800,
+          "seconds": 0.613,
           "status": "succeeded"
         },
         "discovered": {
           "content_sha256": "dc9dad48aa26add40616e4d861c902e02343039f78e82dc6e58dc8295fc48b64",
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "entry_detected": {
           "entry": "UMAT",
+          "seconds": 0.074,
+          "status": "succeeded"
+        },
+        "generated_compiled": {
+          "seconds": 2.502,
           "status": "succeeded"
         },
         "license_classified": {
@@ -4324,11 +4477,37 @@
           "license_spdx": "MIT",
           "redistribution_permitted": true,
           "status": "succeeded"
+        },
+        "original_compiled": {
+          "seconds": 0.34,
+          "status": "succeeded"
+        },
+        "original_executed": {
+          "increments": 20,
+          "seconds": 0.01,
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "seconds": 0.001,
+          "status": "succeeded",
+          "worst_relative_difference": 8.36248851926198e-16
+        },
+        "reference_resolved": {
+          "seconds": 0.048,
+          "status": "succeeded"
+        },
+        "transformed": {
+          "seconds": 0.089,
+          "status": "succeeded"
+        },
+        "transformed_executed": {
+          "seconds": 0.007,
+          "status": "succeeded"
         }
       }
     },
     {
-      "blocker": "contract_constructed: no material property vector or loading history is available for this source; upstream provides none and none may be invented",
+      "blocker": "original_executed: the original build, as compiled here, is not reproducible: two replays of the same material vector along the same path returned different output. Its response is not a function of PROPS, so a centred difference over a perturbed property would divide run-to-run variation by the step and report it as a derivative.",
       "canonical_source_id": "71d6e827ce64823a571212c35ba42752",
       "commit_sha": "54181407aa7aa23055e33d354d0b2a3abc266365",
       "constitutive_class": "viscoplastic damage, combined hardening, thermomechanical",
@@ -4338,6 +4517,7 @@
           "EXIT"
         ],
         "conflicts": [],
+        "declared_donors": [],
         "duplicates": [
           {
             "bodies_agree": true,
@@ -5015,7 +5195,7 @@
         ]
       },
       "entry_routine": "UMAT",
-      "furthest_stage": "dependencies_resolved",
+      "furthest_stage": "generated_compiled",
       "id": "jgomezc1_UMAT_NKH_1.02",
       "identity": {
         "canonical_source_id": "71d6e827ce64823a571212c35ba42752",
@@ -5041,7 +5221,6 @@
       },
       "license_source": "LICENSE.md: 'Copyright (c) [2015] [Juan Gomez]' followed by the MIT permission notice",
       "license_spdx": "MIT",
-      "material_blocker": "INPUT_FILES/TEST_INDENT_UMAT.inp declares CONSTANTS=24 and includes MATERIAL_NKH.inp, which is not present anywhere in the pinned upstream snapshot",
       "notes": "viscoplastic damage, combined hardening, thermomechanical",
       "redistribution_permitted": true,
       "repository": "jgomezc1_ABAQUS-US",
@@ -5050,21 +5229,84 @@
       "source_path": "permissive/jgomezc1_ABAQUS-US/UMATS/UMAT_NKH_1.02.for",
       "stages": {
         "contract_constructed": {
-          "reason": "no material property vector or loading history is available for this source; upstream provides none and none may be invented",
-          "status": "blocked_by_missing_material_data"
+          "material": {
+            "deformation_gradient_increment": [],
+            "dstran_per_increment": [
+              0.0001,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "finite_strain": false,
+            "material_is_physical": true,
+            "n_increments": 20,
+            "parameters": [
+              {
+                "name": "E0",
+                "props_index": 2
+              },
+              {
+                "name": "SIGY0",
+                "props_index": 6
+              }
+            ],
+            "props": [
+              295.15,
+              52.1,
+              -0.1059,
+              19.44,
+              -0.0395,
+              60.069,
+              -0.14,
+              5.7e-06,
+              13.6,
+              457.9,
+              37.47,
+              -0.0748,
+              383.3,
+              7600000000.0,
+              48.8,
+              3.18e-07,
+              1.38e-20,
+              0.0106,
+              3.34,
+              1.67,
+              44700000.0,
+              8314.0,
+              6.023e+23,
+              20140.0
+            ],
+            "provenance": "SAMPLE/material_template.txt lines 30-32: the 24-constant example block whose names, order and units are documented in lines 1-28 of the same file and which SUBROUTINE VSPRATE consumes in that order. Twenty-four values for the twenty-four PROPS indices this source addresses. INPUT_FILES/TEST_INDENT_UMAT.inp independently declares CONSTANTS=24 and DEPVAR 16 for this family. It is an upstream template-plus-example file rather than a deck card: SAMPLE/material_co.inp holds 26 values and is used for UMAT_VPDCO, which reads 26; truncating it to 24 here would be a transformation this pipeline does not perform. The strain path and DTIME are declared by the pipeline, not by upstream."
+          },
+          "nprops": 24,
+          "nstatv": 16,
+          "ntens": 4,
+          "parameters": [
+            "E0",
+            "SIGY0"
+          ],
+          "seconds": 0.005,
+          "status": "succeeded"
         },
         "dependencies_resolved": {
           "closure_size": 10,
           "external_files": [],
           "multi_file": false,
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "discovered": {
           "content_sha256": "1a2835983e161003ac3f3664a9800a17404be92fdcdecb9e77e5a4c5abc5b6a6",
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "entry_detected": {
           "entry": "UMAT",
+          "seconds": 0.071,
+          "status": "succeeded"
+        },
+        "generated_compiled": {
+          "seconds": 2.587,
           "status": "succeeded"
         },
         "license_classified": {
@@ -5072,11 +5314,25 @@
           "license_spdx": "MIT",
           "redistribution_permitted": true,
           "status": "succeeded"
+        },
+        "original_compiled": {
+          "seconds": 0.315,
+          "status": "succeeded"
+        },
+        "original_executed": {
+          "reason": "the original build, as compiled here, is not reproducible: two replays of the same material vector along the same path returned different output. Its response is not a function of PROPS, so a centred difference over a perturbed property would divide run-to-run variation by the step and report it as a derivative.",
+          "seconds": 0.009,
+          "status": "failed"
+        },
+        "transformed": {
+          "seconds": 0.135,
+          "status": "succeeded"
         }
       }
     },
     {
-      "blocker": "dependencies_resolved: these helpers have differing definitions in different files and none is local, so choosing one would change the numerics: KMAT, KMATERIALPARAM",
+      "blocker": "contract_constructed: the declared dimensions are too small for what this source addresses: it needs NTENS >= 0 and, at NTENS=6, NSTATV >= 125, but the contract declares NTENS=6 and NSTATV=0. Running it would read or write outside the driver's arrays",
+      "canonical_source_id": "7a9020f367817e4a0679b864fb78bc7e",
       "commit_sha": "85102ed35dc4592edc5fd4aaec542fa63e7162fd",
       "constitutive_class": "crystal plasticity, finite strain, COMMON-block state",
       "content_sha256": "0732d6432730e20089416f1485343229b7eeacbc8b3a18853705b3b882f1526d",
@@ -5087,9 +5343,42 @@
           "RANDOM_NUMBER",
           "XIT"
         ],
-        "conflicts": [
-          "KMAT",
-          "KMATERIALPARAM"
+        "conflicts": [],
+        "declared_donors": [
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/mycommon.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kmat.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/uexternaldb.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kdirns.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/ktwinrot.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kslip0.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kslip5ET.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kslip6ET.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kslipPowerLaw.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kgndl2ET.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kcurlET.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kshapes.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/utils.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/UEL.for",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/ktwinneighbourhood.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kRhoTwinInit.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kMaterialParam.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kCRSS.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kHardening.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kslipCreepPowerLaw.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xDir0ET.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xNorm0ET.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xDir1.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xNorm1.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xDir2.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xNorm2.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xDir2c.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xNorm2c.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xDir4.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xNorm4.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xDirAlphaUranium.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xNormAlphaUranium.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xTwinDirAlphaUranium.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/xTwinNormAlphaUranium.f"
         ],
         "duplicates": [
           {
@@ -5117,8 +5406,8 @@
               "c840a1f3bbd9b838",
               "dc6714e4f487ce59"
             ],
-            "note": "definitions DIFFER and none is local; choosing one would change the numerics, so a donor must be selected explicitly",
-            "resolution": "ambiguous",
+            "note": "the source names the file it takes this routine from in its own INCLUDE manifest, so the other definitions are never compiled either; the choice was made upstream, not here",
+            "resolution": "declared",
             "symbol": "KMAT"
           },
           {
@@ -5171,8 +5460,8 @@
               "71c5f73c349728fc",
               "f24a241f06c9279c"
             ],
-            "note": "definitions DIFFER and none is local; choosing one would change the numerics, so a donor must be selected explicitly",
-            "resolution": "ambiguous",
+            "note": "the source names the file it takes this routine from in its own INCLUDE manifest, so the other definitions are never compiled either; the choice was made upstream, not here",
+            "resolution": "declared",
             "symbol": "KMATERIALPARAM"
           }
         ],
@@ -5204,6 +5493,7 @@
             "KSLIP0",
             "KSLIP5ET",
             "KSLIP6ET",
+            "KSLIPCREEPPOWERLAW",
             "KSLIPPOWERLAW",
             "KTWINROT",
             "KVECMAT6",
@@ -5226,6 +5516,9 @@
             "KGMATVEC6"
           ],
           "KSLIP6ET": [
+            "KGMATVEC6"
+          ],
+          "KSLIPCREEPPOWERLAW": [
             "KGMATVEC6"
           ],
           "KSLIPPOWERLAW": [
@@ -5256,17 +5549,18 @@
         "entry_path": "permissive/ngrilli_Oxford_Crystal_Plasticity/umat.for",
         "excluded_path_fragments": [],
         "external_files": [
-          "permissive/ngrilli_Oxford_Crystal_Plasticity/ExampleInputFiles/DiscreteTwin/kMaterialParam.f",
-          "permissive/ngrilli_Oxford_Crystal_Plasticity/ExampleInputFiles/HomogeneousTwin/kmat.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/kCRSS.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/kHardening.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kMaterialParam.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/kRhoTwinInit.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/kcurlET.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/kdirns.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/kgndl2ET.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kmat.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/kslip0.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/kslip5ET.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/kslip6ET.f",
+          "permissive/ngrilli_Oxford_Crystal_Plasticity/kslipCreepPowerLaw.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/kslipPowerLaw.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/ktwinneighbourhood.f",
           "permissive/ngrilli_Oxford_Crystal_Plasticity/ktwinrot.f",
@@ -5374,19 +5668,19 @@
             "start_line": 6
           },
           "KMAT": {
-            "body_sha256": "dc6714e4f487ce5953eb0ee08fce6a8eede6099dd67f88eb4e8dce441de46d44",
-            "end_line": 1033,
+            "body_sha256": "c840a1f3bbd9b8380f62b80b374f4106f4eb425bbdca49dc3dcc5f2835258a66",
+            "end_line": 1094,
             "kind": "subroutine",
             "name": "KMAT",
-            "path": "permissive/ngrilli_Oxford_Crystal_Plasticity/ExampleInputFiles/HomogeneousTwin/kmat.f",
+            "path": "permissive/ngrilli_Oxford_Crystal_Plasticity/kmat.f",
             "start_line": 6
           },
           "KMATERIALPARAM": {
-            "body_sha256": "f24a241f06c9279c1373dc91f54abce3bbc4512f37011aea167f6a5175a6c5ab",
-            "end_line": 400,
+            "body_sha256": "71c5f73c349728fcf9b6cd2ce594bf43d6bd6d73aa3a03f662f34324ebf96abb",
+            "end_line": 466,
             "kind": "subroutine",
             "name": "KMATERIALPARAM",
-            "path": "permissive/ngrilli_Oxford_Crystal_Plasticity/ExampleInputFiles/DiscreteTwin/kMaterialParam.f",
+            "path": "permissive/ngrilli_Oxford_Crystal_Plasticity/kMaterialParam.f",
             "start_line": 6
           },
           "KMATVEC6": {
@@ -5428,6 +5722,14 @@
             "name": "KSLIP6ET",
             "path": "permissive/ngrilli_Oxford_Crystal_Plasticity/kslip6ET.f",
             "start_line": 2
+          },
+          "KSLIPCREEPPOWERLAW": {
+            "body_sha256": "584cc3b757afc7d6d4fbb9bdef6e3b3896d7c36bc1c6b9db37bdb15132afae81",
+            "end_line": 184,
+            "kind": "subroutine",
+            "name": "KSLIPCREEPPOWERLAW",
+            "path": "permissive/ngrilli_Oxford_Crystal_Plasticity/kslipCreepPowerLaw.f",
+            "start_line": 7
           },
           "KSLIPPOWERLAW": {
             "body_sha256": "897f978e8f2f7b2deaff5aba795f810445242d7b2fa9e273de8823c7b33187b2",
@@ -5508,8 +5810,55 @@
         ]
       },
       "entry_routine": "UMAT",
-      "furthest_stage": "entry_detected",
+      "furthest_stage": "dependencies_resolved",
       "id": "ngrilli_umat",
+      "identity": {
+        "canonical_source_id": "7a9020f367817e4a0679b864fb78bc7e",
+        "closure_routines": [
+          "KCRSS",
+          "KCURLET",
+          "KDETER",
+          "KDIRNS",
+          "KDOTPROD",
+          "KFINDNEIGHBOURHOOD",
+          "KGMATVEC6",
+          "KGNDL2ET",
+          "KHARDENING",
+          "KMAT",
+          "KMATERIALPARAM",
+          "KMATVEC6",
+          "KRHOTWININIT",
+          "KSLIP0",
+          "KSLIP5ET",
+          "KSLIP6ET",
+          "KSLIPCREEPPOWERLAW",
+          "KSLIPPOWERLAW",
+          "KTWINROT",
+          "KTWINVOLFRACINTEGRAL",
+          "KVECMAT6",
+          "KVECPROD",
+          "LAPINVERSE",
+          "ROTORD4SIG",
+          "TRACE",
+          "UMAT"
+        ],
+        "closure_size": 26,
+        "code_only_sha256": "16db1b9b58409ec840d1a15c493d3c7ee4cc24c36e17943a419ea267424a7911",
+        "entry_routine": "UMAT",
+        "identity_kind": "dependency_closure",
+        "normalised_content_sha256": "7642cf67b96a9394dfcf7c0265129eee4216ca6ded46575111267397e669e9b0"
+      },
+      "inferred_dimensions": {
+        "literal_statev_index": 125,
+        "minimum_nstatv_for": {
+          "3": 125,
+          "4": 125,
+          "6": 125
+        },
+        "minimum_ntens": null,
+        "note": "minimum_ntens is the largest literal index written into a tensor-shaped argument; driving the source with a smaller NTENS writes out of bounds",
+        "statev_terms": []
+      },
       "license_source": "LICENSE",
       "license_spdx": "MIT",
       "material_blocker": "dimensions and material vector not yet established from the upstream example decks",
@@ -5520,20 +5869,45 @@
       "retrieved_at": "pinned at 85102ed35dc4",
       "source_path": "permissive/ngrilli_Oxford_Crystal_Plasticity/umat.for",
       "stages": {
+        "contract_constructed": {
+          "reason": "the declared dimensions are too small for what this source addresses: it needs NTENS >= 0 and, at NTENS=6, NSTATV >= 125, but the contract declares NTENS=6 and NSTATV=0. Running it would read or write outside the driver's arrays",
+          "required_nstatv": 125,
+          "required_ntens": 0,
+          "seconds": 0.079,
+          "status": "dimension_inference_conflict"
+        },
         "dependencies_resolved": {
-          "ambiguous": [
-            "KMAT",
-            "KMATERIALPARAM"
+          "closure_size": 26,
+          "external_files": [
+            "kCRSS.f",
+            "kHardening.f",
+            "kMaterialParam.f",
+            "kRhoTwinInit.f",
+            "kcurlET.f",
+            "kdirns.f",
+            "kgndl2ET.f",
+            "kmat.f",
+            "kslip0.f",
+            "kslip5ET.f",
+            "kslip6ET.f",
+            "kslipCreepPowerLaw.f",
+            "kslipPowerLaw.f",
+            "ktwinneighbourhood.f",
+            "ktwinrot.f",
+            "utils.f"
           ],
-          "reason": "these helpers have differing definitions in different files and none is local, so choosing one would change the numerics: KMAT, KMATERIALPARAM",
-          "status": "failed"
+          "multi_file": true,
+          "seconds": 0.001,
+          "status": "succeeded"
         },
         "discovered": {
           "content_sha256": "0732d6432730e20089416f1485343229b7eeacbc8b3a18853705b3b882f1526d",
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "entry_detected": {
           "entry": "UMAT",
+          "seconds": 0.484,
           "status": "succeeded"
         },
         "license_classified": {
@@ -5564,6 +5938,9 @@
       "dependency_graph": {
         "abaqus_runtime_calls": [],
         "conflicts": [],
+        "declared_donors": [
+          "permissive/sergiolucarini_UMAT4COMSOL/neohookean/ABA_PARAM.INC"
+        ],
         "duplicates": [],
         "edges": {
           "UMAT": []
@@ -5662,27 +6039,33 @@
             "EMOD",
             "ENU"
           ],
+          "seconds": 0.001,
           "status": "succeeded"
         },
         "dependencies_resolved": {
           "closure_size": 1,
           "external_files": [],
           "multi_file": false,
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "derivatives_verified": {
           "rows": 140,
+          "seconds": 0.002,
           "status": "succeeded"
         },
         "discovered": {
           "content_sha256": "513cb6a98be7f433c306ae1bc600de8910816d84022ad112dee447dd91fe16f8",
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "entry_detected": {
           "entry": "UMAT",
+          "seconds": 0.002,
           "status": "succeeded"
         },
         "generated_compiled": {
+          "seconds": 2.272,
           "status": "succeeded"
         },
         "license_classified": {
@@ -5692,23 +6075,29 @@
           "status": "succeeded"
         },
         "original_compiled": {
+          "seconds": 0.235,
           "status": "succeeded"
         },
         "original_executed": {
           "increments": 10,
+          "seconds": 0.006,
           "status": "succeeded"
         },
         "primal_parity": {
+          "seconds": 0.0,
           "status": "succeeded",
           "worst_relative_difference": 0.0
         },
         "reference_resolved": {
+          "seconds": 0.031,
           "status": "succeeded"
         },
         "transformed": {
+          "seconds": 0.07,
           "status": "succeeded"
         },
         "transformed_executed": {
+          "seconds": 0.003,
           "status": "succeeded"
         }
       }
@@ -5733,6 +6122,9 @@
       "dependency_graph": {
         "abaqus_runtime_calls": [],
         "conflicts": [],
+        "declared_donors": [
+          "permissive/sergiolucarini_UMAT4COMSOL/elastoplastic/ABA_PARAM.INC"
+        ],
         "duplicates": [
           {
             "bodies_agree": true,
@@ -5911,27 +6303,33 @@
             "EMOD",
             "SY"
           ],
+          "seconds": 0.052,
           "status": "succeeded"
         },
         "dependencies_resolved": {
           "closure_size": 3,
           "external_files": [],
           "multi_file": false,
+          "seconds": 0.0,
           "status": "succeeded"
         },
         "derivatives_verified": {
           "rows": 260,
+          "seconds": 0.003,
           "status": "succeeded"
         },
         "discovered": {
           "content_sha256": "dafd083b99b2dc3fa14a9332505e6a69ccaee5c0d9d0e58edf1738718dfb2015",
+          "seconds": 0.001,
           "status": "succeeded"
         },
         "entry_detected": {
           "entry": "UMAT",
+          "seconds": 0.054,
           "status": "succeeded"
         },
         "generated_compiled": {
+          "seconds": 10.17,
           "status": "succeeded"
         },
         "license_classified": {
@@ -5941,36 +6339,55 @@
           "status": "succeeded"
         },
         "original_compiled": {
+          "seconds": 4.519,
           "status": "succeeded"
         },
         "original_executed": {
           "increments": 10,
+          "seconds": 0.009,
           "status": "succeeded"
         },
         "primal_parity": {
+          "seconds": 0.001,
           "status": "succeeded",
           "worst_relative_difference": 0.0
         },
         "reference_resolved": {
+          "seconds": 0.039,
           "status": "succeeded"
         },
         "transformed": {
+          "seconds": 0.202,
           "status": "succeeded"
         },
         "transformed_executed": {
+          "seconds": 0.005,
           "status": "succeeded"
         }
       }
     },
     {
-      "blocker": "contract_constructed: no material property vector or loading history is available for this source; upstream provides none and none may be invented",
+      "blocker": null,
       "canonical_source_id": "108518e08678d2939acf0eac4859de80",
       "commit_sha": "e62506fd842611566bac5b19ae1041b52b40ddc6",
+      "comparison": {
+        "agreeing": 7120,
+        "disagreeing": 0,
+        "reference_unresolved": 0,
+        "rows": 7120,
+        "rows_by_judgement": {
+          "relative": 857,
+          "within_reference_resolution": 6263
+        },
+        "substantive_rows": 857,
+        "worst_substantive_relative_error": 7.106919071380207e-07
+      },
       "constitutive_class": "crystal plasticity (Huang/Kysar lineage)",
       "content_sha256": "8e17d7614676e8b4afb99c5e90548b09b493f3a9371c437cf1ef4fb4035ab784",
       "dependency_graph": {
         "abaqus_runtime_calls": [],
         "conflicts": [],
+        "declared_donors": [],
         "duplicates": [
           {
             "bodies_agree": true,
@@ -6656,7 +7073,7 @@
         ]
       },
       "entry_routine": "UMAT",
-      "furthest_stage": "dependencies_resolved",
+      "furthest_stage": "derivatives_verified",
       "id": "lucarini_crystalplasticity",
       "identity": {
         "canonical_source_id": "108518e08678d2939acf0eac4859de80",
@@ -6679,7 +7096,6 @@
       },
       "license_source": "LICENSE (SPDX MIT, reported by the GitHub licence API)",
       "license_spdx": "MIT",
-      "material_blocker": "byte-identical to coupled/umat.f in the same repository, so it is one implementation reachable at two paths; its 160-constant deck has not been mapped to the source's PROPS layout",
       "notes": "crystal plasticity (Huang/Kysar lineage)",
       "redistribution_permitted": true,
       "repository": "sergiolucarini_UMAT4COMSOL",
@@ -6688,21 +7104,227 @@
       "source_path": "permissive/sergiolucarini_UMAT4COMSOL/crystalplasticity/umat.f",
       "stages": {
         "contract_constructed": {
-          "reason": "no material property vector or loading history is available for this source; upstream provides none and none may be invented",
-          "status": "blocked_by_missing_material_data"
+          "material": {
+            "deformation_gradient_increment": [],
+            "dstran_per_increment": [
+              0.0001,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "finite_strain": false,
+            "material_is_physical": true,
+            "n_increments": 20,
+            "parameters": [
+              {
+                "name": "C11",
+                "props_index": 1
+              },
+              {
+                "name": "C12",
+                "props_index": 2
+              }
+            ],
+            "props": [
+              168400.0,
+              121400.0,
+              75400.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.16462,
+              0.875881,
+              0.453579,
+              0.7524,
+              0.185844,
+              -0.631946,
+              -0.637804,
+              0.445304,
+              -0.628419,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              10.0,
+              0.001,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              541.5,
+              109.5,
+              60.8,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.5,
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              10.0,
+              1e-05,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "provenance": "crystalplasticity/crystalplasticity.inp, the *User Material block for material U1 declaring constants=160, read in file order. The source addresses PROPS up to index 160 and no further, so the count matches exactly. The same deck declares *Depvar 172, which is why nstatv is 172 here and not the 21 this manifest previously carried: the source indexes STATEV(NSTATV-22), and 21 would address STATEV(-1). The strain path, increment count and DTIME are declared by this pipeline, not by upstream: every deck in the snapshot is a boundary-value problem rather than a material-point strain history."
+          },
+          "nprops": 160,
+          "nstatv": 172,
+          "ntens": 6,
+          "parameters": [
+            "C11",
+            "C12"
+          ],
+          "seconds": 0.059,
+          "status": "succeeded"
         },
         "dependencies_resolved": {
           "closure_size": 18,
           "external_files": [],
           "multi_file": false,
+          "seconds": 0.0,
+          "status": "succeeded"
+        },
+        "derivatives_verified": {
+          "rows": 7120,
+          "seconds": 0.077,
           "status": "succeeded"
         },
         "discovered": {
           "content_sha256": "8e17d7614676e8b4afb99c5e90548b09b493f3a9371c437cf1ef4fb4035ab784",
+          "seconds": 0.001,
           "status": "succeeded"
         },
         "entry_detected": {
           "entry": "UMAT",
+          "seconds": 0.077,
+          "status": "succeeded"
+        },
+        "generated_compiled": {
+          "seconds": 2.981,
           "status": "succeeded"
         },
         "license_classified": {
@@ -6710,37 +7332,61 @@
           "license_spdx": "MIT",
           "redistribution_permitted": true,
           "status": "succeeded"
+        },
+        "original_compiled": {
+          "seconds": 0.735,
+          "status": "succeeded"
+        },
+        "original_executed": {
+          "increments": 20,
+          "seconds": 0.03,
+          "status": "succeeded"
+        },
+        "primal_parity": {
+          "seconds": 0.008,
+          "status": "succeeded",
+          "worst_relative_difference": 4.127110947956279e-16
+        },
+        "reference_resolved": {
+          "seconds": 0.151,
+          "status": "succeeded"
+        },
+        "transformed": {
+          "seconds": 0.308,
+          "status": "succeeded"
+        },
+        "transformed_executed": {
+          "seconds": 0.039,
+          "status": "succeeded"
         }
       }
     }
   ],
   "failure_taxonomy": {
     "contract_constructed": [
-      "jgomezc1_UMAT_NKH_1.02",
-      "jgomezc1_UMAT_VPDCL",
-      "lucarini_crystalplasticity"
-    ],
-    "dependencies_resolved": [
       "ngrilli_umat"
+    ],
+    "original_executed": [
+      "jgomezc1_UMAT_NKH_1.02"
     ]
   },
   "funnel": {
     "candidates": 11,
-    "reached_contract_constructed": 7,
-    "reached_dependencies_resolved": 10,
-    "reached_derivatives_verified": 7,
+    "reached_contract_constructed": 10,
+    "reached_dependencies_resolved": 11,
+    "reached_derivatives_verified": 9,
     "reached_discovered": 11,
     "reached_entry_detected": 11,
-    "reached_generated_compiled": 7,
+    "reached_generated_compiled": 10,
     "reached_license_classified": 11,
-    "reached_original_compiled": 7,
-    "reached_original_executed": 7,
-    "reached_primal_parity": 7,
-    "reached_reference_resolved": 7,
-    "reached_transformed": 7,
-    "reached_transformed_executed": 7
+    "reached_original_compiled": 10,
+    "reached_original_executed": 9,
+    "reached_primal_parity": 9,
+    "reached_reference_resolved": 9,
+    "reached_transformed": 10,
+    "reached_transformed_executed": 9
   },
-  "generated_at": "2026-08-25T20:53:46.513206+00:00",
+  "generated_at": "2026-08-27T17:06:00.150512+00:00",
   "mode": "offline",
   "repositories": [
     {

@@ -1,30 +1,30 @@
 {
   "answers": "Which verification route reached each collection source, and how much do the two routes overlap?",
   "command": "python tools/figures/build_collection_figures.py",
-  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
   "figure": "figure_verification_routes",
-  "generated_at": "2026-08-26T18:48:40.168095+00:00",
+  "generated_at": "2026-08-27T17:06:05.617265+00:00",
   "inputs": [
     {
-      "bytes": 33097,
+      "bytes": 32969,
       "path": "paper_results/generality/generality_matrix.csv",
-      "sha256": "19aa17c889a05fd80b2d30e92f08b8e458a8e13efd377a2b3ff6bf0a87fb9cef"
+      "sha256": "2f88ea8c845fc0a19332ca7a68476f7b3a569207762e0dc74b279d9dfc0ea67e"
     }
   ],
   "layout": {
     "configured_font_sizes": {
-      "axes.labelsize": 10.0,
-      "axes.titlesize": 11.0,
-      "figure.titlesize": 12.0,
-      "font.size": 10.0,
-      "legend.fontsize": 9.5,
-      "xtick.labelsize": 9.5,
-      "ytick.labelsize": 9.5
+      "axes.labelsize": 13.0,
+      "axes.titlesize": 15.0,
+      "figure.titlesize": 16.0,
+      "font.size": 13.0,
+      "legend.fontsize": 12.0,
+      "xtick.labelsize": 12.0,
+      "ytick.labelsize": 12.0
     },
     "figure_width_in": 6.2,
     "minimum_rendered_pt": 9.0
   },
-  "notes": "",
+  "notes": "38 of 41 sources are verified by at least one route. The 3 that are not keep their place in the denominator and are shown as their own bar; the four bars sum to the denominator. This belongs in the caption rather than on the figure, where at a readable size it overlapped the first row of bars.",
   "outputs": {
     "axes": [
       {
@@ -38,11 +38,11 @@
     ],
     "height_inches": 3.1,
     "pdf": "paper_results/figures/figure_verification_routes.pdf",
-    "pdf_sha256": "d171056926440d60178df70e1400ff759d6897c686a1b8c0c4a3b195f325bfc4",
+    "pdf_sha256": "8d0b5f6a73682931bc21ef9c1b86ae1ef8836ebe08b6e3bacec7f1c7a9aab3e7",
     "png": "paper_results/figures/figure_verification_routes.png",
-    "png_sha256": "dd51a9db85b67471ca088c09bfc8216f9b022243ddbea452c93f8f9427b66626",
-    "smallest_configured_pt": 9.5,
-    "smallest_printed_pt": 9.5,
+    "png_sha256": "8f6af4acc618383bdae6dfc869061904bd2aacc8e166e605b551833e82a45971",
+    "smallest_configured_pt": 12.0,
+    "smallest_printed_pt": 12.0,
     "width_inches": 6.2
   },
   "plotted_filters": {
@@ -55,18 +55,16 @@
     "offline_route": "numerical_verification == 'succeeded'"
   },
   "row_counts": {
-    "Abaqus route only": 12,
-    "both routes": 5,
+    "Abaqus route only": 11,
+    "both routes": 6,
     "eligible": 41,
-    "neither route": 5,
-    "offline route only": 19,
+    "neither route": 3,
+    "offline route only": 21,
     "unverified_with_reasons": [
-      "derivatives_verified: 5 of 3600 rows sit at the centred-difference noise floor and cannot be resolved by it",
-      "derivatives_verified: 28 of 560 rows sit on a branch boundary (increment 10), where the centred difference straddles the",
-      "dependencies_resolved: these helpers have differing definitions in different files and none is local, so choosing one wo",
-      "contract_constructed: no material property vector or loading history is available for this source; upstream provides non",
+      "derivatives_verified: 1 of 3600 rows sit at the centred-difference noise floor and cannot be resolved by it",
+      "contract_constructed: the declared dimensions are too small for what this source addresses: it needs NTENS >= 0 and, at ",
       "abaqus: the paired round recorded failed_execution for this source (slurm 791506), and it has not been run through the o"
     ],
-    "verified_by_at_least_one": 36
+    "verified_by_at_least_one": 38
   }
 }

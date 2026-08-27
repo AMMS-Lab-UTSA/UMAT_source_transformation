@@ -1,11 +1,11 @@
 Model,Verdict,Rows,Agreeing,Disagreeing,Unresolved (noise floor),Unresolved (branch crossing),Worst rel error
-m6_fcc,unresolved,3600,3595,0,5,0,8.195e-07
-sweep_drucker_prager,unresolved,560,532,0,0,28,1.183e-08
+m6_fcc,unresolved,3600,3599,0,1,0,8.195e-07
 m1_elastic,succeeded,240,240,0,0,0,2.480e-08
 m2_cubic,succeeded,360,360,0,0,0,3.103e-12
 m5_cpflow,succeeded,840,840,0,0,0,5.927e-07
 sweep_aniso_ortho,succeeded,1080,1080,0,0,0,2.181e-12
 sweep_damage_elastic,succeeded,360,360,0,0,0,2.479e-08
+sweep_drucker_prager,succeeded,560,560,0,0,0,1.183e-08
 sweep_eco,succeeded,240,240,0,0,0,2.480e-08
 sweep_j2_bilinear,succeeded,560,560,0,0,0,2.480e-08
 sweep_j2_combined,succeeded,1300,1300,0,0,0,2.480e-08

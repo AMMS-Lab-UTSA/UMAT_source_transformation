@@ -15,6 +15,7 @@ verification instrument rather than a tolerance-fitting exercise:
 
 from __future__ import annotations
 
+import csv
 import json
 from pathlib import Path
 
@@ -272,8 +273,17 @@ def test_normalization_is_scale_aware_across_orders():
 # --------------------------------------------------------------------------- #
 # Generated datasets
 # --------------------------------------------------------------------------- #
-@pytest.mark.parametrize("model,expected_rows", [("j2", 108), ("code_imp", 96)])
-def test_archived_convergence_dataset_is_internally_consistent(model, expected_rows):
+@pytest.mark.parametrize("model", ["j2", "code_imp"])
+def test_archived_convergence_dataset_is_internally_consistent(model):
+    """Consistency, on a count the dataset has to justify from its own shape.
+
+    The row count used to be a literal here. It is the product of the loading
+    path, the derivative orders and the direction sets, so lengthening the
+    path made this fail with nothing wrong -- and the only way to satisfy a
+    literal is to edit it, which is exactly the move that would also hide a
+    study that had quietly stopped emitting rows. Deriving it instead means
+    the test still fails when rows go missing.
+    """
     path = (REPO_ROOT / "paper_results" / "higher_order_convergence" / model
             / "convergence_evidence.json")
     if not path.exists():
@@ -284,6 +294,25 @@ def test_archived_convergence_dataset_is_internally_consistent(model, expected_r
     dataset = json.loads(path.read_text(encoding="utf-8"))
     summary = dataset["summary"]
     counts = summary["classification_counts"]
+
+    rows_path = path.with_name("convergence_rows.csv")
+    with rows_path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    increments = {int(row["increment"]) for row in rows}
+    orders = {int(row["order"]) for row in rows}
+    directions = {row["directions"] for row in rows}
+    components = {int(row["stress_component"]) for row in rows}
+    # One row for every combination the study set out to cover, and no
+    # duplicates: each order carries its own direction sets, so the product is
+    # taken over the direction sets belonging to each order.
+    expected_rows = len(increments) * len(components) * len(directions)
+    assert len(rows) == expected_rows, (
+        f"{model}: {len(rows)} rows for {len(increments)} increments x "
+        f"{len(components)} components x {len(directions)} direction sets")
+    assert len({(r["increment"], r["order"], r["directions"],
+                 r["stress_component"]) for r in rows}) == len(rows), (
+        "a comparison appears twice")
+    assert len(orders) == len({d.count("|") + 1 for d in directions})
 
     assert summary["rows"] == expected_rows
     assert sum(counts.values()) == expected_rows

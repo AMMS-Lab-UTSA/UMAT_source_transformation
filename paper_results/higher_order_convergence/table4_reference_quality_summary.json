@@ -1,8 +1,8 @@
 {
   "all_models_defensible": false,
   "artifact_sha256": {
-    "TABLE4_REFERENCE_QUALITY.md": "c9329ecdc21018ff4c9ffb1f728b1d17d9ba1734a094a78418d0bf6ca8fdd58d",
-    "table4_higher_order_convergence.csv": "437154addebadbdfdca5fc88c175ba968d91505fe2e3821fa18dcc4386d7cf4c"
+    "TABLE4_REFERENCE_QUALITY.md": "65ad0747102c3039ec05f5801970f652969108f9733cb6d85ed9a6e77f1f9e05",
+    "table4_higher_order_convergence.csv": "73a2398b210ce64e29ac235e8791bcf400cdbe9a7782b7c4704e0bc80ad1e4e2"
   },
   "models": {
     "UMAT_PCL": {
@@ -430,9 +430,9 @@
       "classification_counts": {
         "cancellation_limited": 0,
         "empirically_zero_over_stencil": 0,
-        "expected_zero_independently_supported": 77,
+        "expected_zero_independently_supported": 474,
         "reference_unresolved": 0,
-        "resolved": 31
+        "resolved": 66
       },
       "defensible": true,
       "model": "controlled_j2_actual_umat",
@@ -476,8 +476,8 @@
         ],
         "zero_support": "structural stencil invariance, exact local affineness, and an independent recomputation at 200 decimal digits with step 2.000e-08"
       },
-      "rows": 108,
-      "rows_admitted_to_table4": 108,
+      "rows": 540,
+      "rows_admitted_to_table4": 540,
       "rows_disagreeing_with_reference": 0,
       "rows_withheld_from_table4": 0,
       "withheld_rows": []

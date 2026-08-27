@@ -28,7 +28,15 @@ from umat_oti.validation.actual_umat_higher_order import (  # noqa: E402
 
 DEFAULT_CONFIG = REPO_ROOT / "examples" / "j2_actual_higher_order.json"
 DEFAULT_RESULTS = REPO_ROOT / "paper_results" / "actual_umat_higher_order" / "j2"
-PUBLISHED = ("table2_ddsdde_illustrative.csv", "actual_umat_ddsdde.csv",
+#: Every artefact this round produces, so that what is published always comes
+#: from one execution. Publishing a subset let the tangent table advance while
+#: the higher-order table beside it stayed behind from an earlier run, with
+#: nothing to reveal that the two described different loading paths.
+PUBLISHED = ("table2_ddsdde_illustrative.csv",
+             "table4_higher_order_actual_umat.csv",
+             "actual_umat_ddsdde.csv",
+             "actual_umat_primal.csv",
+             "actual_umat_higher_order_comparison.csv",
              "actual_umat_higher_order_evidence.json")
 
 

@@ -17,21 +17,11 @@
       "Model": "m6_fcc",
       "Verdict": "unresolved",
       "Rows": 3600,
-      "Agreeing": 3595,
+      "Agreeing": 3599,
       "Disagreeing": 0,
-      "Unresolved (noise floor)": 5,
+      "Unresolved (noise floor)": 1,
       "Unresolved (branch crossing)": 0,
       "Worst rel error": "8.195e-07"
-    },
-    {
-      "Model": "sweep_drucker_prager",
-      "Verdict": "unresolved",
-      "Rows": 560,
-      "Agreeing": 532,
-      "Disagreeing": 0,
-      "Unresolved (noise floor)": 0,
-      "Unresolved (branch crossing)": 28,
-      "Worst rel error": "1.183e-08"
     },
     {
       "Model": "m1_elastic",
@@ -82,6 +72,16 @@
       "Unresolved (noise floor)": 0,
       "Unresolved (branch crossing)": 0,
       "Worst rel error": "2.479e-08"
+    },
+    {
+      "Model": "sweep_drucker_prager",
+      "Verdict": "succeeded",
+      "Rows": 560,
+      "Agreeing": 560,
+      "Disagreeing": 0,
+      "Unresolved (noise floor)": 0,
+      "Unresolved (branch crossing)": 0,
+      "Worst rel error": "1.183e-08"
     },
     {
       "Model": "sweep_eco",

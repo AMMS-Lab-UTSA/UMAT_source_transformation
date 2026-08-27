@@ -14,13 +14,14 @@ reference's limits.
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
 
 from umat_oti.validation.parameter_sensitivity_validation import (
-    DEFAULT_REL_STEP, ReplayResult, compare, driver_source, fd_noise_floor,
-    primal_parity,
+    DEFAULT_REL_STEP, ReplayResult, build_original_driver, compare,
+    driver_source, fd_noise_floor, primal_parity, replay, replay_reproducibly,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -150,3 +151,145 @@ def test_a_model_with_unverified_rows_reports_no_verified_directions_for_them():
     for model in payload["models"]:
         verified = model.get("verified_parameter_directions", [])
         assert len(verified) <= model.get("parameter_count", 0), model["model"]
+
+
+# --------------------------------------------------------------------------
+# What the reference build has to be before anything may be measured against
+# it. Each of these is checked by compiling Fortran that misbehaves in the
+# specific way and running it, because the failures they describe are ones that
+# produce plausible-looking numbers rather than an error.
+# --------------------------------------------------------------------------
+
+_UMAT_HEAD = """      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,RPL,DDSDDT,
+     1 DRPLDE,DRPLDT,STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,
+     2 CMNAME,NDI,NSHR,NTENS,NSTATV,PROPS,NPROPS,COORDS,DROT,PNEWDT,
+     3 CELENT,DFGRD0,DFGRD1,NOEL,NPT,LAYER,KSPT,KSTEP,KINC)
+      IMPLICIT REAL*8(A-H,O-Z)
+      CHARACTER*80 CMNAME
+      DIMENSION STRESS(NTENS),STATEV(NSTATV),DDSDDE(NTENS,NTENS),
+     1 DDSDDT(NTENS),DRPLDE(NTENS),STRAN(NTENS),DSTRAN(NTENS),
+     2 TIME(2),PREDEF(1),DPRED(1),PROPS(NPROPS),COORDS(3),DROT(3,3),
+     3 DFGRD0(3,3),DFGRD1(3,3)
+"""
+
+_UMAT_TAIL = """      STRESS(1)=STRESS(1)+PROPS(1)*DSTRAN(1)
+      STATEV(1)=STRAN(1)+DSTRAN(1)
+      DDSDDE(1,1)=PROPS(1)
+      RETURN
+      END
+"""
+
+#: Stops part way through the path the way a real local solver does: it prints
+#: why and calls EXIT, which leaves the process with status 0.
+ABORTING_UMAT = _UMAT_HEAD + """      IF (KINC.GT.3) THEN
+        WRITE(*,*)
+        WRITE(*,*) 'LOCAL SOLVE DID NOT CONVERGE'
+        WRITE(*,*) 'AFTER=',10,' ITERATIONS'
+        CALL EXIT
+      END IF
+""" + _UMAT_TAIL
+
+#: Prints a warning on one increment and carries on to the end of the path.
+CHATTY_UMAT = _UMAT_HEAD + """      IF (KINC.EQ.2) WRITE(*,*) 'WARNING: SMALL PIVOT, CONTINUING'
+""" + _UMAT_TAIL
+
+
+def _nondeterministic_umat(counter_file) -> str:
+    """A UMAT that answers differently in every process.
+
+    A source that reads an uninitialised variable behaves like this, but
+    uninitialised memory is undefined rather than guaranteed to differ, so the
+    run-to-run change is driven by a counter on disk instead. What matters to
+    the code under test is only that identical input produces different output.
+    """
+    return _UMAT_HEAD + f"""      IF (KINC.EQ.1) THEN
+        NRUN=0
+        OPEN(71,FILE='{counter_file}',STATUS='OLD',IOSTAT=IOS)
+        IF (IOS.EQ.0) THEN
+          READ(71,*,IOSTAT=IOS) NRUN
+          IF (IOS.NE.0) NRUN=0
+          CLOSE(71)
+        END IF
+        OPEN(72,FILE='{counter_file}',STATUS='REPLACE')
+        WRITE(72,*) NRUN+1
+        CLOSE(72)
+        STATEV(2)=DBLE(NRUN)
+      END IF
+      STRESS(1)=STRESS(1)+PROPS(1)*DSTRAN(1)+STATEV(2)*1.0D-2
+      STATEV(1)=STRAN(1)+DSTRAN(1)
+      DDSDDE(1,1)=PROPS(1)
+      RETURN
+      END
+"""
+
+
+def _build(tmp_path, text, name, *, nstatv=1):
+    source = tmp_path / f"{name}.for"
+    source.write_text(text, encoding="utf-8")
+    return build_original_driver(source, tmp_path / name, ntens=1,
+                                 nstatv=nstatv, nprops=1)
+
+
+@pytest.mark.fortran
+@pytest.mark.skipif(shutil.which("gfortran") is None, reason="gfortran not on PATH")
+def test_a_model_that_stops_part_way_is_reported_as_stopping_not_as_bad_data(tmp_path):
+    """A UMAT can abort without XIT and without a non-zero exit status.
+
+    CALL EXIT leaves the process at status 0 with the rows it already wrote
+    still on stdout, so nothing but the row count establishes that the path was
+    never finished. Reporting the model's own message with the count is the
+    difference between naming the abort and blaming the parser.
+    """
+    driver = _build(tmp_path, ABORTING_UMAT, "abort")
+    with pytest.raises(RuntimeError) as excinfo:
+        replay(driver, [1000.0], [[1e-4]] * 5, ntens=1, nstatv=1)
+    message = str(excinfo.value)
+    assert "completed 3 of 5 increments" in message
+    assert "LOCAL SOLVE DID NOT CONVERGE" in message
+
+
+@pytest.mark.fortran
+@pytest.mark.skipif(shutil.which("gfortran") is None, reason="gfortran not on PATH")
+def test_a_warning_printed_mid_path_does_not_destroy_the_replay(tmp_path):
+    """A model is allowed to talk. Only the row count decides completeness."""
+    driver = _build(tmp_path, CHATTY_UMAT, "chatty")
+    result = replay(driver, [1000.0], [[1e-4]] * 5, ntens=1, nstatv=1)
+    assert result.increments == 5
+    assert result.stress[-1][0] == pytest.approx(5 * 1000.0 * 1e-4)
+
+
+@pytest.mark.fortran
+@pytest.mark.skipif(shutil.which("gfortran") is None, reason="gfortran not on PATH")
+def test_a_build_that_answers_differently_each_run_is_refused_as_a_reference(tmp_path):
+    """The precondition every later stage depends on and none of them checks.
+
+    Primal parity compares one evaluation against another build's; a centred
+    difference divides the gap between two evaluations by a step of order 1e-5.
+    Both are meaningless unless the same PROPS reproduce the same response, and
+    a single replay cannot tell -- each run on its own looks like a complete,
+    well-formed answer.
+    """
+    driver = _build(tmp_path, _nondeterministic_umat(tmp_path / "count.txt"),
+                    "drift", nstatv=2)
+    path = [[1e-4]] * 5
+
+    # Each run on its own is a full, plausible replay: the defect is invisible
+    # to any single evaluation.
+    first = replay(driver, [1000.0], path, ntens=1, nstatv=2)
+    second = replay(driver, [1000.0], path, ntens=1, nstatv=2)
+    assert first.increments == second.increments == 5
+    assert first.stress[0][0] != second.stress[0][0]
+
+    with pytest.raises(RuntimeError) as excinfo:
+        replay_reproducibly(driver, [1000.0], path, ntens=1, nstatv=2)
+    assert "not reproducible" in str(excinfo.value)
+
+
+@pytest.mark.fortran
+@pytest.mark.skipif(shutil.which("gfortran") is None, reason="gfortran not on PATH")
+def test_a_reproducible_build_passes_the_check_and_returns_its_response(tmp_path):
+    """The gate must not cost a well-behaved model anything."""
+    driver = _build(tmp_path, _UMAT_HEAD + _UMAT_TAIL, "steady")
+    result = replay_reproducibly(driver, [1000.0], [[1e-4]] * 5, ntens=1, nstatv=1)
+    assert result.increments == 5
+    assert result.stress[-1][0] == pytest.approx(5 * 1000.0 * 1e-4)

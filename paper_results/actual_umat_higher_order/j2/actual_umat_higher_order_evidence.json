@@ -10,35 +10,35 @@
     },
     {
       "path": "<work>/actual_umat_higher_order_driver.f90",
-      "sha256": "dab7b51e4fa20a34250c837d7a5813dd41990ee92650ba74ea6c4182f6c1bbab"
+      "sha256": "6447a4c89decf369ab6a09fafb3494123fd43be1477fbb880434bdf4e114ec23"
     },
     {
       "path": "<work>/actual_umat_higher_order_driver",
-      "sha256": "00d403ccf18d6d09d825cceef45acd708532cc7e9d5c981e5214ac9a4e63b783"
+      "sha256": "a20023601ccf4181883ffaa4862783280a4d2f19bbda70c95489026fc49ffaf2"
     },
     {
       "path": "<work>/oti_hjac.dat",
-      "sha256": "1f47baba5a79d50333b1bea77c576ccbfa7ed096a2f9c1ae0f1f7ed58187e6fd"
+      "sha256": "0d89a1d0ba645938dec3a86234f29bc8f3853cbc517707f7b1ea253c313b4073"
     },
     {
       "path": "<work>/actual_umat_higher_order_comparison.csv",
-      "sha256": "0558485f01398580707357b72ba929c15a235b651411e797d32973d6fd23cfd5"
+      "sha256": "8c1cce39d853919e23304cb043df65d463d070b8491f72113f364c7214b15577"
     },
     {
       "path": "<work>/table4_higher_order_actual_umat.csv",
-      "sha256": "0239f8d5b50b1c1f4aee770750d4b490319a305a3d0291e54b2a1273e4d67960"
+      "sha256": "b5f8c296e99b4d90a641327eb7df0df3b8e89c34e2bb15ccce1d62f7f7509282"
     },
     {
       "path": "<work>/actual_umat_primal.csv",
-      "sha256": "a89579696d887f7de09a8b4b736cc77a9123de68ba82cd446f7ee3ddfff5c23b"
+      "sha256": "1aa86c7f5429d047870679728121cab8025442bd30edc6b3d7389fd0db5b6f47"
     },
     {
       "path": "<work>/actual_umat_ddsdde.csv",
-      "sha256": "bba500f36d48fa07058e0feadc9b786e30ad3a872c6c4f92a8d415f0e3ccf540"
+      "sha256": "54b5da6ce09f6533d5f7659d0ecdee5744d3356ad3f7adefeb2a7372049bf2a5"
     },
     {
       "path": "<work>/table2_ddsdde_illustrative.csv",
-      "sha256": "b8d5293d6634119d134efe10a6de62eab8c6b4794113c9f0667e145f62b42d01"
+      "sha256": "7e4edf371b8a384eb05a0aca25d4ed2bf0af9598de96d08c0db980cdff56ba36"
     }
   ],
   "branch_history": [
@@ -50,18 +50,102 @@
       "yielded": false
     },
     {
-      "dgamma": 0.00031394580304031734,
-      "eqplas_after": 0.00031394580304031734,
+      "dgamma": 0.0,
+      "eqplas_after": 0.0,
       "eqplas_before": 0.0,
       "increment": 2,
+      "yielded": false
+    },
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0,
+      "eqplas_before": 0.0,
+      "increment": 3,
+      "yielded": false
+    },
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0,
+      "eqplas_before": 0.0,
+      "increment": 4,
+      "yielded": false
+    },
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0,
+      "eqplas_before": 0.0,
+      "increment": 5,
+      "yielded": false
+    },
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0,
+      "eqplas_before": 0.0,
+      "increment": 6,
+      "yielded": false
+    },
+    {
+      "dgamma": 8.26173165895574e-05,
+      "eqplas_after": 8.26173165895574e-05,
+      "eqplas_before": 0.0,
+      "increment": 7,
       "yielded": true
     },
     {
-      "dgamma": 0.00023757536285034934,
-      "eqplas_after": 0.0005515211658906667,
-      "eqplas_before": 0.00031394580304031734,
-      "increment": 3,
+      "dgamma": 0.0001652346331791143,
+      "eqplas_after": 0.0002478519497686717,
+      "eqplas_before": 8.26173165895574e-05,
+      "increment": 8,
       "yielded": true
+    },
+    {
+      "dgamma": 0.0001652346331791142,
+      "eqplas_after": 0.00041308658294778586,
+      "eqplas_before": 0.0002478519497686717,
+      "increment": 9,
+      "yielded": true
+    },
+    {
+      "dgamma": 0.00016523463317911406,
+      "eqplas_after": 0.0005783212161268999,
+      "eqplas_before": 0.00041308658294778586,
+      "increment": 10,
+      "yielded": true
+    },
+    {
+      "dgamma": 0.00016523463317911396,
+      "eqplas_after": 0.0007435558493060139,
+      "eqplas_before": 0.0005783212161268999,
+      "increment": 11,
+      "yielded": true
+    },
+    {
+      "dgamma": 0.00016523463317911396,
+      "eqplas_after": 0.0009087904824851278,
+      "eqplas_before": 0.0007435558493060139,
+      "increment": 12,
+      "yielded": true
+    },
+    {
+      "dgamma": 0.00023755116395937347,
+      "eqplas_after": 0.0011463416464445014,
+      "eqplas_before": 0.0009087904824851278,
+      "increment": 13,
+      "yielded": true
+    },
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0011463416464445014,
+      "eqplas_before": 0.0011463416464445014,
+      "increment": 14,
+      "yielded": false
+    },
+    {
+      "dgamma": 0.0,
+      "eqplas_after": 0.0011463416464445014,
+      "eqplas_before": 0.0011463416464445014,
+      "increment": 15,
+      "yielded": false
     }
   ],
   "canonical_manifest": "<work>/derivative_manifest.json",
@@ -73,13 +157,16 @@
     },
     "csv": "<work>/actual_umat_higher_order_comparison.csv",
     "failed_rows": 0,
-    "max_absolute_error": 12320.98046875,
-    "max_relative_error": 1.0013220965779142,
-    "max_relative_error_when_absolute_tolerance_exceeded": 1.9367542501703836e-09,
-    "passed_rows": 108,
+    "max_absolute_error": 11892.05078125,
+    "max_relative_error": 1.000410215594899,
+    "max_relative_error_when_absolute_tolerance_exceeded": 1.8937976950208375e-09,
+    "passed_rows": 540,
     "publication_table": "<work>/table4_higher_order_actual_umat.csv",
     "relative_tolerance": 1e-07,
-    "rows": 108
+    "rows": 540,
+    "rows_judged_by_tolerance": 66,
+    "rows_that_are_zeros_of_their_family": 474,
+    "structural_zero_fraction": 1e-08
   },
   "compiler": {
     "command": [
@@ -151,7 +238,7 @@
   "factorial_recovery": "OTI coefficients are multiplied by product factorials before oti_hjac.dat output.",
   "increments": [
     [
-      0.0001,
+      0.00025,
       0.0,
       0.0,
       0.0,
@@ -159,7 +246,87 @@
       0.0
     ],
     [
-      0.002,
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.00025,
       0.0,
       0.0,
       0.0,
@@ -171,6 +338,22 @@
       -0.0001,
       0.0,
       0.0002,
+      0.0,
+      0.0
+    ],
+    [
+      -0.001,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0005,
+      0.0,
+      0.0,
+      -0.0002,
       0.0,
       0.0
     ]
@@ -218,30 +401,150 @@
     {
       "eqplas": "  0.0000000000000000E+00",
       "increment": "1",
-      "stress_1": "  2.6923076923076927E+01",
-      "stress_2": "  1.1538461538461538E+01",
-      "stress_3": "  1.1538461538461538E+01",
+      "stress_1": "  6.7307692307692307E+01",
+      "stress_2": "  2.8846153846153843E+01",
+      "stress_3": "  2.8846153846153843E+01",
       "stress_4": "  0.0000000000000000E+00",
       "stress_5": "  0.0000000000000000E+00",
       "stress_6": "  0.0000000000000000E+00"
     },
     {
-      "eqplas": "  3.1394580304031739E-04",
+      "eqplas": "  0.0000000000000000E+00",
       "increment": "2",
-      "stress_1": "  5.1708526107072043E+02",
-      "stress_2": "  2.6645736946463978E+02",
-      "stress_3": "  2.6645736946463978E+02",
+      "stress_1": "  1.3461538461538461E+02",
+      "stress_2": "  5.7692307692307686E+01",
+      "stress_3": "  5.7692307692307686E+01",
       "stress_4": "  0.0000000000000000E+00",
       "stress_5": "  0.0000000000000000E+00",
       "stress_6": "  0.0000000000000000E+00"
     },
     {
-      "eqplas": "  5.5152116589066603E-04",
+      "eqplas": "  0.0000000000000000E+00",
       "increment": "3",
-      "stress_1": "  5.4993969739918111E+02",
-      "stress_2": "  2.9371637463356285E+02",
-      "stress_3": "  3.0634392796725598E+02",
-      "stress_4": "  1.2627553333693180E+01",
+      "stress_1": "  2.0192307692307691E+02",
+      "stress_2": "  8.6538461538461533E+01",
+      "stress_3": "  8.6538461538461533E+01",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  0.0000000000000000E+00",
+      "increment": "4",
+      "stress_1": "  2.6923076923076923E+02",
+      "stress_2": "  1.1538461538461537E+02",
+      "stress_3": "  1.1538461538461537E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  0.0000000000000000E+00",
+      "increment": "5",
+      "stress_1": "  3.3653846153846155E+02",
+      "stress_2": "  1.4423076923076923E+02",
+      "stress_3": "  1.4423076923076923E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  0.0000000000000000E+00",
+      "increment": "6",
+      "stress_1": "  4.0384615384615387E+02",
+      "stress_2": "  1.7307692307692307E+02",
+      "stress_3": "  1.7307692307692307E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  8.2617316589557411E-05",
+      "increment": "7",
+      "stress_1": "  4.5844348975545273E+02",
+      "stress_2": "  2.0827825512227363E+02",
+      "stress_3": "  2.0827825512227363E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  2.4785194976867175E-04",
+      "increment": "8",
+      "stress_1": "  5.0033046926635825E+02",
+      "stress_2": "  2.4983476536682087E+02",
+      "stress_3": "  2.4983476536682087E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  4.1308658294778597E-04",
+      "increment": "9",
+      "stress_1": "  5.4221744877726371E+02",
+      "stress_2": "  2.9139127561136814E+02",
+      "stress_3": "  2.9139127561136814E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  5.7832121612690004E-04",
+      "increment": "10",
+      "stress_1": "  5.8410442828816917E+02",
+      "stress_2": "  3.3294778585591541E+02",
+      "stress_3": "  3.3294778585591541E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  7.4355584930601399E-04",
+      "increment": "11",
+      "stress_1": "  6.2599140779907464E+02",
+      "stress_2": "  3.7450429610046262E+02",
+      "stress_3": "  3.7450429610046262E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  9.0879048248512795E-04",
+      "increment": "12",
+      "stress_1": "  6.6787838730998010E+02",
+      "stress_2": "  4.1606080634500984E+02",
+      "stress_3": "  4.1606080634500984E+02",
+      "stress_4": "  0.0000000000000000E+00",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  1.1463416464445010E-03",
+      "increment": "13",
+      "stress_1": "  7.0073518883957399E+02",
+      "stress_2": "  4.4331317417901505E+02",
+      "stress_3": "  4.5595163698141062E+02",
+      "stress_4": "  1.2638462802395622E+01",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  1.1463416464445010E-03",
+      "increment": "14",
+      "stress_1": "  4.3150441960880477E+02",
+      "stress_2": "  3.2792855879439969E+02",
+      "stress_3": "  3.4056702159679526E+02",
+      "stress_4": "  1.2638462802395622E+01",
+      "stress_5": "  0.0000000000000000E+00",
+      "stress_6": "  0.0000000000000000E+00"
+    },
+    {
+      "eqplas": "  1.1463416464445010E-03",
+      "increment": "15",
+      "stress_1": "  5.6611980422418935E+02",
+      "stress_2": "  3.8562086648670737E+02",
+      "stress_3": "  3.9825932928910294E+02",
+      "stress_4": " -2.7461525822197626E+00",
       "stress_5": "  0.0000000000000000E+00",
       "stress_6": "  0.0000000000000000E+00"
     }
@@ -258,21 +561,21 @@
   },
   "status": "verified_from_generic_transformed_source",
   "tangent": {
-    "agreeing": 108,
+    "agreeing": 540,
     "csv": "<work>/table2_ddsdde_illustrative.csv",
     "disagreeing": 0,
-    "entries": 108,
-    "measured": 42,
+    "entries": 540,
+    "measured": 186,
     "reference_unresolved": 0,
     "references": [
       "closed-form elastoplastic consistent tangent from umat_oti.validation.j2_reference",
       "80-digit centred difference of the independent integrator umat_oti.validation.actual_umat_higher_order._integrate_increment_mp"
     ],
     "relative_tolerance": 1e-09,
-    "resolved": 108,
-    "structural_zeros": 66,
+    "resolved": 540,
+    "structural_zeros": 354,
     "structural_zeros_disagreeing": 0,
-    "worst_measured_relative_error": 2.517698407641461e-15,
-    "worst_reference_spread_relative_where_measured": 4.770094035526686e-14
+    "worst_measured_relative_error": 2.1878975679081053e-15,
+    "worst_reference_spread_relative_where_measured": 4.623756860179139e-14
   }
 }

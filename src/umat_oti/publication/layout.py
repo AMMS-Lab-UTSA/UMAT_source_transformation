@@ -22,10 +22,13 @@ MAX_FIGURE_HEIGHT_IN = 8.2
 #: The floor every rendered glyph in a figure must clear.
 MIN_RENDERED_PT = 9.0
 
-#: Base sizes for plot text, chosen so the smallest role clears the floor with
-#: margin rather than sitting on it.
-BODY_TEXT_PT = 10.0
-CAPTION_PT = 9.0
+#: Base sizes for plot text. A 2x2 grid at FIGURE_WIDTH_IN gives each panel
+#: about three inches, so the type can be much larger than a four-across strip
+#: allowed -- and it needs to be: at 9 pt in a 1.5 inch panel nothing reads.
+#: These are the sizes as printed, since figures are authored at the width
+#: they are placed at.
+BODY_TEXT_PT = 13.0
+CAPTION_PT = 12.0
 
 #: The interface's smallest text, in CSS pixels. Streamlit's own label tier is
 #: 14 px, which prints below the floor at any usable viewport, so the interface

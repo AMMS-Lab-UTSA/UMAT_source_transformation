@@ -44,7 +44,7 @@ from umat_oti.validation.parameter_sensitivity_validation import (
     compare,
     primal_parity,
     read_oti_csv,
-    replay,
+    replay_reproducibly,
 )
 from umat_oti.validation.reference_resolution import (
     converged_value,
@@ -408,14 +408,26 @@ def run_funnel(candidate: Candidate, work_dir: Path, *,
     record.passed("generated_compiled")
 
     # --- execute both -----------------------------------------------------
+    # The unperturbed replay, run twice. Every later stage reads this build as
+    # a function of PROPS -- parity compares one evaluation against the other
+    # build's, and the reference divides the gap between two evaluations by a
+    # step of order 1e-5 -- so a build that answers differently each time
+    # cannot support any of it. Asking once cannot tell the difference, because
+    # a run that reads uninitialised memory still returns a full set of
+    # plausible numbers.
     try:
-        original = replay(
+        original = replay_reproducibly(
             executable, list(material.props), path,
             ntens=candidate.ntens, nstatv=candidate.nstatv,
             deformation_gradient_increment=(
                 list(material.deformation_gradient_increment)
                 if material.finite_strain else None))
     except RuntimeError as exc:
+        # The run-specific divergence goes to the operator, not into the
+        # frozen artefact: it differs on every run by definition.
+        detail = getattr(exc, "detail", "")
+        if detail:
+            print(f"    [{candidate.id}] first divergence: {detail}", flush=True)
         record.stopped("original_executed", str(exc)[:600])
         return record.as_dict()
     record.passed("original_executed", increments=original.increments)

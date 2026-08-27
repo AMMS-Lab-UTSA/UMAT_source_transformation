@@ -1,11 +1,18 @@
 {
+  "caption": "Internal constitutive Jacobians extracted from the local Newton solve and checked against centred differences of the independently compiled untransformed build. The source's own hand-coded Jacobian is audited against the same reference and is never used as the reference.",
   "column_count": 7,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "environment": {
+    "abaqus": "Abaqus JOB abaqus",
+    "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
+    "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+    "python": "3.11.7"
+  },
   "filters": {
     "deduplication": "one row per canonical source identity"
   },
-  "generated_at": "2026-08-26T18:46:48.865614+00:00",
+  "generated_at": "2026-08-27T17:06:06.516349+00:00",
   "inputs": [
     {
       "bytes": 2853,
@@ -20,5 +27,11 @@
   },
   "row_count": 6,
   "table": "table3_internal_constitutive_jacobians",
+  "unavailable_and_failed": {
+    "cells_with_no_measurement": 0,
+    "marker": "not measured",
+    "policy": "An absent measurement is printed as the marker and never as zero; a failed or withheld case keeps its row and its place in the denominator.",
+    "rows_recording_a_failure_or_withheld_result": []
+  },
   "unavailable_marker": "not measured"
 }

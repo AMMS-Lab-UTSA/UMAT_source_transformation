@@ -1,14 +1,14 @@
 {
-  "answers": "How does the material point's response depend on each material constant, along the whole loading path?",
+  "answers": "How does the material point's response depend on each material constant along the loading path, and does the independent reference agree?",
   "command": "python tools/figures/build_sensitivity_figure.py",
-  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
   "figure": "figure_sensitivities",
-  "generated_at": "2026-08-26T18:46:47.134679+00:00",
+  "generated_at": "2026-08-27T15:25:02.297717+00:00",
   "inputs": [
     {
-      "bytes": 1847975,
+      "bytes": 1848832,
       "path": "paper_results/parameter_sensitivity/table6_comparison_rows.csv",
-      "sha256": "684cd82e2c4e302cd1a9029fe9b466c5f8b8d2039692de0034266c284138737e"
+      "sha256": "fdbfdb0a63474aae9518d665efabef5cf93b4d38e16e4e2ce9075a542c62a589"
     },
     {
       "bytes": 2111,
@@ -18,66 +18,67 @@
   ],
   "layout": {
     "configured_font_sizes": {
-      "axes.labelsize": 10.0,
-      "axes.titlesize": 11.0,
-      "figure.titlesize": 12.0,
-      "font.size": 10.0,
-      "legend.fontsize": 9.5,
-      "xtick.labelsize": 9.5,
-      "ytick.labelsize": 9.5
+      "axes.labelsize": 13.0,
+      "axes.titlesize": 15.0,
+      "figure.titlesize": 16.0,
+      "font.size": 13.0,
+      "legend.fontsize": 12.0,
+      "xtick.labelsize": 12.0,
+      "ytick.labelsize": 12.0
     },
     "figure_width_in": 6.2,
     "minimum_rendered_pt": 9.0
   },
-  "notes": "Row-adjudication counts are reported in the validation table, not here: they answer how many comparisons the reference could settle, which is a different question from how the material responds.",
+  "notes": "Agreement is shown by overlay rather than as an error statistic; the errors are reported exactly in Table 5 and the row accounting in Table 8.",
   "outputs": {
     "axes": [
       {
         "axes": 0,
-        "title": "",
+        "title": "$E$",
         "xlabel": "",
         "xscale": "linear",
-        "ylabel": "$p\\,\\partial\\sigma_{11}/\\partial p$  (MPa)",
+        "ylabel": "$p\\,\\partial\\sigma_{ij}/\\partial p$  (MPa)",
         "yscale": "linear"
       },
       {
         "axes": 1,
-        "title": "",
-        "xlabel": "increment along the loading path",
+        "title": "$\\nu$",
+        "xlabel": "",
         "xscale": "linear",
-        "ylabel": "$p\\,\\partial\\bar\\varepsilon^{\\,p}/\\partial p$  (dimensionless)",
+        "ylabel": "",
         "yscale": "linear"
       },
       {
         "axes": 2,
-        "title": "",
-        "xlabel": "",
+        "title": "$\\sigma_{y0}$",
+        "xlabel": "applied strain  (%)",
         "xscale": "linear",
-        "ylabel": "$H$ only (right axis)",
+        "ylabel": "$p\\,\\partial\\sigma_{ij}/\\partial p$  (MPa)",
         "yscale": "linear"
       },
       {
         "axes": 3,
-        "title": "",
-        "xlabel": "",
+        "title": "$H$",
+        "xlabel": "applied strain  (%)",
         "xscale": "linear",
-        "ylabel": "$H$ only (right axis)",
+        "ylabel": "",
         "yscale": "linear"
       }
     ],
-    "height_inches": 5.6,
+    "height_inches": 6.0,
     "pdf": "paper_results/figures/figure_sensitivities.pdf",
-    "pdf_sha256": "64541dce78116acaf97d47e08203d99497b681c9e5ab8fd3d408a6540bdfa306",
+    "pdf_sha256": "420c10802cc1818105e6f24343274249bda61d714e6b662e93defe2dfa20a5d4",
     "png": "paper_results/figures/figure_sensitivities.png",
-    "png_sha256": "3e720d0ff15bc1506a602edc79637c46c1914ed58031ebdc21162c75ab60449f",
-    "smallest_configured_pt": 9.5,
-    "smallest_printed_pt": 9.5,
+    "png_sha256": "277571ffaee93adae873047532b3ff306ca7a58f433ec458231fea5089893912",
+    "smallest_configured_pt": 12.0,
+    "smallest_printed_pt": 12.0,
     "width_inches": 6.2
   },
   "plotted_filters": {
-    "axis_scale": "linear in both panels; no logarithmic axis is used, so the exact zeros before yield are plotted where they belong",
-    "curve_definition": "parameter-scaled: p * d(response)/dp, with p read from the committed contract",
-    "increments": "1-20, the complete path, no selection",
+    "axis_scale": "linear in every row; each row has its own scale, which is why no second axis or rescaling is used",
+    "curve_definition": "parameter-scaled: p d(response)/dp, with p read from the committed contract",
+    "generated": "line",
+    "layout": "two by two, one panel per material constant",
     "model": "m3_j2",
     "parameter_values_from_contract": {
       "E": 210000.0,
@@ -85,53 +86,40 @@
       "SIGY0": 250.0,
       "nu": 0.3
     },
-    "second_axis": {
-      "panel_a": [
-        "H"
-      ],
-      "panel_b": [
-        "H"
-      ]
-    },
-    "state_component": 1,
-    "stress_component": 1
+    "reference": "open markers, every second point",
+    "reference_method": "centred differences of the independently compiled untransformed build",
+    "rows": "one per material constant for the stress, plus one for the state variable",
+    "stress_components_omitted_as_identically_zero": [
+      4,
+      5,
+      6
+    ],
+    "stress_components_plotted": [
+      1,
+      2,
+      3
+    ]
   },
   "row_counts": {
     "disagreeing_rows": 0,
-    "first_inelastic_increment": 16,
+    "increments": 20,
     "model_rows": 560,
-    "panel_a": {
-      "largest_absolute_value": {
-        "E": 424.03846153846126,
-        "H": 0.3955595809883948,
-        "SIGY0": 165.30226700251893,
-        "nu": 524.6843850922218
+    "per_parameter": {
+      "E": {
+        "components": 3,
+        "points": 20
       },
-      "on_second_axis": [
-        "H"
-      ],
-      "plotted": {
-        "E": 20,
-        "H": 20,
-        "SIGY0": 20,
-        "nu": 20
-      }
-    },
-    "panel_b": {
-      "largest_absolute_value": {
-        "E": 0.001025748450278855,
-        "H": 2.448702168023398e-06,
-        "SIGY0": 0.001023299748110832,
-        "nu": 0.0002367111808335811
+      "H": {
+        "components": 3,
+        "points": 20
       },
-      "on_second_axis": [
-        "H"
-      ],
-      "plotted": {
-        "E": 20,
-        "H": 20,
-        "SIGY0": 20,
-        "nu": 20
+      "SIGY0": {
+        "components": 3,
+        "points": 20
+      },
+      "nu": {
+        "components": 3,
+        "points": 20
       }
     }
   }

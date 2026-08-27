@@ -50,23 +50,23 @@
     "small_strain": 29
   },
   "by_numerical_verification": {
-    "not_attempted": 16,
-    "succeeded": 25,
-    "unresolved": 2
+    "not_attempted": 14,
+    "succeeded": 28,
+    "unresolved": 1
   },
   "by_source_form": {
     "fixed": 43
   },
   "counting_policy": "One row per implementation. Rows are merged on canonical source identity -- normalised content for a single file, resolved routine closure for a multi-file source -- so a UMAT reachable from both the in-repository archive and the pinned upstream snapshot is one source with several origins and several validation events, not several sources.",
-  "generated_at": "2026-08-26T18:46:42.568945+00:00",
+  "generated_at": "2026-08-27T17:06:01.194449+00:00",
   "identity_registry_counts": {
-    "content_deduplicated_sources": 45,
+    "content_deduplicated_sources": 46,
     "independent_upstream_repositories": 3,
     "note": "content_deduplicated_sources counts implementations, not appearances. A source found both locally and upstream is one source with two origins and however many validation events were run against it.",
     "raw_discovered_files": 54,
-    "sources_found_at_more_than_one_origin": 43,
+    "sources_found_at_more_than_one_origin": 42,
     "unique_constitutive_models": 27,
-    "unique_dependency_closures": 4,
+    "unique_dependency_closures": 5,
     "validation_events_by_kind": {
       "CORPUS offline round": 11,
       "TABLE-2 paired Abaqus": 19,
@@ -74,12 +74,12 @@
       "TABLE-4 higher order": 4,
       "TABLE-6 parameter sensitivity": 20
     },
-    "verified_unique_sources": 37,
+    "verified_unique_sources": 39,
     "verified_unique_sources_by_event": {
-      "CORPUS offline round": 7,
+      "CORPUS offline round": 9,
       "TABLE-2 paired Abaqus": 17,
       "TABLE-3 internal Jacobian": 6,
-      "TABLE-6 parameter sensitivity": 18
+      "TABLE-6 parameter sensitivity": 19
     }
   },
   "merged_rows": [

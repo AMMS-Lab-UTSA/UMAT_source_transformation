@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -12,6 +13,7 @@ from umat_oti.transform.dependency_resolution import (
     DependencyResolutionError,
     _END_RE,
     combined_source,
+    declared_donor_files,
     index_sources,
     infer_minimum_dimensions,
     resolve_closure,
@@ -215,3 +217,154 @@ def test_real_helper_heavy_icp_umat_resolves_completely():
                    "KSMULT", "KMATSUB"):
         assert helper in graph.resolved, helper
     assert len(graph.external_definitions) >= 7
+
+
+# --- donors the source names for itself ------------------------------------
+#
+# A fixed-form project with no makefile states its own build in a file-scope
+# INCLUDE manifest between program units. That is the source answering "which
+# of these definitions do I mean", and it outranks anything a directory sweep
+# turns up, because the compiler splices in those files and no other.
+
+MANIFEST_ENTRY = ENTRY.replace(
+    "      END\n", "      END\n\n      include 'chosen.for'\n")
+
+
+def test_a_donor_the_source_names_wins_over_a_swept_sibling(tmp_path: Path):
+    """The manifest sits between program units, where no routine body reaches.
+
+    Scanning only routine bodies discarded the declaration, the resolver then
+    swept the siblings, found two definitions that disagree, and refused to
+    choose -- a choice the source had already made for itself.
+    """
+    (tmp_path / "entry.for").write_text(MANIFEST_ENTRY, encoding="utf-8")
+    (tmp_path / "chosen.for").write_text(HELPERS, encoding="utf-8")
+    (tmp_path / "other.for").write_text(
+        HELPERS.replace("V(I) * F", "V(I) * F * 7.0D0"), encoding="utf-8")
+
+    graph = resolve_closure(tmp_path / "entry.for", entry="UMAT", roots=[tmp_path])
+    assert not graph.conflicts, [d.symbol for d in graph.conflicts]
+    assert graph.resolved["KSCALE"].path == tmp_path / "chosen.for"
+    assert graph.resolved["KCLEAR"].path == tmp_path / "chosen.for"
+    settled = next(d for d in graph.duplicates if d.symbol == "KSCALE")
+    assert settled.resolution == "declared"
+    assert not settled.bodies_agree, (
+        "the definitions really do differ; the source picked one, the resolver "
+        "did not")
+
+
+def test_two_donors_the_source_did_not_name_still_conflict(tmp_path: Path):
+    """The relaxation is narrow: it applies only to what the source named."""
+    (tmp_path / "entry.for").write_text(MANIFEST_ENTRY, encoding="utf-8")
+    # The manifest names a file that defines neither helper, so both are found
+    # only by sweeping, and the sweep finds two bodies that disagree.
+    (tmp_path / "chosen.for").write_text(
+        "      SUBROUTINE KUNRELATED(X)\n      X = 1.0D0\n      RETURN\n"
+        "      END\n", encoding="utf-8")
+    (tmp_path / "a.for").write_text(HELPERS, encoding="utf-8")
+    (tmp_path / "b.for").write_text(
+        HELPERS.replace("V(I) * F", "V(I) * F * 7.0D0"), encoding="utf-8")
+
+    graph = resolve_closure(tmp_path / "entry.for", entry="UMAT", roots=[tmp_path])
+    assert {d.symbol for d in graph.conflicts} == {"KSCALE"}
+
+
+def test_a_source_that_names_two_disagreeing_donors_is_still_ambiguous(
+        tmp_path: Path):
+    """Naming both sides of a disagreement settles nothing; it is a contradiction."""
+    (tmp_path / "entry.for").write_text(
+        ENTRY.replace("      END\n",
+                      "      END\n\n      include 'a.for'\n      include 'b.for'\n"),
+        encoding="utf-8")
+    (tmp_path / "a.for").write_text(HELPERS, encoding="utf-8")
+    (tmp_path / "b.for").write_text(
+        HELPERS.replace("V(I) * F", "V(I) * F * 7.0D0"), encoding="utf-8")
+
+    graph = resolve_closure(tmp_path / "entry.for", entry="UMAT", roots=[tmp_path])
+    assert {d.symbol for d in graph.conflicts} == {"KSCALE"}
+
+
+def test_a_local_definition_still_outranks_a_named_donor(tmp_path: Path):
+    (tmp_path / "entry.for").write_text(MANIFEST_ENTRY + HELPERS, encoding="utf-8")
+    (tmp_path / "chosen.for").write_text(
+        HELPERS.replace("V(I) * F", "V(I) * F * 7.0D0"), encoding="utf-8")
+    graph = resolve_closure(tmp_path / "entry.for", entry="UMAT", roots=[tmp_path])
+    assert not graph.conflicts
+    assert graph.resolved["KSCALE"].path == tmp_path / "entry.for"
+    assert next(d for d in graph.duplicates
+                if d.symbol == "KSCALE").resolution == "local"
+
+
+def test_the_manifest_is_followed_transitively_and_relative_to_its_own_file(
+        tmp_path: Path):
+    """An included file may name further files, resolved next to *it*."""
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    (tmp_path / "entry.for").write_text(
+        ENTRY.replace("      END\n", "      END\n\n      include 'nested/mid.for'\n"),
+        encoding="utf-8")
+    # 'deep.for' is named by mid.for, so it resolves inside nested/, not beside
+    # the entry file.
+    (nested / "mid.for").write_text("      include 'deep.for'\n", encoding="utf-8")
+    (nested / "deep.for").write_text(HELPERS, encoding="utf-8")
+    (tmp_path / "deep.for").write_text(
+        HELPERS.replace("V(I) * F", "V(I) * F * 7.0D0"), encoding="utf-8")
+
+    declared = declared_donor_files(tmp_path / "entry.for")
+    assert nested / "deep.for" in declared
+    assert tmp_path / "deep.for" not in declared
+    graph = resolve_closure(tmp_path / "entry.for", entry="UMAT", roots=[tmp_path])
+    assert not graph.conflicts
+    assert graph.resolved["KSCALE"].path == nested / "deep.for"
+
+
+def test_a_commented_out_include_is_not_a_declaration(tmp_path: Path):
+    (tmp_path / "entry.for").write_text(
+        ENTRY.replace("      END\n", "      END\n\nC     include 'chosen.for'\n"),
+        encoding="utf-8")
+    (tmp_path / "chosen.for").write_text(HELPERS, encoding="utf-8")
+    assert declared_donor_files(tmp_path / "entry.for") == ()
+
+
+def test_an_include_that_is_not_on_disk_is_not_a_resolution_failure(tmp_path: Path):
+    """A missing include is the compiler's diagnostic to make, not this one's."""
+    (tmp_path / "entry.for").write_text(
+        ENTRY.replace("      END\n", "      END\n\n      include 'absent.for'\n"),
+        encoding="utf-8")
+    (tmp_path / "helpers.for").write_text(HELPERS, encoding="utf-8")
+    graph = resolve_closure(tmp_path / "entry.for", entry="UMAT", roots=[tmp_path])
+    assert declared_donor_files(tmp_path / "entry.for") == ()
+    assert not graph.missing
+    assert graph.resolved["KSCALE"].path == tmp_path / "helpers.for"
+
+
+CORPUS_ROOT = Path(
+    os.environ.get("UMAT_OTI_CORPUS_ROOT")
+    or REPO_ROOT.parent / "Residual_Assembler" / "sources")
+OXFORD = CORPUS_ROOT / "permissive" / "ngrilli_Oxford_Crystal_Plasticity"
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not (OXFORD / "umat.for").is_file(),
+                    reason="pinned external corpus snapshot is not checked out")
+def test_real_source_with_a_file_scope_manifest_settles_its_own_donors():
+    """The Oxford crystal-plasticity UMAT names its donors and means it.
+
+    kmat.f and kMaterialParam.f exist several times over in this repository --
+    per-example override sets under ExampleInputFiles, a different metal and a
+    different flow rule in each. Those really do disagree and choosing between
+    them by sweeping directories would pick the physics at random. The entry
+    file settles it in its own manifest, and the copies it does not name are
+    never compiled.
+    """
+    graph = resolve_closure(OXFORD / "umat.for", entry="UMAT", roots=[OXFORD])
+    assert not graph.missing, [m.symbol for m in graph.missing]
+    assert not graph.conflicts, [d.symbol for d in graph.conflicts]
+    for helper in ("KMAT", "KMATERIALPARAM"):
+        settled = next(d for d in graph.duplicates if d.symbol == helper)
+        assert len(settled.definitions) > 1, helper
+        assert not settled.bodies_agree, helper
+        assert settled.resolution == "declared", helper
+        assert graph.resolved[helper].path.parent == OXFORD, helper
+    assert not any("ExampleInputFiles" in str(d.path)
+                   for d in graph.resolved.values())

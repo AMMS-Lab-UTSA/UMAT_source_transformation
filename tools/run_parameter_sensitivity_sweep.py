@@ -38,7 +38,8 @@ from umat_oti.services.transformation import (  # noqa: E402
     TransformationOptions, run_transformation,
 )
 from umat_oti.validation.parameter_sensitivity_validation import (  # noqa: E402
-    build_original_driver, centered_fd, compare, primal_parity, read_oti_csv, replay,
+    build_original_driver, centered_fd, compare, primal_parity, read_oti_csv,
+    replay_reproducibly,
 )
 
 MODELS_DIR = REPO_ROOT / "parameter_sensitivity" / "models"
@@ -250,7 +251,14 @@ def _readjudicate_at_converged_step(rows, *, executable, props, path, ntens,
     for row in rows:
         key = (row.array, row.parameter, row.increment, row.component)
         replacement = replacements.get(key)
-        if replacement is not None and row.agrees is False:
+        # A branch-crossing row keeps the verdict it already has. Re-judging
+        # it here would replace a branch-aware reference with a centred ladder,
+        # which is the estimate the branch check rejected in the first place:
+        # it straddles the kink and measures the derivative of neither branch.
+        # It is still appended -- skipping the append dropped 28 rows out of
+        # the denominator, which is the one thing this file exists to prevent.
+        if replacement is not None and row.agrees is False \
+                and not row.branch_crossing:
             value, chosen, absolute, relative, agrees, uncertainty = replacement
             row.reference = value
             row.absolute_error = absolute
@@ -361,7 +369,15 @@ def _execute_and_verify(model: str, contract: dict, out: Path, record: dict) -> 
     try:
         executable = build_original_driver(
             source, reference_dir, ntens=ntens, nstatv=nstatv, nprops=len(props))
-        original = replay(executable, props, path, ntens=ntens, nstatv=nstatv)
+        # The same gate the corpus round applies. Everything below reads this
+        # build as a function of PROPS: parity compares one evaluation against
+        # the other build's, and every centred difference divides the gap
+        # between two evaluations by a step of order 1e-5. A build that answers
+        # differently each time cannot support any of it, and one replay cannot
+        # reveal that -- a run over uninitialised memory returns a full set of
+        # plausible numbers. All twenty models pass this.
+        original = replay_reproducibly(
+            executable, props, path, ntens=ntens, nstatv=nstatv)
     except RuntimeError as exc:
         record["stages"]["executed_original"] = {"status": "failed", "reason": str(exc)[:400]}
         return

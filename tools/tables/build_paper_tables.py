@@ -17,6 +17,7 @@ import argparse
 import csv
 import hashlib
 import json
+import platform
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -176,27 +177,54 @@ def table3_internal_jacobians() -> Table:
 
 
 def table4_higher_order() -> Table:
-    """Higher-order stress derivatives for the illustrative example."""
-    source = (RESULTS / "actual_umat_higher_order" / "j2"
-              / "table4_higher_order_actual_umat.csv")
+    """Higher-order stress derivatives for the illustrative example.
+
+    Sourced from the convergence study rather than from the single-step
+    comparison archived beside it. The two adjudicate the same comparisons
+    differently: the single-step comparator judges every row against fixed
+    absolute tolerances, while the convergence study requires the reference
+    itself to converge -- a plateau across at least three consecutive step
+    sizes, with steps that cross the yield surface rejected rather than
+    averaged across the kink, and a zero admitted only on evidence that does
+    not involve the OTI result. Rows the reference cannot resolve are withheld
+    and counted, never reported as agreement.
+    """
+    source = (RESULTS / "higher_order_convergence"
+              / "table4_higher_order_convergence.csv")
+    illustrative = "controlled_j2_actual_umat"
     rows = []
     for row in _csv(source):
+        if row["model"] != illustrative:
+            continue
         rows.append([
-            row["branch"], row["order"], row["comparison_rows"],
-            row["passed_rows"], row["failed_rows"],
-            _number(row["max_absolute_error"]),
-            _number(row["max_relative_error_when_absolute_tolerance_exceeded"]),
-            _number(row["absolute_tolerance"]),
+            row["branch"], row["order"], row["rows"], row["resolved"],
+            row["expected_zero_independently_supported"],
+            row["rows_admitted"], row["rows_withheld"],
+            _number(row["max_relative_error_on_resolved_rows"]),
+            row["defensible"],
         ])
+    if not rows:
+        raise SystemExit(f"no rows for {illustrative} in {source}")
     return Table(
         4, "higher_order_derivative_verification",
-        "Higher-order stress derivatives of the illustrative example against an "
-        "independent 80-digit reference. The relative error is reported only "
-        "over rows whose absolute error exceeds the absolute tolerance, because "
-        "a relative error on a quantity at the rounding floor measures nothing.",
-        ["Branch", "Order", "Rows", "Passed", "Failed", "Max abs error",
-         "Max rel error where significant", "Abs tolerance"], rows, [source],
-        filters={"model": "controlled_j2_actual_umat (illustrative example)"})
+        "Higher-order stress derivatives of the illustrative example against "
+        "an independent 80-digit reference, adjudicated by convergence of the "
+        "reference itself. A row counts as admitted only when the reference "
+        "resolved it and the two agree, or when the derivative is shown to be "
+        "zero on evidence independent of the OTI result. The relative error is "
+        "reported over resolved rows only, because a relative error on a "
+        "quantity at the rounding floor measures nothing.",
+        ["Branch", "Order", "Rows", "Resolved", "Independently zero",
+         "Admitted", "Withheld", "Max rel error on resolved", "Defensible"],
+        rows, [source],
+        filters={"model": f"{illustrative} (illustrative example)"},
+        notes=("The same comparisons are also adjudicated by the single-step "
+               "method archived at paper_results/actual_umat_higher_order/j2/"
+               "table4_higher_order_actual_umat.csv, which judges each entry "
+               "against a closed-form tolerance rather than against the "
+               "convergence of the reference. The two methods are "
+               "independent, and they agree: both admit every row and neither "
+               "reports a disagreement."))
 
 
 def table5_illustrative() -> Table:
@@ -420,13 +448,57 @@ def write_sources(table: Table, out_dir: Path) -> dict:
     return {"csv": _relative(csv_path), "json": _relative(json_path)}
 
 
+def _environment() -> dict:
+    """What produced these numbers, recorded with them."""
+    def _first_line(command: list[str]) -> str:
+        try:
+            done = subprocess.run(command, capture_output=True, text=True,
+                                  timeout=20)
+        except (OSError, subprocess.SubprocessError):
+            return UNAVAILABLE
+        text = (done.stdout or done.stderr).strip().splitlines()
+        return text[0] if text else UNAVAILABLE
+
+    return {
+        "python": sys.version.split()[0],
+        "platform": platform.platform(),
+        "fortran_compiler": _first_line(["gfortran", "--version"]),
+        "abaqus": _first_line(["abaqus", "information=release"]),
+    }
+
+
+def _unavailable(table: Table) -> dict:
+    """Cells that carry no measurement, and rows that record a failure.
+
+    Counted rather than described, so a reader can see at a glance whether a
+    table is mostly measurements or mostly absences, and so a table that
+    quietly turned an absence into a zero would show a count of nought here
+    while its source said otherwise.
+    """
+    marker_cells = sum(1 for row in table.rows for cell in row
+                       if str(cell) == UNAVAILABLE)
+    failure_words = ("failed", "unresolved", "blocked", "not_attempted",
+                     "withheld", "unsupported")
+    failing_rows = [row[0] for row in table.rows
+                    if any(word in str(cell).lower()
+                           for cell in row for word in failure_words)]
+    return {"cells_with_no_measurement": marker_cells,
+            "marker": UNAVAILABLE,
+            "rows_recording_a_failure_or_withheld_result": failing_rows,
+            "policy": ("An absent measurement is printed as the marker and "
+                       "never as zero; a failed or withheld case keeps its "
+                       "row and its place in the denominator.")}
+
+
 def write_provenance(table: Table, out_dir: Path, sources: dict) -> None:
     stem = f"table{table.number}_{table.slug}"
     (out_dir / f"{stem}_provenance.json").write_text(json.dumps({
         "table": stem,
+        "caption": table.caption,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "commit": _commit(),
         "command": "python tools/tables/build_paper_tables.py",
+        "environment": _environment(),
         "inputs": [{"path": _relative(p), "sha256": _digest(p),
                     "bytes": Path(p).stat().st_size}
                    for p in table.inputs if Path(p).is_file()],
@@ -434,6 +506,7 @@ def write_provenance(table: Table, out_dir: Path, sources: dict) -> None:
         "row_count": len(table.rows),
         "column_count": len(table.columns),
         "filters": table.filters,
+        "unavailable_and_failed": _unavailable(table),
         "unavailable_marker": UNAVAILABLE,
         "notes": table.notes,
     }, indent=2, sort_keys=True) + "\n", encoding="utf-8")

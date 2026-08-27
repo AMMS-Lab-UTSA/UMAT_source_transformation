@@ -1,14 +1,21 @@
 {
+  "caption": "External sources acquired from public repositories at a pinned commit. Every source that entered the funnel is listed with the stage it reached and, where it stopped, why. Licences were classified from the repository's own licence text.",
   "column_count": 8,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "environment": {
+    "abaqus": "Abaqus JOB abaqus",
+    "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
+    "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+    "python": "3.11.7"
+  },
   "filters": {},
-  "generated_at": "2026-08-26T18:46:48.999122+00:00",
+  "generated_at": "2026-08-27T17:06:08.076408+00:00",
   "inputs": [
     {
-      "bytes": 2535,
+      "bytes": 2425,
       "path": "paper_results/corpus/corpus_funnel.csv",
-      "sha256": "69193b2f485698466cb991529b86e3a0ae78bd2d5b6f49f5fdd58a210b6b91db"
+      "sha256": "772cfd21f3445bd47da44399e1cb7b3bcd274bf63bf8f725bf2791acdbc912bf"
     }
   ],
   "notes": "",
@@ -18,5 +25,11 @@
   },
   "row_count": 11,
   "table": "table7_external_web_corpus",
+  "unavailable_and_failed": {
+    "cells_with_no_measurement": 4,
+    "marker": "not measured",
+    "policy": "An absent measurement is printed as the marker and never as zero; a failed or withheld case keeps its row and its place in the denominator.",
+    "rows_recording_a_failure_or_withheld_result": []
+  },
   "unavailable_marker": "not measured"
 }

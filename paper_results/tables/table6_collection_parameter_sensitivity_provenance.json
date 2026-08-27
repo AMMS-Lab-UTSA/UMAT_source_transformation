@@ -1,7 +1,14 @@
 {
+  "caption": "Parameter and state sensitivities across the model collection. Rows the reference cannot adjudicate are split by reason: those below what a centred difference resolves, and those whose stencil straddles a branch boundary. Every attempted model is listed, verified or not.",
   "column_count": 8,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "environment": {
+    "abaqus": "Abaqus JOB abaqus",
+    "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
+    "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+    "python": "3.11.7"
+  },
   "filters": {
     "excluded": [
       "j2",
@@ -9,12 +16,12 @@
     ],
     "exclusion_reason": "reported only in the illustrative tables"
   },
-  "generated_at": "2026-08-26T18:46:48.991381+00:00",
+  "generated_at": "2026-08-27T17:06:07.701118+00:00",
   "inputs": [
     {
-      "bytes": 42738,
+      "bytes": 43756,
       "path": "paper_results/parameter_sensitivity/parameter_sensitivity_round.json",
-      "sha256": "c813ab0c1af0cc382b3a15a866c865d474ecfe25af921a8e3f27f0e733580102"
+      "sha256": "8c6219a7fa3293cb626e66a6e27b604b96da503bb72f6b46250d461cfeca33e7"
     }
   ],
   "notes": "",
@@ -24,5 +31,13 @@
   },
   "row_count": 19,
   "table": "table6_collection_parameter_sensitivity",
+  "unavailable_and_failed": {
+    "cells_with_no_measurement": 0,
+    "marker": "not measured",
+    "policy": "An absent measurement is printed as the marker and never as zero; a failed or withheld case keeps its row and its place in the denominator.",
+    "rows_recording_a_failure_or_withheld_result": [
+      "m6_fcc"
+    ]
+  },
   "unavailable_marker": "not measured"
 }

@@ -1,77 +1,84 @@
 {
   "number": 4,
   "slug": "higher_order_derivative_verification",
-  "caption": "Higher-order stress derivatives of the illustrative example against an independent 80-digit reference. The relative error is reported only over rows whose absolute error exceeds the absolute tolerance, because a relative error on a quantity at the rounding floor measures nothing.",
+  "caption": "Higher-order stress derivatives of the illustrative example against an independent 80-digit reference, adjudicated by convergence of the reference itself. A row counts as admitted only when the reference resolved it and the two agree, or when the derivative is shown to be zero on evidence independent of the OTI result. The relative error is reported over resolved rows only, because a relative error on a quantity at the rounding floor measures nothing.",
   "columns": [
     "Branch",
     "Order",
     "Rows",
-    "Passed",
-    "Failed",
-    "Max abs error",
-    "Max rel error where significant",
-    "Abs tolerance"
+    "Resolved",
+    "Independently zero",
+    "Admitted",
+    "Withheld",
+    "Max rel error on resolved",
+    "Defensible"
   ],
   "rows": [
     {
       "Branch": "elastic",
       "Order": "2",
-      "Rows": "12",
-      "Passed": "12",
-      "Failed": "0",
-      "Max abs error": "1.958e-70",
-      "Max rel error where significant": "0",
-      "Abs tolerance": "1.000e-05"
+      "Rows": "96",
+      "Resolved": "0",
+      "Independently zero": "96",
+      "Admitted": "96",
+      "Withheld": "0",
+      "Max rel error on resolved": "not measured",
+      "Defensible": "True"
     },
     {
       "Branch": "elastic",
       "Order": "3",
-      "Rows": "12",
-      "Passed": "12",
-      "Failed": "0",
-      "Max abs error": "1.039e-65",
-      "Max rel error where significant": "0",
-      "Abs tolerance": "0.02"
+      "Rows": "96",
+      "Resolved": "0",
+      "Independently zero": "96",
+      "Admitted": "96",
+      "Withheld": "0",
+      "Max rel error on resolved": "not measured",
+      "Defensible": "True"
     },
     {
       "Branch": "elastic",
       "Order": "4",
-      "Rows": "12",
-      "Passed": "12",
-      "Failed": "0",
-      "Max abs error": "5.163e-60",
-      "Max rel error where significant": "0",
-      "Abs tolerance": "0.1"
+      "Rows": "96",
+      "Resolved": "0",
+      "Independently zero": "96",
+      "Admitted": "96",
+      "Withheld": "0",
+      "Max rel error on resolved": "not measured",
+      "Defensible": "True"
     },
     {
       "Branch": "plastic",
       "Order": "2",
-      "Rows": "24",
-      "Passed": "24",
-      "Failed": "0",
-      "Max abs error": "5.131e-06",
-      "Max rel error where significant": "0",
-      "Abs tolerance": "1.000e-05"
+      "Rows": "84",
+      "Resolved": "20",
+      "Independently zero": "64",
+      "Admitted": "84",
+      "Withheld": "0",
+      "Max rel error on resolved": "5.119e-14",
+      "Defensible": "True"
     },
     {
       "Branch": "plastic",
       "Order": "3",
-      "Rows": "24",
-      "Passed": "24",
-      "Failed": "0",
-      "Max abs error": "6.47",
-      "Max rel error where significant": "1.937e-09",
-      "Abs tolerance": "0.02"
+      "Rows": "84",
+      "Resolved": "20",
+      "Independently zero": "64",
+      "Admitted": "84",
+      "Withheld": "0",
+      "Max rel error on resolved": "2.956e-11",
+      "Defensible": "True"
     },
     {
       "Branch": "plastic",
       "Order": "4",
-      "Rows": "24",
-      "Passed": "24",
-      "Failed": "0",
-      "Max abs error": "1.23e+04",
-      "Max rel error where significant": "1.679e-09",
-      "Abs tolerance": "0.1"
+      "Rows": "84",
+      "Resolved": "26",
+      "Independently zero": "58",
+      "Admitted": "84",
+      "Withheld": "0",
+      "Max rel error on resolved": "2.563e-11",
+      "Defensible": "True"
     }
   ]
 }

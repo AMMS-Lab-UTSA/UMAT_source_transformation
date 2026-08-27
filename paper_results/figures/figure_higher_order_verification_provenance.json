@@ -1,99 +1,136 @@
 {
-  "answers": "Does the agreement with an independent reference hold as the derivative order rises, and does it depend on whether the differentiation directions repeat?",
+  "answers": "Do the generated stress derivatives of order two and above match an independent 80-digit reference at every increment of the path?",
   "command": "python tools/figures/build_higher_order_figure.py",
-  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
   "figure": "figure_higher_order_verification",
-  "generated_at": "2026-08-26T18:49:48.377849+00:00",
+  "generated_at": "2026-08-27T15:25:05.322992+00:00",
   "inputs": [
     {
-      "bytes": 49517,
+      "bytes": 235213,
       "path": "paper_results/higher_order_convergence/j2/convergence_rows.csv",
-      "sha256": "13f0431bbf977837858e03f92b2931ab1ecfc3d722a69798b97316bc207ce51c"
+      "sha256": "a24e16735b2ddf3e05f91593f51df39ddf977e737c697a9bdd9b6ec1e0260027"
     }
   ],
   "layout": {
     "configured_font_sizes": {
-      "axes.labelsize": 10.0,
-      "axes.titlesize": 11.0,
-      "figure.titlesize": 12.0,
-      "font.size": 10.0,
-      "legend.fontsize": 9.5,
-      "xtick.labelsize": 9.5,
-      "ytick.labelsize": 9.5
+      "axes.labelsize": 13.0,
+      "axes.titlesize": 15.0,
+      "figure.titlesize": 16.0,
+      "font.size": 13.0,
+      "legend.fontsize": 12.0,
+      "xtick.labelsize": 12.0,
+      "ytick.labelsize": 12.0
     },
     "figure_width_in": 6.2,
     "minimum_rendered_pt": 9.0
   },
-  "notes": "",
+  "notes": "Errors are reported exactly in Table 4.",
   "outputs": {
     "axes": [
       {
         "axes": 0,
-        "title": "",
-        "xlabel": "derivative order of the stress with respect to the strain increment",
+        "title": "order 2:  $\\partial^{2}\\sigma$",
+        "xlabel": "",
         "xscale": "linear",
-        "ylabel": "relative difference from the\n80-digit reference (dimensionless)",
-        "yscale": "log"
+        "ylabel": "",
+        "yscale": "linear"
+      },
+      {
+        "axes": 1,
+        "title": "order 3:  $\\partial^{3}\\sigma$",
+        "xlabel": "",
+        "xscale": "linear",
+        "ylabel": "",
+        "yscale": "linear"
+      },
+      {
+        "axes": 2,
+        "title": "order 4:  $\\partial^{4}\\sigma$",
+        "xlabel": "",
+        "xscale": "linear",
+        "ylabel": "",
+        "yscale": "linear"
+      },
+      {
+        "axes": 3,
+        "title": "",
+        "xlabel": "",
+        "xscale": "linear",
+        "ylabel": "",
+        "yscale": "linear"
       }
     ],
-    "height_inches": 3.4,
+    "height_inches": 6.4,
     "pdf": "paper_results/figures/figure_higher_order_verification.pdf",
-    "pdf_sha256": "e40f6d19b8d463ce6ffbb0c3552364f6d28144bd2165238564d4b55527f5ad7e",
+    "pdf_sha256": "6778a969429533f8ea03e501e55130e9121be3352dc53321ed8e07f203879f9b",
     "png": "paper_results/figures/figure_higher_order_verification.png",
-    "png_sha256": "eecbae7fa7829c298975f203f2774378d33fada1da591479ea851fd97aaf10c8",
-    "smallest_configured_pt": 9.5,
-    "smallest_printed_pt": 9.5,
+    "png_sha256": "bce708ce2ecdbdc0a9247c78a02e8af57a93396089d5ee5d39405b3d367181ad",
+    "smallest_configured_pt": 12.0,
+    "smallest_printed_pt": 12.0,
     "width_inches": 6.2
   },
   "plotted_filters": {
-    "axis_scale": "logarithmic in the error; no zero is placed on it",
-    "direction_classes": "as labelled by the study's own direction_pattern column",
-    "error_definition": "|generated - reference| / max(|generated|, |reference|)",
+    "colour": "stress component",
+    "components_omitted_as_identically_zero": [
+      5,
+      6
+    ],
+    "components_plotted": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "directions_plotted": [
+      "1|1",
+      "1|2",
+      "1|1|1",
+      "1|1|2",
+      "1|1|1|1",
+      "1|1|2|2"
+    ],
+    "generated": "line",
+    "line_style": "whether the direction pattern repeats one strain component or mixes two",
     "model": "controlled_j2_actual_umat (the illustrative example)",
-    "not_plotted": "77 comparisons the reference independently shows to be zero, and 0 the reference cannot resolve",
-    "plotted": "comparisons whose absolute difference exceeds their absolute tolerance, so a relative error is meaningful",
-    "reference_method": "independent tensor-product finite differences of umat_oti.validation.j2_reference evaluated at 80 decimal digits",
-    "shaded_band": "the reference's own relative resolution, the widest plateau_relative_uncertainty over the resolved rows; below it the reference cannot distinguish the two values"
+    "not_plotted": "0 comparisons with neither",
+    "panels": "one per derivative order, each with its own scale because the orders are six decades apart",
+    "plotted": "comparisons the study resolved against the reference, and comparisons the study establishes to be zero on evidence independent of the OTI result",
+    "reference": "open markers every second increment",
+    "reference_method": "independent tensor-product finite differences of umat_oti.validation.j2_reference evaluated at 80 decimal digits, with the zeros reconfirmed at 200 digits"
   },
   "row_counts": {
-    "by_group": {
-      "order 2, mixed": {
-        "comparisons": 18,
-        "independently_shown_to_be_zero": 12,
-        "resolved": 6
-      },
-      "order 2, repeated": {
-        "comparisons": 18,
-        "independently_shown_to_be_zero": 14,
-        "resolved": 4
-      },
-      "order 3, mixed": {
-        "comparisons": 18,
-        "independently_shown_to_be_zero": 12,
-        "resolved": 6
-      },
-      "order 3, repeated": {
-        "comparisons": 18,
-        "independently_shown_to_be_zero": 14,
-        "resolved": 4
-      },
-      "order 4, mixed": {
-        "comparisons": 18,
-        "independently_shown_to_be_zero": 11,
-        "resolved": 7
-      },
-      "order 4, repeated": {
-        "comparisons": 18,
-        "independently_shown_to_be_zero": 14,
-        "resolved": 4
-      }
-    },
-    "comparisons": 108,
+    "comparisons": 540,
     "disagreeing": 0,
-    "independently_shown_to_be_zero": 77,
-    "reference_relative_resolution": 8.349305707578356e-06,
-    "reference_unresolved": 0,
-    "resolved": 31,
-    "worst_resolved_relative_error": 3.018419325837293e-11
+    "increments": 15,
+    "independently_shown_to_be_zero": 474,
+    "resolved": 66,
+    "series": {
+      "order 2 mixed sigma_1": 15,
+      "order 2 mixed sigma_2": 15,
+      "order 2 mixed sigma_3": 15,
+      "order 2 mixed sigma_4": 15,
+      "order 2 repeated sigma_1": 15,
+      "order 2 repeated sigma_2": 15,
+      "order 2 repeated sigma_3": 15,
+      "order 2 repeated sigma_4": 15,
+      "order 3 mixed sigma_1": 15,
+      "order 3 mixed sigma_2": 15,
+      "order 3 mixed sigma_3": 15,
+      "order 3 mixed sigma_4": 15,
+      "order 3 repeated sigma_1": 15,
+      "order 3 repeated sigma_2": 15,
+      "order 3 repeated sigma_3": 15,
+      "order 3 repeated sigma_4": 15,
+      "order 4 mixed sigma_1": 15,
+      "order 4 mixed sigma_2": 15,
+      "order 4 mixed sigma_3": 15,
+      "order 4 mixed sigma_4": 15,
+      "order 4 repeated sigma_1": 15,
+      "order 4 repeated sigma_2": 15,
+      "order 4 repeated sigma_3": 15,
+      "order 4 repeated sigma_4": 15
+    },
+    "withheld_as_unsupported": 0,
+    "worst_resolved_relative_error": 2.95639158022812e-11
   }
 }
