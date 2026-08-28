@@ -51,6 +51,7 @@ TABLE_COLUMNS = (
     "empirically_zero_over_stencil", "cancellation_limited", "reference_unresolved",
     "rows_admitted", "rows_withheld",
     "max_relative_error_on_resolved_rows",
+    "max_normalized_magnitude_on_zero_rows",
     "reference_precision", "reference_method", "defensible",
 )
 
@@ -128,6 +129,18 @@ def build(models: list[str]) -> dict[str, Any]:
                     if row["reference_classification"] == RESOLVED
                 ]
                 resolved_errors = [value for value in resolved_errors if value is not None]
+                # A branch where every derivative is zero has no resolved row
+                # and therefore no relative error, and reporting nothing there
+                # left three rows of this table reading "not measured" when
+                # what they actually show is exact agreement. The measurement
+                # that belongs to a zero is how far the generated value sits
+                # from zero, normalised so that a real derivative of the same
+                # order would be O(1).
+                zero_magnitudes = [
+                    abs(_float_or_none(row["oti_normalized"]) or 0.0)
+                    for row in selected
+                    if row["reference_classification"] == EXPECTED_ZERO
+                ]
                 table.append({
                     "model": model_name,
                     "branch": branch,
@@ -138,6 +151,9 @@ def build(models: list[str]) -> dict[str, Any]:
                     "rows_withheld": len(selected) - admitted,
                     "max_relative_error_on_resolved_rows": (
                         max(resolved_errors) if resolved_errors else None
+                    ),
+                    "max_normalized_magnitude_on_zero_rows": (
+                        max(zero_magnitudes) if zero_magnitudes else None
                     ),
                     "reference_precision": reference["precision"],
                     "reference_method": reference["method"],

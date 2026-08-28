@@ -1,0 +1,145 @@
+"""A model may propose. It may never decide, and it may never supply a number.
+
+Everything else in this repository rests on being able to say where a number
+came from. These pin the boundary that keeps that true: a proposal is inert
+until deterministic code agrees with it, the verdict does not depend on a model
+being reachable, and no value in the evidence originates from one.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from umat_oti.assist.deck_pairing import check_pairing, pair_source_with_deck
+from umat_oti.assist.local_model import (
+    LocalModel, ModelUnavailable, model_from_environment,
+)
+from umat_oti.assist.proposals import Proposal, ProposalNotConfirmed, Verdict
+
+
+def _repo(tmp_path: Path, *, constants: int, depvar: int) -> tuple[Path, Path]:
+    source = tmp_path / "umat.for"
+    source.write_text("      SUBROUTINE UMAT(STRESS,STATEV,PROPS)\n      END\n",
+                      encoding="utf-8")
+    deck = tmp_path / "job.inp"
+    values = ", ".join(str(float(i + 1)) for i in range(constants))
+    deck.write_text(
+        f"*Material, name=M\n*User Material, constants={constants}\n"
+        f"{values}\n*Depvar\n{depvar}\n", encoding="utf-8")
+    return source, deck
+
+
+def test_an_unchecked_proposal_cannot_be_used():
+    proposal = Proposal(subject="deck", proposed="job.inp", model="m")
+    assert proposal.verdict is Verdict.UNVERIFIED
+    with pytest.raises(ProposalNotConfirmed):
+        proposal.confirmed_value()
+
+
+def test_a_contradicted_proposal_cannot_be_used():
+    proposal = Proposal(subject="deck", proposed="job.inp", model="m")
+    proposal.contradict(checked_by="parser", evidence="supplies 3, expects 4")
+    with pytest.raises(ProposalNotConfirmed):
+        proposal.confirmed_value()
+
+
+def test_the_verdict_does_not_depend_on_a_model_being_reachable(tmp_path: Path):
+    """The property that makes this safe to ship.
+
+    A model changes which file is examined first and nothing else. Run the
+    same pairing with a model, with a model that answers nonsense, and with no
+    model at all, and the confirmed answer has to be the same file every time.
+    """
+    source, deck = _repo(tmp_path, constants=4, depvar=1)
+
+    class Liar(LocalModel):
+        def ask(self, prompt, *, temperature=0.0, max_tokens=256):
+            return "definitely-not-a-real-deck.inp", "0" * 64
+
+    class Dead(LocalModel):
+        def ask(self, prompt, *, temperature=0.0, max_tokens=256):
+            raise ModelUnavailable("no server")
+
+    answers = []
+    for model in (None, Liar(name="liar"), Dead(name="dead")):
+        proposal = pair_source_with_deck(
+            source, [deck], expected_nprops=4, expected_nstatv=1, model=model)
+        assert proposal.verdict is Verdict.CONFIRMED
+        answers.append(proposal.confirmed_value())
+    assert len(set(answers)) == 1, (
+        f"the confirmed deck changed with the model: {answers}")
+
+
+def test_a_model_naming_the_wrong_deck_is_overruled(tmp_path: Path):
+    """A wrong proposal must not become a wrong answer."""
+    source, good = _repo(tmp_path, constants=4, depvar=1)
+    bad = tmp_path / "wrong.inp"
+    bad.write_text("*Material, name=W\n*User Material, constants=2\n1.0, 2.0\n",
+                   encoding="utf-8")
+
+    class NamesTheWrongOne(LocalModel):
+        def ask(self, prompt, *, temperature=0.0, max_tokens=256):
+            return str(bad), "0" * 64
+
+    proposal = pair_source_with_deck(
+        source, [bad, good], expected_nprops=4, expected_nstatv=1,
+        model=NamesTheWrongOne(name="wrong"))
+    assert proposal.verdict is Verdict.CONFIRMED
+    assert proposal.confirmed_value() == str(good)
+    assert proposal.metadata["model_was_right"] is False, (
+        "the record has to say the model was overruled, not hide it")
+
+
+def test_no_deck_fitting_means_contradicted_not_a_guess(tmp_path: Path):
+    source, deck = _repo(tmp_path, constants=2, depvar=1)
+    proposal = pair_source_with_deck(
+        source, [deck], expected_nprops=9, expected_nstatv=1, model=None)
+    assert proposal.verdict is Verdict.CONTRADICTED
+    with pytest.raises(ProposalNotConfirmed):
+        proposal.confirmed_value()
+
+
+def test_the_check_is_arithmetic_on_counts_both_sides_declare(tmp_path: Path):
+    source, deck = _repo(tmp_path, constants=4, depvar=10)
+    ok, detail = check_pairing(source, deck, expected_nprops=4, expected_nstatv=10)
+    assert ok and "supplies 4 constants" in detail
+    ok, detail = check_pairing(source, deck, expected_nprops=5, expected_nstatv=10)
+    assert not ok and "expects 5" in detail
+    ok, detail = check_pairing(source, deck, expected_nprops=4, expected_nstatv=999)
+    assert not ok, "a deck with too few state variables must not be accepted"
+
+
+def test_a_proposal_records_that_it_supplied_no_number():
+    proposal = Proposal(subject="deck", proposed="job.inp", model="m")
+    proposal.confirm(checked_by="parser", evidence="counts agree")
+    record = proposal.as_dict()
+    assert "No value here was generated by it" in record["note"]
+    assert record["checked_by"] == "parser"
+    assert isinstance(record["proposed"], str), (
+        "a proposal names an artefact; it never carries a numeric value")
+
+
+def test_no_published_evidence_mentions_the_assist_package():
+    """The load-bearing check: nothing in paper_results can trace to a model."""
+    import subprocess
+
+    results = Path(__file__).resolve().parents[1] / "paper_results"
+    if not results.is_dir():
+        pytest.skip("no published evidence in this tree")
+    found = subprocess.run(
+        ["grep", "-rl", "-e", "umat_oti.assist", "-e", "qwen2.5",
+         "-e", "ollama", str(results)],
+        capture_output=True, text=True)
+    assert not found.stdout.strip(), (
+        "published evidence references a model:\n" + found.stdout)
+
+
+def test_the_package_is_optional():
+    """Absence is an ordinary outcome, reported as None rather than raising."""
+    unreachable = LocalModel(name="nothing", host="http://127.0.0.1:1")
+    assert unreachable.available() is False
+    with pytest.raises(ModelUnavailable):
+        unreachable.tags()
+    # And the environment helper never raises, whatever is or is not running.
+    assert model_from_environment() is None or model_from_environment().name

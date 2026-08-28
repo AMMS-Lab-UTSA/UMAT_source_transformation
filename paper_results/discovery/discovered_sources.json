@@ -1,0 +1,36 @@
+{
+  "caveat": "A candidate here is a distinct, permissively licensed Fortran file declaring a UMAT entry point. Nothing has been transformed, compiled or verified, and no count in the paper may cite this file. The corpus round is what turns a candidate into evidence.",
+  "distinct_repositories_seen": 105,
+  "files_examined": 150,
+  "licences_seen": [
+    "Apache-2.0",
+    "GPL-2.0",
+    "GPL-3.0",
+    "LGPL-2.1",
+    "MIT"
+  ],
+  "new_candidate_repositories": [
+    "HIT-FSW-314/abaqus",
+    "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+    "Jeff97/Realization-of-planar-and-surface-conformal-mappings",
+    "Jeff97/growth-of-circular-plate",
+    "adtzlr/ttb",
+    "jgomezc1/ABAQUS-US",
+    "mholla/growth"
+  ],
+  "new_candidates": 71,
+  "outcomes": {
+    "already_known": 1,
+    "candidate": 71,
+    "duplicate_within_search": 25,
+    "licence_absent": 18,
+    "licence_incompatible": 4,
+    "no_umat_entry": 23,
+    "not_examined": 8
+  },
+  "query": "\"SUBROUTINE UMAT\" language:Fortran",
+  "repositories_surveyed": 30,
+  "search_pages_read": 3,
+  "search_total_reported_by_github": 2576,
+  "stopped_early": ""
+}

@@ -2,7 +2,7 @@
   "caption": "External sources acquired from public repositories at a pinned commit. Every source that entered the funnel is listed with the stage it reached and, where it stopped, why. Licences were classified from the repository's own licence text.",
   "column_count": 8,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "489806911fe5ddc5a9ac1ede812a0c7e84a98e81",
+  "commit": "63bf39bed285c8253cd6d370e7ef1a010d184b4b",
   "environment": {
     "abaqus": "Abaqus JOB abaqus",
     "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
@@ -10,7 +10,7 @@
     "python": "3.11.7"
   },
   "filters": {},
-  "generated_at": "2026-08-27T22:14:25.399627+00:00",
+  "generated_at": "2026-08-28T13:45:58.297388+00:00",
   "inputs": [
     {
       "bytes": 2425,

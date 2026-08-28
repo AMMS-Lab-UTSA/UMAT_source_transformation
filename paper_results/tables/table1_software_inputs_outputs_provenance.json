@@ -2,7 +2,7 @@
   "caption": "Inputs the software accepts and artefacts it produces. The product and outcome vocabularies are read from the request schema, so this table cannot describe a capability the code does not expose.",
   "column_count": 4,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "489806911fe5ddc5a9ac1ede812a0c7e84a98e81",
+  "commit": "63bf39bed285c8253cd6d370e7ef1a010d184b4b",
   "environment": {
     "abaqus": "Abaqus JOB abaqus",
     "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
@@ -10,7 +10,7 @@
     "python": "3.11.7"
   },
   "filters": {},
-  "generated_at": "2026-08-27T22:14:23.191801+00:00",
+  "generated_at": "2026-08-28T13:45:55.973646+00:00",
   "inputs": [
     {
       "bytes": 22545,
