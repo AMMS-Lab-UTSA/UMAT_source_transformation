@@ -22,6 +22,7 @@ import csv
 import json
 import os
 import shutil
+import subprocess
 import sys
 import time
 import traceback
@@ -47,7 +48,8 @@ COLUMNS = (
     "source", "repository", "bytes", "lines", "form", "kinematics", "ntens", "nstatv_hint",
     "anchor_status",
     "helper_routines", "declared_unsupported",
-    "stage", "blocker_kind", "blocker", "seconds",
+    "stage", "blocker_kind", "blocker",
+    "original_compiles", "compiled", "compile_error", "seconds",
 )
 
 #: Coarse causes, so the histogram groups a defect rather than listing every
@@ -81,6 +83,30 @@ def _classify(text: str) -> str:
         if any(needle in lowered for needle in needles):
             return kind
     return "other" if lowered else "none"
+
+
+
+def _original_compiles(source: Path, work: Path) -> tuple[bool, str]:
+    """Whether the untransformed source compiles here, and why not if it does not.
+
+    The baseline has to be measured, not assumed. mholla/growth's
+    umat_neohooke.f closes its own SUBROUTINE statement with two parentheses
+    and does not compile as shipped; charging that to the transformer would be
+    inventing a defect, and counting the transformed file as a failure without
+    saying so would be worse. Sources are held to what they were, not to what
+    they would need to be.
+    """
+    from umat_oti.corpus.cli import _write_aba_param_stub
+    baseline = work / "baseline"
+    baseline.mkdir(parents=True, exist_ok=True)
+    _write_aba_param_stub(baseline)
+    staged = baseline / source.name
+    staged.write_text(source.read_text(errors="replace"), encoding="utf-8")
+    flags = ["-ffree-line-length-none"] if source.suffix.lower() == ".f90" else []
+    finished = subprocess.run(
+        ["gfortran", "-fsyntax-only", *flags, "-I", str(baseline), str(staged)],
+        capture_output=True, text=True, cwd=baseline)
+    return finished.returncode == 0, finished.stderr[:300]
 
 
 def triage_one(source: Path, work_root: Path, *, ntens: int = 6,
@@ -131,6 +157,12 @@ def triage_one(source: Path, work_root: Path, *, ntens: int = 6,
     work.mkdir(parents=True, exist_ok=True)
     staged = work / f"{source.stem}{source.suffix}"
     staged.write_text(text, encoding="utf-8")
+    # Without the stub beside the generated file, a UMAT that includes
+    # ABA_PARAM.INC has its compile silently skipped and the result reads
+    # "not_requested" -- indistinguishable here from a clean compile unless
+    # the status is checked, and a skipped check is not a passed one.
+    from umat_oti.corpus.cli import _write_aba_param_stub
+    _write_aba_param_stub(work)
 
     try:
         summary = role_summary(suggest_variable_roles(analysis, text))
@@ -145,8 +177,18 @@ def triage_one(source: Path, work_root: Path, *, ntens: int = 6,
         row["kinematics"] = "finite" if finite else "small strain"
         contract_path = work / "contract.json"
         contract_path.write_text(json.dumps(config, indent=2), encoding="utf-8")
+        # Compiled, because "the transformer produced Fortran" and "the
+        # transformer produced Fortran that is Fortran" are different claims
+        # and only the second is worth reporting. A fixed-form comment whose
+        # sixth character is not a space was being stitched into the statement
+        # above it, and the run was reported as successful with
+        # ``ReadDetF(NOEL,NPT) = REAL(DETF_OTI e coordinate from STATEV_OTI)``
+        # in the emitted file. Nothing here re-read the emitted text, so the
+        # only thing that catches that class of defect is a compiler.
+        (work / "out").mkdir(parents=True, exist_ok=True)
+        _write_aba_param_stub(work / "out")
         report, _code = run_transformation(
-            contract_path, work / "out", TransformationOptions(compile_generated=False))
+            contract_path, work / "out", TransformationOptions(compile_generated=True))
     except Exception as exc:  # noqa: BLE001 - a crash is the most useful finding
         row.update(stage="transform_crashed", blocker_kind="scanner_error",
                    blocker=f"{type(exc).__name__}: {exc}"[:300],
@@ -171,7 +213,29 @@ def triage_one(source: Path, work_root: Path, *, ntens: int = 6,
     completion = report.get("completion_issues") or []
     row["anchor_status"] = str(report.get("anchor_status") or "")
     if report.get("transform_success"):
-        row.update(stage="transformed", blocker_kind="none", blocker="")
+        compilation = report.get("compilation") or {}
+        # Anything but a clean compile counts as not compiled, "skipped" and
+        # "not_requested" included: a check that did not run is not a check
+        # that passed.
+        compiled = (str(compilation.get("status", "")) == "compiled"
+                    and int(compilation.get("returncode", 1) or 0) == 0)
+        row["compiled"] = "yes" if compiled else "no"
+        if not compiled:
+            row["compile_error"] = str(
+                compilation.get("stderr") or compilation.get("status") or "")[:300]
+        baseline_ok, baseline_error = _original_compiles(source, work)
+        row["original_compiles"] = "yes" if baseline_ok else "no"
+        if compiled:
+            row.update(stage="transformed", blocker_kind="none", blocker="")
+        elif not baseline_ok:
+            # The source did not compile before the transform touched it.
+            row.update(stage="source_does_not_compile",
+                       blocker_kind="source_does_not_compile",
+                       blocker=f"as shipped: {baseline_error}"[:300])
+        else:
+            row.update(stage="generated_not_compiled",
+                       blocker_kind="compile_failed",
+                       blocker=row["compile_error"])
     elif blockers:
         # The blocker says what failed; declared_unsupported says what the
         # transformer had already announced it cannot read. Letting the second
@@ -240,11 +304,14 @@ def main(argv: list[str] | None = None) -> int:
             "is a property of the machine that ran the triage, not of "
             "the result, so it is not recorded here."),
         "caveat": (
-            "Reaching 'transformed' means the transformer produced Fortran, "
-            "not that anything was compiled, executed or compared. These "
+            "Reaching 'transformed' means the generated Fortran compiles, "
+            "not that it was executed or compared against anything. These "
             "sources have no material vector and no loading history, so no "
-            "count here is verification evidence. The blocker histogram is "
-            "the point: it names what the transformer cannot yet do."),
+            "count here is verification evidence. 'source_does_not_compile' "
+            "means the source did not compile as shipped, before the "
+            "transform touched it; those are held to what they were. The "
+            "blocker histogram is the point: it names what the transformer "
+            "cannot yet do."),
     }
     print(json.dumps(summary, indent=2))
 

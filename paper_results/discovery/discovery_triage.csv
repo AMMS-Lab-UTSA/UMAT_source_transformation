@@ -1,72 +1,448 @@
-source,repository,bytes,lines,form,kinematics,ntens,nstatv_hint,anchor_status,helper_routines,declared_unsupported,stage,blocker_kind,blocker,seconds
-HIT-FSW-314__abaqus/abaqus-umat/uel/UEL9_VPDCL.for,uel,58067,1697,fixed,finite,6,81,ready_with_json_contract,29,io_write,transformed,none,,0.92
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/BodyForce-Growth-2Stages.for,Th001,19416,608,fixed,finite,6,29,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.17
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGravity.for,Th001,18617,580,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.14
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGrowth.for,Th001,18499,578,fixed,finite,6,26,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.14
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/BodyForce-Growth-2Stages.for,Th002,19424,609,fixed,finite,6,29,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.13
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for,Th002,18616,580,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.14
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGrowth.for,Th002,18498,578,fixed,finite,6,26,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.11
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/BodyForce-Growth-2Stages.for,Th005,19417,609,fixed,finite,6,29,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.12
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/PureGrowth.for,Th005,18499,578,fixed,finite,6,26,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.11
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005-Visualization/BodyForce-Growth-2Stages.for,Th005-Visualization,19278,607,fixed,finite,6,27,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.12
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/BodyForce-Growth-2Stages.for,Th01,19493,610,fixed,finite,6,29,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.12
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGravity.for,Th01,18616,580,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.11
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th002/BodyForce-Growth-2Stages.for,Th002,22889,673,fixed,finite,6,29,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.13
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/PureGravity.for,Th005,18617,580,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.11
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th01/PureGrowth.for,Th01,18517,578,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,blocked,shape_unknown,Promoted variable READDETF is indexed in a stress region but has no confirmed shape.,0.11
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-EX.for,inputFile,6379,200,fixed,finite,6,19,ready_with_json_contract,1,,transformed,none,,0.1
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-Z2.for,inputFile,6428,202,fixed,finite,6,19,ready_with_json_contract,1,,transformed,none,,0.18
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-frac.for,inputFile,6460,203,fixed,finite,6,19,ready_with_json_contract,1,,transformed,none,,0.13
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur1.for,InputFile,7239,220,fixed,finite,6,26,ready_with_json_contract,1,,transformed,none,,0.19
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur2.for,InputFile,7483,230,fixed,finite,6,28,ready_with_json_contract,1,,transformed,none,,0.22
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur3.for,InputFile,7089,221,fixed,finite,6,29,ready_with_json_contract,1,,transformed,none,,0.2
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example1/Growth-MinSur1.for,Example1,7287,221,fixed,finite,6,26,ready_with_json_contract,1,,transformed,none,,0.17
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example2/Growth-MinSur2.for,Example2,7170,223,fixed,finite,6,28,ready_with_json_contract,1,,transformed,none,,0.18
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example3-Sphere/Growth-MinSur3.for,Example3-Sphere,7010,221,fixed,finite,6,27,ready_with_json_contract,1,,transformed,none,,0.21
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Bunny/Part1/ABAQUS_files/Growth-Bunny-Part1.for,ABAQUS_files,9094,296,fixed,finite,6,29,ready_with_json_contract,1,data;io_open;io_read;save,transformed,none,,0.2
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Catenoid/10/Growth-Catenoid.for,10,7397,226,fixed,finite,6,29,ready_with_json_contract,1,,transformed,none,,0.23
-Jeff97__growth-of-circular-plate/Bending/Growth-CASE1.for,Bending,5944,187,fixed,finite,6,13,ready_with_json_contract,1,,transformed,none,,0.15
-Jeff97__growth-of-circular-plate/Bending/Growth-CASE2.for,Bending,5968,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,0.21
-Jeff97__growth-of-circular-plate/Bending/Growth-CASE3.for,Bending,6013,187,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,0.16
-Jeff97__growth-of-circular-plate/Combined/Growth-CASE1.for,Combined,5968,187,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,0.12
-Jeff97__growth-of-circular-plate/Combined/Growth-CASE2.for,Combined,5958,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,0.16
-Jeff97__growth-of-circular-plate/Combined/Growth-CASE3.for,Combined,5983,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,0.16
-Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE1.for,ShapeProgramming,6005,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,0.13
-Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE2.for,ShapeProgramming,6056,188,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,0.12
-Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE3.for,ShapeProgramming,6118,189,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,0.15
-Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE4.for,ShapeProgramming,6057,188,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,0.16
-Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE5.for,ShapeProgramming,7090,205,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,0.22
-Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-102.for,Wrinkle,6804,197,fixed,finite,6,16,ready_with_json_contract,1,,transformed,none,,0.16
-adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb.f,Abaqus,4088,116,fixed,finite,6,21,ready_with_json_contract,1,,blocked,shape_unknown,Promoted variable ASABQARRAY is indexed in a stress region but has no confirmed shape.; Promoted variable DET is indexed in a stress region but has no confirmed shape.; Promoted variable PIOLA is indexed in a stress region but has no confirmed shape.; Promoted variable TR is indexed in a stress regi,0.12
-adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb_simple.f,Abaqus,2356,72,fixed,finite,6,11,ready_with_json_contract,1,,blocked,shape_unknown,Promoted variable ASABQARRAY is indexed in a stress region but has no confirmed shape.; Promoted variable DEV is indexed in a stress region but has no confirmed shape.; Promoted variable PIOLA is indexed in a stress region but has no confirmed shape.; Promoted variable TRANSPOSE is indexed in a stre,0.05
-adtzlr__ttb/docs/examples/script_umat.f,examples,2661,102,fixed,small strain,6,0,needs_json_completion,1,io_write,anchors_not_located,missing_ddsdde_extraction_point,missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions,0.02
-jgomezc1__ABAQUS-US/INPUT_FILES/UEL8_ECL_AXY.for,INPUT_FILES,44840,1335,fixed,finite,6,27,ready_with_json_contract,26,,transformed,none,,0.26
-jgomezc1__ABAQUS-US/SAMPLE/UEL9_VPDCO.for,SAMPLE,64383,1837,fixed,finite,6,96,ready_with_json_contract,29,io_write,transformed,none,,0.94
-jgomezc1__ABAQUS-US/UELS/UEL8_ECL.for,UELS,43894,1301,fixed,finite,6,26,ready_with_json_contract,26,,transformed,none,,0.33
-jgomezc1__ABAQUS-US/UELS/UEL8_ECO.for,UELS,44731,1280,fixed,finite,6,31,ready_with_json_contract,24,,transformed,none,,0.33
-jgomezc1__ABAQUS-US/UELS/UEL8_PCLI.for,UELS,48634,1445,fixed,finite,6,73,ready_with_json_contract,26,io_write,transformed,none,,0.61
-jgomezc1__ABAQUS-US/UELS/UEL8_PCLI_R.for,UELS,45671,1340,fixed,finite,6,47,ready_with_json_contract,25,,transformed,none,,0.35
-jgomezc1__ABAQUS-US/UELS/UEL8_PCLK.for,UELS,52183,1533,fixed,finite,6,66,ready_with_json_contract,28,io_write,transformed,none,,0.49
-jgomezc1__ABAQUS-US/UELS/UEL8_PCOI.for,UELS,56241,1644,fixed,finite,6,83,ready_with_json_contract,27,io_write,transformed,none,,0.66
-jgomezc1__ABAQUS-US/UELS/UEL8_PCOR.for,UELS,52786,1568,fixed,finite,6,66,ready_with_json_contract,26,io_write,transformed,none,,0.42
-jgomezc1__ABAQUS-US/UELS/UEL8_PCOR_KIN.for,UELS,54761,1604,fixed,finite,6,68,ready_with_json_contract,26,io_write,transformed,none,,0.45
-jgomezc1__ABAQUS-US/UELS/UEL8_VPDCL.for,UELS,55172,1651,fixed,finite,6,80,ready_with_json_contract,29,io_write,transformed,none,,0.54
-jgomezc1__ABAQUS-US/UELS/UEL8_VPDCO.for,UELS,59830,1757,fixed,finite,6,95,ready_with_json_contract,28,io_write,transformed,none,,0.88
-jgomezc1__ABAQUS-US/UELS/UEL9_ECL.for,UELS,43314,1291,fixed,finite,6,26,ready_with_json_contract,26,,transformed,none,,0.23
-jgomezc1__ABAQUS-US/UELS/UEL9_ECO.for,UELS,41971,1222,fixed,finite,6,31,ready_with_json_contract,23,,transformed,none,,0.23
-jgomezc1__ABAQUS-US/UELS/UEL9_ECO_m.for,UELS,45112,1329,fixed,finite,6,34,ready_with_json_contract,25,,transformed,none,,0.34
-mholla__growth/umats/umat_area_morph.f,umats,7025,169,fixed,finite,6,9,ready_with_json_contract,3,data,transformed,none,,0.15
-mholla__growth/umats/umat_area_morph_Abaqus.f,umats,7193,168,fixed,finite,6,10,ready_with_json_contract,3,data,transformed,none,,0.14
-mholla__growth/umats/umat_area_morph_orient.f,umats,9476,241,fixed,finite,6,15,ready_with_json_contract,4,data,transformed,none,,0.2
-mholla__growth/umats/umat_area_stretch.f,umats,9968,253,fixed,finite,6,22,ready_with_json_contract,3,data,transformed,none,,0.21
-mholla__growth/umats/umat_fiber_morph.f,umats,6805,169,fixed,finite,6,9,ready_with_json_contract,3,data,transformed,none,,0.14
-mholla__growth/umats/umat_fiber_morph_Abaqus.f,umats,7010,170,fixed,finite,6,10,ready_with_json_contract,3,data,transformed,none,,0.14
-mholla__growth/umats/umat_fiber_morph_orient.f,umats,9256,243,fixed,finite,6,15,ready_with_json_contract,4,data,transformed,none,,0.17
-mholla__growth/umats/umat_fiber_stretch.f,umats,9603,258,fixed,finite,6,20,ready_with_json_contract,3,data,transformed,none,,0.2
-mholla__growth/umats/umat_iso_Mandel.f,umats,8325,233,fixed,finite,6,20,ready_with_json_contract,3,data,transformed,none,,0.18
-mholla__growth/umats/umat_iso_Mandel_v2.f,umats,8423,244,fixed,finite,6,18,ready_with_json_contract,2,data,semantic_checks_failed,semantic_check,Semantic check failed: old_ddsdde_assignments_disabled.,0.18
-mholla__growth/umats/umat_iso_morph.f,umats,5941,158,fixed,finite,6,8,ready_with_json_contract,3,data,transformed,none,,0.09
-mholla__growth/umats/umat_iso_morph_Abaqus.f,umats,5872,155,fixed,finite,6,9,ready_with_json_contract,3,data,transformed,none,,0.1
-mholla__growth/umats/umat_iso_stretch.f,umats,7467,213,fixed,finite,6,19,ready_with_json_contract,3,data,transformed,none,,0.18
-mholla__growth/umats/umat_neohooke.f,umats,4952,131,fixed,finite,6,7,ready_with_json_contract,3,data,transformed,none,,0.15
-mholla__growth/umats/umat_neohooke_abaqus.f,umats,4712,123,fixed,finite,6,5,ready_with_json_contract,2,data,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1)= vol + 2.d0/3.d0*mu*J53*b(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2)= vol + 2.d0/3.d0*mu*J53*b(2); DDSDDE assignment is not covered by an old tangent replacement region: dds",0.08
+source,repository,bytes,lines,form,kinematics,ntens,nstatv_hint,anchor_status,helper_routines,declared_unsupported,stage,blocker_kind,blocker,original_compiles,compiled,compile_error,seconds
+HIT-FSW-314__abaqus/abaqus-umat/uel/UEL9_VPDCL.for,uel,58067,1697,fixed,finite,6,81,ready_with_json_contract,29,io_write,generated_not_compiled,compile_failed,"UEL9_VPDCL_oti.for:460:21:
+
+  460 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL9_VPDCL_oti.for:462:9:
+
+  462 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL9_VPDCL_oti.for:509:21:
+
+  509 |       DO OTI_HI = 1, ",yes,no,"UEL9_VPDCL_oti.for:460:21:
+
+  460 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL9_VPDCL_oti.for:462:9:
+
+  462 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL9_VPDCL_oti.for:509:21:
+
+  509 |       DO OTI_HI = 1, ",2.16
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/BodyForce-Growth-2Stages.for,Th001,19416,608,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.76
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGravity.for,Th001,18617,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.7
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGrowth.for,Th001,18499,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.69
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/BodyForce-Growth-2Stages.for,Th002,19424,609,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.7
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for,Th002,18616,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.73
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGrowth.for,Th002,18498,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.6
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/BodyForce-Growth-2Stages.for,Th005,19417,609,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.71
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/PureGrowth.for,Th005,18499,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.66
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005-Visualization/BodyForce-Growth-2Stages.for,Th005-Visualization,19278,607,fixed,finite,6,26,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.76
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/BodyForce-Growth-2Stages.for,Th01,19493,610,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.72
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGravity.for,Th01,18616,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.71
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th002/BodyForce-Growth-2Stages.for,Th002,22889,673,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,semantic_checks_failed,semantic_check,Semantic check failed: integer_literals_normalized_in_oti_expressions.,,,,0.24
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/PureGravity.for,Th005,18617,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.54
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th01/PureGrowth.for,Th01,18517,578,fixed,finite,6,27,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.66
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-EX.for,inputFile,6379,200,fixed,finite,6,19,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.34
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-Z2.for,inputFile,6428,202,fixed,finite,6,19,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.43
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-frac.for,inputFile,6460,203,fixed,finite,6,19,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.39
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur1.for,InputFile,7239,220,fixed,finite,6,26,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.41
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur2.for,InputFile,7483,230,fixed,finite,6,28,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.44
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur3.for,InputFile,7089,221,fixed,finite,6,29,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.48
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example1/Growth-MinSur1.for,Example1,7287,221,fixed,finite,6,26,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.44
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example2/Growth-MinSur2.for,Example2,7170,223,fixed,finite,6,28,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.43
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example3-Sphere/Growth-MinSur3.for,Example3-Sphere,7010,221,fixed,finite,6,27,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.41
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Bunny/Part1/ABAQUS_files/Growth-Bunny-Part1.for,ABAQUS_files,9094,296,fixed,finite,6,29,ready_with_json_contract,1,data;io_open;io_read;save,transformed,none,,yes,yes,,1.49
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Catenoid/10/Growth-Catenoid.for,10,7397,226,fixed,finite,6,29,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.52
+Jeff97__growth-of-circular-plate/Bending/Growth-CASE1.for,Bending,5944,187,fixed,finite,6,13,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.42
+Jeff97__growth-of-circular-plate/Bending/Growth-CASE2.for,Bending,5968,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.34
+Jeff97__growth-of-circular-plate/Bending/Growth-CASE3.for,Bending,6013,187,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.32
+Jeff97__growth-of-circular-plate/Combined/Growth-CASE1.for,Combined,5968,187,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.44
+Jeff97__growth-of-circular-plate/Combined/Growth-CASE2.for,Combined,5958,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.35
+Jeff97__growth-of-circular-plate/Combined/Growth-CASE3.for,Combined,5983,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.32
+Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE1.for,ShapeProgramming,6005,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.36
+Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE2.for,ShapeProgramming,6056,188,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.41
+Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE3.for,ShapeProgramming,6118,189,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.39
+Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE4.for,ShapeProgramming,6057,188,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.39
+Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE5.for,ShapeProgramming,7090,205,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.44
+Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-102.for,Wrinkle,6804,197,fixed,finite,6,16,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.22
+adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb.f,Abaqus,4088,116,fixed,finite,6,21,ready_with_json_contract,1,,blocked,shape_unknown,Promoted variable ASABQARRAY is indexed in a stress region but has no confirmed shape.; Promoted variable DET is indexed in a stress region but has no confirmed shape.; Promoted variable PIOLA is indexed in a stress region but has no confirmed shape.; Promoted variable TR is indexed in a stress regi,,,,0.11
+adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb_simple.f,Abaqus,2356,72,fixed,finite,6,11,ready_with_json_contract,1,,blocked,shape_unknown,Promoted variable ASABQARRAY is indexed in a stress region but has no confirmed shape.; Promoted variable DEV is indexed in a stress region but has no confirmed shape.; Promoted variable PIOLA is indexed in a stress region but has no confirmed shape.; Promoted variable TRANSPOSE is indexed in a stre,,,,0.04
+adtzlr__ttb/docs/examples/script_umat.f,examples,2661,102,fixed,small strain,6,0,needs_json_completion,1,io_write,anchors_not_located,missing_ddsdde_extraction_point,missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions,,,,0.02
+jgomezc1__ABAQUS-US/INPUT_FILES/UEL8_ECL_AXY.for,INPUT_FILES,44840,1335,fixed,finite,6,27,ready_with_json_contract,26,,transformed,none,,yes,yes,,1.56
+jgomezc1__ABAQUS-US/SAMPLE/UEL9_VPDCO.for,SAMPLE,64383,1837,fixed,finite,6,96,ready_with_json_contract,29,io_write,generated_not_compiled,compile_failed,"UEL9_VPDCO_oti.for:720:21:
+
+  720 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL9_VPDCO_oti.for:722:9:
+
+  722 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL9_VPDCO_oti.for:794:21:
+
+  794 |       DO OTI_HI = 1, ",yes,no,"UEL9_VPDCO_oti.for:720:21:
+
+  720 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL9_VPDCO_oti.for:722:9:
+
+  722 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL9_VPDCO_oti.for:794:21:
+
+  794 |       DO OTI_HI = 1, ",2.29
+jgomezc1__ABAQUS-US/UELS/UEL8_ECL.for,UELS,43894,1301,fixed,finite,6,26,ready_with_json_contract,26,,transformed,none,,yes,yes,,1.53
+jgomezc1__ABAQUS-US/UELS/UEL8_ECO.for,UELS,44731,1280,fixed,finite,6,31,ready_with_json_contract,24,,transformed,none,,yes,yes,,1.61
+jgomezc1__ABAQUS-US/UELS/UEL8_PCLI.for,UELS,48634,1445,fixed,finite,6,73,ready_with_json_contract,26,io_write,generated_not_compiled,compile_failed,"umat_oti_helpers.f90:60:9:
+
+   60 |     DIAG(5,5)=ONE/(ONE+CALFA2*GAM_PAR)
+      |         1
+Warning: Array reference at (1) is out of bounds (5 > 4) in dimension 1
+umat_oti_helpers.f90:60:11:
+
+   60 |     DIAG(5,5)=ONE/(ONE+CALFA2*GAM_PAR)
+      |           1
+Warning: Array reference at (1) is out ",yes,no,"umat_oti_helpers.f90:60:9:
+
+   60 |     DIAG(5,5)=ONE/(ONE+CALFA2*GAM_PAR)
+      |         1
+Warning: Array reference at (1) is out of bounds (5 > 4) in dimension 1
+umat_oti_helpers.f90:60:11:
+
+   60 |     DIAG(5,5)=ONE/(ONE+CALFA2*GAM_PAR)
+      |           1
+Warning: Array reference at (1) is out ",1.8
+jgomezc1__ABAQUS-US/UELS/UEL8_PCLI_R.for,UELS,45671,1340,fixed,finite,6,47,ready_with_json_contract,25,,generated_not_compiled,compile_failed,"UEL8_PCLI_R_oti.for:365:21:
+
+  365 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL8_PCLI_R_oti.for:367:9:
+
+  367 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL8_PCLI_R_oti.for:400:21:
+
+  400 |       DO OTI_HI = ",yes,no,"UEL8_PCLI_R_oti.for:365:21:
+
+  365 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL8_PCLI_R_oti.for:367:9:
+
+  367 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL8_PCLI_R_oti.for:400:21:
+
+  400 |       DO OTI_HI = ",1.61
+jgomezc1__ABAQUS-US/UELS/UEL8_PCLK.for,UELS,52183,1533,fixed,finite,6,66,ready_with_json_contract,28,io_write,generated_not_compiled,compile_failed,"UEL8_PCLK_oti.for:1615:57:
+
+ 1615 |         IF(AAMAX.EQ.0.) PAUSE 'SINGULAR MATRIX IN LUDCMP'
+      |                                                         1
+Warning: Deleted feature: PAUSE statement at (1)
+UEL8_PCLK_oti.for:335:39:
+
+  335 |       TYPE(ONUMM6N1) :: AUX1_OTI(NTENS, NDOFEL)
+      | ",yes,no,"UEL8_PCLK_oti.for:1615:57:
+
+ 1615 |         IF(AAMAX.EQ.0.) PAUSE 'SINGULAR MATRIX IN LUDCMP'
+      |                                                         1
+Warning: Deleted feature: PAUSE statement at (1)
+UEL8_PCLK_oti.for:335:39:
+
+  335 |       TYPE(ONUMM6N1) :: AUX1_OTI(NTENS, NDOFEL)
+      | ",1.77
+jgomezc1__ABAQUS-US/UELS/UEL8_PCOI.for,UELS,56241,1644,fixed,finite,6,83,ready_with_json_contract,27,io_write,generated_not_compiled,compile_failed,"UEL8_PCOI_oti.for:678:21:
+
+  678 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL8_PCOI_oti.for:680:9:
+
+  680 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL8_PCOI_oti.for:739:21:
+
+  739 |       DO OTI_HI = 1, *
+ ",yes,no,"UEL8_PCOI_oti.for:678:21:
+
+  678 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL8_PCOI_oti.for:680:9:
+
+  680 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL8_PCOI_oti.for:739:21:
+
+  739 |       DO OTI_HI = 1, *
+ ",1.99
+jgomezc1__ABAQUS-US/UELS/UEL8_PCOR.for,UELS,52786,1568,fixed,finite,6,66,ready_with_json_contract,26,io_write,generated_not_compiled,compile_failed,"UEL8_PCOR_oti.for:526:21:
+
+  526 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL8_PCOR_oti.for:528:9:
+
+  528 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL8_PCOR_oti.for:569:21:
+
+  569 |       DO OTI_HI = 1, *
+ ",yes,no,"UEL8_PCOR_oti.for:526:21:
+
+  526 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL8_PCOR_oti.for:528:9:
+
+  528 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL8_PCOR_oti.for:569:21:
+
+  569 |       DO OTI_HI = 1, *
+ ",1.72
+jgomezc1__ABAQUS-US/UELS/UEL8_PCOR_KIN.for,UELS,54761,1604,fixed,finite,6,68,ready_with_json_contract,26,io_write,generated_not_compiled,compile_failed,"UEL8_PCOR_KIN_oti.for:1710:57:
+
+ 1710 |         IF(AAMAX.EQ.0.) PAUSE 'SINGULAR MATRIX IN LUDCMP'
+      |                                                         1
+Warning: Deleted feature: PAUSE statement at (1)
+UEL8_PCOR_KIN_oti.for:463:39:
+
+  463 |       TYPE(ONUMM6N1) :: AUX1_OTI(NTENS, NDOFEL)
+",yes,no,"UEL8_PCOR_KIN_oti.for:1710:57:
+
+ 1710 |         IF(AAMAX.EQ.0.) PAUSE 'SINGULAR MATRIX IN LUDCMP'
+      |                                                         1
+Warning: Deleted feature: PAUSE statement at (1)
+UEL8_PCOR_KIN_oti.for:463:39:
+
+  463 |       TYPE(ONUMM6N1) :: AUX1_OTI(NTENS, NDOFEL)
+",1.87
+jgomezc1__ABAQUS-US/UELS/UEL8_VPDCL.for,UELS,55172,1651,fixed,finite,6,80,ready_with_json_contract,29,io_write,generated_not_compiled,compile_failed,"UEL8_VPDCL_oti.for:416:21:
+
+  416 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL8_VPDCL_oti.for:418:9:
+
+  418 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL8_VPDCL_oti.for:465:21:
+
+  465 |       DO OTI_HI = 1, ",yes,no,"UEL8_VPDCL_oti.for:416:21:
+
+  416 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL8_VPDCL_oti.for:418:9:
+
+  418 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL8_VPDCL_oti.for:465:21:
+
+  465 |       DO OTI_HI = 1, ",1.86
+jgomezc1__ABAQUS-US/UELS/UEL8_VPDCO.for,UELS,59830,1757,fixed,finite,6,95,ready_with_json_contract,28,io_write,generated_not_compiled,compile_failed,"UEL8_VPDCO_oti.for:687:21:
+
+  687 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL8_VPDCO_oti.for:689:9:
+
+  689 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL8_VPDCO_oti.for:761:21:
+
+  761 |       DO OTI_HI = 1, ",yes,no,"UEL8_VPDCO_oti.for:687:21:
+
+  687 |       DO OTI_HI = 1, *
+      |                     1
+Error: Syntax error in iterator at (1)
+UEL8_VPDCO_oti.for:689:9:
+
+  689 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+UEL8_VPDCO_oti.for:761:21:
+
+  761 |       DO OTI_HI = 1, ",2.28
+jgomezc1__ABAQUS-US/UELS/UEL9_ECL.for,UELS,43314,1291,fixed,finite,6,26,ready_with_json_contract,26,,transformed,none,,yes,yes,,1.6
+jgomezc1__ABAQUS-US/UELS/UEL9_ECO.for,UELS,41971,1222,fixed,finite,6,31,ready_with_json_contract,23,,transformed,none,,yes,yes,,1.6
+jgomezc1__ABAQUS-US/UELS/UEL9_ECO_m.for,UELS,45112,1329,fixed,finite,6,34,ready_with_json_contract,25,,transformed,none,,yes,yes,,1.71
+mholla__growth/umats/umat_area_morph.f,umats,7025,169,fixed,finite,6,9,ready_with_json_contract,3,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageD/umats/umat_area_morph/baseline/umat_area_morph.f:85:72:
+
+   85 |       xn(1) = (dfgrd1(1,1)*xn0(1) + dfgrd1(1,2)*xn0(2) + dfgrd1(1,3)*xn0(3))/norm
+      |                                              ",no,no,"umat_area_morph_oti.f:117:9:
+
+  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |         1
+Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
+umat_area_morph_oti.f:117:29:
+
+  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |                             1
+Error: Function ‘dstran’",1.32
+mholla__growth/umats/umat_area_morph_Abaqus.f,umats,7193,168,fixed,finite,6,10,ready_with_json_contract,3,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageD/umats/umat_area_morph_Abaqus/baseline/umat_area_morph_Abaqus.f:85:72:
+
+   85 |       xn(1) = (dfgrd1(1,1)*xn0(1) + dfgrd1(1,2)*xn0(2) + dfgrd1(1,3)*xn0(3))/norm
+      |                                ",no,no,"umat_area_morph_Abaqus_oti.f:118:9:
+
+  118 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |         1
+Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
+umat_area_morph_Abaqus_oti.f:118:29:
+
+  118 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |                             1
+Error: Fun",1.21
+mholla__growth/umats/umat_area_morph_orient.f,umats,9476,241,fixed,finite,6,15,ready_with_json_contract,4,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageD/umats/umat_area_morph_orient/baseline/umat_area_morph_orient.f:16:72:
+
+   16 |       subroutine orient (T,noel,npt,layer,kspt,coords,basis,orname,nnodes,cnodes,jnnum)
+      |                          ",no,no,"umat_area_morph_orient_oti.f:174:9:
+
+  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |         1
+Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
+umat_area_morph_orient_oti.f:174:29:
+
+  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |                             1
+Error: Fun",1.28
+mholla__growth/umats/umat_area_stretch.f,umats,9968,253,fixed,finite,6,22,ready_with_json_contract,3,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageD/umats/umat_area_stretch/baseline/umat_area_stretch.f:92:72:
+
+   92 |       xn(1) = (dfgrd1(1,1)*xn0(1) + dfgrd1(1,2)*xn0(2) + dfgrd1(1,3)*xn0(3))/norm
+      |                                          ",no,no,"umat_area_stretch_oti.f:183:21:
+
+  183 |       XTOL_OTI = 1.D_OTI-12
+      |                     1
+Error: Missing exponent in real number at (1)
+umat_area_stretch_oti.f:154:9:
+
+  154 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |         1
+Error: Function ‘dstran_oti’ at (1) has no IMPLICIT ty",1.36
+mholla__growth/umats/umat_fiber_morph.f,umats,6805,169,fixed,finite,6,9,ready_with_json_contract,3,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageD/umats/umat_fiber_morph/baseline/umat_fiber_morph.f:85:72:
+
+   85 |       xf(1) = (dfgrd1(1,1)*xf0(1) + dfgrd1(1,2)*xf0(2) + dfgrd1(1,3)*xf0(3))/norm
+      |                                            ",no,no,"umat_fiber_morph_oti.f:117:9:
+
+  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |         1
+Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
+umat_fiber_morph_oti.f:117:29:
+
+  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |                             1
+Error: Function ‘dstra",1.32
+mholla__growth/umats/umat_fiber_morph_Abaqus.f,umats,7010,170,fixed,finite,6,10,ready_with_json_contract,3,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageD/umats/umat_fiber_morph_Abaqus/baseline/umat_fiber_morph_Abaqus.f:86:72:
+
+   86 |       xn(1) = (dfgrd1(1,1)*xn0(1) + dfgrd1(1,2)*xn0(2) + dfgrd1(1,3)*xn0(3))/norm
+      |                              ",no,no,"umat_fiber_morph_Abaqus_oti.f:119:9:
+
+  119 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |         1
+Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
+umat_fiber_morph_Abaqus_oti.f:119:29:
+
+  119 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |                             1
+Error: F",1.25
+mholla__growth/umats/umat_fiber_morph_orient.f,umats,9256,243,fixed,finite,6,15,ready_with_json_contract,4,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageD/umats/umat_fiber_morph_orient/baseline/umat_fiber_morph_orient.f:16:72:
+
+   16 |       subroutine orient (T,noel,npt,layer,kspt,coords,basis,orname,nnodes,cnodes,jnnum)
+      |                        ",no,no,"umat_fiber_morph_orient_oti.f:174:9:
+
+  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |         1
+Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
+umat_fiber_morph_orient_oti.f:174:29:
+
+  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |                             1
+Error: F",1.36
+mholla__growth/umats/umat_fiber_stretch.f,umats,9603,258,fixed,finite,6,20,ready_with_json_contract,3,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageD/umats/umat_fiber_stretch/baseline/umat_fiber_stretch.f:91:72:
+
+   91 |       xn(1) = (dfgrd1(1,1)*xn0(1) + dfgrd1(1,2)*xn0(2) + dfgrd1(1,3)*xn0(3))/norm
+      |                                        ",no,no,"umat_fiber_stretch_oti.f:175:21:
+
+  175 |       XTOL_OTI = 1.D_OTI-12
+      |                     1
+Error: Missing exponent in real number at (1)
+umat_fiber_stretch_oti.f:234:12:
+
+  234 |      1growth
+      |            1
+Error: Symbol ‘cr_neggrowth’ at (1) has no IMPLICIT type; did you mean ‘cr_neg",1.34
+mholla__growth/umats/umat_iso_Mandel.f,umats,8325,233,fixed,finite,6,20,ready_with_json_contract,3,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageD/umats/umat_iso_Mandel/baseline/umat_iso_Mandel.f:86:72:
+
+   86 |      #       +dfgrd1(1,3)*(dfgrd1(2,1)*dfgrd1(3,2)-dfgrd1(2,2)*dfgrd1(3,1))
+      |                                                    ",no,no,"umat_iso_Mandel_oti.f:168:21:
+
+  168 |       XTOL_OTI = 1.D_OTI-12
+      |                     1
+Error: Missing exponent in real number at (1)
+umat_iso_Mandel_oti.f:174:43:
+
+  174 |       cr_pos  = REAL(props(4)              ! critical STRESS_OTI for
+      |                                          ",1.34
+mholla__growth/umats/umat_iso_Mandel_v2.f,umats,8423,244,fixed,finite,6,18,ready_with_json_contract,2,data,semantic_checks_failed,semantic_check,Semantic check failed: old_ddsdde_assignments_disabled.,,,,0.21
+mholla__growth/umats/umat_iso_morph.f,umats,5941,158,fixed,finite,6,8,ready_with_json_contract,3,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageD/umats/umat_iso_morph/baseline/umat_iso_morph.f:98:72:
+
+   98 |      #     +dfgrd1(1,3) * (dfgrd1(2,1)*dfgrd1(3,2)-dfgrd1(2,2)*dfgrd1(3,1))
+      |                                                      ",no,no,"umat_iso_morph_oti.f:111:9:
+
+  111 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |         1
+Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
+umat_iso_morph_oti.f:111:29:
+
+  111 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |                             1
+Error: Function ‘dstran’ a",1.19
+mholla__growth/umats/umat_iso_morph_Abaqus.f,umats,5872,155,fixed,finite,6,9,ready_with_json_contract,3,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageD/umats/umat_iso_morph_Abaqus/baseline/umat_iso_morph_Abaqus.f:94:72:
+
+   94 |      #     +dfgrd1(1,3) * (dfgrd1(2,1)*dfgrd1(3,2)-dfgrd1(2,2)*dfgrd1(3,1))
+      |                                        ",no,no,"umat_iso_morph_Abaqus_oti.f:113:9:
+
+  113 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |         1
+Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
+umat_iso_morph_Abaqus_oti.f:113:29:
+
+  113 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |                             1
+Error: Funct",1.26
+mholla__growth/umats/umat_iso_stretch.f,umats,7467,213,fixed,finite,6,19,ready_with_json_contract,3,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageD/umats/umat_iso_stretch/baseline/umat_iso_stretch.f:85:72:
+
+   85 |      #       +dfgrd1(1,3)*(dfgrd1(2,1)*dfgrd1(3,2)-dfgrd1(2,2)*dfgrd1(3,1))
+      |                                                  ",no,no,"umat_iso_stretch_oti.f:164:21:
+
+  164 |       XTOL_OTI = 1.D_OTI-12
+      |                     1
+Error: Missing exponent in real number at (1)
+umat_iso_stretch_oti.f:135:9:
+
+  135 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+      |         1
+Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type",1.33
+mholla__growth/umats/umat_neohooke.f,umats,4952,131,fixed,finite,6,7,ready_with_json_contract,3,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageD/umats/umat_neohooke/baseline/umat_neohooke.f:40:51:
+
+   40 |      #                         noel,npt,kstep,kinc))
+      |                                                   1
+Error: Syntax error in SUB",no,no,"umat_neohooke_oti.f:40:51:
+
+   40 |      #                         noel,npt,kstep,kinc))
+      |                                                   1
+Error: Syntax error in SUBROUTINE statement at (1)
+umat_neohooke_oti.f:55:27:
+
+   55 |       real*8  stress(ntens), ddsdde(ntens,ntens), statev(nstatv)",1.28
+mholla__growth/umats/umat_neohooke_abaqus.f,umats,4712,123,fixed,finite,6,5,ready_with_json_contract,2,data,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1)= vol + 2.d0/3.d0*mu*J53*b(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2)= vol + 2.d0/3.d0*mu*J53*b(2); DDSDDE assignment is not covered by an old tangent replacement region: dds",,,,0.07
