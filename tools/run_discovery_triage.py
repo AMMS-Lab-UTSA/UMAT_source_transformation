@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import shutil
 import sys
 import time
@@ -38,13 +39,15 @@ from umat_oti.services.transformation import (  # noqa: E402
     TransformationOptions, run_transformation,
 )
 
-DEFAULT_CACHE = Path("/home/ammslab3/softwarex_work/discovery_cache")
+DEFAULT_CACHE = Path(os.environ.get("UMAT_OTI_DISCOVERY_CACHE")
+                     or REPO_ROOT.parent / "discovery_cache")
 DEFAULT_OUT = REPO_ROOT / "paper_results" / "discovery"
 
 COLUMNS = (
     "source", "repository", "bytes", "lines", "form", "kinematics", "ntens", "nstatv_hint",
     "anchor_status",
-    "helper_routines", "stage", "blocker_kind", "blocker", "seconds",
+    "helper_routines", "declared_unsupported",
+    "stage", "blocker_kind", "blocker", "seconds",
 )
 
 #: Coarse causes, so the histogram groups a defect rather than listing every
@@ -53,8 +56,15 @@ _KINDS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("unsupported_intrinsic", ("unsupported intrinsic",)),
     ("unresolved_dependency", ("differing definitions", "ambiguous",
                                "could not be resolved", "no local definition")),
-    ("no_stress_update_found", ("stress", "no assignment to")),
+    # "has no confirmed shape" is tested before anything matching the word
+    # "stress", because the message that carries it -- "Promoted variable X is
+    # indexed in a stress region but has no confirmed shape" -- names a
+    # declaration the transformer could not read, not a stress update it could
+    # not find. Matching the bare word "stress" filed fourteen sources under a
+    # cause that was not theirs and hid a whole defect class behind a count.
     ("shape_unknown", ("has no confirmed shape",)),
+    ("no_stress_update_found", ("stress update region is required",
+                               "no assignment to")),
     ("io_on_stress_path", ("file i/o", "write(", "read(")),
     ("unparsed_construct", ("unsupported", "cannot be transformed",
                             "syntax", "parse")),
@@ -95,6 +105,18 @@ def triage_one(source: Path, work_root: Path, *, ntens: int = 6,
                    seconds=round(time.time() - started, 2))
         return row
     row["form"] = str(analysis.get("form", ""))
+    # Constructs the transformer declares up front that it does not
+    # handle. Reading them matters because their consequences surface far
+    # downstream: fourteen sources keep their arrays in COMMON blocks and
+    # were filed under "no confirmed shape", which is what a COMMON-
+    # declared bound looks like to a reader that never learned to read
+    # one. Naming the declared limitation says which of these is a gap to
+    # close and which is a symptom of a gap already known.
+    unsupported = sorted({
+        str(f.get("code", "")) for f in
+        (analysis.get("unsupported_features") or [])
+        if isinstance(f, dict) and f.get("severity") == "error"})
+    row["declared_unsupported"] = ";".join(unsupported)
     row["helper_routines"] = len(analysis.get("detected_subroutines") or [])
     if not analysis.get("has_subroutine_umat"):
         row.update(stage="not_a_umat", blocker_kind="not_a_umat",
@@ -149,7 +171,9 @@ def triage_one(source: Path, work_root: Path, *, ntens: int = 6,
     if report.get("transform_success"):
         row.update(stage="transformed", blocker_kind="none", blocker="")
     elif blockers:
-        row.update(stage="blocked", blocker_kind=_classify(blockers[0]),
+        row.update(stage="blocked",
+                   blocker_kind=(f"unsupported_{unsupported[0]}" if unsupported
+                                 else _classify(blockers[0])),
                    blocker="; ".join(str(b) for b in blockers)[:300])
     elif completion:
         kinds = sorted({str(c.get("kind", "")) for c in completion
@@ -200,7 +224,12 @@ def main(argv: list[str] | None = None) -> int:
         "by_stage": dict(stages.most_common()),
         "by_blocker_kind": dict(kinds.most_common()),
         "transformed": stages.get("transformed", 0),
-        "cache_root": str(args.cache_dir),
+        "cache_root_name": args.cache_dir.name,
+        "cache_root_note": (
+            "The cache is outside the repository; set "
+            "UMAT_OTI_DISCOVERY_CACHE to point at it. Its absolute path "
+            "is a property of the machine that ran the triage, not of "
+            "the result, so it is not recorded here."),
         "caveat": (
             "Reaching 'transformed' means the transformer produced Fortran, "
             "not that anything was compiled, executed or compared. These "

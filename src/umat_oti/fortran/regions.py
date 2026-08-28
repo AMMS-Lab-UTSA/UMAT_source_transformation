@@ -345,21 +345,56 @@ def _constant_variables(
     written_variables: set[str],
     declaration_only_variables: set[str],
 ) -> set[str]:
+    """Names whose value carries no derivative, on the evidence of *every*
+    assignment to them.
+
+    "Constant" is a claim about a variable, not about one line, so it has to
+    hold for every definition of that variable. Asking only whether *some*
+    assignment reads constants alone is an existential test wearing a
+    universal name, and a UMAT that zeroes its work arrays before filling
+    them -- the ordinary Fortran idiom
+
+        DO K1=1,3
+          DO K2=1,3
+            A1(K1,K2)=0.0
+          END DO
+        END DO
+        A1(1,1)=DFGRD1(1,1)/G11
+
+    -- satisfies it on the reset loop alone. A1 was then declared constant
+    while the very next statement reads the deformation gradient, and because
+    constancy propagates, the declaration walked the whole chain A1 -> BA1 ->
+    BA1B -> STRESS. The transform keeps constants real, so it wrote
+    ``A1(1,1)=REAL(DFGRD1_OTI(1,1)/G11_OTI)`` and the derivative died in the
+    cast one statement after the seed.
+
+    A self-referential definition is refused outright rather than judged on
+    the rest of its right-hand side. ``X = X * TWO`` reads only constants
+    besides X, but it says nothing about where X's value came from, and a
+    value delivered by ``CALL GETSTRAIN(X, DSTRAN)`` arrives without an
+    assignment for this function to see. Treating the increment as proof of
+    constancy would certify exactly the variable the call had just seeded.
+    The cost of refusing is that a genuinely constant accumulator stays
+    hypercomplex and carries a zero derivative part; the cost of accepting is
+    a silent truncation, so the asymmetry decides it.
+    """
+    assignments_by_lhs: dict[str, list[AssignmentInfo]] = {}
+    for assignment in assignments:
+        if assignment.lhs in {"STRESS", "STATEV", "DDSDDE"}:
+            continue
+        assignments_by_lhs.setdefault(assignment.lhs, []).append(assignment)
     constants = set(parameter_variables) | set(STANDARD_CONSTANT_INPUTS)
     constants.update(declaration_only_variables & STANDARD_CONSTANT_INPUTS)
     changed = True
     while changed:
         changed = False
-        for assignment in assignments:
-            if assignment.lhs in {"STRESS", "STATEV", "DDSDDE"}:
+        for name, name_assignments in assignments_by_lhs.items():
+            if name in constants:
                 continue
-            if assignment.lhs in constants:
+            if any(name in assignment.rhs_tokens for assignment in name_assignments):
                 continue
-            if assignment.lhs in assignment.rhs_tokens and assignment.lhs not in constants:
-                continue
-            rhs_tokens = assignment.rhs_tokens - {assignment.lhs}
-            if rhs_tokens <= constants:
-                constants.add(assignment.lhs)
+            if all(assignment.rhs_tokens <= constants for assignment in name_assignments):
+                constants.add(name)
                 changed = True
     constants.update(name for name in STANDARD_CONSTANT_INPUTS if name not in written_variables)
     return constants

@@ -213,7 +213,7 @@ def search_repositories(client: GitHubClient, *, pages: int,
 def survey_repository(client: GitHubClient, full_name: str,
                       known: dict[str, str], survey: Survey,
                       *, max_files: int, matched: set[str] | None = None,
-                      cache_dir: Path | None = None) -> None:
+                      cache_dir: Path | None = None, max_decks: int = 40) -> None:
     owner, _, repo = full_name.partition("/")
     row = Discovery(repository=full_name)
 
@@ -272,6 +272,26 @@ def survey_repository(client: GitHubClient, full_name: str,
                                        "its tree lists no Fortran file"})
         survey.add(clone)
         return
+
+    # Decks first, when anything is being cached. A source without a material
+    # vector cannot be verified, and for these repositories the deck the
+    # author shipped is the only place one is written down. The licence has
+    # already cleared, so caching them is permitted by the same rule that
+    # permits caching the sources.
+    if cache_dir is not None:
+        decks = [e for e in entries
+                 if str(e.get("path", "")).lower().endswith(".inp")]
+        for deck in decks[:max_decks]:
+            try:
+                blob = client.blob(owner, repo, str(deck.get("sha", "")))
+            except RateLimited:
+                raise
+            except AcquisitionError:
+                continue
+            target = (Path(cache_dir) / full_name.replace("/", "__")
+                      / str(deck.get("path", "")))
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(blob)
 
     examined = 0
     for entry in fortran:
