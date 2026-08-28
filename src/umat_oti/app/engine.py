@@ -153,12 +153,29 @@ def _build_contract(name: str, seed: str, output: str, target: str, ntens: int, 
     constants = [n for n in summ["constant_variables"] if n not in claimed]
     claimed.update(constants)
     keep_real = [n for n in summ["keep_real_variables"] if n not in claimed]
+    # Keeping the Abaqus interface separate from the constitutive model is an
+    # ordinary way to write a UMAT: subroutine umat(...) declares the argument
+    # list Abaqus insists on, calls the model routine, and returns. Naming UMAT
+    # as the routine to transform then names one that holds no stress update
+    # and no tangent, and the transform reports both missing -- accurately, and
+    # one call above where they live. Fifteen of the discovered finite-strain
+    # sources are written that way.
+    from umat_oti.fortran.callgraph import delegated_material_routine
+    from umat_oti.fortran.parser import parse_fortran_file
+    delegate = delegated_material_routine(parse_fortran_file(src_path), "UMAT")
+    source_block: dict = {"file": str(src_path)}
+    if delegate:
+        source_block["selected_umat_name"] = delegate
+        source_block["selected_umat_reason"] = (
+            "UMAT's executable body is a single call to locally defined "
+            f"{delegate}, passing STRESS and DDSDDE through; the material is "
+            "that routine.")
     cfg = {
         "case_name": name,
         "jacobian": {"dependent": output, "independent": "DSTRAN", "target": target},
         "otis": {"ntens": int(ntens), "order": int(order)},
         "replace": {"ddsdde_block": _ddsdde_ranges(analysis)},
-        "source": {"file": str(src_path)},
+        "source": source_block,
         "variables": {"seed": seeds, "promote": promote,
                       "constant": constants, "real": keep_real},
     }

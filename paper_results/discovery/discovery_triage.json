@@ -13,14 +13,14 @@
       "nstatv_hint": 81,
       "ntens": 6,
       "repository": "uel",
-      "seconds": 0.93,
+      "seconds": 0.92,
       "source": "HIT-FSW-314__abaqus/abaqus-umat/uel/UEL9_VPDCL.for",
       "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 19416,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -30,14 +30,14 @@
       "nstatv_hint": 29,
       "ntens": 6,
       "repository": "Th001",
-      "seconds": 0.2,
+      "seconds": 0.17,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/BodyForce-Growth-2Stages.for",
       "stage": "blocked"
     },
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 18617,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -54,7 +54,7 @@
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 18499,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -71,7 +71,7 @@
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 19424,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -81,14 +81,14 @@
       "nstatv_hint": 29,
       "ntens": 6,
       "repository": "Th002",
-      "seconds": 0.15,
+      "seconds": 0.13,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/BodyForce-Growth-2Stages.for",
       "stage": "blocked"
     },
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 18616,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -98,14 +98,14 @@
       "nstatv_hint": 25,
       "ntens": 6,
       "repository": "Th002",
-      "seconds": 0.18,
+      "seconds": 0.14,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for",
       "stage": "blocked"
     },
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 18498,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -115,14 +115,14 @@
       "nstatv_hint": 26,
       "ntens": 6,
       "repository": "Th002",
-      "seconds": 0.13,
+      "seconds": 0.11,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGrowth.for",
       "stage": "blocked"
     },
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 19417,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -139,7 +139,7 @@
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 18499,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -156,7 +156,7 @@
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 19278,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -173,7 +173,7 @@
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 19493,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -190,7 +190,7 @@
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 18616,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -207,7 +207,7 @@
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 22889,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -224,7 +224,7 @@
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 18617,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -241,7 +241,7 @@
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "Promoted variable READDETF is indexed in a stress region but has no confirmed shape.",
-      "blocker_kind": "unsupported_common_block",
+      "blocker_kind": "shape_unknown",
       "bytes": 18517,
       "declared_unsupported": "common_block;io_write",
       "form": "fixed",
@@ -268,7 +268,7 @@
       "nstatv_hint": 19,
       "ntens": 6,
       "repository": "inputFile",
-      "seconds": 0.11,
+      "seconds": 0.1,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-EX.for",
       "stage": "transformed"
     },
@@ -285,7 +285,7 @@
       "nstatv_hint": 19,
       "ntens": 6,
       "repository": "inputFile",
-      "seconds": 0.21,
+      "seconds": 0.18,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-Z2.for",
       "stage": "transformed"
     },
@@ -302,7 +302,7 @@
       "nstatv_hint": 19,
       "ntens": 6,
       "repository": "inputFile",
-      "seconds": 0.19,
+      "seconds": 0.13,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-frac.for",
       "stage": "transformed"
     },
@@ -336,7 +336,7 @@
       "nstatv_hint": 28,
       "ntens": 6,
       "repository": "InputFile",
-      "seconds": 0.2,
+      "seconds": 0.22,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur2.for",
       "stage": "transformed"
     },
@@ -353,7 +353,7 @@
       "nstatv_hint": 29,
       "ntens": 6,
       "repository": "InputFile",
-      "seconds": 0.19,
+      "seconds": 0.2,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur3.for",
       "stage": "transformed"
     },
@@ -370,7 +370,7 @@
       "nstatv_hint": 26,
       "ntens": 6,
       "repository": "Example1",
-      "seconds": 0.19,
+      "seconds": 0.17,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example1/Growth-MinSur1.for",
       "stage": "transformed"
     },
@@ -387,7 +387,7 @@
       "nstatv_hint": 28,
       "ntens": 6,
       "repository": "Example2",
-      "seconds": 0.15,
+      "seconds": 0.18,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example2/Growth-MinSur2.for",
       "stage": "transformed"
     },
@@ -404,7 +404,7 @@
       "nstatv_hint": 27,
       "ntens": 6,
       "repository": "Example3-Sphere",
-      "seconds": 0.14,
+      "seconds": 0.21,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example3-Sphere/Growth-MinSur3.for",
       "stage": "transformed"
     },
@@ -421,7 +421,7 @@
       "nstatv_hint": 29,
       "ntens": 6,
       "repository": "ABAQUS_files",
-      "seconds": 0.22,
+      "seconds": 0.2,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Bunny/Part1/ABAQUS_files/Growth-Bunny-Part1.for",
       "stage": "transformed"
     },
@@ -438,7 +438,7 @@
       "nstatv_hint": 29,
       "ntens": 6,
       "repository": "10",
-      "seconds": 0.16,
+      "seconds": 0.23,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Catenoid/10/Growth-Catenoid.for",
       "stage": "transformed"
     },
@@ -472,7 +472,7 @@
       "nstatv_hint": 14,
       "ntens": 6,
       "repository": "Bending",
-      "seconds": 0.19,
+      "seconds": 0.21,
       "source": "Jeff97__growth-of-circular-plate/Bending/Growth-CASE2.for",
       "stage": "transformed"
     },
@@ -489,7 +489,7 @@
       "nstatv_hint": 15,
       "ntens": 6,
       "repository": "Bending",
-      "seconds": 0.12,
+      "seconds": 0.16,
       "source": "Jeff97__growth-of-circular-plate/Bending/Growth-CASE3.for",
       "stage": "transformed"
     },
@@ -506,7 +506,7 @@
       "nstatv_hint": 15,
       "ntens": 6,
       "repository": "Combined",
-      "seconds": 0.18,
+      "seconds": 0.12,
       "source": "Jeff97__growth-of-circular-plate/Combined/Growth-CASE1.for",
       "stage": "transformed"
     },
@@ -540,7 +540,7 @@
       "nstatv_hint": 14,
       "ntens": 6,
       "repository": "Combined",
-      "seconds": 0.13,
+      "seconds": 0.16,
       "source": "Jeff97__growth-of-circular-plate/Combined/Growth-CASE3.for",
       "stage": "transformed"
     },
@@ -557,7 +557,7 @@
       "nstatv_hint": 14,
       "ntens": 6,
       "repository": "ShapeProgramming",
-      "seconds": 0.15,
+      "seconds": 0.13,
       "source": "Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE1.for",
       "stage": "transformed"
     },
@@ -591,7 +591,7 @@
       "nstatv_hint": 15,
       "ntens": 6,
       "repository": "ShapeProgramming",
-      "seconds": 0.13,
+      "seconds": 0.15,
       "source": "Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE3.for",
       "stage": "transformed"
     },
@@ -608,7 +608,7 @@
       "nstatv_hint": 15,
       "ntens": 6,
       "repository": "ShapeProgramming",
-      "seconds": 0.17,
+      "seconds": 0.16,
       "source": "Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE4.for",
       "stage": "transformed"
     },
@@ -625,7 +625,7 @@
       "nstatv_hint": 15,
       "ntens": 6,
       "repository": "ShapeProgramming",
-      "seconds": 0.16,
+      "seconds": 0.22,
       "source": "Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE5.for",
       "stage": "transformed"
     },
@@ -642,7 +642,7 @@
       "nstatv_hint": 16,
       "ntens": 6,
       "repository": "Wrinkle",
-      "seconds": 0.13,
+      "seconds": 0.16,
       "source": "Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-102.for",
       "stage": "transformed"
     },
@@ -659,7 +659,7 @@
       "nstatv_hint": 21,
       "ntens": 6,
       "repository": "Abaqus",
-      "seconds": 0.13,
+      "seconds": 0.12,
       "source": "adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb.f",
       "stage": "blocked"
     },
@@ -727,7 +727,7 @@
       "nstatv_hint": 96,
       "ntens": 6,
       "repository": "SAMPLE",
-      "seconds": 0.93,
+      "seconds": 0.94,
       "source": "jgomezc1__ABAQUS-US/SAMPLE/UEL9_VPDCO.for",
       "stage": "transformed"
     },
@@ -744,7 +744,7 @@
       "nstatv_hint": 26,
       "ntens": 6,
       "repository": "UELS",
-      "seconds": 0.29,
+      "seconds": 0.33,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_ECL.for",
       "stage": "transformed"
     },
@@ -761,7 +761,7 @@
       "nstatv_hint": 31,
       "ntens": 6,
       "repository": "UELS",
-      "seconds": 0.28,
+      "seconds": 0.33,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_ECO.for",
       "stage": "transformed"
     },
@@ -778,7 +778,7 @@
       "nstatv_hint": 73,
       "ntens": 6,
       "repository": "UELS",
-      "seconds": 0.58,
+      "seconds": 0.61,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_PCLI.for",
       "stage": "transformed"
     },
@@ -795,7 +795,7 @@
       "nstatv_hint": 47,
       "ntens": 6,
       "repository": "UELS",
-      "seconds": 0.31,
+      "seconds": 0.35,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_PCLI_R.for",
       "stage": "transformed"
     },
@@ -812,7 +812,7 @@
       "nstatv_hint": 66,
       "ntens": 6,
       "repository": "UELS",
-      "seconds": 0.5,
+      "seconds": 0.49,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_PCLK.for",
       "stage": "transformed"
     },
@@ -829,7 +829,7 @@
       "nstatv_hint": 83,
       "ntens": 6,
       "repository": "UELS",
-      "seconds": 0.67,
+      "seconds": 0.66,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_PCOI.for",
       "stage": "transformed"
     },
@@ -846,7 +846,7 @@
       "nstatv_hint": 66,
       "ntens": 6,
       "repository": "UELS",
-      "seconds": 0.43,
+      "seconds": 0.42,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_PCOR.for",
       "stage": "transformed"
     },
@@ -863,7 +863,7 @@
       "nstatv_hint": 68,
       "ntens": 6,
       "repository": "UELS",
-      "seconds": 0.46,
+      "seconds": 0.45,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_PCOR_KIN.for",
       "stage": "transformed"
     },
@@ -880,7 +880,7 @@
       "nstatv_hint": 80,
       "ntens": 6,
       "repository": "UELS",
-      "seconds": 0.57,
+      "seconds": 0.54,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_VPDCL.for",
       "stage": "transformed"
     },
@@ -897,7 +897,7 @@
       "nstatv_hint": 95,
       "ntens": 6,
       "repository": "UELS",
-      "seconds": 0.97,
+      "seconds": 0.88,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_VPDCO.for",
       "stage": "transformed"
     },
@@ -914,7 +914,7 @@
       "nstatv_hint": 26,
       "ntens": 6,
       "repository": "UELS",
-      "seconds": 0.31,
+      "seconds": 0.23,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL9_ECL.for",
       "stage": "transformed"
     },
@@ -931,7 +931,7 @@
       "nstatv_hint": 31,
       "ntens": 6,
       "repository": "UELS",
-      "seconds": 0.34,
+      "seconds": 0.23,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL9_ECO.for",
       "stage": "transformed"
     },
@@ -948,14 +948,14 @@
       "nstatv_hint": 34,
       "ntens": 6,
       "repository": "UELS",
-      "seconds": 0.32,
+      "seconds": 0.34,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL9_ECO_m.for",
       "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(2); DDSDDE assignment is not",
-      "blocker_kind": "unsupported_data",
+      "blocker": "",
+      "blocker_kind": "none",
       "bytes": 7025,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -965,14 +965,14 @@
       "nstatv_hint": 9,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.08,
+      "seconds": 0.15,
       "source": "mholla__growth/umats/umat_area_morph.f",
-      "stage": "blocked"
+      "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1)= (vol + 2.d0/3.d0*mu*J23e*be(1))/detf; DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2)= (vol + 2.d0/3.d0*mu*J23e*be(2))/detf; DDSDDE assignment is not covered by an old tangent repla",
-      "blocker_kind": "unsupported_data",
+      "blocker": "",
+      "blocker_kind": "none",
       "bytes": 7193,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -982,14 +982,14 @@
       "nstatv_hint": 10,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.05,
+      "seconds": 0.14,
       "source": "mholla__growth/umats/umat_area_morph_Abaqus.f",
-      "stage": "blocked"
+      "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1) = (lam + 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2) = (lam + 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(2); DDSDDE assignment is not",
-      "blocker_kind": "unsupported_data",
+      "blocker": "",
+      "blocker_kind": "none",
       "bytes": 9476,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -999,14 +999,14 @@
       "nstatv_hint": 15,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.06,
+      "seconds": 0.2,
       "source": "mholla__growth/umats/umat_area_morph_orient.f",
-      "stage": "blocked"
+      "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(2); DDSDDE assignment is not",
-      "blocker_kind": "unsupported_data",
+      "blocker": "",
+      "blocker_kind": "none",
       "bytes": 9968,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -1016,14 +1016,14 @@
       "nstatv_hint": 22,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.07,
+      "seconds": 0.21,
       "source": "mholla__growth/umats/umat_area_stretch.f",
-      "stage": "blocked"
+      "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(2); DDSDDE assignment is not",
-      "blocker_kind": "unsupported_data",
+      "blocker": "",
+      "blocker_kind": "none",
       "bytes": 6805,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -1033,14 +1033,14 @@
       "nstatv_hint": 9,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.04,
+      "seconds": 0.14,
       "source": "mholla__growth/umats/umat_fiber_morph.f",
-      "stage": "blocked"
+      "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1)= (vol + 2.d0/3.d0*mu*J23e*be(1))/detf; DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2)= (vol + 2.d0/3.d0*mu*J23e*be(2))/detf; DDSDDE assignment is not covered by an old tangent repla",
-      "blocker_kind": "unsupported_data",
+      "blocker": "",
+      "blocker_kind": "none",
       "bytes": 7010,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -1050,14 +1050,14 @@
       "nstatv_hint": 10,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.05,
+      "seconds": 0.14,
       "source": "mholla__growth/umats/umat_fiber_morph_Abaqus.f",
-      "stage": "blocked"
+      "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1) = (lam + 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2) = (lam + 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(2); DDSDDE assignment is not",
-      "blocker_kind": "unsupported_data",
+      "blocker": "",
+      "blocker_kind": "none",
       "bytes": 9256,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -1067,14 +1067,14 @@
       "nstatv_hint": 15,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.06,
+      "seconds": 0.17,
       "source": "mholla__growth/umats/umat_fiber_morph_orient.f",
-      "stage": "blocked"
+      "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(2); DDSDDE assignment is not",
-      "blocker_kind": "unsupported_data",
+      "blocker": "",
+      "blocker_kind": "none",
       "bytes": 9603,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -1084,14 +1084,14 @@
       "nstatv_hint": 20,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.07,
+      "seconds": 0.2,
       "source": "mholla__growth/umats/umat_fiber_stretch.f",
-      "stage": "blocked"
+      "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(2); DDSDDE assignment is not",
-      "blocker_kind": "unsupported_data",
+      "blocker": "",
+      "blocker_kind": "none",
       "bytes": 8325,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -1101,14 +1101,14 @@
       "nstatv_hint": 20,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.06,
+      "seconds": 0.18,
       "source": "mholla__growth/umats/umat_iso_Mandel.f",
-      "stage": "blocked"
+      "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(2); DDSDDE assignment is not",
-      "blocker_kind": "unsupported_data",
+      "blocker": "Semantic check failed: old_ddsdde_assignments_disabled.",
+      "blocker_kind": "semantic_check",
       "bytes": 8423,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -1118,14 +1118,14 @@
       "nstatv_hint": 18,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.06,
+      "seconds": 0.18,
       "source": "mholla__growth/umats/umat_iso_Mandel_v2.f",
-      "stage": "blocked"
+      "stage": "semantic_checks_failed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(2); DDSDDE assignment is not",
-      "blocker_kind": "unsupported_data",
+      "blocker": "",
+      "blocker_kind": "none",
       "bytes": 5941,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -1135,14 +1135,14 @@
       "nstatv_hint": 8,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.04,
+      "seconds": 0.09,
       "source": "mholla__growth/umats/umat_iso_morph.f",
-      "stage": "blocked"
+      "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1)= (vol + 2.d0/3.d0*mu*J23e*be(1))/detf; DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2)= (vol + 2.d0/3.d0*mu*J23e*be(2))/detf; DDSDDE assignment is not covered by an old tangent repla",
-      "blocker_kind": "unsupported_data",
+      "blocker": "",
+      "blocker_kind": "none",
       "bytes": 5872,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -1152,14 +1152,14 @@
       "nstatv_hint": 9,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.04,
+      "seconds": 0.1,
       "source": "mholla__growth/umats/umat_iso_morph_Abaqus.f",
-      "stage": "blocked"
+      "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2) = (lam - 2.d0*(lam*lnJe - mu))/detfe + 2.d0*stress(2); DDSDDE assignment is not",
-      "blocker_kind": "unsupported_data",
+      "blocker": "",
+      "blocker_kind": "none",
       "bytes": 7467,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -1169,14 +1169,14 @@
       "nstatv_hint": 19,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.05,
+      "seconds": 0.18,
       "source": "mholla__growth/umats/umat_iso_stretch.f",
-      "stage": "blocked"
+      "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1) = (lam + 2.d0*(lam*lnJe - mu))/detf + 2.d0*stress(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2) = (lam + 2.d0*(lam*lnJe - mu))/detf + 2.d0*stress(2); DDSDDE assignment is not c",
-      "blocker_kind": "unsupported_data",
+      "blocker": "",
+      "blocker_kind": "none",
       "bytes": 4952,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -1186,14 +1186,14 @@
       "nstatv_hint": 7,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.03,
+      "seconds": 0.15,
       "source": "mholla__growth/umats/umat_neohooke.f",
-      "stage": "blocked"
+      "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
       "blocker": "DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1)= vol + 2.d0/3.d0*mu*J53*b(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2)= vol + 2.d0/3.d0*mu*J53*b(2); DDSDDE assignment is not covered by an old tangent replacement region: dds",
-      "blocker_kind": "unsupported_data",
+      "blocker_kind": "missing_ddsdde_extraction_point",
       "bytes": 4712,
       "declared_unsupported": "data",
       "form": "fixed",
@@ -1203,27 +1203,27 @@
       "nstatv_hint": 5,
       "ntens": 6,
       "repository": "umats",
-      "seconds": 0.03,
+      "seconds": 0.08,
       "source": "mholla__growth/umats/umat_neohooke_abaqus.f",
       "stage": "blocked"
     }
   ],
   "summary": {
     "by_blocker_kind": {
-      "missing_ddsdde_extraction_point": 1,
-      "shape_unknown": 2,
-      "unsupported_common_block": 14,
-      "unsupported_data": 15
+      "missing_ddsdde_extraction_point": 2,
+      "semantic_check": 1,
+      "shape_unknown": 16
     },
     "by_stage": {
       "anchors_not_located": 1,
-      "blocked": 31,
-      "transformed": 39
+      "blocked": 17,
+      "semantic_checks_failed": 1,
+      "transformed": 52
     },
     "cache_root_name": "discovery_cache",
     "cache_root_note": "The cache is outside the repository; set UMAT_OTI_DISCOVERY_CACHE to point at it. Its absolute path is a property of the machine that ran the triage, not of the result, so it is not recorded here.",
     "caveat": "Reaching 'transformed' means the transformer produced Fortran, not that anything was compiled, executed or compared. These sources have no material vector and no loading history, so no count here is verification evidence. The blocker histogram is the point: it names what the transformer cannot yet do.",
     "sources": 71,
-    "transformed": 39
+    "transformed": 52
   }
 }

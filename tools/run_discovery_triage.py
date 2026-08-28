@@ -68,6 +68,8 @@ _KINDS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("io_on_stress_path", ("file i/o", "write(", "read(")),
     ("unparsed_construct", ("unsupported", "cannot be transformed",
                             "syntax", "parse")),
+    ("missing_ddsdde_extraction_point",
+     ("not covered by an old tangent replacement region",)),
     ("semantic_check", ("semantic check",)),
     ("scanner_error", ("traceback", "exception")),
 )
@@ -171,9 +173,16 @@ def triage_one(source: Path, work_root: Path, *, ntens: int = 6,
     if report.get("transform_success"):
         row.update(stage="transformed", blocker_kind="none", blocker="")
     elif blockers:
-        row.update(stage="blocked",
-                   blocker_kind=(f"unsupported_{unsupported[0]}" if unsupported
-                                 else _classify(blockers[0])),
+        # The blocker says what failed; declared_unsupported says what the
+        # transformer had already announced it cannot read. Letting the second
+        # overwrite the first repeated the mistake it was meant to correct:
+        # fifteen sources whose blocker is an uncovered DDSDDE assignment were
+        # filed under "unsupported_data" because a DATA statement appears
+        # somewhere in the file. The two are reported side by side instead,
+        # which is what makes the COMMON-block group legible -- its fourteen
+        # sources fail on a shape the reader could not confirm, and the reason
+        # it could not is in the other column.
+        row.update(stage="blocked", blocker_kind=_classify(blockers[0]),
                    blocker="; ".join(str(b) for b in blockers)[:300])
     elif completion:
         kinds = sorted({str(c.get("kind", "")) for c in completion
