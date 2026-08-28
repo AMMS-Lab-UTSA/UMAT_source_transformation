@@ -545,11 +545,41 @@ def _region_summary(
 
 
 def _block_ranges(logical_lines: tuple[FortranLogicalLine, ...]) -> list[tuple[int, int]]:
+    """Spans of DO loops, each closed inside the program unit that opened it.
+
+    The stack is cleared at every program-unit boundary because a DO loop
+    cannot span subroutines, and Fortran gives it every opportunity to look
+    as though it does: a loop written with a labelled terminator
+
+        DO 20 I = 1, NGAUSS
+          ...
+    20  CONTINUE
+
+    never produces an END DO, so its opener stayed on the stack after its
+    routine ended and the next END DO anywhere in the file closed it. In a
+    file holding a UEL above a UMAT that manufactured ranges like (122, 436)
+    -- opened in the element routine, closed in the material routine -- and
+    the inverted spans that follow from them, (379, 250). _expanded_range
+    picks the containing block by width, and a range spanning two routines is
+    wide enough to contain almost anything, so the stress region grew to cover
+    the element routine. Calls that were never on the material stress path
+    were harvested as helper roots, UMAT itself among them, and fourteen
+    sources were reported as needing a source definition for the very routine
+    being transformed.
+
+    An opener left unclosed at the boundary is discarded rather than carried
+    forward: it was closed by a labelled CONTINUE this function does not read,
+    or the source is malformed, and either way the next routine's END DO is
+    not its terminator.
+    """
     stack: list[tuple[str, int]] = []
     ranges: list[tuple[int, int]] = []
     for line in logical_lines:
         text = line.text.strip()
         lower_text = text.lower()
+        if _program_unit_boundary(lower_text):
+            stack.clear()
+            continue
         opener = _block_opener(lower_text)
         if opener:
             stack.append((opener, line.line_numbers[0]))
@@ -562,6 +592,29 @@ def _block_ranges(logical_lines: tuple[FortranLogicalLine, ...]) -> list[tuple[i
                     del stack[stack_index:]
                     break
     return ranges
+
+
+#: Constructs whose END is a block terminator, not a program-unit terminator.
+_BLOCK_ENDS = ("do", "if", "select", "where", "type", "interface", "block",
+               "associate", "forall", "critical", "enum", "map", "structure",
+               "union")
+
+_UNIT_HEADER = re.compile(
+    r"^(?:recursive|pure|elemental|module|impure)?\s*"
+    r"(?:(?:real|integer|logical|complex|character|double\s*precision|type)"
+    r"\s*(?:\*\s*\d+|\([^)]*\))?\s*)?"
+    r"(?:subroutine|function|program|block\s*data)\b",
+    re.IGNORECASE)
+
+
+def _program_unit_boundary(lower_text: str) -> bool:
+    """Whether this statement opens or closes a program unit."""
+    if _UNIT_HEADER.match(lower_text):
+        return True
+    if not re.match(r"^end\b|^end$", lower_text):
+        return False
+    remainder = lower_text[3:].strip()
+    return not any(remainder.startswith(name) for name in _BLOCK_ENDS)
 
 
 def _block_opener(lower_text: str) -> str | None:

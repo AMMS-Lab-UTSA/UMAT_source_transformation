@@ -94,7 +94,9 @@ def transform_umat_to_oti_from_config(
     roles = _roles_with_stress_path_promotions(config, roles)
     roles = _roles_with_finite_strain_promotions(config, roles)
     roles = _roles_with_extra_jacobian_promotions(config, roles)
-    regions = _regions_with_finite_strain_path(config, regions, source_text)
+    parsed = _parse_source(source_text, source_file)
+    umat_span = _selected_routine_span(parsed, selected_umat)
+    regions = _regions_with_finite_strain_path(config, regions, source_text, umat_span)
     regions = _regions_with_local_stress_bridges(regions, source_text)
     order = int(_dict(config.get("transformation_settings")).get("order", 1) or 1)
     directions_required = _directions_required(ntens, config)
@@ -102,7 +104,6 @@ def transform_umat_to_oti_from_config(
     module_name = f"otim{oti_directions}n{order}" if oti_directions else ""
     type_name = f"ONUMM{oti_directions}N{order}" if oti_directions else ""
     tangent_context = _tangent_region_context(config, regions["old_tangent"], regions["stress"], source_text)
-    parsed = _parse_source(source_text, source_file)
     helper_roots = _liftable_helper_roots(config, roles, regions["stress"])
     helper_lift_names: tuple[str, ...] = ()
     helper_lift_issue = ""
@@ -816,11 +817,25 @@ def _roles_with_stress_path_promotions(config: dict[str, Any], roles: dict[str, 
     return updated
 
 
-def _regions_with_finite_strain_path(config: dict[str, Any], regions: dict[str, list[dict[str, Any]]], source_text: str) -> dict[str, list[dict[str, Any]]]:
+def _regions_with_finite_strain_path(
+    config: dict[str, Any],
+    regions: dict[str, list[dict[str, Any]]],
+    source_text: str,
+    umat_span: tuple[int, int] | None = None,
+) -> dict[str, list[dict[str, Any]]]:
     updated = {key: list(value) for key, value in regions.items()}
     if not _finite_strain_enabled(config) or not updated["stress"]:
         return updated
     finite_lines = _finite_strain_use_lines(_dict(config.get("analysis")))
+    # The deformation gradient is read wherever the file happens to read it,
+    # and in a file holding a UEL above its UMAT the element routine reads it
+    # first. Spanning from there to the end of the material stress update
+    # produced a single region covering both routines, which put the UEL's
+    # own helper calls -- and its call to UMAT -- on the material stress path.
+    # A line outside the routine being transformed is not on that path.
+    if umat_span:
+        finite_lines = [line for line in finite_lines
+                        if umat_span[0] <= line <= umat_span[1]]
     if not finite_lines:
         return updated
     source_lines = source_text.splitlines()
@@ -830,11 +845,17 @@ def _regions_with_finite_strain_path(config: dict[str, Any], regions: dict[str, 
             return updated
     start_line = min(min(finite_lines), path_start or min(finite_lines), min(_as_int(region.get("start_line")) for region in updated["stress"] if _as_int(region.get("start_line"))))
     end_line = max(max(finite_lines), max(_as_int(region.get("end_line")) for region in updated["stress"] if _as_int(region.get("end_line"))))
+    lowest = max(1, umat_span[0]) if umat_span else 1
+    highest = min(len(source_lines), umat_span[1]) if umat_span else len(source_lines)
+    start_line = max(lowest, int(start_line))
+    end_line = min(highest, int(end_line))
+    if end_line < start_line:
+        return updated
     updated["stress"].append(
         {
             "region_id": "FINITE-STRAIN-PROPAGATION",
-            "start_line": max(1, int(start_line)),
-            "end_line": min(len(source_lines), int(end_line)),
+            "start_line": start_line,
+            "end_line": end_line,
             "reason": "Executable finite-strain kinematics detected on stress path",
             "classification": "Main stress update, transform with OTIS",
             "variables": sorted(_finite_kinematic_names_from_analysis(_dict(config.get("analysis")))),
