@@ -588,6 +588,20 @@ def _expand_regions_to_logical_statements(
             expanded_end = max(expanded_end, statement_span[1])
         expanded_start = max(span[0], expanded_start)
         expanded_end = min(span[1], expanded_end)
+        if expanded_end < expanded_start:
+            # Clamping is right for a region that straddles the routine
+            # boundary and wrong for one that lies wholly outside it: the two
+            # bounds then cross, and the result is not a small region but an
+            # impossible one. A file holding a UEL above its UMAT produced
+            # (379, 250) this way -- start pulled up to the UMAT's first line,
+            # end left in the element routine. Nothing downstream reads such a
+            # span as empty. _line_numbers_intersect matched calls against it,
+            # so KGPOINTS3X3 and KSTDM were harvested as stress-path helpers
+            # from a routine that is not being transformed, and UMAT itself
+            # was harvested from the UEL's call to it -- which is how the
+            # lifter came to demand a source definition for the very routine
+            # it was transforming, on fourteen sources.
+            continue
         updated = dict(region)
         updated["start_line"] = expanded_start
         updated["end_line"] = expanded_end
