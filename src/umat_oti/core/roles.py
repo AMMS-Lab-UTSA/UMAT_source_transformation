@@ -73,6 +73,65 @@ _IMPLICIT_SPEC = re.compile(
     r"(?P<type>[A-Z][A-Z0-9_*()\s]*?)\s*\((?P<letters>[^)]*)\)", re.IGNORECASE)
 
 
+
+_COMMON_STATEMENT = re.compile(r"^\s*common\b(.*)$", re.IGNORECASE)
+
+
+def common_block_names(source_text: str | None) -> frozenset[str]:
+    """Names this source places in a COMMON block.
+
+    A COMMON block is a storage layout agreed between routines. Promoting one
+    of its names to the differentiated type changes that layout in the routine
+    being transformed and in no other, so every routine sharing the block
+    would then disagree with it about where its own variables are. The
+    transformer already declares COMMON unsupported; this keeps a name that
+    lives in one out of the differentiated set rather than promoting it and
+    failing later for an unrelated-looking reason.
+
+    Writing to such a name still works: the value is cast on the way out, the
+    way STRESS and STATEV are. Reading one on the stress path is a real
+    truncation, and the seed-consumption and structural-zero checks report it
+    as one -- which is the honest answer, because the derivative genuinely
+    does not flow through storage this transform cannot type.
+    """
+    if not source_text:
+        return frozenset()
+    names: set[str] = set()
+    for line in source_text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith(("c", "C", "*", "!")) and not stripped[:6].lower().startswith("common"):
+            continue
+        match = _COMMON_STATEMENT.match(stripped)
+        if not match:
+            continue
+        # Strip the block names: COMMON /BLOCK/ A, B(3,4) and the blank form
+        # COMMON // A both leave the variable list behind. A block boundary
+        # separates names exactly as a comma does -- COMMON /X/ A, B /Y/ C
+        # declares three -- so it is replaced by one.
+        body = re.sub(r"/[^/]*/", ",", match.group(1))
+        depth = 0
+        current: list[str] = []
+        for character in body:
+            if character == "(":
+                depth += 1
+                continue
+            if character == ")":
+                depth = max(0, depth - 1)
+                continue
+            if depth:
+                # Inside a dimension declarator: COMMON /BLK/ A(NELEM, NGAUSS)
+                # declares its bounds here, and the comma between them is not
+                # a separator between names.
+                continue
+            if character == ",":
+                names.add("".join(current).strip().upper())
+                current = []
+                continue
+            current.append(character)
+        names.add("".join(current).strip().upper())
+    return frozenset(name for name in names if name and name.isidentifier())
+
+
 def implicit_integer_letters(source_text: str) -> frozenset[str]:
     """Which first letters make an undeclared name an INTEGER.
 
@@ -179,6 +238,7 @@ def _suggest_variable_roles(analysis: dict[str, Any],
                        if source_text is not None else frozenset())
     not_variables = (INTRINSIC_CALL_NAMES | defined_function_names(source_text)
                      if source_text is not None else frozenset())
+    common_names = common_block_names(source_text)
     helper_local_names = _pure_helper_local_variables(analysis)
     helper_output_names = _pure_helper_output_variables(analysis)
     plasticity = analysis.get("plasticity_indicators", {}) or {}
@@ -215,6 +275,15 @@ def _suggest_variable_roles(analysis: dict[str, Any],
                    else "a function this source defines")
                 + ". Promoting it renames the call itself, and the renamed "
                   "name is declared nowhere."
+            )
+        elif role == "Promote" and name in common_names:
+            role = "Keep real"
+            notes = (
+                f"{name} lives in a COMMON block. Promoting it would change "
+                "that block's storage layout in this routine and in no other, "
+                "so every routine sharing it would disagree about where its "
+                "own variables are. Values written to it are cast on the way "
+                "out, as STRESS and STATEV are."
             )
         elif role in ("Promote", "Seed") and _is_implicitly_integer(
                 name, detected_type, variable, integer_letters):

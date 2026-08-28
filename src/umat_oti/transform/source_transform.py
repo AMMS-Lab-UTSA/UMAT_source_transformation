@@ -733,12 +733,27 @@ def _variable_shapes(config: dict[str, Any], mappings: dict[str, str], ntens: in
         shapes[name.upper()] = shape
     for name, shape in _synthetic_real_surface_variables(config).items():
         shapes[name.upper()] = shape
-    if mappings.get("dstran"):
-        shapes[mappings["dstran"]] = "NTENS"
-    if mappings.get("stress"):
-        shapes[mappings["stress"]] = "NTENS"
-    if mappings.get("statev"):
-        shapes[mappings["statev"]] = "NSTATV"
+    # NTENS and NSTATV are the names Abaqus uses in its own documentation, not
+    # names the source is obliged to use. This file calls its state-variable
+    # count NSTATEV:
+    #
+    #     SUBROUTINE UMAT(...,NTENS,NSTATEV,PROPS,...)
+    #     DIMENSION STRESS(NTENS),STATEV(NSTATEV),
+    #
+    # and declaring the shadow as STATEV_OTI(NSTATV) names a variable the
+    # routine does not have. Under the IMPLICIT REAL*8(A-H,O-Z) that
+    # ABA_PARAM.INC installs it is not even an error at the point of use --
+    # it is a real variable, and the array bound is rejected later with
+    # "Variable 'nstatv' cannot appear in the expression". Thirty-six of the
+    # discovered sources failed to compile on exactly that.
+    #
+    # The source's own declared bound wins; the conventional name is the
+    # fallback for a source that declares none.
+    for key, conventional in (("dstran", "NTENS"), ("stress", "NTENS"),
+                              ("statev", "NSTATV")):
+        name = mappings.get(key)
+        if name:
+            shapes[name] = shapes.get(name) or conventional
     return shapes
 
 
@@ -1176,7 +1191,7 @@ def _transform_source_text(
                 if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                     output.extend(pure_seed_tangent_bridge_lines)
                     pure_seed_tangent_bridge_inserted = True
-                output.extend(_real_extraction_lines(form, mappings, roles, ntens))
+                output.extend(_real_extraction_lines(form, mappings, roles, ntens, variable_shapes))
                 real_extraction_inserted = True
             if ddsdde_insert_after_line == line_number and not tangent_extraction_inserted:
                 if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
@@ -1193,7 +1208,7 @@ def _transform_source_text(
                 if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                     output.extend(pure_seed_tangent_bridge_lines)
                     pure_seed_tangent_bridge_inserted = True
-                output.extend(_real_extraction_lines(form, mappings, roles, ntens))
+                output.extend(_real_extraction_lines(form, mappings, roles, ntens, variable_shapes))
                 real_extraction_inserted = True
             if ddsdde_insert_after_line == line_number and not tangent_extraction_inserted:
                 if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
@@ -1337,7 +1352,7 @@ def _transform_source_text(
             if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                 output.extend(pure_seed_tangent_bridge_lines)
                 pure_seed_tangent_bridge_inserted = True
-            output.extend(_real_extraction_lines(form, mappings, roles, ntens))
+            output.extend(_real_extraction_lines(form, mappings, roles, ntens, variable_shapes))
             real_extraction_inserted = True
         if ddsdde_insert_after_line == line_number and not tangent_extraction_inserted:
             if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
@@ -1360,7 +1375,7 @@ def _transform_source_text(
             if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                 output[len(output) - 1:len(output) - 1] = pure_seed_tangent_bridge_lines
                 pure_seed_tangent_bridge_inserted = True
-            output[len(output) - 1:len(output) - 1] = _real_extraction_lines(form, mappings, roles, ntens)
+            output[len(output) - 1:len(output) - 1] = _real_extraction_lines(form, mappings, roles, ntens, variable_shapes)
             real_extraction_inserted = True
         if (_is_return_line(line) and not tangent_extraction_inserted
                 and _line_in_span(line_number, selected_routine_span)):
@@ -1694,6 +1709,19 @@ def _declaration_lines(
     return lines
 
 
+def _bound(variable_shapes: dict[str, str], name: str, conventional: str) -> str:
+    """The extent to count to for ``name``, as this source declares it.
+
+    A copy loop has to agree with the declaration it copies into. Emitting
+    ``DO OTI_I = 1, NSTATV`` beside ``STATEV_OTI(NSTATEV)`` disagrees with it
+    twice over -- once about the name, once about the length.
+    """
+    shape = (variable_shapes or {}).get(name, "").strip()
+    if not shape or "," in shape or "*" in shape:
+        return conventional
+    return shape
+
+
 def _initialization_lines(
     form: str,
     mappings: dict[str, str],
@@ -1729,7 +1757,7 @@ def _initialization_lines(
     if statev in roles["promote"]:
         lines.extend(
             [
-                _stmt(form, "DO OTI_I = 1, NSTATV"),
+                _stmt(form, f"DO OTI_I = 1, {_bound(variable_shapes, statev, 'NSTATV')}"),
                 _stmt(form, f"   {statev}_OTI(OTI_I) = {statev}(OTI_I)"),
                 _stmt(form, "END DO"),
             ]
@@ -1820,7 +1848,8 @@ def _shape_dimensions(shape: str) -> list[str]:
     return [part.strip() for part in cleaned.split(",") if part.strip()]
 
 
-def _real_extraction_lines(form: str, mappings: dict[str, str], roles: dict[str, set[str]], ntens: int) -> list[str]:
+def _real_extraction_lines(form: str, mappings: dict[str, str], roles: dict[str, set[str]], ntens: int,
+                           variable_shapes: dict[str, str] | None = None) -> list[str]:
     lines = [_comment_line(form, "Copy real-valued OTIS outputs back to Abaqus arrays")]
     stress = mappings.get("stress", "STRESS")
     statev = mappings.get("statev", "STATEV")
@@ -1835,7 +1864,7 @@ def _real_extraction_lines(form: str, mappings: dict[str, str], roles: dict[str,
     if statev in roles["promote"]:
         lines.extend(
             [
-                _stmt(form, "DO OTI_I = 1, NSTATV"),
+                _stmt(form, f"DO OTI_I = 1, {_bound(variable_shapes or {}, statev, 'NSTATV')}"),
                 _stmt(form, f"   {statev}(OTI_I) = REAL({statev}_OTI(OTI_I))"),
                 _stmt(form, "END DO"),
             ]
@@ -2483,10 +2512,29 @@ def _statement_line_segment(line: str, form: str) -> str:
 
 
 def _is_continuation_line(line: str, form: str) -> bool:
+    """Whether this physical line continues the statement above it.
+
+    A comment is never a continuation, whatever stands in column 6. In fixed
+    form the comment marker in column 1 settles the question before the
+    continuation field is looked at, and skipping that test reads
+
+        ReadDetF(NOEL, NPT) = DetF
+    C store coordinate from STATEV
+
+    as one statement, because the "r" of "store" happens to fall in column 6.
+    The label field is then stripped along with the marker and the assignment
+    is emitted as
+    ``ReadDetF(NOEL,NPT) = REAL(DETF_OTI e coordinate from STATEV_OTI)``:
+    not Fortran at all, in a file the transform had just reported as
+    successful. Nothing downstream re-reads the emitted text, so a prose
+    comment whose sixth character is not a space silently ends the run.
+    """
     if form == "fixed":
         line = _fixed_form_physical_line(line)
+        if _is_commented(line):
+            return False
         return len(line) > 5 and line[5] not in {" ", "0"}
-    return line.lstrip().startswith("&")
+    return not _is_commented(line) and line.lstrip().startswith("&")
 
 
 def _logical_helper_call_line(lines: list[str], start_line: int, form: str) -> tuple[str, list[int]]:
@@ -3424,7 +3472,15 @@ def _normalize_numeric_literals_in_oti_expression(line: str, type_name: str = ""
         lambda match: match.group(1) if match.group(1).upper().endswith("D0") else match.group(1).rstrip(".") + (".0" if match.group(1).endswith(".") else "") + "D0",
         line,
     )
-    normalized = re.sub(r"(?<![A-Za-z0-9_.)])(\d+)(?![A-Za-z0-9_.])(?=\s*[*\/])", r"\1.0D0", normalized)
+    # (?<![eEdD][+-]) keeps the exponent of a real literal out of this. In
+    # 3.8019047483079793e-6*Sin(...) the digits of the exponent are preceded
+    # by "-", which the character-class lookbehind allows, so the 6 was read
+    # as a bare integer multiplying Sin and rewritten to 6.0D0. The literal
+    # became 3.8019047483079793e-6.0D0 -- not a number -- and gfortran
+    # reported "Invalid character in name" pointing at the next name-like
+    # token, several terms further along a forty-line continued expression.
+    # An unsigned exponent was already safe: its digits follow a letter.
+    normalized = re.sub(r"(?<![A-Za-z0-9_.)])(?<![eEdD][+-])(\d+)(?![A-Za-z0-9_.])(?=\s*[*\/])", r"\1.0D0", normalized)
     normalized = re.sub(r"([*\/])\s*(\d+)(?![A-Za-z0-9_.])", r"\1\2.0D0", normalized)
     return normalized
 
