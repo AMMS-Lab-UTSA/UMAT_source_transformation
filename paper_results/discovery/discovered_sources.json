@@ -1,4 +1,7 @@
 {
+  "cache_root_name": "discovery_cache",
+  "cache_root_note": "cached_as in the CSV is relative to the cache directory the search was given; where that directory lives is a property of the machine that ran it, not of the evidence",
+  "cached": 71,
   "caveat": "A candidate here is a distinct, permissively licensed Fortran file declaring a UMAT entry point. Nothing has been transformed, compiled or verified, and no count in the paper may cite this file. The corpus round is what turns a candidate into evidence.",
   "distinct_repositories_seen": 105,
   "files_examined": 150,

@@ -133,14 +133,34 @@ def _build_contract(name: str, seed: str, output: str, target: str, ntens: int, 
     summ = role_summary(suggest_variable_roles(
         analysis, src_path.read_text(errors="replace")))
     promote = list(dict.fromkeys(summ["promoted_variables"] + [output] + (["DFGRD1"] if finite else [])))
+    # A variable holds one role. The two names forced into "promote" above --
+    # the response variable, and the deformation gradient when the kinematics
+    # are finite -- are forced precisely because the classifier may not have
+    # put them there, which means they are still sitting in whichever list it
+    # chose. Emitting both assignments makes a contradictory contract that the
+    # loader rejects with "assigns variable DFGRD1 to multiple roles", and the
+    # transform then aborts with no report at all: sixteen of the seventy-one
+    # externally authored sources surveyed failed exactly this way, every one
+    # of them finite-strain.
+    #
+    # Precedence, highest first: seed, promote, constant, keep real. Seeding
+    # is what the contract is for; promotion carries a derivative and so
+    # outranks both ways of declining to carry one.
+    seeds = ["DSTRAN"]
+    claimed = set(seeds)
+    promote = [name for name in promote if name not in claimed]
+    claimed.update(promote)
+    constants = [n for n in summ["constant_variables"] if n not in claimed]
+    claimed.update(constants)
+    keep_real = [n for n in summ["keep_real_variables"] if n not in claimed]
     cfg = {
         "case_name": name,
         "jacobian": {"dependent": output, "independent": "DSTRAN", "target": target},
         "otis": {"ntens": int(ntens), "order": int(order)},
         "replace": {"ddsdde_block": _ddsdde_ranges(analysis)},
         "source": {"file": str(src_path)},
-        "variables": {"seed": ["DSTRAN"], "promote": promote,
-                      "constant": summ["constant_variables"], "real": summ["keep_real_variables"]},
+        "variables": {"seed": seeds, "promote": promote,
+                      "constant": constants, "real": keep_real},
     }
     if finite:                                       # the Abaqus finite-strain correction
         cfg["transformation_settings"] = {"seed_dfgrd1": True}
