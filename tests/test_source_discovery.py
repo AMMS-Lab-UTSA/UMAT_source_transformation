@@ -8,6 +8,7 @@ fetching or caching something whose licence does not permit it.
 """
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -22,7 +23,12 @@ from discover_umat_sources import (  # noqa: E402
     _has_umat_entry, _hashes, known_identities,
 )
 
-SNAPSHOT_ROOT = Path("/home/ammslab3/softwarex_work/Residual_Assembler/sources")
+# The pinned snapshot, by the convention the rest of the
+# suite uses: an absolute path here records this machine's
+# home directory in a tracked file.
+SNAPSHOT_ROOT = Path(
+    os.environ.get("UMAT_OTI_SNAPSHOT_ROOT")
+    or REPO_ROOT.parent / "Residual_Assembler" / "sources")
 
 
 def test_hashes_agree_with_the_identity_registry():
@@ -97,3 +103,69 @@ def test_the_published_manifest_never_claims_a_candidate_is_verified():
     assert "search_pages_read" in summary, (
         "a count of what was found is a statement about the search that was "
         "run, and the manifest has to say how much of it was read")
+
+
+# --------------------------------------------------------------------------- #
+# What the discovered sources exposed in the pipeline itself.
+# --------------------------------------------------------------------------- #
+def test_a_variable_is_never_assigned_two_roles(tmp_path: Path):
+    """Regression: sixteen of seventy-one sources aborted with no report.
+
+    The contract builder forces the response variable into "promote", and the
+    deformation gradient too when the kinematics are finite -- precisely
+    because the classifier may not have put them there, which means they are
+    still sitting in whichever list it did choose. Emitting both assignments
+    makes a contract the loader rejects with "assigns variable DFGRD1 to
+    multiple roles", and the transform aborts before it can report anything.
+    Every source that hit it was finite-strain.
+    """
+    from umat_oti.app.engine import _build_contract
+
+    source = tmp_path / "umat.for"
+    source.write_text(
+        "      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,DSTRAN,DFGRD0,DFGRD1)\n"
+        "      DIMENSION STRESS(6),DFGRD1(3,3)\n"
+        "      DETF = DFGRD1(1,1)\n"
+        "      STRESS(1) = DETF\n"
+        "      DDSDDE(1,1) = 1.0\n"
+        "      END\n", encoding="utf-8")
+
+    config, _finite = _build_contract(
+        "probe", "auto", "STRESS", "DDSDDE", 6, 1, source)
+    variables = config["variables"]
+    roles = {name: set(variables[name]) for name in
+             ("seed", "promote", "constant", "real")}
+    overlaps = {
+        f"{a} and {b}": sorted(roles[a] & roles[b])
+        for a in roles for b in roles if a < b and (roles[a] & roles[b])
+    }
+    assert not overlaps, f"a variable holds two roles: {overlaps}"
+
+
+def test_the_forced_names_win_their_role(tmp_path: Path):
+    """Precedence, not merely deduplication.
+
+    Dropping the duplicate from "promote" instead of from the lower-priority
+    list would resolve the contradiction and quietly stop differentiating the
+    response.
+    """
+    from umat_oti.app.engine import _build_contract
+
+    source = tmp_path / "umat.for"
+    source.write_text(
+        "      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,DSTRAN,DFGRD0,DFGRD1)\n"
+        "      DIMENSION STRESS(6),DFGRD1(3,3)\n"
+        "      DETF = DFGRD1(1,1)\n"
+        "      STRESS(1) = DETF\n"
+        "      DDSDDE(1,1) = 1.0\n"
+        "      END\n", encoding="utf-8")
+    config, finite = _build_contract(
+        "probe", "auto", "STRESS", "DDSDDE", 6, 1, source)
+    variables = config["variables"]
+    assert "STRESS" in variables["promote"], "the response must carry a derivative"
+    if finite:
+        assert "DFGRD1" in variables["promote"], (
+            "a finite-strain source differentiates the deformation gradient")
+        assert "DFGRD1" not in variables["real"]
+    assert variables["seed"] == ["DSTRAN"]
+    assert "DSTRAN" not in variables["promote"]

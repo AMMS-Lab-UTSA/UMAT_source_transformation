@@ -38,6 +38,7 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import sys
 import time
 import urllib.parse
@@ -67,6 +68,7 @@ _FORTRAN_SUFFIXES = (".f", ".for", ".f90", ".f95", ".f03", ".ftn", ".fpp")
 COLUMNS = (
     "repository", "commit", "license_spdx", "license_evidence", "path",
     "bytes", "content_sha256", "code_only_sha256", "outcome", "reason",
+    "cached_as",
 )
 
 
@@ -84,6 +86,7 @@ class Discovery:
     code_only_sha256: str = ""
     outcome: str = ""
     reason: str = ""
+    cached_as: str = ""
 
     def row(self) -> dict[str, Any]:
         return {name: getattr(self, name) for name in COLUMNS}
@@ -209,7 +212,8 @@ def search_repositories(client: GitHubClient, *, pages: int,
 
 def survey_repository(client: GitHubClient, full_name: str,
                       known: dict[str, str], survey: Survey,
-                      *, max_files: int, matched: set[str] | None = None) -> None:
+                      *, max_files: int, matched: set[str] | None = None,
+                      cache_dir: Path | None = None) -> None:
     owner, _, repo = full_name.partition("/")
     row = Discovery(repository=full_name)
 
@@ -315,6 +319,19 @@ def survey_repository(client: GitHubClient, full_name: str,
         candidate.outcome = "candidate"
         candidate.reason = ("distinct, permissively licensed, declares a UMAT "
                             "entry point; not yet transformed or verified")
+        if cache_dir is not None:
+            # Written only now, after the licence cleared and the file proved
+            # distinct. Laid out as <owner>__<repo>/<path> so a cached file
+            # still says where it came from without consulting the manifest.
+            target = (Path(cache_dir) / full_name.replace("/", "__")
+                      / candidate.path)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(blob)
+            # Relative to the cache root, which the summary names. An absolute
+            # path in published evidence records this machine's home
+            # directory, which means nothing anywhere else and is what
+            # audit_repository_standards refuses.
+            candidate.cached_as = str(target.relative_to(Path(cache_dir)))
         survey.add(candidate)
 
 
@@ -325,9 +342,13 @@ def main(argv: list[str] | None = None) -> int:
                         help="code-search pages to read (100 hits each)")
     parser.add_argument("--max-repositories", type=int, default=40)
     parser.add_argument("--max-files-per-repository", type=int, default=25)
+    parser.add_argument("--cache-dir", type=Path, default=None,
+                        help="write accepted candidates here, after their "
+                             "licence has cleared and they proved distinct")
     parser.add_argument("--snapshot-root", type=Path,
-                        default=Path("/home/ammslab3/softwarex_work/"
-                                     "Residual_Assembler/sources"),
+                        default=Path(
+                            os.environ.get("UMAT_OTI_CORPUS_ROOT")
+                            or REPO_ROOT.parent / "Residual_Assembler" / "sources"),
                         help="where the pinned corpus snapshot lives, so "
                              "sources already in it are not rediscovered")
     args = parser.parse_args(argv)
@@ -358,7 +379,8 @@ def main(argv: list[str] | None = None) -> int:
         try:
             survey_repository(client, name, known, survey,
                               max_files=args.max_files_per_repository,
-                              matched=matched_paths.get(name))
+                              matched=matched_paths.get(name),
+                              cache_dir=args.cache_dir)
         except RateLimited:
             stopped_early = (f"the GitHub rate limit was reached after "
                              f"{index - 1} repositories; the rest were not read")
@@ -387,6 +409,12 @@ def main(argv: list[str] | None = None) -> int:
         "outcomes": outcomes,
         "new_candidates": len(candidates),
         "new_candidate_repositories": sorted({r.repository for r in candidates}),
+        "cached": sum(1 for r in candidates if r.cached_as),
+        "cache_root_name": args.cache_dir.name if args.cache_dir else "",
+        "cache_root_note": ("cached_as in the CSV is relative to the cache "
+                            "directory the search was given; where that "
+                            "directory lives is a property of the machine "
+                            "that ran it, not of the evidence"),
         "licences_seen": sorted({r.license_spdx for r in survey.rows if r.license_spdx}),
         "caveat": (
             "A candidate here is a distinct, permissively licensed Fortran file "

@@ -8,13 +8,21 @@ nothing and a deck that contradicts itself must say so.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
 from umat_oti.corpus.abaqus_deck import DeckMaterial, parse_deck
 
-SNAPSHOT_ROOT = Path("/home/ammslab3/softwarex_work/Residual_Assembler/sources")
+# The pinned snapshot, by the convention the rest of the
+# suite uses: an absolute path here records this machine's
+# home directory in a tracked file.
+SNAPSHOT_ROOT = Path(
+    os.environ.get("UMAT_OTI_SNAPSHOT_ROOT")
+    or REPO_ROOT.parent / "Residual_Assembler" / "sources")
 
 
 def _write(tmp_path: Path, text: str) -> Path:
