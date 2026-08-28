@@ -10,7 +10,9 @@ from typing import Any
 from umat_oti.core.model import ParsedFortranSource
 from umat_oti.core.transformation_anchors import anchor_completion_status
 from umat_oti.fortran.normalize import detect_source_form
-from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines, split_top_level
+from umat_oti.fortran.parser import (
+    logical_lines_from_text, parse_entity, parse_subroutines, split_top_level,
+)
 from umat_oti.fortran.regions import INTRINSIC_TOKEN_NAMES, _is_executable_line
 from umat_oti.oti.module_generator import OtilibGenerationError, generate_otilib_module
 from umat_oti.transform.helper_lifting import HelperLiftingError, helper_lift_closure, lift_helper_set_source, wrap_free_form
@@ -829,12 +831,27 @@ def _roles_with_stress_path_promotions(config: dict[str, Any], roles: dict[str, 
     analysis = _dict(config.get("analysis"))
     summary = _dict(analysis.get("region_summary"))
     path_names = _upper_set(summary.get("stress_path_variables", []))
-    known_variables = set(_variable_role_items(config))
+    role_items = _variable_role_items(config)
+    known_variables = set(role_items)
+    # An assumed-size dummy has no extent in this routine, so there is nothing
+    # to declare a shadow with. This promotion runs after the classifier and
+    # overrides it, so declining here as well as there is what actually keeps
+    # PROPS(*) out: the classifier had called it constant, and being on the
+    # stress path promoted it anyway. The emitted declaration was
+    # TYPE(ONUMM6N1) :: PROPS_OTI(*) and its initialisation loop
+    # DO OTI_HI = 1, *, which is not a loop. Seven sources failed to compile
+    # on that. Guessing which other argument carries the extent would be
+    # inventing an interface the source does not state.
+    assumed_size = {
+        str(name).upper() for name, row in role_items.items()
+        if "*" in str(row.get("detected_shape")
+                      or row.get("detected shape/dimension") or "")}
     for name in path_names:
         if (
             name in {"DDSDDE"}
             or name in updated["seed"]
             or name in updated["keep_real"]
+            or name in assumed_size
             or name in INTRINSIC_TOKEN_NAMES
             or (known_variables and name not in known_variables)
         ):
@@ -1066,9 +1083,41 @@ def _transform_source_text(
     removable_io_by_line = _removable_file_io_by_line(config)
     stress_line_numbers = _line_set(regions["stress"])
     lifted_helper_argument_shadows = _lifted_helper_argument_shadow_names(config, regions["stress"], lifted_helper_names, variable_shapes)
+    # Shapes are collected across the whole file under bare names, and two
+    # routines may declare the same name differently -- these UEL files
+    # declare AUX1(NTENS,NDOFEL) in the element routine and AUX1(NTENS,NTENS)
+    # in the material routine below it. The file-wide answer won, so the
+    # shadow emitted inside UMAT carried the UEL's second bound, and NDOFEL is
+    # a dummy argument of the UEL. The routine's own declaration is the one
+    # that governs its own declarations.
+    variable_shapes = _shapes_declared_in_selected_routine(parsed, selected_umat, variable_shapes)
     shadow_variable_names = _shadow_variable_names_for_selected_routine(lines, selected_routine_span, roles, argument_variables)
-    shadow_variable_names.update(lifted_helper_argument_shadows)
+    # Lifted-helper argument surfaces are shadowed in the lifted module, not
+    # here, so only the ones this routine actually mentions belong in its
+    # declarations. Adding them unfiltered declared AUX1_OTI(NTENS, NDOFEL)
+    # inside a UMAT that has no NDOFEL -- it is a dummy argument of the UEL
+    # above it -- and gfortran rejected the bound rather than the name, in
+    # nine sources.
+    shadow_variable_names.update(
+        _names_present_in_span(lines, selected_routine_span,
+                               lifted_helper_argument_shadows, argument_variables))
     shadow_variable_names.update(_synthetic_real_surface_variables(config))
+    # A name with no extent cannot be given a shadow. An assumed-size dummy --
+    # PROPS(*), SVARS(*) -- has its extent only in the caller, so
+    # TYPE(ONUMM6N1) :: PROPS_OTI(*) is not a declaration and the
+    # initialisation written beside it, DO OTI_HI = 1, *, is not a loop.
+    # Filtered here rather than at each contributor because shadows arrive
+    # from three places -- the role classifier, the stress-path promotion that
+    # overrides it, and the lifted-helper argument surfaces -- and PROPS
+    # reached the emitter through the third after the first two had both
+    # declined it. Guessing which other argument carries the extent would be
+    # inventing an interface the source does not state; the name stays real,
+    # and if the stress path reads it the seed-consumption and structural-zero
+    # checks report the truncation.
+    assumed_size = {
+        str(name).upper() for name, shape in variable_shapes.items()
+        if "*" in str(shape or "")}
+    shadow_variable_names.difference_update(assumed_size)
     replacement_names = {name: f"{name}_OTI" for name in sorted(shadow_variable_names)}
     sprinc_equivalent_stress_rewrites, sprinc_formula_skip_lines = _sprinc_equivalent_stress_rewrites(
         source_lines=lines,
@@ -3509,12 +3558,18 @@ def _first_executable_line(parsed: ParsedFortranSource, selected_umat: str) -> i
     return None
 
 
-def _shadow_variable_names_for_selected_routine(
+def _names_present_in_span(
     source_lines: list[str],
     selected_routine_span: tuple[int, int],
-    roles: dict[str, set[str]],
+    names: set[str],
     argument_variables: set[str],
 ) -> set[str]:
+    """Those of ``names`` the selected routine mentions, or receives as an argument.
+
+    A declaration emitted into a routine has to be about that routine. A name
+    belonging to another subprogram brings that subprogram's bounds with it,
+    and those resolve to nothing here.
+    """
     start_line, end_line = selected_routine_span
     selected_text = "\n".join(
         line
@@ -3522,13 +3577,52 @@ def _shadow_variable_names_for_selected_routine(
         if not _is_commented(line)
     )
     result: set[str] = set()
-    for name in roles["seed"] | roles["promote"]:
-        if name in argument_variables:
-            result.add(name)
-            continue
-        if re.search(rf"\b{re.escape(name)}\b", selected_text, flags=re.IGNORECASE):
+    for name in names:
+        if name in argument_variables or re.search(
+                rf"\b{re.escape(name)}\b", selected_text, flags=re.IGNORECASE):
             result.add(name)
     return result
+
+
+def _shapes_declared_in_selected_routine(
+    parsed: ParsedFortranSource,
+    selected_umat: str,
+    variable_shapes: dict[str, str],
+) -> dict[str, str]:
+    """``variable_shapes`` with the selected routine's own declarations on top.
+
+    Only names the routine declares are overridden; everything else keeps the
+    file-wide answer, which is all there is for a name declared nowhere.
+    """
+    for routine in parsed.subroutines:
+        if routine.upper_name != selected_umat.upper():
+            continue
+        updated = dict(variable_shapes)
+        for declaration in routine.declarations:
+            for entity in declaration.entities:
+                if entity.dimensions:
+                    updated[entity.upper_name] = ", ".join(entity.dimensions)
+        for line in routine.lines:
+            match = re.match(r"^\s*dimension\s+(.+)$", line.text, flags=re.IGNORECASE)
+            if not match:
+                continue
+            for item in split_top_level(match.group(1)):
+                entity = parse_entity(item)
+                if entity.dimensions:
+                    updated[entity.upper_name] = ", ".join(entity.dimensions)
+        return updated
+    return variable_shapes
+
+
+def _shadow_variable_names_for_selected_routine(
+    source_lines: list[str],
+    selected_routine_span: tuple[int, int],
+    roles: dict[str, set[str]],
+    argument_variables: set[str],
+) -> set[str]:
+    return _names_present_in_span(
+        source_lines, selected_routine_span,
+        roles["seed"] | roles["promote"], argument_variables)
 
 
 def _lifted_helper_argument_shadow_names(

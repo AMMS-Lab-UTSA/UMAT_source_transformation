@@ -205,3 +205,35 @@ def test_higher_order_power_block_is_left_untouched():
         "    DER1_1 = X%R**Y%R*LOG(X%R)\n",
         "    DER1_1 = X%R**Y%R*LOG(X%R)\n    DER2_0 = X%R**Y%R*Y%R/X%R\n")
     assert _guard_pow_at_zero_base(higher) == higher
+
+
+def test_a_helper_that_calls_back_into_the_selected_routine_is_refused():
+    """The lifted body is OTI-typed and the selected routine is not.
+
+    Letting the call through passes hypercomplex values to REAL dummy
+    arguments across an implicit interface: it links, it runs, and it reads
+    whatever those words happen to mean as REALs. Nothing downstream would
+    notice, so the closure refuses rather than rewriting around it.
+    """
+    from umat_oti.transform.helper_lifting import HelperLiftingError, helper_lift_closure
+    from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines
+    from umat_oti.core.model import ParsedFortranSource
+    from pathlib import Path
+
+    text = """\
+      SUBROUTINE UMAT(STRESS,DSTRAN,PROPS)
+      DIMENSION STRESS(6),DSTRAN(6),PROPS(2)
+      CALL KHELPER(STRESS,DSTRAN,PROPS)
+      RETURN
+      END
+      SUBROUTINE KHELPER(S,D,P)
+      DIMENSION S(6),D(6),P(2)
+      CALL UMAT(S,D,P)
+      RETURN
+      END
+"""
+    lines = logical_lines_from_text(text, "fixed")
+    parsed = ParsedFortranSource(Path("x.f"), "fixed", text, lines,
+                                 parse_subroutines(lines))
+    with pytest.raises(HelperLiftingError, match="calls back into UMAT"):
+        helper_lift_closure(parsed, ["KHELPER"], selected_umat="UMAT")
