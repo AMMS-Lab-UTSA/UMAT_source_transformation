@@ -1,7 +1,7 @@
 {
   "command": "python tools/tables/render_table_previews.py",
-  "commit": "489806911fe5ddc5a9ac1ede812a0c7e84a98e81",
-  "generated_at": "2026-08-27T22:14:29.871686+00:00",
+  "commit": "63bf39bed285c8253cd6d370e7ef1a010d184b4b",
+  "generated_at": "2026-08-28T13:46:02.725957+00:00",
   "note": "Previews are pictures of the canonical CSVs, for visual review only. The CSV is what becomes the manuscript table; a preview recomputes nothing and so cannot disagree with it. A cell longer than 58 characters is elided here and kept in full in the CSV.",
   "previews": [
     {
@@ -29,11 +29,11 @@
       "rows": 6
     },
     {
-      "columns": 9,
+      "columns": 10,
       "csv": "paper_results/tables/table4_higher_order_derivative_verification.csv",
-      "csv_sha256": "35ba7a439bbb9547d039c1113b18e1f4c3637004c90bb22b00d921df965b72d8",
+      "csv_sha256": "6479d7fbb317d54555eaa255911aa1048bb80e513599da95abc63a2f4e626e61",
       "preview": "paper_results/tables/previews/table4_higher_order_derivative_verification_preview.png",
-      "preview_sha256": "8ff581c8c5d93d330243217e78bbea166d81bf311a6d5edad702ca0dfa8f0ae2",
+      "preview_sha256": "b7f355a3f2d7af08dca379e1522d9a264c4a7fdc477cb4b660547660ee6c2bff",
       "rows": 6
     },
     {

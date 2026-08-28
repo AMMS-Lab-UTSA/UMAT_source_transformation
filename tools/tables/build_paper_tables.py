@@ -200,7 +200,12 @@ def table4_higher_order() -> Table:
             row["branch"], row["order"], row["rows"], row["resolved"],
             row["expected_zero_independently_supported"],
             row["rows_admitted"], row["rows_withheld"],
-            _number(row["max_relative_error_on_resolved_rows"]),
+            # "not measured" would claim a gap. There is no relative error
+            # here because there is no resolved row to take one over, and the
+            # column beside it carries what was measured instead.
+            (_number(row["max_relative_error_on_resolved_rows"])
+             if int(row["resolved"] or 0) else "no resolved rows"),
+            _number(row["max_normalized_magnitude_on_zero_rows"]),
             row["defensible"],
         ])
     if not rows:
@@ -213,9 +218,15 @@ def table4_higher_order() -> Table:
         "resolved it and the two agree, or when the derivative is shown to be "
         "zero on evidence independent of the OTI result. The relative error is "
         "reported over resolved rows only, because a relative error on a "
-        "quantity at the rounding floor measures nothing.",
+        "quantity at the rounding floor measures nothing. Where the reference "
+        "establishes a zero there is no relative error to report, so the "
+        "measurement is the largest generated magnitude on those rows, "
+        "normalised so that a real derivative of the same order would be of "
+        "order one: on the elastic branch the response is linear and every "
+        "generated derivative of order two and above is exactly zero.",
         ["Branch", "Order", "Rows", "Resolved", "Independently zero",
-         "Admitted", "Withheld", "Max rel error on resolved", "Defensible"],
+         "Admitted", "Withheld", "Max rel error on resolved",
+         "Max |generated| where zero", "Defensible"],
         rows, [source],
         filters={"model": f"{illustrative} (illustrative example)"},
         notes=("The same comparisons are also adjudicated by the single-step "

@@ -133,6 +133,7 @@ with the virtual environment active.
 | Table 6 — 20-model sweep | `python tools/run_parameter_sensitivity_sweep.py` | `paper_results/parameter_sensitivity/table6_parameter_sensitivity.csv` | A |
 | Illustrative tangent | `python tools/run_tangent_round.py --work-dir reproduce/tangent --results-dir paper_results/actual_umat_higher_order/j2` | `paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv` | A |
 | Paired Abaqus round (local) | `python tools/run_abaqus_paired_round.py --work-dir /tmp/abq --results-dir paper_results/abaqus_paired` | `paper_results/abaqus_paired/abaqus_paired_round.csv` | C |
+| Source discovery (network) | `python tools/discover_umat_sources.py --out-dir paper_results/discovery` | `paper_results/discovery/discovered_sources.csv` | B |
 | Source identity registry | `python tools/build_source_identity_registry.py` | `paper_results/generality/source_identity.csv` | A |
 | Data figures | `python tools/figures/build_tangent_figure.py`, `python tools/figures/build_higher_order_figure.py`, `python tools/figures/build_sensitivity_figure.py`, `python tools/figures/build_collection_figures.py`, `python tools/figures/build_acquisition_figures.py` | `paper_results/figures/` | A |
 | Table previews | `python tools/tables/render_table_previews.py` | `paper_results/tables/previews/` | A |
@@ -227,6 +228,33 @@ with a reason. Neither is a pass. Neither is silently dropped from a denominator
 A model's own hand-written Jacobian is never used as a reference. Where it
 appears (Table 3), it is a third, *audited* column checked against the same
 finite-difference reference as everything else.
+
+## 10b. The advisory model, and what it is not allowed to do
+
+`umat_oti.assist` can talk to a model running on this machine's loopback
+interface. It exists for one class of problem: a pairing that is written down
+only in prose or directory layout, such as which of a repository's example
+decks supplies the material for which of its subroutines. No parser can read
+that, and it is the reason sources sit in the corpus without a material vector.
+
+The boundary is not a convention, it is enforced:
+
+* A model selects among artefacts that already exist. It names a file; it
+  never produces a value. The constants that reach the evidence are read out
+  of that file by `umat_oti.corpus.abaqus_deck`.
+* A proposal is inert until deterministic code agrees with it. Reaching for
+  the value of an unchecked or contradicted proposal raises rather than
+  returning it.
+* The verdict does not depend on a model being reachable. With none, the same
+  check runs over every candidate in order; a model changes which file is
+  opened first and nothing else. `tests/test_assist_is_advisory_only.py`
+  asserts that the confirmed answer is identical with a model, with a model
+  that answers nonsense, and with no model at all.
+* Nothing in `paper_results/` may reference it, which is also asserted.
+
+Set `UMAT_OTI_LOCAL_MODEL_HOST` and `UMAT_OTI_LOCAL_MODEL` to point elsewhere.
+Absence is an ordinary outcome and every caller falls back to the
+deterministic path it already had.
 
 ## 11. Reproducibility tiers
 

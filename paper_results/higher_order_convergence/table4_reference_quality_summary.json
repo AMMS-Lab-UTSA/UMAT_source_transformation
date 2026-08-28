@@ -2,7 +2,7 @@
   "all_models_defensible": false,
   "artifact_sha256": {
     "TABLE4_REFERENCE_QUALITY.md": "65ad0747102c3039ec05f5801970f652969108f9733cb6d85ed9a6e77f1f9e05",
-    "table4_higher_order_convergence.csv": "73a2398b210ce64e29ac235e8791bcf400cdbe9a7782b7c4704e0bc80ad1e4e2"
+    "table4_higher_order_convergence.csv": "d803ec3b18f28395006874316b2193e094b40d9d7b77832a21d896262276c9c1"
   },
   "models": {
     "UMAT_PCL": {

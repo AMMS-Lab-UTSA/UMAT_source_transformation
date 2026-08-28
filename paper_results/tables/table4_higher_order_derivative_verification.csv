@@ -1,7 +1,7 @@
-Branch,Order,Rows,Resolved,Independently zero,Admitted,Withheld,Max rel error on resolved,Defensible
-elastic,2,96,0,96,96,0,not measured,True
-elastic,3,96,0,96,96,0,not measured,True
-elastic,4,96,0,96,96,0,not measured,True
-plastic,2,84,20,64,84,0,5.119e-14,True
-plastic,3,84,20,64,84,0,2.956e-11,True
-plastic,4,84,26,58,84,0,2.563e-11,True
+Branch,Order,Rows,Resolved,Independently zero,Admitted,Withheld,Max rel error on resolved,Max |generated| where zero,Defensible
+elastic,2,96,0,96,96,0,no resolved rows,0,True
+elastic,3,96,0,96,96,0,no resolved rows,0,True
+elastic,4,96,0,96,96,0,no resolved rows,0,True
+plastic,2,84,20,64,84,0,5.119e-14,1.490e-16,True
+plastic,3,84,20,64,84,0,2.956e-11,3.662e-16,True
+plastic,4,84,26,58,84,0,2.563e-11,1.125e-15,True

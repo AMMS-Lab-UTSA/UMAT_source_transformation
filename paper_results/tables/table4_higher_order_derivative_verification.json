@@ -1,7 +1,7 @@
 {
   "number": 4,
   "slug": "higher_order_derivative_verification",
-  "caption": "Higher-order stress derivatives of the illustrative example against an independent 80-digit reference, adjudicated by convergence of the reference itself. A row counts as admitted only when the reference resolved it and the two agree, or when the derivative is shown to be zero on evidence independent of the OTI result. The relative error is reported over resolved rows only, because a relative error on a quantity at the rounding floor measures nothing.",
+  "caption": "Higher-order stress derivatives of the illustrative example against an independent 80-digit reference, adjudicated by convergence of the reference itself. A row counts as admitted only when the reference resolved it and the two agree, or when the derivative is shown to be zero on evidence independent of the OTI result. The relative error is reported over resolved rows only, because a relative error on a quantity at the rounding floor measures nothing. Where the reference establishes a zero there is no relative error to report, so the measurement is the largest generated magnitude on those rows, normalised so that a real derivative of the same order would be of order one: on the elastic branch the response is linear and every generated derivative of order two and above is exactly zero.",
   "columns": [
     "Branch",
     "Order",
@@ -11,6 +11,7 @@
     "Admitted",
     "Withheld",
     "Max rel error on resolved",
+    "Max |generated| where zero",
     "Defensible"
   ],
   "rows": [
@@ -22,7 +23,8 @@
       "Independently zero": "96",
       "Admitted": "96",
       "Withheld": "0",
-      "Max rel error on resolved": "not measured",
+      "Max rel error on resolved": "no resolved rows",
+      "Max |generated| where zero": "0",
       "Defensible": "True"
     },
     {
@@ -33,7 +35,8 @@
       "Independently zero": "96",
       "Admitted": "96",
       "Withheld": "0",
-      "Max rel error on resolved": "not measured",
+      "Max rel error on resolved": "no resolved rows",
+      "Max |generated| where zero": "0",
       "Defensible": "True"
     },
     {
@@ -44,7 +47,8 @@
       "Independently zero": "96",
       "Admitted": "96",
       "Withheld": "0",
-      "Max rel error on resolved": "not measured",
+      "Max rel error on resolved": "no resolved rows",
+      "Max |generated| where zero": "0",
       "Defensible": "True"
     },
     {
@@ -56,6 +60,7 @@
       "Admitted": "84",
       "Withheld": "0",
       "Max rel error on resolved": "5.119e-14",
+      "Max |generated| where zero": "1.490e-16",
       "Defensible": "True"
     },
     {
@@ -67,6 +72,7 @@
       "Admitted": "84",
       "Withheld": "0",
       "Max rel error on resolved": "2.956e-11",
+      "Max |generated| where zero": "3.662e-16",
       "Defensible": "True"
     },
     {
@@ -78,6 +84,7 @@
       "Admitted": "84",
       "Withheld": "0",
       "Max rel error on resolved": "2.563e-11",
+      "Max |generated| where zero": "1.125e-15",
       "Defensible": "True"
     }
   ]

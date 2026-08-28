@@ -1,6 +1,6 @@
 {
   "command": "python tools/figures/build_contact_sheets.py",
-  "generated_at": "2026-08-27T22:14:32.024108+00:00",
+  "generated_at": "2026-08-28T13:46:05.118627+00:00",
   "sheets": {
     "figures": {
       "sheet": "paper_results/figures/contact_sheets/contact_sheet_figures.png",
