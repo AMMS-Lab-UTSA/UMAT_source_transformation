@@ -1319,14 +1319,24 @@ def _transform_source_text(
             output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions))
             tangent_extraction_inserted = True
             extraction_insertion_region_id = str(extraction_region.get("region_id", "")) if extraction_region else "before RETURN"
-        if _is_return_line(line) and not real_extraction_inserted:
+        # "Before RETURN" means before the selected routine's RETURN. A file
+        # that holds the UMAT below a UEL, or below any other subprogram,
+        # reaches a RETURN long before the routine being transformed begins,
+        # and the fallback fired there: the real STRESS copy and the GETIM
+        # tangent extraction were written into the element routine, which has
+        # neither STRESS_OTI nor DDSDDE in scope, and the material routine ran
+        # to its own RETURN with no extraction at all. Both flags were then
+        # set, so nothing downstream reported a gap.
+        if (_is_return_line(line) and not real_extraction_inserted
+                and _line_in_span(line_number, selected_routine_span)):
             output.insert(len(output) - 1, _comment_line(form, "OTIS real extraction inserted before RETURN"))
             if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                 output[len(output) - 1:len(output) - 1] = pure_seed_tangent_bridge_lines
                 pure_seed_tangent_bridge_inserted = True
             output[len(output) - 1:len(output) - 1] = _real_extraction_lines(form, mappings, roles, ntens)
             real_extraction_inserted = True
-        if _is_return_line(line) and not tangent_extraction_inserted:
+        if (_is_return_line(line) and not tangent_extraction_inserted
+                and _line_in_span(line_number, selected_routine_span)):
             output.insert(len(output) - 1, _comment_line(form, "OTIS derivative extraction inserted before RETURN"))
             if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                 output[len(output) - 1:len(output) - 1] = pure_seed_tangent_bridge_lines
