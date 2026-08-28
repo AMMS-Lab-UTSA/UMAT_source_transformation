@@ -164,7 +164,21 @@ def helper_lift_closure(
         for callee in _routine_callees(routine, parsed.form, source_lines,
                                        function_names=defined_functions):
             if callee == selected_umat.upper():
-                continue
+                # A lifted body is OTI-typed; the selected routine is not
+                # rewritten to accept that. Letting the call through would
+                # pass hypercomplex values to REAL dummy arguments across an
+                # implicit interface, which no compiler checks and no test
+                # here would notice -- it links, runs, and reads garbage.
+                # Refusing is free: instrumenting this branch across all 71
+                # discovered sources takes it zero times.
+                raise HelperLiftingError(
+                    f"Helper {current} calls back into {selected_umat.upper()}, "
+                    "the routine being transformed. The lifted body is "
+                    "OTI-typed and that routine is not, so the call would "
+                    "pass hypercomplex values to REAL dummy arguments through "
+                    "an implicit interface. Lifting is refused rather than "
+                    "rewritten around."
+                )
             if callee in _LIFTED_BODY_INLINED:
                 # Trivial utility (e.g. KCLEAR) inlined directly in the lifted
                 # body, so it needs no definition and is not lifted. Lets UMATs

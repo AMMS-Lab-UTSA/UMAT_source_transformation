@@ -276,6 +276,16 @@ def _suggest_variable_roles(analysis: dict[str, Any],
                 + ". Promoting it renames the call itself, and the renamed "
                   "name is declared nowhere."
             )
+        elif role == "Promote" and "*" in str(variable.get("detected_shape") or ""):
+            role = "Keep real"
+            notes = (
+                f"{name} is declared assumed-size, so this routine does not "
+                "know its extent and neither does the transform. A shadow "
+                "cannot be declared without one, and the initialisation loop "
+                "written for it came out as DO OTI_HI = 1, *. The extent is "
+                "the caller's, and guessing which other argument carries it "
+                "would be inventing an interface this source does not state."
+            )
         elif role == "Promote" and name in common_names:
             role = "Keep real"
             notes = (
