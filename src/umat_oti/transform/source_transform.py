@@ -96,6 +96,19 @@ def transform_umat_to_oti_from_config(
     roles = _roles_with_extra_jacobian_promotions(config, roles)
     parsed = _parse_source(source_text, source_file)
     umat_span = _selected_routine_span(parsed, selected_umat)
+    # The floor is the first executable line, not the routine's first line.
+    # A finite-strain UMAT names DFGRD1 in its own argument list and again in
+    # its DIMENSION statement, and those count as lines that read the
+    # deformation gradient. Starting the propagation region there put the
+    # subroutine header inside a stress region, so the header was rewritten
+    # along with the body and the routine's dummy arguments came out renamed:
+    # subroutine umat_area_stretch(STRESS_OTI,STATEV_OTI,...), which no caller
+    # can satisfy. It only surfaced on a delegating source, where the caller
+    # is in the same file and passes real arrays.
+    if umat_span:
+        first_executable = _first_executable_line(parsed, selected_umat)
+        if first_executable:
+            umat_span = (max(umat_span[0], first_executable), umat_span[1])
     regions = _regions_with_finite_strain_path(config, regions, source_text, umat_span)
     regions = _regions_with_local_stress_bridges(regions, source_text)
     order = int(_dict(config.get("transformation_settings")).get("order", 1) or 1)
@@ -839,7 +852,7 @@ def _regions_with_finite_strain_path(
     if not finite_lines:
         return updated
     source_lines = source_text.splitlines()
-    path_start = _first_finite_path_assignment_line(source_text, _dict(config.get("analysis")))
+    path_start = _first_finite_path_assignment_line(source_text, _dict(config.get("analysis")), umat_span)
     if all(_line_numbers_intersect([line], updated["stress"]) for line in finite_lines):
         if not path_start or _line_numbers_intersect([path_start], updated["stress"]):
             return updated
@@ -928,12 +941,26 @@ def _regions_with_local_stress_bridges(regions: dict[str, list[dict[str, Any]]],
     return updated
 
 
-def _first_finite_path_assignment_line(source_text: str, analysis: dict[str, Any]) -> int:
+def _first_finite_path_assignment_line(
+    source_text: str, analysis: dict[str, Any],
+    span: tuple[int, int] | None = None,
+) -> int:
+    """First line in the selected routine that assigns a finite-strain name.
+
+    Scanning the whole file finds assignments in routines that are not being
+    transformed. In a source shipping SDVINI above its UMAT the first match is
+    ``statev(1)=1.0d0``, thirty lines before the material routine begins, and
+    the propagation region built from it began at the subroutine header --
+    which is how the routine's dummy arguments came to be renamed to the
+    shadow names, leaving a call no caller in the file could satisfy.
+    """
     names = _finite_kinematic_names_from_analysis(analysis) | {"STATEV", "STRESS"}
     if not names:
         return 0
     pattern = re.compile(r"^\s*(?:" + "|".join(re.escape(name) for name in sorted(names, key=len, reverse=True)) + r")\s*(?:\([^=]*\))?\s*=", flags=re.IGNORECASE)
     for line_number, line in enumerate(source_text.splitlines(), start=1):
+        if span and not (span[0] <= line_number <= span[1]):
+            continue
         if _is_commented(line) or not _is_executable_line(line):
             continue
         if pattern.search(line):
