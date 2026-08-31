@@ -925,6 +925,39 @@ def _written_names_from_analysis(analysis: dict[str, Any]) -> set[str]:
     return written
 
 
+def subscript_names(source_text: str, arrays: set[str]) -> set[str]:
+    """Names that appear as an array subscript somewhere in this source.
+
+    A Fortran subscript must be of type INTEGER, so a name used as one carries
+    no derivative -- there is nothing for it to carry. Promoting one produces
+    ``A1_OTI = A1IMP_OTI(TMPELEM_OTI)`` and gfortran refuses it outright:
+    "Array index at (1) must be of INTEGER type, found DERIVED".
+
+    That is worth a rule of its own because the usual signals miss it. The
+    name in the source that prompted this is TmpElem, assigned from the
+    element number NOEL: it begins with T, so the implicit rule makes it REAL
+    rather than INTEGER, and it sits on the stress path, so the promotion that
+    runs after the classifier picks it up. Its being a subscript is the only
+    thing that says what it is.
+
+    Only references to names known to be arrays are read as subscripting, so
+    an argument to a function call is not mistaken for one.
+    """
+    if not arrays:
+        return set()
+    found: set[str] = set()
+    pattern = re.compile(
+        r"\b(" + "|".join(re.escape(name) for name in sorted(arrays, key=len, reverse=True))
+        + r")\s*\(([^()]*)\)", re.IGNORECASE)
+    for line in source_text.splitlines():
+        if _is_commented(line):
+            continue
+        for match in pattern.finditer(line):
+            for token in re.findall(r"[A-Za-z_]\w*", match.group(2)):
+                found.add(token.upper())
+    return found
+
+
 def _roles_with_stress_path_promotions(
     config: dict[str, Any], roles: dict[str, set[str]], source_text: str = "",
 ) -> dict[str, set[str]]:
@@ -945,6 +978,20 @@ def _roles_with_stress_path_promotions(
     written = _written_names_from_analysis(analysis)
     data_constants = {
         name for name in data_initialised_names(source_text) if name not in written}
+    # A subscript is an INTEGER by the language's own rule, so a name used as
+    # one carries no derivative and promoting it emits code gfortran refuses.
+    known_arrays = {
+        str(name).upper() for name, row in _variable_role_items(config).items()
+        if str(row.get("detected_shape") or row.get("detected shape/dimension") or "").strip()}
+    subscripts = subscript_names(source_text, known_arrays)
+    # Removed, not merely skipped. A subscript can already be in "promote"
+    # when this runs -- the contract's own role list carries it -- so
+    # declining to add it again leaves it exactly where it was. A name cannot
+    # be both an INTEGER subscript and a value carrying a derivative, so this
+    # takes it out and says what it is instead.
+    for name in sorted(subscripts & updated["promote"]):
+        updated["promote"].discard(name)
+        updated["keep_real"].add(name)
     summary = _dict(analysis.get("region_summary"))
     path_names = _upper_set(summary.get("stress_path_variables", []))
     role_items = _variable_role_items(config)
@@ -969,6 +1016,7 @@ def _roles_with_stress_path_promotions(
             or name in updated["keep_real"]
             or name in assumed_size
             or name in data_constants
+            or name in subscripts
             or name in INTRINSIC_TOKEN_NAMES
             or (known_variables and name not in known_variables)
         ):
