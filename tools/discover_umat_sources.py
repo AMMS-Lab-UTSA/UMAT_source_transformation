@@ -8,9 +8,9 @@ counted -- which of them this project is allowed to redistribute and which are
 genuinely new.
 
 It decides nothing about correctness. A source that survives every check here
-has been shown to be a distinct, permissively licensed Fortran file containing
-a UMAT entry point, and nothing else. Whether its derivatives can be recovered
-is what the corpus round is for.
+has been shown to be a distinct file containing a UMAT entry point, under a
+licence this project may redistribute, and nothing else. Whether its
+derivatives can be recovered is what the corpus round is for.
 
 Four rules, the same ones acquisition already follows:
 
@@ -30,7 +30,25 @@ found twice, is reported as a duplicate rather than inflating a count.
 **Failures are recorded as themselves.** Rate limiting, a missing licence, a
 file with no UMAT entry and a network error are four outcomes, not one.
 
-    python tools/discover_umat_sources.py --out-dir paper_results/discovery
+How far it reaches is set by the questions, not the budget. GitHub caps any
+single code-search query at 1000 results, so reading more pages of one query
+cannot see past that cap -- which is why one query saw 105 repositories and
+stopped. ``CODE_QUERIES`` asks a dozen differently-shaped questions (a
+signature, an include file, an argument list, a file extension), and
+``--repository-search`` adds ``REPOSITORY_QUERIES``, which reaches projects
+code search structurally cannot return: it indexes only the default branch and
+drops repositories above its size limit. Every formulation is reported in the
+manifest with what it contributed, so a query that found nothing is visible as
+a query that found nothing.
+
+Widening the questions does not widen the gate. ``REDISTRIBUTABLE_SPDX`` is
+unchanged; a repository with no LICENSE file is refused rather than assumed;
+and every refusal is written into the manifest with the repository, the
+evidence and the reason, because a refusal that is only a number in a
+histogram cannot be audited.
+
+    python tools/discover_umat_sources.py --out-dir paper_results/discovery \
+        --repository-search --known-cache <existing cache>
 """
 from __future__ import annotations
 
@@ -57,26 +75,104 @@ from umat_oti.corpus.identity import (  # noqa: E402
 )
 
 DEFAULT_OUT = REPO_ROOT / "paper_results" / "discovery"
-
-#: The question that found the first corpus. GitHub returns at most 1000
-#: results for any single code-search query -- ten pages of a hundred -- no
-#: matter how many hits it says exist, so a corpus larger than that is reached
-#: by asking different questions, not by paging further. Every Abaqus UMAT
-#: declares the same entry point and includes the same header, which gives
-#: several independent ways to ask.
-DEFAULT_QUERY = '"SUBROUTINE UMAT" language:Fortran' 
 GENERALITY_MATRIX = REPO_ROOT / "paper_results" / "generality" / "generality_matrix.csv"
 
 #: What a UMAT entry point looks like, independent of spacing and case.
 _UMAT_ENTRY = "SUBROUTINEUMAT("
 
-#: Extensions the search may return that are Fortran.
-_FORTRAN_SUFFIXES = (".f", ".for", ".f90", ".f95", ".f03", ".ftn", ".fpp")
+#: A VUMAT is a different interface with a different argument list and is out
+#: of scope. It is named here so a file that declares both is still read for
+#: its UMAT rather than skipped, and so the exclusion is a stated rule rather
+#: than an accident of ``SUBROUTINEUMAT(`` not being a substring of
+#: ``SUBROUTINEVUMAT(``.
+_VUMAT_ENTRY = "SUBROUTINEVUMAT("
+
+#: Extensions the search may return that are Fortran. ``.f77``, ``.f08`` and
+#: ``.f18`` were absent, so a repository that uses them had its UMAT listed in
+#: the tree and never read. Widening this costs a blob fetch on a file that
+#: turns out not to declare a UMAT; omitting it costs the source entirely.
+_FORTRAN_SUFFIXES = (".f", ".for", ".f77", ".f90", ".f95", ".f03", ".f08",
+                     ".f15", ".f18", ".ftn", ".fpp")
+
+#: Suffixes that are documentation, markup or data rather than source. The
+#: relaxation below reads a file the search matched whatever its extension,
+#: which is how a UMAT shipped as ``.inc`` becomes reachable -- and, on the
+#: first run of it, how six README and docs files were admitted as candidates.
+#: A markdown page that quotes ``SUBROUTINE UMAT(`` in a fenced code block
+#: satisfies every content check this tool makes, because the quotation is
+#: real Fortran; what disqualifies it is the file it sits in. Every suffix in
+#: the name is tested, not only the last, because ``umat.rst.txt`` is Sphinx
+#: output whose final suffix is innocent.
+_DOCUMENTATION_SUFFIXES = frozenset({
+    ".md", ".markdown", ".rst", ".adoc", ".tex", ".html", ".htm", ".xml",
+    ".json", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".csv", ".tsv",
+    ".ipynb", ".pdf", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".zip",
+    ".gz", ".tar", ".odt", ".doc", ".docx", ".bib", ".log", ".out",
+})
+
+#: Directory names that, by convention, hold an Abaqus deck beside the source
+#: it drives. A deck found here is recorded against the candidate rather than
+#: being one of the first forty ``.inp`` files in the tree.
+_EXAMPLE_DIR_HINTS = ("exampleinputfiles", "example", "examples", "input",
+                      "inputfiles", "inp", "test", "tests", "verification",
+                      "benchmark", "benchmarks", "demo", "demos", "case",
+                      "cases", "run", "runs")
+
+#: SPDX identifiers inside ``REDISTRIBUTABLE_SPDX`` that carry a copyleft
+#: obligation. The gate itself is ``REDISTRIBUTABLE_SPDX`` and is not narrowed
+#: here -- this repository is GPL-3.0-only, so a GPL-3.0 source is one it may
+#: redistribute. What this adds is that the obligation is *recorded* per row,
+#: so a reader who needs a permissive-only subset can take one from the
+#: evidence instead of having to re-derive it from licence names.
+_COPYLEFT_SPDX = frozenset({
+    "GPL-3.0", "GPL-3.0-only", "GPL-3.0-or-later",
+    "LGPL-3.0", "LGPL-3.0-only", "AGPL-3.0", "AGPL-3.0-only",
+})
+
+#: Code-search formulations, run in order. GitHub caps any single code-search
+#: query at 1000 results, so one query cannot reach further than that however
+#: many pages are read: the way to see more repositories is to ask differently,
+#: not to ask again. Each entry is (name, query) and every one is reported in
+#: the manifest with what it contributed, so a query that finds nothing is
+#: visible as a query that found nothing rather than as an absence.
+#:
+#: ``language:Fortran`` is deliberately not on all of them. GitHub classifies a
+#: UMAT shipped as ``.inc``, ``.txt`` or with no extension at all as something
+#: other than Fortran, and those files were unreachable while every query
+#: carried the filter.
+CODE_QUERIES: tuple[tuple[str, str], ...] = (
+    ("subroutine_umat_fortran", '"SUBROUTINE UMAT" language:Fortran'),
+    ("subroutine_umat_ddsdde", '"SUBROUTINE UMAT" DDSDDE'),
+    ("aba_param_include", '"ABA_PARAM.INC"'),
+    ("ddsdde_statev_nprops", 'DDSDDE STATEV NPROPS'),
+    ("umat_signature_ddsdde_sse", '"UMAT(STRESS,STATEV,DDSDDE,SSE"'),
+    ("umat_extension_for", '"SUBROUTINE UMAT" extension:for'),
+    ("umat_extension_f", '"SUBROUTINE UMAT" extension:f'),
+    ("umat_extension_f90", '"SUBROUTINE UMAT" extension:f90'),
+    ("umat_extension_inc", '"SUBROUTINE UMAT" extension:inc'),
+    ("umat_extension_txt", '"SUBROUTINE UMAT" extension:txt'),
+    ("umat_ddsdde_ntens", '"DDSDDE(NTENS,NTENS)"'),
+    ("umat_props_dstran", '"PROPS(NPROPS)" "DSTRAN(NTENS)"'),
+)
+
+#: Repository-search formulations. Code search only indexes the default branch
+#: and drops repositories it considers too large, so a repository whose UMAT it
+#: never returns is still findable by name, description or topic. These produce
+#: repository names only; every one is then put through the same licence gate
+#: and the same tree walk as a code-search hit.
+REPOSITORY_QUERIES: tuple[tuple[str, str], ...] = (
+    ("repo_umat_abaqus", "UMAT abaqus"),
+    ("repo_umat_subroutine", "UMAT subroutine fortran"),
+    ("repo_abaqus_user_material", "abaqus user material subroutine"),
+    ("repo_topic_umat", "topic:umat"),
+    ("repo_topic_abaqus_fortran", "topic:abaqus language:Fortran"),
+    ("repo_constitutive_abaqus", "constitutive model abaqus umat"),
+)
 
 COLUMNS = (
-    "repository", "commit", "license_spdx", "license_evidence", "path",
-    "bytes", "content_sha256", "code_only_sha256", "outcome", "reason",
-    "cached_as",
+    "repository", "commit", "license_spdx", "license_class", "license_evidence",
+    "path", "bytes", "content_sha256", "code_only_sha256", "outcome", "reason",
+    "found_by", "cached_as", "decks",
 )
 
 
@@ -87,6 +183,7 @@ class Discovery:
     repository: str = ""
     commit: str = ""
     license_spdx: str = ""
+    license_class: str = ""
     license_evidence: str = ""
     path: str = ""
     bytes: int = 0
@@ -94,7 +191,9 @@ class Discovery:
     code_only_sha256: str = ""
     outcome: str = ""
     reason: str = ""
+    found_by: str = ""
     cached_as: str = ""
+    decks: str = ""
 
     def row(self) -> dict[str, Any]:
         return {name: getattr(self, name) for name in COLUMNS}
@@ -161,6 +260,99 @@ def _hashes(text: str, path: str) -> tuple[str, str]:
     return content, code_only
 
 
+def cache_identities(*cache_roots: Path | None) -> dict[str, str]:
+    """Hash -> name, for every Fortran source already sitting in a cache.
+
+    ``known_identities`` reads the generality matrix, which lists the sources
+    the *corpus round* has processed. It does not list what a previous
+    discovery run cached, and those are two different sets: at the time this
+    was written the matrix held 43 rows and the discovery cache held 71
+    candidates, with no digest in common. A second run therefore re-admitted
+    all 71 as new discoveries -- the same files, fetched again, counted again,
+    and reported as having widened the corpus.
+
+    A cached file is named by its path relative to the cache root it was found
+    under, never absolutely: the name is written into the manifest's reasons,
+    and an absolute path there records this machine's home directory.
+    """
+    known: dict[str, str] = {}
+    for root in cache_roots:
+        if root is None:
+            continue
+        root = Path(root)
+        if not root.is_dir():
+            continue
+        for source in sorted(root.rglob("*")):
+            if not source.is_file():
+                continue
+            if source.suffix.lower() not in _FORTRAN_SUFFIXES:
+                continue
+            try:
+                text = source.read_text(errors="replace")
+            except OSError:
+                continue
+            content, code_only = _hashes(text, str(source))
+            name = f"{root.name}/{source.relative_to(root)}"
+            known.setdefault(content, name)
+            known.setdefault(code_only, name)
+    return known
+
+
+#: How many nearby decks are recorded against one source. A cap, so a
+#: repository with hundreds of decks does not write a kilobyte of paths into
+#: one CSV cell.
+_DECKS_PER_SOURCE = 8
+
+
+def _licence_class(spdx: str | None) -> str:
+    """permissive, copyleft, or the empty string when nothing was declared.
+
+    This classifies; it does not gate. ``REDISTRIBUTABLE_SPDX`` is the gate and
+    is unchanged: this repository is GPL-3.0-only, so a GPL-3.0 source is one
+    it may lawfully redistribute, and dropping the fifteen GPL-3.0 sources
+    already in the collection would delete published evidence rather than
+    tighten a rule. What this adds is that the obligation is written down per
+    row, so a reader who needs a permissive-only subset can filter the evidence
+    instead of re-deriving licence names by hand.
+    """
+    if not spdx:
+        return ""
+    return "copyleft" if spdx in _COPYLEFT_SPDX else "permissive"
+
+
+def _may_be_source(path: str) -> bool:
+    """Could this path hold source, as opposed to writing about it?
+
+    Applied only to a file the search matched under a non-Fortran extension.
+    Two things disqualify it: a documentation or data suffix anywhere in the
+    name, and a suffix that is not a word -- ``astest/umat001a.22`` is a
+    Code_Aster reference result, and a numeric extension has never named a
+    Fortran source file. A file with no extension at all is allowed, because
+    that is one of the shapes this relaxation exists to reach.
+    """
+    name = Path(path).name
+    suffixes = [s.lower() for s in Path(name).suffixes]
+    if any(s in _DOCUMENTATION_SUFFIXES for s in suffixes):
+        return False
+    if not suffixes:
+        return True
+    last = suffixes[-1].lstrip(".")
+    return bool(last) and last.isalnum() and not last.isdigit()
+
+
+def _declares_vumat_only(text: str) -> bool:
+    """A VUMAT and no UMAT. Out of scope, and said so rather than filed as noise.
+
+    ``SUBROUTINEUMAT(`` is not a substring of ``SUBROUTINEVUMAT(``, so a VUMAT
+    was already excluded -- but it was excluded silently, under the same
+    "declares no SUBROUTINE UMAT" reason as a file of pure utility routines.
+    Naming it separates a file that is the wrong interface from a file that is
+    not a material subroutine at all.
+    """
+    squeezed = "".join(text.upper().split()).replace("&", "")
+    return _VUMAT_ENTRY in squeezed and _UMAT_ENTRY not in squeezed
+
+
 def _has_umat_entry(text: str) -> bool:
     """Does the file declare a UMAT, however the declaration is laid out?
 
@@ -174,17 +366,10 @@ def _has_umat_entry(text: str) -> bool:
     return _UMAT_ENTRY in squeezed
 
 
-def search_repositories(client: GitHubClient, *, pages: int,
-                        per_page: int = 100,
-                        query: str = DEFAULT_QUERY,
-                        pause: float = 2.0) -> tuple[list[str], int, int]:
-    """Repository full names the code search returns, most-hits first.
-
-    GitHub's code search is capped and rate limited, so this reports how many
-    pages it actually read alongside the total the API claims. A count of
-    repositories found is a statement about this search, not about the world,
-    and the manifest says so.
-    """
+def _search_code_once(client: GitHubClient, query: str, *, pages: int,
+                      per_page: int, pause: float
+                      ) -> tuple[dict[str, int], dict[str, set[str]], int, int]:
+    """One code-search formulation, paged until it stops giving new hits."""
     seen: dict[str, int] = {}
     matched_paths: dict[str, set[str]] = {}
     total_reported = 0
@@ -206,30 +391,203 @@ def search_repositories(client: GitHubClient, *, pages: int,
         read += 1
         for item in items:
             name = (item.get("repository") or {}).get("full_name")
-            if name:
-                seen[name] = seen.get(name, 0) + 1
-                path = str(item.get("path") or "")
-                if path:
-                    matched_paths.setdefault(name, set()).add(path)
+            if not name:
+                continue
+            seen[name] = seen.get(name, 0) + 1
+            path = str(item.get("path") or "")
+            if path:
+                matched_paths.setdefault(name, set()).add(path)
         if len(items) < per_page:
             break
         time.sleep(pause)
+    return seen, matched_paths, total_reported, read
+
+
+def _search_repositories_once(client: GitHubClient, query: str, *, pages: int,
+                              per_page: int, pause: float
+                              ) -> tuple[list[str], int, int]:
+    """Repository names for one repository-search formulation.
+
+    Repository search answers a question code search cannot: which projects
+    *say* they are about UMATs. Code search indexes only the default branch and
+    silently omits repositories above its size limit, so a repository whose
+    UMAT it never returns is still reachable by name, description or topic.
+    No file is read here -- this produces names, which then go through exactly
+    the same licence gate and tree walk as a code-search hit.
+    """
+    names: list[str] = []
+    total_reported = 0
+    read = 0
+    for page in range(1, pages + 1):
+        url = ("https://api.github.com/search/repositories?q="
+               + urllib.parse.quote(query, safe="")
+               + f"&per_page={per_page}&page={page}")
+        try:
+            payload = client._get(url)
+        except RateLimited:
+            break
+        except AcquisitionError:
+            break
+        total_reported = int(payload.get("total_count") or total_reported)
+        items = payload.get("items") or []
+        if not items:
+            break
+        read += 1
+        for item in items:
+            name = item.get("full_name")
+            if name:
+                names.append(str(name))
+        if len(items) < per_page:
+            break
+        time.sleep(pause)
+    return names, total_reported, read
+
+
+def search_repositories(client: GitHubClient, *, pages: int,
+                        per_page: int = 100,
+                        query: str | None = None,
+                        code_queries: Iterable[tuple[str, str]] | None = None,
+                        repository_queries: Iterable[tuple[str, str]] | None = None,
+                        repository_pages: int = 2,
+                        pause: float = 2.0):
+    """Every repository the search formulations reach, most-hits-first.
+
+    GitHub caps a single code-search query at 1000 results. Reading more pages
+    of one query therefore cannot reach further than that cap, which is why the
+    previous single-query search saw 105 repositories and stopped: the limit
+    was the question, not the budget. Several differently-shaped questions --
+    a signature, an include file, an argument list, a file extension -- reach
+    overlapping but not identical sets, and repository search reaches a third
+    set that code search structurally cannot return.
+
+    Returns (ordered names, total reported across queries, pages read, matched
+    paths per repository, per-query provenance, which query first named each
+    repository). A repository named by more than one query is surveyed once.
+    """
+    if code_queries is None:
+        code_queries = (CODE_QUERIES if query is None
+                        else (("query", query),))
+    if repository_queries is None:
+        repository_queries = ()
+
+    seen: dict[str, int] = {}
+    matched_paths: dict[str, set[str]] = {}
+    found_by: dict[str, str] = {}
+    provenance: list[dict[str, Any]] = []
+    total_reported = 0
+    pages_read = 0
+
+    for index, (name, formulation) in enumerate(code_queries):
+        # Between formulations as well as between pages. GitHub allows ten
+        # code searches a minute; twelve formulations fired back to back are
+        # rate limited part way through, and a rate-limited query reports zero
+        # repositories, which is indistinguishable in the manifest from a
+        # query that genuinely found none.
+        if index:
+            time.sleep(pause)
+        hits, matched, reported, read = _search_code_once(
+            client, formulation, pages=pages, per_page=per_page, pause=pause)
+        fresh = [r for r in hits if r not in seen]
+        for repository, count in hits.items():
+            seen[repository] = seen.get(repository, 0) + count
+            found_by.setdefault(repository, name)
+        for repository, paths in matched.items():
+            matched_paths.setdefault(repository, set()).update(paths)
+        total_reported += reported
+        pages_read += read
+        provenance.append({
+            "name": name, "kind": "code", "query": formulation,
+            "total_reported_by_github": reported, "pages_read": read,
+            "repositories": len(hits),
+            "repositories_first_seen_here": len(fresh),
+        })
+        print(f"    code/{name}: {reported} reported, {read} page(s), "
+              f"{len(hits)} repositories, {len(fresh)} new", flush=True)
+
+    for index, (name, formulation) in enumerate(repository_queries):
+        if index:
+            time.sleep(pause)
+        hits, reported, read = _search_repositories_once(
+            client, formulation, pages=repository_pages, per_page=per_page,
+            pause=pause)
+        fresh = [r for r in hits if r not in seen]
+        for repository in hits:
+            # A repository-search hit carries no file path and no hit count.
+            # It is ranked below every code-search hit rather than being given
+            # a fabricated one: the code search demonstrated a UMAT is in the
+            # file it named, and this only demonstrates the project says it is
+            # about UMATs.
+            seen.setdefault(repository, 0)
+            found_by.setdefault(repository, name)
+        total_reported += reported
+        pages_read += read
+        provenance.append({
+            "name": name, "kind": "repository", "query": formulation,
+            "total_reported_by_github": reported, "pages_read": read,
+            "repositories": len(hits),
+            "repositories_first_seen_here": len(fresh),
+        })
+        print(f"    repo/{name}: {reported} reported, {read} page(s), "
+              f"{len(hits)} repositories, {len(fresh)} new", flush=True)
+
     ordered = sorted(seen, key=lambda n: (-seen[n], n))
-    return ordered, total_reported, read, matched_paths
+    return ordered, total_reported, pages_read, matched_paths, provenance, found_by
+
+
+def _decks_near(entries: list[dict[str, Any]], source_path: str) -> list[str]:
+    """Deck paths that belong to one source, nearest first.
+
+    An ``ExampleInputFiles/`` directory beside a UMAT is the only place these
+    repositories write down a material vector, and a source without one cannot
+    be verified. Previously every ``.inp`` in the tree was cached, in tree
+    order, up to a fixed cap -- so a repository with sixty decks in an
+    unrelated directory could exhaust the cap before reaching the one deck that
+    drives the UMAT, and nothing recorded which deck went with which source.
+
+    Nearest first means: the source's own directory, then a sibling whose name
+    is one of the conventional example-directory names, then the parent
+    directory, then anything else. This records a *proximity*, not a verified
+    pairing; whether the deck actually drives that source is the corpus round's
+    question, not this one.
+    """
+    source_dir = str(Path(source_path).parent).strip(".")
+    parent_dir = str(Path(source_dir).parent).strip(".") if source_dir else ""
+    ranked: list[tuple[int, str]] = []
+    for entry in entries:
+        path = str(entry.get("path", ""))
+        if not path.lower().endswith(".inp"):
+            continue
+        deck_dir = str(Path(path).parent).strip(".")
+        parts = [part.lower() for part in Path(path).parts[:-1]]
+        if deck_dir == source_dir:
+            rank = 0
+        elif source_dir and deck_dir.startswith(source_dir + "/"):
+            rank = 1
+        elif any(part in _EXAMPLE_DIR_HINTS for part in parts) and (
+                not parent_dir or deck_dir.startswith(parent_dir)):
+            rank = 2
+        elif parent_dir and deck_dir.startswith(parent_dir):
+            rank = 3
+        elif any(part in _EXAMPLE_DIR_HINTS for part in parts):
+            rank = 4
+        else:
+            rank = 5
+        ranked.append((rank, path))
+    ranked.sort()
+    return [path for rank, path in ranked if rank < 5]
 
 
 
 #: Repositories that are this project itself, or its sibling. A corpus of
 #: externally authored sources exists to show the transformer works on code
 #: nobody here wrote; admitting the authoring project's own repository would
-#: make the corpus partly a mirror of the thing being measured. The search
-#: query finds them because they legitimately contain UMAT sources, so the
+#: make the corpus partly a mirror of the thing being measured. The widened
+#: query set finds them because they legitimately contain UMAT sources, so the
 #: exclusion has to be explicit. Matched on the full owner/name,
-#: case-insensitively. A fork under a different owner is not caught here
-#: and does not need to be: it carries the same file contents, so the
-#: content-hash dedup reports it as a duplicate. Matching on the bare
-#: repository name instead would refuse an unrelated project that happens
-#: to have chosen the same name.
+#: case-insensitively. A fork under a different owner is not caught here and
+#: does not need to be: it carries the same file contents, so the content-hash
+#: dedup reports it as a duplicate. Matching on the bare repository name
+#: instead would refuse an unrelated project that happens to share it.
 OWN_REPOSITORIES = frozenset({
     "amms-lab-utsa/umat_source_transformation",
     "amms-lab-utsa/residual_assembler",
@@ -241,57 +599,13 @@ def is_own_repository(full_name: str) -> bool:
     return full_name.strip().lower() in OWN_REPOSITORIES
 
 
-
-def search_repositories_by_topic(client: GitHubClient, *, query: str,
-                                 pages: int, per_page: int = 100,
-                                 pause: float = 2.0) -> tuple[list[str], int, int]:
-    """Repository full names from the repository search, most-relevant first.
-
-    A different index from the code search, and it reaches different work. The
-    code search ranks by content and caps any one query at a thousand results,
-    so a repository whose UMAT is buried under a thousand better-matching files
-    is unreachable by adding pages -- but the same repository is findable by
-    its name, description or topic. Of the first hundred hits for
-    "abaqus umat", eighty-five named repositories the code search had not
-    surfaced at all.
-
-    The name is all this contributes. Everything after it -- licence first,
-    then a pinned commit, then whether any Fortran here declares a UMAT entry
-    point -- is the same gate the code-search path goes through, because how a
-    repository was found says nothing about whether it may be used.
-    """
-    seen: list[str] = []
-    total_reported = 0
-    read = 0
-    for page in range(1, pages + 1):
-        url = ("https://api.github.com/search/repositories?q="
-               + urllib.parse.quote(query, safe="")
-               + f"&per_page={per_page}&page={page}")
-        try:
-            payload = client._get(url)
-        except (RateLimited, AcquisitionError):
-            break
-        total_reported = int(payload.get("total_count") or total_reported)
-        items = payload.get("items") or []
-        if not items:
-            break
-        read += 1
-        for item in items:
-            name = item.get("full_name")
-            if name and name not in seen:
-                seen.append(name)
-        if len(items) < per_page:
-            break
-        time.sleep(pause)
-    return seen, total_reported, read
-
-
 def survey_repository(client: GitHubClient, full_name: str,
                       known: dict[str, str], survey: Survey,
                       *, max_files: int, matched: set[str] | None = None,
-                      cache_dir: Path | None = None, max_decks: int = 40) -> None:
+                      cache_dir: Path | None = None, max_decks: int = 40,
+                      found_by: str = "") -> None:
     owner, _, repo = full_name.partition("/")
-    row = Discovery(repository=full_name)
+    row = Discovery(repository=full_name, found_by=found_by)
 
     if is_own_repository(full_name):
         row.outcome = "own_repository"
@@ -314,10 +628,12 @@ def survey_repository(client: GitHubClient, full_name: str,
 
     row.license_spdx = spdx or ""
     row.license_evidence = evidence or ""
+    row.license_class = _licence_class(spdx)
     if not spdx:
         row.outcome = "licence_absent"
         row.reason = ("no licence is declared, so nothing may be redistributed "
-                      "from it; recorded and not fetched")
+                      "from it; a repository without a LICENSE file is refused, "
+                      "not assumed permissive; recorded and not fetched")
         survey.add(row)
         return
     if spdx not in REDISTRIBUTABLE_SPDX:
@@ -340,8 +656,24 @@ def survey_repository(client: GitHubClient, full_name: str,
         return
 
     row.commit = commit
+    matched = matched or set()
+    # A file the search itself matched is read even without a Fortran
+    # extension. Abaqus does not require one: a UMAT is routinely shipped as
+    # ``.inc``, as ``.txt``, or with no extension at all, and every one of
+    # those was unreachable while the tree walk filtered on a Fortran suffix.
+    #
+    # The relaxation needs its own guard. Read literally it admitted six
+    # README and docs files, because a markdown page quoting a UMAT signature
+    # in a code block contains a genuine ``SUBROUTINE UMAT(`` and passes every
+    # content check there is. ``_may_be_source`` refuses the file on its name
+    # instead. Directories and anything over 512 kB are excluded too -- a UMAT
+    # is not a megabyte.
     fortran = [e for e in entries
-               if str(e.get("path", "")).lower().endswith(_FORTRAN_SUFFIXES)]
+               if e.get("type", "blob") == "blob"
+               and (str(e.get("path", "")).lower().endswith(_FORTRAN_SUFFIXES)
+                    or (str(e.get("path", "")) in matched
+                        and _may_be_source(str(e.get("path", "")))
+                        and int(e.get("size") or 0) <= 512_000))]
     # The search already said which files matched. Reading those first spends
     # the per-repository budget on the files that prompted the hit instead of
     # on whatever the tree happens to list alphabetically -- a repository
@@ -351,31 +683,12 @@ def survey_repository(client: GitHubClient, full_name: str,
         fortran.sort(key=lambda e: str(e.get("path", "")) not in matched)
     if not fortran:
         clone = Discovery(**{**row.row(), "outcome": "no_fortran",
-                             "reason": "the search matched this repository but "
-                                       "its tree lists no Fortran file"})
+                             "reason": "its tree lists no Fortran file and no "
+                                       "file the search matched"})
         survey.add(clone)
         return
 
-    # Decks first, when anything is being cached. A source without a material
-    # vector cannot be verified, and for these repositories the deck the
-    # author shipped is the only place one is written down. The licence has
-    # already cleared, so caching them is permitted by the same rule that
-    # permits caching the sources.
-    if cache_dir is not None:
-        decks = [e for e in entries
-                 if str(e.get("path", "")).lower().endswith(".inp")]
-        for deck in decks[:max_decks]:
-            try:
-                blob = client.blob(owner, repo, str(deck.get("sha", "")))
-            except RateLimited:
-                raise
-            except AcquisitionError:
-                continue
-            target = (Path(cache_dir) / full_name.replace("/", "__")
-                      / str(deck.get("path", "")))
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(blob)
-
+    admitted: list[Discovery] = []
     examined = 0
     for entry in fortran:
         if examined >= max_files:
@@ -400,7 +713,10 @@ def survey_repository(client: GitHubClient, full_name: str,
         candidate.bytes = len(blob)
         if not _has_umat_entry(text):
             candidate.outcome = "no_umat_entry"
-            candidate.reason = "Fortran, but it declares no SUBROUTINE UMAT"
+            candidate.reason = (
+                "declares a VUMAT and no UMAT; the explicit interface is out "
+                "of scope" if _declares_vumat_only(text)
+                else "Fortran, but it declares no SUBROUTINE UMAT")
             survey.add(candidate)
             continue
         content, code_only = _hashes(text, candidate.path)
@@ -420,8 +736,10 @@ def survey_repository(client: GitHubClient, full_name: str,
             survey.add(candidate)
             continue
         candidate.outcome = "candidate"
-        candidate.reason = ("distinct, permissively licensed, declares a UMAT "
-                            "entry point; not yet transformed or verified")
+        candidate.reason = (
+            f"distinct, licensed {candidate.license_spdx} "
+            f"({candidate.license_class}), declares a UMAT entry point; "
+            "not yet transformed or verified")
         if cache_dir is not None:
             # Written only now, after the licence cleared and the file proved
             # distinct. Laid out as <owner>__<repo>/<path> so a cached file
@@ -435,7 +753,54 @@ def survey_repository(client: GitHubClient, full_name: str,
             # directory, which means nothing anywhere else and is what
             # audit_repository_standards refuses.
             candidate.cached_as = str(target.relative_to(Path(cache_dir)))
+        # Which decks sit with this source, nearest first. Recorded whether or
+        # not anything is cached, because the pairing is the finding: a UMAT
+        # with a deck beside it has a material vector written down somewhere,
+        # and a UMAT without one does not.
+        near = _decks_near(entries, candidate.path)
+        candidate.decks = ";".join(near[:_DECKS_PER_SOURCE])
+        admitted.append(candidate)
         survey.add(candidate)
+
+    # Decks last, and only the ones that sit with a source this survey
+    # admitted. Caching every ``.inp`` in tree order up to a fixed cap meant a
+    # repository with sixty decks in an unrelated directory could exhaust the
+    # cap before reaching the one deck that drives its UMAT. The licence
+    # cleared before any of this, so caching a deck is permitted by the same
+    # rule that permits caching the source it belongs to.
+    # Only for a repository that contributed a source. A deck is evidence
+    # about the source it drives; on its own it is an input file for a model
+    # this collection does not have. The previous pass cached decks from every
+    # repository whose licence cleared, which is how the cache came to hold
+    # 670 decks against 71 sources, most of them belonging to nothing here.
+    if cache_dir is not None and admitted:
+        by_path = {str(e.get("path", "")): e for e in entries}
+        wanted: list[str] = []
+        for candidate in admitted:
+            for deck in candidate.decks.split(";"):
+                if deck and deck not in wanted:
+                    wanted.append(deck)
+        # Then any remaining deck, so a repository whose decks live nowhere
+        # near its sources still contributes them, just not at the expense of
+        # the ones that do.
+        for path in by_path:
+            if len(wanted) >= max_decks:
+                break
+            if path.lower().endswith(".inp") and path not in wanted:
+                wanted.append(path)
+        for path in wanted[:max_decks]:
+            entry = by_path.get(path)
+            if entry is None:
+                continue
+            try:
+                blob = client.blob(owner, repo, str(entry.get("sha", "")))
+            except RateLimited:
+                raise
+            except AcquisitionError:
+                continue
+            target = (Path(cache_dir) / full_name.replace("/", "__") / path)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(blob)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -443,21 +808,29 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--pages", type=int, default=3,
                         help="code-search pages to read (100 hits each)")
-    parser.add_argument("--repo-query", action="append", dest="repo_queries",
-                        default=None,
-                        help="repository-search query; repeatable. A different "
-                             "index from the code search, reaching repositories "
-                             "whose UMAT the content ranking buries.")
-    parser.add_argument("--query", action="append", dest="queries", default=None,
-                        help="code-search query; repeatable. GitHub caps ONE "
-                             "query at 1000 results however many hits it "
-                             "reports, so reaching further means asking a "
-                             "different question, not asking for more pages.")
-    parser.add_argument("--max-repositories", type=int, default=40)
+    # Raised with the search. Forty was sized for a single query that reached
+    # 105 repositories; the widened formulations reach several times that, and
+    # leaving the cap where it was would have made the extra queries visible in
+    # the manifest and invisible in the result.
+    parser.add_argument("--max-repositories", type=int, default=150)
     parser.add_argument("--max-files-per-repository", type=int, default=25)
+    parser.add_argument("--max-decks-per-repository", type=int, default=40,
+                        help="decks nearest an admitted source are taken first")
+    parser.add_argument("--search-pause", type=float, default=7.0,
+                        help="seconds between search requests; GitHub allows "
+                             "ten code searches a minute")
     parser.add_argument("--cache-dir", type=Path, default=None,
                         help="write accepted candidates here, after their "
                              "licence has cleared and they proved distinct")
+    parser.add_argument("--known-cache", type=Path, action="append", default=[],
+                        help="an existing cache root whose sources are already "
+                             "counted; may be repeated. --cache-dir is always "
+                             "treated as one of these, so a re-run never "
+                             "re-admits what it admitted last time.")
+    parser.add_argument("--repository-search", action="store_true",
+                        help="also run repository search, which reaches "
+                             "projects code search structurally cannot return")
+    parser.add_argument("--repository-pages", type=int, default=2)
     parser.add_argument("--snapshot-root", type=Path,
                         default=Path(
                             os.environ.get("UMAT_OTI_CORPUS_ROOT")
@@ -473,50 +846,33 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     print(f"  authenticated via {client.auth_source}")
 
-    # The default code query stands in only when no question was asked at all.
-    # Asking a repository question and getting the default code search as well
-    # would survey work the caller did not ask for and report its hits in the
-    # same totals.
-    queries = args.queries or ([] if args.repo_queries else [DEFAULT_QUERY])
-    names: list[str] = []
-    matched_paths: dict[str, set[str]] = {}
-    # Counted apart, because they count different things: one is a number of
-    # matching files, the other a number of repositories. Adding them produces
-    # a figure that is not a quantity of anything.
-    code_hits_reported = 0
-    repositories_reported = 0
-    pages_read = 0
-    for query in queries:
-        found, reported, read, paths = search_repositories(
-            client, pages=args.pages, query=query)
-        print(f"  code search {query!r}: {reported} hits reported, "
-              f"{read} page(s) read, {len(found)} distinct repositories")
-        code_hits_reported += reported
-        pages_read += read
-        for name in found:
-            if name not in names:
-                names.append(name)
-        for name, found_paths in (paths or {}).items():
-            matched_paths.setdefault(name, set()).update(found_paths)
-    for repo_query in (args.repo_queries or []):
-        found, reported, read = search_repositories_by_topic(
-            client, query=repo_query, pages=args.pages)
-        print(f"  repository search {repo_query!r}: {reported} repositories "
-              f"reported, {read} page(s) read, {len(found)} named")
-        repositories_reported += reported
-        pages_read += read
-        for name in found:
-            if name not in names:
-                names.append(name)
-    survey = Survey(searched_pages=pages_read,
-                    search_total_reported=code_hits_reported)
-    print(f"  {len(queries)} code quer{'y' if len(queries) == 1 else 'ies'} + "
-          f"{len(args.repo_queries or [])} repository quer"
-          f"{'y' if len(args.repo_queries or []) == 1 else 'ies'}: "
-          f"{len(names)} distinct repositories in all")
+    names, total, pages_read, matched_paths, provenance, found_by = \
+        search_repositories(
+            client, pages=args.pages,
+            repository_queries=(REPOSITORY_QUERIES
+                                if args.repository_search else ()),
+            repository_pages=args.repository_pages,
+            pause=args.search_pause)
+    survey = Survey(searched_pages=pages_read, search_total_reported=total)
+    print(f"  search complete: {total} hits reported across "
+          f"{len(provenance)} formulations, {pages_read} page(s) read, "
+          f"{len(names)} distinct repositories")
 
     known = known_identities(args.snapshot_root)
-    print(f"  {len(known)} digests for implementations already in the collection")
+    from_matrix = len(known)
+    # Every cache root, including the one about to be written into. The
+    # generality matrix lists what the corpus round processed; it does not
+    # list what a previous discovery run cached, and without this a re-run
+    # re-admitted every source it had already admitted.
+    cache_roots = list(args.known_cache)
+    if args.cache_dir is not None and args.cache_dir not in cache_roots:
+        cache_roots.append(args.cache_dir)
+    cached_known = cache_identities(*cache_roots)
+    for digest, name in cached_known.items():
+        known.setdefault(digest, name)
+    print(f"  {from_matrix} digests from the collection, "
+          f"{len(cached_known)} from {len(cache_roots)} cache root(s), "
+          f"{len(known)} in total")
     if not known:
         print("  refusing to run with an empty known-set: every source already "
               "in the collection would be reported as a new discovery")
@@ -529,7 +885,9 @@ def main(argv: list[str] | None = None) -> int:
             survey_repository(client, name, known, survey,
                               max_files=args.max_files_per_repository,
                               matched=matched_paths.get(name),
-                              cache_dir=args.cache_dir)
+                              cache_dir=args.cache_dir,
+                              max_decks=args.max_decks_per_repository,
+                              found_by=found_by.get(name, ""))
         except RateLimited:
             stopped_early = (f"the GitHub rate limit was reached after "
                              f"{index - 1} repositories; the rest were not read")
@@ -547,11 +905,27 @@ def main(argv: list[str] | None = None) -> int:
     for row in survey.rows:
         outcomes[row.outcome] = outcomes.get(row.outcome, 0) + 1
     candidates = [r for r in survey.rows if r.outcome == "candidate"]
+    # Every repository that was looked at and not used, with the reason. A
+    # refusal that is only a number in a histogram cannot be audited: a reader
+    # checking licence discipline needs to see which repository was refused and
+    # on what evidence, and a reader checking coverage needs to see that a
+    # repository was refused rather than never reached.
+    refused_outcomes = ("licence_absent", "licence_incompatible", "unreadable",
+                        "no_fortran", "rate_limited")
+    refusals = [
+        {"repository": r.repository, "outcome": r.outcome,
+         "license_spdx": r.license_spdx, "license_evidence": r.license_evidence,
+         "path": r.path, "reason": r.reason, "found_by": r.found_by}
+        for r in survey.rows if r.outcome in refused_outcomes]
+    refused_repositories = sorted({r["repository"] for r in refusals})
+    licence_classes: dict[str, int] = {}
+    for row in candidates:
+        key = row.license_class or "undeclared"
+        licence_classes[key] = licence_classes.get(key, 0) + 1
     summary = {
-        "queries": list(queries),
-        "repository_queries": list(args.repo_queries or []),
-        "repositories_reported_by_repository_search": repositories_reported,
-        "search_total_reported_by_github": code_hits_reported,
+        "queries": [dict(entry) for entry in provenance],
+        "repository_search_run": bool(args.repository_search),
+        "search_total_reported_by_github": total,
         "search_pages_read": pages_read,
         "distinct_repositories_seen": len(names),
         "repositories_surveyed": min(len(names), args.max_repositories),
@@ -560,6 +934,27 @@ def main(argv: list[str] | None = None) -> int:
         "outcomes": outcomes,
         "new_candidates": len(candidates),
         "new_candidate_repositories": sorted({r.repository for r in candidates}),
+        "new_candidates_by_licence_class": licence_classes,
+        "new_candidates_with_a_deck_beside_them": sum(
+            1 for r in candidates if r.decks),
+        "known_digests_from_collection": from_matrix,
+        "known_digests_from_caches": len(cached_known),
+        "known_cache_root_names": [Path(root).name for root in cache_roots],
+        "refused_repositories": refused_repositories,
+        "refused_repository_count": len(refused_repositories),
+        "refusals": refusals,
+        "refusal_note": (
+            "A repository with no LICENSE file is refused, not assumed: "
+            "licence_absent means nothing was fetched from it and nothing "
+            "cached. licence_incompatible means a licence was declared and is "
+            "outside REDISTRIBUTABLE_SPDX. Neither was read beyond its licence."),
+        "licence_gate": sorted(REDISTRIBUTABLE_SPDX),
+        "licence_gate_note": (
+            "The gate is REDISTRIBUTABLE_SPDX and this run did not change it. "
+            "It admits copyleft licences compatible with this repository's own "
+            "GPL-3.0-only terms; license_class records which admitted sources "
+            "carry a copyleft obligation so a permissive-only subset can be "
+            "taken from the evidence."),
         "cached": sum(1 for r in candidates if r.cached_as),
         "cache_root_name": args.cache_dir.name if args.cache_dir else "",
         "cache_root_note": ("cached_as in the CSV is relative to the cache "
@@ -568,10 +963,13 @@ def main(argv: list[str] | None = None) -> int:
                             "that ran it, not of the evidence"),
         "licences_seen": sorted({r.license_spdx for r in survey.rows if r.license_spdx}),
         "caveat": (
-            "A candidate here is a distinct, permissively licensed Fortran file "
-            "declaring a UMAT entry point. Nothing has been transformed, "
-            "compiled or verified, and no count in the paper may cite this "
-            "file. The corpus round is what turns a candidate into evidence."),
+            "A candidate here is a distinct file declaring a UMAT entry point "
+            "under a licence inside REDISTRIBUTABLE_SPDX; license_class says "
+            "whether that licence is permissive or copyleft, because not every "
+            "admitted licence is permissive and calling them all that was "
+            "wrong. Nothing has been transformed, compiled or verified, and no "
+            "count in the paper may cite this file. The corpus round is what "
+            "turns a candidate into evidence."),
     }
     (args.out_dir / "discovered_sources.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")

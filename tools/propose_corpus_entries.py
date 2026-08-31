@@ -50,11 +50,18 @@ DEFAULT_CACHE = Path(os.environ.get("UMAT_OTI_DISCOVERY_CACHE")
 DEFAULT_OUT = REPO_ROOT / "paper_results" / "discovery"
 LOADING_PATHS = REPO_ROOT / "parameter_sensitivity" / "loading_paths.json"
 
-_FORTRAN = {".f", ".for", ".f90", ".f95", ".ftn"}
+# The third copy of this list, now the only one: discovery admits a suffix,
+# the triage globs one and this globbed a third, and a source cached under a
+# suffix only the first knew about was proposed by nothing.
+sys.path.insert(0, str(REPO_ROOT / "tools"))
+from discover_umat_sources import _FORTRAN_SUFFIXES  # noqa: E402
+
+_FORTRAN = set(_FORTRAN_SUFFIXES)
 
 
 def _sources(cache: Path) -> list[Path]:
-    return sorted(p for p in cache.rglob("*") if p.suffix.lower() in _FORTRAN)
+    return sorted(p for p in cache.rglob("*")
+                  if p.is_file() and p.suffix.lower() in _FORTRAN)
 
 
 def _decks(repository_dir: Path) -> list[Path]:
