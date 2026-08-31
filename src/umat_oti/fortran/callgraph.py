@@ -68,10 +68,55 @@ def delegated_material_routine(
     return resolved
 
 
+def undefined_delegate_call(
+    parsed: ParsedFortranSource, entry_name: str
+) -> str | None:
+    """The routine an entry point delegates to that this source does not define.
+
+    The mirror image of :func:`delegated_material_routine`. The same shape --
+    an entry routine whose whole executable body is one CALL passing STRESS
+    and DDSDDE -- but the callee is defined somewhere else, so the material is
+    not in this file at all.
+
+    Reported rather than dropped because the consequence is otherwise
+    unreadable: the transform stays on the wrapper, whose only statement is
+    the call, and then names as its blocker whatever DDSDDE assignments happen
+    to sit further down the file in routines the wrapper never calls. That
+    says nothing about why the source cannot be transformed. This does.
+
+    Returns the callee's upper-case name, or None when the entry routine is
+    not a delegation or delegates to a routine this source defines.
+    """
+    routines = {routine.upper_name: routine for routine in parsed.subroutines}
+    current = entry_name.upper()
+    seen: set[str] = set()
+    while current in routines and current not in seen:
+        seen.add(current)
+        callee, defined = _delegated_call_target(routines[current], routines)
+        if callee is None:
+            return None
+        if not defined:
+            return callee
+        current = callee
+    return None
+
+
 def _sole_delegated_call(
     routine: ParsedSubroutine, routines: dict[str, ParsedSubroutine]
 ) -> str | None:
     """The single locally defined routine this one delegates its whole body to."""
+    callee, defined = _delegated_call_target(routine, routines)
+    return callee if defined else None
+
+
+def _delegated_call_target(
+    routine: ParsedSubroutine, routines: dict[str, ParsedSubroutine]
+) -> tuple[str | None, bool]:
+    """The routine this one delegates its whole body to, and whether it is local.
+
+    Returns ``(None, False)`` when this routine is not a pure delegation at
+    all; otherwise the callee's name and whether this source defines it.
+    """
     callee: str | None = None
     arguments: tuple[str, ...] = ()
     for line in routine.lines:
@@ -83,15 +128,15 @@ def _sole_delegated_call(
         if not match or callee is not None:
             # A second statement of any kind means this routine computes
             # something itself, so it is the routine to transform.
-            return None
+            return None, False
         callee = match.group(1).upper()
         arguments = tuple(
             argument.strip().upper() for argument in match.group(2).split(","))
-    if callee is None or callee not in routines:
-        return None
+    if callee is None:
+        return None, False
     # The delegate has to receive the arrays the transform reads and writes.
     # Without them it is a subordinate calculation, not the material routine.
     passed = {argument.split("(")[0] for argument in arguments}
     if not {"STRESS", "DDSDDE"} <= passed:
-        return None
-    return callee
+        return None, False
+    return callee, callee in routines

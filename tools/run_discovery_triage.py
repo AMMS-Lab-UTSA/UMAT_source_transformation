@@ -56,6 +56,14 @@ COLUMNS = (
 #: message. Ordered: the first pattern that matches names the cause.
 _KINDS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("unsupported_intrinsic", ("unsupported intrinsic",)),
+    # Two causes that used to be reported as their downstream symptoms, so
+    # they are matched before the patterns those symptoms fall under. A
+    # wrapper whose material routine is in another file was filed as an
+    # uncovered DDSDDE assignment -- in a routine it does not call -- and a
+    # source whose stress path calls into a Fortran module was filed as an
+    # array with no confirmed shape.
+    ("delegate_not_defined_in_source", ("delegates its whole body to",)),
+    ("module_names_unresolved", ("cannot read that module",)),
     ("unresolved_dependency", ("differing definitions", "ambiguous",
                                "could not be resolved", "no local definition")),
     # "has no confirmed shape" is tested before anything matching the word
