@@ -66,13 +66,40 @@ def _free_logical_lines(text: str) -> tuple[FortranLogicalLine, ...]:
     return tuple(result)
 
 
+def expand_fixed_form_tabs(raw: str) -> str:
+    """A tab in the label field advances to column 7.
+
+    Both ifort -- which is what Abaqus uses -- and gfortran accept a tab there
+    as a vendor extension, and sources in the wild are written that way:
+
+        \t   SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,
+
+    Column arithmetic on the raw text reads that as a statement beginning
+    somewhere inside the word, so the file appears to declare nothing at all.
+    A digit 1-9 immediately after the tab is the other half of the convention:
+    it marks a continuation line, so the digit is placed in column 6 rather
+    than column 7.
+
+    Only a tab inside the label field is touched. A tab later in the line is
+    ordinary whitespace within a statement and is left exactly where it is.
+    """
+    index = raw.find("\t")
+    if index < 0 or index >= 6:
+        return raw
+    rest = raw[index + 1:]
+    if rest[:1].isdigit() and rest[0] != "0":
+        return raw[:index].ljust(5) + rest[0] + rest[1:]
+    return raw[:index].ljust(6) + rest
+
+
 def _fixed_logical_lines(text: str) -> tuple[FortranLogicalLine, ...]:
     result: list[FortranLogicalLine] = []
     pending = ""
     numbers: list[int] = []
-    for number, raw in enumerate(text.splitlines(), start=1):
-        if not raw:
+    for number, original in enumerate(text.splitlines(), start=1):
+        if not original:
             continue
+        raw = expand_fixed_form_tabs(original)
         marker = raw[0]
         if marker in {"c", "C", "*", "!"}:
             continue

@@ -14,10 +14,18 @@ FIXED_FORM_EXTENSIONS = {".f", ".for", ".ftn"}
 #: field. Twenty cached sources were recorded as "not a UMAT" that way while
 #: declaring SUBROUTINE UMAT on their sixth line.
 _FORM_DIRECTIVES: tuple[tuple[str, str], ...] = (
+    # Both prefixes, because ifort honours both: !DIR$ is the Intel spelling
+    # and !DEC$ the older Compaq/DEC one that it still accepts. Sources in the
+    # wild use each, and reading only the first left three files declaring
+    # "!DEC$ FREEFORM" on their first line parsed as fixed form.
     ("!dir$ freeform", "free"),
     ("!dir$ fixedform", "fixed"),
+    ("!dec$ freeform", "free"),
+    ("!dec$ fixedform", "fixed"),
     ("cdir$ freeform", "free"),
     ("cdir$ fixedform", "fixed"),
+    ("cdec$ freeform", "free"),
+    ("cdec$ fixedform", "fixed"),
 )
 
 
