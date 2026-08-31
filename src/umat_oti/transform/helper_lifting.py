@@ -5,6 +5,13 @@ import re
 from typing import Any, Iterable, Sequence
 
 from umat_oti.core.model import ParsedFortranSource, ParsedSubroutine
+from umat_oti.fortran.literals import (
+    mask_character_literals,
+    mask_real_literals,
+    unmask_character_literals,
+    unmask_real_literals,
+    without_real_literals,
+)
 from umat_oti.fortran.normalize import strip_inline_comment
 from umat_oti.fortran.parser import (
     FUNCTION_HEADER_RE,
@@ -355,7 +362,10 @@ def direction_renames(module_name: str, statements: Sequence[str]) -> str:
     count = int(match.group(1))
     used: set[str] = set()
     for statement in statements:
-        used.update(name.upper() for name in _LIFT_IDENTIFIER_RE.findall(statement))
+        # ``1.E1`` is a number, not a mention of a variable named E1. Reading it
+        # as one renames a direction constant nothing collides with.
+        used.update(name.upper() for name in
+                    _LIFT_IDENTIFIER_RE.findall(without_real_literals(statement)))
     collisions = [f"E{index}" for index in range(1, count + 1)
                   if f"E{index}" in used]
     return "".join(f", OTI_{name} => {name}" for name in collisions)
@@ -731,18 +741,21 @@ def _rewrite_helper_executable_line(
 def _rewrite_lifted_function_references(line: str, function_call_names: set[str]) -> str:
     """Point ``NAME(`` at the lifted ``NAME_OTI``.
 
-    Character literals are masked first: a name inside a FORMAT string or an
-    error message is text, not a reference.
+    Literals are masked first: a name inside a FORMAT string or an error
+    message is text, not a reference, and the letters inside a real literal are
+    not a name at all.
     """
     if not function_call_names:
         return line
     masked, literals = mask_character_literals(line)
+    masked, reals = mask_real_literals(masked)
     pattern = re.compile(
         r"(?<![A-Za-z0-9_])(" + "|".join(re.escape(name) for name in sorted(function_call_names, key=len, reverse=True))
         + r")(?=\s*\()",
         re.IGNORECASE,
     )
-    return unmask_character_literals(pattern.sub(lambda m: f"{m.group(1).upper()}_OTI", masked), literals)
+    rewritten = unmask_real_literals(pattern.sub(lambda m: f"{m.group(1).upper()}_OTI", masked), reals)
+    return unmask_character_literals(rewritten, literals)
 
 
 def _rewrite_lifted_call(line: str, lifted_names: set[str]) -> str:
@@ -806,72 +819,6 @@ def _normalize_typed_intrinsics(line: str, oti_names: set[str]) -> str:
     if not _contains_oti_name(line, oti_names):
         return line
     return _TYPED_INTRINSIC_RE.sub(lambda match: _TYPED_INTRINSIC_MAP[match.group(1).upper()], line)
-
-
-#: A complete Fortran real literal, including any D/E exponent. These are atomic
-#: tokens: nothing inside one may be rewritten. Two separate defects came from
-#: not treating them that way -- a variable named ``D`` matched the ``D`` inside
-#: ``1.D-12``, and the bare-integer promoter appended ``.0D0`` to the exponent
-#: digits of ``1.0D-6``, producing ``1.0D-6.0D0``.
-_REAL_LITERAL_RE = re.compile(
-    r"(?<![A-Za-z0-9_])"
-    r"(?:(?:\d+\.\d*|\.\d+|\d+)[dDeE][+-]?\d+"   # with an exponent
-    r"|(?:\d+\.\d*|\.\d+))"                        # plain real
-)
-#: Private-use code points: no ASCII letters or digits, so no downstream pattern
-#: matching identifiers or integers can see inside a masked literal.
-_MASK_BASE = 0xE000
-
-
-def mask_real_literals(text: str) -> tuple[str, list[str]]:
-    """Replace every real literal with an inert placeholder."""
-    store: list[str] = []
-
-    def capture(match: re.Match[str]) -> str:
-        store.append(match.group(0))
-        return chr(_MASK_BASE + len(store) - 1)
-
-    return _REAL_LITERAL_RE.sub(capture, text), store
-
-
-def unmask_real_literals(text: str, store: list[str]) -> str:
-    """Restore literals masked by :func:`mask_real_literals`."""
-    if not store:
-        return text
-    return "".join(
-        store[ord(char) - _MASK_BASE]
-        if _MASK_BASE <= ord(char) < _MASK_BASE + len(store) else char
-        for char in text
-    )
-
-
-#: A complete character literal, single- or double-quoted, doubled quotes
-#: included. Masking these keeps identifier rewrites out of FORMAT strings and
-#: error messages, where a name is text and not a reference.
-_CHARACTER_LITERAL_RE = re.compile(r"'(?:''|[^'])*'|\"(?:\"\"|[^\"])*\"")
-_CHARACTER_MASK_BASE = 0xE800
-
-
-def mask_character_literals(text: str) -> tuple[str, list[str]]:
-    """Replace every character literal with an inert placeholder."""
-    store: list[str] = []
-
-    def capture(match: re.Match[str]) -> str:
-        store.append(match.group(0))
-        return chr(_CHARACTER_MASK_BASE + len(store) - 1)
-
-    return _CHARACTER_LITERAL_RE.sub(capture, text), store
-
-
-def unmask_character_literals(text: str, store: list[str]) -> str:
-    """Restore literals masked by :func:`mask_character_literals`."""
-    if not store:
-        return text
-    return "".join(
-        store[ord(char) - _CHARACTER_MASK_BASE]
-        if _CHARACTER_MASK_BASE <= ord(char) < _CHARACTER_MASK_BASE + len(store) else char
-        for char in text
-    )
 
 
 def _normalize_numeric_literals(line: str, oti_names: set[str]) -> str:
