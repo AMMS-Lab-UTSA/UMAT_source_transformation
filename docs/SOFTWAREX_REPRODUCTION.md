@@ -257,6 +257,45 @@ Set `UMAT_OTI_LOCAL_MODEL_HOST` and `UMAT_OTI_LOCAL_MODEL` to point elsewhere.
 Absence is an ordinary outcome and every caller falls back to the
 deterministic path it already had.
 
+Two further proposers work the same way, and
+`tests/test_assist_proposers_are_fenced.py` pins both against stub models that
+answer with confident nonsense.
+
+**A candidate cause for a failed source** (`umat_oti.assist.blocker_triage`).
+The transform's message names an internal symptom; the cause is usually a
+construct some lines earlier. The model names one construct from a closed
+vocabulary — the transformer's own `UNSUPPORTED_PATTERNS`, reused rather than
+restated — at one line number, and deterministic code re-opens the file and
+looks. It is confirmed only if that construct really is at that line and that
+line is not a comment. Run it with
+`python tools/run_discovery_triage.py --propose-causes`; the flag is off by
+default, the import lives inside the function the flag calls, and the output is
+a separate `blocker_proposals.json`. No column, stage, blocker kind or count in
+`discovery_triage.csv` is affected by it, which is asserted.
+
+**A minimal repair for generated Fortran that does not compile**
+(`umat_oti.assist.repair`). This is the only place a model would write Fortran,
+so two things are true of it. The transformer's output is never modified: the
+out directory is copied to a sandbox and the edit is made there. And a repaired
+file is never counted as a transformed one — that would credit the transformer
+with work a model did. A confirmed repair is a bug report about the emitter,
+carrying a line number and a compiler-checked minimal edit. Three gates must all
+agree: the path resolves inside the sandbox and outside `src/` and the source
+cache; every edit quotes the line it claims to change, exactly, so an invented
+edit cannot match; and the edited copy compiles under `gfortran` while no
+text-derived semantic check regresses and the sequence of semantically
+significant lines is unchanged.
+
+On the coverage of that last gate, plainly: the checks in `_semantic_checks`
+that are pure functions of the emitted text are re-run. The ordering checks are
+carried across the edit by refusing any edit that touches a line they are about
+and requiring their relative order to hold — strictly stronger than re-running
+them, since it rejects edits that would have passed. The checks that depend on
+transform state the module does not have are not recomputed; no edit touching a
+classified line is ever accepted instead. That boundary is conservative rather
+than complete, and it is why a confirmed repair is reported rather than
+shipped.
+
 ## 11. Reproducibility tiers
 
 **Tier A — public, offline.** Needs the repository, Python, `gfortran` and the

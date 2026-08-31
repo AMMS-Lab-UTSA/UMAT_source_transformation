@@ -19,6 +19,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   lookbehind is replaced by the mask: it read spelling rather than position and
   also blocked a genuine integer factor in `D-6*Y`.
 
+### Added
+- Two advisory proposers beside the deck pairing, both fenced the same way: a
+  model may propose, deterministic code decides, and an unchecked proposal
+  cannot be read.
+  - `umat_oti.assist.blocker_triage` proposes a candidate cause for a failed
+    source -- one construct from a closed vocabulary (the transformer's own
+    `UNSUPPORTED_PATTERNS`, reused rather than restated) at one line number --
+    and confirms it only by re-opening the source and finding that construct at
+    that line, in code rather than in a comment. Exposed as
+    `tools/run_discovery_triage.py --propose-causes`, off by default, writing a
+    separate `blocker_proposals.json`. No stage, blocker kind, column or count
+    in `discovery_triage.csv` is affected.
+  - `umat_oti.assist.repair` proposes a minimal edit to generated Fortran that
+    does not compile. The edit is made in a sandbox copy, so the transformer's
+    output is never modified, and a repaired file is never counted as a
+    transformed one. Three gates: the path resolves inside the sandbox and
+    outside `src/` and the source cache; every edit must quote the line it
+    changes exactly, so an invented edit cannot match; and the copy must compile
+    under `gfortran` with no text-derived semantic check regressing and the
+    sequence of semantically significant lines unchanged.
+- `tests/test_assist_proposers_are_fenced.py` pins both against stub models that
+  answer with confident nonsense, including a real-`gfortran` check that the
+  compile gate is the compiler rather than the model's opinion.
+
 ## [1.1.0] - 2026-08-21
 
 Adds the SoftwareX unified-derivative model on top of the 1.0.0 tangent pipeline.
