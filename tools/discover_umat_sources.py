@@ -110,6 +110,27 @@ _DOCUMENTATION_SUFFIXES = frozenset({
     ".gz", ".tar", ".odt", ".doc", ".docx", ".bib", ".log", ".out",
 })
 
+#: Extensions that name another language, or a solver's own data format. A file
+#: like these can contain the exact string "SUBROUTINE UMAT" and still not be a
+#: UMAT: tests/test_umat_gen.py is a Python generator that WRITES that line,
+#: uhyper.pyf is an f2py interface DESCRIBING one, and
+#: MainCalculiXProgram.model is a solver input deck. All three were admitted as
+#: Fortran sources, because the relaxation below asks only whether the suffix
+#: looks like a word. Writing about Fortran is not being Fortran.
+_FOREIGN_LANGUAGE_SUFFIXES = frozenset({
+    ".py", ".pyf", ".pyx", ".pyi", ".ipynb",
+    ".c", ".cc", ".cpp", ".cxx", ".h", ".hpp", ".hxx",
+    ".java", ".cs", ".js", ".ts", ".rs", ".go", ".rb", ".pl", ".php",
+    ".m", ".mlx", ".r", ".jl", ".lua", ".tcl",
+    ".sh", ".bash", ".zsh", ".bat", ".cmd", ".ps1", ".mk", ".cmake",
+    # Solver artefacts, not source. ".dat" is deliberately absent: it is an
+    # Abaqus output file far more often than not, but the relaxation was
+    # written to reach a UMAT shipped under an odd extension and a test pins
+    # ".dat" as one of those shapes. Nothing observed has been admitted
+    # wrongly under it, and the UMAT-entry check stands behind this one.
+    ".model", ".inp", ".msg", ".sta", ".odb", ".env",
+})
+
 #: Directory names that, by convention, hold an Abaqus deck beside the source
 #: it drives. A deck found here is recorded against the candidate rather than
 #: being one of the first forty ``.inp`` files in the tree.
@@ -333,6 +354,8 @@ def _may_be_source(path: str) -> bool:
     name = Path(path).name
     suffixes = [s.lower() for s in Path(name).suffixes]
     if any(s in _DOCUMENTATION_SUFFIXES for s in suffixes):
+        return False
+    if any(s in _FOREIGN_LANGUAGE_SUFFIXES for s in suffixes):
         return False
     if not suffixes:
         return True
