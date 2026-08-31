@@ -6,7 +6,40 @@ from pathlib import Path
 FIXED_FORM_EXTENSIONS = {".f", ".for", ".ftn"}
 
 
+#: Compiler directives that state the source form outright. Intel's ifort --
+#: which is what Abaqus uses -- honours these regardless of the file's
+#: extension, so a .f file carrying !DIR$ FREEFORM really is free form and the
+#: extension is the weaker evidence. Reading it as fixed finds no statements at
+#: all: every line begins in column 1, so the whole file looks like a label
+#: field. Twenty cached sources were recorded as "not a UMAT" that way while
+#: declaring SUBROUTINE UMAT on their sixth line.
+_FORM_DIRECTIVES: tuple[tuple[str, str], ...] = (
+    ("!dir$ freeform", "free"),
+    ("!dir$ fixedform", "fixed"),
+    ("cdir$ freeform", "free"),
+    ("cdir$ fixedform", "fixed"),
+)
+
+
+def declared_source_form(text: str) -> str | None:
+    """The form the file states for itself, or None if it states none.
+
+    Only an explicit directive counts. Guessing from indentation or from a
+    line ending in "&" would put the two hundred genuinely fixed-form sources
+    at risk to rescue the handful that say what they are.
+    """
+    for line in text.splitlines()[:40]:
+        stripped = line.strip().lower()
+        for needle, form in _FORM_DIRECTIVES:
+            if stripped.startswith(needle):
+                return form
+    return None
+
+
 def detect_source_form(path: Path, text: str) -> str:
+    declared = declared_source_form(text)
+    if declared:
+        return declared
     suffix = path.suffix.lower()
     if suffix in FIXED_FORM_EXTENSIONS:
         return "fixed"
