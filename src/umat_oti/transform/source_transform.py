@@ -1009,6 +1009,19 @@ def _roles_with_stress_path_promotions(
         str(name).upper() for name, row in role_items.items()
         if "*" in str(row.get("detected_shape")
                       or row.get("detected shape/dimension") or "")}
+    # A Fortran intrinsic is not a variable, and promoting one renames it like
+    # one: STRESS = MATMUL(DDSDDE, STRAN + DSTRAN) was emitted as
+    # STRESS_OTI = MATMUL_OTI(...), a name declared nowhere, and the file
+    # stopped at "Unclassifiable statement" rather than at anything to do with
+    # MATMUL. INTRINSIC_TOKEN_NAMES, tested just below, is the region reader's
+    # list of scalar maths intrinsics and holds none of the array ones;
+    # core.roles keeps the full set the classifier already declines, together
+    # with the companion test that makes it safe -- a name the source ever
+    # assigns is a variable whatever the set says, so a UMAT may still keep an
+    # undeclared accumulator called SUM. This promotion runs after the
+    # classifier and overrides it, so declining here as well as there is what
+    # actually keeps the name out.
+    intrinsic_calls = _INTRINSIC_CALLS - _assigned_names(source_text)
     for name in path_names:
         if (
             name in {"DDSDDE"}
@@ -1018,6 +1031,7 @@ def _roles_with_stress_path_promotions(
             or name in data_constants
             or name in subscripts
             or name in INTRINSIC_TOKEN_NAMES
+            or name in intrinsic_calls
             or (known_variables and name not in known_variables)
         ):
             continue
