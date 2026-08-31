@@ -268,9 +268,14 @@ def test_the_cache_name_never_records_an_absolute_path(tmp_path: Path):
 
 def test_the_published_cache_would_not_be_rediscovered():
     """Against the real cache, when the machine running this has one."""
-    root = os.environ.get("UMAT_OTI_DISCOVERY_CACHE")
-    if not root or not Path(root).is_dir():
-        pytest.skip("no discovery cache on this machine")
+    # The same fallback the tools use. Honouring only the environment variable
+    # made this skip on the very machine that has a cache, because pytest is
+    # not run with it set -- and a check that never runs looks like coverage
+    # while being none.
+    root = (os.environ.get("UMAT_OTI_DISCOVERY_CACHE")
+            or str(REPO_ROOT.parent / "discovery_cache"))
+    if not Path(root).is_dir():
+        pytest.skip(f"no discovery cache at {root}")
     import csv as _csv
 
     manifest = REPO_ROOT / "paper_results" / "discovery" / "discovered_sources.csv"

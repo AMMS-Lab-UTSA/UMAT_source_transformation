@@ -267,3 +267,48 @@ def test_gfortran_agrees_that_the_broken_form_is_not_fortran(tmp_path):
         capture_output=True, text=True, cwd=tmp_path)
     assert finished.returncode != 0
     assert "exponent" in finished.stderr.lower()
+
+
+class TestACharacterLiteralIsNotCode:
+    """Text the author wrote for a reader is not a reference to anything.
+
+    Harmless-looking, because the usual case is a diagnostic message. Not
+    harmless when the string is compared: a UMAT that switches on CMNAME with
+    IF (CMNAME(1:6) .EQ. 'ELAST1') stops matching the moment some promoted
+    variable happens to be called ELAST1.
+    """
+
+    NAMES = {"STRESS": "STRESS_OTI", "DET": "DET_OTI", "ELAST1": "ELAST1_OTI"}
+
+    def _rewrite(self, line: str) -> str:
+        from umat_oti.transform.source_transform import _replace_role_references
+        return _replace_role_references(line, self.NAMES)
+
+    def test_a_message_keeps_the_words_the_author_wrote(self):
+        assert self._rewrite("      WRITE(6,*) 'STRESS is negative'") == (
+            "      WRITE(6,*) 'STRESS is negative'")
+
+    def test_a_compared_string_keeps_its_value(self):
+        assert self._rewrite("      IF (CMNAME(1:6) .EQ. 'ELAST1') THEN") == (
+            "      IF (CMNAME(1:6) .EQ. 'ELAST1') THEN")
+
+    def test_a_double_quoted_string_is_also_left_alone(self):
+        assert self._rewrite('      WRITE(6,*) "DET too small"') == (
+            '      WRITE(6,*) "DET too small"')
+
+    def test_code_beside_a_string_is_still_rewritten(self):
+        """Masking the string must not mask the statement around it."""
+        assert self._rewrite("      WRITE(6,*) 'DET too small', DET") == (
+            "      WRITE(6,*) 'DET too small', DET_OTI")
+
+    def test_an_embedded_doubled_quote_does_not_end_the_literal_early(self):
+        line = "      WRITE(6,*) 'DET''s value is small', DET"
+        assert self._rewrite(line) == (
+            "      WRITE(6,*) 'DET''s value is small', DET_OTI")
+
+    def test_ordinary_code_is_unaffected(self):
+        assert self._rewrite("      STRESS(1) = DET*2.0D0") == (
+            "      STRESS_OTI(1) = DET_OTI*2.0D0")
+
+    def test_real_literals_are_still_atomic_alongside_the_string_mask(self):
+        assert self._rewrite("      XTOL = 1.d-12") == "      XTOL = 1.d-12"

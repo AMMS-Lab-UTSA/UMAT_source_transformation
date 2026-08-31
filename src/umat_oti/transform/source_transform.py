@@ -12,7 +12,9 @@ from umat_oti.core.transformation_anchors import anchor_completion_status
 from umat_oti.fortran.callgraph import build_call_graph, undefined_delegate_call
 from umat_oti.fortran.literals import (
     atomic_real_literals,
+    mask_character_literals,
     mask_real_literals,
+    unmask_character_literals,
     unmask_real_literals,
     without_real_literals,
 )
@@ -2432,7 +2434,18 @@ def _replace_role_references(line: str, replacement_names: dict[str, str]) -> st
     if not replacement_names:
         return line
     pattern = re.compile(r"\b(" + "|".join(re.escape(name) for name in sorted(replacement_names, key=len, reverse=True)) + r")\b", re.IGNORECASE)
-    return pattern.sub(lambda match: replacement_names[match.group(1).upper()], line)
+    # A character literal is text the author wrote for a reader, not a
+    # reference to anything: 'STRESS is negative' became
+    # 'STRESS_OTI is negative'. Harmless in a message and not harmless in a
+    # comparison -- a UMAT that switches on CMNAME with
+    # IF (CMNAME(1:6) .EQ. 'ELAST1') stops matching the moment a promoted
+    # variable is called ELAST1. Masked here rather than inside the pattern
+    # because a name is a name wherever it appears; what changes is whether
+    # the surrounding text is code.
+    masked, store = mask_character_literals(line)
+    rewritten = pattern.sub(
+        lambda match: replacement_names[match.group(1).upper()], masked)
+    return unmask_character_literals(rewritten, store)
 
 
 def _transform_executable_line(
