@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fortran real literals are atomic again in every rewrite path. A promoted
+  variable named `D` matched the `D` inside `1.d-12` and `xtol = 1.d-12` was
+  emitted as `XTOL_OTI = 1.D_OTI-12` ("Missing exponent in real number"). The
+  masking mechanism that had fixed this class lived inside
+  `umat_oti.transform.helper_lifting` and the main source rewrite did not go
+  through it; it now lives in `umat_oti.fortran.literals` and is applied at
+  every identifier substitution, every identifier scan that drives a rename,
+  and the integer-to-double promoter. The promoter's `(?<![eEdD][+-])`
+  lookbehind is replaced by the mask: it read spelling rather than position and
+  also blocked a genuine integer factor in `D-6*Y`.
+
 ## [1.1.0] - 2026-08-21
 
 Adds the SoftwareX unified-derivative model on top of the 1.0.0 tangent pipeline.

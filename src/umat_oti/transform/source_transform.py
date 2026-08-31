@@ -9,6 +9,12 @@ from typing import Any
 
 from umat_oti.core.model import ParsedFortranSource
 from umat_oti.core.transformation_anchors import anchor_completion_status
+from umat_oti.fortran.literals import (
+    atomic_real_literals,
+    mask_real_literals,
+    unmask_real_literals,
+    without_real_literals,
+)
 from umat_oti.fortran.normalize import detect_source_form
 from umat_oti.fortran.parser import (
     logical_lines_from_text, parse_entity, parse_subroutines, split_top_level,
@@ -1287,7 +1293,11 @@ def _transform_source_text(
                     and assign.group(1).upper() not in replacement_names
                     and not re.match(r"^\s*(?:IF|DO|ELSE|END|WRITE|READ|CALL|GO\s*TO|GOTO)\b", candidate, flags=re.IGNORECASE)
                 ):
-                    rhs = assign.group(2)
+                    # Masked, for the same reason the substitution itself is:
+                    # the D in "1.d-12" is not a reference to a variable named
+                    # D, and a line whose only "mention" of a promoted name is
+                    # inside a literal reads nothing promoted.
+                    rhs = without_real_literals(assign.group(2))
                     reads_promoted_reference = any(
                         re.search(rf"\b{re.escape(name)}\b", rhs, flags=re.IGNORECASE) for name in replacement_names
                     )
@@ -2093,7 +2103,17 @@ def _higher_order_jacobian_lines(
     return lines
 
 
+@atomic_real_literals
 def _replace_role_references(line: str, replacement_names: dict[str, str]) -> str:
+    """Point every reference to a promoted variable at its OTI shadow.
+
+    Decorated, because a real literal is one token and this substitution works
+    on characters. ``1.d-12`` offers the substituter a ``\\bD\\b`` between a dot
+    and a minus sign, and a model that names a variable ``D`` -- damage, most of
+    them -- had ``xtol = 1.d-12`` emitted as ``XTOL_OTI = 1.D_OTI-12``. The same
+    hole is open for ``E`` in ``1.E-6``, ``D0`` in ``2.D0`` and ``E2`` in
+    ``1.E2``, so the fix is atomicity rather than a lookaround for ``D``.
+    """
     if not replacement_names:
         return line
     pattern = re.compile(r"\b(" + "|".join(re.escape(name) for name in sorted(replacement_names, key=len, reverse=True)) + r")\b", re.IGNORECASE)
@@ -3497,7 +3517,10 @@ def _wrap_oti_condition_with_real(line: str) -> str:
 def _is_promoted_branch_line(line: str, replacement_names: dict[str, str]) -> bool:
     if not replacement_names or not re.match(r"^\s*(?:ELSE\s*)?IF\s*\(", line, flags=re.IGNORECASE):
         return False
-    return any(re.search(rf"\b{re.escape(name)}\b", line, flags=re.IGNORECASE) for name in replacement_names)
+    # ``IF (ABS(RES).GT.1.D-12)`` mentions no promoted variable, whatever a
+    # model happens to have called D.
+    scanned = without_real_literals(line)
+    return any(re.search(rf"\b{re.escape(name)}\b", scanned, flags=re.IGNORECASE) for name in replacement_names)
 
 
 def _real_wrapped_oti_tokens(condition: str) -> str:
@@ -3521,17 +3544,21 @@ def _normalize_numeric_literals_in_oti_expression(line: str, type_name: str = ""
         lambda match: match.group(1) if match.group(1).upper().endswith("D0") else match.group(1).rstrip(".") + (".0" if match.group(1).endswith(".") else "") + "D0",
         line,
     )
-    # (?<![eEdD][+-]) keeps the exponent of a real literal out of this. In
-    # 3.8019047483079793e-6*Sin(...) the digits of the exponent are preceded
-    # by "-", which the character-class lookbehind allows, so the 6 was read
-    # as a bare integer multiplying Sin and rewritten to 6.0D0. The literal
-    # became 3.8019047483079793e-6.0D0 -- not a number -- and gfortran
-    # reported "Invalid character in name" pointing at the next name-like
-    # token, several terms further along a forty-line continued expression.
-    # An unsigned exponent was already safe: its digits follow a letter.
-    normalized = re.sub(r"(?<![A-Za-z0-9_.)])(?<![eEdD][+-])(\d+)(?![A-Za-z0-9_.])(?=\s*[*\/])", r"\1.0D0", normalized)
+    # From here on only *bare integers* are promoted, so the complete real
+    # literals are masked out first. Their digits are not factors: in
+    # 3.8019047483079793e-6*Sin(...) the exponent's 6 was read as an integer
+    # multiplying Sin and rewritten, leaving 3.8019047483079793e-6.0D0.
+    #
+    # This used to be a (?<![eEdD][+-]) lookbehind rather than a mask. A
+    # lookbehind reads spelling where the property is position, so it also
+    # fired on D-6*Y_OTI -- an ordinary variable D, minus six times Y -- and
+    # left an INTEGER factor the OTI library has no overload for. It also has
+    # to be written out again at every rewrite that could reach a literal,
+    # which is how the substitution above came to be missing one.
+    normalized, literals = mask_real_literals(normalized)
+    normalized = re.sub(r"(?<![A-Za-z0-9_.)])(\d+)(?![A-Za-z0-9_.])(?=\s*[*\/])", r"\1.0D0", normalized)
     normalized = re.sub(r"([*\/])\s*(\d+)(?![A-Za-z0-9_.])", r"\1\2.0D0", normalized)
-    return normalized
+    return unmask_real_literals(normalized, literals)
 
 
 def _selected_header_end(parsed: ParsedFortranSource, selected_umat: str) -> int | None:
