@@ -24,3 +24,9 @@ from umat_oti.assist.proposals import Proposal, Verdict
 
 __all__ = ["LocalModel", "ModelUnavailable", "model_from_environment",
            "Proposal", "Verdict"]
+
+#: The proposers themselves are imported from their own modules rather than
+#: re-exported here. ``umat_oti.assist.repair`` reaches into the transformer for
+#: the predicates its invariance check is built on, and a package that pulled
+#: that in on import would make the cost of ``import umat_oti.assist`` depend on
+#: a proposer nobody asked for.
