@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 from typing import Any
 
+from umat_oti.core.roles import INTRINSIC_CALL_NAMES, assigned_names
 from umat_oti.fortran.normalize import detect_source_form
 from umat_oti.fortran.parser import logical_lines_from_text
 from umat_oti.fortran.regions import TRANSFORMABLE_HELPER_EFFECTS
@@ -234,7 +235,8 @@ def merge_completed_anchors_into_config(config: dict[str, Any], source_text: str
     review["shared_setup_regions_to_keep"] = anchors.get("shared_setup_regions_to_keep", [])
     review["completion_status"] = anchors.get("status", "needs_json_completion")
     review["completion_issues"] = anchors.get("completion_issues", [])
-    normalized_roles = _finalize_completed_variable_roles(updated.get("variable_roles", {}), anchors)
+    normalized_roles = _finalize_completed_variable_roles(
+        updated.get("variable_roles", {}), anchors, source_text)
     updated["variable_roles"] = normalized_roles
     review.update(_review_role_lists(normalized_roles))
     review["ready_for_transformation"] = anchors.get("status") == "ready_with_json_contract" and not review.get("action_needed")
@@ -244,9 +246,11 @@ def merge_completed_anchors_into_config(config: dict[str, Any], source_text: str
     return updated
 
 
-def _finalize_completed_variable_roles(raw_roles: Any, anchors: dict[str, Any]) -> Any:
+def _finalize_completed_variable_roles(
+    raw_roles: Any, anchors: dict[str, Any], source_text: str = "",
+) -> Any:
     updated = _promote_anchor_stress_variables(raw_roles, anchors)
-    updated = _normalize_intrinsic_variable_roles(updated)
+    updated = _normalize_intrinsic_variable_roles(updated, source_text)
     return _normalize_completed_keep_real_roles(updated)
 
 
@@ -841,11 +845,11 @@ def _anchor_promoted_names(raw_roles: Any, anchors: dict[str, Any]) -> set[str]:
     return result
 
 
-def _normalize_intrinsic_variable_roles(raw_roles: Any) -> Any:
+def _normalize_intrinsic_variable_roles(raw_roles: Any, source_text: str = "") -> Any:
     if not isinstance(raw_roles, dict):
         return raw_roles
     updated = {str(name): dict(role) if isinstance(role, dict) else role for name, role in raw_roles.items()}
-    for name in _intrinsic_names():
+    for name in _intrinsic_names(source_text):
         row = updated.get(name)
         if isinstance(row, dict) and row.get("selected_role") == "Promote":
             row["selected_role"] = "Keep real"
@@ -900,23 +904,22 @@ def _shape_symbol_names(shape: str) -> set[str]:
     return {token.upper() for token in re.findall(r"\b[A-Za-z_]\w*\b", str(shape or ""))}
 
 
-def _intrinsic_names() -> set[str]:
-    return {
-        "ABS",
-        "DABS",
-        "SQRT",
-        "DSQRT",
-        "EXP",
-        "DEXP",
-        "LOG",
-        "DLOG",
-        "SIN",
-        "DSIN",
-        "COS",
-        "DCOS",
-        "SINH",
-        "COSH",
-    }
+def _intrinsic_names(source_text: str = "") -> set[str]:
+    """Names that are calls rather than variables in this source.
+
+    One definition, in core.roles, so this and the role classifier cannot
+    drift apart about what counts as a call. The list this replaced held
+    fourteen scalar maths intrinsics and no array ones, so MATMUL, TRANSPOSE
+    and DOT_PRODUCT were promoted like variables and renamed like variables:
+    STRESS = MATMUL(DDSDDE, STRAN + DSTRAN) came out as
+    STRESS_OTI = MATMUL_OTI(...), a name declared nowhere.
+
+    Subtracting the names the source assigns is what makes the wider set safe:
+    several standard intrinsics -- SUM, COUNT, SIZE, INDEX -- are also
+    perfectly ordinary names for a UMAT's own undeclared accumulator, and a
+    name that carries a value is a variable whatever the set says.
+    """
+    return set(INTRINSIC_CALL_NAMES) - set(assigned_names(source_text))
 
 
 def _append_note(existing: object, note: str) -> str:
