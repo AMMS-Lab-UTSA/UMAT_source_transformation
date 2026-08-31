@@ -1,297 +1,527 @@
 source,repository,bytes,lines,form,kinematics,ntens,nstatv_hint,anchor_status,helper_routines,declared_unsupported,stage,blocker_kind,blocker,original_compiles,compiled,compile_error,seconds
-HIT-FSW-314__abaqus/abaqus-umat/uel/UEL9_VPDCL.for,uel,58067,1697,fixed,finite,6,80,ready_with_json_contract,29,io_write,transformed,none,,yes,yes,,2.48
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/BodyForce-Growth-2Stages.for,Th001,19416,608,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.75
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGravity.for,Th001,18617,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.68
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGrowth.for,Th001,18499,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.68
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/BodyForce-Growth-2Stages.for,Th002,19424,609,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.66
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for,Th002,18616,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.79
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGrowth.for,Th002,18498,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.61
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/BodyForce-Growth-2Stages.for,Th005,19417,609,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.56
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/PureGrowth.for,Th005,18499,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.58
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005-Visualization/BodyForce-Growth-2Stages.for,Th005-Visualization,19278,607,fixed,finite,6,26,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.59
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/BodyForce-Growth-2Stages.for,Th01,19493,610,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.7
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGravity.for,Th01,18616,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.56
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th002/BodyForce-Growth-2Stages.for,Th002,22889,673,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,semantic_checks_failed,semantic_check,Semantic check failed: integer_literals_normalized_in_oti_expressions.,,,,0.25
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/PureGravity.for,Th005,18617,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.57
-Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th01/PureGrowth.for,Th01,18517,578,fixed,finite,6,27,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.72
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-EX.for,inputFile,6379,200,fixed,finite,6,19,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.35
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-Z2.for,inputFile,6428,202,fixed,finite,6,19,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.43
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-frac.for,inputFile,6460,203,fixed,finite,6,19,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.34
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur1.for,InputFile,7239,220,fixed,finite,6,26,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.43
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur2.for,InputFile,7483,230,fixed,finite,6,28,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.43
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur3.for,InputFile,7089,221,fixed,finite,6,29,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.43
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example1/Growth-MinSur1.for,Example1,7287,221,fixed,finite,6,26,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.39
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example2/Growth-MinSur2.for,Example2,7170,223,fixed,finite,6,28,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.35
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example3-Sphere/Growth-MinSur3.for,Example3-Sphere,7010,221,fixed,finite,6,27,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.45
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Bunny/Part1/ABAQUS_files/Growth-Bunny-Part1.for,ABAQUS_files,9094,296,fixed,finite,6,29,ready_with_json_contract,1,data;io_open;io_read;save,transformed,none,,yes,yes,,1.48
-Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Catenoid/10/Growth-Catenoid.for,10,7397,226,fixed,finite,6,29,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.51
-Jeff97__growth-of-circular-plate/Bending/Growth-CASE1.for,Bending,5944,187,fixed,finite,6,13,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.27
-Jeff97__growth-of-circular-plate/Bending/Growth-CASE2.for,Bending,5968,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.38
-Jeff97__growth-of-circular-plate/Bending/Growth-CASE3.for,Bending,6013,187,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.32
-Jeff97__growth-of-circular-plate/Combined/Growth-CASE1.for,Combined,5968,187,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.35
-Jeff97__growth-of-circular-plate/Combined/Growth-CASE2.for,Combined,5958,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.4
-Jeff97__growth-of-circular-plate/Combined/Growth-CASE3.for,Combined,5983,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.43
-Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE1.for,ShapeProgramming,6005,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.45
-Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE2.for,ShapeProgramming,6056,188,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.35
-Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE3.for,ShapeProgramming,6118,189,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.22
-Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE4.for,ShapeProgramming,6057,188,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.33
-Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE5.for,ShapeProgramming,7090,205,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.4
-Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-102.for,Wrinkle,6804,197,fixed,finite,6,16,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.34
-adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb.f,Abaqus,4088,116,fixed,finite,6,21,ready_with_json_contract,1,,blocked,shape_unknown,Promoted variable ASABQARRAY is indexed in a stress region but has no confirmed shape.; Promoted variable DET is indexed in a stress region but has no confirmed shape.; Promoted variable PIOLA is indexed in a stress region but has no confirmed shape.; Promoted variable TR is indexed in a stress regi,,,,0.12
-adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb_simple.f,Abaqus,2356,72,fixed,finite,6,11,ready_with_json_contract,1,,blocked,shape_unknown,Promoted variable ASABQARRAY is indexed in a stress region but has no confirmed shape.; Promoted variable DEV is indexed in a stress region but has no confirmed shape.; Promoted variable PIOLA is indexed in a stress region but has no confirmed shape.; Promoted variable TRANSPOSE is indexed in a stre,,,,0.05
-adtzlr__ttb/docs/examples/script_umat.f,examples,2661,102,fixed,small strain,6,0,needs_json_completion,1,io_write,anchors_not_located,missing_ddsdde_extraction_point,missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions,,,,0.02
-jgomezc1__ABAQUS-US/INPUT_FILES/UEL8_ECL_AXY.for,INPUT_FILES,44840,1335,fixed,finite,6,27,ready_with_json_contract,26,,transformed,none,,yes,yes,,1.54
-jgomezc1__ABAQUS-US/SAMPLE/UEL9_VPDCO.for,SAMPLE,64383,1837,fixed,finite,6,95,ready_with_json_contract,29,io_write,transformed,none,,yes,yes,,2.71
-jgomezc1__ABAQUS-US/UELS/UEL8_ECL.for,UELS,43894,1301,fixed,finite,6,26,ready_with_json_contract,26,,transformed,none,,yes,yes,,1.6
-jgomezc1__ABAQUS-US/UELS/UEL8_ECO.for,UELS,44731,1280,fixed,finite,6,31,ready_with_json_contract,24,,transformed,none,,yes,yes,,1.59
-jgomezc1__ABAQUS-US/UELS/UEL8_PCLI.for,UELS,48634,1445,fixed,finite,6,72,ready_with_json_contract,26,io_write,transformed,none,,yes,yes,,2.06
-jgomezc1__ABAQUS-US/UELS/UEL8_PCLI_R.for,UELS,45671,1340,fixed,finite,6,46,ready_with_json_contract,25,,transformed,none,,yes,yes,,1.66
-jgomezc1__ABAQUS-US/UELS/UEL8_PCLK.for,UELS,52183,1533,fixed,finite,6,65,ready_with_json_contract,28,io_write,transformed,none,,yes,yes,,1.91
-jgomezc1__ABAQUS-US/UELS/UEL8_PCOI.for,UELS,56241,1644,fixed,finite,6,82,ready_with_json_contract,27,io_write,transformed,none,,yes,yes,,2.16
-jgomezc1__ABAQUS-US/UELS/UEL8_PCOR.for,UELS,52786,1568,fixed,finite,6,65,ready_with_json_contract,26,io_write,transformed,none,,yes,yes,,1.69
-jgomezc1__ABAQUS-US/UELS/UEL8_PCOR_KIN.for,UELS,54761,1604,fixed,finite,6,67,ready_with_json_contract,26,io_write,transformed,none,,yes,yes,,1.85
-jgomezc1__ABAQUS-US/UELS/UEL8_VPDCL.for,UELS,55172,1651,fixed,finite,6,79,ready_with_json_contract,29,io_write,transformed,none,,yes,yes,,1.88
-jgomezc1__ABAQUS-US/UELS/UEL8_VPDCO.for,UELS,59830,1757,fixed,finite,6,94,ready_with_json_contract,28,io_write,transformed,none,,yes,yes,,2.75
+3MAH__simcoon/testBin/Umats/UMABA/external/UMAT_ABAQUS_ELASTIC.f,external,13213,308,fixed,small strain,6,2,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.66
+BAMresearch__fenics-constitutive/examples/umat/src/umat_linear_elastic.f,src,1300,45,fixed,small strain,6,1,ready_with_json_contract,1,,generated_not_compiled,compile_failed,"umat_linear_elastic_oti.f:77:6:
+
+   77 |       STRESS_OTI = MATMUL_OTI(DDSDDE, STRAN + DSTRAN_OTI)
+      |      1
+Error: Unclassifiable statement at (1)
+",yes,no,"umat_linear_elastic_oti.f:77:6:
+
+   77 |       STRESS_OTI = MATMUL_OTI(DDSDDE, STRAN + DSTRAN_OTI)
+      |      1
+Error: Unclassifiable statement at (1)
+",1.18
+BristolCompositesInstitute__abaci/example/src/umat.f,src,1451,44,fixed,,,,,0,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.0
+BristolCompositesInstitute__abaci/test/data/umat.f,data,13629,365,fixed,small strain,6,1,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.28
+BristolCompositesInstitute__abaqus-modern-fortran/src/umat.f,src,1447,44,fixed,,,,,0,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.0
+CAEAssistant-Group__Abaqus-CAE-UMAT-subroutine-for-3D-Composite-fatigue-simulation/Abaqus-CAE-UMAT-subroutine-for-3D-Composite-fatigue-simulation-Fortran-Code.for,CAEAssistant-Group__Abaqus-CAE-UMAT-subroutine-for-3D-Composite-fatigue-simulation,21427,764,fixed,,,,,5,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.07
+Dr-Ning-An__Viscoelastic-RVE-Calculator/ViscoelasticRVEs/umat3dorthotropic_viscoelastic.for,ViscoelasticRVEs,2936,94,fixed,small strain,6,2,ready_with_json_contract,1,io_write,transformed,none,,yes,yes,,1.26
+Farid-Alisafaei__Implant-Fibrotic-Capsule/CellMatrixModel_20241204.for,Farid-Alisafaei__Implant-Fibrotic-Capsule,103118,3247,fixed,small strain,6,86,ready_with_json_contract,14,,blocked,shape_unknown,Promoted variable CCONTMATC is indexed in a stress region but has no confirmed shape.; Promoted variable CFIBMAT is indexed in a stress region but has no confirmed shape.; Promoted variable CISOMAT is indexed in a stress region but has no confirmed shape.; Promoted variable CISOMATC1 is indexed in a,,,,0.84
+HIT-FSW-314__abaqus/abaqus-umat/uel/UEL9_VPDCL.for,uel,58067,1697,fixed,finite,6,80,ready_with_json_contract,29,io_write,transformed,none,,yes,yes,,1.97
+InstituteOfMechanics__Paraqus/examples/example_abaqus_extrusion_umat.f,examples,32622,871,fixed,finite,6,33,ready_with_json_contract,20,io_write,generated_not_compiled,compile_failed,"example_abaqus_extrusion_umat_oti.f:95:44:
+
+   95 |             CALL CALCDET33(DFGRD1_OTI, detJ)
+      |                                            1
+Warning: Type mismatch in argument ‘a’ at (1); passed TYPE(onumm6n1) to REAL(8) [-Wargument-mismatch]
+example_abaqus_extrusion_umat_oti.f:103:19:
+
+  1",yes,no,"example_abaqus_extrusion_umat_oti.f:95:44:
+
+   95 |             CALL CALCDET33(DFGRD1_OTI, detJ)
+      |                                            1
+Warning: Type mismatch in argument ‘a’ at (1); passed TYPE(onumm6n1) to REAL(8) [-Wargument-mismatch]
+example_abaqus_extrusion_umat_oti.f:103:19:
+
+  1",1.53
+InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f,UMAT,10064,249,fixed,,,,,0,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.02
+InstituteOfMechanics__Thermomechanical_Gradient_Enhanced_Damage_UMAT/src/UMAT_DamThermMech_1_H.f,src,90222,2352,fixed,finite,6,50,ready_with_json_contract,41,io_write,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE = 0.0d0; DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(1,1) = ABATAN(1,1,1,1); DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(1,2) = ABATAN(1,1,2,2); DDSDDE as",,,,0.5
+Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto2D/From-2D-to-2D-Axe.for,2Dto2D,10319,281,fixed,finite,6,36,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.62
+Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto2D/From-2D-to-2D-Disk.for,2Dto2D,10221,280,fixed,finite,6,36,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.54
+Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto2D/From-2D-to-2D-Scallop.for,2Dto2D,10302,281,fixed,finite,6,36,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.6
+Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto3D/From-2D-to-3D-DupinCyclide.for,2Dto3D,32379,653,fixed,finite,6,42,ready_with_json_contract,1,,transformed,none,,yes,yes,,4.01
+Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto3D/From-2D-to-3D-Genhel.for,2Dto3D,14033,363,fixed,finite,6,43,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.75
+Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto3D/From-2D-to-3D-Saddle.for,2Dto3D,10216,280,fixed,finite,6,38,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.62
+Jeff97__General-shape-control-of-shell/Abaqus_Files/3Dto3D/From-3D-to-3D-Petal.for,3Dto3D,14644,369,fixed,finite,6,60,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.81
+Jeff97__General-shape-control-of-shell/Abaqus_Files/3Dto3D/From-3D-to-3D-SeaShell.for,3Dto3D,21646,510,fixed,finite,6,78,ready_with_json_contract,1,,transformed,none,,yes,yes,,2.22
+Jeff97__General-shape-control-of-shell/Abaqus_Files/Alex_Shocked/Growth-Alex.for,Alex_Shocked,17357,459,fixed,finite,6,67,ready_with_json_contract,1,data;io_open;io_read;save,generated_not_compiled,compile_failed,"Growth-Alex_oti.for:421:27:
+
+  421 |         A1_OTI = A1IMP_OTI(TMPELEM_OTI)
+      |                           1
+Error: Array index at (1) must be of INTEGER type, found DERIVED
+Growth-Alex_oti.for:422:27:
+
+  422 |         A2_OTI = A2IMP_OTI(TMPELEM_OTI)
+      |                           1
+Error: Ar",yes,no,"Growth-Alex_oti.for:421:27:
+
+  421 |         A1_OTI = A1IMP_OTI(TMPELEM_OTI)
+      |                           1
+Error: Array index at (1) must be of INTEGER type, found DERIVED
+Growth-Alex_oti.for:422:27:
+
+  422 |         A2_OTI = A2IMP_OTI(TMPELEM_OTI)
+      |                           1
+Error: Ar",1.53
+Jeff97__General-shape-control-of-shell/Abaqus_Files/Beetle_Taxi/Growth-Car.for,Beetle_Taxi,17457,464,fixed,finite,6,66,ready_with_json_contract,1,data;io_open;io_read;save,generated_not_compiled,compile_failed,"Growth-Car_oti.for:417:27:
+
+  417 |         A1_OTI = A1IMP_OTI(TMPELEM_OTI)
+      |                           1
+Error: Array index at (1) must be of INTEGER type, found DERIVED
+Growth-Car_oti.for:418:27:
+
+  418 |         A2_OTI = A2IMP_OTI(TMPELEM_OTI)
+      |                           1
+Error: Arra",yes,no,"Growth-Car_oti.for:417:27:
+
+  417 |         A1_OTI = A1IMP_OTI(TMPELEM_OTI)
+      |                           1
+Error: Array index at (1) must be of INTEGER type, found DERIVED
+Growth-Car_oti.for:418:27:
+
+  418 |         A2_OTI = A2IMP_OTI(TMPELEM_OTI)
+      |                           1
+Error: Arra",1.52
+Jeff97__General-shape-control-of-shell/Abaqus_Files/FaceChange/Growth-Robot.for,FaceChange,26143,653,fixed,finite,6,90,ready_with_json_contract,1,data;io_open;io_read;save,generated_not_compiled,compile_failed,"Growth-Robot_oti.for:579:30:
+
+  579 |         A1_OTI = A1IMPST1_OTI(TMPELEM_OTI)
+      |                              1
+Error: Array index at (1) must be of INTEGER type, found DERIVED
+Growth-Robot_oti.for:580:30:
+
+  580 |         A2_OTI = A2IMPST1_OTI(TMPELEM_OTI)
+      |                           ",yes,no,"Growth-Robot_oti.for:579:30:
+
+  579 |         A1_OTI = A1IMPST1_OTI(TMPELEM_OTI)
+      |                              1
+Error: Array index at (1) must be of INTEGER type, found DERIVED
+Growth-Robot_oti.for:580:30:
+
+  580 |         A2_OTI = A2IMPST1_OTI(TMPELEM_OTI)
+      |                           ",1.81
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/BodyForce-Growth-2Stages.for,Th001,19416,608,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.67
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGravity.for,Th001,18617,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.71
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGrowth.for,Th001,18499,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.73
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/BodyForce-Growth-2Stages.for,Th002,19424,609,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.73
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for,Th002,18616,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.69
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGrowth.for,Th002,18498,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.63
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/BodyForce-Growth-2Stages.for,Th005,19417,609,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.67
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/PureGrowth.for,Th005,18499,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.65
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005-Visualization/BodyForce-Growth-2Stages.for,Th005-Visualization,19278,607,fixed,finite,6,26,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.75
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/BodyForce-Growth-2Stages.for,Th01,19493,610,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.61
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/PureGravity.for,Th01,18616,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.64
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/PureGrowth.for,Th01,18498,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.66
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th001/BodyForce-Growth-2Stages.for,Th001,19531,613,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.54
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th001/PureGrowth.for,Th001,18500,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.7
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th002/BodyForce-Growth-2Stages.for,Th002,19539,614,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.71
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th002/PureGrowth.for,Th002,18499,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.65
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th005/BodyForce-Growth-2Stages.for,Th005,19532,614,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.72
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th005/PureGrowth.for,Th005,18500,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.66
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th005-Visualization/BodyForce-Growth-2Stages.for,Th005-Visualization,19374,607,fixed,finite,6,26,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.66
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/BodyForce-Growth-2Stages.for,Th01,19476,609,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.78
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGravity.for,Th01,18616,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.65
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGrowth.for,Th01,18499,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.64
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th001/BodyForce-Growth-2Stages.for,Th001,19084,601,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.59
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th001/PureGrowth.for,Th001,18498,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.64
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002/BodyForce-Growth-2Stages.for,Th002,19092,602,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.76
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002/PureGrowth.for,Th002,18497,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.74
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002-Visualization/BodyForce-Growth-2Stages.for,Th002-Visualization,19098,602,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.63
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/BodyForce-Growth-2Stages.for,Th005,19085,602,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.68
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/PureGravity.for,Th005,18617,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.6
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/PureGrowth.for,Th005,18498,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.65
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005-Visualization/BodyForce-Growth-2Stages.for,Th005-Visualization,19091,602,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.7
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/PureGravity.for,Th001,18690,580,fixed,finite,6,26,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.7
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th002/BodyForce-Growth-2Stages.for,Th002,22889,673,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.89
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th01/BodyForce-Growth-2Stages.for,Th01,22947,674,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.82
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th001/BodyForce-Growth-2Stages.for,Th001,20371,624,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.78
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th001/PureGravity.for,Th001,18617,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.69
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th002/BodyForce-Growth-2Stages.for,Th002,20386,625,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.6
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th002/PureGrowth.for,Th002,18517,578,fixed,finite,6,27,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.69
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/BodyForce-Growth-2Stages.for,Th005,20361,625,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.61
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/PureGravity.for,Th005,18617,580,fixed,finite,6,24,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.63
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th01/PureGrowth.for,Th01,18517,578,fixed,finite,6,27,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.63
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th001/PureGrowth.for,Th001,18521,578,fixed,finite,6,27,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.58
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th002/PureGrowth.for,Th002,18520,578,fixed,finite,6,27,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.69
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th01/BodyForce-Growth-2Stages.for,Th01,20368,622,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.74
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGravity.for,Th01,18527,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.62
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGrowth.for,Th01,18875,586,fixed,finite,6,27,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.6
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-Flat/Th005/PureGrowth.for,Th005,18609,582,fixed,finite,6,27,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.65
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-Flat/Th01/PureGrowth.for,Th01,18608,582,fixed,finite,6,27,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.63
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th005/PureGravity.for,Th005,18524,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.66
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th01/PureGravity.for,Th01,18523,578,fixed,finite,6,25,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.69
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th005/BodyForce-Growth-2Stages.for,Th005,19147,599,fixed,finite,6,30,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.69
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th005/PureGrowth.for,Th005,18605,582,fixed,finite,6,27,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.6
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th01/BodyForce-Growth-2Stages.for,Th01,19146,599,fixed,finite,6,30,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.61
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/PathSensitivity/Th001-1MPa/BodyForce-Growth-GravityFirst.for,Th001-1MPa,19395,611,fixed,finite,6,26,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.65
+Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/PathSensitivity/Th001-5MPa/BodyForce-Growth-Simultaneous.for,Th001-5MPa,19477,609,fixed,finite,6,28,ready_with_json_contract,5,common_block;io_write,transformed,none,,yes,yes,,1.75
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-EX.for,inputFile,6379,200,fixed,finite,6,19,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.36
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-Z2.for,inputFile,6428,202,fixed,finite,6,19,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.4
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-frac.for,inputFile,6460,203,fixed,finite,6,19,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.43
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur1.for,InputFile,7239,220,fixed,finite,6,26,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.5
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur2.for,InputFile,7483,230,fixed,finite,6,28,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.46
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur3.for,InputFile,7089,221,fixed,finite,6,29,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.37
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example1/Growth-MinSur1.for,Example1,7287,221,fixed,finite,6,26,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.37
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example2/Growth-MinSur2.for,Example2,7170,223,fixed,finite,6,28,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.44
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example3-Sphere/Growth-MinSur3.for,Example3-Sphere,7010,221,fixed,finite,6,27,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.48
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example4-Torus/Growth-MinSur3.for,Example4-Torus,7010,221,fixed,finite,6,27,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.34
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Bunny/Part1/ABAQUS_files/Growth-Bunny-Part1.for,ABAQUS_files,9094,296,fixed,finite,6,29,ready_with_json_contract,1,data;io_open;io_read;save,transformed,none,,yes,yes,,1.52
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Bunny/Part2/ABAQUS_files/Growth-Bunny-Part2.for,ABAQUS_files,9094,296,fixed,finite,6,29,ready_with_json_contract,1,data;io_open;io_read;save,transformed,none,,yes,yes,,1.43
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Hunman_face/ABAQUS_files/Growth-Human-face.for,ABAQUS_files,9089,296,fixed,finite,6,29,ready_with_json_contract,1,data;io_open;io_read;save,transformed,none,,yes,yes,,1.51
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Instability_Analysis/Growth-Sphere.for,Instability_Analysis,7089,221,fixed,finite,6,29,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.36
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/2D/EX/10/Growth-EX.for,10,6186,196,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.32
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/2D/Frac/10/Growth-Frac.for,10,6236,196,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.28
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/2D/Z2/10/Growth-Z2.for,10,6176,196,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.35
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Catenoid/10/Growth-Catenoid.for,10,7397,226,fixed,finite,6,29,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.44
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Helicoid/10/Growth-Helicoid.for,10,7239,220,fixed,finite,6,26,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.4
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Sphere/10/Growth-Sphere.for,10,7138,222,fixed,finite,6,26,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.47
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/Alex/20470/Growth-Alex.for,20470,9070,296,fixed,finite,6,29,ready_with_json_contract,1,data;io_open;io_read;save,transformed,none,,yes,yes,,1.5
+Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/Alex/749/Growth-Alex.for,749,9069,296,fixed,finite,6,29,ready_with_json_contract,1,data;io_open;io_read;save,transformed,none,,yes,yes,,1.5
+Jeff97__growth-of-circular-plate/Bending/Growth-CASE1.for,Bending,5944,187,fixed,finite,6,13,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.41
+Jeff97__growth-of-circular-plate/Bending/Growth-CASE2.for,Bending,5968,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.39
+Jeff97__growth-of-circular-plate/Bending/Growth-CASE3.for,Bending,6013,187,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.38
+Jeff97__growth-of-circular-plate/Combined/Growth-CASE1.for,Combined,5968,187,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.34
+Jeff97__growth-of-circular-plate/Combined/Growth-CASE2.for,Combined,5958,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.37
+Jeff97__growth-of-circular-plate/Combined/Growth-CASE3.for,Combined,5983,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.36
+Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE1.for,ShapeProgramming,6005,187,fixed,finite,6,14,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.39
+Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE2.for,ShapeProgramming,6056,188,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.36
+Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE3.for,ShapeProgramming,6118,189,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.36
+Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE4.for,ShapeProgramming,6057,188,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.44
+Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE5.for,ShapeProgramming,7090,205,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.37
+Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE6.for,ShapeProgramming,6171,190,fixed,finite,6,15,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.36
+Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-101.for,Wrinkle,6804,197,fixed,finite,6,16,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.39
+Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-102.for,Wrinkle,6804,197,fixed,finite,6,16,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.39
+Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-103.for,Wrinkle,6804,197,fixed,finite,6,16,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.43
+Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-11.for,Wrinkle,6803,197,fixed,finite,6,16,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.41
+Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-12.for,Wrinkle,6803,197,fixed,finite,6,16,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.38
+Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-13.for,Wrinkle,6803,197,fixed,finite,6,16,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.38
+KianAbd__vCANN_FEM/Abaqus/umat.f90,Abaqus,91786,2113,free,finite,6,88,ready_with_json_contract,38,module_use,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(mm,nn) = CC_tot(ii,jj,kk,ll)",,,,0.49
+KianAbd__vCANN_FEM/Abaqus/umat_vCANN.f90,Abaqus,140693,3072,free,finite,6,119,ready_with_json_contract,46,module_use;save,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(mm,nn) = CC_tot(ii,jj,kk,ll)",,,,0.61
+KianAbd__vCANN_FEM/Abaqus/umat_vCANN.for,Abaqus,122017,2777,fixed,,,,,0,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.08
+KianAbd__vCANN_FEM/TensorFlow/Results_Liao_Thermo/20260601-103627/UMAT/umat_vCANN.for,UMAT,140693,3072,fixed,,,,,0,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.1
+LallyLabTCD__localBasisAbaqus/Case studies/umat_MA_global.for,Case studies,4750,144,fixed,finite,6,6,ready_with_json_contract,1,,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/tmp.WRC2MdTMvz/t/Case studies/umat_MA_global/baseline/umat_MA_global.for:134: Error: Can't open included file 'kstress_calc.for'
+",no,no,"umat_MA_global_oti.for:235: Error: Can't open included file 'kstress_calc.for'
+",1.14
+LallyLabTCD__localBasisAbaqus/Case studies/umat_MA_local.for,Case studies,6077,179,fixed,finite,6,6,ready_with_json_contract,1,,semantic_checks_failed,semantic_check,Semantic check failed: ddsdde_extraction_after_selected_stress_regions.,,,,0.1
+LallyLabTCD__localBasisAbaqus/Lesson C - fibre reinforced anistropic models/Abaqus/umat_MA_global.for,Abaqus,4591,138,fixed,finite,6,6,ready_with_json_contract,1,,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/tmp.WRC2MdTMvz/t/Abaqus/umat_MA_global/baseline/umat_MA_global.for:128: Error: Can't open included file 'kstress_calc.for'
+",no,no,"umat_MA_global_oti.for:229: Error: Can't open included file 'kstress_calc.for'
+",1.17
+LallyLabTCD__localBasisAbaqus/Lesson C - fibre reinforced anistropic models/Abaqus/umat_MA_local.for,Abaqus,5902,173,fixed,finite,6,6,ready_with_json_contract,1,,semantic_checks_failed,semantic_check,Semantic check failed: ddsdde_extraction_after_selected_stress_regions.,,,,0.11
+MCM-QMUL__PhaseFieldComp/Subroutine/UELUMATPhaseField_AT2.for,Subroutine,23084,681,fixed,small strain,6,28,ready_with_json_contract,6,data;io_write;save,blocked,shape_unknown,Promoted variable USERVAR is indexed in a stress region but has no confirmed shape.,,,,0.21
+PeriDoX__PeriDoX/Publications/2022_JOSS/data/UMAT/base.f,UMAT,2030,59,fixed,small strain,6,2,ready_with_json_contract,1,,blocked,shape_unknown,Promoted variable STRANNP1 is indexed in a stress region but has no confirmed shape.,,,,0.05
+PeriHub__PeriLab.jl/src/Models/Material/UMATs/base.f,UMATs,2020,59,fixed,small strain,6,2,ready_with_json_contract,1,,blocked,shape_unknown,Promoted variable STRANNP1 is indexed in a stress region but has no confirmed shape.,,,,0.08
+PeriHub__PeriLab.jl/src/Models/Material/UMATs/usertest.f,UMATs,1452,47,fixed,finite,6,2,ready_with_json_contract,1,,semantic_checks_failed,semantic_check,Semantic check failed: ddsdde_extraction_after_selected_stress_regions.,,,,0.05
+PlatypusBytes__ConstitutiveModels/fortran_models/linear_elastic/UMAT_LinearElasticity.f90,linear_elastic,2143,71,free,small strain,6,4,ready_with_json_contract,1,,blocked,shape_unknown,Promoted variable DSIG is indexed in a stress region but has no confirmed shape.; Promoted variable SIG is indexed in a stress region but has no confirmed shape.,,,,0.05
+PlatypusBytes__ConstitutiveModels/fortran_models/mohr_coulomb/UMAT_MohrCoulomb.f,mohr_coulomb,40293,1296,fixed,small strain,6,18,ready_with_json_contract,27,io_write,generated_not_compiled,compile_failed,"umat_oti_helpers.f90:258:50:
+
+  258 |     If (REAL(fme).Lt.0 .And. REAL(fte).Lt.0 ) Goto 999.0D0
+      |                                                  1
+Error: Syntax error in GOTO statement at (1)
+umat_oti_helpers.f90:272:79:
+
+  272 |     If ( REAL(fm) .Lt. REAL(fmTol) .And. REAL(ft) .Lt. REAL(f",yes,no,"umat_oti_helpers.f90:258:50:
+
+  258 |     If (REAL(fme).Lt.0 .And. REAL(fte).Lt.0 ) Goto 999.0D0
+      |                                                  1
+Error: Syntax error in GOTO statement at (1)
+umat_oti_helpers.f90:272:79:
+
+  272 |     If ( REAL(fm) .Lt. REAL(fmTol) .And. REAL(ft) .Lt. REAL(f",1.67
+RafalMichalczyk__PavementDesign/Subroutines/umat_gmaxwell.for,Subroutines,4175,128,fixed,,,,,0,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.02
+RafalMichalczyk__PavementDesign/Subroutines/umat_ms_plast.for,Subroutines,4686,142,fixed,,,,,0,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.01
+ReachOptimum__mlpcp-interp-dic/abaqus/UMMDp_FLC.f,abaqus,283100,8995,fixed,small strain,6,499,ready_with_json_contract,91,common_block;data;io_open;io_write,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(i,j)=delast(i,j); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(i,j)=0.0; DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(i,j)=delast(i,j); DDSDDE assignment is",,,,2.08
+RitioL__PolyFatigueCrackSim/CPFEM-val/subroutines_revised.for,CPFEM-val,92296,2894,fixed,small strain,6,74,ready_with_json_contract,12,io_write,blocked,shape_unknown,Promoted variable F is indexed in a stress region but has no confirmed shape.,,,,0.4
+RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for,workplace,92007,2884,fixed,small strain,6,74,ready_with_json_contract,12,io_write,blocked,shape_unknown,Promoted variable F is indexed in a stress region but has no confirmed shape.,,,,0.42
+RitioL__PolyFatigueCrackSim/workplace/subroutines3_revised.for,workplace,93798,2950,fixed,small strain,6,75,ready_with_json_contract,13,common_block;io_write,blocked,shape_unknown,Promoted variable F is indexed in a stress region but has no confirmed shape.,,,,0.41
+Shi2oon__DIC2ABAQUS/OXFORD-UMAT/Example - Polycrytal with PROPS/OXFORD-UMAT.f,Example - Polycrytal with PROPS,18127,601,fixed,finite,6,6,ready_with_json_contract,2,io_write;module_use,blocked,module_names_unresolved,"IP_COUNT appears as IP_COUNT(...) on the stress path but is not declared anywhere in this source, which USEs INITIALIZATIONS, USERINPUTS, GLOBALVARIABLES, STRAINGRADIENTS, BACKSTRESS, MESHPROP, USEROUTPUTS, CPSOLVER without defining it. The transformer cannot read that module, so it cannot tell whet",,,,0.09
+Shi2oon__DIC2ABAQUS/OXFORD-UMAT/Example - Residual deformation/OXFORD-UMAT.f,Example - Residual deformation,9069,283,fixed,finite,6,4,ready_with_json_contract,1,module_use,blocked,module_names_unresolved,"IP_COUNT appears as IP_COUNT(...) on the stress path but is not declared anywhere in this source, which USEs USERINPUTS, GLOBALVARIABLES, INITIALIZATIONS, CPSOLVER without defining it. The transformer cannot read that module, so it cannot tell whether IP_COUNT is an array to promote or a call into i",,,,0.06
+Shi2oon__DIC2ABAQUS/OXFORD-UMAT/OXFORD-UMAT v2.26/OXFORD-UMAT.f,OXFORD-UMAT v2.26,18198,603,fixed,finite,6,6,ready_with_json_contract,2,io_write;module_use,blocked,module_names_unresolved,"IP_COUNT appears as IP_COUNT(...) on the stress path but is not declared anywhere in this source, which USEs INITIALIZATIONS, USERINPUTS, GLOBALVARIABLES, STRAINGRADIENTS, BACKSTRESS, MESHPROP, USEROUTPUTS, CPSOLVER without defining it. The transformer cannot read that module, so it cannot tell whet",,,,0.09
+Shi2oon__DIC2ABAQUS/OXFORD-UMAT/OXFORD-UMAT v3.1/OXFORD-UMAT.f,OXFORD-UMAT v3.1,9115,283,fixed,finite,6,4,ready_with_json_contract,1,module_use,blocked,module_names_unresolved,"IP_COUNT appears as IP_COUNT(...) on the stress path but is not declared anywhere in this source, which USEs USERINPUTS, GLOBALVARIABLES, INITIALIZATIONS, CPSOLVER without defining it. The transformer cannot read that module, so it cannot tell whether IP_COUNT is an array to promote or a call into i",,,,0.06
+Shi2oon__DIC2ABAQUS/OXFORD-UMAT/OXFORD-UMAT v3.3/OXFORD-UMAT.f,OXFORD-UMAT v3.3,10138,308,fixed,finite,6,4,ready_with_json_contract,1,module_use,blocked,module_names_unresolved,"IP_COUNT appears as IP_COUNT(...) on the stress path but is not declared anywhere in this source, which USEs USERINPUTS, GLOBALVARIABLES, INITIALIZATIONS, CPSOLVER without defining it. The transformer cannot read that module, so it cannot tell whether IP_COUNT is an array to promote or a call into i",,,,0.06
+Worlthen__20220314-abqus-simulation/abaqus/enhanced/enhanced_curing.for,enhanced,9651,274,fixed,small strain,6,7,ready_with_json_contract,5,io_write,semantic_checks_failed,semantic_check,Semantic check failed: stress_path_consumes_the_seed.,,,,0.09
+Worlthen__20220314-abqus-simulation/abaqus/original/array_with_two_pixel_z.for,original,19885,610,fixed,small strain,6,9,ready_with_json_contract,6,io_write,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/tmp.WRC2MdTMvz/t/original/array_with_two_pixel_z/baseline/array_with_two_pixel_z.for:19:2:
+
+   19 | #include 'aba_tcs_param.inc'
+      |  1
+Warning: Illegal preprocessor directive
+/tmp/tmp.WRC2MdTMvz/t/original/array_with_two_pixel_z/baseline/array_with_two_pixel_z.for:20:2:
+
+   20 ",no,no,"array_with_two_pixel_z_oti.for:19:2:
+
+   19 | #include 'aba_tcs_param.inc'
+      |  1
+Warning: Illegal preprocessor directive
+array_with_two_pixel_z_oti.for:20:2:
+
+   20 | #include 'PtkUtilitySubs.hdr'
+      |  1
+Warning: Illegal preprocessor directive
+array_with_two_pixel_z_oti.for:21:2:
+
+   21 | #",1.4
+Worlthen__20220314-abqus-simulation/abaqus/simplified/simplified_curing.for,simplified,6831,214,fixed,small strain,6,5,ready_with_json_contract,4,io_write,semantic_checks_failed,semantic_check,Semantic check failed: stress_path_consumes_the_seed.,,,,0.12
+Yutu0k__ABQflow/examples/07_SubroutineJob/subroutine/umat_elastic.for,subroutine,3699,106,fixed,small strain,6,1,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.21
+abuganza__BayesianCalibrationSkinGrowth/GOH_Example.f,abuganza__BayesianCalibrationSkinGrowth,52958,1432,fixed,finite,6,46,ready_with_json_contract,9,common_block;data,semantic_checks_failed,semantic_check,Semantic check failed: stress_oti_update_before_real_stress_extraction.,,,,0.68
+abuganza__BayesianCalibrationSkinGrowth/Iso_Example.f,abuganza__BayesianCalibrationSkinGrowth,17597,482,fixed,finite,6,24,ready_with_json_contract,6,common_block;data,transformed,none,,yes,yes,,1.47
+abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/GOH/BC1_50cc/GOH_50cc.f,BC1_50cc,52924,1432,fixed,finite,6,46,ready_with_json_contract,9,common_block;data,semantic_checks_failed,semantic_check,Semantic check failed: stress_oti_update_before_real_stress_extraction.,,,,0.69
+abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/GOH/BC1_55cc/GOH_55cc.f,BC1_55cc,52924,1432,fixed,finite,6,46,ready_with_json_contract,9,common_block;data,semantic_checks_failed,semantic_check,Semantic check failed: stress_oti_update_before_real_stress_extraction.,,,,0.63
+abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/Isotropic/BC1_50cc/Iso_50cc.f,BC1_50cc,17597,482,fixed,finite,6,24,ready_with_json_contract,6,common_block;data,transformed,none,,yes,yes,,1.46
+abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/Isotropic/BC1_60cc/Iso_60cc.f,BC1_60cc,17597,482,fixed,finite,6,24,ready_with_json_contract,6,common_block;data,transformed,none,,yes,yes,,1.62
+abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/Isotropic/BC2_60cc/Iso_60cc.f,BC2_60cc,17597,482,fixed,finite,6,24,ready_with_json_contract,6,common_block;data,transformed,none,,yes,yes,,1.51
+abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/SampleSimulation/GOH_Example.f,SampleSimulation,52924,1432,fixed,finite,6,46,ready_with_json_contract,9,common_block;data,semantic_checks_failed,semantic_check,Semantic check failed: stress_oti_update_before_real_stress_extraction.,,,,0.65
+abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/SampleSimulation/Iso_Example.f,SampleSimulation,17597,482,fixed,finite,6,24,ready_with_json_contract,6,common_block;data,transformed,none,,yes,yes,,1.49
+abuganza__UMAT_anisotropic_damage/UMAT_Tissue_2d_plane_strain.f,abuganza__UMAT_anisotropic_damage,25672,669,fixed,finite,6,45,ready_with_json_contract,5,,semantic_checks_failed,semantic_check,Semantic check failed: old_ddsdde_assignments_disabled.,,,,0.43
+abuganza__UMAT_anisotropic_damage/UMAT_Tissue_2d_plane_stress.f,abuganza__UMAT_anisotropic_damage,25725,662,fixed,finite,6,52,ready_with_json_contract,5,,semantic_checks_failed,semantic_check,Semantic check failed: old_ddsdde_assignments_disabled.,,,,0.35
+abuganza__UMAT_anisotropic_damage/UMAT_Tissue_3d.f,abuganza__UMAT_anisotropic_damage,25231,643,fixed,finite,6,58,ready_with_json_contract,5,,semantic_checks_failed,semantic_check,Semantic check failed: old_ddsdde_assignments_disabled.,,,,0.38
+adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb.f,Abaqus,4088,116,fixed,finite,6,20,ready_with_json_contract,1,module_use,blocked,module_names_unresolved,"ASABQARRAY appears as ASABQARRAY(...) on the stress path but is not declared anywhere in this source, which USEs TENSOR without defining it. The transformer cannot read that module, so it cannot tell whether ASABQARRAY is an array to promote or a call into it.; DET appears as DET(...) on the stress ",,,,0.06
+adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb_simple.f,Abaqus,2356,72,fixed,finite,6,10,ready_with_json_contract,1,module_use,blocked,module_names_unresolved,"ASABQARRAY appears as ASABQARRAY(...) on the stress path but is not declared anywhere in this source, which USEs TENSOR without defining it. The transformer cannot read that module, so it cannot tell whether ASABQARRAY is an array to promote or a call into it.; DEV appears as DEV(...) on the stress ",,,,0.05
+adtzlr__ttb/docs/examples/script_umat.f,examples,2661,102,fixed,small strain,6,0,needs_json_completion,1,io_write;module_use,anchors_not_located,selected_routine_is_not_an_abaqus_umat,selected_routine_is_not_an_abaqus_umat,,,,0.02
+ahartloper__UVC_MatMod/Abaqus/UVCmultiaxial.for,Abaqus,11548,313,fixed,small strain,6,39,ready_with_json_contract,1,,blocked,shape_unknown,Promoted variable ALPHA is indexed in a stress region but has no confirmed shape.; Promoted variable ALPHA_K is indexed in a stress region but has no confirmed shape.; Promoted variable ALPHA_UPD is indexed in a stress region but has no confirmed shape.; Promoted variable C_K is indexed in a stress ,,,,0.12
+ahartloper__UVC_MatMod/Abaqus/UVCplanestress.for,Abaqus,14070,368,fixed,small strain,6,38,ready_with_json_contract,1,,blocked,shape_unknown,Promoted variable ALPHA is indexed in a stress region but has no confirmed shape.; Promoted variable ALPHA_K is indexed in a stress region but has no confirmed shape.; Promoted variable ALPHA_TILDE is indexed in a stress region but has no confirmed shape.; Promoted variable ALPHA_TILDE_PRIME is inde,,,,0.13
+ahartloper__UVC_MatMod/Abaqus/UVCuniaxial.for,Abaqus,6412,179,fixed,small strain,6,21,ready_with_json_contract,1,,blocked,unsupported_intrinsic,Unsupported intrinsic SIGN is used with promoted variables on stress path line 99.; Unsupported intrinsic SIGN is used with promoted variables on stress path line 103.; Unsupported intrinsic SIGN is used with promoted variables on stress path line 104.; Unsupported intrinsic SIGN is used with promot,,,,0.04
+ahartloper__UVC_MatMod/Abaqus/UVCuniaxial_IS.for,Abaqus,9324,263,fixed,small strain,6,31,ready_with_json_contract,1,,blocked,unsupported_intrinsic,Unsupported intrinsic SIGN is used with promoted variables on stress path line 111.; Unsupported intrinsic SIGN is used with promoted variables on stress path line 115.; Unsupported intrinsic SIGN is used with promoted variables on stress path line 116.; Unsupported intrinsic SIGN is used with promo,,,,0.06
+artorg-unibe-ch__HFE/02_CODE/abq/UMAT_BIPHASIC.f,abq,55267,1729,fixed,finite,6,88,ready_with_json_contract,9,io_write,blocked,shape_unknown,Promoted variable DAM is indexed in a stress region but has no confirmed shape.; Promoted variable DDAM is indexed in a stress region but has no confirmed shape.; Promoted variable DOTP is indexed in a stress region but has no confirmed shape.; Promoted variable DRADK is indexed in a stress region b,,,,0.39
+bessagroup__f3dasm_simulate/src/f3dasm_simulate/abaqus/scriptbase/benchmark_abaqus_scripts/veni_mix_model.f,benchmark_abaqus_scripts,46347,1096,fixed,finite,6,91,ready_with_json_contract,9,,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE = R0; DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(i, j) = kmodvisc; DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(i,i) = kmodvisc + R2*gmodvisc; DDSDDE assi",,,,0.21
+bessagroup__f3dasm_simulate/src/f3dasm_simulate/abaqus/scriptbase/benchmark_abaqus_scripts/vevp_leonov_model.f,benchmark_abaqus_scripts,32777,781,fixed,finite,6,69,ready_with_json_contract,8,,blocked,shape_unknown,Promoted variable DELTASTRAIN is indexed in a stress region but has no confirmed shape.; Promoted variable ESTRAIN is indexed in a stress region but has no confirmed shape.; Promoted variable ESTRAIN0 is indexed in a stress region but has no confirmed shape.; Promoted variable GEQ is indexed in a st,,,,0.21
+bessagroup__f3dasm_simulate/src/f3dasm_simulate/abaqus/scriptbase/benchmark_abaqus_scripts/vp_leonov_model.f,benchmark_abaqus_scripts,20088,520,fixed,finite,6,43,ready_with_json_contract,7,,blocked,shape_unknown,Promoted variable ETRISTRAIN is indexed in a stress region but has no confirmed shape.,,,,0.14
+bmmbUPF__abaqusIVD/Sub_MechDisc.f,bmmbUPF__abaqusIVD,52415,1335,fixed,finite,6,91,ready_with_json_contract,8,common_block;io_open;io_write,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(1,1) = TWO*EG13*BBAR(1) + KW; DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(2,2) = TWO*EG13*BBAR(2) + KW; DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(3,3) =",,,,0.16
+bmmbUPF__abaqusIVD/Sub_TransDisc.f,bmmbUPF__abaqusIVD,85384,2097,fixed,small strain,6,7,needs_json_completion,6,common_block;io_open;io_read;io_write,anchors_not_located,missing_ddsdde_extraction_point,missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions,,,,0.3
+calculix__ccx_fff/src/umat.f,src,2859,93,fixed,small strain,6,1,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.19
+compas-dev__compas_fea2/data/umat/umat-hooke-iso.f,umat,1793,46,fixed,small strain,6,3,ready_with_json_contract,1,,generated_not_compiled,compile_failed,"umat-hooke-iso_oti.f:72:7:
+
+   72 |        SPEPS_OTI = SUM_OTI(EPS_OTI(1:3))
+      |       1
+Error: Unclassifiable statement at (1)
+",yes,no,"umat-hooke-iso_oti.f:72:7:
+
+   72 |        SPEPS_OTI = SUM_OTI(EPS_OTI(1:3))
+      |       1
+Error: Unclassifiable statement at (1)
+",1.17
+compas-dev__compas_fea2/data/umat/umat-hooke-transversaliso.f,umat,1880,49,fixed,small strain,6,2,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.3
+davidmorinNTNU__ABAQUS_subroutines/V_UMAT/UMAT.f,V_UMAT,1736,32,fixed,small strain,6,1,ready_with_json_contract,1,,blocked,delegate_not_defined_in_source,"UMAT delegates its whole body to UMAT_MODEL, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform.",,,,0.02
+ekurth__NEML/util/abaqus/nemlumat.f,abaqus,5696,201,fixed,small strain,6,3,ready_with_json_contract,4,io_write,semantic_checks_failed,semantic_check,Semantic check failed: stress_oti_update_before_real_stress_extraction.; Semantic check failed: stress_oti_update_before_ddsdde_extraction.; Semantic check failed: ddsdde_extraction_after_selected_stress_regions.; Semantic check failed: ddsdde_extraction_after_final_selected_stress_update.,,,,0.12
+glu46__3D_anisotropic_viscoelastic_model/OrthoWoodCreep_Column.for,glu46__3D_anisotropic_viscoelastic_model,13192,440,fixed,small strain,6,12,ready_with_json_contract,2,,blocked,shape_unknown,Promoted variable TRANSFORM_T is indexed in a stress region but has no confirmed shape.,,,,0.1
+glu46__3D_anisotropic_viscoelastic_model/OrthoWoodCreep_General.for,glu46__3D_anisotropic_viscoelastic_model,12703,409,fixed,small strain,6,12,ready_with_json_contract,2,,blocked,shape_unknown,Promoted variable TRANSFORM_T is indexed in a stress region but has no confirmed shape.,,,,0.09
+glu46__3D_anisotropic_viscoelastic_model/Ortho_WoodCreep_Cube.for,glu46__3D_anisotropic_viscoelastic_model,12758,410,fixed,small strain,6,12,ready_with_json_contract,2,,blocked,shape_unknown,Promoted variable TRANSFORM_T is indexed in a stress region but has no confirmed shape.,,,,0.1
+glu46__3D_anisotropic_viscoelastic_model/TIRockCreep_CANEY.for,glu46__3D_anisotropic_viscoelastic_model,13155,435,fixed,small strain,6,12,ready_with_json_contract,2,,blocked,shape_unknown,Promoted variable TRANSFORM_T is indexed in a stress region but has no confirmed shape.,,,,0.1
+glu46__3D_anisotropic_viscoelastic_model/TIRockCreep_GENERAL.for,glu46__3D_anisotropic_viscoelastic_model,12670,404,fixed,small strain,6,12,ready_with_json_contract,2,,blocked,shape_unknown,Promoted variable TRANSFORM_T is indexed in a stress region but has no confirmed shape.,,,,0.09
+harshaa765__UMATFile/UMAT.for,harshaa765__UMATFile,64881,2075,fixed,small strain,,64,,12,data;io_write,transform_crashed,scanner_error,"HelperLiftingError: Unsupported DATA statement shape: 'AMPLITUDE_FACTOR/ 0.08,0.22,0.22,0.30,0.38,0.38,0.16,0.38,0.45,0.16,0.45,0.38, 0.22,0.08,0.22,0.38,0.16,0.45,0.38,0.30,0.38,0.45,0.16,0.38, 0.22,0.22,0.08,0.38,0.45,0.16,0.45,0.38,0.16,0.38,0.38,0.30, 0.30,0.38,0.38,0.08,0.22,0.22,0.16,0.45,0.38",,,,0.62
+hwu12sluedu__MaterialAI-Workbench/examples/UMAT/ml_umat.f,UMAT,23868,641,fixed,small strain,6,44,ready_with_json_contract,12,,blocked,shape_unknown,Promoted variable CT is indexed in a stress region but has no confirmed shape.; Promoted variable DDEPS is indexed in a stress region but has no confirmed shape.; Promoted variable DEPS is indexed in a stress region but has no confirmed shape.; Promoted variable DETOT is indexed in a stress region b,,,,0.21
+hwu12sluedu__MaterialAI-Workbench/material_ai_workbench/resources/umat/ml_umat.f,umat,23868,641,fixed,small strain,6,44,ready_with_json_contract,12,,blocked,shape_unknown,Promoted variable CT is indexed in a stress region but has no confirmed shape.; Promoted variable DDEPS is indexed in a stress region but has no confirmed shape.; Promoted variable DEPS is indexed in a stress region but has no confirmed shape.; Promoted variable DETOT is indexed in a stress region b,,,,0.18
+ibf-RWTH__GA-Calibration/subroutine/Umat_CP.for,subroutine,26783,535,fixed,finite,6,48,ready_with_json_contract,2,io_write;module_use,blocked,module_names_unresolved,"BACKSTRESS appears as BACKSTRESS(...) on the stress path but is not declared anywhere in this source, which USEs GLOBALVARIABLES, MATERIALDATA, GLOBALVARIABLES2 without defining it. The transformer cannot read that module, so it cannot tell whether BACKSTRESS is an array to promote or a call into it",,,,0.17
+irfancn__Abaqus-UMAT-elastic/umat_elastic.for,irfancn__Abaqus-UMAT-elastic,1617,57,fixed,small strain,6,1,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.26
+irfancn__Abaqus-UMAT-viscoelastic/umat_viscoelastic.for,irfancn__Abaqus-UMAT-viscoelastic,2688,87,fixed,small strain,6,2,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.33
+j-machacek__numgeo-hardening-soil-bricks/src/hs-bricks-umat/umat.f90,hs-bricks-umat,7717,154,free,small strain,6,1,ready_with_json_contract,1,io_write;module_use,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/tmp.WRC2MdTMvz/t/hs-bricks-umat/umat/baseline/umat.f90:48:6:
+
+   48 |   use precision_, only: rk, ik
+      |      1
+Fatal Error: Cannot open module file ‘precision_.mod’ for reading at (1): No such file or directory
+compilation terminated.
+",no,no,"umat_oti.f90:42:1:
+
+   42 | subroutine umat(stress,statev,ddsdde,sse,spd,scd,rpl,ddsddt,drplde,drpldt, &
+      | 1
+Error: Non-numeric character in statement label at (1)
+umat_oti.f90:46:3:
+
+   46 |   USE otim6n1, OTI_MODULE_DP => DP, OTI_E1 => E1, OTI_E2 => E2, OTI_E3 => E3, OTI_E4 => E4, OTI_E5 => ",1.24
+j-machacek__numgeo-hardening-soil-bricks/src/incremental-driver/material_models.f90,incremental-driver,6439,133,free,small strain,6,1,ready_with_json_contract,1,io_write;module_use,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/tmp.WRC2MdTMvz/t/incremental-driver/material_models/baseline/material_models.f90:42:6:
+
+   42 |   use precision_, only: rk, ik
+      |      1
+Fatal Error: Cannot open module file ‘precision_.mod’ for reading at (1): No such file or directory
+compilation terminated.
+",no,no,"material_models_oti.f90:36:1:
+
+   36 | subroutine umat(stress,statev,ddsdde,sse,spd,scd,rpl,ddsddt,drplde,drpldt, &
+      | 1
+Error: Non-numeric character in statement label at (1)
+material_models_oti.f90:40:3:
+
+   40 |   USE otim6n1, OTI_MODULE_DP => DP, OTI_E1 => E1, OTI_E2 => E2, OTI_E3 => E3, OT",1.2
+jacojvr__UMATs/UMAT_framework/umat_comb.f,UMAT_framework,4269,155,fixed,small strain,6,17,ready_with_json_contract,1,io_write,transformed,none,,yes,yes,,1.4
+jacojvr__UMATs/UMAT_framework/umat_iso.f,UMAT_framework,3605,130,fixed,small strain,6,10,ready_with_json_contract,1,io_write,transformed,none,,yes,yes,,1.39
+jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/official_examples/umat/umat_elastic_official.f,umat,1964,64,fixed,small strain,6,4,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.32
+jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/official_examples/umat/umat_mises_plasticity_official.f,umat,5094,164,fixed,small strain,6,10,ready_with_json_contract,1,io_write,transformed,none,,yes,yes,,1.33
+jgomezc1__ABAQUS-US/INPUT_FILES/UEL8_ECL_AXY.for,INPUT_FILES,44840,1335,fixed,finite,6,27,ready_with_json_contract,26,,transformed,none,,yes,yes,,1.58
+jgomezc1__ABAQUS-US/SAMPLE/UEL9_VPDCO.for,SAMPLE,64383,1837,fixed,finite,6,95,ready_with_json_contract,29,io_write,transformed,none,,yes,yes,,2.84
+jgomezc1__ABAQUS-US/UELS/UEL8_ECL.for,UELS,43894,1301,fixed,finite,6,26,ready_with_json_contract,26,,transformed,none,,yes,yes,,1.58
+jgomezc1__ABAQUS-US/UELS/UEL8_ECO.for,UELS,44731,1280,fixed,finite,6,31,ready_with_json_contract,24,,transformed,none,,yes,yes,,1.58
+jgomezc1__ABAQUS-US/UELS/UEL8_PCLI.for,UELS,48634,1445,fixed,finite,6,72,ready_with_json_contract,26,io_write,transformed,none,,yes,yes,,2.14
+jgomezc1__ABAQUS-US/UELS/UEL8_PCLI_R.for,UELS,45671,1340,fixed,finite,6,46,ready_with_json_contract,25,,transformed,none,,yes,yes,,1.78
+jgomezc1__ABAQUS-US/UELS/UEL8_PCLK.for,UELS,52183,1533,fixed,finite,6,65,ready_with_json_contract,28,io_write,transformed,none,,yes,yes,,1.88
+jgomezc1__ABAQUS-US/UELS/UEL8_PCOI.for,UELS,56241,1644,fixed,finite,6,82,ready_with_json_contract,27,io_write,transformed,none,,yes,yes,,2.2
+jgomezc1__ABAQUS-US/UELS/UEL8_PCOR.for,UELS,52786,1568,fixed,finite,6,65,ready_with_json_contract,26,io_write,transformed,none,,yes,yes,,1.85
+jgomezc1__ABAQUS-US/UELS/UEL8_PCOR_KIN.for,UELS,54761,1604,fixed,finite,6,67,ready_with_json_contract,26,io_write,transformed,none,,yes,yes,,1.98
+jgomezc1__ABAQUS-US/UELS/UEL8_VPDCL.for,UELS,55172,1651,fixed,finite,6,79,ready_with_json_contract,29,io_write,transformed,none,,yes,yes,,1.98
+jgomezc1__ABAQUS-US/UELS/UEL8_VPDCO.for,UELS,59830,1757,fixed,finite,6,94,ready_with_json_contract,28,io_write,transformed,none,,yes,yes,,2.8
 jgomezc1__ABAQUS-US/UELS/UEL9_ECL.for,UELS,43314,1291,fixed,finite,6,26,ready_with_json_contract,26,,transformed,none,,yes,yes,,1.57
-jgomezc1__ABAQUS-US/UELS/UEL9_ECO.for,UELS,41971,1222,fixed,finite,6,31,ready_with_json_contract,23,,transformed,none,,yes,yes,,1.61
+jgomezc1__ABAQUS-US/UELS/UEL9_ECO.for,UELS,41971,1222,fixed,finite,6,31,ready_with_json_contract,23,,transformed,none,,yes,yes,,1.64
 jgomezc1__ABAQUS-US/UELS/UEL9_ECO_m.for,UELS,45112,1329,fixed,finite,6,34,ready_with_json_contract,25,,transformed,none,,yes,yes,,1.58
-mholla__growth/umats/umat_area_morph.f,umats,7025,169,fixed,finite,6,9,ready_with_json_contract,3,data,generated_not_compiled,compile_failed,"umat_area_morph_oti.f:117:9:
-
-  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_area_morph_oti.f:117:29:
-
-  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: Function ‘dstran’",yes,no,"umat_area_morph_oti.f:117:9:
-
-  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_area_morph_oti.f:117:29:
-
-  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: Function ‘dstran’",1.27
-mholla__growth/umats/umat_area_morph_Abaqus.f,umats,7193,168,fixed,finite,6,10,ready_with_json_contract,3,data,generated_not_compiled,compile_failed,"umat_area_morph_Abaqus_oti.f:118:9:
-
-  118 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_area_morph_Abaqus_oti.f:118:29:
-
-  118 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: Fun",yes,no,"umat_area_morph_Abaqus_oti.f:118:9:
-
-  118 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_area_morph_Abaqus_oti.f:118:29:
-
-  118 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: Fun",1.3
-mholla__growth/umats/umat_area_morph_orient.f,umats,9476,241,fixed,finite,6,15,ready_with_json_contract,4,data,generated_not_compiled,compile_failed,"umat_area_morph_orient_oti.f:174:9:
-
-  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_area_morph_orient_oti.f:174:29:
-
-  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: Fun",yes,no,"umat_area_morph_orient_oti.f:174:9:
-
-  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_area_morph_orient_oti.f:174:29:
-
-  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: Fun",1.37
-mholla__growth/umats/umat_area_stretch.f,umats,9968,253,fixed,finite,6,22,ready_with_json_contract,3,data,generated_not_compiled,compile_failed,"umat_area_stretch_oti.f:183:21:
-
-  183 |       XTOL_OTI = 1.D_OTI-12
-      |                     1
-Error: Missing exponent in real number at (1)
-umat_area_stretch_oti.f:154:9:
-
-  154 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT ty",yes,no,"umat_area_stretch_oti.f:183:21:
-
-  183 |       XTOL_OTI = 1.D_OTI-12
-      |                     1
-Error: Missing exponent in real number at (1)
-umat_area_stretch_oti.f:154:9:
-
-  154 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT ty",1.36
-mholla__growth/umats/umat_fiber_morph.f,umats,6805,169,fixed,finite,6,9,ready_with_json_contract,3,data,generated_not_compiled,compile_failed,"umat_fiber_morph_oti.f:117:9:
-
-  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_fiber_morph_oti.f:117:29:
-
-  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: Function ‘dstra",yes,no,"umat_fiber_morph_oti.f:117:9:
-
-  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_fiber_morph_oti.f:117:29:
-
-  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: Function ‘dstra",1.17
-mholla__growth/umats/umat_fiber_morph_Abaqus.f,umats,7010,170,fixed,finite,6,10,ready_with_json_contract,3,data,generated_not_compiled,compile_failed,"umat_fiber_morph_Abaqus_oti.f:119:9:
-
-  119 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_fiber_morph_Abaqus_oti.f:119:29:
-
-  119 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: F",yes,no,"umat_fiber_morph_Abaqus_oti.f:119:9:
-
-  119 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_fiber_morph_Abaqus_oti.f:119:29:
-
-  119 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: F",1.31
-mholla__growth/umats/umat_fiber_morph_orient.f,umats,9256,243,fixed,finite,6,15,ready_with_json_contract,4,data,generated_not_compiled,compile_failed,"umat_fiber_morph_orient_oti.f:174:9:
-
-  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_fiber_morph_orient_oti.f:174:29:
-
-  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: F",yes,no,"umat_fiber_morph_orient_oti.f:174:9:
-
-  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_fiber_morph_orient_oti.f:174:29:
-
-  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: F",1.29
-mholla__growth/umats/umat_fiber_stretch.f,umats,9603,258,fixed,finite,6,20,ready_with_json_contract,3,data,generated_not_compiled,compile_failed,"umat_fiber_stretch_oti.f:175:21:
-
-  175 |       XTOL_OTI = 1.D_OTI-12
-      |                     1
-Error: Missing exponent in real number at (1)
-umat_fiber_stretch_oti.f:234:12:
-
-  234 |      1growth
-      |            1
-Error: Symbol ‘cr_neggrowth’ at (1) has no IMPLICIT type; did you mean ‘cr_neg",yes,no,"umat_fiber_stretch_oti.f:175:21:
-
-  175 |       XTOL_OTI = 1.D_OTI-12
-      |                     1
-Error: Missing exponent in real number at (1)
-umat_fiber_stretch_oti.f:234:12:
-
-  234 |      1growth
-      |            1
-Error: Symbol ‘cr_neggrowth’ at (1) has no IMPLICIT type; did you mean ‘cr_neg",1.33
-mholla__growth/umats/umat_iso_Mandel.f,umats,8325,233,fixed,finite,6,20,ready_with_json_contract,3,data,generated_not_compiled,compile_failed,"umat_iso_Mandel_oti.f:168:21:
-
-  168 |       XTOL_OTI = 1.D_OTI-12
-      |                     1
-Error: Missing exponent in real number at (1)
-umat_iso_Mandel_oti.f:174:43:
-
-  174 |       cr_pos  = REAL(props(4)              ! critical STRESS_OTI for
-      |                                          ",yes,no,"umat_iso_Mandel_oti.f:168:21:
-
-  168 |       XTOL_OTI = 1.D_OTI-12
-      |                     1
-Error: Missing exponent in real number at (1)
-umat_iso_Mandel_oti.f:174:43:
-
-  174 |       cr_pos  = REAL(props(4)              ! critical STRESS_OTI for
-      |                                          ",1.39
-mholla__growth/umats/umat_iso_Mandel_v2.f,umats,8423,244,fixed,finite,6,18,ready_with_json_contract,2,data,semantic_checks_failed,semantic_check,Semantic check failed: old_ddsdde_assignments_disabled.,,,,0.18
-mholla__growth/umats/umat_iso_morph.f,umats,5941,158,fixed,finite,6,8,ready_with_json_contract,3,data,generated_not_compiled,compile_failed,"umat_iso_morph_oti.f:111:9:
-
-  111 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_iso_morph_oti.f:111:29:
-
-  111 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: Function ‘dstran’ a",yes,no,"umat_iso_morph_oti.f:111:9:
-
-  111 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_iso_morph_oti.f:111:29:
-
-  111 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: Function ‘dstran’ a",1.24
-mholla__growth/umats/umat_iso_morph_Abaqus.f,umats,5872,155,fixed,finite,6,9,ready_with_json_contract,3,data,generated_not_compiled,compile_failed,"umat_iso_morph_Abaqus_oti.f:113:9:
-
-  113 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_iso_morph_Abaqus_oti.f:113:29:
-
-  113 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: Funct",yes,no,"umat_iso_morph_Abaqus_oti.f:113:9:
-
-  113 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type
-umat_iso_morph_Abaqus_oti.f:113:29:
-
-  113 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |                             1
-Error: Funct",1.23
-mholla__growth/umats/umat_iso_stretch.f,umats,7467,213,fixed,finite,6,19,ready_with_json_contract,3,data,generated_not_compiled,compile_failed,"umat_iso_stretch_oti.f:164:21:
-
-  164 |       XTOL_OTI = 1.D_OTI-12
-      |                     1
-Error: Missing exponent in real number at (1)
-umat_iso_stretch_oti.f:135:9:
-
-  135 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type",yes,no,"umat_iso_stretch_oti.f:164:21:
-
-  164 |       XTOL_OTI = 1.D_OTI-12
-      |                     1
-Error: Missing exponent in real number at (1)
-umat_iso_stretch_oti.f:135:9:
-
-  135 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
-      |         1
-Error: Function ‘dstran_oti’ at (1) has no IMPLICIT type",1.43
-mholla__growth/umats/umat_neohooke.f,umats,4952,131,fixed,finite,6,7,ready_with_json_contract,3,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageH/umats/umat_neohooke/baseline/umat_neohooke.f:40:51:
+jgomezc1__ABAQUS-US/UELS/UEL9_PCLI.for,UELS,50279,1472,fixed,finite,6,73,ready_with_json_contract,26,io_write,transformed,none,,yes,yes,,2.15
+jgomezc1__ABAQUS-US/UELS/UEL9_PCLI_R.for,UELS,45792,1354,fixed,finite,6,48,ready_with_json_contract,25,io_write,transformed,none,,yes,yes,,1.77
+jgomezc1__ABAQUS-US/UELS/UEL9_PCLK.for,UELS,48272,1403,fixed,finite,6,53,ready_with_json_contract,25,io_write,transformed,none,,yes,yes,,1.89
+jgomezc1__ABAQUS-US/UELS/UEL9_PCOI.for,UELS,56479,1645,fixed,finite,6,82,ready_with_json_contract,27,io_write,transformed,none,,yes,yes,,2.28
+jgomezc1__ABAQUS-US/UELS/UEL9_PCON.for,UELS,53589,1600,fixed,finite,6,97,ready_with_json_contract,27,io_write,transformed,none,,yes,yes,,2.2
+jgomezc1__ABAQUS-US/UELS/UEL9_PCOR.for,UELS,53133,1573,fixed,finite,6,65,ready_with_json_contract,26,io_write,transformed,none,,yes,yes,,1.95
+jgomezc1__ABAQUS-US/UELS/UEL9_PCOR_KIN.for,UELS,54691,1603,fixed,finite,6,67,ready_with_json_contract,26,io_write,transformed,none,,yes,yes,,1.9
+jgomezc1__ABAQUS-US/UELS/UEL9_VPDCL.for,UELS,58067,1697,fixed,finite,6,80,ready_with_json_contract,29,io_write,transformed,none,,yes,yes,,1.98
+jgomezc1__ABAQUS-US/UELS/UEL9_VPDCL_R.for,UELS,58303,1670,fixed,finite,6,88,ready_with_json_contract,28,io_write,transformed,none,,yes,yes,,2.68
+jgomezc1__WAVES/SOURCE/matutil.for,SOURCE,4731,121,fixed,small strain,6,0,needs_json_completion,2,,anchors_not_located,missing_ddsdde_extraction_point,missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions,,,,0.04
+jpsferreira__UMAT-ABAQUS/src/_umat.for,src,13352,340,fixed,finite,6,13,ready_with_json_contract,1,common_block,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/tmp.WRC2MdTMvz/t/src/_umat/baseline/_umat.for:36: Error: Can't open included file 'PARAM_UMAT.INC'
+",no,no,"_umat_oti.for:39: Error: Can't open included file 'PARAM_UMAT.INC'
+",1.32
+jpsferreira__UMAT-ABAQUS/umat_general.for,jpsferreira__UMAT-ABAQUS,53155,1821,fixed,finite,6,78,ready_with_json_contract,49,common_block;io_open;io_read;io_write,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(I1,J1)=(ONE/TWO)*(PP1+PP2)",,,,0.43
+llnl__ExaConstit/src/umats/umat.f,umats,3988,127,fixed,small strain,6,1,ready_with_json_contract,1,,semantic_checks_failed,semantic_check,Semantic check failed: stress_path_consumes_the_seed.,,,,0.05
+luisez1988__Viscoplastic-NorSand/UMAT_Nor_Sand_Zamb.for,luisez1988__Viscoplastic-NorSand,81914,2185,fixed,,,,,6,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.08
+luisez1988__Viscoplastic-SSMC/UMAT_SSMCWStrainRates_Zambrano.for,luisez1988__Viscoplastic-SSMC,76115,2038,fixed,,,,,0,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.07
+mholla__BMMB24/simulations/input files/umat_transverseIsotropicStretch.f,input files,9203,210,fixed,finite,6,12,ready_with_json_contract,3,data,transformed,none,,yes,yes,,1.39
+mholla__growth/umats/umat_area_morph.f,umats,7025,169,fixed,finite,6,8,ready_with_json_contract,3,data,transformed,none,,yes,yes,,1.34
+mholla__growth/umats/umat_area_morph_Abaqus.f,umats,7193,168,fixed,finite,6,9,ready_with_json_contract,3,data,transformed,none,,yes,yes,,1.27
+mholla__growth/umats/umat_area_morph_orient.f,umats,9476,241,fixed,finite,6,14,ready_with_json_contract,4,data,transformed,none,,yes,yes,,1.42
+mholla__growth/umats/umat_area_stretch.f,umats,9968,253,fixed,finite,6,21,ready_with_json_contract,3,data,transformed,none,,yes,yes,,1.37
+mholla__growth/umats/umat_fiber_morph.f,umats,6805,169,fixed,finite,6,8,ready_with_json_contract,3,data,transformed,none,,yes,yes,,1.32
+mholla__growth/umats/umat_fiber_morph_Abaqus.f,umats,7010,170,fixed,finite,6,9,ready_with_json_contract,3,data,transformed,none,,yes,yes,,1.39
+mholla__growth/umats/umat_fiber_morph_orient.f,umats,9256,243,fixed,finite,6,14,ready_with_json_contract,4,data,transformed,none,,yes,yes,,1.42
+mholla__growth/umats/umat_fiber_stretch.f,umats,9603,258,fixed,finite,6,19,ready_with_json_contract,3,data,transformed,none,,yes,yes,,1.39
+mholla__growth/umats/umat_iso_Mandel.f,umats,8325,233,fixed,finite,6,19,ready_with_json_contract,3,data,transformed,none,,yes,yes,,1.38
+mholla__growth/umats/umat_iso_Mandel_v2.f,umats,8423,244,fixed,finite,6,17,ready_with_json_contract,2,data,semantic_checks_failed,semantic_check,Semantic check failed: old_ddsdde_assignments_disabled.,,,,0.16
+mholla__growth/umats/umat_iso_morph.f,umats,5941,158,fixed,finite,6,7,ready_with_json_contract,3,data,transformed,none,,yes,yes,,1.29
+mholla__growth/umats/umat_iso_morph_Abaqus.f,umats,5872,155,fixed,finite,6,8,ready_with_json_contract,3,data,transformed,none,,yes,yes,,1.42
+mholla__growth/umats/umat_iso_stretch.f,umats,7467,213,fixed,finite,6,18,ready_with_json_contract,3,data,transformed,none,,yes,yes,,1.36
+mholla__growth/umats/umat_neohooke.f,umats,4952,131,fixed,finite,6,6,ready_with_json_contract,3,data,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/tmp.WRC2MdTMvz/t/umats/umat_neohooke/baseline/umat_neohooke.f:40:51:
 
    40 |      #                         noel,npt,kstep,kinc))
       |                                                   1
-Error: Syntax error in SUB",no,no,"umat_neohooke_oti.f:40:51:
+Error: Syntax error in SUBROUTINE statement at (1)
+/tmp/tmp.WRC2MdTMvz/t/umats/umat_neohooke",no,no,"umat_neohooke_oti.f:40:51:
 
    40 |      #                         noel,npt,kstep,kinc))
       |                                                   1
 Error: Syntax error in SUBROUTINE statement at (1)
 umat_neohooke_oti.f:55:27:
 
-   55 |       real*8  stress(ntens), ddsdde(ntens,ntens), statev(nstatv)",1.25
-mholla__growth/umats/umat_neohooke_abaqus.f,umats,4712,123,fixed,finite,6,5,ready_with_json_contract,2,data,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(1,1)= vol + 2.d0/3.d0*mu*J53*b(1); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(2,2)= vol + 2.d0/3.d0*mu*J53*b(2); DDSDDE assignment is not covered by an old tangent replacement region: dds",,,,0.07
+   55 |       real*8  stress(ntens), ddsdde(ntens,ntens), statev(nstatv)",1.26
+mholla__growth/umats/umat_neohooke_abaqus.f,umats,4712,123,fixed,finite,6,4,ready_with_json_contract,2,data,blocked,delegate_not_defined_in_source,"UMAT delegates its whole body to UMAT_NEOHOOKE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform.",,,,0.07
+mholla__growth/umats/umat_ortho_stretch.f,umats,11137,283,fixed,finite,6,22,ready_with_json_contract,3,data,generated_not_compiled,compile_failed,"umat_ortho_stretch_oti.f:70:38:
+
+   70 |       real*8  lam, tcr, mu, cr(3), max(3), alpha(3), cr_pos(3),
+      |                                      1
+Error: Cannot change attributes of USE-associated symbol max at (1)
+umat_ortho_stretch_oti.f:200:9:
+
+  200 |       lam       = props(1)             ",yes,no,"umat_ortho_stretch_oti.f:70:38:
+
+   70 |       real*8  lam, tcr, mu, cr(3), max(3), alpha(3), cr_pos(3),
+      |                                      1
+Error: Cannot change attributes of USE-associated symbol max at (1)
+umat_ortho_stretch_oti.f:200:9:
+
+  200 |       lam       = props(1)             ",1.32
+mholla__growth/umats/umat_transverse.f,umats,12651,311,fixed,finite,6,33,ready_with_json_contract,3,data,transformed,none,,yes,yes,,1.59
+mkhadijeh26__UMAT_for_Viscoelastictiy/Fortran Code_Basic_Viscoelasticity/ABAQUS_DSR_EXAMPLE/ViscoelasticityCode3.f,ABAQUS_DSR_EXAMPLE,6428,184,fixed,small strain,6,13,ready_with_json_contract,1,,generated_not_compiled,compile_failed,"ViscoelasticityCode3_oti.f:80:21:
+
+   80 |       DO OTI_HI = 1, :
+      |                     1
+Error: Syntax error in iterator at (1)
+ViscoelasticityCode3_oti.f:82:9:
+
+   82 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+ViscoelasticityCode3_oti.f:83:21:
+
+   83 | ",yes,no,"ViscoelasticityCode3_oti.f:80:21:
+
+   80 |       DO OTI_HI = 1, :
+      |                     1
+Error: Syntax error in iterator at (1)
+ViscoelasticityCode3_oti.f:82:9:
+
+   82 |       END DO
+      |         1
+Error: Expecting END SUBROUTINE statement at (1)
+ViscoelasticityCode3_oti.f:83:21:
+
+   83 | ",1.39
+mkhadijeh26__UMAT_for_Viscoelastictiy/Fortran Code_Basic_Viscoelasticity/ViscoelasticityCode.f,Fortran Code_Basic_Viscoelasticity,9892,248,fixed,,,,,0,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.02
+mkhadijeh26__UMAT_for_Viscoelastictiy/Fortran Code_Basic_Viscoelasticity/ViscoelasticityCode2.f,Fortran Code_Basic_Viscoelasticity,7578,194,fixed,,,,,0,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.02
+mkhadijeh26__UMAT_for_Viscoelastictiy/Fortran Code_Basic_Viscoelasticity/ViscoelasticityCode3.f,Fortran Code_Basic_Viscoelasticity,6258,184,fixed,,,,,0,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.01
+mkhadijeh26__UMAT_for_Viscoelastictiy/Linking Mechanical with Aging Code/CoupledMechanicalAgingCode.f,Linking Mechanical with Aging Code,8338,216,fixed,,,,,0,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.02
+mkhadijeh26__UMAT_for_Viscoelastictiy/Linking Mechanical with Aging Code/CoupledMechanicalAgingCode2.f,Linking Mechanical with Aging Code,8574,234,fixed,,,,,0,,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.01
+mrkearden__abaqus_umat/ElasticSolve.F90,mrkearden__abaqus_umat,236954,5690,free,small strain,6,232,ready_with_json_contract,12,io_write;module_use;save,source_does_not_compile,source_does_not_compile,"as shipped: /tmp/tmp.WRC2MdTMvz/t/mrkearden__abaqus_umat/ElasticSolve/baseline/ElasticSolve.F90:44:6:
+
+   44 |   USE DefUtils
+      |      1
+Fatal Error: Cannot open module file ‘defutils.mod’ for reading at (1): No such file or directory
+compilation terminated.
+",no,no,"ElasticSolve_oti.F90:42:1:
+
+   42 | SUBROUTINE ElasticSolver_Init0( Model,Solver,dt,Transient )
+      | 1
+Error: Non-numeric character in statement label at (1)
+ElasticSolve_oti.F90:44:3:
+
+   44 |   USE DefUtils
+      |   1
+Error: Non-numeric character in statement label at (1)
+ElasticSolve_oti.F90:",6.33
+mrkearden__abaqus_umat/PlasticSolve.F90,mrkearden__abaqus_umat,247501,6171,free,,,,,30,io_write;module_use;save,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.46
+mrkearden__abaqus_umat/UMAT.F90,mrkearden__abaqus_umat,5868,134,free,small strain,6,1,needs_json_completion,1,module_use,anchors_not_located,missing_ddsdde_extraction_point,missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions,,,,0.02
+ngrilli__Oxford_Crystal_Plasticity/ExampleInputFiles/HCPnoTwin/umat.for,HCPnoTwin,13278,447,fixed,finite,6,3,ready_with_json_contract,1,io_write,semantic_checks_failed,other,"Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call KCURLET at lines [413], rewriting ['CURLFP', 'FP', 'GAUSS', 'GAUSSCOORDS'], but helper lifting is not yet safe here: Helper lifting requires source definitions for ['KCURLET', 'KFINDNEIGHBOURHOOD', ",,,,0.15
+patrickstaubach__abaqus-explicit/examples/_pile_driving/HPP_Staubach_explicit.f,_pile_driving,46446,1111,fixed,small strain,6,93,ready_with_json_contract,6,io_write;module_use,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE = zero; DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE = map2ddsdde(Mstiff,ntens)",,,,0.24
+patrickstaubach__abaqus-explicit/src/HPP_Staubach_explicit.f,src,46446,1111,fixed,small strain,6,93,ready_with_json_contract,6,io_write;module_use,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE = zero; DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE = map2ddsdde(Mstiff,ntens)",,,,0.23
+peer-open-source__xara/SRC/domain/peri/umat.for,peri,1430,47,fixed,small strain,6,4,ready_with_json_contract,1,module_use,blocked,module_names_unresolved,"ELE_BOND_SUM_STATE_FEM appears as ELE_BOND_SUM_STATE_FEM(...) on the stress path but is not declared anywhere in this source, which USEs KVISUAL without defining it. The transformer cannot read that module, so it cannot tell whether ELE_BOND_SUM_STATE_FEM is an array to promote or a call into it.; E",,,,0.04
+phhannequart__UMAT_sma_hannequart/UMAT_sma_hannequart.for,phhannequart__UMAT_sma_hannequart,10863,348,fixed,small strain,6,14,ready_with_json_contract,2,,semantic_checks_failed,semantic_check,Semantic check failed: integer_literals_normalized_in_oti_expressions.,,,,0.14
+rhdodds__warp3d/src/user_routines_umat.f,src,47222,596,fixed,small strain,6,52,ready_with_json_contract,6,io_write,generated_not_compiled,compile_failed,"user_routines_umat_oti.f:253:9:
+
+  253 |          STRESS_OTI(OTI_I) = STRESS(OTI_I)
+      |         1
+Error: Function ‘stress_oti’ at (1) has no IMPLICIT type
+user_routines_umat_oti.f:335:6:
+
+  335 |       CONSTANT_HARD_OTI = HARD_OTI
+      |      1
+Error: Incompatible ranks 0 and 1 in assignment at",yes,no,"user_routines_umat_oti.f:253:9:
+
+  253 |          STRESS_OTI(OTI_I) = STRESS(OTI_I)
+      |         1
+Error: Function ‘stress_oti’ at (1) has no IMPLICIT type
+user_routines_umat_oti.f:335:6:
+
+  335 |       CONSTANT_HARD_OTI = HARD_OTI
+      |      1
+Error: Incompatible ranks 0 and 1 in assignment at",1.42
+sahmotaman__TMM-FE-Simulation/Abaqus User Material Subroutines/Abaqus Standard - UMAT/UMAT - Strain-based Return Mapping - Fully-Implicit/umat_subroutine.for,UMAT - Strain-based Return Mapping - Fully-Implicit,23877,391,fixed,,,,,0,io_write,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.03
+sahmotaman__TMM-FE-Simulation/Abaqus User Material Subroutines/Abaqus Standard - UMAT/UMAT - Strain-based Return Mapping - Semi-Implicit/umat_subroutine.for,UMAT - Strain-based Return Mapping - Semi-Implicit,22069,357,fixed,,,,,0,io_write,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.02
+sahmotaman__TMM-FE-Simulation/Abaqus User Material Subroutines/Abaqus Standard - UMAT/UMAT - Stress-based Return Mapping - Fully-Implicit/umat_subroutine.for,UMAT - Stress-based Return Mapping - Fully-Implicit,22594,384,fixed,,,,,0,io_write,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.02
+sahmotaman__TMM-FE-Simulation/Abaqus User Material Subroutines/Abaqus Standard - UMAT/UMAT - Stress-based Return Mapping - Semi-Implicit/umat_subroutine.for,UMAT - Stress-based Return Mapping - Semi-Implicit,21192,358,fixed,,,,,0,io_write,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.01
+simoneponcioni__HFE/02_CODE/abq/UMAT_BIPHASIC.f,abq,55279,1730,fixed,finite,6,88,ready_with_json_contract,9,io_write,blocked,shape_unknown,Promoted variable DAM is indexed in a stress region but has no confirmed shape.; Promoted variable DDAM is indexed in a stress region but has no confirmed shape.; Promoted variable DOTP is indexed in a stress region but has no confirmed shape.; Promoted variable DRADK is indexed in a stress region b,,,,0.5
+tengzhang48__CoupFE/examples/neo_hookean_umat/neo_hookean_umat.for,neo_hookean_umat,43767,1371,fixed,finite,6,48,ready_with_json_contract,29,data,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(i,j) = c(voigt_i(i), voigt_j(i), voigt_i(j), voigt_j(j)); DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(j,i) = DDSDDE(i,j)",,,,0.26
+tengzhang48__CoupFE/examples/ogden_umat/ogden_umat.for,ogden_umat,45585,1419,fixed,finite,6,49,ready_with_json_contract,29,data,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(i,j) = c(voigt_i(i), voigt_j(i), voigt_i(j), voigt_j(j)); DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(j,i) = DDSDDE(i,j)",,,,0.28
+tengzhang48__CoupFE/examples/small_strain_j2_umat/small_strain_j2.for,small_strain_j2_umat,55324,1789,fixed,small strain,6,16,ready_with_json_contract,35,,blocked,shape_unknown,Promoted variable DSTRAIN_Z is indexed in a stress region but has no confirmed shape.; Promoted variable SIGMA_NEW_Z is indexed in a stress region but has no confirmed shape.,,,,0.37
+tengzhang48__CoupFE/examples/small_strain_viscoelastic_umat/small_strain_viscoelastic.for,small_strain_viscoelastic_umat,55621,1793,fixed,small strain,6,15,ready_with_json_contract,35,,blocked,shape_unknown,Promoted variable DSTRAIN_Z is indexed in a stress region but has no confirmed shape.; Promoted variable EPS_V_NEW_Z is indexed in a stress region but has no confirmed shape.; Promoted variable SIGMA_NEW_Z is indexed in a stress region but has no confirmed shape.,,,,0.34
+tengzhang48__abaqus_ufl/examples/_template/template_umat.for,_template,61908,2020,fixed,small strain,6,20,ready_with_json_contract,38,data,blocked,shape_unknown,Promoted variable DSTRAIN_Z is indexed in a stress region but has no confirmed shape.; Promoted variable SIGMA_NEW_Z is indexed in a stress region but has no confirmed shape.,,,,0.35
+tengzhang48__abaqus_ufl/examples/neo_hookean_umat/neo_hookean_umat.for,neo_hookean_umat,52761,1669,fixed,finite,6,72,ready_with_json_contract,32,data,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(i,j) = c(voigt_i(i), voigt_j(i), voigt_i(j), voigt_j(j))",,,,0.26
+tengzhang48__abaqus_ufl/examples/ogden_umat/ogden_umat.for,ogden_umat,54635,1720,fixed,finite,6,85,ready_with_json_contract,32,data,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(i,j) = c(voigt_i(i), voigt_j(i), voigt_i(j), voigt_j(j))",,,,0.28
+tengzhang48__abaqus_ufl/examples/small_strain_j2_umat/small_strain_j2.for,small_strain_j2_umat,64605,2093,fixed,small strain,6,24,ready_with_json_contract,38,data,blocked,shape_unknown,Promoted variable DSTRAIN_Z is indexed in a stress region but has no confirmed shape.; Promoted variable SIGMA_NEW_Z is indexed in a stress region but has no confirmed shape.,,,,0.4
+tengzhang48__abaqus_ufl/examples/small_strain_viscoelastic_umat/small_strain_viscoelastic.for,small_strain_viscoelastic_umat,65045,2098,fixed,small strain,6,23,ready_with_json_contract,38,data,blocked,shape_unknown,Promoted variable DSTRAIN_Z is indexed in a stress region but has no confirmed shape.; Promoted variable EPS_V_NEW_Z is indexed in a stress region but has no confirmed shape.; Promoted variable SIGMA_NEW_Z is indexed in a stress region but has no confirmed shape.,,,,0.37
+tmfrln__paraqus/examples/example_abaqus_extrusion_umat.f,examples,32622,871,fixed,finite,6,33,ready_with_json_contract,20,io_write,generated_not_compiled,compile_failed,"example_abaqus_extrusion_umat_oti.f:95:44:
+
+   95 |             CALL CALCDET33(DFGRD1_OTI, detJ)
+      |                                            1
+Warning: Type mismatch in argument ‘a’ at (1); passed TYPE(onumm6n1) to REAL(8) [-Wargument-mismatch]
+example_abaqus_extrusion_umat_oti.f:103:19:
+
+  1",yes,no,"example_abaqus_extrusion_umat_oti.f:95:44:
+
+   95 |             CALL CALCDET33(DFGRD1_OTI, detJ)
+      |                                            1
+Warning: Type mismatch in argument ‘a’ at (1); passed TYPE(onumm6n1) to REAL(8) [-Wargument-mismatch]
+example_abaqus_extrusion_umat_oti.f:103:19:
+
+  1",1.44
+toruinaba__manforge/archives/fortran_fixed_form/yu_kinematic_3d_abaqus.for,fortran_fixed_form,63372,1858,fixed,finite,6,133,ready_with_json_contract,35,io_write,semantic_checks_failed,other,"Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call ROTSIG at lines [1742], rewriting ['THETA_N', 'THETA_ROT'], but helper lifting is not yet safe here: Helper lifting requires source definitions for ['ROTSIG']. The completed JSON rewrites those call",,,,0.57
+toruinaba__manforge/archives/fortran_fixed_form/yu_kinematic_3d_fixed.for,fortran_fixed_form,63733,1829,fixed,small strain,6,133,ready_with_json_contract,34,io_write,semantic_checks_failed,other,"Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call ROTSIG at lines [1713], rewriting ['THETA_N', 'THETA_ROT'], but helper lifting is not yet safe here: Helper lifting requires source definitions for ['ROTSIG']. The completed JSON rewrites those call",,,,0.52
+toruinaba__manforge/fortran/j2_isotropic_3d.f90,fortran,14727,439,free,small strain,,28,,4,,transform_crashed,scanner_error,"HelperLiftingError: Cannot parse helper header for j2_isotropic_3d: 'subroutine j2_isotropic_3d(E, nu, sigma_y0, H, &'",,,,0.14
+toruinaba__manforge/fortran/yu_kinematic_3d.f90,fortran,65928,1772,free,small strain,6,136,ready_with_json_contract,33,io_write,semantic_checks_failed,other,"Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call ROTSIG at lines [1665], rewriting ['THETA_N', 'THETA_ROT'], but helper lifting is not yet safe here: Helper lifting requires source definitions for ['ROTSIG']. The completed JSON rewrites those call",,,,0.44
+toruinaba__manforge/fortran/yu_kinematic_ps.f90,fortran,59102,1570,free,small strain,6,121,ready_with_json_contract,32,io_write,semantic_checks_failed,other,"Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call ROTSIG at lines [1460], rewriting ['THETA_N', 'THETA_ROT'], but helper lifting is not yet safe here: Helper lifting requires source definitions for ['ROTSIG']. The completed JSON rewrites those call",,,,0.39

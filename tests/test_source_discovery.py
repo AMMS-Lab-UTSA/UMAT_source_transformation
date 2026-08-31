@@ -582,3 +582,33 @@ def test_a_matched_readme_is_never_fetched():
     assert "r1" not in client.blobs_read, "a README was fetched"
     admitted = [r.path for r in survey.rows if r.outcome == "candidate"]
     assert admitted == ["umat.for"], admitted
+
+
+def test_a_traceback_does_not_carry_this_machine_into_published_evidence():
+    """A Python traceback quotes the absolute path of every frame.
+
+    Recording one verbatim puts /home/<someone>/... into a published record,
+    which means nothing on another machine and is what
+    audit_repository_standards refuses. What is dropped is the part that is a
+    property of the machine; the frames stay identifiable.
+    """
+    import sys as _sys
+    _sys.path.insert(0, str(REPO_ROOT / "tools"))
+    from run_discovery_triage import without_machine_paths
+
+    raw = (f'  File "{REPO_ROOT}/src/umat_oti/transform/x.py", line 4\n'
+           f'  File "{Path.home()}/elsewhere/y.py", line 9\n')
+    cleaned = without_machine_paths(raw)
+    assert str(REPO_ROOT) not in cleaned
+    assert str(Path.home()) not in cleaned
+    assert "<repo>/src/umat_oti/transform/x.py" in cleaned
+    assert "y.py" in cleaned, "the frame is still identifiable"
+
+
+def test_the_published_triage_carries_no_machine_path():
+    """The record itself, not only the function that writes it."""
+    published = REPO_ROOT / "paper_results" / "discovery" / "discovery_triage.json"
+    if not published.is_file():
+        pytest.skip("triage has not been published")
+    text = published.read_text(encoding="utf-8")
+    assert "/home/" not in text

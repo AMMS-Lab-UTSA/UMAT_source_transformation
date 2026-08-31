@@ -113,6 +113,26 @@ def _classify(text: str) -> str:
 
 
 
+
+def without_machine_paths(text: str) -> str:
+    """``text`` with this machine's directories replaced by named roots.
+
+    A Python traceback quotes the absolute path of every frame, so recording
+    one puts ``/home/<someone>/...`` into published evidence -- which means
+    nothing on another machine and is what audit_repository_standards refuses.
+    The frames are still identifiable: what is dropped is the part that is a
+    property of the machine rather than of the failure.
+    """
+    if not text:
+        return text
+    for root, name in ((str(REPO_ROOT), "<repo>"),
+                       (str(Path.home()), "<home>")):
+        if root and root != "/":
+            text = text.replace(root, name)
+    return text
+
+
+
 def _original_compiles(source: Path, work: Path) -> tuple[bool, str]:
     """Whether the untransformed source compiles here, and why not if it does not.
 
@@ -227,7 +247,7 @@ def triage_one(source: Path, work_root: Path, *, ntens: int = 6,
         row.update(stage="transform_crashed", blocker_kind="scanner_error",
                    blocker=f"{type(exc).__name__}: {exc}"[:300],
                    seconds=round(time.time() - started, 2))
-        row["traceback"] = traceback.format_exc()[-400:]
+        row["traceback"] = without_machine_paths(traceback.format_exc())[-400:]
         return row
 
     row["ntens"] = ntens
