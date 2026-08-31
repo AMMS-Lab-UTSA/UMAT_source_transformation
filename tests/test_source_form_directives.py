@@ -32,6 +32,15 @@ class TestAnExplicitDirectiveWins:
         text = "!DIR$ FIXEDFORM\n      SUBROUTINE UMAT(STRESS)\n      END\n"
         assert detect_source_form(tmp_path / "umat.f90", text) == "fixed"
 
+    def test_the_dec_spelling_is_read_too(self, tmp_path):
+        """ifort honours !DEC$ as well as !DIR$; sources in the wild use both."""
+        text = "!DEC$ FREEFORM\n" + FREE_BODY
+        assert detect_source_form(tmp_path / "umat.for", text) == "free"
+
+    def test_the_dec_fixedform_spelling_is_read_too(self, tmp_path):
+        text = "!DEC$ FIXEDFORM\n      SUBROUTINE UMAT(STRESS)\n      END\n"
+        assert detect_source_form(tmp_path / "umat.f90", text) == "fixed"
+
     def test_the_c_prefixed_spelling_is_read_too(self, tmp_path):
         text = "CDIR$ FREEFORM\n" + FREE_BODY
         assert detect_source_form(tmp_path / "umat.f", text) == "free"
@@ -84,3 +93,48 @@ def test_a_real_source_that_declares_freeform_is_read_as_a_umat():
         pytest.skip("that source is not in this cache")
     analysis = analyze_fortran_source(candidate)
     assert analysis.get("has_subroutine_umat") is True
+
+
+class TestATabInTheLabelFieldAdvancesToColumnSeven:
+    """Both ifort and gfortran accept it, and sources in the wild use it.
+
+    Column arithmetic on the raw text reads a tab-indented statement as
+    beginning somewhere inside its own first word, so the file appears to
+    declare nothing at all.
+    """
+
+    def _expand(self, line: str) -> str:
+        from umat_oti.fortran.parser import expand_fixed_form_tabs
+        return expand_fixed_form_tabs(line)
+
+    def test_a_leading_tab_puts_the_statement_at_column_seven(self):
+        assert self._expand("\tSUBROUTINE UMAT(X)") == "      SUBROUTINE UMAT(X)"
+
+    def test_a_digit_after_the_tab_is_a_continuation_marker(self):
+        """The other half of the convention: the digit belongs in column 6."""
+        assert self._expand("\t1 CONTINUED")[5] == "1"
+
+    def test_a_zero_after_the_tab_is_not_a_continuation(self):
+        assert self._expand("\t0 STATEMENT")[5] != "0"
+
+    def test_a_line_without_a_tab_is_untouched(self):
+        line = "      SUBROUTINE UMAT(X)"
+        assert self._expand(line) == line
+
+    def test_a_tab_inside_the_statement_is_left_alone(self):
+        """Beyond the label field a tab is ordinary whitespace in a statement."""
+        line = "      A = B\tC"
+        assert self._expand(line) == line
+
+    def test_a_comment_marker_stays_in_column_one(self):
+        assert self._expand("C\tcomment").startswith("C")
+
+    def test_a_tab_indented_umat_is_found_by_the_scanner(self, tmp_path):
+        source = tmp_path / "tabbed.for"
+        source.write_text("C     header\n"
+                          "\t   SUBROUTINE UMAT(STRESS,DSTRAN)\n"
+                          "\t   DIMENSION STRESS(6),DSTRAN(6)\n"
+                          "\t   STRESS(1) = DSTRAN(1)\n"
+                          "\t   END\n", encoding="utf-8")
+        from umat_oti.fortran.scanner import analyze_fortran_source
+        assert analyze_fortran_source(source).get("has_subroutine_umat") is True
