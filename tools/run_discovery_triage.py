@@ -44,6 +44,25 @@ DEFAULT_CACHE = Path(os.environ.get("UMAT_OTI_DISCOVERY_CACHE")
                      or REPO_ROOT.parent / "discovery_cache")
 DEFAULT_OUT = REPO_ROOT / "paper_results" / "discovery"
 
+sys.path.insert(0, str(REPO_ROOT / "tools"))
+from discover_umat_sources import _FORTRAN_SUFFIXES, _has_umat_entry  # noqa: E402
+
+
+def _looks_like_a_umat(path: Path) -> bool:
+    """Cheap check, for reporting only: does this file declare a UMAT?
+
+    Used to separate "cached but not triaged because the form is unknown" from
+    "cached because it sat beside one that was" -- a README is not a hole in
+    the triage, a UMAT shipped as ``.inc`` is.
+    """
+    try:
+        if path.stat().st_size > 2_000_000:
+            return False
+        return _has_umat_entry(path.read_text(errors="replace"))
+    except OSError:
+        return False
+
+
 COLUMNS = (
     "source", "repository", "bytes", "lines", "form", "kinematics", "ntens", "nstatv_hint",
     "anchor_status",
@@ -280,14 +299,28 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--limit", type=int, default=0)
     args = parser.parse_args(argv)
 
+    # The same suffix list discovery admits, imported rather than repeated:
+    # the two lists drifted, and a source cached under .f03 or .f77 was
+    # triaged by nothing and appeared in no count at all.
     sources = sorted(p for p in args.cache_dir.rglob("*")
-                     if p.suffix.lower() in {".f", ".for", ".f90", ".f95", ".ftn"})
+                     if p.is_file() and p.suffix.lower() in set(_FORTRAN_SUFFIXES))
+    # A UMAT shipped as .inc or .txt is a real source that this triage cannot
+    # read, because the transform takes its form decision from the suffix.
+    # Counted and named, so the hole is a number in the summary rather than an
+    # absence: a file nothing triages is otherwise indistinguishable from a
+    # file that was never cached.
+    skipped = sorted(
+        str(p.relative_to(args.cache_dir)) for p in args.cache_dir.rglob("*")
+        if p.is_file() and p.suffix.lower() not in set(_FORTRAN_SUFFIXES)
+        and p.suffix.lower() != ".inp" and _looks_like_a_umat(p))
     if args.limit:
         sources = sources[:args.limit]
     if not sources:
         print(f"no cached sources under {args.cache_dir}")
         return 2
-    print(f"  {len(sources)} cached sources to triage")
+    print(f"  {len(sources)} cached sources to triage"
+          + (f"; {len(skipped)} declare a UMAT under a suffix this triage "
+             f"cannot assign a source form to" if skipped else ""))
 
     rows: list[dict[str, Any]] = []
     for index, source in enumerate(sources, start=1):
@@ -301,6 +334,8 @@ def main(argv: list[str] | None = None) -> int:
     kinds = Counter(r["blocker_kind"] for r in rows if r["blocker_kind"] not in ("none", ""))
     summary = {
         "sources": len(rows),
+        "not_triaged_unknown_source_form": skipped,
+        "not_triaged_unknown_source_form_count": len(skipped),
         "by_stage": dict(stages.most_common()),
         "by_blocker_kind": dict(kinds.most_common()),
         "transformed": stages.get("transformed", 0),
