@@ -16,7 +16,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "uel",
-      "seconds": 2.43,
+      "seconds": 2.48,
       "source": "HIT-FSW-314__abaqus/abaqus-umat/uel/UEL9_VPDCL.for",
       "stage": "transformed"
     },
@@ -36,7 +36,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Th001",
-      "seconds": 1.77,
+      "seconds": 1.75,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/BodyForce-Growth-2Stages.for",
       "stage": "transformed"
     },
@@ -56,7 +56,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Th001",
-      "seconds": 1.59,
+      "seconds": 1.68,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGravity.for",
       "stage": "transformed"
     },
@@ -76,7 +76,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Th001",
-      "seconds": 1.61,
+      "seconds": 1.68,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGrowth.for",
       "stage": "transformed"
     },
@@ -96,7 +96,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Th002",
-      "seconds": 1.71,
+      "seconds": 1.66,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/BodyForce-Growth-2Stages.for",
       "stage": "transformed"
     },
@@ -116,7 +116,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Th002",
-      "seconds": 1.73,
+      "seconds": 1.79,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for",
       "stage": "transformed"
     },
@@ -136,7 +136,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Th002",
-      "seconds": 1.6,
+      "seconds": 1.61,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGrowth.for",
       "stage": "transformed"
     },
@@ -156,7 +156,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Th005",
-      "seconds": 1.77,
+      "seconds": 1.56,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/BodyForce-Growth-2Stages.for",
       "stage": "transformed"
     },
@@ -176,7 +176,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Th005",
-      "seconds": 1.64,
+      "seconds": 1.58,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/PureGrowth.for",
       "stage": "transformed"
     },
@@ -236,7 +236,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Th01",
-      "seconds": 1.67,
+      "seconds": 1.56,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGravity.for",
       "stage": "transformed"
     },
@@ -296,7 +296,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Th01",
-      "seconds": 1.73,
+      "seconds": 1.72,
       "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th01/PureGrowth.for",
       "stage": "transformed"
     },
@@ -316,7 +316,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "inputFile",
-      "seconds": 1.38,
+      "seconds": 1.35,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-EX.for",
       "stage": "transformed"
     },
@@ -336,7 +336,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "inputFile",
-      "seconds": 1.38,
+      "seconds": 1.43,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-Z2.for",
       "stage": "transformed"
     },
@@ -356,7 +356,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "inputFile",
-      "seconds": 1.38,
+      "seconds": 1.34,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-frac.for",
       "stage": "transformed"
     },
@@ -396,7 +396,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "InputFile",
-      "seconds": 1.5,
+      "seconds": 1.43,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur2.for",
       "stage": "transformed"
     },
@@ -416,7 +416,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "InputFile",
-      "seconds": 1.41,
+      "seconds": 1.43,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur3.for",
       "stage": "transformed"
     },
@@ -436,7 +436,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Example1",
-      "seconds": 1.42,
+      "seconds": 1.39,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example1/Growth-MinSur1.for",
       "stage": "transformed"
     },
@@ -456,7 +456,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Example2",
-      "seconds": 1.48,
+      "seconds": 1.35,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example2/Growth-MinSur2.for",
       "stage": "transformed"
     },
@@ -496,7 +496,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "ABAQUS_files",
-      "seconds": 1.35,
+      "seconds": 1.48,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Bunny/Part1/ABAQUS_files/Growth-Bunny-Part1.for",
       "stage": "transformed"
     },
@@ -516,7 +516,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "10",
-      "seconds": 1.45,
+      "seconds": 1.51,
       "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Catenoid/10/Growth-Catenoid.for",
       "stage": "transformed"
     },
@@ -536,7 +536,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Bending",
-      "seconds": 1.45,
+      "seconds": 1.27,
       "source": "Jeff97__growth-of-circular-plate/Bending/Growth-CASE1.for",
       "stage": "transformed"
     },
@@ -576,7 +576,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Bending",
-      "seconds": 1.38,
+      "seconds": 1.32,
       "source": "Jeff97__growth-of-circular-plate/Bending/Growth-CASE3.for",
       "stage": "transformed"
     },
@@ -596,7 +596,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Combined",
-      "seconds": 1.41,
+      "seconds": 1.35,
       "source": "Jeff97__growth-of-circular-plate/Combined/Growth-CASE1.for",
       "stage": "transformed"
     },
@@ -636,7 +636,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Combined",
-      "seconds": 1.44,
+      "seconds": 1.43,
       "source": "Jeff97__growth-of-circular-plate/Combined/Growth-CASE3.for",
       "stage": "transformed"
     },
@@ -656,7 +656,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "ShapeProgramming",
-      "seconds": 1.35,
+      "seconds": 1.45,
       "source": "Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE1.for",
       "stage": "transformed"
     },
@@ -676,7 +676,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "ShapeProgramming",
-      "seconds": 1.44,
+      "seconds": 1.35,
       "source": "Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE2.for",
       "stage": "transformed"
     },
@@ -696,7 +696,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "ShapeProgramming",
-      "seconds": 1.36,
+      "seconds": 1.22,
       "source": "Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE3.for",
       "stage": "transformed"
     },
@@ -716,7 +716,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "ShapeProgramming",
-      "seconds": 1.41,
+      "seconds": 1.33,
       "source": "Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE4.for",
       "stage": "transformed"
     },
@@ -736,7 +736,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "ShapeProgramming",
-      "seconds": 1.45,
+      "seconds": 1.4,
       "source": "Jeff97__growth-of-circular-plate/ShapeProgramming/Growth-CASE5.for",
       "stage": "transformed"
     },
@@ -756,7 +756,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "Wrinkle",
-      "seconds": 1.37,
+      "seconds": 1.34,
       "source": "Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-102.for",
       "stage": "transformed"
     },
@@ -776,7 +776,7 @@
       "ntens": 6,
       "original_compiles": "",
       "repository": "Abaqus",
-      "seconds": 0.09,
+      "seconds": 0.12,
       "source": "adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb.f",
       "stage": "blocked"
     },
@@ -796,7 +796,7 @@
       "ntens": 6,
       "original_compiles": "",
       "repository": "Abaqus",
-      "seconds": 0.04,
+      "seconds": 0.05,
       "source": "adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb_simple.f",
       "stage": "blocked"
     },
@@ -836,7 +836,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "INPUT_FILES",
-      "seconds": 1.55,
+      "seconds": 1.54,
       "source": "jgomezc1__ABAQUS-US/INPUT_FILES/UEL8_ECL_AXY.for",
       "stage": "transformed"
     },
@@ -856,7 +856,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "SAMPLE",
-      "seconds": 2.73,
+      "seconds": 2.71,
       "source": "jgomezc1__ABAQUS-US/SAMPLE/UEL9_VPDCO.for",
       "stage": "transformed"
     },
@@ -876,7 +876,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "UELS",
-      "seconds": 1.58,
+      "seconds": 1.6,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_ECL.for",
       "stage": "transformed"
     },
@@ -896,7 +896,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "UELS",
-      "seconds": 1.6,
+      "seconds": 1.59,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_ECO.for",
       "stage": "transformed"
     },
@@ -916,7 +916,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "UELS",
-      "seconds": 2.08,
+      "seconds": 2.06,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_PCLI.for",
       "stage": "transformed"
     },
@@ -936,7 +936,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "UELS",
-      "seconds": 1.7,
+      "seconds": 1.66,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_PCLI_R.for",
       "stage": "transformed"
     },
@@ -956,7 +956,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "UELS",
-      "seconds": 1.9,
+      "seconds": 1.91,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_PCLK.for",
       "stage": "transformed"
     },
@@ -996,7 +996,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "UELS",
-      "seconds": 1.83,
+      "seconds": 1.69,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_PCOR.for",
       "stage": "transformed"
     },
@@ -1016,7 +1016,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "UELS",
-      "seconds": 1.93,
+      "seconds": 1.85,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_PCOR_KIN.for",
       "stage": "transformed"
     },
@@ -1036,7 +1036,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "UELS",
-      "seconds": 2.0,
+      "seconds": 1.88,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_VPDCL.for",
       "stage": "transformed"
     },
@@ -1056,7 +1056,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "UELS",
-      "seconds": 2.52,
+      "seconds": 2.75,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL8_VPDCO.for",
       "stage": "transformed"
     },
@@ -1076,7 +1076,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "UELS",
-      "seconds": 1.59,
+      "seconds": 1.57,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL9_ECL.for",
       "stage": "transformed"
     },
@@ -1096,7 +1096,7 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "UELS",
-      "seconds": 1.6,
+      "seconds": 1.61,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL9_ECO.for",
       "stage": "transformed"
     },
@@ -1116,14 +1116,14 @@
       "ntens": 6,
       "original_compiles": "yes",
       "repository": "UELS",
-      "seconds": 1.65,
+      "seconds": 1.58,
       "source": "jgomezc1__ABAQUS-US/UELS/UEL9_ECO_m.for",
       "stage": "transformed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageG/umats/umat_area_morph/baseline/umat_area_morph.f:85:72:\n\n   85 |       xn(1) = (dfgrd1(1,1)*xn0(1) + dfgrd1(1,2)*xn0(2) + dfgrd1(1,3)*xn0(3))/norm\n      |                                              ",
-      "blocker_kind": "source_does_not_compile",
+      "blocker": "umat_area_morph_oti.f:117:9:\n\n  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_area_morph_oti.f:117:29:\n\n  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: Function \u2018dstran\u2019",
+      "blocker_kind": "compile_failed",
       "bytes": 7025,
       "compile_error": "umat_area_morph_oti.f:117:9:\n\n  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_area_morph_oti.f:117:29:\n\n  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: Function \u2018dstran\u2019",
       "compiled": "no",
@@ -1134,16 +1134,16 @@
       "lines": 169,
       "nstatv_hint": 9,
       "ntens": 6,
-      "original_compiles": "no",
+      "original_compiles": "yes",
       "repository": "umats",
-      "seconds": 1.31,
+      "seconds": 1.27,
       "source": "mholla__growth/umats/umat_area_morph.f",
-      "stage": "source_does_not_compile"
+      "stage": "generated_not_compiled"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageG/umats/umat_area_morph_Abaqus/baseline/umat_area_morph_Abaqus.f:85:72:\n\n   85 |       xn(1) = (dfgrd1(1,1)*xn0(1) + dfgrd1(1,2)*xn0(2) + dfgrd1(1,3)*xn0(3))/norm\n      |                                ",
-      "blocker_kind": "source_does_not_compile",
+      "blocker": "umat_area_morph_Abaqus_oti.f:118:9:\n\n  118 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_area_morph_Abaqus_oti.f:118:29:\n\n  118 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: Fun",
+      "blocker_kind": "compile_failed",
       "bytes": 7193,
       "compile_error": "umat_area_morph_Abaqus_oti.f:118:9:\n\n  118 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_area_morph_Abaqus_oti.f:118:29:\n\n  118 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: Fun",
       "compiled": "no",
@@ -1154,16 +1154,16 @@
       "lines": 168,
       "nstatv_hint": 10,
       "ntens": 6,
-      "original_compiles": "no",
+      "original_compiles": "yes",
       "repository": "umats",
-      "seconds": 1.27,
+      "seconds": 1.3,
       "source": "mholla__growth/umats/umat_area_morph_Abaqus.f",
-      "stage": "source_does_not_compile"
+      "stage": "generated_not_compiled"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageG/umats/umat_area_morph_orient/baseline/umat_area_morph_orient.f:16:72:\n\n   16 |       subroutine orient (T,noel,npt,layer,kspt,coords,basis,orname,nnodes,cnodes,jnnum)\n      |                          ",
-      "blocker_kind": "source_does_not_compile",
+      "blocker": "umat_area_morph_orient_oti.f:174:9:\n\n  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_area_morph_orient_oti.f:174:29:\n\n  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: Fun",
+      "blocker_kind": "compile_failed",
       "bytes": 9476,
       "compile_error": "umat_area_morph_orient_oti.f:174:9:\n\n  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_area_morph_orient_oti.f:174:29:\n\n  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: Fun",
       "compiled": "no",
@@ -1174,16 +1174,16 @@
       "lines": 241,
       "nstatv_hint": 15,
       "ntens": 6,
-      "original_compiles": "no",
+      "original_compiles": "yes",
       "repository": "umats",
-      "seconds": 1.32,
+      "seconds": 1.37,
       "source": "mholla__growth/umats/umat_area_morph_orient.f",
-      "stage": "source_does_not_compile"
+      "stage": "generated_not_compiled"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageG/umats/umat_area_stretch/baseline/umat_area_stretch.f:92:72:\n\n   92 |       xn(1) = (dfgrd1(1,1)*xn0(1) + dfgrd1(1,2)*xn0(2) + dfgrd1(1,3)*xn0(3))/norm\n      |                                          ",
-      "blocker_kind": "source_does_not_compile",
+      "blocker": "umat_area_stretch_oti.f:183:21:\n\n  183 |       XTOL_OTI = 1.D_OTI-12\n      |                     1\nError: Missing exponent in real number at (1)\numat_area_stretch_oti.f:154:9:\n\n  154 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT ty",
+      "blocker_kind": "compile_failed",
       "bytes": 9968,
       "compile_error": "umat_area_stretch_oti.f:183:21:\n\n  183 |       XTOL_OTI = 1.D_OTI-12\n      |                     1\nError: Missing exponent in real number at (1)\numat_area_stretch_oti.f:154:9:\n\n  154 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT ty",
       "compiled": "no",
@@ -1194,16 +1194,16 @@
       "lines": 253,
       "nstatv_hint": 22,
       "ntens": 6,
-      "original_compiles": "no",
+      "original_compiles": "yes",
       "repository": "umats",
-      "seconds": 1.27,
+      "seconds": 1.36,
       "source": "mholla__growth/umats/umat_area_stretch.f",
-      "stage": "source_does_not_compile"
+      "stage": "generated_not_compiled"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageG/umats/umat_fiber_morph/baseline/umat_fiber_morph.f:85:72:\n\n   85 |       xf(1) = (dfgrd1(1,1)*xf0(1) + dfgrd1(1,2)*xf0(2) + dfgrd1(1,3)*xf0(3))/norm\n      |                                            ",
-      "blocker_kind": "source_does_not_compile",
+      "blocker": "umat_fiber_morph_oti.f:117:9:\n\n  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_fiber_morph_oti.f:117:29:\n\n  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: Function \u2018dstra",
+      "blocker_kind": "compile_failed",
       "bytes": 6805,
       "compile_error": "umat_fiber_morph_oti.f:117:9:\n\n  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_fiber_morph_oti.f:117:29:\n\n  117 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: Function \u2018dstra",
       "compiled": "no",
@@ -1214,16 +1214,16 @@
       "lines": 169,
       "nstatv_hint": 9,
       "ntens": 6,
-      "original_compiles": "no",
+      "original_compiles": "yes",
       "repository": "umats",
-      "seconds": 1.27,
+      "seconds": 1.17,
       "source": "mholla__growth/umats/umat_fiber_morph.f",
-      "stage": "source_does_not_compile"
+      "stage": "generated_not_compiled"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageG/umats/umat_fiber_morph_Abaqus/baseline/umat_fiber_morph_Abaqus.f:86:72:\n\n   86 |       xn(1) = (dfgrd1(1,1)*xn0(1) + dfgrd1(1,2)*xn0(2) + dfgrd1(1,3)*xn0(3))/norm\n      |                              ",
-      "blocker_kind": "source_does_not_compile",
+      "blocker": "umat_fiber_morph_Abaqus_oti.f:119:9:\n\n  119 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_fiber_morph_Abaqus_oti.f:119:29:\n\n  119 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: F",
+      "blocker_kind": "compile_failed",
       "bytes": 7010,
       "compile_error": "umat_fiber_morph_Abaqus_oti.f:119:9:\n\n  119 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_fiber_morph_Abaqus_oti.f:119:29:\n\n  119 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: F",
       "compiled": "no",
@@ -1234,16 +1234,16 @@
       "lines": 170,
       "nstatv_hint": 10,
       "ntens": 6,
-      "original_compiles": "no",
+      "original_compiles": "yes",
       "repository": "umats",
-      "seconds": 1.27,
+      "seconds": 1.31,
       "source": "mholla__growth/umats/umat_fiber_morph_Abaqus.f",
-      "stage": "source_does_not_compile"
+      "stage": "generated_not_compiled"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageG/umats/umat_fiber_morph_orient/baseline/umat_fiber_morph_orient.f:16:72:\n\n   16 |       subroutine orient (T,noel,npt,layer,kspt,coords,basis,orname,nnodes,cnodes,jnnum)\n      |                        ",
-      "blocker_kind": "source_does_not_compile",
+      "blocker": "umat_fiber_morph_orient_oti.f:174:9:\n\n  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_fiber_morph_orient_oti.f:174:29:\n\n  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: F",
+      "blocker_kind": "compile_failed",
       "bytes": 9256,
       "compile_error": "umat_fiber_morph_orient_oti.f:174:9:\n\n  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_fiber_morph_orient_oti.f:174:29:\n\n  174 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: F",
       "compiled": "no",
@@ -1254,16 +1254,16 @@
       "lines": 243,
       "nstatv_hint": 15,
       "ntens": 6,
-      "original_compiles": "no",
+      "original_compiles": "yes",
       "repository": "umats",
-      "seconds": 1.3,
+      "seconds": 1.29,
       "source": "mholla__growth/umats/umat_fiber_morph_orient.f",
-      "stage": "source_does_not_compile"
+      "stage": "generated_not_compiled"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageG/umats/umat_fiber_stretch/baseline/umat_fiber_stretch.f:91:72:\n\n   91 |       xn(1) = (dfgrd1(1,1)*xn0(1) + dfgrd1(1,2)*xn0(2) + dfgrd1(1,3)*xn0(3))/norm\n      |                                        ",
-      "blocker_kind": "source_does_not_compile",
+      "blocker": "umat_fiber_stretch_oti.f:175:21:\n\n  175 |       XTOL_OTI = 1.D_OTI-12\n      |                     1\nError: Missing exponent in real number at (1)\numat_fiber_stretch_oti.f:234:12:\n\n  234 |      1growth\n      |            1\nError: Symbol \u2018cr_neggrowth\u2019 at (1) has no IMPLICIT type; did you mean \u2018cr_neg",
+      "blocker_kind": "compile_failed",
       "bytes": 9603,
       "compile_error": "umat_fiber_stretch_oti.f:175:21:\n\n  175 |       XTOL_OTI = 1.D_OTI-12\n      |                     1\nError: Missing exponent in real number at (1)\numat_fiber_stretch_oti.f:234:12:\n\n  234 |      1growth\n      |            1\nError: Symbol \u2018cr_neggrowth\u2019 at (1) has no IMPLICIT type; did you mean \u2018cr_neg",
       "compiled": "no",
@@ -1274,16 +1274,16 @@
       "lines": 258,
       "nstatv_hint": 20,
       "ntens": 6,
-      "original_compiles": "no",
+      "original_compiles": "yes",
       "repository": "umats",
-      "seconds": 1.3,
+      "seconds": 1.33,
       "source": "mholla__growth/umats/umat_fiber_stretch.f",
-      "stage": "source_does_not_compile"
+      "stage": "generated_not_compiled"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageG/umats/umat_iso_Mandel/baseline/umat_iso_Mandel.f:86:72:\n\n   86 |      #       +dfgrd1(1,3)*(dfgrd1(2,1)*dfgrd1(3,2)-dfgrd1(2,2)*dfgrd1(3,1))\n      |                                                    ",
-      "blocker_kind": "source_does_not_compile",
+      "blocker": "umat_iso_Mandel_oti.f:168:21:\n\n  168 |       XTOL_OTI = 1.D_OTI-12\n      |                     1\nError: Missing exponent in real number at (1)\numat_iso_Mandel_oti.f:174:43:\n\n  174 |       cr_pos  = REAL(props(4)              ! critical STRESS_OTI for\n      |                                          ",
+      "blocker_kind": "compile_failed",
       "bytes": 8325,
       "compile_error": "umat_iso_Mandel_oti.f:168:21:\n\n  168 |       XTOL_OTI = 1.D_OTI-12\n      |                     1\nError: Missing exponent in real number at (1)\numat_iso_Mandel_oti.f:174:43:\n\n  174 |       cr_pos  = REAL(props(4)              ! critical STRESS_OTI for\n      |                                          ",
       "compiled": "no",
@@ -1294,11 +1294,11 @@
       "lines": 233,
       "nstatv_hint": 20,
       "ntens": 6,
-      "original_compiles": "no",
+      "original_compiles": "yes",
       "repository": "umats",
-      "seconds": 1.27,
+      "seconds": 1.39,
       "source": "mholla__growth/umats/umat_iso_Mandel.f",
-      "stage": "source_does_not_compile"
+      "stage": "generated_not_compiled"
     },
     {
       "anchor_status": "ready_with_json_contract",
@@ -1316,14 +1316,14 @@
       "ntens": 6,
       "original_compiles": "",
       "repository": "umats",
-      "seconds": 0.13,
+      "seconds": 0.18,
       "source": "mholla__growth/umats/umat_iso_Mandel_v2.f",
       "stage": "semantic_checks_failed"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageG/umats/umat_iso_morph/baseline/umat_iso_morph.f:98:72:\n\n   98 |      #     +dfgrd1(1,3) * (dfgrd1(2,1)*dfgrd1(3,2)-dfgrd1(2,2)*dfgrd1(3,1))\n      |                                                      ",
-      "blocker_kind": "source_does_not_compile",
+      "blocker": "umat_iso_morph_oti.f:111:9:\n\n  111 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_iso_morph_oti.f:111:29:\n\n  111 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: Function \u2018dstran\u2019 a",
+      "blocker_kind": "compile_failed",
       "bytes": 5941,
       "compile_error": "umat_iso_morph_oti.f:111:9:\n\n  111 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_iso_morph_oti.f:111:29:\n\n  111 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: Function \u2018dstran\u2019 a",
       "compiled": "no",
@@ -1334,16 +1334,16 @@
       "lines": 158,
       "nstatv_hint": 8,
       "ntens": 6,
-      "original_compiles": "no",
+      "original_compiles": "yes",
       "repository": "umats",
-      "seconds": 1.18,
+      "seconds": 1.24,
       "source": "mholla__growth/umats/umat_iso_morph.f",
-      "stage": "source_does_not_compile"
+      "stage": "generated_not_compiled"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageG/umats/umat_iso_morph_Abaqus/baseline/umat_iso_morph_Abaqus.f:94:72:\n\n   94 |      #     +dfgrd1(1,3) * (dfgrd1(2,1)*dfgrd1(3,2)-dfgrd1(2,2)*dfgrd1(3,1))\n      |                                        ",
-      "blocker_kind": "source_does_not_compile",
+      "blocker": "umat_iso_morph_Abaqus_oti.f:113:9:\n\n  113 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_iso_morph_Abaqus_oti.f:113:29:\n\n  113 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: Funct",
+      "blocker_kind": "compile_failed",
       "bytes": 5872,
       "compile_error": "umat_iso_morph_Abaqus_oti.f:113:9:\n\n  113 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type\numat_iso_morph_Abaqus_oti.f:113:29:\n\n  113 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |                             1\nError: Funct",
       "compiled": "no",
@@ -1354,16 +1354,16 @@
       "lines": 155,
       "nstatv_hint": 9,
       "ntens": 6,
-      "original_compiles": "no",
+      "original_compiles": "yes",
       "repository": "umats",
-      "seconds": 1.18,
+      "seconds": 1.23,
       "source": "mholla__growth/umats/umat_iso_morph_Abaqus.f",
-      "stage": "source_does_not_compile"
+      "stage": "generated_not_compiled"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageG/umats/umat_iso_stretch/baseline/umat_iso_stretch.f:85:72:\n\n   85 |      #       +dfgrd1(1,3)*(dfgrd1(2,1)*dfgrd1(3,2)-dfgrd1(2,2)*dfgrd1(3,1))\n      |                                                  ",
-      "blocker_kind": "source_does_not_compile",
+      "blocker": "umat_iso_stretch_oti.f:164:21:\n\n  164 |       XTOL_OTI = 1.D_OTI-12\n      |                     1\nError: Missing exponent in real number at (1)\numat_iso_stretch_oti.f:135:9:\n\n  135 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type",
+      "blocker_kind": "compile_failed",
       "bytes": 7467,
       "compile_error": "umat_iso_stretch_oti.f:164:21:\n\n  164 |       XTOL_OTI = 1.D_OTI-12\n      |                     1\nError: Missing exponent in real number at (1)\numat_iso_stretch_oti.f:135:9:\n\n  135 |          DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)\n      |         1\nError: Function \u2018dstran_oti\u2019 at (1) has no IMPLICIT type",
       "compiled": "no",
@@ -1374,15 +1374,15 @@
       "lines": 213,
       "nstatv_hint": 19,
       "ntens": 6,
-      "original_compiles": "no",
+      "original_compiles": "yes",
       "repository": "umats",
-      "seconds": 1.23,
+      "seconds": 1.43,
       "source": "mholla__growth/umats/umat_iso_stretch.f",
-      "stage": "source_does_not_compile"
+      "stage": "generated_not_compiled"
     },
     {
       "anchor_status": "ready_with_json_contract",
-      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageG/umats/umat_neohooke/baseline/umat_neohooke.f:40:51:\n\n   40 |      #                         noel,npt,kstep,kinc))\n      |                                                   1\nError: Syntax error in SUB",
+      "blocker": "as shipped: /tmp/claude-1000/-home-ammslab3/ae508e3e-cba8-4f04-830c-f9416c4c82d8/scratchpad/triageH/umats/umat_neohooke/baseline/umat_neohooke.f:40:51:\n\n   40 |      #                         noel,npt,kstep,kinc))\n      |                                                   1\nError: Syntax error in SUB",
       "blocker_kind": "source_does_not_compile",
       "bytes": 4952,
       "compile_error": "umat_neohooke_oti.f:40:51:\n\n   40 |      #                         noel,npt,kstep,kinc))\n      |                                                   1\nError: Syntax error in SUBROUTINE statement at (1)\numat_neohooke_oti.f:55:27:\n\n   55 |       real*8  stress(ntens), ddsdde(ntens,ntens), statev(nstatv)",
@@ -1396,7 +1396,7 @@
       "ntens": 6,
       "original_compiles": "no",
       "repository": "umats",
-      "seconds": 1.28,
+      "seconds": 1.25,
       "source": "mholla__growth/umats/umat_neohooke.f",
       "stage": "source_does_not_compile"
     },
@@ -1423,16 +1423,18 @@
   ],
   "summary": {
     "by_blocker_kind": {
+      "compile_failed": 12,
       "missing_ddsdde_extraction_point": 2,
       "semantic_check": 2,
       "shape_unknown": 2,
-      "source_does_not_compile": 13
+      "source_does_not_compile": 1
     },
     "by_stage": {
       "anchors_not_located": 1,
       "blocked": 3,
+      "generated_not_compiled": 12,
       "semantic_checks_failed": 2,
-      "source_does_not_compile": 13,
+      "source_does_not_compile": 1,
       "transformed": 52
     },
     "cache_root_name": "discovery_cache",
