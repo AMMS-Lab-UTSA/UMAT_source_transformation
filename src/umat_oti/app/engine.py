@@ -126,6 +126,49 @@ def _build_contract(name: str, seed: str, output: str, target: str, ntens: int, 
     from umat_oti.core.roles import suggest_variable_roles, role_summary
     analysis = _analyze(src_path)
     finite = _is_finite(analysis) if seed == "auto" else (seed == "DFGRD1")
+    # Keeping the Abaqus interface separate from the constitutive model is an
+    # ordinary way to write a UMAT: subroutine umat(...) declares the argument
+    # list Abaqus insists on, calls the model routine, and returns. Naming UMAT
+    # as the routine to transform then names one that holds no stress update
+    # and no tangent, and the transform reports both missing -- accurately, and
+    # one call above where they live. Fifteen of the discovered finite-strain
+    # sources are written that way.
+    from umat_oti.fortran.callgraph import delegated_material_routine
+    from umat_oti.fortran.parser import parse_fortran_file
+    from umat_oti.fortran.symbols import find_routine, routine_symbol_names
+    parsed = parse_fortran_file(src_path)
+    delegate = delegated_material_routine(parsed, "UMAT")
+    # What the SELECTED routine receives, which is not what the file's UMAT
+    # receives once the material lives one call below.
+    selected_routine = find_routine(parsed, delegate or "UMAT")
+    available = routine_symbol_names(selected_routine) if selected_routine else set()
+    # The seed is the program variable the OTI directions are injected into,
+    # so it has to be one the selected routine actually holds. A small-strain
+    # UMAT takes DSTRAN and seeds from DSTRAN. A finite-strain model routine
+    # that is handed DFGRD1 and no DSTRAN seeds from DFGRD1 alone: writing
+    # DSTRAN_OTI into a routine whose argument list has no DSTRAN produced an
+    # undeclared name that "implicit none" rejects, in twelve of the
+    # seventy-one externally authored sources surveyed.
+    #
+    # When both are present neither is dropped. DSTRAN stays the seed and the
+    # finite-strain correction below maps the same directions into DFGRD1 as
+    # well, which is what a routine reading both needs: perturbing only one of
+    # two inputs that describe the same increment would leave the other at its
+    # unperturbed value and halve the tangent.
+    if "DSTRAN" in available:
+        seeds = ["DSTRAN"]
+    elif "DFGRD1" in available:
+        # The routine's only kinematic input is the deformation gradient, so
+        # the kinematics are finite by the interface itself -- a firmer
+        # statement than the source scan's, and it is what makes the DFGRD1
+        # seed lines get emitted below.
+        seeds = ["DFGRD1"]
+        finite = True
+    else:
+        # Neither is in reach. Nothing here can invent an input the routine
+        # does not take; the contract keeps the conventional seed and the
+        # transform reports what it finds.
+        seeds = ["DSTRAN"]
     # The source text goes in so the classifier can apply Fortran's implicit
     # typing rule: an undeclared name in the integer range carries no
     # derivative, and promoting one turns index and parity arithmetic into
@@ -146,23 +189,21 @@ def _build_contract(name: str, seed: str, output: str, target: str, ntens: int, 
     # Precedence, highest first: seed, promote, constant, keep real. Seeding
     # is what the contract is for; promotion carries a derivative and so
     # outranks both ways of declining to carry one.
-    seeds = ["DSTRAN"]
     claimed = set(seeds)
     promote = [name for name in promote if name not in claimed]
     claimed.update(promote)
     constants = [n for n in summ["constant_variables"] if n not in claimed]
     claimed.update(constants)
-    keep_real = [n for n in summ["keep_real_variables"] if n not in claimed]
-    # Keeping the Abaqus interface separate from the constitutive model is an
-    # ordinary way to write a UMAT: subroutine umat(...) declares the argument
-    # list Abaqus insists on, calls the model routine, and returns. Naming UMAT
-    # as the routine to transform then names one that holds no stress update
-    # and no tangent, and the transform reports both missing -- accurately, and
-    # one call above where they live. Fifteen of the discovered finite-strain
-    # sources are written that way.
-    from umat_oti.fortran.callgraph import delegated_material_routine
-    from umat_oti.fortran.parser import parse_fortran_file
-    delegate = delegated_material_routine(parse_fortran_file(src_path), "UMAT")
+    # The classifier names DSTRAN the seed on sight, because for a
+    # conventional UMAT it is. When the selected routine does not receive it
+    # that suggestion stands unopposed beside the seed chosen above, the
+    # contract reaches the transform carrying two seeds, and it stops on
+    # "Exactly one seed variable is required for this milestone." A name the
+    # routine never sees carries no derivative in it, so the contract says so
+    # rather than leaving the classifier's default in place.
+    unchosen_seeds = [n for n in summ["seed_variables"] if n not in claimed]
+    keep_real = [n for n in dict.fromkeys(summ["keep_real_variables"] + unchosen_seeds)
+                 if n not in claimed]
     source_block: dict = {"file": str(src_path)}
     if delegate:
         source_block["selected_umat_name"] = delegate
