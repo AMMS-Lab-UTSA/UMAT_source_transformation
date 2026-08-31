@@ -108,9 +108,10 @@ def test_intrinsic_module_supplies_unary_plus():
              for line in text.splitlines() if line.strip().startswith("PUBLIC ::")
              for name in line.split("::", 1)[1].split(",")}
     assert names <= {"MIN", "MAX", "SIGN", "NINT", "INT", "ABS", "SQRT",
+                     "MATMUL", "TRANSPOSE", "DOT_PRODUCT",
                      "ASSIGNMENT(=)", "OPERATOR(+)", "OPERATOR(-)",
                      "OPERATOR(*)", "OPERATOR(/)"}, f"unexpected export: {names}"
-    assert {"MIN", "MAX", "SIGN", "OPERATOR(+)"} <= names
+    assert {"MIN", "MAX", "SIGN", "OPERATOR(+)", "MATMUL"} <= names
 
 
 @pytest.mark.slow

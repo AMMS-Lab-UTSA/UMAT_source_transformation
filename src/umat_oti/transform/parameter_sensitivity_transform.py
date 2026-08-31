@@ -620,13 +620,22 @@ def _required_utility_stubs(source_text: str) -> tuple[str, ...]:
 
 
 def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
-    """Mixed OTI/real forms of MIN, MAX and SIGN.
+    """Mixed OTI/real forms of MIN, MAX, SIGN and MATMUL.
 
     The generated OTI module defines MIN and MAX only for two OTI operands, but
     UMATs routinely clamp against a real constant -- ``ENU=MIN(PROPS(2),ENUMAX)``
     with ENUMAX a REAL parameter is the idiom that first exposed this. gfortran
     then reports the generic as not matching any specific interface, which reads
     like a transformation bug and is really a missing overload.
+
+    MATMUL is the same story one rank up. The generated algebra covers
+    ``MATMUL(rank 2, rank 2)`` in all three mixed forms and stops there, so
+    ``STRESS = MATMUL(DDSDDE, STRAN + DSTRAN)`` matches no specific procedure
+    once DSTRAN is promoted. The six rank-mixed forms are added here.
+    TRANSPOSE, DOT_PRODUCT and the rank-2 x rank-2 MATMUL forms are *not*:
+    the generated algebra already provides them, and a second specific with
+    the same argument types in the same generic is an ambiguous interface that
+    stops every scope importing both modules from compiling at all.
 
     The semantics are the ones the mathematics requires rather than a
     convenience: MIN and MAX are piecewise, so the result carries the derivative
@@ -637,7 +646,7 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
     lines = [
         "!===============================================================",
         "! Mixed OTI/real intrinsic overloads. Generic interfaces are",
-        "! additive across modules, so these extend MIN/MAX/SIGN.",
+        "! additive across modules, so these extend MIN/MAX/SIGN/MATMUL.",
         "!===============================================================",
         f"MODULE oti_intrinsics",
         "  USE master_parameters, ONLY: DP",
@@ -649,8 +658,23 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         # any scope that renamed them away to avoid colliding with a UMAT's own
         # variables of the same name.
         "  PRIVATE",
-        "  PUBLIC :: MIN, MAX, SIGN, NINT, INT, ASSIGNMENT(=)",
+        "  PUBLIC :: MIN, MAX, SIGN, NINT, INT, ASSIGNMENT(=), MATMUL",
         "  PUBLIC :: OPERATOR(+), OPERATOR(-), OPERATOR(*), OPERATOR(/)",
+        # MATMUL with a vector operand. The generated algebra defines MATMUL
+        # for two rank-2 arguments in all three mixed forms, and nothing else,
+        # so STRESS = MATMUL(DDSDDE, STRAN + DSTRAN) -- rank 2 times rank 1,
+        # the most ordinary way a linear-elastic UMAT writes its stress
+        # update -- resolves to no specific procedure and gfortran reports
+        # "Generic function 'matmul' is not consistent with a specific
+        # intrinsic interface". Only the six rank-mixed forms are declared
+        # here: redeclaring the rank-2 x rank-2 forms, TRANSPOSE, or
+        # DOT_PRODUCT, which the generated algebra already provides, would put
+        # two indistinguishable specifics in one generic and every scope that
+        # imports both modules would stop compiling on the USE line.
+        "  INTERFACE MATMUL",
+        "    MODULE PROCEDURE oti_matmul_oo_mv, oti_matmul_ro_mv, oti_matmul_or_mv",
+        "    MODULE PROCEDURE oti_matmul_oo_vm, oti_matmul_ro_vm, oti_matmul_or_vm",
+        "  END INTERFACE MATMUL",
         "  INTERFACE MIN",
         "    MODULE PROCEDURE oti_min_or, oti_min_ro",
         "  END INTERFACE MIN",
@@ -751,6 +775,68 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
             f"  END FUNCTION {name}",
         ]
 
+    def matmul_matrix_vector(name: str, first: str, second: str) -> list[str]:
+        """MATMUL(matrix, vector) written as a loop over the algebra's own * and +.
+
+        The derivative rides in the imaginary components of the type and the
+        generated ``*`` and ``+`` already propagate it, so a contraction
+        written in those operators is right in value and in derivative
+        together; nothing here touches a component of the type, which is also
+        what keeps this correct at any order.
+
+        The extents come from the arguments, never from a constant: a UMAT
+        calls MATMUL on 3x3 kinematics and on NTENS-by-NTENS material matrices
+        in the same file. The contracted extent is the matrix's, which is the
+        one the result shape is already taken from; MATMUL is not defined at
+        all when the two operands disagree about it.
+        """
+        a_type = f"TYPE({type_name})" if first == "o" else "REAL(DP)"
+        b_type = f"TYPE({type_name})" if second == "o" else "REAL(DP)"
+        return [
+            f"  FUNCTION {name}(A, B) RESULT(RES)",
+            "    IMPLICIT NONE",
+            f"    {a_type}, INTENT(IN) :: A(:,:)",
+            f"    {b_type}, INTENT(IN) :: B(:)",
+            f"    TYPE({type_name}) :: RES(SIZE(A, 1))",
+            "    INTEGER :: OTI_MM_I, OTI_MM_K",
+            # The accumulator is zeroed before it is summed into. An OTI
+            # shadow left at whatever was in memory is a wrong derivative
+            # that still compiles and still prints a plausible stress.
+            "    RES = 0.0_DP",
+            "    DO OTI_MM_I = 1, SIZE(A, 1)",
+            "      DO OTI_MM_K = 1, SIZE(A, 2)",
+            "        RES(OTI_MM_I) = RES(OTI_MM_I) + A(OTI_MM_I, OTI_MM_K) * B(OTI_MM_K)",
+            "      END DO",
+            "    END DO",
+            f"  END FUNCTION {name}",
+        ]
+
+    def matmul_vector_matrix(name: str, first: str, second: str) -> list[str]:
+        """MATMUL(vector, matrix): the row-vector form, same contraction."""
+        a_type = f"TYPE({type_name})" if first == "o" else "REAL(DP)"
+        b_type = f"TYPE({type_name})" if second == "o" else "REAL(DP)"
+        return [
+            f"  FUNCTION {name}(A, B) RESULT(RES)",
+            "    IMPLICIT NONE",
+            f"    {a_type}, INTENT(IN) :: A(:)",
+            f"    {b_type}, INTENT(IN) :: B(:,:)",
+            f"    TYPE({type_name}) :: RES(SIZE(B, 2))",
+            "    INTEGER :: OTI_MM_J, OTI_MM_K",
+            "    RES = 0.0_DP",
+            "    DO OTI_MM_J = 1, SIZE(B, 2)",
+            "      DO OTI_MM_K = 1, SIZE(B, 1)",
+            "        RES(OTI_MM_J) = RES(OTI_MM_J) + A(OTI_MM_K) * B(OTI_MM_K, OTI_MM_J)",
+            "      END DO",
+            "    END DO",
+            f"  END FUNCTION {name}",
+        ]
+
+    lines += matmul_matrix_vector("oti_matmul_oo_mv", "o", "o")
+    lines += matmul_matrix_vector("oti_matmul_ro_mv", "r", "o")
+    lines += matmul_matrix_vector("oti_matmul_or_mv", "o", "r")
+    lines += matmul_vector_matrix("oti_matmul_oo_vm", "o", "o")
+    lines += matmul_vector_matrix("oti_matmul_ro_vm", "r", "o")
+    lines += matmul_vector_matrix("oti_matmul_or_vm", "o", "r")
     lines += selector("oti_min_or", "o", "r", "<")
     lines += selector("oti_min_ro", "r", "o", "<")
     lines += selector("oti_max_or", "o", "r", ">")
