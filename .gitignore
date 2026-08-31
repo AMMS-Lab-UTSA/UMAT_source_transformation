@@ -58,3 +58,6 @@ logs/
 # absolute paths of the machine that produced it; the durable record is the
 # frozen snapshot under paper_results/frozen/, not this scratch area.
 reproduce/
+
+# Ephemeral agent worktrees created by the Workflow tool.
+.claude/worktrees/
