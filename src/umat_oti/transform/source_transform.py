@@ -464,6 +464,18 @@ def _readiness_blockers(
     seed_variables = sorted(roles["seed"])
     if len(seed_variables) != 1:
         blockers.append("Exactly one seed variable is required for this milestone.")
+    elif seed_variables[0] == "DFGRD1":
+        # The deformation gradient is a seed the emitter knows how to inject
+        # into -- _finite_dfgrd1_seed_lines maps the six strain directions
+        # into DFGRD1 -- but only under the finite-strain setting that turns
+        # those lines on. Without it nothing would perturb anything and the
+        # tangent would come out structurally zero, so it is refused here
+        # rather than emitted.
+        if not _validation_uses_finite_geometry(config):
+            blockers.append(
+                "DFGRD1 is the seed, which requires the finite-strain seed: set "
+                "transformation_settings.seed_dfgrd1."
+            )
     elif seed_variables[0] != mappings.get("dstran", "DSTRAN") or seed_variables[0] != "DSTRAN":
         blockers.append("The only seed variable must be mapped to DSTRAN.")
     if not mappings.get("stress"):
@@ -1147,11 +1159,7 @@ def _transform_source_text(
         replacement_names=replacement_names,
         type_name=type_name,
         ntens=ntens,
-        seed_dfgrd1_active=(
-            seed_dfgrd1_enabled
-            and "DFGRD1" in roles["promote"]
-            and mappings.get("dstran", "DSTRAN") in roles["seed"]
-        ),
+        seed_dfgrd1_active=_dfgrd1_carries_the_seed(roles, mappings, seed_dfgrd1_enabled),
     )
     preserved_ddsdde_output_lines = _preserved_ddsdde_output_lines(
         form=form,
@@ -1817,11 +1825,36 @@ def _initialization_lines(
         if name in copied or name not in copy_shadow_names:
             continue
         lines.extend(_copy_real_shadow_lines(form, name, variable_shapes.get(name, "")))
-    if seed_dfgrd1 and "DFGRD1" in roles["promote"] and dstran in roles["seed"]:
+    if _dfgrd1_carries_the_seed(roles, mappings, seed_dfgrd1):
         lines.extend(_finite_dfgrd1_seed_lines(form, ntens))
-    for direction in range(1, ntens + 1):
-        lines.append(_stmt(form, f"{dstran}_OTI({direction}) = {dstran}_OTI({direction}) + {_seed_basis_name(direction)}"))
+    # Only into a variable the routine has. The directions used to be injected
+    # into DSTRAN_OTI unconditionally, which wrote that name into finite-strain
+    # model routines whose argument list has no DSTRAN at all; under the
+    # "implicit none" those routines declare, gfortran read DSTRAN_OTI as an
+    # untyped function.
+    if dstran in roles["seed"]:
+        for direction in range(1, ntens + 1):
+            lines.append(_stmt(form, f"{dstran}_OTI({direction}) = {dstran}_OTI({direction}) + {_seed_basis_name(direction)}"))
     return lines
+
+
+def _dfgrd1_carries_the_seed(
+    roles: dict[str, set[str]], mappings: dict[str, str], seed_dfgrd1_enabled: bool
+) -> bool:
+    """Whether the OTI directions are injected into DFGRD1.
+
+    Two shapes reach here, and both are finite-strain. A conventional UMAT
+    receives DSTRAN and is seeded through it; because its stress update reads
+    the deformation gradient as well, the same directions are ALSO mapped into
+    DFGRD1 so that neither input is left at its unperturbed value. A model
+    routine that receives DFGRD1 and no DSTRAN has DFGRD1 as its only seed,
+    and DSTRAN must not be named anywhere in the emitted routine.
+    """
+    if not seed_dfgrd1_enabled:
+        return False
+    if "DFGRD1" in roles["seed"]:
+        return True
+    return "DFGRD1" in roles["promote"] and mappings.get("dstran", "DSTRAN") in roles["seed"]
 
 
 def _finite_dfgrd1_seed_lines(form: str, ntens: int) -> list[str]:
@@ -3786,10 +3819,19 @@ def _semantic_checks(
     config: dict[str, Any],
 ) -> tuple[dict[str, bool], list[str]]:
     warnings: list[str] = []
+    # The seeded variable is the one that has to be present, and it is not
+    # always DSTRAN: a finite-strain model routine that receives only the
+    # deformation gradient is seeded through DFGRD1, and asking for DSTRAN_OTI
+    # there reports a missing name that is correctly missing.
+    seed_shadow = (
+        "DFGRD1_OTI"
+        if "DFGRD1" in roles["seed"] and "DSTRAN" not in roles["seed"]
+        else "DSTRAN_OTI"
+    )
     checks = {
         f"USE {module_name}": f"transformed file does not contain USE {module_name}",
         f"TYPE({type_name})": f"transformed file does not contain TYPE({type_name})",
-        "DSTRAN_OTI": "transformed file does not contain DSTRAN_OTI",
+        seed_shadow: f"transformed file does not contain {seed_shadow}",
         "STRESS_OTI": "transformed file does not contain STRESS_OTI",
         "SUBROUTINE UMAT": "transformed file does not contain SUBROUTINE UMAT",
     }
@@ -3822,8 +3864,18 @@ def _semantic_checks(
     # verdict for a source that was seeding correctly all along.
     dfgrd1_seed_lines = [number for number, line in selected_active_lines
                          if _is_finite_dfgrd1_seed_line(line)]
+    # When the routine never receives DSTRAN, DFGRD1 is the whole seed, and the
+    # ordering invariants below have to be read against it. Left naming DSTRAN
+    # they ask whether a line that is not in the file precedes another line
+    # that is not in the file, and every one of them answers no -- failing a
+    # transform that seeded exactly what the routine has.
+    if "DFGRD1" in roles["seed"] and dstran not in roles["seed"]:
+        dstran_init_line = _first_line_matching(
+            selected_active_lines,
+            lambda line: _is_shadow_initialization_line(line, "DFGRD1"))
+        dstran_seed_lines = list(dfgrd1_seed_lines)
     seed_names = {dstran} | ({"DFGRD1"} if dfgrd1_seed_lines else set())
-    seed_lines = sorted(dstran_seed_lines + dfgrd1_seed_lines)
+    seed_lines = sorted(set(dstran_seed_lines) | set(dfgrd1_seed_lines))
     seed_consuming_lines = _seed_consuming_stress_lines(stress_expression_lines, seed_names)
     real_stress_extraction_line = _first_line_matching(selected_active_lines, lambda line: _is_real_stress_extraction_line(line, stress))
     helper_region_ids = {str(region.get("region_id", "")) for region in tangent_context.helper_regions}
@@ -4305,7 +4357,11 @@ def _integer_literals_normalized_in_oti_expressions(source: str) -> bool:
 
 
 def _promoted_dfgrd_variables_initialized_before_use(active_lines: list[tuple[int, str]], roles: dict[str, set[str]]) -> bool:
-    for name in sorted({"DFGRD0", "DFGRD1"} & roles["promote"]):
+    # Seeded counts as carried. A deformation gradient that is the seed rather
+    # than a promotion has exactly the same shadow to establish before its
+    # first use, and reading only "promote" skipped the check on the sources
+    # where it is the only kinematic input there is.
+    for name in sorted({"DFGRD0", "DFGRD1"} & (roles["seed"] | roles["promote"])):
         init_line = _first_line_matching(active_lines, lambda line, variable=name: _is_shadow_initialization_line(line, variable))
         use_line = _first_line_matching(
             active_lines,
@@ -4320,7 +4376,7 @@ def _promoted_dfgrd_variables_initialized_before_use(active_lines: list[tuple[in
 
 
 def _finite_strain_path_uses_oti_versions(active_lines: list[tuple[int, str]], roles: dict[str, set[str]]) -> bool:
-    promoted_kinematics = _finite_kinematic_name_set() & roles["promote"]
+    promoted_kinematics = _finite_kinematic_name_set() & (roles["seed"] | roles["promote"])
     if not promoted_kinematics:
         return True
     for _, line in active_lines:
