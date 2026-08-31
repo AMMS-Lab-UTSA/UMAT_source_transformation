@@ -242,7 +242,63 @@ INTRINSIC_CALL_NAMES = frozenset({
     "DSIGN", "DSQRT", "EXP", "FLOAT", "IABS", "IDINT", "IDNINT", "INT", "LOG",
     "LOG10", "MAX", "MAX0", "MAX1", "MIN", "MIN0", "MIN1", "MOD", "NINT",
     "REAL", "SIGN", "SIN", "SINH", "SQRT", "TAN", "TANH", "CMPLX", "CONJG",
+    # Array-valued, reduction, inquiry and conversion intrinsics. These are the
+    # ones that matter for NAME(...) being read as indexing, because they are
+    # the ones whose call sites look exactly like an array reference --
+    # MATMUL(A,B) and A(I,J) are the same shape to a reader that only knows
+    # the name. Their absence had MATMUL, TRANSPOSE and DCMPLX reported as
+    # promoted variables indexed on the stress path with no confirmed shape,
+    # in eleven of the thirty sources blocked that way.
+    #
+    # Several of these are also plausible variable names -- SUM, COUNT, SIZE,
+    # INDEX, LEN, RANGE, SCALE, MERGE, SHAPE, TRIM. That is safe only because
+    # of the test the caller applies alongside this set: a name the source
+    # declares, or ever assigns, is a variable whatever this set says. Without
+    # that test, adding SUM here would demote a UMAT's undeclared accumulator
+    # and take its derivative silently to zero.
+    "MATMUL", "TRANSPOSE", "DOT_PRODUCT", "RESHAPE", "SPREAD", "PACK",
+    "UNPACK", "CSHIFT", "EOSHIFT", "MERGE", "TRANSFER",
+    "SUM", "PRODUCT", "MAXVAL", "MINVAL", "MAXLOC", "MINLOC", "COUNT",
+    "ALL", "ANY", "NORM2",
+    "SIZE", "SHAPE", "LBOUND", "UBOUND", "ALLOCATED", "ASSOCIATED", "PRESENT",
+    "LEN", "LEN_TRIM", "KIND", "SELECTED_INT_KIND", "SELECTED_REAL_KIND",
+    "EPSILON", "TINY", "HUGE", "PRECISION", "RANGE", "DIGITS", "RADIX",
+    "EXPONENT", "FRACTION", "NEAREST", "SCALE", "SET_EXPONENT", "SPACING",
+    "RRSPACING", "MODULO", "CEILING", "FLOOR",
+    "DCMPLX", "DPROD", "DDIM", "IFIX", "SNGL", "ICHAR", "IACHAR", "CHAR",
+    "ACHAR", "LOGICAL", "TRIM", "ADJUSTL", "ADJUSTR", "INDEX", "SCAN",
+    "VERIFY", "REPEAT",
+    "IAND", "IOR", "IEOR", "NOT", "ISHFT", "ISHFTC", "IBSET", "IBCLR",
+    "IBITS", "BTEST",
+    "ASINH", "ACOSH", "ATANH", "ERF", "ERFC", "GAMMA", "LOG_GAMMA", "HYPOT",
 })
+
+
+_ASSIGNMENT_TARGET = re.compile(
+    r"^\s*([A-Za-z_]\w*)\s*(?:\([^=]*\))?\s*=(?!=)")
+
+
+def assigned_names(source_text: str | None) -> frozenset[str]:
+    """Names this source ever assigns to.
+
+    The companion test to INTRINSIC_CALL_NAMES. Several standard intrinsics
+    are also perfectly ordinary variable names, and a UMAT is free to keep an
+    undeclared accumulator called SUM under IMPLICIT REAL*8(A-H,O-Z). Asking
+    whether the source assigns the name separates the two without a list of
+    exceptions: an intrinsic is never assigned, and a variable that carries a
+    value is.
+    """
+    if not source_text:
+        return frozenset()
+    names: set[str] = set()
+    for line in source_text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped[:1] in ("c", "C", "*", "!"):
+            continue
+        match = _ASSIGNMENT_TARGET.match(stripped)
+        if match:
+            names.add(match.group(1).upper())
+    return frozenset(names)
 
 
 def defined_function_names(source_text: str) -> frozenset[str]:
@@ -283,7 +339,12 @@ def _suggest_variable_roles(analysis: dict[str, Any],
     statev_path_names = set(region_summary.get("statev_path_variables", []))
     integer_letters = (implicit_integer_letters(source_text)
                        if source_text is not None else frozenset())
-    not_variables = (INTRINSIC_CALL_NAMES | defined_function_names(source_text)
+    # A name the source assigns is a variable, whatever the intrinsic list
+    # says: the list now includes names like SUM and INDEX that a UMAT may
+    # legitimately use, and demoting one of those would take its derivative
+    # silently to zero.
+    not_variables = ((INTRINSIC_CALL_NAMES | defined_function_names(source_text))
+                     - assigned_names(source_text)
                      if source_text is not None else frozenset())
     common_names = common_block_names(source_text)
     data_names = data_initialised_names(source_text)

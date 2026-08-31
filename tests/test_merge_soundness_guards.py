@@ -7,6 +7,7 @@ warning is emitted, and a number the UMAT returns is wrong.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -50,7 +51,12 @@ class TestALiveAssignmentIsNotCommentedOut:
         assert _claimed_lines_whose_result_is_dead("      a = 1.d0\n", set(), (1, 1)) == set()
 
 
-GROWTH = Path("/home/ammslab3/softwarex_work/discovery_cache/mholla__growth/umats")
+#: The discovery cache lives outside the repository and its location is a
+#: property of whoever ran discovery, so it is named rather than hardcoded --
+#: an absolute home path here is what audit_repository_standards refuses.
+_CACHE = Path(os.environ.get("UMAT_OTI_DISCOVERY_CACHE")
+              or Path(__file__).resolve().parents[2] / "discovery_cache")
+GROWTH = _CACHE / "mholla__growth" / "umats"
 
 
 @pytest.mark.skipif(not GROWTH.exists(), reason="discovery cache is not present")

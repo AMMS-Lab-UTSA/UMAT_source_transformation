@@ -1201,6 +1201,7 @@ def _first_finite_path_assignment_line(
 # apart about what counts as a call rather than a variable.
 from umat_oti.core.roles import (  # noqa: E402
     INTRINSIC_CALL_NAMES as _INTRINSIC_CALLS,
+    assigned_names as _assigned_names,
     data_initialised_names, defined_function_names as _defined_function_names,
 )
 
@@ -1255,7 +1256,12 @@ def _shape_blockers(
     # being reported as a promoted array with no shape -- FLOAT(NSLPTL) and a
     # crystal-plasticity flow rule named F both blocked a source that has
     # nothing wrong with it.
-    not_arrays = _INTRINSIC_CALLS | _defined_function_names(source_text)
+    # Minus what the source assigns, for the same reason the classifier
+    # subtracts it: the intrinsic set includes names a UMAT may legitimately
+    # use for its own variables, and a name that carries a value is a variable
+    # whatever the set says.
+    not_arrays = ((_INTRINSIC_CALLS | _defined_function_names(source_text))
+                  - _assigned_names(source_text))
     used_modules = _used_modules_not_defined_here(source_text)
     declared = _declared_names(parsed)
     for name in sorted(roles["seed"] | roles["promote"]):

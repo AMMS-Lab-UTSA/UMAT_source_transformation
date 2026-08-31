@@ -241,6 +241,51 @@ def is_own_repository(full_name: str) -> bool:
     return full_name.strip().lower() in OWN_REPOSITORIES
 
 
+
+def search_repositories_by_topic(client: GitHubClient, *, query: str,
+                                 pages: int, per_page: int = 100,
+                                 pause: float = 2.0) -> tuple[list[str], int, int]:
+    """Repository full names from the repository search, most-relevant first.
+
+    A different index from the code search, and it reaches different work. The
+    code search ranks by content and caps any one query at a thousand results,
+    so a repository whose UMAT is buried under a thousand better-matching files
+    is unreachable by adding pages -- but the same repository is findable by
+    its name, description or topic. Of the first hundred hits for
+    "abaqus umat", eighty-five named repositories the code search had not
+    surfaced at all.
+
+    The name is all this contributes. Everything after it -- licence first,
+    then a pinned commit, then whether any Fortran here declares a UMAT entry
+    point -- is the same gate the code-search path goes through, because how a
+    repository was found says nothing about whether it may be used.
+    """
+    seen: list[str] = []
+    total_reported = 0
+    read = 0
+    for page in range(1, pages + 1):
+        url = ("https://api.github.com/search/repositories?q="
+               + urllib.parse.quote(query, safe="")
+               + f"&per_page={per_page}&page={page}")
+        try:
+            payload = client._get(url)
+        except (RateLimited, AcquisitionError):
+            break
+        total_reported = int(payload.get("total_count") or total_reported)
+        items = payload.get("items") or []
+        if not items:
+            break
+        read += 1
+        for item in items:
+            name = item.get("full_name")
+            if name and name not in seen:
+                seen.append(name)
+        if len(items) < per_page:
+            break
+        time.sleep(pause)
+    return seen, total_reported, read
+
+
 def survey_repository(client: GitHubClient, full_name: str,
                       known: dict[str, str], survey: Survey,
                       *, max_files: int, matched: set[str] | None = None,
@@ -398,6 +443,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--pages", type=int, default=3,
                         help="code-search pages to read (100 hits each)")
+    parser.add_argument("--repo-query", action="append", dest="repo_queries",
+                        default=None,
+                        help="repository-search query; repeatable. A different "
+                             "index from the code search, reaching repositories "
+                             "whose UMAT the content ranking buries.")
     parser.add_argument("--query", action="append", dest="queries", default=None,
                         help="code-search query; repeatable. GitHub caps ONE "
                              "query at 1000 results however many hits it "
@@ -423,25 +473,46 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     print(f"  authenticated via {client.auth_source}")
 
-    queries = args.queries or [DEFAULT_QUERY]
+    # The default code query stands in only when no question was asked at all.
+    # Asking a repository question and getting the default code search as well
+    # would survey work the caller did not ask for and report its hits in the
+    # same totals.
+    queries = args.queries or ([] if args.repo_queries else [DEFAULT_QUERY])
     names: list[str] = []
     matched_paths: dict[str, set[str]] = {}
-    total = 0
+    # Counted apart, because they count different things: one is a number of
+    # matching files, the other a number of repositories. Adding them produces
+    # a figure that is not a quantity of anything.
+    code_hits_reported = 0
+    repositories_reported = 0
     pages_read = 0
     for query in queries:
         found, reported, read, paths = search_repositories(
             client, pages=args.pages, query=query)
         print(f"  code search {query!r}: {reported} hits reported, "
               f"{read} page(s) read, {len(found)} distinct repositories")
-        total += reported
+        code_hits_reported += reported
         pages_read += read
         for name in found:
             if name not in names:
                 names.append(name)
         for name, found_paths in (paths or {}).items():
             matched_paths.setdefault(name, set()).update(found_paths)
-    survey = Survey(searched_pages=pages_read, search_total_reported=total)
-    print(f"  {len(queries)} quer{'y' if len(queries) == 1 else 'ies'}: "
+    for repo_query in (args.repo_queries or []):
+        found, reported, read = search_repositories_by_topic(
+            client, query=repo_query, pages=args.pages)
+        print(f"  repository search {repo_query!r}: {reported} repositories "
+              f"reported, {read} page(s) read, {len(found)} named")
+        repositories_reported += reported
+        pages_read += read
+        for name in found:
+            if name not in names:
+                names.append(name)
+    survey = Survey(searched_pages=pages_read,
+                    search_total_reported=code_hits_reported)
+    print(f"  {len(queries)} code quer{'y' if len(queries) == 1 else 'ies'} + "
+          f"{len(args.repo_queries or [])} repository quer"
+          f"{'y' if len(args.repo_queries or []) == 1 else 'ies'}: "
           f"{len(names)} distinct repositories in all")
 
     known = known_identities(args.snapshot_root)
@@ -478,7 +549,9 @@ def main(argv: list[str] | None = None) -> int:
     candidates = [r for r in survey.rows if r.outcome == "candidate"]
     summary = {
         "queries": list(queries),
-        "search_total_reported_by_github": total,
+        "repository_queries": list(args.repo_queries or []),
+        "repositories_reported_by_repository_search": repositories_reported,
+        "search_total_reported_by_github": code_hits_reported,
         "search_pages_read": pages_read,
         "distinct_repositories_seen": len(names),
         "repositories_surveyed": min(len(names), args.max_repositories),
