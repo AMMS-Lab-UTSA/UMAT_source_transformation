@@ -25,6 +25,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import shutil
 import subprocess
 import time
 import urllib.error
@@ -103,20 +104,52 @@ class RateLimited(AcquisitionError):
             "set GH_TOKEN, or run 'gh auth login' so 'gh auth token' works.")
 
 
+#: Places gh is installed that a login shell may not have on PATH. A
+#: per-user install under ~/.local/bin is the default for the tarball and for
+#: several package managers, and it is exactly the case that looks like an
+#: absent tool: `command -v gh` finds nothing, this function falls back to
+#: unauthenticated, and GitHub's code-search endpoint answers 401 rather than
+#: rate-limiting -- so the failure reads as "search is unavailable" instead of
+#: "you are not logged in".
+_GH_FALLBACK_PATHS = (
+    "~/.local/bin/gh",
+    "/usr/local/bin/gh",
+    "/opt/homebrew/bin/gh",
+    "/snap/bin/gh",
+)
+
+
+def _gh_executable() -> Optional[str]:
+    """The gh binary, whether or not the caller's PATH mentions it."""
+    found = shutil.which("gh")
+    if found:
+        return found
+    for candidate in _GH_FALLBACK_PATHS:
+        expanded = Path(candidate).expanduser()
+        if expanded.is_file() and os.access(expanded, os.X_OK):
+            return str(expanded)
+    return None
+
+
 def _discover_token() -> tuple[Optional[str], str]:
     """A token from the environment, or from the gh CLI, or none."""
     for name in ("GH_TOKEN", "GITHUB_TOKEN"):
         value = os.environ.get(name)
         if value:
             return value, f"environment variable {name}"
-    try:
-        proc = subprocess.run(["gh", "auth", "token"], capture_output=True,
-                              text=True, timeout=15)
-        if proc.returncode == 0 and proc.stdout.strip():
-            return proc.stdout.strip(), "gh auth token"
-    except (OSError, subprocess.SubprocessError):
-        pass
-    return None, "unauthenticated (60 requests an hour)"
+    executable = _gh_executable()
+    if executable:
+        try:
+            proc = subprocess.run([executable, "auth", "token"],
+                                  capture_output=True, text=True, timeout=15)
+            if proc.returncode == 0 and proc.stdout.strip():
+                return proc.stdout.strip(), f"gh auth token ({executable})"
+        except (OSError, subprocess.SubprocessError):
+            pass
+        return None, (f"{executable} is installed but not logged in "
+                      "(run: gh auth login)")
+    return None, ("unauthenticated (60 requests an hour); no gh on PATH or in "
+                  + ", ".join(_GH_FALLBACK_PATHS))
 
 
 @dataclass
