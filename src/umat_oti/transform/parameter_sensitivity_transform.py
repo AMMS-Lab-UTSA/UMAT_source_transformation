@@ -47,6 +47,7 @@ from pathlib import Path
 from typing import Iterable, Optional
 
 from umat_oti.core.model import ParsedFortranSource
+from umat_oti.fortran.literals import without_real_literals
 from umat_oti.fortran.normalize import detect_source_form
 from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines
 from umat_oti.oti.module_generator import generate_otilib_module
@@ -343,7 +344,12 @@ def _colliding_direction_names(body: str, n_param: int) -> tuple[str, ...]:
     context". Seeding happens in the driver, never inside the lifted routine, so
     the constant is not needed here and the import can rename it away.
     """
-    used = {name.upper() for name in _IDENTIFIER_RE.findall(_strip_comments(body))}
+    # Literals are masked out of the scan: ``1.E1`` is a number, and reading its
+    # letter and digit as a mention of E1 renames a constant nothing collides
+    # with. Same atomicity the rewrites hold, applied to the scan that drives
+    # one.
+    used = {name.upper() for name in
+            _IDENTIFIER_RE.findall(without_real_literals(_strip_comments(body)))}
     return tuple(name for name in oti_direction_names(n_param) if name in used)
 
 
