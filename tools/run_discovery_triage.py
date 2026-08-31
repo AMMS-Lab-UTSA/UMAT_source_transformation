@@ -102,7 +102,14 @@ def _original_compiles(source: Path, work: Path) -> tuple[bool, str]:
     _write_aba_param_stub(baseline)
     staged = baseline / source.name
     staged.write_text(source.read_text(errors="replace"), encoding="utf-8")
-    flags = ["-ffree-line-length-none"] if source.suffix.lower() == ".f90" else []
+    # The same line-length flag the generated file is compiled with. Without
+    # it gfortran truncates fixed-form source at column 72, and twelve sources
+    # whose only sin was an 84-column line were recorded as not compiling as
+    # shipped -- which excused the transformer from them. A baseline held to
+    # stricter flags than the thing it is the baseline for is not a baseline.
+    flags = (["-ffree-form", "-ffree-line-length-none"]
+             if source.suffix.lower() == ".f90"
+             else ["-ffixed-form", "-ffixed-line-length-none"])
     finished = subprocess.run(
         ["gfortran", "-fsyntax-only", *flags, "-I", str(baseline), str(staged)],
         capture_output=True, text=True, cwd=baseline)
