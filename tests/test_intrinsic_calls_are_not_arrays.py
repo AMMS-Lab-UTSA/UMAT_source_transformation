@@ -90,3 +90,30 @@ def test_a_declared_array_named_size_is_not_demoted():
     roles = _roles(source, [{"variable_name": "SIZE", "detected_type": "real*8",
                              "detected_shape": "6", "detected_usage": ["read", "write"]}])
     assert roles["SIZE"] != "Keep real"
+
+
+def test_an_intrinsic_the_classifier_declined_to_judge_is_still_not_promoted():
+    """"Unknown" is not an abstention downstream.
+
+    The classifier declines to guess for a name it has only ever seen read,
+    and the stress-path promotion that runs afterwards promotes it anyway. So
+    MATMUL in "STRESS = MATMUL(DDSDDE, STRAN + DSTRAN)" was classified
+    Unknown, promoted, and the call itself renamed -- STRESS_OTI =
+    MATMUL_OTI(...) -- which gfortran calls an unclassifiable statement,
+    because nothing declares MATMUL_OTI.
+    """
+    source = ("      SUBROUTINE UMAT(STRESS,DSTRAN,DDSDDE,STRAN)\n"
+              "      DIMENSION STRESS(6),DSTRAN(6),DDSDDE(6,6),STRAN(6)\n"
+              "      STRESS = MATMUL(DDSDDE, STRAN + DSTRAN)\n"
+              "      END\n")
+    roles = _roles(source, [{"variable_name": "MATMUL", "detected_type": "unknown",
+                             "detected_usage": ["read"]}])
+    assert roles["MATMUL"] == "Keep real"
+
+
+def test_a_declared_variable_the_classifier_calls_unknown_is_left_alone():
+    """The widening must not reach a name the source actually declares."""
+    source = "      REAL*8 SUM(6)\n      SUM(1) = DSTRAN(1)\n"
+    roles = _roles(source, [{"variable_name": "SUM", "detected_type": "real*8",
+                             "detected_shape": "6", "detected_usage": ["read", "write"]}])
+    assert roles["SUM"] != "Keep real"
