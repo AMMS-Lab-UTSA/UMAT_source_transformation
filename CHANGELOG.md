@@ -8,6 +8,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- A DATA-initialised constant is no longer promoted and silently zeroed. A
+  DATA statement is not an assignment, so a name initialised by one and never
+  written again read downstream as a variable with no value; it is the
+  opposite, a compile-time constant. `data xi/1.d0,1.d0,1.d0,0.d0,0.d0,0.d0/`
+  promoted, its shadow zeroed and the DATA values never delivered, multiplied
+  a whole pressure term by zero in the returned stress and in every derivative
+  taken from it -- while the file compiled, the transform reported success and
+  all seventeen semantic checks passed. Such a name is kept real whatever the
+  classifier guessed; the genuinely unhandled case, DATA-initialised *and*
+  assigned, is a blocker naming the variable rather than an emitted shadow
+  starting at zero.
+- The seed follows the selected routine's own interface. `_build_contract`
+  hard-coded `seeds = ["DSTRAN"]`, so a finite-strain model routine reached
+  through a delegating UMAT -- one that receives DFGRD1 and no DSTRAN -- had
+  `DSTRAN_OTI` written into a routine declaring `implicit none`. Where both
+  are present neither is dropped.
+- A UMAT that hands its whole body to another routine is followed
+  (`fortran.callgraph.delegated_material_routine`): a single CALL passing
+  STRESS and DDSDDE through to a routine defined in the same source.
+- Whole-file scans are scoped to the routine being transformed. DO-loop ranges
+  no longer pair an opener in one program unit with an `END DO` in another;
+  region clamping drops a region with no overlap instead of inverting its
+  bounds; "insert before RETURN" finds the selected routine's RETURN rather
+  than the file's first; the finite-strain path no longer starts at SDVINI's
+  `statev(1)=1.0d0`; and array shapes are read from the routine's own
+  declarations, not file-wide first-wins.
+- A live assignment is no longer commented out as old tangent. Where the
+  anchor stage's classification is too wide it covered a statement the rest of
+  the routine depends on, leaving `SSE` -- a UMAT output -- computed from an
+  uninitialised variable. A claimed line is released when the name it assigns
+  is still read by a line that will remain active; intermediates feeding only
+  the tangent stay commented, which is the point of the classification.
+- A comment is no longer read as a construct. The logical lines the
+  unsupported-feature patterns match have already lost their comment marker,
+  so `!I use Newton-Raphson to ...` arrived as text beginning `use ` and a
+  source with no USE statement anywhere was reported as importing from a
+  module. The column-1 rule is applied only in fixed form, where no statement
+  may begin before column 7; in free form `c = 1.0` assigns to a variable.
+- A promoted name is no longer substituted inside a character literal.
+  `'STRESS is negative'` became `'STRESS_OTI is negative'` -- cosmetic in a
+  message, not cosmetic in `IF (CMNAME(1:6) .EQ. 'ELAST1')`.
+- The array, reduction, inquiry and conversion intrinsics are known (45 names
+  to 130). `MATMUL(A,B)` and `A(I,J)` are the same shape to a reader that only
+  knows names, so an unknown intrinsic was reported as a promoted variable
+  indexed with no confirmed shape. Safe only because of the companion rule
+  added with it: a name the source assigns is a variable whatever the list
+  says, so an undeclared accumulator called `SUM` keeps its derivative.
+- An assumed-size dummy is never given a shadow: `PROPS(*)` has its extent
+  only in the caller, so `TYPE(...) :: PROPS_OTI(*)` is not a declaration and
+  `DO OTI_HI = 1, *` is not a loop.
+- A name in a COMMON block is kept real. Promoting one would change that
+  block's storage layout in the transformed routine and in no other.
+- The gh CLI is found where it is installed, not only where `PATH` mentions
+  it. A per-user install under `~/.local/bin` left the client unauthenticated,
+  and GitHub answers code search with 401 rather than degrading -- so the
+  failure read as "code search is unavailable" instead of "you are not logged
+  in", and discovery quietly stopped finding sources.
+- The discovery triage compiles what it generates, and compiles each source as
+  shipped first, so a source that never built is not charged to the
+  transformer. Its baseline uses the same line-length flags as the generated
+  compile; without that, twelve sources whose only fault was an 84-column line
+  were recorded as "did not compile as shipped", which excused the transformer
+  from every one of them.
 - Fortran real literals are atomic again in every rewrite path. A promoted
   variable named `D` matched the `D` inside `1.d-12` and `xtol = 1.d-12` was
   emitted as `XTOL_OTI = 1.D_OTI-12` ("Missing exponent in real number"). The
@@ -20,6 +83,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   also blocked a genuine integer factor in `D-6*Y`.
 
 ### Added
+- Discovery asks twelve differently-shaped code questions and, under
+  `--repository-search`, six repository-index questions. One code query is one
+  question and GitHub answers at most a thousand results to it however many
+  hits it reports, so the corpus of 71 came from a single question read three
+  pages deep and no number of extra pages would have reached further. Each
+  source records which query found it. Candidates are deduplicated against the
+  discovery cache as well as the pinned snapshot, and a VUMAT is excluded by
+  signature -- a different interface, out of scope, and it matches several of
+  these queries.
+- Discovery refuses this project's own repository. The query set finds it
+  because it genuinely contains UMAT sources, and a corpus assembled to show
+  the transformer works on code nobody here wrote cannot contain the author.
 - Two advisory proposers beside the deck pairing, both fenced the same way: a
   model may propose, deterministic code decides, and an unchecked proposal
   cannot be read.
