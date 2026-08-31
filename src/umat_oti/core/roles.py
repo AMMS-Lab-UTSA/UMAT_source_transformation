@@ -374,7 +374,14 @@ def _suggest_variable_roles(analysis: dict[str, Any],
         # declaration always wins. A source may legally name a variable DIM or
         # AINT, and demoting a declared one would wrap it in REAL() and take
         # its derivative silently to zero.
-        if (role in ("Promote", "Seed") and name in not_variables
+        # "Unknown" is included because it is not an abstention downstream:
+        # the classifier declines to guess for a name it has only seen read,
+        # and the stress-path promotion that runs afterwards promotes it
+        # anyway. MATMUL in "STRESS = MATMUL(DDSDDE, STRAN + DSTRAN)" was
+        # classified Unknown, promoted, and the call itself renamed --
+        # "STRESS_OTI = MATMUL_OTI(...)", which gfortran calls an
+        # unclassifiable statement because nothing declares MATMUL_OTI.
+        if (role in ("Promote", "Seed", "Unknown") and name in not_variables
                 and str(detected_type or "").strip().lower() in ("", "unknown")
                 and not str(variable.get("detected_shape") or "").strip()):
             role = "Keep real"
