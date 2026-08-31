@@ -133,7 +133,7 @@ with the virtual environment active.
 | Table 6 — 20-model sweep | `python tools/run_parameter_sensitivity_sweep.py` | `paper_results/parameter_sensitivity/table6_parameter_sensitivity.csv` | A |
 | Illustrative tangent | `python tools/run_tangent_round.py --work-dir reproduce/tangent --results-dir paper_results/actual_umat_higher_order/j2` | `paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv` | A |
 | Paired Abaqus round (local) | `python tools/run_abaqus_paired_round.py --work-dir /tmp/abq --results-dir paper_results/abaqus_paired` | `paper_results/abaqus_paired/abaqus_paired_round.csv` | C |
-| Source discovery (network) | `python tools/discover_umat_sources.py --out-dir paper_results/discovery` | `paper_results/discovery/discovered_sources.csv` | B |
+| Source discovery (network) | `python tools/discover_umat_sources.py --out-dir paper_results/discovery --repository-search --known-cache "$UMAT_OTI_DISCOVERY_CACHE"` | `paper_results/discovery/discovered_sources.csv` | B |
 | Discovery triage | `python tools/run_discovery_triage.py --work-dir /tmp/triage --results-dir paper_results/discovery` | `paper_results/discovery/discovery_triage.csv` | B |
 | Source identity registry | `python tools/build_source_identity_registry.py` | `paper_results/generality/source_identity.csv` | A |
 | Data figures | `python tools/figures/build_tangent_figure.py`, `python tools/figures/build_higher_order_figure.py`, `python tools/figures/build_sensitivity_figure.py`, `python tools/figures/build_collection_figures.py`, `python tools/figures/build_acquisition_figures.py` | `paper_results/figures/` | A |
