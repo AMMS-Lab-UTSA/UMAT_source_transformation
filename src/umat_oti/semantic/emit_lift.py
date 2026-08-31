@@ -20,6 +20,7 @@ Everything that the earlier hand-written script "knew" is computed here:
 from __future__ import annotations
 
 import re
+from umat_oti.fortran.literals import rewrite_outside_real_literals
 from .retype import retype_declarations as RT
 from .fortran_model import FortranProject
 
@@ -899,7 +900,11 @@ def emit_oti_lift(proj: FortranProject, entry: str, *, oti_type: str, seed: str 
         # (e.g. I => Isym) to never clobber a loop index.
         for loc, act in rmap.items():
             if len(loc) >= 2:
-                t = re.sub(rf"\b{re.escape(loc)}\b", act, t)
+                # Outside real literals: a two-character alias is exactly the
+                # length that collides with the tail of one (D0 in 2.D0, E1 in
+                # 1.E1), and a literal is a single token.
+                t = rewrite_outside_real_literals(
+                    t, lambda masked, loc=loc, act=act: re.sub(rf"\b{re.escape(loc)}\b", act, masked))
         return t
 
     def emit_body(p):
