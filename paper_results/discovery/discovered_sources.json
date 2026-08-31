@@ -1,39 +1,3237 @@
 {
   "cache_root_name": "discovery_cache",
   "cache_root_note": "cached_as in the CSV is relative to the cache directory the search was given; where that directory lives is a property of the machine that ran it, not of the evidence",
-  "cached": 71,
-  "caveat": "A candidate here is a distinct, permissively licensed Fortran file declaring a UMAT entry point. Nothing has been transformed, compiled or verified, and no count in the paper may cite this file. The corpus round is what turns a candidate into evidence.",
-  "distinct_repositories_seen": 105,
-  "files_examined": 150,
-  "licences_seen": [
+  "cached": 93,
+  "caveat": "A candidate here is a distinct file declaring a UMAT entry point under a licence inside REDISTRIBUTABLE_SPDX; license_class says whether that licence is permissive or copyleft, because not every admitted licence is permissive and calling them all that was wrong. Nothing has been transformed, compiled or verified, and no count in the paper may cite this file. The corpus round is what turns a candidate into evidence.",
+  "distinct_repositories_seen": 561,
+  "files_examined": 2776,
+  "known_cache_root_names": [
+    "discovery_cache"
+  ],
+  "known_digests_from_caches": 525,
+  "known_digests_from_collection": 86,
+  "licence_gate": [
+    "AGPL-3.0",
+    "AGPL-3.0-only",
     "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "GPL-3.0",
+    "GPL-3.0-only",
+    "GPL-3.0-or-later",
+    "ISC",
+    "LGPL-3.0",
+    "LGPL-3.0-only",
+    "MIT",
+    "Zlib"
+  ],
+  "licence_gate_note": "The gate is REDISTRIBUTABLE_SPDX and this run did not change it. It admits copyleft licences compatible with this repository's own GPL-3.0-only terms; license_class records which admitted sources carry a copyleft obligation so a permissive-only subset can be taken from the evidence.",
+  "licences_seen": [
+    "AGPL-3.0",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "CC-BY-4.0",
+    "CC0-1.0",
     "GPL-2.0",
     "GPL-3.0",
     "LGPL-2.1",
-    "MIT"
+    "LGPL-3.0",
+    "MIT",
+    "Unlicense"
   ],
   "new_candidate_repositories": [
-    "HIT-FSW-314/abaqus",
+    "AlexSTA1993/numerical_geolab",
+    "AlexanderJFDR/Hyperelastic_phase_field",
+    "AnargyrosKarakalas/UMAT_3D",
+    "BBahtiri/ABAQUS-Multiphysics-Diffusion-UEL",
+    "Batmanabcdefg/ParaFEM-lite",
+    "CAEAssistant-Group/Abaqus-CAE-UMAT-subroutine-for-Composite-fatigue-simulation",
+    "CAEAssistant-Group/Abaqus-UEL-Subroutine",
+    "CAEAssistant-Group/Path-dependent-Abaqus-model-for-the-analysis-of-composite-curing",
+    "CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine",
+    "CAEAssistant-Group/UMAT-Abaqus-Tsai-Hill-Orthotropic-Composite-Subroutine",
+    "CAEAssistant-Group/Viscoelastic-Abaqus-model-for-the-analysis-of-composite-curing",
+    "CriticalSoilModels/critical-soil-models",
+    "CriticalSoilModels/incremental-driver",
+    "ElmerCSC/elmerfem",
+    "GuGuaTT/STEEL-3dPointClouds",
     "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
     "Jeff97/Realization-of-planar-and-surface-conformal-mappings",
-    "Jeff97/growth-of-circular-plate",
-    "adtzlr/ttb",
-    "jgomezc1/ABAQUS-US",
-    "mholla/growth"
+    "Jeff97/growth-of-shell",
+    "JuliaFEM/UMAT.jl",
+    "KnutAM/MaterialModels",
+    "RickAlb/UMAT-DFD-Lebedev",
+    "Sina-Taghizadeh/UMAT_Hyperelastic",
+    "Woowinehouse/ABQ-UMAT-Sanisand-High",
+    "Woowinehouse/Abaqus_UMAT_sanisand",
+    "awhelanUCD/Lemaitre-damage-UMAT-Public",
+    "baw-de/poroMechanicalFoam",
+    "bennifuchs/TsaiWu-Fortran",
+    "brizzer/elmerfem_piezo",
+    "core-marine-dev/elmerfem",
+    "cunhuav/Abaqus-Neural-Network-UMAT",
+    "damin225/short-crack-propagation-3d",
+    "frodal/SCMM-hypo",
+    "hamza-djeloud/thesis_project",
+    "harshaa765/Bilinear-CZM-UMAT",
+    "j-machacek/numgeo-hypo-igs-isa-gis",
+    "jcmcmurry/pipelining",
+    "jgomezc1/DRM-FEAP",
+    "jpsferreira/UMAT-ABAQUS",
+    "learnitmyway/Paperboard",
+    "luisez1988/Viscoplastic_MC_coupled",
+    "makkemal/NGIMASEM",
+    "marioruiarruda/Hashin_3D_UMAT",
+    "marioruiarruda/Mazars_UMAT",
+    "matmodlab/matmodlab2",
+    "mholla/SOFT24",
+    "philipcardiff/paper-code-vertex-centred-elastoplastic",
+    "prashanthgadwala/ferrite-fortran-integration_using_Julia",
+    "samanseifi/Tahoe",
+    "sas229/geomat",
+    "seekzzh/mat-model-lab",
+    "swayli94/AbaqusTools",
+    "tengzhang48/abaqus_ufl",
+    "thealanjason/umat_finite_viscoelasticity",
+    "thelfer/tfel",
+    "vishalsubbiah/Abaqus-Multi-scale-modelling",
+    "zning8251-jpg/ufc-fem-kernel",
+    "zorkzou/UniMoVib"
   ],
-  "new_candidates": 71,
-  "outcomes": {
-    "already_known": 1,
-    "candidate": 71,
-    "duplicate_within_search": 25,
-    "licence_absent": 18,
-    "licence_incompatible": 4,
-    "no_umat_entry": 23,
-    "not_examined": 8
+  "new_candidates": 90,
+  "new_candidates_by_licence_class": {
+    "copyleft": 20,
+    "permissive": 73
   },
-  "query": "\"SUBROUTINE UMAT\" language:Fortran",
-  "repositories_surveyed": 30,
-  "search_pages_read": 3,
-  "search_total_reported_by_github": 2576,
-  "stopped_early": ""
+  "new_candidates_with_a_deck_beside_them": 46,
+  "outcomes": {
+    "already_known": 380,
+    "candidate": 90,
+    "duplicate_within_search": 2,
+    "licence_absent": 262,
+    "licence_incompatible": 25,
+    "no_fortran": 6,
+    "no_umat_entry": 1971,
+    "not_a_source_file": 3,
+    "not_examined": 34,
+    "own_repository": 2,
+    "unreadable": 1
+  },
+  "queries": [
+    {
+      "kind": "code",
+      "name": "subroutine_umat_fortran",
+      "pages_read": 8,
+      "query": "\"SUBROUTINE UMAT\" language:Fortran",
+      "repositories": 194,
+      "repositories_first_seen_here": 194,
+      "total_reported_by_github": 2576
+    },
+    {
+      "kind": "code",
+      "name": "subroutine_umat_ddsdde",
+      "pages_read": 8,
+      "query": "\"SUBROUTINE UMAT\" DDSDDE",
+      "repositories": 217,
+      "repositories_first_seen_here": 46,
+      "total_reported_by_github": 2328
+    },
+    {
+      "kind": "code",
+      "name": "aba_param_include",
+      "pages_read": 8,
+      "query": "\"ABA_PARAM.INC\"",
+      "repositories": 208,
+      "repositories_first_seen_here": 89,
+      "total_reported_by_github": 2592
+    },
+    {
+      "kind": "code",
+      "name": "ddsdde_statev_nprops",
+      "pages_read": 8,
+      "query": "DDSDDE STATEV NPROPS",
+      "repositories": 161,
+      "repositories_first_seen_here": 25,
+      "total_reported_by_github": 2632
+    },
+    {
+      "kind": "code",
+      "name": "umat_signature_ddsdde_sse",
+      "pages_read": 8,
+      "query": "\"UMAT(STRESS,STATEV,DDSDDE,SSE\"",
+      "repositories": 210,
+      "repositories_first_seen_here": 21,
+      "total_reported_by_github": 1704
+    },
+    {
+      "kind": "code",
+      "name": "umat_extension_for",
+      "pages_read": 8,
+      "query": "\"SUBROUTINE UMAT\" extension:for",
+      "repositories": 139,
+      "repositories_first_seen_here": 33,
+      "total_reported_by_github": 1018
+    },
+    {
+      "kind": "code",
+      "name": "umat_extension_f",
+      "pages_read": 8,
+      "query": "\"SUBROUTINE UMAT\" extension:f",
+      "repositories": 151,
+      "repositories_first_seen_here": 7,
+      "total_reported_by_github": 1612
+    },
+    {
+      "kind": "code",
+      "name": "umat_extension_f90",
+      "pages_read": 4,
+      "query": "\"SUBROUTINE UMAT\" extension:f90",
+      "repositories": 65,
+      "repositories_first_seen_here": 20,
+      "total_reported_by_github": 321
+    },
+    {
+      "kind": "code",
+      "name": "umat_extension_inc",
+      "pages_read": 1,
+      "query": "\"SUBROUTINE UMAT\" extension:inc",
+      "repositories": 1,
+      "repositories_first_seen_here": 0,
+      "total_reported_by_github": 1
+    },
+    {
+      "kind": "code",
+      "name": "umat_extension_txt",
+      "pages_read": 1,
+      "query": "\"SUBROUTINE UMAT\" extension:txt",
+      "repositories": 13,
+      "repositories_first_seen_here": 5,
+      "total_reported_by_github": 22
+    },
+    {
+      "kind": "code",
+      "name": "umat_ddsdde_ntens",
+      "pages_read": 8,
+      "query": "\"DDSDDE(NTENS,NTENS)\"",
+      "repositories": 228,
+      "repositories_first_seen_here": 5,
+      "total_reported_by_github": 1968
+    },
+    {
+      "kind": "code",
+      "name": "umat_props_dstran",
+      "pages_read": 8,
+      "query": "\"PROPS(NPROPS)\" \"DSTRAN(NTENS)\"",
+      "repositories": 212,
+      "repositories_first_seen_here": 0,
+      "total_reported_by_github": 2240
+    },
+    {
+      "kind": "repository",
+      "name": "repo_umat_abaqus",
+      "pages_read": 2,
+      "query": "UMAT abaqus",
+      "repositories": 137,
+      "repositories_first_seen_here": 83,
+      "total_reported_by_github": 137
+    },
+    {
+      "kind": "repository",
+      "name": "repo_umat_subroutine",
+      "pages_read": 1,
+      "query": "UMAT subroutine fortran",
+      "repositories": 16,
+      "repositories_first_seen_here": 1,
+      "total_reported_by_github": 16
+    },
+    {
+      "kind": "repository",
+      "name": "repo_abaqus_user_material",
+      "pages_read": 1,
+      "query": "abaqus user material subroutine",
+      "repositories": 9,
+      "repositories_first_seen_here": 3,
+      "total_reported_by_github": 9
+    },
+    {
+      "kind": "repository",
+      "name": "repo_topic_umat",
+      "pages_read": 1,
+      "query": "topic:umat",
+      "repositories": 40,
+      "repositories_first_seen_here": 9,
+      "total_reported_by_github": 40
+    },
+    {
+      "kind": "repository",
+      "name": "repo_topic_abaqus_fortran",
+      "pages_read": 1,
+      "query": "topic:abaqus language:Fortran",
+      "repositories": 56,
+      "repositories_first_seen_here": 20,
+      "total_reported_by_github": 56
+    },
+    {
+      "kind": "repository",
+      "name": "repo_constitutive_abaqus",
+      "pages_read": 1,
+      "query": "constitutive model abaqus umat",
+      "repositories": 9,
+      "repositories_first_seen_here": 0,
+      "total_reported_by_github": 9
+    }
+  ],
+  "refusal_note": "A repository with no LICENSE file is refused, not assumed: licence_absent means nothing was fetched from it and nothing cached. licence_incompatible means a licence was declared and is outside REDISTRIBUTABLE_SPDX. Neither was read beyond its licence.",
+  "refusals": [
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "jpsferreira/abaqus-material-lab"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Junyi88/SubroutineVault"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "SpringNuance/Phase-Field-Case-Study-Notched-Plate"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "PRVSTUDENT/adaptive-remeshing-phase-field-thesis"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX GPL-2.0 via the GitHub licence API)",
+      "license_spdx": "GPL-2.0",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "GPL-2.0 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "calculix/ccx_prool"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ammarkh95/ABAQUS_PDALAC"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "LianjGroup/Abaqus-Nanoindentation-Project"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "mohibmustafa/MaterialModels"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "santiagarcia/OTI_LLM"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "yossy11/Subroutines"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "dudqlsBeans/COE-Group3"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "NASA-CHEETA/Topology-Optimization"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "bbist196/CPFE-UMATHT"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "luisrlp/UEL-dynamicCL"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Mohtesham786/ANURA3D_Linux_Moore_CI"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "SpringNuance/Abaqus-TDS-Hydrogen-Parameter-Calibration-Project"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "luisrlp/biopolymer-networks"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "SpringNuance/Abaqus-COMSOL-Subroutine-References"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Anura3D/Anura3D_OpenSource"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Mohtesham786/Anura3D_Clean_Linux"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX GPL-2.0 via the GitHub licence API)",
+      "license_spdx": "GPL-2.0",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "GPL-2.0 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "Dhondtguido/CalculiX"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX GPL-2.0 via the GitHub licence API)",
+      "license_spdx": "GPL-2.0",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "GPL-2.0 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "jwharington/CalculiX"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "SpringNuance/Abaqus-Fortran-Subroutine"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "xianjian-xie/moosedgpdev"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "WangDooo/Fortarn"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "WonhoLee1/WHT_Calculixent"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "donggiang/moose-codex"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "idaholab/moose"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ekemomoh007/VEVP-Code-and-Input-Files"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "ShawnZ1438/MOOSE"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "shenyaojin/moose-fiberis"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "AdvancedMaterialSimulation/CalculixSource"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ParaFEM/ParaFEM"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "youngung/abaqusPy"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "MekaSaiKrishna/CodesComposites"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "SpringNuance/Phase-Field-Cohesive-Zone-Resources"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "luvres/calculix"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "PacoOMG2/Ccx-welding-simulation"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "soorajnarayan/PhD_thesis"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "trungnnguyen/Capsul"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "adzetto/final_year_project"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "thelfer/thelfer.github.io"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "vryy/constitutive_laws_application"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "MeritaTafili/REV-wIncDr"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "adhithya96/EigenSolverMOOSE"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "tjfulle/matmodlab"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "WaveHello/Anura3D_Excavation"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "luisrlp/stochastic-biopolymers"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "IllinoisRocstar/calculix-csc"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "jr23mx/Instrucciones-compilar-calculix"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Pavan-asur/Multi-phase-field-Puck-FRC"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "Truster-Research-Group/moose-clmi_lab"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "CMMAi/ABAQUS_UMAT"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "vnvlabs/moose"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "yfche/parallel_subset"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "TarletonGroup/CrystalPlasticity"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "feltner515/COBRA"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "svn2github/kratos"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "AbnerWater/Calculix-mingw"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ISCPC/CalculiX-ccx"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "looooo/CalculiX"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "SpringNuance/COMSOL-Hydrogen-Diffusion-Simulation"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "earthexploration/cp-modeling"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "noberito/ethz"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "starry-phoenix/grainmodel"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "unicfdlab/TwoDaysMeshingCourse"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Olareanu/ccx-install"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "migueljgoliveira/unified-material-model-driver-for-plasticity"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX GPL-2.0 via the GitHub licence API)",
+      "license_spdx": "GPL-2.0",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "GPL-2.0 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "zagl/ccx-user"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "490990916/umat-mohr"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "WeilinDeng/ABAQUS"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "happyhappysyr/Phase_field_brittle"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "SpringNuance/Abaqus-CPFEM-Workflow"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE.md present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "dmytrokuksenko/FEA-Portfolio"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "fbosi/ETFENLVEconstitutivemodel"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "parallelworks/CalculiX-PW"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "bobmel/CalculiX"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "chihsuan/search-engine"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "faisal-bhuiyan/Physics-based-composite-progressive-failure"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "flaviomamede/FurnasDinamica"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "gustafson/CalculiX"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "vikrambalaji95/UMAT-Files"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "gustafson/CalculiXarchive"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "prateekr9SF/Large-Scale-Topology-Optimization"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "tin7/TestUmar-CodeAster-Gdef"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "TRG-NHM/DRM-and-PML"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "hhupde/abaqusUEL"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "joel-laudo/TE-skin-digital-twin"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Dalft/Anura3D"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "burakbayramli/books"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Jamal-dev/thesis_material"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Patrickstarrrrr/pasta"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "haomjc/UmatCryspl"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "ngrilli/c_pfor_am"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "snake0/spec-int-2006"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "zhao1995/MiniThesi"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Aero-tomato/SMA-UMAT"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "GundaSachin/Finite-Strain-fractional-poroelasticity"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "HenannResearchGroup/ElastomericFoam"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Megidd/CalculiX"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Pavan-asur/Fatigue-Solidshell"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Zexu-Fan/COUPLED_ELEMENT_ABAQUS"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "etacir/TRG-Regional-Seismic-Workflow"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX Unlicense via the GitHub licence API)",
+      "license_spdx": "Unlicense",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "Unlicense is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "ritukeshbharali/Abaqus-UMAT-cpp"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE.md present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "usnistgov/viscoelastic_SLS_umat_with_radiation_stiffening"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "zhmAtSJTU/personalSetup"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Prasannahegde23/UMAT-and-UMATHT-Implementation-for-Hydrogen-diffusion-under-Large-deformations-in-Abaqus"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "gabnasello/boneingrowth_subroutine"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "keisuke58/wccm2026-cfrp-gnn"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX GPL-2.0 via the GitHub licence API)",
+      "license_spdx": "GPL-2.0",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "GPL-2.0 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "louisepb/TexGen"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ngrilli/PyCiGen"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "npaulson/MKS-Experimentation"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "nsundar/thermomechfatigue"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "vidratajec/VFW"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "JensPfeifle/abaqus-usermat"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "MechMaster95/LS-DYNA-subroutines"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "LICENSE (SPDX AGPL-3.0 via the GitHub licence API)",
+      "license_spdx": "AGPL-3.0",
+      "outcome": "no_fortran",
+      "path": "",
+      "reason": "its tree lists no Fortran file and no file the search matched",
+      "repository": "Zhijie-YU/Learning_Notes"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "donuts-nvm/benchmarks-old"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "kkodagali/Puck-Failure-Criteria"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "luogyong/feasolver"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "mojtaba-komeili/ABAQUS-Subroutines"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "vpzz/Markdown-file"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Circularbuildinggroup/UMAT_Anisotropic-creep-analysis-for-FRP-structure"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "JimBrouzoulis/OOFEM_LargeDef"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "license.txt present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "KratosMultiphysics/KratosLegacyApplications"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "NguyenLabJHU/Tahoe-FEM"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "djm87/Basic-UMATS"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "eivindhugaas/Abaverify_Example"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "jianyingwu/pfczm-abaqus"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "patrickstaubach/abaqus-implicit"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ricortiz/CalculiX-cmake"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "vineethravi2310/Hashin-3D-UMAT-Subroutine"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ALandauer/ABAQUS_Subroutines"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Extraweich/Schapery_visco_elasticity"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "GeoGroup/Programming_FEM"
+    },
+    {
+      "found_by": "umat_extension_f90",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Gurleen-kansray/-rv-port-gurleen"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Hao-Xu/UMAT"
+    },
+    {
+      "found_by": "umat_signature_ddsdde_sse",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Johann-Cardenas/Need-for-Compute"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "LICENSE (SPDX MIT via the GitHub licence API)",
+      "license_spdx": "MIT",
+      "outcome": "no_fortran",
+      "path": "",
+      "reason": "its tree lists no Fortran file and no file the search matched",
+      "repository": "JuliaFEM/JuliaFEM.jl"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "L-Quinteros/PiezoresistiveFractureAbaqus"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Micket/oofem"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "XJTU-Zhou-group/ABAQUS-Codes-for-AM-Process-of-Tantalum"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "license.txt present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "asroy/Kratos"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "cast3m/cast3m"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "chyg-code/appendix"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "htn403/Hygro-Thermal-Poromechanics"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "jfriedlein/usrmat_LS-Dyna_Fortran"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "zhfzzz/CPFEM-1"
+    },
+    {
+      "found_by": "umat_signature_ddsdde_sse",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "CriticalSoilModels/Modified_Cam_Clay_Potts"
+    },
+    {
+      "found_by": "umat_signature_ddsdde_sse",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "CriticalSoilModels/Strain_Rate_Mohr_Coulomb"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "JimBrouzoulis/OOFEM_Jim"
+    },
+    {
+      "found_by": "umat_signature_ddsdde_sse",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Johann-Cardenas/ABQ-Scripting"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Sorao0921/biaxial-cpfem"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Vinayak-RamachandranN/solids4Foam"
+    },
+    {
+      "found_by": "umat_signature_ddsdde_sse",
+      "license_evidence": "LICENSE.txt present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ep-infosec/28_nasa_puma"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "happyhappysyr/Phase_field_ductile"
+    },
+    {
+      "found_by": "umat_signature_ddsdde_sse",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "latmarat/abaqus2vpsc"
+    },
+    {
+      "found_by": "umat_signature_ddsdde_sse",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "luisez1988/NorSand-VT"
+    },
+    {
+      "found_by": "umat_signature_ddsdde_sse",
+      "license_evidence": "LICENSE.txt present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "nasa/puma"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "yangyLab/uelumat"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "AmitexFFTP/AMITEX"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "BristolCompositesInstitute/RSE-Guide"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "LICENSE (SPDX BSD-3-Clause via the GitHub licence API)",
+      "license_spdx": "BSD-3-Clause",
+      "outcome": "unreadable",
+      "path": "",
+      "reason": "contents could not be listed: tree_truncated: the tree listing for KratosMultiphysics/Documentation@0d89b1986f89 was truncated by the API; a full clone would be needed to enumerate it",
+      "repository": "KratosMultiphysics/Documentation"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "LivingMatterLab/CANN"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "SzMarton93/MOOSE"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Uintah/Uintah"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Uintah/Uintah_update"
+    },
+    {
+      "found_by": "umat_extension_txt",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ahmad-zaid99/FinalYearProject"
+    },
+    {
+      "found_by": "umat_extension_f90",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "antoanikdas/magpie"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "danielbi-ETHZ/learning_moose"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "debasismpt125/Uintah_Geotech"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "happyhappysyr/USDFLD_FGM"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "jonmatteochurch/uintah-svn"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "kranthibalusu/Crystal-plasticity-"
+    },
+    {
+      "found_by": "umat_signature_ddsdde_sse",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "sYasman/Abaqus_and_ML"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "timondy/PhaseFieldBenchmarking"
+    },
+    {
+      "found_by": "umat_signature_ddsdde_sse",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "wjin33/DSID"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "xuzhiping/multiscale_winterschool_2021"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "LICENSE (SPDX CC0-1.0 via the GitHub licence API)",
+      "license_spdx": "CC0-1.0",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "CC0-1.0 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "Irvise/latex-template"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "JStaWZL/USR_VFriction_WZLReibmodell"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Jeff230222/VUANISOHYPER_INV_1"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "KianAghani/UEL"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "COPYRIGHT present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Payeh-app/OpenSeesH"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "LICENSE (SPDX CC0-1.0 via the GitHub licence API)",
+      "license_spdx": "CC0-1.0",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "CC0-1.0 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "SoftTissueBiomechanicsLab/Embedded_Fibers_UEL"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "LICENSE-CC-BY.txt (SPDX CC-BY-4.0 via the GitHub licence API)",
+      "license_spdx": "CC-BY-4.0",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "CC-BY-4.0 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "SoftTissueBiomechanicsLab/Texas_TriValve_1.1"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "adwardF/ABQnn"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "damu1000/hypre_ep"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "elanurkarabulut/umat-analysis"
+    },
+    {
+      "found_by": "umat_signature_ddsdde_sse",
+      "license_evidence": "LICENSE.md present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "fbraeu90/GR-Eye"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "githubgrasp/cdpm2"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "heartvalve/Biomechanics_FiniteElementAnalysis"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "hhupde/PSBFEM-Abaqus"
+    },
+    {
+      "found_by": "umat_signature_ddsdde_sse",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ignorantimt/Abaqus_subroutines"
+    },
+    {
+      "found_by": "umat_extension_f90",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "l1Ha/ABC_S"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "leonghien/Localizing-Gradient-Damage-with-UMAT-UMATHT"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "lqbentham/material-simulations-designs"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "meiannnnn/coe-final-project"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "mjhmilla/Millard2024VEXATMuscleLSDYNA"
+    },
+    {
+      "found_by": "umat_extension_txt",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "nabojyoti/Research-Paper-Abstract-Generator"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "nsundar/NSFEM"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "paramesh-md/Abaqus_subroutines"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "LICENSE (SPDX GPL-2.0 via the GitHub licence API)",
+      "license_spdx": "GPL-2.0",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "GPL-2.0 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "paul-leroux/PyTriaxial"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "qgyc98/ssf"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "redfenglin/VUMAT_Fortran_Hashin3D"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "rohitsakala/SMAI_Project"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "tjdodwell/CosseratUEL"
+    },
+    {
+      "found_by": "subroutine_umat_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "vbertone/MELA"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "wuhuiguo/Abaqus"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "yangyLab/PS-SBFEM"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "yvanblanchard/CuringThermoSetWithCalculix"
+    },
+    {
+      "found_by": "umat_ddsdde_ntens",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Andrey-Fog/ANSYS-USERMAT-CMSG"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ChenYizh0u/abaqus-USDFLD"
+    },
+    {
+      "found_by": "umat_extension_f90",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "CriticalSoilModels/Associative_Mohr_Coulomb"
+    },
+    {
+      "found_by": "umat_extension_f90",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "CriticalSoilModels/MCSS_Tension_Cutoff"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "DemonMelon/USDFLD-VUSDFLD"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "FatemeAhangari/CDM-UMAT-Subroutine"
+    },
+    {
+      "found_by": "umat_extension_txt",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "IADNGUYEN/CV-Parsing"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "COPYRIGHT present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "JAGallardo1992/OpenSees_md"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Mayakruha/ABAQUS-Import-of-transient-temp-through-UTEMP"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "COPYRIGHT present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "MentosD/OpenSees372_ModelUpdateBYH"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "COPYRIGHT present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "OpenSees/OpenSees"
+    },
+    {
+      "found_by": "umat_extension_f",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Pooja96234/xyzzy"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Rainy-fall-end/welding_pred_nn"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Roger-YU2022/Hashin-Failure-criterion-VUMAT"
+    },
+    {
+      "found_by": "umat_extension_f",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Ronakshoghi/MicroMecWorkflow"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "SpringNuance/Abaqus-Machine-Learning-Integration"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "TengTongSEU/Phase-field-coupled-cohesive"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "COPYRIGHT present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "WeepingProphet77/Tessera"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "XJTU-Zhou-group/ABAQUS_UMAT_U3Si2SW"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "YB-LIM/Van_der_Waals_UINTER"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "adamzhen/STAR-Simulator"
+    },
+    {
+      "found_by": "umat_extension_txt",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "aitsc/WSIM"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "LICENSE (SPDX LGPL-2.1 via the GitHub licence API)",
+      "license_spdx": "LGPL-2.1",
+      "outcome": "licence_incompatible",
+      "path": "",
+      "reason": "LGPL-2.1 is outside the set this project may redistribute; recorded and not fetched",
+      "repository": "aprilnovak/coupling-moose"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "baptiste622/Thermo-mechanical-simulation-of-a-braking-disc--using-Abaqus-"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "cmhamel/Machine_Learning_Abaqus_Production"
+    },
+    {
+      "found_by": "umat_extension_txt",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "davidchan-emtelligent/word2vec"
+    },
+    {
+      "found_by": "umat_ddsdde_ntens",
+      "license_evidence": "LICENSE.txt present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ep-infosec/28_nasa_CompDam_DGD"
+    },
+    {
+      "found_by": "umat_extension_f",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "hyoungsuksuh/ABAQUS_NN"
+    },
+    {
+      "found_by": "umat_extension_f",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "igorbray/ccc-gpu"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "isChenXuan/AWI"
+    },
+    {
+      "found_by": "umat_extension_f90",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "kkiyama117/math"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "kranthibalusu/CrackGrowth"
+    },
+    {
+      "found_by": "umat_extension_f90",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "liudss/hencky-jc-vumat"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "m-aryayi/Abaqus-Projects"
+    },
+    {
+      "found_by": "subroutine_umat_ddsdde",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "mholla/hitchhikers-guide-to-abaqus"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "mrtrkmn/yanki"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "LICENSE.txt present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "nasa/abaverify"
+    },
+    {
+      "found_by": "umat_signature_ddsdde_sse",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "orgitcog/org-llnl"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "shuishengy/abaqus-umat-for-viscoelastcity"
+    },
+    {
+      "found_by": "ddsdde_statev_nprops",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "structure-computation/LMTpp"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "synodriver/abaqus_subroutines"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "tajtac/node_diffusion"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "tengzhang48/feacheap"
+    },
+    {
+      "found_by": "umat_extension_for",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "wjin33/Nonsmooth-yield-surface"
+    },
+    {
+      "found_by": "umat_extension_f90",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "yvanblanchard/ProgressiveFailureOfCompositesWithCalculix"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ywytrew/pyaba"
+    },
+    {
+      "found_by": "aba_param_include",
+      "license_evidence": "COPYRIGHT present but neither GitHub nor a text match identified a licence",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "zhuminjie/OpenSeesPy"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "28ToFuture2028-8-8/UMAT-WITH-ABAQUS"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "AMPL-Gururaja/Fatigue-Damage-UMAT-Subroutine-for-Abaqus-"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Anqi94/AbaqusUMAT"
+    },
+    {
+      "found_by": "repo_topic_umat",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Cyril-fr/blast-fragmentation-ai"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "DevendraNagpure13/UMAT_Implicit_for-radial-return"
+    },
+    {
+      "found_by": "repo_topic_umat",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "FIT2082/28813952_RESEARCH_NOTEBOOK"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "GzCode321/ABAQUS.Umatcode"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "HAS-0612/Modified-HTC-Based-Equivalent-Strain-for-Enhanced-Local-Damage-Modeling-of-Quasi-Brittle-Materials"
+    },
+    {
+      "found_by": "repo_topic_abaqus_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "HYWLab/phase-field-fracture-model"
+    },
+    {
+      "found_by": "repo_topic_umat",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Jeanvit/UMatTest"
+    },
+    {
+      "found_by": "repo_topic_abaqus_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Khorashad/3DHashin_VUMAT"
+    },
+    {
+      "found_by": "repo_topic_abaqus_fortran",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "MattE4/Abaqus_UVARM_equivalent_strain_subroutine_Solidworks"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Punit2510/abaqus-umat-cpp"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "RexiJing/Fortran-to-CPP"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "SaeednHT/Useful-Fortran-Subroutines"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "LICENSE (SPDX MIT via the GitHub licence API)",
+      "license_spdx": "MIT",
+      "outcome": "no_fortran",
+      "path": "",
+      "reason": "its tree lists no Fortran file and no file the search matched",
+      "repository": "ShawnWolgu/SXCpp_UMAT"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ShihaoTUD/ABAQUS_UMAT_Learing"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "SmallScaleMechanicsLaboratory/UMAT_SXP"
+    },
+    {
+      "found_by": "repo_abaqus_user_material",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "SrivastavaResearchLab/Damage_Abq_LargeDef_2025"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Standardsomind/abaqus-master"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Taeyoung-GO/HCP_CPUMAT"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "Unlimited0424/ABAQUS_UMAT_GRASS-SST"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "XJTU-Zhou-group/ABAQUS_UMAT_316ss_Zr4"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "XJTU-Zhou-group/ABAQUS_UMAT_HSCcompVEVP"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "XJTU-Zhou-group/ABAQUS_UMAT_HSCmultiscaleVEP"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ZhouChaunge/PMT-Traversal-in-Abauqs"
+    },
+    {
+      "found_by": "repo_topic_umat",
+      "license_evidence": "LICENSE (SPDX MIT via the GitHub licence API)",
+      "license_spdx": "MIT",
+      "outcome": "no_fortran",
+      "path": "",
+      "reason": "its tree lists no Fortran file and no file the search matched",
+      "repository": "aNasiusA/umat-thesis-guide"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "aamir-dean/Numerical-Tangent-UMAT"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "adityaagrawaltc100/ABAQUS-UMAT-Subroutine-using-FORTRAN"
+    },
+    {
+      "found_by": "repo_topic_umat",
+      "license_evidence": "LICENSE (SPDX GPL-3.0 via the GitHub licence API)",
+      "license_spdx": "GPL-3.0",
+      "outcome": "no_fortran",
+      "path": "",
+      "reason": "its tree lists no Fortran file and no file the search matched",
+      "repository": "adtzlr/felupe"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "ajayan-achuthan/Abaqus-UMAT-Isotropic-Models"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "LICENSE (SPDX MIT via the GitHub licence API)",
+      "license_spdx": "MIT",
+      "outcome": "no_fortran",
+      "path": "",
+      "reason": "its tree lists no Fortran file and no file the search matched",
+      "repository": "behrouz-arash/finite-strain-vevp-composites"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "beingujjwalraj/Multiscale-Modelling-of-Material-Using-Machine-Learning"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "brightfrank1999/abaqus-umat"
+    },
+    {
+      "found_by": "repo_topic_umat",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "cmlztrk/cmlztrk"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "coppercentipedetram/abaqus"
+    },
+    {
+      "found_by": "repo_umat_abaqus",
+      "license_evidence": "no LICENSE file detected by the GitHub API",
+      "license_spdx": "",
+      "outcome": "licence_absent",
+      "path": "",
+      "reason": "no licence is declared, so nothing may be redistributed from it; a repository without a LICENSE file is refused, not assumed permissive; recorded and not fetched",
+      "repository": "fun0730/abaqus-subroutine"
+    }
+  ],
+  "refused_repositories": [
+    "28ToFuture2028-8-8/UMAT-WITH-ABAQUS",
+    "490990916/umat-mohr",
+    "ALandauer/ABAQUS_Subroutines",
+    "AMPL-Gururaja/Fatigue-Damage-UMAT-Subroutine-for-Abaqus-",
+    "AbnerWater/Calculix-mingw",
+    "AdvancedMaterialSimulation/CalculixSource",
+    "Aero-tomato/SMA-UMAT",
+    "AmitexFFTP/AMITEX",
+    "Andrey-Fog/ANSYS-USERMAT-CMSG",
+    "Anqi94/AbaqusUMAT",
+    "Anura3D/Anura3D_OpenSource",
+    "BristolCompositesInstitute/RSE-Guide",
+    "CMMAi/ABAQUS_UMAT",
+    "ChenYizh0u/abaqus-USDFLD",
+    "Circularbuildinggroup/UMAT_Anisotropic-creep-analysis-for-FRP-structure",
+    "CriticalSoilModels/Associative_Mohr_Coulomb",
+    "CriticalSoilModels/MCSS_Tension_Cutoff",
+    "CriticalSoilModels/Modified_Cam_Clay_Potts",
+    "CriticalSoilModels/Strain_Rate_Mohr_Coulomb",
+    "Cyril-fr/blast-fragmentation-ai",
+    "Dalft/Anura3D",
+    "DemonMelon/USDFLD-VUSDFLD",
+    "DevendraNagpure13/UMAT_Implicit_for-radial-return",
+    "Dhondtguido/CalculiX",
+    "Extraweich/Schapery_visco_elasticity",
+    "FIT2082/28813952_RESEARCH_NOTEBOOK",
+    "FatemeAhangari/CDM-UMAT-Subroutine",
+    "GeoGroup/Programming_FEM",
+    "GundaSachin/Finite-Strain-fractional-poroelasticity",
+    "Gurleen-kansray/-rv-port-gurleen",
+    "GzCode321/ABAQUS.Umatcode",
+    "HAS-0612/Modified-HTC-Based-Equivalent-Strain-for-Enhanced-Local-Damage-Modeling-of-Quasi-Brittle-Materials",
+    "HYWLab/phase-field-fracture-model",
+    "Hao-Xu/UMAT",
+    "HenannResearchGroup/ElastomericFoam",
+    "IADNGUYEN/CV-Parsing",
+    "ISCPC/CalculiX-ccx",
+    "IllinoisRocstar/calculix-csc",
+    "Irvise/latex-template",
+    "JAGallardo1992/OpenSees_md",
+    "JStaWZL/USR_VFriction_WZLReibmodell",
+    "Jamal-dev/thesis_material",
+    "Jeanvit/UMatTest",
+    "Jeff230222/VUANISOHYPER_INV_1",
+    "JensPfeifle/abaqus-usermat",
+    "JimBrouzoulis/OOFEM_Jim",
+    "JimBrouzoulis/OOFEM_LargeDef",
+    "Johann-Cardenas/ABQ-Scripting",
+    "Johann-Cardenas/Need-for-Compute",
+    "JuliaFEM/JuliaFEM.jl",
+    "Junyi88/SubroutineVault",
+    "Khorashad/3DHashin_VUMAT",
+    "KianAghani/UEL",
+    "KratosMultiphysics/Documentation",
+    "KratosMultiphysics/KratosLegacyApplications",
+    "L-Quinteros/PiezoresistiveFractureAbaqus",
+    "LianjGroup/Abaqus-Nanoindentation-Project",
+    "LivingMatterLab/CANN",
+    "MattE4/Abaqus_UVARM_equivalent_strain_subroutine_Solidworks",
+    "Mayakruha/ABAQUS-Import-of-transient-temp-through-UTEMP",
+    "MechMaster95/LS-DYNA-subroutines",
+    "Megidd/CalculiX",
+    "MekaSaiKrishna/CodesComposites",
+    "MentosD/OpenSees372_ModelUpdateBYH",
+    "MeritaTafili/REV-wIncDr",
+    "Micket/oofem",
+    "Mohtesham786/ANURA3D_Linux_Moore_CI",
+    "Mohtesham786/Anura3D_Clean_Linux",
+    "NASA-CHEETA/Topology-Optimization",
+    "NguyenLabJHU/Tahoe-FEM",
+    "Olareanu/ccx-install",
+    "OpenSees/OpenSees",
+    "PRVSTUDENT/adaptive-remeshing-phase-field-thesis",
+    "PacoOMG2/Ccx-welding-simulation",
+    "ParaFEM/ParaFEM",
+    "Patrickstarrrrr/pasta",
+    "Pavan-asur/Fatigue-Solidshell",
+    "Pavan-asur/Multi-phase-field-Puck-FRC",
+    "Payeh-app/OpenSeesH",
+    "Pooja96234/xyzzy",
+    "Prasannahegde23/UMAT-and-UMATHT-Implementation-for-Hydrogen-diffusion-under-Large-deformations-in-Abaqus",
+    "Punit2510/abaqus-umat-cpp",
+    "Rainy-fall-end/welding_pred_nn",
+    "RexiJing/Fortran-to-CPP",
+    "Roger-YU2022/Hashin-Failure-criterion-VUMAT",
+    "Ronakshoghi/MicroMecWorkflow",
+    "SaeednHT/Useful-Fortran-Subroutines",
+    "ShawnWolgu/SXCpp_UMAT",
+    "ShawnZ1438/MOOSE",
+    "ShihaoTUD/ABAQUS_UMAT_Learing",
+    "SmallScaleMechanicsLaboratory/UMAT_SXP",
+    "SoftTissueBiomechanicsLab/Embedded_Fibers_UEL",
+    "SoftTissueBiomechanicsLab/Texas_TriValve_1.1",
+    "Sorao0921/biaxial-cpfem",
+    "SpringNuance/Abaqus-COMSOL-Subroutine-References",
+    "SpringNuance/Abaqus-CPFEM-Workflow",
+    "SpringNuance/Abaqus-Fortran-Subroutine",
+    "SpringNuance/Abaqus-Machine-Learning-Integration",
+    "SpringNuance/Abaqus-TDS-Hydrogen-Parameter-Calibration-Project",
+    "SpringNuance/COMSOL-Hydrogen-Diffusion-Simulation",
+    "SpringNuance/Phase-Field-Case-Study-Notched-Plate",
+    "SpringNuance/Phase-Field-Cohesive-Zone-Resources",
+    "SrivastavaResearchLab/Damage_Abq_LargeDef_2025",
+    "Standardsomind/abaqus-master",
+    "SzMarton93/MOOSE",
+    "TRG-NHM/DRM-and-PML",
+    "Taeyoung-GO/HCP_CPUMAT",
+    "TarletonGroup/CrystalPlasticity",
+    "TengTongSEU/Phase-field-coupled-cohesive",
+    "Truster-Research-Group/moose-clmi_lab",
+    "Uintah/Uintah",
+    "Uintah/Uintah_update",
+    "Unlimited0424/ABAQUS_UMAT_GRASS-SST",
+    "Vinayak-RamachandranN/solids4Foam",
+    "WangDooo/Fortarn",
+    "WaveHello/Anura3D_Excavation",
+    "WeepingProphet77/Tessera",
+    "WeilinDeng/ABAQUS",
+    "WonhoLee1/WHT_Calculixent",
+    "XJTU-Zhou-group/ABAQUS-Codes-for-AM-Process-of-Tantalum",
+    "XJTU-Zhou-group/ABAQUS_UMAT_316ss_Zr4",
+    "XJTU-Zhou-group/ABAQUS_UMAT_HSCcompVEVP",
+    "XJTU-Zhou-group/ABAQUS_UMAT_HSCmultiscaleVEP",
+    "XJTU-Zhou-group/ABAQUS_UMAT_U3Si2SW",
+    "YB-LIM/Van_der_Waals_UINTER",
+    "Zexu-Fan/COUPLED_ELEMENT_ABAQUS",
+    "Zhijie-YU/Learning_Notes",
+    "ZhouChaunge/PMT-Traversal-in-Abauqs",
+    "aNasiusA/umat-thesis-guide",
+    "aamir-dean/Numerical-Tangent-UMAT",
+    "adamzhen/STAR-Simulator",
+    "adhithya96/EigenSolverMOOSE",
+    "adityaagrawaltc100/ABAQUS-UMAT-Subroutine-using-FORTRAN",
+    "adtzlr/felupe",
+    "adwardF/ABQnn",
+    "adzetto/final_year_project",
+    "ahmad-zaid99/FinalYearProject",
+    "aitsc/WSIM",
+    "ajayan-achuthan/Abaqus-UMAT-Isotropic-Models",
+    "ammarkh95/ABAQUS_PDALAC",
+    "antoanikdas/magpie",
+    "aprilnovak/coupling-moose",
+    "asroy/Kratos",
+    "baptiste622/Thermo-mechanical-simulation-of-a-braking-disc--using-Abaqus-",
+    "bbist196/CPFE-UMATHT",
+    "behrouz-arash/finite-strain-vevp-composites",
+    "beingujjwalraj/Multiscale-Modelling-of-Material-Using-Machine-Learning",
+    "bobmel/CalculiX",
+    "brightfrank1999/abaqus-umat",
+    "burakbayramli/books",
+    "calculix/ccx_prool",
+    "cast3m/cast3m",
+    "chihsuan/search-engine",
+    "chyg-code/appendix",
+    "cmhamel/Machine_Learning_Abaqus_Production",
+    "cmlztrk/cmlztrk",
+    "coppercentipedetram/abaqus",
+    "damu1000/hypre_ep",
+    "danielbi-ETHZ/learning_moose",
+    "davidchan-emtelligent/word2vec",
+    "debasismpt125/Uintah_Geotech",
+    "djm87/Basic-UMATS",
+    "dmytrokuksenko/FEA-Portfolio",
+    "donggiang/moose-codex",
+    "donuts-nvm/benchmarks-old",
+    "dudqlsBeans/COE-Group3",
+    "earthexploration/cp-modeling",
+    "eivindhugaas/Abaverify_Example",
+    "ekemomoh007/VEVP-Code-and-Input-Files",
+    "elanurkarabulut/umat-analysis",
+    "ep-infosec/28_nasa_CompDam_DGD",
+    "ep-infosec/28_nasa_puma",
+    "etacir/TRG-Regional-Seismic-Workflow",
+    "faisal-bhuiyan/Physics-based-composite-progressive-failure",
+    "fbosi/ETFENLVEconstitutivemodel",
+    "fbraeu90/GR-Eye",
+    "feltner515/COBRA",
+    "flaviomamede/FurnasDinamica",
+    "fun0730/abaqus-subroutine",
+    "gabnasello/boneingrowth_subroutine",
+    "githubgrasp/cdpm2",
+    "gustafson/CalculiX",
+    "gustafson/CalculiXarchive",
+    "haomjc/UmatCryspl",
+    "happyhappysyr/Phase_field_brittle",
+    "happyhappysyr/Phase_field_ductile",
+    "happyhappysyr/USDFLD_FGM",
+    "heartvalve/Biomechanics_FiniteElementAnalysis",
+    "hhupde/PSBFEM-Abaqus",
+    "hhupde/abaqusUEL",
+    "htn403/Hygro-Thermal-Poromechanics",
+    "hyoungsuksuh/ABAQUS_NN",
+    "idaholab/moose",
+    "ignorantimt/Abaqus_subroutines",
+    "igorbray/ccc-gpu",
+    "isChenXuan/AWI",
+    "jfriedlein/usrmat_LS-Dyna_Fortran",
+    "jianyingwu/pfczm-abaqus",
+    "joel-laudo/TE-skin-digital-twin",
+    "jonmatteochurch/uintah-svn",
+    "jpsferreira/abaqus-material-lab",
+    "jr23mx/Instrucciones-compilar-calculix",
+    "jwharington/CalculiX",
+    "keisuke58/wccm2026-cfrp-gnn",
+    "kkiyama117/math",
+    "kkodagali/Puck-Failure-Criteria",
+    "kranthibalusu/CrackGrowth",
+    "kranthibalusu/Crystal-plasticity-",
+    "l1Ha/ABC_S",
+    "latmarat/abaqus2vpsc",
+    "leonghien/Localizing-Gradient-Damage-with-UMAT-UMATHT",
+    "liudss/hencky-jc-vumat",
+    "looooo/CalculiX",
+    "louisepb/TexGen",
+    "lqbentham/material-simulations-designs",
+    "luisez1988/NorSand-VT",
+    "luisrlp/UEL-dynamicCL",
+    "luisrlp/biopolymer-networks",
+    "luisrlp/stochastic-biopolymers",
+    "luogyong/feasolver",
+    "luvres/calculix",
+    "m-aryayi/Abaqus-Projects",
+    "meiannnnn/coe-final-project",
+    "mholla/hitchhikers-guide-to-abaqus",
+    "migueljgoliveira/unified-material-model-driver-for-plasticity",
+    "mjhmilla/Millard2024VEXATMuscleLSDYNA",
+    "mohibmustafa/MaterialModels",
+    "mojtaba-komeili/ABAQUS-Subroutines",
+    "mrtrkmn/yanki",
+    "nabojyoti/Research-Paper-Abstract-Generator",
+    "nasa/abaverify",
+    "nasa/puma",
+    "ngrilli/PyCiGen",
+    "ngrilli/c_pfor_am",
+    "noberito/ethz",
+    "npaulson/MKS-Experimentation",
+    "nsundar/NSFEM",
+    "nsundar/thermomechfatigue",
+    "orgitcog/org-llnl",
+    "parallelworks/CalculiX-PW",
+    "paramesh-md/Abaqus_subroutines",
+    "patrickstaubach/abaqus-implicit",
+    "paul-leroux/PyTriaxial",
+    "prateekr9SF/Large-Scale-Topology-Optimization",
+    "qgyc98/ssf",
+    "redfenglin/VUMAT_Fortran_Hashin3D",
+    "ricortiz/CalculiX-cmake",
+    "ritukeshbharali/Abaqus-UMAT-cpp",
+    "rohitsakala/SMAI_Project",
+    "sYasman/Abaqus_and_ML",
+    "santiagarcia/OTI_LLM",
+    "shenyaojin/moose-fiberis",
+    "shuishengy/abaqus-umat-for-viscoelastcity",
+    "snake0/spec-int-2006",
+    "soorajnarayan/PhD_thesis",
+    "starry-phoenix/grainmodel",
+    "structure-computation/LMTpp",
+    "svn2github/kratos",
+    "synodriver/abaqus_subroutines",
+    "tajtac/node_diffusion",
+    "tengzhang48/feacheap",
+    "thelfer/thelfer.github.io",
+    "timondy/PhaseFieldBenchmarking",
+    "tin7/TestUmar-CodeAster-Gdef",
+    "tjdodwell/CosseratUEL",
+    "tjfulle/matmodlab",
+    "trungnnguyen/Capsul",
+    "unicfdlab/TwoDaysMeshingCourse",
+    "usnistgov/viscoelastic_SLS_umat_with_radiation_stiffening",
+    "vbertone/MELA",
+    "vidratajec/VFW",
+    "vikrambalaji95/UMAT-Files",
+    "vineethravi2310/Hashin-3D-UMAT-Subroutine",
+    "vnvlabs/moose",
+    "vpzz/Markdown-file",
+    "vryy/constitutive_laws_application",
+    "wjin33/DSID",
+    "wjin33/Nonsmooth-yield-surface",
+    "wuhuiguo/Abaqus",
+    "xianjian-xie/moosedgpdev",
+    "xuzhiping/multiscale_winterschool_2021",
+    "yangyLab/PS-SBFEM",
+    "yangyLab/uelumat",
+    "yfche/parallel_subset",
+    "yossy11/Subroutines",
+    "youngung/abaqusPy",
+    "yvanblanchard/CuringThermoSetWithCalculix",
+    "yvanblanchard/ProgressiveFailureOfCompositesWithCalculix",
+    "ywytrew/pyaba",
+    "zagl/ccx-user",
+    "zhao1995/MiniThesi",
+    "zhfzzz/CPFEM-1",
+    "zhmAtSJTU/personalSetup",
+    "zhuminjie/OpenSeesPy"
+  ],
+  "refused_repository_count": 294,
+  "repositories_surveyed": 500,
+  "repository_search_run": true,
+  "search_pages_read": 85,
+  "search_total_reported_by_github": 19281,
+  "stopped_early": "",
+  "correction": "3 files were admitted by this run under a non-Fortran extension and are recorded as not_a_source_file rather than removed: a .py generator, an f2py .pyf interface and a solver .model deck, each of which contains the string SUBROUTINE UMAT while writing about Fortran rather than being it. The gate refuses those extensions since; the rows are kept so the mistake stays visible."
 }

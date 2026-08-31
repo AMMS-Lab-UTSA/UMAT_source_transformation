@@ -612,3 +612,23 @@ def test_the_published_triage_carries_no_machine_path():
         pytest.skip("triage has not been published")
     text = published.read_text(encoding="utf-8")
     assert "/home/" not in text
+
+
+def test_a_file_written_in_another_language_is_not_a_fortran_source():
+    """Writing about Fortran is not being Fortran.
+
+    Each of these was admitted by a real run: a Python generator that WRITES
+    the line "SUBROUTINE UMAT", an f2py interface DESCRIBING one, and a solver
+    input deck. The relaxation asked only whether the suffix looked like a
+    word, so all three passed and were cached as sources.
+    """
+    for path in ("tests/test_umat_gen.py", "matmodlab2/umat/uhyper.pyf",
+                 "MainCalculiXProgram.model", "src/wrapper.cpp",
+                 "run_umat.sh", "driver.m", "bindings.pyx"):
+        assert not _may_be_source(path), f"{path} was admitted"
+
+
+def test_the_relaxation_still_reaches_a_umat_under_an_odd_extension():
+    """The refusals above must not close the door this relaxation opened."""
+    for path in ("umat.txt", "umat.inc", "UMAT", "src/umat", "material.dat"):
+        assert _may_be_source(path), f"{path} was refused"

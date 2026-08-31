@@ -8,6 +8,7 @@ SUBROUTINE UMAT on its sixth line is recorded as not being a UMAT.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -68,7 +69,10 @@ def test_a_directive_far_below_the_header_is_still_found():
     assert declared_source_form(text) == "free"
 
 
-CACHE = Path("/home/ammslab3/softwarex_work/discovery_cache")
+#: Named, not hardcoded: the cache lives outside the repository and its
+#: location belongs to whoever ran discovery.
+CACHE = Path(os.environ.get("UMAT_OTI_DISCOVERY_CACHE")
+             or Path(__file__).resolve().parents[2] / "discovery_cache")
 
 
 @pytest.mark.skipif(not CACHE.is_dir(), reason="no discovery cache on this machine")
