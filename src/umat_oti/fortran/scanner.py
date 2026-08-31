@@ -52,7 +52,7 @@ def analyze_fortran_source(path: Path) -> dict[str, Any]:
         )
         parsed = ParsedFortranSource(path, form, text, logical_lines, ())
     call_sites = _collect_calls(parsed)
-    unsupported = scan_unsupported_features(parsed.logical_lines, call_sites)
+    unsupported = scan_unsupported_features(parsed.logical_lines, call_sites, parsed.text, form)
     external_calls = _external_calls(parsed, call_sites)
     detected_regions = detect_candidate_regions(parsed)
     if not parsed.subroutines:

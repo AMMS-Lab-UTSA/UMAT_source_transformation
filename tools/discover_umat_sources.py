@@ -57,6 +57,14 @@ from umat_oti.corpus.identity import (  # noqa: E402
 )
 
 DEFAULT_OUT = REPO_ROOT / "paper_results" / "discovery"
+
+#: The question that found the first corpus. GitHub returns at most 1000
+#: results for any single code-search query -- ten pages of a hundred -- no
+#: matter how many hits it says exist, so a corpus larger than that is reached
+#: by asking different questions, not by paging further. Every Abaqus UMAT
+#: declares the same entry point and includes the same header, which gives
+#: several independent ways to ask.
+DEFAULT_QUERY = '"SUBROUTINE UMAT" language:Fortran' 
 GENERALITY_MATRIX = REPO_ROOT / "paper_results" / "generality" / "generality_matrix.csv"
 
 #: What a UMAT entry point looks like, independent of spacing and case.
@@ -168,7 +176,7 @@ def _has_umat_entry(text: str) -> bool:
 
 def search_repositories(client: GitHubClient, *, pages: int,
                         per_page: int = 100,
-                        query: str = '"SUBROUTINE UMAT" language:Fortran',
+                        query: str = DEFAULT_QUERY,
                         pause: float = 2.0) -> tuple[list[str], int, int]:
     """Repository full names the code search returns, most-hits first.
 
@@ -390,6 +398,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--pages", type=int, default=3,
                         help="code-search pages to read (100 hits each)")
+    parser.add_argument("--query", action="append", dest="queries", default=None,
+                        help="code-search query; repeatable. GitHub caps ONE "
+                             "query at 1000 results however many hits it "
+                             "reports, so reaching further means asking a "
+                             "different question, not asking for more pages.")
     parser.add_argument("--max-repositories", type=int, default=40)
     parser.add_argument("--max-files-per-repository", type=int, default=25)
     parser.add_argument("--cache-dir", type=Path, default=None,
@@ -410,11 +423,26 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     print(f"  authenticated via {client.auth_source}")
 
-    names, total, pages_read, matched_paths = search_repositories(
-        client, pages=args.pages)
+    queries = args.queries or [DEFAULT_QUERY]
+    names: list[str] = []
+    matched_paths: dict[str, set[str]] = {}
+    total = 0
+    pages_read = 0
+    for query in queries:
+        found, reported, read, paths = search_repositories(
+            client, pages=args.pages, query=query)
+        print(f"  code search {query!r}: {reported} hits reported, "
+              f"{read} page(s) read, {len(found)} distinct repositories")
+        total += reported
+        pages_read += read
+        for name in found:
+            if name not in names:
+                names.append(name)
+        for name, found_paths in (paths or {}).items():
+            matched_paths.setdefault(name, set()).update(found_paths)
     survey = Survey(searched_pages=pages_read, search_total_reported=total)
-    print(f"  code search: {total} hits reported, {pages_read} page(s) read, "
-          f"{len(names)} distinct repositories")
+    print(f"  {len(queries)} quer{'y' if len(queries) == 1 else 'ies'}: "
+          f"{len(names)} distinct repositories in all")
 
     known = known_identities(args.snapshot_root)
     print(f"  {len(known)} digests for implementations already in the collection")
@@ -449,7 +477,7 @@ def main(argv: list[str] | None = None) -> int:
         outcomes[row.outcome] = outcomes.get(row.outcome, 0) + 1
     candidates = [r for r in survey.rows if r.outcome == "candidate"]
     summary = {
-        "query": '"SUBROUTINE UMAT" language:Fortran',
+        "queries": list(queries),
         "search_total_reported_by_github": total,
         "search_pages_read": pages_read,
         "distinct_repositories_seen": len(names),

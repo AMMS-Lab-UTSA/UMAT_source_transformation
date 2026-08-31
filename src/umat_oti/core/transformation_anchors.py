@@ -132,7 +132,14 @@ def build_transformation_anchors(config: dict[str, Any], source_text: str = "") 
         seed_line_before = min(value for value in (seed_line_before, finite_seed_line, first_executable) if value)
 
     completion_issues: list[dict[str, Any]] = []
-    if not stress_regions:
+    # Asked before anything else, and returned alone when it fires. Every
+    # anchor below is a place inside the Abaqus UMAT interface; if the routine
+    # does not have that interface there is no such place, and listing four
+    # missing anchors describes the consequence while leaving the cause unsaid.
+    not_a_umat = _not_an_abaqus_umat_issue(analysis, mappings, selected_umat)
+    if not_a_umat is not None:
+        completion_issues.append(not_a_umat)
+    elif not stress_regions:
         completion_issues.append(
             {
                 "kind": "missing_stress_update_region",
@@ -281,6 +288,15 @@ def anchor_completion_status(config: dict[str, Any]) -> dict[str, Any]:
             ],
         }
     issues = [dict(row) for row in anchors.get("completion_issues", []) if isinstance(row, dict)]
+    # One issue answers all the others. Every required field below names a
+    # place inside the Abaqus UMAT interface, and a routine that does not have
+    # that interface is missing all of them for one reason. Reporting the
+    # reason alone is the whole point of detecting it.
+    not_a_umat = next(
+        (row for row in issues
+         if row.get("kind") == "selected_routine_is_not_an_abaqus_umat"), None)
+    if not_a_umat is not None:
+        return {"status": "needs_json_completion", "completion_issues": [not_a_umat]}
     issues.extend(_required_contract_issues(config, anchors))
     status = "needs_json_completion" if issues else str(anchors.get("status") or "ready_with_json_contract")
     return {"status": status, "completion_issues": issues}
@@ -373,6 +389,50 @@ def _selected_umat(config: dict[str, Any], analysis: dict[str, Any]) -> str:
             return name
     routines = analysis.get("detected_subroutines", [])
     return str(routines[0].get("name", "UMAT")).upper() if routines else "UMAT"
+
+
+def _selected_routine_arguments(
+    analysis: dict[str, Any], selected_umat: str
+) -> tuple[str, ...] | None:
+    """The selected routine's dummy argument names, or None if it was not found."""
+    target = (selected_umat or "UMAT").upper()
+    for routine in analysis.get("detected_subroutines", []) or []:
+        if str(routine.get("name", "")).upper() == target:
+            return tuple(str(name).upper() for name in (routine.get("arguments") or []))
+    return None
+
+
+def _not_an_abaqus_umat_issue(
+    analysis: dict[str, Any], mappings: dict[str, str], selected_umat: str
+) -> dict[str, Any] | None:
+    """The routine carries the UMAT name but not the UMAT interface.
+
+    Abaqus calls a UMAT with one fixed argument list, and the contract is
+    written against two of its arrays. A file can hold a routine named UMAT
+    that is something else entirely -- a four-argument demonstration routine
+    called from a ``program`` in the same file is one -- and there the anchor
+    search reports four missing anchors, each true and none of them the
+    reason. Fires only when the routine receives neither output, so a UMAT
+    whose delegate spells the arguments differently is not caught by it.
+    """
+    arguments = _selected_routine_arguments(analysis, selected_umat)
+    if arguments is None:
+        return None
+    stress = str(mappings.get("stress") or "STRESS").upper()
+    ddsdde = str(mappings.get("ddsdde") or "DDSDDE").upper()
+    if stress in arguments or ddsdde in arguments:
+        return None
+    return {
+        "kind": "selected_routine_is_not_an_abaqus_umat",
+        "message": (
+            f"SUBROUTINE {(selected_umat or 'UMAT').upper()} is declared as "
+            f"({', '.join(arguments)}) and receives neither {stress} nor "
+            f"{ddsdde}. That is not the argument list Abaqus calls a UMAT "
+            "with, so this routine has no stress or tangent output for the "
+            "transform to write into."
+        ),
+        "required_json_field": "source.selected_umat_name",
+    }
 
 
 def _selected_umat_span(analysis: dict[str, Any], selected_umat: str) -> tuple[int, int]:

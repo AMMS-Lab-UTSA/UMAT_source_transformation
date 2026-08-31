@@ -9,6 +9,18 @@ from umat_oti.fortran.parser import parse_entity, split_top_level
 
 ASSIGNMENT_RE = re.compile(r"^\s*(?P<lhs>[A-Za-z_]\w*)\s*(?:\([^=]*\))?\s*=\s*(?P<rhs>.+)$")
 TOKEN_RE = re.compile(r"\b[A-Za-z_]\w*\b")
+#: A Fortran real literal, exponent included, so the exponent's letter is not
+#: read as a name. ``1.0D0`` was already handled by discarding a token that
+#: looks like D<digits>, but ``1.d-12`` puts the sign between them and yields
+#: the bare token "D". Nothing declares D, nothing assigns it, and it was
+#: promoted to an OTI shadow anyway -- so the transform declared D_OTI and
+#: then rewrote the literal that invented it into ``1.D_OTI-12``.
+REAL_LITERAL_RE = re.compile(
+    r"(?<![A-Za-z0-9_])"
+    r"(?:\d+\.\d*(?:[dDeEqQ][-+]?\d+)?"
+    r"|\.\d+(?:[dDeEqQ][-+]?\d+)?"
+    r"|\d+[dDeEqQ][-+]?\d+)"
+)
 FORTRAN_KEYWORDS = {
     "AND",
     "CALL",
@@ -149,7 +161,7 @@ def _record(records: dict[str, VariableRecord], name: str) -> VariableRecord:
 
 def _tokens(text: str) -> set[str]:
     result: set[str] = set()
-    for token in TOKEN_RE.findall(text):
+    for token in TOKEN_RE.findall(REAL_LITERAL_RE.sub(" ", text)):
         upper = token.upper()
         if upper in FORTRAN_KEYWORDS or upper in FORTRAN_INTRINSICS:
             continue
