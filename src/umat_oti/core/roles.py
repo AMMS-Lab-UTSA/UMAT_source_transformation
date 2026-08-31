@@ -132,6 +132,53 @@ def common_block_names(source_text: str | None) -> frozenset[str]:
     return frozenset(name for name in names if name and name.isidentifier())
 
 
+
+_DATA_STATEMENT = re.compile(r"^\s*data\s+(.*?)/", re.IGNORECASE)
+
+
+def data_initialised_names(source_text: str | None) -> frozenset[str]:
+    """Names given their value by a DATA statement.
+
+    A DATA statement is not an assignment and no assignment scan sees it, so a
+    name initialised that way and never written again looks, to everything
+    downstream, like a variable that is never given a value at all. That is
+    the opposite of the truth: it is a compile-time constant.
+
+    It matters because promoting one silently destroys it. mholla/growth
+    declares the Voigt identity as
+
+        real*8  xi(6)
+        data xi/1.d0,1.d0,1.d0,0.d0,0.d0,0.d0/
+
+    and reads it in the stress update. Promoted, XI_OTI is declared, zeroed by
+    the shadow initialiser, and never given the DATA values, so the whole
+    ``(lam*lnJe - mu)*xi(i)`` pressure term evaluates to zero -- in the stress
+    that is written back and in every derivative extracted from it. The file
+    compiles, no check fails, and nothing warns.
+    """
+    if not source_text:
+        return frozenset()
+    names: set[str] = set()
+    for line in source_text.splitlines():
+        stripped = line.strip()
+        if stripped[:1] in ("c", "C", "*", "!") and not stripped[:4].lower().startswith("data"):
+            continue
+        match = _DATA_STATEMENT.match(stripped)
+        if not match:
+            continue
+        # Everything before the first "/" is the name list. An implied-do list
+        # -- DATA (X(I),I=1,3)/.../ -- splits on commas into "(X(I)", "I=1"
+        # and "3)", so the loop control has to be dropped explicitly: an item
+        # containing "=" names an index, not a variable being initialised.
+        for item in match.group(1).split(","):
+            if "=" in item:
+                continue
+            head = re.match(r"\s*\(?\s*([A-Za-z_]\w*)", item)
+            if head:
+                names.add(head.group(1).upper())
+    return frozenset(names)
+
+
 def implicit_integer_letters(source_text: str) -> frozenset[str]:
     """Which first letters make an undeclared name an INTEGER.
 
@@ -239,6 +286,7 @@ def _suggest_variable_roles(analysis: dict[str, Any],
     not_variables = (INTRINSIC_CALL_NAMES | defined_function_names(source_text)
                      if source_text is not None else frozenset())
     common_names = common_block_names(source_text)
+    data_names = data_initialised_names(source_text)
     helper_local_names = _pure_helper_local_variables(analysis)
     helper_output_names = _pure_helper_output_variables(analysis)
     plasticity = analysis.get("plasticity_indicators", {}) or {}
@@ -275,6 +323,18 @@ def _suggest_variable_roles(analysis: dict[str, Any],
                    else "a function this source defines")
                 + ". Promoting it renames the call itself, and the renamed "
                   "name is declared nowhere."
+            )
+        elif (role in ("Promote", "Seed", "Unknown") and name in data_names
+                and "write" not in set(variable.get("detected_usage") or [])
+                and "write" not in usage
+                and "write" not in str(variable.get("read_write") or "")):
+            role = "Keep real"
+            notes = (
+                f"{name} is given its value by a DATA statement and is never "
+                "assigned, so it is a compile-time constant and carries no "
+                "derivative. Promoting it would declare a shadow that the "
+                "initialiser zeroes and the DATA values never reach, which "
+                "reads as the constant being zero rather than as an error."
             )
         elif role == "Promote" and "*" in str(variable.get("detected_shape") or ""):
             role = "Keep real"

@@ -93,7 +93,7 @@ def transform_umat_to_oti_from_config(
     mappings = _mapping(config)
     selected_umat = _selected_umat(config)
     source_file = _source_file(config)
-    roles = _roles_with_stress_path_promotions(config, roles)
+    roles = _roles_with_stress_path_promotions(config, roles, source_text)
     roles = _roles_with_finite_strain_promotions(config, roles)
     roles = _roles_with_extra_jacobian_promotions(config, roles)
     parsed = _parse_source(source_text, source_file)
@@ -164,6 +164,7 @@ def transform_umat_to_oti_from_config(
     variable_shapes = _variable_shapes(config, mappings, ntens)
     argument_variables = _argument_variables(config, selected_umat)
     shape_blockers = _shape_blockers(source_text, roles, regions, mappings, variable_shapes)
+    shape_blockers.extend(_data_initialised_shadow_blockers(source_text, roles))
     if shape_blockers:
         blockers.extend(shape_blockers)
         report = {**report_base, "success": False, "warnings": warnings, "blockers": blockers, "generated_files": []}
@@ -826,9 +827,40 @@ def _roles_with_extra_jacobian_promotions(config: dict[str, Any], roles: dict[st
     return updated
 
 
-def _roles_with_stress_path_promotions(config: dict[str, Any], roles: dict[str, set[str]]) -> dict[str, set[str]]:
+def _written_names_from_analysis(analysis: dict[str, Any]) -> set[str]:
+    """Names the source assigns to somewhere."""
+    written: set[str] = set()
+    for row in analysis.get("detected_variables", []) or []:
+        if not isinstance(row, dict):
+            continue
+        access = row.get("read_write") or row.get("access") or ""
+        usage = row.get("detected_usage") or []
+        text = f"{access} {' '.join(str(u) for u in usage)}".lower()
+        if "write" in text:
+            written.add(str(row.get("variable_name", "")).upper())
+    return written
+
+
+def _roles_with_stress_path_promotions(
+    config: dict[str, Any], roles: dict[str, set[str]], source_text: str = "",
+) -> dict[str, set[str]]:
     updated = {key: set(value) for key, value in roles.items()}
     analysis = _dict(config.get("analysis"))
+    # A DATA statement is not an assignment, so a name initialised by one and
+    # never written again reads here as a variable with no value at all. It is
+    # the opposite: a compile-time constant. Being on the stress path promoted
+    # it anyway, its shadow was zeroed by the initialiser, and the DATA values
+    # never arrived -- so a Voigt identity declared
+    #     real*8 xi(6)
+    #     data xi/1.d0,1.d0,1.d0,0.d0,0.d0,0.d0/
+    # multiplied its whole term by zero, in the stress written back and in
+    # every derivative taken from it, with the file compiling and no check
+    # failing. The classifier declines these too; this promotion runs after it
+    # and overrides it, so declining in both places is what actually keeps
+    # them out.
+    written = _written_names_from_analysis(analysis)
+    data_constants = {
+        name for name in data_initialised_names(source_text) if name not in written}
     summary = _dict(analysis.get("region_summary"))
     path_names = _upper_set(summary.get("stress_path_variables", []))
     role_items = _variable_role_items(config)
@@ -852,6 +884,7 @@ def _roles_with_stress_path_promotions(config: dict[str, Any], roles: dict[str, 
             or name in updated["seed"]
             or name in updated["keep_real"]
             or name in assumed_size
+            or name in data_constants
             or name in INTRINSIC_TOKEN_NAMES
             or (known_variables and name not in known_variables)
         ):
@@ -1003,7 +1036,8 @@ def _first_finite_path_assignment_line(
 # One definition, in core.roles, so the classifier and this check cannot drift
 # apart about what counts as a call rather than a variable.
 from umat_oti.core.roles import (  # noqa: E402
-    INTRINSIC_CALL_NAMES as _INTRINSIC_CALLS, defined_function_names as _defined_function_names,
+    INTRINSIC_CALL_NAMES as _INTRINSIC_CALLS,
+    data_initialised_names, defined_function_names as _defined_function_names,
 )
 
 
@@ -1030,6 +1064,36 @@ def _shape_blockers(
         if not shape and re.search(rf"\b{re.escape(name)}\s*\(", region_text, flags=re.IGNORECASE):
             blockers.append(f"Promoted variable {name} is indexed in a stress region but has no confirmed shape.")
     return blockers
+
+
+def _data_initialised_shadow_blockers(
+    source_text: str, roles: dict[str, set[str]]
+) -> list[str]:
+    """Refuse to shadow a name whose starting value comes from a DATA statement.
+
+    A shadow is declared and zeroed by the initialiser; nothing carries a DATA
+    value into it, and there is no DATA rewriting anywhere in this transformer
+    (it is listed among the declared unsupported constructs). A name that is
+    DATA-initialised and never assigned is handled before this point -- it is a
+    constant and stays real. What is left is the genuinely unhandled case: a
+    name that starts from a DATA value and is then assigned. Its shadow would
+    begin at zero instead, and every result computed from it before the first
+    assignment would be wrong with nothing to show for it.
+
+    Refused rather than emitted, because the alternative is a file that
+    compiles, passes every semantic check, and returns a wrong stress.
+    """
+    initialised = data_initialised_names(source_text)
+    if not initialised:
+        return []
+    return [
+        f"{name} takes its starting value from a DATA statement and is also "
+        "assigned, so it needs an OTI shadow, and nothing carries a DATA "
+        "value into a shadow. The shadow would start at zero instead of the "
+        "declared value. DATA initialisation of a promoted variable is not "
+        "supported."
+        for name in sorted((roles["seed"] | roles["promote"]) & initialised)
+    ]
 
 
 def _transform_source_text(
