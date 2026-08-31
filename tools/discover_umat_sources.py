@@ -210,12 +210,42 @@ def search_repositories(client: GitHubClient, *, pages: int,
     return ordered, total_reported, read, matched_paths
 
 
+
+#: Repositories that are this project itself, or its sibling. A corpus of
+#: externally authored sources exists to show the transformer works on code
+#: nobody here wrote; admitting the authoring project's own repository would
+#: make the corpus partly a mirror of the thing being measured. The search
+#: query finds them because they legitimately contain UMAT sources, so the
+#: exclusion has to be explicit. Matched on the full owner/name,
+#: case-insensitively. A fork under a different owner is not caught here
+#: and does not need to be: it carries the same file contents, so the
+#: content-hash dedup reports it as a duplicate. Matching on the bare
+#: repository name instead would refuse an unrelated project that happens
+#: to have chosen the same name.
+OWN_REPOSITORIES = frozenset({
+    "amms-lab-utsa/umat_source_transformation",
+    "amms-lab-utsa/residual_assembler",
+})
+
+
+def is_own_repository(full_name: str) -> bool:
+    """Whether this repository is the project being validated."""
+    return full_name.strip().lower() in OWN_REPOSITORIES
+
+
 def survey_repository(client: GitHubClient, full_name: str,
                       known: dict[str, str], survey: Survey,
                       *, max_files: int, matched: set[str] | None = None,
                       cache_dir: Path | None = None, max_decks: int = 40) -> None:
     owner, _, repo = full_name.partition("/")
     row = Discovery(repository=full_name)
+
+    if is_own_repository(full_name):
+        row.outcome = "own_repository"
+        row.reason = ("this is the project being validated; its sources and "
+                      "decks are not external evidence about itself")
+        survey.add(row)
+        return
 
     try:
         spdx, evidence = client.license(owner, repo)
