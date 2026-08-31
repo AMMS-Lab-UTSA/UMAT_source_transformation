@@ -13,6 +13,13 @@ UNSUPPORTED_PATTERNS: tuple[tuple[str, str, str], ...] = (
     ("io_open", r"^\s*open\b", "Runtime file I/O is not supported in transformed UMAT kernels."),
     ("io_read", r"^\s*read\b", "Runtime input I/O is not supported in transformed UMAT kernels."),
     ("io_write", r"^\s*write\b", "Runtime output I/O is not supported in transformed UMAT kernels."),
+    # A USE brings in derived types, generic interfaces and defined operators
+    # from a file the transformer never reads, and every one of them reads as
+    # NAME(...) at the point of use -- identical to indexing an array. Declared
+    # here so the limitation is stated where the others are, instead of
+    # surfacing downstream as a promoted variable with no confirmed shape.
+    ("module_use", r"^\s*use\s+[A-Za-z_]",
+     "Names imported from a Fortran module are not resolved by the transformer."),
 )
 def scan_unsupported_features(
     logical_lines: tuple[FortranLogicalLine, ...], call_sites: tuple[CallSite, ...]

@@ -9,6 +9,7 @@ from typing import Any
 
 from umat_oti.core.model import ParsedFortranSource
 from umat_oti.core.transformation_anchors import anchor_completion_status
+from umat_oti.fortran.callgraph import build_call_graph, undefined_delegate_call
 from umat_oti.fortran.normalize import detect_source_form
 from umat_oti.fortran.parser import (
     logical_lines_from_text, parse_entity, parse_subroutines, split_top_level,
@@ -127,7 +128,7 @@ def transform_umat_to_oti_from_config(
             helper_lift_names = helper_lift_closure(parsed, helper_roots, selected_umat=selected_umat)
         except HelperLiftingError as exc:
             helper_lift_issue = str(exc)
-    blockers = _readiness_blockers(config, roles, regions, mappings, ntens, selected_umat, source_text, helper_lift_issue="")
+    blockers = _readiness_blockers(config, roles, regions, mappings, ntens, selected_umat, source_text, helper_lift_issue="", parsed=parsed)
     blockers.extend(tangent_context.blockers)
     warnings: list[str] = []
     if helper_lift_issue:
@@ -163,7 +164,7 @@ def transform_umat_to_oti_from_config(
 
     variable_shapes = _variable_shapes(config, mappings, ntens)
     argument_variables = _argument_variables(config, selected_umat)
-    shape_blockers = _shape_blockers(source_text, roles, regions, mappings, variable_shapes)
+    shape_blockers = _shape_blockers(source_text, roles, regions, mappings, variable_shapes, parsed)
     if shape_blockers:
         blockers.extend(shape_blockers)
         report = {**report_base, "success": False, "warnings": warnings, "blockers": blockers, "generated_files": []}
@@ -448,11 +449,26 @@ def _readiness_blockers(
     selected_umat: str,
     source_text: str,
     helper_lift_issue: str = "",
+    parsed: ParsedFortranSource | None = None,
 ) -> list[str]:
     blockers: list[str] = []
     review = _dict(config.get("transformation_review"))
     analysis = _dict(config.get("analysis"))
     has_completed_anchors = bool(config.get("transformation_anchors"))
+    # Named first, because it explains every other blocker this source
+    # produces. A wrapper that hands its whole job to a routine defined in
+    # another file has no stress update and no tangent here to find, and the
+    # checks below can only report the absence as a list of symptoms.
+    missing_delegate = (
+        undefined_delegate_call(parsed, selected_umat or "UMAT") if parsed is not None else None
+    )
+    if missing_delegate:
+        blockers.append(
+            f"{(selected_umat or 'UMAT').upper()} delegates its whole body to "
+            f"{missing_delegate}, which this source does not define: the stress "
+            "update and the tangent are in another file, so there is nothing "
+            "here to transform."
+        )
     if has_completed_anchors:
         completion = anchor_completion_status(config)
         if completion.get("status") == "needs_json_completion":
@@ -479,7 +495,9 @@ def _readiness_blockers(
         blockers.extend(_completed_json_helper_call_blockers(analysis, regions["stress"], roles, helper_lift_issue))
     blockers.extend(_local_newton_blockers(config, roles))
     blockers.extend(_unsupported_intrinsic_blockers(source_text, roles, regions["stress"]))
-    blockers.extend(_uncovered_ddsdde_blockers(analysis, regions["old_tangent"], regions["stress"], regions["shared_setup"]))
+    blockers.extend(_uncovered_ddsdde_blockers(
+        analysis, regions["old_tangent"], regions["stress"], regions["shared_setup"],
+        _reachable_routine_regions(parsed, selected_umat)))
     if not source_text.strip():
         blockers.append("Selected UMAT source text is empty.")
     if not has_completed_anchors:
@@ -613,7 +631,17 @@ def _uncovered_ddsdde_blockers(
     old_tangent_regions: list[dict[str, Any]],
     stress_regions: list[dict[str, Any]],
     shared_setup_regions: list[dict[str, Any]],
+    reachable_regions: list[dict[str, Any]] | None = None,
 ) -> list[str]:
+    """DDSDDE assignments the transform would leave writing the old tangent.
+
+    ``reachable_regions``, when given, is the selected routine and the
+    routines it can call. An assignment outside all of them is in code this
+    transform never executes -- a second model shipped in the same file that
+    nothing calls -- and reporting it says nothing true about the source. One
+    file lists twenty-two such assignments in a routine its UMAT does not
+    call, and they were the whole of its blocker text.
+    """
     blockers = []
     first_stress_start = min((region.get("start_line", 0) for region in stress_regions), default=0)
     for assignment in analysis.get("assignments_to_ddsdde", []) or []:
@@ -622,6 +650,8 @@ def _uncovered_ddsdde_blockers(
             last_assignment_line = max(int(value) for value in line_numbers)
         except (TypeError, ValueError):
             last_assignment_line = 0
+        if reachable_regions and not _line_numbers_intersect(line_numbers, reachable_regions):
+            continue
         if first_stress_start and last_assignment_line and last_assignment_line < first_stress_start:
             continue
         if _line_numbers_intersect(line_numbers, shared_setup_regions):
@@ -629,6 +659,40 @@ def _uncovered_ddsdde_blockers(
         if not _line_numbers_intersect(assignment.get("line_numbers", []), old_tangent_regions):
             blockers.append(f"DDSDDE assignment is not covered by an old tangent replacement region: {assignment.get('text', '')}")
     return blockers
+
+
+def _reachable_routine_regions(
+    parsed: ParsedFortranSource | None, selected_umat: str
+) -> list[dict[str, Any]]:
+    """Line spans of the selected routine and every routine it can reach.
+
+    Empty when the source could not be parsed or the routine is not found, and
+    an empty result means "do not scope" at every call site -- a span this
+    cannot compute must not silently narrow a check.
+    """
+    if parsed is None or not parsed.subroutines:
+        return []
+    routines = {routine.upper_name: routine for routine in parsed.subroutines}
+    start = (selected_umat or "UMAT").upper()
+    if start not in routines:
+        return []
+    reached: set[str] = set()
+    pending = [start]
+    while pending:
+        current = pending.pop()
+        if current in reached:
+            continue
+        reached.add(current)
+        for call in build_call_graph(parsed, current):
+            callee = call.callee.upper()
+            if callee in routines and callee not in reached:
+                pending.append(callee)
+    regions: list[dict[str, Any]] = []
+    for name in sorted(reached):
+        span = _selected_routine_span(parsed, name)
+        if span:
+            regions.append({"region_id": name, "start_line": span[0], "end_line": span[1]})
+    return regions
 
 
 def _tangent_region_context(
@@ -896,18 +960,48 @@ def _regions_with_finite_strain_path(
     end_line = min(highest, int(end_line))
     if end_line < start_line:
         return updated
-    updated["stress"].append(
-        {
-            "region_id": "FINITE-STRAIN-PROPAGATION",
-            "start_line": start_line,
-            "end_line": end_line,
-            "reason": "Executable finite-strain kinematics detected on stress path",
-            "classification": "Main stress update, transform with OTIS",
-            "variables": sorted(_finite_kinematic_names_from_analysis(_dict(config.get("analysis")))),
-            "preview": "",
-        }
-    )
+    # The propagation region is one contiguous span from the first
+    # finite-strain line to the last stress line, and in a source whose author
+    # wrote the tangent between them it swallows the tangent whole. Membership
+    # in a stress region wins over membership in a tangent region downstream,
+    # so the old DDSDDE block was rewritten in place instead of being
+    # commented out, and the keep-real setup between them was rewritten too.
+    # A span this synthesises to bridge a gap must not reclassify lines the
+    # anchor stage has already classified; it is filled in around them.
+    claimed = _line_set(updated["old_tangent"]) | _line_set(updated["shared_setup"])
+    variables = sorted(_finite_kinematic_names_from_analysis(_dict(config.get("analysis"))))
+    for index, (span_start, span_end) in enumerate(
+            _spans_excluding(start_line, end_line, claimed), start=1):
+        updated["stress"].append(
+            {
+                "region_id": ("FINITE-STRAIN-PROPAGATION" if index == 1
+                              else f"FINITE-STRAIN-PROPAGATION-{index}"),
+                "start_line": span_start,
+                "end_line": span_end,
+                "reason": "Executable finite-strain kinematics detected on stress path",
+                "classification": "Main stress update, transform with OTIS",
+                "variables": variables,
+                "preview": "",
+            }
+        )
     return updated
+
+
+def _spans_excluding(start: int, end: int, excluded: set[int]) -> list[tuple[int, int]]:
+    """``start..end`` split into the runs of lines that are not excluded."""
+    spans: list[tuple[int, int]] = []
+    run_start: int | None = None
+    for line in range(start, end + 1):
+        if line in excluded:
+            if run_start is not None:
+                spans.append((run_start, line - 1))
+                run_start = None
+            continue
+        if run_start is None:
+            run_start = line
+    if run_start is not None:
+        spans.append((run_start, end))
+    return spans
 
 
 def _regions_with_local_stress_bridges(regions: dict[str, list[dict[str, Any]]], source_text: str) -> dict[str, list[dict[str, Any]]]:
@@ -1007,12 +1101,47 @@ from umat_oti.core.roles import (  # noqa: E402
 )
 
 
+def _used_modules_not_defined_here(source_text: str) -> list[str]:
+    """Modules this source USEs and does not itself define.
+
+    A USE brings in names -- derived types, generic functions, operators --
+    that are not in this file at all. Every one of them reads as ``NAME(...)``
+    at a call site, which is indistinguishable from indexing an array unless
+    the module can be read, and it cannot be.
+    """
+    defined = {
+        match.group(1).upper()
+        for match in re.finditer(r"^\s*MODULE\s+([A-Za-z_]\w*)\s*$", source_text,
+                                 flags=re.IGNORECASE | re.MULTILINE)
+    }
+    used: list[str] = []
+    for match in re.finditer(r"^\s*USE\s+([A-Za-z_]\w*)", source_text,
+                             flags=re.IGNORECASE | re.MULTILINE):
+        name = match.group(1).upper()
+        if name not in defined and name not in used:
+            used.append(name)
+    return used
+
+
+def _declared_names(parsed: ParsedFortranSource | None) -> set[str]:
+    """Every name this source declares, in any routine."""
+    if parsed is None:
+        return set()
+    names: set[str] = set()
+    for routine in parsed.subroutines:
+        names.update(argument.upper() for argument in routine.args)
+        for declaration in routine.declarations:
+            names.update(entity.upper_name for entity in declaration.entities)
+    return names
+
+
 def _shape_blockers(
     source_text: str,
     roles: dict[str, set[str]],
     regions: dict[str, list[dict[str, Any]]],
     mappings: dict[str, str],
     variable_shapes: dict[str, str],
+    parsed: ParsedFortranSource | None = None,
 ) -> list[str]:
     blockers: list[str] = []
     region_text = _selected_region_text(source_text, regions["stress"])
@@ -1023,12 +1152,30 @@ def _shape_blockers(
     # crystal-plasticity flow rule named F both blocked a source that has
     # nothing wrong with it.
     not_arrays = _INTRINSIC_CALLS | _defined_function_names(source_text)
+    used_modules = _used_modules_not_defined_here(source_text)
+    declared = _declared_names(parsed)
     for name in sorted(roles["seed"] | roles["promote"]):
         if name in mapped_arrays or name.upper() in not_arrays:
             continue
         shape = variable_shapes.get(name, "")
-        if not shape and re.search(rf"\b{re.escape(name)}\s*\(", region_text, flags=re.IGNORECASE):
-            blockers.append(f"Promoted variable {name} is indexed in a stress region but has no confirmed shape.")
+        if shape or not re.search(rf"\b{re.escape(name)}\s*\(", region_text, flags=re.IGNORECASE):
+            continue
+        # "No confirmed shape" is what a missing declaration looks like from
+        # here; it is not why the declaration is missing. When the name is not
+        # declared in this source at all and the source USEs a module this
+        # source does not contain, the name is a call into that module, and
+        # saying "no confirmed shape" sends the reader to look for a DIMENSION
+        # statement that was never going to be there.
+        if used_modules and name.upper() not in declared:
+            blockers.append(
+                f"{name} appears as {name}(...) on the stress path but is not "
+                f"declared anywhere in this source, which USEs "
+                f"{', '.join(used_modules)} without defining it. The "
+                f"transformer cannot read that module, so it cannot tell "
+                f"whether {name} is an array to promote or a call into it."
+            )
+            continue
+        blockers.append(f"Promoted variable {name} is indexed in a stress region but has no confirmed shape.")
     return blockers
 
 
@@ -1287,7 +1434,10 @@ def _transform_source_text(
                     and assign.group(1).upper() not in replacement_names
                     and not re.match(r"^\s*(?:IF|DO|ELSE|END|WRITE|READ|CALL|GO\s*TO|GOTO)\b", candidate, flags=re.IGNORECASE)
                 ):
-                    rhs = assign.group(2)
+                    # The statement, not the note the author left beside it.
+                    # "cr_pos = props(4)   ! critical stress for growth" reads
+                    # no promoted name; the word "stress" is in the comment.
+                    rhs = _statement_without_inline_comment(assign.group(2))
                     reads_promoted_reference = any(
                         re.search(rf"\b{re.escape(name)}\b", rhs, flags=re.IGNORECASE) for name in replacement_names
                     )
@@ -1787,7 +1937,14 @@ def _initialization_lines(
     dstran = mappings.get("dstran", "DSTRAN")
     stress = mappings.get("stress", "STRESS")
     statev = mappings.get("statev", "STATEV")
-    if dstran in roles["seed"]:
+    # DSTRAN_OTI can only exist where DSTRAN does. A material routine reached
+    # through an Abaqus wrapper is handed the deformation gradient and not the
+    # strain increment -- thirteen of the discovered sources are written that
+    # way -- and there this copy read a dummy argument the routine does not
+    # have while assigning a shadow that was never declared. gfortran reported
+    # both as undeclared functions, which is the last thing they are.
+    dstran_in_scope = dstran in set(shadow_variables)
+    if dstran in roles["seed"] and dstran_in_scope:
         lines.extend(
             [
                 _stmt(form, "DO OTI_I = 1, NTENS"),
@@ -1819,8 +1976,13 @@ def _initialization_lines(
         lines.extend(_copy_real_shadow_lines(form, name, variable_shapes.get(name, "")))
     if seed_dfgrd1 and "DFGRD1" in roles["promote"] and dstran in roles["seed"]:
         lines.extend(_finite_dfgrd1_seed_lines(form, ntens))
-    for direction in range(1, ntens + 1):
-        lines.append(_stmt(form, f"{dstran}_OTI({direction}) = {dstran}_OTI({direction}) + {_seed_basis_name(direction)}"))
+    # Same reason as the copy above. Where the strain increment is out of
+    # scope the deformation-gradient seed is the seed; where neither is
+    # present nothing is seeded, and the seed-consumption checks say so
+    # rather than this emitting a statement that cannot compile.
+    if dstran_in_scope:
+        for direction in range(1, ntens + 1):
+            lines.append(_stmt(form, f"{dstran}_OTI({direction}) = {dstran}_OTI({direction}) + {_seed_basis_name(direction)}"))
     return lines
 
 
@@ -2107,6 +2269,20 @@ def _transform_executable_line(
     lifted_helper_names: set[str] | None = None,
     helper_output_surfaces: dict[str, list[dict[str, Any]]] | None = None,
 ) -> str:
+    # A trailing ! comment is not part of the statement, and treating it as
+    # one does more than rename words inside prose: wrapping an assignment's
+    # right-hand side in REAL(...) put the closing parenthesis after the
+    # comment, so "cr_pos = props(4)   ! critical stress for growth" was
+    # emitted as "cr_pos = REAL(props(4)   ! critical STRESS_OTI for growth"
+    # and the file stopped being Fortran. Split off, transformed without it,
+    # and reattached exactly as the author wrote it.
+    statement = _statement_without_inline_comment(line)
+    if statement != line:
+        if not statement.strip():
+            return line
+        return _transform_executable_line(
+            statement, replacement_names, type_name,
+            lifted_helper_names, helper_output_surfaces) + line[len(statement):]
     replaced = _replace_role_references(line, replacement_names)
     replaced = _rewrite_lifted_helper_call(replaced, lifted_helper_names or set(), helper_output_surfaces or {})
     replaced = _wrap_oti_condition_with_real(replaced)
@@ -2296,6 +2472,19 @@ def _wrap_fixed_form_source(source: str) -> str:
 def _wrap_fixed_form_line(line: str) -> str:
     if len(line.rstrip("\n")) <= 72 or _is_commented(line):
         return line
+    # An over-long line whose overflow is a trailing ! comment is not an
+    # over-long statement. Wrapping it put the tail of the comment in column 7
+    # of a continuation line -- "     1growth" -- and the statement above it
+    # stopped being classifiable. The comment moves to a line of its own, and
+    # only the statement is measured against the 72-column limit.
+    statement = _statement_without_inline_comment(line).rstrip()
+    if statement != line.rstrip("\n") and statement.strip():
+        comment = line.rstrip("\n")[len(statement):].lstrip()
+        wrapped_statement = _wrap_fixed_form_line(statement)
+        if not comment:
+            return wrapped_statement
+        return "\n".join([wrapped_statement,
+                          *_split_fixed_form_comment(comment)])
     prefix = line[:6] if len(line) >= 6 else "      "
     payload = line[6:].rstrip() if len(line) >= 6 else line.strip()
     if not payload:
@@ -2306,6 +2495,14 @@ def _wrap_fixed_form_line(line: str) -> str:
     wrapped = [prefix + chunks[0]]
     wrapped.extend("     1" + chunk for chunk in chunks[1:])
     return "\n".join(wrapped)
+
+
+def _split_fixed_form_comment(comment: str) -> list[str]:
+    """The author's trailing comment, as full comment lines within 72 columns."""
+    body = comment.lstrip("!").strip()
+    if not body:
+        return ["C"]
+    return [f"C     {chunk}" for chunk in _split_fixed_form_payload(body, 66)]
 
 
 def _split_fixed_form_payload(payload: str, width: int) -> list[str]:
@@ -3789,7 +3986,6 @@ def _semantic_checks(
     checks = {
         f"USE {module_name}": f"transformed file does not contain USE {module_name}",
         f"TYPE({type_name})": f"transformed file does not contain TYPE({type_name})",
-        "DSTRAN_OTI": "transformed file does not contain DSTRAN_OTI",
         "STRESS_OTI": "transformed file does not contain STRESS_OTI",
         "SUBROUTINE UMAT": "transformed file does not contain SUBROUTINE UMAT",
     }
@@ -3802,7 +3998,6 @@ def _semantic_checks(
     dstran = mappings.get("dstran", "DSTRAN")
     stress = mappings.get("stress", "STRESS")
     ddsdde = mappings.get("ddsdde", "DDSDDE")
-    dstran_init_line = _first_line_matching(selected_active_lines, lambda line: _is_dstran_initialization_line(line, dstran))
     dstran_seed_lines = [line_number for line_number, line in selected_active_lines if _is_dstran_seed_line(line, dstran)]
     stress_expression_lines = _stress_expression_lines(selected_active_lines, roles, mappings)
     first_stress_expression_line = stress_expression_lines[0][0] if stress_expression_lines else 0
@@ -3824,11 +4019,38 @@ def _semantic_checks(
                          if _is_finite_dfgrd1_seed_line(line)]
     seed_names = {dstran} | ({"DFGRD1"} if dfgrd1_seed_lines else set())
     seed_lines = sorted(dstran_seed_lines + dfgrd1_seed_lines)
+    # The same correction, applied to the initialisation these checks pair
+    # with the seed. A material routine reached through an Abaqus wrapper has
+    # no DSTRAN at all -- thirteen discovered sources take the deformation
+    # gradient instead -- so asking for DSTRAN_OTI's initialisation asked
+    # about a variable the routine does not have, and its absence was reported
+    # as an ordering failure. The keys keep their names because published
+    # reports carry them; what they ask is the ordering of the variable that
+    # was actually seeded. The last initialisation must precede the first
+    # injection, so this takes the maximum, never the minimum: a check that
+    # would pass on the earliest of several initialisations is weaker than the
+    # one it replaces, and this has to be at least as strong.
+    seeded_initialization_lines = [
+        _first_line_matching(selected_active_lines,
+                             lambda line, variable=name: _is_shadow_initialization_line(line, variable))
+        for name in sorted(seed_names)
+        if (dstran_seed_lines if name == dstran else dfgrd1_seed_lines)
+    ]
+    seed_init_line = (max(seeded_initialization_lines)
+                      if seeded_initialization_lines and all(seeded_initialization_lines) else 0)
+    # Replaces a needle test for the literal text "DSTRAN_OTI" anywhere in the
+    # file. That passed on the word appearing in a comment and failed on a
+    # routine that has no strain increment to shadow; this asks for a seed
+    # injection, which is the thing the needle was standing in for.
+    if not seed_lines:
+        warnings.append(
+            f"transformed file injects no derivative direction: neither "
+            f"{dstran}_OTI nor DFGRD1_OTI is seeded")
     seed_consuming_lines = _seed_consuming_stress_lines(stress_expression_lines, seed_names)
     real_stress_extraction_line = _first_line_matching(selected_active_lines, lambda line: _is_real_stress_extraction_line(line, stress))
     helper_region_ids = {str(region.get("region_id", "")) for region in tangent_context.helper_regions}
     semantic_checks = {
-        "dstran_initialization_before_seed": bool(dstran_init_line and dstran_seed_lines and dstran_init_line < min(dstran_seed_lines)),
+        "dstran_initialization_before_seed": bool(seed_init_line and seed_lines and seed_init_line < min(seed_lines)),
         # The ordering is asked of every stress expression, not only of the
         # ones that name the seed. Restricting it to consumers is strictly
         # weaker -- consumers are a subset -- and it would pass a promoted
@@ -3837,13 +4059,13 @@ def _semantic_checks(
         # seeded, which is what the finite-strain fix bought; the consumption
         # check below is an addition beside it, not a replacement for it.
         "dstran_initialization_before_stress_use": bool(
-            dstran_init_line and first_stress_expression_line
-            and dstran_init_line < first_stress_expression_line),
+            seed_init_line and first_stress_expression_line
+            and seed_init_line < first_stress_expression_line),
         "stress_path_consumes_the_seed": bool(seed_consuming_lines),
         "dstran_seed_before_stress_update": bool(
             seed_lines and first_stress_expression_line
             and max(seed_lines) < first_stress_expression_line),
-        "dstran_seed_before_transformed_stress_update": bool(dstran_seed_lines and last_stress_update_line and max(dstran_seed_lines) < last_stress_update_line),
+        "dstran_seed_before_transformed_stress_update": bool(seed_lines and last_stress_update_line and max(seed_lines) < last_stress_update_line),
         "stress_oti_update_before_real_stress_extraction": bool(last_stress_update_line and real_stress_extraction_line and last_stress_update_line < real_stress_extraction_line),
         "ddsdde_output_present": bool(ddsdde_output_line),
         "real_stress_extraction_before_ddsdde_extraction": bool(real_stress_extraction_line and ddsdde_output_line and real_stress_extraction_line < ddsdde_output_line),
@@ -3857,7 +4079,7 @@ def _semantic_checks(
         ),
         "no_extraction_in_tangent_helper_region": extraction_insertion_region_id not in helper_region_ids,
         "fixed_form_line_lengths_ok": _fixed_form_line_lengths_ok(transformed_source, form),
-        "integer_literals_normalized_in_oti_expressions": _integer_literals_normalized_in_oti_expressions(transformed_source),
+        "integer_literals_normalized_in_oti_expressions": _integer_literals_normalized_in_oti_expressions(transformed_source, form),
         "promoted_dfgrd_variables_initialized_before_use": _promoted_dfgrd_variables_initialized_before_use(selected_active_lines, roles),
         "finite_strain_path_uses_oti_versions": _finite_strain_path_uses_oti_versions(selected_active_lines, roles),
     }
@@ -4292,14 +4514,76 @@ def _fixed_form_line_lengths_ok(source: str, form: str) -> bool:
     return all(len(line.rstrip("\n")) <= 72 for _, line in _active_lines_with_numbers(source))
 
 
-def _integer_literals_normalized_in_oti_expressions(source: str) -> bool:
-    for _, line in _active_lines_with_numbers(source):
-        if "_OTI" not in line.upper():
+#: A Fortran real literal, exponent included. Deliberately does not match a
+#: bare integer: the check below exists to find those, and blanking them would
+#: blind it. The exponent form is the point -- "3.8019047483079793e-6" ends in
+#: digits that are part of the literal, not an integer literal of their own.
+_REAL_LITERAL_RE = re.compile(
+    r"(?<![A-Za-z0-9_])"
+    r"(?:\d+\.\d*(?:[dDeEqQ][-+]?\d+)?"
+    r"|\.\d+(?:[dDeEqQ][-+]?\d+)?"
+    r"|\d+[dDeEqQ][-+]?\d+)"
+)
+
+
+def _statement_without_inline_comment(segment: str) -> str:
+    """The statement text with any trailing ``!`` comment removed.
+
+    Quoted text is respected, so a ``!`` inside a CHARACTER literal is not
+    read as a comment marker.
+    """
+    quote = ""
+    for index, character in enumerate(segment):
+        if quote:
+            if character == quote:
+                quote = ""
             continue
-        statement = line[6:] if len(line) > 6 and not line[:5].strip() and line[5] not in {" ", "0"} else line
-        if re.search(r"(?<![A-Za-z0-9_.)])\d+(?![A-Za-z0-9_.])\s*[*\/]", statement):
+        if character in {"'", '"'}:
+            quote = character
+            continue
+        if character == "!":
+            return segment[:index]
+    return segment
+
+
+def _logical_statements_with_numbers(source: str, form: str) -> list[tuple[int, str]]:
+    """Active statements with fixed-form continuations joined, comments dropped.
+
+    A real literal may straddle a fixed-form continuation -- gfortran reads
+    ``2.7026494317808357e-`` and ``6*Sin(...)`` on the next line as one number
+    -- and a reader that looks at one physical line at a time sees the tail as
+    a bare integer multiplying something. Joining before scanning is what makes
+    the statement the compiler sees the statement the check sees. No space is
+    inserted at the join, because fixed form does not insert one.
+    """
+    statements: list[tuple[int, str]] = []
+    for line_number, line in _active_lines_with_numbers(source):
+        segment = _statement_without_inline_comment(_statement_line_segment(line, form))
+        if form == "fixed" and statements and _is_continuation_line(line, form):
+            first_line, text = statements[-1]
+            statements[-1] = (first_line, text + segment)
+            continue
+        statements.append((line_number, segment))
+    return statements
+
+
+def _integer_literals_normalized_in_oti_expressions(source: str, form: str = "fixed") -> bool:
+    """No bare integer literal multiplies or divides an OTI expression.
+
+    The OTI type has no operator against a default INTEGER, so ``2*X_OTI``
+    does not compile and this catches it before the compiler does. It reads
+    the joined statement with real literals blanked out first: without that,
+    ``3.8019047483079793e-6*Sin(Pi*X_OTI)`` reported an unnormalised integer
+    -- the exponent's digits -- in a file that compiles cleanly, and the
+    source was refused for a defect that was not in it.
+    """
+    for _, statement in _logical_statements_with_numbers(source, form):
+        if "_OTI" not in statement.upper():
+            continue
+        scanned = _REAL_LITERAL_RE.sub(lambda match: " " * len(match.group(0)), statement)
+        if re.search(r"(?<![A-Za-z0-9_.)])\d+(?![A-Za-z0-9_.])\s*[*\/]", scanned):
             return False
-        if re.search(r"[*\/]\s*\d+(?![A-Za-z0-9_.])", statement):
+        if re.search(r"[*\/]\s*\d+(?![A-Za-z0-9_.])", scanned):
             return False
     return True
 
