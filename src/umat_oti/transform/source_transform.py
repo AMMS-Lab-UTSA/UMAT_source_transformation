@@ -2225,6 +2225,102 @@ def _finite_dfgrd1_seed_lines(form: str, ntens: int) -> list[str]:
     return lines
 
 
+# The inverse of the two emitters above, kept beside them so the pair cannot
+# drift apart. Anything that has to perturb the same inputs the transform
+# seeded -- an independent reference for the returned tangent, above all --
+# must know *which* map was used, and reading it back off the emitted code is
+# the only way to know that without maintaining a second copy of it.
+_DFGRD1_SEED_LINE = re.compile(
+    r"\bDFGRD1_OTI\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)\s*=\s*"
+    r"DFGRD1_OTI\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)\s*\+\s*"
+    r"(0\.5D0\s*\*)?(?:OTI_)?E(\d+)\b",
+    flags=re.IGNORECASE,
+)
+
+
+def parse_finite_dfgrd1_seed_line(line: str) -> tuple[int, int, float, int] | None:
+    """``(row, column, coefficient, direction)`` for one emitted DFGRD1 seed line.
+
+    ``None`` for any other line. The accumulated entry has to be the same one
+    being read, or the line is an injection into a different entry and is not
+    part of this map.
+    """
+    match = _DFGRD1_SEED_LINE.search(line)
+    if not match:
+        return None
+    row, column, read_row, read_column = (int(match.group(i)) for i in (1, 2, 3, 4))
+    if (row, column) != (read_row, read_column):
+        return None
+    return row, column, 0.5 if match.group(5) else 1.0, int(match.group(6))
+
+
+def parse_dstran_seed_line(line: str, dstran: str = "DSTRAN") -> tuple[int, int] | None:
+    """``(component, direction)`` for one emitted strain-increment seed line."""
+    match = re.search(
+        rf"\b{re.escape(dstran)}_OTI\s*\(\s*(\d+)\s*\)\s*=\s*"
+        rf"{re.escape(dstran)}_OTI\s*\(\s*(\d+)\s*\)\s*\+\s*(?:OTI_)?E(\d+)\b",
+        line,
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return None
+    component, read_component = int(match.group(1)), int(match.group(2))
+    if component != read_component:
+        return None
+    return component, int(match.group(3))
+
+
+@dataclass(frozen=True)
+class SeededKinematics:
+    """Which kinematic inputs a transformed source injects the directions into.
+
+    This is read from the transformed file, so it is what the transform *did*
+    for this source and not a second guess at what it should have done. A
+    routine that receives the strain increment is seeded through it; one whose
+    kinematic input is the deformation gradient is seeded through that; a
+    routine that reads both is seeded through both, and then neither may be
+    left at its unperturbed value.
+    """
+
+    #: Strain-increment component -> the direction injected into it.
+    dstran: dict[int, int] = field(default_factory=dict)
+    #: Direction -> the ``(row, column, coefficient)`` terms it adds to DFGRD1.
+    dfgrd1: dict[int, tuple[tuple[int, int, float], ...]] = field(default_factory=dict)
+
+    @property
+    def drives_deformation_gradient(self) -> bool:
+        return bool(self.dfgrd1)
+
+    @property
+    def drives_strain_increment(self) -> bool:
+        return bool(self.dstran)
+
+    def directions(self) -> tuple[int, ...]:
+        return tuple(sorted(set(self.dstran.values()) | set(self.dfgrd1)))
+
+
+def seeded_kinematics(transformed_source: str, dstran: str = "DSTRAN") -> SeededKinematics:
+    """Read back the seed injections a transformed source carries."""
+    strain: dict[int, int] = {}
+    gradient: dict[int, list[tuple[int, int, float]]] = {}
+    for line in transformed_source.splitlines():
+        if _is_commented(line):
+            continue
+        strain_seed = parse_dstran_seed_line(line, dstran)
+        if strain_seed is not None:
+            component, direction = strain_seed
+            strain[component] = direction
+            continue
+        gradient_seed = parse_finite_dfgrd1_seed_line(line)
+        if gradient_seed is not None:
+            row, column, coefficient, direction = gradient_seed
+            gradient.setdefault(direction, []).append((row, column, coefficient))
+    return SeededKinematics(
+        dstran=strain,
+        dfgrd1={direction: tuple(sorted(terms)) for direction, terms in sorted(gradient.items())},
+    )
+
+
 def _copy_real_shadow_lines(form: str, name: str, shape: str) -> list[str]:
     dims = _shape_dimensions(shape)
     if not dims:
@@ -4469,23 +4565,11 @@ def _seed_consuming_stress_lines(
 
 
 def _is_dstran_seed_line(line: str, dstran: str) -> bool:
-    return bool(
-        re.search(
-            rf"\b{re.escape(dstran)}_OTI\s*\(\s*\d+\s*\)\s*=\s*{re.escape(dstran)}_OTI\s*\(\s*\d+\s*\)\s*\+\s*(?:OTI_)?E\d+\b",
-            line,
-            flags=re.IGNORECASE,
-        )
-    )
+    return parse_dstran_seed_line(line, dstran) is not None
 
 
 def _is_finite_dfgrd1_seed_line(line: str) -> bool:
-    return bool(
-        re.search(
-            r"\bDFGRD1_OTI\s*\(\s*\d+\s*,\s*\d+\s*\)\s*=\s*DFGRD1_OTI\s*\(\s*\d+\s*,\s*\d+\s*\)\s*\+\s*(?:0\.5D0\s*\*)?(?:OTI_)?E\d+\b",
-            line,
-            flags=re.IGNORECASE,
-        )
-    )
+    return parse_finite_dfgrd1_seed_line(line) is not None
 
 
 def _is_do_line(line: str) -> bool:
