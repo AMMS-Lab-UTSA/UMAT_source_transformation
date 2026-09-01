@@ -103,11 +103,18 @@ class TestTheAuthorsOwnInitialState:
 
 
 class TestWhereTheMaterialPointSits:
+    """Three coincidences, each of which a real source here divides by.
+
+    There is no neutral position, only a generic one. The origin was the first
+    guess and broke twenty-four sources; the unit diagonal was the second and
+    broke six of the seven that survived the first. Both looked obviously safe.
+    """
+
     def test_the_declared_position_is_not_the_origin(self):
-        # A model that reads a fibre direction off the position computes
-        # COORDS(2)/SQRT(COORDS(1)**2+COORDS(2)**2). At the origin that is
-        # 0/0, and the untransformed build returns NaN just as the
-        # transformed one does -- which is the harness's fault, not the
+        # A direction resolved from position computes
+        # COORDS(2)/SQRT(COORDS(1)**2+COORDS(2)**2), which at the origin is
+        # 0/0 -- and the untransformed build returns NaN just as the
+        # transformed one does, which is the harness's fault, not the
         # transform's.
         assert all(value != 0.0 for value in _case().coords)
 
@@ -115,6 +122,22 @@ class TestWhereTheMaterialPointSits:
         x, y, z = _case().coords
         for a, b in ((x, y), (y, z), (x, z)):
             assert a * a + b * b > 0.0
+
+    def test_no_two_coordinates_are_equal_in_magnitude(self):
+        # A model separating two principal growth directions divides by
+        # COORDS(1)**2 - COORDS(2)**2. On the unit diagonal that is exactly
+        # zero, which is why (1,1,1) was no better than the origin for six
+        # sources -- it satisfied both tests above.
+        x, y, z = _case().coords
+        for a, b in ((x, y), (y, z), (x, z)):
+            assert abs(abs(a) - abs(b)) > 0.0
+
+    def test_the_point_lies_inside_the_unit_cube(self):
+        # The shell and plate models here parameterise on a normalised patch:
+        # one computes (-4 - 64*(X-1)*X*(Y-1)*Y) / (4*(X-1)*X - 1) and then
+        # takes a square root of a discriminant built from it. Outside [0,1]
+        # that discriminant goes negative and the root is not a number.
+        assert all(0.0 < value < 1.0 for value in _case().coords)
 
     def test_the_driver_sets_every_component(self):
         source = _driver_source(_case(), DRIVE)
