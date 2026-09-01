@@ -18,7 +18,7 @@ from umat_oti.fortran.literals import (
     unmask_real_literals,
     without_real_literals,
 )
-from umat_oti.fortran.normalize import detect_source_form
+from umat_oti.fortran.normalize import detect_source_form, strip_inline_comment
 from umat_oti.fortran.parser import (
     logical_lines_from_text, parse_entity, parse_subroutines, split_top_level,
 )
@@ -174,6 +174,7 @@ def transform_umat_to_oti_from_config(
     argument_variables = _argument_variables(config, selected_umat)
     shape_blockers = _shape_blockers(source_text, roles, regions, mappings, variable_shapes, parsed)
     shape_blockers.extend(_data_initialised_shadow_blockers(source_text, roles))
+    shape_blockers.extend(_complex_type_blockers(config, roles))
     if shape_blockers:
         blockers.extend(shape_blockers)
         report = {**report_base, "success": False, "warnings": warnings, "blockers": blockers, "generated_files": []}
@@ -1007,8 +1008,8 @@ def _roles_with_stress_path_promotions(
     # inventing an interface the source does not state.
     assumed_size = {
         str(name).upper() for name, row in role_items.items()
-        if "*" in str(row.get("detected_shape")
-                      or row.get("detected shape/dimension") or "")}
+        if _has_undeclarable_extent(str(row.get("detected_shape")
+                                        or row.get("detected shape/dimension") or ""))}
     # A Fortran intrinsic is not a variable, and promoting one renames it like
     # one: STRESS = MATMUL(DDSDDE, STRAN + DSTRAN) was emitted as
     # STRESS_OTI = MATMUL_OTI(...), a name declared nowhere, and the file
@@ -1021,7 +1022,12 @@ def _roles_with_stress_path_promotions(
     # undeclared accumulator called SUM. This promotion runs after the
     # classifier and overrides it, so declining here as well as there is what
     # actually keeps the name out.
-    intrinsic_calls = _INTRINSIC_CALLS - _assigned_names(source_text)
+    # Functions this source defines, as well as intrinsics: promoting a call
+    # renames the call itself. F(X,PROP) from "REAL*8 FUNCTION F(X,PROP)" was
+    # on the stress path, so it was promoted here after the classifier had
+    # correctly declined it, and the emitted file called F_OTI -- a name
+    # nothing declares.
+    intrinsic_calls = _call_names_that_are_not_variables(source_text)
     for name in path_names:
         if (
             name in {"DDSDDE"}
@@ -1265,8 +1271,10 @@ def _first_finite_path_assignment_line(
 # apart about what counts as a call rather than a variable.
 from umat_oti.core.roles import (  # noqa: E402
     INTRINSIC_CALL_NAMES as _INTRINSIC_CALLS,
-    assigned_names as _assigned_names,
+    call_names_that_are_not_variables as _call_names_that_are_not_variables,
     data_initialised_names, defined_function_names as _defined_function_names,
+    derived_type_names as _derived_type_names,
+    subscripted_assignment_names as _subscripted_assignment_names,
 )
 
 
@@ -1313,26 +1321,51 @@ def _shape_blockers(
     parsed: ParsedFortranSource | None = None,
 ) -> list[str]:
     blockers: list[str] = []
-    region_text = _selected_region_text(source_text, regions["stress"])
+    region_text = _executable_text(_selected_region_text(source_text, regions["stress"]))
     mapped_arrays = {mappings.get("dstran"), mappings.get("stress"), mappings.get("statev")}
     # NAME(...) is indexing only if NAME is an array. A call to an intrinsic,
     # or to a function the source itself defines, reads identically and was
     # being reported as a promoted array with no shape -- FLOAT(NSLPTL) and a
     # crystal-plasticity flow rule named F both blocked a source that has
     # nothing wrong with it.
-    # Minus what the source assigns, for the same reason the classifier
-    # subtracts it: the intrinsic set includes names a UMAT may legitimately
-    # use for its own variables, and a name that carries a value is a variable
-    # whatever the set says.
-    not_arrays = ((_INTRINSIC_CALLS | _defined_function_names(source_text))
-                  - _assigned_names(source_text))
+    # Minus what the source writes *through a subscript*, not minus everything
+    # it assigns: the question here is whether NAME(...) is an index or a call,
+    # and only a subscripted write answers it. A file that defines
+    # "REAL*8 FUNCTION F(X,PROP)" and also keeps a scalar F in an unrelated
+    # helper assigns the name, which deleted the function from this set and
+    # reported the call F(X,PROP) as an array with no confirmed shape.
+    not_arrays = ((_INTRINSIC_CALLS | _defined_function_names(source_text)
+                   | _derived_type_names(source_text))
+                  - _subscripted_assignment_names(source_text))
     used_modules = _used_modules_not_defined_here(source_text)
     declared = _declared_names(parsed)
     for name in sorted(roles["seed"] | roles["promote"]):
         if name in mapped_arrays or name.upper() in not_arrays:
             continue
         shape = variable_shapes.get(name, "")
-        if shape or not re.search(rf"\b{re.escape(name)}\s*\(", region_text, flags=re.IGNORECASE):
+        # (?<!%) because X%NAME(...) is a component of X, not the variable
+        # NAME: a type-bound procedure invoked as shvars%calc_dsigma(...) was
+        # read as an array named CALC_DSIGMA that this source never declares.
+        indexed = re.search(rf"(?<![%\w]){re.escape(name)}\s*\(", region_text,
+                            flags=re.IGNORECASE)
+        # A deferred shape is a declaration, so it passed the "is there a
+        # shape?" test, but it is not an extent: DIMENSION(:, :), ALLOCATABLE
+        # says the extent arrives at ALLOCATE and this transformer emits none.
+        # The shadow was declared X_OTI(:,:) with DO OTI_HI = 1, : beside it.
+        # Used at all, not indexed: a whole-array reference to an allocatable
+        # needs a shadow just as much as a subscripted one does, and there is
+        # no more of a bound to declare it with.
+        if shape and _has_deferred_extent(shape) and re.search(
+                rf"(?<![%\w])\b{re.escape(name)}\b", region_text, flags=re.IGNORECASE):
+            blockers.append(
+                f"{name} is declared with a deferred shape ({shape}) and is "
+                f"read on the stress path. Its extent is fixed by an "
+                f"ALLOCATE at run time, so there is no bound to declare a "
+                f"shadow with and none to count an initialisation loop to. "
+                f"Allocatable promoted variables are not supported."
+            )
+            continue
+        if shape or not indexed:
             continue
         # "No confirmed shape" is what a missing declaration looks like from
         # here; it is not why the declaration is missing. When the name is not
@@ -1350,6 +1383,39 @@ def _shape_blockers(
             )
             continue
         blockers.append(f"Promoted variable {name} is indexed in a stress region but has no confirmed shape.")
+    return blockers
+
+
+def _complex_type_blockers(config: dict[str, Any], roles: dict[str, set[str]]) -> list[str]:
+    """Refuse to shadow a name the source declares COMPLEX.
+
+    The OTI number is a hypercomplex algebra over the reals: a shadow is
+    declared TYPE(ONUMM6N1) and its real part is read back with REAL(). There
+    is no complex OTI type to shadow a COMPLEX variable with, and a real
+    shadow of one drops the imaginary part -- which in these sources is not a
+    detail but the whole method. Several of them compute their own tangent by
+    the complex step, perturbing DSTRAIN_Z by DCMPLX(0, h) and reading
+    AIMAG(SIGMA_NEW_Z)/h, so a real shadow would return a stress computed
+    from a perturbation that is identically zero.
+
+    Refused rather than truncated, because a truncation here compiles, warns
+    about nothing, and returns a wrong number.
+    """
+    blockers: list[str] = []
+    for name in sorted(roles["seed"] | roles["promote"]):
+        row = _variable_role_items(config).get(name)
+        if not isinstance(row, dict):
+            continue
+        declared = str(row.get("detected_type") or row.get("detected type") or "").strip().lower()
+        if not declared.startswith(("complex", "double complex")):
+            continue
+        blockers.append(
+            f"{name} is declared {declared.upper()} and is on the stress "
+            f"path. The OTI type is built over the reals, so there is no "
+            f"complex shadow to promote {name} to, and a real shadow would "
+            f"drop the imaginary part silently. Complex arithmetic on the "
+            f"stress path is not supported."
+        )
     return blockers
 
 
@@ -1467,7 +1533,7 @@ def _transform_source_text(
     # checks report the truncation.
     assumed_size = {
         str(name).upper() for name, shape in variable_shapes.items()
-        if "*" in str(shape or "")}
+        if _has_undeclarable_extent(str(shape or ""))}
     shadow_variable_names.difference_update(assumed_size)
     replacement_names = {name: f"{name}_OTI" for name in sorted(shadow_variable_names)}
     sprinc_equivalent_stress_rewrites, sprinc_formula_skip_lines = _sprinc_equivalent_stress_rewrites(
@@ -2123,7 +2189,10 @@ def _bound(variable_shapes: dict[str, str], name: str, conventional: str) -> str
     shape = (variable_shapes or {}).get(name, "").strip()
     if not shape or "," in shape or "*" in shape:
         return conventional
-    return shape
+    lower, upper = _dimension_bounds(shape)
+    if lower != "1" or not upper:
+        return conventional
+    return upper
 
 
 def _initialization_lines(
@@ -2231,14 +2300,14 @@ def _copy_real_shadow_lines(form: str, name: str, shape: str) -> list[str]:
         return [_stmt(form, f"{name}_OTI = {name}")]
     if len(dims) == 1:
         return [
-            _stmt(form, f"DO OTI_HI = 1, {dims[0]}"),
+            _stmt(form, f"DO OTI_HI = {_dimension_loop_range(dims[0])}"),
             _stmt(form, f"   {name}_OTI(OTI_HI) = {name}(OTI_HI)"),
             _stmt(form, "END DO"),
         ]
     if len(dims) == 2:
         return [
-            _stmt(form, f"DO OTI_HI = 1, {dims[0]}"),
-            _stmt(form, f"   DO OTI_HJ = 1, {dims[1]}"),
+            _stmt(form, f"DO OTI_HI = {_dimension_loop_range(dims[0])}"),
+            _stmt(form, f"   DO OTI_HJ = {_dimension_loop_range(dims[1])}"),
             _stmt(form, f"      {name}_OTI(OTI_HI,OTI_HJ) = {name}(OTI_HI,OTI_HJ)"),
             _stmt(form, "   END DO"),
             _stmt(form, "END DO"),
@@ -2256,7 +2325,7 @@ def _shadow_default_lines(form: str, shadow_variables: list[str], variable_shape
         if len(dims) == 1:
             lines.extend(
                 [
-                    _stmt(form, f"DO OTI_HI = 1, {dims[0]}"),
+                    _stmt(form, f"DO OTI_HI = {_dimension_loop_range(dims[0])}"),
                     _stmt(form, f"   {name}_OTI(OTI_HI) = 0.0D0"),
                     _stmt(form, "END DO"),
                 ]
@@ -2265,8 +2334,8 @@ def _shadow_default_lines(form: str, shadow_variables: list[str], variable_shape
         if len(dims) == 2:
             lines.extend(
                 [
-                    _stmt(form, f"DO OTI_HI = 1, {dims[0]}"),
-                    _stmt(form, f"   DO OTI_HJ = 1, {dims[1]}"),
+                    _stmt(form, f"DO OTI_HI = {_dimension_loop_range(dims[0])}"),
+                    _stmt(form, f"   DO OTI_HJ = {_dimension_loop_range(dims[1])}"),
                     _stmt(form, f"      {name}_OTI(OTI_HI,OTI_HJ) = 0.0D0"),
                     _stmt(form, "   END DO"),
                     _stmt(form, "END DO"),
@@ -2275,6 +2344,58 @@ def _shadow_default_lines(form: str, shadow_variables: list[str], variable_shape
             continue
         lines.append(_stmt(form, f"{name}_OTI = 0.0D0"))
     return lines
+
+
+def _has_deferred_extent(shape: str) -> bool:
+    """Is any dimension of ``shape`` a deferred (ALLOCATE-time) extent?"""
+    return any(not _dimension_bounds(dimension)[1]
+               for dimension in _shape_dimensions(str(shape or "")))
+
+
+def _has_undeclarable_extent(shape: str) -> bool:
+    """Does ``shape`` leave an extent this routine cannot write down?
+
+    Two ways for that to happen, and a shadow can be declared for neither:
+
+    * an assumed-size dummy, ``PROPS(*)``, whose extent is the caller's;
+    * a deferred shape, ``DIMENSION(:, :), ALLOCATABLE``, whose extent is
+      fixed by an ALLOCATE this transformer does not emit.
+
+    ``TYPE(ONUMM6N1) :: X_OTI(:,:)`` is not a declaration and the loop written
+    beside it, ``DO OTI_HI = 1, :``, is not a loop.
+    """
+    text = str(shape or "")
+    return "*" in text or _has_deferred_extent(text)
+
+
+def _dimension_bounds(dimension: str) -> tuple[str, str]:
+    """``(lower, upper)`` of one array dimension, as an explicit-shape spec.
+
+    ``NTENS`` means ``1:NTENS``; a spec that writes its own lower bound keeps
+    it. The colon is found outside parentheses so a bound that is itself a
+    call -- ``MAX(1,N):M`` -- is not split inside its own argument list.
+
+    A dimension is not always a bare extent, and a loop written as if it were
+    is not a loop: ``REAL*8, DIMENSION(1:NTENS) :: KRho`` is an ordinary
+    declaration, and the initialisation emitted beside its shadow came out as
+    ``DO OTI_HI = 1, 1:NTENS``.
+    """
+    text = str(dimension or "").strip()
+    depth = 0
+    for index, char in enumerate(text):
+        if char == "(":
+            depth += 1
+        elif char == ")" and depth:
+            depth -= 1
+        elif char == ":" and depth == 0:
+            return text[:index].strip() or "1", text[index + 1:].strip()
+    return "1", text
+
+
+def _dimension_loop_range(dimension: str) -> str:
+    """``lower, upper`` for a DO statement counting over one dimension."""
+    lower, upper = _dimension_bounds(dimension)
+    return f"{lower}, {upper}"
 
 
 def _shape_dimensions(shape: str) -> list[str]:
@@ -4901,6 +5022,20 @@ def _is_allowed_real_shadow_source(line: str, name: str) -> bool:
 def _active_region_lines(source: str, start_line: int, end_line: int) -> list[str]:
     lines = source.splitlines()[start_line - 1 : end_line]
     return [line for line in lines if not _is_commented(line)]
+
+
+def _executable_text(text: str) -> str:
+    """``text`` with comment lines dropped and trailing comments cut off.
+
+    A comment is prose, and reading it as code answers questions about the
+    program with sentences about it. ``! calculate the geq(g1)`` is the only
+    place its file writes ``geq(`` at all, and it was enough to report GEQ --
+    a declared scalar -- as an array indexed on the stress path with no
+    confirmed shape.
+    """
+    kept = [strip_inline_comment(line) for line in text.splitlines()
+            if not _is_commented(line)]
+    return "\n".join(kept)
 
 
 def _is_commented(line: str) -> bool:

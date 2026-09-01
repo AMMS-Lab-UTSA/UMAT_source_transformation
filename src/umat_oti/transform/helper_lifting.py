@@ -15,6 +15,7 @@ from umat_oti.fortran.literals import (
 from umat_oti.fortran.normalize import strip_inline_comment
 from umat_oti.fortran.parser import (
     FUNCTION_HEADER_RE,
+    parse_declaration_line,
     parse_function_subprograms,
     split_top_level,
 )
@@ -440,6 +441,13 @@ def _lift_helper_routine(
     prelude: list[str] = []
     body: list[str] = []
     data_assignments: list[str] = []
+    # The Fortran 77 way to write a named constant is two statements --
+    # INTEGER N, then PARAMETER (N = 3) -- and the PARAMETER rewrite below
+    # emits a complete typed declaration of its own. Emitting the plain
+    # declaration as well declares N twice, which gfortran rejects with
+    # "Symbol 'n' already has basic type of INTEGER". The names are read ahead
+    # of the pass that emits, because the type declaration comes first.
+    named_constants = _parameter_statement_names(stitched_lines[1:-1], form)
 
     for raw in stitched_lines[1:-1]:
         stripped = _statement_text(raw, form)
@@ -449,6 +457,7 @@ def _lift_helper_routine(
             continue
         if re.match(r"^\s*IMPLICIT\s+", stripped, re.IGNORECASE):
             continue
+        stripped = _flattened_attributed_declaration(stripped)
         parameter_match = _PARAMETER_RE.match(stripped)
         if parameter_match:
             parameter_lines, names = _rewrite_parameter_line(parameter_match.group(1))
@@ -457,20 +466,27 @@ def _lift_helper_routine(
             continue
         dimension_match = _DIMENSION_RE.match(stripped)
         if dimension_match:
-            lines, oti_names, ints = _rewrite_dimension_line(dimension_match.group(1), type_name)
+            payload = _without_names(dimension_match.group(1), named_constants)
+            if not payload:
+                continue
+            lines, oti_names, ints = _rewrite_dimension_line(payload, type_name)
             prelude.extend(lines)
             declaration_oti_names.update(oti_names)
             integer_names.update(ints)
             continue
         integer_match = _INTEGER_RE.match(stripped)
         if integer_match:
-            payload = integer_match.group(1).strip()
+            payload = _without_names(integer_match.group(1), named_constants)
+            if not payload:
+                continue
             prelude.append(f"    integer :: {payload}")
             integer_names.update(_declared_names(payload))
             continue
         real_match = _REAL_RE.match(stripped)
         if real_match:
-            payload = real_match.group(1).strip()
+            payload = _without_names(real_match.group(1), named_constants)
+            if not payload:
+                continue
             prelude.append(f"    type({type_name}) :: {payload}")
             declaration_oti_names.update(_declared_names(payload))
             continue
@@ -646,6 +662,70 @@ def _helper_indexed_name(name: str, indices: list[int]) -> str:
     if not indices:
         return name
     return f"{name}({', '.join(str(index) for index in indices)})"
+
+
+#: Attributes a declaration can carry that the lifted form can express by
+#: writing the entity out longhand. DIMENSION becomes the entity's own
+#: array-spec, INTENT is optional on a module procedure's dummy, and PARAMETER
+#: becomes the PARAMETER statement the lifter already rewrites. Anything else
+#: -- SAVE, ALLOCATABLE, POINTER -- changes what the declaration means, so it
+#: is left exactly as written rather than silently dropped.
+_EXPRESSIBLE_ATTRIBUTES = ("dimension", "intent", "parameter")
+
+
+def _flattened_attributed_declaration(stripped: str) -> str:
+    """``TYPE, attrs :: names`` rewritten in the form the lifter reads.
+
+    Every declaration matcher below reads a type keyword and takes the rest of
+    the statement as its entity list. That is right for ``REAL*8 A(3,3)`` and
+    wrong for ``DOUBLE PRECISION, DIMENSION(3,3), INTENT(IN) :: A``, whose
+    rest-of-statement starts with a comma: the attribute list was carried
+    through into the emitted declaration, which came out as
+
+        type(ONUMM6N1) :: , DIMENSION(3,3), INTENT(IN)  :: A
+
+    and stopped the build. Folding DIMENSION into each entity says the same
+    thing in the form the matchers already handle.
+    """
+    declaration = parse_declaration_line(stripped)
+    if declaration is None or not declaration.attributes:
+        return stripped
+    if not all(attribute.strip().lower().startswith(_EXPRESSIBLE_ATTRIBUTES)
+               for attribute in declaration.attributes):
+        return stripped
+    entities = ", ".join(entity.render() for entity in declaration.entities)
+    if not entities:
+        return stripped
+    if declaration.has_parameter_attribute:
+        return f"PARAMETER({entities})"
+    return f"{declaration.raw_type} {entities}"
+
+
+def _parameter_statement_names(raw_lines: Sequence[str], form: str) -> set[str]:
+    """Names given a value by a PARAMETER statement in this routine."""
+    names: set[str] = set()
+    for raw in raw_lines:
+        stripped = _statement_text(raw, form)
+        if not stripped:
+            continue
+        match = _PARAMETER_RE.match(_flattened_attributed_declaration(stripped))
+        if not match:
+            continue
+        for assignment in split_top_level(match.group(1)):
+            head = assignment.split("=", 1)[0].strip()
+            if head:
+                names.add(head.upper())
+    return names
+
+
+def _without_names(payload: str, names: set[str]) -> str:
+    """``payload`` with any declared entity whose name is in ``names`` removed."""
+    kept = [
+        entry.strip() for entry in split_top_level(payload)
+        if entry.strip()
+        and entry.strip().split("(", 1)[0].split("=", 1)[0].strip().upper() not in names
+    ]
+    return ", ".join(kept)
 
 
 def _rewrite_parameter_line(payload: str) -> tuple[list[str], set[str]]:

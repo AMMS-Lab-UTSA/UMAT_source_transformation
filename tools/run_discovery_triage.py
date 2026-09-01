@@ -91,6 +91,14 @@ _KINDS: tuple[tuple[str, tuple[str, ...]], ...] = (
     # declaration the transformer could not read, not a stress update it could
     # not find. Matching the bare word "stress" filed fourteen sources under a
     # cause that was not theirs and hid a whole defect class behind a count.
+    # Two causes that used to be reported as "no confirmed shape", which is
+    # what each of them looks like to a reader that stops at "is there a
+    # shape?". A deferred shape and a complex declaration are both
+    # declarations -- they say rank and type -- and neither gives a bound to
+    # declare a shadow with; naming them separates a transformer gap that
+    # could be closed from a source the OTI type cannot represent at all.
+    ("deferred_shape_allocatable", ("declared with a deferred shape",)),
+    ("complex_arithmetic", ("no complex shadow",)),
     ("shape_unknown", ("has no confirmed shape",)),
     ("no_stress_update_found", ("stress update region is required",
                                "no assignment to")),
