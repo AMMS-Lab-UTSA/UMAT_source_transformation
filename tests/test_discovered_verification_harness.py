@@ -142,3 +142,16 @@ class TestTheSummaryCountsHonestly:
         summary = summarise(self.ROWS)
         assert summary["rows_total"] == 20
         assert summary["rows_agreeing"] == 17
+
+
+def test_every_row_says_what_was_actually_differentiated():
+    """A finite-strain row and a small-strain row are not the same claim.
+
+    One establishes a derivative with respect to a strain increment, the other
+    with respect to the same increment mapped into the deformation gradient.
+    A reader scanning the table has to see which without going back to the
+    module docstring, so the fields travel per row rather than sitting in a
+    per-case summary.
+    """
+    assert "driven_through" in COLUMNS
+    assert "reference_perturbation" in COLUMNS

@@ -66,7 +66,8 @@ COLUMNS = (
     "props_count", "material_provenance", "loading_probe",
     "furthest_stage", "primal_parity", "rows_total", "rows_agreeing",
     "rows_disagreeing", "rows_unresolved", "structural_zeros",
-    "worst_relative_error", "blocker",
+    "worst_relative_error", "driven_through", "reference_perturbation",
+    "blocker",
 )
 
 
@@ -155,6 +156,13 @@ def run(items: list[dict[str, Any]], work_root: Path) -> list[dict[str, Any]]:
             "rows_unresolved": unresolved,
             "structural_zeros": int(summary.get("structural_zeros") or 0),
             "worst_relative_error": summary.get("worst_measured_relative_error", ""),
+            # Which inputs were actually perturbed, carried per row rather than
+            # left in a per-case summary. A finite-strain row and a
+            # small-strain row establish derivatives with respect to different
+            # things, and a reader scanning the table has to be able to see
+            # which without going back to the module docstring.
+            "driven_through": summary.get("driven_through", ""),
+            "reference_perturbation": summary.get("reference_perturbation", ""),
             "blocker": (result.blocker or "")[:220],
         })
         rows.append(record)
