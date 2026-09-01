@@ -79,3 +79,25 @@ def test_every_leak_is_reported_once_per_callee_and_argument():
     source = ("      CALL EXT(A_OTI)\n" * 3) + "      CALL EXT(B_OTI)\n"
     found = leaks(source, "fixed", set())
     assert sorted(found) == [("EXT", "A_OTI"), ("EXT", "B_OTI")]
+
+
+class TestTheAbaqusUtilityExemption:
+    """Only the routines that report, and only because a message is bounded."""
+
+    def test_a_diagnostic_utility_does_not_cost_a_whole_umat(self):
+        assert _names("      CALL STDB_ABQERR(-1,'bad',INTV,STRESS_OTI,CHARV)\n",
+                      set()) == set()
+
+    @pytest.mark.parametrize("callee", ["SPRINC", "SPRIND", "SINV", "ROTSIG"])
+    def test_a_utility_that_returns_into_the_stress_path_is_still_reported(self, callee):
+        """These hand back principal stresses, invariants and rotated tensors.
+
+        Exempting them would hide a truncated derivative, which is the defect
+        this check exists to find -- not a garbled message.
+        """
+        assert callee in _names(f"      CALL {callee}(STRESS_OTI, PS, LSTR, NDI, NSHR)\n",
+                                set())
+
+    def test_an_unknown_external_routine_is_not_exempted_by_looking_official(self):
+        assert "GETSOMETHINGELSE" in _names(
+            "      CALL GETSOMETHINGELSE(STRESS_OTI)\n", set())

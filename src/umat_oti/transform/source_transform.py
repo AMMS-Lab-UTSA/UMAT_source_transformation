@@ -33,6 +33,25 @@ from umat_oti.transform.parameter_sensitivity_transform import (
 
 
 INLINEABLE_HELPERS = {"DOTPROD", "DYADICPROD", "KCLEAR", "KDAMACAL", "KDEVIA", "KEFFP", "KINVER", "KMATSUB", "KMAVEC", "KMLT", "KMLT1", "KMMULT", "KMTRAN", "KPROYECTOR", "KSMULT", "KTRACE", "KTRANS", "KUPDVEC", "VSPRATE"}
+#: Utility routines Abaqus itself provides, and only the ones that report.
+#: They consume values for a message or ask the solver something; none returns
+#: a value into the stress path, and none can be lifted, because none of them
+#: is in the source. A shadow reaching one is still not right -- the routine
+#: reads the first of seven doubles -- so the residual is a diagnostic that
+#: may print a value where a message was meant. That is bounded and does not
+#: touch a derivative, which is why these are exempted from the refusal rather
+#: than costing a whole UMAT. Wrapping the argument in REAL() at the call site
+#: would remove even that, and is not done here.
+#: SPRINC, SPRIND, SINV and ROTSIG are deliberately NOT here. They are Abaqus
+#: utilities too, but they return principal stresses, invariants and rotated
+#: tensors back INTO the stress path, so a shadow reaching one is a truncated
+#: derivative and not a diagnostic. Exempting them would hide the defect this
+#: check exists to find. (SPRINC already has its own rewrite elsewhere.)
+ABAQUS_UTILITY_ROUTINES = {
+    "STDB_ABQERR", "STDB_ABQPRT", "XIT",
+    "GETOUTDIR", "GETJOBNAME", "GETNUMCPUS", "GETPARTINFO",
+}
+
 TYPED_INTRINSIC_NORMALIZATIONS = {
     "DABS": "ABS",
     "DMAX1": "MAX",
@@ -4489,6 +4508,8 @@ def oti_arguments_into_untransformed_calls(
                                          or bare in INLINEABLE_HELPERS)):
             continue
         if callee in lifted_names or callee in defined or callee in INLINEABLE_HELPERS:
+            continue
+        if callee in ABAQUS_UTILITY_ROUTINES:
             continue
         for argument in re.findall(r"\b([A-Za-z_]\w*_OTI)\b", match.group(2),
                                    flags=re.IGNORECASE):
