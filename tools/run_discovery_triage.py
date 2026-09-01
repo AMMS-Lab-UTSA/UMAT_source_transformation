@@ -143,9 +143,21 @@ def without_machine_paths(text: str, *extra_roots: Path | str) -> str:
     roots += [(str(REPO_ROOT), "<repo>"), (str(Path.home()), "<home>")]
     # Longest first, so a work directory that sits inside the home directory
     # is named as the work directory rather than half-rewritten to <home>.
-    for root, name in sorted(roots, key=lambda item: -len(item[0])):
+    ordered = sorted(roots, key=lambda item: -len(item[0]))
+    for root, name in ordered:
         if root and root != "/":
             text = text.replace(root, name)
+    # A blocker is cut to a length before it reaches here, and the cut can land
+    # in the middle of a path -- leaving a fragment that matches no root and
+    # survived every replacement above. Three rows kept a partial
+    # "/tmp/claude-1000/-home-..." that way. A truncated machine path is still
+    # a machine path, so a trailing prefix of a root is named as one too.
+    for root, name in ordered:
+        if not root or root == "/":
+            continue
+        for length in range(len(root) - 1, len(root.split("/")[1]) + 1, -1):
+            if text.endswith(root[:length]):
+                return text[:-length] + name
     return text
 
 

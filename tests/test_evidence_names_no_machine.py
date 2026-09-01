@@ -61,3 +61,39 @@ class TestWhatItKeeps:
         work = Path.home() / "scratch" / "w"
         cleaned = without_machine_paths(f"{work}/x/u.for:3: Error", work)
         assert cleaned == "<work>/x/u.for:3: Error"
+
+
+class TestATruncatedPathIsStillAPath:
+    """A blocker is cut to a length before the filter sees it.
+
+    The cut can land in the middle of a path, leaving a fragment that matches
+    no root and survives every replacement. Three rows kept a partial
+    "/tmp/claude-1000/-home-..." exactly that way -- the filter ran, the audit
+    passed, and the evidence still named one computer.
+    """
+
+    WORK = Path("/tmp/scratch-abc/-home-someone/run/triage_work")
+
+    def test_a_trailing_fragment_of_a_root_is_named(self):
+        assert without_machine_paths(
+            "as shipped: /tmp/scratch-abc/-home-so", self.WORK) == "as shipped: <work>"
+
+    def test_a_whole_root_still_works(self):
+        assert without_machine_paths(
+            f"as shipped: {self.WORK}/x/u.for:3", self.WORK) == "as shipped: <work>/x/u.for:3"
+
+    def test_an_unrelated_absolute_path_is_left_alone(self):
+        # Only prefixes of roots it was given. Trimming anything that merely
+        # looks like a path would delete parts of a compiler message that are
+        # about the source.
+        text = "mentions /tmp/other/thing"
+        assert without_machine_paths(text, self.WORK) == text
+
+    def test_ordinary_text_is_untouched(self):
+        for text in ("Error: Expecting END IF statement", "/", "u.for:3: Error"):
+            assert without_machine_paths(text, self.WORK) == text
+
+    def test_it_does_not_eat_a_single_leading_slash(self):
+        # The scan stops above the root's first component, so a fragment has
+        # to be long enough to actually identify the machine.
+        assert without_machine_paths("path ends in /", self.WORK) == "path ends in /"
