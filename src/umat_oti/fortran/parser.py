@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from pathlib import Path
 
 from umat_oti.core.model import (
@@ -13,8 +14,16 @@ from umat_oti.core.model import (
 from umat_oti.fortran.normalize import detect_source_form, strip_inline_comment
 
 
+#: ``double complex`` and ``complex`` are listed with the rest because a
+#: declaration the grammar does not know is not a declaration at all: the name
+#: it declares comes out with no recorded type and no recorded shape, which
+#: downstream is indistinguishable from a name this source never mentions. A
+#: complex variable is not promotable -- the OTI algebra is built over the
+#: reals -- and saying so needs the declaration to have been read first.
 TYPE_PATTERN = (
     r"double\s+precision"
+    r"|double\s+complex"
+    r"|complex(?:\s*\*\s*\d+|\s*\([^)]*\))?"
     r"|real(?:\s*\*\s*\d+|\s*\([^)]*\))?"
     r"|integer(?:\s*\*\s*\d+|\s*\([^)]*\))?"
     r"|character(?:\s*\*\s*\d+|\s*\([^)]*\))?"
@@ -162,7 +171,12 @@ def parse_subroutines(logical_lines: tuple[FortranLogicalLine, ...]) -> tuple[Pa
 #: them here cannot change what any existing caller of ``subroutines`` sees.
 FUNCTION_HEADER_RE = re.compile(
     rf"^\s*(?:(?P<type>{TYPE_PATTERN})\s+)?"
-    r"(?:(?:recursive|pure|elemental)\s+)*"
+    # "module" among the prefixes: a submodule interface writes
+    # "module function Convert_array_to_tensor(array, scalar) result(tensor)",
+    # and a header this pattern does not match is not a function as far as
+    # everything downstream is concerned -- so the call to it read as an
+    # index into an array nothing declares.
+    r"(?:(?:recursive|pure|impure|elemental|module)\s+)*"
     r"function\s+(?P<name>\w+)\s*"
     r"(?:\(\s*(?P<args>[^)]*)\)\s*)?"
     r"(?:result\s*\(\s*(?P<result>\w+)\s*\)\s*)?$",
@@ -222,17 +236,17 @@ def parse_declaration_line(line: FortranLogicalLine | str) -> Declaration | None
         text = line
         line_numbers = ()
     stripped = text.strip()
-    with_colons = re.match(
-        rf"^(?P<type>{TYPE_PATTERN})(?P<attrs>(?:\s*,\s*[^:]+)*)\s*::\s*(?P<vars>.+)$",
-        stripped,
-        flags=re.IGNORECASE,
-    )
+    with_colons = _split_attributed_declaration(stripped)
     if with_colons:
-        raw_type = _normalize_type(with_colons.group("type"))
-        attributes = tuple(
-            attr.strip() for attr in with_colons.group("attrs").split(",") if attr.strip()
-        )
-        entities = tuple(parse_entity(item) for item in split_top_level(with_colons.group("vars")))
+        raw_type = _normalize_type(with_colons[0])
+        attribute_text, variable_text = with_colons[1], with_colons[2]
+        # ``split_top_level`` rather than ``str.split(",")``: an attribute
+        # carries its own parentheses, and ``DIMENSION(3, 3)`` split on every
+        # comma yields the two fragments "DIMENSION(3" and "3)", neither of
+        # which is an attribute.
+        attributes = split_top_level(attribute_text)
+        entities = tuple(parse_entity(item) for item in split_top_level(variable_text))
+        entities = _with_dimension_attribute(entities, attributes)
         return Declaration(_kind(raw_type), raw_type, attributes, entities, text, line_numbers)
     old_style = re.match(
         rf"^(?P<type>{TYPE_PATTERN})\s+(?P<vars>.+)$",
@@ -244,6 +258,85 @@ def parse_declaration_line(line: FortranLogicalLine | str) -> Declaration | None
     raw_type = _normalize_type(old_style.group("type"))
     entities = tuple(parse_entity(item) for item in split_top_level(old_style.group("vars")))
     return Declaration(_kind(raw_type), raw_type, (), entities, text, line_numbers)
+
+
+TYPE_PREFIX_RE = re.compile(rf"^(?P<type>{TYPE_PATTERN})", flags=re.IGNORECASE)
+
+
+def _split_attributed_declaration(stripped: str) -> tuple[str, str, str] | None:
+    """``(type, attributes, entities)`` of a ``TYPE, attrs :: names`` statement.
+
+    The ``::`` is located by scanning outside parentheses instead of by a regex
+    that forbids a colon in the attribute list. A colon is exactly what a
+    deferred shape is written with, so
+
+        REAL(8), DIMENSION(:, :), ALLOCATABLE :: alpha_k
+
+    matched nothing and the whole statement was not a declaration at all: the
+    name it declares had no recorded type, no recorded shape, and no record
+    that this source declares it anywhere.
+    """
+    type_match = TYPE_PREFIX_RE.match(stripped)
+    if not type_match:
+        return None
+    rest = stripped[type_match.end():]
+    depth = 0
+    in_single = False
+    in_double = False
+    for index, char in enumerate(rest):
+        if char == "'" and not in_double:
+            in_single = not in_single
+        elif char == '"' and not in_single:
+            in_double = not in_double
+        elif in_single or in_double:
+            continue
+        elif char == "(":
+            depth += 1
+        elif char == ")" and depth:
+            depth -= 1
+        elif char == ":" and depth == 0 and rest[index : index + 2] == "::":
+            attributes = rest[:index].strip()
+            if attributes and not attributes.startswith(","):
+                return None
+            entities = rest[index + 2 :].strip()
+            if not entities:
+                return None
+            return type_match.group("type"), attributes.lstrip(",").strip(), entities
+    return None
+
+
+DIMENSION_ATTRIBUTE_RE = re.compile(r"^dimension\s*\((?P<dims>.*)\)$", flags=re.IGNORECASE)
+
+
+def _with_dimension_attribute(
+    entities: tuple[DeclaredEntity, ...], attributes: tuple[str, ...]
+) -> tuple[DeclaredEntity, ...]:
+    """``entities`` with the declaration's DIMENSION attribute applied.
+
+    ``REAL(8), DIMENSION(6, 6) :: ID4, C_MAT`` declares two 6x6 arrays, and the
+    extent is written once, on the declaration, rather than after each name.
+    Reading only the per-entity array-spec sees two entities with no shape at
+    all, which downstream is indistinguishable from a name this source never
+    declared -- so a promoted variable declared this way was refused with
+    "indexed in a stress region but has no confirmed shape" while its extent
+    sat in plain sight one comma to the left.
+
+    Fortran gives the entity's own array-spec precedence: in
+    ``REAL, DIMENSION(6) :: A, B(3)``, B is the 3-vector it says it is. So the
+    attribute fills in only where the entity declares no shape of its own.
+    """
+    dimensions: tuple[str, ...] = ()
+    for attribute in attributes:
+        match = DIMENSION_ATTRIBUTE_RE.match(attribute.strip())
+        if match:
+            dimensions = split_top_level(match.group("dims"))
+            break
+    if not dimensions:
+        return entities
+    return tuple(
+        entity if entity.dimensions else replace(entity, dimensions=dimensions)
+        for entity in entities
+    )
 
 
 def parse_entity(text: str) -> DeclaredEntity:
@@ -300,6 +393,8 @@ def _normalize_type(raw: str) -> str:
 
 def _kind(raw_type: str) -> str:
     lowered = raw_type.lower()
+    if lowered.startswith("complex") or lowered.startswith("double complex"):
+        return "complex"
     if lowered.startswith("real") or lowered.startswith("double precision"):
         return "real"
     if lowered.startswith("integer"):
