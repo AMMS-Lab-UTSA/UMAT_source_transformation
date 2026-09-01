@@ -129,6 +129,11 @@ def build_transformation_anchors(config: dict[str, Any], source_text: str = "") 
     # Never inside a loop the stress update runs in. Both extractions are
     # moved past the outermost enclosing DO, together, so the real copy and
     # the tangent stay in the order the semantic checks require.
+    # After every CALL that could write DDSDDE, for the same reason it goes
+    # after the last direct assignment: whatever writes the old tangent last
+    # is what the extraction has to overwrite.
+    for call_line in _ddsdde_writing_call_lines(config, source_text, umat_span):
+        ddsdde_insert_after = max(ddsdde_insert_after, call_line)
     for candidate in (real_insert_after, ddsdde_insert_after):
         loop_end = _enclosing_do_end(source_lines, candidate, umat_span)
         if loop_end:
@@ -1107,6 +1112,39 @@ def _regions_overlap(left: dict[str, Any], right: dict[str, Any]) -> bool:
     right_start = _as_int(right.get("start_line"))
     right_end = _as_int(right.get("end_line"))
     return left_start <= right_end and right_start <= left_end
+
+
+def _ddsdde_writing_call_lines(
+    config: dict[str, Any], source_text: str, span: tuple[int, int],
+) -> list[int]:
+    """Last lines of CALLs inside the UMAT that hand DDSDDE to a routine.
+
+    A Fortran dummy argument is writable unless the callee declares otherwise,
+    so a CALL that passes DDSDDE is a place DDSDDE may be written -- and it is
+    a place the extraction point has to sit after, or the callee's old tangent
+    lands on top of the GETIM values and the generated UMAT quietly returns
+    the tangent it was supposed to replace.
+
+    Asked of the caller, not the callee, so it holds whether or not the callee
+    is defined in this file. One source calls
+    ``voigt_notation_tangent(CC, NTENS, indices, DDSDDE)`` one line after its
+    stress update ends, and the extraction was being placed in between.
+    """
+    if not span:
+        return []
+    form = detect_source_form(Path(config.get("source_file") or "x.f"), source_text)
+    lines: list[int] = []
+    for logical in logical_lines_from_text(source_text, form):
+        numbers = [int(value) for value in logical.line_numbers]
+        if not numbers or not (span[0] <= numbers[0] <= span[1]):
+            continue
+        text = logical.text.strip()
+        match = re.match(r"^CALL\s+\w+\s*\((.*)\)\s*$", text, re.IGNORECASE)
+        if not match:
+            continue
+        if re.search(r"\bDDSDDE\b", match.group(1), re.IGNORECASE):
+            lines.append(max(numbers))
+    return lines
 
 
 def _infer_ddsdde_output_region(
