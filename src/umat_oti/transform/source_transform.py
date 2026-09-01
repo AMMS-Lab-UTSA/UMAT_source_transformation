@@ -191,7 +191,8 @@ def transform_umat_to_oti_from_config(
 
     variable_shapes = _variable_shapes(config, mappings, ntens)
     argument_variables = _argument_variables(config, selected_umat)
-    shape_blockers = _shape_blockers(source_text, roles, regions, mappings, variable_shapes, parsed)
+    shape_blockers = _shape_blockers(source_text, roles, regions, mappings,
+                                     variable_shapes, parsed, selected_umat)
     shape_blockers.extend(_data_initialised_shadow_blockers(source_text, roles))
     shape_blockers.extend(_complex_type_blockers(config, roles))
     if shape_blockers:
@@ -273,8 +274,16 @@ def transform_umat_to_oti_from_config(
     ]
     if helper_source_path is not None:
         compile_lines.append('gfortran -c -ffree-form -ffree-line-length-none -I"$OBJDIR" umat_oti_helpers.f90 -J"$OBJDIR" -o "$OBJDIR/umat_oti_helpers.o"')
+    # The form the transform actually emitted, not a fixed assumption. A
+    # free-form source is rewritten as free-form and was being handed to the
+    # compiler as fixed, which reads column 1 as a statement label and stops
+    # at the very first line: "Non-numeric character in statement label"
+    # against a subroutine header that is perfectly correct.
+    transformed_form = ("-ffixed-form -ffixed-line-length-none"
+                        if detect_source_form(Path(source_file), transformed_source) == "fixed"
+                        else "-ffree-form -ffree-line-length-none")
     compile_lines.append(
-        f'gfortran -c -ffixed-form -ffixed-line-length-none -I"$OBJDIR" {transformed_name} -J"$OBJDIR" -o "$OBJDIR/transformed_umat.o"'
+        f'gfortran -c {transformed_form} -I"$OBJDIR" {transformed_name} -J"$OBJDIR" -o "$OBJDIR/transformed_umat.o"'
     )
     compile_hint.write_text("\n".join(compile_lines) + "\n", encoding="utf-8")
     compile_hint.chmod(0o755)
@@ -539,7 +548,9 @@ def _readiness_blockers(
     blockers.extend(_unsupported_intrinsic_blockers(source_text, roles, regions["stress"]))
     blockers.extend(_uncovered_ddsdde_blockers(
         analysis, regions["old_tangent"], regions["stress"], regions["shared_setup"],
-        _reachable_routine_regions(parsed, selected_umat)))
+        _reachable_routine_regions(parsed, selected_umat), parsed, selected_umat,
+        _as_int(_dict(_dict(config.get("transformation_anchors"))
+                      .get("ddsdde_extraction")).get("insert_after_line"))))
     if not source_text.strip():
         blockers.append("Selected UMAT source text is empty.")
     if not has_completed_anchors:
@@ -668,12 +679,134 @@ def _stress_path_io_blockers(config: dict[str, Any], analysis: dict[str, Any], s
     return blockers
 
 
+def _call_lines_reaching(
+    parsed: ParsedFortranSource | None, selected_umat: str, target: str
+) -> list[int]:
+    """Lines in the selected UMAT whose CALL can reach ``target``.
+
+    A routine other than the UMAT that assigns DDSDDE is assigning to a dummy
+    argument, and the write lands in the caller's array at the moment of the
+    call. So the place to judge such an assignment is not the line it is
+    written on -- that line is in another program unit and the UMAT's own
+    ordering says nothing about it -- but the CALL statements in the UMAT that
+    can reach it. Returns an empty list when no call reaches the target, which
+    every caller must read as "cannot place it", never as "nothing to place".
+    """
+    if parsed is None or not parsed.subroutines:
+        return []
+    routines = {routine.upper_name: routine for routine in parsed.subroutines}
+    start, goal = (selected_umat or "UMAT").upper(), target.upper()
+    if start not in routines or goal not in routines:
+        return []
+
+    def reaches(name: str, seen: set[str]) -> bool:
+        if name == goal:
+            return True
+        if name in seen or name not in routines:
+            return False
+        seen.add(name)
+        return any(reaches(call.callee.upper(), seen)
+                   for call in build_call_graph(parsed, name))
+
+    lines: list[int] = []
+    for call in build_call_graph(parsed, start):
+        if reaches(call.callee.upper(), set()):
+            lines.extend(int(value) for value in call.line_numbers)
+    return sorted(lines)
+
+
+def _extent_key(text: str) -> str:
+    """``a , b`` and ``a,b`` are the same extent written two ways.
+
+    Named for what it compares rather than what it does to the string, so it
+    is not mistaken for the parser's ``_collapse_spaces``, which keeps one
+    space where this keeps none.
+    """
+    return re.sub(r"\s+", "", str(text or "")).upper()
+
+
+def allocate_fixed_shape(
+    source_text: str, name: str, parsed: ParsedFortranSource | None,
+    selected_umat: str,
+) -> str:
+    """The shape the source's own ALLOCATE fixes for ``name``, or "".
+
+    A deferred shape is not an extent, but the extent is not unknowable: the
+    source states it a few lines later, in the ALLOCATE that fixes it. Reading
+    it there is the same move this transformer already makes for a declared
+    DIMENSION -- take the shape the author wrote rather than refuse for want
+    of one.
+
+    Returned only when the shadow can honestly be declared with it, which
+    needs two things to hold. There must be exactly one ALLOCATE of the name:
+    two mean the extent changes during the run and no single declaration is
+    right for both. And every name in the bound must be a dummy argument of
+    the selected routine or a named constant, because the shadow's declaration
+    is evaluated on entry -- a bound computed in the body would be read before
+    it is assigned, and would size the shadow from whatever the memory held.
+    That is precisely the quiet wrong number this transformer exists to avoid,
+    so anything less than both conditions returns "" and the refusal stands.
+    """
+    if parsed is None:
+        return ""
+    pattern = re.compile(
+        rf"\ballocate\s*\(\s*{re.escape(name)}\s*\((?P<bound>[^()]*(?:\([^()]*\)[^()]*)*)\)",
+        re.IGNORECASE)
+    bounds = [match.group("bound").strip()
+              for match in pattern.finditer(_executable_text(source_text))]
+    # One *extent*, not one statement. A source that allocates the same array
+    # to the same size on two branches is not ambiguous about how big it is;
+    # a source that allocates it to two different sizes is, and no single
+    # declaration would be right for both.
+    distinct = {_extent_key(bound) for bound in bounds if bound}
+    if len(distinct) != 1:
+        return ""
+    bound = bounds[0]
+    available = _names_a_declaration_may_use(parsed, selected_umat, source_text)
+    for token in re.findall(r"[A-Za-z_]\w*", bound):
+        if token.upper() not in available:
+            return ""
+    return bound
+
+
+def _names_a_declaration_may_use(
+    parsed: ParsedFortranSource, selected_umat: str, source_text: str
+) -> set[str]:
+    """Names whose value is already fixed when the routine is entered.
+
+    Dummy arguments and named constants, and nothing else. A local assigned in
+    the body has no value yet where declarations are written.
+    """
+    from umat_oti.fortran.regions import _parameter_variables  # noqa: PLC0415
+
+    available = set(_parameter_variables(parsed.logical_lines))
+    for routine in parsed.subroutines:
+        if routine.upper_name == (selected_umat or "UMAT").upper():
+            available |= {str(arg).upper() for arg in routine.args}
+    # ``REAL, PARAMETER :: N = 3`` is a named constant too, and is written in
+    # the attributed form the loop above does not read.
+    for line in parsed.logical_lines:
+        text = line.text
+        if not re.search(r"\bparameter\b", text, re.IGNORECASE):
+            continue
+        if "::" not in text:
+            continue
+        for entity in text.split("::", 1)[1].split(","):
+            candidate = entity.strip().split("=")[0].strip()
+            if candidate.isidentifier():
+                available.add(candidate.upper())
+    return available
+
+
 def _uncovered_ddsdde_blockers(
     analysis: dict[str, Any],
     old_tangent_regions: list[dict[str, Any]],
     stress_regions: list[dict[str, Any]],
     shared_setup_regions: list[dict[str, Any]],
     reachable_regions: list[dict[str, Any]] | None = None,
+    parsed: ParsedFortranSource | None = None,
+    selected_umat: str = "",
+    extraction_line: int = 0,
 ) -> list[str]:
     """DDSDDE assignments the transform would leave writing the old tangent.
 
@@ -686,6 +819,8 @@ def _uncovered_ddsdde_blockers(
     """
     blockers = []
     first_stress_start = min((region.get("start_line", 0) for region in stress_regions), default=0)
+    umat_span = _selected_routine_span(parsed, selected_umat) if parsed is not None else None
+    last_stress_end = max((region.get("end_line", 0) for region in stress_regions), default=0)
     for assignment in analysis.get("assignments_to_ddsdde", []) or []:
         line_numbers = assignment.get("line_numbers", [])
         try:
@@ -699,8 +834,70 @@ def _uncovered_ddsdde_blockers(
         if _line_numbers_intersect(line_numbers, shared_setup_regions):
             continue
         if not _line_numbers_intersect(assignment.get("line_numbers", []), old_tangent_regions):
+            if _overwritten_through_its_call_sites(
+                    line_numbers, umat_span, parsed, selected_umat, extraction_line,
+                    last_stress_end):
+                continue
             blockers.append(f"DDSDDE assignment is not covered by an old tangent replacement region: {assignment.get('text', '')}")
     return blockers
+
+
+def _overwritten_through_its_call_sites(
+    line_numbers: list[Any],
+    umat_span: tuple[int, int] | None,
+    parsed: ParsedFortranSource | None,
+    selected_umat: str,
+    extraction_line: int,
+    last_stress_end: int,
+) -> bool:
+    """True when this assignment writes the old tangent strictly before extraction.
+
+    Only for an assignment in a routine the UMAT calls. Such an assignment
+    writes a dummy argument, so it takes effect when the call runs, not where
+    it is written; if every CALL in the UMAT that can reach that routine sits
+    at or before the line the GETIM extraction is inserted after, the
+    extraction overwrites everything it wrote and no old-tangent value can
+    survive into the output. The whole callee runs
+    inside the call, so its own internal ordering cannot escape that bracket.
+
+    The call must also come after the stress update. A call in the middle of
+    it would put the old tangent into DDSDDE while the stress is still being
+    built, and a stress that reads DDSDDE would then take its value through a
+    REAL array where no derivative can follow -- the transform would compile,
+    run, and return a tangent that is wrong for a reason nothing reports.
+
+    Refuses -- returns False -- whenever any part of the argument is missing:
+    no parse, no UMAT span, no extraction point, or no call site found. A check
+    that cannot be made must block, not pass.
+    """
+    if parsed is None or umat_span is None or not extraction_line:
+        return False
+    numbers = [_as_int(value) for value in line_numbers if _as_int(value)]
+    if not numbers:
+        return False
+    if any(umat_span[0] <= number <= umat_span[1] for number in numbers):
+        return False  # in the UMAT itself; its own line is where it lands
+    holder = _routine_containing(parsed, min(numbers))
+    if not holder:
+        return False
+    call_lines = _call_lines_reaching(parsed, selected_umat, holder)
+    if not call_lines:
+        return False
+    # ``extraction_line`` is an insert-AFTER line, so a call on that very line
+    # is still overwritten by what follows it.
+    return all(last_stress_end <= line <= extraction_line for line in call_lines)
+
+
+def _routine_containing(parsed: ParsedFortranSource, line_number: int) -> str:
+    """The program unit whose span holds ``line_number``, innermost first."""
+    best, best_span = "", None
+    for routine in parsed.subroutines:
+        span = _selected_routine_span(parsed, routine.upper_name)
+        if not span or not (span[0] <= line_number <= span[1]):
+            continue
+        if best_span is None or (span[1] - span[0]) < (best_span[1] - best_span[0]):
+            best, best_span = routine.upper_name, span
+    return best
 
 
 def _reachable_routine_regions(
@@ -1339,6 +1536,7 @@ def _shape_blockers(
     mappings: dict[str, str],
     variable_shapes: dict[str, str],
     parsed: ParsedFortranSource | None = None,
+    selected_umat: str = "",
 ) -> list[str]:
     blockers: list[str] = []
     region_text = _executable_text(_selected_region_text(source_text, regions["stress"]))
@@ -1377,12 +1575,20 @@ def _shape_blockers(
         # no more of a bound to declare it with.
         if shape and _has_deferred_extent(shape) and re.search(
                 rf"(?<![%\w])\b{re.escape(name)}\b", region_text, flags=re.IGNORECASE):
+            # Before refusing for want of a bound, look where the source puts
+            # it. The emitter resolves the same way, through the same
+            # function, so the two cannot disagree about whether a shadow can
+            # be declared -- they did, and the check passed a source the
+            # emitter then wrote ``X_OTI(:,:)`` for.
+            if allocate_fixed_shape(source_text, name, parsed, selected_umat):
+                continue
             blockers.append(
-                f"{name} is declared with a deferred shape ({shape}) and is "
-                f"read on the stress path. Its extent is fixed by an "
-                f"ALLOCATE at run time, so there is no bound to declare a "
-                f"shadow with and none to count an initialisation loop to. "
-                f"Allocatable promoted variables are not supported."
+                f"{name} is declared with a deferred shape ({shape}) and "
+                f"is read on the stress path. Its extent is fixed by an "
+                f"ALLOCATE at run time whose bound this routine cannot "
+                f"evaluate where declarations are written, so there is no "
+                f"bound to declare a shadow with and none to count an "
+                f"initialisation loop to."
             )
             continue
         if shape or not indexed:
@@ -4282,6 +4488,12 @@ def _shapes_declared_in_selected_routine(
 
     Only names the routine declares are overridden; everything else keeps the
     file-wide answer, which is all there is for a name declared nowhere.
+
+    A deferred shape is replaced by the extent the source's own ALLOCATE
+    fixes, when that extent can honestly be written in a declaration -- see
+    :func:`allocate_fixed_shape`, which refuses unless it can. Done here so
+    that the readiness check and the emitter read one answer; resolving it in
+    the check alone left the emitter still declaring ``X_OTI(:,:)``.
     """
     for routine in parsed.subroutines:
         if routine.upper_name != selected_umat.upper():
@@ -4299,6 +4511,12 @@ def _shapes_declared_in_selected_routine(
                 entity = parse_entity(item)
                 if entity.dimensions:
                     updated[entity.upper_name] = ", ".join(entity.dimensions)
+        for name, shape in list(updated.items()):
+            if not _has_deferred_extent(shape):
+                continue
+            fixed = allocate_fixed_shape(parsed.text, name, parsed, selected_umat)
+            if fixed:
+                updated[name] = fixed
         return updated
     return variable_shapes
 
