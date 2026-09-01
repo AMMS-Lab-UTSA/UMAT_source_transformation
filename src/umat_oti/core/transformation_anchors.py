@@ -126,6 +126,14 @@ def build_transformation_anchors(config: dict[str, Any], source_text: str = "") 
     real_output_line = _real_output_insert_after_line(source_lines, stress_regions, mappings)
     real_insert_after = _branch_safe_real_output_insert_after_line(source_lines, real_output_line, output_region) or real_output_line or last_stress_end or ddsdde_insert_after
     ddsdde_insert_after = max(ddsdde_insert_after, real_insert_after)
+    # Never inside a loop the stress update runs in. Both extractions are
+    # moved past the outermost enclosing DO, together, so the real copy and
+    # the tangent stay in the order the semantic checks require.
+    for candidate in (real_insert_after, ddsdde_insert_after):
+        loop_end = _enclosing_do_end(source_lines, candidate, umat_span)
+        if loop_end:
+            real_insert_after = max(real_insert_after, loop_end)
+            ddsdde_insert_after = max(ddsdde_insert_after, loop_end)
     seed_line_before = first_stress_start or _first_executable_line_in_span(source_lines, umat_span)
     finite_seed_line = _first_finite_strain_use_line(analysis, umat_span)
     if finite_seed_line:
@@ -1157,6 +1165,65 @@ def _same_span_exists(region: dict[str, Any], regions: list[dict[str, Any]]) -> 
         and _as_int(region.get("end_line")) == _as_int(other.get("end_line"))
         for other in regions
     )
+
+
+def _enclosing_do_end(source_lines: list[str], line_number: int,
+                      span: tuple[int, int]) -> int:
+    """The END DO of the outermost DO loop containing ``line_number``, or 0.
+
+    An extraction inserted inside a loop runs once per iteration, and the two
+    things it does are both destroyed by that. The real copy
+    ``STRESS(I) = REAL(STRESS_OTI(I))`` is merely repeated; the tangent
+    extraction ``DDSDDE(i,j) = GETIM(STRESS_OTI(i), j)`` overwrites the array
+    the loop is still reading.
+
+    That is not hypothetical. A UMAT whose whole stress update is
+
+        DO K1=1, NTENS
+          DO K2=1, NTENS
+            STRESS(K2)=STRESS(K2)+DDSDDE(K2,K1)*DSTRAN(K1)
+          END DO
+        END DO
+
+    puts the last stress statement inside two loops. Inserting after it landed
+    the extraction between the two END DOs, so on the first pass GETIM
+    replaced the elastic stiffness the remaining passes then read back as
+    though it were the stiffness. The file compiled, ran, and returned a
+    tangent whose first column was right and whose other five were zero,
+    together with a wrong stress. Only a numerical comparison against the
+    untransformed original found it.
+
+    A tab in the label field is expanded before the columns are read, because
+    that source -- like others written for ifort -- indents with tabs, and the
+    loop keywords are invisible otherwise.
+    """
+    from umat_oti.fortran.parser import expand_fixed_form_tabs
+
+    start, end = span
+    if not (start <= line_number <= end):
+        return 0
+    depth = 0
+    outermost_open = 0
+    for number in range(start, min(end, len(source_lines)) + 1):
+        text = expand_fixed_form_tabs(source_lines[number - 1]).strip()
+        if _is_comment_or_blank(text):
+            continue
+        if re.match(r"^end\s*do\b", text, flags=re.IGNORECASE):
+            depth = max(0, depth - 1)
+            # Inside means between the DO and its END DO, not merely before
+            # the END DO: a statement above the loop entirely is not enclosed
+            # by it and must not be pushed past it.
+            if depth == 0 and outermost_open <= line_number <= number and outermost_open:
+                return number
+            if depth == 0:
+                outermost_open = 0
+            continue
+        if re.match(r"^(?:\w+\s*:\s*)?do\b", text, flags=re.IGNORECASE):
+            if depth == 0:
+                outermost_open = number
+            depth += 1
+    return 0
+
 
 
 def _post_output_insert_line(source_lines: list[str], output_region: dict[str, Any] | None) -> int:
