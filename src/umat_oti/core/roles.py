@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from umat_oti.fortran.normalize import strip_inline_comment
+
 
 OTIS_ROLES = ("Seed", "Promote", "Constant", "Keep real", "Unknown")
 ROUTINE_ROLES = (
@@ -131,6 +133,60 @@ def common_block_names(source_text: str | None) -> frozenset[str]:
         names.add("".join(current).strip().upper())
     return frozenset(name for name in names if name and name.isidentifier())
 
+
+
+_MODULE_HEADER = re.compile(r"^\s*module\s+([A-Za-z_]\w*)\s*$", re.IGNORECASE)
+_MODULE_TAIL = re.compile(r"^\s*(?:end\s*module\b|contains\s*$)", re.IGNORECASE)
+
+
+def module_variable_names(source_text: str | None) -> frozenset[str]:
+    """Names declared in the specification part of a module in this source.
+
+    Module state is shared storage, exactly as a COMMON block is, and it is
+    kept out of the differentiated set for the same reason: a shadow declared
+    in the UMAT is a different object from the module variable every other
+    routine reads, so the values written to it never arrive anywhere, and the
+    module's own declaration -- the one place the extent is written down --
+    keeps its real type whatever this routine does.
+
+    The file that made this concrete pairs a UEL with a UMAT and passes state
+    between them through
+
+        module kvisual
+          real*8 UserVar(70000,16,8)
+        end module
+
+    which no routine declares, so promoting USERVAR asked for the shape of a
+    name with no declaration in any routine and reported that it had none.
+
+    Writing to such a name still works: the value is cast on the way out, the
+    way STRESS and STATEV are, and reading one on the stress path is reported
+    by the seed-consumption and structural-zero checks as the truncation it is.
+    """
+    if not source_text:
+        return frozenset()
+    try:
+        from umat_oti.fortran.parser import parse_declaration_line  # noqa: PLC0415
+    except Exception:
+        return frozenset()
+    names: set[str] = set()
+    inside = False
+    for line in source_text.splitlines():
+        if line[:1] in "Cc*!":
+            continue
+        stripped = strip_inline_comment(line).strip()
+        if not stripped:
+            continue
+        if not inside:
+            inside = bool(_MODULE_HEADER.match(stripped))
+            continue
+        if _MODULE_TAIL.match(stripped):
+            inside = False
+            continue
+        declaration = parse_declaration_line(stripped)
+        if declaration is not None:
+            names.update(entity.upper_name for entity in declaration.entities)
+    return frozenset(name for name in names if name.isidentifier())
 
 
 _DATA_STATEMENT = re.compile(r"^\s*data\s+(.*?)/", re.IGNORECASE)
@@ -277,6 +333,31 @@ INTRINSIC_CALL_NAMES = frozenset({
 _ASSIGNMENT_TARGET = re.compile(
     r"^\s*([A-Za-z_]\w*)\s*(?:\([^=]*\))?\s*=(?!=)")
 
+_SUBSCRIPTED_ASSIGNMENT_TARGET = re.compile(
+    r"^\s*([A-Za-z_]\w*)\s*\([^=]*\)\s*=(?!=)")
+
+
+def subscripted_assignment_names(source_text: str | None) -> frozenset[str]:
+    """Names this source assigns *through a subscript*: ``NAME(...) = ...``.
+
+    Evidence that a name is an array, which is a narrower question than
+    whether it is a variable. ``F = TERM2**2`` proves that F is a variable in
+    the scope that writes it; it proves nothing about whether the ``F(X,PROP)``
+    somewhere else is an index or a call to the ``REAL*8 FUNCTION F(X,PROP)``
+    this same file defines. Only a subscripted write says "array".
+    """
+    if not source_text:
+        return frozenset()
+    names: set[str] = set()
+    for line in source_text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped[:1] in ("c", "C", "*", "!"):
+            continue
+        match = _SUBSCRIPTED_ASSIGNMENT_TARGET.match(stripped)
+        if match:
+            names.add(match.group(1).upper())
+    return frozenset(names)
+
 
 def assigned_names(source_text: str | None) -> frozenset[str]:
     """Names this source ever assigns to.
@@ -290,27 +371,128 @@ def assigned_names(source_text: str | None) -> frozenset[str]:
     """
     if not source_text:
         return frozenset()
-    names: set[str] = set()
-    for line in source_text.splitlines():
+    return frozenset(assigned_names_with_lines(source_text))
+
+
+def assigned_names_with_lines(source_text: str | None) -> dict[str, set[int]]:
+    """``assigned_names``, with the 1-based lines each assignment sits on."""
+    if not source_text:
+        return {}
+    names: dict[str, set[int]] = {}
+    for number, line in enumerate(source_text.splitlines(), start=1):
         stripped = line.strip()
         if not stripped or stripped[:1] in ("c", "C", "*", "!"):
             continue
         match = _ASSIGNMENT_TARGET.match(stripped)
         if match:
-            names.add(match.group(1).upper())
+            names.setdefault(match.group(1).upper(), set()).add(number)
+    return names
+
+
+def _function_spans(source_text: str) -> dict[str, list[tuple[int, int]]]:
+    """Line span of every FUNCTION subprogram this source defines.
+
+    Read in both source forms and merged. The form is a property of the file
+    and is not derivable from the text alone with any confidence -- a
+    fixed-form SUBROUTINE statement and a free-form one are the same words --
+    and reading one form's text under the other's rules does not invent a
+    function: fixed-form parsing of a free-form file chops the first six
+    columns, which leaves a fragment no header pattern matches, and free-form
+    parsing of a fixed-form file leaves the C in column one at the front of
+    every comment, which is likewise not a header. So the union is the set of
+    functions actually defined, and reading only "fixed" -- which is what this
+    did -- missed every function in every free-form source.
+    """
+    spans: dict[str, list[tuple[int, int]]] = {}
+    try:
+        from umat_oti.fortran.parser import (  # noqa: PLC0415
+            logical_lines_from_text, parse_function_subprograms,
+        )
+    except Exception:
+        return spans
+    for form in ("fixed", "free"):
+        try:
+            lines = logical_lines_from_text(source_text, form)
+            functions = parse_function_subprograms(lines)
+        except Exception:
+            continue
+        for function in functions:
+            numbers = [number for line in function.lines for number in line.line_numbers]
+            if not numbers:
+                continue
+            spans.setdefault(function.name.upper(), []).append((min(numbers), max(numbers)))
+    return spans
+
+
+_DERIVED_TYPE_DEFINITION = re.compile(
+    r"^\s*type\s*(?:,[^:]*)?::\s*([A-Za-z_]\w*)\s*$", re.IGNORECASE)
+_DERIVED_TYPE_DEFINITION_BARE = re.compile(
+    r"^\s*type\s+([A-Za-z_]\w*)\s*$", re.IGNORECASE)
+_GENERIC_INTERFACE = re.compile(
+    r"^\s*interface\s+([A-Za-z_]\w*)\s*$", re.IGNORECASE)
+
+
+def derived_type_names(source_text: str | None) -> frozenset[str]:
+    """Derived types, and generic interfaces, this source defines.
+
+    Neither is a variable and neither is an array. ``Share_var(...)`` is a
+    structure constructor or a call to the generic of the same name, and
+    reading it as an index reported a promoted array with no confirmed shape
+    for a name whose definition is a ``type, public :: Share_var`` block a few
+    hundred lines up.
+    """
+    if not source_text:
+        return frozenset()
+    names: set[str] = set()
+    for line in source_text.splitlines():
+        if line[:1] in "Cc*!":
+            continue
+        stripped = strip_inline_comment(line).strip()
+        for pattern in (_DERIVED_TYPE_DEFINITION, _DERIVED_TYPE_DEFINITION_BARE,
+                        _GENERIC_INTERFACE):
+            match = pattern.match(stripped)
+            if match:
+                names.add(match.group(1).upper())
+                break
     return frozenset(names)
 
 
 def defined_function_names(source_text: str) -> frozenset[str]:
     """Names this source defines as FUNCTIONs. Calls, not arrays or variables."""
-    try:
-        from umat_oti.fortran.parser import (  # noqa: PLC0415
-            logical_lines_from_text, parse_function_subprograms,
-        )
-        lines = logical_lines_from_text(source_text, "fixed")
-        return frozenset(f.upper_name for f in parse_function_subprograms(lines))
-    except Exception:
+    return frozenset(_function_spans(source_text))
+
+
+def call_names_that_are_not_variables(source_text: str | None) -> frozenset[str]:
+    """Names that read as ``NAME(...)`` here but are calls, not arrays.
+
+    Two sources of such names, and they need opposite treatment by the
+    "does this source assign it?" test:
+
+    * A Fortran intrinsic is never assigned, so an assignment to the name is
+      proof that this source uses it as its own variable. That subtraction is
+      what lets a UMAT keep an accumulator called SUM.
+    * A function subprogram's name IS assigned -- that is how a Fortran
+      function returns its value, written inside its own body. Subtracting on
+      that evidence deleted every function this source defines from the set,
+      which is how ``F(X,PROP)`` from ``REAL*8 FUNCTION F(X,PROP)`` came to be
+      reported as a promoted array with no confirmed shape, and how
+      ``DOUBLE PRECISION FUNCTION DAM(KAPPA,KONSTD,CRITD)`` did. An assignment
+      to the name *outside* that function's own body is still evidence of a
+      variable, and only those count.
+    """
+    if not source_text:
         return frozenset()
+    spans = _function_spans(source_text)
+    assigned = assigned_names_with_lines(source_text)
+    functions = {
+        name for name, name_spans in spans.items()
+        if not any(
+            not any(start <= number <= end for start, end in name_spans)
+            for number in assigned.get(name, ())
+        )
+    }
+    return frozenset((INTRINSIC_CALL_NAMES - assigned_names(source_text))
+                     | functions | derived_type_names(source_text))
 
 
 
@@ -343,10 +525,10 @@ def _suggest_variable_roles(analysis: dict[str, Any],
     # says: the list now includes names like SUM and INDEX that a UMAT may
     # legitimately use, and demoting one of those would take its derivative
     # silently to zero.
-    not_variables = ((INTRINSIC_CALL_NAMES | defined_function_names(source_text))
-                     - assigned_names(source_text)
+    not_variables = (call_names_that_are_not_variables(source_text)
                      if source_text is not None else frozenset())
     common_names = common_block_names(source_text)
+    module_names = module_variable_names(source_text)
     data_names = data_initialised_names(source_text)
     helper_local_names = _pure_helper_local_variables(analysis)
     helper_output_names = _pure_helper_output_variables(analysis)
@@ -413,6 +595,16 @@ def _suggest_variable_roles(analysis: dict[str, Any],
                 "written for it came out as DO OTI_HI = 1, *. The extent is "
                 "the caller's, and guessing which other argument carries it "
                 "would be inventing an interface this source does not state."
+            )
+        elif role == "Promote" and name in module_names:
+            role = "Keep real"
+            notes = (
+                f"{name} is declared in a module in this source, so it is "
+                "shared storage rather than a local of this routine. A shadow "
+                "declared here would be a different object from the one every "
+                "other routine reads, and the values written to it would "
+                "never arrive. Values are cast on the way out, as STRESS and "
+                "STATEV are."
             )
         elif role == "Promote" and name in common_names:
             role = "Keep real"
