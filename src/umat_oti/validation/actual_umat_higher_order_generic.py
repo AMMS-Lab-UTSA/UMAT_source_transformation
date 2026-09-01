@@ -462,6 +462,20 @@ SUBROUTINE SPRINC(S,PS,LSTR,NDI,NSHR)
   PS(2) = CENTRE - RADIUS
   PS(3) = S(3)
 END SUBROUTINE SPRINC
+SUBROUTINE MUTEXINIT(ID)
+  ! Abaqus's thread locks. This driver runs one material point on one thread,
+  ! so there is nothing to serialise and a no-op is not an approximation of
+  ! their behaviour -- it is their behaviour. Unlike XIT, no run-time
+  ! condition is being swallowed: a lock in a single-threaded program is
+  ! uncontended by construction.
+  INTEGER :: ID
+END SUBROUTINE MUTEXINIT
+SUBROUTINE MUTEXLOCK(ID)
+  INTEGER :: ID
+END SUBROUTINE MUTEXLOCK
+SUBROUTINE MUTEXUNLOCK(ID)
+  INTEGER :: ID
+END SUBROUTINE MUTEXUNLOCK
 """
 
 

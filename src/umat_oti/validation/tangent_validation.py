@@ -47,6 +47,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 import math
 import subprocess
 from dataclasses import dataclass, field
@@ -91,6 +92,57 @@ ZERO_FRACTION = 1.0e-12
 _BUILD_TIMEOUT_SECONDS = 600
 
 
+#: An assignment to one state variable inside SDVINI.
+_SDVINI_ASSIGNMENT = re.compile(
+    r"^\s*statev\s*\(\s*(\d+)\s*\)\s*=\s*([-+0-9.eEdD]+)\s*(?:!.*)?$",
+    re.IGNORECASE)
+
+
+def sdvini_initial_state(source_text: str, nstatv: int) -> tuple[float, ...]:
+    """The initial state variables the source's own SDVINI sets.
+
+    Not an invention and not a probe: SDVINI is how an Abaqus user declares
+    the state a material point starts in, and it is shipped in the same file
+    as the UMAT. Driving from all zeros is driving from a state its author
+    never intended, and for a growth model that is not merely different but
+    undefined -- the growth multipliers start at 1.0 and a zero divides.
+    Twenty-four sources returned NaN from BOTH builds under an all-zero start,
+    which is the untransformed original saying the state was wrong rather than
+    the transform being wrong.
+
+    Only literal assignments are read. A value computed from COORDS or NOEL
+    depends on where the point sits in a mesh this driver does not have, so it
+    is left at zero rather than guessed at.
+    """
+    if nstatv <= 0:
+        return ()
+    values = [0.0] * nstatv
+    inside = False
+    for raw in source_text.splitlines():
+        stripped = raw.strip()
+        if re.match(r"^[cC*!]", stripped):
+            continue
+        lowered = stripped.lower()
+        if re.match(r"^(?:\w+\s+)*subroutine\s+sdvini\b", lowered):
+            inside = True
+            continue
+        if inside and re.match(r"^end\b", lowered):
+            break
+        if not inside:
+            continue
+        match = _SDVINI_ASSIGNMENT.match(stripped)
+        if not match:
+            continue
+        index = int(match.group(1))
+        if 1 <= index <= nstatv:
+            try:
+                values[index - 1] = float(
+                    match.group(2).replace("d", "e").replace("D", "e"))
+            except ValueError:
+                continue
+    return tuple(values)
+
+
 @dataclass(frozen=True)
 class TangentCase:
     """One source whose returned tangent is to be checked."""
@@ -111,6 +163,17 @@ class TangentCase:
     relative_tolerance: float = DEFAULT_RELATIVE_TOLERANCE
     extra_sources: tuple[Path, ...] = ()
     link_libraries: tuple[str, ...] = ()
+    #: The state the material point starts in. Empty means all zeros, which is
+    #: right for a model with no SDVINI and wrong for one that has it.
+    initial_statev: tuple[float, ...] = ()
+    #: Where the material point sits. A declared probe like the loading path,
+    #: not read from any mesh. The origin is not a neutral default for it: a
+    #: model that resolves a fibre direction from position computes
+    #: COORDS(2)/SQRT(COORDS(1)**2+COORDS(2)**2) and gets 0/0 there, which is
+    #: why such sources returned NaN from the untransformed build as well as
+    #: the transformed one. The unit diagonal is just as arbitrary and is
+    #: degenerate in none of those expressions.
+    coords: tuple[float, float, float] = (1.0, 1.0, 1.0)
 
 
 @dataclass
@@ -226,6 +289,129 @@ def _flat(matrix: Sequence[Sequence[float]]) -> list[float]:
     return [float(value) for row in matrix for value in row]
 
 
+#: A declaration that names a default REAL -- single precision on every
+#: compiler this project runs on -- rather than REAL*8 or DOUBLE PRECISION.
+_BARE_REAL_DECLARATION = re.compile(
+    r"^\s*real\s+(?!\*|\()(?P<names>[A-Za-z_].*)$", re.IGNORECASE)
+
+
+def single_precision_names(source_text: str) -> tuple[str, ...]:
+    """Variables the source declares as a default REAL.
+
+    A UMAT that writes ``real E, nu, lambda, mu, S(6), D1(6,6)`` is asking for
+    single precision, and its stress is only good to about seven digits. The
+    OTI type is built over doubles, so a promoted variable comes back in
+    double precision and the two builds stop computing the same function --
+    not because the transform is wrong, but because it is more accurate than
+    the model it was made from.
+
+    Worth naming rather than leaving as a bare disagreement: a reader who sees
+    "the builds disagree by 4e-08" cannot tell that from a defect, and this is
+    the difference between a source that cannot be verified against itself and
+    a source that was transformed incorrectly.
+    """
+    names: list[str] = []
+    for raw in source_text.splitlines():
+        if re.match(r"^[cC*!]", raw):
+            continue
+        body = raw.split("!")[0]
+        match = _BARE_REAL_DECLARATION.match(body.strip())
+        if not match:
+            continue
+        for entity in match.group("names").split(","):
+            name = entity.strip().split("(")[0].strip()
+            if name and name.isidentifier() and name.lower() != "function":
+                names.append(name.upper())
+    return tuple(dict.fromkeys(names))
+
+
+#: Relative spacing of IEEE single precision. A build-to-build difference at
+#: this scale is what a single-precision declaration produces on its own.
+_SINGLE_PRECISION_EPSILON = 1.1920929e-7
+
+
+#: A Fortran runtime error naming a file the model expected to find.
+_MISSING_INPUT_FILE = re.compile(
+    r"Cannot open file '([^']+)'", re.IGNORECASE)
+
+
+def _missing_data_file_reason(stderr: str) -> str:
+    """Name a data file the source needs and its repository does not ship.
+
+    Several UMATs read their own inputs at run time -- growth targets, fitted
+    coefficients, tabulated curves -- from a path on the author's machine
+    (``T:\\Abaqus-Temp\\...``). The repository holds the subroutine and not
+    the data, so the model cannot run here, and it could not run under Abaqus
+    on any other machine either. That is a property of what was published, not
+    a transformation failure, and saying so is the difference between a
+    reader blaming this tool and a reader knowing to go and ask for the file.
+    """
+    match = _MISSING_INPUT_FILE.search(stderr or "")
+    if not match:
+        return ""
+    return (f"the source reads {match.group(1)!r} at run time and its "
+            "repository does not ship that file, so the model cannot be "
+            "driven here -- and could not be driven under Abaqus on any "
+            "machine but its author's. Nothing was transformed incorrectly: "
+            "the published source is incomplete without its data")
+
+
+def _transform_refusal(summary: dict) -> str:
+    """Why the transformation service returned non-zero, in its own words.
+
+    The summary carries the reason in one of several fields depending on where
+    it stopped, and stringifying the whole dict when none of them is checked
+    prints a configuration echo as though it were a diagnosis -- which is how
+    eight sources came to report their own contract as their blocker.
+    """
+    if summary.get("error"):
+        return str(summary["error"])
+    errors = summary.get("errors")
+    if errors:
+        return "; ".join(str(item) for item in errors)
+    parts: list[str] = []
+    category = summary.get("status_category")
+    if category:
+        parts.append(str(category))
+    blockers = summary.get("blockers") or []
+    if blockers:
+        parts.append("; ".join(str(item) for item in blockers))
+    # A transform can fail with no blocker at all: a semantic check refuses
+    # after the fact, and the refusal is recorded here and nowhere else. Two
+    # sources reported the bare words "transform_failed" for exactly this.
+    failed_checks = [name for name, passed
+                     in (summary.get("semantic_checks") or {}).items()
+                     if passed is False]
+    if failed_checks:
+        parts.append("semantic checks failed: " + ", ".join(sorted(failed_checks)))
+    elif not blockers:
+        warnings = summary.get("warnings") or []
+        if warnings:
+            parts.append("; ".join(str(item) for item in warnings))
+    compilation = summary.get("compilation") or {}
+    if compilation.get("status") not in (None, "compiled", "not_requested"):
+        stderr = str(compilation.get("stderr") or "").strip()
+        detail = stderr.splitlines()[-8:] if stderr else []
+        parts.append(str(compilation["status"])
+                     + (": " + " / ".join(detail) if detail else ""))
+    if parts:
+        return " | ".join(parts)
+    return ("the transformation service returned non-zero and named no "
+            "reason, so the cause is not recorded")
+
+
+def _initial_state_lines(case: "TangentCase") -> str:
+    """The non-zero entries of the starting state, one assignment each.
+
+    Emitted after the blanket zeroing so a model with no SDVINI is driven
+    exactly as before and nothing changes for it.
+    """
+    values = getattr(case, "initial_statev", ()) or ()
+    lines = [f"\n  STATEV({index}) = {value!r}_8"
+             for index, value in enumerate(values, start=1) if value]
+    return "".join(lines)
+
+
 def _driver_source(case: TangentCase, drive) -> str:
     """A driver that walks the path and writes the tangent each increment.
 
@@ -255,6 +441,7 @@ def _driver_source(case: TangentCase, drive) -> str:
         advance_gradient = "    DFGRD0=DFGRD1\n    DFGRD1=DFGRD1+DFGRDINC\n"
     else:
         declare_gradient = set_gradient = advance_gradient = ""
+    initial_state = _initial_state_lines(case)
     return f"""PROGRAM tangent_driver
   IMPLICIT NONE
   INTEGER, PARAMETER :: NTENS={case.ntens}, NSTATV={max(case.nstatv, 1)}
@@ -266,12 +453,14 @@ def _driver_source(case: TangentCase, drive) -> str:
   INTEGER :: NDI,NSHR,NOEL,NPT,LAYER,KSPT,KSTEP,KINC,I,INC,U,UT,IR,IC
 {declare_gradient}  CHARACTER(80) :: CMNAME
   DATA STEP / {path} /
-  STRESS=0.0_8; STATEV=0.0_8; DDSDDE=0.0_8; STRAN=0.0_8; DSTRAN=0.0_8
+  STRESS=0.0_8; STATEV=0.0_8; DDSDDE=0.0_8; STRAN=0.0_8; DSTRAN=0.0_8{initial_state}
   SSE=0.0_8; SPD=0.0_8; SCD=0.0_8; RPL=0.0_8; DDSDDT=0.0_8
   DRPLDE=0.0_8; DRPLDT=0.0_8; TIME=0.0_8; DTIME=1.0_8
   TEMP=293.15_8; DTEMP=0.0_8; PREDEF=0.0_8; DPRED=0.0_8
   PROPS=0.0_8; {props}
-  COORDS=0.0_8; DROT=0.0_8; DFGRD0=0.0_8; DFGRD1=0.0_8
+  COORDS(1)={case.coords[0]!r}_8; COORDS(2)={case.coords[1]!r}_8
+  COORDS(3)={case.coords[2]!r}_8
+  DROT=0.0_8; DFGRD0=0.0_8; DFGRD1=0.0_8
   DO I=1,3
     DROT(I,I)=1.0_8; DFGRD0(I,I)=1.0_8; DFGRD1(I,I)=1.0_8
   END DO
@@ -338,8 +527,7 @@ def verify_tangent(case: TangentCase, work_dir: Path) -> TangentResult:
         result.stopped("transformed", f"{type(error).__name__}: {error}"[:600])
         return result
     if code != 0:
-        result.stopped("transformed",
-                       str(summary.get("error") or summary)[:600])
+        result.stopped("transformed", _transform_refusal(summary)[:600])
         return result
     result.passed("transformed",
                   transformed_source=Path(summary["transformed_source"]).name)
@@ -384,7 +572,11 @@ def verify_tangent(case: TangentCase, work_dir: Path) -> TangentResult:
             source, reference_dir, ntens=case.ntens, nstatv=case.nstatv,
             nprops=len(case.props), extra_sources=case.extra_sources,
             link_libraries=case.link_libraries,
-            finite_strain=drive.drives_deformation_gradient)
+            finite_strain=drive.drives_deformation_gradient,
+            # The same starting conditions the OTI driver used. Without this
+            # the two builds sit at different points and disagree for a reason
+            # that has nothing to do with the transformation.
+            coords=case.coords, initial_statev=case.initial_statev)
     except RuntimeError as error:
         result.stopped("original_compiled", str(error)[:600])
         return result
@@ -392,9 +584,12 @@ def verify_tangent(case: TangentCase, work_dir: Path) -> TangentResult:
 
     executed = _run([str(executable)], build)
     if executed.returncode != 0:
-        result.stopped("transformed_executed",
-                       f"the OTI driver failed (rc={executed.returncode}): "
-                       f"{executed.stderr[-600:]}")
+        missing = _missing_data_file_reason(executed.stderr)
+        result.stopped(
+            "transformed_executed",
+            missing or (f"the OTI driver failed (rc={executed.returncode}): "
+                        f"{executed.stderr[-600:]}"),
+            **({"external_data_dependency": True} if missing else {}))
         return result
     result.passed("transformed_executed")
 
@@ -513,8 +708,41 @@ def _primal_parity(original, primal_csv: Path, case: TangentCase) -> dict:
                       f"build, {theirs} from the original), so neither build "
                       "produced a response a derivative could be taken of",
         }
-    return {"agrees": worst <= 1.0e-9, "worst_relative": worst,
-            "increments_compared": compared}
+    if worst <= 1.0e-9:
+        return {"agrees": True, "worst_relative": worst,
+                "increments_compared": compared}
+    result = {"agrees": False, "worst_relative": worst,
+              "increments_compared": compared}
+    # Not a widened tolerance: the verdict above is unchanged and this source
+    # is still not verified. What changes is that the reason is the source's
+    # own declaration instead of an unexplained number.
+    declared = _single_precision_explanation(case, worst)
+    if declared:
+        result["reason"] = declared
+        result["reference_limited_by"] = "source_declared_single_precision"
+    return result
+
+
+def _single_precision_explanation(case: TangentCase, worst: float) -> str:
+    """Name a divergence a single-precision declaration fully accounts for."""
+    if worst > 32.0 * _SINGLE_PRECISION_EPSILON:
+        return ""
+    try:
+        source = Path(case.source_path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+    names = single_precision_names(source)
+    if not names:
+        return ""
+    listed = ", ".join(names[:6]) + (", ..." if len(names) > 6 else "")
+    return (f"the two builds differ by {worst:.3e}, which this source's own "
+            f"declaration accounts for: it declares {listed} as default REAL, "
+            "so the original computes its stress in single precision while "
+            "the OTI type is built over doubles. The transformed build is not "
+            "wrong here -- it is more precise than the model it was made "
+            "from -- but the original cannot resolve a derivative finely "
+            "enough to check it, so this source is reference-limited rather "
+            "than verified")
 
 
 def _compare(case: TangentCase, reference: Path, path: list,
