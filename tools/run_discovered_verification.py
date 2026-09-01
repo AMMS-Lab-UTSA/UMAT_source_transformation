@@ -41,8 +41,11 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
+sys.path.insert(0, str(REPO_ROOT / "tools"))
 
+from run_discovery_triage import without_machine_paths  # noqa: E402
 from umat_oti.validation.tangent_validation import (  # noqa: E402
+    sdvini_initial_state,
     STAGE_ORDER, TangentCase, verify_tangent,
 )
 
@@ -60,6 +63,11 @@ PROBE_PROVENANCE = (
     "declared probe, chosen by the verification harness; not read from a deck "
     "and not this source's own loading history"
 )
+#: Where the driver places the material point. Declared here for the same
+#: reason the loading path is: it is a choice this harness makes, and a reader
+#: has to be able to see it. The origin is not a neutral choice -- a model that
+#: reads a fibre direction off the position divides by a zero radius there.
+PROBE_COORDS = (1.0, 1.0, 1.0)
 
 COLUMNS = (
     "name", "source", "repository", "kinematics", "nstatv", "ntens",
@@ -99,6 +107,19 @@ def cases_from(triage_csv: Path, proposals_json: Path, cache: Path,
     return out
 
 
+def _source_text(path: Path) -> str:
+    """The source, or empty when it cannot be read.
+
+    An unreadable source is a real outcome for this harness -- the verify step
+    reports it with the compiler's own words a moment later -- so reading it
+    here to look for an SDVINI must not be what ends the run.
+    """
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
 def _case(item: dict[str, Any]) -> TangentCase:
     row, entry = item["row"], item["entry"]
     props = tuple(float(v) for v in (entry.get("material") or {}).get("props") or ())
@@ -109,8 +130,13 @@ def _case(item: dict[str, Any]) -> TangentCase:
         props=props,
         dstran_per_increment=PROBE_INCREMENT,
         n_increments=PROBE_INCREMENTS,
+        coords=PROBE_COORDS,
         ntens=int(row.get("ntens") or 6),
         nstatv=nstatv,
+        # Read from this source's own SDVINI, not chosen here. A growth model
+        # whose multipliers start at zero divides by zero, which is why both
+        # builds returned NaN rather than only the transformed one.
+        initial_statev=sdvini_initial_state(_source_text(item["path"]), nstatv),
     )
 
 
@@ -137,7 +163,8 @@ def run(items: list[dict[str, Any]], work_root: Path) -> list[dict[str, Any]]:
             result = verify_tangent(_case(item), work)
         except Exception as error:  # noqa: BLE001 - a crash is a finding
             record.update(furthest_stage="harness_error",
-                          blocker=f"{type(error).__name__}: {error}"[:220])
+                          blocker=without_machine_paths(
+                              f"{type(error).__name__}: {error}", work_root)[:220])
             record["traceback"] = traceback.format_exc()[-300:]
             rows.append(record)
             print(f"    harness_error  {type(error).__name__}", flush=True)
@@ -165,6 +192,13 @@ def run(items: list[dict[str, Any]], work_root: Path) -> list[dict[str, Any]]:
             "reference_perturbation": summary.get("reference_perturbation", ""),
             "blocker": (result.blocker or "")[:220],
         })
+        # A blocker quotes whatever the compiler or the runtime said, and both
+        # name the absolute path of every file they were handed. Those paths
+        # are a property of the machine that ran this, not of the failure, and
+        # they were reaching the published table.
+        for key, value in record.items():
+            if isinstance(value, str):
+                record[key] = without_machine_paths(value, work_root)
         rows.append(record)
         print(f"    {result.furthest_stage or 'no stage'}  "
               f"rows {agreeing}/{total} agreeing, {unresolved} unresolved",
@@ -200,6 +234,7 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "structural_zeros": sum(int(r.get("structural_zeros") or 0) for r in rows),
         "loading_probe": {"dstran_per_increment": list(PROBE_INCREMENT),
                           "n_increments": PROBE_INCREMENTS,
+                          "coords": list(PROBE_COORDS),
                           "provenance": PROBE_PROVENANCE},
         "caveat": CAVEAT,
     }

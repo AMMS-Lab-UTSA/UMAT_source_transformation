@@ -94,7 +94,9 @@ class ValidationRow:
 
 
 def driver_source(*, ntens: int, nstatv: int, nprops: int,
-                  finite_strain: bool = False) -> str:
+                  finite_strain: bool = False,
+                  coords: Sequence[float] = (0.0, 0.0, 0.0),
+                  initial_statev: Sequence[float] = ()) -> str:
     """A driver that replays a path through the ORIGINAL UMAT.
 
     Reads NPROPS values then the increment count and each DSTRAN row from stdin,
@@ -108,6 +110,15 @@ def driver_source(*, ntens: int, nstatv: int, nprops: int,
     row-major increment of F, and advances DFGRD0 -> DFGRD1 by it.
     """
     nsv = max(nstatv, 1)
+    # The starting conditions have to be the ones the OTI driver used, or the
+    # two builds are not walking the same problem and any difference between
+    # them says nothing about the transform. Both default to what this driver
+    # has always done, so a caller that does not set them is unaffected.
+    set_coords = "".join(f"  COORDS({index})={value!r}_8\n"
+                         for index, value in enumerate(coords, start=1) if value)
+    set_statev = "".join(f"  STATEV({index})={value!r}_8\n"
+                         for index, value in enumerate(initial_statev, start=1)
+                         if value and index <= nsv)
     read_gradient = ("    READ(*,*) DFGRDINC\n"
                      "    DFGRD0=DFGRD1\n"
                      "    DFGRD1=DFGRD1+RESHAPE(DFGRDINC,[3,3],ORDER=[2,1])\n"
@@ -126,7 +137,7 @@ def driver_source(*, ntens: int, nstatv: int, nprops: int,
   SSE=0.0_8;SPD=0.0_8;SCD=0.0_8;RPL=0.0_8;DDSDDT=0.0_8;DRPLDE=0.0_8;DRPLDT=0.0_8
   TIME=0.0_8;DTIME=1.0_8;TEMP=293.15_8;DTEMP=0.0_8;PREDEF=0.0_8;DPRED=0.0_8
   COORDS=0.0_8;DROT=0.0_8;DFGRD0=0.0_8;DFGRD1=0.0_8
-  DO I=1,3
+{set_coords}{set_statev}  DO I=1,3
     DROT(I,I)=1.0_8;DFGRD0(I,I)=1.0_8;DFGRD1(I,I)=1.0_8
   END DO
   PNEWDT=1.0_8;CELENT=1.0_8;CMNAME='ORIGINAL_REFERENCE'
@@ -151,6 +162,20 @@ SUBROUTINE XIT
   WRITE(0,'(A)') 'original UMAT called XIT (local solve did not converge)'
   STOP 3
 END SUBROUTINE XIT
+SUBROUTINE MUTEXINIT(ID)
+  ! Abaqus's thread locks. One material point on one thread: a lock here is
+  ! uncontended by construction, so an empty body is their behaviour and not
+  ! a stand-in for it. Without them the reference build does not link at all,
+  ! and a source is charged with a transformation failure for calling a
+  ! utility its solver supplies.
+  INTEGER :: ID
+END SUBROUTINE MUTEXINIT
+SUBROUTINE MUTEXLOCK(ID)
+  INTEGER :: ID
+END SUBROUTINE MUTEXLOCK
+SUBROUTINE MUTEXUNLOCK(ID)
+  INTEGER :: ID
+END SUBROUTINE MUTEXUNLOCK
 """
 
 
@@ -158,7 +183,9 @@ def build_original_driver(source: Path, out_dir: Path, *, ntens: int, nstatv: in
                           nprops: int, compiler: str = "gfortran",
                           finite_strain: bool = False,
                           link_libraries: Sequence[str] = (),
-                          extra_sources: Sequence[Path] = ()) -> Path:
+                          extra_sources: Sequence[Path] = (),
+                          coords: Sequence[float] = (0.0, 0.0, 0.0),
+                          initial_statev: Sequence[float] = ()) -> Path:
     """Compile the untransformed source into a replayable reference executable."""
     out_dir.mkdir(parents=True, exist_ok=True)
     for name in ("aba_param.inc", "ABA_PARAM.INC", "ABA_PARAM.inc", "aba_param.INC"):
@@ -178,6 +205,7 @@ def build_original_driver(source: Path, out_dir: Path, *, ntens: int, nstatv: in
     driver = out_dir / "original_reference_driver.f90"
     driver.write_text(
         driver_source(ntens=ntens, nstatv=nstatv, nprops=nprops,
+                      coords=coords, initial_statev=initial_statev,
                       finite_strain=finite_strain),
         encoding="utf-8")
 
