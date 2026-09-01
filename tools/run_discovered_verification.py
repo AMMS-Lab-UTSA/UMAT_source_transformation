@@ -65,9 +65,10 @@ PROBE_PROVENANCE = (
 )
 #: Where the driver places the material point. Declared here for the same
 #: reason the loading path is: it is a choice this harness makes, and a reader
-#: has to be able to see it. The origin is not a neutral choice -- a model that
-#: reads a fibre direction off the position divides by a zero radius there.
-PROBE_COORDS = (1.0, 1.0, 1.0)
+#: has to be able to see it. A generic point of the unit cube -- no coordinate
+#: zero, no two equal in magnitude, none outside a normalised patch -- because
+#: sources here divide by all three of those coincidences. See TangentCase.coords.
+PROBE_COORDS = (0.3, 0.7, 0.5)
 
 COLUMNS = (
     "name", "source", "repository", "kinematics", "nstatv", "ntens",

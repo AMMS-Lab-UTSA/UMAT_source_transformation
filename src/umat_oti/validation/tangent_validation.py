@@ -167,13 +167,20 @@ class TangentCase:
     #: right for a model with no SDVINI and wrong for one that has it.
     initial_statev: tuple[float, ...] = ()
     #: Where the material point sits. A declared probe like the loading path,
-    #: not read from any mesh. The origin is not a neutral default for it: a
-    #: model that resolves a fibre direction from position computes
-    #: COORDS(2)/SQRT(COORDS(1)**2+COORDS(2)**2) and gets 0/0 there, which is
-    #: why such sources returned NaN from the untransformed build as well as
-    #: the transformed one. The unit diagonal is just as arbitrary and is
-    #: degenerate in none of those expressions.
-    coords: tuple[float, float, float] = (1.0, 1.0, 1.0)
+    #: not read from any mesh. There is no neutral choice, only a generic one,
+    #: and three coincidences have to be avoided because real sources in this
+    #: corpus divide by each of them.
+    #:
+    #: No coordinate may be zero: a direction resolved from position computes
+    #: COORDS(2)/SQRT(COORDS(1)**2+COORDS(2)**2), which at the origin is 0/0.
+    #: No two may be equal in magnitude: a model separating two principal
+    #: growth directions divides by COORDS(1)**2-COORDS(2)**2, so the unit
+    #: diagonal -- the obvious second guess, and the one tried first -- is
+    #: singular for six sources that the origin had already broken. And the
+    #: point belongs inside the unit cube, because the shell and plate models
+    #: here parameterise on a normalised patch: outside it a discriminant goes
+    #: negative and the square root of it is not a number.
+    coords: tuple[float, float, float] = (0.3, 0.7, 0.5)
 
 
 @dataclass
