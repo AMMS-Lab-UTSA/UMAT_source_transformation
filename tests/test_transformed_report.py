@@ -74,8 +74,20 @@ class TestTheReportStatesItsLimits:
     def test_a_compiling_source_with_a_vector_still_needs_a_loading_path(self, tmp_path):
         triage = tmp_path / "t.csv"
         _triage(triage, [{"source": "o__r/u.f", "stage": "transformed", "compiled": "yes"}])
-        rows = rows_for(triage, {}, {"u.f": {"count": "6", "provenance": "d.inp"}})
+        # Keyed by the path within the cache, not the file name: three
+        # separate projects in this corpus ship a "umat.f".
+        rows = rows_for(triage, {},
+                        {"o__r/u.f": {"count": "6", "provenance": "d.inp"}})
         assert rows[0]["verifiable_today"] == "needs an accepted loading path"
+
+    def test_another_project_of_the_same_filename_is_not_given_its_vector(self, tmp_path):
+        triage = tmp_path / "t.csv"
+        _triage(triage, [{"source": "other__p/u.f", "stage": "transformed",
+                          "compiled": "yes"}])
+        rows = rows_for(triage, {},
+                        {"o__r/u.f": {"count": "6", "provenance": "d.inp"}})
+        assert rows[0]["verifiable_today"] == "no material vector"
+        assert "d.inp" not in str(rows[0])
 
     def test_a_compiling_source_without_a_vector_says_so(self, tmp_path):
         triage = tmp_path / "t.csv"

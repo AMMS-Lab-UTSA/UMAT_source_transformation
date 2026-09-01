@@ -87,13 +87,27 @@ def material_index(proposals_path: Path | None) -> dict[str, dict[str, str]]:
     for entry in entries:
         if entry.get("status") != "proposed_needs_review":
             continue
-        source = str(entry.get("source") or "")
         material = entry.get("material") or {}
-        index[Path(source).name] = {
+        index[_cache_relative_source(entry)] = {
             "count": str(len(material.get("props") or [])),
             "provenance": str(material.get("provenance") or ""),
         }
     return index
+
+
+def _cache_relative_source(entry: dict[str, Any]) -> str:
+    """An entry's path within the discovery cache.
+
+    Not its file name. Twenty-one transformed sources share a basename with
+    another -- three separate projects ship a "umat.f" -- so a name key
+    collapses them and reports one entry's material provenance against every
+    source of that name. The same key was wrong in the verification harness and
+    drove eighteen cases with the wrong project's constants; here it would
+    print a deck from the wrong repository beside a correct result.
+    """
+    repository = str(entry.get("repository") or "").replace("/", "__")
+    source = str(entry.get("source") or "")
+    return f"{repository}/{source}" if repository else source
 
 
 def rows_for(triage_path: Path, provenance: dict[str, dict[str, str]],
@@ -106,7 +120,7 @@ def rows_for(triage_path: Path, provenance: dict[str, dict[str, str]],
                 continue
             source = row.get("source", "")
             origin = provenance.get(source)
-            material = materials.get(Path(source).name, {})
+            material = materials.get(source, {})
             record = {name: row.get(name, "") for name in COLUMNS if name in row}
             record["source"] = source
             if origin:
