@@ -269,6 +269,7 @@ def transform_umat_to_oti_from_config(
         mappings=mappings,
         tangent_context=tangent_context,
         extraction_insertion_region_id=rewrite.extraction_insertion_region_id,
+        lifted_helper_names=set(helper_lift_names or ()),
         config=config,
     )
     warnings.extend(sanity_warnings)
@@ -4319,6 +4320,64 @@ def _region_classification_items(config: dict[str, Any]) -> dict[str, dict[str, 
     return {}
 
 
+def oti_arguments_into_untransformed_calls(
+    transformed_source: str, form: str, lifted: set[str] | None = None,
+) -> list[tuple[str, str]]:
+    """CALLs that hand a hypercomplex value to a routine that still takes REALs.
+
+    Fortran's implicit interface makes this compile. gfortran emits at most
+    -Wargument-mismatch and exits 0, so the file is reported as a successful
+    transformation, and then the callee reads an ONUMM element -- seven
+    doubles -- as one REAL and computes the whole constitutive response on
+    reinterpreted memory. One discovered source returned a wrong stress and a
+    NaN tangent that way with all seventeen semantic checks passing.
+
+    A callee is safe when it was lifted (its body was rewritten to the
+    hypercomplex type), inlined (no call survives), or defined in this file
+    and transformed with it. What is left is an external routine, and there is
+    nothing here that can make passing a shadow to it correct -- so it is
+    reported rather than emitted quietly.
+
+    Returns (callee, argument) pairs, so the message can name both.
+    """
+    lifted_names = {name.upper() for name in (lifted or set())}
+    defined = {match.group(1).upper() for match in re.finditer(
+        r"^\s*(?:\w+\s+)*?subroutine\s+([A-Za-z_]\w*)",
+        transformed_source, flags=re.IGNORECASE | re.MULTILINE)}
+    defined |= {match.group(1).upper() for match in re.finditer(
+        r"^\s*(?:\w+\s+)*?function\s+([A-Za-z_]\w*)",
+        transformed_source, flags=re.IGNORECASE | re.MULTILINE)}
+    found: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for line in transformed_source.splitlines():
+        if _is_commented(line):
+            continue
+        match = re.match(r"^\s*(?:\d+\s+)?CALL\s+([A-Za-z_]\w*)\s*\((.*)$",
+                         line.replace("\t", " "), flags=re.IGNORECASE)
+        if not match:
+            continue
+        callee = match.group(1).upper()
+        # A call the transform rewrote to NAME_OTI is the safe case, not the
+        # unsafe one: that is what pointing a call at its lifted, OTI-typed
+        # body looks like. The lifted set holds the original names, so the
+        # suffix is stripped before comparing -- without that, every correctly
+        # lifted helper reads as a leak and the check condemns exactly the
+        # sources it should pass.
+        bare = callee[:-4] if callee.endswith("_OTI") else callee
+        if (callee.endswith("_OTI") and (bare in lifted_names or bare in defined
+                                         or bare in INLINEABLE_HELPERS)):
+            continue
+        if callee in lifted_names or callee in defined or callee in INLINEABLE_HELPERS:
+            continue
+        for argument in re.findall(r"\b([A-Za-z_]\w*_OTI)\b", match.group(2),
+                                   flags=re.IGNORECASE):
+            key = (callee, argument.upper())
+            if key not in seen:
+                seen.add(key)
+                found.append(key)
+    return found
+
+
 def _semantic_checks(
     *,
     transformed_source: str,
@@ -4331,6 +4390,7 @@ def _semantic_checks(
     tangent_context: TangentRegionContext,
     extraction_insertion_region_id: str,
     ddsdde_output_method: str = "GETIM(STRESS_OTI(i), j)",
+    lifted_helper_names: set[str] | None = None,
     config: dict[str, Any],
 ) -> tuple[dict[str, bool], list[str]]:
     warnings: list[str] = []
@@ -4405,7 +4465,19 @@ def _semantic_checks(
     seed_consuming_lines = _seed_consuming_stress_lines(stress_expression_lines, seed_names)
     real_stress_extraction_line = _first_line_matching(selected_active_lines, lambda line: _is_real_stress_extraction_line(line, stress))
     helper_region_ids = {str(region.get("region_id", "")) for region in tangent_context.helper_regions}
+    # A shadow handed to a routine that was never rewritten is not a
+    # transformation, it is a reinterpretation of memory that happens to link.
+    leaked = oti_arguments_into_untransformed_calls(
+        transformed_source, form, set(lifted_helper_names or ()))
+    for callee, argument in leaked[:6]:
+        warnings.append(
+            f"{argument} is passed to {callee}, which was neither lifted, "
+            "inlined, nor transformed with this file. Fortran's implicit "
+            "interface makes that compile and the callee then reads a "
+            "hypercomplex element as a single REAL, so the result is wrong "
+            "with nothing to show for it.")
     semantic_checks = {
+        "no_oti_argument_reaches_an_untransformed_call": not leaked,
         "dstran_initialization_before_seed": bool(seed_init_line and seed_lines and seed_init_line < min(seed_lines)),
         # The ordering is asked of every stress expression, not only of the
         # ones that name the seed. Restricting it to consumers is strictly
