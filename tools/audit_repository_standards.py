@@ -32,6 +32,16 @@ BINARY_SUFFIXES = {".o", ".mod", ".so", ".obj", ".a", ".pyc", ".exe"}
 #: then the path must not be required to re-run anything.
 HOME_PATH = re.compile(r"/home/[a-z][-a-z0-9_]*/|/Users/[A-Za-z][-A-Za-z0-9_]*/")
 
+#: Scratch directories are as machine-specific as a home directory and are not
+#: caught by the pattern above -- a run whose work directory was under
+#: /tmp/claude-<uid>/ wrote three of those absolute paths into a published
+#: blocker column, and the audit passed because the string never said /home/.
+#: Named prefixes only: the bare word /tmp is legitimate in prose and in
+#: documented commands, and banning it would make this check unusable.
+SCRATCH_PATH = re.compile(
+    r"/tmp/(?:claude|tmp|pytest-of-|pyright-|scratch)[-a-zA-Z0-9_.]*/"
+    r"|/var/folders/[a-zA-Z0-9_]+/")
+
 SECRET_PATTERNS = (
     (re.compile(r"gh[pousr]_[A-Za-z0-9]{16,}"), "GitHub token"),
     (re.compile(r"AKIA[0-9A-Z]{16}"), "AWS access key id"),
@@ -91,6 +101,10 @@ def check_no_absolute_home_paths(files: list[Path]) -> dict:
     rewriting a Slurm log's working directory would falsify the record. The
     exemption never covers anything a reproduction reads as input, and the
     authoritative proof of independence is the clean-clone acceptance script.
+
+    A scratch directory counts as a machine path for the same reason a home
+    directory does. It did not count until a triage run put its own /tmp work
+    directory into the published blocker column and this check passed anyway.
     """
     exempt = tuple(e["prefix"] for e in _exemptions())
     offenders = []
@@ -105,7 +119,7 @@ def check_no_absolute_home_paths(files: list[Path]) -> dict:
         except OSError:
             continue
         for number, line in enumerate(text.splitlines(), 1):
-            if HOME_PATH.search(line):
+            if HOME_PATH.search(line) or SCRATCH_PATH.search(line):
                 offenders.append(f"{relative}:{number}")
     return {"name": "no_absolute_home_paths_outside_archived_records",
             "required": True, "ok": not offenders, "offenders": offenders[:80],

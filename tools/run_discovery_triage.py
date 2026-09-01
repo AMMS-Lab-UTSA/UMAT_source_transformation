@@ -122,19 +122,28 @@ def _classify(text: str) -> str:
 
 
 
-def without_machine_paths(text: str) -> str:
+def without_machine_paths(text: str, *extra_roots: Path | str) -> str:
     """``text`` with this machine's directories replaced by named roots.
 
-    A Python traceback quotes the absolute path of every frame, so recording
-    one puts ``/home/<someone>/...`` into published evidence -- which means
-    nothing on another machine and is what audit_repository_standards refuses.
-    The frames are still identifiable: what is dropped is the part that is a
-    property of the machine rather than of the failure.
+    A Python traceback quotes the absolute path of every frame, and a compiler
+    quotes the absolute path of every file it was handed, so recording either
+    puts ``/home/<someone>/...`` into published evidence -- which means nothing
+    on another machine and is what audit_repository_standards refuses. The
+    frames and files are still identifiable: what is dropped is the part that
+    is a property of the machine rather than of the failure.
+
+    ``extra_roots`` is for the scratch directory a run was given. It knew only
+    the repository and the home directory, and a run whose work directory was
+    under /tmp wrote three of those absolute paths straight into the published
+    blocker column.
     """
     if not text:
         return text
-    for root, name in ((str(REPO_ROOT), "<repo>"),
-                       (str(Path.home()), "<home>")):
+    roots = [(str(root), "<work>") for root in extra_roots if root]
+    roots += [(str(REPO_ROOT), "<repo>"), (str(Path.home()), "<home>")]
+    # Longest first, so a work directory that sits inside the home directory
+    # is named as the work directory rather than half-rewritten to <home>.
+    for root, name in sorted(roots, key=lambda item: -len(item[0])):
         if root and root != "/":
             text = text.replace(root, name)
     return text
@@ -324,6 +333,12 @@ def triage_one(source: Path, work_root: Path, *, ntens: int = 6,
         row.update(stage="failed", blocker_kind="other",
                    blocker="the transform reported neither success nor a reason")
     row["seconds"] = round(time.time() - started, 2)
+    # Every text column, in one place. Filtering at each site meant filtering
+    # at most of them: the compiler's own message about the baseline build
+    # names the file it was handed, and that one was missed.
+    for name, value in row.items():
+        if isinstance(value, str):
+            row[name] = without_machine_paths(value, work_root)
     return row
 
 
