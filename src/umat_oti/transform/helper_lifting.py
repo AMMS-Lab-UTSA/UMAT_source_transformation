@@ -978,10 +978,23 @@ def _is_implicit_integer_name(name: str) -> bool:
     return bool(name) and name[0].upper() in _IMPLICIT_INTEGER_FIRST_LETTERS
 
 
+#: Statements whose integers are statement labels, not values. Promoting one
+#: turns ``GOTO 999`` into ``GOTO 999.0D0``, which is not a label and not a
+#: number: eight sources failed to compile on exactly this.
+_LABEL_BEARING_STATEMENT = re.compile(
+    r"(?:^|[);,]\s*|\bTHEN\s+)\s*(?:GO\s*TO\b|ASSIGN\b)|"
+    r"^\s*(?:\d+\s+)?IF\s*\(.*\)\s*\d+\s*,\s*\d+\s*,\s*\d+\s*$",
+    re.IGNORECASE)
+
+
 def _promote_bare_integers_for_oti(line: str) -> str:
     if not line.strip() or not any(char.isdigit() for char in line):
         return line
     if re.match(r"^\s*DO\b", line, re.IGNORECASE):
+        return line
+    # A GOTO target, an ASSIGN target and the three branches of an arithmetic
+    # IF are labels. There is no value in them to promote.
+    if _LABEL_BEARING_STATEMENT.search(line):
         return line
     out: list[str] = []
     paren_stack: list[bool] = []
@@ -1008,6 +1021,15 @@ def _promote_bare_integers_for_oti(line: str) -> str:
                 out.append(char)
                 index += 1
                 continue
+            # The digits after an exponent's sign belong to the literal that
+            # opened it. ``1.0D-6`` came out as ``1.0D-6.0D0``: the minus sign
+            # reads as an operator, and the exponent reads as a bare integer
+            # standing next to it.
+            if previous in {"+", "-"} and index >= 2 and line[index - 2] in "dDeE" \
+                    and index >= 3 and (line[index - 3].isdigit() or line[index - 3] == "."):
+                out.append(char)
+                index += 1
+                continue
             end = index
             while end < len(line) and line[end].isdigit():
                 end += 1
@@ -1024,7 +1046,17 @@ def _promote_bare_integers_for_oti(line: str) -> str:
                 right += 1
             prev_char = line[left] if left >= 0 else ""
             next_char = line[right] if right < len(line) else ""
-            if not any(paren_stack) and (prev_char in "+-*/" or next_char in "+-*/"):
+            # ``next_char in "+-*/"`` reads as "is it an operator", and for
+            # an empty string Python answers yes -- so every integer that
+            # ended a line was promoted, whatever it meant, and that is how
+            # ``GOTO 999`` became ``GOTO 999.0D0``. The end of a line is a
+            # real case and it is kept, but as itself: an integer that ends a
+            # statement is the value being assigned, and an OTI variable has
+            # no overload that takes an integer.
+            neighbours_an_operator = ((prev_char and prev_char in "+-*/")
+                                      or (next_char and next_char in "+-*/")
+                                      or (not next_char and "=" in line))
+            if not any(paren_stack) and neighbours_an_operator:
                 out.append(f"{literal}.0D0")
             else:
                 out.append(literal)
