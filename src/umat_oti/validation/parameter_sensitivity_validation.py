@@ -244,18 +244,51 @@ def branch_history(statev: Sequence[Sequence[float]]) -> list[str]:
             else "elastic" for row in statev]
 
 
+def deformation_gradient_rows(
+    increment: Optional[Sequence[float] | Sequence[Sequence[float]]],
+    increments: int,
+) -> Optional[list[list[float]]]:
+    """The nine numbers the driver reads after each increment's strain row.
+
+    Two shapes are accepted and they mean different things. Nine numbers are
+    one increment of F applied at every step -- the constant advance a base
+    path uses. A sequence of nine-number rows is one per increment, which is
+    what a reference that perturbs a *single* increment of the path needs: a
+    perturbation spread over every increment would be the derivative with
+    respect to the whole history, not with respect to the increment whose
+    tangent is being checked.
+    """
+    if increment is None:
+        return None
+    raw = list(increment)
+    if raw and isinstance(raw[0], (list, tuple)):
+        rows = [[float(v) for v in row] for row in raw]
+        if len(rows) != increments:
+            raise ValueError(
+                f"a per-increment deformation gradient path needs {increments} rows, "
+                f"one per increment of the loading path; got {len(rows)}")
+    else:
+        rows = [[float(v) for v in raw] for _ in range(increments)]
+    for row in rows:
+        if len(row) != 9:
+            raise ValueError(
+                "a deformation gradient increment is nine numbers, row-major; "
+                f"got {len(row)}")
+    return rows
+
+
 def _driver_payload(props: Sequence[float], path: Sequence[Sequence[float]],
                     deformation_gradient_increment: Optional[Sequence[float]]
                     ) -> str:
     """The stdin the reference driver reads: PROPS, the increment count, rows."""
     payload = " ".join(f"{v:.17e}" for v in props) + "\n"
     payload += f"{len(path)}\n"
+    gradient = deformation_gradient_rows(deformation_gradient_increment, len(path))
     rows = []
-    for entry in path:
+    for index, entry in enumerate(path):
         line = " ".join(f"{v:.17e}" for v in entry)
-        if deformation_gradient_increment is not None:
-            line += "\n" + " ".join(
-                f"{v:.17e}" for v in deformation_gradient_increment)
+        if gradient is not None:
+            line += "\n" + " ".join(f"{v:.17e}" for v in gradient[index])
         rows.append(line)
     payload += "\n".join(rows) + "\n"
     return payload
@@ -335,7 +368,10 @@ def replay(executable: Path, props: Sequence[float],
     """Run the original UMAT over the path with the given PROPS.
 
     ``deformation_gradient_increment`` is a row-major 3x3 added to F each
-    increment, for drivers built with ``finite_strain=True``.
+    increment, for drivers built with ``finite_strain=True``. One row of nine
+    numbers advances F by the same amount every increment; a sequence of such
+    rows, one per increment, advances it differently at each -- see
+    :func:`deformation_gradient_rows`.
     """
     stdout = _run_driver(executable, props, path,
                          deformation_gradient_increment)
