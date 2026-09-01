@@ -79,24 +79,43 @@ COLUMNS = (
 )
 
 
+def _cache_relative_source(entry: dict[str, Any]) -> str:
+    """An entry's path within the discovery cache.
+
+    A proposal names its source relative to the repository and names the
+    repository as "owner/name"; the cache holds it under "owner__name". Putting
+    the two together is what makes an entry identify one file rather than one
+    filename.
+    """
+    repository = str(entry.get("repository") or "").replace("/", "__")
+    source = str(entry.get("source") or "")
+    return f"{repository}/{source}" if repository else source
+
+
 def cases_from(triage_csv: Path, proposals_json: Path, cache: Path,
                limit: int = 0, kinematics: str = "") -> list[dict[str, Any]]:
     """One entry per transformed source that has a material vector."""
     payload = json.loads(proposals_json.read_text(encoding="utf-8"))
     entries = payload if isinstance(payload, list) else payload.get("entries", [])
+    # Keyed by the path within the cache, not by the file's name. Twenty-one
+    # transformed sources share a basename with another -- three separate
+    # projects ship a "umat.f" -- so a basename key silently collapsed them and
+    # handed whichever entry happened to be last to all of them. Eighteen cases
+    # were driven with another project's material constants, and two of those
+    # reached "verified": the tangent agreed with a derivative of a stress that
+    # was never the one its author meant to compute.
     material: dict[str, dict[str, Any]] = {}
     for entry in entries:
         if entry.get("status") != "proposed_needs_review":
             continue
-        material[Path(str(entry.get("source") or "")).name] = entry
+        material[_cache_relative_source(entry)] = entry
 
     out: list[dict[str, Any]] = []
     with triage_csv.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
             if row.get("stage") != "transformed":
                 continue
-            name = Path(row["source"]).name
-            entry = material.get(name)
+            entry = material.get(row["source"])
             if not entry:
                 continue
             if kinematics and row.get("kinematics") != kinematics:
