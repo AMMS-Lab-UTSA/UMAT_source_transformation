@@ -46,3 +46,39 @@ def test_exemptions_never_cover_source_or_tests():
     for entry in config["absolute_path_exemptions"]:
         assert not entry["prefix"].startswith(("src/", "tests/", "scripts/", "examples/"))
         assert entry["prefix"] not in {"", "."}
+
+
+def test_a_scratch_directory_counts_as_a_machine_path():
+    """A /tmp work directory is as machine-specific as a home directory.
+
+    It did not count until a triage run wrote its own scratch path into the
+    published blocker column and this audit passed anyway -- the string never
+    said /home/, so nothing objected. Three rows of committed evidence named
+    a directory that exists on exactly one computer.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "tools"))
+    from audit_repository_standards import HOME_PATH, SCRATCH_PATH
+
+    leaked = "as shipped: /tmp/claude-1000/-home-someone/abc/work/u.for:3: Error"
+    assert not HOME_PATH.search(leaked), "the old pattern really did miss it"
+    assert SCRATCH_PATH.search(leaked)
+
+    for path in ("/tmp/tmp.J8e353cPrO/out/",
+                 "/tmp/pytest-of-someone/pytest-1/",
+                 "/var/folders/kx/T/build/"):
+        assert SCRATCH_PATH.search(path), path
+
+
+def test_the_word_tmp_is_still_allowed_in_prose():
+    """The check names scratch prefixes, not the bare directory.
+
+    Documented commands and prose legitimately say /tmp, and a check that
+    banned it would be turned off rather than obeyed.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "tools"))
+    from audit_repository_standards import SCRATCH_PATH
+
+    for benign in ("write it to /tmp if you like",
+                   "--work-dir /tmp/umat-oti-work",
+                   "export TMPDIR=/tmp"):
+        assert not SCRATCH_PATH.search(benign), benign
