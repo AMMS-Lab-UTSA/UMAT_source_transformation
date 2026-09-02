@@ -79,6 +79,31 @@ def _read(path: Path) -> str:
         return ""
 
 
+#: Fortran statements that wait for terminal input. A source containing one
+#: can hang a solver indefinitely rather than failing, so a run of it is worth
+#: labelling even when it completes: the statement may simply not have been
+#: reached this time.
+_BLOCKING_STATEMENT = re.compile(r"^\s{6,}(?:.*\b)?(PAUSE)\b", re.IGNORECASE | re.MULTILINE)
+
+
+def blocking_statements(source_text: str) -> tuple[str, ...]:
+    """The input-waiting statements a source carries, if any.
+
+    Reported rather than removed. PAUSE is the model author's, and deleting it
+    would be editing scientific code to make a run finish -- the failure it
+    announces is real, and the fix is to give the solver no terminal to wait
+    on, not to stop it announcing.
+    """
+    found = []
+    for line in source_text.splitlines():
+        if line[:1] in "cC*!":
+            continue
+        match = _BLOCKING_STATEMENT.match(line)
+        if match:
+            found.append(line.strip()[:80])
+    return tuple(found)
+
+
 def classify_job(
     directory: Path,
     job: str,

@@ -5,6 +5,14 @@ Two things here are deliberate.
 The job's outcome is decided by :mod:`umat_oti.abaqus.job_status`, from the
 records Abaqus writes, never from the exit code -- see that module for why.
 
+The solver gets no standard input. Fortran's ``PAUSE`` waits for a line on
+stdin, and the corpus contains it -- a Numerical Recipes LU decomposition
+announces a singular matrix that way. Inheriting a terminal turns that into a
+solver that neither finishes nor fails, holding a licence token and looking
+exactly like a long analysis. With no input it reads end-of-file and continues,
+so the singular matrix becomes a numerical failure the job records, which is
+something a verification can read.
+
 Results are read from the ODB through ``abaqus python`` and ``odbAccess``,
 which returns the stored doubles. The .dat is written to a printed format and
 is fine for confirming that a job ran; it is not fine for a finite-difference
@@ -127,7 +135,8 @@ def run_job(
     environment["OTIS_PROBE_FILE"] = str((work_dir / f"{job}_probe.txt").resolve())
     try:
         finished = subprocess.run(command, cwd=str(work_dir), capture_output=True,
-                                  text=True, timeout=timeout, env=environment)
+                                  text=True, timeout=timeout, env=environment,
+                                  stdin=subprocess.DEVNULL)
         console, code = finished.stdout + finished.stderr, finished.returncode
     except subprocess.TimeoutExpired:
         console, code = "TIMEOUT", None
