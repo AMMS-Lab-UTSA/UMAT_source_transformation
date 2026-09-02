@@ -129,12 +129,45 @@ class TestTheProbeIsSeparateInertAndPlaced:
         second = probe_call("t").splitlines()[1]
         assert second[5] == "1" and second[:5].strip() == ""
 
-    def test_it_is_called_before_the_return_of_the_entry_routine(self):
+    def test_the_result_call_sits_before_the_return_of_the_entry_routine(self):
         text, ok = instrument(FIXTURE.read_text(), "orig")
         assert ok
         lines = text.splitlines()
-        call = next(i for i, l in enumerate(lines) if "CALL OTIS_PROBE" in l)
+        call = next(i for i, l in enumerate(lines)
+                    if "CALL OTIS_PROBE(" in l)
         assert lines[call + 2].strip().upper() == "RETURN"
+
+    def test_the_entry_call_comes_first_and_before_any_assignment(self):
+        """STRESS and STATEV still hold the state the increment starts from.
+
+        Recording them any later would record a starting point the UMAT had
+        already begun to overwrite, and an offline replay of the increment
+        would then start somewhere the solver never was.
+        """
+        text, ok = instrument(FIXTURE.read_text(), "orig")
+        assert ok
+        lines = text.splitlines()
+        entry = next(i for i, l in enumerate(lines) if "CALL OTIS_PROBE_IN(" in l)
+        result = next(i for i, l in enumerate(lines) if "CALL OTIS_PROBE(" in l)
+        assert entry < result
+        # nothing that runs precedes it inside the routine
+        opener = next(i for i, l in enumerate(lines)
+                      if re.search(r"SUBROUTINE\s+UMAT\b", l, re.IGNORECASE))
+        for line in lines[opener + 1:entry]:
+            if re.match(r"^[cC*!]", line) or not line.strip():
+                continue
+            assert "=" not in line.split("!")[0] or line.strip().upper().startswith(
+                ("CHARACTER", "INTEGER", "REAL", "DOUBLE", "PARAMETER", "DIMENSION",
+                 "IMPLICIT", "COMMON", "DATA")), line
+
+    def test_a_continuation_line_is_never_split_by_the_entry_call(self):
+        """Column 6 carries the tail of the statement above it."""
+        text, ok = instrument(FIXTURE.read_text(), "orig")
+        assert ok
+        lines = text.splitlines()
+        entry = next(i for i, l in enumerate(lines) if "CALL OTIS_PROBE_IN(" in l)
+        following = lines[entry + 4]      # the call spans four lines
+        assert not (len(following) > 5 and following[5] not in " \t")
 
     def test_it_touches_no_state_variable(self):
         """It reads STATEV to record it and never writes one.

@@ -104,3 +104,45 @@ class TestWhatStopsItBeingCompletion:
         status = classify_job(_job(tmp_path, sta="INCOMPLETE"), "j", exit_code=0,
                               required_files=("j.odb",))
         assert not status.analysis_completed
+
+
+class TestAStatementThatWaitsForInput:
+    """PAUSE hangs a solver instead of failing it, so it is named.
+
+    Found the way these things are found: a transformed crystal-plasticity job
+    sat for twelve minutes having spent two seconds of processor time, in the
+    kernel's pause() call, holding a licence token and looking exactly like a
+    long analysis. The source carries a Numerical Recipes LU decomposition that
+    announces a singular matrix with PAUSE.
+    """
+
+    def test_a_pause_is_reported(self):
+        from umat_oti.abaqus.job_status import blocking_statements
+
+        source = ("      SUBROUTINE UMAT(STRESS)\n"
+                  "      IF (AAMAX.EQ.0.) PAUSE 'Singular matrix.'\n"
+                  "      RETURN\n      END\n")
+        found = blocking_statements(source)
+        assert len(found) == 1 and "Singular matrix" in found[0]
+
+    def test_a_pause_in_a_comment_is_not_a_statement(self):
+        from umat_oti.abaqus.job_status import blocking_statements
+
+        assert blocking_statements("C     PAUSE here if it goes singular\n") == ()
+
+    def test_a_source_without_one_reports_nothing(self):
+        from umat_oti.abaqus.job_status import blocking_statements
+
+        assert blocking_statements("      X = 1.0\n      RETURN\n") == ()
+
+    def test_the_statement_is_reported_and_not_removed(self):
+        """It is the model author's, and it announces a real failure.
+
+        Deleting it would be editing scientific code to make a run finish. The
+        fix is to give the solver no terminal to wait on, which is the runner's
+        business, not the source's.
+        """
+        from umat_oti.abaqus import runner
+
+        assert "stdin=subprocess.DEVNULL" in \
+            Path(runner.__file__).read_text(encoding="utf-8")
