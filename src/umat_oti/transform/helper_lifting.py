@@ -469,7 +469,8 @@ def _lift_helper_routine(
             payload = _without_names(dimension_match.group(1), named_constants)
             if not payload:
                 continue
-            lines, oti_names, ints = _rewrite_dimension_line(payload, type_name)
+            lines, oti_names, ints = _rewrite_dimension_line(
+                payload, type_name, declaration_oti_names | integer_names)
             prelude.extend(lines)
             declaration_oti_names.update(oti_names)
             integer_names.update(ints)
@@ -745,7 +746,20 @@ def _rewrite_parameter_line(payload: str) -> tuple[list[str], set[str]]:
     return lines, names
 
 
-def _rewrite_dimension_line(payload: str, type_name: str) -> tuple[list[str], set[str], set[str]]:
+def _rewrite_dimension_line(
+    payload: str, type_name: str, already_typed: set[str] | None = None,
+) -> tuple[list[str], set[str], set[str]]:
+    """Turn a DIMENSION statement into declarations for the lifted routine.
+
+    A DIMENSION statement carries shape and not type, and a name it mentions
+    may already have been typed by a declaration above it. Emitting a second
+    ``type(ONUMM6N1) :: tensor(3,3)`` for a name whose ``real*8 vector,tensor``
+    was already rewritten declares it twice: "Symbol 'tensor' already has basic
+    type of DERIVED". For those names the shape is emitted as what it is, a
+    DIMENSION statement, which is what the source said in the first place.
+    """
+    typed = {name.upper() for name in (already_typed or set())}
+    shape_only: list[str] = []
     oti_entries: list[str] = []
     int_entries: list[str] = []
     oti_names: set[str] = set()
@@ -755,7 +769,9 @@ def _rewrite_dimension_line(payload: str, type_name: str) -> tuple[list[str], se
         name = clean.split("(", 1)[0].strip().upper()
         if not name:
             continue
-        if _is_implicit_integer_name(name):
+        if name in typed:
+            shape_only.append(clean)
+        elif _is_implicit_integer_name(name):
             int_entries.append(clean)
             integer_names.add(name)
         else:
@@ -766,6 +782,8 @@ def _rewrite_dimension_line(payload: str, type_name: str) -> tuple[list[str], se
         lines.append(f"    type({type_name}) :: {', '.join(oti_entries)}")
     if int_entries:
         lines.append(f"    integer :: {', '.join(int_entries)}")
+    if shape_only:
+        lines.append(f"    dimension {', '.join(shape_only)}")
     return lines, oti_names, integer_names
 
 

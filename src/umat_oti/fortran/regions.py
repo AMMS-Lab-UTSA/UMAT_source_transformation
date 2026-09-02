@@ -765,6 +765,18 @@ def _is_loop_counter(name: str) -> bool:
 
 
 def _is_executable_line(text: str) -> bool:
+    """Is this a statement that runs, rather than one that declares?
+
+    The answer decides where the transform inserts its own declarations: they
+    go before the first executable line. Every specification statement the
+    list below fails to name is therefore a place a TYPE declaration can be
+    inserted ahead of a statement that has to come first.
+
+    The F77 keywords were listed and the F90 ones were not, so a free-form
+    source's ``use NumKind`` was executable, and the generated file opened
+    with a derived-type declaration followed by the USE it depends on:
+    "USE statement at (1) cannot follow data declaration statement at (2)".
+    """
     stripped = text.strip()
     if not stripped:
         return False
@@ -774,6 +786,20 @@ def _is_executable_line(text: str) -> bool:
     if re.match(r"^(include|implicit|dimension|parameter|common|save|data|equivalence|external|intrinsic)\b", lower_text):
         return False
     if re.match(r"^(character|integer|logical|real|double\s+precision|double|complex)\b", lower_text):
+        return False
+    # Free-form specification statements. USE and IMPORT must precede every
+    # declaration; the attribute statements and the interface block are
+    # declarations themselves and nothing may be inserted between them and
+    # the ones they qualify.
+    if re.match(r"^(use|import|interface|end\s+interface|procedure|"
+                r"allocatable|pointer|target|optional|intent|value|volatile|"
+                r"asynchronous|protected|public|private|generic|namelist|"
+                r"format|entry|enum|enumerator|sequence)\b", lower_text):
+        return False
+    # TYPE(x) :: y and CLASS(x) :: y declare; TYPE *, x is an output
+    # statement and TYPE :: name opens a derived-type definition, so the
+    # parenthesis and the double colon are what separate them.
+    if re.match(r"^(type|class)\s*(\(|::|\s*,)", lower_text):
         return False
     return True
 
