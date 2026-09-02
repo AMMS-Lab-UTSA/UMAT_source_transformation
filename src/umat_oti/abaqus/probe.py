@@ -128,6 +128,26 @@ def parse_probe(path: Path) -> list[dict]:
     return records
 
 
+def converged_only(records: list[dict]) -> list[dict]:
+    """One record per increment: the last call, which is the converged one.
+
+    A UMAT is called once per equilibrium iteration, and the probe records
+    every call. How many iterations an increment needs is a property of the
+    solve, not of the material -- two builds that agree exactly about the
+    stress can still take a different number of passes to get there, and
+    comparing the raw sequences would report that as a disagreement about the
+    model. The last call for an increment is the one whose values Abaqus
+    accepted and carried forward, so it is the one worth comparing.
+    """
+    converged: dict[tuple, dict] = {}
+    for record in records:
+        key = (record.get("element"), record.get("point"),
+               record.get("step"), record.get("increment"))
+        converged[key] = record          # later calls replace earlier ones
+    return [converged[key] for key in sorted(converged, key=lambda k: tuple(
+        -1 if part is None else part for part in k))]
+
+
 def instrument(source_text: str, tag: str, entry: str = "UMAT") -> tuple[str, bool]:
     """``source_text`` with the probe called at the end of ``entry``.
 

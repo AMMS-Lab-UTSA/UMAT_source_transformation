@@ -7,6 +7,7 @@ regression before it reaches CI.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -29,6 +30,39 @@ def test_documented_commands_and_links_resolve():
     proc = _run("audit_documentation_commands.py")
     problems = json.loads(proc.stdout)["problems"]
     assert problems == [], json.dumps(problems, indent=2)
+
+
+def test_every_machine_path_fixture_marker_states_a_reason():
+    """A marker with nothing after it is a hole, not an exemption.
+
+    The line-level marker exists so the filter's own tests can hold paths
+    shaped like real ones. It is worth having only while every use of it says
+    which fixture it excuses, and only while it stays confined to the files
+    that handle machine paths -- one appearing in evidence or documentation
+    would mean a real path was marked rather than removed.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "tools"))
+    from audit_repository_standards import FIXTURE_MARKER
+
+    # A marker is a comment, so look for one -- matching the bare token would
+    # match this test's own search for it, and the pattern's own definition.
+    looks_like_a_marker = re.compile(r"#\s*machine-path-fixture:")
+    allowed = ("tests/", "tools/")
+    found = 0
+    for path in REPO_ROOT.rglob("*.py"):
+        if ".git" in path.parts or "__pycache__" in path.parts:
+            continue
+        relative = str(path.relative_to(REPO_ROOT))
+        for number, line in enumerate(path.read_text(errors="replace").splitlines(), 1):
+            if not looks_like_a_marker.search(line):
+                continue
+            found += 1
+            where = f"{relative}:{number}"
+            assert FIXTURE_MARKER.search(line), f"{where} states no reason"
+            reason = line.split("machine-path-fixture:", 1)[1].strip()
+            assert len(reason) > 20, f"{where} states only {reason!r}"
+            assert relative.startswith(allowed), f"{where} is outside {allowed}"
+    assert found, "the marker is unused; delete it rather than leaving it armed"
 
 
 def test_every_absolute_path_exemption_states_a_reason():
@@ -59,13 +93,13 @@ def test_a_scratch_directory_counts_as_a_machine_path():
     sys.path.insert(0, str(REPO_ROOT / "tools"))
     from audit_repository_standards import HOME_PATH, SCRATCH_PATH
 
-    leaked = "as shipped: /tmp/claude-1000/-home-someone/abc/work/u.for:3: Error"
+    leaked = "as shipped: /tmp/claude-1000/-home-someone/abc/work/u.for:3: Error"  # machine-path-fixture: a fabricated path, proving this audit's own patterns match it
     assert not HOME_PATH.search(leaked), "the old pattern really did miss it"
     assert SCRATCH_PATH.search(leaked)
 
-    for path in ("/tmp/tmp.J8e353cPrO/out/",
-                 "/tmp/pytest-of-someone/pytest-1/",
-                 "/var/folders/kx/T/build/"):
+    for path in ("/tmp/tmp.J8e353cPrO/out/",  # machine-path-fixture: a fabricated path, proving this audit's own patterns match it
+                 "/tmp/pytest-of-someone/pytest-1/",  # machine-path-fixture: a fabricated path, proving this audit's own patterns match it
+                 "/var/folders/kx/T/build/"):  # machine-path-fixture: a fabricated path, proving this audit's own patterns match it
         assert SCRATCH_PATH.search(path), path
 
 

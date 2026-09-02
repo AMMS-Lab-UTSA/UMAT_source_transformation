@@ -15,6 +15,7 @@ leading digits cancel and what is left is the answer.
 from __future__ import annotations
 
 import sys
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -188,3 +189,82 @@ class TestTheProbeIsSeparateInertAndPlaced:
 
     def test_a_missing_file_is_no_records_not_a_crash(self, tmp_path):
         assert parse_probe(tmp_path / "absent.txt") == []
+
+
+def _driven(deck: str) -> list:
+    """The prescribed-displacement lines: node, dof, same dof, value.
+
+    Matching on the repeated degree of freedom is what separates them from an
+    element connectivity line, which is also a row of comma-separated integers.
+    """
+    return [line for line in deck.splitlines()
+            if re.match(r"^\d+, ([123]), \1, ", line)]
+
+
+def test_a_tetrahedron_gets_tetrahedron_nodes():
+    """Four nodes in three dimensions, not the first four corners of a cube.
+
+    C3D8R would be the obvious one-integration-point element, but Abaqus
+    refuses a reduced-integration element under a user material unless an
+    hourglass stiffness is supplied, and that number is not ours to invent.
+    The constant-strain tetrahedron has one integration point and no hourglass
+    modes, so it needs nothing added.
+    """
+    from umat_oti.abaqus.deck import generate_deck
+    from umat_oti.abaqus.manifest import VerificationManifest, uniaxial
+
+    deck = generate_deck(VerificationManifest(
+        name="t", source=Path("t.for"), element_type="C3D4",
+        props=(1.0,), loading=(uniaxial(0.01, 2),)))
+    lines = deck.splitlines()
+    assert "*ELEMENT, TYPE=C3D4, ELSET=ONE" in lines
+    assert lines[lines.index("*ELEMENT, TYPE=C3D4, ELSET=ONE") + 1] == "1, 1, 2, 3, 4"
+    # every node driven in all three directions: four nodes times three
+    assert len(_driven(deck)) == 12
+
+
+def test_a_plane_element_is_driven_in_two_directions_only():
+    from umat_oti.abaqus.deck import generate_deck
+    from umat_oti.abaqus.manifest import VerificationManifest, uniaxial
+
+    deck = generate_deck(VerificationManifest(
+        name="t", source=Path("t.for"), element_type="CPE4",
+        props=(1.0,), loading=(uniaxial(0.01, 2),)))
+    driven = _driven(deck)
+    assert len(driven) == 8                      # four nodes, two directions
+    assert not any(line.split(", ")[1] == "3" for line in driven)
+
+
+def _call(increment, stress, point=1, step=1, element=1):
+    return {"element": element, "point": point, "step": step,
+            "increment": increment, "STRESS": list(stress)}
+
+
+def test_only_the_converged_call_of_each_increment_is_kept():
+    """A UMAT is called once per iteration; only the last one was accepted."""
+    from umat_oti.abaqus.probe import converged_only
+
+    kept = converged_only([
+        _call(1, [10.0]), _call(1, [11.0]), _call(1, [11.5]),   # three iterations
+        _call(2, [20.0]), _call(2, [21.0]),                     # two
+    ])
+    assert [record["increment"] for record in kept] == [1, 2]
+    assert [record["STRESS"] for record in kept] == [[11.5], [21.0]]
+
+
+def test_iteration_counts_may_differ_without_being_a_disagreement():
+    """The whole point: how many passes a solve took is not a material fact."""
+    from umat_oti.abaqus.compare import compare_primal
+    from umat_oti.abaqus.probe import converged_only
+
+    left = converged_only([_call(1, [10.0]), _call(1, [12.0])])
+    right = converged_only([_call(1, [3.0]), _call(1, [9.0]), _call(1, [12.0])])
+    assert compare_primal(left, right).agrees
+
+
+def test_points_and_steps_are_kept_apart():
+    from umat_oti.abaqus.probe import converged_only
+
+    kept = converged_only([_call(1, [1.0], point=1), _call(1, [2.0], point=2),
+                           _call(1, [3.0], point=1, step=2)])
+    assert len(kept) == 3
