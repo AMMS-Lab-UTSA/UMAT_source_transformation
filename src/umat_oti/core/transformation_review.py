@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from umat_oti.core.roles import role_summary
+from umat_oti.core.roles import (
+    _is_implicitly_integer, implicit_integer_letters, role_summary)
 
 
 REQUIRED_MAPPING_KEYS = ("stress", "dstran", "ddsdde")
@@ -16,6 +17,7 @@ def build_transformation_review(
     routine_roles: list[dict[str, object]] | None = None,
     region_classifications: list[dict[str, object]] | None = None,
     variable_roles: list[dict[str, object]] | None = None,
+    source_text: str = "",
 ) -> dict[str, Any]:
     analysis = analysis or {}
     mappings = mappings or {}
@@ -24,7 +26,8 @@ def build_transformation_review(
     variable_roles = variable_roles or []
     summary = analysis.get("region_summary", {}) if isinstance(analysis.get("region_summary"), dict) else {}
 
-    role_groups = role_summary(variable_roles) if variable_roles else _fallback_role_groups(analysis, summary)
+    role_groups = (role_summary(variable_roles) if variable_roles
+                   else _fallback_role_groups(analysis, summary, source_text))
     seed_variables = _stable_unique(role_groups.get("seed_variables", []))
     promoted_variables = _stable_unique(role_groups.get("promoted_variables", []))
     constant_variables = _stable_unique(role_groups.get("constant_variables", []))
@@ -69,14 +72,43 @@ def build_transformation_review(
     }
 
 
-def _fallback_role_groups(analysis: dict[str, Any], summary: dict[str, Any]) -> dict[str, list[str]]:
+def _fallback_role_groups(analysis: dict[str, Any], summary: dict[str, Any],
+                          source_text: str = "") -> dict[str, list[str]]:
+    """Roles from the region summary, when no classified variable rows exist.
+
+    This runs when nothing has classified the variables one at a time, and it
+    used to promote every name on the stress path. That is one rule short of
+    what the classifier applies: a name the source never gives a type is typed
+    by its first letter, and one in the integer range carries no derivative.
+
+    Promoting an integer is not a lost derivative but a corrupted call. The
+    Huang crystal-plasticity source reaches this path and holds its slip-plane
+    and slip-direction Miller indices, and two LU pivot vectors, in arrays
+    declared by DIMENSION alone. Promoted, each integer became seven doubles
+    handed to a routine that declares the same argument INTEGER, and the
+    callee read half of a double as an index.
+    """
     variables = {str(row.get("variable_name", "")).upper() for row in analysis.get("detected_variables", [])}
     stress_path = {str(name).upper() for name in summary.get("stress_path_variables", [])}
     constants = {str(name).upper() for name in summary.get("constant_variables", [])}
     tangent_only = {str(name).upper() for name in summary.get("tangent_only_variables", [])}
     seed = ["DSTRAN"] if "DSTRAN" in variables or "DSTRAN" in stress_path else []
-    promoted = sorted((stress_path - {"DSTRAN"}) & (variables | {"STRESS"}))
-    keep_real = sorted((tangent_only | {"DDSDDE"}) & (variables | {"DDSDDE"}))
+
+    typed = {str(row.get("variable_name", "")).upper(): row
+             for row in analysis.get("detected_variables", [])}
+    letters = implicit_integer_letters(source_text) if source_text else frozenset()
+
+    def carries_a_derivative(name: str) -> bool:
+        row = typed.get(name, {})
+        return not _is_implicitly_integer(
+            name, str(row.get("detected_type") or ""), row, letters)
+
+    promoted = sorted(name for name in (stress_path - {"DSTRAN"}) & (variables | {"STRESS"})
+                      if carries_a_derivative(name))
+    integers = sorted(name for name in (stress_path - {"DSTRAN"}) & (variables | {"STRESS"})
+                      if not carries_a_derivative(name))
+    keep_real = sorted(((tangent_only | {"DDSDDE"}) & (variables | {"DDSDDE"}))
+                       | set(integers))
     return {
         "seed_variables": seed,
         "promoted_variables": promoted,

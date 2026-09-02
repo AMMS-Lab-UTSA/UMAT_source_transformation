@@ -38,6 +38,39 @@ from umat_oti.abaqus.manifest import (                          # noqa: E402
 from umat_oti.corpus.abaqus_deck import parse_deck              # noqa: E402
 
 
+#: Roots a source may live under, and the name a manifest records it by. A
+#: manifest is a committed input, so it must not name one computer: an absolute
+#: path under a home directory is both unusable on any other machine and a leak
+#: of whose machine it was.
+def portable_source(source: Path) -> tuple[str, str]:
+    """How to record a source path, and what the record is relative to.
+
+    Repository-relative where the source is in the repository, cache-relative
+    where it came from the discovery cache, and otherwise the bare filename
+    with its digest -- which identifies the file without naming the machine.
+    """
+    source = Path(source).resolve()
+    repo = Path(__file__).resolve().parents[1]
+    for root, label in ((repo, "repository"),
+                        (Path.home() / "softwarex_work/discovery_cache",
+                         "discovery cache")):
+        try:
+            return str(source.relative_to(root.resolve())), label
+        except ValueError:
+            continue
+    return source.name, "filename only"
+
+
+def source_digest(source: Path) -> str:
+    """A SHA-256, so a recorded path identifies one file and not one name."""
+    import hashlib
+
+    try:
+        return hashlib.sha256(Path(source).read_bytes()).hexdigest()
+    except OSError:
+        return ""
+
+
 def choose_material(path: Path, name: str | None):
     """The named ``*MATERIAL`` block, or the one with the most constants.
 
@@ -69,8 +102,9 @@ def build(args) -> dict:
 
     material = choose_material(Path(args.deck), args.material) if args.deck else None
     if material is None:
+        relative, relative_to = portable_source(source)
         manifest = VerificationManifest(
-            name=args.name or source.stem, source=source,
+            name=args.name or source.stem, source=Path(relative),
             element_type=args.element, loading=tuple(loading),
             status=NEEDS_MATERIAL_DATA,
             notes=("no *MATERIAL block with constants was found for this source. "
@@ -94,6 +128,10 @@ def build(args) -> dict:
         notes=args.notes or "")
 
     record = manifest.as_dict()
+    relative, relative_to = portable_source(source)
+    record["source"] = relative
+    record["source_relative_to"] = relative_to
+    record["source_sha256"] = source_digest(source)
     # A statement that waits for terminal input can hang a solver rather than
     # failing it. Naming it in the manifest means a reader of the result knows
     # the run could stall for a reason that is in the source, not the harness.

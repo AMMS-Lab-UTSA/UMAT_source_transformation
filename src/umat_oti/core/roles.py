@@ -615,7 +615,7 @@ def _suggest_variable_roles(analysis: dict[str, Any],
                 "own variables are. Values written to it are cast on the way "
                 "out, as STRESS and STATEV are."
             )
-        elif role in ("Promote", "Seed") and _is_implicitly_integer(
+        elif role in ("Promote", "Seed", "Unknown") and _is_implicitly_integer(
                 name, detected_type, variable, integer_letters):
             role = "Keep real"
             notes = (
@@ -623,7 +623,12 @@ def _suggest_variable_roles(analysis: dict[str, Any],
                 "integer range for this source), so it carries no derivative "
                 "and must not be promoted: an integer promoted to the "
                 "differentiated type turns index and parity arithmetic into "
-                "unsupported operations on a derived type."
+                "unsupported operations on a derived type, and an integer "
+                "array promoted and passed to a routine that declares the "
+                "same argument INTEGER is read there as half of a double. "
+                "The rule is about the variable's type, so it settles an "
+                "unclassified name too rather than leaving it to whatever "
+                "promotes unknowns downstream."
             )
         rows.append(
             {
@@ -729,16 +734,25 @@ def _is_implicitly_integer(name: str, detected_type: str, variable: dict[str, An
                            integer_letters: frozenset[str]) -> bool:
     """An undeclared name whose first letter makes it an INTEGER.
 
-    Only undeclared names: an explicit declaration always wins, and a variable
-    the scanner typed is not being guessed at here.
+    Only undeclared *types*: an explicit type declaration always wins, and a
+    variable the scanner typed is not being guessed at here.
+
+    A shape is not a type. This used to exempt any name the scanner had found
+    a shape for, on the reasoning that a shape meant a declaration had been
+    seen -- but ``DIMENSION ISPDIR(3)`` declares only the shape, and the type
+    still comes from the first letter. Fortran applies implicit typing to
+    arrays exactly as it does to scalars.
+
+    The exemption let the Huang crystal-plasticity UMAT's Miller-index arrays
+    be promoted. Each integer index became seven doubles, passed to a routine
+    that declares the same argument INTEGER; the callee read the high half of
+    the double 1.0 as an index, computed a zero modulus, and divided by it.
     """
     if not name or not integer_letters:
         return False
     if name[0].upper() not in integer_letters:
         return False
-    if str(detected_type or "").strip().lower() not in ("", "unknown"):
-        return False
-    return not str(variable.get("detected_shape") or "").strip()
+    return str(detected_type or "").strip().lower() in ("", "unknown")
 
 
 

@@ -38,9 +38,20 @@ from umat_oti.abaqus.support import (                        # noqa: E402
     build_support, compile_order, install_support)
 
 
-def load_manifest(path: Path) -> VerificationManifest:
-    """A manifest from JSON, with its loading rebuilt as segments."""
+def load_manifest(path: Path) -> tuple[VerificationManifest, tuple[str, ...]]:
+    """A manifest from JSON, with its loading rebuilt as segments.
+
+    Returns the manifest and the names of any keys it carried that the manifest
+    does not declare. Those are dropped -- a manifest may hold diagnostics that
+    are not inputs -- but they are handed back rather than discarded, because a
+    misspelled field would otherwise take a real setting out of the run without
+    anything saying so.
+    """
     record = json.loads(Path(path).read_text(encoding="utf-8"))
+    declared = set(VerificationManifest.__dataclass_fields__)
+    ignored = tuple(sorted(set(record) - declared - {"loading"}))
+    for name in ignored:
+        record.pop(name)
     loading = tuple(LoadingSegment(**dict(segment, strain=tuple(segment["strain"])))
                     for segment in record.pop("loading", []))
     for name in ("props", "initial_statev", "fd_steps", "bundle",
@@ -51,7 +62,7 @@ def load_manifest(path: Path) -> VerificationManifest:
         record["orientation"] = tuple(record["orientation"])
     record["source"] = Path(record["source"])
     record["bundle"] = tuple(Path(p) for p in record.get("bundle", ()))
-    return VerificationManifest(loading=loading, **record)
+    return VerificationManifest(loading=loading, **record), ignored
 
 
 def run_one(manifest: VerificationManifest, source: Path, job: str,
@@ -109,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
 
-    manifest = load_manifest(args.manifest)
+    manifest, ignored = load_manifest(args.manifest)
     missing = manifest.missing_requirements()
     if missing:
         print(json.dumps({"job": args.job, "refused": list(missing)}, indent=1))
@@ -118,6 +129,8 @@ def main(argv: list[str] | None = None) -> int:
     work = args.work_dir or Path(args.job)
     report = run_one(manifest, args.source, args.job, work,
                      args.support_dir, args.timeout)
+    if ignored:
+        report["manifest_keys_ignored"] = list(ignored)
 
     if args.against and report.get("completed"):
         reference = json.loads(Path(args.against).read_text(encoding="utf-8"))
