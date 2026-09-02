@@ -798,6 +798,198 @@ def _names_a_declaration_may_use(
     return available
 
 
+@dataclass(frozen=True)
+class MirroredAllocation:
+    """One ALLOCATE the source performs, and the shadow that follows it.
+
+    ``lines`` is the physical span of the source's own statement. The shadow's
+    ALLOCATE is written immediately after that span, where every name in the
+    bound already holds the value the source gave it.
+    """
+
+    name: str
+    rank: int
+    lines: tuple[int, ...]
+
+
+_ALLOCATE_STATEMENT_RE = re.compile(r"^\s*allocate\s*\((?P<items>.*)\)\s*$", flags=re.IGNORECASE)
+
+
+def _allocate_statement_items(statement: str) -> list[tuple[str, int]]:
+    """``(name, rank)`` for every array an ALLOCATE statement allocates.
+
+    Reads the whole item list rather than the first item: a source that writes
+    ``ALLOCATE(DEV_H0(NDIM4), DEV_SIG(NDIM4), STAT_VAR(NDIM6))`` states the
+    extent of three arrays in one statement, and reading only the first says
+    nothing about the other two. Keyword items -- ``STAT=``, ``SOURCE=``,
+    ``MOLD=`` -- are not allocate-objects and a component reference
+    ``x%part(n)`` is not a name this transformer shadows; both are skipped.
+    """
+    match = _ALLOCATE_STATEMENT_RE.match(strip_inline_comment(str(statement or "")).strip())
+    if not match:
+        return []
+    items: list[tuple[str, int]] = []
+    for raw in split_top_level(match.group("items")):
+        item = raw.strip()
+        if not item or "%" in item:
+            continue
+        head = item.split("(", 1)[0]
+        if "=" in head:
+            continue
+        entity = parse_entity(item)
+        if not entity.name.isidentifier() or not entity.dimensions:
+            continue
+        items.append((entity.upper_name, len(entity.dimensions)))
+    return items
+
+
+def _names_in_unreadable_allocate(statement: str, candidates: dict[str, int]) -> set[str]:
+    """Candidate names an ALLOCATE this reader could not parse mentions."""
+    text = strip_inline_comment(str(statement or ""))
+    # The lookbehind is what separates ALLOCATE from DEALLOCATE, which frees an
+    # array rather than sizing one and leaves nothing to mirror.
+    if not re.search(r"(?<![A-Za-z_])allocate\s*\(", text, flags=re.IGNORECASE):
+        return set()
+    mentioned = {token.upper() for token in re.findall(r"[A-Za-z_]\w*", text)}
+    return {name for name in candidates if name in mentioned}
+
+
+def _deferred_allocatable_locals(
+    parsed: ParsedFortranSource, selected_umat: str
+) -> dict[str, int]:
+    """``name -> rank`` for the selected routine's own deferred-shape locals.
+
+    ALLOCATABLE and declared here, so this routine is the one that fixes the
+    extent. A dummy argument is left out: an allocatable dummy is allocated by
+    its caller, and there is no statement in this routine to mirror.
+    """
+    for routine in parsed.subroutines:
+        if routine.upper_name != (selected_umat or "UMAT").upper():
+            continue
+        arguments = {str(argument).upper() for argument in routine.args}
+        declared: dict[str, int] = {}
+        for declaration in routine.declarations:
+            attributes = {str(attribute).strip().lower() for attribute in declaration.attributes}
+            if not any(attribute.startswith("allocatable") for attribute in attributes):
+                continue
+            for entity in declaration.entities:
+                if entity.upper_name in arguments or not entity.dimensions:
+                    continue
+                if not _has_deferred_extent(", ".join(entity.dimensions)):
+                    continue
+                declared[entity.upper_name] = len(entity.dimensions)
+        return declared
+    return {}
+
+
+def deferred_shadow_allocations(
+    source_text: str, parsed: ParsedFortranSource | None, selected_umat: str,
+) -> dict[str, tuple[MirroredAllocation, ...]]:
+    """Deferred-shape locals whose shadow can be allocated where they are.
+
+    A deferred shape carries no extent, so the shadow cannot be *declared*
+    with one -- but it does not have to be. The source states the extent in
+    its own ALLOCATE, and a shadow declared ALLOCATABLE takes the same extent
+    from an ALLOCATE written immediately after that one, where the bound has
+    the value the source computed. ``ALLOCATE(X_OTI(LBOUND(X,1):UBOUND(X,1)))``
+    asks the array itself rather than re-evaluating the author's expression,
+    so the shadow is exactly as large as what it shadows however the extent
+    was arrived at -- from a COMMON block filled a few lines earlier, from a
+    module variable another routine assigned, from PROPS.
+
+    Offered only when this routine both declares the name ALLOCATABLE and
+    allocates it itself, at a statement whose every allocate-object rank
+    matches the declaration. Anything else -- an allocatable dummy argument,
+    an array allocated in a routine this one calls, a name never allocated at
+    all -- leaves no statement here to mirror, and the refusal stands.
+
+    Names whose bound :func:`allocate_fixed_shape` can already write into a
+    declaration are excluded: those get a fixed-size shadow, which needs no
+    allocation and no mirror, and offering both would let the check and the
+    emitter disagree about which one a name gets.
+    """
+    if parsed is None:
+        return {}
+    declared = _deferred_allocatable_locals(parsed, selected_umat)
+    if not declared:
+        return {}
+    sites: dict[str, list[MirroredAllocation]] = {}
+    refused: set[str] = set()
+    for routine in parsed.subroutines:
+        if routine.upper_name != (selected_umat or "UMAT").upper():
+            continue
+        for line in routine.lines:
+            items = _allocate_statement_items(line.text)
+            read_here = {name for name, _ in items}
+            # An ALLOCATE this reader did not take apart is still an
+            # allocation of whatever it names -- one sharing its line with
+            # another statement, "allocate(tau(nslip)); tau = 0.0", or one
+            # written with a type-spec. Mirroring only the sites that *are*
+            # readable would leave the shadow sized by one allocation while
+            # the array is sized by another, so every candidate such a
+            # statement mentions and this reader did not resolve is refused.
+            # A name that only appears inside another item's bound is refused
+            # with them; erring towards the refusal that already stands costs
+            # a shadow, and the other way costs a wrong number.
+            refused.update(
+                _names_in_unreadable_allocate(line.text, declared) - read_here)
+            for name, rank in items:
+                if name not in declared:
+                    continue
+                if rank != declared[name]:
+                    # The statement allocates a different array than the one
+                    # declared. Nothing here is safe to mirror.
+                    refused.add(name)
+                    continue
+                sites.setdefault(name, []).append(
+                    MirroredAllocation(name, rank, tuple(line.line_numbers)))
+    return {
+        name: tuple(found)
+        for name, found in sites.items()
+        if name not in refused
+        and not allocate_fixed_shape(source_text, name, parsed, selected_umat)
+    }
+
+
+def _mirrored_allocation_lines(
+    form: str, type_name: str, allocation: MirroredAllocation
+) -> list[str]:
+    """Allocate the shadow to the extent the source's ALLOCATE just fixed.
+
+    Written immediately after that statement, so the shadow is sized from the
+    array itself rather than from a bound expression re-evaluated somewhere
+    the names in it may not yet mean anything. The guard before it keeps a
+    routine that allocates the same array twice -- or a compiler that keeps
+    locals between calls -- from allocating an allocated shadow, and the loop
+    after it gives every element the zero the seed block gives every other
+    shadow, at the first point in the routine where there are elements to
+    give it to.
+    """
+    name = allocation.name
+    rank = allocation.rank
+    axes = range(1, rank + 1)
+    bounds = ", ".join(f"LBOUND({name},{axis}):UBOUND({name},{axis})" for axis in axes)
+    lines = [
+        _comment_line(form, f"OTIS shadow allocation mirroring the source's ALLOCATE of {name}"),
+        _stmt(form, f"IF (ALLOCATED({name}_OTI)) DEALLOCATE({name}_OTI)"),
+        _stmt(form, f"ALLOCATE({name}_OTI({bounds}))"),
+    ]
+    indices = ["OTI_HI", "OTI_HJ", "OTI_HK"][:rank]
+    if len(indices) != rank:
+        lines.append(_stmt(form, f"{name}_OTI = 0.0D0"))
+        return lines
+    for depth, index in enumerate(indices):
+        lines.append(_stmt(
+            form,
+            "   " * depth
+            + f"DO {index} = LBOUND({name}_OTI,{depth + 1}), UBOUND({name}_OTI,{depth + 1})"))
+    lines.append(_stmt(
+        form, "   " * rank + f"{name}_OTI({','.join(indices)}) = 0.0D0"))
+    for depth in range(rank - 1, -1, -1):
+        lines.append(_stmt(form, "   " * depth + "END DO"))
+    return lines
+
+
 def _uncovered_ddsdde_blockers(
     analysis: dict[str, Any],
     old_tangent_regions: list[dict[str, Any]],
@@ -1582,6 +1774,13 @@ def _shape_blockers(
             # emitter then wrote ``X_OTI(:,:)`` for.
             if allocate_fixed_shape(source_text, name, parsed, selected_umat):
                 continue
+            # Or, when the bound is not one a declaration may use, mirror the
+            # ALLOCATE itself: an allocatable shadow allocated beside the
+            # source's own statement has the extent the source computed there,
+            # and the loop that zeroes it counts to the same bounds. The
+            # emitter asks the same function for the same reason.
+            if name in deferred_shadow_allocations(source_text, parsed, selected_umat):
+                continue
             blockers.append(
                 f"{name} is declared with a deferred shape ({shape}) and "
                 f"is read on the stress path. Its extent is fixed by an "
@@ -1757,10 +1956,36 @@ def _transform_source_text(
     # inventing an interface the source does not state; the name stays real,
     # and if the stress path reads it the seed-consumption and structural-zero
     # checks report the truncation.
+    # A deferred extent is not written where the declaration is, but it is
+    # written -- in the source's own ALLOCATE -- and an allocatable shadow
+    # allocated beside that statement has it. The same function the readiness
+    # check asked, so a name is never refused there and mirrored here, or the
+    # reverse.
+    mirrored_allocations = {
+        name: sites
+        for name, sites in deferred_shadow_allocations(
+            source_text, parsed, selected_umat).items()
+        if name in shadow_variable_names}
     assumed_size = {
         str(name).upper() for name, shape in variable_shapes.items()
-        if _has_undeclarable_extent(str(shape or ""))}
+        if _has_undeclarable_extent(str(shape or ""))
+        and str(name).upper() not in mirrored_allocations}
     shadow_variable_names.difference_update(assumed_size)
+    mirrored_allocations = {name: sites for name, sites in mirrored_allocations.items()
+                            if name in shadow_variable_names}
+    # Where each mirror goes, and which physical lines must reach the output
+    # untouched: an ALLOCATE is not arithmetic, and renaming the array inside
+    # it would allocate the shadow in place of the array it shadows -- the
+    # mirror would then size itself off an array nothing allocated.
+    mirrored_lines_after: dict[int, list[str]] = {}
+    verbatim_allocation_lines: set[int] = set()
+    for name, sites in sorted(mirrored_allocations.items()):
+        for site in sites:
+            if not site.lines:
+                continue
+            verbatim_allocation_lines.update(site.lines)
+            mirrored_lines_after.setdefault(max(site.lines), []).extend(
+                _mirrored_allocation_lines(form, type_name, site))
     replacement_names = {name: f"{name}_OTI" for name in sorted(shadow_variable_names)}
     sprinc_equivalent_stress_rewrites, sprinc_formula_skip_lines = _sprinc_equivalent_stress_rewrites(
         source_lines=lines,
@@ -1835,6 +2060,9 @@ def _transform_source_text(
                     },
                     order=oti_order,
                     external_functions=_external_procedure_names(source_text),
+                    allocatable_shadow_ranks={
+                        name: sites[0].rank
+                        for name, sites in mirrored_allocations.items() if sites},
                 )
             )
         if line_number + 1 == seed_insert_before_line and not initialization_inserted:
@@ -1850,9 +2078,15 @@ def _transform_source_text(
                     lifted_helper_argument_shadows,
                     seed_dfgrd1=seed_dfgrd1_enabled,
                     external_functions=_external_procedure_names(source_text),
+                    allocated_shadow_names=set(mirrored_allocations),
                 )
             )
             initialization_inserted = True
+        # The source's own ALLOCATE, kept exactly as written, with the
+        # shadow's allocation immediately after it.
+        if line_number in verbatim_allocation_lines:
+            output.extend(mirrored_lines_after.get(line_number, []))
+            continue
         if line_number in helper_continuation_skip_lines:
             output.pop()
             output.append(_comment_old_line(form, line))
@@ -2420,6 +2654,7 @@ def _declaration_lines(
     synthetic_real_variables: dict[str, str] | None = None,
     order: int = 1,
     external_functions: set[str] | None = None,
+    allocatable_shadow_ranks: dict[str, int] | None = None,
 ) -> list[str]:
     lines = [_stmt(form, "INTEGER :: OTI_I, OTI_J, OTI_HI, OTI_HJ, OTI_HK")]
     lines.append(_stmt(form, f"TYPE({type_name}) :: OTI_HX, OTI_HY, OTI_HTR"))
@@ -2434,6 +2669,15 @@ def _declaration_lines(
         lines.append(_stmt(form, f"REAL(8) :: {name}{suffix}"))
     external = {str(name).upper() for name in (external_functions or set())}
     for name in shadow_variables:
+        # A name the source allocates itself gets an allocatable shadow with
+        # the same rank and no extent; the extent arrives at the ALLOCATE
+        # written beside the source's own, the only place it is known.
+        rank = (allocatable_shadow_ranks or {}).get(name, 0)
+        if rank:
+            deferred = ", ".join([":"] * rank)
+            lines.append(_stmt(
+                form, f"TYPE({type_name}), ALLOCATABLE :: {name}_OTI({deferred})"))
+            continue
         shape = variable_shapes.get(name, "")
         suffix = f"({shape})" if shape else ""
         lines.append(_stmt(form, f"TYPE({type_name}) :: {name}_OTI{suffix}"))
@@ -2475,6 +2719,7 @@ def _initialization_lines(
     lifted_helper_argument_shadows: set[str],
     seed_dfgrd1: bool = False,
     external_functions: set[str] | None = None,
+    allocated_shadow_names: set[str] | None = None,
 ) -> list[str]:
     # A name the source declares EXTERNAL is a procedure. Its shadow is the
     # lifted procedure, and "F_OTI = 0.0D0" assigns to a function name --
@@ -2483,6 +2728,14 @@ def _initialization_lines(
         skip = {str(name).upper() for name in external_functions}
         shadow_variables = [name for name in shadow_variables
                             if name.upper() not in skip]
+    # A shadow whose extent arrives at an ALLOCATE later in the routine has no
+    # elements here. The seed block runs before that statement, so zeroing it
+    # or copying into it would touch an unallocated array; its own mirror does
+    # both, at the first point where there are elements to do it to.
+    if allocated_shadow_names:
+        allocated = {str(name).upper() for name in allocated_shadow_names}
+        shadow_variables = [name for name in shadow_variables
+                            if name.upper() not in allocated]
     lines = [_comment_line(form, "OTIS seed initialization from GUI configuration")]
     lines.extend(_shadow_default_lines(form, shadow_variables, variable_shapes))
     dstran = mappings.get("dstran", "DSTRAN")
@@ -3031,6 +3284,7 @@ def _transform_executable_line(
     replaced = _normalize_typed_intrinsics_in_oti_expression(replaced)
     replaced = _normalize_mixed_minmax_intrinsics_in_oti_expression(replaced)
     replaced = _real_sign_selector_in_oti_expression(replaced)
+    replaced = _real_argument_to_integer_intrinsics(replaced)
     replaced = _normalize_safe_sqrt_intrinsics_in_oti_expression(replaced)
     replaced = _wrap_real_assignment_rhs(replaced)
     return _normalize_numeric_literals_in_oti_expression(replaced, type_name)
@@ -3177,6 +3431,45 @@ def _real_sign_selector_in_oti_expression(line: str) -> str:
             search_from = open_paren + 1
             continue
         rebuilt = f"{parts[0]},REAL({selector})"
+        result = result[:open_paren + 1] + rebuilt + result[close_paren:]
+        search_from = open_paren + 1
+
+
+#: Intrinsics whose result is an integer. Their value is fixed by the real
+#: part of the argument and is piecewise constant in it, so the derivative is
+#: zero wherever it is defined -- reading the real part is exact, not an
+#: approximation, and it is what lets them type-check against a shadow.
+_INTEGER_VALUED_INTRINSICS = ("FLOOR", "CEILING", "NINT", "IDNINT", "IDINT",
+                              "INT", "IFIX")
+
+
+def _real_argument_to_integer_intrinsics(line: str) -> str:
+    """``FLOOR(x_oti)`` reads the real part of its argument.
+
+    "'a' argument of 'floor' intrinsic at (1) must be REAL" is the compiler
+    saying the same thing: these take a number and answer with a whole one, so
+    a hypercomplex argument carries information the result cannot hold.
+    """
+    if "_OTI" not in line.upper():
+        return line
+    result = line
+    search_from = 0
+    names = "|".join(_INTEGER_VALUED_INTRINSICS)
+    while True:
+        match = re.search(rf"(?<![A-Za-z0-9_%])({names})\s*\(",
+                          result[search_from:], flags=re.IGNORECASE)
+        if not match:
+            return result
+        open_paren = search_from + match.end() - 1
+        close_paren = _matching_paren_index(result, open_paren)
+        if close_paren < 0:
+            return result
+        parts = split_top_level(result[open_paren + 1:close_paren])
+        if not parts or "_OTI" not in parts[0].upper() or re.match(
+                r"^\s*REAL\s*\(", parts[0], flags=re.IGNORECASE):
+            search_from = open_paren + 1
+            continue
+        rebuilt = ",".join([f"REAL({parts[0].strip()})"] + [p.strip() for p in parts[1:]])
         result = result[:open_paren + 1] + rebuilt + result[close_paren:]
         search_from = open_paren + 1
 
