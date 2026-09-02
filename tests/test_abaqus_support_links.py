@@ -150,3 +150,15 @@ def test_excluding_a_file_that_is_not_in_the_order_changes_nothing(tmp_path):
     (tmp_path / "m.f90").write_text("end\n")
     (tmp_path / "compile_order.txt").write_text("m.f90\n")
     assert len(compile_order(tmp_path, exclude=tmp_path / "elsewhere.for")) == 1
+
+
+def test_the_abaqus_header_path_is_added_to_the_support_build(tmp_path):
+    """A transformed source keeps its original's `include 'aba_param.inc'`.
+
+    Abaqus's reported compile line does not carry the path to that header --
+    the launcher adds it when it compiles a user subroutine -- so a unit built
+    here has to be given it, or the include fails to open.
+    """
+    from umat_oti.abaqus import support
+
+    assert "abaqus_include_dir" in Path(support.__file__).read_text(encoding="utf-8")
