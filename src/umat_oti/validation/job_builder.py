@@ -942,10 +942,26 @@ def _restricted_oti_use_lines(module_name: str, source_text: str) -> list[str]:
 
 
 def _infer_max_constant_subscript(source_text: str, variable_name: str) -> int:
+    """The highest literal subscript the source READS, comments excluded.
+
+    A UMAT's header comments describe the material vector its author had in
+    mind, and that is not always the vector the code reads. One source in the
+    corpus documents
+
+        C PROPS(1) - E
+        C PROPS(2) - NU
+
+    and then uses only PROPS(1). Counting the comment made it expect two
+    constants, and its own deck -- declaring "*User Material, constants=1" --
+    was refused as not supplying enough. Prose about the code is not the code.
+    """
     if not source_text.strip() or not variable_name.strip():
         return 0
     pattern = re.compile(rf"\b{re.escape(variable_name)}\s*\(\s*(\d+)\s*\)", flags=re.IGNORECASE)
-    return max((int(match.group(1)) for match in pattern.finditer(source_text)), default=0)
+    return max((int(match.group(1))
+                for raw_line in source_text.splitlines()
+                if (statement := _fortran_statement(raw_line))
+                for match in pattern.finditer(statement)), default=0)
 
 
 def _infer_max_tensor_component_index(source_text: str, variable_names: tuple[str, ...]) -> int:

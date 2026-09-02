@@ -705,8 +705,14 @@ def _primal_parity(original, primal_csv: Path, case: TangentCase) -> dict:
     for index, row in enumerate(rows):
         if index >= len(original.stress):
             break
+        # The largest component either build produced. Taking it from the
+        # transformed build alone would call a response "zero" when the
+        # original returned something, and then describe the difference as a
+        # fraction of nothing.
         response = max(
-            (abs(float(row[f"stress_{c}"])) for c in range(1, case.ntens + 1)),
+            [abs(float(row[f"stress_{c}"])) for c in range(1, case.ntens + 1)]
+            + [abs(value) for value in original.stress[index][:case.ntens]
+               if math.isfinite(value)],
             default=0.0)
         for component in range(1, case.ntens + 1):
             mine = float(row[f"stress_{component}"])
@@ -749,17 +755,24 @@ def _primal_parity(original, primal_csv: Path, case: TangentCase) -> dict:
     # response, or differing only where neither of them resolves anything.
     if worst_resolvable <= 1.0e-9 and worst_at is not None:
         increment, component, mine, theirs, response = worst_at
+        # A response of exactly zero is its own situation and not a smaller
+        # version of this one: there is no magnitude to be a fraction of, and
+        # dividing by it to say so crashed the harness on four sources.
+        share = (f"{max(abs(mine), abs(theirs)) / response:.1e} of that "
+                 f"increment's largest stress ({response:.4e})"
+                 if response else
+                 "the whole of that increment's response, which is itself "
+                 "exactly zero in both builds")
         result["reason"] = (
             f"the builds differ only in components too small to compare: the "
             f"largest difference is component {component} at increment "
-            f"{increment} ({mine!r} against {theirs!r}), which is "
-            f"{max(abs(mine), abs(theirs)) / response:.1e} of that increment's "
-            f"largest stress ({response:.4e}). A component that is a "
-            f"vanishing fraction of the response holds whatever each build's "
-            f"rounding left in it, and two such values differ by 100% without "
-            f"that meaning anything. Every component large enough to compare "
-            f"agrees to {worst_resolvable:.3e}. This source is not verified: "
-            f"a parity this weak is not evidence either way")
+            f"{increment} ({mine!r} against {theirs!r}), which is {share}. A "
+            f"component that is a vanishing fraction of the response holds "
+            f"whatever each build's rounding left in it, and two such values "
+            f"differ by 100% without that meaning anything. Every component "
+            f"large enough to compare agrees to {worst_resolvable:.3e}. This "
+            f"source is not verified: a parity this weak is not evidence "
+            f"either way")
         result["reference_limited_by"] = "components_below_the_resolved_response"
         return result
     # Not a widened tolerance: the verdict above is unchanged and this source
