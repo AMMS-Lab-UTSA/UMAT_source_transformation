@@ -33,6 +33,7 @@ import argparse
 import csv
 import json
 import os
+import re
 import sys
 import traceback
 from collections import Counter
@@ -72,7 +73,7 @@ PROBE_COORDS = (0.3, 0.7, 0.5)
 
 COLUMNS = (
     "name", "source", "repository", "kinematics", "nstatv", "ntens",
-    "props_count", "material_provenance", "loading_probe",
+    "props_count", "material_provenance", "nstatv_provenance", "loading_probe",
     "furthest_stage", "primal_parity", "rows_total", "rows_agreeing",
     "rows_disagreeing", "rows_unresolved", "structural_zeros",
     "worst_relative_error", "driven_through", "reference_perturbation",
@@ -127,6 +128,53 @@ def cases_from(triage_csv: Path, proposals_json: Path, cache: Path,
     return out
 
 
+#: The *DEPVAR block of an Abaqus input deck and the count on its next line.
+_DEPVAR = re.compile(
+    r"^\s*\*depvar\b[^\n]*\n\s*(\d+)", re.IGNORECASE | re.MULTILINE)
+
+
+def deck_state_variable_count(deck_path: Path) -> int:
+    """How many state variables the deck says the model has, or 0.
+
+    *DEPVAR is how an Abaqus user declares that count, and it sits in the same
+    deck the material constants are read from -- so this is the author's own
+    number, not a guess, in the same class as the SDVINI the initial state
+    comes from and the ALLOCATE the transformer reads an extent from.
+
+    It replaces a number that was never about state at all: the triage set
+    nstatv_hint to the COUNT OF PROMOTED VARIABLES, the stress-path names
+    lifted into OTI arithmetic. That cardinality has no relation to NSTATV.
+    It was larger than the source's largest literal STATEV subscript in every
+    case here, so nothing was written out of bounds -- but the driver was
+    handing a growth shell NSTATV=78 where its author wrote 9, and a model
+    that loops DO I=1,NSTATV over its state ran that loop over sixty-nine
+    slots the author never meant it to touch.
+    """
+    try:
+        text = deck_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return 0
+    match = _DEPVAR.search(text)
+    if not match:
+        return 0
+    try:
+        return max(0, int(match.group(1)))
+    except ValueError:
+        return 0
+
+
+def _declared_nstatv(item: dict[str, Any], cache: Path) -> tuple[int, str]:
+    """The state-variable count and where it came from."""
+    provenance = str((item["entry"].get("material") or {}).get("provenance") or "")
+    deck = provenance.split(",")[0].strip()
+    if deck:
+        declared = deck_state_variable_count(cache / deck)
+        if declared:
+            return declared, f"*DEPVAR in {deck}"
+    hint = int(item["row"].get("nstatv_hint") or 0)
+    return hint, "promoted-variable count (no *DEPVAR in the paired deck)"
+
+
 def _source_text(path: Path) -> str:
     """The source, or empty when it cannot be read.
 
@@ -140,10 +188,12 @@ def _source_text(path: Path) -> str:
         return ""
 
 
-def _case(item: dict[str, Any]) -> TangentCase:
+def _case(item: dict[str, Any], cache: Path = DEFAULT_CACHE) -> TangentCase:
     row, entry = item["row"], item["entry"]
     props = tuple(float(v) for v in (entry.get("material") or {}).get("props") or ())
-    nstatv = int(row.get("nstatv_hint") or 0) or 1
+    declared, provenance = _declared_nstatv(item, cache)
+    item["nstatv_provenance"] = provenance
+    nstatv = declared or 1
     return TangentCase(
         name=Path(row["source"]).stem,
         source_path=item["path"],
@@ -160,7 +210,8 @@ def _case(item: dict[str, Any]) -> TangentCase:
     )
 
 
-def run(items: list[dict[str, Any]], work_root: Path) -> list[dict[str, Any]]:
+def run(items: list[dict[str, Any]], work_root: Path,
+        cache_root: Path = DEFAULT_CACHE) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for index, item in enumerate(items, start=1):
         row, entry = item["row"], item["entry"]
@@ -176,11 +227,14 @@ def run(items: list[dict[str, Any]], work_root: Path) -> list[dict[str, Any]]:
             "ntens": row.get("ntens", ""),
             "props_count": len((entry.get("material") or {}).get("props") or ()),
             "material_provenance": (entry.get("material") or {}).get("provenance", ""),
+            # Where NSTATV came from. It used to come from a count of promoted
+            # variables, which is not a statement about state at all.
+            "nstatv_provenance": item.get("nstatv_provenance", ""),
             "loading_probe": PROBE_PROVENANCE,
         })
         work = work_root / name
         try:
-            result = verify_tangent(_case(item), work)
+            result = verify_tangent(_case(item, cache_root), work)
         except Exception as error:  # noqa: BLE001 - a crash is a finding
             record.update(furthest_stage="harness_error",
                           blocker=without_machine_paths(
@@ -280,7 +334,7 @@ def main(argv: list[str] | None = None) -> int:
         print("  nothing to verify")
         return 0
     args.work_dir.mkdir(parents=True, exist_ok=True)
-    rows = run(items, args.work_dir)
+    rows = run(items, args.work_dir, args.cache_dir)
     summary = summarise(rows)
     print(json.dumps({k: v for k, v in summary.items() if k != "caveat"}, indent=2))
 
