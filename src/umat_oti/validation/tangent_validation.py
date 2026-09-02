@@ -332,6 +332,12 @@ def single_precision_names(source_text: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(names))
 
 
+#: How large a stress component must be, as a fraction of the largest
+#: component in its own increment, before a relative difference in it says
+#: anything. Below this the component is a structural zero carrying each
+#: build's rounding, and the two roundings are unrelated.
+_RESOLVABLE_FRACTION_OF_RESPONSE = 1.0e-8
+
 #: Relative spacing of IEEE single precision. A build-to-build difference at
 #: this scale is what a single-precision declaration produces on its own.
 _SINGLE_PRECISION_EPSILON = 1.1920929e-7
@@ -691,9 +697,17 @@ def _primal_parity(original, primal_csv: Path, case: TangentCase) -> dict:
         rows = list(csv.DictReader(handle))
     worst = 0.0
     not_a_number: Optional[tuple] = None
+    #: The largest relative difference among components big enough, relative
+    #: to the response, for a relative difference to mean anything, and the
+    #: component that produced the headline number either way.
+    worst_resolvable = 0.0
+    worst_at: Optional[tuple] = None
     for index, row in enumerate(rows):
         if index >= len(original.stress):
             break
+        response = max(
+            (abs(float(row[f"stress_{c}"])) for c in range(1, case.ntens + 1)),
+            default=0.0)
         for component in range(1, case.ntens + 1):
             mine = float(row[f"stress_{component}"])
             theirs = original.stress[index][component - 1]
@@ -702,8 +716,17 @@ def _primal_parity(original, primal_csv: Path, case: TangentCase) -> dict:
                     not_a_number = (index + 1, component, mine, theirs)
                 continue
             scale = max(abs(mine), abs(theirs))
-            if scale:
-                worst = max(worst, abs(mine - theirs) / scale)
+            if not scale:
+                continue
+            relative = abs(mine - theirs) / scale
+            if relative > worst:
+                worst, worst_at = relative, (index + 1, component, mine, theirs,
+                                             response)
+            # A component that is a vanishing fraction of the response is a
+            # structural zero returning whatever each build's rounding left
+            # in it. Two such values differ by 100% and mean nothing by it.
+            if response and scale > _RESOLVABLE_FRACTION_OF_RESPONSE * response:
+                worst_resolvable = max(worst_resolvable, relative)
     compared = min(len(rows), len(original.stress))
     if not_a_number is not None:
         increment, component, mine, theirs = not_a_number
@@ -719,7 +742,26 @@ def _primal_parity(original, primal_csv: Path, case: TangentCase) -> dict:
         return {"agrees": True, "worst_relative": worst,
                 "increments_compared": compared}
     result = {"agrees": False, "worst_relative": worst,
+              "worst_relative_resolvable": worst_resolvable,
               "increments_compared": compared}
+    # The verdict is unchanged either way. What this adds is which of the two
+    # very different situations produced it -- the builds differing about the
+    # response, or differing only where neither of them resolves anything.
+    if worst_resolvable <= 1.0e-9 and worst_at is not None:
+        increment, component, mine, theirs, response = worst_at
+        result["reason"] = (
+            f"the builds differ only in components too small to compare: the "
+            f"largest difference is component {component} at increment "
+            f"{increment} ({mine!r} against {theirs!r}), which is "
+            f"{max(abs(mine), abs(theirs)) / response:.1e} of that increment's "
+            f"largest stress ({response:.4e}). A component that is a "
+            f"vanishing fraction of the response holds whatever each build's "
+            f"rounding left in it, and two such values differ by 100% without "
+            f"that meaning anything. Every component large enough to compare "
+            f"agrees to {worst_resolvable:.3e}. This source is not verified: "
+            f"a parity this weak is not evidence either way")
+        result["reference_limited_by"] = "components_below_the_resolved_response"
+        return result
     # Not a widened tolerance: the verdict above is unchanged and this source
     # is still not verified. What changes is that the reason is the source's
     # own declaration instead of an unexplained number.

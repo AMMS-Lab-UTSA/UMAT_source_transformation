@@ -121,3 +121,68 @@ class TestTheVerdictIsUnchanged:
         verdict = self._parity(tmp_path, 1.0e-12, "      real E, S(6)\n")
         assert verdict["agrees"] is True
         assert "reference_limited_by" not in verdict
+
+
+class TestAComponentTooSmallToCompare:
+    """A structural zero holds rounding, and two roundings differ by 100%.
+
+    One source's shear component is exactly 0.0 in both builds for five
+    increments, then reads -9.3e-11 in one and 1.9e-2 in the other -- two
+    parts in ten billion of that increment's largest stress. Scored against
+    its own magnitude that is a 100% disagreement, and it was the whole of
+    that source's headline "worst relative difference 1.000e+00" while every
+    component large enough to compare agreed to eight digits.
+
+    The verdict does not change: a parity this weak is not evidence either
+    way, and the source stays unverified. What changes is that the report
+    distinguishes "the builds disagree about the response" from "the builds
+    differ only where neither of them resolves anything".
+    """
+
+    def _parity(self, tmp_path, components, original):
+        import csv  # noqa: PLC0415
+
+        from umat_oti.validation.tangent_validation import _primal_parity  # noqa: PLC0415
+        source = tmp_path / "u.f"
+        source.write_text("      real*8 X\n", encoding="utf-8")
+        case = TangentCase(name="u", source_path=source, props=(1.0,),
+                           dstran_per_increment=(1.0e-4,) + (0.0,) * 5,
+                           n_increments=1, ntens=len(components), nstatv=1)
+        primal = tmp_path / "primal.csv"
+        with primal.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.writer(handle)
+            writer.writerow(["increment"]
+                            + [f"stress_{i}" for i in range(1, len(components) + 1)]
+                            + ["statev_1"])
+            writer.writerow([1] + [repr(v) for v in components] + ["0.0"])
+
+        class _Original:
+            stress = [list(original)]
+        return _primal_parity(_Original(), primal, case)
+
+    def test_a_negligible_component_is_named_as_unresolvable(self, tmp_path):
+        verdict = self._parity(tmp_path,
+                               [3.0e8, -9.28e-11], [3.0e8, 1.85e-2])
+        assert verdict["agrees"] is False
+        assert verdict["reference_limited_by"] == "components_below_the_resolved_response"
+        assert "too small to compare" in verdict["reason"]
+
+    def test_a_real_disagreement_is_not_excused_by_it(self, tmp_path):
+        # Both components are a large fraction of the response, so the
+        # difference is about the response and must not borrow this reason.
+        verdict = self._parity(tmp_path, [3.0e8, 1.0e8], [3.0e8, 1.2e8])
+        assert verdict["agrees"] is False
+        assert "reference_limited_by" not in verdict
+
+    def test_a_negligible_component_does_not_make_it_agree(self, tmp_path):
+        verdict = self._parity(tmp_path, [3.0e8, -9.28e-11], [3.0e8, 1.85e-2])
+        assert verdict["agrees"] is False
+
+    def test_the_headline_number_still_reports_the_worst(self, tmp_path):
+        verdict = self._parity(tmp_path, [3.0e8, -9.28e-11], [3.0e8, 1.85e-2])
+        assert verdict["worst_relative"] > 0.99
+        assert verdict["worst_relative_resolvable"] < 1.0e-9
+
+    def test_agreement_everywhere_is_still_agreement(self, tmp_path):
+        verdict = self._parity(tmp_path, [3.0e8, 1.0], [3.0e8, 1.0])
+        assert verdict["agrees"] is True
