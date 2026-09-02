@@ -223,18 +223,23 @@ def run(items: list[dict[str, Any]], work_root: Path,
             "source": row["source"],
             "repository": row.get("repository", ""),
             "kinematics": row.get("kinematics", ""),
-            "nstatv": row.get("nstatv_hint", ""),
             "ntens": row.get("ntens", ""),
             "props_count": len((entry.get("material") or {}).get("props") or ()),
             "material_provenance": (entry.get("material") or {}).get("provenance", ""),
-            # Where NSTATV came from. It used to come from a count of promoted
-            # variables, which is not a statement about state at all.
-            "nstatv_provenance": item.get("nstatv_provenance", ""),
             "loading_probe": PROBE_PROVENANCE,
         })
         work = work_root / name
         try:
-            result = verify_tangent(_case(item, cache_root), work)
+            # Built before the record's state columns are filled, because it is
+            # what decides them. Reading them from the triage row instead
+            # reported the count the run did NOT use: a growth shell driven at
+            # NSTATV=9 was recorded as NSTATV=36, with an empty provenance.
+            case = _case(item, cache_root)
+            record.update({
+                "nstatv": case.nstatv,
+                "nstatv_provenance": item.get("nstatv_provenance", ""),
+            })
+            result = verify_tangent(case, work)
         except Exception as error:  # noqa: BLE001 - a crash is a finding
             record.update(furthest_stage="harness_error",
                           blocker=without_machine_paths(

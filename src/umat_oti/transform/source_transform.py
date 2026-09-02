@@ -2447,7 +2447,7 @@ def _initialization_lines(
     if dstran in roles["seed"] and dstran_in_scope:
         lines.extend(
             [
-                _stmt(form, "DO OTI_I = 1, NTENS"),
+                _stmt(form, f"DO OTI_I = 1, {_bound(variable_shapes, dstran, 'NTENS')}"),
                 _stmt(form, f"   {dstran}_OTI(OTI_I) = {dstran}(OTI_I)"),
                 _stmt(form, "END DO"),
             ]
@@ -2455,7 +2455,7 @@ def _initialization_lines(
     if stress in roles["promote"]:
         lines.extend(
             [
-                _stmt(form, "DO OTI_I = 1, NTENS"),
+                _stmt(form, f"DO OTI_I = 1, {_bound(variable_shapes, stress, 'NTENS')}"),
                 _stmt(form, f"   {stress}_OTI(OTI_I) = {stress}(OTI_I)"),
                 _stmt(form, "END DO"),
             ]
@@ -2737,7 +2737,7 @@ def _real_extraction_lines(form: str, mappings: dict[str, str], roles: dict[str,
     if stress in roles["promote"]:
         lines.extend(
             [
-                _stmt(form, "DO OTI_I = 1, NTENS"),
+                _stmt(form, f"DO OTI_I = 1, {_bound(variable_shapes or {}, stress, 'NTENS')}"),
                 _stmt(form, f"   {stress}(OTI_I) = REAL({stress}_OTI(OTI_I))"),
                 _stmt(form, "END DO"),
             ]
