@@ -14,6 +14,7 @@ from umat_oti.fortran.literals import (
 )
 from umat_oti.fortran.normalize import strip_inline_comment
 from umat_oti.fortran.parser import (
+    parse_entity,
     FUNCTION_HEADER_RE,
     parse_declaration_line,
     parse_function_subprograms,
@@ -567,6 +568,18 @@ def _lift_helper_routine(
     # Function references to rewrite in this body: every lifted function except
     # one this routine has shadowed with an array or a dummy argument of its own,
     # and except its own name, which inside a function is the result variable.
+    # Rank-1 literal extents this routine declares for its own hypercomplex
+    # names, which is all SUM needs to be written out term by term.
+    helper_oti_shapes: dict[str, str] = {}
+    for prelude_line in prelude:
+        entities = re.match(r"^\s*type\([^)]*\)\s*::\s*(.+)$", prelude_line,
+                            flags=re.IGNORECASE)
+        if not entities:
+            continue
+        for item in split_top_level(entities.group(1)):
+            entity = parse_entity(item.strip())
+            if len(entity.dimensions) == 1 and entity.dimensions[0].strip().isdigit():
+                helper_oti_shapes[entity.upper_name] = entity.dimensions[0].strip()
     body_statements = [_split_label_and_statement(raw, form)[1] for raw in body]
     shadowed = _routine_array_names(stitched_lines, form) | {arg.upper() for arg in args}
     function_call_names = {name for name in lifted_function_names
@@ -603,7 +616,8 @@ def _lift_helper_routine(
             lines.extend(kclear_lines)
             continue
         rewritten = _rewrite_helper_executable_line(statement, lifted_names, oti_names,
-                                                   function_call_names)
+                                                   function_call_names,
+                                                   oti_shapes=helper_oti_shapes)
         if re.match(r"^\s*RETURN\b", rewritten, re.IGNORECASE) and helper_output_surfaces:
             lines.extend(_helper_output_surface_lines(helper_output_surfaces))
         if re.match(r"^\s*RETURN\b", rewritten, re.IGNORECASE) and helper_output_copies:
@@ -822,16 +836,190 @@ def _implicit_oti_names(
     return result
 
 
+def _wrap_oti_rhs_assigned_to_a_plain_variable(
+    line: str, oti_names: set[str],
+) -> str:
+    """``NSS = STAT_VAR(3)`` takes the real part when the target is not OTI.
+
+    The source stored a count in a real array and read it back into an
+    integer, and that real-to-integer conversion is what it always did. Once
+    the array is hypercomplex the assignment has no meaning to the compiler --
+    "Cannot convert TYPE(onumm6n1) to INTEGER(4)" -- and the real part is the
+    value the original converted, so nothing is lost that the source kept.
+
+    Only when the target is a name this routine does NOT hold as
+    hypercomplex. An OTI target keeps the whole number, derivative and all.
+    """
+    if not oti_names:
+        return line
+    match = re.match(r"^(\s*)([A-Za-z_]\w*)\s*(\([^=]*\))?\s*=(?!=)(.*)$", line)
+    if not match:
+        return line
+    indent, target, subscript, rhs = match.groups()
+    if target.upper() in oti_names or not rhs.strip():
+        return line
+    if not any(token.upper() in oti_names
+               for token in re.findall(r"[A-Za-z_]\w*", rhs)):
+        return line
+    if re.match(r"^\s*REAL\s*\(.*\)\s*$", rhs.strip(), flags=re.IGNORECASE):
+        return line
+    return f"{indent}{target}{subscript or ''} = REAL({rhs.strip()})"
+
+
+def _expand_sum_over_oti(line: str, oti_names: set[str],
+                         shapes: dict[str, str] | None = None) -> str:
+    """``SUM(PSIG)`` written out term by term when the extent is a literal.
+
+    The OTI library has no SUM, and there is nothing to take the real part of
+    here -- a sum of hypercomplex numbers is hypercomplex, and its derivative
+    is the sum of theirs. Writing PSIG(1)+PSIG(2)+PSIG(3) is the same value by
+    definition and carries every derivative through untouched.
+
+    Only for a whole-array reference whose extent this routine declares as a
+    literal. A sum over a run-time extent would need a loop, and a loop cannot
+    be written inside an expression; that case keeps the SUM and the compiler
+    reports it, which is a refusal rather than a wrong number.
+    """
+    if not oti_names or not shapes:
+        return line
+    result = line
+    search_from = 0
+    while True:
+        match = re.search(r"(?<![A-Za-z0-9_%])SUM\s*\(", result[search_from:],
+                          flags=re.IGNORECASE)
+        if not match:
+            return result
+        open_paren = search_from + match.end() - 1
+        close_paren = _matching_paren_index(result, open_paren)
+        if close_paren < 0:
+            return result
+        parts = split_top_level(result[open_paren + 1:close_paren])
+        name = parts[0].strip().upper() if len(parts) == 1 else ""
+        extent = str(shapes.get(name, "")).strip() if name in oti_names else ""
+        if not name.isidentifier() or not extent.isdigit() or int(extent) < 1:
+            search_from = open_paren + 1
+            continue
+        terms = " + ".join(f"{parts[0].strip()}({index})"
+                           for index in range(1, int(extent) + 1))
+        rebuilt = f"({terms})"
+        result = result[:search_from + match.start()] + rebuilt + result[close_paren + 1:]
+        search_from = search_from + match.start() + len(rebuilt)
+
+
+def _matching_paren_index(text: str, open_paren: int) -> int:
+    """Index of the ")" closing the "(" at ``open_paren``, or -1."""
+    depth = 0
+    for index in range(open_paren, len(text)):
+        char = text[index]
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+            if depth == 0:
+                return index
+    return -1
+
+
+def _expand_mod_over_oti(line: str, oti_names: set[str]) -> str:
+    """``MOD(A, P)`` written out, so the derivative survives it.
+
+    The OTI library has no MOD, and wrapping the argument in REAL would make
+    it compile while silently zeroing a derivative that is not zero: unlike
+    FLOOR or NINT, MOD is not piecewise constant in its first argument -- it
+    has slope one almost everywhere.
+
+    Fortran defines MOD(a, p) as ``a - INT(a/p)*p``, and that form is exact in
+    hypercomplex arithmetic. The truncation is piecewise constant, so it is
+    the only part that needs the real value; the ``a`` in front carries the
+    derivative through unchanged.
+    """
+    if not oti_names:
+        return line
+    result = line
+    search_from = 0
+    while True:
+        match = re.search(r"(?<![A-Za-z0-9_%])(D?MOD)\s*\(",
+                          result[search_from:], flags=re.IGNORECASE)
+        if not match:
+            return result
+        open_paren = search_from + match.end() - 1
+        close_paren = _matching_paren_index(result, open_paren)
+        if close_paren < 0:
+            return result
+        parts = split_top_level(result[open_paren + 1:close_paren])
+        stem = re.match(r"[A-Za-z_]\w*", parts[0].strip()) if parts else None
+        if (len(parts) != 2 or not stem
+                or stem.group(0).upper() not in oti_names):
+            search_from = open_paren + 1
+            continue
+        a, q = parts[0].strip(), parts[1].strip()
+        rebuilt = f"(({a}) - REAL(INT(REAL({a})/({q})))*({q}))"
+        result = result[:search_from + match.start()] + rebuilt + result[close_paren + 1:]
+        search_from = search_from + match.start() + len(rebuilt)
+
+
+#: Intrinsics whose result is a whole number, so their value is fixed by the
+#: real part of the argument and is piecewise constant in it. Reading the real
+#: part there is exact rather than an approximation, and it is what lets them
+#: type-check against a hypercomplex operand.
+_INTEGER_VALUED_INTRINSICS = ("FLOOR", "CEILING", "NINT", "IDNINT", "IDINT",
+                              "INT", "IFIX")
+
+
+def _real_argument_to_integer_intrinsics(line: str, oti_names: set[str]) -> str:
+    """``FLOOR(HARD_PAR)`` reads the real part when HARD_PAR is hypercomplex.
+
+    A lifted helper keeps the source's own names and changes only their
+    declared type, so the argument carries no suffix to recognise it by -- the
+    set of names this routine declares OTI is what says so.
+
+        Error: 'a' argument of 'floor' intrinsic at (1) must be REAL
+    """
+    if not oti_names:
+        return line
+    result = line
+    search_from = 0
+    names = "|".join(_INTEGER_VALUED_INTRINSICS)
+    while True:
+        match = re.search(rf"(?<![A-Za-z0-9_%])({names})\s*\(",
+                          result[search_from:], flags=re.IGNORECASE)
+        if not match:
+            return result
+        open_paren = search_from + match.end() - 1
+        close_paren = _matching_paren_index(result, open_paren)
+        if close_paren < 0:
+            return result
+        parts = split_top_level(result[open_paren + 1:close_paren])
+        first = parts[0].strip() if parts else ""
+        # The whole argument, not just its leading name: after MOD is written
+        # out the argument is an expression -- FLOOR(((VAL1) - ...)) -- and it
+        # is hypercomplex if any name in it is.
+        mentions_oti = any(token.upper() in oti_names
+                           for token in re.findall(r"[A-Za-z_]\w*", first))
+        if (not parts or not mentions_oti
+                or re.match(r"^\s*REAL\s*\(.*\)\s*$", first, flags=re.IGNORECASE)):
+            search_from = open_paren + 1
+            continue
+        rebuilt = ",".join([f"REAL({first})"] + [p.strip() for p in parts[1:]])
+        result = result[:open_paren + 1] + rebuilt + result[close_paren:]
+        search_from = open_paren + 1
+
+
 def _rewrite_helper_executable_line(
     line: str,
     lifted_names: set[str],
     oti_names: set[str],
     function_call_names: set[str] | None = None,
+    oti_shapes: dict[str, str] | None = None,
 ) -> str:
     rewritten = _rewrite_lifted_call(line, lifted_names)
     rewritten = _wrap_condition_with_real_tokens(rewritten, oti_names)
     rewritten = _normalize_typed_intrinsics(rewritten, oti_names)
+    rewritten = _expand_sum_over_oti(rewritten, oti_names, oti_shapes)
+    rewritten = _expand_mod_over_oti(rewritten, oti_names)
+    rewritten = _real_argument_to_integer_intrinsics(rewritten, oti_names)
     rewritten = _normalize_numeric_literals(rewritten, oti_names)
+    rewritten = _wrap_oti_rhs_assigned_to_a_plain_variable(rewritten, oti_names)
     # Last, so every rewrite above still sees the source's own names.
     return _rewrite_lifted_function_references(rewritten, function_call_names or set())
 
