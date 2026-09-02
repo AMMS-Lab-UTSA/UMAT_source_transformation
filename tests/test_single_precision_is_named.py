@@ -186,3 +186,30 @@ class TestAComponentTooSmallToCompare:
     def test_agreement_everywhere_is_still_agreement(self, tmp_path):
         verdict = self._parity(tmp_path, [3.0e8, 1.0], [3.0e8, 1.0])
         assert verdict["agrees"] is True
+
+    def test_an_all_zero_response_does_not_divide_by_it(self, tmp_path):
+        """Four sources crashed the harness here with ZeroDivisionError.
+
+        A whole increment whose stress is zero in both builds has no magnitude
+        for a component to be a fraction of. That is a situation to describe,
+        not a smaller version of the one above.
+        """
+        verdict = self._parity(tmp_path, [0.0, 0.0], [0.0, 0.0])
+        assert verdict["agrees"] is True, "two identical zero responses agree"
+        # And the case that actually crashed: one build all zeros, the other
+        # not, so there is a difference but no magnitude to scale it by.
+        verdict = self._parity(tmp_path, [0.0, 0.0], [0.0, 1.85e-2])
+        assert verdict["agrees"] is False
+
+    def test_the_response_is_taken_from_both_builds(self, tmp_path):
+        """Not from the transformed one alone.
+
+        A transformed build returning all zeros while the original returns
+        1.85e-2 has a response of 1.85e-2, not of nothing -- and the
+        difference is the whole of it, which is a real disagreement rather
+        than a component too small to compare.
+        """
+        verdict = self._parity(tmp_path, [0.0, 0.0], [0.0, 1.85e-2])
+        assert verdict["agrees"] is False
+        assert verdict.get("reference_limited_by") != \
+            "components_below_the_resolved_response"
