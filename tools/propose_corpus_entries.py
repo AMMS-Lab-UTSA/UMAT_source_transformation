@@ -141,8 +141,12 @@ def propose(source: Path, cache: Path, model) -> dict[str, Any]:
         return entry
 
     deck = Path(proposal.confirmed_value())
-    materials = [m for m in parse_deck(deck)
-                 if m.props and len(m.props) == nprops]
+    # At least what the source reads, matching the pairing check. Abaqus hands
+    # the UMAT the deck's whole constant list and sets NPROPS to its length;
+    # the subroutine reads the indices it needs and the rest go unread. An
+    # exact-length material is still preferred where the deck offers one.
+    usable = [m for m in parse_deck(deck) if m.props and len(m.props) >= nprops]
+    materials = [m for m in usable if len(m.props) == nprops] or usable
     if not materials:
         entry.update(status="no_matching_deck",
                      reason="the paired deck lost its material on re-read")

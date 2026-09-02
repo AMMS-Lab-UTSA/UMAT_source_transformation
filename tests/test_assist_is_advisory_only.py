@@ -105,9 +105,49 @@ def test_the_check_is_arithmetic_on_counts_both_sides_declare(tmp_path: Path):
     ok, detail = check_pairing(source, deck, expected_nprops=4, expected_nstatv=10)
     assert ok and "supplies 4 constants" in detail
     ok, detail = check_pairing(source, deck, expected_nprops=5, expected_nstatv=10)
-    assert not ok and "expects 5" in detail
+    assert not ok and "expects at least 5" in detail
     ok, detail = check_pairing(source, deck, expected_nprops=4, expected_nstatv=999)
     assert not ok, "a deck with too few state variables must not be accepted"
+
+
+def test_a_deck_that_supplies_more_than_the_source_reads_is_capable(tmp_path: Path):
+    """Capable of driving it, which is the property this check exists to test.
+
+    Abaqus hands the UMAT the deck's whole constant list and sets NPROPS to its
+    length; the subroutine reads the indices it needs and the rest go unread.
+    Demanding exact equality rejected decks that drive the source perfectly
+    well -- among them the one three crystal-plasticity UMATs ship in their own
+    repository, declaring 168 constants where the source reads 160.
+    """
+    source, deck = _repo(tmp_path, constants=168, depvar=150)
+    ok, detail = check_pairing(source, deck, expected_nprops=160, expected_nstatv=None)
+    assert ok
+    assert "supplies 168 constants" in detail
+    assert "reads the first 160" in detail, "the surplus has to be visible"
+
+
+def test_too_few_constants_is_still_refused(tmp_path: Path):
+    """The loosening is one-sided. Short is short."""
+    source, deck = _repo(tmp_path, constants=48, depvar=10)
+    ok, _ = check_pairing(source, deck, expected_nprops=160, expected_nstatv=None)
+    assert not ok
+
+
+def test_an_exact_deck_wins_over_a_merely_sufficient_one(tmp_path: Path):
+    """So loosening the rule can only add pairings, never move one.
+
+    Both decks fit under "at least". If the larger one could win, a source
+    already paired with its exact deck would silently change which material it
+    is driven by -- and the provenance column would change with it.
+    """
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
+    source, big = _repo(tmp_path / "a", constants=200, depvar=10)
+    _, exact = _repo(tmp_path / "b", constants=6, depvar=10)
+    proposal = pair_source_with_deck(
+        source, [big, exact], expected_nprops=6, expected_nstatv=10, model=None)
+    assert proposal.verdict is Verdict.CONFIRMED
+    assert proposal.confirmed_value() == str(exact)
 
 
 def test_a_proposal_records_that_it_supplied_no_number():
