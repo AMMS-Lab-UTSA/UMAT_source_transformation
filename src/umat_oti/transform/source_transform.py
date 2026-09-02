@@ -1834,6 +1834,7 @@ def _transform_source_text(
                         **_synthetic_real_jacobian_targets(config),
                     },
                     order=oti_order,
+                    external_functions=_external_procedure_names(source_text),
                 )
             )
         if line_number + 1 == seed_insert_before_line and not initialization_inserted:
@@ -1848,6 +1849,7 @@ def _transform_source_text(
                     argument_variables,
                     lifted_helper_argument_shadows,
                     seed_dfgrd1=seed_dfgrd1_enabled,
+                    external_functions=_external_procedure_names(source_text),
                 )
             )
             initialization_inserted = True
@@ -2387,6 +2389,29 @@ def _helper_call_base_names(line: str) -> set[str]:
     return names
 
 
+#: An EXTERNAL statement, which declares that a name is a procedure.
+_EXTERNAL_STATEMENT = re.compile(r"^\s*EXTERNAL\s+(.+)$", re.IGNORECASE)
+
+
+def _external_procedure_names(source_text: str) -> set[str]:
+    """Names the source declares EXTERNAL, upper-cased.
+
+    A name in an EXTERNAL statement is a procedure, so its shadow is the
+    lifted procedure of the same name and not a variable holding a value.
+    """
+    names: set[str] = set()
+    for raw_line in source_text.splitlines():
+        statement = _executable_text(raw_line).strip()
+        match = _EXTERNAL_STATEMENT.match(statement)
+        if not match:
+            continue
+        for entry in match.group(1).split(","):
+            candidate = entry.strip().split("(")[0].strip()
+            if candidate.isidentifier():
+                names.add(candidate.upper())
+    return names
+
+
 def _declaration_lines(
     form: str,
     type_name: str,
@@ -2394,6 +2419,7 @@ def _declaration_lines(
     variable_shapes: dict[str, str],
     synthetic_real_variables: dict[str, str] | None = None,
     order: int = 1,
+    external_functions: set[str] | None = None,
 ) -> list[str]:
     lines = [_stmt(form, "INTEGER :: OTI_I, OTI_J, OTI_HI, OTI_HJ, OTI_HK")]
     lines.append(_stmt(form, f"TYPE({type_name}) :: OTI_HX, OTI_HY, OTI_HTR"))
@@ -2406,10 +2432,19 @@ def _declaration_lines(
     for name, shape in sorted((synthetic_real_variables or {}).items()):
         suffix = f"({shape})" if shape else ""
         lines.append(_stmt(form, f"REAL(8) :: {name}{suffix}"))
+    external = {str(name).upper() for name in (external_functions or set())}
     for name in shadow_variables:
         shape = variable_shapes.get(name, "")
         suffix = f"({shape})" if shape else ""
         lines.append(_stmt(form, f"TYPE({type_name}) :: {name}_OTI{suffix}"))
+        # A name the source declares EXTERNAL is a function, and its shadow is
+        # the lifted function of the same name. Typing it is right and is how
+        # Fortran declares an external function's result; leaving it at that
+        # makes it a scalar variable, so F_OTI(X_OTI, PROPS_OTI(K)) parses as
+        # two subscripts on a scalar and gfortran calls the whole statement
+        # unclassifiable.
+        if name.upper() in external:
+            lines.append(_stmt(form, f"EXTERNAL {name}_OTI"))
     return lines
 
 
@@ -2439,7 +2474,15 @@ def _initialization_lines(
     argument_variables: set[str],
     lifted_helper_argument_shadows: set[str],
     seed_dfgrd1: bool = False,
+    external_functions: set[str] | None = None,
 ) -> list[str]:
+    # A name the source declares EXTERNAL is a procedure. Its shadow is the
+    # lifted procedure, and "F_OTI = 0.0D0" assigns to a function name --
+    # gfortran: "'f_oti' at (1) is not a variable".
+    if external_functions:
+        skip = {str(name).upper() for name in external_functions}
+        shadow_variables = [name for name in shadow_variables
+                            if name.upper() not in skip]
     lines = [_comment_line(form, "OTIS seed initialization from GUI configuration")]
     lines.extend(_shadow_default_lines(form, shadow_variables, variable_shapes))
     dstran = mappings.get("dstran", "DSTRAN")
@@ -2987,6 +3030,7 @@ def _transform_executable_line(
     replaced = _wrap_oti_condition_with_real(replaced)
     replaced = _normalize_typed_intrinsics_in_oti_expression(replaced)
     replaced = _normalize_mixed_minmax_intrinsics_in_oti_expression(replaced)
+    replaced = _real_sign_selector_in_oti_expression(replaced)
     replaced = _normalize_safe_sqrt_intrinsics_in_oti_expression(replaced)
     replaced = _wrap_real_assignment_rhs(replaced)
     return _normalize_numeric_literals_in_oti_expression(replaced, type_name)
@@ -3097,6 +3141,44 @@ def _normalize_typed_intrinsics_in_oti_expression(line: str) -> str:
         flags=re.IGNORECASE,
     )
     return pattern.sub(lambda match: TYPED_INTRINSIC_NORMALIZATIONS[match.group(1).upper()] + "(", line)
+
+
+def _real_sign_selector_in_oti_expression(line: str) -> str:
+    """``SIGN(a, x_oti)`` takes the real part of its sign selector.
+
+    SIGN and DSIGN return the magnitude of the first argument carrying the
+    sign of the second, so the second argument selects a sign and contributes
+    nothing else. A hypercomplex number's sign is the sign of its real part,
+    and the result is piecewise constant in it -- its derivative is zero
+    wherever it is defined -- so reading the real part there is exact rather
+    than an approximation, and it is what lets the intrinsic type-check at all.
+
+    Without it: "'b' argument of 'dsign' intrinsic at (1) must be REAL".
+    """
+    if "_OTI" not in line.upper():
+        return line
+    result = line
+    search_from = 0
+    while True:
+        match = re.search(r"\b(D?SIGN)\s*\(", result[search_from:], flags=re.IGNORECASE)
+        if not match:
+            return result
+        open_paren = search_from + match.end() - 1
+        close_paren = _matching_paren_index(result, open_paren)
+        if close_paren < 0:
+            return result
+        inner = result[open_paren + 1:close_paren]
+        parts = split_top_level(inner)
+        if len(parts) != 2 or "_OTI" not in parts[1].upper():
+            search_from = open_paren + 1
+            continue
+        selector = parts[1].strip()
+        if re.match(r"^REAL\s*\(", selector, flags=re.IGNORECASE):
+            search_from = open_paren + 1
+            continue
+        rebuilt = f"{parts[0]},REAL({selector})"
+        result = result[:open_paren + 1] + rebuilt + result[close_paren:]
+        search_from = open_paren + 1
 
 
 def _normalize_mixed_minmax_intrinsics_in_oti_expression(line: str) -> str:
@@ -4432,9 +4514,67 @@ def _normalize_numeric_literals_in_oti_expression(line: str, type_name: str = ""
     # to be written out again at every rewrite that could reach a literal,
     # which is how the substitution above came to be missing one.
     normalized, literals = mask_real_literals(normalized)
-    normalized = re.sub(r"(?<![A-Za-z0-9_.)])(\d+)(?![A-Za-z0-9_.])(?=\s*[*\/])", r"\1.0D0", normalized)
-    normalized = re.sub(r"([*\/])\s*(\d+)(?![A-Za-z0-9_.])", r"\1\2.0D0", normalized)
+
+    def _promote(match: "re.Match[str]", digits: int) -> str:
+        """Promote only when this term actually reaches a hypercomplex value."""
+        return (match.group(0).replace(match.group(digits),
+                                       f"{match.group(digits)}.0D0", 1)
+                if _term_is_hypercomplex(normalized, match.start(digits))
+                else match.group(0))
+
+    normalized = re.sub(r"(?<![A-Za-z0-9_.)])(\d+)(?![A-Za-z0-9_.])(?=\s*[*\/])",
+                        lambda m: _promote(m, 1), normalized)
+    normalized = re.sub(r"([*\/])\s*(\d+)(?![A-Za-z0-9_.])",
+                        lambda m: _promote(m, 2), normalized)
     return unmask_real_literals(normalized, literals)
+
+
+#: The transform gives every hypercomplex name the _OTI suffix -- a shadow, or
+#: a lifted helper returning one -- so a term carrying one is the only kind the
+#: OTI library has no integer overload against. An integer multiplying anything
+#: else is ordinary integer arithmetic, and inside a subscript it has to stay
+#: that way: PROPS(65+8*I) came out as PROPS_OTI(65+8.0D0*I), which is not an
+#: index.
+_HYPERCOMPLEX_NAME = re.compile(r"[A-Za-z_]\w*_OTI\b", re.IGNORECASE)
+
+
+def _term_is_hypercomplex(line: str, position: int) -> bool:
+    """Does the multiplicative term around ``position`` reach an OTI value?
+
+    The term, not the neighbouring operand: in ``2*PI*X_OTI`` the two is
+    multiplied by an ordinary real and only then by a shadow, and it still
+    needs to be a double. The term is bounded by the additive operators and by
+    the parentheses enclosing it, which is what keeps a subscript separate --
+    in ``PROPS_OTI(65+8*I)`` the term around the eight is ``8*I``, and the
+    ``PROPS_OTI`` outside the bracket is not part of it.
+    """
+    depth, start = 0, 0
+    for index in range(position - 1, -1, -1):
+        char = line[index]
+        if char == ")":
+            depth += 1
+        elif char == "(":
+            if depth == 0:
+                start = index + 1
+                break
+            depth -= 1
+        elif depth == 0 and char in "+-,=":
+            start = index + 1
+            break
+    depth, stop = 0, len(line)
+    for index in range(position, len(line)):
+        char = line[index]
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            if depth == 0:
+                stop = index
+                break
+            depth -= 1
+        elif depth == 0 and char in "+-,=":
+            stop = index
+            break
+    return bool(_HYPERCOMPLEX_NAME.search(line[start:stop]))
 
 
 def _selected_header_end(parsed: ParsedFortranSource, selected_umat: str) -> int | None:
@@ -4507,10 +4647,16 @@ def _shapes_declared_in_selected_routine(
         if routine.upper_name != selected_umat.upper():
             continue
         updated = dict(variable_shapes)
+        #: Every name this routine declares a shape for, however it declares
+        #: it. Both forms have to be collected, because a routine that names
+        #: its arrays in a DIMENSION statement rather than on the type
+        #: declaration declares them just as much.
+        declared_here: set[str] = set()
         for declaration in routine.declarations:
             for entity in declaration.entities:
                 if entity.dimensions:
                     updated[entity.upper_name] = ", ".join(entity.dimensions)
+                    declared_here.add(entity.upper_name)
         for line in routine.lines:
             match = re.match(r"^\s*dimension\s+(.+)$", line.text, flags=re.IGNORECASE)
             if not match:
@@ -4519,12 +4665,36 @@ def _shapes_declared_in_selected_routine(
                 entity = parse_entity(item)
                 if entity.dimensions:
                     updated[entity.upper_name] = ", ".join(entity.dimensions)
+                    declared_here.add(entity.upper_name)
         for name, shape in list(updated.items()):
             if not _has_deferred_extent(shape):
                 continue
             fixed = allocate_fixed_shape(parsed.text, name, parsed, selected_umat)
             if fixed:
                 updated[name] = fixed
+        # A shape this routine does not declare came from somewhere else in
+        # the file, and two routines may spell the same name differently. One
+        # source writes GSLIP(NSLIP) inside a helper, where NSLIP is a scalar
+        # argument counting slip systems, and uses a scalar GSLIP inside the
+        # UMAT, where NSLIP is DIMENSION NSLIP(3). Carrying the helper's shape
+        # across gave the UMAT "TYPE(ONUMM6N1) :: GSLIP_OTI(NSLIP)" -- an array
+        # bound that is itself an array -- and gave TERM1, a scalar here, a
+        # rank of two.
+        #
+        # A name this routine neither declares nor ever subscripts has no shape
+        # here, whatever another routine says. Both halves matter: reading only
+        # the type declarations missed arrays named in a DIMENSION statement
+        # and cost two sources that were transforming.
+        span = _selected_routine_span(parsed, selected_umat)
+        body = "\n".join(_executable_text(line) for line
+                         in parsed.text.splitlines()[span[0] - 1:span[1]]) if span else ""
+        if body:
+            for name in list(updated):
+                if name in declared_here or not updated[name]:
+                    continue
+                if not re.search(rf"(?<![%\w]){re.escape(name)}\s*\(",
+                                 body, flags=re.IGNORECASE):
+                    updated.pop(name)
         return updated
     return variable_shapes
 
@@ -5360,15 +5530,25 @@ def _integer_literals_normalized_in_oti_expressions(source: str, form: str = "fi
     ``3.8019047483079793e-6*Sin(Pi*X_OTI)`` reported an unnormalised integer
     -- the exponent's digits -- in a file that compiles cleanly, and the
     source was refused for a defect that was not in it.
+
+    "Multiplies an OTI expression" is the whole of it, and asking only whether
+    the line mentions one is not the same question. ``STATEV_OTI(K1+2*NTENS)``
+    mentions a shadow and contains a bare integer beside a ``*``, and the
+    integer is a subscript arithmetic term that has to stay an integer. The
+    same term test the emitter promotes by is used here, so the two cannot
+    disagree about which integers need a double -- when they did, this check
+    refused a file the emitter had written correctly.
     """
     for _, statement in _logical_statements_with_numbers(source, form):
         if "_OTI" not in statement.upper():
             continue
         scanned = _REAL_LITERAL_RE.sub(lambda match: " " * len(match.group(0)), statement)
-        if re.search(r"(?<![A-Za-z0-9_.)])\d+(?![A-Za-z0-9_.])\s*[*\/]", scanned):
-            return False
-        if re.search(r"[*\/]\s*\d+(?![A-Za-z0-9_.])", scanned):
-            return False
+        for pattern in (r"(?<![A-Za-z0-9_.)])\d+(?![A-Za-z0-9_.])\s*[*\/]",
+                        r"[*\/]\s*(\d+)(?![A-Za-z0-9_.])"):
+            for match in re.finditer(pattern, scanned):
+                digits = match.start(1) if match.groups() else match.start()
+                if _term_is_hypercomplex(scanned, digits):
+                    return False
     return True
 
 
