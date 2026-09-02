@@ -1,0 +1,202 @@
+{
+ "model": "huang_cp",
+ "description": "Huang (1991) rate-dependent crystal plasticity UMAT, run in Abaqus in both its original and transformed form and compared.",
+ "provenance": {
+  "source": "RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for",
+  "source_relative_to": "discovery cache",
+  "source_sha256": "fda18f57c81ef10d86c365e44fd1ae52211457e08a43bc8ec3378d3fa2cc5f94",
+  "material": "Job-1-copy.inp *MATERIAL MATERIAL-1: 168 constants, *DEPVAR 150, UNSYMM",
+  "note": "The source and its transform are not committed here. The upstream repository states no licence, which is not permission to redistribute. The digest identifies the file; the commands below reproduce the transform and both runs from it."
+ },
+ "deck": {
+  "element_type": "C3D4",
+  "kinematics": "finite",
+  "kinematics_provenance": "the source deck's *STEP sets nlgeom=YES and its PROPS(146)=1 selects finite rotation",
+  "loading": [
+   {
+    "name": "uniaxial",
+    "strain": [
+     0.005,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "increments": 3,
+    "period": 1.0,
+    "description": "prescribed extension along x, lateral faces free to move only in their own plane"
+   }
+  ],
+  "nprops": 168,
+  "nstatv": 150,
+  "unsymmetric": true
+ },
+ "abaqus": {
+  "original": {
+   "completed": true,
+   "increments": 3,
+   "converged_records": 3,
+   "reasons": [],
+   "warnings": [
+    "post_analysis_wrapup_failure",
+    "process_exit_code_1"
+   ]
+  },
+  "transformed": {
+   "completed": true,
+   "increments": 3,
+   "converged_records": 3,
+   "reasons": [],
+   "warnings": [
+    "post_analysis_wrapup_failure",
+    "process_exit_code_1"
+   ]
+  },
+  "warning_note": "Abaqus 2021.HF5 on this machine aborts during post-analysis wrap-up after writing that the analysis completed -- with no user subroutine at all. The nonzero exit code and the signal-6 event are preserved as a separate warning and are not treated as analysis failure; the outcome is read from the records Abaqus wrote."
+ },
+ "primal_comparison": {
+  "increments": 3,
+  "worst_stress_relative": 3.000366552383293e-13,
+  "worst_stress_at": [
+   1,
+   5,
+   0.04037942879545307,
+   0.04037942879544096
+  ],
+  "worst_state_relative": 1.0930170236658148e-14,
+  "worst_state_at": [
+   3,
+   30,
+   4.875560400997095,
+   4.875560400997042
+  ],
+  "unresolved_components": 36,
+  "agrees": true,
+  "reason": ""
+ },
+ "tangent_verification": {
+  "method": "centred differences of the untransformed build, replayed from the state the probe recorded at the converged increment, so the two sides share no code path",
+  "perturbation_scale": 0.0016597510373443992,
+  "oti_tangent": {
+   "increment": 0,
+   "point": 1,
+   "sweep": [
+    {
+     "step": 0.01,
+     "absolute": 0.577067000005627,
+     "relative": 0.0003478680428531952,
+     "frobenius": 1.299854206873435
+    },
+    {
+     "step": 0.001,
+     "absolute": 0.005770404066424817,
+     "relative": 3.4789333245550637e-06,
+     "frobenius": 0.012998366715518232
+    },
+    {
+     "step": 0.0001,
+     "absolute": 5.787948612123728e-05,
+     "relative": 3.4802944135777184e-08,
+     "frobenius": 0.00013053620314338728
+    },
+    {
+     "step": 1e-05,
+     "absolute": 9.79371543508023e-06,
+     "relative": 4.250988240654406e-09,
+     "frobenius": 1.8430035084183674e-05
+    },
+    {
+     "step": 1e-06,
+     "absolute": 9.413764792043366e-05,
+     "relative": 2.3681680504372714e-08,
+     "frobenius": 0.00015615347558979405
+    },
+    {
+     "step": 1e-07,
+     "absolute": 0.00085069565102458,
+     "relative": 1.55070459661663e-07,
+     "frobenius": 0.0020419993658643155
+    },
+    {
+     "step": 1e-08,
+     "absolute": 0.009423752315342426,
+     "relative": 4.707111828299304e-06,
+     "frobenius": 0.01956307289070839
+    }
+   ],
+   "best_step": 1e-05,
+   "best_frobenius": 1.8430035084183674e-05,
+   "best_relative": 4.250988240654406e-09,
+   "stable_range": [
+    1e-06,
+    0.0001
+   ],
+   "near_zero_entries": 0,
+   "notes": ""
+  },
+  "source_own_analytic_tangent": {
+   "increment": 0,
+   "point": 1,
+   "sweep": [
+    {
+     "step": 0.01,
+     "absolute": 418.3826777188806,
+     "relative": 0.048934201793785215,
+     "frobenius": 915.7564238664366
+    },
+    {
+     "step": 0.001,
+     "absolute": 417.8113811229414,
+     "relative": 0.04893441078435353,
+     "frobenius": 914.783957751868
+    },
+    {
+     "step": 0.0001,
+     "absolute": 417.8056685983611,
+     "relative": 0.048934412958505216,
+     "frobenius": 914.7742377118151
+    },
+    {
+     "step": 1e-05,
+     "absolute": 417.8056103764975,
+     "relative": 0.04893441312360246,
+     "frobenius": 914.774140008783
+    },
+    {
+     "step": 1e-06,
+     "absolute": 417.80567887282814,
+     "relative": 0.048934411294146996,
+     "frobenius": 914.7741822842164
+    },
+    {
+     "step": 1e-07,
+     "absolute": 417.80602135442314,
+     "relative": 0.048934411294146996,
+     "frobenius": 914.7737955193048
+    },
+    {
+     "step": 1e-08,
+     "absolute": 417.80191157522495,
+     "relative": 0.04893436221119508,
+     "frobenius": 914.7737198588267
+    }
+   ],
+   "best_step": 1e-08,
+   "best_frobenius": 914.7737198588267,
+   "best_relative": 0.04893436221119508,
+   "stable_range": [
+    1e-08,
+    0.01
+   ],
+   "near_zero_entries": 0,
+   "notes": ""
+  },
+  "reading": "The OTI tangent's error falls as the square of the step to 4.25e-09 at h=1e-5 and rises again as cancellation takes over, which is what a centred difference of a correct derivative does. The source's own DDSDDE stays at 4.89e-02 across seven decades: it does not converge because it is not the derivative but the theta=0.5 rate tangent modulus the source computes (PROPS(145)). This is a finite-difference comparison and is not claimed as machine-precision agreement."
+ },
+ "reproduce": [
+  "tools/make_verification_manifest.py --source <cache>/RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for --deck <cache>/RitioL__PolyFatigueCrackSim/CPFEM-val/workplace/Job-1-copy.inp --name huang_cp --increments 3 --strain 0.005 --kinematics finite --out verification_manifests/huang_cp.json",
+  "tools/run_abaqus_verification.py --manifest verification_manifests/huang_cp.json --source <source> --job morig --work-dir <work>/orig",
+  "tools/run_abaqus_verification.py --manifest verification_manifests/huang_cp.json --source <transformed> --job mtx --work-dir <work>/tx --support-dir <transform_out> --against <work>/orig/morig_history.json"
+ ]
+}
