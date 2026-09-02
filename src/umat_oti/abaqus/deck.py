@@ -29,6 +29,25 @@ _NODES = (
 #: Plane elements use the first four.
 _PLANE_NODES = _NODES[:4]
 
+#: The constant-strain tetrahedron. One integration point, so one material
+#: point per job rather than eight identical ones, and -- unlike a reduced
+#: hexahedron -- no hourglass modes, so no artificial stiffness has to be
+#: supplied. Abaqus rejects a reduced-integration element under a user
+#: material without one, and inventing that number is not available here.
+_TET_NODES = (
+    (1, 0.0, 0.0, 0.0), (2, 1.0, 0.0, 0.0), (3, 0.0, 1.0, 0.0), (4, 0.0, 0.0, 1.0),
+)
+
+
+def _nodes_for(element_type: str) -> tuple[tuple, ...]:
+    """The reference geometry this element type is driven on."""
+    name = element_type.upper()
+    if name.startswith(("CPE", "CPS", "CAX")):
+        return _PLANE_NODES
+    if name.startswith(("C3D4", "C3D10")):
+        return _TET_NODES
+    return _NODES
+
 
 def _displacement(node: tuple[float, float, float],
                   strain: tuple[float, ...]) -> tuple[float, float, float]:
@@ -108,11 +127,11 @@ def _orientation(manifest: VerificationManifest) -> list[str]:
     ]
 
 
-def _boundary_for(segment: LoadingSegment, nodes) -> list[str]:
+def _boundary_for(segment: LoadingSegment, nodes, plane: bool = False) -> list[str]:
     lines = []
     for index, x, y, z in nodes:
         ux, uy, uz = _displacement((x, y, z), segment.strain)
-        components = (ux, uy, uz) if len(nodes) == 8 else (ux, uy)
+        components = (ux, uy) if plane else (ux, uy, uz)
         for dof, value in enumerate(components, start=1):
             lines.append(f"{index}, {dof}, {dof}, {_fmt(value)}")
     return lines
@@ -120,9 +139,8 @@ def _boundary_for(segment: LoadingSegment, nodes) -> list[str]:
 
 def generate_deck(manifest: VerificationManifest) -> str:
     """The complete .inp for this manifest."""
-    plane = manifest.element_type.upper().startswith("CPE") or \
-        manifest.element_type.upper().startswith("CPS")
-    nodes = _PLANE_NODES if plane else _NODES
+    plane = manifest.element_type.upper().startswith(("CPE", "CPS", "CAX"))
+    nodes = _nodes_for(manifest.element_type)
 
     lines: list[str] = [
         "*HEADING",
@@ -160,7 +178,7 @@ def generate_deck(manifest: VerificationManifest) -> str:
             f"{_fmt(increment * segment.period)}",
             "*BOUNDARY, OP=NEW",
         ]
-        lines += _boundary_for(segment, nodes)
+        lines += _boundary_for(segment, nodes, plane)
         lines += [
             "*OUTPUT, FIELD, FREQUENCY=1",
             "*ELEMENT OUTPUT, POSITION=INTEGRATION POINTS",

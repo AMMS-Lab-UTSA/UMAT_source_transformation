@@ -32,16 +32,18 @@ class TestWhatItReplaces:
         assert "<home>" in without_machine_paths(f"{Path.home()}/elsewhere/u.for")
 
     def test_a_work_directory_it_is_told_about(self):
-        text = "as shipped: /tmp/scratch/w/x/baseline/u.for:3: Error"
-        assert without_machine_paths(text, Path("/tmp/scratch/w")) \
+        work = "/tmp/scratch/w"  # machine-path-fixture: fabricated, fed to the filter under test
+        text = f"as shipped: {work}/x/baseline/u.for:3: Error"
+        assert without_machine_paths(text, Path(work)) \
             == "as shipped: <work>/x/baseline/u.for:3: Error"
 
     def test_a_work_directory_it_is_not_told_about_is_not_invented(self):
         # The filter replaces roots it is given. Silently guessing at other
         # absolute paths would rewrite parts of a compiler message that are
         # about the source rather than about the machine.
-        text = "as shipped: /tmp/scratch/w/u.for:3: Error"
-        assert "/tmp/scratch/w" in without_machine_paths(text)
+        work = "/tmp/scratch/w"  # machine-path-fixture: fabricated, fed to the filter under test
+        text = f"as shipped: {work}/u.for:3: Error"
+        assert work in without_machine_paths(text)
 
 
 class TestWhatItKeeps:
@@ -68,15 +70,15 @@ class TestATruncatedPathIsStillAPath:
 
     The cut can land in the middle of a path, leaving a fragment that matches
     no root and survives every replacement. Three rows kept a partial
-    "/tmp/claude-1000/-home-..." exactly that way -- the filter ran, the audit
+    scratch root exactly that way -- the filter ran, the audit
     passed, and the evidence still named one computer.
     """
 
-    WORK = Path("/tmp/scratch-abc/-home-someone/run/triage_work")
+    WORK = Path("/tmp/scratch-abc/-home-someone/run/triage_work")  # machine-path-fixture: a fabricated path, fed to the filter under test
 
     def test_a_trailing_fragment_of_a_root_is_named(self):
         assert without_machine_paths(
-            "as shipped: /tmp/scratch-abc/-home-so", self.WORK) == "as shipped: <work>"
+            "as shipped: /tmp/scratch-abc/-home-so", self.WORK) == "as shipped: <work>"  # machine-path-fixture: a fabricated path, fed to the filter under test
 
     def test_a_whole_root_still_works(self):
         assert without_machine_paths(

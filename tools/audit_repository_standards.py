@@ -42,6 +42,12 @@ SCRATCH_PATH = re.compile(
     r"/tmp/(?:claude|tmp|pytest-of-|pyright-|scratch)[-a-zA-Z0-9_.]*/"
     r"|/var/folders/[a-zA-Z0-9_]+/")
 
+#: A line testing the machine-path filter has to contain a path shaped like a
+#: machine path. It may say so, and say why -- one line at a time, so the rest
+#: of the file stays checked. The reason is not decoration: a marker with
+#: nothing after the colon is rejected by the standards tests.
+FIXTURE_MARKER = re.compile(r"#\s*machine-path-fixture:\s*\S")
+
 SECRET_PATTERNS = (
     (re.compile(r"gh[pousr]_[A-Za-z0-9]{16,}"), "GitHub token"),
     (re.compile(r"AKIA[0-9A-Z]{16}"), "AWS access key id"),
@@ -105,6 +111,12 @@ def check_no_absolute_home_paths(files: list[Path]) -> dict:
     A scratch directory counts as a machine path for the same reason a home
     directory does. It did not count until a triage run put its own /tmp work
     directory into the published blocker column and this check passed anyway.
+
+    The code that strips machine paths has to be tested against paths shaped
+    like real ones, so a single line may carry a fixture marker naming its
+    reason. That is deliberately line-level and not another path prefix: a
+    prefix would stop checking a whole file, and the file most likely to leak
+    a real path is the one that handles them.
     """
     exempt = tuple(e["prefix"] for e in _exemptions())
     offenders = []
@@ -119,6 +131,8 @@ def check_no_absolute_home_paths(files: list[Path]) -> dict:
         except OSError:
             continue
         for number, line in enumerate(text.splitlines(), 1):
+            if FIXTURE_MARKER.search(line):
+                continue
             if HOME_PATH.search(line) or SCRATCH_PATH.search(line):
                 offenders.append(f"{relative}:{number}")
     return {"name": "no_absolute_home_paths_outside_archived_records",

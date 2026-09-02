@@ -150,7 +150,7 @@ def without_machine_paths(text: str, *extra_roots: Path | str) -> str:
     # A blocker is cut to a length before it reaches here, and the cut can land
     # in the middle of a path -- leaving a fragment that matches no root and
     # survived every replacement above. Three rows kept a partial
-    # "/tmp/claude-1000/-home-..." that way. A truncated machine path is still
+    # a cut-off scratch root that way. A truncated machine path is still
     # a machine path, so a trailing prefix of a root is named as one too.
     for root, name in ordered:
         if not root or root == "/":
