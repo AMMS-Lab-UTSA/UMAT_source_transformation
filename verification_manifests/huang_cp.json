@@ -1,11 +1,11 @@
 {
  "name": "huang_cp",
- "source": "/home/ammslab3/softwarex_work/discovery_cache/RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for",
+ "source": "RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for",
  "bundle": [],
  "source_form": "fixed",
  "compiler_flags": [],
  "element_type": "C3D4",
- "kinematics": "small strain",
+ "kinematics": "finite",
  "ntens": 6,
  "ndi": 3,
  "nshr": 3,
@@ -218,8 +218,10 @@
  ],
  "near_zero_fraction": 1e-08,
  "primal_tolerance": 1e-10,
- "notes": "Huang 1991 rate-dependent crystal plasticity UMAT; one of three variants in the corpus differing by factors of two in spin coupling.",
+ "notes": "Huang 1991 rate-dependent crystal plasticity UMAT; one of three variants in the corpus differing by factors of two in spin coupling. Kinematics follow the source deck, whose *STEP sets nlgeom=YES and whose PROPS(146)=1 selects finite rotation.",
  "status": "ready",
+ "source_relative_to": "discovery cache",
+ "source_sha256": "fda18f57c81ef10d86c365e44fd1ae52211457e08a43bc8ec3378d3fa2cc5f94",
  "blocking_statements": [
   "IF (AAMAX.EQ.0.) PAUSE 'Singular matrix.'"
  ]

@@ -103,3 +103,50 @@ def test_a_missing_abaqus_is_a_stated_reason(tmp_path):
     build = build_support((tmp_path / "a.f90",), tmp_path,
                           abaqus="abaqus-that-is-not-installed")
     assert not build.ok and "not on PATH" in build.reason
+
+
+def test_a_manifest_key_the_manifest_does_not_declare_is_reported(tmp_path):
+    """Dropped, because a manifest may hold diagnostics that are not inputs.
+
+    Handed back rather than discarded: a misspelled field would otherwise take
+    a real setting out of the run with nothing saying so.
+    """
+    import json
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+    from run_abaqus_verification import load_manifest
+
+    path = tmp_path / "m.json"
+    path.write_text(json.dumps({
+        "name": "m", "source": "u.for", "props": [1.0],
+        "material_provenance": "a deck", "loading": [
+            {"name": "uniaxial", "strain": [0.01, 0, 0, 0, 0, 0], "increments": 2}],
+        "blocking_statements": ["PAUSE 'x'"],
+        "primal_tolerence": 1e-6,          # a typo of primal_tolerance
+    }))
+    manifest, ignored = load_manifest(path)
+    assert ignored == ("blocking_statements", "primal_tolerence")
+    assert manifest.primal_tolerance == 1e-10          # the default, not the typo
+    assert manifest.missing_requirements() == ()
+
+
+def test_the_entry_source_can_be_left_out_of_the_order(tmp_path):
+    """It is compiled separately, and compiling it twice fails the link.
+
+    `abaqus user=` builds the transformed UMAT itself, and so does the replay
+    driver's link line. Leaving it in the support order defines every routine
+    in the file twice.
+    """
+    for name in ("m.f90", "u_oti.for"):
+        (tmp_path / name).write_text("end\n")
+    (tmp_path / "compile_order.txt").write_text("m.f90\nu_oti.for\n")
+    assert [p.name for p in compile_order(tmp_path)] == ["m.f90", "u_oti.for"]
+    kept = compile_order(tmp_path, exclude=tmp_path / "u_oti.for")
+    assert [p.name for p in kept] == ["m.f90"]
+
+
+def test_excluding_a_file_that_is_not_in_the_order_changes_nothing(tmp_path):
+    (tmp_path / "m.f90").write_text("end\n")
+    (tmp_path / "compile_order.txt").write_text("m.f90\n")
+    assert len(compile_order(tmp_path, exclude=tmp_path / "elsewhere.for")) == 1

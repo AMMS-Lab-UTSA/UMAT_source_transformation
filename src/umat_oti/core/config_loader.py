@@ -75,6 +75,7 @@ def session_state_from_config(config: dict[str, Any]) -> tuple[dict[str, Any], l
             routine_roles=routine_roles,
             region_classifications=region_classifications,
             variable_roles=variable_roles,
+            source_text=source_text,
         )
     transformation_anchors = _dict_or_empty(config.get("transformation_anchors"))
     transformation_settings = _dict_or_empty(config.get("transformation_settings"))
@@ -353,7 +354,12 @@ def _expand_compact_project_config(config: dict[str, Any], *, origin_path: str |
     selected_umat = _compact_selected_umat(source, analysis)
     selected_arguments = _selected_umat_arguments(analysis, selected_umat)
     mappings = _compact_mappings(normalized, selected_arguments)
-    variable_roles = suggest_variable_roles(analysis)
+    # The source text goes in so the classifier can apply Fortran's implicit
+    # typing rule. Left out, `integer_letters` is empty and the rule cannot
+    # fire at all -- which is how the Huang crystal-plasticity source had its
+    # Miller-index and LU-pivot arrays promoted to the differentiated type and
+    # passed to routines that declare the same arguments INTEGER.
+    variable_roles = suggest_variable_roles(analysis, source_text)
     _apply_compact_variable_roles(variable_roles, _compact_variables_payload(normalized))
     region_classifications = _compact_region_classifications(
         analysis=analysis,

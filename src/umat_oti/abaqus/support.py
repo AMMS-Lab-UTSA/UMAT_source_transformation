@@ -78,26 +78,37 @@ def _compile_command(template: str, source: Path, include: Path) -> list[str]:
     return parts + ["-module", str(include), "-o", str(include / f"{source.stem}.o")]
 
 
-def compile_order(transform_dir: Path) -> tuple[Path, ...]:
+def compile_order(transform_dir: Path,
+                  exclude: Optional[Path] = None) -> tuple[Path, ...]:
     """The support units, in the order the transform says they must be built.
 
     Module dependencies make the order load-bearing, and the transform is what
     knows it. Reading the order from a file it wrote is what keeps this from
     encoding a list of unit names that would go stale the moment the emitter
     gained one.
+
+    The order includes the transformed UMAT itself, because it is the last
+    thing to compile. ``exclude`` drops it, which every caller that compiles
+    the UMAT separately needs: ``abaqus user=`` builds it, and so does the
+    replay driver's own link line, so leaving it here builds it twice and the
+    link fails on every routine in the file at once.
     """
     transform_dir = Path(transform_dir)
     listing = transform_dir / "compile_order.txt"
     if not listing.is_file():
         return ()
+    skip = Path(exclude).resolve() if exclude is not None else None
     units = []
     for line in listing.read_text(errors="replace").splitlines():
         name = line.strip()
         if not name or name.startswith("#"):
             continue
         candidate = transform_dir / name
-        if candidate.is_file():
-            units.append(candidate)
+        if not candidate.is_file():
+            continue
+        if skip is not None and candidate.resolve() == skip:
+            continue
+        units.append(candidate)
     return tuple(units)
 
 
