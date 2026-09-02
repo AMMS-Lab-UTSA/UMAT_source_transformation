@@ -117,7 +117,15 @@ def _fixed_logical_lines(text: str) -> tuple[FortranLogicalLine, ...]:
             continue
         is_continuation = len(raw) >= 6 and raw[5].strip() not in {"", "0"}
         if is_continuation and pending:
-            pending = pending + " " + body.strip()
+            # No space at the join, because fixed form does not insert one --
+            # the same rule _logical_statements_with_numbers states and
+            # follows. An identifier may straddle a continuation, and a real
+            # source in this corpus writes G31 as "...G12*G23*G3" then
+            # "     &  1+G13*G21*G32...". gfortran reads G31; a space-join
+            # reads G3 and 1, and the transform then renamed a variable that
+            # does not exist, declared it, zeroed it, and dropped the whole
+            # G12*G23*G31 term out of a determinant. It compiled and ran.
+            pending = pending.rstrip() + body.strip()
             numbers.append(number)
         else:
             if pending:
