@@ -1889,7 +1889,15 @@ def _transform_source_text(
                 tangent_extraction_inserted = True
                 extraction_insertion_region_id = str(extraction_region.get("region_id", "")) if extraction_region else "before RETURN"
             continue
-        if line_number in old_region_by_line and line_number not in stress_line_numbers:
+        old_tangent_store_is_dead = (
+            line_number in old_region_by_line
+            and line_number in stress_line_numbers
+            and _dead_old_tangent_store(
+                lines, line_number, ddsdde_insert_after_line,
+                mappings.get("ddsdde", "DDSDDE"), form))
+        if (line_number in old_region_by_line
+                and (line_number not in stress_line_numbers
+                     or old_tangent_store_is_dead)):
             output.pop()
             output.append(_comment_old_line(form, line))
             if real_output_insert_after_line == line_number and not real_extraction_inserted:
@@ -6207,8 +6215,82 @@ def _comment_line(form: str, text: str) -> str:
     return f"C     {text}" if form == "fixed" else f"! {text}"
 
 
+def _dead_old_tangent_store(
+    lines: list[str], line_number: int, extraction_after_line: int,
+    ddsdde_name: str, form: str,
+) -> bool:
+    """Is this old-tangent write to DDSDDE overwritten before anything reads it?
+
+    The emitter keeps an old-tangent line when a stress region also covers it,
+    because dropping a statement the stress needs would break the stress. That
+    is right for a statement doing two jobs. A statement whose left-hand side
+    is DDSDDE does one job -- it writes the tangent -- and the GETIM extraction
+    rewrites every entry of DDSDDE afterwards, so the store is dead unless
+    something reads DDSDDE in between.
+
+    So the question is asked exactly that way, and answered from the source
+    rather than from region membership: no read of DDSDDE between this line and
+    the extraction point means no live value depends on it. Anything the check
+    cannot establish -- an unknown extraction point, a read it can see, a name
+    it cannot resolve -- keeps the statement, because a surviving old tangent
+    that is overwritten is harmless and a dropped statement the stress needed
+    is not.
+
+    One crystal-plasticity source reaches this with a single statement,
+    ``DDSDDE(I,J)=DDSDE1(I,J)``, restoring a scratch copy of its own
+    hand-coded tangent 300 lines after the last thing that reads DDSDDE.
+    """
+    if not extraction_after_line or line_number >= extraction_after_line:
+        return False
+    name = re.escape(ddsdde_name)
+    assignment = re.compile(rf"^\s*{name}\s*(\([^)]*\))?\s*=(?!=)", re.IGNORECASE)
+    reference = re.compile(rf"(?<![%\w]){name}\b", re.IGNORECASE)
+    for index in range(line_number, min(extraction_after_line, len(lines))):
+        raw = lines[index]
+        statement = _executable_text(raw).strip()
+        if not statement or not reference.search(statement):
+            continue
+        match = assignment.match(statement)
+        if match is None:
+            return False  # DDSDDE read by something that is not a store to it
+        if reference.search(statement[match.end():]):
+            return False  # DDSDDE(...) = ... DDSDDE ... reads its own value
+    return True
+
+
+#: Statements that carry control flow rather than data. Commenting one out
+#: does not disable a computation -- it changes the shape of the program.
+_BLOCK_STRUCTURE = re.compile(
+    r"^(?:\d+\s+)?(?:"
+    r"END\s*DO\b|END\s*IF\b|ELSE\s*IF\b|ELSE\b|END\s*SELECT\b|"
+    r"END\s*WHERE\b|ELSE\s*WHERE\b|CASE\b|SELECT\s*CASE\b|"
+    r"DO\s+\w+\s*=|DO\s+WHILE\b|DO\s*$|CONTINUE\b|"
+    r"IF\s*\(.*\)\s*THEN\s*$|WHERE\s*\(.*\)\s*$"
+    r")", re.IGNORECASE)
+
+
+def _is_block_structure(line: str) -> bool:
+    """Does this line open or close a block?
+
+    An old-tangent region is a span of lines, and a span drawn around a
+    hand-coded tangent will often take a loop's END DO in with it. Commenting
+    that out leaves the DO unclosed, and gfortran reports the failure hundreds
+    of lines later against whatever statement finally runs out of blocks:
+
+        DO I=1,NTENS
+    C     OTIS-SKIP: DDSDE1(I,J)=DDSDDE(I,J)
+    C     OTIS-SKIP: END DO
+        END DO
+
+    Disabling a region means disabling the computations in it. The control
+    flow around them has to stay, because the statements that are kept are
+    still inside it.
+    """
+    return bool(_BLOCK_STRUCTURE.match(_executable_text(line).strip()))
+
+
 def _comment_old_line(form: str, line: str) -> str:
-    if _is_commented(line):
+    if _is_commented(line) or _is_block_structure(line):
         return line
     if form != "fixed":
         return "! OTIS-SKIP: " + line.strip()
