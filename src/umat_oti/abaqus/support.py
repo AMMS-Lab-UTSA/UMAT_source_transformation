@@ -135,10 +135,20 @@ def build_support(
         return build
     build.compiler = shlex.split(template)[0]
 
+    # A transformed source keeps the `include 'aba_param.inc'` its original
+    # had, and Abaqus's reported compile line does not carry the path to it --
+    # the launcher adds that itself when it compiles a user subroutine. A unit
+    # built here therefore needs it added, or the include fails to open.
+    from umat_oti.abaqus.replay import abaqus_include_dir
+
+    header = abaqus_include_dir(abaqus)
+    extra_includes = [f"-I{header}"] if header is not None else []
+
     objects: list[Path] = []
     transcript: list[str] = []
     for unit in units:
         command = _compile_command(template, Path(unit), work_dir)
+        command[1:1] = extra_includes
         try:
             done = subprocess.run(command, cwd=str(work_dir), capture_output=True,
                                   text=True, timeout=timeout)

@@ -72,7 +72,10 @@ def run_one(manifest: VerificationManifest, source: Path, job: str,
     report: dict = {"job": job, "source": str(source), "support": None}
 
     if support_dir is not None:
-        build = build_support(compile_order(support_dir), work_dir)
+        # The transformed UMAT is last in the order because that is when it
+        # compiles, but `abaqus user=` builds it itself. Building it here too
+        # defines every routine in the file twice.
+        build = build_support(compile_order(support_dir, exclude=source), work_dir)
         report["support"] = build.as_dict()
         if not build.ok:
             report["log"] = build.log[-4000:]
