@@ -597,10 +597,40 @@ def summarise(records: Sequence[dict[str, Any]]) -> dict[str, Any]:
         "undecided": len(records) - decided,
         "with_blocking_statements": sum(
             1 for record in records if record.get("blocking_statements")),
+        "resolved_components_total": sum(
+            int(record.get("resolved_components") or 0) for record in records),
+        "unresolved_components_total": sum(
+            int(record.get("unresolved_components") or 0) for record in records),
+        "non_finite_components_total": sum(
+            int(record.get("non_finite_components") or 0) for record in records),
+        "rows_on_an_unreviewed_pairing": sum(
+            1 for record in records
+            if str(record.get("pairing_status") or "") == "proposed_needs_review"),
+        "rows_on_a_shared_deck": _shared_deck_rows(records),
         "worst_relative_difference_among_agreeing": max(
             [float(record.get("worst_relative") or 0.0) for record in records
              if record.get("outcome") == AGREED], default=0.0),
     }
+
+
+def _shared_deck_rows(records: Sequence[dict[str, Any]]) -> int:
+    """How many rows took their constants from a deck another row also used.
+
+    Measured, and it is most of the corpus: 25 distinct decks are paired to 158
+    transformed sources, one of them to 64 of them. That does not weaken the
+    parity claim -- both builds are handed the same constants, whatever they
+    are, so "the transformed build computes what the original computes at this
+    material point" holds either way. It does mean a row's constants are not
+    necessarily the ones ITS author published for THAT source, only ones from a
+    deck in the same repository with a matching count. A reader who takes an
+    agreement rate as "verified against the author's own material" would be
+    over-reading it, and this number is here to stop that.
+    """
+    used = Counter(str(record.get("material_provenance") or "")
+                   for record in records
+                   if record.get("material_provenance"))
+    return sum(1 for record in records
+               if used.get(str(record.get("material_provenance") or ""), 0) > 1)
 
 
 CAVEAT = (
