@@ -157,6 +157,76 @@ def _identity() -> list[float]:
     return [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
 
 
+def declared_start(
+    props: Sequence[float], *, ntens: int = 6, nstatv: int = 1,
+    strain: float = 1.0e-4, ndi: int = 3,
+    transformed_source: Optional[Path] = None,
+    initial_statev: Sequence[float] = (),
+    temperature: float = 293.15, dtime: float = 1.0,
+) -> dict:
+    """An unloaded material point, driven along whichever input the source reads.
+
+    Shaped like a probe ENTRY record, so :func:`write_state` accepts it and one
+    increment can be replayed without a solver having produced it. Every value
+    is stated: the stress and history are zero because that is what an unloaded
+    point is, and the constants are the author's.
+
+    Which kinematic input carries the increment is *read from the transformed
+    file*, through ``seeded_kinematics`` -- the same map the transform seeded,
+    so the reference is driven through the quantity the OTI side differentiated.
+    Guessing it wrong is silent: a hyperelastic source that computes its stress
+    from the deformation gradient, handed an identity gradient and a nonzero
+    DSTRAN, returns zero stress for every increment. Both builds then return
+    zero, and a comparison that accepted that would report perfect agreement
+    about a model neither build had exercised.
+    """
+    stran = [0.0] * ntens
+    dstran = [0.0] * ntens
+    gradient = _identity()
+
+    increment = [strain] + [0.0] * (ntens - 1)
+    drive = None
+    if transformed_source is not None:
+        try:
+            from umat_oti.transform.source_transform import seeded_kinematics
+            drive = seeded_kinematics(
+                Path(transformed_source).read_text(errors="replace"))
+        except Exception:                      # noqa: BLE001 - fall back below
+            drive = None
+
+    if drive is None or drive.drives_strain_increment:
+        dstran = list(increment)
+    if drive is not None and drive.drives_deformation_gradient:
+        from umat_oti.validation.tangent_validation import _gradient_increment
+        advance = _gradient_increment(drive, increment)
+        gradient = [1.0 if r == c else 0.0 for r in range(3) for c in range(3)]
+        gradient = [value + advance[i // 3][i % 3] for i, value in enumerate(gradient)]
+
+    state = list(initial_statev) or [0.0] * max(nstatv, 1)
+    return {
+        "NTENS": ntens, "NSTATV": max(nstatv, 1), "NPROPS": len(props),
+        "NDI": ndi, "NSHR": max(ntens - ndi, 0),
+        "STRESS0": [0.0] * ntens,
+        "STATEV0": state,
+        "STRAN": stran,
+        "DSTRAN": dstran,
+        "PROPS": [float(value) for value in props],
+        "DTIME": [dtime],
+        "TEMP": [temperature, 0.0],
+        "time": 0.0,
+        "DFGRD0": _identity(),
+        "DFGRD1": gradient,
+        "DROT": _identity(),
+        # Not the origin and not (1,1,1): models in this corpus divide by
+        # COORDS(1)**2 - COORDS(2)**2, which both of those make zero.
+        "COORDS": [0.3, 0.7, 0.5, 1.0],
+        "element": 1, "point": 1, "step": 1, "increment": 1,
+        "driven_through": ("deformation gradient"
+                           if drive is not None and drive.drives_deformation_gradient
+                           else "strain increment"),
+    }
+
+
 def parse_replay_output(path: Path) -> tuple[list[float], list[list[float]]]:
     """The stress and tangent one replay produced."""
     try:
