@@ -87,6 +87,16 @@ def _material_block(manifest: VerificationManifest) -> list[str]:
 
 
 def _initial_state(manifest: VerificationManifest) -> list[str]:
+    """Where the state starts, in whichever form the author's deck used.
+
+    ``USER`` asks Abaqus to call the source's own SDVINI. Omitting it left
+    every state variable at zero, and a model that divides by one -- a growth
+    stretch initialised to 1.0, say -- returns NaN from the first increment.
+    Five mholla growth UMATs failed exactly that way while their two siblings
+    that do not read state verified cleanly.
+    """
+    if manifest.initial_state_from_user_subroutine:
+        return ["*INITIAL CONDITIONS, TYPE=SOLUTION, USER"]
     if not any(manifest.initial_statev):
         return []
     values = [_fmt(value) for value in manifest.initial_statev]

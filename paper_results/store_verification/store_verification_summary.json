@@ -7,7 +7,7 @@
   "already_in_the_store": 0,
   "failed": 0,
   "not_in_the_cache": 0,
-  "fingerprint": "9506a4184554bf40",
+  "fingerprint": "35fe7df03e5c9eb0",
   "note": "a stored entry means the transform ran and, where the metadata says so, that the generated Fortran compiled. Compiling is not verification: nothing here was executed against a material vector and nothing was compared against anything"
  },
  "offline_gate": {
@@ -35,15 +35,24 @@
  },
  "abaqus": {
   "available": true,
-  "attempted": 4,
+  "attempted": 199,
   "by_stage": {
-   "primal_disagreed": 1,
-   "tangent_not_verified": 1,
-   "original_job_failed": 1,
+   "primal_disagreed": 74,
+   "needs_material_data": 41,
+   "transformed_job_failed": 33,
+   "tangent_not_verified": 27,
+   "original_job_failed": 18,
+   "verified": 5,
    "manifest_refused": 1
   },
-  "verified": 0,
-  "verified_sources": [],
+  "verified": 5,
+  "verified_sources": [
+   "BristolCompositesInstitute__abaci/test/data/umat.f",
+   "irfancn__Abaqus-UEL-elastic/uel_elastic.for",
+   "irfancn__Abaqus-UMAT-elastic/umat_elastic.for",
+   "mholla__growth/umats/umat_fiber_morph.f",
+   "mholla__growth/umats/umat_iso_morph.f"
+  ],
   "note": "only the last rung is 'verified': the original and the transformed source both ran in Abaqus over one manifest, their stress and state histories agreed, and the OTI tangent matched a centred difference of the original replayed offline. A harness_error is a statement about this run, not about the model, and a resumed batch does it again"
  },
  "caveats": [

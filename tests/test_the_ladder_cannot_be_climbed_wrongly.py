@@ -274,3 +274,79 @@ def test_the_input_waiting_rung_sits_above_needs_material_data():
 
     assert STAGES.index("needs_material_data") < STAGES.index(WAITS_FOR_INPUT)
     assert STAGES.index(WAITS_FOR_INPUT) < STAGES.index("verified")
+
+
+# ---- the deck's own form for where the state starts ---------------------
+USER_STATE_DECK = """\
+*MATERIAL, NAME=GROWTH
+*DEPVAR
+3,
+*USER MATERIAL, CONSTANTS=2
+1.0, 0.3
+*Initial Conditions, Type=Solution, User
+*Step, name=Step-1, nlgeom=YES
+*STATIC
+*END STEP
+"""
+
+
+def test_a_deck_that_asks_abaqus_to_call_sdvini_is_recognised():
+    """`USER` means the source's own SDVINI computes the starting state.
+
+    Omitting it left every state variable at zero. Five mholla growth UMATs
+    then divided by a growth stretch their SDVINI initialises to 1.0 and
+    returned NaN from the first increment, while their two siblings that do
+    not read state verified cleanly.
+    """
+    from verify_store_in_abaqus import initial_state_is_computed
+
+    assert initial_state_is_computed(USER_STATE_DECK)
+
+
+def test_a_deck_that_lists_values_is_not_the_user_form():
+    from verify_store_in_abaqus import initial_state_is_computed
+
+    assert not initial_state_is_computed(
+        "*Initial Conditions, Type=Solution\nALL, 1.0, 1.0\n")
+
+
+def test_a_commented_user_line_is_not_read():
+    from verify_store_in_abaqus import initial_state_is_computed
+
+    assert not initial_state_is_computed(
+        "**Initial Conditions, Type=Solution, User\n")
+
+
+def test_the_generated_deck_carries_the_form_through(tmp_path):
+    """Reading the values out of the Fortran and retyping them would be
+    inventing what the author chose to compute."""
+    from umat_oti.abaqus.deck import generate_deck
+    from umat_oti.abaqus.manifest import VerificationManifest, uniaxial
+
+    deck = generate_deck(VerificationManifest(
+        name="growth", source=Path("u.for"), props=(1.0, 0.3),
+        material_provenance="a deck", nstatv=3,
+        initial_state_from_user_subroutine=True,
+        initial_statev_provenance="the deck's USER form",
+        loading=(uniaxial(0.01, 2),)))
+    line = next(l for l in deck.splitlines() if l.startswith("*INITIAL"))
+    assert line == "*INITIAL CONDITIONS, TYPE=SOLUTION, USER"
+    # and no invented values beside it
+    assert not any(l.startswith("ONE,") for l in deck.splitlines())
+
+
+def test_listed_values_are_still_emitted_as_values(tmp_path):
+    from umat_oti.abaqus.deck import generate_deck
+    from umat_oti.abaqus.manifest import VerificationManifest, uniaxial
+
+    deck = generate_deck(VerificationManifest(
+        name="growth", source=Path("u.for"), props=(1.0,),
+        material_provenance="a deck", nstatv=3,
+        initial_statev=(1.0, 1.0, 1.0),
+        initial_statev_provenance="the deck listed them",
+        loading=(uniaxial(0.01, 2),)))
+    # scoped to the initial-conditions line: "USER" also appears in
+    # *USER MATERIAL, which every deck here carries.
+    line = next(l for l in deck.splitlines() if l.startswith("*INITIAL"))
+    assert line == "*INITIAL CONDITIONS, TYPE=SOLUTION"
+    assert "1.0, 1.0, 1.0," in deck
