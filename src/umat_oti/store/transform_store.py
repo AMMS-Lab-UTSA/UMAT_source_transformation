@@ -82,6 +82,46 @@ def transform_fingerprint(package_root: Optional[Path] = None) -> str:
     return digest.hexdigest()[:16]
 
 
+#: What the transform writes to say which units to build, and in what order.
+#: Module dependencies make the order load-bearing.
+COMPILE_ORDER = "compile_order.txt"
+
+
+def _support_units(directory: Path, entry_source: Path) -> tuple[Path, ...]:
+    """The units that must be built alongside the entry source, in order.
+
+    Read from the transform's own compile_order.txt rather than by globbing
+    the directory. The transform also emits a combined free-form copy of the
+    whole UMAT beside the support modules, and a glob picks that up -- which
+    links a second definition of every routine in the file and fails the link
+    on all of them at once. The order file names only what belongs in a build,
+    and it names it in the sequence a module has to be compiled before its
+    users.
+
+    The entry source itself is dropped: it is the last line of the order
+    because that is when it compiles, but every caller compiles it separately
+    -- `abaqus user=` does, and so does the replay driver's link line.
+    """
+    listing = Path(directory) / COMPILE_ORDER
+    entry = Path(entry_source).resolve()
+    if listing.is_file():
+        units = []
+        for line in listing.read_text(errors="replace").splitlines():
+            name = line.strip()
+            if not name or name.startswith("#"):
+                continue
+            candidate = Path(directory) / name
+            if candidate.is_file() and candidate.resolve() != entry:
+                units.append(candidate)
+        return tuple(units)
+    # No order file: fall back to the modules, but still never the entry
+    # source and never a combined whole-UMAT copy of it.
+    stem = entry.stem
+    return tuple(sorted(
+        path for path in Path(directory).glob("*.f90")
+        if path.is_file() and path.resolve() != entry and stem not in path.stem))
+
+
 @dataclass(frozen=True)
 class StoredTransform:
     """One transformed source, and what it was made from."""
@@ -190,8 +230,7 @@ class TransformStore:
         shutil.copytree(Path(out_dir), target)
 
         entry = target / Path(entry_source).name
-        support = tuple(sorted(
-            path for path in target.glob("*.f90") if path.is_file()))
+        support = _support_units(target, entry)
         stored = StoredTransform(
             key=key, source_id=source_id, source_sha256=source_sha256,
             fingerprint=self._fingerprint, directory=target, entry_source=entry,
