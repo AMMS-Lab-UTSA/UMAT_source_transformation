@@ -8,7 +8,7 @@ PROFILE_ARGS ?=
 .PHONY: help setup test test-fortran test-offline audit \
         reproduce-smoke reproduce-offline reproduce-paper reproduce-corpus \
         reproduce-abaqus batch batch-transform batch-offline batch-abaqus \
-        batch-status clean-clone clean
+        batch-status batch-record clean-clone clean
 
 help:
 	@echo "setup              install the package and its test extras"
@@ -27,6 +27,7 @@ help:
 	@echo "batch-offline      fast parity gate over the store (minutes, no Abaqus)"
 	@echo "batch-abaqus       paired Abaqus verification over the store (hours)"
 	@echo "batch              all three in order -- the full chain after a change"
+	@echo "batch-record       write the three reports into paper_results as evidence"
 
 setup:
 	$(PYTHON) -m pip install -e ".[test]"
@@ -79,6 +80,11 @@ batch-abaqus:
 # The offline gate runs before Abaqus on purpose. It costs seconds per source
 # and Abaqus costs minutes, so a source whose two builds already disagree at a
 # material point should be fixed before it is given a licence token.
+# The three reports live wherever the batch ran; this puts the part a reader
+# needs into the tree, scrubbed of machine paths and carrying no source text.
+batch-record:
+	$(PYTHON) tools/record_batch_evidence.py $(BATCH_ARGS)
+
 batch: batch-transform batch-offline batch-abaqus
 
 clean-clone:

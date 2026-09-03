@@ -1,0 +1,60 @@
+{
+ "what_this_is": "the state of the transform store and what has been established about it, in three stages. Nothing here is pooled: an entry that compiled, an entry that agreed at one material point offline, and an entry verified in Abaqus are three different claims.",
+ "transform": {
+  "available": true,
+  "selected": 199,
+  "transformed_now": 199,
+  "already_in_the_store": 0,
+  "failed": 0,
+  "not_in_the_cache": 0,
+  "fingerprint": "9506a4184554bf40",
+  "note": "a stored entry means the transform ran and, where the metadata says so, that the generated Fortran compiled. Compiling is not verification: nothing here was executed against a material vector and nothing was compared against anything"
+ },
+ "offline_gate": {
+  "available": true,
+  "entries": 199,
+  "by_outcome": {
+   "agreed": 84,
+   "disagreed": 36,
+   "non_finite_response": 27,
+   "original_build_failed": 1,
+   "driver_did_not_run": 10,
+   "needs_material_data": 41
+  },
+  "agreed": 84,
+  "disagreed": 36,
+  "undecided": 79,
+  "worst_relative_difference_among_agreeing": 4.0575273231822164e-11,
+  "resolved_components_total": 388,
+  "unresolved_components_total": 1,
+  "non_finite_components_total": 162,
+  "rows_on_a_shared_deck": 144,
+  "rows_on_an_unreviewed_pairing": 158,
+  "with_blocking_statements": 25,
+  "what_this_is": "This is an offline stress-parity gate, not Abaqus verification. It compares the stress two standalone drivers compute from one declared starting state. It runs no solver, drives no loading history and does not examine DDSDDE. An agreeing row has earned a place in the Abaqus queue and nothing more."
+ },
+ "abaqus": {
+  "available": true,
+  "attempted": 4,
+  "by_stage": {
+   "primal_disagreed": 1,
+   "tangent_not_verified": 1,
+   "original_job_failed": 1,
+   "manifest_refused": 1
+  },
+  "verified": 0,
+  "verified_sources": [],
+  "note": "only the last rung is 'verified': the original and the transformed source both ran in Abaqus over one manifest, their stress and state histories agreed, and the OTI tangent matched a centred difference of the original replayed offline. A harness_error is a statement about this run, not about the model, and a resumed batch does it again"
+ },
+ "caveats": [
+  "Material constants come from a deck in the same repository as the source, matched deterministically on the constant count. 144 of the 158 paired sources share their deck with another source, and every pairing is marked proposed_needs_review by the tool that made it. Both builds are handed the same constants, so a parity result holds regardless; but an agreement rate is not 'verified against the author's own material'.",
+  "Neither the sources nor their transforms are committed here. Most carry no licence, and a public repository without one is not permission to redistribute. The store keeps them outside the tree and this record keeps digests and counts.",
+  "Abaqus 2021 on this installation aborts in its post-analysis wrap-up after writing that the analysis completed, with no user subroutine at all. The exit code is preserved as a warning and is never the verdict."
+ ],
+ "reproduce": [
+  "make batch-transform   # fills the store; re-runs everything when the transform fingerprint changes",
+  "make batch-offline     # the fast stress-parity gate",
+  "make batch-abaqus      # the paired Abaqus verification",
+  "make batch             # all three, in order"
+ ]
+}
