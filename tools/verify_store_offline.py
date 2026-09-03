@@ -83,15 +83,26 @@ ORIGINAL_BUILD_FAILED = "original_build_failed"
 TRANSFORMED_BUILD_FAILED = "transformed_build_failed"
 DRIVER_DID_NOT_RUN = "driver_did_not_run"
 NO_RESPONSE = "no_response"
-#: A build returned NaN or Inf. Its own outcome, because folding it
-#: into "disagreed" hid it: every comparison against NaN is False, so the
-#: worst difference read as 0.0 and the row scored AGREED.
-NON_FINITE_RESPONSE = "non_finite_response"
+#: The TRANSFORMED build returned NaN or Inf where the original returned finite
+#: numbers. This one is evidence against the transform.
+NON_FINITE_RESPONSE = "transformed_non_finite"
+
+#: BOTH builds returned NaN or Inf. This is not evidence against the transform
+#: at all -- it says the probe drove both programs somewhere neither can
+#: evaluate. Measured: of the 27 rows the gate first reported as
+#: `non_finite_response`, 27 were this and none were the other, so a category
+#: whose name asserted a transform defect contained no instance of one.
+BOTH_NON_FINITE = "both_builds_non_finite"
+
+#: The ORIGINAL returned NaN where the transformed build did not. Rare, and
+#: still not a transform defect: the reference is what failed.
+ORIGINAL_NON_FINITE = "original_non_finite"
 HARNESS_ERROR = "harness_error"
 
 #: Report order: what passed, what failed, what was never askable.
 OUTCOMES = (
-    AGREED, DISAGREED, NON_FINITE_RESPONSE, NO_RESPONSE, ORIGINAL_BUILD_FAILED,
+    AGREED, DISAGREED, NON_FINITE_RESPONSE, BOTH_NON_FINITE,
+    ORIGINAL_NON_FINITE, NO_RESPONSE, ORIGINAL_BUILD_FAILED,
     TRANSFORMED_BUILD_FAILED, DRIVER_DID_NOT_RUN, ORIGINAL_UNAVAILABLE,
     NEEDS_MATERIAL_DATA, HARNESS_ERROR,
 )
@@ -484,6 +495,21 @@ def stress_response(values: Sequence[float]) -> float:
                 if math.isfinite(float(value))), default=0.0)
 
 
+def _has_non_finite(values: Any) -> bool:
+    """Did this build produce a value that is not a number?
+
+    Tolerates the labelled strings the report writes for non-finite values, so
+    a row read back from a previous run is judged the same way as a fresh one.
+    """
+    for value in values or ():
+        try:
+            if not math.isfinite(float(value)):
+                return True
+        except (TypeError, ValueError):
+            return True
+    return False
+
+
 def non_finite_count(*histories: Sequence[float]) -> int:
     """How many values across these stresses are not finite."""
     return sum(1 for values in histories for value in values or ()
@@ -543,10 +569,28 @@ def outcome_for(record: dict[str, Any]) -> tuple[str, str]:
     if not record.get("ran_original") or not record.get("ran_transformed"):
         return DRIVER_DID_NOT_RUN, str(record.get("run_reason") or "")
     if record.get("non_finite_components"):
+        # WHICH build produced the non-finite value decides what this row is
+        # evidence of. Collapsing the three cases into one manufactured a
+        # 27-row category whose name asserted a transform defect and which
+        # contained no instance of one.
+        original_bad = _has_non_finite(record.get("stress_original"))
+        transformed_bad = _has_non_finite(record.get("stress_transformed"))
+        if original_bad and transformed_bad:
+            return BOTH_NON_FINITE, (
+                f"both builds returned a non-finite stress from the same "
+                f"declared starting state, so this says nothing about the "
+                f"transform: the probe drove two programs somewhere neither "
+                f"can evaluate. {record['non_finite_components']} components "
+                f"affected")
+        if original_bad:
+            return ORIGINAL_NON_FINITE, (
+                "the original build returned a non-finite stress, so there is "
+                "no reference to compare the transform against")
         return NON_FINITE_RESPONSE, (
-            f"{record['non_finite_components']} stress components are not "
-            f"finite, so nothing is established: a comparison against NaN is "
-            f"False and leaves the worst difference reading as zero")
+            f"the transformed build returned {record['non_finite_components']} "
+            f"non-finite stress components where the original returned finite "
+            f"numbers. A comparison against NaN is False, so the worst "
+            f"difference would otherwise have read as zero")
     if not record.get("response"):
         return NO_RESPONSE, (
             "both builds returned an all-zero stress for the probe, so they "
@@ -607,6 +651,11 @@ def summarise(records: Sequence[dict[str, Any]]) -> dict[str, Any]:
             1 for record in records
             if str(record.get("pairing_status") or "") == "proposed_needs_review"),
         "rows_on_a_shared_deck": _shared_deck_rows(records),
+        "non_finite_note": (
+            "transformed_non_finite is the only one of the three non-finite "
+            "outcomes that is evidence against the transform. "
+            "both_builds_non_finite says the probe drove two programs "
+            "somewhere neither can evaluate"),
         "worst_relative_difference_among_agreeing": max(
             [float(record.get("worst_relative") or 0.0) for record in records
              if record.get("outcome") == AGREED], default=0.0),
