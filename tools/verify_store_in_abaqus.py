@@ -85,6 +85,7 @@ from umat_oti.abaqus.compare import compare_primal, compare_tangent     # noqa: 
 from umat_oti.abaqus.deck import generate_deck                          # noqa: E402
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
     NEEDS_MATERIAL_DATA, VerificationManifest, reverse, uniaxial)
+from umat_oti.abaqus.job_status import blocking_statements
 from umat_oti.abaqus.probe import CORRUPT, converged_only, parse_probe           # noqa: E402
 from umat_oti.abaqus.replay import (                                    # noqa: E402
     STATE_FILE, build_replay, difference_tangent, write_state)
@@ -101,6 +102,7 @@ from umat_oti.store import TransformStore                               # noqa: 
 #: rung is the only one that may be called verified.
 STAGES: tuple[str, ...] = (
     "needs_material_data",
+    "waits_for_input",
     "manifest_refused",
     "support_build_failed",
     "original_job_failed",
@@ -111,6 +113,13 @@ STAGES: tuple[str, ...] = (
 )
 
 VERIFIED = STAGES[-1]
+
+#: A source carrying a Fortran PAUSE does not fail a solver, it hangs one:
+#: Abaqus sits on a terminal read until the job's timeout elapses and the
+#: licence is spent on nothing. 25 of the 199 stored transforms carry one. This
+#: is a property of the source, not of the transform and not of this machine,
+#: so it is a rung of the ladder and settled -- re-running it would hang again.
+WAITS_FOR_INPUT = "waits_for_input"
 
 #: A crash in this harness. Deliberately not one of STAGES: it is not a
 #: statement about the model, it is a statement about the run, so --resume
@@ -157,6 +166,10 @@ class StageEvidence:
     """
 
     material_found: bool = False
+    #: The source carries a statement that waits for terminal input, and the
+    #: run hung on it. Recorded before anything else about the run, because
+    #: nothing after it is a measurement.
+    waits_for_input: bool = False
     manifest_refusals: tuple[str, ...] = ()
     #: None when the stored transform names no support units to build.
     support_ok: Optional[bool] = None
@@ -180,6 +193,8 @@ def classify_stage(evidence: StageEvidence) -> str:
     """
     if not evidence.material_found:
         return "needs_material_data"
+    if evidence.waits_for_input:
+        return WAITS_FOR_INPUT
     if evidence.manifest_refusals:
         return "manifest_refused"
     if evidence.support_ok is False:
@@ -870,6 +885,21 @@ _HARNESS_SIGNATURES = (
 )
 
 
+def timed_out(report: dict) -> bool:
+    """Did this run end because its clock ran out, rather than for a reason?
+
+    The runner turns a TimeoutExpired into console='TIMEOUT'; a hung solver
+    also leaves none of its own files behind, because it never got past the
+    increment it was sitting in.
+    """
+    console = str(report.get("console") or "")
+    if "TIMEOUT" in console or "TimeoutExpired" in console:
+        return True
+    reasons = " ".join(str(r) for r in (report.get("reasons") or ()))
+    return (not report.get("converged_records")
+            and ".sta was not written" in reasons)
+
+
 def looks_like_a_harness_failure(report: dict) -> str:
     """Why this run says nothing about the model, or "" when it does.
 
@@ -1224,6 +1254,13 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             "the stored transform names no support units beyond the entry "
             "source, which abaqus user= compiles itself")
 
+    # What the ORIGINAL source carries; the transform preserves such a
+    # statement, because deleting it would be editing scientific code to make
+    # a run finish.
+    waiting = blocking_statements(
+        Path(original).read_text(errors="replace")) if Path(original).is_file() else ()
+    record["blocking_statements"] = list(waiting[:3])
+
     original_report = run_one(**original_call)
     original_job = job_evidence(original_report)
     record["original"] = {
@@ -1239,6 +1276,18 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     record["warnings"] += [f"original: {w}" for w in original_job.warnings]
     seen["original_completed"] = original_job.completed
     if not original_job.completed:
+        # Checked before the harness/model split. A source carrying a Fortran
+        # PAUSE hangs the solver on a terminal read until the timeout elapses,
+        # and the timeout then looks exactly like a licence wait -- which would
+        # send it round the retry loop to hang again, every time.
+        if waiting and timed_out(original_report):
+            record["stage"] = WAITS_FOR_INPUT
+            record["reason"] = (
+                f"the run hung until its timeout on a statement that waits for "
+                f"terminal input, which this source carries: {waiting[0]}. "
+                f"Abaqus does not fail on one, it sits on it, so the licence is "
+                f"spent and nothing is measured. A property of the source")
+            return scrub(record, *roots)
         harness = looks_like_a_harness_failure(original_report)
         if harness:
             record["stage"] = HARNESS_ERROR
@@ -1260,6 +1309,13 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     record["warnings"] += [f"transformed: {w}" for w in transformed_job.warnings]
     seen["transformed_completed"] = transformed_job.completed
     if not transformed_job.completed:
+        if waiting and timed_out(transformed_report):
+            record["stage"] = WAITS_FOR_INPUT
+            record["reason"] = (
+                f"the transformed run hung until its timeout on a statement "
+                f"that waits for terminal input, carried over from the "
+                f"original: {waiting[0]}")
+            return scrub(record, *roots)
         harness = looks_like_a_harness_failure(transformed_report)
         if harness:
             record["stage"] = HARNESS_ERROR
