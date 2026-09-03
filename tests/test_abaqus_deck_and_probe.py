@@ -444,3 +444,80 @@ class TestAProbeRecordThatCouldNotBeWritten:
         assert CORRUPT not in record
         assert record["STRESS0"] == [1.0, 2.0]
         assert record["NSTATV"] == 4
+
+
+class TestTheProbeNamesWhatTheRoutineHas:
+    """Three ways the probe made a source stop compiling, each measured.
+
+    All three had the same shape: the job never started, so the entry was
+    recorded as a failure of somebody's model for a defect in this harness.
+    With them fixed, 194 of the corpus's 199 originals instrument and compile;
+    the remaining 5 have no call site and are reported as that.
+    """
+
+    def test_the_newer_abaqus_interface_uses_jstep_not_kstep(self):
+        """Abaqus replaced the scalar KSTEP with the array JSTEP(4).
+
+        A source written against it rejected the probe with "This name does not
+        have a type" on KSTEP.
+        """
+        from umat_oti.abaqus.probe import instrument
+
+        source = ("      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,NOEL,NPT,\n"
+                  "     &    LAYER,KSPT,JSTEP,KINC)\n"
+                  "      IMPLICIT NONE\n"
+                  "      INTEGER JSTEP(4)\n"
+                  "      STRESS(1) = 1.0\n"
+                  "      RETURN\n      END\n")
+        text, ok = instrument(source, "t")
+        assert ok
+        call = next(l for l in text.splitlines() if "OTIS_PROBE_IN(" in l)
+        assert "JSTEP(1)" in call and ",KSTEP," not in call
+
+    def test_a_routine_with_kstep_still_uses_kstep(self):
+        from umat_oti.abaqus.probe import instrument
+
+        source = ("      SUBROUTINE UMAT(STRESS,NOEL,NPT,KSTEP,KINC)\n"
+                  "      STRESS(1) = 1.0\n"
+                  "      RETURN\n      END\n")
+        text, _ = instrument(source, "t")
+        call = next(l for l in text.splitlines() if "OTIS_PROBE_IN(" in l)
+        assert ",KSTEP," in call
+
+    def test_a_routine_with_neither_records_a_literal(self):
+        """The step number labels a record; it is not a measurement, so the
+        probe should still compile rather than refuse the source."""
+        from umat_oti.abaqus.probe import step_expression
+
+        assert step_expression({"STRESS", "NOEL"}) == "1"
+
+    def test_an_indented_free_style_comment_is_a_comment(self):
+        """`! variables passed in` at column 9 read as a statement, was called
+        executable, and the probe went in above the type declarations that
+        followed it -- so every argument it named had no type yet."""
+        from umat_oti.abaqus.probe import _is_comment
+
+        assert _is_comment("        ! variables passed in")
+        assert _is_comment("C     a fixed-form comment")
+        assert _is_comment("   \t ")
+        # a trailing comment does not make the line one
+        assert not _is_comment("      X = 1.0 ! set it")
+
+    def test_the_probe_goes_after_the_declarations_it_names(self):
+        from umat_oti.abaqus.probe import instrument
+
+        source = ("      SUBROUTINE UMAT(STRESS,NOEL,NPT,KSTEP,KINC)\n"
+                  "        use NumKind\n"
+                  "        implicit none\n"
+                  "        ! variables passed in\n"
+                  "        integer(ikind) :: noel, npt, kstep, kinc\n"
+                  "        real(rkind) :: stress(6)\n"
+                  "        stress(1) = 1.0\n"
+                  "      RETURN\n      END\n")
+        text, ok = instrument(source, "t")
+        assert ok
+        lines = text.splitlines()
+        call = next(i for i, l in enumerate(lines) if "OTIS_PROBE_IN(" in l)
+        declaration = next(i for i, l in enumerate(lines)
+                           if "real(rkind)" in l)
+        assert call > declaration, "the probe precedes the types it names"

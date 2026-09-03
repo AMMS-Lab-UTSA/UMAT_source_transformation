@@ -139,7 +139,7 @@ C     called, so say which it was. Unit 6 is the .msg/.log Abaqus captures.
 """ % {"unit": PROBE_UNIT}
 
 
-def probe_call(tag: str, indent: str = "      ") -> str:
+def probe_call(tag: str, indent: str = "      ", step: str = "KSTEP") -> str:
     """The one statement that records what an increment computed.
 
     Placed immediately before the UMAT's RETURN, where STRESS, STATEV and
@@ -148,12 +148,53 @@ def probe_call(tag: str, indent: str = "      ") -> str:
     # The continuation marker belongs in column 6, which means five spaces
     # before it and not the statement indent.
     return (
-        f"{indent}CALL OTIS_PROBE('{tag}',NOEL,NPT,KSTEP,KINC,TIME(2),\n"
+        f"{indent}CALL OTIS_PROBE('{tag}',NOEL,NPT,{step},KINC,TIME(2),\n"
         f"     1     STRESS,NTENS,STATEV,NSTATV,DDSDDE)\n"
     )
 
 
-def entry_call(tag: str, indent: str = "      ") -> str:
+def _argument_names(lines: list[str], start: int) -> set[str]:
+    """The dummy argument names of the routine opening at ``start``, upper-cased.
+
+    The probe can only name arguments the routine actually has. Abaqus's newer
+    UMAT interface replaces the scalar KSTEP with the array JSTEP(4), and a
+    source written against it rejects the probe with "This name does not have a
+    type" on KSTEP -- the job then never starts and the entry is recorded as a
+    failure of the model.
+    """
+    text = []
+    for line in lines[start:start + 40]:
+        if _is_comment(line):
+            continue
+        text.append(line)
+        if ")" in line and "(" in "".join(text):
+            break
+    joined = " ".join(text)
+    if "(" not in joined:
+        return set()
+    inside = joined[joined.index("(") + 1:]
+    inside = inside[:inside.rindex(")")] if ")" in inside else inside
+    return {name.strip().upper() for name in re.split(r"[,\s&]+", inside)
+            if name.strip() and re.fullmatch(r"\w+", name.strip())}
+
+
+def step_expression(arguments: set[str]) -> str:
+    """How this routine names the step number.
+
+    KSTEP where the routine has it. JSTEP(1) where it uses Abaqus's newer
+    interface, in which the scalar was replaced by an array whose first element
+    is the step number. A literal 1 where it has neither, so the probe still
+    records something rather than refusing to compile: the step number labels a
+    record and is not a measurement.
+    """
+    if "KSTEP" in arguments:
+        return "KSTEP"
+    if "JSTEP" in arguments:
+        return "JSTEP(1)"
+    return "1"
+
+
+def entry_call(tag: str, indent: str = "      ", step: str = "KSTEP") -> str:
     """The statement that records what an increment was given.
 
     Placed before the UMAT's first executable statement, where STRESS and
@@ -162,7 +203,7 @@ def entry_call(tag: str, indent: str = "      ") -> str:
     finite difference has nothing to re-run the increment from.
     """
     return (
-        f"{indent}CALL OTIS_PROBE_IN('{tag}',NOEL,NPT,KSTEP,KINC,TIME(2),DTIME,\n"
+        f"{indent}CALL OTIS_PROBE_IN('{tag}',NOEL,NPT,{step},KINC,TIME(2),DTIME,\n"
         f"     1     STRESS,NTENS,STATEV,NSTATV,STRAN,DSTRAN,\n"
         f"     2     PROPS,NPROPS,TEMP,DTEMP,DFGRD0,DFGRD1,DROT,\n"
         f"     3     NDI,NSHR,CELENT,COORDS)\n"
@@ -358,13 +399,27 @@ def instrument(source_text: str, tag: str, entry: str = "UMAT") -> tuple[str, bo
         return source_text, False
 
     # Insert from the bottom up, so the earlier index stays valid.
-    lines.insert(last_return, probe_call(tag))
-    lines.insert(first_executable, entry_call(tag))
+    step = step_expression(_argument_names(lines, start))
+    lines.insert(last_return, probe_call(tag, step=step))
+    lines.insert(first_executable, entry_call(tag, step=step))
     return "".join(lines) + PROBE_SOURCE, True
 
 
 def _is_comment(line: str) -> bool:
-    return bool(re.match(r"^[cC*!]", line)) or not line.strip()
+    """A whole-line comment, or blank, in either source form.
+
+    Fixed form puts its marker in column 1. Free form puts ``!`` at the first
+    non-blank character, which the column-1 test missed: an indented
+    ``! variables passed in`` read as a statement, `_is_executable_line` called
+    it executable, and the probe was inserted above the type declarations that
+    followed it. A ``!`` after code is a trailing comment and does not make the
+    line one, which is why this asks about the first non-blank character rather
+    than searching the line.
+    """
+    stripped = line.strip()
+    if not stripped:
+        return True
+    return bool(re.match(r"^[cC*!]", line)) or stripped[0] == "!"
 
 
 #: A line that CLOSES a program unit rather than opening one. Fortran lets a
@@ -404,6 +459,35 @@ def _routine_span(lines: list[str], entry: str) -> tuple[Optional[int], int]:
     return start, len(lines) if end is None else end
 
 
+#: A line carrying the tail of the statement above it. Fixed form marks that in
+#: column 6; free form ends the previous line with ``&`` and may also open the
+#: continuation with one.
+_FREE_CONTINUATION = re.compile(r"^\s*&")
+
+#: A statement label, which precedes the statement in both forms.
+_LEADING_LABEL = re.compile(r"^\s*\d*\s*")
+
+
+def _statement_text(line: str) -> str:
+    """The statement on this line, with the label field removed, in either form.
+
+    This used to slice ``line[6:]`` unconditionally, which is right for fixed
+    form and destroys free form: ``        integer(ikind), intent(in) :: ndi``
+    became ``eger(ikind), intent(in) :: ndi``, which matches no declaration
+    pattern and was therefore taken for an executable statement. The probe was
+    then inserted between ``implicit none`` and the type declarations, and
+    every argument it named had no type yet -- ifort rejected the file with
+    "This name does not have a type" on DTEMP, DFGRD0, DFGRD1, DROT and NDI,
+    so the job never started and the entry was recorded as a failure of the
+    model.
+
+    Stripping a leading label and whitespace instead is correct for both: in
+    fixed form columns 1-5 hold a label or nothing, and in free form a label is
+    equally optional.
+    """
+    return _LEADING_LABEL.sub("", line, count=1)
+
+
 def _first_executable(lines: list[str], start: int, end: int) -> Optional[int]:
     """The first line of the routine that runs rather than declares.
 
@@ -413,12 +497,17 @@ def _first_executable(lines: list[str], start: int, end: int) -> Optional[int]:
     """
     from umat_oti.fortran.regions import _is_executable_line
 
+    continued = False
     for number in range(start + 1, end):
         line = lines[number]
         if _is_comment(line):
             continue
-        if len(line) > 5 and line[5] not in " \t":     # column 6: a continuation
+        fixed_continuation = len(line) > 5 and line[5] not in " \t" and \
+            not line[:5].strip()
+        if fixed_continuation or _FREE_CONTINUATION.match(line) or continued:
+            continued = line.rstrip().endswith("&")
             continue
-        if _is_executable_line(line[6:] if len(line) > 6 else ""):
+        continued = line.rstrip().endswith("&")
+        if _is_executable_line(_statement_text(line)):
             return number
     return None
