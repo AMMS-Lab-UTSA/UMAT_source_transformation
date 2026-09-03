@@ -279,10 +279,16 @@ def paired_block_name(provenance: str, deck_relative: str) -> Optional[str]:
     provenance naming some other file is evidence about some other file, and
     letting its block name select in this one is how a material vector ends up
     belonging to a source that never declared it.
+
+    Matched on the full cache-relative path, not the basename. ``job.inp`` and
+    ``input.inp`` are the commonest deck names in this cache, so a basename
+    test let a provenance about another repository's ``job.inp`` choose which
+    block feeds this one -- the identity-by-basename mistake, inside the
+    function written to prevent it.
     """
     if not provenance or not deck_relative:
         return None
-    if Path(deck_relative).name not in provenance:
+    if str(deck_relative) not in provenance:
         return None
     match = _PROVENANCE_BLOCK.search(provenance)
     return match.group(1) if match else None
@@ -319,6 +325,47 @@ class ManifestPlan:
     #: Set when the deck and the triage row disagree about finite strain. The
     #: deck wins; the disagreement is recorded rather than resolved silently.
     kinematics_note: str = ""
+
+
+_SOLUTION_STATE = re.compile(
+    r"^\s*\*INITIAL\s+CONDITIONS\b[^\n]*\bTYPE\s*=\s*SOLUTION\b", re.IGNORECASE)
+
+
+def initial_solution_state(deck_text: str) -> tuple[float, ...]:
+    """The state variables a deck declares its material starts from.
+
+    Read, never assumed. Thirteen of the paired decks in this corpus declare
+    ``*INITIAL CONDITIONS, TYPE=SOLUTION`` -- growth and damage models whose
+    authors published a nonzero starting state, typically an initial stretch of
+    1.0. Running one of those from zeros is a different model than the deck
+    describes, and it could still climb the ladder to "verified".
+
+    A deck that declares none is not a problem: zeros are then the deck's own
+    statement about where the material starts.
+    """
+    lines = deck_text.splitlines()
+    values: list[float] = []
+    collecting = False
+    for line in lines:
+        if line.lstrip().startswith("**"):
+            continue
+        if _SOLUTION_STATE.match(line):
+            collecting = True
+            continue
+        if collecting:
+            if line.lstrip().startswith("*"):
+                break
+            for token in line.split(","):
+                token = token.strip()
+                if not token:
+                    continue
+                try:
+                    values.append(float(token))
+                except ValueError:
+                    # The first field of the first data line is the element set
+                    # or node set the state belongs to, not a number.
+                    continue
+    return tuple(values)
 
 
 def build_manifest(
@@ -385,6 +432,8 @@ def build_manifest(
             f"paired deck runs it as {found.kinematics}, and the deck is what "
             f"the manifest follows")
 
+    declared_state = initial_solution_state(deck_text)
+
     loading = [uniaxial(strain, increments)]
     if include_reversal:
         loading.append(reverse(loading[0]))
@@ -413,11 +462,40 @@ def build_manifest(
         nstatv=material.nstatv or 1,
         unsymmetric=bool(material.unsymmetric),
         material_provenance=provenance,
+        initial_statev=declared_state,
+        initial_statev_provenance=(
+            f"{Path(proposed).name} *INITIAL CONDITIONS, TYPE=SOLUTION: "
+            f"{len(declared_state)} values" if declared_state else ""),
         loading=tuple(loading),
         fd_steps=tuple(fd_steps) or VerificationManifest.fd_steps,
         notes=PROBE_NOTE)
 
     refusals = list(manifest.missing_requirements())
+
+    # An orientation is material data for an anisotropic law -- the local axes
+    # ARE the model. The deck parser gives the orientation's NAME, not its
+    # axes, and the manifest needs three Euler angles, so there is nothing here
+    # to carry over honestly. Refusing is the only option that does not invent
+    # a frame the author never published: running such a material in the global
+    # frame and calling the result verified would be a statement about a model
+    # nobody described.
+    if material.orientation:
+        refusals.append(
+            f"the deck uses this material with *ORIENTATION "
+            f"{material.orientation}, and the local axes of an anisotropic "
+            f"material are part of what it is made of. This harness can read "
+            f"the orientation's name but not its axes, and will not run the "
+            f"material in a frame its author never published")
+
+    # A state-variable count nobody published is not the same fact as one read
+    # from a deck, and the two were indistinguishable in the record: the
+    # provenance string only mentions *DEPVAR when the deck actually had one.
+    if material.nstatv is None:
+        refusals.append(
+            "the paired deck declares no *DEPVAR, so nobody published how many "
+            "state variables this material has. A UMAT that writes past the "
+            "end of a defaulted array of one either corrupts memory or "
+            "measures a truncated state")
     if shape is None:
         # Not a material problem, so not needs_material_data: what is missing
         # is an element this harness can drive one point of at this tensor size.
@@ -701,13 +779,56 @@ def tangent_verdict(comparison: dict, *, tolerance: float = TANGENT_TOLERANCE,
 # ---------------------------------------------------------------------------
 
 
+#: Console signatures of a run that broke for reasons outside the model: a
+#: shared licence server that made the job wait past the timeout, an Abaqus
+#: that is not on PATH, a killed process. The licence server this runs against
+#: is contended and multi-minute waits have been measured, so this is the
+#: normal way a long batch loses an entry.
+_HARNESS_SIGNATURES = (
+    "TIMEOUT", "TimeoutExpired", "FileNotFoundError", "OSError",
+    "PermissionError", "is not on PATH", "abaqus: command not found",
+    "No licenses available", "licence", "license server", "flexlm",
+    "Killed", "Aborted by system", "MemoryError",
+)
+
+
+def looks_like_a_harness_failure(report: dict) -> str:
+    """Why this run says nothing about the model, or "" when it does.
+
+    A job that produced no solver records at all, whose console carries a
+    timeout or a missing binary or a licence wait, is a statement about this
+    machine. Recording it as ``original_job_failed`` attributes a licence
+    problem to somebody's UMAT -- and because every rung of the ladder is
+    settled, ``--resume`` then served that verdict for as long as the results
+    file lived, reproducing it verbatim instead of retrying.
+    """
+    if report.get("completed"):
+        return ""
+    if report.get("converged_records"):
+        return ""              # it ran and produced records; that is the model
+    console = " ".join(str(report.get(key) or "")
+                       for key in ("console", "log", "warning"))
+    reasons = " ".join(str(r) for r in (report.get("reasons") or ()))
+    haystack = f"{console} {reasons}"
+    for signature in _HARNESS_SIGNATURES:
+        if signature.lower() in haystack.lower():
+            return (f"the run broke before it could say anything about the "
+                    f"model: {signature!r} in the solver console. Recorded as "
+                    f"a harness error so a later --resume retries it")
+    return ""
+
+
 def is_terminal(stage: str) -> bool:
     """Is this a settled result, or a run that has to be done again?
 
     Every rung of the ladder is settled, including ``needs_material_data``:
-    nothing about re-running it would change, and it is a finding in its own
-    right. A harness error is not settled -- it says the run broke, not the
-    model -- so a resumed batch does it again.
+    it is a finding in its own right and re-running it changes nothing while
+    the deck and the source stay as they are.
+
+    A harness error is not settled. It says the run broke, not the model, and
+    the commonest cause here is a shared licence server making a job wait past
+    its timeout -- a machine-state artifact that must not become a published
+    finding about a UMAT. A resumed batch does those again.
     """
     return stage in STAGES
 
@@ -968,6 +1089,11 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     record["warnings"] += [f"original: {w}" for w in original_job.warnings]
     seen["original_completed"] = original_job.completed
     if not original_job.completed:
+        harness = looks_like_a_harness_failure(original_report)
+        if harness:
+            record["stage"] = HARNESS_ERROR
+            record["reason"] = f"original: {harness}"
+            return record
         return settle("; ".join(original_job.reasons)
                       or "the original build did not complete")
 
@@ -984,6 +1110,11 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     record["warnings"] += [f"transformed: {w}" for w in transformed_job.warnings]
     seen["transformed_completed"] = transformed_job.completed
     if not transformed_job.completed:
+        harness = looks_like_a_harness_failure(transformed_report)
+        if harness:
+            record["stage"] = HARNESS_ERROR
+            record["reason"] = f"transformed: {harness}"
+            return record
         return settle("; ".join(transformed_job.reasons)
                       or "the transformed build did not complete")
 
