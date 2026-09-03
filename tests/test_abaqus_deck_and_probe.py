@@ -528,3 +528,47 @@ class TestTheProbeNamesWhatTheRoutineHas:
         declaration = next(i for i, l in enumerate(lines)
                            if "real(rkind)" in l)
         assert call > declaration, "the probe precedes the types it names"
+
+
+def test_a_zero_length_block_does_not_end_the_record(tmp_path):
+    """A model with no state variables writes `STATEV 0` and a blank line.
+
+    Fortran still performs the WRITE, so the empty implied-do emits an empty
+    record. Reading that blank as the end of the probe record dropped the
+    DDSDDE that follows it -- and with it the tangent check for every
+    stateless model. Six of the eight entries that had already agreed on
+    their primal histories in Abaqus were blocked by exactly this.
+    """
+    from umat_oti.abaqus.probe import parse_probe
+
+    path = tmp_path / "p.txt"
+    path.write_text(
+        "RECORD t        1        1        1        1   0.0E+000\n"
+        "STRESS        2\n"
+        "   1.0E+000   2.0E+000\n"
+        "STATEV        0\n"
+        "\n"
+        "DDSDDE        4\n"
+        "   10.0E+000   20.0E+000   30.0E+000   40.0E+000\n", encoding="utf-8")
+    record = parse_probe(path)[0]
+    assert record["STATEV"] == []
+    assert record["DDSDDE"] == [10.0, 20.0, 30.0, 40.0]
+
+
+def test_a_blank_line_does_not_merge_two_records(tmp_path):
+    """The record still ends at the next ENTRY or RECORD."""
+    from umat_oti.abaqus.probe import parse_probe
+
+    path = tmp_path / "p.txt"
+    path.write_text(
+        "RECORD t        1        1        1        1   0.0E+000\n"
+        "STATEV        0\n"
+        "\n"
+        "RECORD t        1        1        1        2   1.0E+000\n"
+        "STRESS        1\n"
+        "   5.0E+000\n", encoding="utf-8")
+    records = parse_probe(path)
+    assert len(records) == 2
+    assert "STRESS" not in records[0]
+    assert records[1]["STRESS"] == [5.0]
+    assert records[1]["increment"] == 2
