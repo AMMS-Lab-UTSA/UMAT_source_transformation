@@ -221,3 +221,56 @@ def test_a_model_that_diverged_stays_a_finding():
     assert not looks_like_a_harness_failure({
         "completed": False, "converged_records": 0, "console": "",
         "reasons": ["the analysis ran 2 increments where 6 were requested"]})
+
+
+# ---- a source that waits for input hangs rather than fails ---------------
+def test_a_hung_run_on_a_pause_source_is_the_sources_property():
+    """A Fortran PAUSE does not fail a solver, it hangs one.
+
+    Abaqus sits on the terminal read until the job's timeout elapses, so the
+    licence is spent and nothing is measured. 25 of the 199 stored transforms
+    carry such a statement. Left as a harness error it would be retried, and
+    would hang again, every time -- so it is a rung of the ladder and settled.
+    """
+    from verify_store_in_abaqus import WAITS_FOR_INPUT, classify_stage
+    from verify_store_in_abaqus import StageEvidence
+
+    stage = classify_stage(StageEvidence(material_found=True,
+                                         waits_for_input=True))
+    assert stage == WAITS_FOR_INPUT
+    assert is_terminal(WAITS_FOR_INPUT)
+
+
+def test_a_source_without_one_is_unaffected():
+    from verify_store_in_abaqus import StageEvidence, classify_stage
+
+    stage = classify_stage(StageEvidence(material_found=True,
+                                         waits_for_input=False,
+                                         manifest_refusals=("no loading",)))
+    assert stage == "manifest_refused"
+
+
+def test_a_timeout_is_recognised_from_the_console_or_the_missing_records():
+    from verify_store_in_abaqus import timed_out
+
+    assert timed_out({"console": "TIMEOUT"})
+    assert timed_out({"console": "TimeoutExpired: 5400s"})
+    assert timed_out({"console": "", "converged_records": 0,
+                      "reasons": ["original.sta was not written"]})
+
+
+def test_a_run_that_produced_records_did_not_time_out():
+    """It reached the material and wrote what it computed."""
+    from verify_store_in_abaqus import timed_out
+
+    assert not timed_out({"console": "", "converged_records": 6,
+                          "reasons": ["original.sta was not written"]})
+
+
+def test_the_input_waiting_rung_sits_above_needs_material_data():
+    """A model nobody can supply constants for is never run at all, so that
+    answer comes first; everything else is about a run that was attempted."""
+    from verify_store_in_abaqus import STAGES, WAITS_FOR_INPUT
+
+    assert STAGES.index("needs_material_data") < STAGES.index(WAITS_FOR_INPUT)
+    assert STAGES.index(WAITS_FOR_INPUT) < STAGES.index("verified")
