@@ -291,6 +291,20 @@ def parse_probe(path: Path) -> list[dict]:
         })
         index += 1
         while index < len(lines):
+            # A block of length zero still costs Fortran a WRITE, and that
+            # writes an empty line. NSTATV is 0 for a model with no state, so
+            # `STATEV 0` is followed by a blank and then `DDSDDE 36`. Treating
+            # the blank as the end of the record dropped the DDSDDE of every
+            # stateless model -- six of the eight entries that had already
+            # agreed on their primal histories in Abaqus could not have their
+            # tangent checked, for a blank line.
+            #
+            # Blank lines are skipped, not terminal. The record still ends at
+            # the next ENTRY or RECORD, because neither is a known block.
+            while index < len(lines) and not lines[index].strip():
+                index += 1
+            if index >= len(lines):
+                break
             header = lines[index].split()
             if not header:
                 break
