@@ -367,6 +367,17 @@ def _is_comment(line: str) -> bool:
     return bool(re.match(r"^[cC*!]", line)) or not line.strip()
 
 
+#: A line that CLOSES a program unit rather than opening one. Fortran lets a
+#: routine end with `END SUBROUTINE UMAT`, and the opener pattern's leading
+#: `(?:\w+\s+)*` swallows the `END` -- so the closing line matched as a second
+#: opening of the same routine, the span restarted there, and the routine's
+#: only RETURN was left outside it. Nine of the first seventeen entries in the
+#: first real batch were recorded as `primal_disagreed` on that: both builds
+#: ran to six increments in Abaqus and neither could be instrumented, so there
+#: was nothing to compare and the model was blamed for it.
+_UNIT_CLOSER = re.compile(r"^\s*\d*\s*END\b", re.IGNORECASE)
+
+
 def _routine_span(lines: list[str], entry: str) -> tuple[Optional[int], int]:
     """Where the named routine begins, and where the next program unit does."""
     opener = re.compile(rf"^\s{{0,5}}\S?\s*(?:\w+\s+)*SUBROUTINE\s+({entry})\b",
@@ -377,10 +388,17 @@ def _routine_span(lines: list[str], entry: str) -> tuple[Optional[int], int]:
     for number, line in enumerate(lines):
         if re.match(r"^[cC*!]", line):
             continue
+        if _UNIT_CLOSER.match(line):
+            # `END SUBROUTINE UMAT` closes the routine. If it closes the one
+            # being instrumented, the span ends here.
+            if start is not None and end is None and opener.search(line):
+                end = number
+            continue
         if not any_unit.match(line):
             continue
         if opener.match(line):
-            start = number
+            if start is None:
+                start = number
         elif start is not None and end is None:
             end = number
     return start, len(lines) if end is None else end
