@@ -85,7 +85,7 @@ from umat_oti.abaqus.compare import compare_primal, compare_tangent     # noqa: 
 from umat_oti.abaqus.deck import generate_deck                          # noqa: E402
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
     NEEDS_MATERIAL_DATA, VerificationManifest, reverse, uniaxial)
-from umat_oti.abaqus.probe import converged_only, parse_probe           # noqa: E402
+from umat_oti.abaqus.probe import CORRUPT, converged_only, parse_probe           # noqa: E402
 from umat_oti.abaqus.replay import (                                    # noqa: E402
     STATE_FILE, build_replay, difference_tangent, write_state)
 from umat_oti.abaqus.support import (                                   # noqa: E402
@@ -694,6 +694,22 @@ def history_of(work_dir: Path, job: str) -> list[dict]:
         return converged_only(parse_probe(Path(work_dir) / f"{job}_probe.txt"))
 
 
+def corrupt_records(history: Sequence[dict]) -> list[str]:
+    """Reasons any record in this history could not be read.
+
+    A record carrying one was written after the subroutine damaged its own
+    argument list -- Fortran printed asterisks where NSTATV should have been --
+    so the numbers beside it are not measurements and must not be compared as
+    if they were. Seen on the first batch: a source whose paired deck declares
+    no *DEPVAR, run with the inferred count, wrote past the end of its state
+    array and clobbered the count itself.
+
+    This is a finding about the model, not about the harness: the source needs
+    more state than anything published for it says.
+    """
+    return [str(record[CORRUPT]) for record in history if CORRUPT in record]
+
+
 # ---------------------------------------------------------------------------
 # the tangent
 # ---------------------------------------------------------------------------
@@ -1214,6 +1230,22 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
 
     original_history = history_of(original_call["work_dir"], "original")
     transformed_history = history_of(transformed_call["work_dir"], "transformed")
+
+    # A record the probe could not print is a record written after the
+    # subroutine damaged its own argument list, so the numbers beside it are
+    # not measurements. Checked before the comparison rather than left to it:
+    # compare_primal would see a record with no STRESS and correctly refuse
+    # agreement, but it would say "no resolvable response", which is the wrong
+    # reason and hides a real finding about the model.
+    damaged = (corrupt_records(original_history)
+               + corrupt_records(transformed_history))
+    if damaged:
+        record["corrupt_records"] = damaged[:4]
+        return settle(
+            f"{len(damaged)} probe record(s) could not be printed, so this run "
+            f"damaged its own argument list and none of its numbers are "
+            f"measurements: {damaged[0][:160]}")
+
     primal = compare_primal(original_history, transformed_history,
                             tolerance=manifest.primal_tolerance,
                             near_zero_fraction=manifest.near_zero_fraction)

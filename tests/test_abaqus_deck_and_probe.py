@@ -372,3 +372,75 @@ class TestADeclaredStartingPoint:
         write_state(state, tmp_path / STATE_FILE)
         first = (tmp_path / STATE_FILE).read_text().splitlines()[0].split()
         assert first == ["6", "2", "3", "3", "3"]
+
+
+class TestAProbeRecordThatCouldNotBeWritten:
+    """A Fortran field that does not fit its format writes asterisks.
+
+    Found on the first real batch: one source's probe wrote
+    `SHAPE 6 ******** 2 3 3`. NSTATV is passed in by Abaqus and never
+    changed, so a record that cannot print it was written after the
+    subroutine overwrote its own argument list -- a UMAT writing past the end
+    of a state array smaller than it needs. The parser crashed on it with
+    `invalid literal for int()`, which turned a real finding about the model
+    into a crash in the harness.
+    """
+
+    def test_an_overflowed_shape_field_is_reported_not_crashed_on(self, tmp_path):
+        from umat_oti.abaqus.probe import CORRUPT, parse_probe
+
+        path = tmp_path / "p.txt"
+        path.write_text(
+            "ENTRY t        1        1        1        1   0.0E+000\n"
+            "SHAPE        6 ********        2        3        3\n"
+            "STATEV0 ********\n", encoding="utf-8")
+        records = parse_probe(path)
+        assert len(records) == 1
+        assert CORRUPT in records[0]
+        assert "overwrote its own argument list" in records[0][CORRUPT] or \
+            "damaged its own interface" in records[0][CORRUPT]
+
+    def test_nothing_past_the_corrupt_field_is_parsed(self, tmp_path):
+        """Once NSTATV is unreadable there is no way to know how many values
+        follow, so anything read past it would be guesswork dressed as data."""
+        from umat_oti.abaqus.probe import CORRUPT, parse_probe
+
+        path = tmp_path / "p.txt"
+        path.write_text(
+            "ENTRY t        1        1        1        1   0.0E+000\n"
+            "SHAPE        6 ********        2        3        3\n"
+            "STRESS0        6\n"
+            "   1.0E+000   2.0E+000   3.0E+000   4.0E+000\n", encoding="utf-8")
+        record = parse_probe(path)[0]
+        assert CORRUPT in record
+        assert "STRESS0" not in record
+
+    def test_an_overflowed_record_header_is_reported(self, tmp_path):
+        from umat_oti.abaqus.probe import CORRUPT, parse_probe
+
+        path = tmp_path / "p.txt"
+        path.write_text("ENTRY t ******** 1 1 1   0.0E+000\n", encoding="utf-8")
+        assert CORRUPT in parse_probe(path)[0]
+
+    def test_an_unreadable_number_in_a_block_is_reported(self, tmp_path):
+        from umat_oti.abaqus.probe import CORRUPT, parse_probe
+
+        path = tmp_path / "p.txt"
+        path.write_text(
+            "ENTRY t        1        1        1        1   0.0E+000\n"
+            "STRESS0        2\n   1.0E+000   ****\n", encoding="utf-8")
+        assert CORRUPT in parse_probe(path)[0]
+
+    def test_a_clean_file_carries_no_corruption_marker(self, tmp_path):
+        """The guard must not label a healthy record."""
+        from umat_oti.abaqus.probe import CORRUPT, parse_probe
+
+        path = tmp_path / "p.txt"
+        path.write_text(
+            "ENTRY t        1        1        1        1   0.0E+000\n"
+            "SHAPE        6        4        2        3        3\n"
+            "STRESS0        2\n   1.0E+000   2.0E+000\n", encoding="utf-8")
+        record = parse_probe(path)[0]
+        assert CORRUPT not in record
+        assert record["STRESS0"] == [1.0, 2.0]
+        assert record["NSTATV"] == 4
