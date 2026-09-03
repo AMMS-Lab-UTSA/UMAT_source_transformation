@@ -766,11 +766,19 @@ def replay_flags(form: str, work_dir: Path) -> tuple[str, ...]:
     The form is not cosmetic: compiling fixed-form Fortran as free-form turns
     every continuation line into a syntax error, and the replay then reports a
     build failure that is the harness's and not the source's.
+
+    But it must not be forced GLOBALLY, because more than one file is on the
+    command line. The replay driver is free-form ``.f90`` and the UMAT beside
+    it is usually fixed-form ``.for``; a global ``-ffixed-form`` compiled the
+    driver as fixed and gfortran rejected every line of it with "Non-numeric
+    character in statement label", so four entries that had already agreed on
+    their primal histories in Abaqus were recorded as tangent failures. The
+    length limits are per-form and harmless to the other, so only they are
+    passed and gfortran infers each file's form from its suffix -- which is
+    what the offline gate has always done, and why it did not hit this.
     """
-    shape = (("-ffree-form", "-ffree-line-length-none")
-             if str(form).strip().lower().startswith("free")
-             else ("-ffixed-form", "-ffixed-line-length-132"))
-    return shape + ("-std=legacy", "-O2", "-w", f"-J{Path(work_dir)}")
+    return ("-ffixed-line-length-132", "-ffree-line-length-none",
+            "-std=legacy", "-O2", "-w", f"-J{Path(work_dir)}")
 
 
 def tangent_verdict(comparison: dict, *, tolerance: float = TANGENT_TOLERANCE,
