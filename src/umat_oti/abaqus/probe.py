@@ -176,8 +176,41 @@ _BLOCKS = ("STRESS", "STATEV", "DDSDDE", "STRESS0", "STATEV0", "STRAN",
            "COORDS")
 
 
+def _whole(token: str) -> Optional[int]:
+    """One integer field, or None when Fortran could not fit it.
+
+    A Fortran ``I8`` field that the value does not fit writes ``********``
+    instead of digits. That is not a formatting curiosity here: NSTATV is
+    passed in by Abaqus and never changed, so a record whose NSTATV reads
+    ``********`` is a record written after the subroutine overwrote its own
+    argument list -- a UMAT writing past the end of a state array smaller than
+    it needs. Seen on the first batch: one source's first record said NSTATV 0
+    and a later one said ``********``.
+
+    Worth reporting rather than crashing on, and worth reporting as what it is
+    rather than as a parse problem.
+    """
+    try:
+        return int(token)
+    except (TypeError, ValueError):
+        return None
+
+
+#: What a record says when a field could not be read. A caller that sees this
+#: is looking at a run whose subroutine damaged its own interface, and must not
+#: treat the numbers beside it as measurements.
+CORRUPT = "corrupt_record"
+
+
 def parse_probe(path: Path) -> list[dict]:
-    """The records the probe wrote, in the order it wrote them."""
+    """The records the probe wrote, in the order it wrote them.
+
+    A field Fortran could not fit into its format is reported, never crashed
+    on. The record carries ``CORRUPT`` with what could not be read, and every
+    later block of that record is abandoned: once NSTATV is unreadable there is
+    no way to know how many values follow it, so anything parsed past that
+    point would be guesswork dressed as a measurement.
+    """
     records: list[dict] = []
     try:
         lines = Path(path).read_text(errors="replace").splitlines()
@@ -190,30 +223,68 @@ def parse_probe(path: Path) -> list[dict]:
             index += 1
             continue
         parts = line.split()
-        record = {
+        header_numbers = [_whole(token) for token in parts[2:6]]
+        record: dict = {
             "kind": "entry" if parts[0] == "ENTRY" else "result",
-            "tag": parts[1], "element": int(parts[2]), "point": int(parts[3]),
-            "step": int(parts[4]), "increment": int(parts[5]),
-            "time": float(parts[6].replace("E+", "e+").replace("E-", "e-")),
+            "tag": parts[1],
         }
+        if any(value is None for value in header_numbers):
+            record[CORRUPT] = (
+                f"the record header could not be read: {line[:80]!r}. A "
+                f"Fortran integer field that does not fit writes asterisks, "
+                f"and these are passed in by Abaqus -- so this run overwrote "
+                f"its own argument list")
+            records.append(record)
+            index += 1
+            continue
+        record.update({
+            "element": header_numbers[0], "point": header_numbers[1],
+            "step": header_numbers[2], "increment": header_numbers[3],
+            "time": float(parts[6].replace("E+", "e+").replace("E-", "e-")),
+        })
         index += 1
         while index < len(lines):
             header = lines[index].split()
             if not header:
                 break
             if header[0] == "SHAPE":
+                shape = [_whole(value) for value in header[1:6]]
+                if any(value is None for value in shape):
+                    record[CORRUPT] = (
+                        f"the shape line could not be read: "
+                        f"{lines[index].strip()[:80]!r}. NSTATV and NTENS are "
+                        f"passed in by Abaqus and never changed, so a run that "
+                        f"cannot print them has written past the end of an "
+                        f"array and damaged its own interface")
+                    break
                 record.update(zip(("NTENS", "NSTATV", "NPROPS", "NDI", "NSHR"),
-                                  (int(value) for value in header[1:6])))
+                                  shape))
                 index += 1
                 continue
             if header[0] not in _BLOCKS:
                 break
-            name, count = header[0], int(header[1])
+            count = _whole(header[1]) if len(header) > 1 else None
+            if count is None:
+                record[CORRUPT] = (
+                    f"the {header[0]} block declares a length that could not "
+                    f"be read: {lines[index].strip()[:60]!r}")
+                break
+            name = header[0]
             index += 1
             values: list[float] = []
+            unreadable = ""
             while index < len(lines) and len(values) < count:
-                values += [float(token) for token in lines[index].split()]
+                try:
+                    values += [float(token) for token in lines[index].split()]
+                except ValueError:
+                    unreadable = (
+                        f"the {name} block holds a number that could not be "
+                        f"read: {lines[index].strip()[:60]!r}")
+                    break
                 index += 1
+            if unreadable:
+                record[CORRUPT] = unreadable
+                break
             record[name] = values[:count]
         records.append(record)
     return records
