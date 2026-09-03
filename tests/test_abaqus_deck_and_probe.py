@@ -572,3 +572,93 @@ def test_a_blank_line_does_not_merge_two_records(tmp_path):
     assert "STRESS" not in records[0]
     assert records[1]["STRESS"] == [5.0]
     assert records[1]["increment"] == 2
+
+
+class TestTheDifferencePerturbsWhatTheSourceReads:
+    """A perturbation the source cannot see is not a difference.
+
+    Ten finite-strain sources that had already agreed on their primal
+    histories in Abaqus reported a tangent error of exactly 1.0 at every step
+    size, with the absolute error unchanged from a step of 1e-3 to one of
+    1e-6. That is the signature of a centred difference that is identically
+    zero: perturbing DSTRAN moves nothing on a source whose kinematic input is
+    the deformation gradient, so the "error" was just the magnitude of the OTI
+    tangent it was compared against.
+
+    Measured after the fix on one of them: the largest difference entry went
+    from 0.0 to 2.91e+08, against an OTI tangent of order 2.96e+08.
+    """
+
+    def test_the_sweep_reads_which_input_the_transform_seeded(self, tmp_path):
+        from umat_oti.abaqus.replay import DifferenceSweep
+
+        assert DifferenceSweep().driven_through == "strain increment"
+
+    def test_the_driver_accepts_a_gradient_perturbation(self):
+        """Nine numbers added to DFGRD1, read from a file the caller writes."""
+        from umat_oti.abaqus.replay import driver_source
+
+        source = driver_source("M")
+        assert "GET_COMMAND_ARGUMENT(3,GFILE)" in source
+        assert "DFGRD1(I,J) = DFGRD1(I,J) + DFPERT(I,J)" in source
+
+    def test_no_gradient_argument_leaves_the_gradient_alone(self):
+        """A strain-driven source must be unaffected by the new path."""
+        from umat_oti.abaqus.replay import driver_source
+
+        source = driver_source("M")
+        assert "IF (LEN_TRIM(GFILE) .GT. 0) THEN" in source
+
+    def test_the_perturbation_file_is_written_row_major(self, tmp_path):
+        from umat_oti.abaqus.replay import GRADIENT_FILE, ReplayBuild, run_replay
+
+        build = ReplayBuild(program=tmp_path / "does-not-exist", ok=True)
+        run_replay(build, tmp_path, 0, 0.0,
+                   gradient=[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+        rows = (tmp_path / GRADIENT_FILE).read_text().splitlines()
+        assert len(rows) == 3
+        assert [float(v) for v in rows[0].split()] == [1.0, 2.0, 3.0]
+        assert [float(v) for v in rows[2].split()] == [7.0, 8.0, 9.0]
+
+    def test_a_gradient_seeded_source_is_recognised_before_anything_runs(
+            self, tmp_path):
+        """Which input the perturbation moves is a property of the source.
+
+        A caller reading a sweep that failed still needs to know it, so it is
+        resolved before the first replay rather than after.
+        """
+        from umat_oti.abaqus.replay import difference_tangent, ReplayBuild
+
+        emitted = tmp_path / "u_oti.for"
+        emitted.write_text(
+            "      SUBROUTINE UMAT(STRESS)\n"
+            "      DFGRD1_OTI(1,1) = DFGRD1_OTI(1,1) + OTI_E1\n"
+            "      RETURN\n      END\n", encoding="utf-8")
+        sweep = difference_tangent(ReplayBuild(program=tmp_path / "nope", ok=True),
+                                   tmp_path, 6, (1e-4,), transformed_source=emitted)
+        assert sweep.driven_through == "deformation gradient"
+        assert not sweep.ok        # nothing ran; the drive is still known
+
+    def test_a_strain_driven_source_is_recognised_as_such(self, tmp_path):
+        from umat_oti.abaqus.replay import difference_tangent, ReplayBuild
+
+        emitted = tmp_path / "u_oti.for"
+        emitted.write_text(
+            "      SUBROUTINE UMAT(STRESS)\n"
+            "      DSTRAN_OTI(1) = DSTRAN_OTI(1) + OTI_E1\n"
+            "      RETURN\n      END\n", encoding="utf-8")
+        sweep = difference_tangent(ReplayBuild(program=tmp_path / "nope", ok=True),
+                                   tmp_path, 6, (1e-4,), transformed_source=emitted)
+        assert sweep.driven_through == "strain increment"
+
+    def test_a_direction_the_seed_map_omits_perturbs_nothing(self):
+        """Which is why such a direction must be reported, not returned as a
+        column of zeros -- that would read as "the stress does not depend on
+        this component"."""
+        from umat_oti.transform.source_transform import seeded_kinematics
+        from umat_oti.validation.tangent_validation import _gradient_perturbation
+
+        drive = seeded_kinematics(
+            "      DFGRD1_OTI(1,1) = DFGRD1_OTI(1,1) + OTI_E1\n")
+        assert any(_gradient_perturbation(drive, 1, 1e-4))
+        assert not any(_gradient_perturbation(drive, 5, 1e-4))
