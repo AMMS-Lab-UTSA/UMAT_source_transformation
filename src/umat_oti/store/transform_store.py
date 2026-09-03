@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
@@ -57,25 +58,41 @@ def file_digest(path: Path) -> str:
         return ""
 
 
+#: What counts as transform code. The Fortran matters as much as the Python:
+#: the transform copies its OTI support units verbatim into every output and
+#: generates from Fortran templates, so a change to one of those changes what
+#: every transformed source computes. Fingerprinting only *.py left them
+#: invisible, and the store went on serving derivatives of code that no longer
+#: existed while reporting every entry as current.
+FINGERPRINTED = ("*.py", "*.f90", "*.f", "*.for", "*.inc")
+
+
 def transform_fingerprint(package_root: Optional[Path] = None) -> str:
     """A digest of the transform code itself.
 
-    Every Python file under the package contributes, in sorted order, name and
-    contents both. That is deliberately broad: it will call an entry stale for
-    a change that could not have affected it, and the cost of that is a rebuild,
-    while the cost of the opposite mistake is a batch that reports agreement it
-    never rechecked.
+    Every file under the package whose suffix is in :data:`FINGERPRINTED`
+    contributes, name and contents both, in one order sorted by path relative
+    to the root -- not grouped by suffix, or the digest would depend on the
+    order the globs happened to run in.
+
+    Deliberately broad: it will call an entry stale for a change that could not
+    have affected it, and the cost of that is a rebuild, while the cost of the
+    opposite mistake is a batch reporting agreement it never rechecked.
     """
     root = Path(package_root) if package_root is not None else \
         Path(__file__).resolve().parents[1]
+    seen: dict[str, Path] = {}
+    for pattern in FINGERPRINTED:
+        for path in root.rglob(pattern):
+            if "__pycache__" in path.parts or not path.is_file():
+                continue
+            seen[str(path.relative_to(root))] = path
     digest = hashlib.sha256()
-    for path in sorted(root.rglob("*.py")):
-        if "__pycache__" in path.parts:
-            continue
-        digest.update(str(path.relative_to(root)).encode("utf-8"))
+    for relative in sorted(seen):
+        digest.update(relative.encode("utf-8"))
         digest.update(b"\0")
         try:
-            digest.update(path.read_bytes())
+            digest.update(seen[relative].read_bytes())
         except OSError:
             digest.update(b"<unreadable>")
         digest.update(b"\0")
@@ -113,13 +130,51 @@ def _support_units(directory: Path, entry_source: Path) -> tuple[Path, ...]:
             candidate = Path(directory) / name
             if candidate.is_file() and candidate.resolve() != entry:
                 units.append(candidate)
-        return tuple(units)
-    # No order file: fall back to the modules, but still never the entry
-    # source and never a combined whole-UMAT copy of it.
-    stem = entry.stem
-    return tuple(sorted(
-        path for path in Path(directory).glob("*.f90")
-        if path.is_file() and path.resolve() != entry and stem not in path.stem))
+        if units:
+            return tuple(units)
+    # No usable order file. Fall back to the modules, and recognise a whole-UMAT
+    # copy by the routine it DECLARES.
+    #
+    # Two weaker rules were tried and both were wrong. Excluding any unit whose
+    # stem contains the entry's stem dropped the real OTI modules, because an
+    # entry named `umat.for` sits inside `umat_oti_module.f90`. Comparing bytes
+    # against the entry missed it entirely, because the copy the transform
+    # leaves is a free-form translation of the fixed-form entry, not a copy of
+    # it. What the two do share is the subprogram they define, and defining it
+    # twice is the link failure being avoided.
+    declared = _declared_subprograms(entry)
+    units = []
+    for path in sorted(Path(directory).glob("*.f90")):
+        if not path.is_file() or path.resolve() == entry:
+            continue
+        if declared and _declared_subprograms(path) & declared:
+            continue
+        units.append(path)
+    return tuple(units)
+
+
+_SUBPROGRAM = re.compile(
+    r"^[^!cC*]{0,10}?\b(?:SUBROUTINE|FUNCTION)\s+(\w+)", re.IGNORECASE)
+
+
+def _declared_subprograms(path: Path) -> set[str]:
+    """The subprogram names a Fortran file defines, upper-cased.
+
+    Enough to tell a support module from a second copy of the UMAT: two files
+    that define the same subprogram cannot both be in one link.
+    """
+    try:
+        text = path.read_text(errors="replace")
+    except OSError:
+        return set()
+    names = set()
+    for line in text.splitlines():
+        if line[:1] in "cC*!":
+            continue
+        match = _SUBPROGRAM.match(line)
+        if match:
+            names.add(match.group(1).upper())
+    return names
 
 
 @dataclass(frozen=True)
@@ -172,14 +227,33 @@ class TransformStore:
 
     # ---- reading ---------------------------------------------------------
     def get(self, source_id: str, source_sha256: str) -> Optional[StoredTransform]:
-        """The stored transform for these inputs, if one is present and intact.
+        """The stored transform for these inputs, if one is usable.
 
         Returns None when the transform code has moved on, which is what makes
-        a change to the transform re-run the batch instead of reusing it.
+        a change to the transform re-run the batch instead of reusing it, and
+        None for an entry that records a transform which failed: otherwise a
+        batch reads it back as already done and reports it as cached for as
+        long as the store lives.
         """
-        return self.read(self.key_for(source_id, source_sha256))
+        stored = self.read(self.key_for(source_id, source_sha256))
+        if stored is None:
+            return None
+        if stored.metadata.get("transform_success") is False:
+            return None
+        return stored
 
     def read(self, key: str) -> Optional[StoredTransform]:
+        """The entry at ``key``, or None when it is absent or its files are gone.
+
+        Use :meth:`record` when the count matters: an entry whose files were
+        cleaned off the disk underneath the store is *broken*, not absent, and
+        dropping it here is how a denominator quietly shrinks.
+        """
+        stored = self.record(key)
+        return stored if stored is not None and stored.exists else None
+
+    def record(self, key: str) -> Optional[StoredTransform]:
+        """What the store says about ``key``, whether or not its files survive."""
         record_path = self.path_for(key) / ENTRY_RECORD
         if not record_path.is_file():
             return None
@@ -187,7 +261,7 @@ class TransformStore:
             record = json.loads(record_path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return None
-        stored = StoredTransform(
+        return StoredTransform(
             key=str(record.get("key", key)),
             source_id=str(record.get("source_id", "")),
             source_sha256=str(record.get("source_sha256", "")),
@@ -197,18 +271,31 @@ class TransformStore:
             support_units=tuple(Path(p) for p in record.get("support_units", [])),
             metadata=dict(record.get("metadata", {})),
         )
-        return stored if stored.exists else None
 
-    def entries(self) -> list[StoredTransform]:
-        """Every intact entry, newest-agnostic, sorted by source identity."""
+    def all_records(self) -> list[StoredTransform]:
+        """Every entry the store has written, intact or not.
+
+        This is the denominator. The store lives outside the repository on a
+        disk that gets cleaned, so entries do lose their files, and a batch has
+        to be able to say how much of its corpus went missing rather than
+        reporting a smaller corpus.
+        """
         found = []
         for child in sorted(self.root.iterdir()) if self.root.is_dir() else []:
             if not child.is_dir():
                 continue
-            stored = self.read(child.name)
+            stored = self.record(child.name)
             if stored is not None:
                 found.append(stored)
         return sorted(found, key=lambda s: s.source_id)
+
+    def broken_entries(self) -> list[StoredTransform]:
+        """Entries the store recorded whose files are no longer on disk."""
+        return [e for e in self.all_records() if not e.exists]
+
+    def entries(self) -> list[StoredTransform]:
+        """Every intact entry, sorted by source identity."""
+        return [e for e in self.all_records() if e.exists]
 
     def current_entries(self) -> list[StoredTransform]:
         """Entries built by the transform as it stands now."""
@@ -222,14 +309,45 @@ class TransformStore:
     def put(self, source_id: str, source_sha256: str, out_dir: Path,
             entry_source: Path, metadata: Optional[dict[str, Any]] = None,
             ) -> StoredTransform:
-        """Copy a transform output into the store and record what made it."""
+        """Copy a transform output into the store and record what made it.
+
+        ``entry_source`` is located by its path within ``out_dir``, not by its
+        basename. The emitter may write the transformed file into a
+        subdirectory, and taking the name alone resolved to whatever sat at the
+        top level -- in the worst case a stale untransformed copy -- which then
+        reported itself as present.
+
+        Raises ValueError when the entry is not under ``out_dir`` or is not
+        there after the copy. A store entry that records a file which does not
+        exist is counted as a transform by its caller while the store counts
+        nothing, and the two numbers then disagree with no way to tell which
+        is wrong.
+        """
+        out_dir = Path(out_dir).resolve()
+        entry_path = Path(entry_source).resolve()
+        try:
+            relative = entry_path.relative_to(out_dir)
+        except ValueError:
+            raise ValueError(
+                f"the entry source {entry_path} is not inside the transform "
+                f"output {out_dir}, so the store cannot address it") from None
+        if not entry_path.is_file():
+            raise ValueError(
+                f"the transform named {entry_path} as its output but no such "
+                f"file exists, so there is nothing to store")
+
         key = self.key_for(source_id, source_sha256)
         target = self.path_for(key)
         if target.exists():
             shutil.rmtree(target, ignore_errors=True)
-        shutil.copytree(Path(out_dir), target)
+        shutil.copytree(out_dir, target)
 
-        entry = target / Path(entry_source).name
+        entry = target / relative
+        if not entry.is_file():
+            shutil.rmtree(target, ignore_errors=True)
+            raise ValueError(
+                f"the entry source did not survive the copy into the store: "
+                f"{relative}")
         support = _support_units(target, entry)
         stored = StoredTransform(
             key=key, source_id=source_id, source_sha256=source_sha256,
@@ -260,25 +378,41 @@ class TransformStore:
 
     # ---- the index -------------------------------------------------------
     def rebuild_index(self) -> Path:
-        entries = self.entries()
+        records = self.all_records()
         payload = {
             "fingerprint": self._fingerprint,
-            "count": len(entries),
-            "current": sum(1 for e in entries if e.fingerprint == self._fingerprint),
-            "entries": [e.as_dict() for e in entries],
+            "count": len(records),
+            "current": sum(1 for e in records
+                           if e.exists and e.fingerprint == self._fingerprint),
+            "stale": sum(1 for e in records
+                         if e.exists and e.fingerprint != self._fingerprint),
+            "broken": sum(1 for e in records if not e.exists),
+            "entries": [e.as_dict() for e in records],
         }
         path = self.root / INDEX
         path.write_text(json.dumps(payload, indent=1) + "\n", encoding="utf-8")
         return path
 
     def summary(self) -> dict[str, Any]:
-        """Counts a caller can report without reading every entry."""
-        entries = self.entries()
-        current = [e for e in entries if e.fingerprint == self._fingerprint]
+        """Counts a caller can report, with nothing dropped from the total.
+
+        ``stored`` is every entry the store has written, so
+        ``current + stale + broken == stored`` always. A broken entry -- one
+        whose files were cleaned off the disk -- used to be dropped from
+        ``entries`` and therefore from the total, which shrank the denominator
+        with no category to account for it.
+
+        The root is deliberately absent: this goes into published evidence,
+        which must not name the machine it was produced on.
+        """
+        records = self.all_records()
+        broken = [e for e in records if not e.exists]
+        intact = [e for e in records if e.exists]
+        current = [e for e in intact if e.fingerprint == self._fingerprint]
         return {
-            "root": str(self.root),
             "fingerprint": self._fingerprint,
-            "stored": len(entries),
+            "stored": len(records),
             "current": len(current),
-            "stale": len(entries) - len(current),
+            "stale": len(intact) - len(current),
+            "broken": len(broken),
         }
