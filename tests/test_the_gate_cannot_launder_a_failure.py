@@ -61,10 +61,15 @@ def test_non_finite_values_are_counted_across_both_builds():
 
 # ---- the outcome vocabulary ---------------------------------------------
 def test_a_non_finite_response_is_never_agreement():
-    """Even with the comparison claiming agreement, which it once did."""
+    """Even with the comparison claiming agreement, which it once did.
+
+    With no stress arrays recorded the row cannot be attributed to a build, and
+    it defaults to the transformed one -- the pessimistic reading about our own
+    work rather than about somebody's UMAT.
+    """
     outcome, reason = outcome_for(_decided(non_finite_components=6, agreed=True))
     assert outcome == NON_FINITE_RESPONSE
-    assert "not finite" in reason
+    assert outcome != AGREED and "non-finite" in reason
 
 
 def test_a_non_finite_response_is_its_own_outcome_not_a_disagreement():
@@ -132,3 +137,57 @@ def test_a_non_finite_value_survives_into_the_report_as_valid_json():
 def test_ordinary_numbers_are_untouched():
     assert _json_safe({"a": [1.0, 2.5], "b": {"c": 3}}) == {"a": [1.0, 2.5],
                                                             "b": {"c": 3}}
+
+
+# ---- which build failed decides what the row is evidence of --------------
+def test_both_builds_non_finite_is_not_evidence_against_the_transform():
+    """Measured: of the 27 rows the gate first reported as non_finite_response,
+    27 had BOTH builds returning NaN and none had only the transformed one.
+    A category whose name asserted a transform defect contained no instance
+    of one, and it was the largest single block of apparent defects in the
+    corpus."""
+    from verify_store_offline import BOTH_NON_FINITE
+
+    nan = [float("nan")] * 6
+    outcome, reason = outcome_for(_decided(
+        non_finite_components=6, stress_original=nan, stress_transformed=nan))
+    assert outcome == BOTH_NON_FINITE
+    assert "says nothing about the transform" in reason
+
+
+def test_only_the_transformed_build_failing_is_evidence():
+    outcome, reason = outcome_for(_decided(
+        non_finite_components=6, stress_original=[1.0] * 6,
+        stress_transformed=[float("nan")] * 6))
+    assert outcome == NON_FINITE_RESPONSE
+    assert "where the original returned finite numbers" in reason
+
+
+def test_the_original_failing_leaves_no_reference():
+    from verify_store_offline import ORIGINAL_NON_FINITE
+
+    outcome, reason = outcome_for(_decided(
+        non_finite_components=6, stress_original=[float("nan")] * 6,
+        stress_transformed=[1.0] * 6))
+    assert outcome == ORIGINAL_NON_FINITE
+    assert "no reference" in reason
+
+
+def test_the_labelled_strings_a_report_writes_are_read_back_the_same_way():
+    """Non-finite values are written to JSON as 'nan'/'inf' so the artifact
+    parses; a row read back from a previous run must be judged identically."""
+    from verify_store_offline import BOTH_NON_FINITE, _has_non_finite
+
+    assert _has_non_finite(["nan", "nan"])
+    assert _has_non_finite(["inf"])
+    assert not _has_non_finite([1.0, 2.0])
+    assert outcome_for(_decided(
+        non_finite_components=6, stress_original=["nan"] * 6,
+        stress_transformed=["nan"] * 6))[0] == BOTH_NON_FINITE
+
+
+def test_all_three_are_in_the_outcome_vocabulary():
+    from verify_store_offline import BOTH_NON_FINITE, ORIGINAL_NON_FINITE
+
+    for name in (NON_FINITE_RESPONSE, BOTH_NON_FINITE, ORIGINAL_NON_FINITE):
+        assert name in OUTCOMES
