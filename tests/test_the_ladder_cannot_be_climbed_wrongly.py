@@ -179,6 +179,33 @@ def test_a_solver_that_wrote_nothing_and_said_nothing_is_a_harness_failure():
     assert reason and "never reached the material" in reason
 
 
+def test_the_launchers_ordinary_banner_does_not_count_as_a_diagnostic():
+    """Requiring an empty console was too strict, and it cost a real entry.
+
+    The launcher prints a banner on every run, so a job killed during a
+    licence wait had a non-empty console with nothing wrong in it -- and the
+    first entry of the first real batch was recorded as a failure of the
+    model on exactly that.
+    """
+    reason = looks_like_a_harness_failure({
+        "completed": False, "converged_records": 0,
+        "console": "Abaqus JOB original\nAbaqus 3DEXPERIENCE R2021x\n"
+                   "Abaqus License Manager checked out the following licenses",
+        "reasons": ["original.sta was not written, so the analysis left no record",
+                    "original.msg was not written",
+                    "expected output is missing or empty: original.odb"]})
+    assert reason and "reported no error" in reason
+
+
+def test_an_abaqus_error_in_the_console_keeps_it_a_finding():
+    assert not looks_like_a_harness_failure({
+        "completed": False, "converged_records": 0,
+        "console": "***ERROR: THE MATERIAL DEFINITION IS INCOMPLETE",
+        "reasons": ["original.sta was not written, so the analysis left no record",
+                    "original.msg was not written",
+                    "expected output is missing or empty: original.odb"]})
+
+
 def test_a_user_subroutine_that_will_not_compile_stays_a_finding():
     """It leaves the compiler's diagnostic behind, so it is evidence."""
     assert not looks_like_a_harness_failure({

@@ -847,12 +847,28 @@ def looks_like_a_harness_failure(report: dict) -> str:
     absent = sum(1 for marker in (".sta was not written", ".msg was not written",
                                   ".dat", ".odb")
                  if marker in reasons)
-    if absent >= 3 and not console.strip():
-        return ("the solver wrote none of its own files and said nothing, so "
-                "it never reached the material: the process was killed or was "
-                "still waiting for a licence when its timeout elapsed. "
+    if absent >= 3 and not _carries_a_diagnostic(console):
+        return ("the solver wrote none of its own files and reported no error, "
+                "so it never reached the material: the process was killed or "
+                "was still waiting for a licence when its timeout elapsed. "
                 "Recorded as a harness error so a later --resume retries it")
     return ""
+
+
+#: What a real failure leaves in the console. Abaqus prefixes its own with
+#: ***ERROR or ***FATAL; ifort and gfortran prefix theirs with "error #" or
+#: "Error:". Requiring the console to be *empty* instead was too strict: the
+#: launcher prints its ordinary banner on every run, so a job killed during a
+#: licence wait had a non-empty console with nothing wrong in it, and the
+#: entry was recorded as a failure of the model.
+_DIAGNOSTIC_MARKERS = ("***ERROR", "***FATAL", "Abaqus Error", "Abaqus/Analysis",
+                       "error #", "Error:", "catastrophic error", "undefined reference")
+
+
+def _carries_a_diagnostic(console: str) -> bool:
+    """Does this console say something went wrong, as opposed to nothing at all?"""
+    text = str(console or "")
+    return any(marker.lower() in text.lower() for marker in _DIAGNOSTIC_MARKERS)
 
 
 def is_terminal(stage: str) -> bool:
