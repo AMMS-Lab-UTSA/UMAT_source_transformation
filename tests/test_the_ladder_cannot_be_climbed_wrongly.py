@@ -159,3 +159,38 @@ def test_a_provenance_about_this_deck_selects_its_block():
 def test_no_provenance_selects_nothing():
     assert paired_block_name("", "owner__name/decks/job.inp") is None
     assert paired_block_name("something", "") is None
+
+
+def test_a_solver_that_wrote_nothing_and_said_nothing_is_a_harness_failure():
+    """Measured: a job cut off during a licence wait leaves only .inp and .com.
+
+    Its console is empty, so no console signature matches, and the entry was
+    recorded as original_job_failed -- a claim about somebody's UMAT for a
+    queue this machine was waiting in. Abaqus writes a .sta and a .msg as it
+    goes and a .dat while reading the input, so a run missing all of them
+    never reached the material.
+    """
+    reason = looks_like_a_harness_failure({
+        "completed": False, "converged_records": 0, "console": "",
+        "reasons": ["original.sta was not written, so the analysis left no record",
+                    "original.msg was not written",
+                    "the analysis ran None increments where 6 were requested",
+                    "expected output is missing or empty: original.odb"]})
+    assert reason and "never reached the material" in reason
+
+
+def test_a_user_subroutine_that_will_not_compile_stays_a_finding():
+    """It leaves the compiler's diagnostic behind, so it is evidence."""
+    assert not looks_like_a_harness_failure({
+        "completed": False, "converged_records": 0,
+        "console": "error #6404: This name does not have a type",
+        "reasons": ["original.sta was not written, so the analysis left no record",
+                    "original.msg was not written",
+                    "expected output is missing or empty: original.odb"]})
+
+
+def test_a_model_that_diverged_stays_a_finding():
+    """It got a .sta and a .msg full of cutbacks, so it reached the material."""
+    assert not looks_like_a_harness_failure({
+        "completed": False, "converged_records": 0, "console": "",
+        "reasons": ["the analysis ran 2 increments where 6 were requested"]})
