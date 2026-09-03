@@ -45,9 +45,18 @@ _DRIVER = """PROGRAM otis_replay
   INTEGER :: NOEL,NPT,LAYER,KSPT,KSTEP,KINC
   CHARACTER(80) :: CMNAME
   CHARACTER(64) :: ARG
+  CHARACTER(256) :: GFILE
+  REAL(8) :: DFPERT(3,3)
 
   CALL GET_COMMAND_ARGUMENT(1,ARG); READ(ARG,*) COMPONENT
   CALL GET_COMMAND_ARGUMENT(2,ARG); READ(ARG,*) STEP
+! An optional third argument names a file holding nine numbers to ADD to
+! DFGRD1. A source whose kinematic input is the deformation gradient does not
+! see a perturbation of DSTRAN at all: its stress does not move, the centred
+! difference is identically zero, and the comparison then reports a relative
+! error of exactly 1 at every step size -- which is what it did, for every
+! finite-strain source in the corpus.
+  CALL GET_COMMAND_ARGUMENT(3,GFILE)
 
   OPEN(NEWUNIT=U,FILE='%(state)s',STATUS='OLD',ACTION='READ',IOSTAT=IOS)
   IF (IOS .NE. 0) THEN
@@ -75,6 +84,21 @@ _DRIVER = """PROGRAM otis_replay
 ! what makes the difference a partial derivative and not a directional one.
   IF (COMPONENT .GE. 1 .AND. COMPONENT .LE. NTENS) THEN
     DSTRAN(COMPONENT) = DSTRAN(COMPONENT) + STEP
+  END IF
+
+  IF (LEN_TRIM(GFILE) .GT. 0) THEN
+    OPEN(NEWUNIT=U,FILE=TRIM(GFILE),STATUS='OLD',ACTION='READ',IOSTAT=IOS)
+    IF (IOS .NE. 0) THEN
+      WRITE(*,*) 'OTIS-REPLAY: no gradient perturbation file'
+      STOP 3
+    END IF
+    READ(U,*) ((DFPERT(I,J),J=1,3),I=1,3)
+    CLOSE(U)
+    DO I=1,3
+      DO J=1,3
+        DFGRD1(I,J) = DFGRD1(I,J) + DFPERT(I,J)
+      END DO
+    END DO
   END IF
 
   DDSDDE=0.0_8; SSE=0.0_8; SPD=0.0_8; SCD=0.0_8; RPL=0.0_8
@@ -361,15 +385,38 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
                        header=used, log=(done.stdout + done.stderr)[-2000:])
 
 
+#: Where a gradient perturbation is written for the driver to read.
+GRADIENT_FILE = "otis_gradient.txt"
+
+
 def run_replay(build: ReplayBuild, work_dir: Path, component: int,
-               step: float, timeout: int = 900) -> tuple[list[float], str]:
-    """One perturbed call. Returns the stress it produced, and any complaint."""
+               step: float, timeout: int = 900,
+               gradient: Optional[Sequence[float]] = None,
+               ) -> tuple[list[float], str]:
+    """One perturbed call. Returns the stress it produced, and any complaint.
+
+    ``gradient`` is nine numbers added to DFGRD1, for a source whose kinematic
+    input is the deformation gradient. Such a source does not see a
+    perturbation of DSTRAN at all -- its stress does not move, the centred
+    difference is identically zero, and the comparison reports a relative error
+    of exactly 1 at every step size. That is what it reported, for all ten
+    finite-strain sources that had already agreed on their primal histories in
+    Abaqus.
+    """
     work_dir = Path(work_dir)
     out = work_dir / "otis_replay_out.txt"
     if out.exists():
         out.unlink()
+    arguments = [str(build.program), str(component), repr(float(step))]
+    if gradient is not None:
+        values = [float(value) for value in gradient]
+        path = work_dir / GRADIENT_FILE
+        path.write_text(
+            "\n".join(" ".join(f"{v!r}" for v in values[row * 3:row * 3 + 3])
+                       for row in range(3)) + "\n", encoding="utf-8")
+        arguments.append(str(path))
     try:
-        done = subprocess.run([str(build.program), str(component), repr(float(step))],
+        done = subprocess.run(arguments,
                               cwd=str(work_dir), capture_output=True, text=True,
                               timeout=timeout, stdin=subprocess.DEVNULL)
     except (OSError, subprocess.SubprocessError) as error:
@@ -387,20 +434,50 @@ class DifferenceSweep:
     matrices: dict = field(default_factory=dict)
     unperturbed: list = field(default_factory=list)
     failures: list = field(default_factory=list)
+    #: Which kinematic input the perturbation moved. Recorded because it
+    #: changes what the derivative is a derivative OF.
+    driven_through: str = "strain increment"
     ok: bool = False
     reason: str = ""
 
 
 def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
                        steps: Sequence[float], *, scale: float = 1.0,
-                       components: Sequence[int] = ()) -> DifferenceSweep:
+                       components: Sequence[int] = (),
+                       transformed_source: Optional[Path] = None,
+                       ) -> DifferenceSweep:
     """The tangent by centred differences, one column per strain component.
 
     ``steps`` are relative to ``scale``, the size of the strain increment being
     perturbed, so the same sweep means the same thing for a model loaded to a
     strain of a percent and one loaded to a strain of a millionth.
+
+    WHICH input is perturbed is read from the transformed file, through the
+    same ``seeded_kinematics`` map the transform seeded, so the reference
+    differentiates the quantity the OTI side differentiated. Perturbing DSTRAN
+    on a source whose kinematic input is the deformation gradient moves nothing
+    at all: the stress is unchanged, the centred difference is identically
+    zero, and the comparison then reports a relative error of exactly 1 at
+    every step size. Measured on all ten finite-strain sources that had already
+    agreed on their primal histories in Abaqus -- 2.96e+08 absolute error,
+    unchanged from a step of 1e-3 to one of 1e-6, which is what a difference
+    that is not a difference looks like.
     """
     sweep = DifferenceSweep()
+    # Resolved first: which input the perturbation moves is a property of the
+    # source, and a caller reading a failed sweep still needs to know it.
+    drive = None
+    if transformed_source is not None:
+        try:
+            from umat_oti.transform.source_transform import seeded_kinematics
+            drive = seeded_kinematics(
+                Path(transformed_source).read_text(errors="replace"))
+        except Exception:                      # noqa: BLE001 - fall back below
+            drive = None
+    gradient_driven = bool(drive is not None and drive.drives_deformation_gradient)
+    sweep.driven_through = ("deformation gradient" if gradient_driven
+                            else "strain increment")
+
     if not build.ok:
         sweep.reason = build.reason
         return sweep
@@ -416,8 +493,29 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
         step = relative * scale
         columns: list[list[float]] = []
         for component in wanted:
-            plus, first = run_replay(build, work_dir, component, step)
-            minus, second = run_replay(build, work_dir, component, -step)
+            if gradient_driven:
+                from umat_oti.validation.tangent_validation import (
+                    _gradient_perturbation)
+                forward = _gradient_perturbation(drive, component, step)
+                backward = _gradient_perturbation(drive, component, -step)
+                if not any(forward):
+                    # The seed map has no term for this direction, so there is
+                    # no perturbation to make and no column to report. Skipped
+                    # rather than reported as a column of zeros, which would
+                    # read as "the stress does not depend on this component".
+                    sweep.failures.append(
+                        f"step {relative:g}, component {component}: the seeded "
+                        f"map carries no deformation-gradient term for this "
+                        f"direction, so no perturbation could be made")
+                    columns = []
+                    break
+                plus, first = run_replay(build, work_dir, 0, 0.0,
+                                         gradient=forward)
+                minus, second = run_replay(build, work_dir, 0, 0.0,
+                                           gradient=backward)
+            else:
+                plus, first = run_replay(build, work_dir, component, step)
+                minus, second = run_replay(build, work_dir, component, -step)
             if not plus or not minus:
                 sweep.failures.append(
                     f"step {relative:g}, component {component}: "

@@ -1360,6 +1360,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
 
     tangent = verify_tangent(
         manifest, original, transformed_history, work / "replay",
+        transformed=Path(stored.entry_source),
         form=str((row or {}).get("form") or "fixed"),
         tolerance=tangent_tolerance, timeout=timeout)
     record["tangent"] = tangent
@@ -1370,7 +1371,8 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
 def verify_tangent(manifest: VerificationManifest, original: Path,
                    transformed_history: Sequence[dict], work_dir: Path, *,
                    form: str = "fixed", tolerance: float = TANGENT_TOLERANCE,
-                   timeout: int = 900) -> dict:
+                   timeout: int = 900,
+                   transformed: Optional[Path] = None) -> dict:
     """The OTI tangent against a difference of the original, over the ladder.
 
     The value under test is DDSDDE out of the transformed build's own converged
@@ -1411,8 +1413,13 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
 
     scale = perturbation_scale(record["entry"])
     outcome["perturbation_scale"] = scale
+    # The transformed file is handed over so the sweep can read which kinematic
+    # input the transform seeded, and perturb THAT. The reference must
+    # differentiate the quantity the OTI side differentiated.
     sweep = difference_tangent(build, work_dir, manifest.ntens,
-                               manifest.fd_steps, scale=scale)
+                               manifest.fd_steps, scale=scale,
+                               transformed_source=transformed)
+    outcome["driven_through"] = sweep.driven_through
     outcome["failures"] = list(sweep.failures)
     if not sweep.ok:
         outcome["reason"] = sweep.reason or "the difference produced no tangent"
