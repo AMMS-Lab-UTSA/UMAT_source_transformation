@@ -378,12 +378,19 @@ class TestAProbeRecordThatCouldNotBeWritten:
     """A Fortran field that does not fit its format writes asterisks.
 
     Found on the first real batch: one source's probe wrote
-    `SHAPE 6 ******** 2 3 3`. NSTATV is passed in by Abaqus and never
-    changed, so a record that cannot print it was written after the
-    subroutine overwrote its own argument list -- a UMAT writing past the end
-    of a state array smaller than it needs. The parser crashed on it with
-    `invalid literal for int()`, which turned a real finding about the model
-    into a crash in the harness.
+    `SHAPE 6 ******** 2 3 3`, having printed `NSTATV 0` in its first record,
+    while the paired deck declares `*DEPVAR 9`. NSTATV is an argument Abaqus
+    passes in, so something wrote over it during the run.
+
+    Which array overran is NOT established, and an earlier version of this
+    docstring claimed it was an undersized state array. For that source the
+    deck's *DEPVAR, the highest literal STATEV subscript and the constant
+    count all agree, so that explanation does not hold; a computed subscript
+    or a local array would look the same from here.
+
+    What is established is that such a record's numbers are not measurements.
+    The parser crashed on it with `invalid literal for int()`, which turned a
+    finding about the run into a crash in the harness.
     """
 
     def test_an_overflowed_shape_field_is_reported_not_crashed_on(self, tmp_path):

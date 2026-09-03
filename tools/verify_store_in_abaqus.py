@@ -697,15 +697,17 @@ def history_of(work_dir: Path, job: str) -> list[dict]:
 def corrupt_records(history: Sequence[dict]) -> list[str]:
     """Reasons any record in this history could not be read.
 
-    A record carrying one was written after the subroutine damaged its own
-    argument list -- Fortran printed asterisks where NSTATV should have been --
-    so the numbers beside it are not measurements and must not be compared as
-    if they were. Seen on the first batch: a source whose paired deck declares
-    no *DEPVAR, run with the inferred count, wrote past the end of its state
-    array and clobbered the count itself.
+    A record carrying one was written after something wrote over an argument
+    Abaqus passes in -- Fortran printed asterisks where NSTATV should have been
+    -- so the numbers beside it are not measurements and must not be compared
+    as if they were.
 
-    This is a finding about the model, not about the harness: the source needs
-    more state than anything published for it says.
+    A finding about the run, not about this harness, and reported without a
+    cause it cannot support. On the source that raised it first, the paired
+    deck's *DEPVAR, the source's highest literal STATEV subscript and its
+    constant count all agree, so an undersized state array does not explain it;
+    a computed subscript or an overrun local array would look identical from
+    here. What can be said is that the run damaged its own interface.
     """
     return [str(record[CORRUPT]) for record in history if CORRUPT in record]
 

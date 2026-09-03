@@ -221,15 +221,21 @@ def _whole(token: str) -> Optional[int]:
     """One integer field, or None when Fortran could not fit it.
 
     A Fortran ``I8`` field that the value does not fit writes ``********``
-    instead of digits. That is not a formatting curiosity here: NSTATV is
-    passed in by Abaqus and never changed, so a record whose NSTATV reads
-    ``********`` is a record written after the subroutine overwrote its own
-    argument list -- a UMAT writing past the end of a state array smaller than
-    it needs. Seen on the first batch: one source's first record said NSTATV 0
-    and a later one said ``********``.
+    instead of digits. That is not a formatting curiosity here: NSTATV is an
+    argument Abaqus passes in, so a run in which it stops being printable is a
+    run in which something wrote over it.
 
-    Worth reporting rather than crashing on, and worth reporting as what it is
-    rather than as a parse problem.
+    Observed on the first batch: one source's first record printed NSTATV 0 and
+    a later record printed ``********``, while the paired deck declares
+    ``*DEPVAR 9``. So the value changed during the run. WHICH array overran is
+    not established -- for that source the deck's *DEPVAR, the highest literal
+    STATEV subscript and the constant count all agree, so it is not simply a
+    state array declared too small, and a computed subscript or a local array
+    would look the same from here.
+
+    What is established is that the numbers in such a record are not
+    measurements. Worth reporting rather than crashing on, and worth reporting
+    without a cause it cannot support.
     """
     try:
         return int(token)
