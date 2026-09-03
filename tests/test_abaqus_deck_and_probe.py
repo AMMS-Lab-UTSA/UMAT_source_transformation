@@ -301,3 +301,74 @@ def test_points_and_steps_are_kept_apart():
     kept = converged_only([_call(1, [1.0], point=1), _call(1, [2.0], point=2),
                            _call(1, [3.0], point=1, step=2)])
     assert len(kept) == 3
+
+
+class TestADeclaredStartingPoint:
+    """An unloaded material point, driven along the input the source reads.
+
+    Which input carries the increment is read from the transformed file rather
+    than assumed. Guessing it wrong is silent and total: a hyperelastic source
+    that computes its stress from the deformation gradient, handed an identity
+    gradient and a nonzero DSTRAN, returns zero stress at every increment.
+    Both builds then return zero, and a comparison that accepted that would
+    report perfect agreement about a model neither had exercised. The corpus's
+    NeoHookean source did exactly this until the drive was read.
+    """
+
+    def test_a_source_with_no_transform_to_read_is_driven_by_the_strain(self):
+        from umat_oti.abaqus.replay import declared_start
+
+        state = declared_start((1.0, 2.0), ntens=6, strain=1e-4)
+        assert state["DSTRAN"][0] == 1e-4
+        assert state["driven_through"] == "strain increment"
+        assert state["DFGRD1"] == [1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0]
+
+    def test_a_gradient_driven_source_advances_the_gradient(self, tmp_path):
+        """DFGRD1 must move, or the source sees no deformation at all."""
+        from umat_oti.abaqus.replay import declared_start
+
+        emitted = tmp_path / "u_oti.for"
+        emitted.write_text(
+            "      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE)\n"
+            "      DFGRD1_OTI(1,1) = DFGRD1_OTI(1,1) + OTI_E1\n"
+            "      RETURN\n      END\n", encoding="utf-8")
+        state = declared_start((1.0,), ntens=6, strain=1e-4,
+                               transformed_source=emitted)
+        assert state["driven_through"] == "deformation gradient"
+        assert state["DFGRD1"][0] != 1.0
+
+    def test_the_state_is_zero_because_the_point_is_unloaded(self):
+        from umat_oti.abaqus.replay import declared_start
+
+        state = declared_start((1.0,), ntens=6, nstatv=4)
+        assert state["STRESS0"] == [0.0] * 6
+        assert state["STATEV0"] == [0.0] * 4
+        assert state["STRAN"] == [0.0] * 6
+
+    def test_a_published_initial_state_is_used_when_given(self):
+        """A growth model's author may publish an initial stretch of 1.0.
+
+        Running it from zeros is a different model, so a caller that has read
+        one from a deck can supply it and it is not overwritten.
+        """
+        from umat_oti.abaqus.replay import declared_start
+
+        state = declared_start((1.0,), nstatv=3, initial_statev=(1.0, 1.0, 1.0))
+        assert state["STATEV0"] == [1.0, 1.0, 1.0]
+
+    def test_the_probe_coordinates_are_neither_the_origin_nor_all_ones(self):
+        """Models here divide by COORDS(1)**2 - COORDS(2)**2, which both zero."""
+        from umat_oti.abaqus.replay import declared_start
+
+        coords = declared_start((1.0,))["COORDS"][:3]
+        assert coords != [0.0, 0.0, 0.0] and coords != [1.0, 1.0, 1.0]
+        assert coords[0] ** 2 != coords[1] ** 2
+
+    def test_the_state_round_trips_through_write_state(self, tmp_path):
+        """It has to be the shape write_state accepts, or the driver reads junk."""
+        from umat_oti.abaqus.replay import STATE_FILE, declared_start, write_state
+
+        state = declared_start((1.0, 2.0, 3.0), ntens=6, nstatv=2)
+        write_state(state, tmp_path / STATE_FILE)
+        first = (tmp_path / STATE_FILE).read_text().splitlines()[0].split()
+        assert first == ["6", "2", "3", "3", "3"]
