@@ -787,12 +787,31 @@ def tangent_verdict(comparison: dict, *, tolerance: float = TANGENT_TOLERANCE,
                     minimum_plateau: int = MINIMUM_PLATEAU) -> tuple[bool, str]:
     """Did the step ladder actually pin this tangent down?
 
-    Two conditions, and both are needed. The best step has to agree to the
-    tolerance -- and the agreement has to hold over a plateau of steps, because
-    one step cannot tell a truncation error from a cancellation one. A single
-    step that happens to land on the right answer while its neighbours do not
-    is the signature of a coincidence, and reporting it as verification is how
-    a finite-difference check gets to say whatever the author wants.
+    The best step has to agree to the tolerance, and that agreement has to be
+    corroborated by more than one step -- one step cannot tell a truncation
+    error from a cancellation one, and a single step landing on the right
+    answer while its neighbours do not is the signature of a coincidence.
+
+    Corroboration comes in two shapes, and only one of them was accepted
+    before. The usual one is a plateau: the error falls as the step shrinks,
+    bottoms out, and rises again as cancellation takes over, so several steps
+    sit within an order of magnitude of the best. That is what a nonlinear
+    model gives.
+
+    The other shape is a sweep with no truncation regime at all, where the
+    error is already at round-off at the largest step and grows monotonically
+    as the step shrinks. That is what an EXACT tangent on a locally linear
+    model gives -- the centred difference has no truncation error to lose, so
+    only cancellation is left. Its plateau is one step wide by construction,
+    and requiring two rejected it. Measured on
+    BristolCompositesInstitute__abaci: 8.08e-14 at 1e-3 rising monotonically
+    to 5.49e-09 at 1e-8, six steps every one of which agrees to better than
+    1e-8, recorded as "the difference agreed at 1 step size".
+
+    So a sweep in which EVERY step agrees within the tolerance also
+    corroborates. That is not a weaker test than the plateau -- it is
+    strictly stronger, because it asks of every step what the plateau asks of
+    the best one. The tolerance itself is unchanged.
     """
     sweep = list(comparison.get("sweep") or ())
     if not sweep:
@@ -801,18 +820,36 @@ def tangent_verdict(comparison: dict, *, tolerance: float = TANGENT_TOLERANCE,
     frobenius = comparison.get("best_frobenius")
     if best is None or frobenius is None:
         return False, "the sweep recorded no best step"
-    threshold = 10.0 * frobenius if frobenius > 0 else 0.0
-    plateau = [point["step"] for point in sweep
-               if "step" in point and point.get("frobenius", 0.0) <= threshold]
     if best > tolerance:
         return False, (f"the closest step agreed only to {best:.3e}, against a "
                        f"tolerance of {tolerance:.0e}")
-    if len(plateau) < minimum_plateau:
-        return False, (f"the difference agreed at {len(plateau)} step size(s); "
-                       f"{minimum_plateau} are required, because one step "
-                       f"cannot separate truncation error from cancellation")
-    return True, (f"agreed to {best:.3e} over {len(plateau)} step sizes, "
-                  f"{min(plateau):g} to {max(plateau):g}")
+
+    # A point with no recorded error is not evidence of agreement, on either
+    # side. Defaulting the missing frobenius to 0.0 put such a point INSIDE the
+    # plateau -- the absence of a measurement counted as a perfect one -- and
+    # defaulting the missing relative error the same way would do it again.
+    # Both read as failing instead.
+    threshold = 10.0 * frobenius if frobenius > 0 else 0.0
+    plateau = [point["step"] for point in sweep
+               if "step" in point
+               and point.get("frobenius", float("inf")) <= threshold]
+    agreeing = [point["step"] for point in sweep
+                if "step" in point
+                and point.get("relative", float("inf")) <= tolerance]
+
+    if len(plateau) >= minimum_plateau:
+        return True, (f"agreed to {best:.3e} over a plateau of {len(plateau)} "
+                      f"step sizes, {min(plateau):g} to {max(plateau):g}")
+    if len(agreeing) >= minimum_plateau and len(agreeing) == len(sweep):
+        return True, (f"agreed to {best:.3e} at the best step and within "
+                      f"{tolerance:.0e} at every one of {len(sweep)} step "
+                      f"sizes, {min(agreeing):g} to {max(agreeing):g}: the "
+                      f"error grows monotonically as the step shrinks, which "
+                      f"is a difference with no truncation error left to lose")
+    return False, (f"the difference agreed at {len(plateau)} step size(s) on a "
+                   f"plateau and at {len(agreeing)} of {len(sweep)} overall; "
+                   f"{minimum_plateau} are required, because one step cannot "
+                   f"separate truncation error from cancellation")
 
 
 # ---------------------------------------------------------------------------
