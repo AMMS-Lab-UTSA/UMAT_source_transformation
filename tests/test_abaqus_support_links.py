@@ -162,3 +162,33 @@ def test_the_abaqus_header_path_is_added_to_the_support_build(tmp_path):
     from umat_oti.abaqus import support
 
     assert "abaqus_include_dir" in Path(support.__file__).read_text(encoding="utf-8")
+
+
+def test_the_parameter_header_is_installed_under_every_casing(tmp_path):
+    """Abaqus ships aba_param.inc; sources include ABA_PARAM.INC.
+
+    On a case-sensitive filesystem those are different files. Pointing -I at
+    the installation directory is not enough: three of the first eight corpus
+    sources piloted failed with "Can't open included file 'ABA_PARAM.INC'"
+    while the real header sat in an included directory under its own name.
+    All three built and agreed exactly once the header was installed under
+    each casing the corpus uses.
+    """
+    from umat_oti.abaqus.replay import _HEADER_NAMES, _install_header
+
+    described = _install_header(tmp_path)
+    assert described
+    for name in _HEADER_NAMES:
+        assert (tmp_path / name).is_file(), name
+    # whichever header was used, every casing has the same contents
+    bodies = {(tmp_path / name).read_text() for name in _HEADER_NAMES}
+    assert len(bodies) == 1
+
+
+def test_the_build_record_says_which_header_it_used(tmp_path):
+    """A reference built against a stub means something weaker than one built
+    against the header the solver itself compiled with, so the record says."""
+    from umat_oti.abaqus.replay import _install_header
+
+    described = _install_header(tmp_path, abaqus="abaqus-that-is-not-installed")
+    assert "stub" in described

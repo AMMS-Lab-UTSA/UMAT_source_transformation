@@ -203,6 +203,33 @@ def abaqus_include_dir(abaqus: Optional[str] = None) -> Optional[Path]:
     return None
 
 
+#: The casings sources in this corpus use for the Abaqus parameter header. A
+#: case-sensitive filesystem makes each one a distinct filename, and a source
+#: that spells it differently from the installation cannot compile.
+_HEADER_NAMES = ("ABA_PARAM.INC", "aba_param.inc", "ABA_PARAM.inc", "aba_param.INC")
+
+
+def _install_header(work_dir: Path, abaqus: Optional[str] = None) -> str:
+    """Put the Abaqus parameter header in the build directory, every casing.
+
+    Returns a description of what was installed, which goes into the build
+    record: whether a reference was built against the installation's own header
+    or against a stub changes what the reference means.
+    """
+    directory = abaqus_include_dir(abaqus)
+    real = (directory / "aba_param.inc") if directory is not None else None
+    if real is not None and real.is_file():
+        body = real.read_text(errors="replace")
+        described = f"{real} (installation), installed under {len(_HEADER_NAMES)} casings"
+    else:
+        from umat_oti.corpus.cli import _write_aba_param_stub
+        _write_aba_param_stub(work_dir)
+        return "stub: the installation's own header was not found"
+    for name in _HEADER_NAMES:
+        (work_dir / name).write_text(body, encoding="utf-8")
+    return described
+
+
 @dataclass
 class ReplayBuild:
     """A compiled replay program, or the reason there is none."""
@@ -230,16 +257,17 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     driver.write_text(driver_source(name), encoding="utf-8")
     program = work_dir / "otis_replay"
 
-    includes = []
-    header = abaqus_include_dir()
-    if header is not None:
-        includes.append(f"-I{header}")
-        used = str(header / "aba_param.inc")
-    else:
-        from umat_oti.corpus.cli import _write_aba_param_stub
-        _write_aba_param_stub(work_dir)
-        used = f"stub in {work_dir}"
-    includes.append(f"-I{work_dir}")
+    # The header is installed into the build directory under every casing a
+    # source in this corpus uses, not merely pointed at with -I. Abaqus ships
+    # it as `aba_param.inc`, sources include it as `ABA_PARAM.INC`, and the
+    # filesystem is case-sensitive: three of the first eight sources piloted
+    # failed to build with "Can't open included file 'ABA_PARAM.INC'" while the
+    # real header sat in an included directory under its own name. The
+    # repository's stub writer already emits four casings for this reason; the
+    # installation's own header deserves the same treatment, because it is the
+    # header the solver actually compiled against.
+    used = _install_header(work_dir)
+    includes = [f"-I{work_dir}"]
 
     # Order is load-bearing, not cosmetic. A compiler processes these in the
     # order given, and a module has to be compiled before the code that uses
