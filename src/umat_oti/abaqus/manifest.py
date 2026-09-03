@@ -65,6 +65,12 @@ class VerificationManifest:
     material_provenance: str = ""
     initial_statev: tuple[float, ...] = ()
     initial_statev_provenance: str = ""
+    #: The author's deck says ``*INITIAL CONDITIONS, TYPE=SOLUTION, USER``,
+    #: which asks Abaqus to call the source's own SDVINI rather than listing
+    #: values. Carried rather than translated into numbers: the values are the
+    #: subroutine's to decide, and reading them out of Fortran to retype into a
+    #: deck would be inventing what the author chose to compute.
+    initial_state_from_user_subroutine: bool = False
     #: Three Euler angles plus the local-axis convention, when the model needs
     #: an orientation. Crystal plasticity usually does.
     orientation: Optional[tuple[float, float, float]] = None

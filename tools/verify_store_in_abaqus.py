@@ -345,6 +345,26 @@ class ManifestPlan:
 _SOLUTION_STATE = re.compile(
     r"^\s*\*INITIAL\s+CONDITIONS\b[^\n]*\bTYPE\s*=\s*SOLUTION\b", re.IGNORECASE)
 
+#: The same keyword with USER, which asks Abaqus to call the source's own
+#: SDVINI instead of listing values.
+_SOLUTION_STATE_USER = re.compile(
+    r"^\s*\*INITIAL\s+CONDITIONS\b[^\n]*\bTYPE\s*=\s*SOLUTION\b[^\n]*\bUSER\b",
+    re.IGNORECASE)
+
+
+def initial_state_is_computed(deck_text: str) -> bool:
+    """Does the deck ask Abaqus to call the source's own SDVINI?
+
+    Reading the values out of the Fortran and retyping them into a deck would
+    be inventing what the author chose to compute, so the form is carried
+    through instead. Omitting it left every state variable at zero, and a
+    growth model whose stretch starts at 1.0 then divides by it and returns
+    NaN from the first increment.
+    """
+    return any(_SOLUTION_STATE_USER.match(line)
+               for line in deck_text.splitlines()
+               if not line.lstrip().startswith("**"))
+
 
 def initial_solution_state(deck_text: str) -> tuple[float, ...]:
     """The state variables a deck declares its material starts from.
@@ -448,6 +468,7 @@ def build_manifest(
             f"the manifest follows")
 
     declared_state = initial_solution_state(deck_text)
+    state_from_sdvini = initial_state_is_computed(deck_text)
     # The transform's own bound on STATEV, from the subscripts the source uses.
     # Reported as an inference everywhere: it is not the author's *DEPVAR and
     # must never read as one.
@@ -485,9 +506,13 @@ def build_manifest(
         unsymmetric=bool(material.unsymmetric),
         material_provenance=provenance,
         initial_statev=declared_state,
+        initial_state_from_user_subroutine=state_from_sdvini,
         initial_statev_provenance=(
-            f"{Path(proposed).name} *INITIAL CONDITIONS, TYPE=SOLUTION: "
-            f"{len(declared_state)} values" if declared_state else ""),
+            f"{Path(proposed).name} *INITIAL CONDITIONS, TYPE=SOLUTION, USER: "
+            f"the source's own SDVINI computes the starting state"
+            if state_from_sdvini else
+            (f"{Path(proposed).name} *INITIAL CONDITIONS, TYPE=SOLUTION: "
+             f"{len(declared_state)} values" if declared_state else "")),
         loading=tuple(loading),
         fd_steps=tuple(fd_steps) or VerificationManifest.fd_steps,
         notes=PROBE_NOTE)
