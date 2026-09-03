@@ -433,6 +433,10 @@ def build_manifest(
             f"the manifest follows")
 
     declared_state = initial_solution_state(deck_text)
+    # The transform's own bound on STATEV, from the subscripts the source uses.
+    # Reported as an inference everywhere: it is not the author's *DEPVAR and
+    # must never read as one.
+    inferred_nstatv = int((proposal or {}).get("nstatv_inferred") or 0)
 
     loading = [uniaxial(strain, increments)]
     if include_reversal:
@@ -443,7 +447,10 @@ def build_manifest(
     provenance = (
         f"{Path(proposed).name} *MATERIAL {plan.material_block}: "
         f"{len(material.props)} constants"
-        + (f", *DEPVAR {material.nstatv}" if material.nstatv else "")
+        + (f", *DEPVAR {material.nstatv}" if material.nstatv
+           else (f", no *DEPVAR: nstatv {inferred_nstatv} INFERRED by the "
+                 f"transform from the subscripts the source uses"
+                 if inferred_nstatv else ", no *DEPVAR and no inference"))
         + (", UNSYMM" if material.unsymmetric else "")
         + f" (paired deck {proposed})")
     manifest = VerificationManifest(
@@ -459,7 +466,7 @@ def build_manifest(
         kinematics=found.kinematics,
         ntens=ntens, ndi=ndi, nshr=nshr,
         nprops=len(material.props), props=tuple(material.props),
-        nstatv=material.nstatv or 1,
+        nstatv=material.nstatv or inferred_nstatv or 1,
         unsymmetric=bool(material.unsymmetric),
         material_provenance=provenance,
         initial_statev=declared_state,
@@ -490,12 +497,20 @@ def build_manifest(
     # A state-variable count nobody published is not the same fact as one read
     # from a deck, and the two were indistinguishable in the record: the
     # provenance string only mentions *DEPVAR when the deck actually had one.
-    if material.nstatv is None:
+    # Refusing outright was the first fix and it was too strong. The transform
+    # reports a count inferred from the subscripts the source actually applies
+    # to STATEV, which is a bound derived from the source rather than a number
+    # somebody chose -- and a UMAT with no state at all still needs an array of
+    # one for Abaqus to pass it. So the inference is used, and said to be an
+    # inference wherever it is reported. Only a source with neither a deck
+    # *DEPVAR nor an inference is refused: there the count really would be
+    # invented here.
+    if material.nstatv is None and not inferred_nstatv:
         refusals.append(
-            "the paired deck declares no *DEPVAR, so nobody published how many "
-            "state variables this material has. A UMAT that writes past the "
-            "end of a defaulted array of one either corrupts memory or "
-            "measures a truncated state")
+            "the paired deck declares no *DEPVAR and the transform inferred no "
+            "state-variable count, so nobody has established how many this "
+            "material has. A UMAT that writes past the end of an array of one "
+            "either corrupts memory or measures a truncated state")
     if shape is None:
         # Not a material problem, so not needs_material_data: what is missing
         # is an element this harness can drive one point of at this tensor size.
@@ -815,6 +830,28 @@ def looks_like_a_harness_failure(report: dict) -> str:
             return (f"the run broke before it could say anything about the "
                     f"model: {signature!r} in the solver console. Recorded as "
                     f"a harness error so a later --resume retries it")
+
+    # A solver that wrote none of its own files did not reach the material.
+    # Abaqus writes a .sta and a .msg as it goes and a .dat while reading the
+    # input, so a run missing every one of them never started -- the process
+    # was killed, or it was still waiting for a licence token when its timeout
+    # elapsed. Measured here: a job cut off during a licence wait left only the
+    # .inp and the .com behind, with an empty console, so no signature above
+    # matched and the entry was recorded as original_job_failed -- a claim
+    # about somebody's UMAT for a queue this machine was waiting in.
+    #
+    # A genuine failure looks different. A user subroutine that will not
+    # compile puts the compiler's diagnostic in the console and the .log; a
+    # model that diverges gets a .sta and a .msg full of cutbacks. Both leave
+    # evidence, and both stay findings.
+    absent = sum(1 for marker in (".sta was not written", ".msg was not written",
+                                  ".dat", ".odb")
+                 if marker in reasons)
+    if absent >= 3 and not console.strip():
+        return ("the solver wrote none of its own files and said nothing, so "
+                "it never reached the material: the process was killed or was "
+                "still waiting for a licence when its timeout elapsed. "
+                "Recorded as a harness error so a later --resume retries it")
     return ""
 
 
@@ -894,6 +931,40 @@ def merge_records(previous: Sequence[dict], fresh: Sequence[dict]) -> list[dict]
 # ---------------------------------------------------------------------------
 # selection and accounting
 # ---------------------------------------------------------------------------
+
+
+def restrict_to_gate(entries: Sequence[Any], report_path: Path,
+                     ) -> tuple[list[Any], dict[str, int]]:
+    """Only the entries an offline gate decided AGREED, and why the rest went.
+
+    The gate costs seconds per source and an Abaqus pair costs minutes against
+    a shared, contended licence server, so a source whose two builds already
+    disagree at one material point -- or whose transform returns NaN there --
+    should be fixed before it is given a token. Twenty-seven of the store's
+    entries return a non-finite stress offline; queueing those would spend
+    hours establishing what a five-second build already said.
+
+    What is dropped is reported by the gate's own verdict rather than merely
+    counted, because "not queued" is not a verification outcome and must never
+    be read as one. An entry the gate could not decide is not in this batch's
+    denominator at all; it is in the gate's.
+    """
+    import json as _json
+
+    try:
+        report = _json.loads(Path(report_path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise SystemExit(f"could not read the gate report: {error}") from None
+    verdicts = {str(row.get("source_id") or ""): str(row.get("outcome") or "")
+                for row in report.get("entries") or report.get("rows") or []}
+    earned, dropped = [], Counter()
+    for entry in entries:
+        outcome = verdicts.get(entry.source_id, "not in the gate report")
+        if outcome == "agreed":
+            earned.append(entry)
+        else:
+            dropped[outcome] += 1
+    return earned, dict(dropped)
 
 
 def select_entries(entries: Sequence[Any], only: str = "", limit: int = 0
@@ -1332,6 +1403,9 @@ def main(argv: Optional[list[str]] = None) -> int:
                         help="skip entries already carried to a settled outcome "
                              "in the results file")
     parser.add_argument("--limit", type=int, default=0)
+    parser.add_argument("--gate-report", type=Path, default=None,
+                        help="an offline stress-parity gate report; only "
+                             "entries it decided AGREED are queued")
     parser.add_argument("--only", default="",
                         help="substring of the source's path within the cache")
     parser.add_argument("--timeout", type=int, default=3600,
@@ -1349,7 +1423,18 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     store = TransformStore(root=args.store)
     available = store.entries() if args.include_stale else store.current_entries()
-    entries = select_entries(available, args.only, args.limit)
+    # The gate restricts BEFORE the limit, so --limit N means N entries that
+    # will actually be run rather than N drawn from the store and then mostly
+    # discarded -- which made --limit 1 queue nothing at all.
+    selected = select_entries(available, args.only, 0)
+    if args.gate_report is not None:
+        earned, dropped = restrict_to_gate(selected, args.gate_report)
+        print(f"  gate {args.gate_report.name}: {len(earned)} of "
+              f"{len(selected)} entries agreed offline and are queued")
+        for outcome, count in sorted(dropped.items(), key=lambda kv: -kv[1]):
+            print(f"      not queued, gate said {outcome}: {count}")
+        selected = earned
+    entries = selected[:args.limit] if args.limit else selected
     results_path = Path(args.results_dir) / "store_verification.jsonl"
     earlier = previous_records(results_path) if args.resume else []
     previous = previous_outcomes(results_path) if args.resume else {}
