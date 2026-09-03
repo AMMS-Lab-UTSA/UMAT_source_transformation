@@ -57,6 +57,8 @@
  },
  "primal_comparison": {
   "increments": 3,
+  "records_original": 3,
+  "records_transformed": 3,
   "worst_stress_relative": 3.000366552383293e-13,
   "worst_stress_at": [
    1,
@@ -72,8 +74,11 @@
    4.875560400997042
   ],
   "unresolved_components": 36,
+  "resolved_components": 326,
+  "non_finite_components": 0,
   "agrees": true,
-  "reason": ""
+  "reason": "",
+  "note": "Recomputed after the comparison was corrected to refuse agreement on non-finite values, on a response that never moved, and across histories of different length. 326 components were resolved and scored; 36 sit below 1e-8 of the response and are counted, not scored; none was non-finite."
  },
  "tangent_verification": {
   "method": "centred differences of the untransformed build, replayed from the state the probe recorded at the converged increment, so the two sides share no code path",
