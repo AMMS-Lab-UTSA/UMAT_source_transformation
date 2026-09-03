@@ -5339,6 +5339,8 @@ def _semantic_checks(
         "no_extraction_in_tangent_helper_region": extraction_insertion_region_id not in helper_region_ids,
         "fixed_form_line_lengths_ok": _fixed_form_line_lengths_ok(transformed_source, form),
         "integer_literals_normalized_in_oti_expressions": _integer_literals_normalized_in_oti_expressions(transformed_source, form),
+        "no_identifier_split_by_insignificant_blanks": _no_identifier_split_by_blanks(
+            transformed_source, form),
         "promoted_dfgrd_variables_initialized_before_use": _promoted_dfgrd_variables_initialized_before_use(selected_active_lines, roles),
         "finite_strain_path_uses_oti_versions": _finite_strain_path_uses_oti_versions(selected_active_lines, roles),
     }
@@ -5708,6 +5710,45 @@ def _is_shadow_default_line(line: str, name: str) -> bool:
             flags=re.IGNORECASE,
         )
     )
+
+
+#: An identifier followed by blanks and then a digit run, in fixed form, where
+#: removing the blanks gives a name the source declares. Blanks are
+#: insignificant in fixed form, so the compiler reads the two as one token.
+_SPLIT_IDENTIFIER = re.compile(r"\b([A-Za-z]\w*?)[ \t]+(\d\w*)")
+
+
+def _no_identifier_split_by_blanks(transformed_source: str, form: str) -> bool:
+    """Did the emitter leave an identifier broken across insignificant blanks?
+
+    Fixed form ignores blanks inside a statement, so a source that writes
+    ``...G12*G23*G3`` at the end of one line and ``1+G13*...`` on the next
+    means the single identifier ``G31``. An emitter that rejoins those two with
+    a space produces ``G3 1``, which the compiler reads back as ``G31`` -- the
+    ORIGINAL, un-renamed, and in the case that raised this, never-assigned
+    variable holding whatever was on the stack.
+
+    That is the worst failure this transform can produce. It is not a crash and
+    not a wrong-looking number: it is a nondeterministic answer that no
+    comparison can be relied on to catch, because the value changes between
+    runs. Measured on From-3D-to-3D-Petal, where three such lines moved the
+    stress disagreement from 8.171e-03 to 2.119e-09 once repaired by hand.
+
+    Only fixed form is checked. In free form blanks ARE significant, so the
+    same text is genuinely two tokens and nothing is wrong with it.
+    """
+    if str(form).strip().lower().startswith("free"):
+        return True
+    declared = {name.upper() for name in
+                re.findall(r"\b([A-Za-z]\w*)\b", transformed_source)}
+    for raw in transformed_source.splitlines():
+        if not raw.strip() or raw[:1] in "cC*!":
+            continue
+        statement = raw[6:] if len(raw) > 6 else ""
+        for head, tail in _SPLIT_IDENTIFIER.findall(statement):
+            if f"{head}{tail}".upper() in declared:
+                return False
+    return True
 
 
 def _old_ddsdde_assignments_disabled(
