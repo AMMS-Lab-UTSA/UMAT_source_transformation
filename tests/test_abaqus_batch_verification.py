@@ -620,7 +620,9 @@ def test_a_tangent_that_holds_over_a_plateau_is_verified():
     }
     verified, reason = tangent_verdict(comparison)
     assert verified is True
-    assert "over 3 step sizes" in reason
+    # The message names which shape corroborated it: a plateau, or a sweep in
+    # which every step agreed. They are different evidence and read differently.
+    assert "plateau of 3 step sizes" in reason
 
 
 def test_a_tangent_that_agrees_loosely_is_not_verified():
