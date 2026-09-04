@@ -3897,6 +3897,30 @@ def _is_continuation_line(line: str, form: str) -> bool:
     return not _is_commented(line) and line.lstrip().startswith("&")
 
 
+def _join_continuations(segments: list[str], form: str) -> str:
+    """One statement from its continuation segments, joined as the form joins them.
+
+    Fixed form ignores blanks inside a statement, so a break can fall in the
+    MIDDLE of a name: the Jeff97 shell sources write ``...G12*G23*G3`` at the
+    end of one line and ``1+G13*G21*G32...`` on the next, and the identifier is
+    ``G31``. Joining those with a space produced ``G3 1``, so the renamer saw
+    ``G3`` -- not a name it knew -- left it alone, and emitted ``*G3 1+``. The
+    compiler then read that back as ``G31``: the original, un-renamed variable,
+    which in these sources is never assigned. The result was not a wrong
+    number but a nondeterministic one, and seven sources carried it.
+
+    Free form is joined with a space, because there a blank IS significant and
+    the two segments are genuinely two tokens.
+
+    This is the same rule the parser applies (umat_oti.fortran.parser), which
+    is why the parser produced ``G31`` correctly all along while the transform
+    did not.
+    """
+    stripped = [segment.strip() for segment in segments if segment.strip()]
+    separator = " " if str(form).strip().lower().startswith("free") else ""
+    return separator.join(stripped)
+
+
 def _logical_helper_call_line(lines: list[str], start_line: int, form: str) -> tuple[str, list[int]]:
     # A comment is never a statement. _statement_line_segment strips the
     # fixed-form marker along with the label field, so without this a
@@ -3924,7 +3948,7 @@ def _logical_helper_call_line(lines: list[str], start_line: int, form: str) -> t
     if paren_depth != 0:
         return "", []
     leading = re.match(r"^(\s*)", lines[start_line - 1]).group(1)
-    logical_line = " ".join(segment.strip() for segment in segments if segment.strip())
+    logical_line = _join_continuations(segments, form)
     return f"{leading}{logical_line}", consumed_lines
 
 
@@ -4051,7 +4075,7 @@ def _logical_branch_line(lines: list[str], start_line: int, form: str) -> tuple[
     if paren_depth != 0:
         return "", []
     leading = re.match(r"^(\s*)", lines[start_line - 1]).group(1)
-    logical_line = " ".join(segment.strip() for segment in segments if segment.strip())
+    logical_line = _join_continuations(segments, form)
     return f"{leading}{logical_line}", consumed_lines
 
 
@@ -4082,7 +4106,7 @@ def _logical_assignment_line(lines: list[str], start_line: int, form: str) -> tu
     if not consumed_lines:
         return "", []
     leading = re.match(r"^(\s*)", lines[start_line - 1]).group(1)
-    logical_line = " ".join(segment.strip() for segment in segments if segment.strip())
+    logical_line = _join_continuations(segments, form)
     return f"{leading}{logical_line}", consumed_lines
 
 
