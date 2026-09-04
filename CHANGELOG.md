@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- A fixed-form continuation is joined the way fixed form joins it. Blanks are
+  insignificant inside a fixed-form statement, so a continuation break may fall
+  in the middle of a name: the Jeff97 shell sources write `...G12*G23*G3` at
+  the end of one line and `1+G13*G21*G32...` on the next, and the identifier is
+  `G31`. The transform's three continuation joiners used `" ".join`, correct for
+  free form and wrong for fixed, so the renamer saw `G3` -- not a name it knew
+  -- left it alone, and emitted `*G3 1+`. The compiler read that back as `G31`:
+  the original, un-renamed variable, which in those sources is never assigned.
+  The answer was not wrong but nondeterministic, so no comparison could be
+  relied on to catch it, and seven corpus sources carried it. The parser had
+  the rule right all along, which is why the defect survived in sources that
+  parse correctly. `no_identifier_split_by_insignificant_blanks` refuses an
+  emitted file carrying the pattern, and the joiners now follow the form.
+- Nothing reads a DDSDDE the transform has stopped filling.
+  `old_ddsdde_assignments_disabled` asks whether the old writes to the array
+  are gone; `no_ddsdde_read_after_disabled_assignment` asks the companion
+  question, whether anything still reads what those writes used to put there.
+  Four store entries passed the first and failed the second in silence,
+  returning a stress of exactly zero -- a number that looks like an answer.
 - A DATA-initialised constant is no longer promoted and silently zeroed. A
   DATA statement is not an assignment, so a name initialised by one and never
   written again read downstream as a variable with no value; it is the
