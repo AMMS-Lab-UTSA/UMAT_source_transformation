@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The documented body of an Abaqus utility the solver provides. A UMAT that
+  calls `ROTSIG` publishes no definition for it, because Abaqus links it in;
+  the helper lifter found nothing to lift and refused the source. That refusal
+  was right -- an un-lifted external handed a hypercomplex array reads the
+  first of seven doubles and returns a truncated derivative -- but the way
+  past it is to supply the body, not to exempt the call. `ROTSIG` is one
+  similarity transform on a symmetric tensor, so the ordinary lifter then
+  transforms it like any other helper and the derivative flows through
+  because the operation is bilinear in its input. Both storage conventions
+  are honoured: `LSTR=2` stores engineering shear, twice the tensor entry,
+  and rotating it as though it were the entry is a silent factor of two.
+  Measured against a reference implementation over two hundred random
+  rotations: worst relative error 9.7e-16 for stress, 6.1e-16 for strain.
+  Six of the eleven corpus sources `ROTSIG` had stopped now transform; the
+  other five stop on separate blockers (a LAPACK `DGESV` on the stress path,
+  an unparsed helper header, a semantic check). `SPRIND` and `SPRINC` are
+  deliberately not supplied: they solve an eigenproblem whose derivative is
+  not the derivative of the algebra once eigenvalues coincide, so those
+  sources keep their refusal until that case is handled deliberately.
+
 ### Fixed
 - A fixed-form continuation is joined the way fixed form joins it. Blanks are
   insignificant inside a fixed-form statement, so a continuation break may fall
