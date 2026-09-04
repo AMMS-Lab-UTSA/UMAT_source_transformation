@@ -1,6 +1,6 @@
 {
   "command": "python tools/manuscript/build_v5_manuscript.py",
-  "commit": "c24ff0d3c43cfc1f5aa4522c0fe17b03b8bf5bca",
+  "commit": "1f9f91c474e3d8131c8d5d6e6362f11a74734588",
   "figure_count": 6,
   "figures": [
     "figure_gui_request.png",
@@ -10,10 +10,10 @@
     "figure_sensitivities.png",
     "figure_collection_coverage.png"
   ],
-  "generated_at": "2026-08-26T18:50:15.735369+00:00",
+  "generated_at": "2026-09-04T20:29:58.543348+00:00",
   "manuscript": "docs/manuscript/UMAT_OTI_SoftwareX_V5.docx",
   "note": "V4 is not read, edited or copied by this script. Every numerical claim is substituted from the evidence; a claim the evidence does not support raises rather than producing a placeholder.",
-  "sha256": "47aa06f36d1cf5a4523f2d9ac3656e5860e74f1ef405cbc74005c7dc2433cd35",
+  "sha256": "a5a818df2f691c3818c5673a581dfcbac8383161dcc65baaa2c3aca139d8a753",
   "substituted_values": {
     "abaqus_cases": {
       "source": "paper_results/arc_791506/table2_abaqus_paired.csv",
@@ -29,11 +29,11 @@
     },
     "collection_agreeing": {
       "source": "paper_results/parameter_sensitivity/parameter_sensitivity_round.json",
-      "value": 13947
+      "value": 13979
     },
     "collection_branch_crossing": {
       "source": "paper_results/parameter_sensitivity/parameter_sensitivity_round.json",
-      "value": 28
+      "value": 0
     },
     "collection_disagreeing": {
       "source": "paper_results/parameter_sensitivity/parameter_sensitivity_round.json",
@@ -45,7 +45,7 @@
     },
     "collection_noise_floor": {
       "source": "paper_results/parameter_sensitivity/parameter_sensitivity_round.json",
-      "value": 5
+      "value": 1
     },
     "collection_rows": {
       "source": "paper_results/parameter_sensitivity/parameter_sensitivity_round.json",
@@ -53,7 +53,7 @@
     },
     "collection_verified_models": {
       "source": "paper_results/parameter_sensitivity/parameter_sensitivity_round.json",
-      "value": 17
+      "value": 18
     },
     "collection_worst_relative": {
       "source": "paper_results/parameter_sensitivity/parameter_sensitivity_round.json",
@@ -69,11 +69,11 @@
     },
     "corpus_verified": {
       "source": "paper_results/corpus/corpus_funnel.csv",
-      "value": 7
+      "value": 9
     },
     "deduplicated_sources": {
       "source": "paper_results/generality/generality_summary.json",
-      "value": 45
+      "value": 46
     },
     "higher_order_failed": {
       "source": "paper_results/actual_umat_higher_order/j2/table4_higher_order_actual_umat.csv",
@@ -85,11 +85,11 @@
     },
     "higher_order_rows": {
       "source": "paper_results/actual_umat_higher_order/j2/table4_higher_order_actual_umat.csv",
-      "value": 108
+      "value": 540
     },
     "higher_order_worst_relative": {
       "source": "paper_results/actual_umat_higher_order/j2/table4_higher_order_actual_umat.csv",
-      "value": 1.9367542501703836e-09
+      "value": 1.8937976950208375e-09
     },
     "j2_exact_zeros": {
       "source": "paper_results/parameter_sensitivity/table6_comparison_rows.csv",
@@ -161,23 +161,23 @@
     },
     "tangent_entries": {
       "source": "paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv",
-      "value": 108
+      "value": 540
     },
     "tangent_measured": {
       "source": "paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv",
-      "value": 42
+      "value": 186
     },
     "tangent_reference_spread": {
       "source": "paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv",
-      "value": 4.770094035526686e-14
+      "value": 4.623756860179139e-14
     },
     "tangent_structural_zeros": {
       "source": "paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv",
-      "value": 66
+      "value": 354
     },
     "tangent_worst_relative": {
       "source": "paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv",
-      "value": 2.517698407641461e-15
+      "value": 2.1878975679081053e-15
     },
     "unique_sources": {
       "source": "paper_results/generality/generality_matrix.csv",
@@ -189,19 +189,19 @@
     },
     "verified_abaqus": {
       "source": "paper_results/generality/generality_matrix.csv",
-      "value": 17
+      "value": 35
     },
     "verified_either": {
       "source": "paper_results/generality/generality_matrix.csv",
-      "value": 36
+      "value": 39
     },
     "verified_neither": {
       "source": "paper_results/generality/generality_matrix.csv",
-      "value": 5
+      "value": 2
     },
     "verified_offline": {
       "source": "paper_results/generality/generality_matrix.csv",
-      "value": 24
+      "value": 27
     }
   },
   "supplementary_figure_count": 4,

@@ -141,3 +141,29 @@ def test_regenerates_identically_except_for_its_stamps(tmp_path):
     rebuilt = [p.text for p in Document(str(out)).paragraphs]
     # The closing note carries the commit, which moves between builds.
     assert original[:-1] == rebuilt[:-1]
+
+
+def test_a_count_that_reaches_one_reads_as_one():
+    """A number substituted into prose has to carry its own agreement.
+
+    The evidence moved from 33 unresolved rows to 1 and the manuscript printed
+    "The 1 rows the reference cannot settle are reported ... 1 sit below" --
+    prose that was only correct for the value it happened to be drafted at.
+    """
+    import sys
+
+    sys.path.insert(0, str(REPO_ROOT / "tools" / "manuscript"))
+    from build_v5_manuscript import _rows, _sit
+
+    assert _rows(1) == "1 row" and _rows(0) == "0 rows" and _rows(33) == "33 rows"
+    assert _sit(1) == "1 sits" and _sit(0) == "0 sit" and _sit(5) == "5 sit"
+
+
+def test_the_built_manuscript_has_no_singular_plural_mismatch():
+    """Read off the document itself, so a template change cannot reintroduce it."""
+    from docx import Document
+
+    text = " ".join(p.text for p in Document(str(MANUSCRIPT)).paragraphs)
+    for wrong in ("The 1 rows", "1 sit below", "1 rows the reference",
+                  "1 row the reference cannot settle are"):
+        assert wrong not in text, wrong

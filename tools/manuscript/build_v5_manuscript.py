@@ -282,10 +282,11 @@ SECTIONS: list[tuple[str, list[str]]] = [
         "Across {collection_models} models the sweep produced "
         "{collection_rows} comparisons, {collection_agreeing} agreeing and "
         "{collection_disagreeing} disagreeing, with a worst relative difference "
-        "of {collection_worst_relative}. The {collection_unresolved} rows the "
-        "reference cannot settle are reported by reason rather than pooled: "
-        "{collection_noise_floor} sit below what a centred difference resolves "
-        "at any step, and {collection_branch_crossing} sit on the increment "
+        "of {collection_worst_relative}. The {collection_unresolved_rows} the "
+        "reference cannot settle {collection_unresolved_are} reported by "
+        "reason rather than pooled: "
+        "{collection_noise_floor_sit} below what a centred difference resolves "
+        "at any step, and {collection_branch_crossing_sit} on the increment "
         "where a Drucker-Prager model first yields, where the stencil straddles "
         "the kink and returns a secant across it rather than the derivative on "
         "the branch the increment took. Those rows withhold their directions "
@@ -373,10 +374,28 @@ def _derived(values: dict) -> dict[str, str]:
     text = {key: value.text() for key, value in values.items()}
     for key in ("jacobian_worst_hand_coded", "jacobian_second_hand_coded"):
         text[f"{key}_percent"] = f"{values[key].value * 100:.3g}%"
-    text["collection_unresolved"] = str(
-        values["collection_noise_floor"].value
-        + values["collection_branch_crossing"].value)
+    unresolved = (values["collection_noise_floor"].value
+                  + values["collection_branch_crossing"].value)
+    text["collection_unresolved"] = str(unresolved)
+    # A count that reaches one has to read as one. The evidence moved from 33
+    # unresolved rows to 1 and the sentence printed "The 1 rows ... 1 sit
+    # below", in a manuscript. A number substituted into prose carries its own
+    # agreement or the prose is only correct for the value it was drafted at.
+    text["collection_unresolved_rows"] = _rows(unresolved)
+    text["collection_unresolved_are"] = "is" if unresolved == 1 else "are"
+    text["collection_noise_floor_sit"] = _sit(
+        values["collection_noise_floor"].value)
+    text["collection_branch_crossing_sit"] = _sit(
+        values["collection_branch_crossing"].value)
     return text
+
+
+def _rows(count: int) -> str:
+    return f"{count} row" if count == 1 else f"{count} rows"
+
+
+def _sit(count: int) -> str:
+    return f"{count} sits" if count == 1 else f"{count} sit"
 
 
 def _fill(paragraph: str, substitutions: dict[str, str]) -> str:
