@@ -176,6 +176,36 @@ def propose(source: Path, cache: Path, model) -> dict[str, Any]:
     return entry
 
 
+def _without_machine_paths(value, cache: Path):
+    """Every mention of the cache root rewritten to a cache-relative path.
+
+    Some fields are built here and already relative; others come straight out
+    of ``DeckMaterial.as_dict``, which records the absolute path it read --
+    right for an object in memory, wrong for a tracked file, where it records
+    the machine that ran the search rather than the evidence.
+    ``audit_repository_standards`` refuses it, and it refused this file.
+
+    Applied to the whole structure rather than to the fields known to carry a
+    path today, so a field added later cannot reintroduce the leak.
+    """
+    root = str(Path(cache).resolve())
+    prefixes = (root + "/", root)
+
+    def scrub(node):
+        if isinstance(node, str):
+            for prefix in prefixes:
+                if prefix in node:
+                    node = node.replace(prefix, "")
+            return node
+        if isinstance(node, dict):
+            return {key: scrub(item) for key, item in node.items()}
+        if isinstance(node, list):
+            return [scrub(item) for item in node]
+        return node
+
+    return scrub(value)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cache-dir", type=Path, default=DEFAULT_CACHE)
@@ -195,7 +225,9 @@ def main(argv: list[str] | None = None) -> int:
     model = None if args.no_model else model_from_environment()
     print(f"  {len(sources)} sources; model: {model.name if model else 'none'}")
 
-    entries = [propose(s, args.cache_dir, model) for s in sources]
+    entries = [_without_machine_paths(propose(s, args.cache_dir, model),
+                                      args.cache_dir)
+               for s in sources]
     by_status: dict[str, int] = {}
     for entry in entries:
         by_status[entry["status"]] = by_status.get(entry["status"], 0) + 1
