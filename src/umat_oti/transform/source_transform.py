@@ -24,6 +24,7 @@ from umat_oti.fortran.parser import (
 )
 from umat_oti.fortran.regions import INTRINSIC_TOKEN_NAMES, _is_executable_line
 from umat_oti.oti.module_generator import OtilibGenerationError, generate_otilib_module
+from umat_oti.transform.abaqus_utility_definitions import available_definitions, definition_text
 from umat_oti.transform.helper_lifting import HelperLiftingError, helper_lift_closure, lift_helper_set_source, wrap_free_form
 # The intrinsic extension module is generated in one place and used by
 # both transform paths; no cycle, that module imports nothing from here.
@@ -150,6 +151,23 @@ def transform_umat_to_oti_from_config(
     helper_roots = _liftable_helper_roots(config, roles, regions["stress"])
     helper_lift_names: tuple[str, ...] = ()
     helper_lift_issue = ""
+    # A helper root the solver provides rather than the author. ROTSIG is
+    # linked in by Abaqus, so the published file does not define it, the
+    # lifter finds nothing to lift and refuses the source -- rightly, since
+    # an un-lifted external receiving a hypercomplex array reads one real out
+    # of seven. Supplying the documented body lets the ordinary lifter
+    # transform it like any other helper, and the derivative flows through
+    # because a similarity transform is bilinear in its input. Eleven corpus
+    # sources stopped here. Nothing is exempted: a name with no definition
+    # available is still refused.
+    supplied = ()
+    if helper_roots:
+        defined_here = {routine.upper_name for routine in parsed.subroutines}
+        supplied = available_definitions(
+            name for name in helper_roots if str(name).upper() not in defined_here)
+        if supplied:
+            source_text = source_text.rstrip("\n") + "\n" + definition_text(supplied)
+            parsed = _parse_source(source_text, source_file)
     if helper_roots:
         try:
             helper_lift_names = helper_lift_closure(parsed, helper_roots, selected_umat=selected_umat)
