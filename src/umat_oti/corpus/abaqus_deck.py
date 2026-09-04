@@ -35,6 +35,7 @@ be a false citation.
 
 from __future__ import annotations
 
+import ast
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -143,6 +144,157 @@ def _numbers(text: str) -> list[float]:
     return values
 
 
+#: ``<name>`` in a data line, substituted from the deck's own ``*PARAMETER``
+#: block at input-processing time. A deck writing its material constants this
+#: way reads as publishing none, so its source is classified as needing
+#: material data that its author did in fact publish -- in the same file.
+_SUBSTITUTION = re.compile(r"<\s*([A-Za-z_][A-Za-z0-9_]*)\s*>")
+
+#: One ``name = value`` line inside a ``*PARAMETER`` block.
+_PARAMETER_ASSIGNMENT = re.compile(
+    r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+?)\s*$")
+
+
+def _parameter_table(lines: list[str]) -> dict[str, float]:
+    """The numeric parameters a deck defines for its own substitutions.
+
+    Abaqus accepts arithmetic here, and one parameter may be written in terms
+    of another (``bulk = mu*1e2``). Those are resolved, because the value is
+    the one the author wrote in the author's own file -- refusing them would
+    leave a vector one constant short. They are resolved by walking a parsed
+    expression tree against a fixed whitelist, never by evaluating the text:
+    arithmetic on numbers and on names already in the table, and nothing else.
+    A call, an attribute, a subscript or an unknown name is refused, and the
+    constant it feeds stays unresolved rather than becoming a wrong number.
+
+    Assignments are resolved by repeated passes, so order in the file does not
+    matter, and a cycle simply stops making progress and is left out.
+
+    A name assigned more than once keeps the LAST assignment, as Abaqus does.
+    That matters: these decks carry a superseded value commented out above the
+    live one (``**k = 0.663`` then ``k = 0.24``), and `**` is a comment, so
+    only the live assignment is ever seen.
+    """
+    written: dict[str, str] = {}
+    inside = False
+    for line in lines:
+        if line.lstrip().startswith("**"):
+            continue
+        keyword = _KEYWORD.match(line)
+        if keyword is not None:
+            inside = _canonical(keyword.group(1)) == "PARAMETER"
+            continue
+        if not inside:
+            continue
+        found = _PARAMETER_ASSIGNMENT.match(line)
+        if found:
+            written[found.group(1).upper()] = found.group(2)
+
+    table: dict[str, float] = {}
+    pending = dict(written)
+    while pending:
+        resolved_this_pass = False
+        for name, text in list(pending.items()):
+            value = _arithmetic_value(text, table)
+            if value is None:
+                continue
+            table[name] = value
+            del pending[name]
+            resolved_this_pass = True
+        if not resolved_this_pass:
+            break
+    return table
+
+
+#: Every node kind the parameter evaluator will walk. Anything else -- a call,
+#: an attribute, a subscript, a comparison, a comprehension -- is refused, so
+#: text out of a downloaded deck can describe arithmetic and nothing more.
+_ALLOWED_OPERATORS = (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow,
+                      ast.FloorDiv, ast.Mod)
+_ALLOWED_UNARY = (ast.UAdd, ast.USub)
+
+
+def _arithmetic_value(text: str, table: dict[str, float]) -> Optional[float]:
+    """The number an assignment's right-hand side denotes, or None.
+
+    None means "not resolvable here", never a default: the caller leaves the
+    name out of the table, `_substituted` leaves ``<name>`` standing, and the
+    declared-CONSTANTS check reports the short vector. A material constant
+    guessed at is worse than one reported missing.
+    """
+    candidate = re.sub(r"(?<=[0-9.])[dD](?=[-+0-9])", "e", text.strip())
+    if not candidate:
+        return None
+    try:
+        tree = ast.parse(candidate, mode="eval")
+    except (SyntaxError, ValueError, MemoryError, RecursionError):
+        return None
+
+    def walk(node: ast.AST) -> Optional[float]:
+        if isinstance(node, ast.Expression):
+            return walk(node.body)
+        if isinstance(node, ast.Constant):
+            return (float(node.value)
+                    if isinstance(node.value, (int, float))
+                    and not isinstance(node.value, bool) else None)
+        if isinstance(node, ast.Name):
+            return table.get(node.id.upper())
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, _ALLOWED_UNARY):
+            operand = walk(node.operand)
+            if operand is None:
+                return None
+            return +operand if isinstance(node.op, ast.UAdd) else -operand
+        if isinstance(node, ast.BinOp) and isinstance(node.op, _ALLOWED_OPERATORS):
+            left, right = walk(node.left), walk(node.right)
+            if left is None or right is None:
+                return None
+            try:
+                if isinstance(node.op, ast.Add):
+                    return left + right
+                if isinstance(node.op, ast.Sub):
+                    return left - right
+                if isinstance(node.op, ast.Mult):
+                    return left * right
+                if isinstance(node.op, ast.Div):
+                    return left / right
+                if isinstance(node.op, ast.FloorDiv):
+                    return float(left // right)
+                if isinstance(node.op, ast.Mod):
+                    return float(left % right)
+                # A large exponent is a denial of service on a parser that
+                # reads a thousand decks, so the range is bounded rather
+                # than trusted.
+                if isinstance(node.op, ast.Pow):
+                    if abs(right) > 64:
+                        return None
+                    return float(left ** right)
+            except (ZeroDivisionError, OverflowError, ValueError):
+                return None
+        return None
+
+    value = walk(tree)
+    if value is None or value != value or value in (float("inf"), float("-inf")):
+        return None
+    return value
+
+
+def _substituted(text: str, table: dict[str, float]) -> str:
+    """``<name>`` replaced by its parameter value, where one is known.
+
+    An unknown name is left as it stands so `_numbers` skips it, which keeps
+    the count short and lets the declared-CONSTANTS check report the
+    mismatch. Silently dropping it would shift every later constant one
+    position left -- a whole material vector wrong, in order, with nothing to
+    show for it.
+    """
+    if not table or "<" not in text:
+        return text
+    return _SUBSTITUTION.sub(
+        lambda m: repr(table[m.group(1).upper()])
+        if m.group(1).upper() in table else m.group(0),
+        text)
+
+
 def parse_deck(path: Path) -> list[DeckMaterial]:
     """Every constant vector a deck publishes, with what it declares.
 
@@ -151,6 +303,10 @@ def parse_deck(path: Path) -> list[DeckMaterial]:
     """
     path = Path(path)
     lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    # NOT `parameters`: the keyword loop below binds that name to each
+    # card's own attributes (NAME=, CONSTANTS=), which silently emptied
+    # this table through the closure on the very first keyword line.
+    substitutions = _parameter_table(lines)
 
     materials: list[DeckMaterial] = []
     current: Optional[DeckMaterial] = None
@@ -182,7 +338,7 @@ def parse_deck(path: Path) -> list[DeckMaterial]:
         if current is None or collecting is None:
             collecting, buffer = None, []
             return
-        text = "\n".join(buffer)
+        text = _substituted("\n".join(buffer), substitutions)
         if collecting in ("user_material", "uel_property"):
             current.props = _numbers(text)
             declared = current.declared_constants

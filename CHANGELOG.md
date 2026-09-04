@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- A deck's own `*PARAMETER` values are substituted into its material
+  constants. Abaqus resolves `<name>` at input-processing time, so a deck
+  that writes `<k>, <mu>, <kappa>` read as publishing no constants at all,
+  and the source paired to it was classified as needing material data its
+  author had published in the same file. Reading them is not inventing them.
+  Arithmetic is resolved too, because `bulk = mu*1e2` is the value the author
+  wrote -- but by walking a parsed expression tree against a whitelist of
+  arithmetic on numbers and known names, never by evaluating the text: a
+  material constant is not a reason to run text out of a downloaded file. A
+  call, an attribute, a subscript, an unbounded exponent or an unknown name
+  is refused, and the constant it feeds stays unresolved, which leaves the
+  vector short and reports the mismatch against the deck's own `CONSTANTS=`
+  count rather than becoming a wrong number. Order in the file does not
+  matter and a cycle stops rather than looping. Measured over the corpus:
+  material vectors read from parameter-substituted decks that agree with
+  their declared count went from 8 to 31.
 - The documented body of an Abaqus utility the solver provides. A UMAT that
   calls `ROTSIG` publishes no definition for it, because Abaqus links it in;
   the helper lifter found nothing to lift and refused the source. That refusal
