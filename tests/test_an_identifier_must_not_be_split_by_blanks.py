@@ -69,3 +69,40 @@ def test_the_real_emitted_output_that_raised_this_is_rejected():
         "      A1_OTI = (X)/(-G13_OTI*G22_OTI*G31_OTI+G12_OTI*G23_OTI*G3 1+\n"
         "     1G13_OTI*G32_OTI)\n")
     assert not _no_identifier_split_by_blanks(emitted, "fixed")
+
+
+# --------------------------------------------------------------------------
+# the root cause, not the guard
+# --------------------------------------------------------------------------
+def test_fixed_form_continuations_join_without_a_space():
+    """Blanks are insignificant in fixed form, so a break can fall mid-name.
+
+    The Jeff97 shell sources write `...G12*G23*G3` at the end of one line and
+    `1+G13*G21*G32...` on the next: one identifier, G31. The transform joined
+    its continuation segments with a space, so the renamer saw `G3` -- not a
+    name it knew -- left it alone, and emitted `*G3 1+`, which the compiler
+    read back as the original un-renamed G31. In those sources G31 is never
+    assigned, so the answer was not wrong but nondeterministic.
+
+    The parser had this right all along; only the transform's own joiner did
+    not, which is why the defect survived a source that parses correctly.
+    """
+    from umat_oti.transform.source_transform import _join_continuations
+
+    joined = _join_continuations(
+        ["A1=(X)/(-G13*G22*G31+G12*G23*G3", "1+G13*G21*G32)"], "fixed")
+    assert "G3 1" not in joined
+    assert "G23*G31+" in joined
+
+
+def test_free_form_continuations_keep_the_space():
+    """There a blank IS significant and the segments are two tokens."""
+    from umat_oti.transform.source_transform import _join_continuations
+
+    assert _join_continuations(["CALL F(A", "B)"], "free") == "CALL F(A B)"
+
+
+def test_an_empty_segment_does_not_introduce_a_separator():
+    from umat_oti.transform.source_transform import _join_continuations
+
+    assert _join_continuations(["A=B", "   ", "+C"], "fixed") == "A=B+C"
