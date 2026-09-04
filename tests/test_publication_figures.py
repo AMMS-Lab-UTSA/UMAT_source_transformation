@@ -19,6 +19,17 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 FIGURES = REPO_ROOT / "paper_results" / "figures"
 
 sys.path.insert(0, str(REPO_ROOT / "tools" / "figures"))
+
+# figure_style imports matplotlib at module level, and matplotlib is in the
+# `paper` extra rather than `test` -- deliberately, so a user who only wants to
+# transform a UMAT does not install a plotting stack. Without this guard the
+# import raised during COLLECTION, which aborts the whole session: CI reported
+# "1 skipped, 1 error" and ran none of the other 1700 tests.
+pytest.importorskip(
+    "matplotlib",
+    reason="matplotlib is in the `paper` extra; install -e \".[paper]\" to "
+           "check the publication figures")
+
 from figure_style import ANNOTATION_PT, FONT_SIZES  # noqa: E402
 
 from umat_oti.publication.layout import (  # noqa: E402

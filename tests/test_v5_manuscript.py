@@ -14,6 +14,14 @@ from pathlib import Path
 
 import pytest
 
+
+# python-docx is in the `paper` extra rather than `test`, so a
+# checkout that installs only the test extra skips these instead of
+# reporting a missing module as a failure of the manuscript.
+pytest.importorskip(
+    "docx",
+    reason="python-docx is in the `paper` extra; install -e \".[paper]\" to check the manuscript")
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MANUSCRIPT = REPO_ROOT / "docs" / "manuscript" / "UMAT_OTI_SoftwareX_V5.docx"
 PROVENANCE = MANUSCRIPT.with_name(f"{MANUSCRIPT.stem}_provenance.json")
