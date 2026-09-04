@@ -191,3 +191,41 @@ def test_all_three_are_in_the_outcome_vocabulary():
 
     for name in (NON_FINITE_RESPONSE, BOTH_NON_FINITE, ORIGINAL_NON_FINITE):
         assert name in OUTCOMES
+
+
+# ---- the report has to describe the run that happened -------------------
+def test_the_provenance_does_not_claim_a_state_the_run_did_not_use():
+    """The driver calls the author's SDVINI where the source ships one.
+
+    The provenance said "zero stress, zero state" on every row while
+    twenty-one of them started from a state their author computes. A published
+    artifact describing a run that did not happen is worse than one that
+    reports less.
+    """
+    from verify_store_offline import PROBE_PROVENANCE
+
+    assert "SDVINI" in PROBE_PROVENANCE
+    assert "sdvini_called" in PROBE_PROVENANCE
+    assert "zero stress, zero state" not in PROBE_PROVENANCE
+
+
+def test_a_source_shipping_sdvini_is_recognised():
+    from verify_store_offline import _defines_sdvini
+
+    assert _defines_sdvini(
+        "      subroutine sdvini(statev,coords,nstatv,ncrds,noel,npt,layer,kspt)\n"
+        "      statev(1)=1.0d0\n      return\n      end\n")
+    assert _defines_sdvini("  100 SUBROUTINE SDVINI(STATEV)\n")
+
+
+def test_a_mention_in_a_comment_is_not_a_definition():
+    from verify_store_offline import _defines_sdvini
+
+    assert not _defines_sdvini("C     this model needs sdvini to be called\n")
+    assert not _defines_sdvini("      CALL SDVINI(STATEV)\n")
+
+
+def test_a_source_without_one_is_not_claimed_to_have_one():
+    from verify_store_offline import _defines_sdvini
+
+    assert not _defines_sdvini("      SUBROUTINE UMAT(STRESS)\n      END\n")

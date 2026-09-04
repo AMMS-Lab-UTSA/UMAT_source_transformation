@@ -105,9 +105,25 @@ def test_the_check_is_arithmetic_on_counts_both_sides_declare(tmp_path: Path):
     ok, detail = check_pairing(source, deck, expected_nprops=4, expected_nstatv=10)
     assert ok and "supplies 4 constants" in detail
     ok, detail = check_pairing(source, deck, expected_nprops=5, expected_nstatv=10)
-    assert not ok and "expects at least 5" in detail
+    assert not ok and "reads PROPS up to 5" in detail
+
+    # State variables are resolved, not refused. The harness allocates the
+    # larger of the deck's *Depvar and the source's own count -- see
+    # build_validation_workspace, which has done that since the out-of-bounds
+    # write it guards against -- so a short *Depvar costs nothing, while
+    # refusing on it threw away six constants UEL8_PCLK's author had
+    # published and then recorded the refusal as a constants shortfall.
+    # Constants remain the one arm that can refuse; that is pinned above and
+    # in test_too_few_constants_is_still_refused.
     ok, detail = check_pairing(source, deck, expected_nprops=4, expected_nstatv=999)
-    assert not ok, "a deck with too few state variables must not be accepted"
+    assert ok, "a short *Depvar must not discard constants that were published"
+    assert "state variables resolve to 999" in detail, (
+        "and the resolved count has to be visible in the evidence")
+    ok, _ = check_pairing(source, deck, expected_nprops=4, expected_nstatv=999,
+                          refuse_short_depvar=True)
+    assert not ok, (
+        "the stricter rule pair_source_with_deck runs first still refuses, "
+        "which is what keeps a pairing that already worked from moving")
 
 
 def test_a_deck_that_supplies_more_than_the_source_reads_is_capable(tmp_path: Path):
