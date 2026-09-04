@@ -45,6 +45,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sources keep their refusal until that case is handled deliberately.
 
 ### Fixed
+- The Abaqus probe calls an argument what the routine calls it. The UMAT
+  interface is positional, and position 23 is the state-variable count: the
+  manual spells it `NSTATV` and **125 of the 251 sources in the store spell it
+  `NSTATEV`**. The probe named `NSTATV` regardless, which in those routines is
+  a name never declared -- an implicitly typed INTEGER with no value under
+  `ABA_PARAM.INC` -- so `(STATEV(I),I=1,NSTATV)` walked off the end of the
+  array and Abaqus died with a segmentation fault inside the formatted WRITE,
+  in a stack whose top frame is `otis_probe_in`. Every such row was recorded
+  as a failure of somebody's UMAT: eight of the first twenty-six rows of an
+  Abaqus batch, all of them ours. Arguments are now resolved by position
+  against the routine's own signature. 157 of 251 sources rename at least one
+  (`NSTATEV` 125, `JSTEP` 24, `MATERL` 6, `KSLAY` 3, and singletons down to
+  `NSTAT_VAR`). A signature too short to be the UMAT interface falls back to
+  the canonical spellings rather than resolving positionally against a list
+  that would map arguments to the wrong names. This also explains a symptom
+  recorded earlier and left open: one source printed `NSTATV 0` in its first
+  record and `********` in a later one, and which array overran was not
+  established. It was this.
+- The proposal writer no longer records the machine that ran the search.
+  `DeckMaterial.as_dict` carries the absolute path it read -- right for an
+  object in memory, wrong for a tracked file -- and it reached
+  `proposed_corpus_entries.json` through the pairing record, where the
+  repository-standards audit refused it. Scrubbing walks the whole structure
+  rather than the fields known to carry a path today, so a field added later
+  cannot reintroduce it.
 - A fixed-form continuation is joined the way fixed form joins it. Blanks are
   insignificant inside a fixed-form statement, so a continuation break may fall
   in the middle of a name: the Jeff97 shell sources write `...G12*G23*G3` at

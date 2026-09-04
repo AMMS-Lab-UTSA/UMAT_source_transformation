@@ -139,17 +139,25 @@ C     called, so say which it was. Unit 6 is the .msg/.log Abaqus captures.
 """ % {"unit": PROBE_UNIT}
 
 
-def probe_call(tag: str, indent: str = "      ", step: str = "KSTEP") -> str:
+def probe_call(tag: str, indent: str = "      ", step: str = "KSTEP",
+               names: Optional[dict[str, str]] = None) -> str:
     """The one statement that records what an increment computed.
 
     Placed immediately before the UMAT's RETURN, where STRESS, STATEV and
     DDSDDE all hold the values the increment converged to.
+
+    ``names`` carries this routine's own spelling of each interface argument;
+    see :func:`entry_call` for what naming one it does not declare costs.
     """
+    name = (names or {}).get
+    n = lambda canonical: name(canonical, canonical) or canonical
     # The continuation marker belongs in column 6, which means five spaces
     # before it and not the statement indent.
     return (
-        f"{indent}CALL OTIS_PROBE('{tag}',NOEL,NPT,{step},KINC,TIME(2),\n"
-        f"     1     STRESS,NTENS,STATEV,NSTATV,DDSDDE)\n"
+        f"{indent}CALL OTIS_PROBE('{tag}',{n('NOEL')},{n('NPT')},{step},"
+        f"{n('KINC')},{n('TIME')}(2),\n"
+        f"     1     {n('STRESS')},{n('NTENS')},{n('STATEV')},{n('NSTATV')},"
+        f"{n('DDSDDE')})\n"
     )
 
 
@@ -194,19 +202,103 @@ def step_expression(arguments: set[str]) -> str:
     return "1"
 
 
-def entry_call(tag: str, indent: str = "      ", step: str = "KSTEP") -> str:
+#: The Abaqus UMAT dummy arguments, in interface order. The interface is
+#: positional, so position -- not spelling -- is what identifies an argument.
+#: Half this corpus writes NSTATEV where the manual writes NSTATV, and a
+#: probe naming NSTATV in such a source names something the routine never
+#: declared: under ABA_PARAM.INC that is an implicitly typed INTEGER with no
+#: value, so ``(STATEV(I),I=1,NSTATV)`` walks off the end of the array and
+#: Abaqus dies with a segmentation fault inside the formatted WRITE. The job
+#: is then recorded as a failure of somebody's UMAT.
+UMAT_INTERFACE = (
+    "STRESS", "STATEV", "DDSDDE", "SSE", "SPD", "SCD", "RPL", "DDSDDT",
+    "DRPLDE", "DRPLDT", "STRAN", "DSTRAN", "TIME", "DTIME", "TEMP", "DTEMP",
+    "PREDEF", "DPRED", "CMNAME", "NDI", "NSHR", "NTENS", "NSTATV", "PROPS",
+    "NPROPS", "COORDS", "DROT", "PNEWDT", "CELENT", "DFGRD0", "DFGRD1",
+    "NOEL", "NPT", "LAYER", "KSPT", "KSTEP", "KINC")
+
+
+def argument_order(lines: list[str], start: int) -> list[str]:
+    """The routine's dummy arguments in the order it declares them.
+
+    Ordered, unlike :func:`_argument_names`, because the probe has to resolve
+    an argument by its position in the interface rather than by its name.
+
+    A fixed-form continuation carries a marker in column 6, and joining the
+    raw lines would read that marker as an argument -- shifting every later
+    position by one, which is worse than not resolving at all. Columns 1 to 6
+    are dropped from a continuation line before joining.
+    """
+    collected: list[str] = []
+    free_form = False
+    for offset, line in enumerate(lines[start:start + 40]):
+        if _is_comment(line):
+            continue
+        body = line.rstrip("\n")
+        # Which continuation convention is in use is decided by the PREVIOUS
+        # line, not by this one. A free-form continuation is announced by a
+        # trailing ``&``; a fixed-form one is announced by a mark in column 6.
+        # Reading a free-form line as fixed drops six characters -- turning
+        # COORDS into OORDS and PREDEF into REDEF -- and every argument after
+        # it keeps its position while losing its name.
+        if offset and not free_form and len(body) > 6 \
+                and not body[:5].strip("0123456789 ") and body[5:6].strip():
+            body = " " + body[6:]
+        collected.append(body)
+        free_form = body.rstrip().endswith("&")
+        joined = "".join(collected)
+        if "(" in joined and joined.count("(") <= joined.count(")"):
+            break
+    joined = "".join(collected).replace("&", " ")
+    if "(" not in joined or ")" not in joined:
+        return []
+    inside = joined[joined.index("(") + 1:joined.rindex(")")]
+    names = []
+    for piece in inside.split(","):
+        piece = piece.strip()
+        names.append(piece.upper() if re.fullmatch(r"\w+", piece) else "")
+    return names
+
+
+def resolved_arguments(lines: list[str], start: int) -> dict[str, str]:
+    """Each interface argument mapped to the name THIS routine gives it.
+
+    Resolution is by position and is applied only where the routine's own
+    argument list is long enough to be the UMAT interface; a shorter list
+    means the opener was not parsed and every name falls back to the
+    canonical spelling, which is what the probe did before.
+    """
+    order = argument_order(lines, start)
+    if len(order) < len(UMAT_INTERFACE):
+        return {name: name for name in UMAT_INTERFACE}
+    return {canonical: (order[index] or canonical)
+            for index, canonical in enumerate(UMAT_INTERFACE)}
+
+
+def entry_call(tag: str, indent: str = "      ", step: str = "KSTEP",
+               names: Optional[dict[str, str]] = None) -> str:
     """The statement that records what an increment was given.
 
     Placed before the UMAT's first executable statement, where STRESS and
     STATEV still hold the state the increment starts from. Without this the
     starting point is gone by the time the routine returns, and an offline
     finite difference has nothing to re-run the increment from.
+
+    ``names`` maps each interface argument to the name this routine gives it.
+    Passing the canonical spelling into a routine that used another one names
+    a variable the routine never declared, and the count it is read as then
+    decides how far the probe walks into an array.
     """
+    name = (names or {}).get
+    n = lambda canonical: name(canonical, canonical) or canonical
     return (
-        f"{indent}CALL OTIS_PROBE_IN('{tag}',NOEL,NPT,{step},KINC,TIME(2),DTIME,\n"
-        f"     1     STRESS,NTENS,STATEV,NSTATV,STRAN,DSTRAN,\n"
-        f"     2     PROPS,NPROPS,TEMP,DTEMP,DFGRD0,DFGRD1,DROT,\n"
-        f"     3     NDI,NSHR,CELENT,COORDS)\n"
+        f"{indent}CALL OTIS_PROBE_IN('{tag}',{n('NOEL')},{n('NPT')},{step},"
+        f"{n('KINC')},{n('TIME')}(2),{n('DTIME')},\n"
+        f"     1     {n('STRESS')},{n('NTENS')},{n('STATEV')},{n('NSTATV')},"
+        f"{n('STRAN')},{n('DSTRAN')},\n"
+        f"     2     {n('PROPS')},{n('NPROPS')},{n('TEMP')},{n('DTEMP')},"
+        f"{n('DFGRD0')},{n('DFGRD1')},{n('DROT')},\n"
+        f"     3     {n('NDI')},{n('NSHR')},{n('CELENT')},{n('COORDS')})\n"
     )
 
 
@@ -420,8 +512,9 @@ def instrument(source_text: str, tag: str, entry: str = "UMAT") -> tuple[str, bo
 
     # Insert from the bottom up, so the earlier index stays valid.
     step = step_expression(_argument_names(lines, start))
-    lines.insert(last_return, probe_call(tag, step=step))
-    lines.insert(first_executable, entry_call(tag, step=step))
+    names = resolved_arguments(lines, start)
+    lines.insert(last_return, probe_call(tag, step=step, names=names))
+    lines.insert(first_executable, entry_call(tag, step=step, names=names))
     return "".join(lines) + PROBE_SOURCE, True
 
 
