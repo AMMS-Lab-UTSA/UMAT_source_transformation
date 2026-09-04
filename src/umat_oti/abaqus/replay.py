@@ -12,12 +12,18 @@ no code path, so an error in the transform cannot cancel itself out of the
 comparison. The transformed build supplies DDSDDE; the original build supplies
 the differences it is checked against.
 
-Nothing here writes into STATEV or changes a constitutive statement. The
-increment is replayed exactly as Abaqus ran it, except for one component of
-DSTRAN, which is what a partial derivative means.
+Nothing here changes a constitutive statement. The increment is replayed
+exactly as Abaqus ran it, except for one component of DSTRAN, which is what a
+partial derivative means.
+
+The one thing the driver writes into STATEV is what Abaqus itself writes there:
+when the source ships an SDVINI and the state read from the file is all zeros,
+it calls the author's own SDVINI, as the solver does before the first
+increment. Never over a state that was recorded -- see the call site below.
 """
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass, field
@@ -104,7 +110,7 @@ _DRIVER = """PROGRAM otis_replay
   DDSDDE=0.0_8; SSE=0.0_8; SPD=0.0_8; SCD=0.0_8; RPL=0.0_8
   DDSDDT=0.0_8; DRPLDE=0.0_8; DRPLDT=0.0_8; PREDEF=0.0_8; DPRED=0.0_8
   PNEWDT=1.0_8; LAYER=1; KSPT=1; CMNAME='%(name)s'
-
+%(sdvini)s
   CALL UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,RPL,DDSDDT,DRPLDE,DRPLDT, &
     STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,CMNAME,NDI,NSHR, &
     NTENS,NSTATV,PROPS,NPROPS,COORDS,DROT,PNEWDT,CELENT,DFGRD0,DFGRD1, &
@@ -127,13 +133,163 @@ END PROGRAM otis_replay
 %(stubs)s"""
 
 
-def driver_source(name: str = "REPLAY") -> str:
-    """The replay program, for a source that has to be linked beside it."""
+#: The Abaqus call the solver makes before the first increment, in the shape
+#: the interface declares it. NCRDS is 3 because the driver hands COORDS three
+#: numbers; LAYER and KSPT are set just above, and STATEV holds what the state
+#: file said.
+_SDVINI_CALL = """
+! Abaqus fills STATEV by calling the author's own SDVINI before the first
+! increment, whenever the deck asks for it. Running the author's subroutine is
+! not the same as reading the constants out of it: a state variable set from
+! COORDS or NOEL is only right if the code that sets it runs.
+!
+! Only when nothing was recorded. A state read from a probe ENTRY record is the
+! state the solver had already reached, and running SDVINI over it would replay
+! a different increment from the one that was recorded -- silently, and with a
+! plausible-looking answer. An all-zero state is the one case where there is
+! nothing to overwrite, and it is exactly the case that was broken: eight
+! mholla growth sources returned NaN in all six stress components from the
+! UNTRANSFORMED build under an all-zero start, five of them because they read
+! a growth stretch their own SDVINI sets to 1.0 and then divide by it.
+  IF (NSTATV .GE. 1) THEN
+    IF (ALL(STATEV(1:NSTATV) .EQ. 0.0_8)) THEN
+      CALL SDVINI(STATEV,COORDS,NSTATV,3,NOEL,NPT,LAYER,KSPT)
+    END IF
+  END IF
+"""
+
+#: A definition of SDVINI, in fixed or free form, with or without a type
+#: prefix. Anchored at the start of a statement so that ``CALL SDVINI`` and a
+#: fixed-form comment in column 1 are not read as definitions.
+_SDVINI_DEFINITION = re.compile(
+    r"^(?:\w+\s+)*subroutine\s+sdvini\b", re.IGNORECASE)
+
+
+def defines_sdvini(source_text: str) -> bool:
+    """Whether this text defines SDVINI, so a call to it would link.
+
+    The call has to be emitted conditionally, not always: gfortran resolves
+    SDVINI at link time and a driver that calls one no source defines does not
+    link at all. That failure would land on every source in the corpus without
+    an SDVINI, which is most of them, and would read as a defect in the model.
+    """
+    for raw in source_text.splitlines():
+        stripped = raw.strip()
+        # Fixed form marks a comment by column 1; the text is scanned line by
+        # line rather than parsed, so the marker is checked on the raw line.
+        if raw[:1] in ("c", "C", "*", "!") or stripped.startswith("!"):
+            continue
+        if _SDVINI_DEFINITION.match(stripped):
+            return True
+    return False
+
+
+def driver_source(name: str = "REPLAY", *, initialise_state: bool = False) -> str:
+    """The replay program, for a source that has to be linked beside it.
+
+    ``initialise_state`` emits the call to SDVINI. It is the caller's job to
+    say so, because whether that call can link is a property of the source
+    being compiled beside the driver, not of the driver.
+    """
     from umat_oti.validation.actual_umat_higher_order_generic import (
         _abaqus_utility_stubs)
 
     return _DRIVER % {"state": STATE_FILE, "name": name.upper()[:60],
-                      "stubs": _abaqus_utility_stubs()}
+                      "sdvini": _SDVINI_CALL if initialise_state else "",
+                      "stubs": _abaqus_utility_stubs() + _replay_utility_stubs()}
+
+
+def _replay_utility_stubs() -> str:
+    """Abaqus utilities the shared stub block does not carry.
+
+    Appended to it rather than added there, because that block is shared with
+    the higher-order drivers and these bodies are what *this* driver's corpus
+    needs. Each one was an undefined symbol at link time, not a suspicion:
+    UMAT_KLP_RK5_hybrid.f failed with `undefined reference to get_thread_id_`,
+    `stdb_abqerr_` and `getvrm_`, for the original build and the transformed
+    build alike, which accuses the harness rather than the transform.
+
+    Two of them deliberately stop the run instead of returning something. That
+    follows the rule the XIT stub already sets: a stub may reproduce the
+    solver's behaviour, but it may not invent an answer the solver would have
+    had to compute, and it may not swallow a refusal the author raised.
+    """
+    return """
+FUNCTION GET_THREAD_ID()
+  ! The thread this material point is being evaluated on. The replay runs one
+  ! point on one thread, so it is the master thread, 0.
+  !
+  ! REAL(8), not INTEGER, and that is not a mistake. Abaqus declares this
+  ! INTEGER in SMAASPUSERSUBROUTINES.HDR, which is a *preprocessor* include
+  ! that gfortran does not process in a fixed-form .f file. The caller
+  ! therefore types the result by the implicit rule these sources carry --
+  ! IMPLICIT REAL*8(A-H,O-Z), and G falls in A-H -- and reads it out of the
+  ! floating-point register. Measured on UMAT_KLP_RK5_hybrid.f, gfortran emits
+  ! `call get_thread_id_` followed by `cvttsd2sil %xmm0,%eax`. An INTEGER stub
+  ! returns in %eax and leaves the caller reading whatever happened to be in
+  ! %xmm0; the author guards his input checks with IF (MYTHREADID.EQ.0), so a
+  ! garbage id skips them without a word.
+  REAL(8) :: GET_THREAD_ID
+  GET_THREAD_ID = 0.0D0
+END FUNCTION GET_THREAD_ID
+SUBROUTINE STDB_ABQERR(LOP,STRING,INTV,REALV,CHARV)
+  ! Abaqus's message service. LOP is the severity: 1 information, -1 warning,
+  ! -2 an error that ends the analysis at the end of the increment, -3 an error
+  ! that ends it at once.
+  !
+  ! An error is therefore NOT a no-op. A model that refuses its input is
+  ! refusing to compute this increment, and letting the run continue would put
+  ! whatever STRESS happened to be in the array into the evidence as though the
+  ! model had produced it.
+  !
+  ! The message is written with its %I and %R placeholders unexpanded, and INTV
+  ! and REALV are never read. They are declared here only to be passed: without
+  ! an interface the caller's actual arguments carry no type information, and
+  ! reading a REAL(4) array through a REAL(8) dummy would print numbers that
+  ! were never in it.
+  IMPLICIT NONE
+  INTEGER :: LOP
+  CHARACTER(*) :: STRING
+  INTEGER :: INTV(*)
+  REAL(8) :: REALV(*)
+  CHARACTER(*) :: CHARV(*)
+  IF (LOP .LE. -2) THEN
+    WRITE(0,'(A,I0,A)') 'UMAT called STDB_ABQERR with severity ',LOP, &
+      ': the model rejected this increment.'
+    WRITE(0,'(A)') TRIM(STRING)
+    STOP 5
+  END IF
+  WRITE(0,'(A,I0,A)') 'STDB_ABQERR (severity ',LOP,'): '//TRIM(STRING)
+END SUBROUTINE STDB_ABQERR
+SUBROUTINE GETJOBNAME(JOBNAME,LENJOBNAME)
+  ! Sources name their scratch files after the job. A blank name would make
+  ! them open a file called '', which fails with a runtime error that reads
+  ! like a defect in the model.
+  IMPLICIT NONE
+  CHARACTER(*) :: JOBNAME
+  INTEGER :: LENJOBNAME
+  JOBNAME = 'otis_replay'
+  LENJOBNAME = LEN_TRIM(JOBNAME)
+END SUBROUTINE GETJOBNAME
+SUBROUTINE GETVRM(VAR,ARRAY,JARRAY,FLGRAY,JRCD,JMAC,JMATYP,MATLAYO,LACCFLA)
+  ! Abaqus reads output values back out of its own results database. There is
+  ! no database here and no previously computed output to read.
+  !
+  ! Stubbed so that a file whose UVARM calls it links -- UMAT_KLP_RK5_hybrid.f
+  ! is such a file, and this driver never enters UVARM -- but stopping rather
+  ! than returning zeros. Zeros would be state this harness invented, and a
+  ! model that computes from them would report a stress that nothing in the
+  ! author's material produced.
+  IMPLICIT NONE
+  CHARACTER(*) :: VAR
+  REAL(8) :: ARRAY(*)
+  INTEGER :: JARRAY(*),JRCD,JMAC(*),JMATYP(*),MATLAYO,LACCFLA
+  CHARACTER(*) :: FLGRAY(*)
+  WRITE(0,'(A)') 'UMAT called GETVRM: the replay has no results database, '// &
+    'so the values it asks for do not exist and were not invented.'
+  STOP 6
+END SUBROUTINE GETVRM
+"""
 
 
 def _row(values) -> str:
@@ -324,6 +480,18 @@ def _install_header(work_dir: Path, abaqus: Optional[str] = None) -> str:
     return described
 
 
+def _text_of(path: Path) -> str:
+    """One source's text, or nothing if it cannot be read.
+
+    A unit that cannot be read is not a unit that defines SDVINI: the compiler
+    is about to fail on it anyway, and failing there says why.
+    """
+    try:
+        return Path(path).read_text(errors="replace")
+    except OSError:
+        return ""
+
+
 @dataclass
 class ReplayBuild:
     """A compiled replay program, or the reason there is none."""
@@ -347,8 +515,18 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     if shutil.which(compiler) is None:
         return ReplayBuild(reason=f"{compiler} is not on PATH")
 
+    # Whether the driver may call SDVINI is read from the units being compiled,
+    # every one of them, because the definition does not have to live in the
+    # entry file: a transformed build compiles its support modules beside the
+    # UMAT. Reading it here rather than asking the caller keeps the two builds
+    # of one source in step -- the transform carries SDVINI through unchanged,
+    # so both sides call it or neither does.
+    units = [Path(path) for path in (*extra, source)]
     driver = work_dir / "otis_replay.f90"
-    driver.write_text(driver_source(name), encoding="utf-8")
+    driver.write_text(
+        driver_source(name, initialise_state=any(
+            defines_sdvini(_text_of(unit)) for unit in units)),
+        encoding="utf-8")
     program = work_dir / "otis_replay"
 
     # The header is installed into the build directory under every casing a

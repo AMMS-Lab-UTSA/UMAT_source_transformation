@@ -46,6 +46,7 @@ import traceback
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional, Sequence
 
@@ -129,21 +130,237 @@ BASE_FLAGS = ("-ffixed-line-length-132", "-std=legacy", "-O2", "-w")
 #: that the stress it produces is not the round-off of a zero.
 PROBE_STRAIN = 1.0e-4
 
-#: Where the probe puts the material point. A generic point of the unit cube:
-#: no coordinate zero, no two equal in magnitude. Sources here divide by all
-#: three of those coincidences.
+#: Where the probe puts the material point when nothing better is known: a
+#: generic point of the unit cube, no coordinate zero, no two equal in
+#: magnitude, because sources here divide by all three of those coincidences.
+#:
+#: It is a fallback and not a default any more. COORDS is a physical position,
+#: and a fixed one is a claim about geometry that most decks in this corpus
+#: contradict: nineteen Jeff97 BodyForce/PureGravity sources model a plate
+#: 0.01 m thick lying in the x-y plane, so Y=0.7 stood seventy plate
+#: thicknesses outside their own mesh. Each computes a growth stretch
+#: G11 = Lambda1z0(X) + Y*Lambda1z1(X), which is -4.05 there, builds
+#: Ae = F.G^-1 from it and evaluates DETAe**(-5/3) on a negative determinant.
+#: Both builds returned NaN, so nineteen rows read `both_builds_non_finite`
+#: and decided nothing. Where the paired deck publishes node coordinates the
+#: point is taken from those instead -- see ``probe_point``.
 PROBE_COORDS = (0.3, 0.7, 0.5)
 
+#: The fractions of a mesh's own extents the probe is placed at, tried in
+#: order. The first is ``PROBE_COORDS`` itself, which is exactly its position
+#: within the unit cube, so a deck whose mesh IS the unit cube is probed where
+#: it always was. The rest exist for the guard below: on an extent centred on
+#: the origin the fraction 0.5 lands exactly on zero, and on a mesh whose y
+#: extent is 3/7 of its x extent the first pair lands on |x| == |y|. Both are
+#: divisions by zero in sources in this corpus, so a second fraction is tried
+#: rather than the point being nudged outside the mesh.
+PROBE_FRACTIONS = (
+    (0.3, 0.7, 0.5),
+    (0.35, 0.62, 0.44),
+    (0.62, 0.28, 0.55),
+    (0.45, 0.8, 0.3),
+)
+
+#: How many node lines are read out of one deck. The decks here run to
+#: millions of lines and the extents converge long before this; the bound is
+#: safe because the bounding box of a subset of the nodes is contained in the
+#: bounding box of all of them, so a point interpolated inside the subset is
+#: still inside the mesh. Nothing weaker than that would do -- a point outside
+#: the mesh is the defect this whole mechanism exists for.
+NODE_LIMIT = 200_000
+
+GENERIC_COORDS = (
+    "the generic point of the unit cube declared by this gate; no deck with a "
+    "*NODE block is paired with this source, so its mesh is not known here"
+)
+DECK_COORDS = (
+    "read from the *NODE block of the deck this source's constants came from: "
+    "a point inside the mesh the author published, placed at fixed fractions "
+    "of that mesh's own extents. Chosen by the gate, not by the author -- it "
+    "is not the integration point of any element"
+)
+
 PROBE_PROVENANCE = (
-    "declared probe, chosen by this offline gate: zero stress, zero state and "
-    "a uniaxial strain increment of 1e-4 over one increment of unit time. It "
-    "is not read from any deck and is not this source's own loading history. "
-    "Only the material constants come from the author"
+    "declared probe, chosen by this offline gate: zero stress and a uniaxial "
+    "strain increment of 1e-4 over one increment of unit time. The state "
+    "starts at zero UNLESS the source ships its own SDVINI, in which case the "
+    "driver calls it and the state is whatever the author's routine computes "
+    "-- see sdvini_called on the row. The loading is not read from any deck "
+    "and is not this source's own loading history. The material constants "
+    "come from the author, and so does the region the material point sits in "
+    "when a paired deck publishes node coordinates -- see probe_coords_from "
+    "on the row"
 )
 
 
+def _defines_sdvini(text: str) -> bool:
+    """Does this source ship its own SDVINI for the driver to call?
+
+    Recorded per row because it changes what the probe means. Twenty-one
+    entries in this corpus start from a state their author computes rather
+    than from zeros, and a report that said "zero state" for all of them would
+    have been describing a run that did not happen.
+    """
+    import re as _re
+
+    return bool(_re.search(r"^\s*\d*\s*subroutine\s+sdvini\b", text,
+                           _re.IGNORECASE | _re.MULTILINE))
+
+
+@dataclass(frozen=True)
+class ProbePoint:
+    """Where one source's material point was put, and on whose authority."""
+
+    coords: tuple[float, float, float]
+    provenance: str
+    deck: str = ""
+
+    def as_dict(self) -> dict[str, Any]:
+        return {"probe_coords": list(self.coords),
+                "probe_coords_from": self.provenance,
+                "probe_deck": self.deck}
+
+
+@lru_cache(maxsize=256)
+def node_extents(path: Path, limit: int = NODE_LIMIT
+                 ) -> Optional[tuple[Optional[tuple[float, float]], ...]]:
+    """The bounding box of the nodes an Abaqus deck declares, per axis.
+
+    Returns one (low, high) pair per axis, ``None`` for an axis the deck says
+    nothing about -- a plane-strain deck gives two coordinates per node and
+    the third stays unknown rather than being invented as zero -- and ``None``
+    for the whole deck when it declares no nodes at all. A deck with no
+    geometry has to leave the probe exactly where it was; that is the same
+    rule as a source with no constants not acquiring any.
+
+    ``*NODE OUTPUT`` is deliberately not this keyword. It is a request for
+    results, and its numbers are field values, not positions: in the Jeff97
+    decks the block reads ``900., 900., 900.``, which would have put the probe
+    further outside the plate than the generic point ever was.
+    """
+    low: list[Optional[float]] = [None, None, None]
+    high: list[Optional[float]] = [None, None, None]
+    seen = 0
+    inside = False
+    try:
+        handle = Path(path).open(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    with handle:
+        for line in handle:
+            text = line.strip()
+            if not text or text.startswith("**"):
+                continue                      # blank, or an Abaqus comment
+            if text.startswith("*"):
+                keyword = " ".join(text[1:].split(",")[0].split()).upper()
+                inside = keyword == "NODE"
+                continue
+            if not inside:
+                continue
+            # The first field is the node's label, the rest its coordinates.
+            fields = text.split(",")[1:4]
+            for axis, field_text in enumerate(fields):
+                try:
+                    value = float(field_text)
+                except ValueError:
+                    continue      # a generated label, or a trailing comma
+                low[axis] = value if low[axis] is None else min(low[axis], value)
+                high[axis] = value if high[axis] is None else max(high[axis], value)
+            seen += 1
+            if seen >= limit:
+                break
+    if not seen:
+        return None
+    return tuple(None if low[axis] is None else (low[axis], high[axis])
+                 for axis in range(3))
+
+
+def _usable(coords: Sequence[float], *, strict: bool) -> bool:
+    """Is this a point the corpus can be evaluated at?
+
+    The divisions that make it a question, all present in this cache:
+    ``COORDS(2)/SQRT(COORDS(1)**2+COORDS(2)**2)`` at the origin, and
+    ``COORDS(1)**2 - COORDS(2)**2`` on the diagonal. ``strict`` additionally
+    refuses a zero third coordinate, which is tried first and given up on for
+    a mesh that is genuinely flat in z -- there Abaqus itself passes zero, and
+    a point off the mesh would be the defect this exists to fix.
+    """
+    x, y, z = (float(value) for value in coords)
+    if x == 0.0 or y == 0.0 or x ** 2 == y ** 2:
+        return False
+    return not (strict and z == 0.0)
+
+
+def probe_coords_in(extents: Sequence[Optional[tuple[float, float]]]
+                    ) -> Optional[tuple[float, float, float]]:
+    """A point inside a mesh with those extents, or None if there is none.
+
+    None is returned rather than a repaired point: a mesh every node of which
+    sits at x=0 offers this gate nowhere it can divide by, and moving the
+    probe off the mesh to satisfy the guard would be the original defect with
+    a different arithmetic failure at the end of it. The caller reports the
+    generic point and says so.
+    """
+    if not extents or all(extent is None for extent in extents):
+        return None
+    for strict in (True, False):
+        for fractions in PROBE_FRACTIONS:
+            point = tuple(
+                generic if extent is None
+                else extent[0] + fraction * (extent[1] - extent[0])
+                for extent, fraction, generic
+                in zip(extents, fractions, PROBE_COORDS))
+            if _usable(point, strict=strict):
+                return point  # type: ignore[return-value]
+    return None
+
+
+def deck_in_cache(deck: str, cache: Path) -> Optional[Path]:
+    """The paired deck as a file, or None.
+
+    A deck named by basename alone is refused. A source's identity in this
+    project is its cache-relative path and a deck's is no different: resolving
+    "Job-1.inp" against the cache root would pair a mesh with whichever
+    repository happened to ship that filename, which is the mistake that once
+    drove eighteen UMATs with another project's constants.
+
+    An absolute path or one climbing out with ".." is refused too. A path from
+    a proposal is data, not a location this tool chose, and the report it ends
+    up in must name no file outside the cache -- the repository audit fails
+    the build on a path under a home or a scratch directory.
+    """
+    text = str(deck or "").strip()
+    if not text or "/" not in text or text.startswith("/"):
+        return None
+    if ".." in Path(text).parts:
+        return None
+    path = Path(cache) / text
+    return path if path.is_file() else None
+
+
+def probe_point(material: Optional["Material"], cache: Path) -> ProbePoint:
+    """Where to put this source's material point, and the sentence saying why.
+
+    The deck is the one the pairing already read the constants out of, so
+    nothing new is being attributed to the author: its node coordinates are
+    published in the same file. Every way of not knowing -- no deck, a deck
+    outside the cache, a deck with no ``*NODE`` block, a mesh with no point
+    the guard allows -- lands on the generic point, which is what this gate
+    did for every source before.
+    """
+    deck = str(getattr(material, "deck", "") or "")
+    path = deck_in_cache(deck, cache)
+    if path is None:
+        return ProbePoint(PROBE_COORDS, GENERIC_COORDS)
+    coords = probe_coords_in(node_extents(path) or ())
+    if coords is None:
+        return ProbePoint(PROBE_COORDS, GENERIC_COORDS)
+    return ProbePoint(coords, DECK_COORDS, deck)
+
+
 def probe_entry(material: "Material", *, strain: float = PROBE_STRAIN,
-                dtime: float = 1.0) -> dict[str, Any]:
+                dtime: float = 1.0,
+                coords: Sequence[float] = PROBE_COORDS) -> dict[str, Any]:
     """The declared starting state, shaped like one probe ENTRY record.
 
     Shaped that way on purpose rather than as a new kind of record: ``write_state``
@@ -156,6 +373,12 @@ def probe_entry(material: "Material", *, strain: float = PROBE_STRAIN,
     point, not a claim about what the model's own initial state should be -- a
     model with an SDVINI has one and this gate does not read it, which is one
     of the reasons a row that agrees here still has to go through Abaqus.
+
+    ``coords`` is where the point sits, and it is an argument rather than a
+    constant because COORDS is a physical position: nineteen sources in this
+    corpus evaluate a growth field at it and NaN'd on a point outside their
+    own mesh. ``probe_point`` resolves it from the paired deck's nodes; the
+    default is the generic fallback.
 
     ``DFGRD1`` is made consistent with the strain increment rather than left at
     the identity: a finite-strain source reads the deformation gradient and
@@ -184,7 +407,7 @@ def probe_entry(material: "Material", *, strain: float = PROBE_STRAIN,
         "DFGRD0": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
         "DFGRD1": stretched,
         "DROT": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
-        "COORDS": [*PROBE_COORDS, 1.0],
+        "COORDS": [*(float(value) for value in coords), 1.0],
     }
 
 
@@ -214,6 +437,13 @@ class Material:
     #: proposal's hedge to reach the output.
     pairing_status: str = ""
     meaning_caveat: str = ""
+    #: The deck these constants were read out of, as a cache-relative path.
+    #: Carried because the same file publishes the mesh: ``probe_point`` reads
+    #: its ``*NODE`` block so the material point is placed inside the geometry
+    #: the author published rather than at a fixed point of the unit cube.
+    #: Empty when the source of the constants named no deck this gate can
+    #: resolve, and then the probe stays where it always was.
+    deck: str = ""
 
     def as_dict(self) -> dict[str, Any]:
         return {"props_count": len(self.props), "ntens": self.ntens,
@@ -223,7 +453,8 @@ class Material:
                 "material_from": self.source,
                 "material_name": self.name,
                 "pairing_status": self.pairing_status,
-                "meaning_caveat": self.meaning_caveat}
+                "meaning_caveat": self.meaning_caveat,
+                "material_deck": self.deck}
 
 
 def _floats(values: Any) -> tuple[float, ...]:
@@ -263,7 +494,25 @@ def material_from_proposal(entry: dict[str, Any]) -> Optional[Material]:
         nstatv_provenance=why, source="corpus pairing",
         name=(str(material.get("name") or "").strip() or "MATERIAL")[:60],
         pairing_status=str(entry.get("status") or ""),
-        meaning_caveat=str(material.get("meaning") or ""))
+        meaning_caveat=str(material.get("meaning") or ""),
+        deck=deck_of_proposal(entry, provenance))
+
+
+def deck_of_proposal(entry: dict[str, Any], provenance: str) -> str:
+    """The deck a pairing selected, as a cache-relative path.
+
+    The pairing writes it twice -- as ``pairing.proposed`` and as the head of
+    the provenance sentence -- and either is the author's file, not this
+    tool's choice. It is read here so ``probe_point`` can take the mesh out of
+    the same file the constants came from. A value that is not a path within
+    the cache is left empty rather than guessed at: see ``deck_in_cache``.
+    """
+    proposed = ((entry.get("pairing") or {}).get("proposed")
+                if isinstance(entry.get("pairing"), dict) else None)
+    if isinstance(proposed, str) and proposed.strip():
+        return proposed.strip()
+    head = str(provenance or "").split(",")[0].strip()
+    return head if head.lower().endswith((".inp", ".dat")) else ""
 
 
 def material_from_manifest(record: dict[str, Any]) -> Optional[Material]:
@@ -281,7 +530,12 @@ def material_from_manifest(record: dict[str, Any]) -> Optional[Material]:
                               or "declared by the verification manifest"),
         source="verification manifest",
         name=(str(record.get("name") or "").strip() or "MATERIAL")[:60],
-        pairing_status="declared by a verification manifest")
+        pairing_status="declared by a verification manifest",
+        # Only a deck the manifest names as a path. The manifests here quote
+        # their deck by filename alone ("Job-1-copy.inp"), which identifies no
+        # file in a cache of 400 repositories, so those rows keep the generic
+        # probe point rather than borrowing somebody else's mesh.
+        deck=str(record.get("deck") or record.get("deck_path") or "").strip())
 
 
 def proposal_materials(path: Path) -> dict[str, Material]:
@@ -778,18 +1032,50 @@ def load_previous(path: Path) -> dict[str, dict[str, Any]]:
     return previously_recorded(payload)
 
 
-def partition_for_resume(entries: Sequence[Any], previous: dict[str, dict]
+def probe_of_record(record: dict[str, Any]) -> list[float]:
+    """The point a previously written row was driven from.
+
+    A row written before the probe point became a per-source question carries
+    no ``probe_coords``, and the point it used is not a guess: the generic one
+    was the only point this gate could use. Reading it that way is what lets a
+    resume tell the rows whose point has since moved from the rows whose has
+    not, instead of re-running all of them or serving all of them.
+    """
+    recorded = record.get("probe_coords")
+    if isinstance(recorded, (list, tuple)) and len(recorded) == 3:
+        try:
+            return [float(value) for value in recorded]
+        except (TypeError, ValueError):
+            pass
+    return list(PROBE_COORDS)
+
+
+def partition_for_resume(entries: Sequence[Any], previous: dict[str, dict],
+                         probe_at: Optional[Any] = None
                          ) -> tuple[list[Any], list[dict[str, Any]]]:
     """Split the store into what still has to run and what can be reused.
 
     Reused records are handed back so they stay in the output. Dropping them
     would leave a resumed run reporting a smaller corpus than the one it
     checked, which is the same lie as dropping a failure.
+
+    ``probe_at`` answers "where would this run put this entry's material
+    point", and a row driven from anywhere else is re-run. The probe point is
+    not in the store key -- that key fingerprints the transform code, and the
+    point depends on the deck paired to the source instead -- so without this
+    a stress measured at one position would be served forever as if it were a
+    measurement at another. Concretely: the nineteen Jeff97 rows were decided
+    at (0.3, 0.7, 0.5), seventy plate thicknesses outside their own mesh, and
+    ``both_builds_non_finite`` is not in RECONSIDERED, so every later
+    ``--resume`` would have reproduced those NaNs verbatim.
     """
     todo, reused = [], []
     for entry in entries:
         record = previous.get(str(getattr(entry, "key", "")))
-        if record is None:
+        moved = (record is not None and probe_at is not None
+                 and probe_of_record(record) != [float(value) for value
+                                                 in probe_at(entry)])
+        if record is None or moved:
             todo.append(entry)
         else:
             carried = dict(record)
@@ -918,10 +1204,26 @@ def check_entry(entry: Any, material: Optional[Material],
     record["blocking_note"] = blocking_note(blocking.get("original", ()),
                                             blocking.get("transformed", ()))
 
+    # Resolved before the intactness gate, and recorded either way: the probe
+    # is a declaration this gate makes about how it would drive the source,
+    # not a result of having driven it. A reader of a row that never built
+    # anything can still see which point it would have used, and whether that
+    # point came from a deck or from the generic fallback.
+    point = probe_point(material, options.cache)
+    if material is not None:
+        record.update(point.as_dict())
+
     if intact and material is not None:
         record["material_provenance"] = material.provenance
         record.update(material.as_dict())
-        state = probe_entry(material, strain=options.strain)
+        state = probe_entry(material, strain=options.strain,
+                            coords=point.coords)
+        # Whether the state the UMAT actually starts from is the zeros written
+        # here or whatever the author's own SDVINI computes. Recorded because
+        # it changes what the probe means, and the report said "zero state"
+        # for every row while twenty-one of them ran an SDVINI.
+        record["sdvini_called"] = _defines_sdvini(
+            original.read_text(errors="replace") if original.is_file() else "")
         record["probe_dstran"] = state["DSTRAN"]
         # Resolved once, for both builds. See the build call below.
         material_name = material.name or "MATERIAL"
@@ -1061,7 +1363,16 @@ def build_report(records: Sequence[dict[str, Any]], store_summary: dict,
         "probe": {
             "provenance": PROBE_PROVENANCE,
             "strain_increment": options.strain,
-            "coords": list(PROBE_COORDS),
+            # Not one point for the whole corpus any more. It used to print
+            # `coords` here, and that line was false for every source whose
+            # mesh is not the unit cube -- which is how nineteen rows came to
+            # be driven seventy plate thicknesses outside their own geometry.
+            "generic_coords": list(PROBE_COORDS),
+            "coords_note": (
+                "the material point is placed per source: probe_coords on "
+                "each row is the point that row was driven from and "
+                "probe_coords_from says whether it came from the paired "
+                "deck's *NODE block or is the generic fallback printed here"),
             "initial_stress": "zero", "initial_state": "zero",
         },
         "tolerance": options.tolerance,
@@ -1103,8 +1414,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.limit:
         entries = entries[:args.limit]
 
+    materials = dict(proposal_materials(args.proposals))
+    materials.update(manifest_materials(args.manifests))
+
     previous = load_previous(args.out) if args.resume else {}
-    todo, reused = partition_for_resume(entries, previous)
+    # Resolved before the split, because where a row's material point goes is
+    # part of what makes an earlier row's verdict reusable.
+    todo, reused = partition_for_resume(
+        entries, previous,
+        probe_at=lambda entry: probe_point(
+            materials.get(str(getattr(entry, "source_id", ""))),
+            args.cache).coords)
 
     work_root = Path(args.work) if args.work else Path(
         tempfile.mkdtemp(prefix="offline_gate_"))
@@ -1114,9 +1434,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                       tolerance=args.tolerance, strain=args.strain,
                       build_timeout=args.build_timeout,
                       run_timeout=args.run_timeout)
-
-    materials = dict(proposal_materials(args.proposals))
-    materials.update(manifest_materials(args.manifests))
 
     records = run_batch(todo, materials, options, jobs=max(1, args.jobs))
     report = build_report([*records, *reused], store.summary(), options)

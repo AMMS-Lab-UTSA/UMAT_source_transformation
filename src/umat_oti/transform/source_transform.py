@@ -1992,6 +1992,45 @@ def _transform_source_text(
         stress_line_numbers=stress_line_numbers,
     )
     shadow_variables = sorted(shadow_variable_names)
+    ddsdde_name = mappings.get("ddsdde", "DDSDDE")
+    # Which old-tangent lines the emitter will comment out, decided once so the
+    # scratch analysis below and the loop that writes the file agree about it.
+    disabled_old_region_lines = {
+        line_number for line_number in old_region_by_line
+        if line_number not in stress_line_numbers
+        or _dead_old_tangent_store(lines, line_number, ddsdde_insert_after_line,
+                                   ddsdde_name, form)
+    }
+    # A source that used DDSDDE as its own working store keeps that use, in a
+    # shadow of its own, rather than reading back the array the caller zeroed.
+    # Nothing to do where DDSDDE is already promoted (the reads are renamed
+    # anyway) or where the routine does not declare a shape to give the shadow.
+    ddsdde_scratch = DdsddeScratchUse()
+    if ddsdde_name not in shadow_variable_names and variable_shapes.get(ddsdde_name):
+        ddsdde_scratch = _ddsdde_scratch_use(
+            lines=lines,
+            form=form,
+            ddsdde=ddsdde_name,
+            selected_routine_span=selected_routine_span,
+            disabled_lines=disabled_old_region_lines,
+            extraction_after_line=ddsdde_insert_after_line,
+        )
+    scratch_replacement_names = replacement_names
+    ddsdde_scratch_lines: set[int] = set()
+    if ddsdde_scratch:
+        shadow_variables = sorted({*shadow_variables, ddsdde_name})
+        scratch_replacement_names = {**replacement_names, ddsdde_name: f"{ddsdde_name}_OTI"}
+        ddsdde_scratch_lines = set(ddsdde_scratch.write_lines) | set(ddsdde_scratch.scratch_lines)
+
+    def names_for(line_number: int) -> dict[str, str]:
+        """The rename map for one source line.
+
+        DDSDDE is renamed only on the statements that take part in the
+        source's own scratch use of it. Everywhere else it stays the real
+        output array, which is what the extraction writes and what the caller
+        reads back.
+        """
+        return scratch_replacement_names if line_number in ddsdde_scratch_lines else replacement_names
 
     output: list[str] = []
     initialization_inserted = False
@@ -2108,8 +2147,8 @@ def _transform_source_text(
         # removed back into the model.
         if (_line_in_span(line_number, selected_routine_span)
                 and not _is_commented(line)
-                and _is_promoted_branch_line(logical_branch_line or line, replacement_names)):
-            output[-1] = _transform_executable_line(logical_branch_line or line, replacement_names, type_name, lifted_helper_names)
+                and _is_promoted_branch_line(logical_branch_line or line, names_for(line_number))):
+            output[-1] = _transform_executable_line(logical_branch_line or line, names_for(line_number), type_name, lifted_helper_names)
             helper_continuation_skip_lines.update(branch_continuation_lines)
             if real_output_insert_after_line == line_number and not real_extraction_inserted:
                 if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
@@ -2125,17 +2164,17 @@ def _transform_source_text(
                 tangent_extraction_inserted = True
                 extraction_insertion_region_id = str(extraction_region.get("region_id", "")) if extraction_region else "before RETURN"
             continue
-        old_tangent_store_is_dead = (
-            line_number in old_region_by_line
-            and line_number in stress_line_numbers
-            and _dead_old_tangent_store(
-                lines, line_number, ddsdde_insert_after_line,
-                mappings.get("ddsdde", "DDSDDE"), form))
-        if (line_number in old_region_by_line
-                and (line_number not in stress_line_numbers
-                     or old_tangent_store_is_dead)):
+        if line_number in disabled_old_region_lines:
             output.pop()
             output.append(_comment_old_line(form, line))
+            # The disabled statement stays disabled; the value it produced is
+            # recomputed into the shadow beside it, so the source's own reads
+            # of its working store still find it.
+            if line_number in ddsdde_scratch.write_lines:
+                scratch_statement, _ = _joined_statement(lines, line_number, form)
+                output.append(_transform_executable_line(
+                    scratch_statement, scratch_replacement_names, type_name,
+                    lifted_helper_names))
             if real_output_insert_after_line == line_number and not real_extraction_inserted:
                 if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                     output.extend(pure_seed_tangent_bridge_lines)
@@ -2163,11 +2202,12 @@ def _transform_source_text(
             # that itself has a shadow (those keep their real value / shadow copy).
             reads_promoted_reference = False
             candidate = dirty_assignment_line or line
-            if replacement_names and not promoted_assignment_targets and not _is_commented(candidate):
+            line_names = names_for(line_number)
+            if line_names and not promoted_assignment_targets and not _is_commented(candidate):
                 assign = re.match(r"^\s*([A-Za-z_]\w*)\s*(?:\([^=]*\))?\s*=\s*(.+)$", candidate)
                 if (
                     assign
-                    and assign.group(1).upper() not in replacement_names
+                    and assign.group(1).upper() not in line_names
                     and not re.match(r"^\s*(?:IF|DO|ELSE|END|WRITE|READ|CALL|GO\s*TO|GOTO)\b", candidate, flags=re.IGNORECASE)
                 ):
                     # Two ways a promoted name appears without being read.
@@ -2180,7 +2220,7 @@ def _transform_source_text(
                     rhs = without_real_literals(
                         _statement_without_inline_comment(assign.group(2)))
                     reads_promoted_reference = any(
-                        re.search(rf"\b{re.escape(name)}\b", rhs, flags=re.IGNORECASE) for name in replacement_names
+                        re.search(rf"\b{re.escape(name)}\b", rhs, flags=re.IGNORECASE) for name in line_names
                     )
             if (
                 (promoted_assignment_targets or reads_promoted_reference)
@@ -2188,7 +2228,7 @@ def _transform_source_text(
                 and seed_insert_before_line
                 and line_number >= seed_insert_before_line
             ):
-                output[-1] = _transform_executable_line(line, replacement_names, type_name, lifted_helper_names)
+                output[-1] = _transform_executable_line(line, names_for(line_number), type_name, lifted_helper_names)
                 shadow_sync_dirty_names.difference_update(_assigned_shadow_names(line, helper_call_sync_names))
         if line_number in stress_line_numbers:
             sprinc_rewrite = sprinc_equivalent_stress_rewrites.get(line_number)
@@ -2226,7 +2266,7 @@ def _transform_source_text(
                 (None, []) if _is_commented(line)
                 else _logical_assignment_line(lines, line_number, form))
             if logical_assignment_line:
-                output[-1] = _transform_executable_line(logical_assignment_line, replacement_names, type_name, lifted_helper_names)
+                output[-1] = _transform_executable_line(logical_assignment_line, names_for(line_number), type_name, lifted_helper_names)
                 shadow_sync_dirty_names.difference_update(_assigned_shadow_names(logical_assignment_line, helper_call_sync_names))
                 helper_continuation_skip_lines.update(assignment_continuation_lines)
                 continue
@@ -2248,7 +2288,7 @@ def _transform_source_text(
                 form,
                 variable_shapes,
             )
-            inlined_helper = _inline_pure_arithmetic_helper_call(helper_call_line or line, replacement_names, form, variable_shapes, ntens)
+            inlined_helper = _inline_pure_arithmetic_helper_call(helper_call_line or line, names_for(line_number), form, variable_shapes, ntens)
             if inlined_helper:
                 output.pop()
                 output.extend(helper_sync_lines)
@@ -2266,7 +2306,7 @@ def _transform_source_text(
                 output.append(
                     _transform_executable_line(
                         helper_call_line or line,
-                        replacement_names,
+                        names_for(line_number),
                         type_name,
                         lifted_helper_names,
                         helper_output_surfaces,
@@ -2277,7 +2317,7 @@ def _transform_source_text(
                 continue
             output[-1] = _transform_executable_line(
                 helper_call_line or line,
-                replacement_names,
+                names_for(line_number),
                 type_name,
                 lifted_helper_names,
                 helper_output_surfaces,
@@ -2285,8 +2325,8 @@ def _transform_source_text(
             output.extend(_helper_surface_sync_lines(form, helper_call_line or line, helper_output_surfaces))
             shadow_sync_dirty_names.difference_update(_assigned_shadow_names(helper_call_line or line, helper_call_sync_names))
             helper_continuation_skip_lines.update(continuation_lines)
-        elif _line_in_span(line_number, selected_routine_span) and _is_promoted_branch_line(line, replacement_names):
-            output[-1] = _transform_executable_line(line, replacement_names, type_name, lifted_helper_names)
+        elif _line_in_span(line_number, selected_routine_span) and _is_promoted_branch_line(line, names_for(line_number)):
+            output[-1] = _transform_executable_line(line, names_for(line_number), type_name, lifted_helper_names)
             shadow_sync_dirty_names.difference_update(_assigned_shadow_names(line, helper_call_sync_names))
         if real_output_insert_after_line == line_number and not real_extraction_inserted:
             if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
@@ -5336,6 +5376,12 @@ def _semantic_checks(
             config,
             last_stress_update_line=last_stress_update_line,
         ),
+        # The companion question. The check above asks whether the old writes
+        # to DDSDDE are gone; this one asks whether anything still reads the
+        # array they used to fill. Four store entries passed the first and
+        # failed the second in silence, returning a stress of exactly zero.
+        "no_ddsdde_read_after_disabled_assignment": _no_ddsdde_read_after_disabled_assignment(
+            transformed_source, form, ddsdde),
         "no_extraction_in_tangent_helper_region": extraction_insertion_region_id not in helper_region_ids,
         "fixed_form_line_lengths_ok": _fixed_form_line_lengths_ok(transformed_source, form),
         "integer_literals_normalized_in_oti_expressions": _integer_literals_normalized_in_oti_expressions(transformed_source, form),
@@ -5790,6 +5836,307 @@ def _old_ddsdde_assignments_disabled(
     # bought cannot execute here anyway. Real dominance would have to fail
     # closed on every form it does not model.
     return not any(text and text in expected_disabled for _, text in active)
+
+
+#: The comment the emitter writes in front of a statement it disables, in both
+#: source forms: "C     OTIS-SKIP: <statement>" and "! OTIS-SKIP: <statement>".
+_OTIS_SKIP_MARKER = re.compile(r"^\s*[Cc*!]\s*OTIS-SKIP:\s*(.*)$")
+
+#: Statements that name a variable without reading its value. A DIMENSION
+#: naming DDSDDE(NTENS,NTENS) is not a read, and neither is the subroutine
+#: header that declares it as a dummy argument.
+_NON_READING_STATEMENT = re.compile(
+    r"^(?:\d+\s+)?(?:SUBROUTINE|FUNCTION|ENTRY|BLOCK\s*DATA|DIMENSION|COMMON|"
+    r"EQUIVALENCE|DATA|SAVE|EXTERNAL|INTRINSIC|IMPLICIT|PARAMETER|USE|INCLUDE|"
+    r"NAMELIST|POINTER|TARGET|ALLOCATABLE|ALLOCATE|DEALLOCATE|TYPE\s*\(|"
+    r"REAL|DOUBLE|INTEGER|LOGICAL|CHARACTER|COMPLEX|END|CALL)\b",
+    re.IGNORECASE)
+
+
+def _assignment_target_name(statement: str) -> str:
+    """The name a statement assigns to, or "" when it assigns to nothing."""
+    match = re.match(r"^\s*(?:\d+\s+)?([A-Za-z_]\w*)\s*(?:\([^=]*\))?\s*=(?!=)",
+                     statement)
+    return match.group(1).upper() if match else ""
+
+
+def _without_character_literals(segment: str) -> str:
+    """The statement with the contents of every CHARACTER literal blanked out.
+
+    A name inside quotes is a label, not a reference. ``WRITE(7,*) 'DDSDDE='``
+    mentions the array and reads nothing, and counting it refused a source
+    whose repair had in fact worked -- sd104400__OPA_Modeling's
+    UMAT_DPIsodwAniDM.for, where the disabled write and the live reads were
+    resolved correctly and the emitted file was then rejected over the label
+    string in a diagnostic WRITE.
+
+    The quotes themselves are kept so the statement still parses as one; only
+    what is between them is replaced, and by spaces, so every column after it
+    stays where it was.
+    """
+    out = []
+    quote = ""
+    for character in segment:
+        if quote:
+            out.append(character if character == quote else " ")
+            if character == quote:
+                quote = ""
+            continue
+        if character in {"'", '"'}:
+            quote = character
+        out.append(character)
+    return "".join(out)
+
+
+def _statement_reads(statement: str, name: str) -> bool:
+    """Does this statement read ``name``'s value?
+
+    Deliberately narrow. Being an assignment target is not a read, a
+    declaration is not a read, and a CALL is not counted either: a routine
+    handed DDSDDE is as likely to be clearing it as reading it, and the
+    caller-side question is already asked by ``_uncovered_ddsdde_blockers``.
+    What is counted is the shape that shipped the wrong answer -- the name on
+    the right-hand side of an assignment -- plus a branch condition, which is
+    the same value reaching the same program by a different route.
+    """
+    text = _without_character_literals(
+        _statement_without_inline_comment(statement)).strip()
+    if not text or _NON_READING_STATEMENT.match(text):
+        return False
+    reference = re.compile(rf"(?<![%\w]){re.escape(name)}\b", re.IGNORECASE)
+    inline_if = _split_inline_if_assignment(text)
+    if inline_if is not None:
+        condition, remainder = inline_if
+        if reference.search(condition):
+            return True
+        text = remainder.strip()
+        if not text or re.match(r"^THEN\b", text, flags=re.IGNORECASE):
+            return False
+        if _NON_READING_STATEMENT.match(text):
+            return False
+    match = re.match(r"^\s*(?:\d+\s+)?([A-Za-z_]\w*)(\([^=]*\))?\s*=(?!=)(.*)$", text)
+    if match is None:
+        # Not an assignment: a DO bound, a WHERE mask, an IF (...) THEN
+        # condition. Every occurrence of the name in it is a read.
+        return bool(reference.search(text))
+    subscript = match.group(2) or ""
+    return bool(reference.search(subscript) or reference.search(match.group(3)))
+
+
+@dataclass(frozen=True)
+class DdsddeScratchUse:
+    """A source's own use of the tangent array as a working store.
+
+    ``write_lines`` are the disabled assignments to DDSDDE whose values a live
+    statement still needs; ``scratch_lines`` are every live statement in the
+    window that touches DDSDDE, reads and writes alike, which all move to the
+    shadow together. Both empty means either that there is nothing to repair or
+    that the repair cannot be made safely -- the semantic check
+    ``no_ddsdde_read_after_disabled_assignment`` is what tells those apart, by
+    asking the emitted file rather than the plan.
+    """
+
+    write_lines: frozenset[int] = frozenset()
+    scratch_lines: frozenset[int] = frozenset()
+
+    def __bool__(self) -> bool:
+        return bool(self.write_lines and self.scratch_lines)
+
+
+def _joined_statement(lines: list[str], start_line: int, form: str) -> tuple[str, list[int]]:
+    """One statement's text, fixed-form continuations included.
+
+    The line is returned as written, label field and all, because the emitter
+    writes the result back into a fixed-form file: handing back the statement
+    segment alone puts the text in column 1, where the compiler reads the first
+    characters as a statement label ("Non-numeric character in statement
+    label", against a line that is otherwise correct).
+    """
+    if _is_commented(lines[start_line - 1]):
+        return "", []
+    joined, consumed = _logical_assignment_line(lines, start_line, form)
+    if joined:
+        return joined, consumed
+    return lines[start_line - 1], []
+
+
+def _ddsdde_scratch_use(
+    *,
+    lines: list[str],
+    form: str,
+    ddsdde: str,
+    selected_routine_span: tuple[int, int],
+    disabled_lines: set[int],
+    extraction_after_line: int,
+) -> DdsddeScratchUse:
+    """Which disabled writes to DDSDDE a live statement still reads.
+
+    Some sources use DDSDDE as scratch: they store the elastic stiffness in it
+    and form the predictor stress out of it. Disabling those writes -- which is
+    right, DDSDDE is the tangent output -- while leaving the read alone made
+    the emitted program compute STRESS = 0 in all six components, because the
+    caller had zeroed DDSDDE. Four store entries shipped that way, each
+    reporting worst_relative of exactly 1.0.
+
+    The writes named here are redirected into the DDSDDE shadow and the reads
+    follow them there, so the source's working store survives while DDSDDE
+    itself stays the transform's output.
+
+    The window runs from the first disabled write to the last live read, and
+    EVERY live statement in it that touches DDSDDE joins the redirect, not only
+    the ones that read. Three of the eleven affected sources scale the
+    stiffness by damage in between -- CALL KSMULT(DDSDDE,NTENS,NTENS,(ONE-D))
+    -- which the emitter inlines into a statement that both reads and writes
+    the array. Leaving that one behind would leave the shadow and the array
+    disagreeing at the point of the read; taking it in also stops the scale
+    factor being truncated through REAL(), so the damage now reaches the
+    derivative instead of being dropped from it.
+
+    The answer is empty -- no repair, and the check refuses the file -- when a
+    redirected write's right-hand side reads a name some OTHER disabled
+    statement assigns. Re-running it would evaluate an expression against a
+    variable nothing sets any more, which is a different wrong answer, not a
+    repair.
+
+    Failing closed here is deliberate: everything it declines is reported by
+    the semantic check instead, and a reported refusal is recoverable while a
+    silent zero is not.
+    """
+    start, end = selected_routine_span
+    end = min(end, len(lines))
+    upper = ddsdde.upper()
+    continuation_lines: set[int] = set()
+    disabled_writes: dict[int, str] = {}
+    disabled_targets: set[str] = set()
+    for number in range(max(start, 1), end + 1):
+        if number not in disabled_lines:
+            continue
+        statement, consumed = _joined_statement(lines, number, form)
+        target = _assignment_target_name(statement)
+        if not target:
+            continue
+        continuation_lines.update(consumed)
+        if target == upper:
+            disabled_writes[number] = statement
+        else:
+            disabled_targets.add(target)
+    for number in continuation_lines:
+        disabled_writes.pop(number, None)
+    if not disabled_writes:
+        return DdsddeScratchUse()
+
+    first_write = min(disabled_writes)
+    last_line = min(extraction_after_line or end, end)
+    reference = re.compile(rf"(?<![%\w]){re.escape(ddsdde)}\b", re.IGNORECASE)
+    live_reads: set[int] = set()
+    touches: dict[int, set[int]] = {}
+    consumed_by_statement: set[int] = set()
+    for number in range(first_write + 1, last_line + 1):
+        if number in disabled_lines or number in consumed_by_statement:
+            continue
+        statement, consumed = _joined_statement(lines, number, form)
+        consumed_by_statement.update(consumed)
+        if not statement.strip() or not reference.search(statement):
+            continue
+        if _NON_READING_STATEMENT.match(_statement_without_inline_comment(statement).strip()) \
+                and not re.match(r"^\s*CALL\b", statement, flags=re.IGNORECASE):
+            continue  # a declaration names the array without touching its value
+        # The statement's first line is the one the emitter rewrites; its
+        # continuations come along so nothing keys off them by mistake.
+        touches[number] = {number, *consumed}
+        if _statement_reads(statement, ddsdde):
+            live_reads.update(touches[number])
+    if not live_reads:
+        return DdsddeScratchUse()
+
+    last_read = max(live_reads)
+    redirected = {number for number in disabled_writes if number < last_read}
+    if not redirected:
+        return DdsddeScratchUse()
+    for number in redirected:
+        if any(_statement_reads(disabled_writes[number], name) for name in disabled_targets):
+            return DdsddeScratchUse()
+    scratch_lines = {line for touch_start, group in touches.items()
+                     if touch_start <= last_read for line in group}
+    return DdsddeScratchUse(write_lines=frozenset(redirected),
+                            scratch_lines=frozenset(scratch_lines))
+
+
+
+def _no_ddsdde_read_after_disabled_assignment(
+    transformed_source: str, form: str, ddsdde: str = "DDSDDE",
+) -> bool:
+    """Nothing live may read DDSDDE between a disabled write and the extraction.
+
+    Some sources use DDSDDE as a working array: they store the elastic
+    stiffness in it and form the predictor stress out of it. The transform
+    disables every assignment to DDSDDE inside an old-tangent region, which is
+    right -- DDSDDE is the tangent output and the transform supplies it -- but
+    the statement that reads the array back is not an assignment to it and was
+    left alone. The caller has already zeroed DDSDDE, so the emitted program
+    computed STRESS = 0 in all six components and the tangent GETIM then read
+    off that stress was zero too.
+
+    Four store entries shipped that way -- UEL8_PCOR, UEL8_PCLI_R, UEL9_PCOR
+    and UEL9_PCLI_R, each reporting worst_relative of exactly 1.0 -- and
+    ``old_ddsdde_assignments_disabled`` passed on all four, because it only
+    ever asked about the writes. This is the companion question about the read.
+
+    A read AFTER the extraction is a different statement about a different
+    value: DDSDDE holds the derivative by then, and a source that scales its
+    own tangent afterwards is doing the intended thing. The window is
+    therefore the disabled write to the extraction, and nothing outside it.
+
+    Where the repair has run, a second rule applies inside that window: while
+    the shadow is the source's working store, naming the array at all means
+    the two have been left to disagree. That catches a statement which only
+    WRITES DDSDDE -- an inlined CALL KCLEAR, say -- which the read rule cannot
+    see and which would desynchronise the shadow just as silently.
+    """
+    lines = transformed_source.splitlines()
+    first_disabled_write = 0
+    for line_number, line in enumerate(lines, start=1):
+        marker = _OTIS_SKIP_MARKER.match(line)
+        if marker and _assignment_target_name(marker.group(1)) == ddsdde.upper():
+            first_disabled_write = line_number
+            break
+    if not first_disabled_write:
+        return True
+    extraction_line = 0
+    for line_number, line in _active_lines_with_numbers(transformed_source):
+        if line_number <= first_disabled_write:
+            continue
+        if re.match(rf"^\s*{re.escape(ddsdde)}\s*\(\s*OTI_I\s*,\s*OTI_J\s*\)\s*=",
+                    line, flags=re.IGNORECASE):
+            extraction_line = line_number
+            break
+    statements = [
+        (line_number, statement)
+        for line_number, statement in _logical_statements_with_numbers(transformed_source, form)
+        if line_number > first_disabled_write
+        and not (extraction_line and line_number >= extraction_line)
+    ]
+    for line_number, statement in statements:
+        if _statement_reads(statement, ddsdde):
+            return False
+    # Where the scratch redirect is in force, the shadow -- not the array --
+    # is the source's working store for as long as it is used, so naming the
+    # array inside that span at all means the two have been left to disagree.
+    # A statement that only WRITES DDSDDE there is invisible to the read rule
+    # above and would desynchronise the shadow silently, which is the failure
+    # mode this whole check exists to stop.
+    shadow = re.compile(rf"(?<![%\w]){re.escape(ddsdde)}_OTI\b", re.IGNORECASE)
+    array = re.compile(rf"(?<![%\w]){re.escape(ddsdde)}\b", re.IGNORECASE)
+    shadow_lines = [line_number for line_number, statement in statements
+                    if shadow.search(statement)]
+    if not shadow_lines:
+        return True
+    last_shadow_use = max(shadow_lines)
+    return not any(
+        array.search(statement)
+        for line_number, statement in statements
+        if line_number <= last_shadow_use
+    )
 
 
 def _canonical_fortran_text(text: str) -> str:
