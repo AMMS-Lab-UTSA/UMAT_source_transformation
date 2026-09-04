@@ -119,7 +119,14 @@ DECIDED = (AGREED, DISAGREED)
 #: ``-J`` is added per build, pointing at that build's own directory, because
 #: the transformed source opens with ``use otim6n1`` and the module file has to
 #: be written somewhere the same command can read it back.
-BASE_FLAGS = ("-ffixed-line-length-132", "-std=legacy", "-O2", "-w")
+#:
+#: ``-fcray-pointer`` enables a syntax extension and nothing else -- no
+#: arithmetic changes -- and Abaqus's own compile line accepts it. A UMAT
+#: reaching an Abaqus utility through ``pointer(ptr_handler, handler)`` failed
+#: to build, and a build failure reads as a finding about somebody's source
+#: when it was this gate declining to compile valid Fortran.
+BASE_FLAGS = ("-ffixed-line-length-132", "-std=legacy", "-O2", "-w",
+              "-fcray-pointer")
 
 
 # ---------------------------------------------------------------------------
