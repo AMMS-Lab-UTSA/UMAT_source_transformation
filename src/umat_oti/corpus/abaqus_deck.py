@@ -295,6 +295,76 @@ def _substituted(text: str, table: dict[str, float]) -> str:
         text)
 
 
+#: ``*INCLUDE, INPUT=<path>`` defers part of a deck to another file. Two decks
+#: in this corpus put their whole material vector behind one, so the parser
+#: read zero constants and the source paired to them was reported as needing
+#: material data its author had published -- one directory away.
+_INCLUDE = re.compile(r"^\s*\*INCLUDE\b[^\n]*?\bINPUT\s*=\s*([^\s,]+)",
+                      re.IGNORECASE)
+
+#: How far to follow a chain of includes. A deck that includes itself, or two
+#: that include each other, would otherwise read forever.
+_INCLUDE_DEPTH = 4
+
+
+def _resolve_include(target: str, deck: Path) -> Optional[Path]:
+    """Where an included file lives, if it is beside the deck that names it.
+
+    Abaqus resolves the path relative to the job directory. Both separators
+    appear in these decks because several were written on Windows, and a
+    lookup by name is the fallback for a deck that moved relative to what it
+    includes. Nothing outside the deck's own tree is consulted: a file found
+    somewhere else in the mirror is a different author's file.
+    """
+    cleaned = str(target).strip().strip('"').strip("'").replace("\\", "/")
+    direct = (deck.parent / cleaned)
+    if direct.is_file():
+        return direct
+    name = Path(cleaned).name
+    for candidate in sorted(deck.parent.rglob(name)):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _with_includes(deck: Path, depth: int = 0) -> tuple[list[str], list[str]]:
+    """The deck's lines with every resolvable include spliced in.
+
+    Returns the lines and the includes that could NOT be resolved. An
+    unresolved include is reported rather than ignored: the deck is then short
+    of constants for a reason a reader can act on, instead of appearing to
+    publish fewer than it does.
+    """
+    try:
+        lines = deck.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return [], [str(deck)]
+    if depth >= _INCLUDE_DEPTH:
+        return lines, []
+
+    out: list[str] = []
+    unresolved: list[str] = []
+    for line in lines:
+        if line.lstrip().startswith("**"):
+            out.append(line)
+            continue
+        found = _INCLUDE.match(line)
+        if not found:
+            out.append(line)
+            continue
+        target = found.group(1)
+        resolved = _resolve_include(target, deck)
+        if resolved is None:
+            unresolved.append(target)
+            out.append(f"** [unresolved include: {target}]")
+            continue
+        out.append(f"** [included from {target}]")
+        nested, nested_unresolved = _with_includes(resolved, depth + 1)
+        out.extend(nested)
+        unresolved.extend(nested_unresolved)
+    return out, unresolved
+
+
 def parse_deck(path: Path) -> list[DeckMaterial]:
     """Every constant vector a deck publishes, with what it declares.
 
@@ -302,7 +372,7 @@ def parse_deck(path: Path) -> list[DeckMaterial]:
     the order the deck writes them, each tagged with the keyword it came from.
     """
     path = Path(path)
-    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    lines, unresolved_includes = _with_includes(path)
     # NOT `parameters`: the keyword loop below binds that name to each
     # card's own attributes (NAME=, CONSTANTS=), which silently emptied
     # this table through the closure on the very first keyword line.

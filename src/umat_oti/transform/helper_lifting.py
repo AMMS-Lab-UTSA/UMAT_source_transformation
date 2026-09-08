@@ -86,6 +86,15 @@ _KEYWORDS = {
     "END",
     "EQ",
     "ENDIF",
+    # .TRUE. and .FALSE. are logical LITERALS, and the dotted form makes them
+    # look like the dotted operators above. Without them here the tokeniser
+    # read `FALSE` as an identifier, found it undeclared and not implicitly
+    # integer, and filed it as an implicitly typed hypercomplex variable --
+    # after which the RHS of `OK_FLAG = .FALSE.` "mentions an OTI name" and
+    # got wrapped as REAL(.FALSE.), which ifort refuses. Five converted builds
+    # failed to compile on it.
+    "FALSE",
+    "TRUE",
     "GE",
     "GO",
     "GOTO",
@@ -615,9 +624,10 @@ def _lift_helper_routine(
         if kclear_lines is not None:
             lines.extend(kclear_lines)
             continue
-        rewritten = _rewrite_helper_executable_line(statement, lifted_names, oti_names,
-                                                   function_call_names,
-                                                   oti_shapes=helper_oti_shapes)
+        rewritten = _rewrite_helper_executable_line(
+            statement, lifted_names, oti_names, function_call_names,
+            oti_shapes=helper_oti_shapes,
+            non_numeric_names=logical_names | character_names)
         if re.match(r"^\s*RETURN\b", rewritten, re.IGNORECASE) and helper_output_surfaces:
             lines.extend(_helper_output_surface_lines(helper_output_surfaces))
         if re.match(r"^\s*RETURN\b", rewritten, re.IGNORECASE) and helper_output_copies:
@@ -837,7 +847,7 @@ def _implicit_oti_names(
 
 
 def _wrap_oti_rhs_assigned_to_a_plain_variable(
-    line: str, oti_names: set[str],
+    line: str, oti_names: set[str], non_numeric_names: set[str] | None = None,
 ) -> str:
     """``NSS = STAT_VAR(3)`` takes the real part when the target is not OTI.
 
@@ -857,6 +867,11 @@ def _wrap_oti_rhs_assigned_to_a_plain_variable(
         return line
     indent, target, subscript, rhs = match.groups()
     if target.upper() in oti_names or not rhs.strip():
+        return line
+    # REAL() of a logical or a character is not a conversion, it is a type
+    # error, and ifort says so. The target being "not hypercomplex" is not
+    # enough to make it numeric: the author declared some of these LOGICAL.
+    if target.upper() in (non_numeric_names or set()):
         return line
     if not any(token.upper() in oti_names
                for token in re.findall(r"[A-Za-z_]\w*", rhs)):
@@ -1011,6 +1026,7 @@ def _rewrite_helper_executable_line(
     oti_names: set[str],
     function_call_names: set[str] | None = None,
     oti_shapes: dict[str, str] | None = None,
+    non_numeric_names: set[str] | None = None,
 ) -> str:
     rewritten = _rewrite_lifted_call(line, lifted_names)
     rewritten = _wrap_condition_with_real_tokens(rewritten, oti_names)
@@ -1019,7 +1035,8 @@ def _rewrite_helper_executable_line(
     rewritten = _expand_mod_over_oti(rewritten, oti_names)
     rewritten = _real_argument_to_integer_intrinsics(rewritten, oti_names)
     rewritten = _normalize_numeric_literals(rewritten, oti_names)
-    rewritten = _wrap_oti_rhs_assigned_to_a_plain_variable(rewritten, oti_names)
+    rewritten = _wrap_oti_rhs_assigned_to_a_plain_variable(
+        rewritten, oti_names, non_numeric_names or set())
     # Last, so every rewrite above still sees the source's own names.
     return _rewrite_lifted_function_references(rewritten, function_call_names or set())
 
