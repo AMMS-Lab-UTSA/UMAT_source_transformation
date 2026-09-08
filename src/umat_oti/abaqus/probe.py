@@ -78,17 +78,26 @@ C     called, so say which it was. Unit 6 is the .msg/.log Abaqus captures.
       IMPLICIT NONE
       CHARACTER*(*) TAG
       INTEGER NOEL,NPT,KSTEP,KINC,NTENS,NSTATV,NPROPS,NDI,NSHR,I,J,IOS
-      DOUBLE PRECISION TIME,DTIME,STRESS(NTENS),STATEV(*),STRAN(NTENS)
+      DOUBLE PRECISION TIME(2),DTIME,STRESS(NTENS),STATEV(*),STRAN(NTENS)
       DOUBLE PRECISION DSTRAN(NTENS),PROPS(*),TEMP,DTEMP,CELENT
       DOUBLE PRECISION DFGRD0(3,3),DFGRD1(3,3),DROT(3,3),COORDS(3)
       CALL OTIS_PROBE_OPEN(%(unit)d,IOS)
       IF (IOS .NE. 0) RETURN
-      WRITE(%(unit)d,900) TAG,NOEL,NPT,KSTEP,KINC,TIME
+      WRITE(%(unit)d,900) TAG,NOEL,NPT,KSTEP,KINC,TIME(2)
   900 FORMAT('ENTRY ',A,1X,I8,1X,I8,1X,I8,1X,I8,1X,E26.17E3)
       WRITE(%(unit)d,903) NTENS,NSTATV,NPROPS,NDI,NSHR
   903 FORMAT('SHAPE',5(1X,I8))
       WRITE(%(unit)d,901) 'DTIME',1
       WRITE(%(unit)d,902) DTIME
+C     BOTH components. TIME(1) is the step time and TIME(2) the total time,
+C     and they are different numbers in every step after the first. Recording
+C     one and writing it into both slots of the replay driver runs the model
+C     at the wrong point on its own load history: these growth models ramp on
+C     (TIME(1)+DTIME)/TotalT, so a replay given TIME(2) for TIME(1) grows them
+C     twice as far. The finite difference then converges cleanly -- to the
+C     tangent of a material state Abaqus never visited.
+      WRITE(%(unit)d,901) 'TIME',2
+      WRITE(%(unit)d,902) TIME(1),TIME(2)
       WRITE(%(unit)d,901) 'STRESS0',NTENS
       WRITE(%(unit)d,902) (STRESS(I),I=1,NTENS)
       WRITE(%(unit)d,901) 'STATEV0',NSTATV
@@ -120,10 +129,10 @@ C     called, so say which it was. Unit 6 is the .msg/.log Abaqus captures.
       IMPLICIT NONE
       CHARACTER*(*) TAG
       INTEGER NOEL,NPT,KSTEP,KINC,NTENS,NSTATV,I,J,IOS
-      DOUBLE PRECISION TIME,STRESS(NTENS),STATEV(*),DDSDDE(NTENS,NTENS)
+      DOUBLE PRECISION TIME(2),STRESS(NTENS),STATEV(*),DDSDDE(NTENS,NTENS)
       CALL OTIS_PROBE_OPEN(%(unit)d,IOS)
       IF (IOS .NE. 0) RETURN
-      WRITE(%(unit)d,900) TAG,NOEL,NPT,KSTEP,KINC,TIME
+      WRITE(%(unit)d,900) TAG,NOEL,NPT,KSTEP,KINC,TIME(2)
   900 FORMAT('RECORD ',A,1X,I8,1X,I8,1X,I8,1X,I8,1X,E26.17E3)
       WRITE(%(unit)d,901) 'STRESS',NTENS
       WRITE(%(unit)d,902) (STRESS(I),I=1,NTENS)
@@ -155,7 +164,7 @@ def probe_call(tag: str, indent: str = "      ", step: str = "KSTEP",
     # before it and not the statement indent.
     return (
         f"{indent}CALL OTIS_PROBE('{tag}',{n('NOEL')},{n('NPT')},{step},"
-        f"{n('KINC')},{n('TIME')}(2),\n"
+        f"{n('KINC')},{n('TIME')},\n"
         f"     1     {n('STRESS')},{n('NTENS')},{n('STATEV')},{n('NSTATV')},"
         f"{n('DDSDDE')})\n"
     )
@@ -293,7 +302,7 @@ def entry_call(tag: str, indent: str = "      ", step: str = "KSTEP",
     n = lambda canonical: name(canonical, canonical) or canonical
     return (
         f"{indent}CALL OTIS_PROBE_IN('{tag}',{n('NOEL')},{n('NPT')},{step},"
-        f"{n('KINC')},{n('TIME')}(2),{n('DTIME')},\n"
+        f"{n('KINC')},{n('TIME')},{n('DTIME')},\n"
         f"     1     {n('STRESS')},{n('NTENS')},{n('STATEV')},{n('NSTATV')},"
         f"{n('STRAN')},{n('DSTRAN')},\n"
         f"     2     {n('PROPS')},{n('NPROPS')},{n('TEMP')},{n('DTEMP')},"
@@ -305,7 +314,7 @@ def entry_call(tag: str, indent: str = "      ", step: str = "KSTEP",
 #: The value blocks a record may carry. Named rather than inferred, so a
 #: corrupt or truncated file ends a record instead of being read as one.
 _BLOCKS = ("STRESS", "STATEV", "DDSDDE", "STRESS0", "STATEV0", "STRAN",
-           "DSTRAN", "PROPS", "DTIME", "TEMP", "DFGRD0", "DFGRD1", "DROT",
+           "DSTRAN", "PROPS", "DTIME", "TIME", "TEMP", "DFGRD0", "DFGRD1", "DROT",
            "COORDS")
 
 

@@ -29,6 +29,7 @@ class PrimalComparison:
     #: How many records each build actually produced. They have to match: a
     #: build whose probe wrote one record out of twenty was being compared over
     #: that one record and reported as agreeing over the whole history.
+    indistinguishable_components: int = 0
     records_original: int = 0
     records_transformed: int = 0
     worst_stress_relative: float = 0.0
@@ -53,6 +54,7 @@ class PrimalComparison:
     def as_dict(self) -> dict:
         return {
             "increments": self.increments,
+            "indistinguishable_components": self.indistinguishable_components,
             "records_original": self.records_original,
             "records_transformed": self.records_transformed,
             "worst_stress_relative": self.worst_stress_relative,
@@ -65,6 +67,11 @@ class PrimalComparison:
             "agrees": self.agrees,
             "reason": self.reason,
         }
+
+
+#: The absolute floor, as a fraction of the largest value the field reaches
+#: over the whole run. See the note at its use for why it is 1e-12.
+ABSOLUTE_FLOOR_FRACTION = 1e-12
 
 
 def compare_primal(
@@ -114,6 +121,18 @@ def compare_primal(
     paired = list(zip(original, transformed))
     result.increments = len(paired)
 
+    # One scale per field, over every increment of both builds: what a
+    # "vanishing fraction of the response" means is a property of the run, not
+    # of whichever increment a component happens to sit in.
+    scales: dict[str, float] = {}
+    for field_name in ("STRESS", "STATEV"):
+        largest = 0.0
+        for record in list(original) + list(transformed):
+            for value in (record.get(field_name) or ()):
+                if math.isfinite(value):
+                    largest = max(largest, abs(value))
+        scales[field_name] = largest
+
     for index, (left, right) in enumerate(paired, start=1):
         for field_name, attribute in (("STRESS", "stress"), ("STATEV", "state")):
             a, b = left.get(field_name) or [], right.get(field_name) or []
@@ -122,8 +141,17 @@ def compare_primal(
                     f"{field_name} has {len(a)} components in one build and "
                     f"{len(b)} in the other at increment {index}")
                 return result
-            finite = [value for value in a if math.isfinite(value)]
-            response = max((abs(value) for value in finite), default=0.0)
+            # The scale is the largest value this field reaches over the WHOLE
+            # history, not within this one increment. Per-increment scaling
+            # makes the first increment -- where every component is still tiny
+            # -- judge a component against its own neighbours rather than
+            # against the response the model eventually produces. Measured:
+            # UMAT_Tissue_2d_plane_strain was recorded as disagreeing by
+            # 9.617e-09, entirely from a component of 6.35e-08 at increment 1,
+            # in a run whose stresses reach 4.668. Against the history's own
+            # scale the two builds agree to 3.806e-16. The component carried no
+            # information and decided the verdict.
+            response = scales.get(field_name, 0.0)
             for component, (x, y) in enumerate(zip(a, b), start=1):
                 # Checked before anything else: a non-finite value poisons
                 # every comparison it takes part in, silently.
@@ -140,7 +168,35 @@ def compare_primal(
                     result.unresolved_components += 1
                     continue
                 result.resolved_components += 1
-                relative = abs(x - y) / scale
+                # Absolute floor beside the relative test, both stated.
+                #
+                # A component at a fraction f of the run's response has been
+                # computed through arithmetic scaled to that response, so its
+                # OWN relative precision is about eps/f -- for f = 1e-8 that is
+                # 2e-8, and asking it to agree to 1e-10 asks for a hundred
+                # times more precision than the number has. The floor says
+                # what "the same" means in absolute terms: a difference below
+                # this fraction of the response is not distinguishable as
+                # physics, whichever component it lands on.
+                #
+                # 1e-12 of the response is roughly 4e4 times double epsilon --
+                # loose enough to cover rounding accumulated through an
+                # increment, and still a hundred times TIGHTER than the 1e-10
+                # relative tolerance applied to a full-scale component. It
+                # cannot rescue a real disagreement: From-3D-to-3D-Petal
+                # differs by 1.29e-02 on stresses of 4e+06, against a floor of
+                # 4e-06, and still fails.
+                # Bounded by the caller's own tolerance, so the floor can
+                # only ever forgive a difference the relative test would also
+                # have forgiven on a full-scale component. It exists to stop
+                # a SMALL component being held to more precision than it has,
+                # never to relax the standard the caller asked for.
+                difference = abs(x - y)
+                floor = min(ABSOLUTE_FLOOR_FRACTION, tolerance) * response
+                if response and difference <= floor:
+                    result.indistinguishable_components += 1
+                    continue
+                relative = difference / scale
                 worst = getattr(result, f"worst_{attribute}_relative")
                 if relative > worst:
                     setattr(result, f"worst_{attribute}_relative", relative)
