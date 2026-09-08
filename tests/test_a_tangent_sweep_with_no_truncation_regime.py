@@ -48,14 +48,19 @@ MONOTONE = sweep(
 def test_a_sweep_that_agrees_at_every_step_is_corroborated():
     verified, reason = tangent_verdict(MONOTONE)
     assert verified, reason
-    assert "every one of 6 step sizes" in reason
+    # The reason now reports the count and the span rather than the
+    # special-cased phrase, because this shape stopped being a special
+    # case: it is the all-six end of the same "how many steps agree, and
+    # over how wide a range" question. The substance asserted is the
+    # same -- every step is counted, and the sweep is accepted.
+    assert "6 of 6 step sizes" in reason
 
 
 def test_that_sweep_has_a_plateau_of_one_and_is_still_accepted():
     """The plateau rule alone rejected it; the reason must say what did not."""
     verified, reason = tangent_verdict(MONOTONE)
     assert verified
-    assert "no truncation error left to lose" in reason
+    assert "6 of 6 step sizes" in reason and "decades" in reason
 
 
 # ---- the classic plateau still passes -----------------------------------
