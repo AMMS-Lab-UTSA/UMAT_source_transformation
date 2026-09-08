@@ -8,7 +8,8 @@ PROFILE_ARGS ?=
 .PHONY: help setup test test-fortran test-offline audit \
         reproduce-smoke reproduce-offline reproduce-paper reproduce-corpus \
         reproduce-abaqus batch batch-transform batch-offline batch-abaqus \
-        batch-status batch-record clean-clone clean
+        batch-status batch-record clean-clone clean \
+        umat-promote umat-materialize umat-regress umat-status
 
 help:
 	@echo "setup              install the package and its test extras"
@@ -21,6 +22,12 @@ help:
 	@echo "reproduce-corpus   a new licensed network round (needs --allow-network)"
 	@echo "reproduce-abaqus   optional paired Abaqus validation (needs ARC)"
 	@echo "clean-clone        prove a fresh clone reproduces with nothing local"
+	@echo ""
+	@echo ""
+	@echo "umat-status        what the verified collection holds"
+	@echo "umat-promote       copy a batch's verified rows into umat/ (deliberate)"
+	@echo "umat-materialize   fetch the sources behind umat/ onto this machine"
+	@echo "umat-regress       re-run every promoted material; non-zero if any fails"
 	@echo ""
 	@echo "batch-status       what the transform store holds, and how much is stale"
 	@echo "batch-transform    transform every discovered source into the store"
@@ -94,3 +101,30 @@ clean:
 	find . -name '__pycache__' -type d -prune -exec rm -rf {} +
 	find . -name '*.o' -o -name '*.mod' -o -name '*.so' | xargs -r rm -f
 	rm -rf build/ reproduce/
+
+
+# ---------------------------------------------------------------------------
+# the verified collection
+# ---------------------------------------------------------------------------
+# Promotion is deliberate and regression never writes. A gate that rewrites
+# its own baseline cannot fail, so `umat-promote` is the only thing here that
+# touches umat/, and it is run by a person deciding to promote.
+RESULTS ?=
+WORK ?=
+
+umat-status:
+	$(PYTHON) tools/promote_verified_umats.py --status
+
+umat-promote:
+	@test -n "$(RESULTS)" || { echo "RESULTS=<run>/store_verification.jsonl is required"; exit 2; }
+	@test -n "$(WORK)" || { echo "WORK=<run>/work is required"; exit 2; }
+	$(PYTHON) tools/promote_verified_umats.py --results "$(RESULTS)" --work-dir "$(WORK)"
+
+umat-materialize:
+	$(PYTHON) tools/materialize_umat_sources.py $(BATCH_ARGS)
+
+# Exits non-zero when a promoted material stops verifying, is blocked, or is
+# no longer attempted. Missing Abaqus fails here rather than passing.
+umat-regress:
+	$(PYTHON) tools/verify_store_in_abaqus.py --mode regression \
+	    --baseline umat/baseline.json --jobs 4 $(BATCH_ARGS)

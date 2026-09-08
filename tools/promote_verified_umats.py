@@ -313,9 +313,11 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--results", type=Path, required=True,
+    parser.add_argument("--status", action="store_true",
+                        help="say what the collection holds and exit")
+    parser.add_argument("--results", type=Path,
                         help="a store_verification.jsonl from a batch run")
-    parser.add_argument("--work-dir", type=Path, required=True,
+    parser.add_argument("--work-dir", type=Path,
                         help="that run's scratch, holding the decks and "
                              "probe histories to copy")
     parser.add_argument("--cache-dir", type=Path,
@@ -326,6 +328,26 @@ def main(argv: Optional[list[str]] = None) -> int:
                         help="say what would be promoted and write nothing")
     args = parser.parse_args(argv)
 
+    if args.status:
+        registry = args.root / "registry.json"
+        if not registry.is_file():
+            print("nothing has been promoted into umat/ yet")
+            return 0
+        payload = json.loads(registry.read_text(encoding="utf-8"))
+        materials = payload.get("materials", [])
+        print(f"{payload.get('count', len(materials))} verified materials in "
+              f"{args.root}")
+        for entry in materials[:12]:
+            worst = entry.get("worst_tangent_relative")
+            print(f"    {entry['id']}"
+                  + (f"   tangent {worst:.2e}" if isinstance(worst, float) else ""))
+        if len(materials) > 12:
+            print(f"    ... and {len(materials) - 12} more")
+        return 0
+
+    if args.results is None or args.work_dir is None:
+        parser.error("--results and --work-dir are required unless --status "
+                     "is given")
     rows = [json.loads(line) for line in
             args.results.read_text(encoding="utf-8").splitlines() if line.strip()]
     verified = [row for row in rows if row.get("stage") == VERIFIED]
