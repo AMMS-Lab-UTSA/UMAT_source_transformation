@@ -85,7 +85,7 @@ from run_discovery_triage import without_machine_paths                  # noqa: 
 from umat_oti.abaqus.compare import compare_primal, compare_tangent     # noqa: E402
 from umat_oti.abaqus.deck import generate_deck                          # noqa: E402
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
-    NEEDS_MATERIAL_DATA, VerificationManifest, reverse, uniaxial)
+    NEEDS_MATERIAL_DATA, VerificationManifest, reverse, simple_shear, uniaxial)
 from umat_oti.abaqus.job_status import blocking_statements
 from umat_oti.abaqus.probe import CORRUPT, converged_only, parse_probe           # noqa: E402
 from umat_oti.abaqus.replay import (                                    # noqa: E402
@@ -505,6 +505,7 @@ def build_manifest(
     strain: float = 0.005,
     increments: int = 10,
     include_reversal: bool = True,
+    include_shear: bool = True,
     fd_steps: Sequence[float] = (),
 ) -> ManifestPlan:
     """What this source is made of, read from the deck its author shipped.
@@ -578,7 +579,18 @@ def build_manifest(
     # must never read as one.
     inferred_nstatv = int((proposal or {}).get("nstatv_inferred") or 0)
 
+    # Uniaxial extension, then shear, then a reversal. Uniaxial alone leaves
+    # most of DDSDDE untested: it drives one direct component, so the shear
+    # rows and columns are only ever exercised by whatever coupling the model
+    # happens to have, and a transform can be wrong about them without a
+    # uniaxial path ever noticing. The reversal makes state evolution
+    # observable -- a monotonic path cannot tell a model that stores state
+    # from one that recomputes it, because both give the same answer going
+    # out. All three are probes chosen here, not the author's loading, and
+    # the manifest records them as such.
     loading = [uniaxial(strain, increments)]
+    if include_shear:
+        loading.append(simple_shear(strain, increments))
     if include_reversal:
         loading.append(reverse(loading[0]))
 
@@ -880,6 +892,44 @@ def choose_probe_record(records: Sequence[dict]) -> Optional[tuple[int, dict]]:
         if record.get("DDSDDE") and record.get("entry"):
             return position, record
     return None
+
+
+def choose_probe_records(records: Sequence[dict],
+                         wanted: int = 3) -> list[tuple[int, dict]]:
+    """Several states along the loading path, not one.
+
+    A tangent checked at a single increment is a tangent checked in a single
+    regime. On a path-dependent model the last increment is usually the
+    plastic one and the first is usually elastic, and a transform can be right
+    about one and wrong about the other -- an elastic tangent is the part every
+    build gets right, so agreement there is the weakest evidence available.
+
+    So: the last replayable record, the first, and the ones between them,
+    spread evenly. All of them have to agree for the tangent to be verified,
+    which is strictly stronger than the single-record rule it replaces and
+    cannot pass anything that rule would have failed.
+
+    A record has to carry both a DDSDDE and the ENTRY state its increment
+    began from; one missing either cannot be replayed, and is skipped rather
+    than replayed from a state made up to fill the gap.
+    """
+    replayable = [(position, record)
+                  for position, record in enumerate(records)
+                  if record.get("DDSDDE") and record.get("entry")]
+    if not replayable:
+        return []
+    wanted = max(1, int(wanted))
+    if len(replayable) <= wanted:
+        return replayable
+    # The last is always included: it is furthest along the path. The rest are
+    # spread over what precedes it, first included.
+    last = replayable[-1]
+    if wanted == 1:
+        return [last]
+    head = replayable[:-1]
+    stride = max(1, len(head) // (wanted - 1))
+    picked = head[::stride][:wanted - 1]
+    return picked + [last]
 
 
 def oti_tangent(record: dict, ntens: int) -> list[list[float]]:
@@ -1539,7 +1589,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
 def verify_tangent(manifest: VerificationManifest, original: Path,
                    transformed_history: Sequence[dict], work_dir: Path, *,
                    form: str = "fixed", tolerance: float = TANGENT_TOLERANCE,
-                   timeout: int = 900,
+                   timeout: int = 900, states: int = 3,
                    transformed: Optional[Path] = None) -> dict:
     """The OTI tangent against a difference of the original, over the ladder.
 
@@ -1552,13 +1602,67 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
     out of its own check.
     """
     outcome: dict[str, Any] = {"verified": False, "reason": ""}
-    chosen = choose_probe_record(list(transformed_history))
-    if chosen is None:
+    chosen = choose_probe_records(list(transformed_history),
+                                  wanted=int(states))
+    if not chosen:
         outcome["reason"] = ("no converged record carries both a DDSDDE and "
                              "the ENTRY state its increment began from, so "
                              "the increment cannot be replayed")
         return outcome
-    position, record = chosen
+
+    # Every chosen state is checked and every one has to agree. The per-state
+    # results are kept whole: a tangent that is right in the elastic regime
+    # and wrong in the plastic one is a specific, reportable finding, and
+    # collapsing the states into one verdict would lose exactly that.
+    at_states: list[dict] = []
+    for order, (position, record) in enumerate(chosen):
+        single = _verify_tangent_at(
+            manifest, original, record, position,
+            Path(work_dir) / f"state{order}", form=form, tolerance=tolerance,
+            timeout=timeout, transformed=transformed)
+        at_states.append(single)
+    outcome["states"] = at_states
+    outcome["states_checked"] = len(at_states)
+    agreed = [s for s in at_states if s.get("verified")]
+    outcome["states_agreeing"] = len(agreed)
+
+    # The reported comparison is the WORST state, not the best: a summary that
+    # quotes the closest agreement among several describes the state that
+    # flattered the transform most.
+    def _best_relative(state):
+        value = ((state.get("comparison") or {}).get("best_relative"))
+        return float("inf") if value is None else float(value)
+    worst = max(at_states, key=_best_relative)
+    outcome["increment"] = worst.get("increment")
+    outcome["record_index"] = worst.get("record_index")
+    for key in ("comparison", "driven_through", "failures",
+                "perturbation_scale", "replay_header", "log"):
+        if key in worst:
+            outcome[key] = worst[key]
+    outcome["fd_steps"] = list(manifest.fd_steps)
+
+    if len(agreed) == len(at_states):
+        outcome["verified"] = True
+        outcome["reason"] = (
+            f"agreed at all {len(at_states)} states checked along the loading "
+            f"path (increments {', '.join(str(s.get('increment')) for s in at_states)}); "
+            f"worst of them: {worst.get('reason', '')}")
+        return outcome
+    failing = [s for s in at_states if not s.get("verified")]
+    outcome["reason"] = (
+        f"agreed at {len(agreed)} of {len(at_states)} states along the "
+        f"loading path; increment {failing[0].get('increment')} did not: "
+        f"{failing[0].get('reason', '')}")
+    return outcome
+
+
+def _verify_tangent_at(manifest: VerificationManifest, original: Path,
+                       record: dict, position: int, work_dir: Path, *,
+                       form: str = "fixed", tolerance: float = TANGENT_TOLERANCE,
+                       timeout: int = 900,
+                       transformed: Optional[Path] = None) -> dict:
+    """One state: the OTI tangent there against a difference of the original."""
+    outcome: dict[str, Any] = {"verified": False, "reason": ""}
     outcome["increment"] = record.get("increment")
     outcome["record_index"] = position
 
