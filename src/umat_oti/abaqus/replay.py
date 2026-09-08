@@ -215,6 +215,83 @@ def _replay_utility_stubs() -> str:
     had to compute, and it may not swallow a refusal the author raised.
     """
     return """
+SUBROUTINE ROTSIG(S, R, OUTPUT, LSTR, NDI, NSHR)
+  ! OUTPUT = R S R^T for a symmetric tensor in Abaqus's Voigt storage.
+  !
+  ! Unlike GETSENSORVALUE this is ON the material-point path: a UMAT calls it
+  ! to carry a state tensor through a rigid rotation, and a stop-stub would
+  ! turn a verifiable material into an unverifiable one. Abaqus links it in,
+  ! so the published source does not define it, and the replay driver's link
+  ! failed on the symbol.
+  !
+  ! The same algebra as the definition the transform supplies for the OTI side
+  ! (umat_oti.transform.abaqus_utility_definitions), in free form and over
+  ! plain reals, so the reference and the value under test rotate a tensor the
+  ! same way. LSTR=2 stores ENGINEERING shear, twice the tensor entry, and
+  ! rotating it as though the stored value were the entry is a silent factor
+  ! of two on every rotated strain.
+  INTEGER :: LSTR, NDI, NSHR, I, J, K, L
+  REAL(8) :: S(NDI+NSHR), R(3,3), OUTPUT(NDI+NSHR)
+  REAL(8) :: T(3,3), TR(3,3), HALFSH
+  HALFSH = 1.0D0
+  IF (LSTR == 2) HALFSH = 0.5D0
+  T = 0.0D0
+  DO I = 1, NDI
+    T(I,I) = S(I)
+  END DO
+  IF (NSHR >= 1) THEN
+    T(1,2) = S(NDI+1)*HALFSH
+    T(2,1) = T(1,2)
+  END IF
+  IF (NSHR >= 2) THEN
+    T(1,3) = S(NDI+2)*HALFSH
+    T(3,1) = T(1,3)
+  END IF
+  IF (NSHR >= 3) THEN
+    T(2,3) = S(NDI+3)*HALFSH
+    T(3,2) = T(2,3)
+  END IF
+  DO I = 1, 3
+    DO J = 1, 3
+      TR(I,J) = 0.0D0
+      DO K = 1, 3
+        DO L = 1, 3
+          TR(I,J) = TR(I,J) + R(I,K)*T(K,L)*R(J,L)
+        END DO
+      END DO
+    END DO
+  END DO
+  DO I = 1, NDI
+    OUTPUT(I) = TR(I,I)
+  END DO
+  IF (NSHR >= 1) OUTPUT(NDI+1) = TR(1,2)/HALFSH
+  IF (NSHR >= 2) OUTPUT(NDI+2) = TR(1,3)/HALFSH
+  IF (NSHR >= 3) OUTPUT(NDI+3) = TR(2,3)/HALFSH
+END SUBROUTINE ROTSIG
+SUBROUTINE GETSENSORVALUE(SENSORNAME, VALUE)
+  ! Abaqus reads a sensor's current value out of the analysis. Five corpus
+  ! files carry the author's UAMP amplitude subroutine in the same compilation
+  ! unit as the UMAT; the replay driver links the whole file, so this symbol
+  ! is undefined at link time even though nothing on the material-point path
+  ! ever calls it. The link failed, no sweep was attempted, and the row was
+  ! recorded as a tangent that could not be verified -- a statement about the
+  ! harness dressed as one about the transform.
+  !
+  ! It STOPS rather than returning a number. A sensor value is a fact about a
+  ! running analysis; there is no analysis here, and inventing one would put a
+  ! fabricated amplitude into a stress history. If a replay ever reaches this,
+  ! the run has left the material point and the result is not evidence.
+  !
+  ! REAL(8) for the same implicit-typing reason as GET_THREAD_ID: these files
+  ! are IMPLICIT REAL*8(A-H,O-Z) and G falls in A-H.
+  CHARACTER(*) :: SENSORNAME
+  REAL(8) :: VALUE
+  WRITE(0,'(A)') 'GETSENSORVALUE was called during a replay. There is no ' &
+    // 'running analysis to read a sensor from, and this driver will not ' &
+    // 'invent one. Sensor: ' // SENSORNAME
+  VALUE = 0.0D0
+  STOP 3
+END SUBROUTINE GETSENSORVALUE
 FUNCTION GET_THREAD_ID()
   ! The thread this material point is being evaluated on. The replay runs one
   ! point on one thread, so it is the master thread, 0.
@@ -312,12 +389,27 @@ def write_state(entry: dict, path: Path) -> None:
     coords = list(entry.get("COORDS") or (0.0, 0.0, 0.0, 1.0))
     celent = coords[3] if len(coords) > 3 else 1.0
     temp = list(entry.get("TEMP") or (0.0, 0.0))
-    time = float(entry.get("time") or 0.0)
     dtime = (entry.get("DTIME") or [0.0])[0]
+    # TIME(1) is the step time and TIME(2) the total time. They are different
+    # numbers in every step after the first, and writing one into both slots
+    # replays the model at a point on its load history that Abaqus never
+    # visited: the Jeff97 growth models ramp on (TIME(1)+DTIME)/TotalT, so a
+    # replay handed TIME(2) as TIME(1) grows them twice as far. The centred
+    # difference still converges -- both evaluations move together -- to the
+    # tangent of the wrong material state, which is worse than not converging.
+    # The pair comes from the probe now; the scalar is the fallback for a
+    # probe file written before it recorded both.
+    recorded = [float(value) for value in (entry.get("TIME") or ())]
+    if len(recorded) >= 2:
+        step_time, total_time = recorded[0], recorded[1]
+    else:
+        total_time = float(entry.get("time") or 0.0)
+        step_time = total_time
 
     lines = [
         f"{ntens} {nstatv} {nprops} {ndi} {nshr}",
-        _row((dtime, time, time, temp[0], temp[1] if len(temp) > 1 else 0.0, celent)),
+        _row((dtime, step_time, total_time, temp[0],
+              temp[1] if len(temp) > 1 else 0.0, celent)),
         f"{entry.get('element', 1)} {entry.get('point', 1)} "
         f"{entry.get('step', 1)} {entry.get('increment', 1)}",
         _row(entry.get("STRESS0") or [0.0] * ntens),

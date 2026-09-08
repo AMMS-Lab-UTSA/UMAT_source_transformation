@@ -4869,12 +4869,65 @@ def _real_wrapped_oti_tokens(condition: str) -> str:
     return token_pattern.sub(replacement, condition)
 
 
+#: A default-precision real literal in Fortran takes its kind from its own
+#: form, not from what it is assigned to. Under ``IMPLICIT REAL*8`` -- which is
+#: what ``ABA_PARAM.INC`` sets, and what most of this corpus uses -- the
+#: statement ``X = 3.14159265359`` still parses that literal as a FOUR-byte
+#: real, rounds it to 3.1415927410125732, and only then widens it into X.
+#:
+#: Abaqus compiles user subroutines with no default-real promotion. Measured
+#: from ``abaqus information=environment`` on the machine this runs on, the
+#: compile line is ifort with -fpp -fPIC -extend_source -auto -pc64
+#: -fp-model precise and no -r8, -real-size or -autodouble. So the author's
+#: program computes with the single-rounded value, and that is the program
+#: this transform is supposed to differentiate.
+#:
+#: Appending D0 to the digits the author wrote does not widen the literal --
+#: it REPLACES it, with a number up to 3e-8 away:
+#:
+#:     as written   0.31415927410125732E+001
+#:     with D0      0.31415926535900001E+001
+#:     difference   2.78e-08 relative
+#:
+#: which is the band the primal disagreements sit in. Two Abaqus runs of the
+#: same original are byte-identical on this platform, so those disagreements
+#: are not noise; they are this.
+#:
+#: The literal still has to become a double, because the OTI overloads take
+#: doubles. So it is widened to the double that holds the value the author's
+#: program uses -- the single-precision one, written out in full. A literal
+#: that is exactly representable in single precision, which covers 0.0, 0.5,
+#: 1.0 and most constants written by hand, keeps the digits the author wrote.
+def _as_written_in_double(text: str) -> str:
+    """``3.14159265359`` -> ``3.1415927410125732D0``; ``0.5`` -> ``0.5D0``."""
+    import struct
+
+    body = text.strip()
+    try:
+        value = float(body.replace("d", "e").replace("D", "e"))
+    except ValueError:
+        return body + "D0"
+    try:
+        single = struct.unpack("<f", struct.pack("<f", value))[0]
+    except (OverflowError, struct.error):
+        # Outside single-precision range, so the author's program could not
+        # have held this literal as a default real at all: an exponent this
+        # large is only ever written with an explicit kind.
+        return body + "D0"
+    if single == value:
+        return body + "D0"          # exactly representable: nothing to restore
+    return repr(single) + "D0"
+
+
 def _normalize_numeric_literals_in_oti_expression(line: str, type_name: str = "") -> str:
     if "_OTI" not in line.upper():
         return line
     normalized = re.sub(
         r"(?<![A-Za-z0-9_])((?:\d+\.\d*)|(?:\d+\.))(?![A-Za-z0-9_.dDeE])",
-        lambda match: match.group(1) if match.group(1).upper().endswith("D0") else match.group(1).rstrip(".") + (".0" if match.group(1).endswith(".") else "") + "D0",
+        lambda match: (match.group(1) if match.group(1).upper().endswith("D0")
+                       else _as_written_in_double(
+                           match.group(1).rstrip(".")
+                           + (".0" if match.group(1).endswith(".") else ""))),
         line,
     )
     # From here on only *bare integers* are promoted, so the complete real
