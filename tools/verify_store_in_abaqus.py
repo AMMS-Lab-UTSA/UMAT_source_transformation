@@ -84,6 +84,7 @@ from run_discovered_verification import _cache_relative_source          # noqa: 
 from run_discovery_triage import without_machine_paths                  # noqa: E402
 from umat_oti.abaqus.compare import compare_primal, compare_tangent     # noqa: E402
 from umat_oti.abaqus.deck import generate_deck                          # noqa: E402
+from umat_oti.corpus.entry_routines import classify as classify_entry   # noqa: E402
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
     NEEDS_MATERIAL_DATA, VerificationManifest, reverse, simple_shear, uniaxial)
 from umat_oti.abaqus.job_status import blocking_statements
@@ -127,6 +128,17 @@ WAITS_FOR_INPUT = "waits_for_input"
 #: statement about the model, it is a statement about the run, so --resume
 #: re-runs it rather than serving it as a settled result.
 HARNESS_ERROR = "harness_error"
+
+#: Off the ladder, like a harness error and for the same reason: it is not a
+#: statement about how far a UMAT got, because the file is not a UMAT. Its
+#: Abaqus entry point is something else -- twenty-five corpus files present a
+#: 36-argument SUBROUTINE UEL and keep a SUBROUTINE UMAT beside it as the
+#: element's own constitutive kernel. Driven through a *USER MATERIAL deck,
+#: Abaqus resolved the global symbol UMAT to that kernel, and the finite
+#: difference then perturbed a deformation gradient it never reads. Those rows
+#: were reported as UMAT tangent failures. Reported in its own column now, and
+#: never inside a count of UMATs that verified or failed.
+NOT_A_UMAT = "not_a_umat"
 
 #: One job at a time. The licence server here is shared with other users and
 #: contended: two concurrent Abaqus jobs demand two sets of tokens at once, and
@@ -434,6 +446,10 @@ class ManifestPlan:
     #: Set when the deck and the triage row disagree about finite strain. The
     #: deck wins; the disagreement is recorded rather than resolved silently.
     kinematics_note: str = ""
+    #: What the file's Abaqus entry point turned out to be, when it is not a
+    #: UMAT. Carried whole -- the units it declares, their argument counts and
+    #: who calls whom -- so the claim can be checked without re-parsing.
+    entry_classification: Optional[dict] = None
 
 
 _SOLUTION_STATE = re.compile(
@@ -525,6 +541,25 @@ def build_manifest(
         plan.reason = ("no triage row for this source, so nothing has "
                        "established its tensor size or form")
         return plan
+
+    # Before anything else: is this file even a UMAT? The entry point is
+    # decided by parsing -- routine name, exact dummy-argument count, and
+    # whether a sibling unit calls it -- never by the filename. Twenty-five
+    # corpus files present a 36-argument SUBROUTINE UEL to Abaqus and keep a
+    # SUBROUTINE UMAT beside it as the element's own constitutive kernel.
+    # Driven through a *USER MATERIAL deck, Abaqus resolved the global symbol
+    # UMAT to that kernel and the finite difference then perturbed a
+    # deformation gradient it never reads, giving a difference of exactly
+    # zero. Those rows were being reported as UMAT tangent failures.
+    source_path = cache_root / source_id
+    if source_path.is_file():
+        entry_kind = classify_entry(
+            source_path.read_text(errors="replace"), path=source_path)
+        if not entry_kind.is_umat:
+            plan.stage = NOT_A_UMAT
+            plan.reason = entry_kind.reason
+            plan.entry_classification = entry_kind.as_dict()
+            return plan
 
     ntens = int(row.get("ntens") or 0)
     shape = point_shape(ntens)
@@ -1465,6 +1500,7 @@ def _material_columns(plan: ManifestPlan) -> dict[str, Any]:
         "kinematics": manifest.kinematics if manifest else "",
         "kinematics_provenance": plan.kinematics_provenance,
         "kinematics_note": plan.kinematics_note,
+        "entry_classification": plan.entry_classification,
     }
 
 
