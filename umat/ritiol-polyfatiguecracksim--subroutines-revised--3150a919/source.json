@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "RitioL/PolyFatigueCrackSim",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "e4b93c3985a162006fa7bee5cdece6da79fe33120a2164b2025d658018863067",
+  "source_id": "RitioL__PolyFatigueCrackSim/CPFEM-val/subroutines_revised.for",
+  "upstream": "https://github.com/RitioL/PolyFatigueCrackSim",
+  "verified_bytes_sha256": "e4b93c3985a162006fa7bee5cdece6da79fe33120a2164b2025d658018863067",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}

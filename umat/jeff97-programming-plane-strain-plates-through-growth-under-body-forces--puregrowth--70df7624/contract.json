@@ -1,0 +1,27 @@
+{
+  "loading": {
+    "kind": "verification probe, chosen by this pipeline",
+    "not_the_authors_history": "This is a controlled probe -- prescribed extension, then shear, then a reversal -- and NOT a reproduction of the author's own example. A result here says the conversion agrees with the original under this probe."
+  },
+  "material": {
+    "block": "neoHookean",
+    "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/Beam-Gravity-C0-100MPa.inp",
+    "deck_digest": "dfaee26b8a70df4a",
+    "meaning": "not established: the deck gives values, not names. The constants are the author's; what they mean is not certified here.",
+    "props_count": 1,
+    "provenance": "Beam-Gravity-C0-100MPa.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 (paired deck Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/Beam-Gravity-C0-100MPa.inp)"
+  },
+  "material_point": {
+    "element_type": "C3D4",
+    "kinematics": "finite",
+    "kinematics_provenance": "Beam-Gravity-C0-100MPa.inp line 32896: *Step, name=Growth, nlgeom=YES, inc=200",
+    "nstatv": 9,
+    "ntens": 6,
+    "unsymmetric": false
+  },
+  "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+  "schema": "umat-oti/verification-contract/1.0",
+  "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGrowth.for",
+  "source_sha256": "f19529e78822882561b4e3c1e9cd3737e880d33c979ddde6c6d115b2bec2cdf0",
+  "transform_fingerprint": "00b5a98fc9041d3c"
+}

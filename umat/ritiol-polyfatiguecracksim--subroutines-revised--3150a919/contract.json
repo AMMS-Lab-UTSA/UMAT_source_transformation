@@ -1,0 +1,27 @@
+{
+  "loading": {
+    "kind": "verification probe, chosen by this pipeline",
+    "not_the_authors_history": "This is a controlled probe -- prescribed extension, then shear, then a reversal -- and NOT a reproduction of the author's own example. A result here says the conversion agrees with the original under this probe."
+  },
+  "material": {
+    "block": "MATERIAL-1",
+    "deck": "RitioL__PolyFatigueCrackSim/CPFEM-val/workplace/Job-1-copy.inp",
+    "deck_digest": "6ade97a0fe109fc7",
+    "meaning": "not established: the deck gives values, not names. The constants are the author's; what they mean is not certified here.",
+    "props_count": 168,
+    "provenance": "Job-1-copy.inp *MATERIAL MATERIAL-1: 168 constants, *DEPVAR 150, UNSYMM (paired deck RitioL__PolyFatigueCrackSim/CPFEM-val/workplace/Job-1-copy.inp)"
+  },
+  "material_point": {
+    "element_type": "C3D4",
+    "kinematics": "finite",
+    "kinematics_provenance": "Job-1-copy.inp line 53867: *Step, name=Step-1, nlgeom=YES, inc=500",
+    "nstatv": 150,
+    "ntens": 6,
+    "unsymmetric": true
+  },
+  "repository": "RitioL/PolyFatigueCrackSim",
+  "schema": "umat-oti/verification-contract/1.0",
+  "source_id": "RitioL__PolyFatigueCrackSim/CPFEM-val/subroutines_revised.for",
+  "source_sha256": "e4b93c3985a162006fa7bee5cdece6da79fe33120a2164b2025d658018863067",
+  "transform_fingerprint": "00b5a98fc9041d3c"
+}

@@ -1,0 +1,271 @@
+{
+  "schema": "umat-oti/regression-baseline/1.0",
+  "what_this_is": "The materials a regression run is required to re-verify. Written by promotion, never by a regression run: a gate that rewrites its own baseline cannot fail.",
+  "promoted_from": "an Abaqus verification batch; see each material's results.json",
+  "entries": [
+    {
+      "source": "BristolCompositesInstitute__abaci/test/data/umat.f",
+      "stage": "verified",
+      "id": "bristolcompositesinstitute-abaci--umat--b8fa3835",
+      "source_sha256": "fde9e0e60814d4bcc1dd6e08bedefa6dad90ce367160e293c8648d3ab915f2d4"
+    },
+    {
+      "source": "irfancn__Abaqus-UEL-elastic/uel_elastic.for",
+      "stage": "verified",
+      "id": "irfancn-abaqus-uel-elastic--uel-elastic--8e98b0b5",
+      "source_sha256": "931a97321c8db3d85934d64b1b6dfd6782cf7780f5d81fcad2fcc5cd5fa359b2"
+    },
+    {
+      "source": "irfancn__Abaqus-UMAT-elastic/umat_elastic.for",
+      "stage": "verified",
+      "id": "irfancn-abaqus-umat-elastic--umat-elastic--7e9bb4c2",
+      "source_sha256": "5e500764da04aaabba279113de51697b41641f62f5912ba5e44144e4fff31572"
+    },
+    {
+      "source": "Jeff97__growth-of-circular-plate/Bending/Growth-CASE1.for",
+      "stage": "verified",
+      "id": "jeff97-growth-of-circular-plate--growth-case1--7c052969",
+      "source_sha256": "199ac9b622e4f94b8b9007c76f021d7a7d7990b4ca559a65c3ebef07b1603c0b"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th001/PureGravity.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--165a97e5",
+      "source_sha256": "1b069d9e3743890f18bd9ed8a49ce90838a539b08b75dcf1aa9d73cc76463fa6"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th005/PureGravity.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--172b43f9",
+      "source_sha256": "80087ac5bb68eff66f2a92205968e0d50393229b0184422f1094a3799e14b8fb"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGravity.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--32df7d71",
+      "source_sha256": "1b069d9e3743890f18bd9ed8a49ce90838a539b08b75dcf1aa9d73cc76463fa6"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGravity.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--473589a5",
+      "source_sha256": "878939fcfc17816c26b73b6e41193614d70d0c0d6e6e6ec8c5b2a095602c6767"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th01/PureGravity.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--53b3211f",
+      "source_sha256": "85c12213d27966e3db39894dff8667d14ab53325e38fb1d8340561c8cc890ae1"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGravity.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--58d1d3e0",
+      "source_sha256": "c5d5267f94a948a98fd487c3266873822d71463250307b0ac2cc9b8777d61be4"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/PureGravity.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--6934cbfc",
+      "source_sha256": "a068d55b5e24c2d87d8affecdf6d49e6ad27e2c308f9d09bee46d3384af96df1"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--88d6fa35",
+      "source_sha256": "6c045e71f7236924cdab75e81b73a940b5ca0bbd172456a2cf7c6adb1a335a61"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/PureGravity.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--e17c0dc7",
+      "source_sha256": "a068d55b5e24c2d87d8affecdf6d49e6ad27e2c308f9d09bee46d3384af96df1"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/PureGravity.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--ead57b5c",
+      "source_sha256": "c5d5267f94a948a98fd487c3266873822d71463250307b0ac2cc9b8777d61be4"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--05282f9c",
+      "source_sha256": "653dc63bde51fcabc299f203a70572be59ccc73363177d7c588d3e65937eb5b9"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th001/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--080267b4",
+      "source_sha256": "f340521fd33f03b1f56c32865bcc2c2bd883584d909165daf9e5a8157e5012ee"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th005/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--10bb19c0",
+      "source_sha256": "b736949192592654e21acec975cf9f3f3476db302b6c1e1add88c4c246047ff0"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th002/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--21006342",
+      "source_sha256": "1c00e67647bc37418d31663abd6332f0fc9576e03b69d324e015506ffdf3bd8c"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--25bd9a49",
+      "source_sha256": "c5b21e39d4b10ebac1d3ea8ae592ff3df0dd4fc556f61b349ffcf43a97890cb8"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--2e3ea178",
+      "source_sha256": "309027711d4d0600e09a06812f55116c1d21ab93f2fa78592e27b061a08b152e"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th005/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--3e1f1c43",
+      "source_sha256": "3b5fea26d8b2ab659482e5414e3b50ebdcf98ea5a20b1442e3c9f598dc85015a"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--5755d72d",
+      "source_sha256": "c28ba973044e7fa9263601c6f33f2d92af59a17a72098b743a8c8eb40ffa4744"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--5defc2a4",
+      "source_sha256": "2be9ab89bb4a138cd49db38a3bf4ace61687042aedafa191681276a6a140c5d1"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-Flat/Th005/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--7088b08d",
+      "source_sha256": "59d1310cf8301e3422c6f07c9bb6e59d1e6b7285a6eb68fbee2f97a9bc7ffae1"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--70df7624",
+      "source_sha256": "f19529e78822882561b4e3c1e9cd3737e880d33c979ddde6c6d115b2bec2cdf0"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th001/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--82c3ab5f",
+      "source_sha256": "9b3ccb786ae1aa3998382b66df6d02f50f4b5eb5d5a1e625ecf16fbd1b9da513"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th01/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--8e9f6e6a",
+      "source_sha256": "4cea0702a6151771f58c45cee174c7ac4ae3192884cc505da240f323a77c982f"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-Flat/Th01/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--a335bdb6",
+      "source_sha256": "5a8a11a538f73ad6f4571ec430b1ccb098309494945411fdbc23fd79303d3330"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--af0f3f65",
+      "source_sha256": "e0555ec0c85624450802846e930528ede5a56da039d10d43e1144b106fd9c402"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th002/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--b5a6af52",
+      "source_sha256": "e273be7d3e32228773a4c130d76445f527ebdb7e449a1e2410e0f05c7af704f6"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th001/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--d66a2899",
+      "source_sha256": "b46e7c69788bb0121bee367d6c5e06ed9025ae4e70a7707dab984e3e3404007c"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th002/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--dc0aebea",
+      "source_sha256": "f7a30a6be5719b7ca68c4e6aa1197e6a7536c6fa49b64b125c3622c03a88b37a"
+    },
+    {
+      "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th01/PureGrowth.for",
+      "stage": "verified",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--fb6cae8e",
+      "source_sha256": "7b98b1ed9df0673f16bdd54e2b7e611db384b3bbcd474ea870fb06f18790db6d"
+    },
+    {
+      "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur3.for",
+      "stage": "verified",
+      "id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur3--162e8ca2",
+      "source_sha256": "d0dc1f26aac9b1225a3cd6ad17053519b339724bcfabe06a7a0b275ac6d64795"
+    },
+    {
+      "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example4-Torus/Growth-MinSur3.for",
+      "stage": "verified",
+      "id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur3--3fe59e3b",
+      "source_sha256": "1d7924cc5a75df0d3aaeb796166ae95c1e76fc2cdbc3343d12f8637a202e1635"
+    },
+    {
+      "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example3-Sphere/Growth-MinSur3.for",
+      "stage": "verified",
+      "id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur3--bbe506c0",
+      "source_sha256": "1d7924cc5a75df0d3aaeb796166ae95c1e76fc2cdbc3343d12f8637a202e1635"
+    },
+    {
+      "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Sphere/10/Growth-Sphere.for",
+      "stage": "verified",
+      "id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-sphere--0780b4d3",
+      "source_sha256": "45ea69e2f3dca3de68a6aa637c77c5cdfbaf0c6b6a2c3baffe8db02d86d2c749"
+    },
+    {
+      "source": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Instability_Analysis/Growth-Sphere.for",
+      "stage": "verified",
+      "id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-sphere--cad0f277",
+      "source_sha256": "d0dc1f26aac9b1225a3cd6ad17053519b339724bcfabe06a7a0b275ac6d64795"
+    },
+    {
+      "source": "mholla__growth/umats/umat_area_morph.f",
+      "stage": "verified",
+      "id": "mholla-growth--umat-area-morph--aa3193e5",
+      "source_sha256": "67768f517035964de170aa67038000baf4242f083514250f3d644ca1e4409138"
+    },
+    {
+      "source": "mholla__growth/umats/umat_fiber_morph.f",
+      "stage": "verified",
+      "id": "mholla-growth--umat-fiber-morph--726933a8",
+      "source_sha256": "c5454e7f18721cde13e5dc3ea1d7097d594885fcbe431ee145ee5ed143a13f0f"
+    },
+    {
+      "source": "RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for",
+      "stage": "verified",
+      "id": "ritiol-polyfatiguecracksim--huang-umat-97--013d8a21",
+      "source_sha256": "fda18f57c81ef10d86c365e44fd1ae52211457e08a43bc8ec3378d3fa2cc5f94"
+    },
+    {
+      "source": "RitioL__PolyFatigueCrackSim/CPFEM-val/subroutines_revised.for",
+      "stage": "verified",
+      "id": "ritiol-polyfatiguecracksim--subroutines-revised--3150a919",
+      "source_sha256": "e4b93c3985a162006fa7bee5cdece6da79fe33120a2164b2025d658018863067"
+    },
+    {
+      "source": "RitioL__PolyFatigueCrackSim/workplace/subroutines3_revised.for",
+      "stage": "verified",
+      "id": "ritiol-polyfatiguecracksim--subroutines3-revised--603ef702",
+      "source_sha256": "2d8c0c89e3306cdfee4158794b96b8c9e9683b5bb388e8d6cc4558fe5ba89193"
+    },
+    {
+      "source": "Sina-Taghizadeh__UMAT_Hyperelastic/CompresibleNeoHookean.for",
+      "stage": "verified",
+      "id": "sina-taghizadeh-umat_hyperelastic--compresibleneohookean--d78e6119",
+      "source_sha256": "bc8d9e5ede5dc5e0b57591bbab0d05d994a786fd0fa4540e6c396d953be408b1"
+    }
+  ]
+}

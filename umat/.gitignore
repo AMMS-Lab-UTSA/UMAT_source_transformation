@@ -1,0 +1,7 @@
+# Sources fetched by tools/materialize_umat_sources.py.
+#
+# Not committed: these are other people's UMATs, mirrored for study, and a
+# public repository without an explicit licence grant is not permission to
+# redistribute it. What IS committed is each material's identity and the
+# SHA-256 of the bytes that were verified, in its source.json.
+materialized/

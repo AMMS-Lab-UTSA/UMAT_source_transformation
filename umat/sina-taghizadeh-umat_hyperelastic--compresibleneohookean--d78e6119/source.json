@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "Sina-Taghizadeh/UMAT_Hyperelastic",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "bc8d9e5ede5dc5e0b57591bbab0d05d994a786fd0fa4540e6c396d953be408b1",
+  "source_id": "Sina-Taghizadeh__UMAT_Hyperelastic/CompresibleNeoHookean.for",
+  "upstream": "https://github.com/Sina-Taghizadeh/UMAT_Hyperelastic",
+  "verified_bytes_sha256": "bc8d9e5ede5dc5e0b57591bbab0d05d994a786fd0fa4540e6c396d953be408b1",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}
