@@ -5,10 +5,7 @@
     "increments": 30,
     "instrumented": true,
     "reasons": [],
-    "warnings": [
-      "post_analysis_wrapup_failure",
-      "process_exit_code_1"
-    ]
+    "warnings": []
   },
   "abaqus_original": {
     "completed": true,
@@ -16,10 +13,7 @@
     "increments": 30,
     "instrumented": true,
     "reasons": [],
-    "warnings": [
-      "post_analysis_wrapup_failure",
-      "process_exit_code_1"
-    ]
+    "warnings": []
   },
   "history_agreement": {
     "agrees": true,
@@ -38,7 +32,7 @@
   },
   "reason": "agreed at all 3 states checked along the loading path (increments 1, 5, 10); worst of them: agreed to 1.766e-13 at the best step and within 1e-06 at 6 of 6 step sizes, 1e-08 to 0.001: 5 decades of perturbation size, over which truncation and cancellation error scale oppositely, so agreement at both ends is not one regime flattering itself",
   "schema": "umat-oti/verification-results/1.0",
-  "seconds": 42.6,
+  "seconds": 43.4,
   "stage": "verified",
   "support_build": {
     "objects": 4,
@@ -109,7 +103,8 @@
               "relative": 1.7607286721007162e-08,
               "step": 1e-08
             }
-          ]
+          ],
+          "zero_difference_steps": 0
         },
         "increment": 1,
         "perturbation_scale": 0.0005,
@@ -168,7 +163,8 @@
               "relative": 5.936817631967036e-08,
               "step": 1e-08
             }
-          ]
+          ],
+          "zero_difference_steps": 0
         },
         "increment": 5,
         "perturbation_scale": 0.0005,
@@ -227,7 +223,8 @@
               "relative": 5.936817631967036e-08,
               "step": 1e-08
             }
-          ]
+          ],
+          "zero_difference_steps": 0
         },
         "increment": 10,
         "perturbation_scale": 0.0005,
@@ -288,13 +285,9 @@
           "relative": 5.936817631967036e-08,
           "step": 1e-08
         }
-      ]
+      ],
+      "zero_difference_steps": 0
     }
   },
-  "warnings": [
-    "original: post_analysis_wrapup_failure",
-    "original: process_exit_code_1",
-    "transformed: post_analysis_wrapup_failure",
-    "transformed: process_exit_code_1"
-  ]
+  "warnings": []
 }

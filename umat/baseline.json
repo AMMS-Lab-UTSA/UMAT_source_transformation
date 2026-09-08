@@ -4,10 +4,22 @@
   "promoted_from": "an Abaqus verification batch; see each material's results.json",
   "entries": [
     {
+      "source": "awhelanUCD__Lemaitre-damage-UMAT-Public/nonLocalLemaitre/lemaitreDamageNonLocal.f",
+      "stage": "verified",
+      "id": "awhelanucd-lemaitre-damage-umat-public--lemaitredamagenonlocal--e7f8623e",
+      "source_sha256": "f841c77b3c7687f1ff8696a4758f9198aeb85dbd06c97d409c400baaa4f87a38"
+    },
+    {
       "source": "BristolCompositesInstitute__abaci/test/data/umat.f",
       "stage": "verified",
       "id": "bristolcompositesinstitute-abaci--umat--b8fa3835",
       "source_sha256": "fde9e0e60814d4bcc1dd6e08bedefa6dad90ce367160e293c8648d3ab915f2d4"
+    },
+    {
+      "source": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/ISOTROPIC-ELASTICITY.for",
+      "stage": "verified",
+      "id": "caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037",
+      "source_sha256": "27cda337a45be53431149436fbad42bd19da0bb5ec2a68f6370c17b608326a86"
     },
     {
       "source": "irfancn__Abaqus-UEL-elastic/uel_elastic.for",

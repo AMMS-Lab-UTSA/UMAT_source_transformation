@@ -5,10 +5,7 @@
     "increments": 30,
     "instrumented": true,
     "reasons": [],
-    "warnings": [
-      "post_analysis_wrapup_failure",
-      "process_exit_code_1"
-    ]
+    "warnings": []
   },
   "abaqus_original": {
     "completed": true,
@@ -16,10 +13,7 @@
     "increments": 30,
     "instrumented": true,
     "reasons": [],
-    "warnings": [
-      "post_analysis_wrapup_failure",
-      "process_exit_code_1"
-    ]
+    "warnings": []
   },
   "history_agreement": {
     "agrees": true,
@@ -38,7 +32,7 @@
   },
   "reason": "agreed at all 3 states checked along the loading path (increments 1, 5, 10); worst of them: agreed to 6.342e-08 over a plateau of 2 step sizes, 0.0001 to 0.001",
   "schema": "umat-oti/verification-results/1.0",
-  "seconds": 46.4,
+  "seconds": 43.7,
   "stage": "verified",
   "support_build": {
     "objects": 5,
@@ -109,7 +103,8 @@
               "relative": 1.3149166654667386e-05,
               "step": 1e-08
             }
-          ]
+          ],
+          "zero_difference_steps": 0
         },
         "increment": 1,
         "perturbation_scale": 0.0004998750312421895,
@@ -168,7 +163,8 @@
               "relative": 0.00615573925964236,
               "step": 1e-08
             }
-          ]
+          ],
+          "zero_difference_steps": 0
         },
         "increment": 5,
         "perturbation_scale": 0.0004998759737277779,
@@ -227,7 +223,8 @@
               "relative": 1.2117151009897842e-05,
               "step": 1e-08
             }
-          ]
+          ],
+          "zero_difference_steps": 0
         },
         "increment": 10,
         "perturbation_scale": 0.0005005638469578349,
@@ -288,13 +285,9 @@
           "relative": 0.00615573925964236,
           "step": 1e-08
         }
-      ]
+      ],
+      "zero_difference_steps": 0
     }
   },
-  "warnings": [
-    "original: post_analysis_wrapup_failure",
-    "original: process_exit_code_1",
-    "transformed: post_analysis_wrapup_failure",
-    "transformed: process_exit_code_1"
-  ]
+  "warnings": []
 }

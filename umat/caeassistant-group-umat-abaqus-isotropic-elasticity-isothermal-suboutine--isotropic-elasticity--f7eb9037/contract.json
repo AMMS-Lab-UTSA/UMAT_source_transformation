@@ -1,0 +1,27 @@
+{
+  "loading": {
+    "kind": "verification probe, chosen by this pipeline",
+    "not_the_authors_history": "This is a controlled probe -- prescribed extension, then shear, then a reversal -- and NOT a reproduction of the author's own example. A result here says the conversion agrees with the original under this probe."
+  },
+  "material": {
+    "block": "Steel",
+    "deck": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/UMATmodel.inp",
+    "deck_digest": "62bcbef3f513d7f8",
+    "meaning": "not established: the deck gives values, not names. The constants are the author's; what they mean is not certified here.",
+    "props_count": 2,
+    "provenance": "UMATmodel.inp *MATERIAL Steel: 2 constants, no *DEPVAR: nstatv 1 INFERRED by the transform from the subscripts the source uses (paired deck CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/UMATmodel.inp)"
+  },
+  "material_point": {
+    "element_type": "C3D4",
+    "kinematics": "small strain",
+    "kinematics_provenance": "no *STEP in UMATmodel.inp sets NLGEOM, which is Abaqus's default of NLGEOM=NO",
+    "nstatv": 1,
+    "ntens": 6,
+    "unsymmetric": false
+  },
+  "repository": "CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine",
+  "schema": "umat-oti/verification-contract/1.0",
+  "source_id": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/ISOTROPIC-ELASTICITY.for",
+  "source_sha256": "27cda337a45be53431149436fbad42bd19da0bb5ec2a68f6370c17b608326a86",
+  "transform_fingerprint": "23454099f6d48f71"
+}

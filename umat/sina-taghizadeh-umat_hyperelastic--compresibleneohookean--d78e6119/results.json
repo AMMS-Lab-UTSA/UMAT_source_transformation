@@ -32,7 +32,7 @@
   },
   "reason": "agreed at all 3 states checked along the loading path (increments 1, 5, 10); worst of them: agreed to 5.239e-07 over a plateau of 2 step sizes, 0.0001 to 0.001",
   "schema": "umat-oti/verification-results/1.0",
-  "seconds": 43.9,
+  "seconds": 43.0,
   "stage": "verified",
   "support_build": {
     "objects": 4,
@@ -103,7 +103,8 @@
               "relative": 0.0002558690365832858,
               "step": 1e-08
             }
-          ]
+          ],
+          "zero_difference_steps": 0
         },
         "increment": 1,
         "perturbation_scale": 0.0004998750312421895,
@@ -162,7 +163,8 @@
               "relative": 0.01472216762396746,
               "step": 1e-08
             }
-          ]
+          ],
+          "zero_difference_steps": 0
         },
         "increment": 5,
         "perturbation_scale": 0.0004998759737277779,
@@ -221,7 +223,8 @@
               "relative": 0.00016314777590611094,
               "step": 1e-08
             }
-          ]
+          ],
+          "zero_difference_steps": 0
         },
         "increment": 10,
         "perturbation_scale": 0.0005005638469578349,
@@ -282,7 +285,8 @@
           "relative": 0.01472216762396746,
           "step": 1e-08
         }
-      ]
+      ],
+      "zero_difference_steps": 0
     }
   },
   "warnings": []
