@@ -899,6 +899,13 @@ def choose_probe_record(records: Sequence[dict]) -> Optional[tuple[int, dict]]:
 #: rest a verification on, however well those increments agree.
 MINIMUM_COMPARABLE_INCREMENTS = 5
 
+#: How many states must yield a measurable difference before a
+#: tangent may be called verified. Two, not one: one step cannot
+#: separate a regime from a coincidence, and one STATE cannot
+#: separate an elastic tangent every build gets right from a
+#: converted one that is right everywhere.
+MINIMUM_MEASURED_STATES = 2
+
 
 def common_finite_prefix(original: list, transformed: list) -> tuple[list, list, int]:
     """The leading increments in which BOTH builds returned finite numbers.
@@ -992,15 +999,48 @@ def oti_tangent(record: dict, ntens: int) -> list[list[float]]:
 
 
 def perturbation_scale(entry: dict) -> float:
-    """The size of the strain increment the difference steps are relative to.
+    """The size of the kinematic increment the difference steps are relative to.
 
     A relative ladder means the same sweep says the same thing for a model
-    loaded to a percent of strain and one loaded to a millionth. An increment
-    of exactly zero would make every step zero, so it falls back to one.
+    loaded to a percent of strain and one loaded to a millionth.
+
+    Two things this has to survive, both measured on the last batch.
+
+    A NON-FINITE component. ``max`` over values containing NaN returns NaN,
+    and ``largest or 1.0`` then returns the NaN rather than the fallback,
+    because NaN is truthy. Every step became NaN, every perturbed replay
+    returned nothing, and the row was recorded as a tangent that could not be
+    verified. Fifty states of one batch died this way. Only finite magnitudes
+    are considered now, and a NaN in the record no longer decides the scale.
+
+    A GRADIENT-DRIVEN source, whose DSTRAN is all zeros because its kinematic
+    input is the deformation gradient. The old fallback then returned 1.0 --
+    a strain scale of one hundred percent -- so the sweep stepped far outside
+    any regime the model was in. The deformation increment is the distance of
+    DFGRD1 from the identity, which is the same physical quantity expressed
+    the other way, so that is used before falling back.
+
+    The final fallback stays 1.0: an increment of exactly zero would make
+    every step zero, and a sweep of zeros measures nothing.
     """
-    magnitudes = [abs(float(value)) for value in (entry.get("DSTRAN") or ())]
-    largest = max(magnitudes, default=0.0)
-    return largest or 1.0
+    def largest_finite(values) -> float:
+        magnitudes = [abs(float(value)) for value in (values or ())
+                      if math.isfinite(float(value))]
+        return max(magnitudes, default=0.0)
+
+    strain = largest_finite(entry.get("DSTRAN"))
+    if strain:
+        return strain
+
+    # DFGRD1 is written row by row, so the diagonal is at 0, 4 and 8.
+    gradient = [float(value) for value in (entry.get("DFGRD1") or ())
+                if math.isfinite(float(value))]
+    if len(gradient) >= 9:
+        deviation = max(abs(value - (1.0 if index in (0, 4, 8) else 0.0))
+                        for index, value in enumerate(gradient[:9]))
+        if deviation:
+            return deviation
+    return 1.0
 
 
 def replay_flags(form: str, work_dir: Path) -> tuple[str, ...]:
@@ -1696,6 +1736,20 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
     outcome["states_checked"] = len(at_states)
     agreed = [s for s in at_states if s.get("verified")]
     outcome["states_agreeing"] = len(agreed)
+    # A state whose sweep produced nothing measurable did not DISAGREE -- the
+    # reference was never obtained there, so nothing was compared. Counting it
+    # as a failure reports "the tangent is wrong at increment 10" when what
+    # happened is "no difference could be taken at increment 10", which are
+    # different findings and belong in different columns. Measured on the last
+    # batch: of 106 state-level failures, 89 were of this kind.
+    measured = [s for s in at_states
+                if (s.get("comparison") or {}).get("best_relative") is not None]
+    unmeasured = [s for s in at_states if s not in measured]
+    outcome["states_measured"] = len(measured)
+    outcome["states_unmeasured"] = len(unmeasured)
+    if unmeasured:
+        outcome["unmeasured_reasons"] = sorted({
+            str(s.get("reason") or "")[:120] for s in unmeasured})
 
     # The reported comparison is the WORST state, not the best: a summary that
     # quotes the closest agreement among several describes the state that
@@ -1712,18 +1766,34 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
             outcome[key] = worst[key]
     outcome["fd_steps"] = list(manifest.fd_steps)
 
-    if len(agreed) == len(at_states):
+    # Every state where a difference COULD be taken has to agree, and at
+    # least two states have to have been measurable. Two rather than one
+    # keeps this stronger than the single-state rule it replaced; requiring
+    # all three to be measurable would fail a material for a state its
+    # reference could not reach, which is a fact about the harness.
+    disagreeing = [s for s in measured if not s.get("verified")]
+    if measured and not disagreeing and len(measured) >= MINIMUM_MEASURED_STATES:
         outcome["verified"] = True
-        outcome["reason"] = (
-            f"agreed at all {len(at_states)} states checked along the loading "
-            f"path (increments {', '.join(str(s.get('increment')) for s in at_states)}); "
-            f"worst of them: {worst.get('reason', '')}")
+        scope = (f"agreed at all {len(measured)} states where a difference "
+                 f"could be taken (increments "
+                 f"{', '.join(str(s.get('increment')) for s in measured)})")
+        if unmeasured:
+            scope += (f"; {len(unmeasured)} further state(s) produced no "
+                      f"measurable difference and establish nothing either way")
+        outcome["reason"] = f"{scope}; worst of them: {worst.get('reason', '')}"
         return outcome
-    failing = [s for s in at_states if not s.get("verified")]
+    if disagreeing:
+        outcome["reason"] = (
+            f"agreed at {len(agreed)} of {len(measured)} measured states along "
+            f"the loading path; increment {disagreeing[0].get('increment')} "
+            f"did not: {disagreeing[0].get('reason', '')}")
+        return outcome
     outcome["reason"] = (
-        f"agreed at {len(agreed)} of {len(at_states)} states along the "
-        f"loading path; increment {failing[0].get('increment')} did not: "
-        f"{failing[0].get('reason', '')}")
+        f"only {len(measured)} of {len(at_states)} states produced a "
+        f"measurable difference, and {MINIMUM_MEASURED_STATES} are required. "
+        f"Nothing here says the tangent is wrong; it says the reference could "
+        f"not be obtained: "
+        + "; ".join(outcome.get("unmeasured_reasons") or ["no reason recorded"])[:200])
     return outcome
 
 
