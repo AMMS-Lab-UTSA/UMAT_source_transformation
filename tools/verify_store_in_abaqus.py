@@ -105,6 +105,7 @@ STAGES: tuple[str, ...] = (
     "needs_material_data",
     "waits_for_input",
     "manifest_refused",
+    "both_builds_non_finite",
     "support_build_failed",
     "original_job_failed",
     "transformed_job_failed",
@@ -894,6 +895,51 @@ def choose_probe_record(records: Sequence[dict]) -> Optional[tuple[int, dict]]:
     return None
 
 
+#: A comparison over fewer increments than this establishes too little to
+#: rest a verification on, however well those increments agree.
+MINIMUM_COMPARABLE_INCREMENTS = 5
+
+
+def common_finite_prefix(original: list, transformed: list) -> tuple[list, list, int]:
+    """The leading increments in which BOTH builds returned finite numbers.
+
+    A model can leave its own domain part-way along a probe path. Measured on
+    BodyForce-Growth-2Stages.for: both builds agree through twenty-two
+    increments -- the whole uniaxial segment, the whole shear segment, and two
+    of the reversal -- and then BOTH return NaN from increment twenty-three,
+    at the same increment and in the same components. That is the growth model
+    declining to be driven backwards, and it says nothing whatever about the
+    conversion.
+
+    Comparing across it produced ``inf`` and the row was recorded as
+    primal_disagreed, which reads as a conversion defect. Refusing the row
+    outright would throw away twenty-two increments of real agreement.
+
+    So the comparison is truncated to the range in which both builds produced
+    numbers, and the caller records where it stopped. The truncation is only
+    ever applied where BOTH went non-finite at the same increment: a
+    transformed build that goes non-finite where the original did not is the
+    defect this whole pipeline exists to catch, and it must keep failing.
+    """
+    def first_non_finite(records: list) -> int:
+        for position, record in enumerate(records):
+            for field in ("STRESS", "STATEV"):
+                for value in (record.get(field) or ()):
+                    if not math.isfinite(value):
+                        return position
+        return len(records)
+
+    stop_original = first_non_finite(original)
+    stop_transformed = first_non_finite(transformed)
+    if stop_original != stop_transformed:
+        # They parted company. Hand back the histories whole so the ordinary
+        # comparison reports it, which is what should happen.
+        return list(original), list(transformed), -1
+    if stop_original >= len(original):
+        return list(original), list(transformed), -1
+    return original[:stop_original], transformed[:stop_original], stop_original
+
+
 def choose_probe_records(records: Sequence[dict],
                          wanted: int = 3) -> list[tuple[int, dict]]:
     """Several states along the loading path, not one.
@@ -1567,11 +1613,28 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             f"damaged its own argument list and none of its numbers are "
             f"measurements: {damaged[0][:160]}")
 
-    primal = compare_primal(original_history, transformed_history,
+    compared_original, compared_transformed, stopped_at = common_finite_prefix(
+        list(original_history), list(transformed_history))
+    primal = compare_primal(compared_original, compared_transformed,
                             tolerance=manifest.primal_tolerance,
                             near_zero_fraction=manifest.near_zero_fraction)
     record["primal"] = primal.as_dict()
     seen["primal_agrees"] = primal.agrees
+    if stopped_at >= 0:
+        record["primal"]["both_builds_non_finite_from_increment"] = stopped_at + 1
+        record["primal"]["increments_compared"] = stopped_at
+        record["primal"]["scope"] = (
+            f"both builds returned finite numbers for {stopped_at} increments "
+            f"and both went non-finite at increment {stopped_at + 1}, at the "
+            f"same increment and in the same components. The comparison covers "
+            f"the {stopped_at} increments in which the model produced numbers; "
+            f"nothing is claimed beyond them.")
+        if stopped_at < MINIMUM_COMPARABLE_INCREMENTS:
+            record["stage"] = "both_builds_non_finite"
+            return settle(
+                f"both builds went non-finite at increment {stopped_at + 1}, "
+                f"leaving only {stopped_at} increments to compare -- too few "
+                f"to rest a verification on")
     if not primal.agrees:
         return settle(primal.reason
                       or "the two builds produced no records to compare")
