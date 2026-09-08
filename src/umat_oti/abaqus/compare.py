@@ -255,6 +255,14 @@ class TangentComparison:
     #: Entries that were not finite, in the tangent or in a difference. A
     #: sweep point holding one cannot be the step a reader is pointed at.
     non_finite_entries: int = 0
+    #: Step sizes whose reconstructed matrix was identically zero. A centred
+    #: difference of zero is not a measurement of the tangent: it says the
+    #: perturbation moved nothing. Scored as a difference it yields a relative
+    #: error of exactly 1.0 at every step -- which reads as "the tangent is
+    #: 100%% wrong" when the truth is that nothing was measured at all.
+    #: Fourteen rows of one batch carried exactly this signature, with the
+    #: absolute error bit-identical from a step of 1e-3 to one of 1e-8.
+    zero_difference_steps: int = 0
     notes: str = ""
 
     def as_dict(self) -> dict:
@@ -270,6 +278,7 @@ class TangentComparison:
             "stable_range": list(self.stable_range),
             "near_zero_entries": self.near_zero_entries,
             "non_finite_entries": self.non_finite_entries,
+            "zero_difference_steps": self.zero_difference_steps,
             "notes": self.notes,
         }
 
@@ -315,6 +324,17 @@ def compare_tangent(
     usable: list[SweepPoint] = []
     for step in sorted(differences, reverse=True):
         approximation = differences[step]
+        # A reconstructed matrix that is identically zero is not a measurement
+        # of the tangent. It says the perturbation moved nothing -- the
+        # forward and backward replays returned the same stress -- so there is
+        # no difference to compare the OTI value against. Scored as one, it
+        # gives a relative error of exactly 1.0 at every step size, which
+        # reads as "the tangent is 100% wrong" when nothing was measured at
+        # all. Counted and excluded from the sweep, so the verdict says the
+        # difference produced nothing rather than accusing the transform.
+        if all(not value for row in approximation for value in row):
+            comparison.zero_difference_steps += 1
+            continue
         absolute = relative = 0.0
         residuals: list[float] = []
         non_finite_here = 0

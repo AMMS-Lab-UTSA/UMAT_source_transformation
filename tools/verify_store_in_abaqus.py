@@ -1056,6 +1056,14 @@ def tangent_verdict(comparison: dict, *, tolerance: float = TANGENT_TOLERANCE,
     """
     sweep = list(comparison.get("sweep") or ())
     if not sweep:
+        zeroed = int(comparison.get("zero_difference_steps") or 0)
+        if zeroed:
+            return False, (
+                f"the finite difference was identically zero at all {zeroed} "
+                f"step sizes: the forward and backward replays returned the "
+                f"same stress, so the perturbation moved nothing and the "
+                f"tangent was never measured. This is a statement about the "
+                f"reference, not about the transform")
         return False, "no step size produced a difference to compare against"
     best = comparison.get("best_relative")
     frobenius = comparison.get("best_frobenius")
