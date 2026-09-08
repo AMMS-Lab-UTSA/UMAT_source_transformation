@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "BristolCompositesInstitute/abaci",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "fde9e0e60814d4bcc1dd6e08bedefa6dad90ce367160e293c8648d3ab915f2d4",
+  "source_id": "BristolCompositesInstitute__abaci/test/data/umat.f",
+  "upstream": "https://github.com/BristolCompositesInstitute/abaci",
+  "verified_bytes_sha256": "fde9e0e60814d4bcc1dd6e08bedefa6dad90ce367160e293c8648d3ab915f2d4",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}

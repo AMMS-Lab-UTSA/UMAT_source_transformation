@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "Jeff97/Realization-of-planar-and-surface-conformal-mappings",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "d0dc1f26aac9b1225a3cd6ad17053519b339724bcfabe06a7a0b275ac6d64795",
+  "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Instability_Analysis/Growth-Sphere.for",
+  "upstream": "https://github.com/Jeff97/Realization-of-planar-and-surface-conformal-mappings",
+  "verified_bytes_sha256": "d0dc1f26aac9b1225a3cd6ad17053519b339724bcfabe06a7a0b275ac6d64795",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}

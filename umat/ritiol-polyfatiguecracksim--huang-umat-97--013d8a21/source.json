@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "RitioL/PolyFatigueCrackSim",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "fda18f57c81ef10d86c365e44fd1ae52211457e08a43bc8ec3378d3fa2cc5f94",
+  "source_id": "RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for",
+  "upstream": "https://github.com/RitioL/PolyFatigueCrackSim",
+  "verified_bytes_sha256": "fda18f57c81ef10d86c365e44fd1ae52211457e08a43bc8ec3378d3fa2cc5f94",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}

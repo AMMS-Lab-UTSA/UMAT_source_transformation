@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "irfancn/Abaqus-UEL-elastic",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "931a97321c8db3d85934d64b1b6dfd6782cf7780f5d81fcad2fcc5cd5fa359b2",
+  "source_id": "irfancn__Abaqus-UEL-elastic/uel_elastic.for",
+  "upstream": "https://github.com/irfancn/Abaqus-UEL-elastic",
+  "verified_bytes_sha256": "931a97321c8db3d85934d64b1b6dfd6782cf7780f5d81fcad2fcc5cd5fa359b2",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}

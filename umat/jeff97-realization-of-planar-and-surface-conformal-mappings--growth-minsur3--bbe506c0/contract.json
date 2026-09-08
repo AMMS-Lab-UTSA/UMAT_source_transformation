@@ -1,0 +1,27 @@
+{
+  "loading": {
+    "kind": "verification probe, chosen by this pipeline",
+    "not_the_authors_history": "This is a controlled probe -- prescribed extension, then shear, then a reversal -- and NOT a reproduction of the author's own example. A result here says the conversion agrees with the original under this probe."
+  },
+  "material": {
+    "block": "NeoHookean",
+    "deck": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-Min1.inp",
+    "deck_digest": "fc17a804a8069c31",
+    "meaning": "not established: the deck gives values, not names. The constants are the author's; what they mean is not certified here.",
+    "props_count": 2,
+    "provenance": "Growth-Min1.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 9 (paired deck Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-Min1.inp)"
+  },
+  "material_point": {
+    "element_type": "C3D4",
+    "kinematics": "finite",
+    "kinematics_provenance": "Growth-Min1.inp line 14870: *Step, name=Growth, nlgeom=YES, inc=3000",
+    "nstatv": 9,
+    "ntens": 6,
+    "unsymmetric": false
+  },
+  "repository": "Jeff97/Realization-of-planar-and-surface-conformal-mappings",
+  "schema": "umat-oti/verification-contract/1.0",
+  "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example3-Sphere/Growth-MinSur3.for",
+  "source_sha256": "1d7924cc5a75df0d3aaeb796166ae95c1e76fc2cdbc3343d12f8637a202e1635",
+  "transform_fingerprint": "00b5a98fc9041d3c"
+}

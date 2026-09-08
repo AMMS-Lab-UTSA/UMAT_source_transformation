@@ -1,0 +1,27 @@
+{
+  "loading": {
+    "kind": "verification probe, chosen by this pipeline",
+    "not_the_authors_history": "This is a controlled probe -- prescribed extension, then shear, then a reversal -- and NOT a reproduction of the author's own example. A result here says the conversion agrees with the original under this probe."
+  },
+  "material": {
+    "block": "MAT",
+    "deck": "mholla__growth/input_files/cube_1_C3D8_noload.inp",
+    "deck_digest": "a588b1bd35ea9015",
+    "meaning": "not established: the deck gives values, not names. The constants are the author's; what they mean is not certified here.",
+    "props_count": 6,
+    "provenance": "cube_1_C3D8_noload.inp *MATERIAL MAT: 6 constants, *DEPVAR 3, UNSYMM (paired deck mholla__growth/input_files/cube_1_C3D8_noload.inp)"
+  },
+  "material_point": {
+    "element_type": "C3D4",
+    "kinematics": "finite",
+    "kinematics_provenance": "cube_1_C3D8_noload.inp line 107: *Step, name=Step-1, nlgeom=YES, inc=10000",
+    "nstatv": 3,
+    "ntens": 6,
+    "unsymmetric": true
+  },
+  "repository": "mholla/growth",
+  "schema": "umat-oti/verification-contract/1.0",
+  "source_id": "mholla__growth/umats/umat_fiber_morph.f",
+  "source_sha256": "c5454e7f18721cde13e5dc3ea1d7097d594885fcbe431ee145ee5ed143a13f0f",
+  "transform_fingerprint": "00b5a98fc9041d3c"
+}

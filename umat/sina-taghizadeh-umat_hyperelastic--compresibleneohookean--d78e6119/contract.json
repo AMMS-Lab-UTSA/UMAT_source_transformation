@@ -1,0 +1,27 @@
+{
+  "loading": {
+    "kind": "verification probe, chosen by this pipeline",
+    "not_the_authors_history": "This is a controlled probe -- prescribed extension, then shear, then a reversal -- and NOT a reproduction of the author's own example. A result here says the conversion agrees with the original under this probe."
+  },
+  "material": {
+    "block": "MyMaterial",
+    "deck": "Sina-Taghizadeh__UMAT_Hyperelastic/NeoHookeanSimpleExtensionUMAT.inp",
+    "deck_digest": "8b1e44726203e388",
+    "meaning": "not established: the deck gives values, not names. The constants are the author's; what they mean is not certified here.",
+    "props_count": 2,
+    "provenance": "NeoHookeanSimpleExtensionUMAT.inp *MATERIAL MyMaterial: 2 constants, no *DEPVAR: nstatv 1 INFERRED by the transform from the subscripts the source uses (paired deck Sina-Taghizadeh__UMAT_Hyperelastic/NeoHookeanSimpleExtensionUMAT.inp)"
+  },
+  "material_point": {
+    "element_type": "C3D4",
+    "kinematics": "finite",
+    "kinematics_provenance": "NeoHookeanSimpleExtensionUMAT.inp line 60: *Step, name=LoadStep, nlgeom=YES, inc=1000",
+    "nstatv": 1,
+    "ntens": 6,
+    "unsymmetric": false
+  },
+  "repository": "Sina-Taghizadeh/UMAT_Hyperelastic",
+  "schema": "umat-oti/verification-contract/1.0",
+  "source_id": "Sina-Taghizadeh__UMAT_Hyperelastic/CompresibleNeoHookean.for",
+  "source_sha256": "bc8d9e5ede5dc5e0b57591bbab0d05d994a786fd0fa4540e6c396d953be408b1",
+  "transform_fingerprint": "00b5a98fc9041d3c"
+}

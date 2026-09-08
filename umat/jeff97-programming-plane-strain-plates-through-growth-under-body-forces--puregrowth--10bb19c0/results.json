@@ -1,0 +1,300 @@
+{
+  "abaqus_converted": {
+    "completed": true,
+    "converged_records": 30,
+    "increments": 30,
+    "instrumented": true,
+    "reasons": [],
+    "warnings": [
+      "post_analysis_wrapup_failure",
+      "process_exit_code_1"
+    ]
+  },
+  "abaqus_original": {
+    "completed": true,
+    "converged_records": 30,
+    "increments": 30,
+    "instrumented": true,
+    "reasons": [],
+    "warnings": [
+      "post_analysis_wrapup_failure",
+      "process_exit_code_1"
+    ]
+  },
+  "history_agreement": {
+    "agrees": true,
+    "increments": 30,
+    "indistinguishable_components": 349,
+    "non_finite_components": 0,
+    "reason": "",
+    "records_original": 30,
+    "records_transformed": 30,
+    "resolved_components": 349,
+    "unresolved_components": 71,
+    "worst_state_at": [],
+    "worst_state_relative": 0.0,
+    "worst_stress_at": [],
+    "worst_stress_relative": 0.0
+  },
+  "reason": "agreed at all 3 states checked along the loading path (increments 1, 5, 10); worst of them: agreed to 3.341e-08 at the best step and within 1e-06 at 2 of 6 step sizes, 0.0001 to 0.001: 1 decades of perturbation size, over which truncation and cancellation error scale oppositely, so agreement at both ends is not one regime flattering itself",
+  "schema": "umat-oti/verification-results/1.0",
+  "seconds": 47.6,
+  "stage": "verified",
+  "support_build": {
+    "objects": 5,
+    "ok": true,
+    "reason": "",
+    "required": true,
+    "units": 5
+  },
+  "tangent_agreement": {
+    "driven_through": "deformation gradient",
+    "fd_steps": [
+      0.001,
+      0.0001,
+      1e-05,
+      1e-06,
+      1e-07,
+      1e-08
+    ],
+    "per_state": [
+      {
+        "comparison": {
+          "best_frobenius": 729.5658457726613,
+          "best_relative": 3.2266199722554996e-10,
+          "best_step": 0.001,
+          "increment": 0,
+          "near_zero_entries": 24,
+          "non_finite_entries": 0,
+          "notes": "",
+          "point": 1,
+          "stable_range": [
+            0.0001,
+            0.001
+          ],
+          "sweep": [
+            {
+              "absolute": 323.855712890625,
+              "frobenius": 729.5658457726613,
+              "relative": 3.2266199722554996e-10,
+              "step": 0.001
+            },
+            {
+              "absolute": 2770.1649169921875,
+              "frobenius": 4900.135548634176,
+              "relative": 2.7599542301812628e-09,
+              "step": 0.0001
+            },
+            {
+              "absolute": 17378.993896484375,
+              "frobenius": 42550.81565638117,
+              "relative": 1.730970266739352e-08,
+              "step": 1e-05
+            },
+            {
+              "absolute": 43932.65283203125,
+              "frobenius": 86931.82887935342,
+              "relative": 4.3779392272186775e-08,
+              "step": 1e-06
+            },
+            {
+              "absolute": 2491082.0546875,
+              "frobenius": 4456481.499614658,
+              "relative": 2.4819000530944878e-06,
+              "step": 1e-07
+            },
+            {
+              "absolute": 30857707.16052246,
+              "frobenius": 53409083.97622102,
+              "relative": 3.0743967223384915e-05,
+              "step": 1e-08
+            }
+          ]
+        },
+        "increment": 1,
+        "perturbation_scale": 0.0004998750312421895,
+        "reason": "agreed to 3.227e-10 over a plateau of 2 step sizes, 0.0001 to 0.001",
+        "record_index": 0,
+        "verified": true
+      },
+      {
+        "comparison": {
+          "best_frobenius": 339.03315930069874,
+          "best_relative": 3.341329211792821e-08,
+          "best_step": 0.001,
+          "increment": 0,
+          "near_zero_entries": 16,
+          "non_finite_entries": 0,
+          "notes": "",
+          "point": 1,
+          "stable_range": [
+            0.001,
+            0.001
+          ],
+          "sweep": [
+            {
+              "absolute": 141.7620849609375,
+              "frobenius": 339.03315930069874,
+              "relative": 3.341329211792821e-08,
+              "step": 0.001
+            },
+            {
+              "absolute": 2547.421142578125,
+              "frobenius": 6824.264458259092,
+              "relative": 5.175544543277279e-07,
+              "step": 0.0001
+            },
+            {
+              "absolute": 15122.625854492188,
+              "frobenius": 39742.267082293474,
+              "relative": 5.960815485756644e-06,
+              "step": 1e-05
+            },
+            {
+              "absolute": 261994.77587890625,
+              "frobenius": 478777.406100396,
+              "relative": 7.835506615231932e-06,
+              "step": 1e-06
+            },
+            {
+              "absolute": 1791171.9781620502,
+              "frobenius": 4407205.289069918,
+              "relative": 0.0014077530130269717,
+              "step": 1e-07
+            },
+            {
+              "absolute": 28261130.322998047,
+              "frobenius": 57706739.44780706,
+              "relative": 0.012819689525907906,
+              "step": 1e-08
+            }
+          ]
+        },
+        "increment": 5,
+        "perturbation_scale": 0.0004998759737277779,
+        "reason": "agreed to 3.341e-08 at the best step and within 1e-06 at 2 of 6 step sizes, 0.0001 to 0.001: 1 decades of perturbation size, over which truncation and cancellation error scale oppositely, so agreement at both ends is not one regime flattering itself",
+        "record_index": 14,
+        "verified": true
+      },
+      {
+        "comparison": {
+          "best_frobenius": 158.52458760381836,
+          "best_relative": 1.3118670048135638e-09,
+          "best_step": 0.001,
+          "increment": 0,
+          "near_zero_entries": 24,
+          "non_finite_entries": 0,
+          "notes": "",
+          "point": 1,
+          "stable_range": [
+            0.001,
+            0.001
+          ],
+          "sweep": [
+            {
+              "absolute": 65.620361328125,
+              "frobenius": 158.52458760381836,
+              "relative": 1.3118670048135638e-09,
+              "step": 0.001
+            },
+            {
+              "absolute": 1508.0748291015625,
+              "frobenius": 3116.9887050559555,
+              "relative": 1.4554505280861694e-09,
+              "step": 0.0001
+            },
+            {
+              "absolute": 14722.925048828125,
+              "frobenius": 38084.27060545323,
+              "relative": 1.4244869268599753e-08,
+              "step": 1e-05
+            },
+            {
+              "absolute": 187990.37084960938,
+              "frobenius": 458090.05965511507,
+              "relative": 1.818862928139011e-07,
+              "step": 1e-06
+            },
+            {
+              "absolute": 245146.37524414062,
+              "frobenius": 567105.0760340273,
+              "relative": 2.3718643241356682e-07,
+              "step": 1e-07
+            },
+            {
+              "absolute": 4419420.443481445,
+              "frobenius": 7583841.778049086,
+              "relative": 4.264414785588352e-06,
+              "step": 1e-08
+            }
+          ]
+        },
+        "increment": 10,
+        "perturbation_scale": 0.0005005638469578349,
+        "reason": "agreed to 1.312e-09 at the best step and within 1e-06 at 5 of 6 step sizes, 1e-07 to 0.001: 4 decades of perturbation size, over which truncation and cancellation error scale oppositely, so agreement at both ends is not one regime flattering itself",
+        "record_index": 29,
+        "verified": true
+      }
+    ],
+    "states_agreeing": 3,
+    "states_checked": 3,
+    "worst_state": {
+      "best_frobenius": 339.03315930069874,
+      "best_relative": 3.341329211792821e-08,
+      "best_step": 0.001,
+      "increment": 0,
+      "near_zero_entries": 16,
+      "non_finite_entries": 0,
+      "notes": "",
+      "point": 1,
+      "stable_range": [
+        0.001,
+        0.001
+      ],
+      "sweep": [
+        {
+          "absolute": 141.7620849609375,
+          "frobenius": 339.03315930069874,
+          "relative": 3.341329211792821e-08,
+          "step": 0.001
+        },
+        {
+          "absolute": 2547.421142578125,
+          "frobenius": 6824.264458259092,
+          "relative": 5.175544543277279e-07,
+          "step": 0.0001
+        },
+        {
+          "absolute": 15122.625854492188,
+          "frobenius": 39742.267082293474,
+          "relative": 5.960815485756644e-06,
+          "step": 1e-05
+        },
+        {
+          "absolute": 261994.77587890625,
+          "frobenius": 478777.406100396,
+          "relative": 7.835506615231932e-06,
+          "step": 1e-06
+        },
+        {
+          "absolute": 1791171.9781620502,
+          "frobenius": 4407205.289069918,
+          "relative": 0.0014077530130269717,
+          "step": 1e-07
+        },
+        {
+          "absolute": 28261130.322998047,
+          "frobenius": 57706739.44780706,
+          "relative": 0.012819689525907906,
+          "step": 1e-08
+        }
+      ]
+    }
+  },
+  "warnings": [
+    "original: post_analysis_wrapup_failure",
+    "original: process_exit_code_1",
+    "transformed: post_analysis_wrapup_failure",
+    "transformed: process_exit_code_1"
+  ]
+}

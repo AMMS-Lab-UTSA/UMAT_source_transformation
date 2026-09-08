@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "irfancn/Abaqus-UMAT-elastic",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "5e500764da04aaabba279113de51697b41641f62f5912ba5e44144e4fff31572",
+  "source_id": "irfancn__Abaqus-UMAT-elastic/umat_elastic.for",
+  "upstream": "https://github.com/irfancn/Abaqus-UMAT-elastic",
+  "verified_bytes_sha256": "5e500764da04aaabba279113de51697b41641f62f5912ba5e44144e4fff31572",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}

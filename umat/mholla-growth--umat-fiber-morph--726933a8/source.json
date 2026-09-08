@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "mholla/growth",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "c5454e7f18721cde13e5dc3ea1d7097d594885fcbe431ee145ee5ed143a13f0f",
+  "source_id": "mholla__growth/umats/umat_fiber_morph.f",
+  "upstream": "https://github.com/mholla/growth",
+  "verified_bytes_sha256": "c5454e7f18721cde13e5dc3ea1d7097d594885fcbe431ee145ee5ed143a13f0f",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}

@@ -1,0 +1,27 @@
+{
+  "loading": {
+    "kind": "verification probe, chosen by this pipeline",
+    "not_the_authors_history": "This is a controlled probe -- prescribed extension, then shear, then a reversal -- and NOT a reproduction of the author's own example. A result here says the conversion agrees with the original under this probe."
+  },
+  "material": {
+    "block": "decoy",
+    "deck": "irfancn__Abaqus-UEL-elastic/wedge_elast.inp",
+    "deck_digest": "fe2892e31014c58f",
+    "meaning": "not established: the deck gives values, not names. The constants are the author's; what they mean is not certified here.",
+    "props_count": 2,
+    "provenance": "wedge_elast.inp *MATERIAL decoy: 2 constants, *DEPVAR 8 (paired deck irfancn__Abaqus-UEL-elastic/wedge_elast.inp)"
+  },
+  "material_point": {
+    "element_type": "C3D4",
+    "kinematics": "finite",
+    "kinematics_provenance": "wedge_elast.inp line 522: *Step, name=Step-1, nlgeom=YES, inc=10000000",
+    "nstatv": 8,
+    "ntens": 6,
+    "unsymmetric": false
+  },
+  "repository": "irfancn/Abaqus-UEL-elastic",
+  "schema": "umat-oti/verification-contract/1.0",
+  "source_id": "irfancn__Abaqus-UEL-elastic/uel_elastic.for",
+  "source_sha256": "931a97321c8db3d85934d64b1b6dfd6782cf7780f5d81fcad2fcc5cd5fa359b2",
+  "transform_fingerprint": "00b5a98fc9041d3c"
+}
