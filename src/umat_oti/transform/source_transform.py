@@ -4914,9 +4914,24 @@ def _as_written_in_double(text: str) -> str:
         # have held this literal as a default real at all: an exponent this
         # large is only ever written with an explicit kind.
         return body + "D0"
-    if single == value:
-        return body + "D0"          # exactly representable: nothing to restore
-    return repr(single) + "D0"
+    # A Fortran literal carries ONE kind marker. Whichever value is emitted,
+    # the exponent letter IS that marker where there is an exponent, so a
+    # trailing D0 may only be added when there is not one. 8.759264...e-05D0
+    # is not a number: ifort reads D0 as an identifier glued to a default-real
+    # literal and refuses the file. Four converted builds failed to compile on
+    # exactly that.
+    written = body if single == value else repr(single)
+    if "e" in written or "E" in written:
+        # repr falls into scientific notation for small and large values, and
+        # a Fortran literal carries ONE kind marker: 8.759264164837077e-05D0
+        # is not a number, it is an identifier D0 glued to a default-real
+        # literal. ifort rejects it outright. The exponent letter IS the kind
+        # marker, so D replaces e and no suffix is added.
+        mantissa, _, exponent = written.replace("E", "e").partition("e")
+        if "." not in mantissa:
+            mantissa += ".0"
+        return f"{mantissa}D{exponent}"
+    return written + "D0"
 
 
 def _normalize_numeric_literals_in_oti_expression(line: str, type_name: str = "") -> str:
