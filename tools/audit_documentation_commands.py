@@ -68,7 +68,12 @@ def _make_targets() -> set[str]:
 
 
 #: Paths that documented commands produce rather than paths that are tracked.
-GENERATED_PREFIXES = ("reproduce/", "build/", "dist/")
+#: Paths a documented command creates. Their absence in a given working
+#: tree is a fact about what has been run there, not a stale reference.
+#: umat/materialized is the sources behind the verified collection: it is
+#: git-ignored on purpose, because those are other people's UMATs, and it
+#: exists only after tools/materialize_umat_sources.py has been run.
+GENERATED_PREFIXES = ("reproduce/", "build/", "dist/", "umat/materialized")
 
 
 def audit() -> list[dict]:

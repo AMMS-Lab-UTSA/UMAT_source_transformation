@@ -1,0 +1,27 @@
+{
+  "loading": {
+    "kind": "verification probe, chosen by this pipeline",
+    "not_the_authors_history": "This is a controlled probe -- prescribed extension, then shear, then a reversal -- and NOT a reproduction of the author's own example. A result here says the conversion agrees with the original under this probe."
+  },
+  "material": {
+    "block": "Material-1",
+    "deck": "awhelanUCD__Lemaitre-damage-UMAT-Public/HETVAL_nonLocalLemaitre/HETVAL_axiSymmetricNotchedBar.inp",
+    "deck_digest": "f427ffaa4b04038d",
+    "meaning": "not established: the deck gives values, not names. The constants are the author's; what they mean is not certified here.",
+    "props_count": 7,
+    "provenance": "HETVAL_axiSymmetricNotchedBar.inp *MATERIAL Material-1: 7 constants, *DEPVAR 23 (paired deck awhelanUCD__Lemaitre-damage-UMAT-Public/HETVAL_nonLocalLemaitre/HETVAL_axiSymmetricNotchedBar.inp)"
+  },
+  "material_point": {
+    "element_type": "C3D4",
+    "kinematics": "finite",
+    "kinematics_provenance": "HETVAL_axiSymmetricNotchedBar.inp line 9267: *Step, name=Step-1, nlgeom=YES, inc=20000",
+    "nstatv": 23,
+    "ntens": 6,
+    "unsymmetric": false
+  },
+  "repository": "awhelanUCD/Lemaitre-damage-UMAT-Public",
+  "schema": "umat-oti/verification-contract/1.0",
+  "source_id": "awhelanUCD__Lemaitre-damage-UMAT-Public/nonLocalLemaitre/lemaitreDamageNonLocal.f",
+  "source_sha256": "f841c77b3c7687f1ff8696a4758f9198aeb85dbd06c97d409c400baaa4f87a38",
+  "transform_fingerprint": "23454099f6d48f71"
+}
