@@ -85,7 +85,16 @@ def _cache_with_deck(tmp_path: Path, text: str = DECK,
     target.write_text(text, encoding="utf-8")
     source = cache / "owner__name/sub/umat.for"
     source.parent.mkdir(parents=True, exist_ok=True)
-    source.write_text("      SUBROUTINE UMAT\n      RETURN\n      END\n")
+    # A real 37-argument header, not a stub: the batch classifies a file's
+    # Abaqus entry point by parsing it, and a bare `SUBROUTINE UMAT` presents
+    # no interface at all.
+    source.write_text(
+        "      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,\n"
+        "     1 RPL,DDSDDT,DRPLDE,DRPLDT,STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,\n"
+        "     2 PREDEF,DPRED,CMNAME,NDI,NSHR,NTENS,NSTATV,PROPS,NPROPS,\n"
+        "     3 COORDS,DROT,PNEWDT,CELENT,DFGRD0,DFGRD1,NOEL,NPT,LAYER,\n"
+        "     4 KSPT,KSTEP,KINC)\n"
+        "      INCLUDE 'ABA_PARAM.INC'\n      RETURN\n      END\n")
     return cache
 
 
@@ -914,7 +923,13 @@ def test_a_real_store_entry_reaches_a_recorded_outcome_without_a_licence_token(
 
     out = tmp_path / "transform_out"
     out.mkdir()
-    (out / "umat.for").write_text("      SUBROUTINE UMAT\n      RETURN\n      END\n")
+    (out / "umat.for").write_text(
+        "      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,\n"
+        "     1 RPL,DDSDDT,DRPLDE,DRPLDT,STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,\n"
+        "     2 PREDEF,DPRED,CMNAME,NDI,NSHR,NTENS,NSTATV,PROPS,NPROPS,\n"
+        "     3 COORDS,DROT,PNEWDT,CELENT,DFGRD0,DFGRD1,NOEL,NPT,LAYER,\n"
+        "     4 KSPT,KSTEP,KINC)\n"
+        "      INCLUDE 'ABA_PARAM.INC'\n      RETURN\n      END\n")
     store = TransformStore(root=tmp_path / "store")
     store.put("owner__name/sub/umat.for", "abc123", out, out / "umat.for", {})
 
@@ -960,7 +975,13 @@ def test_a_resumed_batch_does_not_run_a_settled_entry_again(tmp_path: Path):
     proposals.write_text(json.dumps({"entries": [_proposal()]}), encoding="utf-8")
     out = tmp_path / "transform_out"
     out.mkdir()
-    (out / "umat.for").write_text("      SUBROUTINE UMAT\n      RETURN\n      END\n")
+    (out / "umat.for").write_text(
+        "      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,\n"
+        "     1 RPL,DDSDDT,DRPLDE,DRPLDT,STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,\n"
+        "     2 PREDEF,DPRED,CMNAME,NDI,NSHR,NTENS,NSTATV,PROPS,NPROPS,\n"
+        "     3 COORDS,DROT,PNEWDT,CELENT,DFGRD0,DFGRD1,NOEL,NPT,LAYER,\n"
+        "     4 KSPT,KSTEP,KINC)\n"
+        "      INCLUDE 'ABA_PARAM.INC'\n      RETURN\n      END\n")
     TransformStore(root=tmp_path / "store").put(
         "owner__name/sub/umat.for", "abc123", out, out / "umat.for", {})
     results = tmp_path / "results"
