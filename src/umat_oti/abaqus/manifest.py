@@ -56,9 +56,14 @@ class VerificationManifest:
     # ---- the material point ------------------------------------------------
     element_type: str = "C3D8"
     kinematics: str = "small strain"          # or "finite"
-    ntens: int = 6
-    ndi: int = 3
-    nshr: int = 3
+    #: Zero means "take it from the element", which is where it comes from:
+    #: the element decides how many components Abaqus hands the UMAT, and a
+    #: manifest that says otherwise describes a run that cannot happen. These
+    #: used to default to a 3D continuum shape whatever the element was, so a
+    #: CPE4 manifest carried NTENS=6 while CPE4 calls a UMAT with four.
+    ntens: int = 0
+    ndi: int = 0
+    nshr: int = 0
     nprops: int = 0
     nstatv: int = 1
     props: tuple[float, ...] = ()
@@ -94,6 +99,39 @@ class VerificationManifest:
     primal_tolerance: float = 1e-10
     notes: str = ""
     status: str = "ready"
+
+    def __post_init__(self) -> None:
+        """Fill the tensor shape from the element, or refuse to contradict it.
+
+        The element is the authority: Abaqus decides NDI and NSHR from it and
+        the UMAT is called accordingly. A manifest carrying a different shape
+        does not describe a different run -- it describes no run at all, and
+        every number attributed to it would be attributed to the wrong test.
+
+        An unknown element is left alone here rather than refused, so that a
+        manifest can still be built and inspected; the refusal comes from
+        :func:`umat_oti.abaqus.deck.generate_deck`, which is where a deck
+        would otherwise be written.
+        """
+        try:
+            from umat_oti.abaqus.elements import geometry_for
+            geometry = geometry_for(self.element_type)
+        except Exception:
+            if not self.ntens:
+                object.__setattr__(self, "ndi", self.ndi or 3)
+                object.__setattr__(self, "nshr", self.nshr or 3)
+                object.__setattr__(self, "ntens", self.ndi + self.nshr)
+            return
+        for field, value in (("ndi", geometry.ndi), ("nshr", geometry.nshr),
+                             ("ntens", geometry.ntens)):
+            declared = getattr(self, field)
+            if declared and declared != value:
+                raise ValueError(
+                    f"{self.element_type} calls a UMAT with {field.upper()}="
+                    f"{value}, but this manifest declares {declared}. The "
+                    f"element decides the tensor shape; a manifest cannot "
+                    f"overrule it.")
+            object.__setattr__(self, field, value)
 
     def as_dict(self) -> dict[str, Any]:
         record = asdict(self)

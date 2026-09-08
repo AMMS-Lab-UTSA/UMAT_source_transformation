@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import Iterable
 
+from umat_oti.abaqus.elements import UnsupportedElement, geometry_for
 from umat_oti.abaqus.manifest import LoadingSegment, VerificationManifest
 
 #: Unit cube corners, in the order Abaqus expects for C3D8.
@@ -40,13 +41,15 @@ _TET_NODES = (
 
 
 def _nodes_for(element_type: str) -> tuple[tuple, ...]:
-    """The reference geometry this element type is driven on."""
-    name = element_type.upper()
-    if name.startswith(("CPE", "CPS", "CAX")):
-        return _PLANE_NODES
-    if name.startswith(("C3D4", "C3D10")):
-        return _TET_NODES
-    return _NODES
+    """The reference geometry this element type is driven on.
+
+    Delegates to the registry in :mod:`umat_oti.abaqus.elements`, which
+    refuses a name it does not know rather than falling back. This function
+    used to choose by prefix and end with ``return _NODES``, so a ten-node
+    C3D10 was emitted with four nodes and any unrecognised name -- ``S4R``,
+    ``C3D20H``, a typo -- silently became an eight-node hexahedron.
+    """
+    return tuple(geometry_for(element_type).nodes)
 
 
 def _displacement(node: tuple[float, float, float],
@@ -149,8 +152,18 @@ def _boundary_for(segment: LoadingSegment, nodes, plane: bool = False) -> list[s
 
 def generate_deck(manifest: VerificationManifest) -> str:
     """The complete .inp for this manifest."""
-    plane = manifest.element_type.upper().startswith(("CPE", "CPS", "CAX"))
-    nodes = _nodes_for(manifest.element_type)
+    # Refuses here, before a single line is written, rather than emitting a
+    # deck that describes a different element than the one asked for.
+    geometry = geometry_for(manifest.element_type)
+    plane = geometry.dimension == 2
+    nodes = tuple(geometry.nodes)
+    if manifest.ntens and manifest.ntens != geometry.ntens:
+        raise UnsupportedElement(
+            f"{geometry.name} calls a UMAT with NTENS={geometry.ntens} "
+            f"({geometry.ndi} direct + {geometry.nshr} shear), but this "
+            f"manifest declares NTENS={manifest.ntens}. Running the material "
+            f"on an element that hands it a different tensor size would "
+            f"compare two different quantities.")
 
     lines: list[str] = [
         "*HEADING",
@@ -171,7 +184,7 @@ def generate_deck(manifest: VerificationManifest) -> str:
         section += ", ORIENTATION=CRYSTAL"
     lines += _orientation(manifest)
     lines.append(section)
-    if plane:
+    if geometry.needs_thickness:
         lines.append("1.0")
     lines += _material_block(manifest)
     lines += _initial_state(manifest)
