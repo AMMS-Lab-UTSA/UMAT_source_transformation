@@ -9,7 +9,8 @@ PROFILE_ARGS ?=
         reproduce-smoke reproduce-offline reproduce-paper reproduce-corpus \
         reproduce-abaqus batch batch-transform batch-offline batch-abaqus \
         batch-status batch-record clean-clone clean \
-        umat-promote umat-materialize umat-regress umat-status
+        umat-promote umat-materialize umat-regress umat-status \
+        corpus-report
 
 help:
 	@echo "setup              install the package and its test extras"
@@ -24,6 +25,7 @@ help:
 	@echo "clean-clone        prove a fresh clone reproduces with nothing local"
 	@echo ""
 	@echo ""
+	@echo "corpus-report      every entry, its gate, and counts that reconcile"
 	@echo "umat-status        what the verified collection holds"
 	@echo "umat-promote       copy a batch's verified rows into umat/ (deliberate)"
 	@echo "umat-materialize   fetch the sources behind umat/ onto this machine"
@@ -128,3 +130,18 @@ umat-materialize:
 umat-regress:
 	$(PYTHON) tools/verify_store_in_abaqus.py --mode regression \
 	    --baseline umat/baseline.json --jobs 4 $(BATCH_ARGS)
+
+
+# Every acquired entry, the gate it reached, and counts that have to add up.
+# --strict exits non-zero when they do not, when a promoted entry is not
+# fully_verified, or when a fully_verified entry was never promoted.
+TRANSFORM_REPORT ?=
+ABAQUS_REPORT ?=
+
+corpus-report:
+	@test -n "$(TRANSFORM_REPORT)" || { echo "TRANSFORM_REPORT=<run>/transform_batch.json is required"; exit 2; }
+	$(PYTHON) tools/corpus_report.py \
+	    --transform "$(TRANSFORM_REPORT)" \
+	    $(if $(ABAQUS_REPORT),--abaqus "$(ABAQUS_REPORT)",) \
+	    --json paper_results/corpus/corpus_report.json \
+	    --markdown paper_results/corpus/CORPUS_REPORT.md $(BATCH_ARGS)
