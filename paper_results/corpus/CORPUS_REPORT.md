@@ -15,11 +15,11 @@ and running is not verified.
 
 | status | entries |
 | --- | --- |
-| `acquired` | 111 |
+| `acquired` | 112 |
 | `metadata_resolved` | 4 |
 | `transformed` | 42 |
 | `compiled` | 17 |
-| `abaqus_original_passed` | 7 |
+| `abaqus_original_passed` | 6 |
 | `abaqus_transformed_passed` | 44 |
 | `primal_parity_passed` | 40 |
 | `fully_verified` | 67 |
@@ -311,7 +311,7 @@ and running is not verified.
 | mholla__growth/umats/umat_iso_stretch.f                    | primal_parity_passed       | -     |  0.00e+00 |  5.22e-08 |    2/3 |
 | mholla__growth/umats/umat_neohooke.f                       | compiled                   | -     |         - |         - |      - |
 | mholla__growth/umats/umat_neohooke_abaqus.f                | acquired                   | UMAT  |         - |         - |      - |
-| mholla__growth/umats/umat_ortho_stretch.f                  | abaqus_original_passed     | -     |         - |         - |      - |
+| mholla__growth/umats/umat_ortho_stretch.f                  | acquired                   | UMAT  |         - |         - |      - |
 | mholla__growth/umats/umat_transverse.f                     | primal_parity_passed       | -     |  0.00e+00 |  5.22e-08 |    2/3 |
 | _Viscoelasticity/ABAQUS_DSR_EXAMPLE/ViscoelasticityCode3.f | acquired                   | UMAT  |         - |         - |      - |
 | mrkearden__abaqus_umat/ElasticSolve.F90                    | acquired                   | UMAT  |         - |         - |      - |

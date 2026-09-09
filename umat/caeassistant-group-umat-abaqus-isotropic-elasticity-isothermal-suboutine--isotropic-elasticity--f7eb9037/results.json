@@ -32,7 +32,7 @@
   },
   "reason": "agreed at all 3 states where a difference could be taken (increments 1, 5, 10); worst of them: agreed to 4.618e-13 at the best step and within 1e-06 at 6 of 6 step sizes, 1e-08 to 0.001: 5 decades of perturbation size, over which truncation and cancellation error scale oppositely, so agreement at both ends is not one regime flattering itself",
   "schema": "umat-oti/verification-results/1.0",
-  "seconds": 42.5,
+  "seconds": 43.8,
   "stage": "verified",
   "support_build": {
     "objects": 4,

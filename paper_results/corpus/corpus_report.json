@@ -6,13 +6,13 @@
   "counts": {
     "transformed": 42,
     "primal_parity_passed": 40,
-    "acquired": 111,
+    "acquired": 112,
     "not_a_umat": 59,
     "fully_verified": 67,
     "metadata_resolved": 4,
     "abaqus_transformed_passed": 44,
     "compiled": 17,
-    "abaqus_original_passed": 7
+    "abaqus_original_passed": 6
   },
   "reconciliation_problems": [],
   "entries": [
@@ -5526,15 +5526,15 @@
     },
     {
       "source_id": "mholla__growth/umats/umat_ortho_stretch.f",
-      "status": "abaqus_original_passed",
-      "reason": "transformed.sta was not written, so the analysis left no record; transformed.msg was not written; the analysis ran None increments where 30 were requested; expected output is missing or empty: transformed.odb",
+      "status": "acquired",
+      "reason": "MAX is declared as a variable here and is also a generic the OTI support modules make public, so the converted source cannot USE them: ifort reports \"The attributes of this name conflict with those made accessible by a USE statement\". Renaming it in the source would resolve it; this transform will n",
       "repository": "mholla/growth",
       "is_umat": true,
-      "entry_interface": "",
-      "transformed": true,
+      "entry_interface": "UMAT",
+      "transformed": false,
       "compiled": false,
-      "abaqus_stage": "transformed_job_failed",
-      "material_provenance": "cube_1_C3D8_stretch_xyz_ortho.inp *MATERIAL VOL: 17 constants, *DEPVAR 8, UNSYMM (paired deck mholla__growth/input_files/cube_1_C3D8_stretch_xyz_ortho.inp)",
+      "abaqus_stage": "",
+      "material_provenance": "",
       "worst_stress_relative": null,
       "worst_tangent_relative": null,
       "states_checked": null,
