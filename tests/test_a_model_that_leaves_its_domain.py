@@ -84,3 +84,56 @@ def test_the_outcome_has_its_own_rung():
     are two different findings."""
     assert "both_builds_non_finite" in STAGES
     assert STAGES.index("both_builds_non_finite") < STAGES.index("verified")
+
+
+# --------------------------------------------------------------------------
+# the tangent is asked for inside the window the primal accepted
+# --------------------------------------------------------------------------
+def test_probe_records_come_from_the_finite_window():
+    """Where both builds left their domain, the records after the cut are
+    Abaqus's own NaNs -- the replay state file for such a record is literally
+    "nan nan nan nan nan nan" -- and a derivative cannot be taken where the
+    solver produced no numbers in either build.
+
+    Thirty-four rows had their LAST probe state chosen from inside that
+    discarded tail, so the sweep produced 252 non-finite entries and the row
+    read as a tangent that could not be verified.
+    """
+    history = [_r(float(i)) for i in range(1, 6)] + [_r(NAN)] * 5
+    left, right, stopped = common_finite_prefix(history, list(history))
+    assert stopped == 5 and len(left) == 5
+
+    replayable = [{"DDSDDE": [1.0] * 36, "entry": {"STRESS0": [0.0]},
+                   "increment": i} for i in range(1, 6)]
+    chosen = choose_probe_records(replayable, 3)
+    assert [r["increment"] for _, r in chosen] == [1, 3, 5]
+
+
+def test_a_non_finite_tangent_at_a_finite_state_is_not_skipped():
+    """The window is a scope, NOT a filter on each record's DDSDDE.
+
+    A record whose ENTRY state is finite but whose transformed DDSDDE came
+    back NaN passes the primal stage -- first_non_finite inspects STRESS and
+    STATEV, not DDSDDE -- and it must stay in the probe set. A non-finite OTI
+    tangent at a finite state is a finding about the conversion, and dropping
+    the record would hide exactly what this pipeline exists to catch.
+    """
+    entry = {"STRESS0": [0.0] * 6}
+    history = [{"DDSDDE": [1.0] * 36, "entry": entry, "increment": 1},
+               {"DDSDDE": [NAN] * 36, "entry": entry, "increment": 2},
+               {"DDSDDE": [1.0] * 36, "entry": entry, "increment": 3}]
+    chosen = choose_probe_records(history, 3)
+    assert [r["increment"] for _, r in chosen] == [1, 2, 3]
+
+
+def test_the_primal_window_is_what_bounds_the_tangent():
+    """Both stages use one cut, the one the primal already prints in its
+    scope line, so the two cannot drift apart."""
+    finite = [_r(1.0), _r(2.0), _r(3.0)]
+    tail = [_r(NAN)] * 4
+    left, _right, stopped = common_finite_prefix(finite + tail,
+                                                 list(finite + tail))
+    assert stopped == len(finite) == len(left)
+
+
+from verify_store_in_abaqus import choose_probe_records  # noqa: E402
