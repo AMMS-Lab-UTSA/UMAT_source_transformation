@@ -30,9 +30,9 @@
     "worst_stress_at": [],
     "worst_stress_relative": 0.0
   },
-  "reason": "agreed at all 3 states checked along the loading path (increments 1, 5, 10); worst of them: agreed to 8.476e-08 at the best step and within 1e-06 at 2 of 6 step sizes, 0.0001 to 0.001: 1 decades of perturbation size, over which truncation and cancellation error scale oppositely, so agreement at both ends is not one regime flattering itself",
+  "reason": "agreed at all 3 states where a difference could be taken (increments 1, 5, 10); worst of them: agreed to 8.476e-08 at the best step and within 1e-06 at 2 of 6 step sizes, 0.0001 to 0.001: 1 decades of perturbation size, over which truncation and cancellation error scale oppositely, so agreement at both ends is not one regime flattering itself",
   "schema": "umat-oti/verification-results/1.0",
-  "seconds": 43.6,
+  "seconds": 42.3,
   "stage": "verified",
   "support_build": {
     "objects": 4,
