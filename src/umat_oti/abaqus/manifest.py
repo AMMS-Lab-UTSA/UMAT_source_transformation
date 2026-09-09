@@ -183,3 +183,122 @@ def reverse(segment: LoadingSegment, fraction: float = -0.5) -> LoadingSegment:
         tuple(value * fraction for value in segment.strain),
         segment.increments, segment.period,
         description=f"reversal of {segment.name} to exercise state evolution")
+
+# ---------------------------------------------------------------------------
+# the family of tests a material is put through
+# ---------------------------------------------------------------------------
+#: One deck is one question. A material that yields in tension may be linear
+#: in shear, one that is pressure-dependent shows nothing under deviatoric
+#: loading, and one with kinematic hardening looks identical to isotropic
+#: hardening until the load reverses. So the generator builds a family, and
+#: each member exists to activate something a different constitutive law does.
+
+
+def compression(strain: float = 0.01, increments: int = 10) -> LoadingSegment:
+    """Extension's mirror. A model with different tensile and compressive
+    responses -- concrete, soil, most damage laws -- shows it only here."""
+    return LoadingSegment(
+        "compression", (-abs(strain), 0.0, 0.0, 0.0, 0.0, 0.0), increments,
+        description="prescribed shortening along x, lateral faces free to "
+                    "move only in their own plane")
+
+
+def hydrostatic(strain: float = 0.01, increments: int = 10) -> LoadingSegment:
+    """Equal direct strain in three directions and no shear.
+
+    Deviatoric loading leaves a pressure-dependent model looking linear: a
+    Drucker-Prager or Mohr-Coulomb surface is reached by pressure, and a path
+    that never changes the pressure never reaches it.
+    """
+    return LoadingSegment(
+        "hydrostatic", (strain, strain, strain, 0.0, 0.0, 0.0), increments,
+        description="equal direct strain in all three directions, no shear")
+
+
+def strain_basis(component: int, strain: float = 0.01,
+                 increments: int = 6) -> LoadingSegment:
+    """One component of the strain increment alone.
+
+    Six of these exercise the whole tangent: a column of DDSDDE that no
+    loading ever drives is a column no comparison can say anything about.
+    """
+    values = [0.0] * 6
+    values[component] = strain
+    names = ("e11", "e22", "e33", "g12", "g13", "g23")
+    return LoadingSegment(
+        f"basis_{names[component]}", tuple(values), increments,
+        description=f"prescribed {names[component]} alone, to drive column "
+                    f"{component + 1} of the tangent")
+
+
+def load_unload(strain: float = 0.01, increments: int = 10) -> tuple:
+    """Out and all the way back.
+
+    An elastic material returns to where it started. Anything that does not
+    has kept something, and the residual is the evidence -- which is why this
+    returns BOTH segments: the reversal is only meaningful beside the loading
+    that preceded it.
+    """
+    out = uniaxial(strain, increments)
+    return (out, LoadingSegment(
+        "unload", tuple(-value for value in out.strain), increments,
+        out.period,
+        description="the whole of the loading removed, so that anything left "
+                    "over is permanent"))
+
+
+def cyclic(strain: float = 0.01, increments: int = 8, cycles: int = 2) -> tuple:
+    """Out, back past zero, and out again.
+
+    Kinematic hardening is invisible to a monotonic path and invisible to a
+    single unloading; it shows as the second excursion meeting a different
+    stress than the first.
+    """
+    segments = []
+    for cycle in range(max(1, cycles)):
+        segments.append(LoadingSegment(
+            f"cycle{cycle + 1}_forward", (strain, 0.0, 0.0, 0.0, 0.0, 0.0),
+            increments, description="forward excursion"))
+        segments.append(LoadingSegment(
+            f"cycle{cycle + 1}_reverse", (-2.0 * strain, 0.0, 0.0, 0.0, 0.0, 0.0),
+            increments, description="reversal through zero to the other side"))
+    return tuple(segments)
+
+
+#: What each named test is FOR. Carried into the manifest so a result says
+#: which physical question it answers, and so a test that activates nothing
+#: can be reported as "this material does not do that" rather than dropped.
+TEST_PURPOSE: dict[str, str] = {
+    "elastic_basis": "drive each strain component alone, to exercise every "
+                     "column of the tangent",
+    "monotonic": "extension and compression, to find yielding, damage or any "
+                 "other threshold and any tension-compression asymmetry",
+    "shear": "deviatoric loading, which activates behaviour a direct path "
+             "leaves untouched",
+    "hydrostatic": "pressure change, which is the only way to reach a "
+                   "pressure-dependent surface",
+    "load_unload": "out and back, so that permanent strain and irreversible "
+                   "state changes become visible",
+    "cyclic": "reversal through zero, which is what separates kinematic "
+              "hardening from isotropic",
+}
+
+
+def family(name: str, strain: float = 0.01,
+           increments: int = 10) -> tuple[LoadingSegment, ...]:
+    """The segments one named test is made of."""
+    if name == "elastic_basis":
+        return tuple(strain_basis(component, strain) for component in range(6))
+    if name == "monotonic":
+        return (uniaxial(strain, increments), compression(strain, increments))
+    if name == "shear":
+        return (simple_shear(strain, increments),)
+    if name == "hydrostatic":
+        return (hydrostatic(strain, increments),)
+    if name == "load_unload":
+        return load_unload(strain, increments)
+    if name == "cyclic":
+        return cyclic(strain, increments)
+    raise ValueError(
+        f"{name!r} is not a test this generator knows. Known tests: "
+        f"{', '.join(sorted(TEST_PURPOSE))}")
