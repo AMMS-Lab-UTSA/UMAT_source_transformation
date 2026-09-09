@@ -1723,11 +1723,29 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         return settle(primal.reason
                       or "the two builds produced no records to compare")
 
+    # The tangent is asked for inside the window the PRIMAL comparison
+    # accepted, not over the whole history. Where both builds left their
+    # domain the records after the cut are Abaqus's own NaNs -- the replay
+    # state file for such a record is literally "nan nan nan nan nan nan" --
+    # and a derivative cannot be taken at a point where the solver produced
+    # no numbers in either build. Thirty-four rows had their last probe state
+    # chosen from inside that discarded tail.
+    #
+    # The window is the one the primal already computed and already prints in
+    # its scope line, so nothing new is being decided here. It is NOT a filter
+    # on whether each record's DDSDDE is finite: a non-finite OTI tangent at a
+    # FINITE state is a finding about the conversion, and dropping such a
+    # record would hide exactly what this pipeline exists to catch.
     tangent = verify_tangent(
-        manifest, original, transformed_history, work / "replay",
+        manifest, original, compared_transformed, work / "replay",
         transformed=Path(stored.entry_source),
         form=str((row or {}).get("form") or "fixed"),
         tolerance=tangent_tolerance, timeout=timeout)
+    if stopped_at >= 0:
+        tangent["states_taken_from"] = (
+            f"the {stopped_at} increments in which both builds produced "
+            f"numbers; the records after increment {stopped_at} are Abaqus's "
+            f"own NaNs in both builds and carry no state to replay from")
     record["tangent"] = tangent
     seen["tangent_verified"] = tangent.get("verified")
     return settle(tangent.get("reason", ""))
