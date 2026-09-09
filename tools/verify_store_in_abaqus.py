@@ -761,12 +761,17 @@ def discover_loading(manifest: VerificationManifest, original: Path,
         return manifest, record
 
     attempts_dir = Path(work_dir) / "discovery"
+    # A search job only has to answer "did anything happen?", and four
+    # increments per segment answers it as well as thirty. The FINAL
+    # verification still runs at full resolution -- this is the cost of
+    # looking, not the cost of the measurement.
+    coarse = max(3, increments // 3)
 
     def run_at(amplitude: float):
         """One Abaqus job on the original at this amplitude."""
         trial = attempts_dir / f"a{amplitude:.6e}"
-        loading = [uniaxial(amplitude, increments),
-                   simple_shear(amplitude, increments)]
+        loading = [uniaxial(amplitude, coarse),
+                   simple_shear(amplitude, coarse)]
         loading.append(reverse(loading[0]))
         candidate = replace(manifest, loading=tuple(loading))
         call = dict(manifest=candidate, timeout=timeout, source=Path(original),
@@ -780,7 +785,7 @@ def discover_loading(manifest: VerificationManifest, original: Path,
             return False, [], "; ".join(evidence.reasons) or "the job did not complete"
         return True, history_of(trial, "original"), ""
 
-    found = search_amplitude(run_at, reversal_at=2 * increments)
+    found = search_amplitude(run_at, reversal_at=2 * coarse)
     record = found.as_dict()
     record["ran"] = True
     record["jobs"] = len(found.attempts)
