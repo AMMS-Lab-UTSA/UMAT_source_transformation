@@ -181,3 +181,48 @@ def test_an_unknown_test_is_refused_by_name():
 
     with pytest.raises(ValueError, match="not a test this generator knows"):
         family("teleportation", 0.005)
+
+
+# --------------------------------------------------------------------------
+# what the cost of looking may not buy
+# --------------------------------------------------------------------------
+def test_proportional_points_below_a_transition_do_not_prove_linearity():
+    """The tempting cost saving, and why it is not taken.
+
+    A search that stops once a few amplitudes scale proportionally costs
+    three Abaqus jobs instead of six on an elastic material. But linearity
+    over one decade does not imply linearity above it: on a material yielding
+    at 0.2%, the points at 1e-4, 3e-4 and 9e-4 are all below the transition
+    and all perfectly proportional. Stopping there reports a plastic material
+    as elastic -- and it is then verified on its elastic branch, which is the
+    part every build gets right.
+
+    So the escalation runs to the ceiling, and the cost is bounded by a wider
+    step and coarser search jobs instead.
+    """
+    result = search_amplitude(
+        lambda a: (True, elastic_plastic(a, 2e-3, increments=4), ""))
+    assert result.outcome == ACTIVATED
+    low, high = result.bracket
+    assert low <= 2e-3 <= high * 1.2, (
+        f"the transition at 2e-3 must be inside the bracket {low}..{high}")
+
+
+def test_the_step_crosses_four_decades_in_a_handful_of_jobs():
+    """Every escalation is a real Abaqus job on the original."""
+    from umat_oti.abaqus.amplitude_search import CEILING, FIRST_AMPLITUDE, GROWTH
+
+    import math
+    steps = math.log(CEILING / FIRST_AMPLITUDE) / math.log(GROWTH)
+    assert steps <= 7, f"{steps:.1f} escalations to reach the ceiling is too many"
+    assert 2.0 <= GROWTH <= 5.0
+
+
+def test_a_search_job_is_coarser_than_the_measurement():
+    """A search job answers "did anything happen?", which four increments
+    answer as well as thirty. The verification that follows still runs at
+    full resolution."""
+    tool = (Path(__file__).resolve().parents[1] / "tools"
+            / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
+    assert "coarse = max(3, increments // 3)" in tool
+    assert "uniaxial(amplitude, coarse)" in tool

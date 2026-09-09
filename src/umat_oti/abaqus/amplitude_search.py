@@ -44,8 +44,17 @@ FIRST_AMPLITUDE = 1e-4
 
 #: The escalation factor. Between two and five, per the method: large enough
 #: to cross several decades in a handful of runs, small enough that the
-#: bracket it leaves is worth refining.
-GROWTH = 3.0
+#: bracket it leaves is worth refining. Five, at the top of that range,
+#: because every step is a real Abaqus job and 1e-4 to 1 is four decades --
+#: at three it takes nine jobs, at five it takes six, and the refinement
+#: afterwards recovers the resolution the wider step gave up.
+#:
+#: Deliberately NOT solved by declaring a material linear once a few
+#: amplitudes scale proportionally. Linearity over one decade does not imply
+#: linearity above it: measured on a material yielding at 0.2%, three
+#: proportional points at 1e-4, 3e-4 and 9e-4 are all below the transition,
+#: and stopping there reports a plastic material as elastic.
+GROWTH = 5.0
 
 #: The ceiling. A strain of one hundred percent is past where a small-strain
 #: formulation means anything, and a finite-strain one driven further is being
