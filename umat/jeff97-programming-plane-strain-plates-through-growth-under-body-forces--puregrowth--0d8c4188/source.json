@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "919d3f028de27d10cdf7667ddf20b53ea2557cdea7fa6384f40f47f3d0383870",
+  "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th002/PureGrowth.for",
+  "upstream": "https://github.com/Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+  "verified_bytes_sha256": "919d3f028de27d10cdf7667ddf20b53ea2557cdea7fa6384f40f47f3d0383870",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}

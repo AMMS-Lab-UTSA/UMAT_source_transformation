@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "0df130476ff8b5fabbd2f964438add246bce937603c1c2ff86bd09d75ba61a4b",
+  "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th01/BodyForce-Growth-2Stages.for",
+  "upstream": "https://github.com/Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+  "verified_bytes_sha256": "0df130476ff8b5fabbd2f964438add246bce937603c1c2ff86bd09d75ba61a4b",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}
