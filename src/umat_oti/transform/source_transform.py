@@ -497,6 +497,39 @@ def _source_file(config: dict[str, Any]) -> str:
     return str(source.get("selected_umat_file") or source.get("uploaded_file") or "umat.f")
 
 
+#: Names the OTI support modules make public as generics. A source that
+#: declares a local of the same name cannot compile against them: ifort says
+#: "The attributes of this name conflict with those made accessible by a USE
+#: statement". mholla/growth's umat_ortho_stretch.f declares `real*8 max(3)`
+#: and fails exactly that way.
+#:
+#: Renaming the author's variable would work and is not done here. It touches
+#: the declaration and every reference, and a rename that misses one produces
+#: a source that compiles and computes something else -- which is worse than
+#: not converting it. Refused with the name, so a reader knows what to change.
+OTI_MODULE_GENERICS = frozenset({"MIN", "MAX", "SIGN", "NINT", "INT", "MATMUL"})
+
+_DECLARATION = re.compile(
+    r"^\s*(?:REAL|INTEGER|DOUBLE\s+PRECISION|LOGICAL|DIMENSION)"
+    r"(?:\s*\*\s*\d+)?\s*(?:::)?\s*(.+)$", re.IGNORECASE)
+
+
+def _locals_colliding_with_the_oti_modules(source_text: str) -> list[str]:
+    """Author-declared names that the OTI modules also export."""
+    found: set[str] = set()
+    for line in source_text.splitlines():
+        if line[:1] in "Cc*!":
+            continue
+        declaration = _DECLARATION.match(line)
+        if not declaration:
+            continue
+        for name in re.findall(r"(?<![A-Za-z0-9_])([A-Za-z_]\w*)\s*(?:\([^)]*\))?",
+                               declaration.group(1)):
+            if name.upper() in OTI_MODULE_GENERICS:
+                found.add(name.upper())
+    return sorted(found)
+
+
 def _readiness_blockers(
     config: dict[str, Any],
     roles: dict[str, set[str]],
@@ -509,6 +542,15 @@ def _readiness_blockers(
     parsed: ParsedFortranSource | None = None,
 ) -> list[str]:
     blockers: list[str] = []
+    for name in _locals_colliding_with_the_oti_modules(source_text):
+        blockers.append(
+            f"{name} is declared as a variable here and is also a generic the "
+            f"OTI support modules make public, so the converted source cannot "
+            f"USE them: ifort reports \"The attributes of this name conflict "
+            f"with those made accessible by a USE statement\". Renaming it in "
+            f"the source would resolve it; this transform will not rename an "
+            f"author's variable, because a rename that misses one reference "
+            f"produces a file that compiles and computes something else.")
     review = _dict(config.get("transformation_review"))
     analysis = _dict(config.get("analysis"))
     has_completed_anchors = bool(config.get("transformation_anchors"))
@@ -3366,6 +3408,22 @@ def _wrap_real_assignment_rhs(line: str) -> str:
     lhs_name = match.group(2).upper()
     rhs = match.group(3).strip()
     if lhs_name.endswith("_OTI") or lhs_name in {"OTI_HX", "OTI_HY", "OTI_HTR"} or rhs.upper().startswith("REAL("):
+        return line
+    # This function is handed ONE physical line, and a statement may run over
+    # several. Where the right-hand side's parentheses do not balance, the
+    # statement continues onto lines this call cannot see, and closing the
+    # REAL( here puts the bracket in the middle of the expression:
+    #
+    #       SHSTRAN(K1) = REAL(max_shrinkage * (CURE_OTI -
+    #      1morphology_threshold) /)
+    #      &                  (1.0 - morphology_threshold)
+    #
+    # which ifort rejects with "Syntax error, found '/)'". Four converted
+    # builds failed to compile on exactly this, two of them on an ABS( split
+    # the same way. Refusing leaves the assignment unwrapped, which may fail
+    # later for a reason the compiler can name -- and a named failure is worth
+    # more than emitted Fortran that is not Fortran.
+    if _without_character_literals(rhs).count("(") != _without_character_literals(rhs).count(")"):
         return line
     return f"{inline_if_prefix}{match.group(1)}REAL({rhs})"
 
