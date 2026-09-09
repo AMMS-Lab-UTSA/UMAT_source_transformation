@@ -69,7 +69,7 @@ import time
 import traceback
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from threading import Lock
 from typing import Any, Optional, Sequence
@@ -84,6 +84,9 @@ from run_discovered_verification import _cache_relative_source          # noqa: 
 from run_discovery_triage import without_machine_paths                  # noqa: E402
 from umat_oti.abaqus.compare import compare_primal, compare_tangent     # noqa: E402
 from umat_oti.abaqus.deck import generate_deck                          # noqa: E402
+from umat_oti.abaqus.activation import detect_activation                # noqa: E402
+from umat_oti.abaqus.amplitude_search import (                          # noqa: E402
+    ACTIVATED, LINEAR_TO_THE_CEILING, search_amplitude)
 from umat_oti.corpus.entry_routines import classify as classify_entry   # noqa: E402
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
     NEEDS_MATERIAL_DATA, VerificationManifest, reverse, simple_shear, uniaxial)
@@ -729,6 +732,64 @@ class DifferentDecks(ValueError):
 
 def deck_digest(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+
+
+def discover_loading(manifest: VerificationManifest, original: Path,
+                     work_dir: Path, timeout: int, *,
+                     increments: int = 10,
+                     enabled: bool = True) -> tuple[VerificationManifest, dict]:
+    """Raise the amplitude on the ORIGINAL until the material does something.
+
+    The fixed probe is a guess about somebody else's material. Driven at a
+    strain the model answers elastically it tests the part of a UMAT that
+    every build gets right -- stress linear in strain, the elastic tangent,
+    state that never moves -- so a converted routine wrong about yielding,
+    damage or hardening agrees perfectly and the row is recorded as verified.
+
+    So the amplitude is searched for. Each candidate is a real Abaqus job on
+    the ORIGINAL source; :func:`detect_activation` reads its probe history and
+    says whether anything happened. The converted build is never run here: a
+    loading chosen with it in view would be a loading chosen to agree.
+
+    Returns the manifest to verify with and what the search found. When
+    nothing activates up to the ceiling the ORIGINAL manifest comes back
+    unchanged -- for a linear elastic material that is the right answer, and
+    the amplitude that ran is still the one the comparison uses.
+    """
+    record: dict = {"ran": False, "reason": "adaptive discovery was not enabled"}
+    if not enabled:
+        return manifest, record
+
+    attempts_dir = Path(work_dir) / "discovery"
+
+    def run_at(amplitude: float):
+        """One Abaqus job on the original at this amplitude."""
+        trial = attempts_dir / f"a{amplitude:.6e}"
+        loading = [uniaxial(amplitude, increments),
+                   simple_shear(amplitude, increments)]
+        loading.append(reverse(loading[0]))
+        candidate = replace(manifest, loading=tuple(loading))
+        call = dict(manifest=candidate, timeout=timeout, source=Path(original),
+                    job="original", work_dir=trial, support_dir=None)
+        try:
+            report = run_one(**call)
+        except Exception as exc:                       # noqa: BLE001
+            return False, [], f"the job raised {type(exc).__name__}: {exc}"
+        evidence = job_evidence(report)
+        if not evidence.completed:
+            return False, [], "; ".join(evidence.reasons) or "the job did not complete"
+        return True, history_of(trial, "original"), ""
+
+    found = search_amplitude(run_at, reversal_at=2 * increments)
+    record = found.as_dict()
+    record["ran"] = True
+    record["jobs"] = len(found.attempts)
+
+    amplitude = found.amplitude or manifest.loading[0].strain[0]
+    loading = [uniaxial(amplitude, increments), simple_shear(amplitude, increments)]
+    loading.append(reverse(loading[0]))
+    record["chosen_amplitude"] = amplitude
+    return replace(manifest, loading=tuple(loading)), record
 
 
 def build_plan(manifest: VerificationManifest, original: Path, transformed: Path,
@@ -1507,7 +1568,8 @@ def _material_columns(plan: ManifestPlan) -> dict[str, Any]:
 def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                cache_root: Path, work_root: Path, *, timeout: int,
                tangent_tolerance: float = TANGENT_TOLERANCE,
-               strain: float = 0.005, increments: int = 10) -> dict:
+               strain: float = 0.005, increments: int = 10,
+               discover: bool = True) -> dict:
     """One stored transform, carried as far up the ladder as it will go.
 
     Every return goes through ``classify_stage`` on the evidence gathered so
@@ -1575,6 +1637,14 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     if absent:
         seen["manifest_refusals"] = tuple(absent)
         return settle("; ".join(absent))
+
+    # The loading is discovered on the ORIGINAL before either verification job
+    # runs, so that the deck both builds are then handed is one that makes the
+    # material do something rather than one chosen in advance.
+    manifest, discovery = discover_loading(
+        manifest, Path(original), work, timeout,
+        increments=increments, enabled=discover)
+    record["discovery"] = discovery
 
     original_call, transformed_call = build_plan(
         manifest, original, stored.entry_source, work, timeout)
@@ -1972,7 +2042,7 @@ def run_batch(entries: Sequence[Any], rows: dict[str, dict],
               tangent_tolerance: float = TANGENT_TOLERANCE,
               strain: float = 0.005, increments: int = 10,
               previous: Optional[dict[str, str]] = None,
-              resume: bool = False) -> list[dict]:
+              resume: bool = False, discover: bool = True) -> list[dict]:
     """Every selected entry, in order, with each result on disk before the next."""
     previous = previous or {}
     lock = Lock()
@@ -1990,7 +2060,8 @@ def run_batch(entries: Sequence[Any], rows: dict[str, dict],
                                 proposals.get(stored.source_id), cache_root,
                                 work_root, timeout=timeout,
                                 tangent_tolerance=tangent_tolerance,
-                                strain=strain, increments=increments)
+                                strain=strain, increments=increments,
+                                discover=discover)
         except Exception as error:                      # noqa: BLE001
             # A crash is a finding about this harness, recorded as such and
             # never as a stage: it says nothing about the model, and --resume
@@ -2049,6 +2120,13 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser.add_argument("--timeout", type=int, default=3600,
                         help="seconds per Abaqus job")
     parser.add_argument("--strain", type=float, default=0.005)
+    parser.add_argument(
+        "--no-discovery", action="store_true",
+        help="drive every material at --strain instead of searching for an "
+             "amplitude that activates it. The search costs extra Abaqus jobs "
+             "on the ORIGINAL, and without it a material that answers the "
+             "fixed probe elastically is verified on its elastic branch only "
+             "-- which is the part every build gets right.")
     parser.add_argument("--increments", type=int, default=10)
     parser.add_argument("--tangent-tolerance", type=float, default=TANGENT_TOLERANCE)
     parser.add_argument("--include-stale", action="store_true",
@@ -2120,7 +2198,8 @@ def main(argv: Optional[list[str]] = None) -> int:
                       results_path, timeout=args.timeout, jobs=max(1, args.jobs),
                       tangent_tolerance=args.tangent_tolerance,
                       strain=args.strain, increments=args.increments,
-                      previous=previous, resume=args.resume)
+                      previous=previous, resume=args.resume,
+                      discover=not args.no_discovery)
 
     # The denominator is every entry this batch attempted, which on a resumed
     # run includes the ones it skipped because they were already settled.
