@@ -120,3 +120,27 @@ def test_not_a_umat_is_not_a_rung():
 
     assert NOT_A_UMAT not in STAGES
     assert stage_rank(NOT_A_UMAT) == -1
+
+
+def test_an_off_ladder_verdict_is_not_re_derived():
+    """classify_stage answers "how far up did this get?", which is the wrong
+    question for a file that was never on the ladder.
+
+    A not-a-UMAT plan carries no manifest, so the derivation fell through to
+    needs_material_data and thirty UEL files were reported as UMATs whose
+    material could not be found -- while their own reason text said UEL. The
+    stage a plan already decided must survive.
+    """
+    tool = (Path(__file__).resolve().parents[1] / "tools"
+            / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
+    assert "stage=NOT_A_UMAT" in tool, (
+        "the not-a-UMAT branch must pass its stage explicitly, or "
+        "classify_stage will overwrite it")
+
+
+def test_the_classification_travels_with_the_row():
+    """A verdict a reader cannot check is not evidence: the units, their
+    argument counts and who calls whom go into the record."""
+    tool = (Path(__file__).resolve().parents[1] / "tools"
+            / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
+    assert "entry_classification=plan.entry_classification" in tool

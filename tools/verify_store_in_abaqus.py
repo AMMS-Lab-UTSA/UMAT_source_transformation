@@ -1532,14 +1532,27 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     roots = (Path(work_root), Path(stored.directory).parent)
     seen: dict[str, Any] = {}
 
-    def settle(reason: str, **extra: Any) -> dict:
-        record.update(stage=classify_stage(StageEvidence(**seen)), reason=reason,
+    def settle(reason: str, stage: str = "", **extra: Any) -> dict:
+        """Record the outcome, deriving the rung from the evidence.
+
+        ``stage`` overrides that derivation, and only an OFF-ladder verdict
+        may use it. classify_stage answers "how far up did this get?", which
+        is the wrong question for a file that was never on the ladder: a
+        not-a-UMAT plan carries no manifest, so the derivation fell through to
+        needs_material_data and thirty UEL files were reported as UMATs whose
+        material could not be found. Their reason text said UEL all along.
+        """
+        settled = stage or classify_stage(StageEvidence(**seen))
+        record.update(stage=settled, reason=reason,
                       seconds=round(time.time() - started, 1), **extra)
         return scrub(record, *roots)
 
     plan = build_manifest(stored.source_id, row, proposal, cache_root,
                           strain=strain, increments=increments)
     record.update(_material_columns(plan))
+    if plan.stage == NOT_A_UMAT:
+        return settle(plan.reason, stage=NOT_A_UMAT,
+                      entry_classification=plan.entry_classification)
     if plan.stage == NEEDS_MATERIAL_DATA or plan.manifest is None:
         return settle(plan.reason)
     manifest = plan.manifest
