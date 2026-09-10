@@ -753,6 +753,15 @@ def _regime_of(state: dict):
                   unloading=bool(found.get("unloading")))
 
 
+#: How far past the bracketed transition to drive, so the loading path
+#: crosses it partway along rather than ending on it. Four: enough that the
+#: early increments are clearly elastic and the late ones clearly inside the
+#: activated regime, and small enough not to walk the model into a regime its
+#: author never wrote. Checked by an actual run before it is adopted -- a
+#: material that cannot be driven that far keeps the amplitude that worked.
+BEYOND_TRANSITION = 4.0
+
+
 def discover_loading(manifest: VerificationManifest, original: Path,
                      work_dir: Path, timeout: int, *,
                      increments: int = 10,
@@ -809,7 +818,35 @@ def discover_loading(manifest: VerificationManifest, original: Path,
     record["ran"] = True
     record["jobs"] = len(found.attempts)
 
+    # The amplitude to VERIFY at is not the amplitude at which activation was
+    # first seen. Driving to exactly there puts the transition at the end of
+    # the path, so every increment is either before it or on it, and there is
+    # no smooth state inside the activated regime to check a tangent at.
+    # Measured on From-2D-to-2D-Axe.for: activation at 2.5e-05, and both
+    # chosen states came out after it with none before.
+    #
+    # Driving PAST it puts the transition partway along, so the early
+    # increments are smooth elastic, the late ones are smooth inelastic, and
+    # the states either side can be chosen with clearance from the corner.
     amplitude = found.amplitude or manifest.loading[0].strain[0]
+    if found.outcome == ACTIVATED and amplitude:
+        wanted = amplitude * BEYOND_TRANSITION
+        ran, _records, why = run_at(wanted)
+        record.setdefault("extension", {})
+        if ran:
+            amplitude = wanted
+            record["extension"] = {
+                "amplitude": wanted, "factor": BEYOND_TRANSITION,
+                "why": ("driven past the transition so the path crosses it "
+                        "partway along and carries smooth states on both "
+                        "sides")}
+        else:
+            record["extension"] = {
+                "amplitude": None, "attempted": wanted, "reason": why,
+                "why": ("the material could not be driven past its own "
+                        "transition, so the path stops at it and only "
+                        "pre-transition states are available")}
+
     loading = [uniaxial(amplitude, increments), simple_shear(amplitude, increments)]
     loading.append(reverse(loading[0]))
     record["chosen_amplitude"] = amplitude

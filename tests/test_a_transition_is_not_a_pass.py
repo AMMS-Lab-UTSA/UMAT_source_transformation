@@ -250,3 +250,25 @@ def test_a_material_that_never_activates_still_gets_states():
 
     chosen = choose_states_around_activation(_replayable(10), each_side=2)
     assert len(chosen) >= 2
+
+
+def test_verification_is_driven_past_the_transition_not_up_to_it():
+    """Discovery stops at the amplitude where activation first appears.
+    Verifying there puts the transition at the END of the path, so every
+    increment is before it or on it and there is no smooth state inside the
+    activated regime. Measured on From-2D-to-2D-Axe.for: activation at
+    2.5e-05, both chosen states after it, none before.
+
+    The verification amplitude is a multiple of the bracket, so the path
+    crosses the transition partway along and carries smooth states on both
+    sides. The multiple is confirmed by an actual run before it is adopted.
+    """
+    tool = (Path(__file__).resolve().parents[1] / "tools"
+            / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
+    assert "BEYOND_TRANSITION" in tool
+    assert "amplitude * BEYOND_TRANSITION" in tool
+    assert "ran, _records, why = run_at(wanted)" in tool, (
+        "the extended amplitude must be confirmed by a run, not assumed")
+    assert "could not be driven past its own" in tool, (
+        "a material that cannot be driven further must keep the amplitude "
+        "that worked, and say so")

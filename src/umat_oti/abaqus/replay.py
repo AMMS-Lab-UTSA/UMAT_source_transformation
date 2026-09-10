@@ -598,6 +598,47 @@ class ReplayBuild:
     header: str = ""
 
 
+#: A PROGRAM unit an author shipped beside the UMAT -- a standalone driver
+#: they used to exercise it. The replay driver has its own PROGRAM, and two
+#: mains in one link is "multiple definition of `main`", which fails the build
+#: and reports as a tangent that could not be measured. Measured on
+#: UMAT_Tissue_2d_plane_strain.f and its plane-stress twin.
+_PROGRAM_START = re.compile(r"^\s*(?:\d+\s+)?PROGRAM\s+([A-Za-z_]\w*)\s*$",
+                            re.IGNORECASE)
+_PROGRAM_END = re.compile(r"^\s*(?:\d+\s+)?END\s*(?:PROGRAM(?:\s+\w+)?)?\s*$",
+                          re.IGNORECASE)
+
+
+def without_the_authors_program(text: str) -> tuple[str, str]:
+    """The source with any PROGRAM unit commented out, and what was removed.
+
+    The replay drives the UMAT subroutine directly and never calls the
+    author's own driver, so removing it changes nothing the replay computes.
+    Commented rather than deleted, so the emitted file still lines up with the
+    original when a reader compares them.
+    """
+    lines = text.splitlines(keepends=True)
+    out: list[str] = []
+    removed = ""
+    inside = False
+    for line in lines:
+        stripped = line.rstrip("\n")
+        if not inside:
+            found = _PROGRAM_START.match(stripped)
+            if found:
+                inside = True
+                removed = found.group(1)
+                out.append("C     OTIS-REMOVED (the replay supplies its own "
+                           "PROGRAM): " + stripped.strip() + "\n")
+                continue
+            out.append(line)
+            continue
+        out.append("C     OTIS-REMOVED: " + stripped.strip() + "\n")
+        if _PROGRAM_END.match(stripped):
+            inside = False
+    return "".join(out), removed
+
+
 def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
                  name: str = "REPLAY", extra: Sequence[Path] = (),
                  flags: Sequence[str] = (), timeout: int = 900) -> ReplayBuild:
@@ -614,6 +655,22 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     # of one source in step -- the transform carries SDVINI through unchanged,
     # so both sides call it or neither does.
     units = [Path(path) for path in (*extra, source)]
+    # A PROGRAM the author shipped beside the UMAT collides with the driver's
+    # own main. The unit is replaced by a copy with it commented out, for this
+    # build only; the original file on disk is untouched.
+    cleaned: list[Path] = []
+    removed_programs: list[str] = []
+    for unit in units:
+        text = _text_of(unit)
+        without, removed = without_the_authors_program(text)
+        if not removed:
+            cleaned.append(unit)
+            continue
+        replacement = work_dir / f"noprogram_{unit.name}"
+        replacement.write_text(without, encoding="utf-8")
+        cleaned.append(replacement)
+        removed_programs.append(f"{unit.name}:PROGRAM {removed}")
+    units = cleaned
     driver = work_dir / "otis_replay.f90"
     driver.write_text(
         driver_source(name, initialise_state=any(
