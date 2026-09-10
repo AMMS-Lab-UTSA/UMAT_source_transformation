@@ -135,3 +135,33 @@ def test_the_report_never_pools_ours_with_theirs(tmp_path: Path):
 def test_the_two_vocabularies_are_disjoint_and_complete():
     assert not set(EXTERNAL) & set(INTERNAL)
     assert FULLY_VERIFIED not in set(EXTERNAL) | set(INTERNAL)
+
+
+# ---------------------------------------------------------------------------
+# and the older report's map has to keep up with the ladder
+# ---------------------------------------------------------------------------
+def test_every_rung_the_batch_can_record_has_a_place_in_the_report():
+    """A stage with no entry falls through to 'blocked with evidence', which
+    would report a source that ran both builds and agreed over its whole
+    history as blocked -- true of nothing about it."""
+    import sys as _sys
+    from pathlib import Path as _Path
+
+    _sys.path.insert(0, str(_Path(__file__).resolve().parents[1] / "tools"))
+    from corpus_report import FROM_ABAQUS_STAGE
+    from umat_oti.abaqus.terminal_states import FROM_STAGE
+
+    unmapped = sorted(set(FROM_STAGE) - set(FROM_ABAQUS_STAGE) - {"verified"})
+    assert not unmapped, unmapped
+
+
+def test_the_two_reports_agree_about_what_verified_means():
+    import sys as _sys
+    from pathlib import Path as _Path
+
+    _sys.path.insert(0, str(_Path(__file__).resolve().parents[1] / "tools"))
+    from corpus_report import FROM_ABAQUS_STAGE
+    from umat_oti.abaqus.terminal_states import FROM_STAGE
+
+    assert FROM_ABAQUS_STAGE["verified"] == "fully_verified"
+    assert FROM_STAGE["verified"] == FULLY_VERIFIED
