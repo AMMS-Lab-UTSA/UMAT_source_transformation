@@ -70,11 +70,18 @@ def test_a_material_block_with_no_user_material_is_not_extracted():
     assert blocks(builtin) == []
 
 
-def test_the_extracted_deck_parses_as_a_deck(tmp_path: Path):
+def _named_document(tmp_path: Path) -> tuple:
+    """A document whose filename names a routine in the same repository."""
     cache = tmp_path / "cache"
-    document = cache / "owner__repo" / "docs" / "guide.md"
+    document = cache / "owner__repo" / "docs" / "umat_elastic.md"
     document.parent.mkdir(parents=True)
     document.write_text(DOCUMENT, encoding="utf-8")
+    (cache / "owner__repo" / "umat_elastic_official.f").write_text("      END\n")
+    return cache, document
+
+
+def test_the_extracted_deck_parses_as_a_deck(tmp_path: Path):
+    cache, document = _named_document(tmp_path)
     record = extract(document, cache)
     assert record is not None
     deck = cache / record["deck"]
@@ -85,22 +92,86 @@ def test_the_extracted_deck_parses_as_a_deck(tmp_path: Path):
 
 
 def test_the_extracted_deck_names_where_every_line_came_from(tmp_path: Path):
-    cache = tmp_path / "cache"
-    document = cache / "owner__repo" / "docs" / "guide.md"
-    document.parent.mkdir(parents=True)
-    document.write_text(DOCUMENT, encoding="utf-8")
+    cache, document = _named_document(tmp_path)
     extract(document, cache)
     written = (cache / "owner__repo" / "docs"
-               / "guide.md.extracted.inp").read_text(encoding="utf-8")
-    assert "extracted verbatim from owner__repo/docs/guide.md" in written
+               / "umat_elastic.md.extracted.inp").read_text(encoding="utf-8")
+    assert "extracted verbatim from owner__repo/docs/umat_elastic.md" in written
     assert "lines 6-11" in written
     assert "Nothing here was" in written
 
 
 def test_a_document_with_no_material_block_produces_nothing(tmp_path: Path):
     cache = tmp_path / "cache"
-    document = cache / "owner__repo" / "README.md"
+    document = cache / "owner__repo" / "umat_elastic.md"
     document.parent.mkdir(parents=True)
+    (cache / "owner__repo" / "umat_elastic_official.f").write_text("      END\n")
     document.write_text("# A repository\n\nNothing to see.\n", encoding="utf-8")
     assert extract(document, cache) is None
     assert not list(document.parent.glob("*.extracted.inp"))
+
+
+# ---------------------------------------------------------------------------
+# and a page of prose has to say what it is about
+# ---------------------------------------------------------------------------
+def test_a_document_is_only_used_when_it_names_its_routine(tmp_path: Path):
+    """Constants in a DECK belong to whatever it runs, and the deck says so.
+    Constants in a document belong to whatever it is about, and nothing says
+    so -- so the only ones carried across are from a document that names its
+    routine in its own filename.
+
+    Without the rule, ``umat_plasticity.md`` -- five constants for a power-law
+    hardening model -- was paired with ``umat_mises_plasticity_official.f``,
+    which reads four and is a different model.
+    """
+    from extract_published_decks import documents
+
+    cache = tmp_path / "cache"
+    repo = cache / "owner__repo"
+    (repo / "src").mkdir(parents=True)
+    (repo / "docs").mkdir(parents=True)
+    (repo / "src" / "umat_elastic_official.f").write_text("      END\n")
+    (repo / "src" / "umat_mises_plasticity_official.f").write_text("      END\n")
+
+    named = repo / "docs" / "umat_elastic.md"
+    named.write_text(DOCUMENT, encoding="utf-8")
+    assert documents(named, cache) == ["owner__repo/src/umat_elastic_official.f"]
+
+    unnamed = repo / "docs" / "umat_plasticity.md"
+    unnamed.write_text(DOCUMENT, encoding="utf-8")
+    assert documents(unnamed, cache) == []
+
+
+def test_a_short_name_does_not_match_by_accident(tmp_path: Path):
+    """``abaqus`` appears inside ``umat_abaqus_elastic`` and means nothing."""
+    from extract_published_decks import documents
+
+    cache = tmp_path / "cache"
+    repo = cache / "owner__repo"
+    repo.mkdir(parents=True)
+    (repo / "UMAT_ABAQUS_ELASTIC.f").write_text("      END\n")
+    short = repo / "abaqus.rst"
+    short.write_text(DOCUMENT, encoding="utf-8")
+    assert documents(short, cache) == []
+
+
+def test_a_document_that_names_nothing_produces_no_deck(tmp_path: Path):
+    cache = tmp_path / "cache"
+    repo = cache / "owner__repo"
+    repo.mkdir(parents=True)
+    (repo / "creep_material.md").write_text(DOCUMENT, encoding="utf-8")
+    assert extract(repo / "creep_material.md", cache) is None
+
+
+def test_the_extracted_deck_names_the_routine_it_is_about(tmp_path: Path):
+    cache = tmp_path / "cache"
+    repo = cache / "owner__repo"
+    (repo / "src").mkdir(parents=True)
+    (repo / "src" / "umat_elastic_official.f").write_text("      END\n")
+    document = repo / "umat_elastic.md"
+    document.write_text(DOCUMENT, encoding="utf-8")
+    record = extract(document, cache)
+    assert record["about"] == ["owner__repo/src/umat_elastic_official.f"]
+    written = (cache / record["deck"]).read_text(encoding="utf-8")
+    assert "names the routine it is about" in written
+    assert "umat_elastic_official.f" in written
