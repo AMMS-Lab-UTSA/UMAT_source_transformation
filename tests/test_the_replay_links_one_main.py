@@ -30,7 +30,7 @@ WITH_PROGRAM = """      SUBROUTINE UMAT(STRESS)
 
 def test_the_authors_program_is_removed():
     out, removed = without_the_authors_program(WITH_PROGRAM)
-    assert removed == "DRIVER"
+    assert removed == ("DRIVER",)
     assert not any(line.strip().upper().startswith("PROGRAM")
                    for line in out.splitlines())
 
@@ -43,7 +43,7 @@ def test_the_umat_itself_is_untouched():
 def test_a_source_with_no_program_is_unchanged():
     text = "      SUBROUTINE UMAT(STRESS)\n      RETURN\n      END\n"
     out, removed = without_the_authors_program(text)
-    assert out == text and removed == ""
+    assert out == text and removed == ()
 
 
 def test_the_removal_is_visible_in_the_emitted_file():
@@ -59,7 +59,7 @@ def test_a_bare_end_closes_the_program():
     text = ("      SUBROUTINE UMAT(S)\n      END\n"
             "      PROGRAM P\n      CALL UMAT(1.0)\n      END\n")
     out, removed = without_the_authors_program(text)
-    assert removed == "P"
+    assert removed == ("P",)
     assert out.count("OTIS-REMOVED") == 3
 
 
@@ -76,6 +76,7 @@ def test_a_subroutine_after_the_program_survives():
 def test_the_replay_build_uses_the_cleaned_copy():
     source = (Path(__file__).resolve().parents[1] / "src" / "umat_oti"
               / "abaqus" / "replay.py").read_text(encoding="utf-8")
-    assert "without_the_authors_program(text)" in source
-    assert 'replacement = work_dir / f"noprogram_{unit.name}"' in source, (
+    assert "without_the_authors_program(\n            text, detect_source_form(unit, text))" in source, (
+        "the build must pass the unit's own form, or a free-form file\n         gets a fixed-form comment marker")
+    assert 'f"noprogram_{index}_{unit.name}"' in source, (
         "the original file on disk must not be rewritten")
