@@ -340,3 +340,32 @@ def test_the_best_step_is_the_one_the_verdict_is_taken_on():
     # and the Frobenius plateau still spans both, because that is a statement
     # about the shape of the sweep rather than about one component
     assert tuple(found["stable_range"]) == (1e-4, 1e-3)
+
+
+def test_a_smooth_unloading_state_is_evidence_about_the_activated_material():
+    """It is a state INSIDE the activated material, and a stronger one than a
+    state on the way up: unloading is where a model that keeps something and a
+    model that does not finally differ. Counted apart from the loading states,
+    a material verified at one of each was recorded as "1 smooth state, and two
+    are needed" -- seventeen of them in one batch, every state agreeing."""
+    from umat_oti.abaqus.state_regime import (Regime, SMOOTH_INELASTIC,
+                                              SMOOTH_UNLOADING, coverage)
+
+    both = [Regime(increment=4, regime=SMOOTH_INELASTIC, reason="activated",
+                   activated_here=True),
+            Regime(increment=3, regime=SMOOTH_UNLOADING, reason="reversing",
+                   activated_here=True, unloading=True)]
+    enough, why = coverage(both, nonlinear=True, character="irreversible")
+    assert enough, why
+    assert "1 loading, 1 unloading" in why
+
+
+def test_one_state_of_either_kind_is_still_not_enough():
+    from umat_oti.abaqus.state_regime import (Regime, SMOOTH_UNLOADING,
+                                              coverage)
+
+    one = [Regime(increment=3, regime=SMOOTH_UNLOADING, reason="reversing",
+                  activated_here=True, unloading=True)]
+    enough, why = coverage(one, nonlinear=True, character="irreversible")
+    assert not enough
+    assert "two are needed" in why
