@@ -28,6 +28,7 @@ import shutil
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
+from umat_oti.fortran.normalize import detect_source_form
 from typing import Optional, Sequence
 
 #: The state file the driver reads. Written rather than generated into the
@@ -609,34 +610,62 @@ _PROGRAM_END = re.compile(r"^\s*(?:\d+\s+)?END\s*(?:PROGRAM(?:\s+\w+)?)?\s*$",
                           re.IGNORECASE)
 
 
-def without_the_authors_program(text: str) -> tuple[str, str]:
-    """The source with any PROGRAM unit commented out, and what was removed.
+def without_the_authors_program(text: str,
+                                form: str = "") -> tuple[str, tuple[str, ...]]:
+    """The source with every PROGRAM unit commented out, and their names.
 
     The replay drives the UMAT subroutine directly and never calls the
     author's own driver, so removing it changes nothing the replay computes.
     Commented rather than deleted, so the emitted file still lines up with the
-    original when a reader compares them.
+    original when a reader compares them -- and the ORIGINAL file on disk is
+    never touched.
+
+    The comment marker follows the SOURCE FORM. ``C`` in column one is a
+    fixed-form comment and a syntax error in free form, so a .f90 cleaned with
+    it fails to compile -- which would turn one link error into another. Free
+    form gets ``!``, which is a comment in both.
+
+    A file may hold more than one PROGRAM, and the modules and subroutines
+    after them have to survive: the removal stops at each program's own END.
     """
-    lines = text.splitlines(keepends=True)
+    # From the CONTENT when the caller does not know: guessing a filename
+    # gets it wrong in one direction or the other, and here that means
+    # emitting a `!` comment into a fixed-form file or a `C` into a free-form
+    # one -- either of which turns one link error into a syntax error.
+    if not form:
+        from umat_oti.corpus import detect_source_form as detect_form_from_text
+        form = detect_form_from_text(text)
+    free = str(form).strip().lower().startswith("free")
+    marker = "!" if free else "C"
+
+    def comment(line: str, note: str = "") -> str:
+        body = line.rstrip("\n").strip()
+        head = f"{marker}     OTIS-REMOVED"
+        return f"{head}{note}: {body}\n" if body else f"{head}{note}\n"
+
     out: list[str] = []
-    removed = ""
+    removed: list[str] = []
     inside = False
-    for line in lines:
+    for line in text.splitlines(keepends=True):
         stripped = line.rstrip("\n")
+        # A preprocessor line is not Fortran and must survive untouched: it is
+        # read before the compiler ever sees the form.
+        if stripped.lstrip().startswith("#"):
+            out.append(line)
+            continue
         if not inside:
             found = _PROGRAM_START.match(stripped)
             if found:
                 inside = True
-                removed = found.group(1)
-                out.append("C     OTIS-REMOVED (the replay supplies its own "
-                           "PROGRAM): " + stripped.strip() + "\n")
+                removed.append(found.group(1))
+                out.append(comment(line, " (the replay supplies its own PROGRAM)"))
                 continue
             out.append(line)
             continue
-        out.append("C     OTIS-REMOVED: " + stripped.strip() + "\n")
+        out.append(comment(line))
         if _PROGRAM_END.match(stripped):
             inside = False
-    return "".join(out), removed
+    return "".join(out), tuple(removed)
 
 
 def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
@@ -660,16 +689,19 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     # build only; the original file on disk is untouched.
     cleaned: list[Path] = []
     removed_programs: list[str] = []
-    for unit in units:
+    for index, unit in enumerate(units):
         text = _text_of(unit)
-        without, removed = without_the_authors_program(text)
+        without, removed = without_the_authors_program(
+            text, detect_source_form(unit, text))
         if not removed:
             cleaned.append(unit)
             continue
-        replacement = work_dir / f"noprogram_{unit.name}"
+        # Indexed, because two helper files in one bundle can share a name
+        # and the second would otherwise overwrite the first's cleaned copy.
+        replacement = work_dir / f"noprogram_{index}_{unit.name}"
         replacement.write_text(without, encoding="utf-8")
         cleaned.append(replacement)
-        removed_programs.append(f"{unit.name}:PROGRAM {removed}")
+        removed_programs.extend(f"{unit.name}:PROGRAM {name}" for name in removed)
     units = cleaned
     driver = work_dir / "otis_replay.f90"
     driver.write_text(
