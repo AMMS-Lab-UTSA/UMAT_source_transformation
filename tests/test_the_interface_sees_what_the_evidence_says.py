@@ -295,3 +295,16 @@ def test_every_terminal_state_has_a_gloss_on_the_page():
     from umat_oti.app.corpus_tab import GLOSS
 
     assert set(ALL) <= set(GLOSS), sorted(set(ALL) - set(GLOSS))
+
+
+def test_a_re_run_entry_is_counted_once(tmp_path: Path):
+    """The results file is append-only: a resumed run that re-runs an entry
+    appends a second record rather than editing the first. Counting both
+    reports 254 outcomes for a 253-entry batch, and counts a superseded
+    verdict beside the one that replaced it."""
+    superseded = dict(VERIFIED_ROW, stage="tangent_not_verified",
+                      reason="an earlier rule said so")
+    view = load_run(write_run(tmp_path, [superseded, VERIFIED_ROW]))
+    assert view.attempted == 1
+    assert view.by_terminal_state == {FULLY_VERIFIED: 1}
+    assert view.entries[0].reason == "agreed at all 3 states"

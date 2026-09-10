@@ -62,6 +62,21 @@ def _read_jsonl(path: Path) -> list[dict]:
     return rows
 
 
+def _latest(rows: list) -> list:
+    """One record per entry: the last one written.
+
+    The results file is append-only, and a resumed run that re-runs an entry
+    appends a second record for it rather than editing the first. Counting
+    both reports 254 outcomes for a 253-entry batch and, worse, counts a
+    superseded verdict beside the one that replaced it.
+    """
+    seen: dict = {}
+    for row in rows:
+        key = str(row.get("key") or row.get("source") or id(row))
+        seen[key] = row
+    return list(seen.values())
+
+
 def _read_json(path: Path) -> Any:
     try:
         return json.loads(Path(path).read_text(encoding="utf-8", errors="replace"))
@@ -269,7 +284,7 @@ def load_run(results_dir: Path, work_dir: Optional[Path] = None) -> RunView:
     interface show a job list that fills in.
     """
     results_dir = Path(results_dir)
-    rows = _read_jsonl(results_dir / RESULTS_FILE)
+    rows = _latest(_read_jsonl(results_dir / RESULTS_FILE))
     summary = _read_json(results_dir / "store_verification.json")
     finished = bool(isinstance(summary, dict) and summary.get("summary"))
     expected = None
