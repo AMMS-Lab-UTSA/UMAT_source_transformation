@@ -89,7 +89,7 @@ from umat_oti.abaqus.state_regime import (                              # noqa: 
     SMOOTH_INELASTIC, classify as classify_regime, coverage,
     response_character)
 from umat_oti.abaqus.amplitude_search import (                          # noqa: E402
-    ACTIVATED, LINEAR_TO_THE_CEILING, search_amplitude)
+    ACTIVATED, LEFT_ITS_DOMAIN, LINEAR_TO_THE_CEILING, search_amplitude)
 from umat_oti.corpus.entry_routines import classify as classify_entry   # noqa: E402
 from umat_oti.fortran.normalize import detect_source_form              # noqa: E402
 from umat_oti.abaqus.elements import geometry_for as element_geometry   # noqa: E402
