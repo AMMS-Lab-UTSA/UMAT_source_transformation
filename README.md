@@ -135,6 +135,28 @@ You can also run the bundled script directly:
 - The standalone no-argument runner now also supports original-vs-transformed validation using the bundled pyoti templates and Abaqus validation pipeline.
 - The bundle now includes the pyoti template files needed for complete OTI module generation, so the minimal-template fallback warning should not appear in normal runs.
 
+## Verifying a corpus
+
+The transformation is one half. The other is establishing, with evidence,
+which of a directory of downloaded UMATs actually work -- and naming, for the
+rest, whose move it is. That loop is described in
+[`docs/CORPUS_VERIFICATION.md`](docs/CORPUS_VERIFICATION.md):
+
+```bash
+make batch-transform                    # convert every discovered source
+make batch-abaqus                       # run both builds, compare, difference
+make corpus-registry TRANSFORM_REPORT=... ABAQUS_RESULTS=...
+make umat-regress                       # replay the frozen experiments
+```
+
+A material is verified when the original ran in Abaqus, the converted build ran
+on the same deck, their stress and state histories agreed over the whole path,
+the loading activated what the material actually does, and the OTI tangent
+agreed with a converged finite difference of the original at several smooth
+states. Compiling is not working and running is not verified.
+
+The interface reads the same records: `streamlit run scripts/app.py`, tab 6.
+
 ## Testing
 
 The test suite does not require Abaqus or a Fortran compiler:
