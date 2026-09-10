@@ -554,6 +554,118 @@ def converged_only(records: list[dict]) -> list[dict]:
     return paired
 
 
+# ---------------------------------------------------------------------------
+# statements that print
+# ---------------------------------------------------------------------------
+#: A statement that writes to standard output: ``PRINT`` in any form, and
+#: ``WRITE`` to unit 6 or to ``*``.
+_CONSOLE_WRITE = re.compile(
+    r"^\s*(?:\d+\s+)?(?:PRINT\s*[*'\"\d]|WRITE\s*\(\s*(?:6|\*)\s*[,)])",
+    re.IGNORECASE)
+
+#: A logical IF whose action is such a statement: ``IF (x) PRINT *, y``.
+_GUARDED_CONSOLE_WRITE = re.compile(
+    r"^\s*(?:\d+\s+)?IF\s*\(.*\)\s*(?:PRINT\s*[*'\"\d]|WRITE\s*\(\s*(?:6|\*)\s*[,)])",
+    re.IGNORECASE)
+
+#: Specifiers that make an output statement assign something. A WRITE with any
+#: of these can change a variable, so removing it would change what the routine
+#: computes and it is left alone.
+_ASSIGNING_SPECIFIER = re.compile(r"\b(IOSTAT|ERR|END|IOMSG|SIZE)\s*=",
+                                  re.IGNORECASE)
+
+#: A leading statement label. A label may be a branch target, so a labelled
+#: statement is replaced by CONTINUE rather than removed.
+_LABEL = re.compile(r"^(\s{0,5})(\d+)(\s.*)$")
+
+
+def _statement_lines(lines: list, start: int) -> int:
+    """Where the statement beginning at ``start`` ends, continuations included.
+
+    A comment between a statement and its continuation belongs to the
+    statement; a comment after the last continuation does not. So the walk
+    looks PAST comments for the next real line and only extends when that line
+    continues -- an earlier version advanced on every comment and swallowed
+    whatever followed the statement.
+    """
+    last = start
+    index = start
+    while index + 1 < len(lines):
+        following = index + 1
+        while following < len(lines) and _is_comment(lines[following]):
+            following += 1
+        if following >= len(lines):
+            break
+        line = lines[following]
+        fixed = (len(line) > 5 and line[5] not in " \t0"
+                 and not line[:5].strip())
+        free = lines[last].split("!")[0].rstrip().endswith("&")
+        if not (fixed or free or _FREE_CONTINUATION.match(line)):
+            break
+        last = index = following
+    return last
+
+
+def silence_console_writes(source_text: str,
+                           form: str = "") -> tuple[str, list]:
+    """Comment out statements that write to standard output, and say which.
+
+    Abaqus/Standard 2021.HF5 on this installation aborts in the element loop
+    when a user subroutine writes to standard output. Measured on two decks
+    identical but for one line: a minimal elastic UMAT completes, and the same
+    routine with ``print*,'ELAM',ELAM`` added aborts, reproducibly, three runs
+    out of three. 179 of the corpus's 391 sources contain such a statement,
+    and the ones whose statement is on the executed path cannot be run here at
+    all -- ``ISOTROPIC-ELASTICITY.for`` prints its Lame constant every call.
+
+    Removing one cannot change what a routine computes, and that is not an
+    assertion: a Fortran output statement assigns nothing unless it carries
+    IOSTAT=, ERR=, END=, IOMSG= or SIZE=, and a statement carrying any of
+    those is left alone. A labelled statement becomes CONTINUE rather than
+    disappearing, because the label may be a branch target.
+
+    Applied to the copy that is compiled, identically for every build in a
+    comparison, and reported with the text of every line it touched -- so a
+    reader can see exactly what was removed and satisfy themselves it computed
+    nothing.
+    """
+    lines = source_text.splitlines(keepends=True)
+    # A fixed-form comment marker in column 1 of a free-form file is a syntax
+    # error, so the marker follows the form of the file being edited.
+    free = str(form).lower().startswith(FREE)
+    marker = "!     OTIS-SILENCED: " if free else "C     OTIS-SILENCED: "
+    removed: list = []
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        if _is_comment(line):
+            index += 1
+            continue
+        statement = _statement_text(line)
+        if not (_CONSOLE_WRITE.match(line) or _CONSOLE_WRITE.match(statement)
+                or _GUARDED_CONSOLE_WRITE.match(line)
+                or _GUARDED_CONSOLE_WRITE.match(statement)):
+            index += 1
+            continue
+        last = _statement_lines(lines, index)
+        whole = "".join(lines[index:last + 1])
+        if _ASSIGNING_SPECIFIER.search(whole):
+            index = last + 1
+            continue
+        labelled = _LABEL.match(line)
+        replacement = []
+        if labelled:
+            replacement.append(f"{labelled.group(1)}{labelled.group(2)} "
+                               f"CONTINUE\n")
+        for number in range(index, last + 1):
+            original = lines[number].rstrip("\n")
+            replacement.append(marker + original.strip() + "\n")
+        removed.append(whole.strip()[:160])
+        lines[index:last + 1] = replacement
+        index += len(replacement)
+    return "".join(lines), removed
+
+
 def instrument(source_text: str, tag: str, entry: str = "UMAT",
                form: str = FIXED) -> tuple[str, bool]:
     """``source_text`` with the probe called at the start and end of ``entry``.

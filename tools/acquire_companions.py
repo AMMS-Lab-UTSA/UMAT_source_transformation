@@ -318,7 +318,9 @@ def main(argv: Optional[list] = None) -> int:
             "published material constants in. Every row names the repository, "
             "the commit it was read at, the path, and the digest of the bytes."),
         "retrieved_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "auth": client.auth_source,
+        # How the token was found, not where the binary lives: the manifest
+        # is committed evidence and may not name a home directory.
+        "auth": client.auth_source.split(" (")[0],
         "requests_made": client.requests_made,
         "cache_root_name": Path(args.cache_dir).name,
         "repositories": [r.as_dict() for r in results],

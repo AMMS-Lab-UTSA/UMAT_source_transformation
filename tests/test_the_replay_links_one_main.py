@@ -15,6 +15,8 @@ rather than deleted so the emitted file still lines up with the original.
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from umat_oti.abaqus.replay import without_the_authors_program  # noqa: E402
@@ -73,10 +75,35 @@ def test_a_subroutine_after_the_program_survives():
     assert "OTIS-REMOVED" not in out.split("SUBROUTINE HELPER")[1]
 
 
-def test_the_replay_build_uses_the_cleaned_copy():
-    source = (Path(__file__).resolve().parents[1] / "src" / "umat_oti"
-              / "abaqus" / "replay.py").read_text(encoding="utf-8")
-    assert "without_the_authors_program(\n            text, detect_source_form(unit, text))" in source, (
-        "the build must pass the unit's own form, or a free-form file\n         gets a fixed-form comment marker")
-    assert 'f"noprogram_{index}_{unit.name}"' in source, (
+@pytest.mark.fortran
+def test_the_replay_build_uses_the_cleaned_copy(tmp_path):
+    """The unit compiled is the cleaned copy, in the unit's own form.
+
+    Asked of what the build produces rather than of the text of the module
+    that produces it: a free-form file given a fixed-form comment marker is a
+    file that does not compile, and that is visible in the copy.
+    """
+    import shutil
+
+    from umat_oti.abaqus.replay import build_replay
+
+    if shutil.which("gfortran") is None:
+        pytest.skip("gfortran is not on PATH")
+    free = tmp_path / "author.f90"
+    free.write_text("program p\n  call umat(1.0)\nend program p\n"
+                    "subroutine umat(x)\n  real :: x\n  print *, x\nend subroutine\n",
+                    encoding="utf-8")
+    work = tmp_path / "work"
+    build_replay(free, work)
+    copies = list(work.glob("noprogram_*"))
+    assert copies, "the cleaned copy is written beside the build, not over the source"
+    cleaned = copies[0].read_text(encoding="utf-8")
+    assert cleaned.lstrip().startswith("!"), (
+        "a free-form file gets a free-form comment marker")
+    assert "OTIS-SILENCED" in cleaned, (
+        "the same console writes the Abaqus builds remove are removed here")
+    live = [line for line in cleaned.splitlines()
+            if not line.lstrip().startswith("!")]
+    assert not any("call umat(1.0)" in line for line in live)
+    assert free.read_text(encoding="utf-8").startswith("program p"), (
         "the original file on disk must not be rewritten")

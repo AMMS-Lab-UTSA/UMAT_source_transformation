@@ -32,7 +32,7 @@ from umat_oti.abaqus.deck import generate_deck, total_increments  # noqa: E402
 from umat_oti.abaqus.manifest import (                      # noqa: E402
     LoadingSegment, VerificationManifest)
 from umat_oti.abaqus.probe import (                          # noqa: E402
-    converged_only, instrument, parse_probe)
+    converged_only, instrument, parse_probe, silence_console_writes)
 from umat_oti.abaqus.runner import run_job                   # noqa: E402
 from umat_oti.abaqus.support import (                        # noqa: E402
     build_support, compile_order, install_support)
@@ -101,6 +101,17 @@ def run_one(manifest: VerificationManifest, source: Path, job: str,
     resolved = (str(form).lower()
                 or detect_source_form(Path(source), source_text))
     report["form"] = resolved
+    # Abaqus/Standard 2021.HF5 here aborts in the element loop when a user
+    # subroutine writes to standard output. Two decks identical but for one
+    # `print*` line: the one without it completes and the one with it aborts,
+    # three runs out of three. 179 of the corpus's 391 sources carry such a
+    # statement. Removing one cannot change what the routine computes -- a
+    # Fortran output statement assigns nothing unless it carries IOSTAT=,
+    # ERR=, END=, IOMSG= or SIZE=, and one that does is left alone -- and it
+    # is done identically for every build in a comparison.
+    source_text, silenced = silence_console_writes(source_text, resolved)
+    report["silenced_console_writes"] = silenced[:10]
+    report["silenced_console_write_count"] = len(silenced)
     text, instrumented = instrument(source_text, job, form=resolved)
     suffix = ".f90" if resolved.startswith("free") else ".for"
     probed = work_dir / f"{job}_probed{suffix}"

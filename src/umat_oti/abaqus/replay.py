@@ -29,6 +29,7 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from umat_oti.fortran.normalize import detect_source_form
+from umat_oti.abaqus.probe import silence_console_writes
 from typing import Optional, Sequence
 
 #: The state file the driver reads. Written rather than generated into the
@@ -732,11 +733,20 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     removed_programs: list[str] = []
     for index, unit in enumerate(units):
         text = _text_of(unit)
-        without, removed = without_the_authors_program(
-            text, detect_source_form(unit, text))
-        if not removed:
+        form = detect_source_form(unit, text)
+        # The same statements the Abaqus builds have removed, removed here
+        # too, so the reference the finite difference is taken from is the
+        # same routine that ran in the solver. Neither changes what is
+        # computed -- an output statement with no IOSTAT= assigns nothing --
+        # but "the same routine" is the claim this comparison rests on.
+        text, silenced = silence_console_writes(text, form)
+        without, removed = without_the_authors_program(text, form)
+        if not removed and not silenced:
             cleaned.append(unit)
             continue
+        if not removed:
+            without = text
+            removed = [f"{len(silenced)} console write(s)"]
         # Indexed, because two helper files in one bundle can share a name
         # and the second would otherwise overwrite the first's cleaned copy.
         replacement = work_dir / f"noprogram_{index}_{unit.name}"
