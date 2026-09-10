@@ -2140,6 +2140,68 @@ def lay_out_includes(found, into: Path) -> Path:
     return into
 
 
+def run_association_control(manifest: VerificationManifest, original: Path,
+                            original_history: Sequence[dict], work_dir: Path,
+                            *, timeout: int, form: str = "",
+                            increments_compared: Optional[int] = None) -> dict:
+    """How much this model's own answer moves when its arithmetic is reordered.
+
+    Some sources disagree with their conversion by an amount no precision
+    difference explains and no bug is visible in. Two things can do that. A
+    local Newton solve converges to a slightly different iterate when its
+    residual is computed in a different order, and the difference it leaves is
+    the solve's own tolerance rather than anybody's mistake. And an
+    ill-conditioned expression -- a difference of two nearly equal large
+    numbers, which finite-strain kinematics is full of -- loses digits that
+    depend on the order the operations were done in.
+
+    Neither is a statement about the transform, and neither can be settled by
+    choosing a tolerance. So it is measured: the ORIGINAL is compiled a second
+    time with reassociation permitted where Abaqus's own line forbids it, run
+    on the same deck, and compared with itself. What comes back is this
+    model's sensitivity to operation order, in the same units as the
+    disagreement under test.
+
+    The transform is credited only when its difference is no LARGER than the
+    model's own -- not merely of the same order. A difference that exceeds it
+    is the transform's, and stays so.
+    """
+    from umat_oti.abaqus.support import association_environment
+
+    outcome: dict[str, Any] = {"ran": False}
+    work_dir = Path(work_dir)
+    work_dir.mkdir(parents=True, exist_ok=True)
+    association_environment(work_dir)
+    report = run_one(manifest=manifest, timeout=timeout, source=Path(original),
+                     job="association", work_dir=work_dir, support_dir=None,
+                     form=form)
+    evidence = job_evidence(report)
+    outcome["completed"] = evidence.completed
+    outcome["warnings"] = list(evidence.warnings)
+    if not evidence.completed:
+        outcome["reason"] = (
+            "the original would not run with its arithmetic reordered, so its "
+            "own sensitivity to operation order could not be measured: "
+            + ("; ".join(evidence.reasons) or "no reason recorded"))
+        return outcome
+
+    # Against the ORIGINAL, not against the conversion: what is being measured
+    # is how far this model moves from ITSELF, which is the yardstick the
+    # conversion's difference is then held against.
+    reordered = history_of(work_dir, "association")
+    left = list(reordered)
+    right = list(original_history)
+    if increments_compared is not None:
+        left, right = left[:increments_compared], right[:increments_compared]
+    baseline = compare_primal(left, right, tolerance=manifest.primal_tolerance,
+                              near_zero_fraction=manifest.near_zero_fraction)
+    outcome["ran"] = True
+    outcome["comparison"] = baseline.as_dict()
+    outcome["worst_stress_relative"] = baseline.worst_stress_relative
+    outcome["worst_state_relative"] = baseline.worst_state_relative
+    return outcome
+
+
 def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                cache_root: Path, work_root: Path, *, timeout: int,
                tangent_tolerance: float = TANGENT_TOLERANCE,
@@ -2477,8 +2539,42 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             record["primal"]["control"] = control["comparison"]
             reference_source = Path(control["source"])
         else:
-            return settle(primal.reason
-                          or "the two builds produced no records to compare")
+            # The other explanation that can be measured rather than argued
+            # about: how far this model moves when its own arithmetic is
+            # reordered. A local Newton solve converges to a different iterate
+            # and an ill-conditioned expression loses different digits, and
+            # neither is a statement about the transform.
+            association = run_association_control(
+                manifest, original, compared_original,
+                work / "association_control", timeout=timeout, form=source_form,
+                increments_compared=(stopped_at if stopped_at >= 0 else None))
+            record["association_control"] = association
+            own = association.get("worst_stress_relative")
+            mine = primal.worst_stress_relative
+            if (association.get("ran") and own is not None and mine is not None
+                    and mine <= own):
+                seen["primal_agrees"] = True
+                precision_note = (
+                    f"the two builds differ by {mine:.3e}, and this model "
+                    f"differs from ITSELF by {own:.3e} when the same source is "
+                    f"compiled with its arithmetic reordered -- reassociation "
+                    f"permitted where Abaqus's own compile line forbids it. "
+                    f"The conversion is no further from the original than the "
+                    f"original is from another equally valid ordering of its "
+                    f"own operations, so the difference is this model's "
+                    f"conditioning and not the transform's")
+                record["primal"]["explained_by_operation_order"] = True
+                record["primal"]["own_sensitivity"] = own
+            else:
+                if association.get("ran") and own is not None:
+                    record["primal"]["own_sensitivity"] = own
+                    return settle(
+                        f"{primal.reason}; and this model differs from itself "
+                        f"by only {own:.3e} when its arithmetic is reordered, "
+                        f"so the difference is larger than its own conditioning "
+                        f"accounts for")
+                return settle(primal.reason
+                              or "the two builds produced no records to compare")
 
     # The tangent is asked for inside the window the PRIMAL comparison
     # accepted, not over the whole history. Where both builds left their
