@@ -96,18 +96,26 @@ class Record:
 
 
 def _rows(path: Optional[Path]) -> list:
+    """Every record, one per entry: the last one written.
+
+    The results file is append-only, so a resumed run that re-runs an entry
+    appends a second record rather than editing the first. Keeping both would
+    put a superseded verdict in the registry beside the one that replaced it.
+    """
     if not path or not Path(path).is_file():
         return []
     text = Path(path).read_text(encoding="utf-8", errors="replace")
     if Path(path).suffix == ".jsonl":
-        out = []
+        latest: dict = {}
         for line in text.splitlines():
-            if line.strip():
-                try:
-                    out.append(json.loads(line))
-                except ValueError:
-                    continue
-        return out
+            if not line.strip():
+                continue
+            try:
+                record = json.loads(line)
+            except ValueError:
+                continue
+            latest[str(record.get("key") or record.get("source") or line)] = record
+        return list(latest.values())
     payload = json.loads(text)
     if isinstance(payload, dict):
         return payload.get("entries") or payload.get("rows") or []
