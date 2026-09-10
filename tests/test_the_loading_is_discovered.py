@@ -269,3 +269,55 @@ def test_a_finite_quiet_run_still_escalates():
     found = search_amplitude(run)
     assert found.outcome == LINEAR_TO_THE_CEILING
     assert found.amplitude <= CEILING
+
+
+def test_the_search_steps_down_before_it_steps_up():
+    """A model whose smallest probe already returns NaN has a domain that does
+    not reach it, and there is nothing above to find. Thirteen Jeff97 growth
+    entries left their domain at the first attempt, the search reported an
+    amplitude of zero, and the caller fell back to a DEFAULT of 0.005 -- fifty
+    times larger than the probe that had just failed."""
+    from umat_oti.abaqus.amplitude_search import search_amplitude
+
+    def run(amplitude):
+        finite = amplitude <= 3e-5
+        value = amplitude * 1e6 if finite else float("nan")
+        return True, [{"STRESS": [value] * 6, "STATEV": [0.0],
+                       "STRAN": [amplitude * (n + 1) / 3] * 6,
+                       "DSTRAN": [amplitude / 3] * 6} for n in range(3)], ""
+
+    found = search_amplitude(run)
+    assert found.amplitude > 0.0
+    assert found.amplitude <= 3e-5, "it came down to where the model has numbers"
+
+
+def test_a_model_with_no_domain_at_all_says_so_and_offers_nothing():
+    from umat_oti.abaqus.amplitude_search import (LEFT_ITS_DOMAIN,
+                                                  search_amplitude)
+
+    def dead(_amplitude):
+        return True, [{"STRESS": [float("nan")] * 6, "STATEV": [0.0]}] * 3, ""
+
+    found = search_amplitude(dead)
+    assert found.outcome == LEFT_ITS_DOMAIN
+    assert found.amplitude == 0.0
+    assert "no loading here this harness can drive it at" in found.reason
+
+
+def test_the_descent_does_not_disturb_a_model_that_runs():
+    from umat_oti.abaqus.amplitude_search import (FIRST_AMPLITUDE,
+                                                  LINEAR_TO_THE_CEILING,
+                                                  search_amplitude)
+
+    tried: list = []
+
+    def run(amplitude):
+        tried.append(amplitude)
+        return True, [{"STRESS": [amplitude * 1e6] * 6, "STATEV": [0.0],
+                       "STRAN": [amplitude] * 6,
+                       "DSTRAN": [amplitude / 3] * 6} for _ in range(3)], ""
+
+    found = search_amplitude(run)
+    assert found.outcome == LINEAR_TO_THE_CEILING
+    assert tried[0] == FIRST_AMPLITUDE
+    assert min(tried) == FIRST_AMPLITUDE, "no descent when the first one runs"

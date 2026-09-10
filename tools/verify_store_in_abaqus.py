@@ -914,7 +914,17 @@ def discover_loading(manifest: VerificationManifest, original: Path,
     # Driving PAST it puts the transition partway along, so the early
     # increments are smooth elastic, the late ones are smooth inelastic, and
     # the states either side can be chosen with clearance from the corner.
-    amplitude = found.amplitude or manifest.loading[0].strain[0]
+    # No fallback to the fixed probe when the search FOUND that the model has
+    # no domain there. Falling back put thirteen entries on 0.005 -- fifty
+    # times the amplitude that had just returned NaN -- and both builds went
+    # non-finite at their second increment.
+    amplitude = found.amplitude
+    if not amplitude:
+        if found.outcome == LEFT_ITS_DOMAIN:
+            record["chosen_amplitude"] = 0.0
+            record["refused"] = found.reason
+            return manifest, record
+        amplitude = manifest.loading[0].strain[0]
     if found.outcome == ACTIVATED and amplitude:
         # Two different situations wear the same word. A material that was
         # quiet and then activated has a transition, and the loading should
