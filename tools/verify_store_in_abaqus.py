@@ -95,8 +95,8 @@ from umat_oti.fortran.normalize import detect_source_form              # noqa: E
 from umat_oti.abaqus.elements import geometry_for as element_geometry   # noqa: E402
 from umat_oti.abaqus.formulation import settle                          # noqa: E402
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
-    NEEDS_MATERIAL_DATA, VerificationManifest, at_rate, hold, reverse,
-    simple_shear, uniaxial)
+    LoadingSegment, NEEDS_MATERIAL_DATA, VerificationManifest, at_rate, hold,
+    reverse, simple_shear, uniaxial)
 from umat_oti.abaqus.rate_search import (                               # noqa: E402
     HOLD_PERIODS, RATE_FACTOR, probe_time)
 from umat_oti.abaqus.job_status import blocking_statements
@@ -739,6 +739,62 @@ def build_manifest(
 
 
 # ---------------------------------------------------------------------------
+# frozen experiments
+# ---------------------------------------------------------------------------
+
+
+def frozen_manifests(collection: Optional[Path]) -> dict:
+    """The experiments already verified, keyed by the source and its bytes.
+
+    A regression that searches again is not a regression. The amplitude the
+    discovery chose, the segments it built, the hold it added, the step ladder
+    and the tolerances were decided once, when the material first verified;
+    replaying them is what makes a later run's difference a difference in the
+    CODE. Keyed on the source's digest as well as its identity, so a source
+    that has changed since it was frozen does not silently reuse an experiment
+    chosen for different text.
+    """
+    frozen: dict = {}
+    if collection is None or not Path(collection).is_dir():
+        return frozen
+    for contract in sorted(Path(collection).glob("*/contract.json")):
+        try:
+            payload = json.loads(contract.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        manifest = payload.get("frozen_manifest")
+        source_id = str(payload.get("source_id") or "")
+        if not manifest or not source_id:
+            continue
+        frozen[source_id] = {
+            "manifest": manifest,
+            "source_sha256": str(payload.get("source_sha256") or ""),
+            "states": payload.get("frozen_states") or [],
+            "from": str(contract.parent.name),
+        }
+    return frozen
+
+
+def thaw(record: dict) -> VerificationManifest:
+    """A manifest back out of its frozen record, loading segments included."""
+    fields = set(VerificationManifest.__dataclass_fields__)
+    payload = {name: value for name, value in dict(record).items()
+               if name in fields and name != "loading"}
+    loading = tuple(
+        LoadingSegment(**dict(segment, strain=tuple(segment["strain"])))
+        for segment in (record.get("loading") or []))
+    for name in ("props", "initial_statev", "fd_steps", "bundle", "outputs",
+                 "perturbation_components"):
+        if payload.get(name) is not None:
+            payload[name] = tuple(payload[name])
+    if payload.get("orientation") is not None:
+        payload["orientation"] = tuple(payload["orientation"])
+    payload["source"] = Path(payload.get("source") or ".")
+    payload["bundle"] = tuple(Path(p) for p in payload.get("bundle", ()))
+    return VerificationManifest(loading=loading, **payload)
+
+
+# ---------------------------------------------------------------------------
 # one manifest, two builds
 # ---------------------------------------------------------------------------
 
@@ -775,6 +831,19 @@ def _regime_of(state: dict):
 #: author never wrote. Checked by an actual run before it is adopted -- a
 #: material that cannot be driven that far keeps the amplitude that worked.
 BEYOND_TRANSITION = 4.0
+
+#: How far to drive a material that was ALREADY active at the smallest
+#: amplitude the search tried. There is no transition to place the path around,
+#: so the amplitude is chosen for RESOLUTION: large enough that the stress
+#: response is well clear of what a centred difference of doubles can see, and
+#: bounded so the model is not walked somewhere its author never wrote.
+#:
+#: Tried largest first, and the largest the model can actually be driven to is
+#: the one used. 400 takes the search's floor of 1e-4 to four percent of
+#: strain, which is a verification amplitude rather than a probe; the smaller
+#: rungs are there for a model that will not go that far, so that "it did not
+#: run" costs resolution rather than the whole result.
+RESOLUTION_FACTORS = (400.0, 100.0, 25.0)
 
 
 def discover_loading(manifest: VerificationManifest, original: Path,
@@ -845,22 +914,57 @@ def discover_loading(manifest: VerificationManifest, original: Path,
     # the states either side can be chosen with clearance from the corner.
     amplitude = found.amplitude or manifest.loading[0].strain[0]
     if found.outcome == ACTIVATED and amplitude:
-        wanted = amplitude * BEYOND_TRANSITION
-        ran, _records, why = run_at(wanted)
+        # Two different situations wear the same word. A material that was
+        # quiet and then activated has a transition, and the loading should
+        # cross it partway along. A material that was ALREADY doing something
+        # at the search's smallest amplitude has no transition the search can
+        # see -- a growth or a swelling law is driven by time and is active
+        # from its first increment -- and for that one the amplitude decides
+        # nothing about branches and everything about whether a finite
+        # difference can resolve anything at all.
+        #
+        # Measured on From-2D-to-2D-Axe.for: activated at 1e-4, the first
+        # amplitude tried, verified at 1e-4, and the tangent came back with
+        # one-sided gaps that GREW as the step shrank -- 0.006 at 1e-3 and 70
+        # at 1e-7, which is cancellation and not a corner -- and a centred
+        # difference 0.9% from the OTI value. There is no transition there to
+        # step past; there is a response too small to difference.
+        # "Activated at the first amplitude tried" is the question, and the
+        # bracket cannot answer it: the refinement starts from
+        # amplitude/growth when nothing was ever quiet, so its lower end is
+        # never zero. The attempts can answer it, because the first of them
+        # IS the first amplitude tried.
+        at_the_floor = bool(found.attempts and found.attempts[0].activated)
+        ladder = RESOLUTION_FACTORS if at_the_floor else (BEYOND_TRANSITION,)
         record.setdefault("extension", {})
-        if ran:
-            amplitude = wanted
-            record["extension"] = {
-                "amplitude": wanted, "factor": BEYOND_TRANSITION,
-                "why": ("driven past the transition so the path crosses it "
+        tried: list = []
+        for factor in ladder:
+            wanted = amplitude * factor
+            ran, _records, why = run_at(wanted)
+            tried.append({"factor": factor, "amplitude": wanted, "ran": ran,
+                          "reason": why[:200]})
+            if ran:
+                amplitude = wanted
+                record["extension"] = {
+                    "amplitude": wanted, "factor": factor, "tried": tried,
+                    "at_the_search_floor": at_the_floor,
+                    "why": (
+                        f"this material was already active at the smallest "
+                        f"amplitude tried, so there is no transition to cross; "
+                        f"driven up by {factor:g} instead, to a strain a "
+                        f"centred difference can resolve"
+                        if at_the_floor else
+                        "driven past the transition so the path crosses it "
                         "partway along and carries smooth states on both "
                         "sides")}
+                break
         else:
             record["extension"] = {
-                "amplitude": None, "attempted": wanted, "reason": why,
-                "why": ("the material could not be driven past its own "
-                        "transition, so the path stops at it and only "
-                        "pre-transition states are available")}
+                "amplitude": None, "tried": tried,
+                "at_the_search_floor": at_the_floor,
+                "why": ("the material could not be driven further than the "
+                        "search reached, so the path stops where it was and "
+                        "only the states it reached are available")}
 
     # No amplitude asks whether this material cares about TIME. A Kelvin-Voigt
     # solid driven at one rate is linear in the strain at every amplitude, so
@@ -2040,7 +2144,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                cache_root: Path, work_root: Path, *, timeout: int,
                tangent_tolerance: float = TANGENT_TOLERANCE,
                strain: float = 0.005, increments: int = 10,
-               discover: bool = True) -> dict:
+               discover: bool = True, frozen: Optional[dict] = None) -> dict:
     """One stored transform, carried as far up the ladder as it will go.
 
     Every return goes through ``classify_stage`` on the evidence gathered so
@@ -2138,14 +2242,58 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     source_form = detect_source_form(
         Path(original), Path(original).read_text(errors="replace"))
     record["source_form"] = source_form
+    # A frozen experiment replaces the search outright, and only when the
+    # bytes it was chosen for are the bytes on disk now.
+    kept = (frozen or {}).get(stored.source_id)
+    if kept and kept.get("source_sha256") not in ("", stored.source_sha256):
+        record["frozen_rejected"] = (
+            f"the experiment frozen as {kept['from']} was chosen for a source "
+            f"whose digest was {kept['source_sha256'][:12]}; this source's is "
+            f"{stored.source_sha256[:12]}, so the frozen loading describes a "
+            f"different file and the discovery is run again")
+        kept = None
+    if kept:
+        try:
+            manifest = thaw(kept["manifest"])
+        except (TypeError, ValueError, KeyError) as error:
+            record["frozen_rejected"] = (
+                f"the frozen experiment could not be read back "
+                f"({type(error).__name__}: {error}); the discovery is run again")
+            kept = None
+    if kept:
+        record["frozen"] = {
+            "from": kept["from"], "states": kept.get("states") or [],
+            "why": ("the experiment this material first verified under, "
+                    "replayed exactly: same amplitude, same segments, same "
+                    "step ladder, same tolerances. A regression that searched "
+                    "again would be measuring a different experiment")}
+        record["discovery"] = {"ran": False,
+                               "reason": "replaying a frozen experiment"}
+        record.update(_material_columns(replace(plan, manifest=manifest)))
+        if stored_ntens and stored_ntens != manifest.ntens:
+            seen["manifest_refusals"] = (
+                f"the frozen experiment drives this material at NTENS="
+                f"{manifest.ntens} and the stored transform was built for "
+                f"NTENS={stored_ntens}. Re-transform, or re-discover: "
+                f"replaying the frozen loading would compare a tangent of the "
+                f"wrong shape",)
+            return settle(seen["manifest_refusals"][0])
     if (row or {}).get("form") and row["form"] != source_form:
         record["source_form_note"] = (
             f"the triage scan called this source {row['form']}; reading it "
             f"again says {source_form}, and the file is what ifort compiles")
-    manifest, discovery = discover_loading(
-        manifest, Path(original), work, timeout, form=source_form,
-        increments=increments, enabled=discover)
-    record["discovery"] = discovery
+    if not kept:
+        manifest, discovery = discover_loading(
+            manifest, Path(original), work, timeout, form=source_form,
+            increments=increments, enabled=discover)
+        record["discovery"] = discovery
+
+    # The whole manifest, as it will actually be run. This is what makes a
+    # regression deterministic: the amplitude the search chose, the segments
+    # it built, the step ladder and the tolerances are decided ONCE, here, and
+    # a later run replays them rather than searching again -- so a difference
+    # between two runs is a difference in the code and not in the experiment.
+    record["manifest"] = manifest.as_dict()
 
     original_call, transformed_call = build_plan(
         manifest, original, stored.entry_source, work, timeout, form=source_form)
@@ -2423,6 +2571,12 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
         at_states.append(single)
     outcome["states"] = at_states
     outcome["states_checked"] = len(at_states)
+    # The increments a regression must return to. Chosen here by looking at
+    # what the material did; frozen so that a later run measures the tangent
+    # at the same places rather than at whatever it would choose next time.
+    outcome["chosen_states"] = [
+        {"increment": state.get("increment"),
+         "record_index": state.get("record_index")} for state in at_states]
     agreed = [s for s in at_states if s.get("verified")]
     outcome["states_agreeing"] = len(agreed)
     # A state whose sweep produced nothing measurable did not DISAGREE -- the
@@ -2741,7 +2895,8 @@ def run_batch(entries: Sequence[Any], rows: dict[str, dict],
               tangent_tolerance: float = TANGENT_TOLERANCE,
               strain: float = 0.005, increments: int = 10,
               previous: Optional[dict[str, str]] = None,
-              resume: bool = False, discover: bool = True) -> list[dict]:
+              resume: bool = False, discover: bool = True,
+              frozen: Optional[dict] = None) -> list[dict]:
     """Every selected entry, in order, with each result on disk before the next."""
     previous = previous or {}
     lock = Lock()
@@ -2760,7 +2915,7 @@ def run_batch(entries: Sequence[Any], rows: dict[str, dict],
                                 work_root, timeout=timeout,
                                 tangent_tolerance=tangent_tolerance,
                                 strain=strain, increments=increments,
-                                discover=discover)
+                                discover=discover, frozen=frozen)
         except Exception as error:                      # noqa: BLE001
             # A crash is a finding about this harness, recorded as such and
             # never as a stage: it says nothing about the model, and --resume
@@ -2850,6 +3005,15 @@ def main(argv: Optional[list[str]] = None) -> int:
              "Without this, regression requires every attempted entry that "
              "previously verified to verify again.")
     parser.add_argument(
+        "--frozen", type=Path, default=REPO_ROOT / "umat",
+        help=("the verified collection, whose contracts carry the experiment "
+              "each material first verified under. Under --mode regression "
+              "these are replayed exactly -- same amplitude, same segments, "
+              "same step ladder, same tolerances -- because a regression that "
+              "searched again would be measuring a different experiment. A "
+              "frozen experiment is used only when the source's digest still "
+              "matches the one it was chosen for."))
+    parser.add_argument(
         "--baseline", type=Path, default=None,
         help="a previous store_verification.json whose verified entries "
              "become the required set under --mode regression. Never written "
@@ -2893,12 +3057,16 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     rows = triage_rows(args.triage)
     proposals = proposal_entries(args.proposals)
+    kept = frozen_manifests(args.frozen) if args.mode == "regression" else {}
+    if args.mode == "regression":
+        print(f"  {len(kept)} frozen experiment(s) available to replay from "
+              f"{args.frozen}")
     fresh = run_batch(entries, rows, proposals, args.cache_dir, args.work_dir,
                       results_path, timeout=args.timeout, jobs=max(1, args.jobs),
                       tangent_tolerance=args.tangent_tolerance,
                       strain=args.strain, increments=args.increments,
                       previous=previous, resume=args.resume,
-                      discover=not args.no_discovery)
+                      discover=not args.no_discovery, frozen=kept)
 
     # The denominator is every entry this batch attempted, which on a resumed
     # run includes the ones it skipped because they were already settled.
