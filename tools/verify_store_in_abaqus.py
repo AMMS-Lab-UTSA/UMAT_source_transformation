@@ -849,6 +849,7 @@ RESOLUTION_FACTORS = (400.0, 100.0, 25.0)
 def discover_loading(manifest: VerificationManifest, original: Path,
                      work_dir: Path, timeout: int, *,
                      increments: int = 10, form: str = "",
+                     data_roots: Sequence[Path] = (),
                      enabled: bool = True) -> tuple[VerificationManifest, dict]:
     """Raise the amplitude on the ORIGINAL until the material does something.
 
@@ -887,7 +888,8 @@ def discover_loading(manifest: VerificationManifest, original: Path,
         loading.append(reverse(loading[0]))
         candidate = replace(manifest, loading=tuple(loading))
         call = dict(manifest=candidate, timeout=timeout, source=Path(original),
-                    job="original", work_dir=trial, support_dir=None, form=form)
+                    job="original", work_dir=trial, support_dir=None, form=form,
+                    data_roots=data_roots)
         try:
             report = run_one(**call)
         except Exception as exc:                       # noqa: BLE001
@@ -981,7 +983,7 @@ def discover_loading(manifest: VerificationManifest, original: Path,
     if enabled:
         time_finding = probe_time_dependence(
             manifest, original, attempts_dir, timeout, amplitude=amplitude,
-            increments=coarse, form=form)
+            increments=coarse, form=form, data_roots=data_roots)
         record["time"] = time_finding.as_dict()
 
     loading = [uniaxial(amplitude, increments), simple_shear(amplitude, increments)]
@@ -1001,7 +1003,7 @@ def discover_loading(manifest: VerificationManifest, original: Path,
 def probe_time_dependence(manifest: VerificationManifest, original: Path,
                           attempts_dir: Path, timeout: int, *,
                           amplitude: float, increments: int,
-                          form: str = ""):
+                          form: str = "", data_roots: Sequence[Path] = ()):
     """Two runs of the ORIGINAL that differ only in how much time passed.
 
     The slow one carries a hold, so relaxation and rate dependence cost two
@@ -1015,7 +1017,8 @@ def probe_time_dependence(manifest: VerificationManifest, original: Path,
         try:
             report = run_one(manifest=candidate, timeout=timeout,
                              source=Path(original), job="original",
-                             work_dir=trial, support_dir=None, form=form)
+                             work_dir=trial, support_dir=None, form=form,
+                             data_roots=data_roots)
         except Exception as exc:                    # noqa: BLE001
             return False, [], f"the job raised {type(exc).__name__}: {exc}"
         evidence = job_evidence(report)
@@ -1033,7 +1036,8 @@ def probe_time_dependence(manifest: VerificationManifest, original: Path,
 
 def build_plan(manifest: VerificationManifest, original: Path, transformed: Path,
                work_dir: Path, timeout: int,
-               form: str = "") -> tuple[dict, dict]:
+               form: str = "",
+               data_roots: Sequence[Path] = ()) -> tuple[dict, dict]:
     """The two ``run_one`` calls, both carrying the very same manifest object.
 
     Returned as a pair rather than made at two call sites because the pair is
@@ -1052,7 +1056,8 @@ def build_plan(manifest: VerificationManifest, original: Path, transformed: Path
     run. Nothing that reaches the deck differs, which ``require_one_manifest``
     then insists on.
     """
-    common = {"manifest": manifest, "timeout": timeout}
+    common = {"manifest": manifest, "timeout": timeout,
+              "data_roots": tuple(data_roots)}
     # The ORIGINAL is driven in the form the triage read off it. The
     # TRANSFORMED source is left to declare its own, because the transform --
     # not the triage -- decided what it emitted, and its suffix says so.
@@ -1964,6 +1969,7 @@ def _material_columns(plan: ManifestPlan) -> dict[str, Any]:
 def run_precision_control(manifest: VerificationManifest, original: Path,
                           transformed: Path, transformed_history: Sequence[dict],
                           work_dir: Path, *, timeout: int, form: str = "",
+                          data_roots: Sequence[Path] = (),
                           increments_compared: Optional[int] = None) -> dict:
     """Test the one explanation of a primal disagreement that can be tested.
 
@@ -2014,7 +2020,7 @@ def run_precision_control(manifest: VerificationManifest, original: Path,
 
     report = run_one(manifest=manifest, timeout=timeout, source=control_source,
                      job="control", work_dir=work_dir, support_dir=None,
-                     form=form)
+                     form=form, data_roots=data_roots)
     evidence = job_evidence(report)
     outcome["ran"] = True
     outcome["completed"] = evidence.completed
@@ -2087,11 +2093,28 @@ def diagnose_original(source: Path, cache_root: Path, work_dir: Path, *,
         about building, and the ladder's own verdict stands.
     """
     from umat_oti.abaqus.companions import repository_files, resolve
+    from umat_oti.abaqus.data_files import stage as stage_data_files
     from umat_oti.abaqus.support import compile_one
 
     found = resolve(Path(source), repository_files(Path(source), cache_root))
     outcome: dict[str, Any] = {"companions": found.as_dict(),
                                "companions_reason": found.reason()}
+
+    # A table the routine opens by name and that nobody published is data the
+    # model runs on, and it is not here. Checked before the compiler, because
+    # a source can compile perfectly and still abort in the element loop on
+    # the first READ -- which is what eleven corpus entries did, leaving a
+    # .msg whose last legible line was the file name it wanted.
+    repository = (Path(cache_root) / Path(source_id).parts[0]
+                  if source_id else Path(source).parent)
+    staging = stage_data_files(Path(source), Path(work_dir) / "data",
+                               roots=[repository])
+    outcome["data_files"] = staging.as_dict()
+    outcome["data_files_reason"] = staging.reason()
+    if not staging.complete:
+        outcome["verdict"] = EXTERNAL_DEPENDENCY_UNAVAILABLE
+        outcome["reason"] = staging.reason()
+        return outcome
     work_dir = Path(work_dir)
     check = compile_one(Path(source), work_dir / "compile", form=form,
                         timeout=timeout, extra_sources=found.order,
@@ -2155,6 +2178,7 @@ def lay_out_includes(found, into: Path) -> Path:
 def run_association_control(manifest: VerificationManifest, original: Path,
                             original_history: Sequence[dict], work_dir: Path,
                             *, timeout: int, form: str = "",
+                            data_roots: Sequence[Path] = (),
                             increments_compared: Optional[int] = None) -> dict:
     """How much this model's own answer moves when its arithmetic is reordered.
 
@@ -2186,7 +2210,7 @@ def run_association_control(manifest: VerificationManifest, original: Path,
     association_environment(work_dir)
     report = run_one(manifest=manifest, timeout=timeout, source=Path(original),
                      job="association", work_dir=work_dir, support_dir=None,
-                     form=form)
+                     form=form, data_roots=data_roots)
     evidence = job_evidence(report)
     outcome["completed"] = evidence.completed
     outcome["warnings"] = list(evidence.warnings)
@@ -2316,6 +2340,11 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     source_form = detect_source_form(
         Path(original), Path(original).read_text(errors="replace"))
     record["source_form"] = source_form
+    # Where to look for a data table the routine opens by name: beside the
+    # source, then anywhere in its own repository. Not further: supplying a
+    # table from another author's repository would be inventing the data the
+    # model runs on.
+    data_roots = (Path(cache_root) / Path(stored.source_id).parts[0],)
     # A frozen experiment replaces the search outright, and only when the
     # bytes it was chosen for are the bytes on disk now.
     kept = (frozen or {}).get(stored.source_id)
@@ -2359,7 +2388,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     if not kept:
         manifest, discovery = discover_loading(
             manifest, Path(original), work, timeout, form=source_form,
-            increments=increments, enabled=discover)
+            increments=increments, data_roots=data_roots, enabled=discover)
         record["discovery"] = discovery
 
     # The whole manifest, as it will actually be run. This is what makes a
@@ -2370,7 +2399,8 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     record["manifest"] = manifest.as_dict()
 
     original_call, transformed_call = build_plan(
-        manifest, original, stored.entry_source, work, timeout, form=source_form)
+        manifest, original, stored.entry_source, work, timeout, form=source_form,
+        data_roots=data_roots)
     # Both builds are handed the SAME manifest object, and this refuses to run
     # them if they ever stop being. Two builds driven by different decks answer
     # two different questions, and an agreement between two different questions
@@ -2541,6 +2571,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         control = run_precision_control(
             manifest, original, Path(stored.entry_source), compared_transformed,
             work / "precision_control", timeout=timeout, form=source_form,
+            data_roots=data_roots,
             increments_compared=(stopped_at if stopped_at >= 0 else None))
         if control:
             record["precision_control"] = control
@@ -2559,6 +2590,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             association = run_association_control(
                 manifest, original, compared_original,
                 work / "association_control", timeout=timeout, form=source_form,
+                data_roots=data_roots,
                 increments_compared=(stopped_at if stopped_at >= 0 else None))
             record["association_control"] = association
             own = association.get("worst_stress_relative")

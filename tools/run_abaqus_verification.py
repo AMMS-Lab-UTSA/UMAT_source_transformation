@@ -24,10 +24,12 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from umat_oti.abaqus.compare import compare_primal          # noqa: E402
+from umat_oti.abaqus.data_files import stage as stage_data_files  # noqa: E402
 from umat_oti.abaqus.deck import generate_deck, total_increments  # noqa: E402
 from umat_oti.abaqus.manifest import (                      # noqa: E402
     LoadingSegment, VerificationManifest)
@@ -68,7 +70,7 @@ def load_manifest(path: Path) -> tuple[VerificationManifest, tuple[str, ...]]:
 
 def run_one(manifest: VerificationManifest, source: Path, job: str,
             work_dir: Path, support_dir: Path | None, timeout: int,
-            form: str = "") -> dict:
+            form: str = "", data_roots: Sequence[Path] = ()) -> dict:
     """One build, through the deck the manifest describes.
 
     ``form`` is the source form -- "fixed" or "free". It decides what the probe
@@ -122,6 +124,17 @@ def run_one(manifest: VerificationManifest, source: Path, job: str,
         # from the ODB at single precision -- not enough for a difference.
         report["warning"] = ("the probe found no call site, so this run records "
                              "no full-precision history")
+
+    # Files the routine opens by name, put where it looks for them. A growth
+    # law that reads its target shape from a table names the author's own path
+    # -- 'T:\\Abaqus-Temp\\...\\Lambda10.csv' -- and the data is in the
+    # repository beside the source; what is missing is the path. Staged under
+    # the exact literal name, backslashes included, because those are ordinary
+    # characters in a POSIX file name.
+    staging = stage_data_files(Path(source), work_dir,
+                               roots=[Path(root) for root in data_roots])
+    report["data_files"] = staging.as_dict()
+    report["data_files_reason"] = staging.reason()
 
     result = run_job(work_dir, job, generate_deck(manifest), user_source=probed,
                      expected_increments=total_increments(manifest.loading),
