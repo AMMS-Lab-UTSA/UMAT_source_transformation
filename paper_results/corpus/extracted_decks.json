@@ -1,55 +1,14 @@
 {
  "what_this_is": "Abaqus material keyword blocks copied verbatim out of files that are not decks -- documentation, reference pages, model scripts -- so that the pairing can read them with the same parser it reads decks with. Nothing was interpreted or converted.",
- "generated": "2026-09-10T21:03:39+00:00",
+ "generated": "2026-09-10T21:16:49+00:00",
  "cache_root_name": "discovery_cache",
  "extracted": [
   {
-   "source_document": "RickAlb__UMAT-DFD-Lebedev/README.md",
-   "deck": "RickAlb__UMAT-DFD-Lebedev/README.md.extracted.inp",
-   "blocks": 1,
-   "lines": [
-    [
-     45,
-     46
-    ]
-   ]
-  },
-  {
-   "source_document": "Woowinehouse__ABQ-UMAT-Sanisand-High/README.md",
-   "deck": "Woowinehouse__ABQ-UMAT-Sanisand-High/README.md.extracted.inp",
-   "blocks": 1,
-   "lines": [
-    [
-     115,
-     116
-    ]
-   ]
-  },
-  {
-   "source_document": "jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/prompts/ai_guide.md",
-   "deck": "jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/prompts/ai_guide.md.extracted.inp",
-   "blocks": 1,
-   "lines": [
-    [
-     107,
-     108
-    ]
-   ]
-  },
-  {
-   "source_document": "jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/reference/material/creep_material.md",
-   "deck": "jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/reference/material/creep_material.md.extracted.inp",
-   "blocks": 1,
-   "lines": [
-    [
-     154,
-     156
-    ]
-   ]
-  },
-  {
    "source_document": "jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/reference/material/umat_elastic.md",
    "deck": "jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/reference/material/umat_elastic.md.extracted.inp",
+   "about": [
+    "jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/official_examples/umat/umat_elastic_official.f"
+   ],
    "blocks": 1,
    "lines": [
     [
@@ -57,59 +16,7 @@
      176
     ]
    ]
-  },
-  {
-   "source_document": "jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/reference/material/umat_plasticity.md",
-   "deck": "jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/reference/material/umat_plasticity.md.extracted.inp",
-   "blocks": 1,
-   "lines": [
-    [
-     252,
-     259
-    ]
-   ]
-  },
-  {
-   "source_document": "jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/reference/thermal/umatht_thermal.md",
-   "deck": "jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/reference/thermal/umatht_thermal.md.extracted.inp",
-   "blocks": 1,
-   "lines": [
-    [
-     120,
-     122
-    ]
-   ]
-  },
-  {
-   "source_document": "3MAH__simcoon/docs/simulation/abaqus.rst",
-   "deck": "3MAH__simcoon/docs/simulation/abaqus.rst.extracted.inp",
-   "blocks": 3,
-   "lines": [
-    [
-     106,
-     110
-    ],
-    [
-     115,
-     119
-    ],
-    [
-     472,
-     478
-    ]
-   ]
-  },
-  {
-   "source_document": "sas229__geomat/docs/source/usage.rst",
-   "deck": "sas229__geomat/docs/source/usage.rst.extracted.inp",
-   "blocks": 1,
-   "lines": [
-    [
-     71,
-     73
-    ]
-   ]
   }
  ],
- "count": 9
+ "count": 1
 }

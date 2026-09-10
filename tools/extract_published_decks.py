@@ -110,6 +110,55 @@ def blocks(text: str) -> list:
     return found
 
 
+#: How much of a name has to match before a document is taken to be ABOUT a
+#: routine. Eight characters: "umat_elastic" matches
+#: "umat_elastic_official" and means it, while "abaqus" matches
+#: "umat_abaqus_elastic" and means nothing.
+NAME_MATCH_MINIMUM = 8
+
+#: Fortran a document might be about.
+SOURCE_SUFFIXES = (".f", ".for", ".f90", ".f95", ".f03", ".f08", ".ftn", ".F90")
+
+
+def _stem(name: str) -> str:
+    return "".join(ch for ch in Path(name).stem.lower() if ch.isalnum())
+
+
+def documents(path: Path, cache_root: Path) -> list:
+    """Which sources in the same repository this document names.
+
+    Constants read out of a DECK belong to whatever that deck runs, and the
+    deck says so. Constants read out of a document belong to whatever the
+    document is about, and nothing says so -- so the only ones carried across
+    are from a document that names its routine in its own filename.
+
+    Without that rule, ``umat_plasticity.md`` -- five constants for a
+    power-law hardening model -- was paired with
+    ``umat_mises_plasticity_official.f``, which reads four and is a different
+    model; and ``abaqus.rst`` was paired with ``UMAT_ABAQUS_ELASTIC.f``
+    because "abaqus" appears in both. Matching on the number of constants is
+    enough for a deck, which was written to run something. It is not enough
+    for a page of prose.
+    """
+    try:
+        relative = path.relative_to(cache_root)
+    except ValueError:
+        return []
+    if not relative.parts:
+        return []
+    stem = _stem(path.name)
+    if len(stem) < NAME_MATCH_MINIMUM:
+        return []
+    named: list = []
+    for source in sorted((cache_root / relative.parts[0]).rglob("*")):
+        if not source.is_file() or source.suffix not in SOURCE_SUFFIXES:
+            continue
+        other = _stem(source.name)
+        if stem in other or other in stem:
+            named.append(str(source.relative_to(cache_root)))
+    return named
+
+
 def extract(path: Path, cache_root: Path) -> Optional[dict]:
     """Write one file's material blocks out as a deck beside it."""
     try:
@@ -119,6 +168,9 @@ def extract(path: Path, cache_root: Path) -> Optional[dict]:
     found = blocks(text)
     if not found:
         return None
+    about = documents(path, cache_root)
+    if not about:
+        return None
     relative = path.relative_to(cache_root)
     header = [
         "*HEADING",
@@ -127,7 +179,8 @@ def extract(path: Path, cache_root: Path) -> Optional[dict]:
         "** interpreted or converted: these are the author's own Abaqus",
         "** material keywords, copied out of the file named above so that the",
         "** same parser that reads every other deck can read them.",
-    ]
+        "** The document names the routine it is about in its own filename:",
+    ] + [f"**   {name}" for name in about]
     body: list = []
     for first, last, block in found:
         body.append(f"** from {relative} lines {first}-{last}")
@@ -136,6 +189,7 @@ def extract(path: Path, cache_root: Path) -> Optional[dict]:
     target.write_text("\n".join(header + body) + "\n", encoding="utf-8")
     return {"source_document": str(relative),
             "deck": str(target.relative_to(cache_root)),
+            "about": about,
             "blocks": len(found),
             "lines": [[first, last] for first, last, _ in found]}
 
@@ -160,7 +214,8 @@ def main(argv: Optional[list] = None) -> int:
             if record:
                 written.append(record)
                 print(f"  {record['deck']}  ({record['blocks']} block(s) from "
-                      f"{record['source_document']})")
+                      f"{record['source_document']}, about "
+                      f"{', '.join(record['about'][:2])})")
     manifest = {
         "what_this_is": (
             "Abaqus material keyword blocks copied verbatim out of files that "

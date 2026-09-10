@@ -107,3 +107,45 @@ def test_the_regression_command_asks_for_no_discovery():
     command = run_command("regression", Path("r"), Path("w"))
     assert "--no-discovery" in command
     assert "--mode" in command and command[command.index("--mode") + 1] == "regression"
+
+
+# ---------------------------------------------------------------------------
+# and a verdict settled under a rule that has since changed is not settled
+# ---------------------------------------------------------------------------
+def test_a_resumed_run_skips_what_is_settled():
+    from verify_store_in_abaqus import should_skip
+
+    assert should_skip("k", {"k": "verified"}, resume=True)
+    assert should_skip("k", {"k": "not_a_umat"}, resume=True)
+    assert not should_skip("k", {"k": "harness_error"}, resume=True), (
+        "a crash is a statement about the run, not about the model")
+    assert not should_skip("k", {"k": "verified"}, resume=False)
+
+
+def test_a_named_stage_is_done_again_even_when_it_was_settled():
+    """The use for it is a fix to the harness: an entry recorded under a
+    coverage rule that has since been corrected has a settled outcome that is
+    settled about the old rule."""
+    from verify_store_in_abaqus import should_skip
+
+    assert not should_skip("k", {"k": "tangent_not_verified"}, resume=True,
+                           retry=("tangent_not_verified",))
+    assert should_skip("k", {"k": "verified"}, resume=True,
+                       retry=("tangent_not_verified",))
+
+
+def test_external_verdicts_are_not_in_the_internal_retry_set():
+    """Re-running them changes nothing while the file stays as it is, and
+    including them would spend Abaqus time on answers nobody disputes."""
+    from umat_oti.abaqus.terminal_states import EXTERNAL, FROM_STAGE, INTERNAL
+
+    internal_stages = {stage for stage, state in FROM_STAGE.items()
+                       if state in set(INTERNAL)}
+    external_stages = {stage for stage, state in FROM_STAGE.items()
+                       if state in set(EXTERNAL)}
+    assert not internal_stages & external_stages
+    assert "tangent_not_verified" in internal_stages
+    assert "primal_disagreed" in internal_stages
+    assert "not_a_umat" not in internal_stages
+    assert "needs_material_data" not in internal_stages
+    assert "verified" not in internal_stages

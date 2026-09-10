@@ -1780,9 +1780,21 @@ def previous_outcomes(path: Path) -> dict[str, str]:
             if record.get("key") and record.get("stage")}
 
 
-def should_skip(key: str, previous: dict[str, str], resume: bool) -> bool:
-    """Has this exact entry already been carried to a settled outcome?"""
-    return bool(resume) and is_terminal(previous.get(key, ""))
+def should_skip(key: str, previous: dict[str, str], resume: bool,
+                retry: Sequence[str] = ()) -> bool:
+    """Has this exact entry already been carried to a settled outcome?
+
+    ``retry`` names stages a resumed run must do again anyway. The use for it
+    is a fix to the harness: a run that recorded ``tangent_not_verified``
+    under a coverage rule that has since been corrected has a settled outcome
+    that is settled about the old rule. Re-running only those entries costs
+    what they cost; re-running the batch costs what all of it cost, and
+    leaving them costs the truth.
+    """
+    stage = previous.get(key, "")
+    if retry and stage in set(retry):
+        return False
+    return bool(resume) and is_terminal(stage)
 
 
 def previous_records(path: Path) -> list[dict]:
@@ -2992,7 +3004,8 @@ def run_batch(entries: Sequence[Any], rows: dict[str, dict],
               strain: float = 0.005, increments: int = 10,
               previous: Optional[dict[str, str]] = None,
               resume: bool = False, discover: bool = True,
-              frozen: Optional[dict] = None) -> list[dict]:
+              frozen: Optional[dict] = None,
+              retry: Sequence[str] = ()) -> list[dict]:
     """Every selected entry, in order, with each result on disk before the next."""
     previous = previous or {}
     lock = Lock()
@@ -3000,7 +3013,7 @@ def run_batch(entries: Sequence[Any], rows: dict[str, dict],
 
     def one(index_entry) -> Optional[dict]:
         index, stored = index_entry
-        if should_skip(stored.key, previous, resume):
+        if should_skip(stored.key, previous, resume, retry):
             print(f"[{index}/{total}] {stored.source_id[:70]}  "
                   f"skipped, already {previous[stored.key]}", flush=True)
             return None
@@ -3061,6 +3074,14 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser.add_argument("--resume", action="store_true",
                         help="skip entries already carried to a settled outcome "
                              "in the results file")
+    parser.add_argument(
+        "--retry", default="",
+        help=("comma-separated stages a --resume run must do again anyway, or "
+              "'internal' for every stage that is this pipeline's problem "
+              "rather than the corpus's. The use for it is a fix to the "
+              "harness: an entry recorded under a rule that has since been "
+              "corrected has a settled outcome that is settled about the old "
+              "rule."))
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--gate-report", type=Path, default=None,
                         help="an offline stress-parity gate report; only "
@@ -3133,8 +3154,23 @@ def main(argv: Optional[list[str]] = None) -> int:
         selected = earned
     entries = selected[:args.limit] if args.limit else selected
     results_path = Path(args.results_dir) / "store_verification.jsonl"
+    retry_stages: tuple = ()
+    if str(args.retry).strip().lower() == "internal":
+        from umat_oti.abaqus.terminal_states import INTERNAL, FROM_STAGE
+        retry_stages = tuple(stage for stage, state in FROM_STAGE.items()
+                             if state in set(INTERNAL))
+    elif args.retry:
+        retry_stages = tuple(piece.strip() for piece in str(args.retry).split(",")
+                             if piece.strip())
+    if retry_stages:
+        print(f"  re-running any entry previously recorded as: "
+              f"{', '.join(sorted(retry_stages))}")
+
     earlier = previous_records(results_path) if args.resume else []
     previous = previous_outcomes(results_path) if args.resume else {}
+    if retry_stages:
+        earlier = [record for record in earlier
+                   if str(record.get("stage")) not in set(retry_stages)]
 
     # The store's summary carries no root -- it goes into published evidence,
     # which must not name the machine it was produced on -- so the path printed
@@ -3162,7 +3198,8 @@ def main(argv: Optional[list[str]] = None) -> int:
                       tangent_tolerance=args.tangent_tolerance,
                       strain=args.strain, increments=args.increments,
                       previous=previous, resume=args.resume,
-                      discover=not args.no_discovery, frozen=kept)
+                      discover=not args.no_discovery, frozen=kept,
+                      retry=retry_stages)
 
     # The denominator is every entry this batch attempted, which on a resumed
     # run includes the ones it skipped because they were already settled.
