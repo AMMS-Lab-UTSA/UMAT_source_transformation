@@ -110,3 +110,53 @@ def test_cleaned_copies_cannot_collide():
     source = (Path(__file__).resolve().parents[1] / "src" / "umat_oti"
               / "abaqus" / "replay.py").read_text(encoding="utf-8")
     assert 'f"noprogram_{index}_{unit.name}"' in source
+
+
+# ---- the implicit main program, which has no PROGRAM statement ----------
+IMPLICIT_MAIN = ("      subroutine umatx(s)\n      real s\n      s = 1.0\n"
+                 "      end\n"
+                 "c...  a bare END with nothing open closes an implicit main\n"
+                 "      end\n")
+
+
+def test_a_bare_end_with_nothing_open_is_an_implicit_main_program():
+    """Fortran lets a main program omit the PROGRAM statement entirely, and
+    gfortran still compiles it into `main`.
+
+    Measured on UMAT_Tissue_2d_plane_strain.f: five subprogram headers, six
+    ENDs, no PROGRAM statement anywhere -- and the replay link failed with
+    "multiple definition of `main` ... first defined here" naming the UMAT's
+    own object. Searching for the PROGRAM keyword found nothing, which is why
+    the first fix did not touch this case.
+    """
+    cleaned, removed = without_the_authors_program(IMPLICIT_MAIN)
+    assert removed == ("(implicit main program)",)
+
+
+def test_the_cleaned_implicit_main_defines_no_main(tmp_path):
+    if shutil.which("nm") is None:
+        pytest.skip("nm is not on PATH")
+    cleaned, _removed = without_the_authors_program(IMPLICIT_MAIN)
+    done, obj = _compile(tmp_path, "t.f", cleaned)
+    assert done.returncode == 0, done.stderr
+    symbols = subprocess.run(["nm", str(obj)], capture_output=True, text=True)
+    assert " T main" not in symbols.stdout
+
+
+def test_a_subprograms_own_end_is_not_touched(tmp_path):
+    """Only an END with nothing open closes an implicit main. An END that
+    closes a subroutine must survive, or the file stops being Fortran."""
+    text = ("      subroutine umatx(s)\n      real s\n      s=1.0\n      end\n"
+            "      subroutine helper(x)\n      real x\n      x=2.0\n      end\n")
+    cleaned, removed = without_the_authors_program(text)
+    assert removed == ()
+    assert cleaned == text
+    done, _obj = _compile(tmp_path, "t.f", cleaned)
+    assert done.returncode == 0, done.stderr
+
+
+def test_a_comment_line_does_not_open_or_close_a_unit():
+    text = ("c comment\n      subroutine umatx(s)\n      end\n"
+            "c another\n      end\n")
+    _cleaned, removed = without_the_authors_program(text)
+    assert removed == ("(implicit main program)",)

@@ -609,6 +609,23 @@ _PROGRAM_START = re.compile(r"^\s*(?:\d+\s+)?PROGRAM\s+([A-Za-z_]\w*)\s*$",
 _PROGRAM_END = re.compile(r"^\s*(?:\d+\s+)?END\s*(?:PROGRAM(?:\s+\w+)?)?\s*$",
                           re.IGNORECASE)
 
+#: Any subprogram header. Tracked so that a bare END can be told apart: one
+#: with a subprogram open closes that subprogram, and one with nothing open
+#: closes an IMPLICIT main program -- a unit with no PROGRAM statement, which
+#: the compiler still turns into `main`.
+_SUBPROGRAM_START = re.compile(
+    r"^\s*(?:\d+\s+)?"
+    r"(?:(?:RECURSIVE|PURE|ELEMENTAL|MODULE)\s+)*"
+    r"(?:(?:DOUBLE\s+PRECISION|REAL|INTEGER|LOGICAL|CHARACTER|COMPLEX)"
+    r"(?:\s*\*\s*\d+|\s*\([^)]*\))?\s+)?"
+    r"(?:SUBROUTINE|FUNCTION|BLOCK\s*DATA|MODULE)\b", re.IGNORECASE)
+
+
+def _is_comment(line: str, free: bool) -> bool:
+    if free:
+        return line.lstrip().startswith("!") or not line.strip()
+    return line[:1] in "Cc*!" or not line.strip()
+
 
 def without_the_authors_program(text: str,
                                 form: str = "") -> tuple[str, tuple[str, ...]]:
@@ -646,11 +663,15 @@ def without_the_authors_program(text: str,
     out: list[str] = []
     removed: list[str] = []
     inside = False
+    open_subprogram = False
     for line in text.splitlines(keepends=True):
         stripped = line.rstrip("\n")
         # A preprocessor line is not Fortran and must survive untouched: it is
         # read before the compiler ever sees the form.
         if stripped.lstrip().startswith("#"):
+            out.append(line)
+            continue
+        if _is_comment(stripped, free):
             out.append(line)
             continue
         if not inside:
@@ -659,6 +680,26 @@ def without_the_authors_program(text: str,
                 inside = True
                 removed.append(found.group(1))
                 out.append(comment(line, " (the replay supplies its own PROGRAM)"))
+                continue
+            if _SUBPROGRAM_START.match(stripped):
+                open_subprogram = True
+                out.append(line)
+                continue
+            if _PROGRAM_END.match(stripped):
+                if open_subprogram:
+                    open_subprogram = False
+                    out.append(line)
+                    continue
+                # An END with no subprogram open closes an IMPLICIT main
+                # program -- a unit with no PROGRAM statement at all, which
+                # gfortran still compiles into `main`. Measured on
+                # UMAT_Tissue_2d_plane_strain.f: five subprogram headers and
+                # six ENDs, and the trailing one is why the replay link said
+                # "multiple definition of `main` ... first defined here" with
+                # the UMAT's own object named.
+                removed.append("(implicit main program)")
+                out.append(comment(line, " (a bare END closing an implicit "
+                                         "main program)"))
                 continue
             out.append(line)
             continue
