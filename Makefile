@@ -10,7 +10,7 @@ PROFILE_ARGS ?=
         reproduce-abaqus batch batch-transform batch-offline batch-abaqus \
         batch-status batch-record clean-clone clean \
         umat-promote umat-materialize umat-regress umat-status \
-        corpus-report
+        corpus-report corpus-registry corpus-fixtures
 
 help:
 	@echo "setup              install the package and its test extras"
@@ -26,6 +26,8 @@ help:
 	@echo ""
 	@echo ""
 	@echo "corpus-report      every entry, its gate, and counts that reconcile"
+	@echo "corpus-registry    one record per acquired artefact, and who has to move next"
+	@echo "corpus-fixtures    freeze verified cases for the residual assembler"
 	@echo "umat-status        what the verified collection holds"
 	@echo "umat-promote       copy a batch's verified rows into umat/ (deliberate)"
 	@echo "umat-materialize   fetch the sources behind umat/ onto this machine"
@@ -145,3 +147,25 @@ corpus-report:
 	    $(if $(ABAQUS_REPORT),--abaqus "$(ABAQUS_REPORT)",) \
 	    --json paper_results/corpus/corpus_report.json \
 	    --markdown paper_results/corpus/CORPUS_REPORT.md $(BATCH_ARGS)
+
+# One record per acquired artefact, its terminal state, and whether that state
+# is finished (external) or work (ours). The two are counted separately: a
+# completion figure that pooled them would be a claim about the corpus made out
+# of facts about the pipeline.
+ABAQUS_RESULTS ?=
+
+corpus-registry:
+	@test -n "$(TRANSFORM_REPORT)" || { echo "TRANSFORM_REPORT=<run>/transform_batch.json is required"; exit 2; }
+	$(PYTHON) tools/build_corpus_registry.py \
+	    --transform "$(TRANSFORM_REPORT)" \
+	    $(if $(ABAQUS_RESULTS),--abaqus "$(ABAQUS_RESULTS)",) $(BATCH_ARGS)
+
+# The ingredients a verified case produced, in the shape the residual
+# assembler reads. Not the source: most of the corpus is not redistributable.
+FIXTURE_OUT ?= ../Residual_Assembler/tests/fixtures/verified
+
+corpus-fixtures:
+	@test -n "$(RESULTS)" || { echo "RESULTS=<run>/results/store_verification.jsonl is required"; exit 2; }
+	@test -n "$(WORK)" || { echo "WORK=<run>/work is required"; exit 2; }
+	$(PYTHON) tools/export_residual_fixture.py \
+	    --results "$(RESULTS)" --work-dir "$(WORK)" --out "$(FIXTURE_OUT)" $(BATCH_ARGS)
