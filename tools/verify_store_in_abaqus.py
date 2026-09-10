@@ -91,6 +91,7 @@ from umat_oti.abaqus.state_regime import (                              # noqa: 
 from umat_oti.abaqus.amplitude_search import (                          # noqa: E402
     ACTIVATED, LINEAR_TO_THE_CEILING, search_amplitude)
 from umat_oti.corpus.entry_routines import classify as classify_entry   # noqa: E402
+from umat_oti.fortran.normalize import detect_source_form              # noqa: E402
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
     NEEDS_MATERIAL_DATA, VerificationManifest, reverse, simple_shear, uniaxial)
 from umat_oti.abaqus.job_status import blocking_statements
@@ -145,6 +146,27 @@ HARNESS_ERROR = "harness_error"
 #: were reported as UMAT tangent failures. Reported in its own column now, and
 #: never inside a count of UMATs that verified or failed.
 NOT_A_UMAT = "not_a_umat"
+
+#: Off the ladder for the same reason as NOT_A_UMAT: the file the author
+#: published does not compile, and no amount of work here changes that. A job
+#: whose compile aborts writes no .sta, no .msg and no .odb, which the ladder
+#: read as ``original_job_failed`` -- a name that reads like this harness's
+#: fault. It is not: it is measured by compiling the UNMODIFIED source with
+#: Abaqus's own compile line, so nothing this pipeline adds is present when the
+#: compiler rejects it.
+INCOMPLETE_OR_CORRUPT_SOURCE = "incomplete_or_corrupt_source"
+
+#: Also off the ladder, and also about the file rather than about this run: the
+#: source compiles only against a module or an include that its repository did
+#: not publish beside it, or that the acquisition did not bring along. Which of
+#: those it is is recorded per entry, because they are different findings.
+EXTERNAL_DEPENDENCY_UNAVAILABLE = "external_dependency_unavailable"
+
+#: Verdicts that are settled without being rungs. Each says something about the
+#: file that no further work here alters, and each is external: the answer lies
+#: in what somebody published, not in this pipeline.
+TERMINAL_OFF_LADDER: tuple[str, ...] = (
+    NOT_A_UMAT, INCOMPLETE_OR_CORRUPT_SOURCE, EXTERNAL_DEPENDENCY_UNAVAILABLE)
 
 #: One job at a time. The licence server here is shared with other users and
 #: contended: two concurrent Abaqus jobs demand two sets of tokens at once, and
@@ -1508,8 +1530,13 @@ def is_terminal(stage: str) -> bool:
     the commonest cause here is a shared licence server making a job wait past
     its timeout -- a machine-state artifact that must not become a published
     finding about a UMAT. A resumed batch does those again.
+
+    The off-ladder verdicts are settled too. ``not_a_umat``,
+    ``incomplete_or_corrupt_source`` and ``external_dependency_unavailable``
+    are statements about the file rather than about how far it got, and none of
+    them changes while the file does not.
     """
-    return stage in STAGES
+    return stage in STAGES or stage in TERMINAL_OFF_LADDER
 
 
 def previous_outcomes(path: Path) -> dict[str, str]:
@@ -1790,6 +1817,102 @@ def run_precision_control(manifest: VerificationManifest, original: Path,
     return outcome
 
 
+# ---------------------------------------------------------------------------
+# what the compiler says about the author's own file
+# ---------------------------------------------------------------------------
+
+
+def diagnose_original(source: Path, cache_root: Path, work_dir: Path, *,
+                      form: str = "", timeout: int = 900,
+                      source_id: str = "") -> dict:
+    """Why the ORIGINAL did not run, from the compiler rather than from silence.
+
+    A job whose compile aborts writes no ``.sta``, no ``.msg`` and no ``.odb``,
+    and that is indistinguishable from a solver that fell over -- so the ladder
+    recorded both as ``original_job_failed``, a name that reads like this
+    harness's fault whichever it was. It is measured here instead, by compiling
+    the UNMODIFIED source with Abaqus's own compile line. Nothing this pipeline
+    adds is present, so a failure cannot be ours.
+
+    Three outcomes, and they are three different findings:
+
+    ``incomplete_or_corrupt_source``
+        the compiler rejected the text of the file. The author published
+        something that does not build. Terminal, and external.
+    ``external_dependency_unavailable``
+        the file needs a module or an include that its repository did not
+        publish beside it, and that a second acquisition pass did not find.
+        Terminal, and external -- and the record names what is missing.
+    ``""``
+        the source compiles. Then the job's failure is about running, not
+        about building, and the ladder's own verdict stands.
+    """
+    from umat_oti.abaqus.companions import repository_files, resolve
+    from umat_oti.abaqus.support import compile_one
+
+    found = resolve(Path(source), repository_files(Path(source), cache_root))
+    outcome: dict[str, Any] = {"companions": found.as_dict(),
+                               "companions_reason": found.reason()}
+    work_dir = Path(work_dir)
+    check = compile_one(Path(source), work_dir / "compile", form=form,
+                        timeout=timeout, extra_sources=found.order,
+                        include_dirs=[lay_out_includes(found, work_dir / "inc")]
+                        if found.include_files else ())
+    # The compiler names the file it was given, which is an absolute path on
+    # this machine. The record has to name it the way the corpus does.
+    def _relative(text: str) -> str:
+        return str(text).replace(str(Path(source)), str(source_id or Path(source).name)) \
+                        .replace(str(Path(cache_root)) + "/", "")
+
+    compiled = check.as_dict()
+    compiled["reason"] = _relative(compiled.get("reason", ""))
+    compiled["defects"] = [_relative(line) for line in compiled.get("defects", [])]
+    compiled["log"] = _relative(compiled.get("log", ""))[-4000:]
+    outcome["compile"] = compiled
+    check_reason = compiled["reason"]
+    if check.ok:
+        outcome["verdict"] = ""
+        outcome["reason"] = ("the unmodified source compiles with Abaqus's own "
+                             "compile line, so what failed was the run and not "
+                             "the build")
+        return outcome
+    if not found.complete:
+        outcome["verdict"] = EXTERNAL_DEPENDENCY_UNAVAILABLE
+        outcome["reason"] = found.reason()
+        return outcome
+    if check.missing_dependencies:
+        outcome["verdict"] = EXTERNAL_DEPENDENCY_UNAVAILABLE
+        outcome["reason"] = check_reason
+        return outcome
+    if check.source_is_malformed:
+        outcome["verdict"] = INCOMPLETE_OR_CORRUPT_SOURCE
+        outcome["reason"] = check_reason
+        return outcome
+    outcome["verdict"] = ""
+    outcome["reason"] = check_reason
+    return outcome
+
+
+def lay_out_includes(found, into: Path) -> Path:
+    """The include files copied under the names the source asks for.
+
+    ``include 'ttb/ttb_library.f'`` is a path relative to wherever the compiler
+    looks, so the file has to be at ``ttb/ttb_library.f`` under a directory on
+    the include path -- not merely present somewhere in the cache.
+    """
+    import shutil
+
+    into = Path(into)
+    for asked, path in (found.include_files or {}).items():
+        target = into / asked
+        target.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.copyfile(path, target)
+        except OSError:                            # pragma: no cover - defensive
+            continue
+    return into
+
+
 def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                cache_root: Path, work_root: Path, *, timeout: int,
                tangent_tolerance: float = TANGENT_TOLERANCE,
@@ -1866,7 +1989,17 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     # The loading is discovered on the ORIGINAL before either verification job
     # runs, so that the deck both builds are then handed is one that makes the
     # material do something rather than one chosen in advance.
-    source_form = str((row or {}).get("form") or "")
+    # The form is read off the source, not taken from the triage row. The row
+    # is a record of an earlier scan and the file is the thing that will be
+    # compiled; where they disagree the file wins, and the disagreement is
+    # recorded rather than resolved silently.
+    source_form = detect_source_form(
+        Path(original), Path(original).read_text(errors="replace"))
+    record["source_form"] = source_form
+    if (row or {}).get("form") and row["form"] != source_form:
+        record["source_form_note"] = (
+            f"the triage scan called this source {row['form']}; reading it "
+            f"again says {source_form}, and the file is what ifort compiles")
     manifest, discovery = discover_loading(
         manifest, Path(original), work, timeout, form=source_form,
         increments=increments, enabled=discover)
@@ -1950,6 +2083,13 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             record["stage"] = HARNESS_ERROR
             record["reason"] = f"original: {harness}"
             return record
+        # Ask the compiler before naming this a failure of the run.
+        diagnosis = diagnose_original(original, cache_root, work / "diagnosis",
+                                      form=source_form, timeout=timeout,
+                                      source_id=stored.source_id)
+        record["original_diagnosis"] = diagnosis
+        if diagnosis.get("verdict"):
+            return settle(diagnosis["reason"], stage=diagnosis["verdict"])
         return settle("; ".join(original_job.reasons)
                       or "the original build did not complete")
 
@@ -2066,7 +2206,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     tangent = verify_tangent(
         manifest, reference_source, compared_transformed, work / "replay",
         transformed=Path(stored.entry_source),
-        form=str((row or {}).get("form") or "fixed"),
+        form=source_form,
         tolerance=tangent_tolerance, timeout=timeout)
     if stopped_at >= 0:
         tangent["states_taken_from"] = (

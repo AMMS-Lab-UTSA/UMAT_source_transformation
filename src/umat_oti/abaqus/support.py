@@ -177,10 +177,47 @@ def build_support(
 #: is only evidence about the AUTHOR's source when none of these appear.
 DEPENDENCY_DIAGNOSTICS = (
     "cannot open include file",
+    # The -fpp preprocessor's own spelling, which is not the compiler's. Nine
+    # sources reporting "can't find include file: Abaqus_Definitions.f90" were
+    # classified as malformed because only the compiler's wording was matched;
+    # they are perfectly well-formed files whose companion was not beside them.
+    "can't find include file",
     "error in opening the compiled module file",
     "error in opening the Library module file",
     "catastrophic error: cannot open source file",
 )
+
+
+def include_case_variants(header: Optional[Path],
+                          into: Path) -> Optional[Path]:
+    """A directory of Abaqus's include files under every case they are written in.
+
+    ``INCLUDE 'ABA_PARAM.INC'`` is how most of this corpus spells it and
+    ``aba_param.inc`` is what is on disk, and a Linux filesystem does not
+    consider those the same file. Abaqus's own launcher papers over that when
+    it compiles a user subroutine; a compile driven from here does not, so 227
+    of the corpus's 391 sources reported "cannot open include file" and were
+    read as unreachable when they compile perfectly.
+
+    Symbolic links, so nothing is copied and the originals stay where they are.
+    Returns None when there is no include directory to link.
+    """
+    if header is None or not Path(header).is_dir():
+        return None
+    into = Path(into)
+    into.mkdir(parents=True, exist_ok=True)
+    for entry in sorted(Path(header).iterdir()):
+        if not entry.is_file():
+            continue
+        for spelling in {entry.name, entry.name.upper(), entry.name.lower()}:
+            link = into / spelling
+            if link.exists() or link.is_symlink():
+                continue
+            try:
+                link.symlink_to(entry)
+            except OSError:                       # pragma: no cover - defensive
+                pass
+    return into
 
 
 @dataclass
@@ -217,6 +254,7 @@ _DIAGNOSTIC = re.compile(r"^(.*?)\((\d+)\):\s*(error|catastrophic error)[^\n]*",
 
 def compile_one(source: Path, work_dir: Path, *, abaqus: str = "abaqus",
                 extra_sources: Sequence[Path] = (), timeout: int = 900,
+                form: str = "",
                 include_dirs: Sequence[Path] = ()) -> CompileCheck:
     """Compile one source with Abaqus's own compile line, and say what happened.
 
@@ -244,6 +282,7 @@ def compile_one(source: Path, work_dir: Path, *, abaqus: str = "abaqus",
 
     from umat_oti.abaqus.replay import abaqus_include_dir
     header = abaqus_include_dir(abaqus)
+    case_variants = include_case_variants(header, work_dir / "_includes")
 
     bundle = Path(source)
     if extra_sources:
@@ -255,8 +294,20 @@ def compile_one(source: Path, work_dir: Path, *, abaqus: str = "abaqus",
         bundle = work_dir / f"bundle{Path(source).suffix or '.f'}"
         bundle.write_text(text, encoding="utf-8")
 
+    # The form is stated rather than left to the suffix. Eight corpus sources
+    # are free-form Fortran in a file named .for, and ifort reads the suffix:
+    # compiled fixed, every continuation in them is a syntax error and the file
+    # looks malformed when it is not.
+    from umat_oti.fortran.normalize import detect_source_form
+
+    resolved = (str(form).lower()
+                or detect_source_form(Path(source),
+                                      Path(source).read_text(errors="replace")))
     command = _compile_command(template, bundle, work_dir)
+    command[1:1] = ["-free" if resolved.startswith("free") else "-fixed"]
     includes = [f"-I{path}" for path in include_dirs]
+    if case_variants is not None:
+        includes.append(f"-I{case_variants}")
     if header is not None:
         includes.append(f"-I{header}")
     command[1:1] = includes
