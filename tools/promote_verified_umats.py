@@ -374,8 +374,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     if args.results is None or args.work_dir is None:
         parser.error("--results and --work-dir are required unless --status "
                      "is given")
-    rows = [json.loads(line) for line in
-            args.results.read_text(encoding="utf-8").splitlines() if line.strip()]
+    # One record per entry: the last one written. The results file is
+    # append-only, so a resumed run that re-runs an entry appends a second
+    # record rather than editing the first, and reading both would let a
+    # superseded verdict promote a material the run that replaced it did not.
+    latest: dict = {}
+    for line in args.results.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        record = json.loads(line)
+        latest[str(record.get("key") or record.get("source") or line)] = record
+    rows = list(latest.values())
     verified = [row for row in rows if row.get("stage") == VERIFIED]
     if args.limit:
         verified = verified[:args.limit]
