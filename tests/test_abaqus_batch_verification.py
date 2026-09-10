@@ -32,7 +32,7 @@ from verify_store_in_abaqus import (  # noqa: E402
     DifferentDecks, StageEvidence, append_record, build_manifest, build_plan,
     choose_probe_record, classify_stage, deck_kinematics, is_terminal,
     job_evidence, main, merge_records, oti_tangent, paired_block_name,
-    perturbation_scale, point_shape, previous_outcomes, replay_flags, scrub,
+    perturbation_scale, previous_outcomes, replay_flags, scrub,
     select_entries, should_skip, stage_rank, summarise, support_plan,
     tangent_verdict, require_one_manifest, require_same_deck,
 )
@@ -277,29 +277,39 @@ def test_a_provenance_for_another_deck_does_not_select_in_this_one():
                              "owner__name/decks/job.inp") == "STEEL"
 
 
-def test_ntens_comes_from_the_triage_row(tmp_path: Path):
-    """The tensor size is the scanner's reading of the source, not the deck's."""
+def test_the_tensor_size_is_not_taken_from_the_triage_row(tmp_path: Path):
+    """The row said 6 for every source in the corpus, because 6 was its default.
+
+    Nothing in the triage ever inferred a tensor size: ``row["ntens"] = ntens``
+    where ``ntens`` was the parameter's default. So a plane-strain routine and
+    a plane-stress one and a three-dimensional one all came out as six
+    components on a tetrahedron, and the two that are not were asked for
+    components they never compute.
+    """
     cache = _cache_with_deck(tmp_path)
     plan = build_manifest("owner__name/sub/umat.for", _row(ntens="4"),
                           _proposal(), cache)
+    # The stub source fills nothing and the deck names no element, so the
+    # documented assumption stands -- and the row's 4 does not decide it.
+    assert plan.manifest.element_type == "C3D8"
+    assert plan.formulation["agreement"].startswith("neither says")
+
+
+def test_a_plane_strain_routine_is_driven_on_a_plane_strain_element(tmp_path: Path):
+    """Read from what the routine does with its own tensor."""
+    cache = _cache_with_deck(tmp_path)
+    source = cache / "owner__name/sub/umat.for"
+    source.write_text(source.read_text().replace(
+        "      RETURN\n",
+        "      DO K1 = 1, 4\n"
+        "        STRESS(K1) = STRESS(K1) + DSTRAN(K1)\n"
+        "      END DO\n"
+        "      RETURN\n"))
+    plan = build_manifest("owner__name/sub/umat.for", _row(), _proposal(), cache)
+    assert plan.manifest.element_type == "CPE4"
     assert plan.manifest.ntens == 4
     assert (plan.manifest.ndi, plan.manifest.nshr) == (3, 1)
-    assert plan.manifest.element_type == "CPE4"
-
-
-def test_an_ntens_with_no_element_refuses_the_manifest(tmp_path: Path):
-    """Refused, not driven on whatever element is nearest.
-
-    An element whose component ordering the source does not use compares every
-    stress against the wrong component, and the comparison still produces a
-    number.
-    """
-    assert point_shape(5) is None
-    cache = _cache_with_deck(tmp_path)
-    plan = build_manifest("owner__name/sub/umat.for", _row(ntens="5"),
-                          _proposal(), cache)
-    assert plan.stage == "manifest_refused"
-    assert "ntens=5" in plan.reason
+    assert "DO loop bounded at 4" in plan.formulation["reason"]
 
 
 def test_a_source_with_no_triage_row_is_not_silently_given_defaults(tmp_path: Path):
