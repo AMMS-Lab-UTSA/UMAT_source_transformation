@@ -71,6 +71,14 @@ FROM_ABAQUS_STAGE: dict[str, str] = {
     "waits_for_input": "compiled",
     "not_a_umat": NOT_A_UMAT,
     "harness_error": BLOCKED,
+    # Rungs and verdicts added after this map was first written. A stage with
+    # no entry here falls through to BLOCKED, which would report a source that
+    # ran both builds and agreed over its whole history as "blocked with
+    # evidence" -- true of nothing about it.
+    "derivative_truncated": "primal_parity_passed",
+    "incomplete_or_corrupt_source": BLOCKED,
+    "external_dependency_unavailable": BLOCKED,
+    "both_builds_non_finite": "abaqus_transformed_passed",
 }
 
 
