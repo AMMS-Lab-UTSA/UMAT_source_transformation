@@ -765,7 +765,7 @@ BEYOND_TRANSITION = 4.0
 
 def discover_loading(manifest: VerificationManifest, original: Path,
                      work_dir: Path, timeout: int, *,
-                     increments: int = 10,
+                     increments: int = 10, form: str = "",
                      enabled: bool = True) -> tuple[VerificationManifest, dict]:
     """Raise the amplitude on the ORIGINAL until the material does something.
 
@@ -804,7 +804,7 @@ def discover_loading(manifest: VerificationManifest, original: Path,
         loading.append(reverse(loading[0]))
         candidate = replace(manifest, loading=tuple(loading))
         call = dict(manifest=candidate, timeout=timeout, source=Path(original),
-                    job="original", work_dir=trial, support_dir=None)
+                    job="original", work_dir=trial, support_dir=None, form=form)
         try:
             report = run_one(**call)
         except Exception as exc:                       # noqa: BLE001
@@ -855,7 +855,8 @@ def discover_loading(manifest: VerificationManifest, original: Path,
 
 
 def build_plan(manifest: VerificationManifest, original: Path, transformed: Path,
-               work_dir: Path, timeout: int) -> tuple[dict, dict]:
+               work_dir: Path, timeout: int,
+               form: str = "") -> tuple[dict, dict]:
     """The two ``run_one`` calls, both carrying the very same manifest object.
 
     Returned as a pair rather than made at two call sites because the pair is
@@ -875,11 +876,15 @@ def build_plan(manifest: VerificationManifest, original: Path, transformed: Path
     then insists on.
     """
     common = {"manifest": manifest, "timeout": timeout}
+    # The ORIGINAL is driven in the form the triage read off it. The
+    # TRANSFORMED source is left to declare its own, because the transform --
+    # not the triage -- decided what it emitted, and its suffix says so.
     original_call = dict(common, source=Path(original), job="original",
-                         work_dir=Path(work_dir) / "original", support_dir=None)
+                         work_dir=Path(work_dir) / "original", support_dir=None,
+                         form=form)
     transformed_call = dict(common, source=Path(transformed), job="transformed",
                             work_dir=Path(work_dir) / "transformed",
-                            support_dir=None)
+                            support_dir=None, form="")
     return original_call, transformed_call
 
 
@@ -1685,6 +1690,106 @@ def _material_columns(plan: ManifestPlan) -> dict[str, Any]:
     }
 
 
+# ---------------------------------------------------------------------------
+# the precision control
+# ---------------------------------------------------------------------------
+
+
+def run_precision_control(manifest: VerificationManifest, original: Path,
+                          transformed: Path, transformed_history: Sequence[dict],
+                          work_dir: Path, *, timeout: int, form: str = "",
+                          increments_compared: Optional[int] = None) -> dict:
+    """Test the one explanation of a primal disagreement that can be tested.
+
+    Fortran's default real is single precision, and an explicit ``REAL``
+    declaration overrides the ``IMPLICIT REAL*8(A-H,O-Z)`` that
+    ``aba_param.inc`` installs. A UMAT that declares ``REAL S(6)`` and copies
+    the incoming stress into it rounds to seven digits where the converted
+    build -- whose OTI type is built over doubles -- does not, and the two
+    stress histories then differ by the author's own truncation.
+
+    Reported as a primal disagreement that reads as "the conversion computes
+    something else". So it is put to a run: the ORIGINAL source with exactly
+    the declarations the transform promoted widened to ``REAL*8``, nothing
+    else touched, driven through the same deck. Agreement there says the
+    difference was the declared precision and says it in numbers; disagreement
+    leaves the original verdict standing, now with one explanation ruled out.
+
+    Nothing is loosened. The control is held to the same
+    ``manifest.primal_tolerance`` the original comparison used, and the
+    original-versus-converted difference stays in the record beside it.
+    """
+    from umat_oti.abaqus.precision import survey, widen
+
+    outcome: dict[str, Any] = {"ran": False}
+    try:
+        original_text = Path(original).read_text(errors="replace")
+        transformed_text = Path(transformed).read_text(errors="replace")
+    except OSError as error:
+        outcome["reason"] = f"the sources could not be read: {error}"
+        return outcome
+
+    finding = survey(original_text, transformed_text)
+    outcome["finding"] = finding.as_dict()
+    if not finding.explains_a_difference:
+        outcome["reason"] = finding.reason
+        return outcome
+
+    control_text, changes = widen(original_text, finding)
+    if control_text == original_text:                # pragma: no cover
+        outcome["reason"] = "the widening changed nothing"
+        return outcome
+    work_dir = Path(work_dir)
+    work_dir.mkdir(parents=True, exist_ok=True)
+    control_source = work_dir / f"control{Path(original).suffix or '.f'}"
+    control_source.write_text(control_text, encoding="utf-8")
+    outcome.update(source=str(control_source), changes=list(changes),
+                   widened=list(finding.widened))
+
+    report = run_one(manifest=manifest, timeout=timeout, source=control_source,
+                     job="control", work_dir=work_dir, support_dir=None,
+                     form=form)
+    evidence = job_evidence(report)
+    outcome["ran"] = True
+    outcome["completed"] = evidence.completed
+    outcome["warnings"] = list(evidence.warnings)
+    if not evidence.completed:
+        outcome["reason"] = (
+            "the control build did not run, so the declared precision could "
+            "not be ruled in or out: " + ("; ".join(evidence.reasons)
+                                          or "no reason recorded"))
+        return outcome
+
+    control_history = history_of(work_dir, "control")
+    # The control is compared over the same window the primal comparison used,
+    # so the two numbers in the record are about the same increments.
+    left = list(control_history)
+    right = list(transformed_history)
+    if increments_compared is not None:
+        left, right = left[:increments_compared], right[:increments_compared]
+    comparison = compare_primal(left, right,
+                                tolerance=manifest.primal_tolerance,
+                                near_zero_fraction=manifest.near_zero_fraction)
+    outcome["comparison"] = comparison.as_dict()
+    outcome["agrees"] = bool(comparison.agrees)
+    if comparison.agrees:
+        outcome["reason"] = (
+            f"the original and the converted build differ because the original "
+            f"declares {', '.join(finding.widened)} at single precision and the "
+            f"OTI type is built over doubles. Put to a run: the original with "
+            f"those declarations alone widened to REAL*8 agrees with the "
+            f"converted build to "
+            f"{comparison.worst_stress_relative:.3e} over "
+            f"{comparison.increments} increments, so what the two builds "
+            f"disagree about is the author's own rounding and not the model")
+    else:
+        outcome["reason"] = (
+            f"widening {', '.join(finding.widened)} to REAL*8 did not account "
+            f"for the difference: the control still differs from the converted "
+            f"build by {comparison.worst_stress_relative:.3e}")
+    return outcome
+
+
 def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                cache_root: Path, work_root: Path, *, timeout: int,
                tangent_tolerance: float = TANGENT_TOLERANCE,
@@ -1761,13 +1866,14 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     # The loading is discovered on the ORIGINAL before either verification job
     # runs, so that the deck both builds are then handed is one that makes the
     # material do something rather than one chosen in advance.
+    source_form = str((row or {}).get("form") or "")
     manifest, discovery = discover_loading(
-        manifest, Path(original), work, timeout,
+        manifest, Path(original), work, timeout, form=source_form,
         increments=increments, enabled=discover)
     record["discovery"] = discovery
 
     original_call, transformed_call = build_plan(
-        manifest, original, stored.entry_source, work, timeout)
+        manifest, original, stored.entry_source, work, timeout, form=source_form)
     # Both builds are handed the SAME manifest object, and this refuses to run
     # them if they ever stop being. Two builds driven by different decks answer
     # two different questions, and an agreement between two different questions
@@ -1922,9 +2028,27 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                 f"both builds went non-finite at increment {stopped_at + 1}, "
                 f"leaving only {stopped_at} increments to compare -- too few "
                 f"to rest a verification on")
+    # A disagreement is not yet a verdict. The author's own declared precision
+    # is the one explanation that can be tested rather than argued about, so
+    # it is tested: see run_precision_control.
+    reference_source = Path(original)
+    precision_note = ""
     if not primal.agrees:
-        return settle(primal.reason
-                      or "the two builds produced no records to compare")
+        control = run_precision_control(
+            manifest, original, Path(stored.entry_source), compared_transformed,
+            work / "precision_control", timeout=timeout, form=source_form,
+            increments_compared=(stopped_at if stopped_at >= 0 else None))
+        if control:
+            record["precision_control"] = control
+        if control.get("agrees"):
+            seen["primal_agrees"] = True
+            precision_note = control["reason"]
+            record["primal"]["explained_by_declared_precision"] = True
+            record["primal"]["control"] = control["comparison"]
+            reference_source = Path(control["source"])
+        else:
+            return settle(primal.reason
+                          or "the two builds produced no records to compare")
 
     # The tangent is asked for inside the window the PRIMAL comparison
     # accepted, not over the whole history. Where both builds left their
@@ -1940,7 +2064,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     # FINITE state is a finding about the conversion, and dropping such a
     # record would hide exactly what this pipeline exists to catch.
     tangent = verify_tangent(
-        manifest, original, compared_transformed, work / "replay",
+        manifest, reference_source, compared_transformed, work / "replay",
         transformed=Path(stored.entry_source),
         form=str((row or {}).get("form") or "fixed"),
         tolerance=tangent_tolerance, timeout=timeout)
@@ -1951,7 +2075,8 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             f"own NaNs in both builds and carry no state to replay from")
     record["tangent"] = tangent
     seen["tangent_verified"] = tangent.get("verified")
-    return settle(tangent.get("reason", ""))
+    return settle("; ".join(part for part in
+                            (precision_note, tangent.get("reason", "")) if part))
 
 
 def verify_tangent(manifest: VerificationManifest, original: Path,

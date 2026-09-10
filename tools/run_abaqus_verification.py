@@ -36,6 +36,7 @@ from umat_oti.abaqus.probe import (                          # noqa: E402
 from umat_oti.abaqus.runner import run_job                   # noqa: E402
 from umat_oti.abaqus.support import (                        # noqa: E402
     build_support, compile_order, install_support)
+from umat_oti.fortran.normalize import detect_source_form     # noqa: E402
 
 
 def load_manifest(path: Path) -> tuple[VerificationManifest, tuple[str, ...]]:
@@ -66,8 +67,22 @@ def load_manifest(path: Path) -> tuple[VerificationManifest, tuple[str, ...]]:
 
 
 def run_one(manifest: VerificationManifest, source: Path, job: str,
-            work_dir: Path, support_dir: Path | None, timeout: int) -> dict:
-    """One build, through the deck the manifest describes."""
+            work_dir: Path, support_dir: Path | None, timeout: int,
+            form: str = "") -> dict:
+    """One build, through the deck the manifest describes.
+
+    ``form`` is the source form -- "fixed" or "free". It decides what the probe
+    is written in and what the file handed to ``abaqus user=`` is called,
+    because Abaqus reads the form off the suffix: ``.for`` and ``.f`` are
+    fixed, ``.f90`` is free. Writing a free-form source into a ``.for`` file
+    made ifort reject every continuation in it, the compile aborted before the
+    analysis began, and the job left no .sta, no .msg and no .odb -- which the
+    ladder recorded as the ORIGINAL failing to run. Fifty-five of the corpus's
+    391 sources are free form and not one had ever reached Abaqus.
+
+    Empty means "read it from the source", which is what a caller that has not
+    been told should do rather than assume fixed.
+    """
     work_dir.mkdir(parents=True, exist_ok=True)
     report: dict = {"job": job, "source": str(source), "support": None}
 
@@ -82,8 +97,13 @@ def run_one(manifest: VerificationManifest, source: Path, job: str,
             return report
         install_support(build, work_dir)
 
-    text, instrumented = instrument(Path(source).read_text(errors="replace"), job)
-    probed = work_dir / f"{job}_probed.for"
+    source_text = Path(source).read_text(errors="replace")
+    resolved = (str(form).lower()
+                or detect_source_form(Path(source), source_text))
+    report["form"] = resolved
+    text, instrumented = instrument(source_text, job, form=resolved)
+    suffix = ".f90" if resolved.startswith("free") else ".for"
+    probed = work_dir / f"{job}_probed{suffix}"
     probed.write_text(text, encoding="utf-8")
     report["instrumented"] = instrumented
     if not instrumented:

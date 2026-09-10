@@ -171,6 +171,132 @@ def build_support(
     return build
 
 
+#: What ifort says when the file it was given is not the problem. A source
+#: that USEs a module compiled elsewhere, or includes a header that is not on
+#: the path, fails to compile without being malformed -- so a compile failure
+#: is only evidence about the AUTHOR's source when none of these appear.
+DEPENDENCY_DIAGNOSTICS = (
+    "cannot open include file",
+    "error in opening the compiled module file",
+    "error in opening the Library module file",
+    "catastrophic error: cannot open source file",
+)
+
+
+@dataclass
+class CompileCheck:
+    """Whether one source compiles on its own, and what the compiler said."""
+
+    ok: bool = False
+    #: The compiler's diagnostics, trimmed. Kept whether or not it compiled:
+    #: a warning on a unit that built is still what the compiler thought of it.
+    log: str = ""
+    #: Diagnostics that name a dependency this compile could not reach, rather
+    #: than a defect in the file. Non-empty means the failure is about what is
+    #: missing beside the file, not about the file.
+    missing_dependencies: tuple[str, ...] = ()
+    #: Diagnostics that are about the text of this file.
+    defects: tuple[str, ...] = ()
+    reason: str = ""
+
+    @property
+    def source_is_malformed(self) -> bool:
+        """The compiler rejected the file itself, not something beside it."""
+        return bool(self.defects) and not self.missing_dependencies
+
+    def as_dict(self) -> dict:
+        return {"ok": self.ok, "reason": self.reason,
+                "defects": list(self.defects),
+                "missing_dependencies": list(self.missing_dependencies),
+                "log": self.log[-4000:]}
+
+
+_DIAGNOSTIC = re.compile(r"^(.*?)\((\d+)\):\s*(error|catastrophic error)[^\n]*",
+                         re.IGNORECASE | re.MULTILINE)
+
+
+def compile_one(source: Path, work_dir: Path, *, abaqus: str = "abaqus",
+                extra_sources: Sequence[Path] = (), timeout: int = 900,
+                include_dirs: Sequence[Path] = ()) -> CompileCheck:
+    """Compile one source with Abaqus's own compile line, and say what happened.
+
+    This is what separates "the author published a file that does not compile"
+    from "our harness could not run it". The first is a fact about the corpus
+    and a terminal answer; the second is work to do. They were indistinguishable
+    in the record, because a job whose compile aborts writes no .sta, no .msg
+    and no .odb -- and the ladder read that as ``original_job_failed``, which
+    reads like the harness's fault whichever it was.
+
+    The source is compiled UNMODIFIED. Nothing this pipeline adds -- not the
+    probe, not a widened declaration -- is present, so a failure here cannot be
+    ours. That is the whole reason the check exists separately from the job.
+    """
+    work_dir = Path(work_dir)
+    work_dir.mkdir(parents=True, exist_ok=True)
+    check = CompileCheck()
+    if shutil.which(abaqus) is None:
+        check.reason = f"{abaqus} is not on PATH, so nothing was compiled"
+        return check
+    template = abaqus_settings(abaqus).get("compile_fortran")
+    if not template:
+        check.reason = "abaqus did not report a compile_fortran line"
+        return check
+
+    from umat_oti.abaqus.replay import abaqus_include_dir
+    header = abaqus_include_dir(abaqus)
+
+    bundle = Path(source)
+    if extra_sources:
+        # `abaqus user=` compiles one file, so a UMAT whose helpers live beside
+        # it is one compilation unit here too, exactly as the job would build it.
+        text = Path(source).read_text(errors="replace")
+        for extra in extra_sources:
+            text += "\n" + Path(extra).read_text(errors="replace")
+        bundle = work_dir / f"bundle{Path(source).suffix or '.f'}"
+        bundle.write_text(text, encoding="utf-8")
+
+    command = _compile_command(template, bundle, work_dir)
+    includes = [f"-I{path}" for path in include_dirs]
+    if header is not None:
+        includes.append(f"-I{header}")
+    command[1:1] = includes
+    try:
+        done = subprocess.run(command, cwd=str(work_dir), capture_output=True,
+                              text=True, timeout=timeout)
+    except (OSError, subprocess.SubprocessError) as error:
+        check.reason = f"{type(error).__name__}: {error}"
+        return check
+
+    check.log = (done.stdout + done.stderr)[-8000:]
+    produced = work_dir / f"{bundle.stem}.o"
+    check.ok = done.returncode == 0 and produced.is_file()
+    if check.ok:
+        check.reason = "compiled with Abaqus's own compile line"
+        return check
+
+    lowered = check.log.lower()
+    check.missing_dependencies = tuple(
+        marker for marker in DEPENDENCY_DIAGNOSTICS if marker.lower() in lowered)
+    check.defects = tuple(
+        line.strip() for line in check.log.splitlines()
+        if re.search(r"\b(error|catastrophic error)\b", line, re.IGNORECASE)
+        and not any(marker.lower() in line.lower()
+                    for marker in DEPENDENCY_DIAGNOSTICS))[:8]
+    if check.missing_dependencies:
+        check.reason = (
+            f"the compile could not reach something beside the file "
+            f"({'; '.join(check.missing_dependencies)}), so this says nothing "
+            f"about the file itself")
+    elif check.defects:
+        check.reason = (
+            f"the unmodified source does not compile with Abaqus's own compile "
+            f"line: {check.defects[0][:200]}")
+    else:
+        check.reason = (f"the compile failed (exit {done.returncode}) with no "
+                        f"diagnostic this could attribute")
+    return check
+
+
 def link_environment(build: SupportBuild) -> str:
     """The job-local ``abaqus_v6.env`` that links what was built.
 

@@ -66,6 +66,22 @@ def file_digest(path: Path) -> str:
 #: existed while reporting every entry as current.
 FINGERPRINTED = ("*.py", "*.f90", "*.f", "*.for", "*.inc")
 
+#: Subpackages that cannot change a stored transform, and so must not make one
+#: stale. There is exactly one, and it earns the exemption structurally rather
+#: than by assertion: ``umat_oti.abaqus`` is the VERIFICATION harness -- decks,
+#: job running, probes, comparisons, the finite-difference replay -- and it is
+#: a leaf. Nothing on the transform side imports it, so nothing it contains can
+#: reach the bytes the store holds. ``tests/test_the_fingerprint_covers_the_
+#: transform.py`` enforces both halves of that: the exemption is dropped the
+#: moment a transform module imports the harness.
+#:
+#: The distinction is not cosmetic. Fingerprinting the harness meant that
+#: improving a comparison, a deck or a diagnostic marked all 250 stored
+#: transforms stale and demanded they be rebuilt before any of them could be
+#: re-verified -- so the cost of looking harder at the evidence was paid in
+#: re-deriving the evidence, which is precisely backwards.
+NOT_TRANSFORM_CODE = ("abaqus",)
+
 
 def transform_fingerprint(package_root: Optional[Path] = None) -> str:
     """A digest of the transform code itself.
@@ -73,11 +89,13 @@ def transform_fingerprint(package_root: Optional[Path] = None) -> str:
     Every file under the package whose suffix is in :data:`FINGERPRINTED`
     contributes, name and contents both, in one order sorted by path relative
     to the root -- not grouped by suffix, or the digest would depend on the
-    order the globs happened to run in.
+    order the globs happened to run in. Files under
+    :data:`NOT_TRANSFORM_CODE` are excluded; see there for why that is safe.
 
-    Deliberately broad: it will call an entry stale for a change that could not
-    have affected it, and the cost of that is a rebuild, while the cost of the
-    opposite mistake is a batch reporting agreement it never rechecked.
+    Otherwise deliberately broad: it will call an entry stale for a change that
+    could not have affected it, and the cost of that is a rebuild, while the
+    cost of the opposite mistake is a batch reporting agreement it never
+    rechecked.
     """
     root = Path(package_root) if package_root is not None else \
         Path(__file__).resolve().parents[1]
@@ -86,7 +104,10 @@ def transform_fingerprint(package_root: Optional[Path] = None) -> str:
         for path in root.rglob(pattern):
             if "__pycache__" in path.parts or not path.is_file():
                 continue
-            seen[str(path.relative_to(root))] = path
+            relative = path.relative_to(root)
+            if relative.parts and relative.parts[0] in NOT_TRANSFORM_CODE:
+                continue
+            seen[str(relative)] = path
     digest = hashlib.sha256()
     for relative in sorted(seen):
         digest.update(relative.encode("utf-8"))
