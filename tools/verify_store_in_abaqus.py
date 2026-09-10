@@ -92,8 +92,13 @@ from umat_oti.abaqus.amplitude_search import (                          # noqa: 
     ACTIVATED, LINEAR_TO_THE_CEILING, search_amplitude)
 from umat_oti.corpus.entry_routines import classify as classify_entry   # noqa: E402
 from umat_oti.fortran.normalize import detect_source_form              # noqa: E402
+from umat_oti.abaqus.elements import geometry_for as element_geometry   # noqa: E402
+from umat_oti.abaqus.formulation import settle                          # noqa: E402
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
-    NEEDS_MATERIAL_DATA, VerificationManifest, reverse, simple_shear, uniaxial)
+    NEEDS_MATERIAL_DATA, VerificationManifest, at_rate, hold, reverse,
+    simple_shear, uniaxial)
+from umat_oti.abaqus.rate_search import (                               # noqa: E402
+    HOLD_PERIODS, RATE_FACTOR, probe_time)
 from umat_oti.abaqus.job_status import blocking_statements
 from umat_oti.abaqus.probe import CORRUPT, converged_only, parse_probe           # noqa: E402
 from umat_oti.abaqus.replay import (                                    # noqa: E402
@@ -300,18 +305,6 @@ def deck_kinematics(text: str, deck_name: str = "the deck") -> Kinematics:
                       f"default of NLGEOM=NO")
 
 
-#: What one material point looks like at each tensor size this corpus uses:
-#: direct components, shear components, and an element that has exactly one
-#: integration point so a job drives one material point rather than several
-#: identical ones. C3D4 and the plane quadrilaterals also carry no hourglass
-#: modes, so no artificial stiffness has to be invented for them.
-POINT_SHAPE: dict[int, tuple[int, int, str]] = {
-    6: (3, 3, "C3D4"),
-    4: (3, 1, "CPE4"),
-    3: (2, 1, "CPS4"),
-}
-
-
 @dataclass
 class ExitVerdict:
     """What this run's exit code should be, and the sentences that justify it."""
@@ -404,17 +397,6 @@ def exit_verdict(mode: str, records: list, required: set) -> ExitVerdict:
     return ExitVerdict(0, lines)
 
 
-def point_shape(ntens: int) -> Optional[tuple[int, int, str]]:
-    """(ndi, nshr, element type) for this tensor size, or None if unknown.
-
-    None is a refusal, not a fallback. Driving an ntens the deck generator has
-    no element for would mean choosing an element whose component ordering the
-    source does not use, and every stress it wrote would be compared against
-    the wrong component.
-    """
-    return POINT_SHAPE.get(int(ntens))
-
-
 #: The ``*Material name=`` a proposal's provenance quotes, so the manifest can
 #: be built from the same block the pairing was judged on rather than from
 #: whichever block happens to carry the most constants.
@@ -478,6 +460,10 @@ class ManifestPlan:
     #: UMAT. Carried whole -- the units it declares, their argument counts and
     #: who calls whom -- so the claim can be checked without re-parsing.
     entry_classification: Optional[dict] = None
+    #: Which formulation the verification runs, and the two witnesses that
+    #: decided it: what the source's own text does with its tensor, and what
+    #: element the author's deck runs the material on.
+    formulation: Optional[dict] = None
 
 
 _SOLUTION_STATE = re.compile(
@@ -589,20 +575,6 @@ def build_manifest(
             plan.entry_classification = entry_kind.as_dict()
             return plan
 
-    ntens = int(row.get("ntens") or 0)
-    shape = point_shape(ntens)
-    if shape is None:
-        # point_shape's docstring calls None a refusal, and it is one; the
-        # code went on to `shape or (3, 3, "C3D4")` and drove the source on a
-        # six-component element regardless. Every stress it wrote would then
-        # be compared against a component the source does not use.
-        plan.stage = "manifest_refused"
-        plan.reason = (
-            f"ntens={ntens} has no element whose component ordering is known "
-            f"to match it, so there is no deck this material can be driven "
-            f"on without comparing stresses against the wrong components")
-        return plan
-
     proposed = str(((proposal or {}).get("pairing") or {}).get("proposed") or "")
     if not proposed:
         plan.stage = NEEDS_MATERIAL_DATA
@@ -628,6 +600,26 @@ def build_manifest(
     plan.material_block = material.name or "(unnamed)"
 
     deck_text = deck_path.read_text(encoding="utf-8", errors="replace")
+
+    # Which formulation this UMAT is called in, from two independent
+    # witnesses: what the routine's own text does with its tensor, and what
+    # element the author's deck runs the material on. The triage row is NOT
+    # one of them -- it recorded ntens=6 for every source in the corpus,
+    # because 6 is the default it was handed and nothing ever inferred it. A
+    # plane-strain routine driven on a six-component element is asked for
+    # components it never computes.
+    settled = settle(source_path.read_text(errors="replace") if source_path.is_file()
+                     else "", source_id, deck_text, Path(proposed).name,
+                     material.name)
+    plan.formulation = settled.as_dict()
+    if not settled.element:
+        plan.stage = "manifest_refused"
+        plan.reason = settled.formulation.reason
+        return plan
+    element = settled.element
+    geometry = element_geometry(element)
+    ndi, nshr, ntens = geometry.ndi, geometry.nshr, geometry.ntens
+
     found = deck_kinematics(deck_text, Path(proposed).name)
     plan.kinematics_provenance = found.provenance
     if (row.get("kinematics") or "") and row["kinematics"] != found.kinematics:
@@ -659,8 +651,6 @@ def build_manifest(
         loading.append(reverse(loading[0]))
 
     relative, _ = portable_source(cache_root / source_id)
-    # shape is not None here: a None was refused above.
-    ndi, nshr, element = shape
     provenance = (
         f"{Path(proposed).name} *MATERIAL {plan.material_block}: "
         f"{len(material.props)} constants"
@@ -732,13 +722,6 @@ def build_manifest(
             "state-variable count, so nobody has established how many this "
             "material has. A UMAT that writes past the end of an array of one "
             "either corrupts memory or measures a truncated state")
-    if shape is None:
-        # Not a material problem, so not needs_material_data: what is missing
-        # is an element this harness can drive one point of at this tensor size.
-        refusals.append(
-            f"ntens={ntens} has no single-point element in this harness, and "
-            f"choosing one whose component order the source does not use would "
-            f"compare every stress against the wrong component")
     plan.refusals = tuple(refusals)
     plan.manifest = manifest
     plan.stage = "manifest_refused" if refusals else ""
@@ -870,10 +853,69 @@ def discover_loading(manifest: VerificationManifest, original: Path,
                         "transition, so the path stops at it and only "
                         "pre-transition states are available")}
 
+    # No amplitude asks whether this material cares about TIME. A Kelvin-Voigt
+    # solid driven at one rate is linear in the strain at every amplitude, so
+    # the search above reports "linear to the ceiling" -- nothing here to
+    # activate -- about a material whose whole subject is time. Measured on
+    # umat_viscoelastic.for, whose stiffness carries eta/(E*dtime): six runs
+    # from 1e-4 to 1 strain, every one of them linear, every one at one DTIME.
+    #
+    # So the same path is walked again at a different step time, with a hold on
+    # the end. Two jobs, and only where they can decide something: a material
+    # the amplitude search already activated is already being verified on a
+    # branch every build can get wrong.
+    time_finding = None
+    if enabled:
+        time_finding = probe_time_dependence(
+            manifest, original, attempts_dir, timeout, amplitude=amplitude,
+            increments=coarse, form=form)
+        record["time"] = time_finding.as_dict()
+
     loading = [uniaxial(amplitude, increments), simple_shear(amplitude, increments)]
     loading.append(reverse(loading[0]))
+    # A hold earns its place in the VERIFICATION loading only when the probe
+    # showed the material answers it. On a rate-independent material it is ten
+    # increments of the same answer, and on a rate-dependent one it is the only
+    # part of the path where the time-dependent branch is exercised at all.
+    if time_finding is not None and time_finding.time_dependent:
+        loading.append(hold(loading[0], period=HOLD_PERIODS * loading[0].period,
+                            increments=max(3, increments // 2)))
+        record["hold_added"] = time_finding.reason
     record["chosen_amplitude"] = amplitude
     return replace(manifest, loading=tuple(loading)), record
+
+
+def probe_time_dependence(manifest: VerificationManifest, original: Path,
+                          attempts_dir: Path, timeout: int, *,
+                          amplitude: float, increments: int,
+                          form: str = ""):
+    """Two runs of the ORIGINAL that differ only in how much time passed.
+
+    The slow one carries a hold, so relaxation and rate dependence cost two
+    jobs between them rather than three. Same targets, same increments, so
+    increment k of one is at the same strain as increment k of the other and a
+    difference between their stresses is time dependence and nothing else.
+    """
+    def run(label: str, segments) -> tuple:
+        trial = Path(attempts_dir) / label
+        candidate = replace(manifest, loading=tuple(segments))
+        try:
+            report = run_one(manifest=candidate, timeout=timeout,
+                             source=Path(original), job="original",
+                             work_dir=trial, support_dir=None, form=form)
+        except Exception as exc:                    # noqa: BLE001
+            return False, [], f"the job raised {type(exc).__name__}: {exc}"
+        evidence = job_evidence(report)
+        if not evidence.completed:
+            return False, [], "; ".join(evidence.reasons) or "the job did not complete"
+        return True, history_of(trial, "original"), ""
+
+    pull = uniaxial(amplitude, increments)
+    held = hold(pull, period=HOLD_PERIODS * pull.period, increments=increments)
+    return probe_time(
+        lambda: run("time_slow", [pull, held]),
+        lambda: run("time_fast", [at_rate(pull, RATE_FACTOR)]),
+        hold_from=increments)
 
 
 def build_plan(manifest: VerificationManifest, original: Path, transformed: Path,
@@ -1714,6 +1756,7 @@ def _material_columns(plan: ManifestPlan) -> dict[str, Any]:
         "kinematics_provenance": plan.kinematics_provenance,
         "kinematics_note": plan.kinematics_note,
         "entry_classification": plan.entry_classification,
+        "formulation": plan.formulation,
     }
 
 

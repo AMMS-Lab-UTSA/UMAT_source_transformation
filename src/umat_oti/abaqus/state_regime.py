@@ -31,6 +31,8 @@ import math
 from dataclasses import dataclass, field
 from typing import Any, Optional, Sequence
 
+from umat_oti.abaqus.activation import increment_of, strain_at
+
 #: Regimes a state can be in. Only the two smooth ones may carry a verified
 #: derivative.
 SMOOTH_ELASTIC = "smooth_elastic"
@@ -138,8 +140,8 @@ def unloading_at(records: Sequence[dict], position: int) -> bool:
     """
     if position <= 0 or position >= len(records):
         return False
-    now = _finite((records[position] or {}).get("DSTRAN"))
-    first = _finite((records[0] or {}).get("DSTRAN"))
+    now = increment_of(records[position] or {})
+    first = increment_of(records[0] or {})
     if not now or not first:
         return False
     dot = sum(a * b for a, b in zip(first, now))
@@ -250,7 +252,22 @@ UNKNOWN_STATE_SEMANTICS = "unknown_state_semantics"
 
 
 def _at(records, position, field):
-    return _finite((records[position] or {}).get(field)) if 0 <= position < len(records) else []
+    """One field of one record, read where the probe actually writes it.
+
+    STRAN and DSTRAN are inputs to a UMAT call and live in the ENTRY record,
+    not in the RESULT record beside them. Reading them off the result found
+    nothing on every real history, and response_character then reported
+    ``unknown_state_semantics`` -- "no strain was recorded to compare against"
+    -- for materials whose strain was recorded all along.
+    """
+    if not 0 <= position < len(records):
+        return []
+    record = records[position] or {}
+    if field == "STRAN":
+        return strain_at(record)
+    if field == "DSTRAN":
+        return increment_of(record)
+    return _finite(record.get(field))
 
 
 def _relative_gap(a, b) -> float:
@@ -343,7 +360,7 @@ def response_character(records: Sequence[dict]) -> tuple[str, str]:
     # nonlinear response came out labelled linear.
     reference, first_stress, first_strain = 0.0, [], []
     for record in usable:
-        strain = _finite(record.get("STRAN"))
+        strain = strain_at(record)
         size = max((abs(v) for v in strain), default=0.0)
         if size > 0:
             reference, first_strain = size, strain
@@ -352,7 +369,7 @@ def response_character(records: Sequence[dict]) -> tuple[str, str]:
     worst = 0.0
     if reference:
         for record in usable[1:]:
-            strain = _finite(record.get("STRAN"))
+            strain = strain_at(record)
             stress = _finite(record.get("STRESS"))
             ratio = max((abs(v) for v in strain), default=0.0) / reference
             if ratio <= 0:

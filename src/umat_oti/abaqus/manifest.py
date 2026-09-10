@@ -172,6 +172,37 @@ def simple_shear(strain: float = 0.01, increments: int = 10) -> LoadingSegment:
         description="prescribed engineering shear in the x-y plane")
 
 
+def hold(segment: LoadingSegment, period: float = 10.0,
+         increments: int = 10) -> LoadingSegment:
+    """Stay where the previous segment finished, and let time pass.
+
+    The boundary values are the same, so the strain does not change; only the
+    step time does. A rate-independent material returns the same stress at the
+    end of it as at the start. Anything with a viscosity, a creep law, a
+    relaxation time or an ageing clock does not, and the difference IS the
+    behaviour -- it is invisible to every amplitude, because raising the strain
+    does not make time pass.
+    """
+    return LoadingSegment(
+        f"{segment.name}_hold", segment.strain, increments, period,
+        description=(f"the strain of {segment.name} held for {period:g} of "
+                     f"step time, so that stress change means time dependence"))
+
+
+def at_rate(segment: LoadingSegment, factor: float) -> LoadingSegment:
+    """The same strain path, walked in ``factor`` times the step time.
+
+    Same targets, same number of increments, different DTIME. Two runs of this
+    differ only in how fast the strain was applied, so a difference between
+    their stresses at the same strain is rate dependence and nothing else.
+    """
+    return LoadingSegment(
+        f"{segment.name}_x{factor:g}", segment.strain, segment.increments,
+        segment.period * float(factor),
+        description=(f"{segment.name} applied over {factor:g} times the step "
+                     f"time, to separate rate dependence from amplitude"))
+
+
 def reverse(segment: LoadingSegment, fraction: float = -0.5) -> LoadingSegment:
     """The same path run backwards, to make state evolution observable.
 
