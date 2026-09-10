@@ -1,7 +1,7 @@
 {
  "what_this_is": "a second acquisition pass over the same repositories, for the files a UMAT needs beside it and the files an author may have published material constants in. Every row names the repository, the commit it was read at, the path, and the digest of the bytes.",
  "retrieved_at": "2026-09-10T16:47:21+00:00",
- "auth": "gh auth token (/home/ammslab3/.local/bin/gh)",
+ "auth": "gh auth token",
  "requests_made": 608,
  "cache_root_name": "discovery_cache",
  "repositories": [

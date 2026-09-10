@@ -67,20 +67,22 @@ def file_digest(path: Path) -> str:
 FINGERPRINTED = ("*.py", "*.f90", "*.f", "*.for", "*.inc")
 
 #: Subpackages that cannot change a stored transform, and so must not make one
-#: stale. There is exactly one, and it earns the exemption structurally rather
-#: than by assertion: ``umat_oti.abaqus`` is the VERIFICATION harness -- decks,
-#: job running, probes, comparisons, the finite-difference replay -- and it is
-#: a leaf. Nothing on the transform side imports it, so nothing it contains can
-#: reach the bytes the store holds. ``tests/test_the_fingerprint_covers_the_
-#: transform.py`` enforces both halves of that: the exemption is dropped the
-#: moment a transform module imports the harness.
+#: stale. Each earns its exemption structurally rather than by assertion: none
+#: is imported by anything the transform runs, so nothing in them can reach the
+#: bytes the store holds. ``abaqus`` is the verification harness -- decks, jobs,
+#: probes, comparisons, the finite-difference replay; ``app`` is the interface;
+#: ``assist`` is advisory and may never touch published evidence;
+#: ``publication`` renders it; ``store`` is this file's own package, which
+#: computes the fingerprint and cannot be an input to it.
+#: ``tests/test_the_fingerprint_covers_the_transform.py`` enforces both halves:
+#: every exemption is dropped the moment a transform module imports one.
 #:
 #: The distinction is not cosmetic. Fingerprinting the harness meant that
 #: improving a comparison, a deck or a diagnostic marked all 250 stored
 #: transforms stale and demanded they be rebuilt before any of them could be
 #: re-verified -- so the cost of looking harder at the evidence was paid in
 #: re-deriving the evidence, which is precisely backwards.
-NOT_TRANSFORM_CODE = ("abaqus",)
+NOT_TRANSFORM_CODE = ("abaqus", "app", "assist", "publication", "store")
 
 
 def transform_fingerprint(package_root: Optional[Path] = None) -> str:

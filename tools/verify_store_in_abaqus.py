@@ -103,6 +103,7 @@ from umat_oti.abaqus.job_status import blocking_statements
 from umat_oti.abaqus.probe import CORRUPT, converged_only, parse_probe           # noqa: E402
 from umat_oti.abaqus.replay import (                                    # noqa: E402
     STATE_FILE, build_replay, difference_tangent, write_state)
+from umat_oti.abaqus.truncation import analyse as analyse_truncation    # noqa: E402
 from umat_oti.abaqus.support import (                                   # noqa: E402
     build_support, compile_order, install_support)
 from umat_oti.store import TransformStore                               # noqa: E402
