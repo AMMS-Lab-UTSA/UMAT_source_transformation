@@ -66,3 +66,42 @@ def test_a_precision_control_that_would_widen_nothing_is_not_run():
     assert not finding.explains_a_difference
     assert "already double" in finding.reason
     assert widen(already_double, finding)[0] == already_double
+
+
+def test_the_ladder_tries_the_gentler_change_first(tmp_path: Path):
+    """A model that will not run with reassociation may still run with a
+    different math library, and a control that does not run measures nothing.
+    From-2D-to-2D-Scallop.for will not complete a single increment with
+    `-fp-model fast=2`."""
+    from umat_oti.abaqus.support import (ARITHMETIC_LADDER, ASSOCIATION_FLAGS,
+                                         INTRINSICS_FLAGS)
+
+    assert [name for name, _ in ARITHMETIC_LADDER] == ["intrinsics",
+                                                       "reassociation"]
+    assert dict(ARITHMETIC_LADDER)["intrinsics"] == INTRINSICS_FLAGS
+    assert dict(ARITHMETIC_LADDER)["reassociation"] == ASSOCIATION_FLAGS
+
+
+def test_the_intrinsics_control_matches_what_a_conversion_is():
+    """The OTI type cannot call the Fortran intrinsic -- it needs the
+    derivative as well as the value -- so it computes both, and its value
+    agrees with the intrinsic's to the accuracy of two implementations of the
+    same function rather than to the last bit. Turning off the math library's
+    architecture consistency is the same kind of change."""
+    from umat_oti.abaqus.support import INTRINSICS_FLAGS
+
+    assert any("fimf-arch-consistency=false" in flag for flag in INTRINSICS_FLAGS)
+    assert all("fp-model" not in flag for flag in INTRINSICS_FLAGS), (
+        "this control changes which implementation runs, not whether the "
+        "compiler may reorder -- that is the other rung")
+
+
+def test_each_rung_writes_its_own_environment(tmp_path: Path):
+    from umat_oti.abaqus.support import (ARITHMETIC_LADDER,
+                                         association_environment)
+
+    for name, flags in ARITHMETIC_LADDER:
+        written = association_environment(tmp_path / name, flags).read_text(
+            encoding="utf-8")
+        for flag in flags:
+            assert repr(flag) in written

@@ -393,6 +393,28 @@ def link_environment(build: SupportBuild) -> str:
 #: is that source's own sensitivity to the order its operations are done in.
 ASSOCIATION_FLAGS = ("-fp-model", "fast=2", "-no-prec-div", "-no-prec-sqrt")
 
+#: Flags that keep the mathematics and change WHICH IMPLEMENTATION of it runs.
+#: Abaqus compiles with ``-fimf-arch-consistency=true``, which pins the math
+#: library to one implementation across processors; turning it off lets the
+#: compiler pick another, and a different implementation of ``sqrt``, ``exp``
+#: or ``log`` agrees with the first to within its own accuracy and not to the
+#: last bit.
+#:
+#: This is the control that matches what an OTI conversion IS. The OTI type
+#: cannot call the Fortran intrinsic -- it needs the derivative as well as the
+#: value -- so it computes both, and its value agrees with the intrinsic's to
+#: the accuracy of two implementations of the same function. A model that
+#: amplifies that is a model whose conversion cannot agree to the last bit
+#: either, and this measures by how much.
+INTRINSICS_FLAGS = ("-fimf-arch-consistency=false", "-fimf-precision=medium")
+
+#: Tried in order. Each keeps the mathematics and changes how it is computed;
+#: the gentler one first, because a model that will not run with reassociation
+#: may still run with a different math library, and a control that does not
+#: run measures nothing.
+ARITHMETIC_LADDER = (("intrinsics", INTRINSICS_FLAGS),
+                     ("reassociation", ASSOCIATION_FLAGS))
+
 
 def association_environment(job_dir: Path,
                             flags: Sequence[str] = ASSOCIATION_FLAGS) -> Path:
