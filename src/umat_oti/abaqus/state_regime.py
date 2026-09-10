@@ -418,7 +418,19 @@ def coverage(regimes: Sequence[Regime], nonlinear: bool,
     # evidence has to span both. One whose reversibility could not be
     # established gets the SAME requirement, not a reduced one: not knowing
     # is not a reason to ask for less.
-    needs_both_sides = character != NONLINEAR_REVERSIBLE
+    #
+    # Unless there is no elastic branch to ask for. A growth or a swelling law
+    # is doing something from its first increment and never stops, so no state
+    # anywhere on the path is pre-activation, and demanding two of them is
+    # demanding evidence the material cannot produce. Measured on the Jeff97
+    # growth family: every state agreed, every one was inside the activated
+    # regime, and the coverage rule failed them for the absence of a branch
+    # they do not have. The requirement then falls to the one that CAN be met
+    # -- two smooth states inside the activated regime -- which is not a
+    # weaker test of the same thing but the same test of what is there.
+    no_elastic_branch = not elastic and any(
+        regime.activated_here for regime in regimes)
+    needs_both_sides = character != NONLINEAR_REVERSIBLE and not no_elastic_branch
     if needs_both_sides and len(elastic) < 2:
         return False, (f"{len(elastic)} smooth state(s) before activation, and "
                        f"two are needed")
@@ -445,9 +457,14 @@ def coverage(regimes: Sequence[Regime], nonlinear: bool,
     if not needs_both_sides:
         return True, (
             f"{len(inelastic)} smooth state(s) inside the activated regime, "
-            f"which is the whole of this material: its response is nonlinear "
-            f"but REVERSIBLE, so there is no irreversible branch to cross and "
-            f"no elastic-versus-plastic split to span"
+            + ("which is the whole of this material: it is activated from its "
+               "first increment and never stops, so there is no elastic branch "
+               "to verify on and every state that can be measured is inside "
+               "the activated one"
+               if no_elastic_branch else
+               "which is the whole of this material: its response is nonlinear "
+               "but REVERSIBLE, so there is no irreversible branch to cross and "
+               "no elastic-versus-plastic split to span")
             + (f"; {len(transitional)} transitional state(s) carried no weight "
                f"either way" if transitional else ""))
     return True, (f"{len(elastic)} smooth elastic, {len(inelastic)} smooth "

@@ -266,9 +266,77 @@ def test_verification_is_driven_past_the_transition_not_up_to_it():
     tool = (Path(__file__).resolve().parents[1] / "tools"
             / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
     assert "BEYOND_TRANSITION" in tool
-    assert "amplitude * BEYOND_TRANSITION" in tool
+    assert "amplitude * factor" in tool, (
+        "the verification amplitude is a multiple of what the search found")
+    assert "ladder = RESOLUTION_FACTORS if at_the_floor else (BEYOND_TRANSITION,)" in tool, (
+        "a material with a transition is driven past it; one that was already\n"
+        "         active at the search's floor has no transition to cross and is\n"
+        "         driven up for resolution instead")
     assert "ran, _records, why = run_at(wanted)" in tool, (
         "the extended amplitude must be confirmed by a run, not assumed")
-    assert "could not be driven past its own" in tool, (
+    assert "could not be driven further than the" in tool, (
         "a material that cannot be driven further must keep the amplitude "
         "that worked, and say so")
+
+
+# ---------------------------------------------------------------------------
+# and a branch that does not exist cannot be evidence
+# ---------------------------------------------------------------------------
+def test_a_material_with_no_elastic_branch_is_not_asked_for_two_elastic_states():
+    """The Jeff97 growth family: activated from the first increment and never
+    stopping. Every state agreed, every one was inside the activated regime,
+    and the coverage rule failed them for the absence of a branch they do not
+    have. Demanding evidence a material cannot produce is not a strict test;
+    it is an unmeetable one."""
+    from umat_oti.abaqus.state_regime import (Regime, SMOOTH_INELASTIC,
+                                              coverage)
+
+    inside = [Regime(increment=n, regime=SMOOTH_INELASTIC,
+                     reason="activated", activated_here=True)
+              for n in (2, 5)]
+    enough, why = coverage(inside, nonlinear=True, character="irreversible")
+    assert enough, why
+    assert "no elastic branch" in why
+
+
+def test_a_material_that_does_have_an_elastic_branch_still_needs_it():
+    """The rule only relaxes where the branch is absent. A material with one
+    pre-activation state has an elastic branch and one state on it, and one
+    state cannot separate a regime from a coincidence."""
+    from umat_oti.abaqus.state_regime import (Regime, SMOOTH_ELASTIC,
+                                              SMOOTH_INELASTIC, coverage)
+
+    mixed = [Regime(increment=1, regime=SMOOTH_ELASTIC, reason="quiet"),
+             Regime(increment=5, regime=SMOOTH_INELASTIC, reason="activated",
+                    activated_here=True),
+             Regime(increment=7, regime=SMOOTH_INELASTIC, reason="activated",
+                    activated_here=True)]
+    enough, why = coverage(mixed, nonlinear=True, character="irreversible")
+    assert not enough
+    assert "before activation" in why
+
+
+def test_the_best_step_is_the_one_the_verdict_is_taken_on():
+    """Choosing the step by the Frobenius norm and reporting that step's
+    RELATIVE error let the two disagree about which step was best -- and they
+    did. Measured on From-2D-to-2D-Axe.for: the Frobenius minimum sat at a
+    step whose worst-component relative error was 1.20e-04, while its
+    neighbour's was 7.69e-06. Fifteen times better and not reported."""
+    from umat_oti.abaqus.compare import compare_tangent
+
+    oti = [[1000.0, 0.0], [0.0, 1.0]]
+    # 1e-3: a SMALL absolute error, all of it on the small entry, so its
+    #       Frobenius norm is the smaller and its worst-component relative
+    #       error is the larger.
+    # 1e-4: a larger absolute error on the large entry: worse Frobenius,
+    #       better worst component.
+    differences = {
+        1e-3: [[1000.0, 0.0], [0.0, 1.0 + 1e-3]],
+        1e-4: [[1000.0 + 1e-2, 0.0], [0.0, 1.0]],
+    }
+    found = compare_tangent(oti, differences).as_dict()
+    assert found["best_step"] == 1e-4
+    assert found["best_relative"] < 1e-4
+    # and the Frobenius plateau still spans both, because that is a statement
+    # about the shape of the sweep rather than about one component
+    assert tuple(found["stable_range"]) == (1e-4, 1e-3)

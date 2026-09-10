@@ -47,6 +47,14 @@ sys.path.insert(0, str(REPO / "src"))
 
 VERIFIED = "verified"
 
+#: What the tangent was held to. Recorded as a sentence rather than a number
+#: because the number alone reads as the whole test, and it is not: the
+#: plateau across step sizes is what does the work. See tangent_verdict.
+TANGENT_TOLERANCE_NOTE = (
+    "1e-6 relative at the best step, corroborated by at least two step sizes "
+    "spanning a decade -- one step cannot separate truncation error from "
+    "cancellation")
+
 #: Repositories whose files this project may redistribute, because it wrote
 #: them. Everything else is recorded by identity and fetched on demand.
 OWN_SOURCES = ("UMATs/",)
@@ -116,10 +124,28 @@ def contract_from(row: dict) -> dict:
         "loading": {
             "kind": "verification probe, chosen by this pipeline",
             "not_the_authors_history": (
-                "This is a controlled probe -- prescribed extension, then "
-                "shear, then a reversal -- and NOT a reproduction of the "
-                "author's own example. A result here says the conversion "
-                "agrees with the original under this probe."),
+                "This is a controlled probe -- an amplitude searched for on "
+                "the ORIGINAL until the material did something, then shear, "
+                "then a reversal, and a hold where the material turned out to "
+                "care about time. NOT a reproduction of the author's own "
+                "example. A result here says the conversion agrees with the "
+                "original under this probe."),
+            "chosen_amplitude": (row.get("discovery") or {}).get(
+                "chosen_amplitude"),
+            "search": (row.get("discovery") or {}).get("summary"),
+            "time_dependence": ((row.get("discovery") or {}).get("time") or {}
+                                ).get("reason"),
+        },
+        # The experiment itself, whole, so a later run can replay it rather
+        # than search again. A regression that re-searched would be measuring
+        # a different experiment, and a difference between two such runs says
+        # nothing about the code that changed between them.
+        "frozen_manifest": row.get("manifest"),
+        "frozen_states": (row.get("tangent") or {}).get("chosen_states") or [],
+        "frozen_tolerances": {
+            "primal": (row.get("manifest") or {}).get("primal_tolerance"),
+            "tangent": TANGENT_TOLERANCE_NOTE,
+            "fd_steps": (row.get("manifest") or {}).get("fd_steps"),
         },
         "transform_fingerprint": row.get("fingerprint"),
     }

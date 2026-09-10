@@ -370,10 +370,23 @@ def compare_tangent(
             f"establishes anything about this tangent")
         return comparison
 
-    comparison.best = min(usable, key=lambda p: p.frobenius)
+    # The best step is the one that minimises what the VERDICT is taken on.
+    # Choosing it by the Frobenius norm and then reporting that step's
+    # relative error meant the two could disagree about which step was best,
+    # and they did: on From-2D-to-2D-Axe.for the Frobenius minimum sat at a
+    # step whose worst-component relative error was 1.20e-04 while the
+    # neighbouring step's was 7.69e-06 -- fifteen times better, and not
+    # reported. A sweep is judged on its worst component, so its best step is
+    # the one whose worst component is smallest.
+    #
+    # The Frobenius norm still decides the PLATEAU, which is a statement about
+    # the shape of the sweep rather than about any one component, and it is
+    # still reported beside the relative error.
+    comparison.best = min(usable, key=lambda p: p.relative)
+    reference = min(usable, key=lambda p: p.frobenius)
     within = [p.step for p in usable
-              if comparison.best.frobenius and
-              p.frobenius <= 10.0 * comparison.best.frobenius]
+              if reference.frobenius and
+              p.frobenius <= 10.0 * reference.frobenius]
     if within:
         comparison.stable_range = (min(within), max(within))
     if comparison.non_finite_entries:
