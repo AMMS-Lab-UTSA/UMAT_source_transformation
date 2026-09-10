@@ -2856,6 +2856,60 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
     return outcome
 
 
+#: How closely the converted build has to reproduce the AUTHOR'S OWN tangent
+#: before the two are treated as the same value for the purpose of asking what
+#: a finite difference can see. This is not a tolerance on correctness -- it is
+#: the threshold at which two numbers are indistinguishable to the reference.
+SAME_TANGENT = 1e-9
+
+
+def _resolved_by_the_reference(outcome: dict, *, tolerance: float,
+                               reason: str) -> tuple[bool, str]:
+    """Is the difference under test smaller than the reference's own error?
+
+    A centred difference has an error of its own, and on a model with a local
+    Newton solve or an ill-conditioned kinematic expression that error is far
+    above the eps**(2/3) a smooth function would give. Measured on the same
+    sweep against the same state: the author's OWN analytic DDSDDE -- a value
+    that shares no code path with the converted build -- differs from the
+    difference by a certain amount, and that amount is what the difference can
+    see.
+
+    Where the converted build reproduces the author's tangent to
+    ``SAME_TANGENT`` and its distance from the difference is no larger than
+    the author's own, the difference is not evidence that the two differ: it
+    cannot tell them apart. That is a pass on a narrower claim, and it says so
+    -- the conversion agrees with the author's own tangent, and the difference
+    agrees with both to the extent it agrees with anything.
+
+    It is NOT a pass when the converted build and the author's tangent differ.
+    Then there are two candidate answers and a reference too coarse to choose,
+    which is exactly the situation nothing may be claimed in.
+    """
+    author = (outcome.get("against_the_authors_tangent") or {}).get("best_relative")
+    floor = (outcome.get("the_references_own_error") or {}).get("best_relative")
+    mine = (outcome.get("comparison") or {}).get("best_relative")
+    if author is None or floor is None or mine is None:
+        return False, reason
+    if author > SAME_TANGENT:
+        return False, (
+            f"{reason}; and the converted build differs from the author's own "
+            f"DDSDDE by {author:.3e}, so there are two candidate tangents and "
+            f"the difference is not close enough to either to choose between "
+            f"them")
+    if mine > floor:
+        return False, (
+            f"{reason}; the author's own DDSDDE sits {floor:.3e} from the same "
+            f"difference, so the difference is not too coarse to have noticed")
+    return True, (
+        f"the centred difference cannot separate them: the converted build "
+        f"reproduces the author's own DDSDDE to {author:.3e}, and the "
+        f"difference sits {mine:.3e} from the converted tangent and "
+        f"{floor:.3e} from the author's -- so its distance from the conversion "
+        f"is within its own error, and the {tolerance:.0e} it misses is below "
+        f"what this reference can resolve on this model")
+
+
 def _verify_tangent_at(manifest: VerificationManifest, original: Path,
                        record: dict, position: int, work_dir: Path, *,
                        form: str = "fixed", tolerance: float = TANGENT_TOLERANCE,
@@ -2907,6 +2961,25 @@ def _verify_tangent_at(manifest: VerificationManifest, original: Path,
     verified, reason = tangent_verdict(outcome["comparison"], tolerance=tolerance)
     outcome.update(verified=verified, reason=reason,
                    fd_steps=list(manifest.fd_steps))
+
+    # A second reference, from the same replay and costing nothing: the
+    # tangent the ORIGINAL routine returned at this state. The difference says
+    # what the stress DOES; the author's DDSDDE says what the author SAID it
+    # does. Recorded always, because the two disagreeing is a finding about
+    # the source, and used below where the difference cannot separate them.
+    if sweep.original_tangent:
+        against_author = compare_tangent(
+            oti, {0.0: sweep.original_tangent},
+            near_zero_fraction=manifest.near_zero_fraction)
+        reference_error = compare_tangent(
+            sweep.original_tangent, sweep.matrices,
+            near_zero_fraction=manifest.near_zero_fraction)
+        outcome["against_the_authors_tangent"] = against_author.as_dict()
+        outcome["the_references_own_error"] = reference_error.as_dict()
+        if not verified:
+            verified, reason = _resolved_by_the_reference(
+                outcome, tolerance=tolerance, reason=reason)
+            outcome.update(verified=verified, reason=reason)
 
     # Where the centred difference is the WRONG reference, ask the right one.
     # A rate-independent inelastic model has a corner at every increment of a
