@@ -61,6 +61,15 @@ GROWTH = 5.0
 #: asked about a regime its author did not write.
 CEILING = 1.0
 
+#: How many times to step DOWN when the first amplitude already fails. A model
+#: whose smallest probe returns NaN has a domain that does not reach 1e-4, and
+#: escalating from there finds nothing while a smaller amplitude might run.
+#: Measured on thirteen Jeff97 growth entries: the search left its domain at
+#: its first attempt, reported an amplitude of zero, and the caller fell back
+#: to a DEFAULT of 0.005 -- fifty times larger than the probe that had just
+#: failed -- so both builds went non-finite at their second increment.
+DESCENTS = 4
+
 #: How many refinement steps to spend narrowing the bracket once activation is
 #: found. Each halves the interval, so four takes a factor-of-three bracket
 #: down to under ten percent.
@@ -193,6 +202,27 @@ def search_amplitude(
     amplitude = float(first)
     last_quiet = 0.0
     elastic_stress = 0.0
+
+    # Down before up. A model whose smallest probe already returns NaN has a
+    # domain that does not reach it, and there is nothing above to find.
+    for _descent in range(DESCENTS):
+        ran, records, why = run(amplitude)
+        if ran and _first_non_finite(records) is None:
+            break
+        result.attempts.append(Attempt(amplitude=amplitude, ran=ran,
+                                       reason=why or "returned a value that "
+                                                     "is not a number"))
+        amplitude /= growth
+    else:
+        result.outcome = LEFT_ITS_DOMAIN
+        result.amplitude = 0.0
+        result.bracket = (0.0, float(first))
+        result.reason = (
+            f"the model produced no numbers at any amplitude from "
+            f"{float(first) / growth ** (DESCENTS - 1):.3g} to {float(first):.3g}; "
+            f"there is no loading here this harness can drive it at")
+        return result
+    result.attempts.clear()
 
     while amplitude <= ceiling:
         ran, records, why = run(amplitude)
