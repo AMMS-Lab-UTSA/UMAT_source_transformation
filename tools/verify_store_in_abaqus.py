@@ -2202,39 +2202,59 @@ def run_association_control(manifest: VerificationManifest, original: Path,
     model's own -- not merely of the same order. A difference that exceeds it
     is the transform's, and stays so.
     """
-    from umat_oti.abaqus.support import association_environment
+    from umat_oti.abaqus.support import (ARITHMETIC_LADDER,
+                                         association_environment)
 
-    outcome: dict[str, Any] = {"ran": False}
+    outcome: dict[str, Any] = {"ran": False, "attempts": []}
     work_dir = Path(work_dir)
-    work_dir.mkdir(parents=True, exist_ok=True)
-    association_environment(work_dir)
-    report = run_one(manifest=manifest, timeout=timeout, source=Path(original),
-                     job="association", work_dir=work_dir, support_dir=None,
-                     form=form, data_roots=data_roots)
-    evidence = job_evidence(report)
-    outcome["completed"] = evidence.completed
-    outcome["warnings"] = list(evidence.warnings)
-    if not evidence.completed:
-        outcome["reason"] = (
-            "the original would not run with its arithmetic reordered, so its "
-            "own sensitivity to operation order could not be measured: "
-            + ("; ".join(evidence.reasons) or "no reason recorded"))
-        return outcome
+    best = None
+    for name, flags in ARITHMETIC_LADDER:
+        where = work_dir / name
+        where.mkdir(parents=True, exist_ok=True)
+        association_environment(where, flags)
+        report = run_one(manifest=manifest, timeout=timeout,
+                         source=Path(original), job="association",
+                         work_dir=where, support_dir=None, form=form,
+                         data_roots=data_roots)
+        evidence = job_evidence(report)
+        attempt: dict[str, Any] = {"how": name, "flags": list(flags),
+                                   "completed": evidence.completed,
+                                   "warnings": list(evidence.warnings)}
+        if not evidence.completed:
+            attempt["reason"] = ("; ".join(evidence.reasons)
+                                 or "no reason recorded")
+            outcome["attempts"].append(attempt)
+            continue
+        # Against the ORIGINAL, not against the conversion: what is being
+        # measured is how far this model moves from ITSELF, which is the
+        # yardstick the conversion's difference is then held against.
+        left = list(history_of(where, "association"))
+        right = list(original_history)
+        if increments_compared is not None:
+            left, right = left[:increments_compared], right[:increments_compared]
+        baseline = compare_primal(left, right,
+                                  tolerance=manifest.primal_tolerance,
+                                  near_zero_fraction=manifest.near_zero_fraction)
+        attempt["worst_stress_relative"] = baseline.worst_stress_relative
+        attempt["worst_state_relative"] = baseline.worst_state_relative
+        attempt["comparison"] = baseline.as_dict()
+        outcome["attempts"].append(attempt)
+        if best is None or (baseline.worst_stress_relative or 0.0) > (
+                best.get("worst_stress_relative") or 0.0):
+            best = attempt
 
-    # Against the ORIGINAL, not against the conversion: what is being measured
-    # is how far this model moves from ITSELF, which is the yardstick the
-    # conversion's difference is then held against.
-    reordered = history_of(work_dir, "association")
-    left = list(reordered)
-    right = list(original_history)
-    if increments_compared is not None:
-        left, right = left[:increments_compared], right[:increments_compared]
-    baseline = compare_primal(left, right, tolerance=manifest.primal_tolerance,
-                              near_zero_fraction=manifest.near_zero_fraction)
+    if best is None:
+        outcome["reason"] = (
+            "the original would not run with its arithmetic computed any other "
+            "way, so its own sensitivity to how it is computed could not be "
+            "measured: "
+            + "; ".join(str(a.get("reason") or "") for a in outcome["attempts"]))
+        return outcome
     outcome["ran"] = True
-    outcome["comparison"] = baseline.as_dict()
-    outcome["worst_stress_relative"] = baseline.worst_stress_relative
-    outcome["worst_state_relative"] = baseline.worst_state_relative
+    outcome["how"] = best["how"]
+    outcome["comparison"] = best.get("comparison")
+    outcome["worst_stress_relative"] = best.get("worst_stress_relative")
+    outcome["worst_state_relative"] = best.get("worst_state_relative")
     return outcome
 
 
@@ -2601,8 +2621,8 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                 precision_note = (
                     f"the two builds differ by {mine:.3e}, and this model "
                     f"differs from ITSELF by {own:.3e} when the same source is "
-                    f"compiled with its arithmetic reordered -- reassociation "
-                    f"permitted where Abaqus's own compile line forbids it. "
+                    f"compiled so that the same mathematics is computed "
+                    f"differently ({association.get('how')}). "
                     f"The conversion is no further from the original than the "
                     f"original is from another equally valid ordering of its "
                     f"own operations, so the difference is this model's "
