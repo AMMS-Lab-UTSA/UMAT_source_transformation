@@ -148,8 +148,75 @@ C     tangent of a material state Abaqus never visited.
 """ % {"unit": PROBE_UNIT}
 
 
+#: Free form is not a dialect of fixed form. A continuation marker in column 6
+#: is a syntax error in free form, and a statement starting in column 1 is a
+#: label field in fixed form, so a probe written for one and appended to the
+#: other does not compile -- and a job whose compile aborts writes no .sta, no
+#: .msg and no .odb, which the ladder reads as "the original did not run".
+#: Fifty-five of the corpus's 391 sources are free form, and not one of them
+#: had ever reached Abaqus.
+FREE = "free"
+FIXED = "fixed"
+
+
+def _continued(pieces: list, *, indent: str = "      ",
+               form: str = FIXED) -> str:
+    """One statement across several lines, in the form the file is written in.
+
+    Fixed form marks a continuation with a character in column 6, which means
+    exactly five leading spaces before it whatever the statement's own indent
+    is. Free form ends the continued line with ``&``.
+    """
+    if not pieces:
+        return ""
+    if str(form).lower().startswith(FREE):
+        body = [f"{indent}{pieces[0]}"]
+        body[:1] = [f"{indent}{pieces[0]} &"] if len(pieces) > 1 else body
+        for index, piece in enumerate(pieces[1:], start=1):
+            last = index == len(pieces) - 1
+            body.append(f"{indent}     {piece}" + ("" if last else " &"))
+        return "\n".join(body) + "\n"
+    body = [f"{indent}{pieces[0]}"]
+    for index, piece in enumerate(pieces[1:], start=1):
+        body.append(f"     {index}     {piece}")
+    return "\n".join(body) + "\n"
+
+
+def free_form(fixed_text: str) -> str:
+    """Fixed-form Fortran rewritten as free form, for text this module owns.
+
+    Deliberately not a general converter: it is applied to :data:`PROBE_SOURCE`
+    and to nothing else, so it only has to handle the constructs that appear
+    there -- ``C`` comments, labels in columns 1-5, and continuation markers in
+    column 6. ``tests/test_the_probe_compiles_in_both_forms.py`` compiles both
+    forms and checks they behave identically, which is what makes the narrow
+    scope safe rather than merely convenient.
+    """
+    out: list = []
+    for line in fixed_text.splitlines():
+        if not line.strip():
+            out.append("")
+            continue
+        if line[0] in "cC*":
+            out.append("!" + line[1:])
+            continue
+        label, marker, statement = line[:5], line[5:6], line[6:]
+        if marker.strip() and marker != "0":
+            # A continuation: the line above it has to end with an ampersand.
+            for index in range(len(out) - 1, -1, -1):
+                if out[index].strip() and not out[index].lstrip().startswith("!"):
+                    out[index] = out[index].rstrip() + " &"
+                    break
+            out.append("     " + statement.rstrip())
+            continue
+        prefix = f"{label.strip()} " if label.strip() else "      "
+        out.append(prefix + statement.rstrip())
+    return "\n".join(out) + "\n"
+
+
 def probe_call(tag: str, indent: str = "      ", step: str = "KSTEP",
-               names: Optional[dict[str, str]] = None) -> str:
+               names: Optional[dict[str, str]] = None,
+               form: str = "fixed") -> str:
     """The one statement that records what an increment computed.
 
     Placed immediately before the UMAT's RETURN, where STRESS, STATEV and
@@ -160,14 +227,12 @@ def probe_call(tag: str, indent: str = "      ", step: str = "KSTEP",
     """
     name = (names or {}).get
     n = lambda canonical: name(canonical, canonical) or canonical
-    # The continuation marker belongs in column 6, which means five spaces
-    # before it and not the statement indent.
-    return (
-        f"{indent}CALL OTIS_PROBE('{tag}',{n('NOEL')},{n('NPT')},{step},"
-        f"{n('KINC')},{n('TIME')},\n"
-        f"     1     {n('STRESS')},{n('NTENS')},{n('STATEV')},{n('NSTATV')},"
-        f"{n('DDSDDE')})\n"
-    )
+    return _continued(
+        [f"CALL OTIS_PROBE('{tag}',{n('NOEL')},{n('NPT')},{step},"
+         f"{n('KINC')},{n('TIME')},",
+         f"{n('STRESS')},{n('NTENS')},{n('STATEV')},{n('NSTATV')},"
+         f"{n('DDSDDE')})"],
+        indent=indent, form=form)
 
 
 def _argument_names(lines: list[str], start: int) -> set[str]:
@@ -285,7 +350,8 @@ def resolved_arguments(lines: list[str], start: int) -> dict[str, str]:
 
 
 def entry_call(tag: str, indent: str = "      ", step: str = "KSTEP",
-               names: Optional[dict[str, str]] = None) -> str:
+               names: Optional[dict[str, str]] = None,
+               form: str = "fixed") -> str:
     """The statement that records what an increment was given.
 
     Placed before the UMAT's first executable statement, where STRESS and
@@ -300,15 +366,15 @@ def entry_call(tag: str, indent: str = "      ", step: str = "KSTEP",
     """
     name = (names or {}).get
     n = lambda canonical: name(canonical, canonical) or canonical
-    return (
-        f"{indent}CALL OTIS_PROBE_IN('{tag}',{n('NOEL')},{n('NPT')},{step},"
-        f"{n('KINC')},{n('TIME')},{n('DTIME')},\n"
-        f"     1     {n('STRESS')},{n('NTENS')},{n('STATEV')},{n('NSTATV')},"
-        f"{n('STRAN')},{n('DSTRAN')},\n"
-        f"     2     {n('PROPS')},{n('NPROPS')},{n('TEMP')},{n('DTEMP')},"
-        f"{n('DFGRD0')},{n('DFGRD1')},{n('DROT')},\n"
-        f"     3     {n('NDI')},{n('NSHR')},{n('CELENT')},{n('COORDS')})\n"
-    )
+    return _continued(
+        [f"CALL OTIS_PROBE_IN('{tag}',{n('NOEL')},{n('NPT')},{step},"
+         f"{n('KINC')},{n('TIME')},{n('DTIME')},",
+         f"{n('STRESS')},{n('NTENS')},{n('STATEV')},{n('NSTATV')},"
+         f"{n('STRAN')},{n('DSTRAN')},",
+         f"{n('PROPS')},{n('NPROPS')},{n('TEMP')},{n('DTEMP')},"
+         f"{n('DFGRD0')},{n('DFGRD1')},{n('DROT')},",
+         f"{n('NDI')},{n('NSHR')},{n('CELENT')},{n('COORDS')})"],
+        indent=indent, form=form)
 
 
 #: The value blocks a record may carry. Named rather than inferred, so a
@@ -488,7 +554,8 @@ def converged_only(records: list[dict]) -> list[dict]:
     return paired
 
 
-def instrument(source_text: str, tag: str, entry: str = "UMAT") -> tuple[str, bool]:
+def instrument(source_text: str, tag: str, entry: str = "UMAT",
+               form: str = FIXED) -> tuple[str, bool]:
     """``source_text`` with the probe called at the start and end of ``entry``.
 
     Returns the text and whether both call sites were found. The exit call goes
@@ -510,7 +577,12 @@ def instrument(source_text: str, tag: str, entry: str = "UMAT") -> tuple[str, bo
     for number in range(start, end):
         if _is_comment(lines[number]):
             continue
-        if re.match(r"^\s{6,}RETURN\s*$", lines[number], re.IGNORECASE):
+        # Not "six or more spaces": that is a fixed-form column rule, and a
+        # free-form source indents its RETURN with two. A continuation line
+        # cannot be confused with this one -- its column-6 marker is not
+        # whitespace, so the leading run of spaces ends before the keyword.
+        if re.match(r"^\s*RETURN\s*$", _statement_text(lines[number]),
+                    re.IGNORECASE):
             last_return = number
     if last_return is None:
         return source_text, False
@@ -522,9 +594,16 @@ def instrument(source_text: str, tag: str, entry: str = "UMAT") -> tuple[str, bo
     # Insert from the bottom up, so the earlier index stays valid.
     step = step_expression(_argument_names(lines, start))
     names = resolved_arguments(lines, start)
-    lines.insert(last_return, probe_call(tag, step=step, names=names))
-    lines.insert(first_executable, entry_call(tag, step=step, names=names))
-    return "".join(lines) + PROBE_SOURCE, True
+    free = str(form).lower().startswith(FREE)
+    indent = "  " if free else "      "
+    lines.insert(last_return,
+                 probe_call(tag, indent=indent, step=step, names=names,
+                            form=form))
+    lines.insert(first_executable,
+                 entry_call(tag, indent=indent, step=step, names=names,
+                            form=form))
+    support = free_form(PROBE_SOURCE) if free else PROBE_SOURCE
+    return "".join(lines) + support, True
 
 
 def _is_comment(line: str) -> bool:
@@ -619,7 +698,13 @@ def _first_executable(lines: list[str], start: int, end: int) -> Optional[int]:
     """
     from umat_oti.fortran.regions import _is_executable_line
 
-    continued = False
+    # Seeded from the OPENING line, because a free-form routine header runs
+    # across several lines and each is continued by the ampersand ending the
+    # one above. Starting the walk with `continued = False` made the second
+    # line of the header -- `rpl, ddsddt, drplde, drpldt, &` -- read as a
+    # statement, and `_is_executable_line` agreed: the probe went INSIDE the
+    # argument list, and every free-form source failed to compile.
+    continued = lines[start].rstrip().endswith("&")
     for number in range(start + 1, end):
         line = lines[number]
         if _is_comment(line):
