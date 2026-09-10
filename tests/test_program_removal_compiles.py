@@ -160,3 +160,39 @@ def test_a_comment_line_does_not_open_or_close_a_unit():
             "c another\n      end\n")
     _cleaned, removed = without_the_authors_program(text)
     assert removed == ("(implicit main program)",)
+
+
+def test_the_compile_command_uses_the_cleaned_units():
+    """The cleaning ran, wrote a correct copy, and the build ignored it.
+
+    `units` was rebuilt from the cleaned copies and then the command was
+    assembled from `extra` and `source` anyway, so the author's implicit main
+    program stayed on the compile line and the link still failed with
+    "multiple definition of `main`" -- while a perfectly good cleaned file sat
+    unused in the build directory. Measured on
+    UMAT_Tissue_2d_plane_strain.f, which links once this is right.
+    """
+    source = (Path(__file__).resolve().parents[1] / "src" / "umat_oti"
+              / "abaqus" / "replay.py").read_text(encoding="utf-8")
+    assert "*[str(path) for path in units], str(driver)" in source
+    assert "*[str(path) for path in extra], str(source), str(driver)" not in source
+
+
+@pytest.mark.skipif(
+    not (Path.home() / "softwarex_work" / "discovery_cache"
+         / "abuganza__UMAT_anisotropic_damage"
+         / "UMAT_Tissue_2d_plane_strain.f").is_file(),
+    reason="the corpus mirror is not on this machine")
+def test_the_real_corpus_source_links(tmp_path):
+    """The end-to-end case, on the actual file that failed."""
+    from umat_oti.abaqus.replay import build_replay
+
+    source = (Path.home() / "softwarex_work" / "discovery_cache"
+              / "abuganza__UMAT_anisotropic_damage"
+              / "UMAT_Tissue_2d_plane_strain.f")
+    built = build_replay(source, tmp_path, name="M",
+                         flags=("-ffixed-line-length-132",
+                                "-ffree-line-length-none", "-std=legacy",
+                                "-O2", "-w"),
+                         timeout=600)
+    assert built.ok, built.reason + "\n" + (built.log or "")[:800]

@@ -768,8 +768,13 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     # it -- the transformed UMAT opens with `use otim6n1`. Putting the driver
     # first gave "Reading module otim6n1: Unexpected EOF", which is what a
     # half-written module file reads like.
+    # The CLEANED units, not the originals. Building the list and then
+    # compiling `extra` and `source` anyway left the author's implicit main
+    # program on the command line, so the link still failed with "multiple
+    # definition of `main`" while a perfectly good cleaned copy sat unused in
+    # the build directory.
     command = [compiler, *flags, *includes,
-               *[str(path) for path in extra], str(source), str(driver),
+               *[str(path) for path in units], str(driver),
                "-o", str(program)]
     try:
         done = subprocess.run(command, cwd=str(work_dir), capture_output=True,
