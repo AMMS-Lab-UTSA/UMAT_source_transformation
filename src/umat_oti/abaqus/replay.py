@@ -848,6 +848,13 @@ class DifferenceSweep:
 
     matrices: dict = field(default_factory=dict)
     unperturbed: list = field(default_factory=list)
+    #: The tangent the ORIGINAL routine returned at the unperturbed state --
+    #: the author's own DDSDDE, read out of the same replay that produced the
+    #: difference. It costs nothing: the routine computes it whether or not
+    #: anybody reads it. It is a second reference and a different one: the
+    #: difference says what the stress DOES, and this says what the author
+    #: SAID it does, and the two disagreeing is a finding about the source.
+    original_tangent: list = field(default_factory=list)
     failures: list = field(default_factory=list)
     #: Which kinematic input the perturbation moved. Recorded because it
     #: changes what the derivative is a derivative OF.
@@ -918,6 +925,9 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
         sweep.reason = f"the unperturbed replay produced no stress: {complaint}"
         return sweep
     sweep.unperturbed = unperturbed
+    # The author's own tangent at the same state, from the same run.
+    _stress, sweep.original_tangent = parse_replay_output(
+        Path(work_dir) / "otis_replay_out.txt")
 
     wanted = tuple(components) or tuple(range(1, ntens + 1))
     for relative in steps:
