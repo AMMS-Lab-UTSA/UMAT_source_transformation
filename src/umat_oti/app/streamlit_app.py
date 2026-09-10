@@ -12,6 +12,7 @@ Five-tab workflow that drives the same backend the CLI / driver scripts use:
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -792,6 +793,35 @@ def _tab_report() -> None:
 # Entry point
 # ----------------------------------------------------------------------------
 
+#: Where a corpus round writes its results and its scratch. Both are outside
+#: the repository: the results carry machine paths until they are scrubbed and
+#: the scratch is tens of gigabytes of Abaqus output.
+CORPUS_RESULTS = Path(
+    os.environ.get("UMAT_OTI_CORPUS_RESULTS")
+    or _repo_root().parent / "corpus_run" / "results")
+CORPUS_WORK = Path(
+    os.environ.get("UMAT_OTI_CORPUS_WORK")
+    or _repo_root().parent / "corpus_run" / "work")
+
+
+def _tab_corpus() -> None:
+    """Every acquired UMAT, how far it got, and where to look.
+
+    The whole panel is drawn by umat_oti.app.corpus_tab from the artefacts a
+    batch wrote. Nothing is decided here: a verdict rendered differently in the
+    interface than in the evidence is a second opinion nobody can cite.
+    """
+    from umat_oti.app.corpus_tab import render
+
+    if not CORPUS_RESULTS.is_dir():
+        st.info(
+            f"No corpus round has written to {CORPUS_RESULTS}. Run "
+            f"`make batch-abaqus` , or set UMAT_OTI_CORPUS_RESULTS and "
+            f"UMAT_OTI_CORPUS_WORK to where one did.")
+        return
+    render(CORPUS_RESULTS, CORPUS_WORK, st=st)
+
+
 def main() -> None:
     st.set_page_config(page_title="UMAT-OTI", layout="wide")
     _init_state()
@@ -817,7 +847,8 @@ def main() -> None:
         st.caption(f"Completed JSON dir: {COMPLETED_JSON_DIR}")
 
     tabs = st.tabs(
-        ["1. Load Config", "2. Transform", "3. Validate", "4. Constitutive Jacobians", "5. Report"]
+        ["1. Load Config", "2. Transform", "3. Validate",
+         "4. Constitutive Jacobians", "5. Report", "6. Corpus"]
     )
     with tabs[0]:
         _tab_load_config()
@@ -829,6 +860,8 @@ def main() -> None:
         _tab_constitutive()
     with tabs[4]:
         _tab_report()
+    with tabs[5]:
+        _tab_corpus()
 
 
 if __name__ == "__main__":
