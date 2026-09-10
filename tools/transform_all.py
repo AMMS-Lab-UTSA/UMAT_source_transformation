@@ -180,10 +180,11 @@ class WorkItem:
     path: Path
     sha256: str
     ntens: int
-    #: False when the triage row carried no ntens and DEFAULT_NTENS was used.
-    #: Recorded so a reader can tell a source's declared size from this file's
-    #: assumption about it.
-    ntens_declared: bool = True
+    #: Where the tensor size came from -- which loop bound, which subscript,
+    #: which deck. Empty when nothing established one and DEFAULT_NTENS stood
+    #: in, so a reader can tell a source's declared size from an assumption
+    #: about it.
+    ntens_evidence: str = ""
     #: The stage the triage recorded, carried through for context under --all.
     stage: str = ""
 
@@ -281,17 +282,78 @@ def select_work(rows: Iterable[dict[str, str]], *, every: bool = False,
     return chosen[:limit] if limit and limit > 0 else chosen
 
 
-def _ntens_of(row: dict[str, str]) -> tuple[int, bool]:
+def _ntens_of(row: dict[str, str], source: Optional[Path] = None,
+              proposal: Optional[dict] = None,
+              cache_root: Optional[Path] = None) -> tuple[int, str]:
+    """How many stress components to transform this source for, and from what.
+
+    The triage row is not the answer. It carried ``ntens`` 6 for all 391
+    sources because 6 was the default its own function was handed, and nothing
+    ever inferred it -- so a plane-strain routine was transformed for a
+    six-direction seed and then run on a four-component element. The seed
+    directions no longer correspond to the element's components, and the OTI
+    tangent it extracts is a matrix of the right shape holding the wrong
+    derivatives. Measured on UMAT_Tissue_2d_plane_strain.f: the primal history
+    agreed exactly and the tangent was out by a factor of 5000, flat across
+    every step size, which is what a mapping error looks like and a
+    convergence failure does not.
+
+    So it is read from the source, by the same function the verification uses
+    to choose the element. The two must agree or the comparison is between two
+    different questions, and reading them from one place is how they do.
+    """
+    if source is not None:
+        try:
+            from umat_oti.abaqus.elements import geometry_for
+            from umat_oti.abaqus.formulation import settle
+            deck_text, deck_name, material = _paired_deck(proposal, cache_root)
+            found = settle(Path(source).read_text(errors="replace"), str(source),
+                           deck_text, deck_name, material)
+            if found.element:
+                return (geometry_for(found.element).ntens,
+                        f"{found.agreement}: {found.formulation.reason}"[:400])
+        except Exception:                          # noqa: BLE001 - fall through
+            pass
     raw = str(row.get("ntens") or "").strip()
     try:
         value = int(raw)
     except ValueError:
-        return DEFAULT_NTENS, False
-    return (value, True) if value > 0 else (DEFAULT_NTENS, False)
+        return DEFAULT_NTENS, ""
+    if value > 0 and value != DEFAULT_NTENS:
+        return value, "triage row"
+    return DEFAULT_NTENS, ""
+
+
+def _paired_deck(proposal: Optional[dict],
+                 cache_root: Optional[Path]) -> tuple[str, str, str]:
+    """The deck this source was paired with, if the pairing found one.
+
+    The deck is the second witness to the formulation: it says which element
+    the author ran this material on. Read here as well as in the verification
+    so that the transform is built for the tensor the verification will drive,
+    which is the only arrangement in which the two are asking one question.
+    """
+    import re as _re
+
+    pairing = ((proposal or {}).get("pairing") or {})
+    proposed = str(pairing.get("proposed") or "")
+    if not proposed or cache_root is None:
+        return "", "", ""
+    path = Path(cache_root) / proposed
+    if not path.is_file():
+        return "", "", ""
+    provenance = str(((proposal or {}).get("material") or {}).get("provenance") or "")
+    found = _re.search(r"\*Material\s+name=([^\s,]+)", provenance, _re.IGNORECASE)
+    material = found.group(1) if found else ""
+    try:
+        return path.read_text(errors="replace"), Path(proposed).name, material
+    except OSError:
+        return "", "", ""
 
 
 def plan_work(rows: Iterable[dict[str, str]], cache_root: Path, store: Any, *,
-              force: bool = False) -> WorkPlan:
+              force: bool = False,
+              proposals: Optional[dict] = None) -> WorkPlan:
     """Split selected rows into what must be transformed and what need not be.
 
     ``store`` is anything with ``get(source_id, source_sha256)``; the real
@@ -316,7 +378,8 @@ def plan_work(rows: Iterable[dict[str, str]], cache_root: Path, store: Any, *,
                 reason="no file at this identity under the discovery cache"))
             continue
         digest = file_digest(path)
-        ntens, declared = _ntens_of(row)
+        ntens, evidence = _ntens_of(row, path,
+                                    (proposals or {}).get(identity), cache_root)
         if not force:
             stored = store.get(identity, digest)
             if stored is not None:
@@ -329,7 +392,7 @@ def plan_work(rows: Iterable[dict[str, str]], cache_root: Path, store: Any, *,
                     kinematics=str(metadata.get("kinematics") or "")))
                 continue
         plan.todo.append(WorkItem(source_id=identity, path=path, sha256=digest,
-                                  ntens=ntens, ntens_declared=declared,
+                                  ntens=ntens, ntens_evidence=evidence,
                                   stage=stage))
     return plan
 
@@ -451,8 +514,9 @@ def transform_one(item: WorkItem, work: Path) -> TransformResult:
     metadata: dict[str, Any] = {
         "source_id": item.source_id,
         "ntens": item.ntens,
-        "ntens_provenance": ("triage row" if item.ntens_declared
-                             else f"default {DEFAULT_NTENS}; the row carried none"),
+        "ntens_provenance": (item.ntens_evidence
+                             or f"default {DEFAULT_NTENS}; nothing in the "
+                                f"source or the triage row established one"),
         "kinematics": kinematics,
         "compiled": compiles,
         "compile_status": str(compilation.get("status") or ""),
@@ -713,6 +777,14 @@ def main(argv: list[str] | None = None) -> int:
                              "only of the ones that failed")
     parser.add_argument("--json", dest="json_path", type=Path, default=None,
                         help="write the machine-readable summary here")
+    parser.add_argument(
+        "--proposals", type=Path,
+        default=REPO_ROOT / "paper_results/discovery/proposed_corpus_entries.json",
+        help=("the deck pairing. Read here, not only in the verification, "
+              "because the deck is the second witness to which element the "
+              "material runs on -- and the transform has to be built for the "
+              "tensor the verification will drive it at, or the two are asking "
+              "different questions."))
     args = parser.parse_args(argv)
 
     if not args.triage.is_file():
@@ -725,7 +797,23 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     store = TransformStore(root=args.store_root)
-    plan = plan_work(rows, args.cache_dir, store, force=args.force)
+    proposals: dict = {}
+    if args.proposals and Path(args.proposals).is_file():
+        try:
+            payload = json.loads(Path(args.proposals).read_text(encoding="utf-8"))
+            entries = payload.get("entries") if isinstance(payload, dict) else payload
+            for entry in (entries.values() if isinstance(entries, dict) else entries or []):
+                repository = str(entry.get("repository") or "").replace("/", "__")
+                identity = f"{repository}/{entry.get('source')}" if repository else ""
+                if identity:
+                    proposals[identity] = entry
+        except (OSError, ValueError) as exc:
+            print(f"  the proposals could not be read ({exc}); the deck will "
+                  f"not be consulted for the tensor size")
+    print(f"  {len(proposals)} pairing(s) available as a second witness to "
+          f"the formulation")
+    plan = plan_work(rows, args.cache_dir, store, force=args.force,
+                     proposals=proposals)
     print(f"  {plan.selected} selected; {len(plan.todo)} to transform, "
           f"{sum(1 for o in plan.settled if o.outcome == OUTCOME_CACHED)} "
           f"already in the store", flush=True)

@@ -847,6 +847,17 @@ class DifferenceSweep:
     #: zero where the response is smooth; of order one where a constitutive
     #: branch changes between the two perturbations, whatever the step size.
     smoothness: dict = field(default_factory=dict)
+    #: Per step, the tangent reconstructed from the FORWARD perturbation
+    #: alone, and from the BACKWARD one alone. Kept because at a loading point
+    #: of a rate-independent inelastic model the consistent tangent IS the
+    #: one-sided derivative along the branch the increment took: the forward
+    #: step grows the plastic strain or the damage and the backward step
+    #: unloads elastically, so their average is the slope of a chord across a
+    #: corner and belongs to neither branch. Only their disagreement used to
+    #: be kept, which said a state was transitional without being able to say
+    #: what its tangent was.
+    forward: dict = field(default_factory=dict)
+    backward: dict = field(default_factory=dict)
     ok: bool = False
     reason: str = ""
 
@@ -960,6 +971,13 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
         # transpose, because DDSDDE(i,j) is indexed the other way round.
         sweep.matrices[relative] = [
             [columns[j][i] for j in range(len(columns))] for i in range(ntens)]
+        if len(one_sided) == len(columns):
+            sweep.forward[relative] = [
+                [one_sided[j][1][i] for j in range(len(one_sided))]
+                for i in range(ntens)]
+            sweep.backward[relative] = [
+                [one_sided[j][2][i] for j in range(len(one_sided))]
+                for i in range(ntens)]
 
         # How far the two one-sided slopes are from each other, measured
         # against the centred slope they average to. A kink between the two

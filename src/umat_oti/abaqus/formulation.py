@@ -303,6 +303,16 @@ _TENSOR_SUBSCRIPT = re.compile(
     r"\b(?:STRESS|DDSDDE|STRAN|DSTRAN|DDSDDT|DRPLDE)\s*\(\s*(\d+)\s*(?:,\s*(\d+)\s*)?\)",
     re.IGNORECASE)
 
+#: A subscript that is an index plus an offset: ``DDSDDE(i+3,i+3)``. It is the
+#: tell that a loop bounded at 3 is filling one BLOCK of a larger matrix, not
+#: the whole of it. PlatypusBytes' Mohr-Coulomb fills DDSDDE(i,j) over
+#: ``Do i=1,3`` and then DDSDDE(i+3,i+3) over the same loop, four lines after
+#: calling ``MZeroR(DDSDDE,36)``: it is a six-component model whose tangent
+#: loop is bounded at three.
+_OFFSET_SUBSCRIPT = re.compile(
+    r"\b(?:STRESS|DDSDDE|STRAN|DSTRAN)\s*\(\s*[A-Za-z_]\w*\s*[+-]\s*\d+",
+    re.IGNORECASE)
+
 #: An explicit test on the tensor size the routine was called with.
 _SIZE_TEST = re.compile(r"\b(NTENS|NDI|NSHR)\b\s*(?:\.EQ\.|==)\s*(\d+)",
                         re.IGNORECASE)
@@ -361,20 +371,34 @@ def _code_lines(text: str):
 def from_source(text: str, name: str = "") -> SourceFormulation:
     """The tensor size this routine is written for, from what it does with it.
 
-    The strongest signal is a DO loop with a LITERAL bound whose index is used
-    to subscript DDSDDE or STRESS: ``do II=1,4 / ddsdde(II,JJ) = ...`` says
-    the routine fills a four-by-four tangent and is a plane-strain or
-    axisymmetric routine, whatever anybody called the file. Measured on the
-    three ``abuganza__UMAT_anisotropic_damage`` tissue UMATs, which are the
-    same model in three formulations and are otherwise almost identical text:
-    the loop bounds are 4, 3 and 6 respectively, and every one is right.
+    Three signals, and only one of them decides anything on its own.
 
-    Comments are removed first. Every one of those three files carries a
-    commented-out ``print *, ddsdde(1,1), ... ddsdde(1,6)``, and reading it
-    made all three look three-dimensional.
+    A DO loop with a LITERAL bound whose index subscripts the whole of DDSDDE
+    or of STRESS says how many components the routine fills:
+    ``do II=1,4 / do JJ=1,4 / ddsdde(II,JJ) = ...`` is a four-by-four tangent
+    and therefore a plane-strain or axisymmetric routine, whatever the file is
+    called. Measured on the three ``abuganza__UMAT_anisotropic_damage`` tissue
+    UMATs -- the same model in three formulations, almost identical text --
+    the bounds are 4, 3 and 6 and every one is right.
+
+    A LITERAL SUBSCRIPT is a lower bound and never an answer. ``STRESS(3)`` is
+    the 33 component of a six-component tensor as often as it is the last
+    component of a plane-stress one, and ``DDSDDE(i)`` inside ``Do i=1,3`` is
+    a partial fill of a 6x6 matrix -- ``PlatypusBytes__ConstitutiveModels``'s
+    Mohr-Coulomb does exactly that, and calls ``MZeroR(DE,36)`` four lines
+    earlier. So a loop bound is believed only when nothing larger appears.
+
+    A TEST on the routine's own tensor size -- ``if (ntens .eq. 3)`` -- says
+    the routine HANDLES that size, not that it is only ever called with it.
+    Three ``RitioL__PolyFatigueCrackSim`` crystal-plasticity UMATs branch on
+    it and run happily at six; taking the test as the answer would have moved
+    them off the element they verified on. It bounds and does not decide.
+
+    Where nothing decides, the answer is no answer, and the deck gets to speak.
     """
     evidence: list = []
     lines = list(_code_lines(text))
+    joined = "\n".join(lines)
 
     open_loops: list = []
     by_loop = 0
@@ -387,59 +411,83 @@ def from_source(text: str, name: str = "") -> SourceFormulation:
             if open_loops:
                 open_loops.pop()
             continue
-        for target in ("DDSDDE", "STRESS"):
-            for subscript in re.findall(
-                    rf"\b{target}\s*\(\s*([A-Za-z_]\w*)\s*[,)]", line,
-                    re.IGNORECASE):
-                for variable, bound in open_loops:
-                    if variable == subscript.upper() and bound in _FAMILY_OF_NTENS:
-                        if bound > by_loop:
+        # STRESS(i) is the whole of the stress; DDSDDE(i,j) is the whole of
+        # the tangent. DDSDDE(i) is neither -- it is one linear index into a
+        # matrix, and a loop over it says nothing about the matrix's extent.
+        for pattern in (r"\bSTRESS\s*\(\s*([A-Za-z_]\w*)\s*\)",
+                        r"\bDDSDDE\s*\(\s*([A-Za-z_]\w*)\s*,"
+                        r"\s*([A-Za-z_]\w*)\s*\)"):
+            for found in re.findall(pattern, line, re.IGNORECASE):
+                names = (found,) if isinstance(found, str) else found
+                for subscript in names:
+                    for variable, bound in open_loops:
+                        if (variable == subscript.upper()
+                                and bound in _FAMILY_OF_NTENS and bound > by_loop):
                             by_loop = bound
-                            evidence.append(
-                                f"a DO loop bounded at {bound} writes "
-                                f"{target}({subscript})")
 
     by_subscript = 0
-    for first, second in _TENSOR_SUBSCRIPT.findall("\n".join(lines)):
+    for first, second in _TENSOR_SUBSCRIPT.findall(joined):
         for value in (first, second):
-            if value and int(value) in _FAMILY_OF_NTENS:
+            if value:
                 by_subscript = max(by_subscript, int(value))
-    if by_subscript:
-        evidence.append(f"a literal subscript {by_subscript} on a tensor array")
 
-    tested = [int(value) for _which, value in _SIZE_TEST.findall("\n".join(lines))
+    tested = [int(value) for _which, value in _SIZE_TEST.findall(joined)
               if int(value) in _FAMILY_OF_NTENS]
-    if tested:
-        evidence.append(f"the routine tests its own tensor size against "
-                        f"{', '.join(str(v) for v in sorted(set(tested)))}")
 
     named = ""
     lowered = str(name or "").lower()
     for needle, family in _NAME_HINTS:
         if needle in lowered:
             named = family
-            evidence.append(f"the file is named {Path(name).name!r}")
             break
 
-    ntens = by_loop or by_subscript or (max(tested) if tested else 0)
     if named == "cohesive":
         # A cohesive law is handed tractions and separations, not a stress
         # tensor, whatever NTENS happens to be. Naming it lets the choice be
         # refused with the right reason instead of driven as plane stress.
-        return SourceFormulation(ntens=ntens, family="cohesive",
-                                 evidence=tuple(evidence))
-    if not ntens and named:
-        ntens = _NTENS_OF_FAMILY.get(named, 0)
+        return SourceFormulation(
+            family="cohesive",
+            evidence=(f"the file is named {Path(name).name!r}",))
+
+    # A loop bound is the whole tensor only if nothing reaches past it.
+    offsets = _OFFSET_SUBSCRIPT.findall(joined)
+    if offsets:
+        by_loop = 0
+        evidence.append(
+            f"a subscript with an offset ({offsets[0].strip()}) reaches past "
+            f"any loop bound, so the loop fills a block and not the whole")
+
+    lower = max([by_subscript] + tested)
+    ntens = 0
+    if by_loop and by_loop >= lower:
+        ntens = by_loop
+        evidence.append(f"a DO loop bounded at {by_loop} fills the whole of "
+                        f"STRESS or DDSDDE, and no larger subscript or size "
+                        f"test appears")
+    elif by_subscript >= 5:
+        ntens = 6
+        evidence.append(f"a literal subscript {by_subscript} on a tensor "
+                        f"array, which only a six-component tensor has")
+    elif named and _NTENS_OF_FAMILY.get(named, 0) >= lower:
+        ntens = _NTENS_OF_FAMILY[named]
+        evidence.append(f"the file is named {Path(name).name!r} and nothing in "
+                        f"it contradicts {named}")
     if not ntens:
-        return SourceFormulation(evidence=tuple(evidence))
+        why = []
+        if by_loop:
+            why.append(f"a DO loop bounded at {by_loop}")
+        if by_subscript:
+            why.append(f"a literal subscript {by_subscript}")
+        if tested:
+            why.append("size tests against "
+                       + ", ".join(str(v) for v in sorted(set(tested))))
+        return SourceFormulation(
+            evidence=tuple(f"{part} -- a bound, not an answer" for part in why))
     family = _FAMILY_OF_NTENS.get(ntens, "")
     # Four components is plane strain OR axisymmetric, and the file's own name
     # is the only thing that separates them.
     if ntens == 4 and named == "axisymmetric":
         family = "axisymmetric"
-    if ntens == 3 and named and named != "plane stress":
-        evidence.append(f"the name says {named} and the code says three "
-                        f"components, which is plane stress; the code decides")
     return SourceFormulation(ntens=ntens, family=family,
                              evidence=tuple(evidence))
 

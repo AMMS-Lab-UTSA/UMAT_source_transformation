@@ -123,6 +123,7 @@ STAGES: tuple[str, ...] = (
     "original_job_failed",
     "transformed_job_failed",
     "primal_disagreed",
+    "derivative_truncated",
     "tangent_not_verified",
     "verified",
 )
@@ -224,6 +225,11 @@ class StageEvidence:
     transformed_completed: bool = False
     #: None when the comparison never ran.
     primal_agrees: Optional[bool] = None
+    #: The converted source takes the real part of a seed-carrying expression
+    #: and uses the result. The stress is still right and every derivative
+    #: computed through that point is short by whatever it contributed, so
+    #: there is nothing here for a finite difference to confirm or deny.
+    derivative_truncated: bool = False
     tangent_verified: Optional[bool] = None
 
 
@@ -252,6 +258,8 @@ def classify_stage(evidence: StageEvidence) -> str:
         return "transformed_job_failed"
     if evidence.primal_agrees is not True:
         return "primal_disagreed"
+    if evidence.derivative_truncated:
+        return "derivative_truncated"
     if evidence.tangent_verified is not True:
         return "tangent_not_verified"
     return VERIFIED
@@ -1464,6 +1472,77 @@ def tangent_verdict(comparison: dict, *, tolerance: float = TANGENT_TOLERANCE,
                    f"separate truncation error from cancellation")
 
 
+#: How closely a ONE-SIDED difference has to match the OTI tangent. Looser
+#: than the centred tolerance, and it has to be: a one-sided difference is
+#: accurate to O(h), not O(h^2), so at a relative step of 1e-4 its own
+#: truncation error is of order 1e-4 times the curvature. The tolerance is
+#: therefore not what does the work here -- the CONVERGENCE is. See
+#: one_sided_verdict.
+ONE_SIDED_TOLERANCE = 1e-3
+
+#: How many step reductions have to improve the agreement before a one-sided
+#: difference is believed. Two: a first-order error falls by ten for every
+#: decade, so two consecutive decades of improvement is a measured order, and
+#: one could be a coincidence.
+ONE_SIDED_IMPROVEMENTS = 2
+
+
+def one_sided_verdict(comparison: dict, *,
+                      tolerance: float = ONE_SIDED_TOLERANCE,
+                      improvements: int = ONE_SIDED_IMPROVEMENTS
+                      ) -> tuple[bool, str]:
+    """Did a ONE-SIDED difference converge onto the OTI tangent?
+
+    Asked only where the centred difference is the wrong reference, which is
+    at a corner: the forward perturbation grows the plastic strain or the
+    damage and the backward one unloads elastically, so their average is the
+    slope of a chord across the corner and is not a derivative of anything.
+    A rate-independent inelastic model has such a corner at EVERY increment of
+    a monotonically loading path, and the consistent tangent Abaqus asks for
+    is precisely the derivative along the branch the increment took.
+
+    A one-sided difference converges at first order, so the evidence is not a
+    plateau -- it is a slope. The error must FALL as the step falls, over at
+    least ``improvements`` reductions, and reach the tolerance. A number that
+    agrees at one step and does not improve as the step shrinks is not
+    converging on anything, and the tolerance alone would have accepted it.
+    """
+    sweep = [point for point in (comparison.get("sweep") or ())
+             if point.get("relative") is not None
+             and math.isfinite(float(point["relative"]))]
+    if len(sweep) < improvements + 1:
+        return False, (f"only {len(sweep)} step size(s) produced a one-sided "
+                       f"difference; {improvements + 1} are needed to see "
+                       f"whether it converges")
+    ordered = sorted(sweep, key=lambda point: -float(point["step"]))
+    best = min(float(point["relative"]) for point in ordered)
+    if best > tolerance:
+        return False, (f"the closest one-sided step agreed only to {best:.3e}, "
+                       f"against a tolerance of {tolerance:.0e}")
+    falling = 0
+    for earlier, later in zip(ordered, ordered[1:]):
+        if float(later["relative"]) < float(earlier["relative"]):
+            falling += 1
+        else:
+            break
+    if falling < improvements:
+        return False, (f"the one-sided difference agreed to {best:.3e} but "
+                       f"improved over only {falling} step reduction(s); a "
+                       f"first-order difference that is converging improves at "
+                       f"every one until cancellation takes over")
+    span = [float(point["step"]) for point in ordered[:falling + 1]]
+    first, last = ordered[0], ordered[falling]
+    try:
+        order = (math.log10(float(first["relative"]) / float(last["relative"]))
+                 / math.log10(float(first["step"]) / float(last["step"])))
+    except (ValueError, ZeroDivisionError):       # pragma: no cover - defensive
+        order = 0.0
+    return True, (f"agreed to {best:.3e}, improving over {falling} step "
+                  f"reductions from {max(span):g} to {min(span):g} at observed "
+                  f"order {order:.2f} -- which is what a first-order one-sided "
+                  f"difference converging on a derivative does")
+
+
 # ---------------------------------------------------------------------------
 # resuming
 # ---------------------------------------------------------------------------
@@ -2018,6 +2097,25 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     # original is what the whole comparison is against: without it there is
     # nothing to compare the transform to, and letting run_one discover that
     # would spend a licence token and report it as a crashed harness.
+    # The transform seeded a fixed number of directions and extracts a tangent
+    # of that shape. Running the result on an element that calls the UMAT with
+    # a different NTENS is not a smaller test of the same thing -- the seed
+    # directions stop corresponding to the element's components, and the
+    # extracted tangent is a matrix of the right shape holding the wrong
+    # derivatives. Measured on UMAT_Tissue_2d_plane_strain.f: the primal
+    # history agreed exactly and the tangent was out by a factor of 5000, flat
+    # across every step size.
+    stored_ntens = int((getattr(stored, "metadata", {}) or {}).get("ntens") or 0)
+    if stored_ntens and stored_ntens != manifest.ntens:
+        seen["manifest_refusals"] = (
+            f"the stored transform was built for NTENS={stored_ntens} and this "
+            f"material is called with NTENS={manifest.ntens} on "
+            f"{manifest.element_type}. The seed directions would not "
+            f"correspond to the element's components, so the tangent it "
+            f"extracts would be the wrong derivatives in the right shape. "
+            f"Re-transform this source at NTENS={manifest.ntens}",)
+        return settle(seen["manifest_refusals"][0])
+
     original = Path(cache_root) / stored.source_id
     absent = [str(name) for path, name in
               ((original, f"the original source {stored.source_id} is not in "
@@ -2246,6 +2344,21 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     # on whether each record's DDSDDE is finite: a non-finite OTI tangent at a
     # FINITE state is a finding about the conversion, and dropping such a
     # record would hide exactly what this pipeline exists to catch.
+    # Before spending a finite-difference budget on it: does the converted
+    # source still carry the derivative by the time it computes the stress? A
+    # REAL() cast of a seed-carrying expression takes the value and throws the
+    # derivatives away, so the primal agrees to the last bit and the tangent
+    # is a different function. There is nothing for a difference to confirm or
+    # deny there, and reporting it as "the tangent did not agree" names the
+    # wrong thing. Measured on 33 of 253 stored transforms.
+    truncation = analyse_truncation(
+        Path(stored.entry_source).read_text(errors="replace"))
+    if truncation.drops_a_derivative:
+        record["truncation"] = truncation.as_dict()
+        seen["derivative_truncated"] = True
+        return settle("; ".join(part for part in
+                                (precision_note, truncation.reason()) if part))
+
     tangent = verify_tangent(
         manifest, reference_source, compared_transformed, work / "replay",
         transformed=Path(stored.entry_source),
@@ -2350,9 +2463,19 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
     # is not a failure and not evidence: it is a state at which a centred
     # difference was the wrong reference.
     smooth = [s for s in measured if (s.get("regime") or {}).get("verifiable")]
+    # A state at a corner is not smooth, and it is not evidence-free either:
+    # where the OTI tangent converges onto the ONE-SIDED difference along the
+    # branch the increment took, that is the consistent tangent Abaqus asks
+    # for at that point, measured. Counted separately, never pooled with a
+    # centred result, and reported as what it is.
+    on_a_branch = [s for s in measured
+                   if not (s.get("regime") or {}).get("verifiable")
+                   and (s.get("branch") or {}).get("verified")]
     transitional = [s for s in measured
-                    if not (s.get("regime") or {}).get("verifiable")]
+                    if not (s.get("regime") or {}).get("verifiable")
+                    and s not in on_a_branch]
     outcome["states_smooth"] = len(smooth)
+    outcome["states_on_a_branch"] = len(on_a_branch)
     outcome["states_transitional"] = len(transitional)
 
     # Does this material activate at all? Read from the ORIGINAL history the
@@ -2369,17 +2492,27 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
     character, character_reason = response_character(history)
     outcome["response_character"] = character
     outcome["character_reason"] = character_reason
+    # A branch-verified corner carries the regime it sits in for coverage: it
+    # is a measured derivative inside the activated regime, which is exactly
+    # the evidence coverage exists to require.
+    counted = smooth + on_a_branch
     enough, coverage_reason = coverage(
-        [_regime_of(s) for s in smooth], nonlinear=nonlinear,
+        [_regime_of(s) for s in counted], nonlinear=nonlinear,
         character=character)
+    if on_a_branch:
+        coverage_reason += (
+            f"; {len(on_a_branch)} of those states sit at a corner and were "
+            f"verified against the one-sided difference along the branch the "
+            f"increment took, which is what a consistent tangent is there")
     outcome["coverage"] = coverage_reason
 
-    disagreeing = [s for s in smooth if not s.get("verified")]
-    if smooth and not disagreeing and enough:
+    disagreeing = [s for s in counted if not s.get("verified")]
+    if counted and not disagreeing and enough:
         outcome["verified"] = True
-        scope = (f"agreed at all {len(smooth)} SMOOTH states where a "
-                 f"difference could be taken (increments "
-                 f"{', '.join(str(s.get('increment')) for s in smooth)}); "
+        smooth = counted
+        scope = (f"agreed at all {len(counted)} states where a difference "
+                 f"could be taken (increments "
+                 f"{', '.join(str(s.get('increment')) for s in counted)}); "
                  f"{coverage_reason}")
         if unmeasured:
             scope += (f"; {len(unmeasured)} further state(s) produced no "
@@ -2388,20 +2521,21 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
         return outcome
     if disagreeing:
         outcome["reason"] = (
-            f"agreed at {len(smooth) - len(disagreeing)} of {len(smooth)} "
-            f"SMOOTH states along the loading path; increment "
-            f"{disagreeing[0].get('increment')} did not: "
+            f"agreed at {len(counted) - len(disagreeing)} of {len(counted)} "
+            f"states along the loading path where a difference could be taken; "
+            f"increment {disagreeing[0].get('increment')} did not: "
             f"{disagreeing[0].get('reason', '')}")
         return outcome
-    if smooth and not enough:
+    if counted and not enough:
         # Every smooth state agreed, and there were not enough of them in the
         # right places. Not a pass: for a material that activates, agreement
         # on the elastic branch is agreement about the part every build gets
         # right.
         outcome["reason"] = (
-            f"every smooth state agreed, but {coverage_reason}")
+            f"every state where a difference could be taken agreed, but "
+            f"{coverage_reason}")
         return outcome
-    if transitional and not smooth:
+    if transitional and not counted:
         # Every state WAS measured; every one of them sat on a transition, so
         # a centred difference was the wrong reference at all of them. That is
         # neither a verified tangent nor a failed one, and reporting it as
@@ -2478,6 +2612,73 @@ def _verify_tangent_at(manifest: VerificationManifest, original: Path,
     verified, reason = tangent_verdict(outcome["comparison"], tolerance=tolerance)
     outcome.update(verified=verified, reason=reason,
                    fd_steps=list(manifest.fd_steps))
+
+    # Where the centred difference is the WRONG reference, ask the right one.
+    # A rate-independent inelastic model has a corner at every increment of a
+    # monotonically loading path: the forward perturbation grows the plastic
+    # strain or the damage and the backward one unloads elastically, so their
+    # average is the slope of a chord across the corner and belongs to neither
+    # branch. The consistent tangent Abaqus asks for is the derivative along
+    # the branch the increment actually took, and that is a ONE-SIDED
+    # difference. Reported as one, never pooled with a centred result.
+    if not verified and sweep.forward and _sits_on_a_corner(sweep.smoothness):
+        outcome["branch"] = branch_verdict(
+            oti, sweep, manifest, tolerance=tolerance)
+        if outcome["branch"].get("verified"):
+            outcome.update(verified=True,
+                           reason=(f"the centred difference is not a reference "
+                                   f"here ({reason}); on the branch this "
+                                   f"increment took, {outcome['branch']['reason']}"))
+    return outcome
+
+
+#: How far the forward and backward one-sided differences have to sit from each
+#: other before the centred difference between them stops being a derivative.
+#: A tenth: a smooth response has them agreeing to O(h), which at these step
+#: sizes is orders of magnitude below this, and a corner has them differing by
+#: the ratio of two branch stiffnesses, which is of order one.
+CORNER_GAP = 0.1
+
+
+def _sits_on_a_corner(smoothness: dict) -> bool:
+    """Do the two one-sided differences disagree at EVERY step size?
+
+    At every step, because that is what distinguishes a corner from noise. A
+    smooth response's one-sided gap falls with the step; a corner's does not,
+    because the two perturbations are on different branches whatever the step.
+    """
+    values = [float(value) for value in (smoothness or {}).values()]
+    return bool(values) and min(values) > CORNER_GAP
+
+
+def branch_verdict(oti, sweep, manifest: VerificationManifest, *,
+                   tolerance: float = TANGENT_TOLERANCE) -> dict:
+    """The OTI tangent against each one-sided difference, and which one it is.
+
+    Both branches are scored and both are reported. The claim earned here is
+    narrower than a centred one and says so: it is that the OTI tangent is the
+    derivative along the named branch, corroborated by a first-order
+    convergence toward it rather than by a plateau.
+    """
+    outcome: dict[str, Any] = {"verified": False}
+    for name, matrices in (("forward", sweep.forward), ("backward", sweep.backward)):
+        if not matrices:
+            continue
+        comparison = compare_tangent(
+            oti, matrices, near_zero_fraction=manifest.near_zero_fraction)
+        agreed, why = one_sided_verdict(comparison.as_dict())
+        outcome[name] = {"verified": agreed, "reason": why,
+                         "comparison": comparison.as_dict()}
+        if agreed and not outcome["verified"]:
+            outcome.update(
+                verified=True, branch=name,
+                reason=(f"the {name} difference -- the one taken along the "
+                        f"direction this increment moved in -- {why}"))
+    if not outcome["verified"]:
+        reasons = [f"{name}: {outcome[name]['reason']}"
+                   for name in ("forward", "backward") if name in outcome]
+        outcome["reason"] = ("neither one-sided difference converged onto the "
+                             "OTI tangent either; " + "; ".join(reasons))
     return outcome
 
 
