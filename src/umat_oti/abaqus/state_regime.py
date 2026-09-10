@@ -241,8 +241,137 @@ def classify(records: Sequence[dict], position: int,
                   selected_step=step, rejected_steps=rejected)
 
 
+#: What the evidence says a material's response IS, rather than what a state
+#: variable happened to do. Ordered from least to most committed.
+LINEAR_REVERSIBLE = "linear_reversible"
+NONLINEAR_REVERSIBLE = "nonlinear_reversible"
+IRREVERSIBLE = "irreversible"
+UNKNOWN_STATE_SEMANTICS = "unknown_state_semantics"
+
+
+def _at(records, position, field):
+    return _finite((records[position] or {}).get(field)) if 0 <= position < len(records) else []
+
+
+def _relative_gap(a, b) -> float:
+    worst = 0.0
+    for x, y in zip(a, b):
+        worst = max(worst, abs(x - y) / max(abs(x), abs(y), 1.0))
+    return worst
+
+
+def response_character(records: Sequence[dict]) -> tuple[str, str]:
+    """What this material's response is, from what it DID -- not from STATEV.
+
+    A state variable can hold time, temperature, a total strain, a stretch, an
+    orientation, a copied input or iteration bookkeeping. Measured on
+    From-2D-to-2D-Axe.for: STATEV(9) rises to 1.0589 under load and falls back
+    to 1.0058 the moment the strain is removed. It is a deformation measure,
+    and a rule that read its movement as "the material has yielded" would have
+    called a reversible response irreversible.
+
+    So the question asked here is reversibility, which is observable: when the
+    strain comes back toward where it started, does the STRESS come back too?
+    An elastic material returns; anything that keeps something does not.
+
+    Returns the character and the sentence that justifies it. Where the
+    evidence does not settle it the answer is UNKNOWN_STATE_SEMANTICS, and the
+    caller must not treat that as either reversible or irreversible.
+    """
+    usable = [r for r in (records or ()) if _finite(r.get("STRESS"))]
+    if len(usable) < 4:
+        return UNKNOWN_STATE_SEMANTICS, (
+            f"only {len(usable)} increment(s) carry a stress, which is too "
+            f"few to see whether the response returns")
+
+    start_strain = _at(usable, 0, "STRAN")
+    if not start_strain:
+        return UNKNOWN_STATE_SEMANTICS, "no strain was recorded to compare against"
+
+    # How far the path went, so "came back" can be measured against its own
+    # excursion. Measured against a fixed scale instead, a path that never
+    # left -- a monotonic ramp to 4e-4 -- reads as having returned, because
+    # every strain on it is small in absolute terms.
+    peak_excursion = 0.0
+    for position in range(len(usable)):
+        strain = _at(usable, position, "STRAN")
+        if strain:
+            peak_excursion = max(
+                peak_excursion,
+                max((abs(a - b) for a, b in zip(start_strain, strain)),
+                    default=0.0))
+    if peak_excursion <= 0.0:
+        return UNKNOWN_STATE_SEMANTICS, (
+            "the strain never moved from where it started, so nothing was "
+            "asked of the material")
+
+    # The increment that came back closest to where the path started, as a
+    # fraction of how far it went.
+    returned, distance = None, math.inf
+    for position in range(1, len(usable)):
+        strain = _at(usable, position, "STRAN")
+        if not strain:
+            continue
+        gap = max((abs(a - b) for a, b in zip(start_strain, strain)),
+                  default=math.inf) / peak_excursion
+        if gap < distance:
+            returned, distance = position, gap
+
+    peak_stress = max((max((abs(v) for v in _finite(r.get("STRESS"))), default=0.0)
+                       for r in usable), default=0.0)
+    if returned is None or distance > 0.2 or not peak_stress:
+        # The path never came back, so reversibility was never tested. Say so
+        # rather than guessing from whether a number moved.
+        return UNKNOWN_STATE_SEMANTICS, (
+            "this loading never returns near the strain it started from, so "
+            "nothing here shows whether the response is reversible; a state "
+            "variable that moved may be a plastic strain or may be a stretch, "
+            "and this evidence cannot tell them apart")
+
+    residual = max((abs(v) for v in _at(usable, returned, "STRESS")), default=0.0)
+    kept = residual / peak_stress
+    if kept > 1e-2:
+        return IRREVERSIBLE, (
+            f"the strain returned to within {distance:.1%} of where it started "
+            f"and {kept:.1%} of the peak stress remained, so the material kept "
+            f"something")
+
+    # Reversible. Linear or not?
+    # The reference is the first increment that actually applied a strain.
+    # Taking record zero blindly makes the reference zero on any path that
+    # starts from rest, and the proportionality check then never runs -- so a
+    # nonlinear response came out labelled linear.
+    reference, first_stress, first_strain = 0.0, [], []
+    for record in usable:
+        strain = _finite(record.get("STRAN"))
+        size = max((abs(v) for v in strain), default=0.0)
+        if size > 0:
+            reference, first_strain = size, strain
+            first_stress = _finite(record.get("STRESS"))
+            break
+    worst = 0.0
+    if reference:
+        for record in usable[1:]:
+            strain = _finite(record.get("STRAN"))
+            stress = _finite(record.get("STRESS"))
+            ratio = max((abs(v) for v in strain), default=0.0) / reference
+            if ratio <= 0:
+                continue
+            predicted = [v * ratio for v in first_stress]
+            scale = max(max((abs(v) for v in predicted), default=0.0),
+                        max((abs(v) for v in stress), default=0.0), 1.0)
+            for a, b in zip(predicted, stress):
+                worst = max(worst, abs(a - b) / scale)
+    character = NONLINEAR_REVERSIBLE if worst > 1e-3 else LINEAR_REVERSIBLE
+    return character, (
+        f"the strain returned to within {distance:.1%} of its start and only "
+        f"{kept:.2%} of the peak stress remained, so the response is "
+        f"reversible; it departs from proportionality by {worst:.3g}")
+
+
 def coverage(regimes: Sequence[Regime], nonlinear: bool,
-             path_dependent: bool = False) -> tuple[bool, str]:
+             path_dependent: bool = False,
+             character: str = UNKNOWN_STATE_SEMANTICS) -> tuple[bool, str]:
     """Is this enough smooth evidence to call a material's tangent verified?
 
     For a linear model the elastic branch is the whole material and smooth
@@ -268,9 +397,22 @@ def coverage(regimes: Sequence[Regime], nonlinear: bool,
                        f"needed: one state cannot separate a regime from a "
                        f"coincidence")
 
-    if len(elastic) < 2:
+    # A material that keeps something has an elastic branch to leave, so the
+    # evidence has to span both. One whose reversibility could not be
+    # established gets the SAME requirement, not a reduced one: not knowing
+    # is not a reason to ask for less.
+    needs_both_sides = character != NONLINEAR_REVERSIBLE
+    if needs_both_sides and len(elastic) < 2:
         return False, (f"{len(elastic)} smooth state(s) before activation, and "
                        f"two are needed")
+    if not needs_both_sides and len(inelastic) < 2:
+        return False, (
+            f"{len(inelastic)} smooth state(s), and two are needed. This "
+            f"material has activated by its second increment and never stops "
+            f"-- there is no elastic branch to verify on, so all the evidence "
+            f"has to come from inside the activated regime"
+            + (f"; {len(transitional)} state(s) sat on a transition and "
+               f"establish nothing either way" if transitional else ""))
     if len(inelastic) < 2:
         return False, (
             f"{len(inelastic)} smooth state(s) inside the activated regime, "
@@ -283,6 +425,14 @@ def coverage(regimes: Sequence[Regime], nonlinear: bool,
     if path_dependent and not unloading:
         return False, ("no smooth unloading state, and this material's "
                        "response depends on the path it took")
+    if not needs_both_sides:
+        return True, (
+            f"{len(inelastic)} smooth state(s) inside the activated regime, "
+            f"which is the whole of this material: its response is nonlinear "
+            f"but REVERSIBLE, so there is no irreversible branch to cross and "
+            f"no elastic-versus-plastic split to span"
+            + (f"; {len(transitional)} transitional state(s) carried no weight "
+               f"either way" if transitional else ""))
     return True, (f"{len(elastic)} smooth elastic, {len(inelastic)} smooth "
                   f"activated"
                   + (f" and {len(unloading)} smooth unloading" if unloading else "")

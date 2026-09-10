@@ -86,7 +86,8 @@ from umat_oti.abaqus.compare import compare_primal, compare_tangent     # noqa: 
 from umat_oti.abaqus.deck import generate_deck                          # noqa: E402
 from umat_oti.abaqus.activation import detect_activation                # noqa: E402
 from umat_oti.abaqus.state_regime import (                              # noqa: E402
-    SMOOTH_INELASTIC, classify as classify_regime, coverage)
+    SMOOTH_INELASTIC, classify as classify_regime, coverage,
+    response_character)
 from umat_oti.abaqus.amplitude_search import (                          # noqa: E402
     ACTIVATED, LINEAR_TO_THE_CEILING, search_amplitude)
 from umat_oti.corpus.entry_routines import classify as classify_entry   # noqa: E402
@@ -2050,8 +2051,19 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
     # loading was discovered on, not assumed.
     nonlinear = any((s.get("regime") or {}).get("activated_here") for s in at_states)
     outcome["nonlinear"] = nonlinear
+    # What this material's response IS, from whether the stress returns when
+    # the strain does -- not from whether a state variable moved. A STATEV can
+    # hold a stretch, a time, an orientation or a copied input; measured on
+    # From-2D-to-2D-Axe.for, STATEV(9) rises to 1.0589 under load and falls
+    # back to 1.0058 the moment the strain is removed. Reading its movement as
+    # "the material has yielded" would call a reversible response
+    # irreversible, and then ask less of it than it should.
+    character, character_reason = response_character(history)
+    outcome["response_character"] = character
+    outcome["character_reason"] = character_reason
     enough, coverage_reason = coverage(
-        [_regime_of(s) for s in smooth], nonlinear=nonlinear)
+        [_regime_of(s) for s in smooth], nonlinear=nonlinear,
+        character=character)
     outcome["coverage"] = coverage_reason
 
     disagreeing = [s for s in smooth if not s.get("verified")]
