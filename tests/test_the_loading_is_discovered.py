@@ -226,3 +226,46 @@ def test_a_search_job_is_coarser_than_the_measurement():
             / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
     assert "coarse = max(3, increments // 3)" in tool
     assert "uniaxial(amplitude, coarse)" in tool
+
+
+# ---------------------------------------------------------------------------
+# a run that produced NaN is not a quiet run
+# ---------------------------------------------------------------------------
+def test_a_non_finite_run_bounds_the_search_rather_than_passing_it():
+    """Every indicator skips a value it cannot compare, so a run full of NaN
+    fires none of them and reads as "nothing happened". The search escalated
+    PAST it to the ceiling and chose an amplitude of 0.3125 for nineteen
+    materials that had left their domain an order of magnitude below it; the
+    verification then drove both builds to NaN by their second increment and
+    reported "too few increments to rest a verification on"."""
+    from umat_oti.abaqus.amplitude_search import (LEFT_ITS_DOMAIN,
+                                                  search_amplitude)
+
+    def run(amplitude):
+        finite = amplitude < 5e-4
+        value = amplitude * 1e6 if finite else float("nan")
+        return True, [{"STRESS": [value] * 6, "STATEV": [0.0],
+                       "STRAN": [amplitude] * 6,
+                       "DSTRAN": [amplitude / 3] * 6} for _ in range(3)], ""
+
+    found = search_amplitude(run)
+    assert found.outcome == LEFT_ITS_DOMAIN
+    assert found.amplitude == 1e-4, "the largest amplitude it answered with numbers"
+    assert "not a number" in found.reason
+
+
+def test_a_finite_quiet_run_still_escalates():
+    """The bound is on NaN, not on quiet: a linear elastic material must still
+    be driven to the ceiling before it is called linear."""
+    from umat_oti.abaqus.amplitude_search import (CEILING,
+                                                  LINEAR_TO_THE_CEILING,
+                                                  search_amplitude)
+
+    def run(amplitude):
+        return True, [{"STRESS": [amplitude * 1e6] * 6, "STATEV": [0.0],
+                       "STRAN": [amplitude] * 6,
+                       "DSTRAN": [amplitude / 3] * 6} for _ in range(3)], ""
+
+    found = search_amplitude(run)
+    assert found.outcome == LINEAR_TO_THE_CEILING
+    assert found.amplitude <= CEILING

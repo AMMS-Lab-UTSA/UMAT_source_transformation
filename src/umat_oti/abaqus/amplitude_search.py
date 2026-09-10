@@ -149,6 +149,28 @@ def _largest_stress(records: Sequence[dict]) -> float:
     return best
 
 
+def _first_non_finite(records: Sequence[dict]) -> Optional[int]:
+    """The first increment whose stress or state is not a number.
+
+    A run that produced NaN is not a quiet run. The search read one as "no
+    indicator fired" -- every indicator skips a value it cannot compare -- and
+    so escalated PAST it to the ceiling, choosing an amplitude of 0.3125 for
+    nineteen materials that had already left their domain an order of
+    magnitude below it. The verification then drove both builds to NaN by
+    their second increment and reported "too few increments to rest a
+    verification on".
+    """
+    for index, record in enumerate(records or (), start=1):
+        for field in ("STRESS", "STATEV"):
+            for value in (record.get(field) or ()):
+                try:
+                    if not math.isfinite(float(value)):
+                        return index
+                except (TypeError, ValueError):
+                    return index
+    return None
+
+
 def search_amplitude(
     run: Callable[[float], tuple[bool, list, str]],
     *,
@@ -188,6 +210,19 @@ def search_amplitude(
             result.amplitude = last_quiet
             result.bracket = (last_quiet, amplitude)
             result.reason = why or "the job produced no history"
+            return result
+
+        broke_at = _first_non_finite(records)
+        if broke_at is not None:
+            result.outcome = LEFT_ITS_DOMAIN
+            result.amplitude = last_quiet
+            result.bracket = (last_quiet, amplitude)
+            result.reason = (
+                f"the model returned a value that is not a number at "
+                f"increment {broke_at} of this run, so it had left its domain "
+                f"before this amplitude; the largest amplitude it answered "
+                f"with numbers is {last_quiet:.3g}")
+            attempt.reason = result.reason
             return result
 
         if not elastic_stress:
