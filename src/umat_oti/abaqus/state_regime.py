@@ -406,6 +406,15 @@ def coverage(regimes: Sequence[Regime], nonlinear: bool,
     unloading = [r for r in verifiable if r.regime == SMOOTH_UNLOADING]
     transitional = [r for r in regimes if not r.verifiable]
 
+    # A smooth state on the way back down is a state INSIDE the activated
+    # material, and a stronger one than a state on the way up: it is where a
+    # model that keeps something and a model that does not finally differ.
+    # Counting it apart from the loading states meant a material verified at
+    # one loading state and one unloading state was recorded as having "1
+    # smooth state, and two are needed" -- seventeen of them in one batch,
+    # every state agreeing.
+    activated = inelastic + unloading
+
     if not nonlinear:
         if len(verifiable) >= 2:
             return True, (f"{len(verifiable)} smooth states on a material that "
@@ -434,17 +443,18 @@ def coverage(regimes: Sequence[Regime], nonlinear: bool,
     if needs_both_sides and len(elastic) < 2:
         return False, (f"{len(elastic)} smooth state(s) before activation, and "
                        f"two are needed")
-    if not needs_both_sides and len(inelastic) < 2:
+    if not needs_both_sides and len(activated) < 2:
         return False, (
-            f"{len(inelastic)} smooth state(s), and two are needed. This "
+            f"{len(activated)} smooth state(s) inside the activated regime, "
+            f"loading and unloading together, and two are needed. This "
             f"material has activated by its second increment and never stops "
             f"-- there is no elastic branch to verify on, so all the evidence "
             f"has to come from inside the activated regime"
             + (f"; {len(transitional)} state(s) sat on a transition and "
                f"establish nothing either way" if transitional else ""))
-    if len(inelastic) < 2:
+    if len(activated) < 2:
         return False, (
-            f"{len(inelastic)} smooth state(s) inside the activated regime, "
+            f"{len(activated)} smooth state(s) inside the activated regime, "
             f"and two are needed. This material activates, so the elastic "
             f"branch is not the whole of it -- a converted routine wrong "
             f"about what happens after activation agrees perfectly on every "
@@ -456,7 +466,8 @@ def coverage(regimes: Sequence[Regime], nonlinear: bool,
                        "response depends on the path it took")
     if not needs_both_sides:
         return True, (
-            f"{len(inelastic)} smooth state(s) inside the activated regime, "
+            f"{len(activated)} smooth state(s) inside the activated regime "
+            f"({len(inelastic)} loading, {len(unloading)} unloading), "
             + ("which is the whole of this material: it is activated from its "
                "first increment and never stops, so there is no elastic branch "
                "to verify on and every state that can be measured is inside "
