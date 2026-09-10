@@ -2093,6 +2093,23 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
         outcome["reason"] = (
             f"every smooth state agreed, but {coverage_reason}")
         return outcome
+    if transitional and not smooth:
+        # Every state WAS measured; every one of them sat on a transition, so
+        # a centred difference was the wrong reference at all of them. That is
+        # neither a verified tangent nor a failed one, and reporting it as
+        # "no measurable difference" said the opposite of what happened.
+        worst_gap = max(
+            (min((s.get("regime") or {}).get("smoothness", {}).values(),
+                 default=float("inf")) for s in transitional),
+            default=float("inf"))
+        outcome["reason"] = (
+            f"all {len(transitional)} states produced a difference and all of "
+            f"them sat on a constitutive transition, where the forward and "
+            f"backward perturbations do not land on the same branch (smallest "
+            f"one-sided gap {worst_gap:.3g}). A centred difference is not a "
+            f"derivative there, so this is neither a verified tangent nor a "
+            f"failed one -- the loading needs states away from the transition")
+        return outcome
     outcome["reason"] = (
         f"only {len(measured)} of {len(at_states)} states produced a "
         f"measurable difference, and {MINIMUM_MEASURED_STATES} are required. "
