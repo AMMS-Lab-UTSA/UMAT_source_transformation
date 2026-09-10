@@ -707,6 +707,11 @@ class DifferenceSweep:
     #: Which kinematic input the perturbation moved. Recorded because it
     #: changes what the derivative is a derivative OF.
     driven_through: str = "strain increment"
+    #: Per step, the largest disagreement between the forward and backward
+    #: one-sided differences, relative to the size of the centred one. Near
+    #: zero where the response is smooth; of order one where a constitutive
+    #: branch changes between the two perturbations, whatever the step size.
+    smoothness: dict = field(default_factory=dict)
     ok: bool = False
     reason: str = ""
 
@@ -762,6 +767,7 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
     for relative in steps:
         step = relative * scale
         columns: list[list[float]] = []
+        one_sided: list[tuple[int, list[float], list[float]]] = []
         for component in wanted:
             if gradient_driven:
                 from umat_oti.validation.tangent_validation import (
@@ -792,13 +798,48 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
                     f"{first or second}")
                 columns = []
                 break
-            columns.append([(a - b) / (2.0 * step) for a, b in zip(plus, minus)])
+            # The centred difference, and the two one-sided differences it is
+            # made of. A centred difference cannot tell whether its two
+            # evaluations sat on the same constitutive branch: at a yield
+            # point, damage onset or any other kink, the forward step is on
+            # one branch and the backward step on the other, and their average
+            # is the slope of a chord across the kink -- a number that is not
+            # a derivative of anything and that no step size makes converge.
+            #
+            # The unperturbed value is the third point that makes the question
+            # answerable. Where the response is smooth the forward and
+            # backward slopes agree with each other to first order in the
+            # step; where a branch changes between them they do not, whatever
+            # the step. Recording both lets the caller say "this state sits on
+            # a transition" instead of "the transform's tangent is wrong".
+            centred = [(a - b) / (2.0 * step) for a, b in zip(plus, minus)]
+            columns.append(centred)
+            if unperturbed:
+                one_sided.append((
+                    component,
+                    [(a - u) / step for a, u in zip(plus, unperturbed)],
+                    [(u - b) / step for u, b in zip(unperturbed, minus)]))
         if not columns:
             continue
         # columns[j][i] is d STRESS(i) / d DSTRAN(j); the tangent is its
         # transpose, because DDSDDE(i,j) is indexed the other way round.
         sweep.matrices[relative] = [
             [columns[j][i] for j in range(len(columns))] for i in range(ntens)]
+
+        # How far the two one-sided slopes are from each other, measured
+        # against the centred slope they average to. A kink between the two
+        # perturbations shows here and nowhere else: the centred difference
+        # itself looks perfectly well-behaved, because a chord across a corner
+        # is a number like any other.
+        worst = 0.0
+        for component, forward_slope, backward_slope in one_sided:
+            for f, b in zip(forward_slope, backward_slope):
+                middle = abs(f + b) / 2.0
+                if middle <= 0.0:
+                    continue
+                worst = max(worst, abs(f - b) / middle)
+        if one_sided:
+            sweep.smoothness[relative] = worst
 
     sweep.ok = bool(sweep.matrices)
     if not sweep.ok and not sweep.reason:

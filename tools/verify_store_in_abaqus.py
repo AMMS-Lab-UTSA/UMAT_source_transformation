@@ -85,6 +85,8 @@ from run_discovery_triage import without_machine_paths                  # noqa: 
 from umat_oti.abaqus.compare import compare_primal, compare_tangent     # noqa: E402
 from umat_oti.abaqus.deck import generate_deck                          # noqa: E402
 from umat_oti.abaqus.activation import detect_activation                # noqa: E402
+from umat_oti.abaqus.state_regime import (                              # noqa: E402
+    SMOOTH_INELASTIC, classify as classify_regime, coverage)
 from umat_oti.abaqus.amplitude_search import (                          # noqa: E402
     ACTIVATED, LINEAR_TO_THE_CEILING, search_amplitude)
 from umat_oti.corpus.entry_routines import classify as classify_entry   # noqa: E402
@@ -734,6 +736,23 @@ def deck_digest(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
 
+def _regime_of(state: dict):
+    """The Regime object back out of a state's recorded dictionary.
+
+    The states are carried as plain dictionaries so the whole record can be
+    written to JSON; coverage() needs the object, and rebuilding it here keeps
+    one definition of what a regime is.
+    """
+    from umat_oti.abaqus.state_regime import Regime
+
+    found = state.get("regime") or {}
+    return Regime(increment=int(found.get("increment") or 0),
+                  regime=str(found.get("regime") or ""),
+                  reason=str(found.get("reason") or ""),
+                  activated_here=bool(found.get("activated_here")),
+                  unloading=bool(found.get("unloading")))
+
+
 def discover_loading(manifest: VerificationManifest, original: Path,
                      work_dir: Path, timeout: int, *,
                      increments: int = 10,
@@ -1046,6 +1065,64 @@ def common_finite_prefix(original: list, transformed: list) -> tuple[list, list,
     if stop_original >= len(original):
         return list(original), list(transformed), -1
     return original[:stop_original], transformed[:stop_original], stop_original
+
+
+def first_activated(records: Sequence[dict]) -> Optional[int]:
+    """The index at which the material first did something.
+
+    Read from the history the ORIGINAL produced, so the states either side of
+    it can be chosen deliberately rather than landing on it by accident.
+    """
+    from umat_oti.abaqus.state_regime import activated_by
+
+    for position in range(1, len(records)):
+        if activated_by(records, position):
+            return position
+    return None
+
+
+def choose_states_around_activation(records: Sequence[dict],
+                                   each_side: int = 2) -> list[tuple[int, dict]]:
+    """Smooth states on both sides of the transition, and none sitting on it.
+
+    Bracketing where a material activates is not the same as verifying it.
+    Measured on From-2D-to-2D-Axe.for: discovery found activation at 2.5e-05
+    and the verification then evaluated at that amplitude, so every state sat
+    at or past the transition and the centred difference was a chord across a
+    corner at all three.
+
+    So the transition is found first and then AVOIDED. States are taken from
+    the interior of each side -- the increment either side of the transition
+    is where a perturbation is most likely to cross it, so the selection steps
+    away from the boundary rather than up to it.
+
+    Falls back to the even spread when nothing activates, which for a linear
+    elastic material is the whole of the material.
+    """
+    replayable = [(position, record) for position, record in enumerate(records)
+                  if record.get("DDSDDE") and record.get("entry")]
+    if not replayable:
+        return []
+    turn = first_activated(records)
+    if turn is None:
+        return choose_probe_records(records, wanted=2 * each_side)
+
+    # One increment of clearance either side: the perturbation at a state
+    # immediately adjacent to the transition is the one most likely to step
+    # across it.
+    before = [pair for pair in replayable if pair[0] < turn - 1]
+    after = [pair for pair in replayable if pair[0] > turn + 1]
+
+    def spread(pairs, count):
+        if len(pairs) <= count:
+            return list(pairs)
+        stride = max(1, len(pairs) // count)
+        return list(pairs[::stride])[:count]
+
+    chosen = spread(before, each_side) + spread(after, each_side)
+    if not chosen:
+        return choose_probe_records(records, wanted=2 * each_side)
+    return sorted(chosen, key=lambda pair: pair[0])
 
 
 def choose_probe_records(records: Sequence[dict],
@@ -1855,8 +1932,11 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
     out of its own check.
     """
     outcome: dict[str, Any] = {"verified": False, "reason": ""}
-    chosen = choose_probe_records(list(transformed_history),
-                                  wanted=int(states))
+    # States either side of where the material activates, and none sitting on
+    # it. Bracketing a transition is not verifying across it: evaluating AT
+    # the transition makes every centred difference a chord across a corner.
+    chosen = choose_states_around_activation(list(transformed_history),
+                                             each_side=max(2, int(states) - 1))
     if not chosen:
         outcome["reason"] = ("no converged record carries both a DDSDDE and "
                              "the ENTRY state its increment began from, so "
@@ -1868,11 +1948,18 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
     # and wrong in the plastic one is a specific, reportable finding, and
     # collapsing the states into one verdict would lose exactly that.
     at_states: list[dict] = []
+    history = list(transformed_history)
     for order, (position, record) in enumerate(chosen):
         single = _verify_tangent_at(
             manifest, original, record, position,
             Path(work_dir) / f"state{order}", form=form, tolerance=tolerance,
             timeout=timeout, transformed=transformed)
+        # What KIND of point this was, decided from the history up to it and
+        # from how the one-sided differences behave across the step sweep.
+        # A chord across a kink is not a derivative, and a state that sits on
+        # one carries no weight in either direction.
+        regime = classify_regime(history, position, single.get("smoothness") or {})
+        single["regime"] = regime.as_dict()
         at_states.append(single)
     outcome["states"] = at_states
     outcome["states_checked"] = len(at_states)
@@ -1913,12 +2000,30 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
     # keeps this stronger than the single-state rule it replaced; requiring
     # all three to be measurable would fail a material for a state its
     # reference could not reach, which is a fact about the harness.
-    disagreeing = [s for s in measured if not s.get("verified")]
-    if measured and not disagreeing and len(measured) >= MINIMUM_MEASURED_STATES:
+    # Only a SMOOTH state can carry a verified derivative. A transitional one
+    # is not a failure and not evidence: it is a state at which a centred
+    # difference was the wrong reference.
+    smooth = [s for s in measured if (s.get("regime") or {}).get("verifiable")]
+    transitional = [s for s in measured
+                    if not (s.get("regime") or {}).get("verifiable")]
+    outcome["states_smooth"] = len(smooth)
+    outcome["states_transitional"] = len(transitional)
+
+    # Does this material activate at all? Read from the ORIGINAL history the
+    # loading was discovered on, not assumed.
+    nonlinear = any((s.get("regime") or {}).get("activated_here") for s in at_states)
+    outcome["nonlinear"] = nonlinear
+    enough, coverage_reason = coverage(
+        [_regime_of(s) for s in smooth], nonlinear=nonlinear)
+    outcome["coverage"] = coverage_reason
+
+    disagreeing = [s for s in smooth if not s.get("verified")]
+    if smooth and not disagreeing and enough:
         outcome["verified"] = True
-        scope = (f"agreed at all {len(measured)} states where a difference "
-                 f"could be taken (increments "
-                 f"{', '.join(str(s.get('increment')) for s in measured)})")
+        scope = (f"agreed at all {len(smooth)} SMOOTH states where a "
+                 f"difference could be taken (increments "
+                 f"{', '.join(str(s.get('increment')) for s in smooth)}); "
+                 f"{coverage_reason}")
         if unmeasured:
             scope += (f"; {len(unmeasured)} further state(s) produced no "
                       f"measurable difference and establish nothing either way")
@@ -1926,9 +2031,18 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
         return outcome
     if disagreeing:
         outcome["reason"] = (
-            f"agreed at {len(agreed)} of {len(measured)} measured states along "
-            f"the loading path; increment {disagreeing[0].get('increment')} "
-            f"did not: {disagreeing[0].get('reason', '')}")
+            f"agreed at {len(smooth) - len(disagreeing)} of {len(smooth)} "
+            f"SMOOTH states along the loading path; increment "
+            f"{disagreeing[0].get('increment')} did not: "
+            f"{disagreeing[0].get('reason', '')}")
+        return outcome
+    if smooth and not enough:
+        # Every smooth state agreed, and there were not enough of them in the
+        # right places. Not a pass: for a material that activates, agreement
+        # on the elastic branch is agreement about the part every build gets
+        # right.
+        outcome["reason"] = (
+            f"every smooth state agreed, but {coverage_reason}")
         return outcome
     outcome["reason"] = (
         f"only {len(measured)} of {len(at_states)} states produced a "
@@ -1975,6 +2089,10 @@ def _verify_tangent_at(manifest: VerificationManifest, original: Path,
                                manifest.fd_steps, scale=scale,
                                transformed_source=transformed)
     outcome["driven_through"] = sweep.driven_through
+    # Per step, how far the forward and backward one-sided differences
+    # sat from each other. This is what says whether the two
+    # perturbations were on the same constitutive branch.
+    outcome["smoothness"] = dict(sweep.smoothness)
     outcome["failures"] = list(sweep.failures)
     if not sweep.ok:
         outcome["reason"] = sweep.reason or "the difference produced no tangent"
