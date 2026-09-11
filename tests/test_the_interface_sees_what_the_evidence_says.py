@@ -21,8 +21,8 @@ from umat_oti.abaqus.terminal_states import (EXTERNAL,  # noqa: E402
                                              from_stage, kind_of)
 from umat_oti.app.corpus_view import (MODES, SCHEMA,  # noqa: E402
                                       componentwise_errors, deck_text,
-                                      entry_view, histories, job_log,
-                                      load_run, progress, run_command)
+                                      entry_view, fd_plateau, histories,
+                                      job_log, load_run, progress, run_command)
 
 VERIFIED_ROW = {
     "key": "aaaa1111", "source": "owner__repo/umat.for", "repository": "owner/repo",
@@ -178,9 +178,15 @@ def test_the_generated_deck_can_be_located_and_read(tmp_path: Path):
 
 def test_the_step_sweep_is_a_table_a_reader_can_sort():
     view = entry_view(VERIFIED_ROW)
-    rows = componentwise_errors(view)
+    rows = fd_plateau(view)
     assert [row["step"] for row in rows] == [1e-3, 1e-4]
     assert rows[0]["relative"] == 1e-12
+
+
+def test_the_componentwise_table_is_empty_without_the_probe_beside_it():
+    """It is read off the two tangents on disk, and an interface that filled
+    it in from nothing would be showing a difference nobody computed."""
+    assert componentwise_errors(entry_view(VERIFIED_ROW)) == []
 
 
 def test_nothing_here_reads_a_corpus_source():
