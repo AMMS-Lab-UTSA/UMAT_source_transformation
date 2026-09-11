@@ -2101,6 +2101,10 @@ def _transform_source_text(
     helper_continuation_skip_lines: set[int] = set()
     projected_vector_sources: dict[str, str] = {}
     helper_call_sync_names = shadow_variable_names - (roles["seed"] | roles["promote"])
+    # Which of the source's own variables survive from one call to the next.
+    # Their shadows have to survive with them, and must not be re-zeroed at
+    # every entry: see _persisting_variables.
+    persisting_variables = _persisting_variables(source_text)
     shadow_sync_dirty_names: set[str] = set()
     shadow_sync_dirty_branch_stack: list[set[str]] = []
     pure_seed_tangent_bridge_lines = _pure_seed_tangent_bridge_lines(
@@ -2162,6 +2166,7 @@ def _transform_source_text(
                     allocatable_shadow_ranks={
                         name: sites[0].rank
                         for name, sites in mirrored_allocations.items() if sites},
+                    persisting_variables=persisting_variables,
                 )
             )
         if line_number + 1 == seed_insert_before_line and not initialization_inserted:
@@ -2178,6 +2183,7 @@ def _transform_source_text(
                     seed_dfgrd1=seed_dfgrd1_enabled,
                     external_functions=_external_procedure_names(source_text),
                     allocated_shadow_names=set(mirrored_allocations),
+                    persisting_variables=persisting_variables,
                 )
             )
             initialization_inserted = True
@@ -2749,6 +2755,66 @@ def _external_procedure_names(source_text: str) -> set[str]:
     return names
 
 
+#: A variable the source keeps between calls: named in a SAVE, given an
+#: initial value by DATA (which implies SAVE), or held in COMMON.
+_SAVE_STATEMENT = re.compile(r"^\s*SAVE\b(?P<names>.*)$", re.IGNORECASE)
+_DATA_STATEMENT = re.compile(r"^\s*DATA\s+(?P<names>[^/]*)/", re.IGNORECASE)
+_COMMON_STATEMENT = re.compile(r"^\s*COMMON\s*(?:/[^/]*/)?(?P<names>.*)$",
+                               re.IGNORECASE)
+
+
+def _persisting_variables(source_text: str) -> set[str]:
+    """Names whose value survives from one call of the routine to the next.
+
+    A shadow's lifetime has to match the variable it shadows. Growth-Alex.for
+    reads twelve tables of 7963 values on its FIRST call, SAVEs them, and
+    guards the read with a counter so no later call repeats it. The shadows
+    beside those arrays were re-zeroed at every entry and filled only inside
+    the guard, so from the second call onward the author's arrays held the
+    data and the shadows held zero. The original ran all 280 increments with
+    finite stresses; the converted build was NaN at its first record.
+
+    A bare ``SAVE`` with no list saves everything in the routine, and DATA
+    initialisation implies SAVE in a subprogram. COMMON blocks persist for
+    the life of the program, so a shadow of one has to as well.
+    """
+    names: set[str] = set()
+    for raw_line in source_text.splitlines():
+        statement = _executable_text(raw_line).strip()
+        if not statement:
+            continue
+        saved = _SAVE_STATEMENT.match(statement)
+        if saved:
+            listed = saved.group("names").strip().lstrip(":").strip()
+            if not listed:
+                return {"*"}          # a bare SAVE saves the whole routine
+            names.update(_persisting_names(listed))
+            continue
+        data = _DATA_STATEMENT.match(statement)
+        if data:
+            names.update(_persisting_names(data.group("names")))
+            continue
+        common = _COMMON_STATEMENT.match(statement)
+        if common:
+            names.update(_persisting_names(common.group("names")))
+    return names
+
+
+def _persisting_names(listed: str) -> set[str]:
+    names: set[str] = set()
+    for entry in listed.split(","):
+        candidate = entry.strip().split("(")[0].strip().lstrip("/").strip()
+        if candidate.isidentifier():
+            names.add(candidate.upper())
+    return names
+
+
+def _persists(name: str, persisting: set[str] | None) -> bool:
+    if not persisting:
+        return False
+    return "*" in persisting or str(name).upper() in persisting
+
+
 def _declaration_lines(
     form: str,
     type_name: str,
@@ -2758,6 +2824,7 @@ def _declaration_lines(
     order: int = 1,
     external_functions: set[str] | None = None,
     allocatable_shadow_ranks: dict[str, int] | None = None,
+    persisting_variables: set[str] | None = None,
 ) -> list[str]:
     lines = [_stmt(form, "INTEGER :: OTI_I, OTI_J, OTI_HI, OTI_HJ, OTI_HK")]
     lines.append(_stmt(form, f"TYPE({type_name}) :: OTI_HX, OTI_HY, OTI_HTR"))
@@ -2784,6 +2851,11 @@ def _declaration_lines(
         shape = variable_shapes.get(name, "")
         suffix = f"({shape})" if shape else ""
         lines.append(_stmt(form, f"TYPE({type_name}) :: {name}_OTI{suffix}"))
+        # A shadow's lifetime has to match the variable it shadows. See
+        # _persisting_variables: a table read once and SAVEd leaves its
+        # shadow holding zero from the second call onward otherwise.
+        if _persists(name, persisting_variables):
+            lines.append(_stmt(form, f"SAVE {name}_OTI"))
         # A name the source declares EXTERNAL is a function, and its shadow is
         # the lifted function of the same name. Typing it is right and is how
         # Fortran declares an external function's result; leaving it at that
@@ -2823,6 +2895,7 @@ def _initialization_lines(
     seed_dfgrd1: bool = False,
     external_functions: set[str] | None = None,
     allocated_shadow_names: set[str] | None = None,
+    persisting_variables: set[str] | None = None,
 ) -> list[str]:
     # A name the source declares EXTERNAL is a procedure. Its shadow is the
     # lifted procedure, and "F_OTI = 0.0D0" assigns to a function name --
@@ -2839,8 +2912,12 @@ def _initialization_lines(
         allocated = {str(name).upper() for name in allocated_shadow_names}
         shadow_variables = [name for name in shadow_variables
                             if name.upper() not in allocated]
+    # A shadow that persists between calls must not be zeroed at every entry:
+    # the value it is carrying is the whole point of the SAVE.
+    kept = [name for name in shadow_variables
+            if not _persists(name, persisting_variables)]
     lines = [_comment_line(form, "OTIS seed initialization from GUI configuration")]
-    lines.extend(_shadow_default_lines(form, shadow_variables, variable_shapes))
+    lines.extend(_shadow_default_lines(form, kept, variable_shapes))
     dstran = mappings.get("dstran", "DSTRAN")
     stress = mappings.get("stress", "STRESS")
     statev = mappings.get("statev", "STATEV")
