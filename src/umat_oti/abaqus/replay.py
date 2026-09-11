@@ -879,10 +879,69 @@ class DifferenceSweep:
     reason: str = ""
 
 
+def one_sided_gap(one_sided: Sequence[tuple], near_zero_fraction: float
+                  ) -> Optional[float]:
+    """How far the forward and backward one-sided slopes sit from each other.
+
+    ``one_sided`` is ``(component, forward_slope, backward_slope)`` per
+    perturbed column. The answer is the worst componentwise disagreement,
+    relative to the centred slope the two average to -- which is what says
+    whether the two perturbations sat on the same constitutive branch. A kink
+    between them shows here and nowhere else: the centred difference itself
+    looks perfectly well behaved, because a chord across a corner is a number
+    like any other.
+
+    Measured only where a measurement exists. It used to be measured against
+    each component's OWN centred slope, so a tangent carrying entries eight
+    orders of magnitude below its largest had that many denominators made of
+    round-off, and the worst of them decided the state. Measured on
+    Growth-MinSur2.for, whose tangent has sixteen such entries: gaps of
+    1.7e-04, 31.6, 3.0e-05, 2.0, 0.29, 2.0 across six step sizes. A quantity
+    moving six orders of magnitude non-monotonically is not converging to two
+    different limits; it is not being measured. Nine corpus entries were
+    classified as sitting on a constitutive transition on that basis and
+    never had a tangent verified.
+
+    The rule is the one :func:`umat_oti.abaqus.compare.compare_histories`
+    already applies to the error it reports, for the same reason and with the
+    same constant: a component that is a vanishing fraction of the response
+    holds each build's rounding and nothing else, so it is left out rather
+    than scored. A real kink is untouched -- its gap is the jump between two
+    branch stiffnesses, which lives in the components that carry the
+    stiffness, not in the ones that are zero.
+
+    Returns ``None`` when no component was resolvable, so a step with nothing
+    to say is absent from the sweep rather than present as a zero.
+    """
+    middles = []
+    for _component, forward_slope, backward_slope in one_sided:
+        middles.extend(abs(f + b) / 2.0
+                       for f, b in zip(forward_slope, backward_slope))
+    if not middles:
+        return None
+    largest = max(middles)
+    floor = largest * max(0.0, float(near_zero_fraction))
+    worst = 0.0
+    scored = 0
+    for _component, forward_slope, backward_slope in one_sided:
+        for f, b in zip(forward_slope, backward_slope):
+            middle = abs(f + b) / 2.0
+            if middle <= 0.0 or middle <= floor:
+                continue
+            scored += 1
+            if abs(f - b) <= floor:
+                # The disagreement is below the resolution of the matrix it
+                # belongs to. That is agreement, not an absent measurement.
+                continue
+            worst = max(worst, abs(f - b) / middle)
+    return worst if scored else None
+
+
 def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
                        steps: Sequence[float], *, scale: float = 1.0,
                        components: Sequence[int] = (),
                        transformed_source: Optional[Path] = None,
+                       near_zero_fraction: float = 1e-8,
                        ) -> DifferenceSweep:
     """The tangent by centred differences, one column per strain component.
 
@@ -1004,15 +1063,9 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
         # perturbations shows here and nowhere else: the centred difference
         # itself looks perfectly well-behaved, because a chord across a corner
         # is a number like any other.
-        worst = 0.0
-        for component, forward_slope, backward_slope in one_sided:
-            for f, b in zip(forward_slope, backward_slope):
-                middle = abs(f + b) / 2.0
-                if middle <= 0.0:
-                    continue
-                worst = max(worst, abs(f - b) / middle)
-        if one_sided:
-            sweep.smoothness[relative] = worst
+        gap = one_sided_gap(one_sided, near_zero_fraction)
+        if gap is not None:
+            sweep.smoothness[relative] = gap
 
     sweep.ok = bool(sweep.matrices)
     if not sweep.ok and not sweep.reason:

@@ -2452,6 +2452,9 @@ def _transform_source_text(
         original_lines=lines,
         form=form,
     )
+    output = _read_shadow_sync(
+        output, {name.upper() for name in shadow_variable_names},
+        variable_shapes, form)
     transformed_source = "\n".join(output) + "\n"
     if form == "fixed":
         transformed_source = _wrap_fixed_form_source(transformed_source)
@@ -5750,6 +5753,103 @@ def _stress_expression_lines(active_lines: list[tuple[int, str]], roles: dict[st
         if re.search(rf"\b{re.escape(stress)}_OTI\s*\(\s*OTI_I\s*\)\s*=\s*{re.escape(stress)}\s*\(\s*OTI_I\s*\)", line, flags=re.IGNORECASE):
             continue
         result.append((line_number, line))
+    return result
+
+
+def _joined_read_statement(lines: list[str], start: int,
+                           form: str) -> tuple[str, list[int]]:
+    """A READ beginning at ``start``, with its continuations joined on.
+
+    Returns the logical statement and the indices of the lines that carried
+    its continuations, so the caller can emit them before the sync it adds.
+    Anything that is not a READ comes back empty.
+    """
+    first = lines[start]
+    if not re.match(r"^\s*(?:\d+\s+)?READ\s*\(", first, flags=re.IGNORECASE):
+        return "", []
+    statement = first
+    continuations: list[int] = []
+    index = start + 1
+    while index < len(lines):
+        line = lines[index]
+        if form == "free":
+            if not statement.rstrip().endswith("&"):
+                break
+            statement = statement.rstrip().rstrip("&") + line.lstrip().lstrip("&")
+        else:
+            if len(line) <= 5 or line[5] in " \t0" or line[:5].strip():
+                break
+            if _is_commented(line):
+                break
+            statement = statement.rstrip() + line[6:].strip()
+        continuations.append(index)
+        index += 1
+    return statement, continuations
+
+
+def _read_item_names(statement: str) -> list[str]:
+    """The variables a READ writes, as bare names.
+
+    ``READ(301,*) A, B(3), C`` writes A, B and C. Only the item list is
+    scanned -- the control list inside the parentheses names units, formats
+    and specifiers, not data.
+    """
+    match = re.match(r"^\s*READ\s*\((?P<control>.*?)\)\s*(?P<items>.*)$",
+                     statement, flags=re.IGNORECASE | re.DOTALL)
+    if not match:
+        return []
+    names: list[str] = []
+    for item in _split_call_arguments(match.group("items")):
+        name = _base_argument_name(item)
+        if name:
+            names.append(name)
+    return names
+
+
+def _read_shadow_sync(output: list[str], shadow_names: set[str],
+                      variable_shapes: dict[str, str], form: str) -> list[str]:
+    """Fill a shadow that a READ has just filled the real variable of.
+
+    A value that enters the routine through an input statement has no
+    expression for the transform to rewrite, so the shadow beside it keeps
+    the zero it was initialised with and the converted build computes the
+    whole model with zeros where the author's tables should be.
+
+    Measured on Growth-Alex.for, which reads twelve tables of 7963 values:
+    the original ran all 280 increments and the converted build was
+    non-finite at its first, because every LAMBDA*_OTI and A*_OTI array was
+    still zero. The primal comparison reported 2800 non-finite values -- a
+    disagreement whose cause was that the converted routine had never been
+    given the data.
+
+    No dirty-tracking is needed here, unlike a CALL: a READ always writes
+    every item in its list, so the shadow is stale immediately after it and
+    at no other time.
+    """
+    if not shadow_names:
+        return output
+    result: list[str] = []
+    pending = 0
+    for index, line in enumerate(output):
+        result.append(line)
+        if pending:
+            pending -= 1
+            continue
+        if _is_commented(line):
+            continue
+        statement, continuations = _joined_read_statement(output, index, form)
+        if not statement:
+            continue
+        names = [name for name in _read_item_names(statement)
+                 if name.upper() in shadow_names]
+        if not names:
+            continue
+        for skipped in continuations:
+            result.append(output[skipped])
+        pending = len(continuations)
+        for name in dict.fromkeys(names):
+            result.extend(_copy_real_shadow_lines(
+                form, name, variable_shapes.get(name, "")))
     return result
 
 
