@@ -31,6 +31,42 @@ becomes after it is carried forward as STATEV0 into every later increment.
 import json
 from pathlib import Path
 
+def _cache():
+    """The discovery cache, configurable and skipped when absent."""
+    import os
+    import pathlib as _pathlib
+
+    import pytest as _pytest
+
+    where = _pathlib.Path(
+        os.environ.get("UMAT_OTI_DISCOVERY_CACHE")
+        or _pathlib.Path.home() / "softwarex_work" / "discovery_cache")
+    if not where.is_dir():
+        _pytest.skip(f"no discovery cache at {where}")
+    return where
+
+
+def _corpus_run(name: str = "pass9"):
+    """Where a completed corpus run's evidence lives on this machine.
+
+    Configurable, and skipped when absent: these are integration tests over
+    evidence a real Abaqus batch produced, and the batch does not run on
+    every machine that runs the suite.
+    """
+    import os
+    import pathlib as _pathlib
+
+    import pytest as _pytest
+
+    root = _pathlib.Path(
+        os.environ.get("UMAT_OTI_CORPUS_RUN")
+        or _pathlib.Path.home() / "softwarex_work" / "corpus_run")
+    where = root / name
+    if not where.is_dir():
+        _pytest.skip(f"no corpus run at {where}; set UMAT_OTI_CORPUS_RUN")
+    return where
+
+
 import pytest
 
 from umat_oti.abaqus import call_isolation as ci
@@ -40,7 +76,7 @@ from umat_oti.abaqus.primal_signature import (CONFIRMED, ITERATIVE_SOLVER,
 
 pytestmark = pytest.mark.integration
 
-PASS9 = Path("/home/ammslab3/softwarex_work/corpus_run/pass9")
+PASS9 = _corpus_run("pass9")
 TRIO = {
     "0d97f9db648d23a064062989":
         "RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for",
@@ -49,7 +85,7 @@ TRIO = {
     "71a0523bc387a9b773773a24":
         "RitioL__PolyFatigueCrackSim/workplace/subroutines3_revised.for",
 }
-CACHE = Path("/home/ammslab3/softwarex_work/discovery_cache")
+CACHE = Path(str(_cache()))
 
 
 def _primal(key):
