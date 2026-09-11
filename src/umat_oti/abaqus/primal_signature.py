@@ -1,17 +1,47 @@
-"""Why two builds of one model disagree, named from the numbers themselves.
+"""Why two builds of one model disagree -- as hypotheses, with their status.
 
-"primal_disagreed" is a stage, not a diagnosis. Thirty-seven entries reached
-it at magnitudes spanning nine orders -- 2.3e-10 to 1.9 -- and a single name
-over that range tells nobody which of them share a cause or which fix would
-move any of them. The signature is read off the comparison and the source:
-where along the history the difference first matters, which quantity carries
-it, whether the two values look like the same number computed differently or
-like two different answers, and whether the routine contains the kind of
-construct that produces each.
+The previous version of this module returned a *name* for each disagreement:
+``iterative_solver_different_iterate``, ``round_off_scale``,
+``branch_divergence_sign_flip``. Those names were read off the summary numbers
+and a regular-expression search of the source, and they were reported in the
+same field, in the same tone, as a measurement. They were not measurements.
+"The worst pair has opposite signs and the source contains a DO WHILE" does
+not establish that two valid internal solves converged to different iterates.
+It is consistent with that. It is equally consistent with one output being
+written wrongly, with an argument being passed wrongly, and with a constant
+being read at the wrong precision -- and on this corpus the last kind of thing
+is what the data actually shows.
 
-Nothing here relaxes a tolerance or excuses a difference. A signature is a
-hypothesis with the evidence for it attached, so that the entries sharing one
-can be worked on together and the fix can be checked against all of them.
+So nothing here returns a diagnosis. Each entry gets one or more
+:class:`Hypothesis` objects, and each hypothesis carries
+
+    claim                  what it asserts about the mechanism
+    predicts               what would have to be true if it held
+    supporting_evidence    measurements consistent with it
+    contradicting_evidence measurements it forbids, that were seen anyway
+    confirmation_status    confirmed / refuted / needs_abaqus /
+                           needs_more_evidence / untested
+    confirmed_root_cause   set ONLY by confirm(), which requires a
+                           reproduction record
+    what_would_confirm     the experiment that would settle it
+    what_would_refute      the observation that would kill it
+
+Two rules this module enforces rather than documents:
+
+**No classifier path can set ``confirmed_root_cause``.** ``classify`` returns
+hypotheses at ``needs_more_evidence`` or ``needs_abaqus`` unless a measured
+:class:`~umat_oti.abaqus.call_isolation.Isolation` contradicts them, in which
+case it returns ``refuted`` with the contradicting measurement attached. The
+only way to reach ``confirmed`` is :meth:`Hypothesis.confirm`, which demands a
+:class:`Reproduction` saying what was held fixed, what was varied, and what was
+observed.
+
+**``round_off_scale`` is not a pass.** It is a hypothesis about a mechanism --
+that the difference is last-place rounding grown along the path -- and it makes
+a prediction that can fail: the first call at which the builds part must differ
+by about one unit in the last place, and the growth from there must be
+consistent with the number of increments. A small worst-case number is not
+evidence for it and is never grounds for widening a tolerance.
 """
 from __future__ import annotations
 
@@ -20,153 +50,944 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Optional, Sequence
 
-#: Two values of opposite sign whose magnitudes agree this closely are not
-#: the same number computed differently. Something chose a different branch.
+# ---------------------------------------------------------------------------
+# status vocabulary
+# ---------------------------------------------------------------------------
+#: A controlled reproduction was performed, and it showed the mechanism the
+#: hypothesis claims. Requires a Reproduction record. Nothing else sets this.
+CONFIRMED = "confirmed"
+#: A measurement showed something the hypothesis forbids.
+REFUTED = "refuted"
+#: The measurement that would settle it needs a solver run that has not been
+#: made. A request belongs in the Abaqus queue.
+NEEDS_ABAQUS = "needs_abaqus"
+#: The measurement that would settle it can be made from data already on disk,
+#: and has not been -- or the evidence is mixed.
+NEEDS_MORE_EVIDENCE = "needs_more_evidence"
+#: Raised as a possibility, nothing measured about it yet.
+UNTESTED = "untested"
+#: The entry cannot carry a claim about the transform, whatever its hypotheses
+#: say: something about the run makes the comparison meaningless.
+NOT_EVIDENCE = "not_evidence_about_the_transform"
+
+_OPEN_STATUSES = (NEEDS_ABAQUS, NEEDS_MORE_EVIDENCE, UNTESTED)
+
+
+# ---------------------------------------------------------------------------
+# hypothesis names
+# ---------------------------------------------------------------------------
+#: The transformed build returned a value that is not a number. This is an
+#: observation, not a mechanism: it says the comparison established nothing
+#: about the model, and leaves open why.
+NON_FINITE = "transformed_returned_non_finite"
+#: Two valid internal solves of the author's own iteration converged to
+#: different iterates because the residual was summed in a different order.
+ITERATIVE_SOLVER = "iterative_solver_different_iterate"
+#: A conditional inside the routine took a different branch in the two builds.
+BRANCH_DIVERGENCE = "branch_divergence"
+#: One output component is written with a wrong value while the rest of the
+#: call is reproduced. Distinguishable from every "whole solve moved"
+#: hypothesis by how many outputs move.
+SINGLE_OUTPUT_SLOT = "single_output_slot_corrupted"
+#: A constant, a modulus or an argument reaches the routine at a different
+#: precision in the two builds, so the first call already differs by far more
+#: than double rounding and by about single-precision epsilon.
+REDUCED_PRECISION_INPUT = "reduced_precision_constant_or_argument"
+#: The two builds agree to the last representable bit at the first call, and
+#: the reported difference is that rounding carried along the path.
+ROUND_OFF_GROWTH = "round_off_grown_along_path"
+#: The routine keeps something between calls -- a SAVE, a COMMON, a file read
+#: once -- whose lifetime differs between the builds.
+DATA_OR_LIFETIME = "data_read_or_save_lifetime"
+#: Most of what was compared is too small a fraction of the response to carry
+#: a claim either way.
+NEAR_ZERO = "near_zero_normalisation"
+#: The transformed routine returns a materially different answer for the very
+#: first call of the analysis, from the same arguments. Nothing about the path,
+#: the solver or accumulated state can be responsible: there is no path yet.
+DIFFERENT_FUNCTION = "transformed_computes_a_different_function"
+#: Nothing above fits.
+UNCLASSIFIED = "unclassified"
+
+
+# ---------------------------------------------------------------------------
+# evidence
+# ---------------------------------------------------------------------------
+#: Where a piece of evidence came from. ``source_text`` is the weakest: it says
+#: a construct exists, never that it ran.
+FROM_PROBE = "probe_history"
+FROM_ISOLATION = "controlled_single_call_comparison"
+FROM_JOB_RECORDS = "abaqus_job_records"
+FROM_SOURCE_TEXT = "source_text"
+FROM_REPRODUCTION = "controlled_reproduction"
+
+#: Evidence read off source text can support a hypothesis and can never
+#: confirm one. A Newton loop in the file is not a Newton loop that ran.
+_NEVER_CONFIRMING = (FROM_SOURCE_TEXT,)
+
+
+@dataclass(frozen=True)
+class Evidence:
+    """One measurement or observation, with where it came from."""
+
+    statement: str
+    origin: str = FROM_PROBE
+
+    @property
+    def is_measurement(self) -> bool:
+        return self.origin not in _NEVER_CONFIRMING
+
+    def as_dict(self) -> dict:
+        return {"statement": self.statement, "origin": self.origin,
+                "is_measurement": self.is_measurement}
+
+
+@dataclass(frozen=True)
+class Reproduction:
+    """What was held fixed, what was varied, and what came out.
+
+    A hypothesis cannot be confirmed without one. The fields are deliberately
+    awkward to fill in from a summary: if "held_fixed" cannot be written down,
+    the experiment was not controlled and the result does not confirm anything.
+    """
+
+    held_fixed: str
+    varied: str
+    observed: str
+    where: str = ""
+    repeatable: bool = False
+
+    def as_dict(self) -> dict:
+        return {"held_fixed": self.held_fixed, "varied": self.varied,
+                "observed": self.observed, "where": self.where,
+                "repeatable": self.repeatable}
+
+
+@dataclass
+class Hypothesis:
+    """One proposed mechanism, and everything known for and against it."""
+
+    name: str
+    claim: str
+    predicts: tuple = ()
+    what_would_confirm: str = ""
+    what_would_refute: str = ""
+    supporting_evidence: list = field(default_factory=list)
+    contradicting_evidence: list = field(default_factory=list)
+    confirmation_status: str = UNTESTED
+    confirmed_root_cause: Optional[str] = None
+    reproduction: Optional[Reproduction] = None
+
+    # -- the only two transitions that reach a verdict --------------------
+    def confirm(self, root_cause: str, reproduction: Reproduction) -> "Hypothesis":
+        """Record that a controlled reproduction showed this mechanism.
+
+        Refuses on three grounds, each of which had to be refused at some
+        point while this corpus was being read:
+
+        * a hypothesis already refuted cannot be confirmed;
+        * a reproduction with nothing held fixed is not an experiment;
+        * evidence read off source text cannot be the whole case.
+        """
+        if self.confirmation_status == REFUTED:
+            against = (self.contradicting_evidence[0].statement
+                       if self.contradicting_evidence else "?")
+            raise ValueError(
+                f"{self.name} has contradicting evidence ({against}); a "
+                f"reproduction cannot confirm a hypothesis that has already "
+                f"been refuted -- withdraw the refutation explicitly or state "
+                f"a different hypothesis")
+        if not reproduction.held_fixed.strip():
+            raise ValueError(
+                f"{self.name} cannot be confirmed by a reproduction that names "
+                f"nothing it held fixed: without that the two observations "
+                f"differ in an unknown number of ways")
+        if not any(item.is_measurement for item in self.supporting_evidence):
+            raise ValueError(
+                f"{self.name} has no supporting evidence that is a "
+                f"measurement; a construct found in the source is consistent "
+                f"with the hypothesis and does not establish it")
+        self.confirmation_status = CONFIRMED
+        self.confirmed_root_cause = root_cause
+        self.reproduction = reproduction
+        self.supporting_evidence.append(
+            Evidence(reproduction.observed, FROM_REPRODUCTION))
+        return self
+
+    def refute(self, evidence: Evidence) -> "Hypothesis":
+        """Record a measurement the hypothesis forbids."""
+        self.contradicting_evidence.append(evidence)
+        self.confirmation_status = REFUTED
+        self.confirmed_root_cause = None
+        return self
+
+    # -- accumulating evidence without reaching a verdict ------------------
+    def support(self, evidence: Evidence) -> "Hypothesis":
+        self.supporting_evidence.append(evidence)
+        if self.confirmation_status == UNTESTED:
+            self.confirmation_status = NEEDS_MORE_EVIDENCE
+        return self
+
+    def needs_abaqus(self, why: str) -> "Hypothesis":
+        if self.confirmation_status in (UNTESTED, NEEDS_MORE_EVIDENCE):
+            self.confirmation_status = NEEDS_ABAQUS
+            self.what_would_confirm = why or self.what_would_confirm
+        return self
+
+    @property
+    def open(self) -> bool:
+        return self.confirmation_status in _OPEN_STATUSES
+
+    def as_dict(self) -> dict:
+        return {
+            "hypothesis": self.name,
+            "claim": self.claim,
+            "predicts": list(self.predicts),
+            "supporting_evidence": [e.as_dict() for e in self.supporting_evidence],
+            "contradicting_evidence": [e.as_dict()
+                                       for e in self.contradicting_evidence],
+            "confirmation_status": self.confirmation_status,
+            "confirmed_root_cause": self.confirmed_root_cause,
+            "reproduction": self.reproduction.as_dict() if self.reproduction else None,
+            "what_would_confirm": self.what_would_confirm,
+            "what_would_refute": self.what_would_refute,
+        }
+
+
+@dataclass
+class Signature:
+    """Every hypothesis raised for one disagreement, and where it stands."""
+
+    magnitude: float = 0.0
+    where: str = ""
+    hypotheses: list = field(default_factory=list)
+    #: Facts that stop the entry being evidence about the transform at all.
+    #: Ten of the forty-two pass9 disagreements are the HelixUp family, and in
+    #: every one of them the ORIGINAL build's own probe record goes non-finite
+    #: at call 83 -- the author's code, on the deck we generated, returns NaN
+    #: for all six stress components at increment 2. The transformed build gets
+    #: there at call 73. Which of two builds reached NaN first is not a
+    #: measurement of a transform, and no hypothesis below should be read as
+    #: one while this list is non-empty.
+    blocking_observations: list = field(default_factory=list)
+
+    @property
+    def confirmed(self) -> list:
+        return [h for h in self.hypotheses
+                if h.confirmation_status == CONFIRMED]
+
+    @property
+    def refuted(self) -> list:
+        return [h for h in self.hypotheses if h.confirmation_status == REFUTED]
+
+    @property
+    def open(self) -> list:
+        return [h for h in self.hypotheses if h.open]
+
+    @property
+    def informative(self) -> bool:
+        """Can this entry carry a claim about the transform at all?"""
+        return not self.blocking_observations
+
+    @property
+    def status(self) -> str:
+        """The status of the entry: what is known, not what is suspected."""
+        if self.blocking_observations:
+            return NOT_EVIDENCE
+        if self.confirmed:
+            return CONFIRMED
+        if not self.hypotheses:
+            return UNTESTED
+        if all(h.confirmation_status == REFUTED for h in self.hypotheses):
+            return REFUTED
+        if any(h.confirmation_status == NEEDS_ABAQUS for h in self.open):
+            return NEEDS_ABAQUS
+        return NEEDS_MORE_EVIDENCE
+
+    def as_dict(self) -> dict:
+        return {"magnitude": self.magnitude, "where": self.where,
+                "status": self.status, "informative": self.informative,
+                "blocking_observations": [e.as_dict()
+                                          for e in self.blocking_observations],
+                "hypotheses": [h.as_dict() for h in self.hypotheses]}
+
+
+# ---------------------------------------------------------------------------
+# thresholds, each one a statement about what a number can mean
+# ---------------------------------------------------------------------------
+#: Two values of opposite sign whose magnitudes agree this closely are not one
+#: number computed twice. It raises a hypothesis; it settles nothing.
 SIGN_FLIP_CLOSENESS = 0.25
 
-#: At or below this, a difference is the size round-off reaches through a
-#: path of a few hundred increments; above it, arithmetic alone does not get
-#: there and something structural is different.
-ROUND_OFF = 1e-9
+#: One unit in the last place of a double, as a relative difference. A first
+#: divergence at or below a few of these is what ROUND_OFF_GROWTH predicts.
+LAST_PLACE = 2.3e-16
 
-#: Constructs whose presence makes a particular signature likely. Searched in
-#: the ORIGINAL source, because what the author wrote is what has to explain
-#: the difference.
+#: Single precision's epsilon. A first divergence near this, from bit-identical
+#: inputs, is what REDUCED_PRECISION_INPUT predicts and round-off does not.
+SINGLE_PRECISION_EPSILON = 1.2e-7
+
+#: Constructs whose presence makes a mechanism possible. Searched in the
+#: ORIGINAL source. Evidence from here is tagged FROM_SOURCE_TEXT and can
+#: never be part of a confirmation.
 _ITERATION = re.compile(
     r"newton|raphson|\bdo\s+while\b|\bconverg|\btoler|\bnitr\b|\bmaxit",
     re.IGNORECASE)
 _BRANCH_ON_STATE = re.compile(
     r"IF\s*\([^)]*\b(STATEV|STRESS|DSTRAN)\b", re.IGNORECASE)
-_SINGLE_PRECISION = re.compile(r"^\s*REAL(?!\s*\*\s*8)(?!\s*\(\s*8)", re.IGNORECASE
-                               | re.MULTILINE)
 _FILE_IO = re.compile(r"^\s*(OPEN|READ)\s*\(", re.IGNORECASE | re.MULTILINE)
 _SAVED = re.compile(r"^\s*(SAVE|COMMON)\b", re.IGNORECASE | re.MULTILINE)
 
-#: The signatures. Ordered so the most specific explanation wins.
-NON_FINITE = "non_finite_in_comparison"
-SIGN_FLIP = "branch_divergence_sign_flip"
-ITERATIVE_SOLVER = "iterative_solver_different_iterate"
-FIRST_INCREMENT = "first_increment_disagreement"
-ACCUMULATING = "accumulating_disagreement"
-STATE_ONLY = "state_variables_only"
-STRESS_ONLY = "stresses_only"
-NEAR_ZERO = "near_zero_normalisation"
-ROUND_OFF_SCALE = "round_off_scale"
-DATA_OR_LIFETIME = "data_read_or_save_lifetime"
-UNCLASSIFIED = "unclassified"
-
-
-@dataclass
-class Signature:
-    """One disagreement, named, with what named it."""
-
-    kind: str = UNCLASSIFIED
-    magnitude: float = 0.0
-    where: str = ""
-    evidence: list = field(default_factory=list)
-
-    def as_dict(self) -> dict:
-        return {"kind": self.kind, "magnitude": self.magnitude,
-                "where": self.where, "evidence": list(self.evidence)}
-
 
 def _closeness(left: float, right: float) -> float:
-    """How near two magnitudes are, as a fraction of the larger."""
     scale = max(abs(left), abs(right))
     return abs(abs(left) - abs(right)) / scale if scale else 0.0
-
-
-def classify(primal: dict, source_text: str = "",
-             complete_increments: int = 0) -> Signature:
-    """Name a primal disagreement from its numbers and its source."""
-    worst = float(primal.get("worst_stress_relative") or 0.0)
-    state = float(primal.get("worst_state_relative") or 0.0)
-    magnitude = max(worst if math.isfinite(worst) else 0.0,
-                    state if math.isfinite(state) else 0.0)
-    at = list(primal.get("worst_stress_at") or ())
-    state_at = list(primal.get("worst_state_at") or ())
-    evidence: list = []
-
-    if primal.get("non_finite_components"):
-        return Signature(NON_FINITE, magnitude, "",
-                         [f"{primal['non_finite_components']} compared values "
-                          f"are not finite, so nothing about this pair is "
-                          f"established"])
-
-    # Two values of opposite sign and near-equal size are two answers, not one
-    # answer computed twice. A slip-system solver picking a different system,
-    # or a yield branch taken one way in one build and the other way in the
-    # other, looks exactly like this and nothing else does.
-    for label, row in (("stress", at), ("state", state_at)):
-        if len(row) >= 4:
-            left, right = float(row[2]), float(row[3])
-            if left * right < 0 and _closeness(left, right) <= SIGN_FLIP_CLOSENESS:
-                evidence.append(
-                    f"the worst {label} pair is {left:.6g} against "
-                    f"{right:.6g}: opposite signs, magnitudes within "
-                    f"{_closeness(left, right):.1%} of each other")
-    if evidence:
-        if source_text and _ITERATION.search(source_text):
-            evidence.append("and the source runs its own Newton iteration, "
-                            "which converges to a different iterate when its "
-                            "residual is computed in a different order")
-            return Signature(ITERATIVE_SOLVER, magnitude, _where(at), evidence)
-        if source_text and _BRANCH_ON_STATE.search(source_text):
-            evidence.append("and the source branches on its own stress or "
-                            "state, so a difference below the branch can "
-                            "decide which way it goes")
-        return Signature(SIGN_FLIP, magnitude, _where(at), evidence)
-
-    if source_text and _FILE_IO.search(source_text) and _SAVED.search(source_text):
-        evidence.append("the source reads a file and keeps what it read "
-                        "between calls, so a shadow whose lifetime does not "
-                        "match would diverge from the first call that skips "
-                        "the read")
-        return Signature(DATA_OR_LIFETIME, magnitude, _where(at), evidence)
-
-    if primal.get("unresolved_components") and magnitude > 0:
-        resolved = int(primal.get("resolved_components") or 0)
-        unresolved = int(primal.get("unresolved_components") or 0)
-        if unresolved > resolved:
-            evidence.append(
-                f"{unresolved} of {resolved + unresolved} components sit "
-                f"below the resolvable fraction of the response, so most of "
-                f"what was compared carries rounding rather than signal")
-            return Signature(NEAR_ZERO, magnitude, _where(at), evidence)
-
-    first = at[0] if at else None
-    if first is not None and int(first) <= 1:
-        evidence.append("the worst difference is at the first record, so the "
-                        "two builds part company before any history has "
-                        "accumulated -- an input, an initial state or a "
-                        "constant differs, not a path")
-        return Signature(FIRST_INCREMENT, magnitude, _where(at), evidence)
-
-    if magnitude and magnitude <= ROUND_OFF:
-        evidence.append(f"{magnitude:.3e} over "
-                        f"{complete_increments or primal.get('increments') or '?'} "
-                        f"increments is the scale round-off reaches along a "
-                        f"path, and no larger cause is visible")
-        return Signature(ROUND_OFF_SCALE, magnitude, _where(at), evidence)
-
-    if state > 0 and worst == 0:
-        return Signature(STATE_ONLY, magnitude, _where(state_at),
-                         ["only state variables differ; the stresses agree"])
-    if worst > 0 and state == 0:
-        evidence.append("only stresses differ; every state variable agrees")
-        if first is not None:
-            return Signature(ACCUMULATING if int(first) > 1 else FIRST_INCREMENT,
-                             magnitude, _where(at), evidence)
-        return Signature(STRESS_ONLY, magnitude, _where(at), evidence)
-    if first is not None and int(first) > 1:
-        evidence.append("the difference first matters part way along the "
-                        "history, so it grows with the path rather than "
-                        "arriving with the inputs")
-        return Signature(ACCUMULATING, magnitude, _where(at), evidence)
-    return Signature(UNCLASSIFIED, magnitude, _where(at), evidence)
 
 
 def _where(at: Sequence) -> str:
     if len(at) >= 2:
         return f"record {at[0]}, component {at[1]}"
     return ""
+
+
+# ---------------------------------------------------------------------------
+# the hypotheses, each with what would settle it
+# ---------------------------------------------------------------------------
+def _iterative_solver() -> Hypothesis:
+    return Hypothesis(
+        ITERATIVE_SOLVER,
+        claim="both builds solved the author's own iteration correctly and "
+              "stopped at different iterates, because the residual was "
+              "accumulated in a different order and crossed the author's "
+              "tolerance on a different pass",
+        predicts=(
+            "the two builds take different numbers of passes through the "
+            "author's loop for the same increment",
+            "at the call where they part, EVERY output the loop writes has "
+            "moved, not one of them",
+            "the size of the move is about the author's own convergence "
+            "tolerance, not about machine epsilon and not about 100%",
+        ),
+        what_would_confirm="instrument the author's loop to write its "
+                           "iteration count and per-iteration residual norm, "
+                           "run both builds on one increment from the same "
+                           "recorded entry state, and show the counts differ "
+                           "and the final residuals are both inside tolerance",
+        what_would_refute="a call at which the two builds were handed "
+                          "bit-identical arguments, took the same number of "
+                          "equilibrium passes, and returned outputs that are "
+                          "bit-identical except for a few components")
+
+
+def _branch_divergence() -> Hypothesis:
+    return Hypothesis(
+        BRANCH_DIVERGENCE,
+        claim="a conditional inside the routine tested a quantity that "
+              "differed between the builds and sent them down different paths",
+        predicts=(
+            "the outputs written only on one side of the branch differ while "
+            "those written on both sides agree",
+            "the tested quantity is near the branch's threshold at the call "
+            "where they part",
+        ),
+        what_would_confirm="record which branch each build took, per call, "
+                           "and show they differ at the first divergent call "
+                           "while the tested quantity sits within rounding of "
+                           "the threshold",
+        what_would_refute="the two builds returning bit-identical values for "
+                          "every quantity the conditional tests")
+
+
+def _single_output_slot() -> Hypothesis:
+    return Hypothesis(
+        SINGLE_OUTPUT_SLOT,
+        claim="the transformed routine reproduces the call except for a small "
+              "fixed set of output components, which are written with a value "
+              "the arithmetic does not explain",
+        predicts=(
+            "at the first divergent call the inputs are bit-identical",
+            "the great majority of outputs are bit-identical too",
+            "the components that differ do so by far more than rounding, and "
+            "are the same components at every point and every increment",
+        ),
+        what_would_confirm="show, over every recorded call, that the set of "
+                           "differing output components is the same small set "
+                           "and that the rest are bit-identical",
+        what_would_refute="a first divergent call at which most outputs moved "
+                          "by a similar small amount")
+
+
+def _reduced_precision() -> Hypothesis:
+    return Hypothesis(
+        REDUCED_PRECISION_INPUT,
+        claim="a constant, modulus or argument reaches the arithmetic at "
+              "single precision in one build and double in the other",
+        predicts=(
+            "the first divergent call has bit-identical inputs",
+            "its relative difference sits near single-precision epsilon, far "
+            "above double rounding and far below a branch change",
+            "the difference appears immediately, not after accumulation",
+        ),
+        what_would_confirm="find the constant or expression in the generated "
+                           "source whose value differs from the original's at "
+                           "single precision, and show that restoring it "
+                           "removes the first-call difference",
+        what_would_refute="a first-call difference at last-place rounding, or "
+                          "one far larger than single-precision epsilon")
+
+
+def _round_off_growth() -> Hypothesis:
+    return Hypothesis(
+        ROUND_OFF_GROWTH,
+        claim="the two builds compute the same arithmetic in a different "
+              "order, part at the last representable bit, and the reported "
+              "difference is that parting amplified along the path",
+        predicts=(
+            "the first divergent call differs by about one unit in the last "
+            "place of a double",
+            "the difference grows along the history rather than arriving",
+            "no output component moves by more than rounding at the first "
+            "divergence",
+        ),
+        what_would_confirm="show the first divergence is at last-place "
+                           "rounding AND that re-running the ORIGINAL build "
+                           "with its own arithmetic reassociated moves the "
+                           "history by a comparable amount -- the model's own "
+                           "sensitivity, measured rather than assumed",
+        what_would_refute="a first divergent call whose outputs differ by more "
+                          "than a few units in the last place")
+
+
+def _non_finite() -> Hypothesis:
+    return Hypothesis(
+        NON_FINITE,
+        claim="the transformed build returned a value that is not a number, "
+              "so the comparison established nothing about the model",
+        predicts=("the probe records a non-finite output at a specific call",),
+        what_would_confirm="locate the first call whose result is non-finite "
+                           "and show its inputs were finite",
+        what_would_refute="every recorded value being finite")
+
+
+def _data_or_lifetime() -> Hypothesis:
+    return Hypothesis(
+        DATA_OR_LIFETIME,
+        claim="the routine keeps something between calls -- a SAVE, a COMMON, "
+              "a file read once -- and the two builds do not agree about when "
+              "it is set",
+        predicts=(
+            "the two builds agree on the first call and part on a later one "
+            "whose inputs are identical",
+            "what differs is a quantity the routine reads rather than one it "
+            "computes from its arguments",
+        ),
+        what_would_confirm="record the saved quantity at entry to every call "
+                           "in both builds and show the first call at which "
+                           "they differ is a call that did not re-read it",
+        what_would_refute="the builds differing on their very first call")
+
+
+def _different_function() -> Hypothesis:
+    return Hypothesis(
+        DIFFERENT_FUNCTION,
+        claim="the transformed routine does not compute the author's function: "
+              "given the same arguments it returns a materially different "
+              "answer, and does so on the first call of the analysis",
+        predicts=(
+            "the first controlled call is the first call of the analysis",
+            "most output components differ, by far more than rounding",
+            "the difference does not need any history to appear",
+        ),
+        what_would_confirm="re-run one call of each build from the same "
+                           "recorded entry state and show the outputs differ "
+                           "by the same amounts, then locate the statement in "
+                           "the generated source whose value differs",
+        what_would_refute="agreement on the first call, with the difference "
+                          "appearing only later")
+
+
+def _near_zero() -> Hypothesis:
+    return Hypothesis(
+        NEAR_ZERO,
+        claim="most of what was compared is too small a fraction of the "
+              "response to carry a claim either way, so the reported number is "
+              "about rounding in quantities that are not part of the answer",
+        predicts=("more components are below the resolvable fraction than "
+                  "above it",),
+        what_would_confirm="a deck that makes those components part of the "
+                           "response, and agreement or disagreement there",
+        what_would_refute="the worst difference sitting in a component that is "
+                          "a large fraction of the response")
+
+
+# ---------------------------------------------------------------------------
+# classification
+# ---------------------------------------------------------------------------
+def classify(primal: dict, source_text: str = "",
+             complete_increments: int = 0,
+             isolation: Optional[Any] = None,
+             iteration_counts_differ: Optional[int] = None) -> Signature:
+    """Raise every hypothesis the evidence permits, and mark where each stands.
+
+    ``isolation`` is a :class:`~umat_oti.abaqus.call_isolation.Isolation` --
+    the controlled single-call comparison. Without it nothing can be refuted
+    and nothing can be confirmed, and every hypothesis comes back open, because
+    the summary numbers alone cannot tell these mechanisms apart. That is the
+    point: the old version returned a confident name from exactly those
+    numbers.
+    """
+    worst = float(primal.get("worst_stress_relative") or 0.0)
+    state = float(primal.get("worst_state_relative") or 0.0)
+    # A non-finite worst-case is not improved by the other field being
+    # finite: max(inf, 1.29) is inf, and reporting 1.29 because the stress
+    # column was the one that went to NaN would rank an entry whose stresses
+    # are not numbers below one whose state moved by a percent.
+    magnitude = (math.inf if not (math.isfinite(worst) and math.isfinite(state))
+                 else max(worst, state))
+    at = list(primal.get("worst_stress_at") or ())
+    state_at = list(primal.get("worst_state_at") or ())
+
+    signature = Signature(magnitude=magnitude, where=_where(at or state_at))
+    raised: dict = {}
+
+    def raise_(builder) -> Hypothesis:
+        hypothesis = builder()
+        raised[hypothesis.name] = hypothesis
+        signature.hypotheses.append(hypothesis)
+        return hypothesis
+
+    # -- observations that stand on their own -----------------------------
+    if primal.get("non_finite_components"):
+        count = primal["non_finite_components"]
+        raise_(_non_finite).support(Evidence(
+            f"{count} compared values are not finite, so every comparison "
+            f"against them is False and the run establishes nothing about the "
+            f"model", FROM_PROBE))
+
+    # -- sign flip raises two rival hypotheses, never one -----------------
+    for label, row in (("stress", at), ("state", state_at)):
+        if len(row) >= 4:
+            left, right = float(row[2]), float(row[3])
+            if left * right < 0 and _closeness(left, right) <= SIGN_FLIP_CLOSENESS:
+                note = Evidence(
+                    f"the worst {label} pair is {left:.6g} against "
+                    f"{right:.6g}: opposite signs, magnitudes within "
+                    f"{_closeness(left, right):.1%} of each other, which one "
+                    f"number computed two ways does not produce",
+                    FROM_PROBE)
+                for builder in (_iterative_solver, _branch_divergence,
+                                _single_output_slot):
+                    if builder().name not in raised:
+                        raise_(builder).support(note)
+                    else:
+                        raised[builder().name].support(note)
+                break
+
+    if source_text and _ITERATION.search(source_text):
+        hypothesis = raised.get(ITERATIVE_SOLVER) or raise_(_iterative_solver)
+        hypothesis.support(Evidence(
+            "the source contains a convergence loop, so the mechanism is "
+            "available to it -- this says the construct exists, not that it "
+            "ran, and not that it ran differently", FROM_SOURCE_TEXT))
+    if source_text and _BRANCH_ON_STATE.search(source_text):
+        hypothesis = raised.get(BRANCH_DIVERGENCE) or raise_(_branch_divergence)
+        hypothesis.support(Evidence(
+            "the source branches on its own stress or state, so a difference "
+            "below the branch could decide which way it goes", FROM_SOURCE_TEXT))
+    if source_text and _FILE_IO.search(source_text) and _SAVED.search(source_text):
+        raise_(_data_or_lifetime).support(Evidence(
+            "the source reads a file and keeps what it read between calls",
+            FROM_SOURCE_TEXT))
+
+    unresolved = int(primal.get("unresolved_components") or 0)
+    resolved = int(primal.get("resolved_components") or 0)
+    if unresolved > resolved and magnitude > 0:
+        raise_(_near_zero).support(Evidence(
+            f"{unresolved} of {resolved + unresolved} components sit below "
+            f"the resolvable fraction of the response", FROM_PROBE))
+
+    # -- the controlled measurement ---------------------------------------
+    if isolation is not None:
+        _apply_isolation(signature, raised, raise_, isolation,
+                         iteration_counts_differ)
+    else:
+        for hypothesis in signature.hypotheses:
+            hypothesis.needs_abaqus(
+                "no controlled single-call comparison was supplied; pair the "
+                "two probe files with call_isolation.isolate_first_divergence "
+                "before any of this is more than a guess")
+
+    if not signature.hypotheses:
+        signature.hypotheses.append(Hypothesis(
+            UNCLASSIFIED,
+            claim="no mechanism has been proposed for this disagreement",
+            what_would_confirm="run call_isolation over the two probe files"))
+    return signature
+
+
+def _apply_isolation(signature: Signature, raised: dict, raise_,
+                     isolation: Any,
+                     iteration_counts_differ: Optional[int]) -> None:
+    """Let the controlled call speak: it refutes, it never confirms alone."""
+    from umat_oti.abaqus import call_isolation as ci
+
+    verdict = getattr(isolation, "verdict", None)
+    if verdict is None:                      # a plain dict from JSON
+        verdict = isolation.get("verdict")
+        get = isolation.get
+        beyond = isolation.get("output_slots_beyond_rounding") or []
+        total = isolation.get("output_slots_total") or 0
+        differing = isolation.get("output_slots_differing") or 0
+        call_index = isolation.get("call_index")
+        worst_input = isolation.get("worst_input_relative") or 0.0
+    else:
+        get = lambda name, default=None: getattr(isolation, name, default)
+        beyond = isolation.output_slots_beyond_rounding
+        total = isolation.output_slots_total
+        differing = isolation.output_slots_differing
+        call_index = isolation.call_index
+        worst_input = isolation.worst_input_relative
+
+    if verdict == ci.INPUTS_ALREADY_DIVERGED:
+        note = Evidence(
+            f"at the first divergent call the two builds had already been "
+            f"handed different arguments (worst {worst_input:.2e} of the "
+            f"block's scale), so nothing this call did is attributable to the "
+            f"routine", FROM_ISOLATION)
+        for hypothesis in signature.hypotheses:
+            hypothesis.support(note)
+            hypothesis.needs_abaqus(
+                "re-run one increment in both builds from the same recorded "
+                "entry state, so the call is controlled")
+        return
+    if verdict != ci.SAME_INPUTS_DIFFERENT_OUTPUTS:
+        for hypothesis in signature.hypotheses:
+            hypothesis.needs_abaqus(
+                f"the probe files could not be paired into controlled calls "
+                f"({verdict})")
+        return
+
+    controlled = Evidence(
+        f"at call {call_index} the two builds were handed arguments agreeing "
+        f"to {worst_input:.2e} of their own scale -- the call is controlled",
+        FROM_ISOLATION)
+    fraction = (len(beyond) / total) if total else 0.0
+    # SlotDifference carries `relative_to(scale)` as a method, not as an
+    # attribute: reading it with getattr(slot, "relative_to_block_scale", 0.0)
+    # returned the default for every object-shaped isolation, so every
+    # refutation printed "0.000e+00" beside a slot it had just called "beyond
+    # rounding", and the reduced-precision band -- which is a test on this very
+    # number -- could never be entered.
+    scales = ({} if isinstance(isolation, dict)
+              else getattr(isolation, "scales", {}) or {})
+    worst_output = 0.0
+    for slot in beyond:
+        if isinstance(slot, dict):
+            value = slot.get("relative_to_block_scale") or 0.0
+        else:
+            value = slot.relative_to(scales.get(slot.block, 0.0))
+        if value is None:
+            value = 0.0
+        if math.isfinite(value):
+            worst_output = max(worst_output, value)
+        else:
+            worst_output = math.inf
+            break
+
+    # ITERATIVE_SOLVER predicts that every output the loop writes has moved
+    # and that the builds took different numbers of passes. Two ways to lose.
+    hypothesis = raised.get(ITERATIVE_SOLVER)
+    if hypothesis is not None:
+        hypothesis.support(controlled)
+        if not beyond:
+            hypothesis.refute(Evidence(
+                f"at the first controlled call no output component differs by "
+                f"more than rounding ({differing} of {total} differ at all, "
+                f"none beyond it); a solve that stopped at a different iterate "
+                f"would have moved its outputs by about its own convergence "
+                f"tolerance, not by one unit in the last place",
+                FROM_ISOLATION))
+        elif fraction <= 0.25:
+            hypothesis.refute(Evidence(
+                f"at the first controlled call {len(beyond)} of {total} output "
+                f"components differ beyond rounding and the other "
+                f"{total - len(beyond)} are bit-identical; a different iterate "
+                f"of one solve moves everything the solve writes",
+                FROM_ISOLATION))
+        if iteration_counts_differ == 0:
+            hypothesis.refute(Evidence(
+                "both builds took the same number of passes through the "
+                "solver for every increment, which is the count this "
+                "hypothesis says must differ", FROM_PROBE))
+
+    # SINGLE_OUTPUT_SLOT predicts exactly the shape ITERATIVE_SOLVER forbids.
+    if beyond and fraction <= 0.25:
+        hypothesis = raised.get(SINGLE_OUTPUT_SLOT) or raise_(_single_output_slot)
+        hypothesis.support(controlled)
+        named = ", ".join(
+            f"{(s.get('block') if isinstance(s, dict) else s.block)}"
+            f"({(s.get('fortran_index') if isinstance(s, dict) else s.fortran_index)})"
+            for s in beyond[:6])
+        hypothesis.support(Evidence(
+            f"{len(beyond)} of {total} output components differ beyond "
+            f"rounding at the first controlled call ({named}); the remaining "
+            f"{total - len(beyond)} are bit-identical", FROM_ISOLATION))
+        hypothesis.needs_abaqus(
+            "re-run the same increment with the named component traced "
+            "through the generated source, to show which statement writes it")
+
+    # DIFFERENT_FUNCTION: most of the call moved, and it moved at call zero.
+    if beyond and fraction > 0.25:
+        hypothesis = raised.get(DIFFERENT_FUNCTION) or raise_(_different_function)
+        hypothesis.support(controlled)
+        hypothesis.support(Evidence(
+            f"{len(beyond)} of {total} output components differ beyond "
+            f"rounding at call {call_index}, the worst by {worst_output:.3e} "
+            f"of its field", FROM_ISOLATION))
+        if call_index == 0:
+            hypothesis.support(Evidence(
+                "and call 0 is the first call of the analysis, so no history "
+                "had accumulated and no path can be responsible",
+                FROM_ISOLATION))
+        else:
+            hypothesis.support(Evidence(
+                f"though the first divergence is at call {call_index}, not at "
+                f"the first call, so some accumulation preceded it",
+                FROM_ISOLATION))
+        hypothesis.needs_abaqus(
+            "re-run one call of each build from the recorded entry state of "
+            "this call and show the same two answers come back")
+
+    # REDUCED_PRECISION predicts a first-call difference near single epsilon.
+    if beyond and math.isfinite(worst_output) and \
+            LAST_PLACE * 50 < worst_output < SINGLE_PRECISION_EPSILON * 50:
+        hypothesis = raised.get(REDUCED_PRECISION_INPUT) or raise_(_reduced_precision)
+        hypothesis.support(controlled)
+        hypothesis.support(Evidence(
+            f"the first controlled call differs by {worst_output:.3e} of the "
+            f"field, which is {worst_output / SINGLE_PRECISION_EPSILON:.2g} "
+            f"times single-precision epsilon and "
+            f"{worst_output / LAST_PLACE:.2g} times a double's last place",
+            FROM_ISOLATION))
+        hypothesis.needs_abaqus(
+            "compare the generated source's constants against the original's "
+            "at both precisions, then re-run with the constant restored")
+
+    # ROUND_OFF_GROWTH predicts nothing beyond rounding at the first call.
+    hypothesis = raised.get(ROUND_OFF_GROWTH) or raise_(_round_off_growth)
+    hypothesis.support(controlled)
+    if beyond:
+        hypothesis.refute(Evidence(
+            f"the first controlled call already differs by {worst_output:.3e} "
+            f"of the field in {len(beyond)} components, which is "
+            f"{worst_output / LAST_PLACE:.3g} times a double's last place; "
+            f"rounding does not start there", FROM_ISOLATION))
+    else:
+        hypothesis.support(Evidence(
+            f"at the first controlled call {differing} of {total} components "
+            f"differ and none by more than rounding", FROM_ISOLATION))
+        hypothesis.needs_abaqus(
+            "measure the ORIGINAL build's own sensitivity by reassociating "
+            "its arithmetic: until that moves the history by a comparable "
+            "amount, 'this is round-off' is an assumption, and it is never a "
+            "reason to widen the tolerance")
+
+    # NON_FINITE, if raised, is settled by where the first non-finite value is.
+    hypothesis = raised.get(NON_FINITE)
+    if hypothesis is not None and not math.isfinite(worst_output):
+        hypothesis.support(Evidence(
+            f"the first controlled call already returns a non-finite output "
+            f"from finite, bit-identical inputs", FROM_ISOLATION))
+
+    # DATA_OR_LIFETIME predicts agreement on the first call.
+    hypothesis = raised.get(DATA_OR_LIFETIME)
+    if hypothesis is not None and call_index == 0 and beyond:
+        hypothesis.refute(Evidence(
+            "the two builds already differ on the very first call of the "
+            "analysis, before anything could have been saved between calls",
+            FROM_ISOLATION))
+
+
+@dataclass(frozen=True)
+class RecordedConfirmation:
+    """A reproduction that was performed, keyed to what it observed.
+
+    A confirmation has to be re-checkable, not remembered. Each entry here
+    names the exact output component and the exact two values a controlled
+    call produced. It is applied only when a fresh isolation reproduces those
+    values bit for bit -- so if the transform changes, or the deck changes, or
+    the numbers move at all, the confirmation stops applying and the hypothesis
+    goes back to open rather than standing on a note somebody wrote once.
+    """
+
+    hypothesis: str
+    root_cause: str
+    reproduction: Reproduction
+    block: str
+    fortran_index: int
+    original: float
+    transformed: float
+    #: The named component must be the ONLY one beyond rounding. That is the
+    #: substance of the claim: a call reproduced except for this one slot.
+    sole_slot_beyond_rounding: bool = True
+
+    def matches(self, isolation) -> bool:
+        beyond = (isolation.get("output_slots_beyond_rounding")
+                  if isinstance(isolation, dict)
+                  else isolation.output_slots_beyond_rounding) or []
+        if self.sole_slot_beyond_rounding and len(beyond) != 1:
+            return False
+        for slot in beyond:
+            block = slot.get("block") if isinstance(slot, dict) else slot.block
+            index = (slot.get("fortran_index") if isinstance(slot, dict)
+                     else slot.fortran_index)
+            left = slot.get("original") if isinstance(slot, dict) else slot.original
+            right = (slot.get("transformed") if isinstance(slot, dict)
+                     else slot.transformed)
+            if (block, index) == (self.block, self.fortran_index) and \
+                    left == self.original and right == self.transformed:
+                return True
+        return False
+
+
+#: Confirmations performed against the pass9 probe records. Each was a
+#: controlled comparison of two real Abaqus runs, not a re-reading of a summary.
+CONFIRMED_FINDINGS: tuple = (
+    RecordedConfirmation(
+        hypothesis=SINGLE_OUTPUT_SLOT,
+        root_cause=(
+            "the transformed build writes exactly one of the 150 state "
+            "variables -- STATEV(2*NSLPTL+1), the first resolved shear stress "
+            "-- with -1.6982275886200392e-30 where the author's build writes "
+            "-73.46290748654624, while returning all four stress components "
+            "and the other 149 state variables to within 5e-17 of the "
+            "author's build from bit-identical arguments. The failure is the "
+            "writing of that one slot. Which statement writes it is NOT "
+            "established here: the slot is the actual argument passed by "
+            "element address to STRAINRATE_OTI, LATENTHARDEN_OTI and "
+            "ITERATION_OTI, which are compiled into a separate object "
+            "(umat_oti_helpers.o) with array dummies, and that is a lead, not "
+            "a finding"),
+        reproduction=Reproduction(
+            held_fixed=(
+                "the deck, the element, the integration point, the increment "
+                "and the entry state: at call 4 (element 1, point 1, "
+                "increment 1, t=0) STRESS0 and STATEV0 are all zero in both "
+                "builds and every other argument agrees to 1.07e-47 of its "
+                "own scale; both builds took two solver passes in every one "
+                "of the 140 increments, so the number of passes is held fixed "
+                "as well"),
+            varied="only the build: the author's source compiled unchanged "
+                   "against the OTI-transformed source of the same file",
+            observed=(
+                "of 154 output components, 153 agree -- the four stresses to "
+                "5.0e-17 of the stress field -- and exactly one does not: "
+                "STATEV(25) is -73.46290748654624 in the original and "
+                "-1.6982275886200392e-30 in the transformed build, a "
+                "difference of 24.9% of the state field"),
+            where="corpus_run/pass9/work/{0d97f9db648d23a064062989,"
+                  "73bdb227267602e659445b72,71a0523bc387a9b773773a24}",
+            repeatable=True),
+        block="STATEV", fortran_index=25,
+        original=-73.46290748654624,
+        transformed=-1.6982275886200392e-30),
+)
+
+
+def apply_recorded_confirmations(signature: Signature, isolation) -> Signature:
+    """Mark a hypothesis confirmed when a recorded reproduction still matches.
+
+    Confirmation is never inferred from the classification. It is applied only
+    when the measurement in front of us is the measurement the experiment made.
+    """
+    for finding in CONFIRMED_FINDINGS:
+        if not finding.matches(isolation):
+            continue
+        for hypothesis in signature.hypotheses:
+            if hypothesis.name != finding.hypothesis:
+                continue
+            if hypothesis.confirmation_status == REFUTED:
+                continue
+            hypothesis.confirm(finding.root_cause, finding.reproduction)
+    return signature
+
+
+def review_entry(primal: dict, work_dir, source_text: str = "") -> Signature:
+    """Classify one entry against the probe files its run left behind.
+
+    This is the whole point of the restructuring in one function: the summary
+    numbers raise the hypotheses, and the recorded calls decide which of them
+    survive. An entry reviewed without its probe files comes back with every
+    hypothesis open, which is the honest answer for it.
+
+    Both isolations are used. The bit-level one establishes that the call was
+    controlled -- that the solver handed both builds the same arguments -- and
+    the material one finds where the routine first returned an answer that
+    rounding cannot explain. Classifying on the bit-level one alone reports
+    every entry in this corpus as round-off, because every entry's first
+    difference of any kind is at the last place of the first call.
+    """
+    from umat_oti.abaqus import call_isolation as ci
+
+    try:
+        original, transformed = ci.read_pair(work_dir)
+    except Exception as error:                     # pragma: no cover - I/O
+        signature = classify(primal, source_text)
+        for hypothesis in signature.hypotheses:
+            hypothesis.needs_abaqus(
+                f"the probe files could not be read ({type(error).__name__}), "
+                f"so no call could be controlled")
+        return signature
+    if not original or not transformed:
+        signature = classify(primal, source_text)
+        for hypothesis in signature.hypotheses:
+            hypothesis.needs_abaqus(
+                "one of the builds left no probe records, so no call could be "
+                "controlled")
+        return signature
+
+    left, right = ci.pair_calls(original), ci.pair_calls(transformed)
+    counts_left, counts_right = ci.iteration_counts(left), ci.iteration_counts(right)
+    differ = sum(1 for key in set(counts_left) | set(counts_right)
+                 if counts_left.get(key, 0) != counts_right.get(key, 0))
+
+    non_finite_original = ci.first_non_finite(left)
+    non_finite_transformed = ci.first_non_finite(right)
+
+    material = ci.isolate_first_divergence(original, transformed,
+                                           require_beyond_rounding=True)
+    any_bit = ci.isolate_first_divergence(original, transformed)
+    chosen = material if material.verdict == ci.SAME_INPUTS_DIFFERENT_OUTPUTS \
+        else any_bit
+
+    signature = classify(primal, source_text, isolation=chosen,
+                         iteration_counts_differ=differ)
+    apply_recorded_confirmations(signature, chosen)
+    beyond_at = (f"call {material.call_index}" if material.call_index >= 0
+                 else "no call in the whole run")
+    increments = len(set(counts_left) | set(counts_right))
+    note = Evidence(
+        f"the two builds first differ at all at call {any_bit.call_index} and "
+        f"first differ beyond rounding at {beyond_at}; they took a different "
+        f"number of solver passes in {differ} of {increments} increments",
+        FROM_PROBE)
+    for hypothesis in signature.hypotheses:
+        hypothesis.supporting_evidence.append(note) \
+            if hypothesis.confirmation_status != REFUTED else None
+
+    if non_finite_original is not None:
+        where = non_finite_original
+        signature.blocking_observations.append(Evidence(
+            f"the ORIGINAL build's own record goes non-finite first at call "
+            f"{where['call_index']} ({where['block']} components "
+            f"{where['components']}, increment {where['at']['increment']}), so "
+            f"the reference this entry is measured against left its own "
+            f"domain on this deck"
+            + (f"; the transformed build reached the same state at call "
+               f"{non_finite_transformed['call_index']}"
+               if non_finite_transformed else "")
+            + ". Which of two builds reaches NaN first is not a measurement "
+              "of a transform, and this entry cannot support a claim about "
+              "one until the deck keeps the author's model inside its domain",
+            FROM_PROBE))
+    return signature
