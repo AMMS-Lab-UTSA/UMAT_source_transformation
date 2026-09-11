@@ -74,6 +74,64 @@ class PrimalComparison:
 ABSOLUTE_FLOOR_FRACTION = 1e-12
 
 
+#: How close two increment times have to be to be the same increment.
+#: Two builds that walked the same increments agree here to the last bit;
+#: this tolerates only the printed precision.
+SAME_TIME = 1e-9
+
+
+def align_by_time(left: Sequence[dict], right: Sequence[dict]
+                  ) -> tuple[list[dict], list[dict], str]:
+    """Pair two histories by WHERE they are, not by how many records each has.
+
+    Two builds of the same model do not always walk the same increments. A
+    displacement-controlled step caps the increment at its initial size, so
+    both take the same ones and the histories line up position for position.
+    A load-controlled step does not: Abaqus cuts back when Newton needs it
+    to, and the converted build does not return the author's analytic DDSDDE
+    -- it returns the OTI tangent, and a different tangent converges at a
+    different rate. Measured on BodyForce-Growth-2Stages.for: the original
+    took the ten increments asked for and the converted build took sixteen.
+
+    Zipping those compares increment 3 of one with increment 3 of the other
+    at different times, which is not a comparison of anything. Forcing both
+    onto a fixed increment does not help either: measured on the same model,
+    the ORIGINAL then reports FIXED TIME INCREMENT IS TOO LARGE at t=0.15,
+    because its stiffness changes along the path and it needs the cutbacks.
+
+    So the records are paired on the step, the integration point and the time
+    they were taken at. What comes back is what both builds actually reached,
+    and a sentence saying how much of each was used -- because a comparison
+    resting on three of forty increments is a different claim from one
+    resting on forty.
+    """
+    def key(record: dict) -> tuple:
+        return (int(record.get("step") or 0),
+                int(record.get("element") or 0),
+                int(record.get("point") or 0),
+                round(float(record.get("time") or 0.0) / SAME_TIME))
+
+    if len(left) == len(right) and all(
+            key(a) == key(b) for a, b in zip(left, right)):
+        return list(left), list(right), ""
+
+    index: dict = {}
+    for record in right:
+        index.setdefault(key(record), record)
+    paired_left: list[dict] = []
+    paired_right: list[dict] = []
+    for record in left:
+        match = index.pop(key(record), None)
+        if match is not None:
+            paired_left.append(record)
+            paired_right.append(match)
+    note = (f"the two builds walked different increments, so the comparison "
+            f"is over the {len(paired_left)} that the original's {len(left)} "
+            f"and the converted build's {len(right)} records share by step, "
+            f"integration point and time")
+    return paired_left, paired_right, note
+
+
 def compare_primal(
     original: Sequence[dict],
     transformed: Sequence[dict],

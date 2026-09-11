@@ -141,12 +141,48 @@ def _orientation(manifest: VerificationManifest) -> list[str]:
 
 
 def _boundary_for(segment: LoadingSegment, nodes, plane: bool = False) -> list[str]:
+    if segment.body_force:
+        return _rigid_body_restraint(segment, nodes, plane)
     lines = []
     for index, x, y, z in nodes:
         ux, uy, uz = _displacement((x, y, z), segment.strain)
         components = (ux, uy) if plane else (ux, uy, uz)
         for dof, value in enumerate(components, start=1):
             lines.append(f"{index}, {dof}, {dof}, {_fmt(value)}")
+    return lines
+
+
+def _rigid_body_restraint(segment: LoadingSegment, nodes,
+                          plane: bool = False) -> list[str]:
+    """Hold the face the author holds, and nothing else.
+
+    A body force does work only on degrees of freedom that are free. Holding
+    every node -- which is what a prescribed-displacement segment does -- makes
+    the load do nothing, so the element never deforms and the routine is asked
+    about a state it never reaches.
+
+    The held face is the one at x = 0: the author's ``LeftEnd`` on a
+    cantilever plate. Which degrees of freedom it keeps is
+    ``segment.held``, read from the author's own ``*BOUNDARY``. Out-of-plane
+    restraint, where the deck asks for it, is applied to every node, because
+    that is a plane-strain condition rather than a support.
+    """
+    lines: list[str] = []
+    held = tuple(segment.held) or (1, 2)
+    in_plane = tuple(dof for dof in held if dof <= (2 if plane else 3))
+    face = [index for index, x, _y, _z in nodes if abs(float(x)) < 1e-12]
+    if not face:                                   # pragma: no cover - defensive
+        face = [nodes[0][0]]
+    for index in face:
+        for dof in in_plane:
+            lines.append(f"{index}, {dof}, {dof}, 0.0")
+    # The third direction, when the deck constrains it everywhere, is the
+    # plane-strain condition and belongs on every node rather than on the
+    # held face alone.
+    if not plane and 3 in held:
+        for index, *_ in nodes:
+            if index not in face:
+                lines.append(f"{index}, 3, 3, 0.0")
     return lines
 
 
@@ -202,6 +238,12 @@ def generate_deck(manifest: VerificationManifest) -> str:
             "*BOUNDARY, OP=NEW",
         ]
         lines += _boundary_for(segment, nodes, plane)
+        if segment.body_force:
+            # The reference magnitudes are the author's; the source's own
+            # SUBROUTINE DLOAD scales them. Nothing here chooses a force.
+            lines.append("*DLOAD, OP=NEW")
+            for label, magnitude in segment.body_force:
+                lines.append(f"ONE, {label}, {_fmt(magnitude)}")
         lines += [
             "*OUTPUT, FIELD, FREQUENCY=1",
             "*ELEMENT OUTPUT, POSITION=INTEGRATION POINTS",

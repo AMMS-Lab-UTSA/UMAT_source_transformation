@@ -79,6 +79,10 @@ FROM_ABAQUS_STAGE: dict[str, str] = {
     "incomplete_or_corrupt_source": BLOCKED,
     "external_dependency_unavailable": BLOCKED,
     "both_builds_non_finite": "abaqus_transformed_passed",
+    # The amplitude search established the model has no domain under any
+    # loading this harness builds. It got as far as a manifest and no
+    # further, which is where a source with no experiment stops.
+    "experiment_not_generated": "metadata_resolved",
 }
 
 

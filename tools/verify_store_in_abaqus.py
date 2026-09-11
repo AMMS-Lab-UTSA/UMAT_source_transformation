@@ -82,7 +82,8 @@ from make_verification_manifest import choose_material, portable_source  # noqa:
 from run_abaqus_verification import run_one                             # noqa: E402
 from run_discovered_verification import _cache_relative_source          # noqa: E402
 from run_discovery_triage import without_machine_paths                  # noqa: E402
-from umat_oti.abaqus.compare import compare_primal, compare_tangent     # noqa: E402
+from umat_oti.abaqus.compare import (align_by_time, compare_primal,   # noqa: E402
+                                     compare_tangent)
 from umat_oti.abaqus.deck import generate_deck                          # noqa: E402
 from umat_oti.abaqus.activation import detect_activation                # noqa: E402
 from umat_oti.abaqus.state_regime import (                              # noqa: E402
@@ -97,7 +98,7 @@ from umat_oti.abaqus.elements import geometry_for as element_geometry   # noqa: 
 from umat_oti.abaqus.formulation import settle                          # noqa: E402
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
     LoadingSegment, NEEDS_MATERIAL_DATA, VerificationManifest, at_rate, hold,
-    reverse, simple_shear, uniaxial)
+    reverse, simple_shear, uniaxial, under_body_force)
 from umat_oti.abaqus.rate_search import (                               # noqa: E402
     HOLD_PERIODS, RATE_FACTOR, probe_time)
 from umat_oti.abaqus.job_status import blocking_statements
@@ -154,6 +155,18 @@ HARNESS_ERROR = "harness_error"
 #: were reported as UMAT tangent failures. Reported in its own column now, and
 #: never inside a count of UMATs that verified or failed.
 NOT_A_UMAT = "not_a_umat"
+
+#: ON the ladder, and ours: the amplitude search established that the model
+#: produces no numbers at any amplitude it can drive, so this harness has no
+#: experiment the source will run. Not a failure of the model and not a
+#: disagreement between the builds. Twenty-two entries were driven at the
+#: fixed 0.005 probe AFTER the search had proved the domain does not reach
+#: 8e-07, and came back as "both builds went non-finite" -- a sentence that
+#: reads like a conversion problem and is a missing experiment. Every one of
+#: them carries a SUBROUTINE DLOAD beside its UMAT and is driven by a body
+#: force through a COMMON block, which a prescribed-displacement deck never
+#: supplies.
+NO_EXPERIMENT = "experiment_not_generated"
 
 #: Off the ladder for the same reason as NOT_A_UMAT: the file the author
 #: published does not compile, and no amount of work here changes that. A job
@@ -899,10 +912,43 @@ BEYOND_TRANSITION = 4.0
 RESOLUTION_FACTORS = (400.0, 100.0, 25.0)
 
 
+def body_force_loading(source: Path, deck: Optional[Path], increments: int
+                       ) -> tuple[Optional[Any], str]:
+    """The author's own body force, when that is what drives this source.
+
+    Returns the loading segment and a sentence saying where every number in
+    it came from, or ``None`` and a sentence saying what was missing. A
+    source that defines DLOAD but whose repository publishes no deck naming
+    the components is not given a force this pipeline invented.
+    """
+    from umat_oti.abaqus.body_force import (defines_dload, held_directions,
+                                            read_loads)
+    try:
+        text = Path(source).read_text(errors="replace")
+    except OSError as error:                       # pragma: no cover
+        return None, f"; the source could not be read: {error}"
+    if not defines_dload(text):
+        return None, ""
+    if not deck or not Path(deck).is_file():
+        return None, ("; this source defines SUBROUTINE DLOAD, so it is "
+                      "driven by a body force, but no deck is paired with it "
+                      "to say which components carry it")
+    loads = read_loads(Path(deck))
+    if not loads.driven:
+        return None, (f"; this source defines SUBROUTINE DLOAD, but "
+                      f"{Path(deck).name} names no non-uniform body-force "
+                      f"component for it")
+    held = held_directions(Path(deck)) or (1, 2)
+    return under_body_force(loads.components, held=held,
+                            increments=increments,
+                            provenance=loads.provenance), loads.provenance
+
+
 def discover_loading(manifest: VerificationManifest, original: Path,
                      work_dir: Path, timeout: int, *,
                      increments: int = 10, form: str = "",
                      data_roots: Sequence[Path] = (),
+                     deck: Optional[Path] = None,
                      enabled: bool = True) -> tuple[VerificationManifest, dict]:
     """Raise the amplitude on the ORIGINAL until the material does something.
 
@@ -985,8 +1031,19 @@ def discover_loading(manifest: VerificationManifest, original: Path,
     amplitude = found.amplitude
     if not amplitude:
         if found.outcome == LEFT_ITS_DOMAIN:
+            # Before giving up: a prescribed-displacement deck is the wrong
+            # question for a model driven by a force per unit volume. If this
+            # source carries the routine Abaqus calls for one, and its author
+            # published a deck saying which components carry it, that is the
+            # experiment -- and nothing about it is chosen here.
+            driven, note = body_force_loading(original, deck, increments)
+            if driven is not None:
+                record["chosen_amplitude"] = 0.0
+                record["body_force"] = note
+                record["refused"] = ""
+                return replace(manifest, loading=(driven,)), record
             record["chosen_amplitude"] = 0.0
-            record["refused"] = found.reason
+            record["refused"] = f"{found.reason}{note}"
             return manifest, record
         amplitude = manifest.loading[0].strain[0]
     if found.outcome == ACTIVATED and amplitude:
@@ -2556,8 +2613,22 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     if not kept:
         manifest, discovery = discover_loading(
             manifest, Path(original), work, timeout, form=source_form,
-            increments=increments, data_roots=data_roots, enabled=discover)
+            increments=increments, data_roots=data_roots, enabled=discover,
+            deck=(Path(cache_root) / plan.deck) if plan.deck else None)
         record["discovery"] = discovery
+        # A search that established the model has no domain here has decided
+        # something, and running the fixed probe afterwards contradicts it.
+        # Twenty-two entries were driven at 0.005 -- fifty times the smallest
+        # amplitude that had ALREADY returned NaN -- and came back as "both
+        # builds went non-finite", which reads as a disagreement between the
+        # builds and is nothing of the kind. Every one of them is a source
+        # this harness has no experiment for, and that is ours to say.
+        if discovery.get("refused"):
+            record["no_experiment"] = discovery["refused"]
+            return settle(
+                f"this harness generated no experiment this source will run: "
+                f"{discovery['refused']}",
+                stage=NO_EXPERIMENT)
 
     # The whole manifest, as it will actually be run. This is what makes a
     # regression deterministic: the amplitude the search chose, the segments
@@ -2717,6 +2788,14 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
 
     compared_original, compared_transformed, stopped_at = common_finite_prefix(
         list(original_history), list(transformed_history))
+    # Paired by step, integration point and time before anything is compared:
+    # two builds of the same model do not always walk the same increments, and
+    # zipping them compares increment 3 of one with increment 3 of the other
+    # at different times. See align_by_time.
+    compared_original, compared_transformed, alignment = align_by_time(
+        compared_original, compared_transformed)
+    if alignment:
+        record["primal_alignment"] = alignment
     primal = compare_primal(compared_original, compared_transformed,
                             tolerance=manifest.primal_tolerance,
                             near_zero_fraction=manifest.near_zero_fraction)

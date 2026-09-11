@@ -40,6 +40,16 @@ class LoadingSegment:
     #: Step time. Rate-dependent models read DTIME from it.
     period: float = 1.0
     description: str = ""
+    #: Body-force components this segment applies, as the author's own deck
+    #: names them: ``(("BYNU", 1.0),)``. A segment carrying these is driven by
+    #: a force per unit volume that the source's own SUBROUTINE DLOAD
+    #: computes, not by prescribed displacement, so the deck holds only the
+    #: rigid-body modes and lets the element deform. See
+    #: :mod:`umat_oti.abaqus.body_force`.
+    body_force: tuple[tuple[str, float], ...] = ()
+    #: Which degrees of freedom the held face keeps, read from the author's
+    #: deck. Only meaningful beside ``body_force``.
+    held: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -191,6 +201,25 @@ def simple_shear(strain: float = 0.01, increments: int = 10) -> LoadingSegment:
     return LoadingSegment(
         "simple_shear", (0.0, 0.0, 0.0, strain, 0.0, 0.0), increments,
         description="prescribed engineering shear in the x-y plane")
+
+
+def under_body_force(components: tuple, held: tuple = (1, 2),
+                     increments: int = 10, period: float = 1.0,
+                     provenance: str = "") -> LoadingSegment:
+    """The author's own body force, over the author's own step time.
+
+    No strain is prescribed: the element is held only where the author's deck
+    holds it, and deforms under the force its own DLOAD routine computes.
+    Nothing about the magnitude is chosen here -- the reference values come
+    from the deck and the routine scales them.
+    """
+    return LoadingSegment(
+        "body_force", (0.0,) * 6, increments, period,
+        description=("the author's own body force, applied through the "
+                     "source's SUBROUTINE DLOAD; the element is held only "
+                     "where rigid-body motion requires"
+                     + (f" ({provenance})" if provenance else "")),
+        body_force=tuple(components), held=tuple(held))
 
 
 def hold(segment: LoadingSegment, period: float = 10.0,
