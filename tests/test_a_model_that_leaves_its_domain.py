@@ -27,13 +27,32 @@ from verify_store_in_abaqus import (MINIMUM_COMPARABLE_INCREMENTS,  # noqa: E402
 NAN = float("nan")
 
 
-def _r(*values):
-    return {"STRESS": list(values), "STATEV": []}
+#: A history record now has to say WHICH increment and material point it is:
+#: a count of records is not a count of increments, and the grouping these
+#: functions do is the whole point. One point per increment here, so the two
+#: counts coincide and the assertions below still read as they did.
+_NEXT = [0]
+
+
+def _r(*values, step=1, increment=None, element=1, point=1):
+    if increment is None:
+        _NEXT[0] += 1
+        increment = _NEXT[0]
+    return {"STRESS": list(values), "STATEV": [], "step": step,
+            "increment": increment, "element": element, "point": point,
+            "time": increment * 0.1}
+
+
+def _history(*rows):
+    """A history whose increments are numbered from one, in order."""
+    return [_r(*row, increment=number) if isinstance(row, tuple)
+            else _r(row, increment=number)
+            for number, row in enumerate(rows, start=1)]
 
 
 def test_both_builds_leaving_together_truncates_to_what_they_computed():
     history = [_r(1.0), _r(2.0), _r(NAN), _r(NAN)]
-    left, right, stopped = common_finite_prefix(history, list(history))
+    left, right, stopped, _grouping = common_finite_prefix(history, list(history))
     assert len(left) == len(right) == 2
     assert stopped == 2
 
@@ -43,7 +62,7 @@ def test_the_transformed_build_leaving_first_is_not_truncated():
     failing rather than being trimmed away."""
     original = [_r(1.0), _r(2.0), _r(3.0), _r(4.0)]
     transformed = [_r(1.0), _r(NAN), _r(NAN), _r(NAN)]
-    left, right, stopped = common_finite_prefix(original, transformed)
+    left, right, stopped, _grouping = common_finite_prefix(original, transformed)
     assert stopped == -1
     assert len(left) == 4 and len(right) == 4
 
@@ -56,14 +75,16 @@ def test_the_original_leaving_first_is_not_truncated_either():
 
 def test_a_history_that_stays_finite_is_untouched():
     history = [_r(1.0), _r(2.0)]
-    left, right, stopped = common_finite_prefix(history, list(history))
+    left, right, stopped, _grouping = common_finite_prefix(history, list(history))
     assert stopped == -1 and len(left) == 2
 
 
 def test_a_non_finite_state_variable_counts_too():
     """A model can keep returning a stress while its state goes bad."""
-    history = [{"STRESS": [1.0], "STATEV": [0.0]},
-               {"STRESS": [2.0], "STATEV": [NAN]}]
+    history = [{"STRESS": [1.0], "STATEV": [0.0], "step": 1, "increment": 1,
+                "element": 1, "point": 1},
+               {"STRESS": [2.0], "STATEV": [NAN], "step": 1, "increment": 2,
+                "element": 1, "point": 1}]
     assert common_finite_prefix(history, list(history))[2] == 1
 
 
@@ -100,7 +121,7 @@ def test_probe_records_come_from_the_finite_window():
     read as a tangent that could not be verified.
     """
     history = [_r(float(i)) for i in range(1, 6)] + [_r(NAN)] * 5
-    left, right, stopped = common_finite_prefix(history, list(history))
+    left, right, stopped, _grouping = common_finite_prefix(history, list(history))
     assert stopped == 5 and len(left) == 5
 
     replayable = [{"DDSDDE": [1.0] * 36, "entry": {"STRESS0": [0.0]},
@@ -131,7 +152,7 @@ def test_the_primal_window_is_what_bounds_the_tangent():
     scope line, so the two cannot drift apart."""
     finite = [_r(1.0), _r(2.0), _r(3.0)]
     tail = [_r(NAN)] * 4
-    left, _right, stopped = common_finite_prefix(finite + tail,
+    left, _right, stopped, _grouping = common_finite_prefix(finite + tail,
                                                  list(finite + tail))
     assert stopped == len(finite) == len(left)
 

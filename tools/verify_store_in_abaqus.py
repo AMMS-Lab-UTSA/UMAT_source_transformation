@@ -90,12 +90,13 @@ from umat_oti.abaqus.state_regime import (                              # noqa: 
     SMOOTH_INELASTIC, classify as classify_regime, coverage,
     response_character)
 from umat_oti.abaqus.amplitude_search import (                          # noqa: E402
-    ACTIVATED, LEFT_ITS_DOMAIN, LINEAR_TO_THE_CEILING, first_non_finite,
-    search_amplitude)
+    ACTIVATED, LEFT_ITS_DOMAIN, LINEAR_TO_THE_CEILING, enough_to_drive,
+    first_non_finite, search_amplitude)
 from umat_oti.corpus.entry_routines import classify as classify_entry   # noqa: E402
 from umat_oti.fortran.normalize import detect_source_form              # noqa: E402
 from umat_oti.abaqus.elements import geometry_for as element_geometry   # noqa: E402
 from umat_oti.abaqus.formulation import settle                          # noqa: E402
+from umat_oti.abaqus import frames, safe_loading                        # noqa: E402
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
     LoadingSegment, NEEDS_MATERIAL_DATA, VerificationManifest, at_rate, hold,
     reverse, simple_shear, uniaxial, under_body_force)
@@ -944,6 +945,286 @@ def body_force_loading(source: Path, deck: Optional[Path], increments: int
                             provenance=loads.provenance), loads.provenance
 
 
+def settle_on_safe_loading(loading, amplitude: float,
+                           manifest: VerificationManifest, original: Path,
+                           attempts_dir: Path, timeout: int, *,
+                           increments: int, form: str,
+                           data_roots: Sequence[Path]) -> tuple[list, dict]:
+    """Run the chosen loading whole, and repair it until nothing in it is NaN.
+
+    A finite prefix is what a search learns the edge of a domain from; it is
+    not what a verification rests on. See
+    :mod:`umat_oti.abaqus.safe_loading`.
+
+    The repair is not "shrink the amplitude". Before anything is changed the
+    failure is PROBED: the same loading is run at half the amplitude and at
+    four times the increment resolution, and what matters is not whether it
+    still broke but whether the break MOVED. A failure whose location is
+    unchanged when the amplitude is halved is not controlled by the
+    amplitude, and halving it again is the same experiment driven less far,
+    failing in the same place. Only once the responding quantity is known is
+    the corresponding one adapted.
+
+    Every run here is on the ORIGINAL. The converted build is never
+    consulted: a loading chosen with it in view would be a loading chosen to
+    agree.
+    """
+    report: dict[str, Any] = {"attempts": [], "complete": False}
+    points = frames.points_for(manifest.element_type)
+
+    def walk(working, here, label):
+        """One real Abaqus job on the original, and what it reached."""
+        trial = attempts_dir / f"safe_{label}_{here:.6e}"
+        candidate = replace(manifest, loading=tuple(working))
+        try:
+            outcome = run_one(manifest=candidate, timeout=timeout,
+                              source=Path(original), job="original",
+                              work_dir=trial, support_dir=None, form=form,
+                              data_roots=data_roots)
+        except Exception as exc:                   # noqa: BLE001
+            return None, f"the job raised {type(exc).__name__}: {exc}"
+        evidence = job_evidence(outcome)
+        if not evidence.completed:
+            return None, ("; ".join(evidence.reasons)
+                          or "the job did not complete")
+        return safe_loading.examine(history_of(trial, "original"),
+                                    expected_points=points), ""
+
+    def how_far(prefix, working) -> tuple:
+        """How far along the path a run got, as a FRACTION, and where.
+
+        A fraction: refining the resolution fourfold turns "22 of 40
+        increments" into "88 of 160", and comparing the counts would say the
+        failure moved when both are the same 55% of the same path.
+        """
+        if prefix is None:
+            return -1.0, 0
+        total = sum(int(segment.increments) for segment in working) or 1
+        step = (prefix.first_bad[0] if not prefix.complete else 0)
+        return prefix.usable / total, step
+
+    prefix, why = walk(loading, amplitude, "as_chosen")
+    if prefix is None:
+        report["reason"] = why
+        return list(loading), report
+    if not prefix.records:
+        # The job ran and wrote no history at all. That is not an experiment
+        # that reached past the edge of a domain, and blaming the loading for
+        # it would report a stub routine, a probe with no call site or a
+        # support library that never built as "this harness has no experiment
+        # for this source". Say what happened and let the ladder reach the
+        # rung that can name the real cause.
+        report["recorded_nothing"] = True
+        report["reason"] = ""
+        report["did_not_run"] = (
+            "the job ran over the chosen loading and recorded no history at "
+            "all, so nothing here is a statement about the loading")
+        return list(loading), report
+    report["prefix"] = prefix.as_dict()
+    reached, broke_in = how_far(prefix, loading)
+    report["attempts"].append({"varied": "none", "value": amplitude,
+                               "reached": reached, "step": broke_in,
+                               "complete_increments": prefix.usable,
+                               "reason": prefix.reason()[:200]})
+    if prefix.complete:
+        report.update(complete=True, amplitude=amplitude, reason=prefix.reason())
+        return list(loading), report
+
+    # It broke. Find out what the break responds to before repairing it.
+    probes = [{"varied": "amplitude", "value": amplitude,
+               "reached": reached, "step": broke_in}]
+    halved, why = walk(_rescaled(loading, 0.5), amplitude * 0.5, "half")
+    half_reached, half_step = how_far(halved, loading)
+    probes.append({"varied": "amplitude", "value": amplitude * 0.5,
+                   "reached": half_reached, "step": half_step,
+                   "reason": why[:160]})
+    finer_loading = _refined(loading, 4)
+    finer, why = walk(finer_loading, amplitude, "finer")
+    fine_reached, fine_step = how_far(finer, finer_loading)
+    probes.append({"varied": "increments", "value": increments * 4,
+                   "reached": fine_reached, "step": fine_step,
+                   "reason": why[:160]})
+    probes.append({"varied": "increments", "value": increments,
+                   "reached": reached, "step": broke_in})
+    mechanism = safe_loading.classify(probes)
+    report["failure_mechanism"] = mechanism.as_dict()
+
+    if halved is not None and halved.complete:
+        report.update(complete=True, amplitude=amplitude * 0.5,
+                      reason=(f"{mechanism.reason}; halving the amplitude gave "
+                              f"a run finite throughout: {halved.reason()}"))
+        report["prefix"] = halved.as_dict()
+        return _rescaled(loading, 0.5), report
+    if finer is not None and finer.complete:
+        report.update(complete=True, amplitude=amplitude,
+                      reason=(f"{mechanism.reason}; refining the increments "
+                              f"gave a run finite throughout: "
+                              f"{finer.reason()}"))
+        report["prefix"] = finer.as_dict()
+        return _refined(loading, 4), report
+
+    if mechanism.kind == safe_loading.PATH_SEGMENT_LIMITED and broke_in > 0:
+        # The model will not do that segment at all -- a growth law declining
+        # to be driven backwards is not an amplitude and not a step size. The
+        # segment is shortened to what the run proved it WILL do, and if that
+        # leaves nothing the segment is dropped and the loss of coverage is
+        # recorded rather than hidden: an experiment that no longer tests
+        # reversal must not be reported as though it did.
+        repairs: list = []
+        working = list(loading)
+        here_prefix = prefix
+        offending = broke_in
+        # Successive segments, because a model that will not be driven
+        # backwards may also not be held. Measured on
+        # BodyForce-Growth-2Stages.for: dropping 'uniaxial_reversed' moved the
+        # break into the hold that followed it. Each drop is recorded, and
+        # what the experiment stops exercising is recorded with it.
+        for _round in range(len(loading)):
+            repaired = None
+            for how in ("shorten", "drop"):
+                candidate, note = _shortened(working, offending, here_prefix, how)
+                if candidate is None:
+                    repairs.append(note)
+                    continue
+                attempt, why = walk(candidate, amplitude, f"{how}{_round}")
+                if attempt is None:
+                    repairs.append(why)
+                    continue
+                report["attempts"].append(
+                    {"varied": "segment",
+                     "value": f"{how} step {offending}",
+                     "reached": how_far(attempt, candidate)[0],
+                     "step": attempt.first_bad[0],
+                     "reason": attempt.reason()[:200]})
+                repairs.append(note)
+                if attempt.complete:
+                    report["prefix"] = attempt.as_dict()
+                    report["segment_repair"] = "; then ".join(repairs)
+                    report.update(
+                        complete=True, amplitude=amplitude,
+                        coverage_given_up="; ".join(
+                            r for r in repairs if "dropped" in r or "cut" in r),
+                        reason=(f"{mechanism.reason}; "
+                                + "; then ".join(repairs)
+                                + f": {attempt.reason()}"))
+                    return candidate, report
+                repaired = (candidate, attempt)
+                break
+            if repaired is None:
+                break
+            working, here_prefix = repaired
+            if here_prefix.first_bad[0] < 1:
+                break
+            offending = here_prefix.first_bad[0]
+        report["segment_repair"] = "; then ".join(repairs)
+        report["reason"] = f"{mechanism.reason}. " + "; then ".join(repairs)
+        return list(loading), report
+
+    if mechanism.kind == safe_loading.INCREMENT_RESOLUTION_LIMITED:
+        # The loading is right and the solver was being asked to walk it in
+        # steps too large. Refine rather than shrink: shrinking would remove
+        # the behaviour the experiment exists to exercise.
+        working, here = _refined(loading, 4), amplitude
+        bracket = "increments"
+    elif mechanism.kind == safe_loading.AMPLITUDE_LIMITED:
+        working, here = list(loading), amplitude
+        bracket = "amplitude"
+    else:
+        report["reason"] = (
+            f"{prefix.reason()}; and the repair is not an amplitude: "
+            f"{mechanism.reason}")
+        return list(loading), report
+
+    # Bracket the safe endpoint by RERUNNING, not by trusting a margin. The
+    # margin is only the first proposal; what makes an endpoint safe is a
+    # complete finite run at it, recorded with its distance from the failure
+    # that was actually observed.
+    for attempt in range(safe_loading.REBUILDS):
+        rebuilt = safe_loading.reconstruct(prefix, here, working)
+        report["rebuilt"] = rebuilt.as_dict()
+        if not rebuilt.possible:
+            report["reason"] = (f"{prefix.reason()}; and the loading could not "
+                                f"be rebuilt: {rebuilt.reason}")
+            return list(loading), report
+        if bracket == "increments":
+            working = _refined(working, 2)
+        else:
+            working = _rescaled(working, rebuilt.fraction)
+            here = rebuilt.amplitude
+        prefix, why = walk(working, here, f"rebuild{attempt}")
+        if prefix is None:
+            report["reason"] = why
+            return list(loading), report
+        report["attempts"].append({"varied": bracket, "value": here,
+                                   "last_complete": prefix.usable,
+                                   "reason": prefix.reason()[:200]})
+        report["prefix"] = prefix.as_dict()
+        if prefix.complete:
+            report.update(
+                complete=True, amplitude=here,
+                safety_distance=rebuilt.as_dict(),
+                reason=(f"{mechanism.reason}; rebuilt and rerun whole: "
+                        f"{prefix.reason()}"))
+            return working, report
+    report["reason"] = (
+        f"the loading was rebuilt {safe_loading.REBUILDS} times and the model "
+        f"left its domain inside every one of them; {mechanism.reason}")
+    return list(loading), report
+
+
+def _shortened(loading, step: int, prefix, how: str = "shorten"):
+    """Cut back, or drop, the segment the model refuses.
+
+    Two strategies in order, because they give up different amounts. Cutting
+    the segment back to what the run demonstrably walked keeps the path going
+    that way, only less far. Dropping it gives up a behaviour, and the note
+    that comes back says which -- an experiment that stopped testing reversal
+    must not be reported as though it still did.
+
+    Measured on BodyForce-Growth-2Stages.for: cutting 'uniaxial_reversed'
+    from ten increments to one still left its domain at the first increment
+    of it, which is the model saying it will not be driven backwards at all.
+    """
+    if step < 1 or step > len(loading):
+        return None, f"there is no step {step} in this loading to shorten"
+    segment = loading[step - 1]
+    working = list(loading)
+    if how == "drop":
+        dropped = working.pop(step - 1)
+        if not working:
+            return None, (f"'{dropped.name}' is the only segment there is, so "
+                          f"dropping it would leave no experiment at all")
+        return working, (f"'{dropped.name}' was dropped: the model left its "
+                         f"domain inside it however short it was made, so "
+                         f"this experiment no longer exercises that path")
+    walked = prefix.last_safe[1] if prefix.last_safe[0] == step else 0
+    keep = int(walked * safe_loading.MARGIN)
+    if keep < 1:
+        return None, (f"the model left its domain inside '{segment.name}' "
+                      f"before completing one increment of it, so there is "
+                      f"nothing of it to keep")
+    working[step - 1] = replace(segment, increments=keep,
+                                strain=tuple(value * keep / max(1, segment.increments)
+                                             for value in segment.strain))
+    return working, (f"'{segment.name}' was cut from {segment.increments} "
+                     f"increments to {keep}, which is {safe_loading.MARGIN:g} "
+                     f"of what the model demonstrably walked; the path still "
+                     f"goes that way, less far")
+
+
+def _refined(loading, factor: int) -> list:
+    """The same path, walked in smaller steps. Amplitude and shape untouched."""
+    return [replace(segment, increments=max(1, int(segment.increments) * factor))
+            for segment in loading]
+
+
+def _rescaled(loading, fraction: float) -> list:
+    """The same path, driven less far. Shape, order and timing untouched."""
+    return [replace(segment, strain=tuple(value * fraction
+                                          for value in segment.strain))
+            for segment in loading]
+
+
 def discover_loading(manifest: VerificationManifest, original: Path,
                      work_dir: Path, timeout: int, *,
                      increments: int = 10, form: str = "",
@@ -1063,7 +1344,16 @@ def discover_loading(manifest: VerificationManifest, original: Path,
                 record["did_not_run"] = found.reason
             return manifest, record
         amplitude = manifest.loading[0].strain[0]
-    if found.outcome == ACTIVATED and amplitude:
+    # Reached whenever the search came back with an amplitude, not only when
+    # it came back ACTIVATED. A material whose domain ends in a non-finite
+    # tail still has a usable history below it, and the question the
+    # extension asks -- "this amplitude runs, but is it big enough to measure
+    # at?" -- is exactly the question those need answered. Measured on
+    # thirteen entries: the search settles on 1e-04, which leaves one smooth
+    # state where two are needed, and the extension's own ladder reaches the
+    # amplitude that leaves two. Every rung is still confirmed by a real run
+    # at the verification's resolution before it is adopted.
+    if found.outcome in (ACTIVATED, LEFT_ITS_DOMAIN) and amplitude:
         # Two different situations wear the same word. A material that was
         # quiet and then activated has a transition, and the loading should
         # cross it partway along. A material that was ALREADY doing something
@@ -1097,12 +1387,18 @@ def discover_loading(manifest: VerificationManifest, original: Path,
             # verification a path the model has already left, and the search
             # itself would have rejected it -- it is the same test, applied
             # in the one place that was not applying it.
-            broke_at = first_non_finite(_records) if ran else None
-            if broke_at is not None:
+            # The same bar the search uses: a run whose prefix is a history
+            # is a run this amplitude can be verified at, and one that breaks
+            # too early is not. Asking for every record to be finite here
+            # while the search asks for five would make the two disagree
+            # about the same run.
+            if ran and not enough_to_drive(_records):
+                broke_at = first_non_finite(_records)
                 ran = False
                 why = (f"the model returned a value that is not a number at "
-                       f"increment {broke_at} of this run, so its domain does "
-                       f"not reach this amplitude")
+                       f"increment {broke_at} of this run, too early to leave "
+                       f"a history, so its domain does not reach this "
+                       f"amplitude")
             tried.append({"factor": factor, "amplitude": wanted, "ran": ran,
                           "reason": why[:200]})
             if ran:
@@ -1156,6 +1452,37 @@ def discover_loading(manifest: VerificationManifest, original: Path,
         loading.append(hold(loading[0], period=HOLD_PERIODS * loading[0].period,
                             increments=max(3, increments // 2)))
         record["hold_added"] = time_finding.reason
+
+    # Everything above chose the loading from probes. This runs the ORIGINAL
+    # over the loading that was chosen, whole, and will not hand it on until
+    # every record of it is finite -- because a verification is allowed to
+    # rest only on an analysis that completed, and a frozen regression
+    # fixture that replays a truncated failure is not a fixture.
+    loading, safety = settle_on_safe_loading(
+        loading, amplitude, manifest, original, attempts_dir, timeout,
+        increments=increments, form=form, data_roots=data_roots)
+    record["discovery_usable_prefix"] = safety.get("prefix")
+    record["safe_loading_reconstructed"] = safety.get("rebuilt")
+    record["complete_finite_verification_run"] = safety.get("complete", False)
+    # The whole account of how the experiment was settled on: what the
+    # failure responded to, what was tried, what was given up and how far the
+    # endpoint finally sat from the failure that was observed.
+    record["failure_mechanism"] = safety.get("failure_mechanism")
+    record["segment_repair"] = safety.get("segment_repair")
+    record["safety_distance"] = safety.get("safety_distance")
+    record["coverage_given_up"] = safety.get("coverage_given_up")
+    record["safe_loading_attempts"] = safety.get("attempts")
+    if not safety.get("complete"):
+        record["chosen_amplitude"] = 0.0
+        # Only a run that PRODUCED a history and left its domain says
+        # anything about the loading. A job that recorded nothing is a
+        # statement about the build, and the rungs below can name it.
+        if safety.get("reason"):
+            record["refused"] = safety["reason"]
+        else:
+            record["did_not_run"] = safety.get("did_not_run", "")
+        return manifest, record
+    amplitude = safety.get("amplitude", amplitude)
     record["chosen_amplitude"] = amplitude
     return replace(manifest, loading=tuple(loading)), record
 
@@ -1412,44 +1739,47 @@ MINIMUM_COMPARABLE_INCREMENTS = 5
 MINIMUM_MEASURED_STATES = 2
 
 
-def common_finite_prefix(original: list, transformed: list) -> tuple[list, list, int]:
-    """The leading increments in which BOTH builds returned finite numbers.
+def common_finite_prefix(original: list, transformed: list,
+                         expected_points: int = 0
+                         ) -> tuple[list, list, int, dict]:
+    """The leading COMPLETE INCREMENTS in which both builds produced numbers.
 
-    A model can leave its own domain part-way along a probe path. Measured on
-    BodyForce-Growth-2Stages.for: both builds agree through twenty-two
-    increments -- the whole uniaxial segment, the whole shear segment, and two
-    of the reversal -- and then BOTH return NaN from increment twenty-three,
-    at the same increment and in the same components. That is the growth model
-    declining to be driven backwards, and it says nothing whatever about the
+    Increments, not records. Abaqus calls a UMAT once per material point per
+    increment, so a single-element C3D8 job writes eight records per
+    increment and a CPE4 four; this used to cut the histories at a raw record
+    position and report it as an increment count, which said "agreed over 280
+    increments" about a thirty-five increment analysis and let a prefix of
+    two complete increments clear a minimum of five. See
+    :mod:`umat_oti.abaqus.frames`.
+
+    A model can leave its own domain part-way along a path. Measured on
+    BodyForce-Growth-2Stages.for: both builds walk two complete increments
+    and then BOTH return values that are not numbers inside the third, at the
+    same increment and in the same material point. That is the growth model
+    declining to be driven that far, and it says nothing about the
     conversion.
 
-    Comparing across it produced ``inf`` and the row was recorded as
-    primal_disagreed, which reads as a conversion defect. Refusing the row
-    outright would throw away twenty-two increments of real agreement.
+    What comes back is that common prefix, the number of COMPLETE INCREMENTS
+    in it, and both histories' grouping so the caller can report what it
+    actually compared. The truncation is only ever applied where BOTH stopped
+    at the same increment: a converted build that goes non-finite where the
+    original did not is the defect this pipeline exists to catch, and it must
+    keep failing.
 
-    So the comparison is truncated to the range in which both builds produced
-    numbers, and the caller records where it stopped. The truncation is only
-    ever applied where BOTH went non-finite at the same increment: a
-    transformed build that goes non-finite where the original did not is the
-    defect this whole pipeline exists to catch, and it must keep failing.
+    Truncating is for diagnosis. It does not make a verdict: a verification
+    rests on an analysis that is finite throughout, which
+    :mod:`umat_oti.abaqus.safe_loading` is what builds.
     """
-    def first_non_finite(records: list) -> int:
-        for position, record in enumerate(records):
-            for field in ("STRESS", "STATEV"):
-                for value in (record.get(field) or ()):
-                    if not math.isfinite(value):
-                        return position
-        return len(records)
-
-    stop_original = first_non_finite(original)
-    stop_transformed = first_non_finite(transformed)
-    if stop_original != stop_transformed:
+    left = frames.group(original, expected_points)
+    right = frames.group(transformed, expected_points)
+    grouping = {"original": left.as_dict(), "transformed": right.as_dict()}
+    if left.complete and right.complete:
+        return list(original), list(transformed), -1, grouping
+    if left.complete_increments != right.complete_increments:
         # They parted company. Hand back the histories whole so the ordinary
         # comparison reports it, which is what should happen.
-        return list(original), list(transformed), -1
-    if stop_original >= len(original):
-        return list(original), list(transformed), -1
-    return original[:stop_original], transformed[:stop_original], stop_original
+        return list(original), list(transformed), -1, grouping
+    return left.prefix(), right.prefix(), left.complete_increments, grouping
 
 
 def first_activated(records: Sequence[dict]) -> Optional[int]:
@@ -2803,8 +3133,12 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             f"damaged its own argument list and none of its numbers are "
             f"measurements: {damaged[0][:160]}")
 
-    compared_original, compared_transformed, stopped_at = common_finite_prefix(
-        list(original_history), list(transformed_history))
+    (compared_original, compared_transformed, complete_increments_compared,
+     grouping) = common_finite_prefix(list(original_history),
+                                      list(transformed_history),
+                                      frames.points_for(manifest.element_type))
+    record["history_grouping"] = grouping
+    stopped_at = complete_increments_compared
     # Paired by step, integration point and time before anything is compared:
     # two builds of the same model do not always walk the same increments, and
     # zipping them compares increment 3 of one with increment 3 of the other
@@ -2818,21 +3152,68 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                             near_zero_fraction=manifest.near_zero_fraction)
     record["primal"] = primal.as_dict()
     seen["primal_agrees"] = primal.agrees
+    # Abaqus printing THE ANALYSIS HAS COMPLETED SUCCESSFULLY is a statement
+    # about the solver, not about the constitutive routine it called: a job
+    # completes while its UMAT returns values that are not numbers. Measured
+    # on BodyForce-Growth-2Stages.for, where both builds "completed" 35
+    # increments and both were non-finite from the third. These are recorded
+    # apart so a reader can see which one a verdict rests on.
+    record["evidence"] = {
+        # The job ran to the end, which is what Abaqus reports.
+        "abaqus_job_completed": True,
+        # Every increment produced every material point it should have: an
+        # increment short of a point did not produce the state a comparison
+        # would compare.
+        "all_requested_outputs_present": all(
+            (grouping[side].get("first_incomplete_increment") or {}).get(
+                "present", True)
+            for side in ("original", "transformed")),
+        # Nothing anywhere in either history is a NaN or an infinity.
+        "complete_history_finite": stopped_at < 0,
+        "primal_agreed": bool(primal.agrees),
+        # Set where the tangent is decided, not here.
+        "derivatives_verified": False,
+    }
+    record["complete_finite_verification_run"] = stopped_at < 0
     if stopped_at >= 0:
         record["primal"]["both_builds_non_finite_from_increment"] = stopped_at + 1
-        record["primal"]["increments_compared"] = stopped_at
+        record["primal"]["complete_increments_compared"] = stopped_at
+        record["primal"]["raw_output_records_compared"] = len(compared_original)
         record["primal"]["scope"] = (
-            f"both builds returned finite numbers for {stopped_at} increments "
-            f"and both went non-finite at increment {stopped_at + 1}, at the "
-            f"same increment and in the same components. The comparison covers "
-            f"the {stopped_at} increments in which the model produced numbers; "
-            f"nothing is claimed beyond them.")
+            f"both builds completed {stopped_at} increment(s) with every "
+            f"material point finite and both failed inside increment "
+            f"{stopped_at + 1}, at the same increment. The comparison covers "
+            f"those {stopped_at} complete increment(s) -- "
+            f"{len(compared_original)} output records at "
+            f"{grouping['original'].get('material_points_per_increment')} "
+            f"material points each; nothing is claimed beyond them.")
         if stopped_at < MINIMUM_COMPARABLE_INCREMENTS:
             record["stage"] = "both_builds_non_finite"
             return settle(
-                f"both builds went non-finite at increment {stopped_at + 1}, "
-                f"leaving only {stopped_at} increments to compare -- too few "
-                f"to rest a verification on")
+                f"both builds went non-finite inside increment "
+                f"{stopped_at + 1}, leaving only {stopped_at} complete "
+                f"increment(s) to compare -- too few to rest a verification "
+                f"on")
+        # And a long prefix is no better than a short one for a VERDICT. A
+        # finite prefix is what discovery learns the edge of the domain from;
+        # a verification rests on an analysis that completed with every
+        # requested output finite throughout. Measured on
+        # BodyForce-Growth-2Stages.for: 280 records, non-finite from record
+        # 23, primal agreement over the first 22 -- and a verdict of
+        # "verified", whose frozen fixture would replay a failed analysis and
+        # start by reproducing the failure. discover_loading rebuilds the
+        # loading to stop short of the edge and reruns it whole; reaching
+        # here means that was not done or did not hold.
+        record["complete_finite_verification_run"] = False
+        record["stage"] = NO_EXPERIMENT
+        return settle(
+            f"the analysis this verdict would rest on is not finite "
+            f"throughout: both builds completed {stopped_at} increment(s) "
+            f"and went non-finite inside increment {stopped_at + 1}. "
+            f"A finite prefix locates the edge of this material's domain, "
+            f"which is what a safe loading is rebuilt from -- it is not a "
+            f"history a verification may be frozen on",
+            stage=NO_EXPERIMENT)
     # A disagreement is not yet a verdict. The author's own declared precision
     # is the one explanation that can be tested rather than argued about, so
     # it is tested: see run_precision_control.
@@ -2940,6 +3321,8 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             f"own NaNs in both builds and carry no state to replay from")
     record["tangent"] = tangent
     seen["tangent_verified"] = tangent.get("verified")
+    record.setdefault("evidence", {})["derivatives_verified"] = bool(
+        tangent.get("verified"))
     return settle("; ".join(part for part in
                             (precision_note, tangent.get("reason", "")) if part))
 

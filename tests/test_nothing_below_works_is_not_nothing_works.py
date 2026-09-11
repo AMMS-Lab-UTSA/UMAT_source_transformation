@@ -24,6 +24,22 @@ from umat_oti.abaqus.amplitude_search import (ACTIVATED, CEILING,
                                               search_amplitude)
 
 
+
+
+def _increments(count: int, value: float = 1.0, bad: bool = False):
+    """``count`` whole increments of one material point each.
+
+    A count of records is not a count of increments, so a history has to say
+    which increment and which point each record belongs to. One point per
+    increment here, so the two counts coincide and these fixtures stay
+    readable.
+    """
+    return [{"step": 1, "increment": number, "element": 1, "point": 1,
+             "time": number * 0.1,
+             "STRESS": [float("nan") if bad else value], "STATEV": [0.0]}
+            for number in range(1, count + 1)]
+
+
 def _nan_below(threshold: float):
     """A model that returns NaN below ``threshold`` and is linear above it."""
     tried: list = []
@@ -31,8 +47,8 @@ def _nan_below(threshold: float):
     def run(amplitude: float):
         tried.append(amplitude)
         if amplitude < threshold:
-            return True, [{"STRESS": [float("nan")], "STATEV": []}] * 6, ""
-        return True, [{"STRESS": [amplitude * 1000.0], "STATEV": [0.0]}] * 6, ""
+            return True, _increments(6, bad=True), ""
+        return True, _increments(6, amplitude * 1000.0), ""
 
     return run, tried
 
@@ -67,13 +83,13 @@ def test_the_loading_this_harness_was_given_is_tried_before_it_gives_up():
     seen: list = []
 
     def coarse(amplitude: float):
-        return True, [{"STRESS": [float("nan")], "STATEV": []}] * 6, ""
+        return True, _increments(6, bad=True), ""
 
     def fine(amplitude: float):
         seen.append(amplitude)
         if 0.004 < amplitude < 0.006:
-            return True, [{"STRESS": [1.0], "STATEV": [0.0]}] * 6, ""
-        return True, [{"STRESS": [float("nan")], "STATEV": []}] * 6, ""
+            return True, _increments(6), ""
+        return True, _increments(6, bad=True), ""
 
     result = search_amplitude(coarse, run_fine=fine, declared=0.005)
     assert 0.005 in seen, "the declared amplitude was never tried"
@@ -96,7 +112,7 @@ def test_the_declared_amplitude_is_only_reached_after_the_search_fails():
 
 def test_a_model_with_no_domain_anywhere_still_says_so():
     def run(amplitude: float):
-        return True, [{"STRESS": [float("nan")], "STATEV": []}] * 6, ""
+        return True, _increments(6, bad=True), ""
 
     result = search_amplitude(run, run_fine=run, declared=0.005)
     assert result.outcome == LEFT_ITS_DOMAIN
@@ -106,7 +122,7 @@ def test_a_model_with_no_domain_anywhere_still_says_so():
 
 def test_the_refusal_names_the_whole_range_it_searched():
     def run(amplitude: float):
-        return True, [{"STRESS": [float("nan")], "STATEV": []}] * 6, ""
+        return True, _increments(6, bad=True), ""
 
     reason = search_amplitude(run).reason
     assert f"{CEILING:.3g}" in reason, (
@@ -115,7 +131,7 @@ def test_the_refusal_names_the_whole_range_it_searched():
 
 def test_a_model_that_answers_the_first_probe_is_unaffected():
     def run(amplitude: float):
-        return True, [{"STRESS": [amplitude * 1000.0], "STATEV": [0.0]}] * 6, ""
+        return True, _increments(6, amplitude * 1000.0), ""
 
     result = search_amplitude(run)
     assert result.outcome == LINEAR_TO_THE_CEILING
@@ -135,10 +151,11 @@ def test_activation_above_the_dead_zone_is_still_found():
     def run(amplitude: float):
         tried.append(amplitude)
         if amplitude < 1e-3:
-            return True, [{"STRESS": [float("nan")], "STATEV": []}] * 6, ""
+            return True, _increments(6, bad=True), ""
         moved = 1.0 if amplitude > 5e-3 else 0.0
-        return True, ([{"STRESS": [amplitude * 1000.0], "STATEV": [0.0]}] * 5
-                      + [{"STRESS": [amplitude * 1000.0], "STATEV": [moved]}]), ""
+        history = _increments(6, amplitude * 1000.0)
+        history[-1]["STATEV"] = [moved]
+        return True, history, ""
 
     result = search_amplitude(run)
     assert result.outcome in (ACTIVATED, LINEAR_TO_THE_CEILING)
@@ -161,8 +178,10 @@ def test_an_amplitude_that_produced_a_history_is_kept():
     how those verifications were being reached at all.
     """
     def run(amplitude: float):
-        good = [{"STRESS": [amplitude * 1000.0], "STATEV": [0.0]}] * 22
-        return True, good + [{"STRESS": [float("nan")], "STATEV": []}] * 10, ""
+        good = _increments(22, amplitude * 1000.0)
+        return True, good + [{"step": 1, "increment": 23, "element": 1,
+                              "point": 1, "STRESS": [float("nan")],
+                              "STATEV": []}], ""
 
     result = search_amplitude(run)
     assert result.outcome == LEFT_ITS_DOMAIN, "the tail still bounds the climb"
@@ -181,8 +200,10 @@ def test_climbing_past_the_tail_was_tried_and_measured_worse():
     state short of coverage into a primal disagreement of 3.35e-08.
     """
     def run(amplitude: float):
-        return True, ([{"STRESS": [amplitude * 1000.0], "STATEV": [0.0]}] * 22
-                      + [{"STRESS": [float("nan")], "STATEV": []}] * 5), ""
+        return True, (_increments(22, amplitude * 1000.0)
+                      + [{"step": 1, "increment": 23, "element": 1,
+                          "point": 1, "STRESS": [float("nan")],
+                          "STATEV": []}]), ""
 
     result = search_amplitude(run)
     assert result.outcome == LEFT_ITS_DOMAIN
@@ -193,8 +214,10 @@ def test_climbing_past_the_tail_was_tried_and_measured_worse():
 def test_a_run_that_broke_too_early_still_falls_back():
     """Two finite records is not a history, and must not be kept as one."""
     def run(amplitude: float):
-        good = [{"STRESS": [amplitude * 1000.0], "STATEV": [0.0]}] * 2
-        return True, good + [{"STRESS": [float("nan")], "STATEV": []}] * 10, ""
+        good = _increments(2, amplitude * 1000.0)
+        return True, good + [{"step": 1, "increment": 3, "element": 1,
+                              "point": 1, "STRESS": [float("nan")],
+                              "STATEV": []}], ""
 
     result = search_amplitude(run)
     assert result.outcome == LEFT_ITS_DOMAIN

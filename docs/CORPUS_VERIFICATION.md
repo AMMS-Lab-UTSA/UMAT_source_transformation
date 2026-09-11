@@ -172,3 +172,75 @@ entry.tangent["states"]       # the sweep at each state
 histories("<run>/work", entry.key)   # both builds, for plotting
 job_log("<run>/work", entry.key, "original")   # the .sta and .msg
 ```
+
+## A finite prefix is discovery evidence, not a verification
+
+A run that produces good increments and then returns values that are not
+numbers has located the edge of a material's numerical domain. That is what
+an adaptive search is for, and the prefix is used for it.
+
+It cannot carry a verdict. A UMAT marked `fully_verified` on a history that
+later becomes non-finite has been verified on a truncated failed analysis:
+the comparison drops everything after the break, and the frozen regression
+fixture inherits a deck that does not run to completion, so every future
+replay begins by reproducing a failure.
+
+This was measured, not anticipated. `BodyForce-Growth-2Stages.for` reported
+`verified` on 280 output records whose 23rd was a NaN, with primal agreement
+of 1.16e-11 over what came before. That verdict is withdrawn.
+
+Three things are now kept apart, because collapsing them is how a truncated
+history became a verdict:
+
+| field | what it means |
+| --- | --- |
+| `discovery_usable_prefix` | how far a run got, and where the domain edge is |
+| `safe_loading_reconstructed` | the loading rebuilt to stop short of it |
+| `complete_finite_verification_run` | a rerun that finished with nothing non-finite anywhere |
+
+Only the third can be verified on. Alongside it the record separates what
+the solver said from what the routine did, because Abaqus prints
+`THE ANALYSIS HAS COMPLETED SUCCESSFULLY` about the solver:
+
+`abaqus_job_completed`, `all_requested_outputs_present`,
+`complete_history_finite`, `primal_agreed`, `derivatives_verified`.
+
+### A record is not an increment
+
+Abaqus calls a UMAT once per material point per increment. A single-element
+C3D8 job of thirty-five increments writes 280 probe records; the same job on
+a CPE4 writes 140. Neither number is thirty-five.
+
+Counting the flattened records as increments made a verification report
+"agreed over 280 increments" about a thirty-five increment analysis, and let
+a prefix of two complete increments and six integration points of a third
+clear a minimum of five. Histories are grouped by `(step, increment,
+element, integration point)`; an increment is complete only when every
+material point it should produce is present and finite. The counts are kept
+under names that say what they are: `raw_output_records`,
+`complete_increments`, `material_points_per_increment`,
+`first_incomplete_increment`, `first_non_finite_material_point`.
+
+### The repair is chosen from what the failure responds to
+
+Shrinking the amplitude is right for one kind of failure and wrong for the
+rest. Before anything is changed the failure is probed — the same loading at
+half the amplitude, and at four times the increment resolution — and what
+matters is whether the break MOVED, as a fraction of the path rather than as
+a count of increments: refining fourfold turns "22 of 40" into "88 of 160",
+and both are 55% of the same path.
+
+`amplitude_limited`, `increment_resolution_limited`, `path_segment_limited`,
+`step_transition_limited`, `time_limited`,
+`initialization_or_state_limited`, `unknown_domain_failure`.
+
+A failure whose location does not move when the amplitude is halved is not
+controlled by the amplitude, and halving it again is the same experiment
+driven less far, failing in the same place. Where the offending segment is
+shortened or dropped, the record says which behaviour the experiment no
+longer exercises — an experiment that stopped testing reversal must not be
+reported as though it still did.
+
+The safety margin is a first proposal, not a proof: what makes an endpoint
+safe is a complete finite rerun at it, with the distance from the observed
+failure recorded beside it.
