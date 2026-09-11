@@ -36,6 +36,8 @@ GLOSS = {
     "experiment_not_informative": "both builds agreed, over an experiment in "
                                   "which the material did not do what it is "
                                   "for -- ours",
+    "informativeness_not_established": "nobody measured whether the "
+                                       "experiment exercised anything -- ours",
     "support_build_failed": "the transform's own modules did not compile -- ours",
     "original_job_failed": "the original did not run -- ours until proven "
                            "otherwise",
