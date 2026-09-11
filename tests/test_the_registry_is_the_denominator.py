@@ -202,7 +202,92 @@ def test_not_knowing_what_it_is_keeps_the_old_answer():
 
 
 def test_the_registry_asks_what_the_file_is_before_blaming_the_transform():
+    """The terminal state of a refused source is derived from what the file
+    is -- ``record.refusal_class``, which classify_refusal read out of the
+    file -- and the refusal text is passed only as the reason. Grepped rather
+    than run because the wiring is what has to hold: the day somebody hands
+    the refusal itself to the classifier, every UEL in the corpus turns into a
+    gap in the transformer and the count stops meaning anything."""
     import pathlib
     text = pathlib.Path(__file__).resolve().parents[1].joinpath(
         "tools", "build_corpus_registry.py").read_text()
-    assert "is_umat=_is_a_umat(" in text
+    assert 'is_umat=(record.is_umat if record.refusal_class' in text
+    assert 'companions_missing=(record.refusal_class ==' in text
+    assert 'if record.refusal_class == "incomplete_or_corrupt_source":' in text
+
+
+# ---------------------------------------------------------------------------
+# the denominator is the acquisition inventory, not the batch that ran
+# ---------------------------------------------------------------------------
+import csv  # noqa: E402
+
+REPO = Path(__file__).resolve().parents[1]
+INVENTORY = REPO / "paper_results/discovery/discovery_triage.csv"
+REGISTRY = REPO / "paper_results/corpus/corpus_registry.json"
+
+
+def _inventory_ids():
+    with INVENTORY.open(newline="", encoding="utf-8") as handle:
+        return [str(row.get("source") or "").strip()
+                for row in csv.DictReader(handle)
+                if str(row.get("source") or "").strip()]
+
+
+def test_the_registry_holds_every_one_of_the_391_discovered_sources():
+    """Measured on the built registry: the acquisition triage lists 391
+    discovered sources, ``corpus_registry.json`` carries 391 records, and the
+    two sets are equal -- no source in the inventory is missing a record, and
+    no record names a source the inventory never discovered.
+
+    391 is also what the transform batch happens to carry, which is exactly
+    why this has to be checked against the INVENTORY. A registry built from
+    the batch agrees with the batch by construction, and would go on agreeing
+    on the day a run stopped attempting a source."""
+    discovered = _inventory_ids()
+    assert len(discovered) == 391, len(discovered)
+
+    payload = json.loads(REGISTRY.read_text(encoding="utf-8"))
+    records = payload["records"]
+    assert len(records) == 391, len(records)
+
+    ids = [r["source_id"] for r in records]
+    assert len(set(ids)) == 391, "a source appears twice"
+    assert set(ids) == set(discovered), {
+        "in the inventory, no record": sorted(set(discovered) - set(ids))[:5],
+        "a record, not in the inventory": sorted(set(ids) - set(discovered))[:5],
+    }
+
+    reconciliation = payload["summary"]["inventory"]
+    assert reconciliation["discovered_sources"] == 391
+    assert reconciliation["in_the_registry"] == 391
+    assert reconciliation["in_a_batch_but_not_the_inventory"] == []
+    assert reconciliation["in_the_inventory_but_in_no_batch"] == []
+
+
+def test_a_discovered_source_no_batch_ever_mentioned_still_gets_a_record(tmp_path):
+    """The registry is seeded from the inventory and the batches are joined
+    onto it. Built the other way round -- which is how it was built -- a
+    source that no transform row and no Abaqus row names produces no record at
+    all, and the denominator shrinks where nobody can see it happen."""
+    transform, abaqus = write(tmp_path)
+    inventory = [r["source"] for r in TRANSFORM["rows"]] + ["owner__e/never.f"]
+
+    records = {r.source_id: r for r in
+               build(transform, abaqus, None, inventory_ids=inventory)}
+    assert len(records) == 5
+    assert "owner__e/never.f" in records, (
+        "a source no batch mentioned vanished from the denominator")
+    assert records["owner__e/never.f"].terminal_state == "not_attempted"
+    assert records["owner__e/never.f"].kind == "internal"
+
+
+def test_a_row_the_inventory_never_listed_is_kept_and_named(tmp_path):
+    """Two artefacts that describe the same corpus disagreeing is itself a
+    finding. A batch row with no inventory entry is kept as a record rather
+    than dropped, so the disagreement shows up instead of being tidied away."""
+    transform, abaqus = write(tmp_path)
+    records = {r.source_id for r in
+               build(transform, abaqus, None,
+                     inventory_ids=["owner__a/umat.for"])}
+    assert "owner__c/notaumat.f" in records
+    assert len(records) == 4
