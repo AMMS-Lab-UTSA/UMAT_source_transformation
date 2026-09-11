@@ -83,6 +83,9 @@ FROM_ABAQUS_STAGE: dict[str, str] = {
     # loading this harness builds. It got as far as a manifest and no
     # further, which is where a source with no experiment stops.
     "experiment_not_generated": "metadata_resolved",
+    # Both builds ran and agreed; the experiment did not exercise the
+    # behaviour, so it got as far as a primal parity and no further.
+    "experiment_not_informative": "primal_parity_passed",
 }
 
 

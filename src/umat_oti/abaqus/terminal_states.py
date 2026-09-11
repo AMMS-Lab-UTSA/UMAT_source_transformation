@@ -43,6 +43,7 @@ EXTERNAL: tuple[str, ...] = (
 INTERNAL: tuple[str, ...] = (
     "transform_refused",
     "experiment_not_generated",
+    "experiment_not_informative",
     "unsupported_formulation",
     "support_build_failed",
     "original_job_failed",
@@ -73,6 +74,7 @@ FROM_STAGE: dict[str, str] = {
     "waits_for_input": WAITS_FOR_INPUT,
     "manifest_refused": "unsupported_formulation",
     "experiment_not_generated": "experiment_not_generated",
+    "experiment_not_informative": "experiment_not_informative",
     "support_build_failed": "support_build_failed",
     "original_job_failed": "original_job_failed",
     "transformed_job_failed": "transformed_job_failed",
