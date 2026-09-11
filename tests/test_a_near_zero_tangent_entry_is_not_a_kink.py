@@ -85,9 +85,14 @@ def test_the_sweep_reaches_the_top_decade_the_method_asks_for():
     """
     from umat_oti.abaqus.manifest import VerificationManifest
     steps = VerificationManifest.fd_steps
-    assert max(steps) == 1e-2, (
+    assert max(steps) >= 1e-2, (
         "a stiff model's U-curve minimum can sit above 1e-3; a sweep that "
         "starts there has no minimum in it to find")
+    # And a step above the minimum, so the minimum is bracketed rather than
+    # sitting at the edge. Measured on From-2D-to-3D-Genhel.for, increment 4:
+    # an exact 1/h line from 1e-3 to 1e-8 and a point at 1e-2 seven hundred
+    # times below where that line would put it.
+    assert max(steps) >= 1e-1
     assert min(steps) <= 1e-6
     assert steps == tuple(sorted(steps, reverse=True))
     assert len(set(steps)) == len(steps)
