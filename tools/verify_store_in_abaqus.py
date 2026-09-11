@@ -90,13 +90,13 @@ from umat_oti.abaqus.state_regime import (                              # noqa: 
     SMOOTH_INELASTIC, classify as classify_regime, coverage,
     response_character)
 from umat_oti.abaqus.amplitude_search import (                          # noqa: E402
-    ACTIVATED, LEFT_ITS_DOMAIN, LINEAR_TO_THE_CEILING, enough_to_drive,
-    first_non_finite, search_amplitude)
+    ACTIVATED, CEILING, LEFT_ITS_DOMAIN, LINEAR_TO_THE_CEILING,
+    enough_to_drive, first_non_finite, search_amplitude)
 from umat_oti.corpus.entry_routines import classify as classify_entry   # noqa: E402
 from umat_oti.fortran.normalize import detect_source_form              # noqa: E402
 from umat_oti.abaqus.elements import geometry_for as element_geometry   # noqa: E402
 from umat_oti.abaqus.formulation import settle                          # noqa: E402
-from umat_oti.abaqus import frames, safe_loading                        # noqa: E402
+from umat_oti.abaqus import frames, primal_signature, safe_loading      # noqa: E402
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
     LoadingSegment, NEEDS_MATERIAL_DATA, VerificationManifest, at_rate, hold,
     reverse, simple_shear, uniaxial, under_body_force)
@@ -1046,9 +1046,35 @@ def settle_on_safe_loading(loading, amplitude: float,
                    "reason": why[:160]})
     probes.append({"varied": "increments", "value": increments,
                    "reached": reached, "step": broke_in})
+    # And TIME, because a growth or a creep law integrates over it and
+    # neither the amplitude nor the step size touches how much of it passes.
+    # Measured on BodyForce-Growth-2Stages.for: the break sat at the same
+    # 14.3% of the path at 0.04 and at 0.02 -- a fixed INCREMENT rather than
+    # a fixed strain, which is what a clock looks like. Without this probe
+    # the failure was called path_segment_limited and the repair went to cut
+    # a ramp whose length was never the problem.
+    briefer = _shorter_in_time(loading, 0.25)
+    brief, why = walk(briefer, amplitude, "briefer")
+    brief_reached, brief_step = how_far(brief, briefer)
+    probes.append({"varied": "period", "value": 0.25,
+                   "reached": brief_reached, "step": brief_step,
+                   "reason": why[:160]})
+    probes.append({"varied": "period", "value": 1.0,
+                   "reached": reached, "step": broke_in})
     mechanism = safe_loading.classify(probes)
     report["failure_mechanism"] = mechanism.as_dict()
 
+    if brief is not None and brief.complete:
+        report.update(complete=True, amplitude=amplitude,
+                      coverage_given_up=("the step time was shortened to a "
+                                         "quarter, so any rate- or "
+                                         "time-dependent branch is exercised "
+                                         "over less of the clock"),
+                      reason=(f"{mechanism.reason}; shortening the step time "
+                              f"gave a run finite throughout: "
+                              f"{brief.reason()}"))
+        report["prefix"] = brief.as_dict()
+        return briefer, report
     if halved is not None and halved.complete:
         report.update(complete=True, amplitude=amplitude * 0.5,
                       reason=(f"{mechanism.reason}; halving the amplitude gave "
@@ -1126,6 +1152,12 @@ def settle_on_safe_loading(loading, amplitude: float,
         # the behaviour the experiment exists to exercise.
         working, here = _refined(loading, 4), amplitude
         bracket = "increments"
+    elif mechanism.kind == safe_loading.TIME_LIMITED:
+        # The clock is what it will not run past, so the clock is what gets
+        # shortened. The loading keeps its shape, its amplitude and its
+        # increments; only the time they are walked in changes.
+        working, here = briefer, amplitude
+        bracket = "period"
     elif mechanism.kind == safe_loading.AMPLITUDE_LIMITED:
         working, here = list(loading), amplitude
         bracket = "amplitude"
@@ -1146,7 +1178,9 @@ def settle_on_safe_loading(loading, amplitude: float,
             report["reason"] = (f"{prefix.reason()}; and the loading could not "
                                 f"be rebuilt: {rebuilt.reason}")
             return list(loading), report
-        if bracket == "increments":
+        if bracket == "period":
+            working = _shorter_in_time(working, 0.5)
+        elif bracket == "increments":
             working = _refined(working, 2)
         else:
             working = _rescaled(working, rebuilt.fraction)
@@ -1210,6 +1244,17 @@ def _shortened(loading, step: int, prefix, how: str = "shorten"):
                      f"increments to {keep}, which is {safe_loading.MARGIN:g} "
                      f"of what the model demonstrably walked; the path still "
                      f"goes that way, less far")
+
+
+def _shorter_in_time(loading, factor: float) -> list:
+    """The same path, walked in less time. Shape and amplitude untouched.
+
+    A growth law, a creep law or a relaxation integrates over the clock, and
+    neither the amplitude nor the increment size changes how much of it
+    passes. This is the only quantity that does.
+    """
+    return [replace(segment, period=max(1e-12, float(segment.period) * factor))
+            for segment in loading]
 
 
 def _refined(loading, factor: int) -> list:
@@ -1379,7 +1424,21 @@ def discover_loading(manifest: VerificationManifest, original: Path,
         record.setdefault("extension", {})
         tried: list = []
         for factor in ladder:
-            wanted = amplitude * factor
+            # Bounded by the ceiling the search itself respects. Measured on
+            # BodyForce-Growth-2Stages.for, where the search settled on 0.005
+            # and the resolution ladder multiplied it by four hundred to give
+            # TWO -- two hundred percent of strain, twice the ceiling, and
+            # exactly the regime the ceiling exists to keep a model out of.
+            # The ladder's own docstring says it is "bounded so the model is
+            # not walked somewhere its author never wrote"; it was not.
+            wanted = min(amplitude * factor, CEILING)
+            if wanted <= amplitude:
+                tried.append({"factor": factor, "amplitude": wanted,
+                              "ran": False,
+                              "reason": (f"a factor of {factor:g} would pass "
+                                         f"the ceiling of {CEILING:g}, and "
+                                         f"the amplitude is already there")})
+                continue
             ran, _records, why = run_at(wanted, steps=increments)
             # "The job completed" is not "the model was still itself". A run
             # that returned NaN at its fourth increment completes: Abaqus
@@ -3151,6 +3210,18 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                             tolerance=manifest.primal_tolerance,
                             near_zero_fraction=manifest.near_zero_fraction)
     record["primal"] = primal.as_dict()
+    # "primal_disagreed" is a stage, not a diagnosis. Thirty-seven entries
+    # reached it at magnitudes spanning nine orders, and one name over that
+    # range says nothing about which share a cause. The signature is read off
+    # the numbers and the source so the cluster can be worked as clusters.
+    if not primal.agrees:
+        try:
+            record["primal_signature"] = primal_signature.classify(
+                primal.as_dict(),
+                Path(original).read_text(errors="replace"),
+                stopped_at if stopped_at > 0 else 0).as_dict()
+        except OSError:                            # pragma: no cover
+            pass
     seen["primal_agrees"] = primal.agrees
     # Abaqus printing THE ANALYSIS HAS COMPLETED SUCCESSFULLY is a statement
     # about the solver, not about the constitutive routine it called: a job

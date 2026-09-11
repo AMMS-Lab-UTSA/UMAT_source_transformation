@@ -371,3 +371,25 @@ def test_one_state_of_either_kind_is_still_not_enough():
     enough, why = coverage(one, nonlinear=True, character="irreversible")
     assert not enough
     assert "two are needed" in why
+
+
+def test_the_resolution_ladder_respects_the_ceiling():
+    """Its own docstring says it is "bounded so the model is not walked
+    somewhere its author never wrote". It was not.
+
+    Measured on BodyForce-Growth-2Stages.for: the search settled on 0.005 and
+    the ladder multiplied it by four hundred to give TWO -- two hundred
+    percent of strain, twice the ceiling, and exactly the regime the ceiling
+    exists to keep a model out of.
+    """
+    from pathlib import Path
+
+    from umat_oti.abaqus.amplitude_search import CEILING
+
+    tool = (Path(__file__).resolve().parents[1] / "tools"
+            / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
+    assert "wanted = min(amplitude * factor, CEILING)" in tool
+    assert "would pass " in tool and "the ceiling of" in tool
+    assert CEILING == 1.0
+    # 0.005 * 400 is 2.0; clamped it is the ceiling itself.
+    assert min(0.005 * 400.0, CEILING) == CEILING
