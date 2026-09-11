@@ -157,11 +157,28 @@ def classify_job(
         status.increments = int(increments.group(1)) if increments else None
 
     if expected_increments is not None:
-        checks["increments_completed"] = status.increments == expected_increments
-        if status.increments != expected_increments:
+        # FEWER increments than requested means the analysis stopped short.
+        # MORE means the solver cut back and recovered, which is a solver
+        # doing its job -- and on a load-controlled step it is what the two
+        # builds do differently, because the converted routine returns the
+        # OTI tangent rather than the author's analytic one and Newton
+        # converges at a different rate. Measured on
+        # BodyForce-Growth-2Stages.for: ten increments for the original and
+        # sixteen for the converted build, both completing successfully.
+        # Calling that a failed job hid a run that had in fact finished; what
+        # it needs is histories paired by time rather than by position, which
+        # is umat_oti.abaqus.compare.align_by_time.
+        short = (status.increments is not None
+                 and status.increments < expected_increments)
+        checks["increments_completed"] = not short
+        if short:
             reasons.append(
                 f"the analysis ran {status.increments} increments where "
                 f"{expected_increments} were requested")
+        elif status.increments != expected_increments:
+            warnings.append(
+                f"the solver cut back and recovered: {status.increments} "
+                f"increments where {expected_increments} were requested")
 
     missing = [name for name in required_files
                if not (directory / name).is_file()

@@ -42,6 +42,7 @@ EXTERNAL: tuple[str, ...] = (
 #: the cluster a failure belongs to is what decides which fix is worth making.
 INTERNAL: tuple[str, ...] = (
     "transform_refused",
+    "experiment_not_generated",
     "unsupported_formulation",
     "support_build_failed",
     "original_job_failed",
@@ -71,6 +72,7 @@ FROM_STAGE: dict[str, str] = {
     "needs_material_data": "missing_material_data",
     "waits_for_input": WAITS_FOR_INPUT,
     "manifest_refused": "unsupported_formulation",
+    "experiment_not_generated": "experiment_not_generated",
     "support_build_failed": "support_build_failed",
     "original_job_failed": "original_job_failed",
     "transformed_job_failed": "transformed_job_failed",
