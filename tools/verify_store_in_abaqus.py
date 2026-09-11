@@ -96,7 +96,8 @@ from umat_oti.corpus.entry_routines import classify as classify_entry   # noqa: 
 from umat_oti.fortran.normalize import detect_source_form              # noqa: E402
 from umat_oti.abaqus.elements import geometry_for as element_geometry   # noqa: E402
 from umat_oti.abaqus.formulation import settle                          # noqa: E402
-from umat_oti.abaqus import frames, primal_signature, safe_loading      # noqa: E402
+from umat_oti.abaqus import (frames, primal_signature,                  # noqa: E402
+                             safe_loading, time_scale)
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
     LoadingSegment, NEEDS_MATERIAL_DATA, VerificationManifest, at_rate, hold,
     reverse, simple_shear, uniaxial, under_body_force)
@@ -168,6 +169,16 @@ NOT_A_UMAT = "not_a_umat"
 #: force through a COMMON block, which a prescribed-displacement deck never
 #: supplies.
 NO_EXPERIMENT = "experiment_not_generated"
+
+#: ON the ladder, and ours: both builds ran, agreed and matched a converged
+#: difference -- over an experiment in which the material did not do what it
+#: is for. Shortening a clock is a legitimate repair for a failure that moves
+#: with the period AND a change to the mechanical problem: a growth law whose
+#: stretch ramps in total time develops less of it in less of it. An
+#: agreement reached near a material's initial state is an agreement about
+#: the part every build gets right, so it is not a verification and must not
+#: be counted as one.
+NOT_INFORMATIVE = "experiment_not_informative"
 
 #: Off the ladder for the same reason as NOT_A_UMAT: the file the author
 #: published does not compile, and no amount of work here changes that. A job
@@ -247,6 +258,12 @@ class StageEvidence:
     #: there is nothing here for a finite difference to confirm or deny.
     derivative_truncated: bool = False
     tangent_verified: Optional[bool] = None
+    #: Did the experiment this verdict rests on exercise anything? A repair
+    #: that made a history finite by removing the behaviour under test has
+    #: not produced a verification OF that behaviour, and a run that agreed
+    #: about a material sitting near its initial state agreed about the part
+    #: every build gets right. Measured on the frozen run, not on a probe.
+    mechanically_informative: Optional[bool] = None
 
 
 def classify_stage(evidence: StageEvidence) -> str:
@@ -278,6 +295,11 @@ def classify_stage(evidence: StageEvidence) -> str:
         return "derivative_truncated"
     if evidence.tangent_verified is not True:
         return "tangent_not_verified"
+    if evidence.mechanically_informative is False:
+        # Everything agreed, and about nothing. The two builds walked an
+        # experiment in which the material did not do what it is for, so what
+        # they agreed on is not evidence about the behaviour under test.
+        return NOT_INFORMATIVE
     return VERIFIED
 
 
@@ -2862,6 +2884,44 @@ def run_association_control(manifest: VerificationManifest, original: Path,
     return outcome
 
 
+def _is_informative(record: dict, manifest: VerificationManifest,
+                    history: Sequence[dict], original: Path) -> tuple[bool, str]:
+    """Did the experiment this verdict rests on exercise anything?
+
+    Two questions, both measured rather than assumed. Did the material do
+    something over the frozen history -- the same indicators the amplitude
+    search uses, read off the run that was actually verified rather than off
+    a probe. And where the source declares a constitutive time scale of its
+    own, did the experiment run long enough to reach the behaviour that scale
+    belongs to.
+
+    The second exists because shortening the clock is a legitimate repair for
+    a model whose failure moves with the period AND a change to the mechanical
+    problem: a growth law whose stretch ramps in total time develops less of
+    it in less of it. Measured on BodyForce-Growth-2Stages.for, whose source
+    writes ``TotalT = 1.0`` and divides ``TIME(2)+DTIME`` by it.
+    """
+    said: list = []
+    try:
+        coverage = time_scale.covers(
+            Path(original).read_text(errors="replace"), manifest.loading)
+    except OSError:                                # pragma: no cover
+        coverage = time_scale.Coverage()
+    record["time_scale_coverage"] = coverage.as_dict()
+    said.append(coverage.reason)
+
+    activation = detect_activation(list(history))
+    record["activation_on_the_frozen_run"] = activation.as_dict()
+    if activation.activated:
+        said.append(f"and the material is active over the run that was "
+                    f"verified: {', '.join(activation.fired)}")
+    else:
+        said.append("and nothing in the run that was verified indicates the "
+                    "material did anything: no state moved, no departure from "
+                    "linearity, no tangent change")
+    return bool(activation.activated and coverage.enough), "; ".join(said)
+
+
 def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                cache_root: Path, work_root: Path, *, timeout: int,
                tangent_tolerance: float = TANGENT_TOLERANCE,
@@ -3244,7 +3304,19 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         "primal_agreed": bool(primal.agrees),
         # Set where the tangent is decided, not here.
         "derivatives_verified": False,
+        # Whether the experiment the verdict rests on exercised anything.
+        # A repair that made a history finite by removing the behaviour under
+        # test has not produced a verification of that behaviour, and a run
+        # that agreed about a material sitting near its initial state agreed
+        # about the part every build gets right.
+        "mechanically_informative": False,
     }
+    informative, informative_why = _is_informative(
+        record, manifest, compared_original, original)
+    record["evidence"]["mechanically_informative"] = informative
+    record["mechanically_informative"] = {"informative": informative,
+                                          "reason": informative_why}
+    seen["mechanically_informative"] = informative
     record["complete_finite_verification_run"] = stopped_at < 0
     if stopped_at >= 0:
         record["primal"]["both_builds_non_finite_from_increment"] = stopped_at + 1

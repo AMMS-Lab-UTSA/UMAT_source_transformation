@@ -33,6 +33,9 @@ GLOSS = {
     "unsupported_formulation": "no element here drives that formulation -- ours",
     "experiment_not_generated": "this harness builds no experiment this "
                                 "source will run -- ours",
+    "experiment_not_informative": "both builds agreed, over an experiment in "
+                                  "which the material did not do what it is "
+                                  "for -- ours",
     "support_build_failed": "the transform's own modules did not compile -- ours",
     "original_job_failed": "the original did not run -- ours until proven "
                            "otherwise",
