@@ -285,7 +285,19 @@ def _gradient_increment(drive, strain_increment: Sequence[float]) -> list[list[f
 
 
 def _gradient_perturbation(drive, direction: int, step: float) -> list[float]:
-    """One direction's DFGRD1 seed, at a finite size, row-major."""
+    """One direction's DFGRD1 seed, at a finite size, row-major.
+
+    The seed DIRECTION, added straight onto the gradient. That is what the
+    transform seeds and what this path perturbs, and it is not the strain
+    increment Abaqus defines DDSDDE against: see
+    :mod:`umat_oti.validation.finite_strain_tangent`, and
+    :func:`umat_oti.abaqus.replay.difference_tangent`, which pushes the same
+    direction forward through the gradient and carries the Kirchhoff term.
+    Here the base path advances an identity gradient by small additive
+    increments, so ``F`` stays within a few parts in a thousand of the
+    identity and the two coincide to that order -- which is a statement about
+    this driver's path, not about the definition.
+    """
     matrix = [[0.0] * 3 for _ in range(3)]
     for row, column, coefficient in drive.dfgrd1.get(direction, ()):
         matrix[row - 1][column - 1] += coefficient * step
