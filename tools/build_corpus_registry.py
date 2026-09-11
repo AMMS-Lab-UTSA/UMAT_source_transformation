@@ -49,6 +49,14 @@ from typing import Any, Optional
 from urllib.parse import quote
 
 REPO = Path(__file__).resolve().parents[1]
+
+
+def _relative_to_repo(path) -> str:
+    """A path as the repository sees it, not as one machine happened to."""
+    try:
+        return str(Path(path).resolve().relative_to(REPO))
+    except (ValueError, OSError):
+        return Path(path).name
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "tools"))
 
@@ -1014,7 +1022,10 @@ def main(argv: Optional[list] = None) -> int:
                     audit=audit)
     summary = summarise(records)
     summary["inventory"] = {
-        "path": str(args.inventory),
+        # Relative to the repository where possible: the audit fails the
+        # build on an absolute home path, and a registry that records where
+        # one machine happened to keep its checkout is not provenance.
+        "path": _relative_to_repo(args.inventory),
         "discovered_sources": len(inventory_ids),
         "in_the_registry": len(records),
         "in_a_batch_but_not_the_inventory": sorted(

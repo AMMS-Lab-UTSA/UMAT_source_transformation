@@ -135,6 +135,10 @@ def test_each_step_that_fails_names_its_own_stage():
     complete = dict(material_found=True, support_ok=True,
                     original_completed=True, transformed_completed=True,
                     primal_agrees=True, tangent_verified=True)
+    # The informativeness rung is a different claim and has its own tests;
+    # these are about the ORDER the earlier rungs are checked in, so the
+    # measurement it needs is supplied rather than left unestablished.
+    complete = dict(complete, mechanically_informative=True)
     assert classify_stage(StageEvidence(**complete)) == VERIFIED
 
     cases = {
@@ -182,7 +186,8 @@ def test_a_transform_with_no_support_units_is_not_a_support_failure():
     assert classify_stage(StageEvidence(
         material_found=True, support_ok=None, original_completed=True,
         transformed_completed=True, primal_agrees=True,
-        tangent_verified=True)) == VERIFIED
+        tangent_verified=True,
+        mechanically_informative=True)) == VERIFIED
 
 
 # --------------------------------------------------------------------------
@@ -532,7 +537,10 @@ def test_a_wrapup_abort_is_a_warning_and_never_a_failure():
         material_found=True, support_ok=True,
         original_completed=evidence.completed,
         transformed_completed=True, primal_agrees=True,
-        tangent_verified=True)) == VERIFIED
+        tangent_verified=True,
+        # Not what this test is about; supplied so the rung it IS about is
+        # the one that decides.
+        mechanically_informative=True)) == VERIFIED
 
 
 def test_a_build_whose_probe_found_no_call_site_says_so():
