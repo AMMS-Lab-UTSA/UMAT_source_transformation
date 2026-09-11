@@ -150,3 +150,21 @@ def test_a_source_missing_a_module_is_not_reported_as_broken(tmp_path):
     assert not check.ok
     assert check.missing_dependencies
     assert not check.source_is_malformed
+
+
+def test_the_converted_build_is_asked_the_same_question():
+    """A build that aborts leaves no .sta, no .msg error count and no .odb,
+    and that reads as "the converted build did not run" whether it failed to
+    compile or failed to converge. Those need different work, and the compiler
+    tells them apart in seconds. The answer is ours either way -- which is why
+    the original's version of this check can end in an EXTERNAL verdict and
+    this one cannot."""
+    tool = (Path(__file__).resolve().parents[1] / "tools"
+            / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
+    assert "def diagnose_transformed(" in tool
+    body = tool.split("def diagnose_transformed(")[1].split("\ndef ")[0]
+    assert "the transform emitted Fortran the compiler will not accept" in body
+    assert "INCOMPLETE_OR_CORRUPT_SOURCE" not in body, (
+        "a converted source that will not compile is this project's problem, "
+        "never the author's")
+    assert "EXTERNAL_DEPENDENCY_UNAVAILABLE" not in body

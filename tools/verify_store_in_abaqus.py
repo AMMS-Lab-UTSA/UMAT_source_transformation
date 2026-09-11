@@ -2165,6 +2165,42 @@ def diagnose_original(source: Path, cache_root: Path, work_dir: Path, *,
     return outcome
 
 
+def diagnose_transformed(stored, work_dir: Path, *, form: str = "",
+                         timeout: int = 900) -> dict:
+    """Why the CONVERTED build did not run, from the compiler.
+
+    The same question as for the original and a different answer: here a
+    compile failure is ours. ``abaqus user=`` builds the converted source
+    itself, and a build that aborts leaves no .sta, no .msg error count and no
+    .odb -- which reads as "the converted build did not run" whether it failed
+    to compile or failed to converge. Those need different work, and the
+    compiler can tell them apart in seconds.
+    """
+    from umat_oti.abaqus.support import compile_one
+
+    outcome: dict[str, Any] = {}
+    entry = Path(stored.entry_source)
+    check = compile_one(entry, Path(work_dir) / "compile", form=form,
+                        timeout=timeout,
+                        include_dirs=[Path(stored.directory)])
+    compiled = check.as_dict()
+    for name in ("reason", "log"):
+        compiled[name] = str(compiled.get(name, "")).replace(
+            str(Path(stored.directory)) + "/", "")
+    compiled["defects"] = [str(line).replace(str(Path(stored.directory)) + "/", "")
+                           for line in compiled.get("defects", [])]
+    outcome["compile"] = compiled
+    if check.ok:
+        outcome["reason"] = ("the converted source compiles with Abaqus's own "
+                             "compile line, so what failed was the run and not "
+                             "the build")
+    else:
+        outcome["reason"] = (
+            f"the transform emitted Fortran the compiler will not accept: "
+            f"{compiled['reason']}")
+    return outcome
+
+
 def lay_out_includes(found, into: Path) -> Path:
     """The include files copied under the names the source asks for.
 
@@ -2549,8 +2585,15 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             record["stage"] = HARNESS_ERROR
             record["reason"] = f"transformed: {harness}"
             return record
+        # Ask the compiler, as for the original. Here the answer is ours
+        # either way, and "it does not compile" and "it does not converge"
+        # need different work.
+        diagnosis = diagnose_transformed(stored, work / "transformed_diagnosis",
+                                         form=source_form, timeout=timeout)
+        record["transformed_diagnosis"] = diagnosis
         return settle("; ".join(transformed_job.reasons)
-                      or "the transformed build did not complete")
+                      + "; " + diagnosis["reason"]
+                      if transformed_job.reasons else diagnosis["reason"])
 
     # The decks Abaqus actually read, compared after the fact. Cheap, and the
     # only one of the two checks that would catch a deck rewritten between the
