@@ -1087,3 +1087,29 @@ def test_more_than_one_job_still_writes_every_record_once(tmp_path: Path):
                                                   "bob__other/src/umat.for"]
     assert {r["stage"] for r in lines} == {"needs_material_data"}
     assert summarise(lines)["attempted"] == 2
+
+
+def test_a_formulation_refusal_is_not_reported_as_missing_material(tmp_path: Path):
+    """A formulation this harness cannot drive leaves no manifest, and the
+    stage derived from the evidence then read needs_material_data -- three
+    cohesive laws and two shell UMATs whose constants were published AND read,
+    reported as materials nobody had described."""
+    cache = _cache_with_deck(tmp_path)
+    source = cache / "owner__name/sub/umat.for"
+    # A cohesive law names itself one.
+    cohesive = cache / "owner__name/sub/Bilinear_CZM_UMAT.for"
+    cohesive.write_text(source.read_text(), encoding="utf-8")
+    plan = build_manifest("owner__name/sub/Bilinear_CZM_UMAT.for", _row(),
+                          _proposal(), cache)
+    assert plan.stage == "manifest_refused"
+    assert "cohesive" in plan.reason
+    assert plan.manifest is None, "there is no manifest to run"
+    assert "no deck" not in plan.reason
+
+
+def test_the_batch_keeps_the_plans_own_stage(tmp_path: Path):
+    """settle() derives a stage from the evidence, and the derivation is the
+    wrong question for a plan that already has one."""
+    tool = (Path(__file__).resolve().parents[1] / "tools"
+            / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
+    assert "return settle(plan.reason, stage=(plan.stage" in tool
