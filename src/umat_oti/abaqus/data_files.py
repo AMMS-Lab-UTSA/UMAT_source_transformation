@@ -130,6 +130,138 @@ def opened_files(text: str) -> tuple:
     return tuple(found)
 
 
+
+#: Fixed-form statements end at column 72 unless the compiler is told
+#: otherwise. Abaqus always passes ``-extend_source``, but the replay driver
+#: builds with whatever compiler it finds, so the rewrite wraps at the
+#: standard column rather than relying on an extension.
+FIXED_LIMIT = 72
+FREE_LIMIT = 132
+
+
+def _chunks(value: str, first: int, rest: int) -> list:
+    """Split a string into pieces that fit the widths given, largest first."""
+    out: list = []
+    remaining = value
+    width = max(1, first)
+    while len(remaining) > width:
+        out.append(remaining[:width])
+        remaining = remaining[width:]
+        width = max(1, rest)
+    out.append(remaining)
+    return out
+
+
+def _rewrite_line(line: str, literal: str, value: str, form: str) -> list:
+    """Replace one quoted literal in one physical line, wrapping if needed.
+
+    A long absolute path does not fit in what is left of a fixed-form
+    statement, and a character literal cannot simply be continued: the
+    standard pads the line to column 72 with blanks, which would put those
+    blanks INSIDE the name. So an over-long value is emitted as concatenated
+    pieces -- ``'/long/pa'//`` then ``'th/file.csv'`` -- which is the same
+    string by any compiler's reading of it.
+    """
+    free = form == "free"
+    limit = FREE_LIMIT if free else FIXED_LIMIT
+    head, _, tail = line.partition(literal)
+    if not _:
+        return [line]
+    single = f"{head}'{value}'{tail}"
+    if len(single) <= limit:
+        return [single]
+    joiner = "// &" if free else "//"
+    marker = "     &" if not free else "     &"
+    # Room for the opening quote, the closing quote and the joiner.
+    first = limit - len(head) - 2 - len(joiner)
+    rest = limit - len(marker) - 2 - len(joiner)
+    if first < 1 or rest < 1:                      # pragma: no cover - defensive
+        return [single]
+    pieces = _chunks(value, first, rest)
+    lines = [f"{head}'{pieces[0]}'{joiner}"]
+    for piece in pieces[1:-1]:
+        lines.append(f"{marker}'{piece}'{joiner}")
+    lines.append(f"{marker}'{pieces[-1]}'{tail}")
+    return lines
+
+
+def redirect(text: str, directory: Path, *, staged: Sequence[str] = (),
+             form: str = "") -> tuple:
+    """Point every literal OPEN name at ``directory``.
+
+    Abaqus/Standard does not run in the job directory. It runs in a scratch
+    directory of its own making -- ``/tmp/<user>_<job>_<pid>`` -- so a routine
+    that opens a file by a name with no directory in it, or by the author's
+    own Windows path, looks there and not where the file was staged. Measured
+    on Growth-Alex.for, which aborts in the element loop of its first
+    increment with::
+
+        forrtl: severe (29): file not found, unit 301, file
+        /tmp/ammslab3_original_1902146/T:\Abaqus-Temp\...\Lambda10.csv
+
+    with the file present, under exactly that name, in the job directory.
+    Thirteen entries failed their original job this way and were reported as
+    the model's failure rather than the harness's.
+
+    So the name is made absolute. Only names in ``staged`` are touched, so the
+    rewrite can never point at a file that is not there, and only the path is
+    changed -- a literal is a literal in both builds, and the same rewrite is
+    applied to both, so nothing about the arithmetic moves.
+
+    Returns the rewritten text and what was pointed where.
+    """
+    directory = Path(directory).resolve()
+    allowed = set(staged) if staged else None
+    wanted = [opened for opened in opened_files(text)
+              if allowed is None or opened.name in allowed]
+    if not wanted:
+        return text, {}
+
+    # Longest first, so 'dir\name.csv' is not half-matched by 'name.csv'.
+    pointed: dict = {}
+    lines = text.splitlines()
+    for opened in sorted(wanted, key=lambda o: -len(o.name)):
+        target = str(directory / opened.name)
+        pieces = re.split(r"([\\/])", opened.name)
+        # The literal that carries the base name is the one worth rewriting;
+        # any directory literal before it becomes empty.
+        head = opened.name[:len(opened.name) - len(opened.basename)]
+        replaced = False
+        for index, line in enumerate(lines):
+            for quote in ("'", '"'):
+                whole = f"{quote}{opened.name}{quote}"
+                if whole in line:
+                    lines[index:index + 1] = _rewrite_line(
+                        line, whole, target, form)
+                    replaced = True
+                    break
+                base = f"{quote}{opened.basename}{quote}"
+                if head and base in line:
+                    lines[index:index + 1] = _rewrite_line(
+                        line, base, target, form)
+                    # The directory literal on this or the previous line is
+                    # now redundant; emptying it keeps the concatenation
+                    # valid without moving anything else.
+                    prefix = f"{quote}{head}{quote}"
+                    for other in range(max(0, index - 3), min(len(lines), index + 4)):
+                        if prefix in lines[other]:
+                            lines[other] = lines[other].replace(
+                                prefix, f"{quote}{quote}")
+                            break
+                    replaced = True
+                    break
+                if not head and base in line:
+                    lines[index:index + 1] = _rewrite_line(
+                        line, base, target, form)
+                    replaced = True
+                    break
+            if replaced:
+                break
+        if replaced:
+            pointed[opened.name] = target
+    return "\n".join(lines) + ("\n" if text.endswith("\n") else ""), pointed
+
+
 @dataclass
 class Staging:
     """What was put beside the job, and what could not be found."""

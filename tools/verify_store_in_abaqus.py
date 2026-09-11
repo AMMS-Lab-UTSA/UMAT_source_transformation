@@ -89,7 +89,8 @@ from umat_oti.abaqus.state_regime import (                              # noqa: 
     SMOOTH_INELASTIC, classify as classify_regime, coverage,
     response_character)
 from umat_oti.abaqus.amplitude_search import (                          # noqa: E402
-    ACTIVATED, LEFT_ITS_DOMAIN, LINEAR_TO_THE_CEILING, search_amplitude)
+    ACTIVATED, LEFT_ITS_DOMAIN, LINEAR_TO_THE_CEILING, first_non_finite,
+    search_amplitude)
 from umat_oti.corpus.entry_routines import classify as classify_entry   # noqa: E402
 from umat_oti.fortran.normalize import detect_source_form              # noqa: E402
 from umat_oti.abaqus.elements import geometry_for as element_geometry   # noqa: E402
@@ -473,6 +474,9 @@ class ManifestPlan:
     #: decided it: what the source's own text does with its tensor, and what
     #: element the author's deck runs the material on.
     formulation: Optional[dict] = None
+    #: Where material constants were looked for, when none were found. A
+    #: refusal that does not say where it searched is a claim, not a finding.
+    searched: Optional[dict] = None
 
 
 _SOLUTION_STATE = re.compile(
@@ -536,6 +540,55 @@ def initial_solution_state(deck_text: str) -> tuple[float, ...]:
     return tuple(values)
 
 
+def searched_places(source_id: str, proposal: Optional[dict]) -> dict:
+    """Every place a material constant was looked for, and what was there.
+
+    "No deck is paired with this source" is a statement about this pipeline
+    until it says where it looked. The pairing scan already records it -- the
+    decks in the repository, how many constants each publishes, and how many
+    the source's own PROPS references reach -- so the refusal quotes it
+    rather than asserting a negative.
+    """
+    pairing = (proposal or {}).get("pairing") or {}
+    alternatives = list(pairing.get("alternatives") or ())
+    repository = str((proposal or {}).get("repository") or "")
+    return {
+        "repository": repository,
+        "decks_scanned": len(alternatives),
+        "decks": alternatives[:40],
+        "decks_not_listed": max(0, len(alternatives) - 40),
+        "scanner": str(pairing.get("checked_by") or ""),
+        "evidence": str(pairing.get("evidence") or ""),
+        "verdict": str(pairing.get("verdict") or ""),
+        "expected_nprops": (pairing.get("metadata") or {}).get("expected_nprops"),
+        "documentation": ("every .md, .rst and .txt in the repository was "
+                          "scanned for a *MATERIAL or *USER MATERIAL block "
+                          "naming this routine; an extracted block is written "
+                          "beside its document as <file>.extracted.inp and "
+                          "enters this same scan"),
+    }
+
+
+def where_we_looked(source_id: str, proposal: Optional[dict]) -> str:
+    """The refusal, with the search in it."""
+    places = searched_places(source_id, proposal)
+    count = places["decks_scanned"]
+    where = places["repository"] or Path(source_id).parts[0]
+    if not count:
+        return (f"no material constants are published for this source: its "
+                f"repository ({where}) contains no .inp file at all, and no "
+                f"document in it carries a *MATERIAL or *USER MATERIAL block "
+                f"naming this routine. Searched: every .inp in the "
+                f"repository, and every .md, .rst and .txt in it for an "
+                f"embedded material block")
+    evidence = places["evidence"] or "no deck published enough constants"
+    return (f"no material constants are published for this source. Searched "
+            f"{count} .inp file(s) in {where}, and every .md, .rst and .txt "
+            f"in it for an embedded *MATERIAL block naming this routine: "
+            f"{evidence}. Supplying constants from anywhere else would be "
+            f"inventing them")
+
+
 def build_manifest(
     source_id: str,
     row: Optional[dict],
@@ -587,8 +640,8 @@ def build_manifest(
     proposed = str(((proposal or {}).get("pairing") or {}).get("proposed") or "")
     if not proposed:
         plan.stage = NEEDS_MATERIAL_DATA
-        plan.reason = ("no deck is paired with this source, so it has no "
-                       "published material constants")
+        plan.reason = where_we_looked(source_id, proposal)
+        plan.searched = searched_places(source_id, proposal)
         return plan
     plan.deck = proposed
     deck_path = Path(cache_root) / proposed
@@ -880,11 +933,22 @@ def discover_loading(manifest: VerificationManifest, original: Path,
     # looking, not the cost of the measurement.
     coarse = max(3, increments // 3)
 
-    def run_at(amplitude: float):
-        """One Abaqus job on the original at this amplitude."""
-        trial = attempts_dir / f"a{amplitude:.6e}"
-        loading = [uniaxial(amplitude, coarse),
-                   simple_shear(amplitude, coarse)]
+    def run_at(amplitude: float, steps: int = 0):
+        """One Abaqus job on the original at this amplitude.
+
+        ``steps`` is how finely to walk the path. The SEARCH walks it coarsely
+        -- four increments per segment answer "did anything happen?" as well
+        as thirty, and every step is a real Abaqus job. The EXTENSION does not
+        get that discount: what it decides is the amplitude the verification
+        will run at, and a model can walk a coarse path to a strain it cannot
+        reach along a fine one. Measured on Growth-Alex.for: 0.01 completed at
+        three increments per segment, was adopted, and the verification at ten
+        put 2800 of 3990 compared values past the end of the model's domain.
+        """
+        walk = steps or coarse
+        trial = attempts_dir / f"a{amplitude:.6e}x{walk}"
+        loading = [uniaxial(amplitude, walk),
+                   simple_shear(amplitude, walk)]
         loading.append(reverse(loading[0]))
         candidate = replace(manifest, loading=tuple(loading))
         call = dict(manifest=candidate, timeout=timeout, source=Path(original),
@@ -952,7 +1016,19 @@ def discover_loading(manifest: VerificationManifest, original: Path,
         tried: list = []
         for factor in ladder:
             wanted = amplitude * factor
-            ran, _records, why = run_at(wanted)
+            ran, _records, why = run_at(wanted, steps=increments)
+            # "The job completed" is not "the model was still itself". A run
+            # that returned NaN at its fourth increment completes: Abaqus
+            # writes the history and exits. Adopting that amplitude hands the
+            # verification a path the model has already left, and the search
+            # itself would have rejected it -- it is the same test, applied
+            # in the one place that was not applying it.
+            broke_at = first_non_finite(_records) if ran else None
+            if broke_at is not None:
+                ran = False
+                why = (f"the model returned a value that is not a number at "
+                       f"increment {broke_at} of this run, so its domain does "
+                       f"not reach this amplitude")
             tried.append({"factor": factor, "amplitude": wanted, "ran": ran,
                           "reason": why[:200]})
             if ran:
@@ -1968,6 +2044,9 @@ def _material_columns(plan: ManifestPlan) -> dict[str, Any]:
         "kinematics_note": plan.kinematics_note,
         "entry_classification": plan.entry_classification,
         "formulation": plan.formulation,
+        # Where constants were looked for, when none were found. A refusal
+        # that does not say where it searched is a claim, not a finding.
+        "searched_for_material_data": plan.searched,
     }
 
 
@@ -3024,7 +3103,8 @@ def _verify_tangent_at(manifest: VerificationManifest, original: Path,
     # differentiate the quantity the OTI side differentiated.
     sweep = difference_tangent(build, work_dir, manifest.ntens,
                                manifest.fd_steps, scale=scale,
-                               transformed_source=transformed)
+                               transformed_source=transformed,
+                               near_zero_fraction=manifest.near_zero_fraction)
     outcome["driven_through"] = sweep.driven_through
     # Per step, how far the forward and backward one-sided differences
     # sat from each other. This is what says whether the two

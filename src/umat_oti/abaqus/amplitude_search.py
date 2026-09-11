@@ -158,7 +158,7 @@ def _largest_stress(records: Sequence[dict]) -> float:
     return best
 
 
-def _first_non_finite(records: Sequence[dict]) -> Optional[int]:
+def first_non_finite(records: Sequence[dict]) -> Optional[int]:
     """The first increment whose stress or state is not a number.
 
     A run that produced NaN is not a quiet run. The search read one as "no
@@ -207,7 +207,7 @@ def search_amplitude(
     # domain that does not reach it, and there is nothing above to find.
     for _descent in range(DESCENTS):
         ran, records, why = run(amplitude)
-        if ran and _first_non_finite(records) is None:
+        if ran and first_non_finite(records) is None:
             break
         result.attempts.append(Attempt(amplitude=amplitude, ran=ran,
                                        reason=why or "returned a value that "
@@ -242,7 +242,7 @@ def search_amplitude(
             result.reason = why or "the job produced no history"
             return result
 
-        broke_at = _first_non_finite(records)
+        broke_at = first_non_finite(records)
         if broke_at is not None:
             result.outcome = LEFT_ITS_DOMAIN
             result.amplitude = last_quiet

@@ -29,7 +29,8 @@ from typing import Sequence
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from umat_oti.abaqus.compare import compare_primal          # noqa: E402
-from umat_oti.abaqus.data_files import stage as stage_data_files  # noqa: E402
+from umat_oti.abaqus.data_files import (                          # noqa: E402
+    redirect as redirect_data_files, stage as stage_data_files)
 from umat_oti.abaqus.deck import generate_deck, total_increments  # noqa: E402
 from umat_oti.abaqus.manifest import (                      # noqa: E402
     LoadingSegment, VerificationManifest)
@@ -135,6 +136,25 @@ def run_one(manifest: VerificationManifest, source: Path, job: str,
                                roots=[Path(root) for root in data_roots])
     report["data_files"] = staging.as_dict()
     report["data_files_reason"] = staging.reason()
+
+    # ...and then pointed at, because Abaqus/Standard does not run in the job
+    # directory. It runs in a scratch directory of its own making, so a
+    # relative name resolves there and not here:
+    #
+    #   forrtl: severe (29): file not found, unit 301, file
+    #   /tmp/ammslab3_original_1902146/T:\Abaqus-Temp\...\Lambda10.csv
+    #
+    # with the file present under exactly that name in the job directory.
+    # Only names that were actually staged are rewritten, and only the path
+    # in them, so the rewrite can neither point at a file that is not there
+    # nor change what the routine computes.
+    if staging.staged:
+        pointed_text, pointed = redirect_data_files(
+            probed.read_text(encoding="utf-8"), work_dir,
+            staged=list(staging.staged), form=resolved)
+        if pointed:
+            probed.write_text(pointed_text, encoding="utf-8")
+        report["data_files_pointed"] = pointed
 
     result = run_job(work_dir, job, generate_deck(manifest), user_source=probed,
                      expected_increments=total_increments(manifest.loading),

@@ -92,7 +92,15 @@ class VerificationManifest:
     perturbation_components: tuple[int, ...] = ()
     #: Relative step sizes for the sweep, largest first. A single step cannot
     #: distinguish a truncation error from a cancellation one.
-    fd_steps: tuple[float, ...] = (1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8)
+    #:
+    #: Starts at 1e-2 because for a stiff model the whole of 1e-3 to 1e-8 can
+    #: sit on the cancellation side of the U-curve, and a sweep that never
+    #: reaches the truncation side has no minimum in it to find. Measured on
+    #: Growth-MinSur2.for: the relative error rose monotonically as the step
+    #: fell -- 8.6e-08, 2.2e-06, 8.3e-06, 3.8e-05, 7.6e-04, 1.0e-02 -- which
+    #: is 1/h over six decades with no h^2 branch visible anywhere in it. Only
+    #: the largest step agreed, and a plateau needs two.
+    fd_steps: tuple[float, ...] = (1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8)
     #: A component smaller than this fraction of the largest entry of the
     #: tangent is reported against the largest entry instead of against itself.
     near_zero_fraction: float = 1e-8

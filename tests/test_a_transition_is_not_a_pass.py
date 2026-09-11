@@ -272,8 +272,10 @@ def test_verification_is_driven_past_the_transition_not_up_to_it():
         "a material with a transition is driven past it; one that was already\n"
         "         active at the search's floor has no transition to cross and is\n"
         "         driven up for resolution instead")
-    assert "ran, _records, why = run_at(wanted)" in tool, (
-        "the extended amplitude must be confirmed by a run, not assumed")
+    assert "ran, _records, why = run_at(wanted, steps=increments)" in tool, (
+        "the extended amplitude must be confirmed by a run, not assumed -- "
+        "and at the resolution the verification will use, because a model "
+        "can walk a coarse path to a strain it cannot reach along a fine one")
     assert "could not be driven further than the" in tool, (
         "a material that cannot be driven further must keep the amplitude "
         "that worked, and say so")

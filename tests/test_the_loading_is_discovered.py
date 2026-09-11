@@ -225,7 +225,14 @@ def test_a_search_job_is_coarser_than_the_measurement():
     tool = (Path(__file__).resolve().parents[1] / "tools"
             / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
     assert "coarse = max(3, increments // 3)" in tool
-    assert "uniaxial(amplitude, coarse)" in tool
+    # The discount is the default and the SEARCH takes it: search_amplitude
+    # calls run_at with an amplitude and nothing else.
+    assert "walk = steps or coarse" in tool
+    assert "uniaxial(amplitude, walk)" in tool
+    call = tool.split("found = search_amplitude(")[1].split(")")[0]
+    assert "steps" not in call, (
+        "the search would be paying the measurement's price for an answer "
+        "four increments give")
 
 
 # ---------------------------------------------------------------------------
