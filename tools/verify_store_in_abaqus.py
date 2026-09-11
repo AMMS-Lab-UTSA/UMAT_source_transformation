@@ -2319,7 +2319,14 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         return settle(plan.reason, stage=NOT_A_UMAT,
                       entry_classification=plan.entry_classification)
     if plan.stage == NEEDS_MATERIAL_DATA or plan.manifest is None:
-        return settle(plan.reason)
+        # The plan's own stage when it has one. A formulation this harness
+        # cannot drive leaves no manifest, and falling through to the
+        # evidence-derived stage recorded it as needs_material_data -- three
+        # cohesive laws and two shell UMATs whose constants were published and
+        # read, reported as materials nobody had described.
+        return settle(plan.reason, stage=(plan.stage
+                                          if plan.stage and plan.stage
+                                          != NEEDS_MATERIAL_DATA else ""))
     manifest = plan.manifest
     seen["material_found"] = True
     seen["manifest_refusals"] = plan.refusals
