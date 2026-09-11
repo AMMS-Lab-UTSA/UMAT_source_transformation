@@ -200,8 +200,11 @@ def test_proportional_points_below_a_transition_do_not_prove_linearity():
     So the escalation runs to the ceiling, and the cost is bounded by a wider
     step and coarser search jobs instead.
     """
+    # Six rather than four, because a run leaving fewer finite records than
+    # the verification's own minimum is not an amplitude the search should
+    # offer: see ENOUGH_FINITE_RECORDS.
     result = search_amplitude(
-        lambda a: (True, elastic_plastic(a, 2e-3, increments=4), ""))
+        lambda a: (True, elastic_plastic(a, 2e-3, increments=6), ""))
     assert result.outcome == ACTIVATED
     low, high = result.bracket
     assert low <= 2e-3 <= high * 1.2, (
@@ -229,10 +232,14 @@ def test_a_search_job_is_coarser_than_the_measurement():
     # calls run_at with an amplitude and nothing else.
     assert "walk = steps or coarse" in tool
     assert "uniaxial(amplitude, walk)" in tool
-    call = tool.split("found = search_amplitude(")[1].split(")")[0]
-    assert "steps" not in call, (
-        "the search would be paying the measurement's price for an answer "
-        "four increments give")
+    call = tool.split("found = search_amplitude(")[1].split("reversal_at")[0]
+    assert "run_at," in call, "the search itself takes the coarse discount"
+    # ...and spends the measurement's price only where the coarse answer is
+    # about to refuse a source: a model that goes non-finite in three
+    # increments of a third of the step can be well behaved in ten of a
+    # tenth. Measured on BodyForce-Growth-2Stages.for.
+    assert "run_fine=lambda amplitude: run_at(amplitude, steps=increments)" \
+        in call
 
 
 # ---------------------------------------------------------------------------
@@ -253,7 +260,7 @@ def test_a_non_finite_run_bounds_the_search_rather_than_passing_it():
         value = amplitude * 1e6 if finite else float("nan")
         return True, [{"STRESS": [value] * 6, "STATEV": [0.0],
                        "STRAN": [amplitude] * 6,
-                       "DSTRAN": [amplitude / 3] * 6} for _ in range(3)], ""
+                       "DSTRAN": [amplitude / 3] * 6} for _ in range(6)], ""
 
     found = search_amplitude(run)
     assert found.outcome == LEFT_ITS_DOMAIN
@@ -271,7 +278,7 @@ def test_a_finite_quiet_run_still_escalates():
     def run(amplitude):
         return True, [{"STRESS": [amplitude * 1e6] * 6, "STATEV": [0.0],
                        "STRAN": [amplitude] * 6,
-                       "DSTRAN": [amplitude / 3] * 6} for _ in range(3)], ""
+                       "DSTRAN": [amplitude / 3] * 6} for _ in range(6)], ""
 
     found = search_amplitude(run)
     assert found.outcome == LINEAR_TO_THE_CEILING
@@ -279,11 +286,15 @@ def test_a_finite_quiet_run_still_escalates():
 
 
 def test_the_search_steps_down_before_it_steps_up():
-    """A model whose smallest probe already returns NaN has a domain that does
-    not reach it, and there is nothing above to find. Thirteen Jeff97 growth
-    entries left their domain at the first attempt, the search reported an
-    amplitude of zero, and the caller fell back to a DEFAULT of 0.005 -- fifty
-    times larger than the probe that had just failed."""
+    """A model whose smallest probe already returns NaN may have a domain that
+    does not reach it, and stepping down is the cheapest thing to try.
+    Thirteen Jeff97 growth entries left their domain at the first attempt, the
+    search reported an amplitude of zero, and the caller fell back to a
+    DEFAULT of 0.005 -- fifty times larger than the probe that had just
+    failed.
+
+    Down is tried FIRST; it is no longer tried alone. See
+    test_nothing_below_works_is_not_nothing_works."""
     from umat_oti.abaqus.amplitude_search import search_amplitude
 
     def run(amplitude):
@@ -291,7 +302,7 @@ def test_the_search_steps_down_before_it_steps_up():
         value = amplitude * 1e6 if finite else float("nan")
         return True, [{"STRESS": [value] * 6, "STATEV": [0.0],
                        "STRAN": [amplitude * (n + 1) / 3] * 6,
-                       "DSTRAN": [amplitude / 3] * 6} for n in range(3)], ""
+                       "DSTRAN": [amplitude / 3] * 6} for n in range(6)], ""
 
     found = search_amplitude(run)
     assert found.amplitude > 0.0
@@ -322,7 +333,7 @@ def test_the_descent_does_not_disturb_a_model_that_runs():
         tried.append(amplitude)
         return True, [{"STRESS": [amplitude * 1e6] * 6, "STATEV": [0.0],
                        "STRAN": [amplitude] * 6,
-                       "DSTRAN": [amplitude / 3] * 6} for _ in range(3)], ""
+                       "DSTRAN": [amplitude / 3] * 6} for _ in range(6)], ""
 
     found = search_amplitude(run)
     assert found.outcome == LINEAR_TO_THE_CEILING

@@ -1009,7 +1009,14 @@ def discover_loading(manifest: VerificationManifest, original: Path,
             return False, [], "; ".join(evidence.reasons) or "the job did not complete"
         return True, history_of(trial, "original"), ""
 
-    found = search_amplitude(run_at, reversal_at=2 * coarse)
+    # The search walks coarsely to keep its cost down. Whether a model can be
+    # driven AT ALL is a question about the increment size as well as the
+    # amplitude, so a source about to be refused is asked again at the
+    # resolution the verification would actually use.
+    found = search_amplitude(
+        run_at, run_fine=lambda amplitude: run_at(amplitude, steps=increments),
+        declared=(manifest.loading[0].strain[0] if manifest.loading else 0.0),
+        reversal_at=2 * coarse)
     record = found.as_dict()
     record["ran"] = True
     record["jobs"] = len(found.attempts)
@@ -1043,7 +1050,17 @@ def discover_loading(manifest: VerificationManifest, original: Path,
                 record["refused"] = ""
                 return replace(manifest, loading=(driven,)), record
             record["chosen_amplitude"] = 0.0
-            record["refused"] = f"{found.reason}{note}"
+            # "The model produced no numbers" and "no job ever ran" are
+            # different findings. Without a licence token every attempt comes
+            # back ran=False, and blaming the experiment for that reports a
+            # harness that could not run anything as a source this harness
+            # has no experiment for. Only a search whose jobs ACTUALLY RAN
+            # and returned values that are not numbers has established
+            # anything about the loading.
+            if any(attempt.ran for attempt in found.attempts):
+                record["refused"] = f"{found.reason}{note}"
+            else:
+                record["did_not_run"] = found.reason
             return manifest, record
         amplitude = manifest.loading[0].strain[0]
     if found.outcome == ACTIVATED and amplitude:

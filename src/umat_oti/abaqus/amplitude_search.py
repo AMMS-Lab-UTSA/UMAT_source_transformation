@@ -61,6 +61,41 @@ GROWTH = 5.0
 #: asked about a regime its author did not write.
 CEILING = 1.0
 
+#: How many finite records a run has to leave before the amplitude counts as
+#: one this model can be driven at. NOT "every record is finite": a model
+#: that walks twenty-two good increments and then leaves its domain is
+#: perfectly drivable, and the verification already truncates at the first
+#: non-finite record and compares what came before.
+#:
+#: Measured on BodyForce-Growth-2Stages.for: 240 records, non-finite from
+#: record 23, and a verification over the first 22 that agreed to 1.16e-11
+#: with its tangent confirmed at two smooth states. Requiring the whole run
+#: to be finite refused that amplitude and sixteen real verifications with
+#: it. Five, to match MINIMUM_COMPARABLE_INCREMENTS in the verifier: fewer
+#: than that is too few to rest a verification on, and the search should not
+#: offer an amplitude the verification will then reject.
+ENOUGH_FINITE_RECORDS = 5
+
+
+def enough_to_drive(records: Sequence[dict]) -> bool:
+    """Did this run leave enough finite records to verify on?"""
+    broke_at = first_non_finite(records)
+    usable = len(records or ()) if broke_at is None else broke_at - 1
+    return usable >= ENOUGH_FINITE_RECORDS
+
+
+def recorded_nothing(records: Sequence[dict]) -> bool:
+    """A run that wrote no history at all.
+
+    Different from one that left too few records: no amplitude changes it.
+    The probe found no call site, or the routine returned without computing
+    anything, or the job never reached the element loop -- and searching
+    seventeen more amplitudes for a model that records nothing costs
+    seventeen Abaqus jobs to learn what the first one said.
+    """
+    return not records
+
+
 #: How many times to step DOWN when the first amplitude already fails. A model
 #: whose smallest probe returns NaN has a domain that does not reach 1e-4, and
 #: escalating from there finds nothing while a smaller amplitude might run.
@@ -183,6 +218,8 @@ def first_non_finite(records: Sequence[dict]) -> Optional[int]:
 def search_amplitude(
     run: Callable[[float], tuple[bool, list, str]],
     *,
+    run_fine: Optional[Callable[[float], tuple[bool, list, str]]] = None,
+    declared: float = 0.0,
     first: float = FIRST_AMPLITUDE,
     growth: float = GROWTH,
     ceiling: float = CEILING,
@@ -203,24 +240,108 @@ def search_amplitude(
     last_quiet = 0.0
     elastic_stress = 0.0
 
-    # Down before up. A model whose smallest probe already returns NaN has a
-    # domain that does not reach it, and there is nothing above to find.
+    # Down first. A model whose smallest probe already returns NaN may have a
+    # domain that does not reach it, and a smaller amplitude is the cheapest
+    # thing to try.
+    found_a_footing = False
     for _descent in range(DESCENTS):
         ran, records, why = run(amplitude)
-        if ran and first_non_finite(records) is None:
+        if ran and enough_to_drive(records):
+            found_a_footing = True
             break
+        if ran and recorded_nothing(records):
+            result.attempts.append(Attempt(amplitude=amplitude, ran=ran,
+                                           reason="the job ran and recorded "
+                                                  "no history at all"))
+            result.outcome = NEVER_RAN
+            result.amplitude = 0.0
+            result.bracket = (0.0, float(first))
+            result.reason = (
+                f"the job ran at {amplitude:.3g} and recorded no history at "
+                f"all, so there is nothing here an amplitude can change")
+            return result
         result.attempts.append(Attempt(amplitude=amplitude, ran=ran,
-                                       reason=why or "returned a value that "
-                                                     "is not a number"))
+                                       reason=why or "left too few finite "
+                                                     "records to verify on"))
         amplitude /= growth
-    else:
+
+    # ...and then UP, which this used to skip. "Nothing below works" is not
+    # "nothing works": a model can be ill-posed at a strain too small to move
+    # it and perfectly well behaved at one that does. Measured on sixteen
+    # BodyForce-Growth-2Stages entries -- the search reported no domain from
+    # 8e-07 to 1e-04 and the same model then ran twenty-two increments at
+    # 0.005 with no non-finite value in either build and a primal agreement
+    # of 1.16e-11. The search had looked in one direction and called it the
+    # whole answer; the verification reached the working amplitude only by
+    # falling back to a fixed probe, which is luck rather than a search.
+    if not found_a_footing:
+        amplitude = float(first) * growth
+        while amplitude <= ceiling:
+            ran, records, why = run(amplitude)
+            if ran and enough_to_drive(records):
+                found_a_footing = True
+                break
+            result.attempts.append(
+                Attempt(amplitude=amplitude, ran=ran,
+                        reason=why or "returned a value that is not a number"))
+            amplitude *= growth
+
+    # Still nothing -- but everything above was probed on the COARSE path the
+    # search uses to keep its cost down, and whether a model can be driven at
+    # all is a question about the increment size as well as the amplitude. A
+    # model that goes non-finite in three increments of a third of the step
+    # can be perfectly well behaved in ten of a tenth. Measured on
+    # BodyForce-Growth-2Stages.for: NaN at every amplitude from 8e-07 to 1 at
+    # three increments per segment, and twenty-two finite increments at 0.005
+    # at ten. Only a source about to be refused pays for this.
+    # Before concluding there is no loading: try the loading this harness was
+    # GIVEN. The search starts at its own 1e-4 and climbs by fives, so a
+    # viable window narrower than a factor of five falls between two of its
+    # steps -- and the manifest's declared amplitude is not one of them.
+    # Measured on sixteen BodyForce-Growth-2Stages entries: NaN at 2.5e-03
+    # and at 1.25e-02, and twenty-two finite increments at the declared
+    # 0.005 that sits between them, agreeing to 1.16e-11.
+    if not found_a_footing and declared and run_fine is not None:
+        ran, records, why = run_fine(float(declared))
+        result.attempts.append(
+            Attempt(amplitude=float(declared), ran=ran,
+                    reason=why or ("" if ran and enough_to_drive(records)
+                                   else "left too few finite records to verify "
+                                        "on, at the amplitude this harness was "
+                                        "configured with")))
+        if ran and enough_to_drive(records):
+            found_a_footing = True
+            amplitude = float(declared)
+            run = run_fine
+
+    if not found_a_footing and run_fine is not None:
+        amplitude = float(first)
+        while amplitude <= ceiling:
+            ran, records, why = run_fine(amplitude)
+            result.attempts.append(
+                Attempt(amplitude=amplitude, ran=ran,
+                        reason=why or ("" if ran and enough_to_drive(records)
+                                       else "left too few finite records to "
+                                            "verify on, at the resolution the "
+                                            "verification would use")))
+            if ran and enough_to_drive(records):
+                found_a_footing = True
+                run = run_fine
+                break
+            amplitude *= growth
+
+    if not found_a_footing:
         result.outcome = LEFT_ITS_DOMAIN
         result.amplitude = 0.0
         result.bracket = (0.0, float(first))
         result.reason = (
             f"the model produced no numbers at any amplitude from "
-            f"{float(first) / growth ** (DESCENTS - 1):.3g} to {float(first):.3g}; "
-            f"there is no loading here this harness can drive it at")
+            f"{float(first) / growth ** (DESCENTS - 1):.3g} to "
+            f"{float(ceiling):.3g}, searched downward from {float(first):.3g} "
+            f"and then upward to the ceiling"
+            + (", and again at the resolution the verification would use"
+               if run_fine is not None else "")
+            + f"; there is no loading here this harness can drive it at")
         return result
     result.attempts.clear()
 
@@ -244,14 +365,44 @@ def search_amplitude(
 
         broke_at = first_non_finite(records)
         if broke_at is not None:
+            # A non-finite tail bounds the ESCALATION -- there is nothing
+            # above this worth trying. It does not throw away this amplitude:
+            # the records before the break are a history, and the verification
+            # truncates at exactly that point and compares what came before.
+            # The footing search accepts such a run; the escalation used to
+            # reject it, and the two have to agree or the search hands back an
+            # amplitude of zero for a model it has just driven successfully.
+            # Measured on BodyForce-Growth-2Stages.for: 240 records, finite
+            # through 22, verified over those 22 to 1.16e-11.
+            # The tail bounds the ESCALATION -- there is nothing above this
+            # worth trying. It does not throw away this amplitude: the
+            # records before the break are a history, and the verification
+            # truncates at exactly that point and compares what came before.
+            # The footing search accepts such a run; the escalation used to
+            # reject it and hand back an amplitude of zero for a model it had
+            # just driven successfully.
+            #
+            # Climbing PAST the tail was tried, on the reasoning that a
+            # larger amplitude with a long enough prefix reaches further into
+            # the material. Measured on BodyForce-Growth-2Stages.for, whose
+            # prefix is twenty-two increments at every amplitude because the
+            # break is driven by its stage switch and not by the loading: the
+            # climb ran to the ceiling, drove the model at 31% strain, and
+            # turned a tangent short of coverage into a primal disagreement
+            # of 3.35e-08. Reverted.
+            usable = enough_to_drive(records)
             result.outcome = LEFT_ITS_DOMAIN
-            result.amplitude = last_quiet
+            result.amplitude = amplitude if usable else last_quiet
             result.bracket = (last_quiet, amplitude)
             result.reason = (
                 f"the model returned a value that is not a number at "
                 f"increment {broke_at} of this run, so it had left its domain "
-                f"before this amplitude; the largest amplitude it answered "
-                f"with numbers is {last_quiet:.3g}")
+                f"before this amplitude"
+                + (f"; the {broke_at - 1} increments before that are a "
+                   f"history, and this amplitude is kept for them"
+                   if usable else
+                   f"; the largest amplitude it answered with numbers is "
+                   f"{last_quiet:.3g}"))
             attempt.reason = result.reason
             return result
 
