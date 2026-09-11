@@ -5,7 +5,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 from umat_oti.core.model import ParsedFortranSource
 from umat_oti.core.transformation_anchors import anchor_completion_status
@@ -292,13 +292,23 @@ def transform_umat_to_oti_from_config(
     ]
     if helper_source_path is not None:
         compile_lines.append('gfortran -c -ffree-form -ffree-line-length-none -I"$OBJDIR" umat_oti_helpers.f90 -J"$OBJDIR" -o "$OBJDIR/umat_oti_helpers.o"')
-    # The form the transform actually emitted, not a fixed assumption. A
-    # free-form source is rewritten as free-form and was being handed to the
-    # compiler as fixed, which reads column 1 as a statement label and stops
-    # at the very first line: "Non-numeric character in statement label"
-    # against a subroutine header that is perfectly correct.
+    # The form the transform actually emitted, not a fixed assumption and not
+    # a second guess at it. A free-form source is rewritten as free-form and
+    # was being handed to the compiler as fixed, which reads column 1 as a
+    # statement label and stops at the very first line: "Non-numeric character
+    # in statement label" against a subroutine header that is perfectly
+    # correct.
+    #
+    # Re-measuring the output instead of using ``parsed.form`` reintroduced
+    # exactly that. ``detect_source_form`` falls back to the file's suffix
+    # whenever the evidence is mixed, and the transform's own emitted
+    # continuations are fixed-form evidence: a free-form ``.for`` source came
+    # out 174 free-form lines to 20 fixed, the suffix broke the tie, and the
+    # whole file was compiled as fixed form. The emitter already knows which
+    # form it wrote every statement in -- ``_stmt(form, ...)`` is given it --
+    # so that is the answer, not an inference from the answer.
     transformed_form = ("-ffixed-form -ffixed-line-length-none"
-                        if detect_source_form(Path(source_file), transformed_source) == "fixed"
+                        if parsed.form == "fixed"
                         else "-ffree-form -ffree-line-length-none")
     compile_lines.append(
         f'gfortran -c {transformed_form} -I"$OBJDIR" {transformed_name} -J"$OBJDIR" -o "$OBJDIR/transformed_umat.o"'
@@ -503,11 +513,27 @@ def _source_file(config: dict[str, Any]) -> str:
 #: statement". mholla/growth's umat_ortho_stretch.f declares `real*8 max(3)`
 #: and fails exactly that way.
 #:
-#: Renaming the author's variable would work and is not done here. It touches
-#: the declaration and every reference, and a rename that misses one produces
-#: a source that compiles and computes something else -- which is worse than
-#: not converting it. Refused with the name, so a reader knows what to change.
+#: Renaming the author's variable would work and is not done: it touches the
+#: declaration and every reference, and a rename that misses one produces a
+#: source that compiles and computes something else. The import is renamed
+#: instead -- ``USE otim6n1, OTI_MODULE_MAX => MAX`` -- which is the technique
+#: already used for the direction constants E1..En, and which leaves the
+#: author's variable and every reference to it exactly as written. A source
+#: that declares its own MAX was never calling the intrinsic through that name
+#: anyway; its own declaration had shadowed it long before the transform ran.
+#: These two were refused outright for it: mholla/growth's umat_ortho_stretch.f
+#: declares ``real*8 max(3)`` and sd104400/OPA_Modeling's UMAT_DPIsodwAniDM.for
+#: declares an INT.
 OTI_MODULE_GENERICS = frozenset({"MIN", "MAX", "SIGN", "NINT", "INT", "MATMUL"})
+
+#: The two of them the transform writes calls to in its own emitted lines: MAX
+#: in the guard that keeps SQRT off a round-off negative, MIN in the bound of
+#: the loop that copies the first three components. Renaming the import does
+#: not help those -- the emitted call is written as ``MAX(...)``, and in a
+#: scope where the author declared ``real*8 max(3)`` that is a rank-2 reference
+#: to a rank-1 array, which is what umat_ortho_stretch.f came out as. So these
+#: two keep the refusal and the rest are renamed on import.
+GENERICS_THE_TRANSFORM_CALLS_ITSELF = frozenset({"MIN", "MAX"})
 
 _DECLARATION = re.compile(
     r"^\s*(?:REAL|INTEGER|DOUBLE\s+PRECISION|LOGICAL|DIMENSION)"
@@ -543,14 +569,20 @@ def _readiness_blockers(
 ) -> list[str]:
     blockers: list[str] = []
     for name in _locals_colliding_with_the_oti_modules(source_text):
+        if name not in GENERICS_THE_TRANSFORM_CALLS_ITSELF:
+            continue
         blockers.append(
             f"{name} is declared as a variable here and is also a generic the "
-            f"OTI support modules make public, so the converted source cannot "
-            f"USE them: ifort reports \"The attributes of this name conflict "
-            f"with those made accessible by a USE statement\". Renaming it in "
-            f"the source would resolve it; this transform will not rename an "
-            f"author's variable, because a rename that misses one reference "
-            f"produces a file that compiles and computes something else.")
+            f"OTI support modules make public. The import is renamed for the "
+            f"other such names, which leaves the author's variable untouched, "
+            f"but not for this one: the transform emits its own {name}(...) "
+            f"call -- the guard that keeps SQRT off a round-off negative, and "
+            f"the loop bound of the component copy -- and in this scope that "
+            f"call would reach the author's variable instead of the "
+            f"intrinsic. Renaming the variable in the source would resolve it; "
+            f"this transform will not rename an author's variable, because a "
+            f"rename that misses one reference produces a file that compiles "
+            f"and computes something else.")
     review = _dict(config.get("transformation_review"))
     analysis = _dict(config.get("analysis"))
     has_completed_anchors = bool(config.get("transformation_anchors"))
@@ -701,10 +733,44 @@ def _local_newton_blockers(config: dict[str, Any], roles: dict[str, set[str]]) -
     return []
 
 
+#: Intrinsics with no counterpart over the OTI type. SIGN was on this list and
+#: is not one: ``oti_intrinsics`` declares SIGN for (OTI, OTI), (OTI, real) and
+#: (real, OTI), the main transform has emitted and USEd that module since it
+#: gained one, and a driver differentiating SIGN(x*x+1, -x) at x=2 returns
+#: -4.0000000000000000 against a central difference of -4.0000000001150227.
+#: Two corpus sources -- ahartloper/UVC_MatMod's uniaxial models, which ask
+#: which way the strain increment is going -- were refused for using an
+#: intrinsic that had been supported for as long as the blocker had been wrong.
+#:
+#: MOD and ATAN2 stay: neither the generated algebra nor the extension module
+#: defines either one over the type, so a source using them on a differentiated
+#: value would not compile.
+#: MOD and ATAN2 are scalar; SUM and PRODUCT reduce an array. Neither the
+#: generated algebra nor oti_intrinsics declares any of the four over the type,
+#: and SUM was found the hard way: with the SIGN blocker gone,
+#: ahartloper/UVC_MatMod's uniaxial model transformed and then stopped at
+#: "'array' argument of 'sum' intrinsic must have a numeric type" on
+#: ALPHA_OTI = SUM(ALPHA_K_OTI(:)). A blocker naming the cause is worth more
+#: than a compile error found later by whoever reads the log.
+#:
+#: SUM is not added to oti_intrinsics as a generic, which would fix the compile
+#: and break more than it fixed: "sum" is an ordinary name for an accumulator,
+#: several corpus sources declare one, and a public generic of that name makes
+#: every one of them fail on its USE line with "The attributes of this name
+#: conflict with those made accessible by a USE statement".
+_INTRINSICS_WITHOUT_AN_OTI_FORM = frozenset({"MOD", "ATAN2", "SUM", "PRODUCT"})
+
+
 def _unsupported_intrinsic_blockers(source_text: str, roles: dict[str, set[str]], stress_regions: list[dict[str, Any]]) -> list[str]:
-    unsupported = {"SIGN", "MOD", "ATAN2"}
     promoted = roles["seed"] | roles["promote"]
     if not promoted or not stress_regions:
+        return []
+    # A source that declares its own SUM or MOD is using a variable, not the
+    # intrinsic, and blocking it would name a cause that is not there. The
+    # classifier's own test for that distinction is reused rather than
+    # repeated, so the two cannot drift apart.
+    unsupported = _INTRINSICS_WITHOUT_AN_OTI_FORM & _call_names_that_are_not_variables(source_text)
+    if not unsupported:
         return []
     line_numbers = _line_set(stress_regions)
     blockers: list[str] = []
@@ -712,12 +778,31 @@ def _unsupported_intrinsic_blockers(source_text: str, roles: dict[str, set[str]]
         if number not in line_numbers:
             continue
         upper_line = line.upper()
-        if not any(re.search(rf"\b{re.escape(name)}\b", upper_line) for name in promoted):
-            continue
         for intrinsic in sorted(unsupported):
-            if re.search(rf"\b{intrinsic}\s*\(", upper_line):
+            if _intrinsic_argument_mentions(upper_line, intrinsic, promoted):
                 blockers.append(f"Unsupported intrinsic {intrinsic} is used with promoted variables on stress path line {number}.")
     return blockers
+
+
+def _intrinsic_argument_mentions(upper_line: str, intrinsic: str, promoted: set[str]) -> bool:
+    """Whether ``INTRINSIC(...)`` on this line is handed a promoted name.
+
+    The argument, not the line. Reading the whole line called
+    ``TERM_OTI = OFFSET + MOD(COUNTER, 3)`` a use of MOD on a differentiated
+    value because a promoted name appeared somewhere else in it, and refused a
+    source over an integer remainder.
+    """
+    search_from = 0
+    while True:
+        match = re.search(rf"(?<![A-Za-z0-9_%]){intrinsic}\s*\(", upper_line[search_from:])
+        if not match:
+            return False
+        open_paren = search_from + match.end() - 1
+        close_paren = _matching_paren_index(upper_line, open_paren)
+        argument = upper_line[open_paren + 1:close_paren] if close_paren > 0 else upper_line[open_paren + 1:]
+        if any(token in promoted for token in re.findall(r"[A-Za-z_]\w*", argument)):
+            return True
+        search_from = open_paren + 1
 
 
 def _stress_path_io_blockers(config: dict[str, Any], analysis: dict[str, Any], stress_regions: list[dict[str, Any]]) -> list[str]:
@@ -751,6 +836,23 @@ def _call_lines_reaching(
     ordering says nothing about it -- but the CALL statements in the UMAT that
     can reach it. Returns an empty list when no call reaches the target, which
     every caller must read as "cannot place it", never as "nothing to place".
+
+    One line per reaching CALL, not one per physical line of it. A CALL is one
+    program point however many lines it is written across, and returning all of
+    them let the caller test each continuation line separately against a
+    bracket the statement as a whole satisfies:
+
+        call EvolveMatlState(cmname, stress, statev, ddsdde, strain, &
+           dstrain, time, dtime, temp, dtemp, &
+           ... )
+
+    spans lines 139-144, the extraction goes in after 144, and lines 139-143
+    are each "before the stress update ends" on their own. Thirteen corpus
+    sources write DDSDDE only inside a routine reached by a continued CALL like
+    this one, and every one of them was refused for it. The line the statement
+    finishes on is the one that places it: nothing can run between a
+    statement's own continuation lines, so that single line says everything the
+    ordering test needs, and for a CALL written on one line it is that line.
     """
     if parsed is None or not parsed.subroutines:
         return []
@@ -770,8 +872,8 @@ def _call_lines_reaching(
 
     lines: list[int] = []
     for call in build_call_graph(parsed, start):
-        if reaches(call.callee.upper(), set()):
-            lines.extend(int(value) for value in call.line_numbers)
+        if reaches(call.callee.upper(), set()) and call.line_numbers:
+            lines.append(max(int(value) for value in call.line_numbers))
     return sorted(lines)
 
 
@@ -1088,10 +1190,25 @@ def _uncovered_ddsdde_blockers(
         if not _line_numbers_intersect(assignment.get("line_numbers", []), old_tangent_regions):
             if _overwritten_through_its_call_sites(
                     line_numbers, umat_span, parsed, selected_umat, extraction_line,
-                    last_stress_end):
+                    last_stress_end,
+                    _ddsdde_stress_input_lines(analysis)):
                 continue
             blockers.append(f"DDSDDE assignment is not covered by an old tangent replacement region: {assignment.get('text', '')}")
     return blockers
+
+
+def _ddsdde_stress_input_lines(analysis: dict[str, Any]) -> list[int]:
+    """Lines where the stress update takes a value from DDSDDE.
+
+    Published by the region classifier. An empty list from a source that has
+    one would turn the check below from conservative into wrong, so a summary
+    that does not carry the key at all is reported as unknown -- ``None`` --
+    and the caller then keeps the old, stricter rule.
+    """
+    summary = _dict(analysis.get("region_summary"))
+    if "ddsdde_stress_input_lines" not in summary:
+        return None  # type: ignore[return-value]
+    return [_as_int(value) for value in summary.get("ddsdde_stress_input_lines") or []]
 
 
 def _overwritten_through_its_call_sites(
@@ -1101,6 +1218,7 @@ def _overwritten_through_its_call_sites(
     selected_umat: str,
     extraction_line: int,
     last_stress_end: int,
+    ddsdde_stress_input_lines: list[int] | None = None,
 ) -> bool:
     """True when this assignment writes the old tangent strictly before extraction.
 
@@ -1117,6 +1235,31 @@ def _overwritten_through_its_call_sites(
     built, and a stress that reads DDSDDE would then take its value through a
     REAL array where no derivative can follow -- the transform would compile,
     run, and return a tangent that is wrong for a reason nothing reports.
+
+    "After the stress update" was a stand-in for that hazard and not the
+    hazard itself, and it refused sources the hazard cannot reach. A UMAT
+    whose whole body is
+
+        IF (PROPS(1) .GT. 2.D0) THEN
+          CALL VEVP(STRESS, STATEV, DDSDDE, ...)
+          RETURN
+        ELSE
+          CALL NEOHOOK(STRESS, STATEV, DDSDDE, ...)
+          RETURN
+        END IF
+
+    has its call inside the stress region because the call IS the stress
+    update, and nothing in the file ever reads DDSDDE back into a stress-path
+    variable. ``ddsdde_stress_input_lines``, which the region classifier
+    computes over every logical line in the file and not only the UMAT's,
+    lists the reads; when it is empty the hazard has no site and the position
+    of the call relative to the stress update stops mattering. When it is
+    non-empty -- ``STRESS(I)=STRESS(I)+DDSDDE(I,J)*DSTRAN(J)`` after a
+    ``CALL EULCONV(..., DDSDDE)``, which is one of the corpus sources this
+    check exists for -- the old rule stands, and so does the refusal.
+
+    Passing ``None`` for it means the reads were not established, and an
+    unestablished fact is not a licence: the old rule stands then too.
 
     Refuses -- returns False -- whenever any part of the argument is missing:
     no parse, no UMAT span, no extraction point, or no call site found. A check
@@ -1137,7 +1280,11 @@ def _overwritten_through_its_call_sites(
         return False
     # ``extraction_line`` is an insert-AFTER line, so a call on that very line
     # is still overwritten by what follows it.
-    return all(last_stress_end <= line <= extraction_line for line in call_lines)
+    if not all(line <= extraction_line for line in call_lines):
+        return False
+    if ddsdde_stress_input_lines is not None and not ddsdde_stress_input_lines:
+        return True
+    return all(last_stress_end <= line for line in call_lines)
 
 
 def _routine_containing(parsed: ParsedFortranSource, line_number: int) -> str:
@@ -2149,7 +2296,10 @@ def _transform_source_text(
             elif branch_kind == "end_if" and shadow_sync_dirty_branch_stack:
                 shadow_sync_dirty_names |= shadow_sync_dirty_branch_stack.pop()
         if line_number == header_end:
-            output.append(_module_use_line(form, module_name, oti_directions))
+            output.append(_module_use_line(
+                form, module_name, oti_directions,
+                [name for name in _locals_colliding_with_the_oti_modules(source_text)
+                 if name not in GENERICS_THE_TRANSFORM_CALLS_ITSELF]))
         if line_number + 1 == declaration_insert_before:
             output.extend(
                 _declaration_lines(
@@ -5072,8 +5222,17 @@ def _as_written_in_double(text: str) -> str:
     return written + "D0"
 
 
+#: A FORMAT statement, label and all. Its digits are edit descriptors, so
+#: ``FORMAT(7(E24.8E3))`` has no literal in it to promote and promoting one
+#: emitted ``E24.8D3`` -- "Period required in format specifier D". The same
+#: guard as the helper lifter's, for the same reason.
+_FORMAT_STATEMENT_RE = re.compile(r"^\s*(?:\d+\s+)?FORMAT\s*\(", re.IGNORECASE)
+
+
 def _normalize_numeric_literals_in_oti_expression(line: str, type_name: str = "") -> str:
     if "_OTI" not in line.upper():
+        return line
+    if _FORMAT_STATEMENT_RE.match(line):
         return line
     normalized = re.sub(
         r"(?<![A-Za-z0-9_])((?:\d+\.\d*)|(?:\d+\.))(?![A-Za-z0-9_.dDeE])",
@@ -7296,11 +7455,19 @@ def _transformed_filename(source_file: str) -> str:
     return f"{path.stem}_oti{suffix}"
 
 
-def _module_use_line(form: str, module_name: str, ntens: int) -> str:
+def _module_use_line(form: str, module_name: str, ntens: int,
+                     shadowed_generics: Sequence[str] = ()) -> str:
     renamed_seeds = ", ".join(f"{_seed_basis_name(direction)} => E{direction}" for direction in range(1, max(ntens, 0) + 1))
     suffix = f", {renamed_seeds}" if renamed_seeds else ""
-    return (_stmt(form, f"USE {module_name}, OTI_MODULE_DP => DP{suffix}")
-            + "\n" + _stmt(form, "USE oti_intrinsics"))
+    # A generic the modules export under a name this source uses for a variable
+    # of its own comes in under another name instead. Both modules export the
+    # same set, so both USE lines carry the rename or the collision survives on
+    # whichever one did not.
+    renames = "".join(f", OTI_MODULE_{name} => {name}" for name in shadowed_generics)
+    intrinsics_renames = "".join(f", OTI_INTRINSIC_{name} => {name}" for name in shadowed_generics)
+    intrinsics = f"USE oti_intrinsics{intrinsics_renames}"
+    return (_stmt(form, f"USE {module_name}, OTI_MODULE_DP => DP{suffix}{renames}")
+            + "\n" + _stmt(form, intrinsics))
 
 
 def _seed_basis_name(direction: int) -> str:
