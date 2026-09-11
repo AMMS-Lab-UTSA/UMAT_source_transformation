@@ -30,6 +30,17 @@ its ``source.json``.
 
 Baselines are written here and never rewritten by a regression run. Promotion
 is deliberate: it happens when someone runs this tool.
+
+And it is refused for a run that was not finite from end to end. What
+gets promoted is the frozen experiment a regression replays, so a
+contract built on a history that stopped being numbers part way through
+would make every later run a comparison against that. Abaqus printing
+THE ANALYSIS HAS COMPLETED SUCCESSFULLY is a statement about the solver,
+not about the constitutive routine it called: measured on
+BodyForce-Growth-2Stages.for, where both builds "completed" 35
+increments and both were non-finite from the third. The check is the same
+one export_residual_fixture.py applies, held in one place so the two
+artefacts cannot drift apart.
 """
 from __future__ import annotations
 
@@ -44,6 +55,10 @@ from typing import Any, Optional
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
+sys.path.insert(0, str(REPO / "tools"))
+
+from export_residual_fixture import (REQUIRED_GATES,  # noqa: E402
+                                     at_either_level, not_a_number)
 
 VERIFIED = "verified"
 
@@ -148,7 +163,95 @@ def contract_from(row: dict) -> dict:
             "fd_steps": (row.get("manifest") or {}).get("fd_steps"),
         },
         "transform_fingerprint": row.get("fingerprint"),
+        # Which of the six gates this verdict rests on, what the two histories
+        # grouped into, and what the experiment stopped exercising in order to
+        # become one that runs whole. A regression replays this contract, so a
+        # reader of it is entitled to the same things a reader of the page is.
+        "finite_verification_run": {
+            "evidence": row.get("evidence") or {},
+            "complete_finite_verification_run": at_either_level(
+                row, "complete_finite_verification_run"),
+            "history_grouping": at_either_level(row, "history_grouping"),
+            "discovery_usable_prefix": at_either_level(
+                row, "discovery_usable_prefix"),
+            "safe_loading_reconstructed": at_either_level(
+                row, "safe_loading_reconstructed"),
+            "failure_mechanism": at_either_level(row, "failure_mechanism"),
+            "segment_repair": at_either_level(row, "segment_repair"),
+            "coverage_given_up": at_either_level(row, "coverage_given_up"),
+            "time_scale_coverage": at_either_level(row, "time_scale_coverage"),
+            "mechanically_informative": at_either_level(
+                row, "mechanically_informative"),
+        },
     }
+
+
+class PromotionRefused(ValueError):
+    """A material that may not be promoted, said in terms of what is wrong."""
+
+
+def why_this_may_not_be_promoted(row: dict, work_root: Path) -> list:
+    """Every reason this run may not become a frozen baseline.
+
+    The record's own account -- the stage it reached, the gates that were
+    measured, and the grouping that says where the first incomplete increment
+    and the first value that is not a number are -- and then the two probe
+    histories on disk, scanned number by number, because "this history was
+    finite" and "these numbers are finite" are two different claims and a
+    baseline is compared against the second.
+
+    Returns the reasons. Empty means it may be promoted.
+    """
+    problems: list = []
+    source = str(row.get("source") or "this material")
+    if row.get("stage") != VERIFIED:
+        problems.append(
+            f"{source} settled at {row.get('stage')!r}, not {VERIFIED!r}")
+    if at_either_level(row, "complete_finite_verification_run") is not True:
+        problems.append(
+            f"{source}: complete_finite_verification_run is "
+            f"{at_either_level(row, 'complete_finite_verification_run')!r}")
+    measured = row.get("evidence") or {}
+    for gate in REQUIRED_GATES:
+        if measured.get(gate) is not True:
+            problems.append(
+                f"{source}: evidence.{gate}="
+                f"{measured.get(gate, 'not measured')!r}")
+    grouping = at_either_level(row, "history_grouping") or {}
+    for side in ("original", "transformed"):
+        payload = grouping.get(side)
+        if not isinstance(payload, dict):
+            problems.append(
+                f"{source}: no history grouping for the {side} build, so "
+                f"nothing says its history was complete")
+            continue
+        incomplete = payload.get("first_incomplete_increment")
+        if incomplete:
+            problems.append(
+                f"{source}: the {side} history's first incomplete increment "
+                f"is {incomplete.get('increment')}")
+        where = payload.get("first_non_finite_material_point")
+        if where:
+            problems.append(
+                f"{source}: the {side} history stops being numbers at element "
+                f"{where.get('element')} point {where.get('point')} of "
+                f"increment {where.get('increment')}")
+    job = Path(work_root) / str(row.get("key") or "")
+    for side in ("original", "transformed"):
+        path = job / side / f"{side}_history.json"
+        if not path.is_file():
+            continue
+        try:
+            history = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:     # pragma: no cover
+            problems.append(f"{source}: {path.name} could not be read: {error}")
+            continue
+        for record in history if isinstance(history, list) else ():
+            for name in ("STRESS", "STATEV", "DDSDDE"):
+                problems.extend(not_a_number(
+                    record.get(name),
+                    f"{side} increment {record.get('increment')} {name}"))
+    return problems
 
 
 def results_from(row: dict) -> dict:
@@ -301,6 +404,11 @@ def copy_artifacts(row: dict, work_root: Path, into: Path) -> list[str]:
 
 
 def promote(row: dict, root: Path, work_root: Path, cache: Path) -> dict:
+    refusals = why_this_may_not_be_promoted(row, work_root)
+    if refusals:
+        raise PromotionRefused(
+            f"{row.get('source')} may not be promoted:\n  - "
+            + "\n  - ".join(refusals))
     identifier = material_id(str(row.get("source") or ""))
     folder = root / identifier
     folder.mkdir(parents=True, exist_ok=True)
@@ -399,8 +507,21 @@ def main(argv: Optional[list[str]] = None) -> int:
         return 0
 
     args.root.mkdir(parents=True, exist_ok=True)
-    entries = [promote(row, args.root, args.work_dir, args.cache_dir)
-               for row in verified]
+    entries = []
+    refused = 0
+    for row in verified:
+        try:
+            entries.append(promote(row, args.root, args.work_dir, args.cache_dir))
+        except PromotionRefused as refusal:
+            print(f"  REFUSED {refusal}")
+            refused += 1
+    if refused:
+        print(f"  {refused} of {len(verified)} verified entries were refused "
+              f"promotion because the run behind them was not finite from end "
+              f"to end")
+    if not entries:
+        print("nothing to promote: every verified entry was refused")
+        return 1
     entries.sort(key=lambda entry: entry["id"])
 
     _json(args.root / "registry.json", {
