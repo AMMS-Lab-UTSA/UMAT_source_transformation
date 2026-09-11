@@ -501,6 +501,37 @@ def declared_start(
     }
 
 
+def read_state(path: Path) -> dict:
+    """Back out of the file :func:`write_state` wrote, as far as it is needed.
+
+    Only the fields a reference has to know about the state it is taken at:
+    the shape, and the deformation gradient at the end of the increment. The
+    driver reads the whole file; this reads enough to know WHAT to perturb,
+    which is a different question from what to pass in.
+
+    Returns an empty dict rather than raising when the file is absent or
+    short: a caller with no state file is a caller that cannot correct its
+    perturbation, and it should say so rather than correct it wrongly.
+    """
+    try:
+        rows = [line.split() for line in
+                Path(path).read_text(errors="replace").splitlines()
+                if line.strip()]
+    except OSError:
+        return {}
+    if len(rows) < 10 or len(rows[0]) < 5:
+        return {}
+    try:
+        ntens, nstatv, nprops, ndi, nshr = (int(value) for value in rows[0][:5])
+        gradient = [float(value) for value in rows[9][:9]]
+    except (TypeError, ValueError):
+        return {}
+    if len(gradient) < 9:
+        return {}
+    return {"NTENS": ntens, "NSTATV": nstatv, "NPROPS": nprops,
+            "NDI": ndi, "NSHR": nshr, "DFGRD1": gradient}
+
+
 def parse_replay_output(path: Path) -> tuple[list[float], list[list[float]]]:
     """The stress and tangent one replay produced."""
     try:
@@ -875,6 +906,18 @@ class DifferenceSweep:
     #: what its tangent was.
     forward: dict = field(default_factory=dict)
     backward: dict = field(default_factory=dict)
+    #: Per step, the SEED-MAP difference: the derivative with respect to the
+    #: perturbation the transform's own seed makes, uncorrected. For a source
+    #: driven through the strain increment it is the same thing as
+    #: ``matrices``; for one driven through the deformation gradient it is
+    #: what ``matrices`` used to hold, and it is kept so the two definitions
+    #: can be reported side by side rather than one silently replacing the
+    #: other. See :mod:`umat_oti.validation.finite_strain_tangent`.
+    seed_map_matrices: dict = field(default_factory=dict)
+    #: How the reference was built. Named in the record because a number
+    #: compared against DDSDDE is only evidence if it is a difference of the
+    #: same thing DDSDDE is a derivative of.
+    reference_definition: str = "d STRESS / d DSTRAN"
     ok: bool = False
     reason: str = ""
 
@@ -937,6 +980,27 @@ def one_sided_gap(one_sided: Sequence[tuple], near_zero_fraction: float
     return worst if scored else None
 
 
+def _as_the_solver_defines_it(matrix, stress, ndi: int, *, correct: bool):
+    """A difference of stresses, raised to the Jacobian the solver asked for.
+
+    Under ``nlgeom`` the quantity Abaqus calls DDSDDE is not ``d sigma / d
+    eps``; it is that plus ``sigma_ij delta_kl``, because the rate it is
+    defined on is the Jaumann rate of the Kirchhoff stress divided by J. A
+    reference that stops at the stress derivative is a different matrix, and
+    the difference is not small -- see
+    :mod:`umat_oti.validation.finite_strain_tangent`, which carries the
+    measurement.
+
+    ``correct`` is False when the perturbation could not be pushed forward
+    through the deformation gradient, because half a correction is worse than
+    none: it would move the reference away from BOTH definitions.
+    """
+    if not correct:
+        return [list(row) for row in matrix]
+    from umat_oti.validation.finite_strain_tangent import kirchhoff_correction
+    return kirchhoff_correction(matrix, stress, ndi)
+
+
 def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
                        steps: Sequence[float], *, scale: float = 1.0,
                        components: Sequence[int] = (),
@@ -950,15 +1014,34 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
     strain of a percent and one loaded to a strain of a millionth.
 
     WHICH input is perturbed is read from the transformed file, through the
-    same ``seeded_kinematics`` map the transform seeded, so the reference
-    differentiates the quantity the OTI side differentiated. Perturbing DSTRAN
-    on a source whose kinematic input is the deformation gradient moves nothing
-    at all: the stress is unchanged, the centred difference is identically
-    zero, and the comparison then reports a relative error of exactly 1 at
-    every step size. Measured on all ten finite-strain sources that had already
-    agreed on their primal histories in Abaqus -- 2.96e+08 absolute error,
-    unchanged from a step of 1e-3 to one of 1e-6, which is what a difference
-    that is not a difference looks like.
+    same ``seeded_kinematics`` map the transform seeded. Perturbing DSTRAN on a
+    source whose kinematic input is the deformation gradient moves nothing at
+    all: the stress is unchanged, the centred difference is identically zero,
+    and the comparison then reports a relative error of exactly 1 at every step
+    size. Measured on all ten finite-strain sources that had already agreed on
+    their primal histories in Abaqus -- 2.96e+08 absolute error, unchanged from
+    a step of 1e-3 to one of 1e-6, which is what a difference that is not a
+    difference looks like.
+
+    The seed map says which DIRECTION to move. It does not say what DDSDDE is a
+    derivative of, and it used to be read as though it did: the seed adds its
+    direction straight onto DFGRD1, the reference added the same thing onto
+    DFGRD1, and the two then agreed about a matrix that was not the one the
+    solver had asked for. A reference that shares the value-under-test's
+    definition of its own input cannot falsify that definition, and for the ten
+    gradient-driven corpus rows it did not.
+
+    So the direction comes from the seed and the DEFINITION comes from Abaqus:
+    the perturbation is pushed forward as ``dF = eps . F`` and the assembled
+    difference carries the Kirchhoff term ``sigma_ij delta_kl``. Both are
+    measured in :mod:`umat_oti.validation.finite_strain_tangent`; together they
+    reproduce Trachea.for's own analytic DDSDDE to 2.40e-06 on its worst
+    component, where the uncorrected reference sat at 3.000 and did not move
+    across four decades of step size.
+
+    The uncorrected difference is not thrown away -- it is kept in
+    ``seed_map_matrices``, because the gap between the two is the measurement
+    of what the seed map differentiates.
     """
     sweep = DifferenceSweep()
     # Resolved first: which input the perturbation moves is a property of the
@@ -979,6 +1062,26 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
         sweep.reason = build.reason
         return sweep
 
+    # The state the increment is replayed from, read back out of the file the
+    # driver reads. A gradient-driven reference needs F to know what a strain
+    # increment IS at this state, and NDI to know which Voigt columns carry a
+    # trace. Absent, the correction is not applied and the reference says so
+    # rather than applying it to an identity it invented.
+    state = read_state(Path(work_dir) / STATE_FILE)
+    base_gradient = state.get("DFGRD1") if gradient_driven else None
+    ndi = int(state.get("NDI") or max(ntens - 3, 0) or 3)
+    if gradient_driven and base_gradient is None:
+        sweep.failures.append(
+            "the state file carried no deformation gradient, so the "
+            "perturbation could not be pushed forward and the Kirchhoff term "
+            "could not be added; the reference is the seed-map difference")
+    sweep.reference_definition = (
+        "d STRESS / d DSTRAN" if not gradient_driven
+        else ("d STRESS / d eps with dF = eps.F, plus sigma_ij delta_kl "
+              "(the Jacobian Abaqus defines under nlgeom)"
+              if base_gradient is not None
+              else "d STRESS / d (additive DFGRD1 seed) -- uncorrected"))
+
     unperturbed, complaint = run_replay(build, work_dir, 0, 0.0)
     if not unperturbed:
         sweep.reason = f"the unperturbed replay produced no stress: {complaint}"
@@ -995,10 +1098,11 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
         one_sided: list[tuple[int, list[float], list[float]]] = []
         for component in wanted:
             if gradient_driven:
-                from umat_oti.validation.tangent_validation import (
-                    _gradient_perturbation)
-                forward = _gradient_perturbation(drive, component, step)
-                backward = _gradient_perturbation(drive, component, -step)
+                from umat_oti.validation.finite_strain_tangent import (
+                    corotational_perturbation)
+                terms = drive.dfgrd1.get(component, ())
+                forward = corotational_perturbation(terms, step, base_gradient)
+                backward = corotational_perturbation(terms, -step, base_gradient)
                 if not any(forward):
                     # The seed map has no term for this direction, so there is
                     # no perturbation to make and no column to report. Skipped
@@ -1048,15 +1152,20 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
             continue
         # columns[j][i] is d STRESS(i) / d DSTRAN(j); the tangent is its
         # transpose, because DDSDDE(i,j) is indexed the other way round.
-        sweep.matrices[relative] = [
-            [columns[j][i] for j in range(len(columns))] for i in range(ntens)]
+        raw = [[columns[j][i] for j in range(len(columns))]
+               for i in range(ntens)]
+        sweep.seed_map_matrices[relative] = raw
+        sweep.matrices[relative] = _as_the_solver_defines_it(
+            raw, unperturbed, ndi, correct=base_gradient is not None)
         if len(one_sided) == len(columns):
-            sweep.forward[relative] = [
-                [one_sided[j][1][i] for j in range(len(one_sided))]
-                for i in range(ntens)]
-            sweep.backward[relative] = [
-                [one_sided[j][2][i] for j in range(len(one_sided))]
-                for i in range(ntens)]
+            sweep.forward[relative] = _as_the_solver_defines_it(
+                [[one_sided[j][1][i] for j in range(len(one_sided))]
+                 for i in range(ntens)],
+                unperturbed, ndi, correct=base_gradient is not None)
+            sweep.backward[relative] = _as_the_solver_defines_it(
+                [[one_sided[j][2][i] for j in range(len(one_sided))]
+                 for i in range(ntens)],
+                unperturbed, ndi, correct=base_gradient is not None)
 
         # How far the two one-sided slopes are from each other, measured
         # against the centred slope they average to. A kink between the two
