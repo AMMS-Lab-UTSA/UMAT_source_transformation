@@ -26,11 +26,23 @@ What this module does not do is decide whether a UMAT is any good. It decides
 what interface a file presents to Abaqus, so that a result is attributed to
 the right question -- and so a file that is not a UMAT never sits inside a
 count of UMATs that verified.
+
+The second half of the module answers a different question about the same
+files: when the TRANSFORMER refused a source, what was the source? A refusal
+is a fact about this repository's transformer and about nothing else. It is
+not evidence that the file is not a UMAT, it is not evidence that the file is
+broken, and it is not evidence that anything is missing beside it. Each of
+those is a separate claim needing its own evidence, and
+:func:`classify_refusal` is where the evidence is combined -- the parsed entry
+point, a digest match against another acquired source, an offline compile of
+the author's own text, and the companion resolution. A refusal with none of
+that evidence behind it stays :data:`GENUINE_UMAT`, which is the answer that
+keeps the work in our column rather than moving it into the corpus's.
 """
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Optional
 
@@ -75,6 +87,31 @@ UMAT = "umat"
 OTHER_ABAQUS_ENTRY = "other_abaqus_entry"
 HELPER_ONLY = "helper_only"
 NO_PROGRAM_UNIT = "no_program_unit"
+
+#: What an acquired source turned out to be, once the transformer had refused
+#: it. These are answers about the FILE. "The transformer refused it" is not
+#: one of them and can never become one: it is an answer about the
+#: transformer, and the whole point of parsing the file is that the two
+#: questions have different answers.
+GENUINE_UMAT = "genuine_umat"
+OTHER_ABAQUS_ROUTINE = "other_abaqus_routine"
+HELPER_OR_MODULE_ONLY = "helper_or_module_only"
+DUPLICATE_SOURCE = "duplicate_of_another_source"
+INCOMPLETE_OR_CORRUPT = "incomplete_or_corrupt_source"
+MISSING_EXTERNAL_DEPENDENCY = "missing_external_dependency"
+
+REFUSAL_CLASSES: tuple[str, ...] = (
+    GENUINE_UMAT,
+    OTHER_ABAQUS_ROUTINE,
+    HELPER_OR_MODULE_ONLY,
+    DUPLICATE_SOURCE,
+    INCOMPLETE_OR_CORRUPT,
+    MISSING_EXTERNAL_DEPENDENCY,
+)
+
+#: The classes that say the work is this repository's. Kept as a set so a
+#: caller can count "ours" without re-deriving the rule.
+OURS: tuple[str, ...] = (GENUINE_UMAT,)
 
 _UNIT = re.compile(
     r"^\s*(?:\d+\s+)?"
@@ -137,6 +174,14 @@ class Classification:
     reason: str = ""
     units: tuple[ProgramUnit, ...] = ()
     abaqus_entries: tuple[str, ...] = ()
+    #: The form the units were read under. Recorded because it is a decision
+    #: this module made and not a property of the file, and because reading a
+    #: free-form file as fixed form finds no arguments at all.
+    source_form: str = ""
+    #: The line of the author's own file that the entry point was read from,
+    #: verbatim. A classification that cannot be checked against the source it
+    #: came from is an assertion, so every record carries the line back.
+    entry_text: str = ""
 
     @property
     def is_umat(self) -> bool:
@@ -148,6 +193,8 @@ class Classification:
             "entry_routine": self.entry_routine,
             "entry_interface": self.entry_interface,
             "entry_line": self.entry_line,
+            "source_form": self.source_form,
+            "entry_text": self.entry_text,
             "reason": self.reason,
             "abaqus_entries": list(self.abaqus_entries),
             "units": [{"name": u.name, "kind": u.kind, "line": u.line,
@@ -246,10 +293,41 @@ def classify(source: str, form: str = "",
     the deck this project generates decides how the file must be driven -- and
     a file whose entry point is a UEL is not a UMAT, however many routines
     called UMAT it contains.
+
+    The form is retried. Four corpus sources under
+    ``sahmotaman__TMM-FE-Simulation`` are free-form Fortran in files named
+    ``.for``, and the form detector -- which sees both free and fixed evidence
+    and falls back to the suffix -- reads them as fixed. Read as fixed, the
+    37-argument ``subroutine umat(sigma, sv, C, ... &`` header loses its whole
+    continued argument list and comes out as ``UMAT`` with ZERO arguments,
+    which fails the interface check and lands four genuine Abaqus UMATs in
+    ``helper_only``. That is the exact error this module exists to prevent,
+    pointed the other way, so when the first form finds no Abaqus interface at
+    all the other form is tried and the reading that finds one wins. It can
+    only ever promote a file from "no Abaqus entry point" to a named one: a
+    file that already matched an interface is never re-read.
     """
+    found = _classify_one_form(source, form, path)
+    if found.kind in (HELPER_ONLY, NO_PROGRAM_UNIT) and not form:
+        other = "free" if found.source_form == "fixed" else "fixed"
+        retry = _classify_one_form(source, other, path)
+        if retry.kind in (UMAT, OTHER_ABAQUS_ENTRY):
+            return replace(retry, reason=(
+                f"{retry.reason}; read as {other} form -- as "
+                f"{found.source_form} form this file matches no Abaqus "
+                f"interface, which is a property of the reading and not of "
+                f"the file"))
+    return found
+
+
+def _classify_one_form(source: str, form: str,
+                       path: Optional[Path] = None) -> Classification:
+    """One reading of the file, under one source form."""
     units = program_units(source, form, path)
+    used = form or (detect_source_form(path, source) if path is not None
+                    else detect_form_from_text(source))
     if not units:
-        return Classification(kind=NO_PROGRAM_UNIT,
+        return Classification(kind=NO_PROGRAM_UNIT, source_form=used,
                               reason="no SUBROUTINE or FUNCTION was found")
 
     abaqus = [(unit, unit.matches_interface()) for unit in units]
@@ -265,8 +343,17 @@ def classify(source: str, form: str = "",
                 for u in units if u.name.upper() in named)
             reason = (f"a unit shares an Abaqus name but not its interface: "
                       f"{counts}")
+        # A file with no Abaqus entry point still gets a line quoted: the unit
+        # that shares an Abaqus name but not its interface where there is one,
+        # and otherwise the file's first program unit. A verdict of "this is
+        # not an Abaqus routine" that quotes nothing is an assertion, and the
+        # reader has no way to check it without opening the file themselves.
+        witness = next((u for u in units if u.name.upper() in INTERFACES),
+                       units[0])
         return Classification(kind=HELPER_ONLY, reason=reason,
-                              units=tuple(units))
+                              source_form=used, units=tuple(units),
+                              entry_line=witness.line,
+                              entry_text=source_line(source, witness.line))
 
     # An entry point is one nothing in this file calls.
     entries = [(unit, name) for unit, name in abaqus if not unit.called_by]
@@ -278,7 +365,8 @@ def classify(source: str, form: str = "",
         unit, name = umats[0]
         return Classification(
             kind=UMAT, entry_routine=unit.name, entry_interface=name,
-            entry_line=unit.line, units=tuple(units),
+            entry_line=unit.line, units=tuple(units), source_form=used,
+            entry_text=source_line(source, unit.line),
             abaqus_entries=tuple(sorted({n for _, n in entries})),
             reason=(f"SUBROUTINE {unit.name} at line {unit.line} takes "
                     f"{unit.argument_count} arguments and is called by nothing "
@@ -296,8 +384,182 @@ def classify(source: str, form: str = "",
                        f"entry point")
     return Classification(
         kind=OTHER_ABAQUS_ENTRY, entry_routine=unit.name, entry_interface=name,
-        entry_line=unit.line, units=tuple(units),
+        entry_line=unit.line, units=tuple(units), source_form=used,
+        entry_text=source_line(source, unit.line),
         abaqus_entries=tuple(others),
         reason=(f"this file's Abaqus entry point is SUBROUTINE {unit.name} "
                 f"({name}, {unit.argument_count} arguments) at line "
                 f"{unit.line}{callee_note}"))
+
+
+def source_line(source: str, number: int) -> str:
+    """One physical line of the author's file, verbatim.
+
+    The evidence for a classification is the line it was read from. Quoting it
+    is what lets a reader disagree with the verdict without re-running
+    anything, and what stops a classification becoming a bare assertion.
+    """
+    if number <= 0:
+        return ""
+    lines = source.splitlines()
+    if number > len(lines):
+        return ""
+    return lines[number - 1].strip()[:300]
+
+
+@dataclass(frozen=True)
+class RefusalVerdict:
+    """What a source the transformer refused turned out to be.
+
+    ``evidence`` is the parsed entry-point line where there is one, or the
+    line of the file that settled the question where there is not. ``basis``
+    names which piece of evidence decided it, so a reader can tell a verdict
+    that came from the compiler apart from one that came from the parser.
+    """
+
+    refusal_class: str
+    entry_interface: str = ""
+    entry_routine: str = ""
+    entry_line: int = 0
+    evidence: str = ""
+    basis: str = ""
+    confident: bool = True
+    duplicate_of: str = ""
+    missing_externals: tuple[str, ...] = ()
+    #: What the file is on its own, before duplication was considered. A
+    #: second copy of a UEL is still a UEL; a second copy of a UMAT is still a
+    #: UMAT. Collapsing that into "duplicate" would lose the only fact that
+    #: decides whether the pair belongs in a count of UMATs.
+    underlying_class: str = ""
+
+    @property
+    def is_umat(self) -> bool:
+        """Whether the FILE presents a UMAT, whatever became of the transform.
+
+        A duplicate of a UMAT is still a UMAT and a UMAT that does not build
+        is still a UMAT; neither is ``not_a_umat``. Only the two classes that
+        say the file's Abaqus entry point is something else, or that it has
+        none at all, answer this question with "no".
+        """
+        return (self.underlying_class or self.refusal_class) not in (
+            OTHER_ABAQUS_ROUTINE, HELPER_OR_MODULE_ONLY)
+
+    def as_dict(self) -> dict:
+        return {"refusal_class": self.refusal_class,
+                "underlying_class": self.underlying_class or self.refusal_class,
+                "entry_interface": self.entry_interface,
+                "entry_routine": self.entry_routine,
+                "entry_line": self.entry_line,
+                "evidence": self.evidence,
+                "basis": self.basis,
+                "confident": self.confident,
+                "is_umat": self.is_umat,
+                "duplicate_of": self.duplicate_of,
+                "missing_externals": list(self.missing_externals)}
+
+
+def classify_refusal(found: Classification, *,
+                     duplicate_of: str = "",
+                     missing_externals: tuple = (),
+                     text_rejected: Optional[bool] = None,
+                     compiler_evidence: str = "") -> RefusalVerdict:
+    """What a refused source is, from evidence about the source.
+
+    THE TRANSFORMER'S REFUSAL IS NOT AN INPUT HERE, and that is deliberate. A
+    refusal says the transformer could not convert the file. It does not say
+    the file is not a UMAT, that the file is broken, or that something is
+    missing beside it -- those are three different claims about somebody
+    else's repository, and each needs its own evidence before it may be made.
+    Reading a refusal as any of them moves work out of this project's column
+    and into the corpus's, which is the one direction the error must never go.
+
+    The evidence is weighed in this order, each rung answering a question the
+    ones below it cannot:
+
+    1. **Is this file even a distinct member of the corpus?** A byte- or
+       line-identical copy of another acquired source is one source counted
+       twice, and every later question about it has already been answered.
+    2. **What does this file present to Abaqus?** Settled by parsing. A UEL, a
+       VUMAT or a UMATHT was never this transformer's to convert, and a file
+       with no Abaqus entry point at all is a helper or a module.
+    3. **Does the author's own text build?** Only asked of files that do
+       present a UMAT, and only believed when the compiler rejected the TEXT
+       -- a file that fails because a module was never published beside it is
+       the next question's answer, not this one's.
+    4. **Was everything it needs published?** An unresolved USE or INCLUDE.
+    5. **Everything else is ours.** A UMAT, whole, with its companions, that
+       this transformer could not convert.
+
+    ``text_rejected`` being ``None`` means the compile did not settle it, and
+    an unsettled compile leaves the verdict at :data:`GENUINE_UMAT` with
+    ``confident`` false. That is the safe direction: it overstates this
+    project's own unfinished work rather than the corpus's incompleteness.
+    """
+    base = _file_verdict(found, missing_externals, text_rejected,
+                         compiler_evidence)
+    if not duplicate_of:
+        return base
+    return replace(
+        base, refusal_class=DUPLICATE_SOURCE, duplicate_of=duplicate_of,
+        underlying_class=base.refusal_class,
+        basis=(f"line-for-line identical to {duplicate_of}, which carries the "
+               f"same answer; as a file it is {base.refusal_class}: "
+               f"{base.basis}")[:600])
+
+
+def _file_verdict(found: Classification, missing_externals: tuple,
+                  text_rejected: Optional[bool],
+                  compiler_evidence: str) -> RefusalVerdict:
+    """What the file is, considered on its own."""
+    missing = tuple(str(name) for name in missing_externals if str(name))
+
+    if found.kind == OTHER_ABAQUS_ENTRY:
+        return RefusalVerdict(
+            OTHER_ABAQUS_ROUTINE, entry_interface=found.entry_interface,
+            entry_routine=found.entry_routine, entry_line=found.entry_line,
+            evidence=found.entry_text, basis=found.reason[:400])
+
+    if found.kind in (HELPER_ONLY, NO_PROGRAM_UNIT):
+        # A file whose text the compiler rejects may parse as nothing, and
+        # "nothing" is then a symptom of the damage rather than a statement
+        # that the author published a helper. But only where the compiler was
+        # given everything: ``mrkearden__abaqus_umat/PlasticSolve.F90`` is an
+        # Elmer solver module -- no Abaqus interface, settled by parsing -- and
+        # the one diagnostic against it is a ``CONTIG`` that Elmer's own build
+        # defines on the command line. Reading that as a corrupt file would
+        # have made a claim about somebody's repository out of a gap in this
+        # probe's build environment.
+        if text_rejected and not missing:
+            return RefusalVerdict(
+                INCOMPLETE_OR_CORRUPT, evidence=compiler_evidence,
+                basis=("this file matches no Abaqus interface AND its "
+                       "published text is rejected by the compiler with "
+                       "everything it needs present: " + found.reason[:200]))
+        return RefusalVerdict(
+            HELPER_OR_MODULE_ONLY, evidence=found.entry_text,
+            entry_line=found.entry_line, missing_externals=missing,
+            basis=found.reason[:400])
+
+    if missing:
+        return RefusalVerdict(
+            MISSING_EXTERNAL_DEPENDENCY, entry_interface=found.entry_interface,
+            entry_routine=found.entry_routine, entry_line=found.entry_line,
+            evidence=found.entry_text, missing_externals=missing,
+            basis=("this file presents a UMAT but USEs or INCLUDEs what was "
+                   "never published beside it: " + "; ".join(missing[:6])))
+
+    if text_rejected:
+        return RefusalVerdict(
+            INCOMPLETE_OR_CORRUPT, entry_interface=found.entry_interface,
+            entry_routine=found.entry_routine, entry_line=found.entry_line,
+            evidence=compiler_evidence or found.entry_text,
+            basis="the author's own text is rejected by the compiler")
+
+    return RefusalVerdict(
+        GENUINE_UMAT, entry_interface=found.entry_interface,
+        entry_routine=found.entry_routine, entry_line=found.entry_line,
+        evidence=found.entry_text, confident=text_rejected is False,
+        basis=(found.reason[:400] if text_rejected is False else
+               (found.reason[:300] + "; the offline compile did not settle "
+                "whether the published text builds, so the refusal stays "
+                "this project's")))
