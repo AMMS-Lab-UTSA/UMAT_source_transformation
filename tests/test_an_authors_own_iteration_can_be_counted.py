@@ -160,7 +160,7 @@ def test_the_traced_crystal_plasticity_source_compiles():
     from pathlib import Path
 
     ifort = shutil.which("ifort")
-    source = Path("/home/ammslab3/softwarex_work/discovery_cache/"
+    source = Path("discovery_cache/"
                   "RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for")
     include = Path("/usr/SIMULIA/EstProducts/2021/SMAUsubs/PublicInterfaces")
     if ifort is None or not source.exists() or not include.exists():

@@ -91,7 +91,7 @@ def test_the_instrumented_source_compiles_where_the_pass9_one_did_not():
     ifort = shutil.which("ifort")
     if ifort is None:
         pytest.skip("no ifort on PATH")
-    source = Path("/home/ammslab3/softwarex_work/discovery_cache/"
+    source = Path("discovery_cache/"
                   "Worlthen__20220314-abqus-simulation/abaqus/original/"
                   "array_with_two_pixel_z.for")
     include = Path("/usr/SIMULIA/EstProducts/2021/SMAUsubs/PublicInterfaces")
