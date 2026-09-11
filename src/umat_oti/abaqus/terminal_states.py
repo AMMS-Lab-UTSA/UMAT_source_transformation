@@ -114,7 +114,8 @@ def from_stage(stage: str, reason: str = "") -> Verdict:
 
 
 def from_transform_failure(reason: str, compiles: bool | None = None,
-                           companions_missing: bool = False) -> Verdict:
+                           companions_missing: bool = False,
+                           is_umat: bool | None = None) -> Verdict:
     """The verdict for a source the transform refused.
 
     A transform refusal is ours -- unless the file it refused is one nobody
@@ -122,7 +123,18 @@ def from_transform_failure(reason: str, compiles: bool | None = None,
     published it, and a source whose companion module was never published
     beside it, are external whatever the transformer says about them, and the
     compile check is what tells those apart from a gap in the transformer.
+
+    And a file whose Abaqus entry point is not a UMAT is not a UMAT whatever
+    stage it stopped at. Three UEL sources began failing a semantic check
+    when the constancy analysis stopped inferring dummy arguments constant;
+    counting them as a gap in the transformer would have put an external
+    fact about somebody's file into this pipeline's column. The direction of
+    that error is the safe one -- it overstates our own failures rather than
+    the corpus's completeness -- but it is still the wrong answer, and it
+    costs a cluster that cannot be fixed because there is nothing wrong.
     """
+    if is_umat is False:
+        return Verdict("not_a_umat", "external", reason)
     if companions_missing:
         return Verdict("external_dependency_unavailable", "external", reason)
     if compiles is False:

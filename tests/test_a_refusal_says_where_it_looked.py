@@ -75,3 +75,38 @@ def test_the_record_carries_the_search():
             / "tools" / "verify_store_in_abaqus.py").read_text()
     assert '"searched_for_material_data": plan.searched' in text, (
         "the search would be computed and then dropped on the floor")
+
+
+# ---------------------------------------------------------------------------
+# and the panel a reader actually looks at shows it too
+# ---------------------------------------------------------------------------
+def test_the_corpus_panel_shows_what_the_search_read():
+    from umat_oti.app.corpus_view import _requirements
+
+    row = {"stage": "needs_material_data",
+           "searched_for_material_data": {
+               "repository": "3MAH__simcoon", "decks_scanned": 36,
+               "evidence": "none of the 36 decks publishes at least 2 constants"}}
+    detail = next(r.detail for r in _requirements(row)
+                  if r.name == "published material constants")
+    assert "36 .inp file(s)" in detail and "3MAH__simcoon" in detail
+
+
+def test_a_row_from_before_the_search_was_recorded_still_reads():
+    from umat_oti.app.corpus_view import _requirements
+
+    row = {"stage": "needs_material_data", "reason": "nothing publishes them"}
+    detail = next(r.detail for r in _requirements(row)
+                  if r.name == "published material constants")
+    assert detail == "nothing publishes them"
+
+
+def test_a_repository_with_no_deck_says_so_in_the_panel():
+    from umat_oti.app.corpus_view import _requirements
+
+    row = {"stage": "needs_material_data",
+           "searched_for_material_data": {"repository": "x__y",
+                                          "decks_scanned": 0}}
+    detail = next(r.detail for r in _requirements(row)
+                  if r.name == "published material constants")
+    assert "no .inp file at all" in detail

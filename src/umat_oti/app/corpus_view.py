@@ -154,8 +154,7 @@ def _requirements(row: dict) -> list:
                     str(row.get("reason") or "")
                     if row.get("stage") == "not_a_umat" else ""),
         Requirement("published material constants", bool(material),
-                    material or "no deck in this repository publishes "
-                                "constants matching this source"),
+                    material or _where_constants_were_looked_for(row)),
         Requirement("a paired deck", bool(deck), deck),
         Requirement("a formulation this harness can drive",
                     bool(formulation.get("element")),
@@ -165,6 +164,32 @@ def _requirements(row: dict) -> list:
         Requirement("a manifest with nothing missing", not manifest_refusals,
                     "; ".join(str(r) for r in manifest_refusals)),
     ]
+
+
+def _where_constants_were_looked_for(row: dict) -> str:
+    """What the search for material constants actually read.
+
+    "No deck publishes constants for this source" is a claim until it names
+    a file. The verification records the pairing scan's own account -- the
+    repository, how many decks were read, how many constants the source's
+    PROPS references reach -- so the panel shows that rather than a sentence
+    a reader cannot check.
+    """
+    searched = row.get("searched_for_material_data") or {}
+    if not searched:
+        return str(row.get("reason") or
+                   "no deck in this repository publishes constants matching "
+                   "this source")
+    where = str(searched.get("repository") or "this source's repository")
+    count = int(searched.get("decks_scanned") or 0)
+    evidence = str(searched.get("evidence") or "")
+    if not count:
+        return (f"{where} contains no .inp file at all, and no document in "
+                f"it carries a material block naming this routine")
+    said = f"read {count} .inp file(s) in {where}"
+    if evidence:
+        said += f": {evidence}"
+    return said
 
 
 def _artifacts(row: dict, work_dir: Optional[Path]) -> dict:
@@ -218,6 +243,7 @@ def entry_view(row: dict, work_dir: Optional[Path] = None) -> EntryView:
             "unsymmetric": row.get("unsymmetric"),
             "material_block": row.get("material_block"),
             "material_provenance": row.get("material_provenance"),
+            "searched_for_material_data": row.get("searched_for_material_data"),
             "deck": row.get("deck"),
             "deck_digest": row.get("deck_digest"),
             "source_form": row.get("source_form"),
