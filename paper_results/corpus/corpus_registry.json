@@ -1,6 +1,6 @@
 {
  "schema": "umat-oti/corpus-registry/1",
- "generated": "2026-09-11T17:12:24+00:00",
+ "generated": "2026-09-11T17:26:43+00:00",
  "what_counts_as_verified": "only fully_verified, and it is reached by a source that transformed, compiled, ran in Abaqus as the original, ran as the converted build on the same deck, agreed with itself over the whole stress and state history, and whose OTI tangent agreed with a finite difference of the original at several smooth states",
  "terminal_states": {
   "verified": [
@@ -17,6 +17,7 @@
    "transform_refused",
    "experiment_not_generated",
    "experiment_not_informative",
+   "informativeness_not_established",
    "unsupported_formulation",
    "support_build_failed",
    "original_job_failed",
@@ -171,7 +172,7 @@
    "mholla__growth/umats/umat_transverse.f"
   ],
   "inventory": {
-   "path": "/home/ammslab3/softwarex_work/wt-A-registry/paper_results/discovery/discovery_triage.csv",
+   "path": "paper_results/discovery/discovery_triage.csv",
    "discovered_sources": 391,
    "in_the_registry": 391,
    "in_a_batch_but_not_the_inventory": [],
