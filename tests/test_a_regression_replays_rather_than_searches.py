@@ -149,3 +149,33 @@ def test_external_verdicts_are_not_in_the_internal_retry_set():
     assert "not_a_umat" not in internal_stages
     assert "needs_material_data" not in internal_stages
     assert "verified" not in internal_stages
+
+
+def test_a_gate_that_ran_nothing_fails(tmp_path: Path):
+    """Returning zero for an empty selection is a green result for a run that
+    never started. The verdict function said so all along; main() returned
+    before reaching it."""
+    from verify_store_in_abaqus import exit_verdict
+
+    for mode in ("regression", "qualification"):
+        outcome = exit_verdict(mode, [], {"some/entry.for"})
+        assert outcome.code != 0, mode
+        assert any("proves nothing" in line for line in outcome.lines), mode
+
+
+def test_an_inventory_that_ran_nothing_still_exits_zero():
+    """It answers "where does everything stand?", and every answer in it --
+    including none -- is an answer. Reading its exit code as a verdict is the
+    mistake the split exists to prevent."""
+    from verify_store_in_abaqus import exit_verdict
+
+    outcome = exit_verdict("inventory", [], set())
+    assert outcome.code == 0
+
+
+def test_main_reaches_the_verdict_on_an_empty_selection():
+    tool = (Path(__file__).resolve().parents[1] / "tools"
+            / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
+    body = tool.split('print("  nothing to verify")')[1].split("\n\n")[0]
+    assert "exit_verdict(" in body
+    assert "return outcome.code" in body
