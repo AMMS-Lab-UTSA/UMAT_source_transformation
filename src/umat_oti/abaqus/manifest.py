@@ -50,6 +50,29 @@ class LoadingSegment:
     #: Which degrees of freedom the held face keeps, read from the author's
     #: deck. Only meaningful beside ``body_force``.
     held: tuple[int, ...] = ()
+    #: Separation of the two faces of a COHESIVE element, in the order the
+    #: element hands them to the UMAT: normal first, then the one or two shear
+    #: directions. A cohesive law is given a displacement jump, not a strain
+    #: tensor, and driving it with ``strain`` would drive a different
+    #: quantity. Empty for every non-cohesive segment.
+    separation: tuple[float, ...] = ()
+    #: Nothing is prescribed and nothing is loaded; only the clock advances
+    #: over ``period``. This is the whole experiment for a law whose driver is
+    #: TIME -- a growth stretch, a swelling, an ageing -- and the segment that
+    #: makes such a law's development visible without changing the
+    #: constitutive problem by shortening its clock.
+    time_only: bool = False
+
+    @property
+    def driven_by(self) -> str:
+        """What makes something happen in this segment, in one word."""
+        if self.body_force:
+            return "body force"
+        if self.separation:
+            return "separation"
+        if self.time_only:
+            return "time"
+        return "strain"
 
 
 @dataclass(frozen=True)
@@ -65,6 +88,22 @@ class VerificationManifest:
 
     # ---- the material point ------------------------------------------------
     element_type: str = "C3D8"
+    #: Where the element sits, as ``(id, x, y, z)`` per node. Empty means the
+    #: registry's reference geometry, which is a unit cube at the origin.
+    #:
+    #: Not decoration. A UMAT that reads COORDS computes a different material
+    #: at a different place, and ``Jeff97__.../PureGrowth.for`` builds a growth
+    #: tensor whose determinant passes through zero at ``y = 0.79`` -- a point
+    #: the unit cube has and the author's millimetre-thick plate does not. See
+    #: :mod:`umat_oti.abaqus.coordinate_domain`.
+    node_coordinates: tuple[tuple[int, float, float, float], ...] = ()
+    node_provenance: str = ""
+    #: Degrees of freedom the author's deck constrains on EVERY node, which is
+    #: a statement about the material's kinematics rather than a support.
+    #: ``Plate-1.WholeRegion, 3, 3`` beside a plane-strain growth problem is
+    #: the plane-strain condition; dropping it would let the plate thicken out
+    #: of plane and change what the routine is asked.
+    plane_strain_directions: tuple[int, ...] = ()
     kinematics: str = "small strain"          # or "finite"
     #: Zero means "take it from the element", which is where it comes from:
     #: the element decides how many components Abaqus hands the UMAT, and a
@@ -90,6 +129,19 @@ class VerificationManifest:
     #: an orientation. Crystal plasticity usually does.
     orientation: Optional[tuple[float, float, float]] = None
     orientation_provenance: str = ""
+    #: An orientation written the way a deck writes one: six numbers giving a
+    #: point on the local 1-axis and a point in the local 1-2 plane, plus an
+    #: ``(axis, angle)`` rotation about one of them.
+    #:
+    #: Carried beside the Euler form rather than converted into it because
+    #: this is what an author publishes. ``CAEAssistant-Group``'s deck says
+    #: ``*Orientation, name=Ori-1 / 1.,0.,0., 0.,1.,0. / 3, 0.`` and then
+    #: rotates the ply 30 degrees about the shell normal on its
+    #: ``*Shell Section`` data line. Both halves are the author's, and a
+    #: verification that dropped either would run the composite in a frame its
+    #: author did not.
+    orientation_axes: Optional[tuple[float, ...]] = None
+    orientation_rotation: Optional[tuple[int, float]] = None
     unsymmetric: bool = False
 
     # ---- what to run -------------------------------------------------------
@@ -383,3 +435,113 @@ def family(name: str, strain: float = 0.01,
     raise ValueError(
         f"{name!r} is not a test this generator knows. Known tests: "
         f"{', '.join(sorted(TEST_PURPOSE))}")
+
+
+# ---------------------------------------------------------------------------
+# loadings for laws whose driver is not a prescribed strain
+# ---------------------------------------------------------------------------
+def let_time_pass(period: float, increments: int = 10,
+                  name: str = "grow", why: str = "") -> LoadingSegment:
+    """Nothing prescribed, nothing loaded, the clock running for ``period``.
+
+    THE experiment for a time-driven law, and the one this harness did not
+    have. A growth tensor, a swelling, an ageing or a healing develops because
+    TIME advances; the element is left free at every node but the ones rigid
+    motion requires, so the growth produces the deformation instead of fighting
+    a boundary condition that was never the author's.
+
+    ``period`` is not a numerical knob here. ``PureGrowth.for`` normalises its
+    own clock by ``TotalT = 1.0`` and ``l1-is-1--l2-is-101.for`` by
+    ``TotalT = 10.0``; running for less is running a smaller growth, which is
+    a different constitutive problem rather than a gentler version of the same
+    one. See :mod:`umat_oti.abaqus.time_scale`.
+    """
+    return LoadingSegment(
+        name, (0.0,) * 6, increments, float(period), time_only=True,
+        description=("no strain is prescribed and no load is applied; the "
+                     "step runs for " + f"{float(period):g}" + " of analysis "
+                     "time so that whatever this law does with the clock is "
+                     "what the element does" + (f" ({why})" if why else "")))
+
+
+def separate(normal: float = 0.0, shear: float = 0.0, second_shear: float = 0.0,
+             increments: int = 10, period: float = 1.0, name: str = "open",
+             why: str = "") -> LoadingSegment:
+    """Pull the two faces of a cohesive element apart by a known jump.
+
+    The components are in the order a cohesive element hands them to the UMAT:
+    the through-thickness separation first, then the one or two shear
+    directions. ``harshaa765__Bilinear-CZM-UMAT`` reads them as
+    ``DELTA_N = STRAN(1) + DSTRAN(1)``, ``DELTA_S``, ``DELTA_T`` and says so in
+    its own comments.
+    """
+    return LoadingSegment(
+        name, (0.0,) * 6, increments, float(period),
+        separation=(float(normal), float(shear), float(second_shear)),
+        description=("the top face of the cohesive element is displaced "
+                     f"relative to the bottom by normal {normal:g}, shear "
+                     f"{shear:g}" + (f", second shear {second_shear:g}"
+                                     if second_shear else "")
+                     + (f" ({why})" if why else "")))
+
+
+def under_body_force_over(components: tuple, held: tuple, period: float,
+                          increments: int = 10, name: str = "body_force",
+                          provenance: str = "") -> LoadingSegment:
+    """The author's own body force over the author's own step period.
+
+    The period matters as much as the components. ``BodyForce-Growth-2Stages``
+    reads ``F = TargetF*(TIME(1))/TotalT`` in its DLOAD and switches its growth
+    stage on ``TIME(2)``, so a step of a different length applies a different
+    fraction of the author's load AND lands in a different stage of the growth.
+    """
+    return LoadingSegment(
+        name, (0.0,) * 6, increments, float(period),
+        description=("the author's own body force, applied through the "
+                     "source's SUBROUTINE DLOAD over a step of "
+                     f"{float(period):g}; the element is held only where "
+                     "rigid-body motion requires"
+                     + (f" ({provenance})" if provenance else "")),
+        body_force=tuple(components), held=tuple(held))
+
+
+def cohesive_open_and_release(onset: float, final: float,
+                             increments: int = 10) -> tuple[LoadingSegment, ...]:
+    """Open past the damage onset, then release, which is the author's own test.
+
+    ``Job_1_Harsh_UMAT.inp`` is two steps: ``control, 3, 3, 0.2`` over half a
+    unit of time, then the same boundary condition removed. The opening carries
+    the traction up the elastic branch, past the onset separation
+    ``TAU_N/A_KN`` and down the softening one; the release is what shows the
+    damage did not come back. A monotonic opening alone cannot tell a damage
+    law from a nonlinear elastic one.
+    """
+    return (
+        separate(normal=float(final), increments=increments, name="open",
+                 why=f"onset separation is {onset:g}, so this reaches "
+                     f"{final / onset:.1f} times it"),
+        separate(normal=0.0, increments=increments, name="release",
+                 why="the whole opening removed, so that a traction that does "
+                     "not return to its elastic value is damage and not "
+                     "nonlinearity"),
+        separate(normal=float(final), increments=increments, name="reopen",
+                 why="reopened to the same separation; a bilinear damage law "
+                     "returns a smaller traction than the first time and an "
+                     "elastic law returns the same one"),
+    )
+
+
+def off_axis(strain: float = 0.01, increments: int = 10) -> LoadingSegment:
+    """A direct strain along the deck's global axis, for an oriented material.
+
+    Meaningless without an orientation and decisive with one: in a frame
+    rotated off the loading axis, a pure direct strain produces a SHEAR stress,
+    and a build that lost the rotation produces none. That coupling is the
+    observable that says the local frame reached the routine.
+    """
+    return LoadingSegment(
+        "off_axis", (float(strain), 0.0, 0.0, 0.0, 0.0, 0.0), increments,
+        description=("prescribed extension along the deck's global x, which "
+                     "is off the material's own axes; the shear stress it "
+                     "produces is the evidence that the orientation reached "
+                     "the routine"))

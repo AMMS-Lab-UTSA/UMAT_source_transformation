@@ -24,6 +24,20 @@ Refusals are deliberate, not gaps waiting to be filled:
 * Coupled temperature-displacement (``CAX4T``, ``C3D8T``) call the UMAT with
   a thermal contract this harness does not drive.
 * User elements (``U1``, ``U3``) are the author's own element, not ours.
+
+Cohesive elements are here, and were not. A cohesive law IS drivable: Abaqus
+calls a UMAT for a ``*COHESIVE SECTION, RESPONSE=TRACTION SEPARATION``, hands
+it NDI=1 direct and NSHR=1 (2D) or 2 (3D) shear components, and what it calls
+STRAN is the separation divided by the constitutive thickness. The author of
+``harshaa765__Bilinear-CZM-UMAT`` published exactly that experiment --
+``Job_1_Harsh_UMAT.inp``, one COH3D8 opened to 0.2 and then released -- and
+this harness refused the source with "no continuum element in this harness
+calls a UMAT that way", which was true of the registry and not of Abaqus.
+
+What remains genuinely out of reach is the COUPLED form. ``COH2D4T`` calls the
+UMAT with a temperature, and ``lucassalmon83860-bit``'s healing law computes
+its kinetics as ``PROPS(8)*Exp(-PROPS(9)/(8.34*TEMP))`` -- driven at TEMP=0
+that divides by zero, and inventing a temperature would invent the experiment.
 """
 from __future__ import annotations
 
@@ -50,6 +64,12 @@ class ElementGeometry:
     #: ``*SOLID SECTION`` for continuum, and a thickness line for planar.
     needs_thickness: bool
     note: str = ""
+    #: Which section keyword attaches this element to its material, and what
+    #: the components of its stress array MEAN. A cohesive element's "stress"
+    #: is a traction and its "strain" a separation, and a deck that drives it
+    #: with a homogeneous strain tensor is driving something else.
+    section: str = "SOLID"
+    kind: str = "continuum"
 
     @property
     def ntens(self) -> int:
@@ -102,6 +122,22 @@ _TET10 = _TET4 + tuple(
 
 _QUAD4 = _numbered([(0.0, 0.0, 0.0), (1.0, 0.0, 0.0),
                     (1.0, 1.0, 0.0), (0.0, 1.0, 0.0)])
+
+#: A cohesive element has two coincident faces. COH3D8 numbers the bottom
+#: face 1-4 and the top face 5-8 directly above it, and the separation is the
+#: displacement of the top face relative to the bottom. The faces are written
+#: coincident, exactly as the author's own patch test writes them: the
+#: constitutive thickness comes from the *COHESIVE SECTION data line, not from
+#: the geometry, so a zero-thickness element is the normal case rather than a
+#: degenerate one.
+_COH_HEX8 = _numbered([
+    (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (1.0, 1.0, 0.0), (0.0, 1.0, 0.0),
+    (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (1.0, 1.0, 0.0), (0.0, 1.0, 0.0)])
+
+#: COH2D4 numbers the bottom edge 1-2 and the top edge 4-3, which is the
+#: counter-clockwise order Abaqus reads a four-node cohesive element in.
+_COH_QUAD4 = _numbered([
+    (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0)])
 _QUAD8 = _QUAD4 + tuple(
     (index, *point) for index, point in enumerate(
         [_mid(_QUAD4[0], _QUAD4[1]), _mid(_QUAD4[1], _QUAD4[2]),
@@ -128,6 +164,18 @@ def _axisymmetric(name, nodes, note=""):
     return ElementGeometry(name, nodes, 2, 3, 1, False, note)
 
 
+def _cohesive(name, nodes, dimension, nshr, note=""):
+    """A traction-separation element: one direct component, one or two shear.
+
+    ``needs_thickness`` is True because ``*COHESIVE SECTION`` takes the
+    constitutive thickness on its data line, and this harness writes 1.0 there
+    so that what the UMAT is handed as STRAN is numerically the separation --
+    which is what the law's own comments call it.
+    """
+    return ElementGeometry(name, nodes, dimension, 1, nshr, True, note,
+                           section="COHESIVE", kind="cohesive")
+
+
 SUPPORTED: dict[str, ElementGeometry] = {
     element.name: element for element in (
         _continuum("C3D8", _HEX8),
@@ -149,6 +197,10 @@ SUPPORTED: dict[str, ElementGeometry] = {
         _axisymmetric("CAX4H", _QUAD4),
         _axisymmetric("CAX3", _TRI3, "constant strain"),
         _axisymmetric("CAX8", _QUAD8),
+        _cohesive("COH3D8", _COH_HEX8, 3, 2,
+                  "the author's own single-element patch test in "
+                  "harshaa765__Bilinear-CZM-UMAT is one of these"),
+        _cohesive("COH2D4", _COH_QUAD4, 2, 1),
     )
 }
 
@@ -165,6 +217,10 @@ _REFUSALS: tuple[tuple[str, str], ...] = (
 )
 
 _STRUCTURAL = {
+    "COH": ("a cohesive element is supported in its displacement-only form "
+            "(COH2D4, COH3D8); the coupled temperature-displacement form "
+            "calls the UMAT with a temperature this harness does not drive, "
+            "and a healing or ageing law read at TEMP=0 is not the law"),
     "S": "a shell hands the UMAT a plane-stress tensor it must enforce itself",
     "M": "a membrane carries no bending and imposes plane stress",
     "B": "a beam integrates a cross-section rather than a material point",

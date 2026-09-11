@@ -69,6 +69,10 @@ _VERIFICATION_ELEMENT: dict[str, tuple[str, str]] = {
     "axisymmetric": ("CAX4", "CAX4H"),
 }
 
+#: Families whose element is not a continuum one and is chosen from what the
+#: author used rather than from a family-to-element table.
+_COHESIVE_ELEMENT: dict[int, str] = {2: "COH2D4", 3: "COH3D8"}
+
 
 @dataclass(frozen=True)
 class Formulation:
@@ -101,8 +105,14 @@ def _parameters(remainder: str) -> dict:
             for name, value in _PARAMETER.findall(remainder or "")}
 
 
-def elements_using(text: str, material: str) -> tuple[tuple[str, ...], str]:
-    """Every element type whose section names ``material``, and where it says so.
+def elements_by_material(text: str) -> dict[str, tuple[tuple[str, ...], str]]:
+    """Every material a deck's sections name, and the elements each one runs on.
+
+    One pass over the deck for the whole file, because the per-material form
+    used to re-read it once per material. ``notched_plate_CZM_random_mesh.inp``
+    defines several hundred cohesive materials in eighteen thousand lines, and
+    asking each of them separately turned one pairing into a quadratic scan
+    that did not finish.
 
     Resolved through the element set, which is how a deck connects the two:
     ``*Element, type=CPS8R`` numbers the elements, ``*Elset, elset=Body``
@@ -121,9 +131,17 @@ def elements_using(text: str, material: str) -> tuple[tuple[str, ...], str]:
     mode = ""
     generate = False
     for number, line in enumerate(text.splitlines(), start=1):
+        # A deck is mostly node and connectivity data, and only a line that
+        # begins with a star can change what is being read. Skipping the rest
+        # without touching a regular expression is what makes a 33 000-line
+        # deck cheap enough to scan once per material rather than once per
+        # question about it.
+        starred = line.lstrip()[:1] == "*"
+        if not starred and not mode:
+            continue
         if line.lstrip().startswith("**"):
             continue
-        found = _KEYWORD.match(line)
+        found = _KEYWORD.match(line) if starred else None
         if found:
             keyword = "".join(found.group(1).split()).upper()
             parameters = _parameters(found.group(2))
@@ -176,27 +194,61 @@ def elements_using(text: str, material: str) -> tuple[tuple[str, ...], str]:
                 found |= types_in(member, depth + 1)
         return found
 
-    wanted = (material or "").upper()
-    kinds: set = set()
-    where: list = []
+    resolved: dict = {}
+    by_material: dict = {}
     for elset, named, number, quoted in sections:
-        if wanted and named != wanted:
-            continue
-        found_kinds = types_in(elset)
+        found_kinds = resolved.get(elset)
+        if found_kinds is None:
+            found_kinds = types_in(elset)
+            resolved[elset] = found_kinds
+        kinds, where = by_material.setdefault(named, (set(), []))
         if found_kinds:
             kinds |= found_kinds
             where.append(f"line {number}: {quoted}")
-    if not kinds and sections:
-        # A section named the material and its set could not be resolved to a
-        # type -- which happens in an assembly whose parts are instanced. The
-        # deck still says what elements it holds, and a deck that holds exactly
-        # one element type holds it for this material too.
-        distinct = {kind for kind in element_type_of.values() if kind}
-        distinct |= {kind for kind in elset_type.values() if kind}
-        if len(distinct) == 1:
-            kinds = distinct
-            where.append(f"the deck declares one element type, {next(iter(kinds))}")
-    return tuple(sorted(k for k in kinds if k)), "; ".join(where[:3])
+
+    # A section named a material and its set could not be resolved to a type --
+    # which happens in an assembly whose parts are instanced. The deck still
+    # says what elements it holds, and a deck that holds exactly one element
+    # type holds it for that material too.
+    distinct = {kind for kind in element_type_of.values() if kind}
+    distinct |= {kind for kind in elset_type.values() if kind}
+    lonely = next(iter(distinct)) if len(distinct) == 1 else ""
+
+    answer: dict = {}
+    for named, (kinds, where) in by_material.items():
+        if not kinds and lonely:
+            kinds = {lonely}
+            where = where + [f"the deck declares one element type, {lonely}"]
+        answer[named] = (tuple(sorted(k for k in kinds if k)),
+                         "; ".join(where[:3]))
+    if sections and lonely:
+        answer.setdefault("", ((lonely,),
+                               f"the deck declares one element type, {lonely}"))
+    return answer
+
+
+def elements_using(text: str, material: str) -> tuple[tuple[str, ...], str]:
+    """Every element type whose section names ``material``, and where it says so.
+
+    The whole-deck form is :func:`elements_by_material`; this asks it for one.
+    """
+    by_material = elements_by_material(text)
+    wanted = (material or "").upper()
+    if not wanted:
+        # No material named: every section counts, which is what the caller
+        # asking about "the deck" rather than about one material means.
+        kinds: set = set()
+        where: list = []
+        for found_kinds, found_where in by_material.values():
+            kinds |= set(found_kinds)
+            if found_where:
+                where.append(found_where)
+        return tuple(sorted(kinds)), "; ".join(where[:3])
+    found = by_material.get(wanted)
+    if found is not None:
+        return found
+    lonely = by_material.get("")
+    return lonely if lonely is not None else ((), "")
 
 
 def family_of(element: str) -> str:
@@ -240,6 +292,12 @@ def choose(author_elements, *, provenance: str = "",
                     f"tensor its UMAT is called with is not settled by the "
                     f"deck: elements {', '.join(kinds)}"))
     family = next(iter(families), "")
+
+    if family == "cohesive":
+        return _cohesive_choice(kinds, provenance)
+    if family in ("shell", "membrane"):
+        return _plane_stress_substitute(kinds, family, provenance, ntens_hint)
+
     choice = _VERIFICATION_ELEMENT.get(family)
     if choice is None:
         return Formulation(
@@ -259,6 +317,97 @@ def choose(author_elements, *, provenance: str = "",
                 f"formulation on {element}, whose "
                 f"NTENS={geometry_for(element).ntens} is the same tensor the "
                 f"UMAT is called with"))
+
+
+def _cohesive_choice(kinds: tuple, provenance: str) -> Formulation:
+    """A cohesive law IS drivable, on a cohesive element.
+
+    Abaqus calls a UMAT for a ``*COHESIVE SECTION, RESPONSE=TRACTION
+    SEPARATION`` and hands it a separation where a continuum element hands a
+    strain. The refusal this replaces -- "no continuum element in this harness
+    calls a UMAT that way" -- was a true statement about continuum elements
+    and a false one about the harness's reach: the author of
+    ``harshaa765__Bilinear-CZM-UMAT`` published a single COH3D8 patch test in
+    the same repository as the source that was refused.
+
+    What stays refused is the COUPLED form. ``COH2D4T`` is called with a
+    temperature, and ``lucassalmon83860-bit``'s healing law computes
+    ``PROPS(8)*Exp(-PROPS(9)/(8.34*TEMP))``; driving it at TEMP=0 divides by
+    zero and choosing a temperature would choose the experiment.
+    """
+    coupled = [kind for kind in kinds if kind.rstrip("H").endswith("T")]
+    if coupled:
+        return Formulation(
+            author_elements=kinds, family="cohesive", provenance=provenance,
+            reason=(f"the author drives this cohesive law on "
+                    f"{', '.join(coupled)}, which is the coupled "
+                    f"temperature-displacement form: the UMAT is called with "
+                    f"a temperature that its own kinetics read, and this "
+                    f"harness drives no thermal field. Running it at zero "
+                    f"temperature would not be running this law"))
+    # Three components means the three-dimensional cohesive element and two
+    # the planar one, which is what the author's own element names say.
+    three_d = any(kind.startswith("COH3D") for kind in kinds)
+    element = _COHESIVE_ELEMENT[3 if three_d else 2]
+    return Formulation(
+        author_elements=kinds, family="cohesive", element=element,
+        provenance=provenance,
+        reason=(f"the author's deck runs this material on "
+                f"{', '.join(kinds)}, which is a traction-separation law; the "
+                f"verification runs {element} under a *COHESIVE SECTION with "
+                f"RESPONSE=TRACTION SEPARATION, which hands the UMAT the same "
+                f"NTENS={geometry_for(element).ntens} separation the author's "
+                f"element does"))
+
+
+def _plane_stress_substitute(kinds: tuple, family: str, provenance: str,
+                             ntens_hint: int = 0) -> Formulation:
+    """A shell's UMAT is a plane-stress UMAT, and CPS4 hands it the same tensor.
+
+    Abaqus calls a UMAT from a shell or a membrane with NDI=2, NSHR=1,
+    NTENS=3 -- the plane-stress contract, which the routine has to enforce
+    itself -- and calls it from CPS4 with exactly the same three components.
+    So the refusal "shell elements do not hand a UMAT the continuum stress
+    tensor this harness drives" named a true difference that does not reach
+    the constitutive routine.
+
+    ``theysy__mml_subroutine_public/MML_U2.for`` settles it in its own text::
+
+        IF(NDIM3 .EQ. 3) THEN !PLANE STRESS
+            NDIM4=NDIM3+1
+        ELSEIF(NDIM3 .EQ. 6) THEN !3-D STRESS
+            ...
+        ELSE
+            WRITE(*,*) '# ERROR: CHECK THE INPUT FILE'
+
+    and its author's own constants select YLD2000_2D, which STOPs unless
+    NTENS is 3. The routine is a plane-stress routine and CPS4 is how this
+    harness drives one.
+
+    What the substitution does NOT verify is said out loud: the shell's own
+    kinematics -- its bending, its transverse shear stiffness, its through-
+    thickness integration -- are the element's, not the material's, and none
+    of them is a UMAT.
+    """
+    if ntens_hint and ntens_hint != 3:
+        return Formulation(
+            author_elements=kinds, family=family, provenance=provenance,
+            reason=(f"the author's deck runs this material on "
+                    f"{', '.join(kinds)}, which calls a UMAT with three "
+                    f"plane-stress components, and the source fills "
+                    f"{ntens_hint}. One of the two is wrong about this "
+                    f"material and this harness will not pick"))
+    return Formulation(
+        author_elements=kinds, family=family, element="CPS4",
+        provenance=provenance,
+        reason=(f"the author's deck runs this material on "
+                f"{', '.join(kinds)}; Abaqus calls a UMAT from a {family} "
+                f"with NDI=2, NSHR=1, NTENS=3, which is the plane-stress "
+                f"contract, and CPS4 hands the routine the same three "
+                f"components. What this SUBSTITUTES is the element: the "
+                f"{family}'s bending, transverse shear and through-thickness "
+                f"integration are not part of the material and are not "
+                f"verified here"))
 
 
 #: What each tensor size means when the deck says nothing. An inference, and
@@ -536,7 +685,23 @@ def settle(source_text: str, source_name: str, deck_text: str = "",
     provenance = (f"{deck_name}: {where}" if where else
                   (f"{deck_name} names no element for material "
                    f"{material or '(unnamed)'}" if deck_text else "no deck"))
-    from_the_deck = choose(kinds, provenance=provenance)
+    # The tensor size the source fills is handed to the chooser, because a
+    # deck that says "shell" is saying "three plane-stress components" and
+    # whether the source agrees decides whether the substitution is honest.
+    from_the_deck = choose(kinds, provenance=provenance,
+                           ntens_hint=from_the_source.ntens)
+
+    # A cohesive element in the deck settles the question outright: the
+    # author drove this material as a traction-separation law, and the
+    # chooser has already worked out which cohesive element and whether its
+    # coupled form puts it out of reach.
+    if from_the_deck.family == "cohesive":
+        return Settled(from_the_deck, from_the_source, kinds,
+                       agreement=("the deck runs this material on cohesive "
+                                  "elements" + ("; the source names itself a "
+                                                "cohesive law too"
+                                                if from_the_source.family
+                                                == "cohesive" else "")))
 
     if from_the_source.known and from_the_deck.known:
         if from_the_source.family == from_the_deck.family:
@@ -560,13 +725,20 @@ def settle(source_text: str, source_name: str, deck_text: str = "",
                                   f"and the deck says {from_the_deck.family}; "
                                   f"the source decides"))
     if from_the_source.family == "cohesive":
+        # The source's own NAME says cohesive and the deck said nothing that
+        # confirms it. A cohesive law is drivable -- see _cohesive_choice --
+        # but which of the two cohesive elements it wants is a statement only
+        # the deck can make, and guessing would run a two-component law on a
+        # three-component element or the reverse.
         return Settled(
             Formulation(author_elements=kinds, family="cohesive",
                         provenance=provenance,
-                        reason=("this source is a cohesive law: it is handed "
-                                "tractions and separations rather than a stress "
-                                "tensor, and no continuum element in this "
-                                "harness calls a UMAT that way")),
+                        reason=("this source names itself a cohesive law, so "
+                                "it is handed separations rather than a strain "
+                                "tensor; this harness drives COH2D4 and "
+                                "COH3D8, and no deck here says which of them "
+                                "the author used, so the number of separation "
+                                "components is unsettled")),
             from_the_source, kinds,
             agreement="the source names itself a cohesive law")
     if from_the_source.known:
