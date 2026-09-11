@@ -134,18 +134,30 @@ def test_a_refusal_still_names_what_was_missing():
 # ---------------------------------------------------------------------------
 # and both builds have to walk the same increments
 # ---------------------------------------------------------------------------
-def test_a_load_controlled_step_is_not_left_to_the_solver():
-    """A displacement-controlled step walks a known increment sequence: the
-    increment size is capped at the initial size, so both builds take the
-    same increments and the histories line up one for one. A load-controlled
-    step does not -- Abaqus cuts back when it needs to. Measured on
-    BodyForce-Growth-2Stages.for: the original took the ten increments asked
-    for and the converted build took sixteen. There is no
-    increment-for-increment comparison between those, and no verdict to be
-    had from one."""
+def test_a_load_controlled_step_keeps_its_automatic_incrementation():
+    """Fixing the increment was tried, and the measurement refused it.
+
+    The two builds do walk different increments -- ten for the original and
+    sixteen for the converted build on BodyForce-Growth-2Stages.for, because
+    the converted routine returns the OTI tangent rather than the author's
+    analytic DDSDDE and Newton converges at a different rate. *STATIC, DIRECT
+    removes the solver's freedom to choose, so both would walk the same ones.
+
+    It cannot be used. Measured on that same model, the ORIGINAL then stops:
+
+        ***ERROR: FIXED TIME INCREMENT IS TOO LARGE
+        1  7  1  0  16  16  0.150  0.150  0.02500
+        THE ANALYSIS HAS NOT BEEN COMPLETED
+
+    Its stiffness changes along the path and it needs the cutbacks it was
+    denied -- at a quarter of the increment size, not only at the original's
+    own. A fixed size small enough for both is a number nothing measured, so
+    the histories are paired by time instead. See align_by_time.
+    """
     segment = under_body_force((("BYNU", 1.0),), held=(1, 2, 3))
     text = generate_deck(replace(_manifest(), loading=(segment,)))
-    assert "*STATIC, DIRECT" in text
+    assert "*STATIC, DIRECT" not in text
+    assert "*STATIC" in text
 
 
 def test_the_displacement_steps_keep_their_automatic_incrementation():
