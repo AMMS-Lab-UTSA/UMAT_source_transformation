@@ -93,14 +93,27 @@ class VerificationManifest:
     #: Relative step sizes for the sweep, largest first. A single step cannot
     #: distinguish a truncation error from a cancellation one.
     #:
-    #: Starts at 1e-2 because for a stiff model the whole of 1e-3 to 1e-8 can
-    #: sit on the cancellation side of the U-curve, and a sweep that never
-    #: reaches the truncation side has no minimum in it to find. Measured on
-    #: Growth-MinSur2.for: the relative error rose monotonically as the step
-    #: fell -- 8.6e-08, 2.2e-06, 8.3e-06, 3.8e-05, 7.6e-04, 1.0e-02 -- which
-    #: is 1/h over six decades with no h^2 branch visible anywhere in it. Only
-    #: the largest step agreed, and a plateau needs two.
-    fd_steps: tuple[float, ...] = (1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8)
+    #: The sweep has to BRACKET its minimum. A minimum at the edge is not a
+    #: minimum: it says the U-curve turns somewhere the sweep never looked,
+    #: and one agreeing step cannot be told from a lucky crossing.
+    #:
+    #: Measured on Growth-MinSur2.for at 1e-3 to 1e-8: the relative error rose
+    #: monotonically as the step fell -- 8.6e-08, 2.2e-06, 8.3e-06, 3.8e-05,
+    #: 7.6e-04, 1.0e-02 -- which is 1/h over six decades with no h^2 branch
+    #: anywhere in it. Adding 1e-2 bracketed thirteen such entries and left
+    #: three, and those three say the same thing one decade up. Measured on
+    #: From-2D-to-3D-Genhel.for, increment 4: 1.10e-09 at 1e-2 against
+    #: 8.26e-06, 8.26e-05, 4.11e-04, 4.11e-03, 4.12e-02, 4.12e-01 below it --
+    #: an exact 1/h line, and a point at 1e-2 that sits seven hundred times
+    #: BELOW where that line would put it. Cancellation has stopped
+    #: dominating there and truncation has not yet taken over, which is where
+    #: the minimum is; a step above it is what shows the minimum was passed.
+    #:
+    #: Widening cannot weaken a verdict. The plateau still needs two steps
+    #: within tolerance spanning a decade, and a perturbation that crosses a
+    #: constitutive branch is caught by the one-sided gap whatever its size.
+    fd_steps: tuple[float, ...] = (1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7,
+                                   1e-8)
     #: A component smaller than this fraction of the largest entry of the
     #: tangent is reported against the largest entry instead of against itself.
     near_zero_fraction: float = 1e-8
