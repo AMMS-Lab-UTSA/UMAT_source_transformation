@@ -801,12 +801,35 @@ def _statement_text(line: str) -> str:
     return _LEADING_LABEL.sub("", line, count=1)
 
 
+#: A C-preprocessor directive. Abaqus compiles user subroutines with ``-fpp``,
+#: so a source may carry ``#include``, ``#if``, ``#define`` -- and Abaqus's own
+#: public headers are pulled in that way: ``#include <SMAAspUserSubroutines.hdr>``
+#: sits between ``INCLUDE 'ABA_PARAM.INC'`` and the type declarations in every
+#: source that uses the thread-safe utilities.
+#:
+#: ``_is_executable_line`` says such a line runs, because it starts with none
+#: of the keywords that declare. Measured consequence, on
+#: ``Worlthen/array_with_two_pixel_z.for``: the probe call was inserted between
+#: ``INCLUDE 'ABA_PARAM.INC'`` and ``#include <SMAAspUserSubroutines.hdr>``,
+#: which put the header's INTERFACE blocks -- and the CHARACTER and REAL*8
+#: declarations after them -- into the executable section. ifort refused the
+#: file with eleven copies of "error #6236: A specification statement cannot
+#: appear in the executable section", Abaqus stopped before writing a .dat, and
+#: the entry was recorded as ``original_job_failed``: the author's code blamed
+#: for where this module put a line.
+#:
+#: A directive is neither executable nor a declaration. It is skipped, so the
+#: walk continues to the first statement that really runs.
+_PREPROCESSOR = re.compile(r"^\s*#")
+
+
 def _first_executable(lines: list[str], start: int, end: int) -> Optional[int]:
     """The first line of the routine that runs rather than declares.
 
     A continuation line is skipped rather than tested: it carries the tail of
     the statement above it, and inserting a call between a statement and its
-    own continuation would split it in half.
+    own continuation would split it in half. A preprocessor directive is
+    skipped for the reason recorded at ``_PREPROCESSOR``.
     """
     from umat_oti.fortran.regions import _is_executable_line
 
@@ -819,7 +842,7 @@ def _first_executable(lines: list[str], start: int, end: int) -> Optional[int]:
     continued = lines[start].rstrip().endswith("&")
     for number in range(start + 1, end):
         line = lines[number]
-        if _is_comment(line):
+        if _is_comment(line) or _PREPROCESSOR.match(line):
             continue
         fixed_continuation = len(line) > 5 and line[5] not in " \t" and \
             not line[:5].strip()
