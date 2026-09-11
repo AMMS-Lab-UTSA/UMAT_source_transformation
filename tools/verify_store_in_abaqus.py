@@ -3369,8 +3369,15 @@ def main(argv: Optional[list[str]] = None) -> int:
           + (f", resuming over {len(previous)} recorded outcomes"
              if args.resume else ""))
     if not entries:
+        # Under a gate, an empty selection is a failure and not a pass: a
+        # regression that ran nothing has proved nothing, and returning 0 here
+        # was a green result for a run that never started. exit_verdict says
+        # so; this used to return before reaching it.
         print("  nothing to verify")
-        return 0
+        outcome = exit_verdict(args.mode, [], required_entries(args, []))
+        for line in outcome.lines:
+            print(line)
+        return outcome.code
 
     rows = triage_rows(args.triage)
     proposals = proposal_entries(args.proposals)
