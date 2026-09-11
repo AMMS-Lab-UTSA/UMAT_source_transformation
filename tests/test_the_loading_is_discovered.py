@@ -26,12 +26,19 @@ from umat_oti.abaqus.manifest import TEST_PURPOSE, family  # noqa: E402
 
 
 def elastic_plastic(amplitude, yield_at, increments=10):
-    """A material that yields at a known strain."""
+    """A material that yields at a known strain.
+
+    One material point per increment, and each record says which increment
+    it is: a count of records is not a count of increments, and every gate
+    downstream groups on that identity.
+    """
     records = []
     for step in range(1, increments + 1):
         strain = amplitude * step / increments
         plastic = max(0.0, strain - yield_at)
         records.append({
+            "step": 1, "increment": step, "element": 1, "point": 1,
+            "time": step / increments,
             "STRESS": [2e5 * (strain - plastic)] + [0.0] * 5,
             "STRAN": [strain] + [0.0] * 5,
             "STATEV": [plastic],
@@ -202,7 +209,7 @@ def test_proportional_points_below_a_transition_do_not_prove_linearity():
     """
     # Six rather than four, because a run leaving fewer finite records than
     # the verification's own minimum is not an amplitude the search should
-    # offer: see ENOUGH_FINITE_RECORDS.
+    # offer: see ENOUGH_COMPLETE_INCREMENTS.
     result = search_amplitude(
         lambda a: (True, elastic_plastic(a, 2e-3, increments=6), ""))
     assert result.outcome == ACTIVATED
@@ -260,7 +267,9 @@ def test_a_non_finite_run_bounds_the_search_rather_than_passing_it():
         value = amplitude * 1e6 if finite else float("nan")
         return True, [{"STRESS": [value] * 6, "STATEV": [0.0],
                        "STRAN": [amplitude] * 6,
-                       "DSTRAN": [amplitude / 3] * 6} for _ in range(6)], ""
+                       "DSTRAN": [amplitude / 3] * 6,
+                       "step": 1, "increment": _n + 1, "element": 1,
+                       "point": 1} for _n in range(6)], ""
 
     found = search_amplitude(run)
     assert found.outcome == LEFT_ITS_DOMAIN
@@ -278,7 +287,9 @@ def test_a_finite_quiet_run_still_escalates():
     def run(amplitude):
         return True, [{"STRESS": [amplitude * 1e6] * 6, "STATEV": [0.0],
                        "STRAN": [amplitude] * 6,
-                       "DSTRAN": [amplitude / 3] * 6} for _ in range(6)], ""
+                       "DSTRAN": [amplitude / 3] * 6,
+                       "step": 1, "increment": _n + 1, "element": 1,
+                       "point": 1} for _n in range(6)], ""
 
     found = search_amplitude(run)
     assert found.outcome == LINEAR_TO_THE_CEILING
@@ -302,7 +313,9 @@ def test_the_search_steps_down_before_it_steps_up():
         value = amplitude * 1e6 if finite else float("nan")
         return True, [{"STRESS": [value] * 6, "STATEV": [0.0],
                        "STRAN": [amplitude * (n + 1) / 3] * 6,
-                       "DSTRAN": [amplitude / 3] * 6} for n in range(6)], ""
+                       "DSTRAN": [amplitude / 3] * 6,
+                       "step": 1, "increment": n + 1, "element": 1,
+                       "point": 1} for n in range(6)], ""
 
     found = search_amplitude(run)
     assert found.amplitude > 0.0
@@ -333,7 +346,9 @@ def test_the_descent_does_not_disturb_a_model_that_runs():
         tried.append(amplitude)
         return True, [{"STRESS": [amplitude * 1e6] * 6, "STATEV": [0.0],
                        "STRAN": [amplitude] * 6,
-                       "DSTRAN": [amplitude / 3] * 6} for _ in range(6)], ""
+                       "DSTRAN": [amplitude / 3] * 6,
+                       "step": 1, "increment": _n + 1, "element": 1,
+                       "point": 1} for _n in range(6)], ""
 
     found = search_amplitude(run)
     assert found.outcome == LINEAR_TO_THE_CEILING

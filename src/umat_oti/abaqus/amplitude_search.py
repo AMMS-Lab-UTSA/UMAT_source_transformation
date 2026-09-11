@@ -36,6 +36,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Optional, Sequence
 
 from umat_oti.abaqus.activation import Activation, detect_activation
+from umat_oti.abaqus.frames import complete_increments
 
 #: Where to start. Small enough that essentially every model answers it
 #: elastically, so the search begins below any transition rather than
@@ -61,37 +62,41 @@ GROWTH = 5.0
 #: asked about a regime its author did not write.
 CEILING = 1.0
 
-#: How many finite records a run has to leave before the amplitude counts as
-#: one this model can be driven at. NOT "every record is finite": a model
-#: that walks twenty-two good increments and then leaves its domain is
-#: perfectly drivable, and the verification already truncates at the first
-#: non-finite record and compares what came before.
+#: How many COMPLETE INCREMENTS a run has to leave before the amplitude
+#: counts as one this model can be driven at.
 #:
-#: Measured on BodyForce-Growth-2Stages.for: 240 records, non-finite from
-#: record 23, and a verification over the first 22 that agreed to 1.16e-11
-#: with its tangent confirmed at two smooth states. Requiring the whole run
-#: to be finite refused that amplitude and sixteen real verifications with
-#: it. Five, to match MINIMUM_COMPARABLE_INCREMENTS in the verifier: fewer
-#: than that is too few to rest a verification on, and the search should not
+#: Increments, not records. Abaqus calls a UMAT once per material point per
+#: increment, so a single-element C3D8 job writes eight records per
+#: increment and a CPE4 writes four. Counting records made a prefix of
+#: twenty-two -- two complete increments and six integration points of a
+#: third -- clear a minimum of five more than four times over. See
+#: :mod:`umat_oti.abaqus.frames`.
+#:
+#: NOT "every increment is finite": a model that walks good increments and
+#: then leaves its domain has told the search where the edge is, which is
+#: what a search is for. What it has not done is earn a verdict --
+#: :mod:`umat_oti.abaqus.safe_loading` rebuilds the loading to stop short of
+#: that edge and reruns it whole before anything is verified.
+#:
+#: Five, to match MINIMUM_COMPARABLE_INCREMENTS in the verifier: fewer than
+#: that is too few to rest a verification on, and the search should not
 #: offer an amplitude the verification will then reject.
-ENOUGH_FINITE_RECORDS = 5
+ENOUGH_COMPLETE_INCREMENTS = 5
 
 
 def enough_to_drive(records: Sequence[dict]) -> bool:
-    """Did this run leave enough finite records to verify on?"""
-    broke_at = first_non_finite(records)
-    usable = len(records or ()) if broke_at is None else broke_at - 1
-    return usable >= ENOUGH_FINITE_RECORDS
+    """Did this run leave enough COMPLETE INCREMENTS to verify on?"""
+    return complete_increments(records) >= ENOUGH_COMPLETE_INCREMENTS
 
 
 def recorded_nothing(records: Sequence[dict]) -> bool:
     """A run that wrote no history at all.
 
-    Different from one that left too few records: no amplitude changes it.
-    The probe found no call site, or the routine returned without computing
-    anything, or the job never reached the element loop -- and searching
-    seventeen more amplitudes for a model that records nothing costs
-    seventeen Abaqus jobs to learn what the first one said.
+    Different from one that left too few increments: no amplitude changes
+    it. The probe found no call site, or the routine returned without
+    computing anything, or the job never reached the element loop -- and
+    searching seventeen more amplitudes for a model that records nothing
+    costs seventeen Abaqus jobs to learn what the first one said.
     """
     return not records
 

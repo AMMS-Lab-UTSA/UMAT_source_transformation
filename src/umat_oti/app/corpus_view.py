@@ -163,7 +163,38 @@ def _requirements(row: dict) -> list:
                     ", ".join(missing_units)),
         Requirement("a manifest with nothing missing", not manifest_refusals,
                     "; ".join(str(r) for r in manifest_refusals)),
+        # The one a verdict actually rests on. Abaqus printing THE ANALYSIS
+        # HAS COMPLETED SUCCESSFULLY is a statement about the solver; this is
+        # about the routine it called.
+        Requirement("an analysis finite from end to end",
+                    bool(row.get("complete_finite_verification_run")),
+                    _how_the_experiment_was_settled(row)),
     ]
+
+
+def _how_the_experiment_was_settled(row: dict) -> str:
+    """What the discovery had to do to get an experiment that runs whole.
+
+    Named rather than summarised, because "not ready" is not something a
+    reader can act on and "the model will not be driven backwards, so the
+    reversal was dropped and this experiment no longer exercises it" is.
+    """
+    grouping = (row.get("history_grouping") or {}).get("original") or {}
+    if row.get("complete_finite_verification_run"):
+        said = (f"{grouping.get('complete_increments', '?')} complete "
+                f"increment(s) at "
+                f"{grouping.get('material_points_per_increment', '?')} "
+                f"material points each, every one finite")
+        given_up = str(row.get("coverage_given_up") or "")
+        return f"{said}; {given_up}" if given_up else said
+    mechanism = (row.get("failure_mechanism") or {}).get("kind") or ""
+    repair = str(row.get("segment_repair") or "")
+    prefix = row.get("discovery_usable_prefix") or {}
+    said = (f"{prefix.get('complete_increments', 0)} complete increment(s) of "
+            f"{prefix.get('total_increments', '?')} before it left its domain")
+    if mechanism:
+        said += f"; the failure is {mechanism.replace('_', ' ')}"
+    return f"{said}; {repair}" if repair else said
 
 
 def _where_constants_were_looked_for(row: dict) -> str:
@@ -244,6 +275,20 @@ def entry_view(row: dict, work_dir: Optional[Path] = None) -> EntryView:
             "material_block": row.get("material_block"),
             "material_provenance": row.get("material_provenance"),
             "searched_for_material_data": row.get("searched_for_material_data"),
+            # How the experiment was settled on, and what it cost. A reader
+            # has to be able to see that a verdict rests on an analysis that
+            # was finite throughout, which segment (if any) the model would
+            # not walk, and what the experiment therefore stopped exercising.
+            "discovery_usable_prefix": row.get("discovery_usable_prefix"),
+            "safe_loading_reconstructed": row.get("safe_loading_reconstructed"),
+            "complete_finite_verification_run": row.get(
+                "complete_finite_verification_run"),
+            "failure_mechanism": row.get("failure_mechanism"),
+            "segment_repair": row.get("segment_repair"),
+            "coverage_given_up": row.get("coverage_given_up"),
+            "safety_distance": row.get("safety_distance"),
+            "history_grouping": row.get("history_grouping"),
+            "evidence": row.get("evidence"),
             "deck": row.get("deck"),
             "deck_digest": row.get("deck_digest"),
             "source_form": row.get("source_form"),
