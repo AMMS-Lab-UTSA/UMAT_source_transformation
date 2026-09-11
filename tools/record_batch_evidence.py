@@ -45,6 +45,14 @@ from run_discovery_triage import without_machine_paths  # noqa: E402
 
 DEFAULT_OUT = REPO_ROOT / "paper_results" / "store_verification"
 
+#: The gates a verdict rests on, in the order the batch decides them. Kept in
+#: step with umat_oti.app.corpus_view.EVIDENCE_GATES, which is what the page
+#: shows: a record that counts different things from the page a reader looks
+#: at is a second opinion nobody can cite.
+EVIDENCE_GATES = ("abaqus_job_completed", "all_requested_outputs_present",
+                  "complete_history_finite", "primal_agreed",
+                  "derivatives_verified", "mechanically_informative")
+
 
 def _load_json(path: Optional[Path]) -> Optional[dict]:
     if path is None or not Path(path).is_file():
@@ -120,6 +128,70 @@ def gate_summary(report: Optional[dict]) -> dict[str, Any]:
     }
 
 
+def _at_either_level(row: dict, name: str) -> Any:
+    """A field the batch writes at the top of a record in some runs and inside
+    ``discovery`` in others. Counted from both, because counting only the top
+    reports zero: on pass9 none of the 250 records carries
+    ``failure_mechanism`` at the top and 139 carry it inside ``discovery``."""
+    value = row.get(name)
+    if value is not None:
+        return value
+    inner = row.get("discovery")
+    return inner.get(name) if isinstance(inner, dict) else None
+
+
+def gate_tally(rows: list[dict]) -> dict[str, Any]:
+    """Each gate, and how many entries it was measured true, false or not at
+    all for.
+
+    "Verified" is one word over six measurements, and the six do not have the
+    same denominator: a gate added after a run was made was not measured on
+    that run, and reporting it as a false would invent failures nobody found.
+    So every gate is counted three ways and "not measured" is one of them.
+    """
+    counts: dict = {}
+    for gate in EVIDENCE_GATES:
+        measured = [(row.get("evidence") or {}).get(gate) for row in rows]
+        counts[gate] = {
+            "true": sum(1 for value in measured if value is True),
+            "false": sum(1 for value in measured if value is False),
+            "not_measured": sum(1 for value in measured if value is None),
+        }
+    return counts
+
+
+def experiment_tally(rows: list[dict]) -> dict[str, Any]:
+    """What the runs cost in coverage to become runs that finish.
+
+    A repair that made a history finite by removing the behaviour under test
+    has not produced a verification of that behaviour, so the number of
+    entries whose experiment gave something up is reported beside the number
+    that verified rather than under it.
+    """
+    finite = sum(1 for row in rows
+                 if _at_either_level(row, "complete_finite_verification_run")
+                 is True)
+    gave_up = [row for row in rows
+               if _at_either_level(row, "coverage_given_up")]
+    repaired = [row for row in rows if _at_either_level(row, "segment_repair")]
+    rebuilt = [row for row in rows
+               if _at_either_level(row, "safe_loading_reconstructed")]
+    mechanisms = Counter(
+        str((_at_either_level(row, "failure_mechanism") or {}).get("kind"))
+        for row in rows
+        if _at_either_level(row, "failure_mechanism"))
+    return {
+        "complete_finite_verification_run": finite,
+        "experiment_gave_up_coverage": len(gave_up),
+        "a_segment_was_shortened_or_dropped": len(repaired),
+        "loading_rebuilt_inside_the_proved_safe_part": len(rebuilt),
+        "failure_mechanisms": dict(mechanisms.most_common()),
+        "note": ("a verdict that rests on a repaired experiment is a verdict "
+                 "about the repaired experiment. These are counted over the "
+                 "whole selection, not over the entries that verified"),
+    }
+
+
 def abaqus_summary(rows: list[dict]) -> dict[str, Any]:
     """How far each entry got up the Abaqus ladder, by stage."""
     if not rows:
@@ -130,6 +202,8 @@ def abaqus_summary(rows: list[dict]) -> dict[str, Any]:
         "available": True,
         "attempted": len(rows),
         "by_stage": dict(stages.most_common()),
+        "by_gate": gate_tally(rows),
+        "experiment": experiment_tally(rows),
         "verified": len(verified),
         "verified_sources": sorted(
             str(row.get("source") or row.get("key") or "") for row in verified),
