@@ -40,6 +40,31 @@ _TET_NODES = (
 )
 
 
+def nodes_for_manifest(manifest: VerificationManifest) -> tuple[tuple, ...]:
+    """Where this manifest's element actually sits.
+
+    The registry's reference geometry is a unit cube at the origin, which is a
+    fine material point for a routine that never looks at where it is and the
+    wrong one for a routine that does. When the manifest carries coordinates --
+    one element of the author's own mesh, chosen by
+    :mod:`umat_oti.abaqus.coordinate_domain` -- those are used, and the node
+    COUNT is still the registry's, because the element type has to match what
+    the connectivity describes.
+    """
+    geometry = geometry_for(manifest.element_type)
+    given = tuple(manifest.node_coordinates or ())
+    if not given:
+        return tuple(geometry.nodes)
+    if len(given) != geometry.node_count:
+        raise UnsupportedElement(
+            f"{geometry.name} has {geometry.node_count} nodes and this "
+            f"manifest carries {len(given)} coordinates. A deck that numbered "
+            f"a different count would describe a different element than the "
+            f"one it names.")
+    return tuple((index + 1, float(x), float(y), float(z))
+                 for index, (_id, x, y, z) in enumerate(given))
+
+
 def _nodes_for(element_type: str) -> tuple[tuple, ...]:
     """The reference geometry this element type is driven on.
 
@@ -117,6 +142,15 @@ def _orientation(manifest: VerificationManifest) -> list[str]:
     *ORIENTATION takes an axis definition, and rotating the frame by naming
     where its axes point is checkable by inspection.
     """
+    if manifest.orientation_axes is not None:
+        axes = tuple(float(value) for value in manifest.orientation_axes)[:6]
+        if len(axes) < 6:                          # pragma: no cover - guarded
+            raise ValueError("an orientation takes six numbers: a point on "
+                             "the local 1-axis and a point in the 1-2 plane")
+        axis, angle = manifest.orientation_rotation or (3, 0.0)
+        return ["*ORIENTATION, NAME=LOCAL, SYSTEM=RECTANGULAR",
+                ", ".join(_fmt(value) for value in axes),
+                f"{int(axis)}, {_fmt(float(angle))}"]
     if manifest.orientation is None:
         return []
     import math
@@ -140,9 +174,23 @@ def _orientation(manifest: VerificationManifest) -> list[str]:
     ]
 
 
-def _boundary_for(segment: LoadingSegment, nodes, plane: bool = False) -> list[str]:
-    if segment.body_force:
-        return _rigid_body_restraint(segment, nodes, plane)
+def _boundary_for(segment: LoadingSegment, nodes, plane: bool = False,
+                  geometry=None, plane_strain: tuple = ()) -> list[str]:
+    """What holds this element, which depends on what drives it.
+
+    Four kinds of segment and four answers, because a boundary condition that
+    suits one makes another meaningless. A prescribed-strain segment drives
+    every node. A body-force segment must leave the element free to deform or
+    the load does no work. A TIME-driven segment -- a growth, a swelling -- has
+    nothing prescribed at all, and holding it would ask the routine about a
+    state the author's model never reaches. A cohesive segment prescribes a
+    displacement JUMP between two faces, not a strain.
+    """
+    if geometry is not None and geometry.kind == "cohesive":
+        return _cohesive_boundary(segment, nodes, geometry)
+    if segment.body_force or segment.time_only:
+        return _rigid_body_restraint(segment, nodes, plane,
+                                     plane_strain=plane_strain)
     lines = []
     for index, x, y, z in nodes:
         ux, uy, uz = _displacement((x, y, z), segment.strain)
@@ -152,38 +200,100 @@ def _boundary_for(segment: LoadingSegment, nodes, plane: bool = False) -> list[s
     return lines
 
 
+def _cohesive_boundary(segment: LoadingSegment, nodes, geometry) -> list[str]:
+    """Hold the bottom face and move the top one by the prescribed separation.
+
+    A cohesive element's two faces are coincident and its connectivity lists
+    the bottom one first. The displacement of the top face relative to the
+    bottom IS the separation the UMAT is handed, and the components are
+    ordered normal first: for COH3D8 the normal is the direction from the
+    bottom face to the top, which for a face written counter-clockwise in the
+    x-y plane is global 3; for COH2D4 with its bottom edge along x it is
+    global 2.
+
+    Written exactly the way the author of ``harshaa765__Bilinear-CZM-UMAT``
+    writes it in ``Job_1_Harsh_UMAT.inp``: ``Lower, 1..3`` fixed and the upper
+    face driven, there through an equation and here node by node, which is the
+    same prescribed jump with one fewer degree of freedom to go wrong.
+    """
+    half = len(nodes) // 2
+    bottom, top = nodes[:half], nodes[half:]
+    normal, shear_one, shear_two = (tuple(segment.separation) + (0.0,) * 3)[:3]
+    if geometry.dimension == 2:
+        # x is the shear direction, y the normal.
+        wanted = (shear_one, normal)
+    else:
+        wanted = (shear_one, shear_two, normal)
+    lines: list[str] = []
+    for index, *_rest in bottom:
+        for dof in range(1, len(wanted) + 1):
+            lines.append(f"{index}, {dof}, {dof}, 0.0")
+    for index, *_rest in top:
+        for dof, value in enumerate(wanted, start=1):
+            lines.append(f"{index}, {dof}, {dof}, {_fmt(float(value))}")
+    return lines
+
+
+def _restraint_nodes(nodes) -> tuple:
+    """Three nodes that between them remove every rigid-body mode.
+
+    Chosen from the element's own coordinates rather than by node number,
+    because the element may be one of the author's -- sitting wherever the
+    author's mesh put it -- and "the node at the origin" is then a node that
+    does not exist. The anchor is the lowest corner, the second node is the
+    one furthest from it along x and the third the one furthest along y, which
+    for the reference hexahedron is nodes 1, 2 and 4.
+    """
+    ordered = sorted(nodes, key=lambda node: (node[1], node[2], node[3]))
+    anchor = ordered[0]
+    along_x = max(nodes, key=lambda node: (abs(node[1] - anchor[1]),
+                                           -abs(node[2] - anchor[2])))
+    along_y = max(nodes, key=lambda node: (abs(node[2] - anchor[2]),
+                                           -abs(node[1] - anchor[1])))
+    return anchor, along_x, along_y
+
+
 def _rigid_body_restraint(segment: LoadingSegment, nodes,
-                          plane: bool = False) -> list[str]:
-    """Hold the face the author holds, and nothing else.
+                          plane: bool = False,
+                          plane_strain: tuple = ()) -> list[str]:
+    """Remove the rigid-body modes and nothing else.
 
-    A body force does work only on degrees of freedom that are free. Holding
-    every node -- which is what a prescribed-displacement segment does -- makes
-    the load do nothing, so the element never deforms and the routine is asked
-    about a state it never reaches.
+    A body force does work only on degrees of freedom that are free, and a
+    growth tensor produces deformation only where the element may deform.
+    Holding every node -- which is what a prescribed-displacement segment
+    does -- makes the load do nothing and the growth fight the boundary, so
+    the routine is asked about a state it never reaches.
 
-    The held face is the one at x = 0: the author's ``LeftEnd`` on a
-    cantilever plate. Which degrees of freedom it keeps is
-    ``segment.held``, read from the author's own ``*BOUNDARY``. Out-of-plane
-    restraint, where the deck asks for it, is applied to every node, because
-    that is a plane-strain condition rather than a support.
+    ``plane_strain`` is different in kind from a support: a deck that writes
+    ``Plate-1.WholeRegion, 3, 3`` is imposing a plane-strain condition on the
+    material, not holding the model up, so it goes on every node. What is left
+    after it is the rigid-body modes, and those are removed at three nodes.
     """
     lines: list[str] = []
-    held = tuple(segment.held) or (1, 2)
-    in_plane = tuple(dof for dof in held if dof <= (2 if plane else 3))
-    face = [index for index, x, _y, _z in nodes if abs(float(x)) < 1e-12]
-    if not face:                                   # pragma: no cover - defensive
-        face = [nodes[0][0]]
-    for index in face:
-        for dof in in_plane:
+    limit = 2 if plane else 3
+    constrained = {dof for dof in plane_strain if 1 <= dof <= limit}
+    for index, *_rest in nodes:
+        for dof in sorted(constrained):
             lines.append(f"{index}, {dof}, {dof}, 0.0")
-    # The third direction, when the deck constrains it everywhere, is the
-    # plane-strain condition and belongs on every node rather than on the
-    # held face alone.
-    if not plane and 3 in held:
-        for index, *_ in nodes:
-            if index not in face:
-                lines.append(f"{index}, 3, 3, 0.0")
-    return lines
+    anchor, along_x, along_y = _restraint_nodes(nodes)
+    free = [dof for dof in range(1, limit + 1) if dof not in constrained]
+    for dof in free:
+        lines.append(f"{anchor[0]}, {dof}, {dof}, 0.0")
+    # The anchor kills translation. The second node kills the rotations that
+    # would still turn the element about it, and the third the last one.
+    for dof in free[1:]:
+        if along_x[0] != anchor[0]:
+            lines.append(f"{along_x[0]}, {dof}, {dof}, 0.0")
+    for dof in free[2:]:
+        if along_y[0] not in (anchor[0], along_x[0]):
+            lines.append(f"{along_y[0]}, {dof}, {dof}, 0.0")
+    seen: set = set()
+    unique = []
+    for line in lines:
+        if line not in seen:
+            seen.add(line)
+            unique.append(line)
+    return unique
 
 
 def generate_deck(manifest: VerificationManifest) -> str:
@@ -192,7 +302,7 @@ def generate_deck(manifest: VerificationManifest) -> str:
     # deck that describes a different element than the one asked for.
     geometry = geometry_for(manifest.element_type)
     plane = geometry.dimension == 2
-    nodes = tuple(geometry.nodes)
+    nodes = nodes_for_manifest(manifest)
     if manifest.ntens and manifest.ntens != geometry.ntens:
         raise UnsupportedElement(
             f"{geometry.name} calls a UMAT with NTENS={geometry.ntens} "
@@ -207,6 +317,9 @@ def generate_deck(manifest: VerificationManifest) -> str:
         "** Generated by umat_oti.abaqus.deck from a verification manifest.",
         f"** kinematics: {manifest.kinematics}; ntens: {manifest.ntens}",
         f"** material provenance: {manifest.material_provenance or 'UNSTATED'}",
+        "** geometry: " + (manifest.node_provenance
+                           or "the reference element of this harness, "
+                              "a unit cell at the origin"),
         "*NODE",
     ]
     for index, x, y, z in nodes:
@@ -215,8 +328,19 @@ def generate_deck(manifest: VerificationManifest) -> str:
     lines.append(f"*ELEMENT, TYPE={manifest.element_type}, ELSET=ONE")
     lines.append("1, " + ", ".join(str(index) for index, *_ in nodes))
 
-    section = "*SOLID SECTION, ELSET=ONE, MATERIAL=" + manifest.name.upper()[:60]
-    if manifest.orientation is not None:
+    if geometry.section == "COHESIVE":
+        # RESPONSE=TRACTION SEPARATION is what makes Abaqus call the UMAT with
+        # a separation and expect a traction back, and the thickness on the
+        # data line is what makes the nominal strain it passes numerically
+        # equal to the separation. The author's own patch test writes both.
+        section = ("*COHESIVE SECTION, ELSET=ONE, RESPONSE=TRACTION SEPARATION"
+                   ", MATERIAL=" + manifest.name.upper()[:60])
+    else:
+        section = ("*SOLID SECTION, ELSET=ONE, MATERIAL="
+                   + manifest.name.upper()[:60])
+    if manifest.orientation_axes is not None:
+        section += ", ORIENTATION=LOCAL"
+    elif manifest.orientation is not None:
         section += ", ORIENTATION=CRYSTAL"
     lines += _orientation(manifest)
     lines.append(section)
@@ -237,7 +361,8 @@ def generate_deck(manifest: VerificationManifest) -> str:
             f"{_fmt(increment * segment.period)}",
             "*BOUNDARY, OP=NEW",
         ]
-        lines += _boundary_for(segment, nodes, plane)
+        lines += _boundary_for(segment, nodes, plane, geometry=geometry,
+                               plane_strain=manifest.plane_strain_directions)
         if segment.body_force:
             # The reference magnitudes are the author's; the source's own
             # SUBROUTINE DLOAD scales them. Nothing here chooses a force.

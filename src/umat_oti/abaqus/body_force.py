@@ -148,3 +148,85 @@ def held_directions(deck: Path) -> tuple[int, ...]:
         if 1 <= first <= 6 and first not in held:
             held.append(first)
     return tuple(sorted(held))
+
+
+#: Node-set names that mean "the whole model" rather than "a support". A
+#: constraint on all of them is a statement about the material's kinematics --
+#: plane strain -- and one on a face is what holds the model up. Jeff97's
+#: growth decks carry both in the same step::
+#:
+#:     *Boundary
+#:     Plate-1.LeftEnd, 1, 1
+#:     Plate-1.LeftEnd, 2, 2
+#:     *Boundary
+#:     Plate-1.WholeRegion, 3, 3
+#:
+#: and a single-element verification has to keep the second and drop the
+#: first: the element is an interior one, not the clamped end.
+_WHOLE = ("WHOLEREGION", "WHOLE", "ALL", "EVERYTHING", "MODEL", "DOMAIN",
+          "REGION", "SET-ALL")
+
+
+@dataclass(frozen=True)
+class Restraints:
+    """What the author's deck holds, separated by what the holding MEANS."""
+
+    everywhere: tuple[int, ...] = ()
+    supports: tuple[int, ...] = ()
+    provenance: str = ""
+
+    def as_dict(self) -> dict:
+        return {"everywhere": list(self.everywhere),
+                "supports": list(self.supports),
+                "provenance": self.provenance}
+
+
+def read_restraints(deck: Path) -> Restraints:
+    """The author's boundary conditions, split into kinematics and support.
+
+    A constraint applied to every node of the model is part of the problem the
+    material is being asked about; a constraint on a face is what stops the
+    model floating away. A single-element verification of an INTERIOR material
+    point keeps the first and must not inherit the second, because clamping one
+    face of a one-element model does not reproduce a cantilever -- it prevents
+    the deformation the experiment exists to produce.
+    """
+    try:
+        text = Path(deck).read_text(errors="replace")
+    except OSError:
+        return Restraints()
+    everywhere: list[int] = []
+    supports: list[int] = []
+    where: list[str] = []
+    inside = False
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("**"):
+            continue
+        if line.startswith("*"):
+            keyword = (_KEYWORD.match(line) or [None, ""])[1]
+            inside = str(keyword).strip().upper().replace(" ", "") == "BOUNDARY"
+            continue
+        if not inside:
+            continue
+        fields = [field.strip() for field in line.split(",")]
+        if len(fields) < 2:
+            continue
+        name = fields[0].upper().split(".")[-1]
+        try:
+            first = int(float(fields[1]))
+            last = int(float(fields[2])) if len(fields) > 2 and fields[2] else first
+        except ValueError:
+            continue
+        if not 1 <= first <= 6:
+            continue
+        target = everywhere if any(mark in name for mark in _WHOLE) else supports
+        for dof in range(first, min(last, 6) + 1):
+            if dof not in target:
+                target.append(dof)
+                where.append(f"{fields[0]} {dof}")
+    if not (everywhere or supports):
+        return Restraints()
+    return Restraints(
+        tuple(sorted(everywhere)), tuple(sorted(supports)),
+        provenance=(f"{Path(deck).name}: *BOUNDARY " + "; ".join(where[:8])))
