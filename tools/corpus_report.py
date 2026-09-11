@@ -86,6 +86,7 @@ FROM_ABAQUS_STAGE: dict[str, str] = {
     # Both builds ran and agreed; the experiment did not exercise the
     # behaviour, so it got as far as a primal parity and no further.
     "experiment_not_informative": "primal_parity_passed",
+    "informativeness_not_established": "primal_parity_passed",
 }
 
 

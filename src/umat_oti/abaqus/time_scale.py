@@ -30,14 +30,17 @@ import re
 from dataclasses import dataclass, field
 from typing import Optional, Sequence
 
-#: How much of a declared constitutive time scale an experiment has to cover
-#: before it can be said to exercise the behaviour that scale belongs to.
+#: A SEARCH HEURISTIC, not a verification criterion.
 #:
-#: A quarter. Below that a ramp normalised by the scale has developed less
-#: than a quarter of its range, and a verification of it is a verification of
-#: the material near its initial state -- which is the part every build gets
-#: right. Not a tolerance on an answer; a floor on how much of the author's
-#: own problem the experiment reaches.
+#: Used to decide whether an experiment is worth extending, and reported
+#: alongside the fraction so a reader can see what it was compared against.
+#: It is NOT evidence that the intended behaviour activated, and nothing
+#: verifies on it: a detected symbol may be a growth normalisation, a
+#: relaxation time, a retardation time, a creep scale, a loading period or a
+#: plain numerical parameter, and one fraction over all of those would be a
+#: threshold pretending to be a criterion. What decides activation is the
+#: observed response -- see umat_oti.abaqus.plausibility and the activation
+#: indicators read off the frozen run.
 ENOUGH_OF_THE_SCALE = 0.25
 
 #: An assignment of a total-time normalisation, as authors write it. Matched
@@ -110,12 +113,18 @@ class Coverage:
     scale: Scale = field(default_factory=Scale)
     total_time: float = 0.0
     fraction: float = 0.0
+    #: Always True. Coverage is reported, not asserted: see
+    #: ENOUGH_OF_THE_SCALE. Kept so callers read the fraction and the role
+    #: rather than a pass mark.
     enough: bool = True
+    #: Whether the fraction cleared the search heuristic. Advisory only.
+    reaches_heuristic: bool = False
     reason: str = ""
 
     def as_dict(self) -> dict:
         return {"scale": self.scale.as_dict(), "total_time": self.total_time,
                 "fraction": self.fraction, "enough": self.enough,
+                "reaches_heuristic": self.reaches_heuristic,
                 "reason": self.reason}
 
 
@@ -131,14 +140,17 @@ def covers(source_text: str, loading: Sequence,
                                 "own, so there is nothing here to measure the "
                                 "experiment's duration against"))
     fraction = total / scale.value if scale.value else 0.0
-    enough = fraction >= floor
+    # Reported, never asserted. The role of the symbol decides what the
+    # fraction means, and this cannot read a role off a name.
+    reaches = fraction >= floor
     return Coverage(
-        scale=scale, total_time=total, fraction=fraction, enough=enough,
+        scale=scale, total_time=total, fraction=fraction, enough=True,
+        reaches_heuristic=reaches,
         reason=(f"the source normalises its clock by {scale.name} = "
                 f"{scale.value:g} ({scale.evidence}); this experiment runs to "
-                f"a total time of {total:g}, which is {fraction:.1%} of it"
-                + ("" if enough else
-                   f" -- below the {floor:.0%} a verification needs, so "
-                   f"whatever it agreed about is the material near its "
-                   f"initial state rather than the behaviour that scale "
-                   f"belongs to")))
+                f"a total time of {total:g}, which is {fraction:.1%} of it "
+                f"({'above' if reaches else 'below'} the {floor:.0%} search "
+                f"heuristic -- what that fraction MEANS depends on whether "
+                f"{scale.name} is a growth normalisation, a relaxation time "
+                f"or a numerical parameter, which this cannot read off a "
+                f"name)"))

@@ -97,7 +97,7 @@ from umat_oti.fortran.normalize import detect_source_form              # noqa: E
 from umat_oti.abaqus.elements import geometry_for as element_geometry   # noqa: E402
 from umat_oti.abaqus.formulation import settle                          # noqa: E402
 from umat_oti.abaqus import (frames, primal_signature,                  # noqa: E402
-                             safe_loading, time_scale)
+                             plausibility, safe_loading, time_scale)
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
     LoadingSegment, NEEDS_MATERIAL_DATA, VerificationManifest, at_rate, hold,
     reverse, simple_shear, uniaxial, under_body_force)
@@ -179,6 +179,12 @@ NO_EXPERIMENT = "experiment_not_generated"
 #: the part every build gets right, so it is not a verification and must not
 #: be counted as one.
 NOT_INFORMATIVE = "experiment_not_informative"
+
+#: ON the ladder, and ours: nobody established whether the experiment
+#: exercised anything. Not the same as establishing that it did not, and not
+#: a verdict either -- every other rung of this ladder reads "did this step
+#: demonstrably pass", and an unmeasured answer is not a pass.
+INFORMATIVENESS_NOT_ESTABLISHED = "informativeness_not_established"
 
 #: Off the ladder for the same reason as NOT_A_UMAT: the file the author
 #: published does not compile, and no amount of work here changes that. A job
@@ -291,6 +297,11 @@ def classify_stage(evidence: StageEvidence) -> str:
         return "transformed_job_failed"
     if evidence.primal_agrees is not True:
         return "primal_disagreed"
+    # Before the derivative work, not after it. There is no reason to spend a
+    # replay ladder on an experiment that has not been shown to exercise the
+    # behaviour whose derivative is in question.
+    if evidence.mechanically_informative is False:
+        return NOT_INFORMATIVE
     if evidence.derivative_truncated:
         return "derivative_truncated"
     if evidence.tangent_verified is not True:
@@ -300,6 +311,13 @@ def classify_stage(evidence: StageEvidence) -> str:
         # experiment in which the material did not do what it is for, so what
         # they agreed on is not evidence about the behaviour under test.
         return NOT_INFORMATIVE
+    if evidence.mechanically_informative is None:
+        # Not measured is not measured true. Every other rung here reads
+        # "did this step demonstrably pass", and this one was written to read
+        # "was it demonstrably refused" -- which let an unestablished answer
+        # through to a verdict, the one convention this ladder exists to
+        # avoid.
+        return INFORMATIVENESS_NOT_ESTABLISHED
     return VERIFIED
 
 
@@ -2885,42 +2903,61 @@ def run_association_control(manifest: VerificationManifest, original: Path,
 
 
 def _is_informative(record: dict, manifest: VerificationManifest,
-                    history: Sequence[dict], original: Path) -> tuple[bool, str]:
-    """Did the experiment this verdict rests on exercise anything?
+                    history: Sequence[dict], original: Path,
+                    discovery: dict) -> tuple[Optional[bool], str]:
+    """Did the experiment this verdict rests on exercise anything real?
 
-    Two questions, both measured rather than assumed. Did the material do
-    something over the frozen history -- the same indicators the amplitude
-    search uses, read off the run that was actually verified rather than off
-    a probe. And where the source declares a constitutive time scale of its
-    own, did the experiment run long enough to reach the behaviour that scale
-    belongs to.
+    Three questions, all measured on the FROZEN run rather than on a probe,
+    and each able to answer "not established" rather than guessing.
 
-    The second exists because shortening the clock is a legitimate repair for
-    a model whose failure moves with the period AND a change to the mechanical
-    problem: a growth law whose stretch ramps in total time develops less of
-    it in less of it. Measured on BodyForce-Growth-2Stages.for, whose source
-    writes ``TotalT = 1.0`` and divides ``TIME(2)+DTIME`` by it.
+    Did the material do something -- the indicators the amplitude search
+    uses, read off the run that was actually verified.
+
+    Where the source declares a time scale of its own, how much of it did the
+    experiment reach. Recorded as a number and a role, NOT as a pass mark: a
+    detected symbol may be a growth normalisation, a relaxation time, a
+    loading period or a numerical parameter, and a single fraction over all
+    of those would be a threshold pretending to be a criterion.
+
+    And is the response one the problem's own scales account for. Measured on
+    BodyForce-Growth-2Stages.for: the growth genuinely developed -- STATEV(9),
+    which the source documents as the norm of the growth tensor, ran 0.003125
+    to 0.40625 -- and both builds agreed, and the derivative matched, and the
+    peak stress was 1.575e13 against a single material constant of 1e8. A
+    ratio of 157,500 is not a regime this material has, and an agreement
+    reached there is not a verification of it.
     """
     said: list = []
     try:
-        coverage = time_scale.covers(
-            Path(original).read_text(errors="replace"), manifest.loading)
+        text = Path(original).read_text(errors="replace")
     except OSError:                                # pragma: no cover
-        coverage = time_scale.Coverage()
+        text = ""
+    coverage = time_scale.covers(text, manifest.loading)
     record["time_scale_coverage"] = coverage.as_dict()
     said.append(coverage.reason)
 
     activation = detect_activation(list(history))
     record["activation_on_the_frozen_run"] = activation.as_dict()
     if activation.activated:
-        said.append(f"and the material is active over the run that was "
-                    f"verified: {', '.join(activation.fired)}")
+        said.append(f"the material is active over the run that was verified "
+                    f"({', '.join(activation.fired)})")
     else:
-        said.append("and nothing in the run that was verified indicates the "
+        said.append("nothing in the run that was verified indicates the "
                     "material did anything: no state moved, no departure from "
                     "linearity, no tangent change")
-    return bool(activation.activated and coverage.enough), "; ".join(said)
 
+    plausible = plausibility.examine(
+        list(history), manifest.props, discovery.get("chosen_amplitude") or 0.0,
+        discovery.get("attempts") or ())
+    record["response_plausibility"] = plausible.as_dict()
+    said.append(plausible.reason())
+
+    if not plausible.checks:
+        # Nothing supplied a scale to check against. That is not a failure and
+        # it is not a pass: it is an unmeasured answer, and the ladder reads
+        # it as one.
+        return (None if not activation.activated else None), "; ".join(said)
+    return bool(activation.activated and plausible.plausible), "; ".join(said)
 
 def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                cache_root: Path, work_root: Path, *, timeout: int,
@@ -3312,7 +3349,8 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         "mechanically_informative": False,
     }
     informative, informative_why = _is_informative(
-        record, manifest, compared_original, original)
+        record, manifest, compared_original, original,
+        record.get("discovery") or {})
     record["evidence"]["mechanically_informative"] = informative
     record["mechanically_informative"] = {"informative": informative,
                                           "reason": informative_why}

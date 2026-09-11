@@ -68,27 +68,27 @@ def test_a_source_with_no_scale_says_so_rather_than_inventing_one():
 
 
 # ---- and the experiment is measured against it ---------------------------
-def test_a_run_that_reaches_far_enough_into_the_scale_is_enough():
-    segments = [replace(uniaxial(0.01, 10), period=0.5)]
-    coverage = covers(GROWTH, segments)
-    assert coverage.fraction == 0.5
-    assert coverage.enough is True
-
-
-def test_a_run_that_barely_starts_the_clock_is_not():
+def test_the_fraction_is_reported_and_never_asserted():
+    """A detected symbol may be a growth normalisation, a relaxation time, a
+    retardation time, a creep scale, a loading period or a plain numerical
+    parameter. One fraction over all of those would be a threshold
+    pretending to be a criterion, so the coverage reports a number and a
+    caveat and decides nothing."""
     segments = [replace(uniaxial(0.01, 10), period=0.02)]
     coverage = covers(GROWTH, segments)
     assert coverage.fraction == 0.02
-    assert coverage.enough is False
-    assert "below the" in coverage.reason
-    assert "near its initial state" in coverage.reason
+    assert coverage.reaches_heuristic is False
+    assert coverage.enough is True, "coverage never refuses on its own"
+    assert "what that fraction MEANS depends on" in coverage.reason
 
 
-def test_the_floor_is_a_floor_on_coverage_not_a_tolerance_on_an_answer():
+def test_the_threshold_is_documented_as_a_search_heuristic():
     assert 0.0 < ENOUGH_OF_THE_SCALE < 1.0
     source = (pathlib.Path(__file__).resolve().parents[1]
               / "src" / "umat_oti" / "abaqus" / "time_scale.py").read_text()
-    assert "Not a tolerance on an answer" in source
+    assert "A SEARCH HEURISTIC, not a verification criterion" in source
+    flat = " ".join(source.split())
+    assert "It is NOT evidence that the intended behaviour activated" in flat
 
 
 # ---- and a verdict is gated on it ----------------------------------------
@@ -110,9 +110,24 @@ def test_everything_agreeing_about_something_is():
         _all_passed(mechanically_informative=True)) == "verified"
 
 
-def test_an_unmeasured_answer_does_not_withdraw_a_verdict_by_itself():
-    """None means not established. The flag blocks on a measured False."""
-    assert verify.classify_stage(_all_passed()) == "verified"
+def test_an_unmeasured_answer_is_not_a_verdict_either():
+    """Every other rung of this ladder reads "did this step demonstrably
+    pass". This one was written to read "was it demonstrably refused", which
+    let an unestablished answer through to a verdict -- the one convention
+    the ladder exists to avoid."""
+    assert verify.classify_stage(_all_passed()) == \
+        verify.INFORMATIVENESS_NOT_ESTABLISHED
+
+
+def test_the_gate_comes_before_the_derivative_work():
+    """There is no reason to spend a replay ladder on an experiment that has
+    not been shown to exercise the behaviour whose derivative is in question."""
+    assert verify.classify_stage(
+        _all_passed(mechanically_informative=False,
+                    derivative_truncated=True)) == verify.NOT_INFORMATIVE
+    assert verify.classify_stage(
+        _all_passed(mechanically_informative=False,
+                    tangent_verified=False)) == verify.NOT_INFORMATIVE
 
 
 def test_the_new_state_is_ours_and_reaches_the_report_and_the_page():
