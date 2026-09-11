@@ -27,6 +27,17 @@ from typing import Optional
 #: What Abaqus/Standard writes to the .sta when the analysis itself finished.
 COMPLETED_MARKER = "THE ANALYSIS HAS COMPLETED SUCCESSFULLY"
 
+#: How much of the driver's console to keep when a job left no records.
+CONSOLE_TAIL = 4000
+
+#: Lines an ifort diagnostic starts with. Used only to pull the build's own
+#: words out of the console into the reason, never to decide anything.
+_COMPILER_DIAGNOSTIC = re.compile(
+    r"^.*\b(?:error\s*#\d+|catastrophic error|undefined reference|"
+    r"cannot open include file|can't find include file|"
+    r"compilation aborted)\b.*$",
+    re.IGNORECASE | re.MULTILINE)
+
 #: The wrap-up abort seen on this installation, which is not a model failure.
 _WRAPUP_SIGNATURES = (
     "buffer overflow detected",
@@ -56,6 +67,17 @@ class JobStatus:
     warnings: tuple[str, ...] = ()
     #: Why the job was not counted as completed, when it was not.
     reasons: tuple[str, ...] = ()
+    #: The tail of what the solver driver printed, kept ONLY when the job did
+    #: not complete. Ten entries of the pass9 corpus failed with no .dat, no
+    #: .msg and no .odb -- Abaqus never reached its input processor, which on
+    #: this installation means the user-subroutine build failed and printed
+    #: the reason to the console. The console was captured and dropped, so all
+    #: ten were recorded as "original.msg was not written" and the only
+    #: evidence of what actually went wrong was gone. Three of those ten were
+    #: compile errors: a missing PROPS declaration, an uppercase #INCLUDE that
+    #: no file on a case-sensitive filesystem matches, and a probe call this
+    #: package inserted above a preprocessor directive.
+    console_tail: str = ""
     checks: dict = field(default_factory=dict)
 
     def as_dict(self) -> dict:
@@ -68,6 +90,7 @@ class JobStatus:
             "increments": self.increments,
             "warnings": list(self.warnings),
             "reasons": list(self.reasons),
+            "console_tail": self.console_tail,
             "checks": dict(self.checks),
         }
 
@@ -126,10 +149,31 @@ def classify_job(
     status = JobStatus(job=job, directory=directory, exit_code=exit_code)
     sta = _read(directory / f"{job}.sta")
     msg = _read(directory / f"{job}.msg")
+    dat = _read(directory / f"{job}.dat")
 
     reasons: list[str] = []
     warnings: list[str] = []
     checks: dict = {}
+
+    # Abaqus writes the .dat while processing the input file, which it does
+    # AFTER building the user subroutine. No .dat at all therefore does not
+    # mean "the analysis left no record": it means there was no analysis,
+    # because the build in front of it did not produce a library. Saying
+    # ".sta was not written" for that points the reader at the solver.
+    # Gated on the .msg being absent too. A .dat that was cleaned away from a
+    # job whose .msg records an analysis is a missing file, not a failed
+    # build, and reporting a build failure for it would be exactly the kind of
+    # confident wrong sentence this replaces.
+    checks["input_processor_reached"] = bool(dat or msg)
+    if not dat and not msg:
+        diagnostics = _COMPILER_DIAGNOSTIC.findall(console)
+        detail = ("; ".join(line.strip() for line in diagnostics[:3])
+                  if diagnostics else
+                  "the console kept no compiler diagnostic")
+        reasons.append(
+            f"{job}.dat was not written, so Abaqus never reached its input "
+            f"processor: the user-subroutine build failed before the analysis "
+            f"began ({detail})")
 
     checks["sta_present"] = bool(sta)
     if not sta:
@@ -175,10 +219,18 @@ def classify_job(
             reasons.append(
                 f"the analysis ran {status.increments} increments where "
                 f"{expected_increments} were requested")
-        elif status.increments != expected_increments:
+        elif status.increments is not None and \
+                status.increments != expected_increments:
             warnings.append(
                 f"the solver cut back and recovered: {status.increments} "
                 f"increments where {expected_increments} were requested")
+        elif status.increments is None:
+            # A job with no .msg has no increment count. Reporting "the solver
+            # cut back and recovered: None increments where 30 were requested"
+            # attributes a recovery to a run that never started, and it was
+            # attached to all ten of the pass9 jobs that failed before Abaqus
+            # wrote anything.
+            checks["increments_completed"] = False
 
     missing = [name for name in required_files
                if not (directory / name).is_file()
@@ -196,6 +248,8 @@ def classify_job(
         warnings.append(f"process_exit_code_{exit_code}")
 
     status.analysis_completed = not reasons
+    if reasons and console:
+        status.console_tail = console[-CONSOLE_TAIL:]
     status.reasons = tuple(reasons)
     status.warnings = tuple(warnings)
     status.checks = checks
