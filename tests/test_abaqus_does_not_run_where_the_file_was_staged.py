@@ -19,6 +19,17 @@ from pathlib import Path
 from umat_oti.abaqus.data_files import (
     FIXED_LIMIT, opened_files, redirect)
 
+
+def _a_job_directory_as_deep_as_the_corpus_run_used() -> Path:
+    """A path whose length is the point: ninety-odd characters.
+
+    The corpus run's job directories are that deep, and an absolute name of
+    that length does not fit in what a fixed-form OPEN statement has left.
+    """
+    return Path("/var") / "tmp" / "a_working_directory_of_the_usual_depth" / (
+        "corpus_run") / "work" / "d55e74dd7861abaa38217335" / "discovery" / (
+        "a1.000000e-04")
+
 SOURCE = """      SUBROUTINE UMAT(STRESS,STATEV)
       open(301,FILE='T:\\Abaqus-Temp\\20231205AlexCoarse\\'//
      &  'Lambda10.csv',status="old")
@@ -48,8 +59,7 @@ def test_a_name_not_staged_is_left_alone():
 
 
 def test_no_rewritten_line_runs_past_the_fixed_form_column():
-    deep = Path("/home/someone/a_rather_long_working_directory/corpus_run/"
-                "work/d55e74dd7861abaa38217335/discovery/a1.000000e-04")
+    deep = _a_job_directory_as_deep_as_the_corpus_run_used()
     names = [o.name for o in opened_files(SOURCE)]
     out, pointed = redirect(SOURCE, deep, staged=names, form="fixed")
     assert pointed
@@ -63,8 +73,7 @@ def test_a_split_name_still_reads_as_the_same_name():
     Continuing one in fixed form pads the first line to column 72 with
     blanks, and those blanks land INSIDE the file name.
     """
-    deep = Path("/home/someone/a_rather_long_working_directory/corpus_run/"
-                "work/d55e74dd7861abaa38217335/discovery/a1.000000e-04")
+    deep = _a_job_directory_as_deep_as_the_corpus_run_used()
     out, _pointed = redirect(SOURCE, deep, staged=["table.dat"], form="fixed")
     statement = []
     for line in out.splitlines():

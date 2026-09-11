@@ -244,6 +244,7 @@ def _dependency_summary(parsed: ParsedFortranSource, assignments: list[Assignmen
         parameter_variables,
         written,
         {name for name, record in variables.items() if "read" not in record.access and "write" not in record.access},
+        _dummy_arguments(parsed),
     )
     finite_strain_path_variables = _finite_strain_path_variables(upstream_to_stress, constant_variables)
     stress_path_variables = (downstream_from_dstran & (upstream_to_stress | {"STRESS"})) | finite_strain_path_variables | {"DSTRAN", "STRESS"}
@@ -339,11 +340,23 @@ def _downstream_dependencies_from(seed: str, assignments: list[AssignmentInfo]) 
     return downstream
 
 
+def _dummy_arguments(parsed: ParsedFortranSource) -> set[str]:
+    """The names every routine in this file receives from its caller."""
+    names: set[str] = set()
+    for routine in getattr(parsed, "subroutines", ()) or ():
+        for argument in getattr(routine, "args", ()) or ():
+            name = str(argument).strip().upper()
+            if name:
+                names.add(name)
+    return names
+
+
 def _constant_variables(
     assignments: list[AssignmentInfo],
     parameter_variables: set[str],
     written_variables: set[str],
     declaration_only_variables: set[str],
+    dummy_arguments: set[str] | None = None,
 ) -> set[str]:
     """Names whose value carries no derivative, on the evidence of *every*
     assignment to them.
@@ -377,6 +390,26 @@ def _constant_variables(
     The cost of refusing is that a genuinely constant accumulator stays
     hypercomplex and carries a zero derivative part; the cost of accepting is
     a silent truncation, so the asymmetry decides it.
+
+    The same argument covers every DUMMY ARGUMENT, and it had to: a routine's
+    arguments arrive with values from its caller, and no assignment inside it
+    accounts for them. A plane-strain UMAT squares up the out-of-plane part
+    of the deformation gradient it was handed --
+
+        dfgrd1(1,3) = 0
+        dfgrd1(2,3) = 0
+        dfgrd1(3,1) = 0
+        dfgrd1(3,2) = 0
+        dfgrd1(3,3) = 1
+
+    -- and those five assignments read no variable at all, so the universal
+    test passed vacuously and DFGRD1, the SEED, was declared constant.
+    Constancy then propagated the whole way to the stress: measured on
+    UMAT_Tissue_2d_plane_strain.f, ``detf = REAL(+DFGRD1_OTI(1,1)*...)`` and
+    twenty-one further assignments, with the derivative dying one statement
+    after the seed. The ones the method names as constant -- PROPS, STRAN,
+    TIME and the rest -- are unaffected: they are constant because the method
+    says so, not because a fixed point inferred it.
     """
     assignments_by_lhs: dict[str, list[AssignmentInfo]] = {}
     for assignment in assignments:
@@ -385,11 +418,19 @@ def _constant_variables(
         assignments_by_lhs.setdefault(assignment.lhs, []).append(assignment)
     constants = set(parameter_variables) | set(STANDARD_CONSTANT_INPUTS)
     constants.update(declaration_only_variables & STANDARD_CONSTANT_INPUTS)
+    # The ones the harness declares constant stay constant: PROPS and STRAN
+    # are dummy arguments too, and they are in the set above because the
+    # method says so, not because a fixed point inferred it.
+    arrived_from_the_caller = set(dummy_arguments or ()) - constants
     changed = True
     while changed:
         changed = False
         for name, name_assignments in assignments_by_lhs.items():
             if name in constants:
+                continue
+            if name in arrived_from_the_caller:
+                # A dummy argument's value comes from outside; no set of
+                # assignments inside the routine accounts for it.
                 continue
             if any(name in assignment.rhs_tokens for assignment in name_assignments):
                 continue

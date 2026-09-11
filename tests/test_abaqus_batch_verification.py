@@ -228,7 +228,11 @@ def test_a_source_with_no_paired_deck_needs_material_data(tmp_path: Path):
                           _proposal(deck=""), cache)
     assert plan.stage == "needs_material_data"
     assert plan.manifest is None
-    assert "no deck is paired" in plan.reason
+    assert "no material constants are published" in plan.reason
+    # ...and it says where it looked, because a refusal that does not is a
+    # claim about somebody's repository rather than a finding about it.
+    assert "Searched" in plan.reason
+    assert plan.searched is not None and "documentation" in plan.searched
 
 
 def test_a_deck_with_no_material_block_needs_material_data(tmp_path: Path):
