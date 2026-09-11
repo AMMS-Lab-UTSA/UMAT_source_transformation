@@ -48,6 +48,19 @@ class PrimalComparison:
     #: perfect match -- which is how a transform that destroyed the stress
     #: entirely scored agreement at a worst difference of 0.0.
     non_finite_components: int = 0
+    #: WHICH build produced them. The total alone cannot tell "the transform
+    #: destroyed the stress" from "the reference build was already returning
+    #: NaN and the transform faithfully reproduced a model that had left its
+    #: own domain". Measured on the HelixUp family
+    #: (Jeff97/Programming-Plane-Strain-Plates.../Examples-In-Section-3/HelixUp,
+    #: ten entries): 72 of the ORIGINAL build's 80 converged records carry NaN
+    #: in all six stress components, and the original's own DSTRAN and DFGRD1
+    #: are NaN on entry from increment 2 onward -- Abaqus handed the author's
+    #: routine a deformation gradient that was not a number and then printed
+    #: THE ANALYSIS HAS COMPLETED SUCCESSFULLY. All ten were recorded as
+    #: primal_disagreed, which reads as a statement about the transform.
+    non_finite_original: int = 0
+    non_finite_transformed: int = 0
     agrees: bool = False
     reason: str = ""
 
@@ -64,6 +77,8 @@ class PrimalComparison:
             "unresolved_components": self.unresolved_components,
             "resolved_components": self.resolved_components,
             "non_finite_components": self.non_finite_components,
+            "non_finite_original": self.non_finite_original,
+            "non_finite_transformed": self.non_finite_transformed,
             "agrees": self.agrees,
             "reason": self.reason,
         }
@@ -215,6 +230,10 @@ def compare_primal(
                 # every comparison it takes part in, silently.
                 if not (math.isfinite(x) and math.isfinite(y)):
                     result.non_finite_components += 1
+                    if not math.isfinite(x):
+                        result.non_finite_original += 1
+                    if not math.isfinite(y):
+                        result.non_finite_transformed += 1
                     setattr(result, f"worst_{attribute}_relative", math.inf)
                     setattr(result, f"worst_{attribute}_at",
                             (index, component, x, y))
@@ -266,6 +285,12 @@ def compare_primal(
             f"{result.non_finite_components} compared values are not finite, "
             f"so nothing about this pair is established: a comparison against "
             f"NaN is False and leaves the worst difference reading as zero")
+        if result.non_finite_original:
+            result.reason += (
+                f" -- and {result.non_finite_original} of them are the "
+                f"ORIGINAL build's, so the reference this pair is measured "
+                f"against left its own domain on this deck and the entry "
+                f"cannot carry a claim about the transform either way")
         return result
     if not result.resolved_components:
         result.reason = (
