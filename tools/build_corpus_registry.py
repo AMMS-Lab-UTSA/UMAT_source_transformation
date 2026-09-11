@@ -264,9 +264,29 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             compiles = _compiles(Path(cache) / record.source_id, record)
         verdict = from_transform_failure(
             record.reason, compiles=compiles,
-            companions_missing=bool(record.missing_companions))
+            companions_missing=bool(record.missing_companions),
+            is_umat=_is_a_umat(cache, record.source_id))
         record.terminal_state, record.kind = verdict.state, verdict.kind
     return sorted(records.values(), key=lambda r: r.source_id)
+
+
+def _is_a_umat(cache: Optional[Path], source_id: str) -> Optional[bool]:
+    """What this file presents to Abaqus, by parsing rather than by name.
+
+    Asked of sources the transform refused, because a file whose entry point
+    is a UEL was never this transformer's to convert and its refusal says
+    nothing about the transformer.
+    """
+    if not cache or not source_id:
+        return None
+    path = Path(cache) / source_id
+    if not path.is_file():
+        return None
+    try:
+        from umat_oti.corpus.entry_routines import classify
+        return bool(classify(path.read_text(errors="replace"), path=path).is_umat)
+    except Exception:                              # noqa: BLE001 - advisory
+        return None
 
 
 def _compiles(source: Path, record: Record) -> Optional[bool]:

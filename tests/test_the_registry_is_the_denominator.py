@@ -165,3 +165,44 @@ def test_the_two_reports_agree_about_what_verified_means():
 
     assert FROM_ABAQUS_STAGE["verified"] == "fully_verified"
     assert FROM_STAGE["verified"] == FULLY_VERIFIED
+
+
+# ---------------------------------------------------------------------------
+# a file the transform refused is not automatically the transform's fault
+# ---------------------------------------------------------------------------
+def test_a_refused_uel_is_not_a_umat_rather_than_a_gap_in_the_transformer():
+    """Three UEL sources began failing a semantic check when the constancy
+    analysis stopped inferring dummy arguments constant. Counting them as a
+    gap in the transformer puts an external fact about somebody's file into
+    this pipeline's column. The direction of that error is the safe one --
+    it overstates our own failures, not the corpus's completeness -- but it
+    is still wrong, and it costs a cluster that cannot be fixed because
+    there is nothing wrong with it."""
+    from umat_oti.abaqus.terminal_states import from_transform_failure
+
+    verdict = from_transform_failure("Semantic check failed", is_umat=False)
+    assert verdict.state == "not_a_umat"
+    assert verdict.kind == "external"
+
+
+def test_a_refused_umat_is_still_ours():
+    from umat_oti.abaqus.terminal_states import from_transform_failure
+
+    verdict = from_transform_failure("Semantic check failed", is_umat=True)
+    assert verdict.state == "transform_refused"
+    assert verdict.kind == "internal"
+
+
+def test_not_knowing_what_it_is_keeps_the_old_answer():
+    from umat_oti.abaqus.terminal_states import from_transform_failure
+
+    assert from_transform_failure("x").state == "transform_refused"
+    assert from_transform_failure("x", compiles=False).state == \
+        "incomplete_or_corrupt_source"
+
+
+def test_the_registry_asks_what_the_file_is_before_blaming_the_transform():
+    import pathlib
+    text = pathlib.Path(__file__).resolve().parents[1].joinpath(
+        "tools", "build_corpus_registry.py").read_text()
+    assert "is_umat=_is_a_umat(" in text
