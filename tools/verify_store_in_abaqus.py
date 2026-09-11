@@ -2380,6 +2380,22 @@ def run_association_control(manifest: VerificationManifest, original: Path,
     outcome["comparison"] = best.get("comparison")
     outcome["worst_stress_relative"] = best.get("worst_stress_relative")
     outcome["worst_state_relative"] = best.get("worst_state_relative")
+    # A rebuild that reproduced the original bit for bit did not perturb this
+    # model, so it says nothing about what the model does WITH a perturbation.
+    # Reporting that as a sensitivity of zero presents an unmeasured quantity
+    # as a measured one, and then rests a verdict on it: twenty-one of the
+    # twenty-three surviving primal disagreements were told they differ "by
+    # more than their own conditioning accounts for" on the strength of a
+    # zero that was never a measurement.
+    moved = float(best.get("worst_stress_relative") or 0.0)
+    outcome["measured"] = bool(moved)
+    if not moved:
+        outcome["reason"] = (
+            f"every way this harness has of computing the same mathematics "
+            f"differently ({', '.join(name for name, _ in ARITHMETIC_LADDER)}) "
+            f"reproduced the original bit for bit, so the model was never "
+            f"perturbed and its sensitivity to being perturbed is unmeasured "
+            f"-- not zero")
     return outcome
 
 
@@ -2754,7 +2770,8 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             record["association_control"] = association
             own = association.get("worst_stress_relative")
             mine = primal.worst_stress_relative
-            if (association.get("ran") and own is not None and mine is not None
+            if (association.get("ran") and association.get("measured")
+                    and own is not None and mine is not None
                     and mine <= own):
                 seen["primal_agrees"] = True
                 precision_note = (
@@ -2769,13 +2786,21 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                 record["primal"]["explained_by_operation_order"] = True
                 record["primal"]["own_sensitivity"] = own
             else:
-                if association.get("ran") and own is not None:
+                if association.get("ran") and association.get("measured") \
+                        and own is not None:
                     record["primal"]["own_sensitivity"] = own
                     return settle(
                         f"{primal.reason}; and this model differs from itself "
                         f"by only {own:.3e} when its arithmetic is reordered, "
                         f"so the difference is larger than its own conditioning "
                         f"accounts for")
+                if association.get("ran"):
+                    record["primal"]["own_sensitivity_unmeasured"] = \
+                        association.get("reason")
+                    return settle(
+                        f"{primal.reason}; and this model's own sensitivity to "
+                        f"round-off could not be measured against it: "
+                        f"{association.get('reason')}")
                 return settle(primal.reason
                               or "the two builds produced no records to compare")
 
