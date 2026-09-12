@@ -5,7 +5,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 from umat_oti.core.model import ParsedFortranSource
 from umat_oti.core.transformation_anchors import anchor_completion_status
@@ -292,13 +292,23 @@ def transform_umat_to_oti_from_config(
     ]
     if helper_source_path is not None:
         compile_lines.append('gfortran -c -ffree-form -ffree-line-length-none -I"$OBJDIR" umat_oti_helpers.f90 -J"$OBJDIR" -o "$OBJDIR/umat_oti_helpers.o"')
-    # The form the transform actually emitted, not a fixed assumption. A
-    # free-form source is rewritten as free-form and was being handed to the
-    # compiler as fixed, which reads column 1 as a statement label and stops
-    # at the very first line: "Non-numeric character in statement label"
-    # against a subroutine header that is perfectly correct.
+    # The form the transform actually emitted, not a fixed assumption and not
+    # a second guess at it. A free-form source is rewritten as free-form and
+    # was being handed to the compiler as fixed, which reads column 1 as a
+    # statement label and stops at the very first line: "Non-numeric character
+    # in statement label" against a subroutine header that is perfectly
+    # correct.
+    #
+    # Re-measuring the output instead of using ``parsed.form`` reintroduced
+    # exactly that. ``detect_source_form`` falls back to the file's suffix
+    # whenever the evidence is mixed, and the transform's own emitted
+    # continuations are fixed-form evidence: a free-form ``.for`` source came
+    # out 174 free-form lines to 20 fixed, the suffix broke the tie, and the
+    # whole file was compiled as fixed form. The emitter already knows which
+    # form it wrote every statement in -- ``_stmt(form, ...)`` is given it --
+    # so that is the answer, not an inference from the answer.
     transformed_form = ("-ffixed-form -ffixed-line-length-none"
-                        if detect_source_form(Path(source_file), transformed_source) == "fixed"
+                        if parsed.form == "fixed"
                         else "-ffree-form -ffree-line-length-none")
     compile_lines.append(
         f'gfortran -c {transformed_form} -I"$OBJDIR" {transformed_name} -J"$OBJDIR" -o "$OBJDIR/transformed_umat.o"'
@@ -503,11 +513,27 @@ def _source_file(config: dict[str, Any]) -> str:
 #: statement". mholla/growth's umat_ortho_stretch.f declares `real*8 max(3)`
 #: and fails exactly that way.
 #:
-#: Renaming the author's variable would work and is not done here. It touches
-#: the declaration and every reference, and a rename that misses one produces
-#: a source that compiles and computes something else -- which is worse than
-#: not converting it. Refused with the name, so a reader knows what to change.
+#: Renaming the author's variable would work and is not done: it touches the
+#: declaration and every reference, and a rename that misses one produces a
+#: source that compiles and computes something else. The import is renamed
+#: instead -- ``USE otim6n1, OTI_MODULE_MAX => MAX`` -- which is the technique
+#: already used for the direction constants E1..En, and which leaves the
+#: author's variable and every reference to it exactly as written. A source
+#: that declares its own MAX was never calling the intrinsic through that name
+#: anyway; its own declaration had shadowed it long before the transform ran.
+#: These two were refused outright for it: mholla/growth's umat_ortho_stretch.f
+#: declares ``real*8 max(3)`` and sd104400/OPA_Modeling's UMAT_DPIsodwAniDM.for
+#: declares an INT.
 OTI_MODULE_GENERICS = frozenset({"MIN", "MAX", "SIGN", "NINT", "INT", "MATMUL"})
+
+#: The two of them the transform writes calls to in its own emitted lines: MAX
+#: in the guard that keeps SQRT off a round-off negative, MIN in the bound of
+#: the loop that copies the first three components. Renaming the import does
+#: not help those -- the emitted call is written as ``MAX(...)``, and in a
+#: scope where the author declared ``real*8 max(3)`` that is a rank-2 reference
+#: to a rank-1 array, which is what umat_ortho_stretch.f came out as. So these
+#: two keep the refusal and the rest are renamed on import.
+GENERICS_THE_TRANSFORM_CALLS_ITSELF = frozenset({"MIN", "MAX"})
 
 _DECLARATION = re.compile(
     r"^\s*(?:REAL|INTEGER|DOUBLE\s+PRECISION|LOGICAL|DIMENSION)"
@@ -543,14 +569,20 @@ def _readiness_blockers(
 ) -> list[str]:
     blockers: list[str] = []
     for name in _locals_colliding_with_the_oti_modules(source_text):
+        if name not in GENERICS_THE_TRANSFORM_CALLS_ITSELF:
+            continue
         blockers.append(
             f"{name} is declared as a variable here and is also a generic the "
-            f"OTI support modules make public, so the converted source cannot "
-            f"USE them: ifort reports \"The attributes of this name conflict "
-            f"with those made accessible by a USE statement\". Renaming it in "
-            f"the source would resolve it; this transform will not rename an "
-            f"author's variable, because a rename that misses one reference "
-            f"produces a file that compiles and computes something else.")
+            f"OTI support modules make public. The import is renamed for the "
+            f"other such names, which leaves the author's variable untouched, "
+            f"but not for this one: the transform emits its own {name}(...) "
+            f"call -- the guard that keeps SQRT off a round-off negative, and "
+            f"the loop bound of the component copy -- and in this scope that "
+            f"call would reach the author's variable instead of the "
+            f"intrinsic. Renaming the variable in the source would resolve it; "
+            f"this transform will not rename an author's variable, because a "
+            f"rename that misses one reference produces a file that "
+            f"compiles and computes something else.")
     review = _dict(config.get("transformation_review"))
     analysis = _dict(config.get("analysis"))
     has_completed_anchors = bool(config.get("transformation_anchors"))
@@ -701,10 +733,44 @@ def _local_newton_blockers(config: dict[str, Any], roles: dict[str, set[str]]) -
     return []
 
 
+#: Intrinsics with no counterpart over the OTI type. SIGN was on this list and
+#: is not one: ``oti_intrinsics`` declares SIGN for (OTI, OTI), (OTI, real) and
+#: (real, OTI), the main transform has emitted and USEd that module since it
+#: gained one, and a driver differentiating SIGN(x*x+1, -x) at x=2 returns
+#: -4.0000000000000000 against a central difference of -4.0000000001150227.
+#: Two corpus sources -- ahartloper/UVC_MatMod's uniaxial models, which ask
+#: which way the strain increment is going -- were refused for using an
+#: intrinsic that had been supported for as long as the blocker had been wrong.
+#:
+#: MOD and ATAN2 stay: neither the generated algebra nor the extension module
+#: defines either one over the type, so a source using them on a differentiated
+#: value would not compile.
+#: MOD and ATAN2 are scalar; SUM and PRODUCT reduce an array. Neither the
+#: generated algebra nor oti_intrinsics declares any of the four over the type,
+#: and SUM was found the hard way: with the SIGN blocker gone,
+#: ahartloper/UVC_MatMod's uniaxial model transformed and then stopped at
+#: "'array' argument of 'sum' intrinsic must have a numeric type" on
+#: ALPHA_OTI = SUM(ALPHA_K_OTI(:)). A blocker naming the cause is worth more
+#: than a compile error found later by whoever reads the log.
+#:
+#: SUM is not added to oti_intrinsics as a generic, which would fix the compile
+#: and break more than it fixed: "sum" is an ordinary name for an accumulator,
+#: several corpus sources declare one, and a public generic of that name makes
+#: every one of them fail on its USE line with "The attributes of this name
+#: conflict with those made accessible by a USE statement".
+_INTRINSICS_WITHOUT_AN_OTI_FORM = frozenset({"MOD", "ATAN2", "SUM", "PRODUCT"})
+
+
 def _unsupported_intrinsic_blockers(source_text: str, roles: dict[str, set[str]], stress_regions: list[dict[str, Any]]) -> list[str]:
-    unsupported = {"SIGN", "MOD", "ATAN2"}
     promoted = roles["seed"] | roles["promote"]
     if not promoted or not stress_regions:
+        return []
+    # A source that declares its own SUM or MOD is using a variable, not the
+    # intrinsic, and blocking it would name a cause that is not there. The
+    # classifier's own test for that distinction is reused rather than
+    # repeated, so the two cannot drift apart.
+    unsupported = _INTRINSICS_WITHOUT_AN_OTI_FORM & _call_names_that_are_not_variables(source_text)
+    if not unsupported:
         return []
     line_numbers = _line_set(stress_regions)
     blockers: list[str] = []
@@ -712,12 +778,31 @@ def _unsupported_intrinsic_blockers(source_text: str, roles: dict[str, set[str]]
         if number not in line_numbers:
             continue
         upper_line = line.upper()
-        if not any(re.search(rf"\b{re.escape(name)}\b", upper_line) for name in promoted):
-            continue
         for intrinsic in sorted(unsupported):
-            if re.search(rf"\b{intrinsic}\s*\(", upper_line):
+            if _intrinsic_argument_mentions(upper_line, intrinsic, promoted):
                 blockers.append(f"Unsupported intrinsic {intrinsic} is used with promoted variables on stress path line {number}.")
     return blockers
+
+
+def _intrinsic_argument_mentions(upper_line: str, intrinsic: str, promoted: set[str]) -> bool:
+    """Whether ``INTRINSIC(...)`` on this line is handed a promoted name.
+
+    The argument, not the line. Reading the whole line called
+    ``TERM_OTI = OFFSET + MOD(COUNTER, 3)`` a use of MOD on a differentiated
+    value because a promoted name appeared somewhere else in it, and refused a
+    source over an integer remainder.
+    """
+    search_from = 0
+    while True:
+        match = re.search(rf"(?<![A-Za-z0-9_%]){intrinsic}\s*\(", upper_line[search_from:])
+        if not match:
+            return False
+        open_paren = search_from + match.end() - 1
+        close_paren = _matching_paren_index(upper_line, open_paren)
+        argument = upper_line[open_paren + 1:close_paren] if close_paren > 0 else upper_line[open_paren + 1:]
+        if any(token in promoted for token in re.findall(r"[A-Za-z_]\w*", argument)):
+            return True
+        search_from = open_paren + 1
 
 
 def _stress_path_io_blockers(config: dict[str, Any], analysis: dict[str, Any], stress_regions: list[dict[str, Any]]) -> list[str]:
@@ -751,6 +836,23 @@ def _call_lines_reaching(
     ordering says nothing about it -- but the CALL statements in the UMAT that
     can reach it. Returns an empty list when no call reaches the target, which
     every caller must read as "cannot place it", never as "nothing to place".
+
+    One line per reaching CALL, not one per physical line of it. A CALL is one
+    program point however many lines it is written across, and returning all of
+    them let the caller test each continuation line separately against a
+    bracket the statement as a whole satisfies:
+
+        call EvolveMatlState(cmname, stress, statev, ddsdde, strain, &
+           dstrain, time, dtime, temp, dtemp, &
+           ... )
+
+    spans lines 139-144, the extraction goes in after 144, and lines 139-143
+    are each "before the stress update ends" on their own. Thirteen corpus
+    sources write DDSDDE only inside a routine reached by a continued CALL like
+    this one, and every one of them was refused for it. The line the statement
+    finishes on is the one that places it: nothing can run between a
+    statement's own continuation lines, so that single line says everything the
+    ordering test needs, and for a CALL written on one line it is that line.
     """
     if parsed is None or not parsed.subroutines:
         return []
@@ -770,8 +872,8 @@ def _call_lines_reaching(
 
     lines: list[int] = []
     for call in build_call_graph(parsed, start):
-        if reaches(call.callee.upper(), set()):
-            lines.extend(int(value) for value in call.line_numbers)
+        if reaches(call.callee.upper(), set()) and call.line_numbers:
+            lines.append(max(int(value) for value in call.line_numbers))
     return sorted(lines)
 
 
@@ -1088,10 +1190,25 @@ def _uncovered_ddsdde_blockers(
         if not _line_numbers_intersect(assignment.get("line_numbers", []), old_tangent_regions):
             if _overwritten_through_its_call_sites(
                     line_numbers, umat_span, parsed, selected_umat, extraction_line,
-                    last_stress_end):
+                    last_stress_end,
+                    _ddsdde_stress_input_lines(analysis)):
                 continue
             blockers.append(f"DDSDDE assignment is not covered by an old tangent replacement region: {assignment.get('text', '')}")
     return blockers
+
+
+def _ddsdde_stress_input_lines(analysis: dict[str, Any]) -> list[int]:
+    """Lines where the stress update takes a value from DDSDDE.
+
+    Published by the region classifier. An empty list from a source that has
+    one would turn the check below from conservative into wrong, so a summary
+    that does not carry the key at all is reported as unknown -- ``None`` --
+    and the caller then keeps the old, stricter rule.
+    """
+    summary = _dict(analysis.get("region_summary"))
+    if "ddsdde_stress_input_lines" not in summary:
+        return None  # type: ignore[return-value]
+    return [_as_int(value) for value in summary.get("ddsdde_stress_input_lines") or []]
 
 
 def _overwritten_through_its_call_sites(
@@ -1101,6 +1218,7 @@ def _overwritten_through_its_call_sites(
     selected_umat: str,
     extraction_line: int,
     last_stress_end: int,
+    ddsdde_stress_input_lines: list[int] | None = None,
 ) -> bool:
     """True when this assignment writes the old tangent strictly before extraction.
 
@@ -1117,6 +1235,31 @@ def _overwritten_through_its_call_sites(
     built, and a stress that reads DDSDDE would then take its value through a
     REAL array where no derivative can follow -- the transform would compile,
     run, and return a tangent that is wrong for a reason nothing reports.
+
+    "After the stress update" was a stand-in for that hazard and not the
+    hazard itself, and it refused sources the hazard cannot reach. A UMAT
+    whose whole body is
+
+        IF (PROPS(1) .GT. 2.D0) THEN
+          CALL VEVP(STRESS, STATEV, DDSDDE, ...)
+          RETURN
+        ELSE
+          CALL NEOHOOK(STRESS, STATEV, DDSDDE, ...)
+          RETURN
+        END IF
+
+    has its call inside the stress region because the call IS the stress
+    update, and nothing in the file ever reads DDSDDE back into a stress-path
+    variable. ``ddsdde_stress_input_lines``, which the region classifier
+    computes over every logical line in the file and not only the UMAT's,
+    lists the reads; when it is empty the hazard has no site and the position
+    of the call relative to the stress update stops mattering. When it is
+    non-empty -- ``STRESS(I)=STRESS(I)+DDSDDE(I,J)*DSTRAN(J)`` after a
+    ``CALL EULCONV(..., DDSDDE)``, which is one of the corpus sources this
+    check exists for -- the old rule stands, and so does the refusal.
+
+    Passing ``None`` for it means the reads were not established, and an
+    unestablished fact is not a licence: the old rule stands then too.
 
     Refuses -- returns False -- whenever any part of the argument is missing:
     no parse, no UMAT span, no extraction point, or no call site found. A check
@@ -1137,7 +1280,11 @@ def _overwritten_through_its_call_sites(
         return False
     # ``extraction_line`` is an insert-AFTER line, so a call on that very line
     # is still overwritten by what follows it.
-    return all(last_stress_end <= line <= extraction_line for line in call_lines)
+    if not all(line <= extraction_line for line in call_lines):
+        return False
+    if ddsdde_stress_input_lines is not None and not ddsdde_stress_input_lines:
+        return True
+    return all(last_stress_end <= line for line in call_lines)
 
 
 def _routine_containing(parsed: ParsedFortranSource, line_number: int) -> str:
@@ -1970,6 +2117,12 @@ def _transform_source_text(
     real_output_insert_after_line = tangent_context.real_output_insert_after_line or extraction_insert_after_line
     ddsdde_insert_after_line = tangent_context.ddsdde_insert_after_line or extraction_insert_after_line
     seed_dfgrd1_enabled = _validation_uses_finite_geometry(config)
+    # Only a source whose seeded kinematic input is the deformation gradient
+    # gets the Kirchhoff term; see _ddsdde_extraction_lines. A DSTRAN-driven
+    # small-strain source asks for "" and its extraction is unchanged.
+    kirchhoff_direct_columns = (
+        direct_component_count_expression(argument_variables)
+        if _dfgrd1_carries_the_seed(roles, mappings, seed_dfgrd1_enabled) else "")
     seed_insert_before_line = _seed_insert_before_line(config) or declaration_insert_before
     if seed_insert_before_line and seed_insert_before_line < declaration_insert_before:
         seed_insert_before_line = declaration_insert_before
@@ -2149,7 +2302,10 @@ def _transform_source_text(
             elif branch_kind == "end_if" and shadow_sync_dirty_branch_stack:
                 shadow_sync_dirty_names |= shadow_sync_dirty_branch_stack.pop()
         if line_number == header_end:
-            output.append(_module_use_line(form, module_name, oti_directions))
+            output.append(_module_use_line(
+                form, module_name, oti_directions,
+                [name for name in _locals_colliding_with_the_oti_modules(source_text)
+                 if name not in GENERICS_THE_TRANSFORM_CALLS_ITSELF]))
         if line_number + 1 == declaration_insert_before:
             output.extend(
                 _declaration_lines(
@@ -2226,7 +2382,7 @@ def _transform_source_text(
                 if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                     output.extend(pure_seed_tangent_bridge_lines)
                     pure_seed_tangent_bridge_inserted = True
-                output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions))
+                output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns))
                 tangent_extraction_inserted = True
                 extraction_insertion_region_id = str(extraction_region.get("region_id", "")) if extraction_region else "before RETURN"
             continue
@@ -2251,7 +2407,7 @@ def _transform_source_text(
                 if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                     output.extend(pure_seed_tangent_bridge_lines)
                     pure_seed_tangent_bridge_inserted = True
-                output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions))
+                output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns))
                 tangent_extraction_inserted = True
                 extraction_insertion_region_id = str(extraction_region.get("region_id", "")) if extraction_region else "before RETURN"
             continue
@@ -2404,7 +2560,7 @@ def _transform_source_text(
             if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                 output.extend(pure_seed_tangent_bridge_lines)
                 pure_seed_tangent_bridge_inserted = True
-            output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions))
+            output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns))
             tangent_extraction_inserted = True
             extraction_insertion_region_id = str(extraction_region.get("region_id", "")) if extraction_region else "before RETURN"
         # "Before RETURN" means before the selected routine's RETURN. A file
@@ -2429,7 +2585,7 @@ def _transform_source_text(
             if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                 output[len(output) - 1:len(output) - 1] = pure_seed_tangent_bridge_lines
                 pure_seed_tangent_bridge_inserted = True
-            output[len(output) - 1:len(output) - 1] = preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions)
+            output[len(output) - 1:len(output) - 1] = preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns)
             tangent_extraction_inserted = True
             extraction_insertion_region_id = "before RETURN"
         if line_number >= selected_routine_span[1]:
@@ -2992,15 +3148,62 @@ def _dfgrd1_carries_the_seed(
     return "DFGRD1" in roles["promote"] and mappings.get("dstran", "DSTRAN") in roles["seed"]
 
 
-def _finite_dfgrd1_seed_lines(form: str, ntens: int) -> list[str]:
-    lines = [_comment_line(form, "OTIS finite-strain seed: map DSTRAN directions into DFGRD1")]
-    diagonal_entries = [(1, 1, 1), (2, 2, 2), (3, 3, 3)]
-    for row, column, direction in diagonal_entries[: min(ntens, 3)]:
-        lines.append(_stmt(form, f"DFGRD1_OTI({row},{column}) = DFGRD1_OTI({row},{column}) + {_seed_basis_name(direction)}"))
-    shear_entries = [(1, 2, 4), (2, 1, 4), (1, 3, 5), (3, 1, 5), (2, 3, 6), (3, 2, 6)]
-    for row, column, direction in shear_entries:
+def _finite_strain_seed_terms(ntens: int) -> list[tuple[int, int, float, int]]:
+    """``(row, column, coefficient, direction)`` for the seeded strain directions.
+
+    One entry per non-zero position of the strain increment each Voigt
+    direction stands for: the three direct directions put a one on a diagonal
+    position, and an engineering shear puts a half on each of the two
+    off-diagonal positions that make it symmetric.
+    """
+    terms: list[tuple[int, int, float, int]] = []
+    for row, column, direction in [(1, 1, 1), (2, 2, 2), (3, 3, 3)][: min(ntens, 3)]:
+        terms.append((row, column, 1.0, direction))
+    for row, column, direction in [(1, 2, 4), (2, 1, 4), (1, 3, 5), (3, 1, 5), (2, 3, 6), (3, 2, 6)]:
         if ntens >= direction:
-            lines.append(_stmt(form, f"DFGRD1_OTI({row},{column}) = DFGRD1_OTI({row},{column}) + 0.5D0*{_seed_basis_name(direction)}"))
+            terms.append((row, column, 0.5, direction))
+    return terms
+
+
+def _finite_dfgrd1_seed_lines(form: str, ntens: int) -> list[str]:
+    """The seed injections for a deformation-gradient-driven tangent.
+
+    The perturbation is ``dF = eps . F``, not ``dF = eps``. The velocity
+    gradient a perturbation of the deformation gradient produces is
+    ``l = dF . F^-1``, so asking for ``l = eps`` -- which is what the strain
+    increment Abaqus differentiates with respect to means -- asks for
+    ``dF = eps . F``. Adding ``eps`` straight onto F asks for
+    ``l = eps . F^-1``, the same thing only at ``F = I`` and wrong by order
+    ``||F - I||`` everywhere else.
+
+    Measured by Pixel Agent E against the analytic DDSDDE that
+    Jeff97/growth-of-shell's Trachea.for writes by hand, at pass9's recorded
+    state, worst componentwise relative error of a centred difference:
+
+        reference built as           h=1e-1    h=1e-2    h=1e-3    h=1e-4
+        dF = eps,     + sigma.delta  7.97e-03  7.97e-03  7.97e-03  7.97e-03
+        dF = eps . F, + sigma.delta  7.12e-06  2.40e-06  9.74e-04  4.78e-03
+
+    ``DFGRD1`` on the right is the REAL dummy argument, which still holds the
+    unperturbed gradient: the shadow ``DFGRD1_OTI`` is being written in this
+    very loop, and reading it back would fold the perturbation into its own
+    push-forward.
+    """
+    lines = [_comment_line(form, "OTIS finite-strain seed: dF = eps . F for each DSTRAN direction")]
+    # Written out over the three columns rather than looped, because a fixed-form
+    # statement has 66 columns to say this in and
+    # "DFGRD1_OTI(1,OTI_HI) = DFGRD1_OTI(1,OTI_HI) + 0.5D0*OTI_E4*DFGRD1(2,OTI_HI)"
+    # does not fit. Continuing it onto a second line would also put the factor
+    # "DFGRD1(2," on one physical line and "OTI_HI)" on the next, and every
+    # reader of the emitted seed -- the semantic checks and seeded_kinematics
+    # among them -- works a physical line at a time.
+    for row, column, coefficient, direction in _finite_strain_seed_terms(ntens):
+        weight = "" if coefficient == 1.0 else "0.5D0*"
+        for index in (1, 2, 3):
+            lines.append(_stmt(
+                form,
+                f"DFGRD1_OTI({row},{index}) = DFGRD1_OTI({row},{index})"
+                f" + {weight}{_seed_basis_name(direction)}*DFGRD1({column},{index})"))
     return lines
 
 
@@ -3016,6 +3219,22 @@ _DFGRD1_SEED_LINE = re.compile(
     flags=re.IGNORECASE,
 )
 
+#: The push-forward form, ``DFGRD1_OTI(i,k) = DFGRD1_OTI(i,k) + c*Ed*DFGRD1(j,k)``
+#: inside a loop over k. What this carries is still one entry of the strain
+#: increment -- ``eps(i,j) = c`` for direction d -- so it reads back as the
+#: same (row, column, coefficient, direction) tuple the additive form did, and
+#: every caller that reconstructs the perturbation from those tuples keeps
+#: working unchanged. The loop index is read as a name rather than a digit,
+#: and the same name has to appear in all three subscripts or the line is
+#: writing one entry from another and is not a seed injection.
+_DFGRD1_PUSHFORWARD_SEED_LINE = re.compile(
+    r"\bDFGRD1_OTI\s*\(\s*(\d+)\s*,\s*(\w+)\s*\)\s*=\s*"
+    r"DFGRD1_OTI\s*\(\s*(\d+)\s*,\s*(\w+)\s*\)\s*\+\s*"
+    r"(0\.5D0\s*\*)?(?:OTI_)?E(\d+)\s*\*\s*"
+    r"DFGRD1\s*\(\s*(\d+)\s*,\s*(\w+)\s*\)",
+    flags=re.IGNORECASE,
+)
+
 
 def parse_finite_dfgrd1_seed_line(line: str) -> tuple[int, int, float, int] | None:
     """``(row, column, coefficient, direction)`` for one emitted DFGRD1 seed line.
@@ -3023,7 +3242,23 @@ def parse_finite_dfgrd1_seed_line(line: str) -> tuple[int, int, float, int] | No
     ``None`` for any other line. The accumulated entry has to be the same one
     being read, or the line is an injection into a different entry and is not
     part of this map.
+
+    Both emitted forms are read: the push-forward one this transform writes
+    now, and the additive ``+ E1`` one every source in the transform store was
+    converted with before it. A reader that understood only the new form would
+    report every stored source as driving no kinematic input at all, which is
+    the verdict "not gradient-driven" -- and that is the field the corpus
+    classifies tangents by.
     """
+    match = _DFGRD1_PUSHFORWARD_SEED_LINE.search(line)
+    if match:
+        row, index, read_row, read_index = (match.group(i) for i in (1, 2, 3, 4))
+        column, factor_index = match.group(7), match.group(8)
+        if (row, index.upper()) != (read_row, read_index.upper()):
+            return None
+        if index.upper() != factor_index.upper():
+            return None
+        return int(row), int(column), 0.5 if match.group(5) else 1.0, int(match.group(6))
     match = _DFGRD1_SEED_LINE.search(line)
     if not match:
         return None
@@ -3093,7 +3328,13 @@ def seeded_kinematics(transformed_source: str, dstran: str = "DSTRAN") -> Seeded
         gradient_seed = parse_finite_dfgrd1_seed_line(line)
         if gradient_seed is not None:
             row, column, coefficient, direction = gradient_seed
-            gradient.setdefault(direction, []).append((row, column, coefficient))
+            # The push-forward form writes the same strain entry once per
+            # column of F. What it describes is one entry of eps, and a reader
+            # that summed the repeats would get three times the perturbation
+            # it was told about.
+            terms = gradient.setdefault(direction, [])
+            if (row, column, coefficient) not in terms:
+                terms.append((row, column, coefficient))
     return SeededKinematics(
         dstran=strain,
         dfgrd1={direction: tuple(sorted(terms)) for direction, terms in sorted(gradient.items())},
@@ -3309,9 +3550,54 @@ def _explicit_ddsdde_assignment_rows(config: dict[str, Any], extraction_region: 
     return sorted(rows, key=lambda row: min((_as_int(value) for value in (row.get("line_numbers") or []) if _as_int(value)), default=0))
 
 
+def direct_component_count_expression(argument_variables: set[str]) -> str:
+    """A Fortran expression for the number of direct stress components.
+
+    NDI when the selected routine has it, which every UMAT written to the
+    Abaqus interface does. A model routine reached through a wrapper may not,
+    and then NTENS-NSHR says the same thing; failing both, MIN(3,NTENS) is
+    right for every element type in this corpus except plane stress, and it is
+    a fallback rather than an answer.
+    """
+    names = {name.upper() for name in argument_variables}
+    if "NDI" in names:
+        return "NDI"
+    if "NSHR" in names and "NTENS" in names:
+        return "NTENS-NSHR"
+    return "MIN(3,NTENS)"
+
+
 def _ddsdde_extraction_lines(
-    form: str, mappings: dict[str, str], ntens: int, order: int = 1, nbases: int | None = None
+    form: str, mappings: dict[str, str], ntens: int, order: int = 1, nbases: int | None = None,
+    kirchhoff_direct_columns: str = "",
 ) -> list[str]:
+    """The lines that read the tangent out of the seeded stress.
+
+    ``kirchhoff_direct_columns``, when given, is a Fortran expression for the
+    number of direct components, and asking for it says this source's tangent
+    is taken with respect to the deformation gradient. Abaqus's DDSDDE under
+    nlgeom is the Jacobian of the Jaumann rate of the Kirchhoff stress divided
+    by J,
+
+        DDSDDE(ij,kl) = d sigma_ij / d eps_kl  +  sigma_ij delta_kl
+
+    and GETIM returns only the first term. In Voigt storage ``delta_kl`` is one
+    on the direct columns and zero on the shear columns, so the whole of the
+    second term is: add the row's stress component to every direct column of
+    that row.
+
+    It is not a small term. Measured by Pixel Agent E over 67 gradient-driven
+    corpus entries and 134 states, the converted tangent's relative Frobenius
+    residual against the corrected reference divided by ``|sigma|/|DDSDDE|``
+    has median 1.370, p10 0.927, p90 1.422 -- one term, not sixty-seven
+    defects. 0 of 67 reached the 1e-6 tolerance without it; 61 of them had
+    been recorded "verified" against a reference that inherited the
+    transform's own definition of its input and so could not falsify it.
+
+    A DSTRAN-driven source asks for nothing here and its extraction is emitted
+    byte-identical to before: its seed already is the strain increment, and
+    small-strain DDSDDE carries no such term.
+    """
     stress = mappings.get("stress", "STRESS")
     ddsdde = mappings.get("ddsdde", "DDSDDE")
     if form == "fixed":
@@ -3321,18 +3607,35 @@ def _ddsdde_extraction_lines(
             "         DO OTI_J = 1, NTENS",
             f"            {ddsdde}(OTI_I,OTI_J) =",
             f"     1      GETIM({stress}_OTI(OTI_I),OTI_J)",
+        ]
+        if kirchhoff_direct_columns:
+            lines.extend([
+                _comment_line(form, "OTIS Kirchhoff term: DDSDDE(ij,kl) += sigma_ij * delta_kl"),
+                f"            IF (OTI_J .LE. {kirchhoff_direct_columns}) {ddsdde}(OTI_I,OTI_J) =",
+                f"     1      {ddsdde}(OTI_I,OTI_J) + REAL({stress}_OTI(OTI_I))",
+            ])
+        lines.extend([
             "         END DO",
             "      END DO",
-        ]
+        ])
     else:
         lines = [
             _comment_line(form, "OTIS DDSDDE extraction: DDSDDE(i,j) = d STRESS(i) / d DSTRAN(j)"),
             _stmt(form, "DO OTI_I = 1, NTENS"),
             _stmt(form, "   DO OTI_J = 1, NTENS"),
             _stmt(form, f"      {ddsdde}(OTI_I, OTI_J) = GETIM({stress}_OTI(OTI_I), OTI_J)"),
+        ]
+        if kirchhoff_direct_columns:
+            lines.extend([
+                _comment_line(form, "OTIS Kirchhoff term: DDSDDE(ij,kl) += sigma_ij * delta_kl"),
+                _stmt(form, f"      IF (OTI_J .LE. {kirchhoff_direct_columns}) "
+                            f"{ddsdde}(OTI_I, OTI_J) = {ddsdde}(OTI_I, OTI_J) "
+                            f"+ REAL({stress}_OTI(OTI_I))"),
+            ])
+        lines.extend([
             _stmt(form, "   END DO"),
             _stmt(form, "END DO"),
-        ]
+        ])
     if order and order > 1:
         lines.extend(_higher_order_jacobian_lines(form, mappings, ntens, order, nbases or ntens))
     return lines
@@ -5072,8 +5375,17 @@ def _as_written_in_double(text: str) -> str:
     return written + "D0"
 
 
+#: A FORMAT statement, label and all. Its digits are edit descriptors, so
+#: ``FORMAT(7(E24.8E3))`` has no literal in it to promote and promoting one
+#: emitted ``E24.8D3`` -- "Period required in format specifier D". The same
+#: guard as the helper lifter's, for the same reason.
+_FORMAT_STATEMENT_RE = re.compile(r"^\s*(?:\d+\s+)?FORMAT\s*\(", re.IGNORECASE)
+
+
 def _normalize_numeric_literals_in_oti_expression(line: str, type_name: str = "") -> str:
     if "_OTI" not in line.upper():
+        return line
+    if _FORMAT_STATEMENT_RE.match(line):
         return line
     normalized = re.sub(
         r"(?<![A-Za-z0-9_])((?:\d+\.\d*)|(?:\d+\.))(?![A-Za-z0-9_.dDeE])",
@@ -5437,6 +5749,41 @@ def _region_classification_items(config: dict[str, Any]) -> dict[str, dict[str, 
     return {}
 
 
+def _routines_carrying_the_oti_type(transformed_source: str, form: str) -> set[str]:
+    """Routines in the transformed file whose own body declares the OTI type.
+
+    "Defined in this file" and "transformed with this file" are not the same
+    thing, and the leak check below treated them as one. A helper the transform
+    left alone -- not lifted, not inlined, its body still ``IMPLICIT REAL*8``
+    -- is defined in the transformed file and so was skipped, while the CALL
+    above it had been rewritten to hand it hypercomplex arrays.
+
+    Measured on a six-component linear-elastic UMAT whose shear terms live in
+    a helper SHEARCORE the lift did not take: the transform reported success
+    with no blockers and no warnings, and the converted build returned
+    STRESS = (2.8e-2, 0, 0, 0, 0, 0) against (2.8e-2, 5.6e-2, 8.4e-2, 3.2e-2,
+    4.0e-2, 4.8e-2) and a DDSDDE whose only non-zero entry was (1,1). The
+    callee reads element k of what it thinks is a REAL array; the array is
+    really ONUMM6N1, seven doubles wide, so only element 1 lands on a real
+    part and everything after it is another element's derivative or zero.
+
+    A routine that declares the type has had its variables rewritten to it,
+    which is what being transformed looks like from the outside.
+    """
+    parsed = _parse_source(transformed_source, "transformed.f")
+    lines = transformed_source.splitlines()
+    carrying: set[str] = set()
+    for routine in parsed.subroutines:
+        if not routine.lines:
+            continue
+        start = routine.lines[0].line_numbers[0]
+        end = routine.lines[-1].line_numbers[-1]
+        body = "\n".join(lines[max(start - 1, 0):min(end, len(lines))])
+        if re.search(r"\bTYPE\s*\(\s*ONUMM\w*\s*\)", body, flags=re.IGNORECASE):
+            carrying.add(routine.upper_name)
+    return carrying
+
+
 def oti_arguments_into_untransformed_calls(
     transformed_source: str, form: str, lifted: set[str] | None = None,
 ) -> list[tuple[str, str]]:
@@ -5451,19 +5798,17 @@ def oti_arguments_into_untransformed_calls(
 
     A callee is safe when it was lifted (its body was rewritten to the
     hypercomplex type), inlined (no call survives), or defined in this file
-    and transformed with it. What is left is an external routine, and there is
-    nothing here that can make passing a shadow to it correct -- so it is
-    reported rather than emitted quietly.
+    and transformed with it. What is left is an external routine -- or a
+    routine sitting in this very file that the transform walked past -- and
+    there is nothing here that can make passing a shadow to it correct, so it
+    is reported rather than emitted quietly.
 
     Returns (callee, argument) pairs, so the message can name both.
     """
     lifted_names = {name.upper() for name in (lifted or set())}
-    defined = {match.group(1).upper() for match in re.finditer(
-        r"^\s*(?:\w+\s+)*?subroutine\s+([A-Za-z_]\w*)",
-        transformed_source, flags=re.IGNORECASE | re.MULTILINE)}
-    defined |= {match.group(1).upper() for match in re.finditer(
-        r"^\s*(?:\w+\s+)*?function\s+([A-Za-z_]\w*)",
-        transformed_source, flags=re.IGNORECASE | re.MULTILINE)}
+    # Only the routines that were actually rewritten, not every routine the
+    # file happens to contain. See _routines_carrying_the_oti_type.
+    defined = _routines_carrying_the_oti_type(transformed_source, form)
     found: list[tuple[str, str]] = []
     seen: set[tuple[str, str]] = set()
     for line in transformed_source.splitlines():
@@ -6625,7 +6970,20 @@ def _line_is_transform_executable(line: str) -> bool:
 
 
 def _is_allowed_real_shadow_source(line: str, name: str) -> bool:
-    return bool(re.search(rf"\b{re.escape(name)}_OTI\s*\([^)]*\)\s*=\s*{re.escape(name)}\s*\([^)]*\)", line, flags=re.IGNORECASE))
+    """Whether a line may name the REAL array without losing a derivative.
+
+    Two shapes may. Copying the argument into its shadow is the one this
+    started as. The finite-strain seed is the other: ``dF = eps . F`` has to
+    read the UNPERTURBED gradient to push the direction forward, and reading
+    the shadow there would fold the perturbation into its own push-forward.
+    Without this the seed lines themselves failed
+    finite_strain_path_uses_oti_versions, which exists to catch a stress path
+    that reads the real gradient -- which these are not.
+    """
+    if re.search(rf"\b{re.escape(name)}_OTI\s*\([^)]*\)\s*=\s*{re.escape(name)}\s*\([^)]*\)",
+                 line, flags=re.IGNORECASE):
+        return True
+    return name.upper() == "DFGRD1" and _is_finite_dfgrd1_seed_line(line)
 
 
 def _active_region_lines(source: str, start_line: int, end_line: int) -> list[str]:
@@ -7296,11 +7654,19 @@ def _transformed_filename(source_file: str) -> str:
     return f"{path.stem}_oti{suffix}"
 
 
-def _module_use_line(form: str, module_name: str, ntens: int) -> str:
+def _module_use_line(form: str, module_name: str, ntens: int,
+                     shadowed_generics: Sequence[str] = ()) -> str:
     renamed_seeds = ", ".join(f"{_seed_basis_name(direction)} => E{direction}" for direction in range(1, max(ntens, 0) + 1))
     suffix = f", {renamed_seeds}" if renamed_seeds else ""
-    return (_stmt(form, f"USE {module_name}, OTI_MODULE_DP => DP{suffix}")
-            + "\n" + _stmt(form, "USE oti_intrinsics"))
+    # A generic the modules export under a name this source uses for a variable
+    # of its own comes in under another name instead. Both modules export the
+    # same set, so both USE lines carry the rename or the collision survives on
+    # whichever one did not.
+    renames = "".join(f", OTI_MODULE_{name} => {name}" for name in shadowed_generics)
+    intrinsics_renames = "".join(f", OTI_INTRINSIC_{name} => {name}" for name in shadowed_generics)
+    intrinsics = f"USE oti_intrinsics{intrinsics_renames}"
+    return (_stmt(form, f"USE {module_name}, OTI_MODULE_DP => DP{suffix}{renames}")
+            + "\n" + _stmt(form, intrinsics))
 
 
 def _seed_basis_name(direction: int) -> str:

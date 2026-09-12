@@ -24,7 +24,13 @@ SOURCE = (
     "      CALL PLAIN(STRESS)\n"
     "      END\n"
     "      SUBROUTINE MYHELPER(S)\n"
+    "      TYPE(ONUMM6N1) :: S(6)\n"
     "      END\n")
+
+#: The same file with MYHELPER left as the author wrote it -- defined here,
+#: and never rewritten to the hypercomplex type.
+SOURCE_WITH_AN_UNTRANSFORMED_SIBLING = SOURCE.replace(
+    "      TYPE(ONUMM6N1) :: S(6)\n", "      IMPLICIT REAL*8(A-H,O-Z)\n")
 
 
 def _names(source, lifted=None):
@@ -38,8 +44,24 @@ class TestWhatCounts:
     def test_the_argument_is_named_too_so_the_message_can_say_which(self):
         assert ("CALCDET33", "DFGRD1_OTI") in leaks(SOURCE, "fixed", set())
 
-    def test_a_routine_defined_in_the_same_file_is_safe(self):
+    def test_a_routine_defined_in_the_same_file_and_rewritten_with_it_is_safe(self):
         assert "MYHELPER" not in _names(SOURCE)
+
+    def test_a_routine_defined_in_the_same_file_but_not_rewritten_is_reported(self):
+        """"Defined here" was being read as "transformed here", and is not.
+
+        A helper the lift did not take keeps its REAL body and sits in the
+        transformed file beside the UMAT, whose CALL to it has been rewritten
+        to hand it hypercomplex arrays. Measured on a six-component linear
+        elastic UMAT whose shear terms live in such a helper: the transform
+        reported success with no blockers and no warnings, gfortran exited 0,
+        and the converted build returned STRESS = (2.8e-2, 0, 0, 0, 0, 0)
+        against (2.8e-2, 5.6e-2, 8.4e-2, 3.2e-2, 4.0e-2, 4.8e-2) and a DDSDDE
+        whose only non-zero entry was (1,1) = 2.8e+02. Eleven of the 250
+        sources the transform store held as successful are in this shape, six
+        of them recorded as compiling cleanly.
+        """
+        assert "MYHELPER" in _names(SOURCE_WITH_AN_UNTRANSFORMED_SIBLING)
 
     def test_an_inlineable_helper_is_safe(self):
         """No call survives inlining, so there is nothing to mismatch."""

@@ -658,7 +658,7 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         # any scope that renamed them away to avoid colliding with a UMAT's own
         # variables of the same name.
         "  PRIVATE",
-        "  PUBLIC :: MIN, MAX, SIGN, NINT, INT, ASSIGNMENT(=), MATMUL",
+        "  PUBLIC :: MIN, MAX, SIGN, NINT, INT, LOG10, ASSIGNMENT(=), MATMUL",
         "  PUBLIC :: OPERATOR(+), OPERATOR(-), OPERATOR(*), OPERATOR(/)",
         # MATMUL with a vector operand. The generated algebra defines MATMUL
         # for two rank-2 arguments in all three mixed forms, and nothing else,
@@ -696,6 +696,16 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "  INTERFACE INT",
         "    MODULE PROCEDURE oti_int",
         "  END INTERFACE INT",
+        # LOG10 of a differentiated value. The generated algebra defines LOG
+        # and nothing else of the logarithm family, so a rate-dependent law
+        # written the ordinary way -- c = c_0*(1 + alpha*LOG10(rate/refrate))
+        # in two viscoplastic Mohr-Coulomb sources -- failed to compile with
+        # "'x' argument of 'log10' intrinsic must be REAL". log10(u) is
+        # log(u)/log(10), so the chain rule is already carried by LOG and the
+        # constant only scales it.
+        "  INTERFACE LOG10",
+        "    MODULE PROCEDURE oti_log10",
+        "  END INTERFACE LOG10",
         # Unary plus. The generated module defines the binary operators but not
         # this one, so an expression like COFACTOR(2,2) = +(A(1,1)*A(3,3)-...)
         # -- ordinary in cofactor and adjugate code, and legal Fortran -- fails
@@ -894,6 +904,12 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "      RES = ABS(A)",
         "    END IF",
         "  END FUNCTION oti_sign_ro",
+        "  FUNCTION oti_log10(A) RESULT(RES)",
+        "    IMPLICIT NONE",
+        f"    TYPE({type_name}), INTENT(IN) :: A",
+        f"    TYPE({type_name}) :: RES",
+        "    RES = LOG(A) * (1.0_DP / LOG(10.0_DP))",
+        "  END FUNCTION oti_log10",
         "  FUNCTION oti_nint(A) RESULT(RES)",
         "    IMPLICIT NONE",
         f"    TYPE({type_name}), INTENT(IN) :: A",

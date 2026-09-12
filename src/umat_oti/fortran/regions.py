@@ -581,6 +581,16 @@ def _region_summary(
         "downstream_from_dstran": sorted(dependency_summary.downstream_from_dstran),
         "parameter_variables": sorted(dependency_summary.parameter_variables),
         "statev_path_variables": sorted(dependency_summary.statev_path_variables),
+        # Lines where a stress-path variable takes its value from DDSDDE --
+        # STRESS(I) = STRESS(I) + DDSDDE(I,J)*DSTRAN(J) is the whole of it in
+        # a linear-elastic UMAT. The classifier has always computed this to
+        # decide whether a DDSDDE assignment is setup or tangent; published
+        # here because it is the one fact that separates a DDSDDE write the
+        # OTI extraction simply overwrites from one the stress update reads
+        # back before the extraction happens, and the transform's placement
+        # check had been using "is the call after the stress update" as a
+        # stand-in for it.
+        "ddsdde_stress_input_lines": sorted(dependency_summary.ddsdde_stress_input_lines),
         "report_messages": messages,
     }
 
