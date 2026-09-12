@@ -99,3 +99,54 @@ def test_the_runner_points_what_it_stages():
         "files are staged into a directory Abaqus never looks in")
     assert "staged=list(staging.staged)" in text, (
         "the rewrite must be bounded by what was actually staged")
+
+
+# ---------------------------------------------------------------------------
+# and the author may split the name anywhere
+# ---------------------------------------------------------------------------
+SPLIT_MID_DIRECTORY = """      SUBROUTINE UMAT(STRESS,STATEV)
+      open(301,FILE='C:\\Users\\12872\\Desktop\\'//
+     &  'Bunny\\part1\\E0.CSV',status="old")
+      END
+"""
+
+
+def test_a_name_split_inside_its_directory_is_still_redirected():
+    """The first version handled two shapes: the whole path in one literal,
+    or a directory literal plus the bare basename. A concatenation can split
+    ANYWHERE, and five corpus entries split it mid-directory -- the tail
+    'Bunny\\part1\\E0.CSV' is a sub-path, not a basename. Neither shape
+    matched, nothing was rewritten, and all five died in for_open on the
+    first UMAT call with the staged file sitting unread in the job
+    directory."""
+    names = [o.name for o in opened_files(SPLIT_MID_DIRECTORY)]
+    assert names == ["C:\\Users\\12872\\Desktop\\Bunny\\part1\\E0.CSV"]
+    out, pointed = redirect(SPLIT_MID_DIRECTORY, Path("/work/job"), staged=names)
+    assert len(pointed) == 1
+    assert out != SPLIT_MID_DIRECTORY
+
+
+def test_the_rewritten_name_reassembles_to_the_staged_path():
+    names = [o.name for o in opened_files(SPLIT_MID_DIRECTORY)]
+    out, _pointed = redirect(SPLIT_MID_DIRECTORY, Path("/work/job"),
+                             staged=names, form="fixed")
+    statement = "".join(line[6:] if line.startswith("     &") else line
+                        for line in out.splitlines()
+                        if "open(" in line or line.startswith("     &"))
+    expression = statement.split("FILE=", 1)[1].split(",status")[0]
+    rebuilt = "".join(piece for index, piece in enumerate(expression.split("'"))
+                      if index % 2 == 1)
+    assert rebuilt == "/work/job/C:\\Users\\12872\\Desktop\\Bunny\\part1\\E0.CSV"
+
+
+def test_a_tail_that_will_not_fit_goes_on_its_own_continuation():
+    """A value that fits in ONE piece can still leave the line too long once
+    ,status="old") is put back after it. That used to emit the single piece
+    twice, producing a name concatenated with itself."""
+    names = [o.name for o in opened_files(SPLIT_MID_DIRECTORY)]
+    out, _pointed = redirect(SPLIT_MID_DIRECTORY, Path("/work/job"),
+                             staged=names, form="fixed")
+    for line in out.splitlines():
+        assert len(line) <= FIXED_LIMIT, line
+    body = "\n".join(out.splitlines())
+    assert body.count("/work/job/C:") == 1, "the name must be written once"

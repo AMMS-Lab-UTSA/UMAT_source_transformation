@@ -161,6 +161,11 @@ def _rewrite_line(line: str, literal: str, value: str, form: str) -> list:
     blanks INSIDE the name. So an over-long value is emitted as concatenated
     pieces -- ``'/long/pa'//`` then ``'th/file.csv'`` -- which is the same
     string by any compiler's reading of it.
+
+    The TAIL is wrapped too, and separately. A value that fits in one piece
+    can still leave a line too long once ``,status="old")`` is put back after
+    it; this used to emit the single piece twice, producing a name
+    concatenated with itself.
     """
     free = form == "free"
     limit = FREE_LIMIT if free else FIXED_LIMIT
@@ -171,18 +176,40 @@ def _rewrite_line(line: str, literal: str, value: str, form: str) -> list:
     if len(single) <= limit:
         return [single]
     joiner = "// &" if free else "//"
-    marker = "     &" if not free else "     &"
-    # Room for the opening quote, the closing quote and the joiner.
+    marker = "     &"
     first = limit - len(head) - 2 - len(joiner)
     rest = limit - len(marker) - 2 - len(joiner)
     if first < 1 or rest < 1:                      # pragma: no cover - defensive
         return [single]
     pieces = _chunks(value, first, rest)
-    lines = [f"{head}'{pieces[0]}'{joiner}"]
-    for piece in pieces[1:-1]:
-        lines.append(f"{marker}'{piece}'{joiner}")
-    lines.append(f"{marker}'{pieces[-1]}'{tail}")
+    lines: list = []
+    for index, piece in enumerate(pieces):
+        opening = head if index == 0 else marker
+        last = index == len(pieces) - 1
+        lines.append(f"{opening}'{piece}'" + ("" if last else joiner))
+    # The tail goes on the last line if it fits there, and on a continuation
+    # of its own if it does not. Either way it is written once.
+    if len(lines[-1]) + len(tail) <= limit:
+        lines[-1] = lines[-1] + tail
+    else:
+        lines.append(f"{marker}{tail}")
     return lines
+
+
+def _pieces_of(text: str, opened: Opened) -> list:
+    """The literal fragments this OPEN concatenates to name its file.
+
+    Read from the joined statement, so a name split across a continuation is
+    seen whole -- and returned in order, because the rewrite empties every
+    fragment but the last.
+    """
+    for match in _OPEN.finditer(joined_statements(text)):
+        named = _FILE.search(match.group("body"))
+        if not named or _joined(named.group("name")) != opened.name:
+            continue
+        return [single or double
+                for single, double in _PIECE.findall(named.group("name"))]
+    return []
 
 
 def redirect(text: str, directory: Path, *, staged: Sequence[str] = (),
@@ -223,39 +250,48 @@ def redirect(text: str, directory: Path, *, staged: Sequence[str] = (),
     for opened in sorted(wanted, key=lambda o: -len(o.name)):
         target = str(directory / opened.name)
         pieces = re.split(r"([\\/])", opened.name)
-        # The literal that carries the base name is the one worth rewriting;
-        # any directory literal before it becomes empty.
-        head = opened.name[:len(opened.name) - len(opened.basename)]
+        # Rewritten piece by piece, wherever the author split the name.
+        #
+        # This used to handle only two shapes: the whole path in one literal,
+        # or a directory literal plus the bare basename. A concatenation can
+        # split ANYWHERE, and five corpus entries split it mid-directory --
+        #
+        #     open(301,FILE='C:\\Users\\12872\\Desktop\\'//
+        #    &  'Bunny\\part1\\E0.CSV',status="old")
+        #
+        # -- where the tail is 'Bunny\\part1\\E0.CSV', a sub-path and not the
+        # basename. Neither shape matched, nothing was rewritten, and all five
+        # died in for_open on the first UMAT call with the staged file sitting
+        # unread in the job directory.
+        #
+        # The general rule needs no shapes: every piece but the last becomes
+        # an empty literal and the last carries the absolute path, so the
+        # concatenation still evaluates to one name however it was divided.
+        pieces = _pieces_of(text, opened)
         replaced = False
-        for index, line in enumerate(lines):
-            for quote in ("'", '"'):
-                whole = f"{quote}{opened.name}{quote}"
-                if whole in line:
-                    lines[index:index + 1] = _rewrite_line(
-                        line, whole, target, form)
-                    replaced = True
-                    break
-                base = f"{quote}{opened.basename}{quote}"
-                if head and base in line:
-                    lines[index:index + 1] = _rewrite_line(
-                        line, base, target, form)
-                    # The directory literal on this or the previous line is
-                    # now redundant; emptying it keeps the concatenation
-                    # valid without moving anything else.
-                    prefix = f"{quote}{head}{quote}"
-                    for other in range(max(0, index - 3), min(len(lines), index + 4)):
-                        if prefix in lines[other]:
-                            lines[other] = lines[other].replace(
-                                prefix, f"{quote}{quote}")
-                            break
-                    replaced = True
-                    break
-                if not head and base in line:
-                    lines[index:index + 1] = _rewrite_line(
-                        line, base, target, form)
-                    replaced = True
-                    break
-            if replaced:
+        if pieces:
+            last = pieces[-1]
+            for index, line in enumerate(lines):
+                quoted = [f"'{last}'", f'"{last}"']
+                hit = next((q for q in quoted if q in line), None)
+                if hit is None:
+                    continue
+                lines[index:index + 1] = _rewrite_line(line, hit, target, form)
+                # Every earlier piece is now redundant. Emptying rather than
+                # deleting keeps the // operators and the line structure
+                # exactly as the author wrote them.
+                for earlier in pieces[:-1]:
+                    for other in range(max(0, index - 6),
+                                       min(len(lines), index + 6)):
+                        for q in (f"'{earlier}'", f'"{earlier}"'):
+                            if q in lines[other]:
+                                lines[other] = lines[other].replace(
+                                    q, q[0] + q[0], 1)
+                                break
+                        else:
+                            continue
+                        break
+                replaced = True
                 break
         if replaced:
             pointed[opened.name] = target
