@@ -581,8 +581,8 @@ def _readiness_blockers(
             f"call would reach the author's variable instead of the "
             f"intrinsic. Renaming the variable in the source would resolve it; "
             f"this transform will not rename an author's variable, because a "
-            f"rename that misses one reference produces a file that compiles "
-            f"and computes something else.")
+            f"rename that misses one reference produces a file that "
+            f"compiles and computes something else.")
     review = _dict(config.get("transformation_review"))
     analysis = _dict(config.get("analysis"))
     has_completed_anchors = bool(config.get("transformation_anchors"))
@@ -5596,6 +5596,41 @@ def _region_classification_items(config: dict[str, Any]) -> dict[str, dict[str, 
     return {}
 
 
+def _routines_carrying_the_oti_type(transformed_source: str, form: str) -> set[str]:
+    """Routines in the transformed file whose own body declares the OTI type.
+
+    "Defined in this file" and "transformed with this file" are not the same
+    thing, and the leak check below treated them as one. A helper the transform
+    left alone -- not lifted, not inlined, its body still ``IMPLICIT REAL*8``
+    -- is defined in the transformed file and so was skipped, while the CALL
+    above it had been rewritten to hand it hypercomplex arrays.
+
+    Measured on a six-component linear-elastic UMAT whose shear terms live in
+    a helper SHEARCORE the lift did not take: the transform reported success
+    with no blockers and no warnings, and the converted build returned
+    STRESS = (2.8e-2, 0, 0, 0, 0, 0) against (2.8e-2, 5.6e-2, 8.4e-2, 3.2e-2,
+    4.0e-2, 4.8e-2) and a DDSDDE whose only non-zero entry was (1,1). The
+    callee reads element k of what it thinks is a REAL array; the array is
+    really ONUMM6N1, seven doubles wide, so only element 1 lands on a real
+    part and everything after it is another element's derivative or zero.
+
+    A routine that declares the type has had its variables rewritten to it,
+    which is what being transformed looks like from the outside.
+    """
+    parsed = _parse_source(transformed_source, "transformed.f")
+    lines = transformed_source.splitlines()
+    carrying: set[str] = set()
+    for routine in parsed.subroutines:
+        if not routine.lines:
+            continue
+        start = routine.lines[0].line_numbers[0]
+        end = routine.lines[-1].line_numbers[-1]
+        body = "\n".join(lines[max(start - 1, 0):min(end, len(lines))])
+        if re.search(r"\bTYPE\s*\(\s*ONUMM\w*\s*\)", body, flags=re.IGNORECASE):
+            carrying.add(routine.upper_name)
+    return carrying
+
+
 def oti_arguments_into_untransformed_calls(
     transformed_source: str, form: str, lifted: set[str] | None = None,
 ) -> list[tuple[str, str]]:
@@ -5610,19 +5645,17 @@ def oti_arguments_into_untransformed_calls(
 
     A callee is safe when it was lifted (its body was rewritten to the
     hypercomplex type), inlined (no call survives), or defined in this file
-    and transformed with it. What is left is an external routine, and there is
-    nothing here that can make passing a shadow to it correct -- so it is
-    reported rather than emitted quietly.
+    and transformed with it. What is left is an external routine -- or a
+    routine sitting in this very file that the transform walked past -- and
+    there is nothing here that can make passing a shadow to it correct, so it
+    is reported rather than emitted quietly.
 
     Returns (callee, argument) pairs, so the message can name both.
     """
     lifted_names = {name.upper() for name in (lifted or set())}
-    defined = {match.group(1).upper() for match in re.finditer(
-        r"^\s*(?:\w+\s+)*?subroutine\s+([A-Za-z_]\w*)",
-        transformed_source, flags=re.IGNORECASE | re.MULTILINE)}
-    defined |= {match.group(1).upper() for match in re.finditer(
-        r"^\s*(?:\w+\s+)*?function\s+([A-Za-z_]\w*)",
-        transformed_source, flags=re.IGNORECASE | re.MULTILINE)}
+    # Only the routines that were actually rewritten, not every routine the
+    # file happens to contain. See _routines_carrying_the_oti_type.
+    defined = _routines_carrying_the_oti_type(transformed_source, form)
     found: list[tuple[str, str]] = []
     seen: set[tuple[str, str]] = set()
     for line in transformed_source.splitlines():
