@@ -887,7 +887,13 @@ def _implicit_oti_names(
 ) -> set[str]:
     result: set[str] = set()
     for line in body:
-        lhs_match = _LHS_ASSIGN_RE.match(line)
+        # An inline IF's target is the assignment it guards, not the word IF.
+        # Reading the whole line left a variable whose only assignment is
+        # written that way out of the implicitly-hypercomplex set, so every
+        # rewrite keyed on that set skipped it.
+        inline_if = _split_inline_if_statement(line)
+        guarded = inline_if[1] if inline_if is not None else line
+        lhs_match = _LHS_ASSIGN_RE.match(guarded)
         if lhs_match:
             name = lhs_match.group(1).upper()
             if name not in declared_non_oti and name not in parameter_names and not _is_implicit_integer_name(name):
@@ -902,6 +908,46 @@ def _implicit_oti_names(
                 continue
             result.add(name)
     return result
+
+
+def _split_inline_if_statement(line: str) -> tuple[str, str] | None:
+    """``IF (cond) stmt`` split into the IF and the statement it guards.
+
+    Returns None when the line does not open with IF, and (prefix, rest) when
+    it does -- including for a block ``IF (cond) THEN``, whose ``rest`` is
+    " THEN" and matches no assignment, so callers need no separate test.
+
+    Without this split, every assignment-shaped rewrite below read the
+    statement as an assignment to a variable called ``IF``: the regexes take a
+    name, an optional parenthesised subscript and an ``=``, and ``[^=]*`` is
+    greedy enough to swallow ``(NSHR .GE. 1) STRESS_OUT(4)`` whole as the
+    subscript. The consequence was silent and numerical.
+    ``_wrap_oti_rhs_assigned_to_a_plain_variable`` then saw a target named IF,
+    which is not hypercomplex, and wrapped the right-hand side in REAL():
+
+        IF(NSHR .GE. 1) STRESS_OUT(4) = REAL(SIGMA(1,2))
+
+    for keisuke58/pde-fem-biofilm's umat_biofilm_visco_phase2.f. The shear
+    stresses kept their values and lost every derivative, so the converted
+    build returned a DDSDDE whose rows 4, 5 and 6 were identically zero
+    against an author's DDSDDE(4,4) of 1.021165e+02 -- with the normal rows,
+    whose assignments are not guarded by an inline IF, correct throughout.
+    """
+    if not re.match(r"^\s*(?:ELSE\s*)?IF\b", line, flags=re.IGNORECASE):
+        return None
+    open_paren = line.find("(")
+    if open_paren < 0:
+        return None
+    depth = 0
+    for index in range(open_paren, len(line)):
+        char = line[index]
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+            if depth == 0:
+                return line[: index + 1], line[index + 1:]
+    return None
 
 
 def _wrap_oti_rhs_assigned_to_a_plain_variable(
@@ -920,7 +966,12 @@ def _wrap_oti_rhs_assigned_to_a_plain_variable(
     """
     if not oti_names:
         return line
-    match = re.match(r"^(\s*)([A-Za-z_]\w*)\s*(\([^=]*\))?\s*=(?!=)(.*)$", line)
+    guard = ""
+    statement = line
+    inline_if = _split_inline_if_statement(line)
+    if inline_if is not None:
+        guard, statement = inline_if
+    match = re.match(r"^(\s*)([A-Za-z_]\w*)\s*(\([^=]*\))?\s*=(?!=)(.*)$", statement)
     if not match:
         return line
     indent, target, subscript, rhs = match.groups()
@@ -936,7 +987,7 @@ def _wrap_oti_rhs_assigned_to_a_plain_variable(
         return line
     if re.match(r"^\s*REAL\s*\(.*\)\s*$", rhs.strip(), flags=re.IGNORECASE):
         return line
-    return f"{indent}{target}{subscript or ''} = REAL({rhs.strip()})"
+    return f"{guard}{indent}{target}{subscript or ''} = REAL({rhs.strip()})"
 
 
 def _expand_sum_over_oti(line: str, oti_names: set[str],
