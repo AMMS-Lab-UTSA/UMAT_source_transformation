@@ -24,6 +24,10 @@ the truncated history became a verdict:
 """
 import math
 import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "tools"))
 
 from umat_oti.abaqus.manifest import simple_shear, uniaxial
 from umat_oti.abaqus.safe_loading import (CHECKED, MARGIN, REBUILDS, examine,
@@ -140,9 +144,8 @@ def test_a_complete_run_is_not_rebuilt():
 
 # ---- and the verdict is gated on the rerun, not on the prefix ------------
 def test_the_verifier_refuses_a_verdict_on_a_history_that_is_not_finite():
-    assert 'record["complete_finite_verification_run"] = stopped_at < 0' in TOOL
-    assert "it is not a history a verification may be frozen on" in TOOL.replace(
-        "\n", " ").replace("  ", " ") or "may be frozen on" in TOOL
+    assert 'grouping.get("both_finite_throughout")' in TOOL
+    assert "may be frozen on" in TOOL
     assert "is not finite " in TOOL and "throughout" in TOOL
 
 
@@ -273,7 +276,7 @@ def test_abaqus_completing_is_recorded_apart_from_the_history_being_finite():
                  "complete_history_finite", "primal_agreed",
                  "derivatives_verified"):
         assert f'"{name}"' in block, name
-    assert '"complete_history_finite": stopped_at < 0' in block
+    assert '"complete_history_finite": bool(grouping.get(' in block
     assert '"derivatives_verified"] = bool(' in TOOL, (
         "the tangent has to set its own flag where it is decided")
 
@@ -338,3 +341,40 @@ def test_the_probes_report_a_fraction_of_the_path():
     assert '"reached": reached' in block
     assert "prefix.usable / total" in block, (
         "how far a run got has to be a fraction of the path it was given")
+
+
+# ---------------------------------------------------------------------------
+# "not truncated" and "finite" are different facts
+# ---------------------------------------------------------------------------
+def test_two_builds_that_parted_company_are_not_a_finite_pair():
+    """common_finite_prefix returns -1 for TWO different reasons: both
+    histories are finite, or the two parted company at different increments
+    and no truncation could be applied. Reading the verdict off that flag
+    reported complete_finite_verification_run = True for ten HelixUp entries
+    whose ORIGINAL build carries NaN in all six stresses of 72 of its 80
+    records -- while original.sta said THE ANALYSIS HAS COMPLETED
+    SUCCESSFULLY.
+    """
+    import verify_store_in_abaqus as verify
+
+    def rec(increment, value):
+        return {"step": 1, "increment": increment, "element": 1, "point": 1,
+                "STRESS": [value], "STATEV": [0.0]}
+
+    whole = [rec(n, 1.0) for n in range(1, 6)]
+    broken = [rec(1, 1.0)] + [rec(n, float("nan")) for n in range(2, 6)]
+
+    _l, _r, stopped, grouping = verify.common_finite_prefix(whole, broken)
+    assert stopped == -1, "they parted company, so nothing was truncated"
+    assert grouping["both_finite_throughout"] is False, (
+        "and that is not the same as being finite")
+
+    _l, _r, stopped, grouping = verify.common_finite_prefix(whole, list(whole))
+    assert stopped == -1 and grouping["both_finite_throughout"] is True
+
+
+def test_the_verdict_reads_finiteness_and_not_the_truncation_flag():
+    assert 'grouping.get("both_finite_throughout")' in TOOL
+    block = TOOL[TOOL.index('record["complete_finite_verification_run"] ='):]
+    block = block[:block.index("\n\n")]
+    assert "stopped_at" not in block

@@ -167,7 +167,10 @@ def run_one(manifest: VerificationManifest, source: Path, job: str,
         "warnings": list(result.status.warnings),
         "increments": result.status.increments,
         "converged_records": len(records),
-        "console": "" if result.status.analysis_completed else result.console[-2000:],
+        # 2000 characters cut the compiler diagnostic off three jobs whose
+        # console was their only evidence. An ifort error list runs longer
+        # than that, and a job that failed has earned the space.
+        "console": "" if result.status.analysis_completed else result.console[-20000:],
     })
     return report
 
