@@ -186,7 +186,12 @@ def _boundary_for(segment: LoadingSegment, nodes, plane: bool = False,
     state the author's model never reaches. A cohesive segment prescribes a
     displacement JUMP between two faces, not a strain.
     """
-    if geometry is not None and geometry.kind == "cohesive":
+    if geometry is not None and geometry.section == "COHESIVE":
+        # Tested on the SECTION and not on the kind string: when the coupled
+        # cohesive elements were added their kind became "cohesive thermal",
+        # an equality test against "cohesive" stopped matching, and the top
+        # face of every COH2D4T silently got a separation of zero -- a deck
+        # that looked complete and prescribed nothing.
         return _cohesive_boundary(segment, nodes, geometry)
     if segment.body_force or segment.time_only:
         return _rigid_body_restraint(segment, nodes, plane,
@@ -342,6 +347,9 @@ def generate_deck(manifest: VerificationManifest) -> str:
                      + ("" if plane else f", {_fmt(z)}"))
     lines.append(f"*ELEMENT, TYPE={manifest.element_type}, ELSET=ONE")
     lines.append("1, " + ", ".join(str(index) for index, *_ in nodes))
+    if manifest.isothermal_temperature is not None:
+        lines.append("*NSET, NSET=ALL")
+        lines.append(", ".join(str(index) for index, *_ in nodes))
 
     if geometry.section == "COHESIVE":
         # RESPONSE=TRACTION SEPARATION is what makes Abaqus call the UMAT with
@@ -363,14 +371,31 @@ def generate_deck(manifest: VerificationManifest) -> str:
         lines.append("1.0")
     lines += _material_block(manifest)
     lines += _initial_state(manifest)
+    if manifest.isothermal_temperature is not None:
+        # The author's own number, applied as an initial condition and then
+        # held by a boundary condition on degree of freedom 11 in every step.
+        # A single element cannot solve for the temperature its author's model
+        # solves for -- there is nothing to conduct to -- so the experiment is
+        # isothermal and says so.
+        lines += ["** temperature: "
+                  + (manifest.temperature_provenance or "UNSTATED"),
+                  "*INITIAL CONDITIONS, TYPE=TEMPERATURE",
+                  "ALL, " + _fmt(float(manifest.isothermal_temperature))]
 
     nlgeom = "YES" if manifest.kinematics == "finite" else "NO"
+    coupled = geometry.kind.endswith("thermal")
+    # TRANSIENT, which is the default form. A healing law integrates its own
+    # damage in DTIME -- ``dd = (1/Eta1)*(...)`` and ``(Da-Da0)/DTIME`` -- so
+    # a steady-state step would ask it for the answer it reaches after its
+    # own kinetics have finished, which is not what its author ran.
+    procedure = ("*COUPLED TEMPERATURE-DISPLACEMENT"
+                 if coupled else "*STATIC")
     for segment in manifest.loading:
         increment = 1.0 / max(segment.increments, 1)
         lines += [
             f"** {segment.name}: {segment.description}",
             f"*STEP, NLGEOM={nlgeom}, INC={max(segment.increments * 10, 100)}",
-            "*STATIC",
+            procedure,
             f"{_fmt(increment * segment.period)}, {_fmt(segment.period)}, "
             f"{_fmt(increment * segment.period * 1e-5)}, "
             f"{_fmt(increment * segment.period)}",
@@ -378,6 +403,10 @@ def generate_deck(manifest: VerificationManifest) -> str:
         ]
         lines += _boundary_for(segment, nodes, plane, geometry=geometry,
                                plane_strain=manifest.plane_strain_directions)
+        if manifest.isothermal_temperature is not None:
+            held = _fmt(float(manifest.isothermal_temperature))
+            for index, *_rest in nodes:
+                lines.append(f"{index}, 11, 11, {held}")
         if segment.body_force:
             # The reference magnitudes are the author's; the source's own
             # SUBROUTINE DLOAD scales them. Nothing here chooses a force.

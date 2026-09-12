@@ -128,14 +128,28 @@ def test_the_growth_criterion_accepts_a_growth_that_actually_developed():
 def test_a_response_far_above_the_material_s_own_constants_is_not_a_response():
     """1.575e13 against a largest material constant of 1e8. An elastic
     constant is the stress the material carries at unit strain, so this is a
-    strain of a hundred thousand or arithmetic that has left the model."""
+    strain of a hundred thousand or arithmetic that has left the model.
+
+    The check is DELEGATED to ``umat_oti.abaqus.plausibility``, which asks
+    three questions rather than one and owns the bound. This file carried its
+    own copy while that module was on a branch this worktree could not see;
+    two thresholds that agree today are still two. What is asserted here is
+    the answer and the number behind it, not how either is spelled -- the
+    earlier form of this test matched the literal string "1000" and broke on
+    "1e+03", which is the same bound."""
     manifest = VerificationManifest(name="g", source=Path("g.for"),
                                     props=(1.0e8,), nstatv=9)
     finding = stress_stays_on_the_material_scale(_records(1.55, 1.575e13),
                                                  manifest.props)
     assert finding.met is False
     assert finding.magnitude == pytest.approx(157500.0, rel=1e-6)
-    assert str(int(PLAUSIBLE_STRESS_MULTIPLE)) in finding.reason
+    assert finding.magnitude > PLAUSIBLE_STRESS_MULTIPLE
+    assert "material constant" in finding.reason
+
+    # And the same run below the bound comes back plausible, so the criterion
+    # is measuring the ratio and not refusing everything.
+    assert stress_stays_on_the_material_scale(
+        _records(1.55, 1.0e9), manifest.props).met is True
 
 
 def test_plausibility_is_checked_for_every_family_and_not_only_for_growth():
