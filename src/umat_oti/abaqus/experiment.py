@@ -495,6 +495,91 @@ class Experiment:
 INCREMENTS = {"growth": 20, "body force": 20, "cohesive": 20}
 
 
+#: How far past its own onset a cohesive law with no closed-form end of
+#: softening is opened. Ten: far enough that a damage law driven at a rate --
+#: ``dd = (1/Eta1)*PP(-Ad1 - Gc*Da)`` -- has accumulated damage over a decade
+#: of separation, and near enough that the element is not turned inside out.
+#: A choice, and the same class of choice as the tool's own
+#: BEYOND_TRANSITION: how far past a threshold the SOURCE defines to walk.
+OPEN_PAST_ONSET = 10.0
+
+#: What a cohesive constant is called, by the names these authors use.
+_STIFFNESS = re.compile(r"^(A_?K|DK|K)[A-Z_0-9]*$", re.IGNORECASE)
+_STRENGTH = re.compile(r"^(TAU|SIG|STRENGTH)[A-Z_0-9]*$", re.IGNORECASE)
+_TOUGHNESS = re.compile(r"^(G_?N?C|GC|GIC)$", re.IGNORECASE)
+
+
+def cohesive_scales(source_text: str,
+                    props: Sequence[float]) -> Optional[tuple]:
+    """The separation this law damages at, from what the law calls its own
+    constants.
+
+    Two parameterisations appear in this corpus and they are read the same
+    way -- by asking the source what each constant IS, not by counting
+    positions.
+
+    ``harshaa765__Bilinear-CZM-UMAT`` names ``A_KN = PROPS(1)``,
+    ``TAU_N = PROPS(2)`` and ``G_NC = PROPS(5)`` and writes the onset out
+    itself: ``DELTA_NC = TAU_N/A_KN``. The separation at which the traction
+    reaches zero is ``2*G_NC/TAU_N``.
+
+    ``lucassalmon83860-bit``'s healing law names ``DKplus = PROPS(1)`` and
+    ``Gc = PROPS(7)`` and has no strength at all: its damage grows while
+    ``2(1-Da)*Kplus*eps^2/2 > Gc*Da``, so the separation at which the elastic
+    energy density reaches the toughness is ``sqrt(Gc/Kplus)``. There is no
+    closed form for where the traction reaches zero, so the path is opened a
+    stated multiple past the onset instead of to a computed end.
+
+    Returns ``(onset, target, how)`` or None when the source names neither
+    pairing, because opening a cohesive law to a separation nothing published
+    justifies is choosing the experiment.
+    """
+    from umat_oti.abaqus.deck_pairing import named_constants
+
+    names = named_constants(source_text)
+    if not names:
+        return None
+
+    def value_of(pattern) -> Optional[tuple[int, float]]:
+        for index in sorted(names):
+            if not pattern.match(names[index]):
+                continue
+            if 0 < index <= len(props):
+                number = float(props[index - 1])
+                if number > 0.0:
+                    return index, number
+        return None
+
+    stiffness = value_of(_STIFFNESS)
+    toughness = value_of(_TOUGHNESS)
+    if stiffness is None or toughness is None:
+        return None
+    strength = value_of(_STRENGTH)
+    if strength is not None:
+        onset = strength[1] / stiffness[1]
+        final = 2.0 * toughness[1] / strength[1]
+        if final > onset > 0.0:
+            return onset, 0.5 * (onset + final), (
+                f"the law names PROPS({stiffness[0]})={names[stiffness[0]]} a "
+                f"stiffness, PROPS({strength[0]})={names[strength[0]]} a "
+                f"strength and PROPS({toughness[0]})={names[toughness[0]]} a "
+                f"toughness, which put damage onset at {onset:g} and the end "
+                f"of softening at {final:g}; this opens halfway down the "
+                f"softening branch")
+    onset = math.sqrt(toughness[1] / stiffness[1])
+    if not onset > 0.0:                            # pragma: no cover - guarded
+        return None
+    return onset, OPEN_PAST_ONSET * onset, (
+        f"the law names PROPS({stiffness[0]})={names[stiffness[0]]} a "
+        f"stiffness and PROPS({toughness[0]})={names[toughness[0]]} a "
+        f"toughness and no strength at all, so the separation at which its "
+        f"elastic energy density reaches its toughness -- "
+        f"sqrt(Gc/K) = {onset:g} -- is its own scale; there is no closed form "
+        f"for the end of softening, so this opens {OPEN_PAST_ONSET:g} times "
+        f"past it and lets the softening criterion say whether that was far "
+        f"enough")
+
+
 def _cohesive_onset(props: Sequence[float]) -> Optional[tuple[float, float]]:
     """The separation a bilinear cohesive law damages at, and where it ends.
 
@@ -548,22 +633,26 @@ def build(source_text: str, manifest: VerificationManifest, *,
     warnings: list[str] = []
 
     if chosen.name == "cohesive":
-        bounds = _cohesive_onset(manifest.props)
-        if bounds is None:
+        scales = cohesive_scales(source_text, manifest.props)
+        if scales is None:
+            bounds = _cohesive_onset(manifest.props)
+            scales = ((bounds[0], 0.5 * (bounds[0] + bounds[1]),
+                       "read from the positions a bilinear law puts its "
+                       "stiffness, strength and toughness in")
+                      if bounds else None)
+        if scales is None:
             return Experiment(
                 family=chosen, criterion=criterion, requirement=requirement,
-                refusal=("this is a traction-separation law and the "
-                         "separation it has to be opened to is decided by its "
-                         "own constants -- the onset is the strength over the "
-                         "penalty stiffness and the end of softening is twice "
-                         "the toughness over the strength. The material block "
-                         "paired with it does not have that shape, so how far "
-                         "to open it is not something this harness can read "
-                         "off anything the author published"))
-        onset, final = bounds
-        target = 0.5 * (onset + final)
-        loading = cohesive_open_and_release(
-            onset, target)
+                refusal=("this is a traction-separation law and how far to "
+                         "open it is decided by its own constants: a "
+                         "stiffness with a strength gives an onset and an end "
+                         "of softening, a stiffness with a toughness gives an "
+                         "onset. This source names neither pairing among the "
+                         "constants its deck publishes, so opening it to any "
+                         "particular separation would be choosing the "
+                         "experiment rather than reading it"))
+        onset, target, how = scales
+        loading = cohesive_open_and_release(onset, target)
         loading = tuple(replace(segment, increments=INCREMENTS["cohesive"],
                                 period=(requirement.periods[0]
                                         if requirement.periods else 1.0))
@@ -571,13 +660,9 @@ def build(source_text: str, manifest: VerificationManifest, *,
         return Experiment(
             manifest=replace(manifest, loading=loading),
             family=chosen, criterion=criterion, requirement=requirement,
-            reason=(f"a traction-separation law, opened to {target:g}: its own "
-                    f"constants put damage onset at {onset:g} and the end of "
-                    f"softening at {final:g}, so this lands halfway down the "
-                    f"softening branch, where the traction is falling while "
-                    f"the separation rises. Then released to zero and "
-                    f"reopened, because a single opening cannot tell damage "
-                    f"from nonlinear elasticity"),
+            reason=(f"a traction-separation law, opened to {target:g}: {how}. "
+                    f"Then released to zero and reopened, because a single "
+                    f"opening cannot tell damage from nonlinear elasticity"),
             warnings=tuple(warnings))
 
     if chosen.name == "growth":
@@ -782,7 +867,8 @@ def plan(source: Path, repository: Path, name: str = "",
     from umat_oti.abaqus.body_force import read_loads, read_restraints
     from umat_oti.abaqus.coordinate_domain import (coordinate_aliases, place,
                                                    reads_coordinates)
-    from umat_oti.abaqus.formulation import read_orientation, settle
+    from umat_oti.abaqus.formulation import (read_orientation, settle,
+                                             stated_temperature)
 
     source = Path(source)
     text = source_text if source_text is not None else source.read_text(
@@ -793,8 +879,9 @@ def plan(source: Path, repository: Path, name: str = "",
     material = pairing.material
     deck_text = Path(material.deck).read_text(errors="replace")
 
+    temperature, temperature_why = stated_temperature(deck_text)
     settled = settle(text, str(source), deck_text, str(material.deck),
-                     material.name)
+                     material.name, temperature=temperature)
     if not settled.element:
         return Plan(source, Experiment(refusal=settled.formulation.reason),
                     pairing, settled)
@@ -846,6 +933,12 @@ def plan(source: Path, repository: Path, name: str = "",
         node_coordinates=nodes,
         node_provenance=node_provenance,
         plane_strain_directions=restraints.everywhere,
+        isothermal_temperature=(temperature
+                                if geometry_for(settled.element).kind.endswith(
+                                    "thermal") else None),
+        temperature_provenance=(f"{Path(material.deck).name} {temperature_why}"
+                                if temperature is not None else
+                                temperature_why),
     )
     frame = read_orientation(deck_text, material.name)
     if frame.known:
@@ -879,7 +972,9 @@ def plan(source: Path, repository: Path, name: str = "",
 GROWTH_MOVEMENT = 0.01
 
 #: How far above the material's own constants a stress may go before the
-#: response stops being about the material.
+#: response stops being about the material. Re-exported from
+#: :mod:`umat_oti.abaqus.plausibility` rather than declared again here, so
+#: there is one number and not two that happen to agree.
 #:
 #: An elastic constant IS a stress: it is what the material carries at unit
 #: strain. A thousand times it is either a strain of a thousand or arithmetic
@@ -890,7 +985,8 @@ GROWTH_MOVEMENT = 0.01
 #: that was finite, complete, and reported as verified. The same model sat at
 #: about 4e13 at the SMALLEST amplitude the search probed, so no amplitude
 #: would have rescued that deck; the deck was wrong.
-PLAUSIBLE_STRESS_MULTIPLE = 1.0e3
+from umat_oti.abaqus.plausibility import (                        # noqa: E402
+    FAR_ABOVE_THE_CONSTANTS as PLAUSIBLE_STRESS_MULTIPLE)
 
 
 @dataclass(frozen=True)
@@ -989,44 +1085,44 @@ def growth_developed(records: Sequence[dict], slots: dict) -> Finding:
 
 
 def stress_stays_on_the_material_scale(records: Sequence[dict],
-                                       props: Sequence[float]) -> Finding:
-    """Is the response the size the material's own constants say it can be?
+                                       props: Sequence[float],
+                                       amplitude: float = 0.0,
+                                       attempts: Sequence[dict] = ()) -> Finding:
+    """Is the response the size the scales this problem supplies say it can be?
 
-    The check the lead's :mod:`umat_oti.abaqus.plausibility` makes in general,
-    stated here as a coverage criterion because for the growth family it is
-    not a safety net but part of what "the experiment ran" means. A growth
-    deck whose element sits where the growth tensor's determinant passes
-    through zero returns finite, complete, monotone numbers that are 1e5 times
-    the only material constant in the deck -- and every generic activation
-    indicator fires on them.
+    Delegated to :mod:`umat_oti.abaqus.plausibility`, which asks three
+    questions rather than one: the peak stress against the material constants,
+    the peak stress against the same model's response at the smallest
+    amplitude the search probed, and det F > 0. This module carried its own
+    copy of the first of them while that module was on a branch this worktree
+    could not see; two thresholds that agree today are still two, and the
+    second one drifts.
+
+    It is a coverage criterion and not only a safety net. For the growth
+    family it is part of what "the experiment ran" means: a growth deck whose
+    element sits where the growth tensor's determinant passes through zero
+    returns finite, complete, monotone numbers 1e5 times the only material
+    constant in the deck, and every generic activation indicator fires on
+    them.
     """
+    from umat_oti.abaqus import plausibility
+
     results = _results(records)
     if not results:
         return Finding("stress on the material scale", None,
                        "this run recorded no completed UMAT calls")
-    scale = max((abs(float(value)) for value in (props or ())
-                 if math.isfinite(float(value))), default=0.0)
-    peak = 0.0
-    for record in results:
-        for value in _values(record, "STRESS"):
-            peak = max(peak, abs(value))
-    if not scale:
+    report = plausibility.examine(results, props=props, amplitude=amplitude,
+                                  attempts=attempts)
+    if not report.checks:
         return Finding("stress on the material scale", None,
-                       f"this material publishes no constant to measure a "
-                       f"stress against; the peak was {peak:g}")
-    ratio = peak / scale
-    if ratio <= PLAUSIBLE_STRESS_MULTIPLE:
-        return Finding("stress on the material scale", True,
-                       f"the peak stress is {peak:g}, which is {ratio:.3g} "
-                       f"times the largest constant this material publishes "
-                       f"({scale:g})", ratio)
-    return Finding(
-        "stress on the material scale", False,
-        f"the peak stress is {peak:g} against a largest material constant of "
-        f"{scale:g} -- a ratio of {ratio:.4g}, past the "
-        f"{PLAUSIBLE_STRESS_MULTIPLE:g} this allows. A response that far above "
-        f"the material's own scale is arithmetic that has left the model, and "
-        f"two builds agreeing on it agree about the same departure", ratio)
+                       "nothing here supplied a scale to check the response "
+                       "against: no material constant, no probe to compare "
+                       "with and no deformation gradient recorded")
+    worst = max((check.measured / check.against
+                 for check in report.checks if check.against),
+                default=0.0)
+    return Finding("stress on the material scale", report.plausible,
+                   report.reason(), worst)
 
 
 def deformed_under_the_load(records: Sequence[dict]) -> Finding:
@@ -1154,7 +1250,8 @@ DECLARED_ONLY: dict[str, tuple[str, ...]] = {
 
 def assess(family: Family, records: Sequence[dict],
            manifest: VerificationManifest,
-           source_text: str = "") -> tuple[Finding, ...]:
+           source_text: str = "", amplitude: float = 0.0,
+           attempts: Sequence[dict] = ()) -> tuple[Finding, ...]:
     """Every criterion this family carries, measured against one run.
 
     The plausibility of the response is checked for EVERY family, not only for
@@ -1164,7 +1261,9 @@ def assess(family: Family, records: Sequence[dict],
     material can be.
     """
     findings: list[Finding] = [
-        stress_stays_on_the_material_scale(records, manifest.props)]
+        stress_stays_on_the_material_scale(records, manifest.props,
+                                           amplitude=amplitude,
+                                           attempts=attempts)]
     if family.name == "growth":
         findings.append(growth_developed(
             records, growth_state_slots(source_text)))

@@ -73,6 +73,22 @@ _VERIFICATION_ELEMENT: dict[str, tuple[str, str]] = {
 #: author used rather than from a family-to-element table.
 _COHESIVE_ELEMENT: dict[int, str] = {2: "COH2D4", 3: "COH3D8"}
 
+#: What a family this harness does NOT emit hands a UMAT, where that is known.
+#: Stated so a refusal names the obstacle rather than the absence: an
+#: axisymmetric shell is refused because nothing here hands two direct
+#: components and no shear, not because shells are refused -- they are not.
+_TENSOR_OF_FAMILY: dict[str, str] = {
+    "axisymmetric shell": ("two direct components (meridional and hoop) and "
+                           "no shear, NTENS=2"),
+    "beam": ("an axial stress and the transverse shears of a cross-section "
+             "it integrates over, which is a section response and not a "
+             "material point"),
+    "truss": "one axial component, NTENS=1",
+    "generalised plane strain": ("four components like plane strain, but with "
+                                 "an out-of-plane strain the element solves "
+                                 "for rather than holds at zero"),
+}
+
 
 @dataclass(frozen=True)
 class Formulation:
@@ -266,7 +282,8 @@ def hybrid(element: str) -> bool:
 
 
 def choose(author_elements, *, provenance: str = "",
-           ntens_hint: int = 0) -> Formulation:
+           ntens_hint: int = 0,
+           temperature: Optional[float] = None) -> Formulation:
     """The element a verification runs on, from the elements the author used.
 
     The author's element is not reused: it may be reduced-integration, which
@@ -294,17 +311,28 @@ def choose(author_elements, *, provenance: str = "",
     family = next(iter(families), "")
 
     if family == "cohesive":
-        return _cohesive_choice(kinds, provenance)
+        return _cohesive_choice(kinds, provenance, temperature)
     if family in ("shell", "membrane"):
         return _plane_stress_substitute(kinds, family, provenance, ntens_hint)
 
     choice = _VERIFICATION_ELEMENT.get(family)
     if choice is None:
+        # Say WHICH tensor, where the tensor is known. "Do not hand a UMAT the
+        # continuum stress tensor" is true of a shell too, and a shell is
+        # drivable; what makes these different is that no element in the
+        # registry hands the same components, so there is nothing to
+        # substitute rather than nothing to say.
+        detail = _TENSOR_OF_FAMILY.get(family, "")
         return Formulation(
             author_elements=kinds, family=family, provenance=provenance,
             reason=(f"the deck uses this material on {family or 'an unfamiliar'} "
-                    f"elements ({', '.join(kinds)}), which do not hand a UMAT "
-                    f"the continuum stress tensor this harness drives"))
+                    f"elements ({', '.join(kinds)})"
+                    + (f", which call a UMAT with {detail}. No element this "
+                       f"harness emits hands those components, so there is "
+                       f"nothing here to run it on that would be the same "
+                       f"question" if detail else
+                       ", which do not hand a UMAT the continuum stress "
+                       "tensor this harness drives")))
     plain, hybrid_name = choice
     element = hybrid_name if any(hybrid(kind) for kind in kinds) else plain
     if element not in SUPPORTED:                   # pragma: no cover - registry
@@ -319,7 +347,8 @@ def choose(author_elements, *, provenance: str = "",
                 f"UMAT is called with"))
 
 
-def _cohesive_choice(kinds: tuple, provenance: str) -> Formulation:
+def _cohesive_choice(kinds: tuple, provenance: str,
+                     temperature: Optional[float] = None) -> Formulation:
     """A cohesive law IS drivable, on a cohesive element.
 
     Abaqus calls a UMAT for a ``*COHESIVE SECTION, RESPONSE=TRACTION
@@ -336,18 +365,35 @@ def _cohesive_choice(kinds: tuple, provenance: str) -> Formulation:
     zero and choosing a temperature would choose the experiment.
     """
     coupled = [kind for kind in kinds if kind.rstrip("H").endswith("T")]
+    three_d = any(kind.startswith("COH3D") for kind in kinds)
     if coupled:
+        if temperature is None:
+            return Formulation(
+                author_elements=kinds, family="cohesive",
+                provenance=provenance,
+                reason=(f"the author drives this cohesive law on "
+                        f"{', '.join(coupled)}, which is the coupled "
+                        f"temperature-displacement form: the UMAT is called "
+                        f"with a temperature that its own kinetics read, and "
+                        f"no temperature is published anywhere in this deck "
+                        f"to hold it at. Running it at zero would divide by "
+                        f"zero in an Arrhenius term, and choosing one would "
+                        f"choose the experiment"))
+        element = _COHESIVE_ELEMENT[3 if three_d else 2] + "T"
         return Formulation(
-            author_elements=kinds, family="cohesive", provenance=provenance,
+            author_elements=kinds, family="cohesive", element=element,
+            provenance=provenance,
             reason=(f"the author drives this cohesive law on "
-                    f"{', '.join(coupled)}, which is the coupled "
-                    f"temperature-displacement form: the UMAT is called with "
-                    f"a temperature that its own kinetics read, and this "
-                    f"harness drives no thermal field. Running it at zero "
-                    f"temperature would not be running this law"))
+                    f"{', '.join(coupled)}, which is called with a "
+                    f"temperature. A single element has no neighbour to "
+                    f"conduct to and cannot solve for the temperature the "
+                    f"author's model solves for, so the verification runs "
+                    f"{element} ISOTHERMALLY at {temperature:g}, which is a "
+                    f"temperature the author STATED rather than one this "
+                    f"harness chose. What it does not exercise is the law's "
+                    f"temperature DEPENDENCE"))
     # Three components means the three-dimensional cohesive element and two
     # the planar one, which is what the author's own element names say.
-    three_d = any(kind.startswith("COH3D") for kind in kinds)
     element = _COHESIVE_ELEMENT[3 if three_d else 2]
     return Formulation(
         author_elements=kinds, family="cohesive", element=element,
@@ -665,7 +711,8 @@ class Settled:
 
 
 def settle(source_text: str, source_name: str, deck_text: str = "",
-           deck_name: str = "", material: str = "") -> Settled:
+           deck_name: str = "", material: str = "",
+           temperature: Optional[float] = None) -> Settled:
     """Which element to run, from the source's own text and the author's deck.
 
     Two independent witnesses. The source says what tensor it fills; the deck
@@ -694,7 +741,8 @@ def settle(source_text: str, source_name: str, deck_text: str = "",
     # "a DO loop bounded at 4 fills the whole of STRESS" -- is then never
     # reached.
     from_the_deck = choose(kinds, provenance=provenance,
-                           ntens_hint=from_the_source.ntens if kinds else 0)
+                           ntens_hint=from_the_source.ntens if kinds else 0,
+                           temperature=temperature)
 
     # A cohesive element in the deck settles the question outright: the
     # author drove this material as a traction-separation law, and the
@@ -913,3 +961,60 @@ def read_orientation(deck_text: str, material: str = "") -> Orientation:
     if ply_angle:
         detail += f"; the ply is turned a further {ply_angle:g} ({section_line})"
     return Orientation(tuple(axes), (axis, total), detail)
+
+
+#: ``*INITIAL CONDITIONS, TYPE=TEMPERATURE`` with a set name and a value.
+_TEMPERATURE_KEYWORD = "INITIALCONDITIONS"
+
+
+def stated_temperature(deck_text: str) -> tuple:
+    """A temperature the author's deck states, and where it says so.
+
+    Returns ``(value, provenance)`` or ``(None, reason)``. Only an INITIAL
+    CONDITION counts: a temperature the analysis SOLVES for is an outcome of a
+    conduction problem a single element has no way to reproduce, and a
+    temperature a *BOUNDARY holds is one too when the set it names is not the
+    whole model. What an initial condition states is a number the author
+    wrote, and holding a single element at it is isothermal rather than
+    invented.
+
+    Measured on ``lucassalmon83860-bit``'s fuel-pellet deck: ``*Initial
+    Conditions, type=TEMPERATURE / Set-3, 673.`` -- and the source's own FILM
+    routine sets ``SINK = 273 + 400``, the same 673, so the number is stated
+    twice and by both halves of the model.
+    """
+    values: list[tuple[float, str]] = []
+    inside = False
+    for number, raw in enumerate(deck_text.splitlines(), start=1):
+        line = raw.strip()
+        if not line or line.startswith("**"):
+            continue
+        if line.startswith("*"):
+            found = _KEYWORD.match(line)
+            keyword = "".join((found.group(1) if found else "").split()).upper()
+            parameters = _parameters(found.group(2) if found else "")
+            inside = (keyword == _TEMPERATURE_KEYWORD
+                      and parameters.get("TYPE", "").upper() == "TEMPERATURE")
+            continue
+        if not inside:
+            continue
+        fields = [field.strip() for field in line.split(",")]
+        if len(fields) < 2:
+            continue
+        try:
+            values.append((float(fields[1]),
+                           f"line {number}: {line[:70]}"))
+        except ValueError:
+            continue
+    if not values:
+        return None, ("this deck states no *INITIAL CONDITIONS, "
+                      "TYPE=TEMPERATURE, so there is no temperature of the "
+                      "author's to hold a single element at")
+    distinct = sorted({value for value, _where in values})
+    if len(distinct) > 1:
+        return None, (f"this deck states {len(distinct)} different initial "
+                      f"temperatures ("
+                      + ", ".join(f"{value:g}" for value in distinct[:5])
+                      + "); which one a single element is at is a choice, and "
+                        "choosing it would choose the experiment")
+    return distinct[0], f"{values[0][1]} (stated for {len(values)} node set(s))"
