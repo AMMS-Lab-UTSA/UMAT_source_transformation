@@ -2117,6 +2117,12 @@ def _transform_source_text(
     real_output_insert_after_line = tangent_context.real_output_insert_after_line or extraction_insert_after_line
     ddsdde_insert_after_line = tangent_context.ddsdde_insert_after_line or extraction_insert_after_line
     seed_dfgrd1_enabled = _validation_uses_finite_geometry(config)
+    # Only a source whose seeded kinematic input is the deformation gradient
+    # gets the Kirchhoff term; see _ddsdde_extraction_lines. A DSTRAN-driven
+    # small-strain source asks for "" and its extraction is unchanged.
+    kirchhoff_direct_columns = (
+        direct_component_count_expression(argument_variables)
+        if _dfgrd1_carries_the_seed(roles, mappings, seed_dfgrd1_enabled) else "")
     seed_insert_before_line = _seed_insert_before_line(config) or declaration_insert_before
     if seed_insert_before_line and seed_insert_before_line < declaration_insert_before:
         seed_insert_before_line = declaration_insert_before
@@ -2376,7 +2382,7 @@ def _transform_source_text(
                 if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                     output.extend(pure_seed_tangent_bridge_lines)
                     pure_seed_tangent_bridge_inserted = True
-                output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions))
+                output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns))
                 tangent_extraction_inserted = True
                 extraction_insertion_region_id = str(extraction_region.get("region_id", "")) if extraction_region else "before RETURN"
             continue
@@ -2401,7 +2407,7 @@ def _transform_source_text(
                 if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                     output.extend(pure_seed_tangent_bridge_lines)
                     pure_seed_tangent_bridge_inserted = True
-                output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions))
+                output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns))
                 tangent_extraction_inserted = True
                 extraction_insertion_region_id = str(extraction_region.get("region_id", "")) if extraction_region else "before RETURN"
             continue
@@ -2554,7 +2560,7 @@ def _transform_source_text(
             if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                 output.extend(pure_seed_tangent_bridge_lines)
                 pure_seed_tangent_bridge_inserted = True
-            output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions))
+            output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns))
             tangent_extraction_inserted = True
             extraction_insertion_region_id = str(extraction_region.get("region_id", "")) if extraction_region else "before RETURN"
         # "Before RETURN" means before the selected routine's RETURN. A file
@@ -2579,7 +2585,7 @@ def _transform_source_text(
             if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                 output[len(output) - 1:len(output) - 1] = pure_seed_tangent_bridge_lines
                 pure_seed_tangent_bridge_inserted = True
-            output[len(output) - 1:len(output) - 1] = preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions)
+            output[len(output) - 1:len(output) - 1] = preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns)
             tangent_extraction_inserted = True
             extraction_insertion_region_id = "before RETURN"
         if line_number >= selected_routine_span[1]:
@@ -3142,15 +3148,62 @@ def _dfgrd1_carries_the_seed(
     return "DFGRD1" in roles["promote"] and mappings.get("dstran", "DSTRAN") in roles["seed"]
 
 
-def _finite_dfgrd1_seed_lines(form: str, ntens: int) -> list[str]:
-    lines = [_comment_line(form, "OTIS finite-strain seed: map DSTRAN directions into DFGRD1")]
-    diagonal_entries = [(1, 1, 1), (2, 2, 2), (3, 3, 3)]
-    for row, column, direction in diagonal_entries[: min(ntens, 3)]:
-        lines.append(_stmt(form, f"DFGRD1_OTI({row},{column}) = DFGRD1_OTI({row},{column}) + {_seed_basis_name(direction)}"))
-    shear_entries = [(1, 2, 4), (2, 1, 4), (1, 3, 5), (3, 1, 5), (2, 3, 6), (3, 2, 6)]
-    for row, column, direction in shear_entries:
+def _finite_strain_seed_terms(ntens: int) -> list[tuple[int, int, float, int]]:
+    """``(row, column, coefficient, direction)`` for the seeded strain directions.
+
+    One entry per non-zero position of the strain increment each Voigt
+    direction stands for: the three direct directions put a one on a diagonal
+    position, and an engineering shear puts a half on each of the two
+    off-diagonal positions that make it symmetric.
+    """
+    terms: list[tuple[int, int, float, int]] = []
+    for row, column, direction in [(1, 1, 1), (2, 2, 2), (3, 3, 3)][: min(ntens, 3)]:
+        terms.append((row, column, 1.0, direction))
+    for row, column, direction in [(1, 2, 4), (2, 1, 4), (1, 3, 5), (3, 1, 5), (2, 3, 6), (3, 2, 6)]:
         if ntens >= direction:
-            lines.append(_stmt(form, f"DFGRD1_OTI({row},{column}) = DFGRD1_OTI({row},{column}) + 0.5D0*{_seed_basis_name(direction)}"))
+            terms.append((row, column, 0.5, direction))
+    return terms
+
+
+def _finite_dfgrd1_seed_lines(form: str, ntens: int) -> list[str]:
+    """The seed injections for a deformation-gradient-driven tangent.
+
+    The perturbation is ``dF = eps . F``, not ``dF = eps``. The velocity
+    gradient a perturbation of the deformation gradient produces is
+    ``l = dF . F^-1``, so asking for ``l = eps`` -- which is what the strain
+    increment Abaqus differentiates with respect to means -- asks for
+    ``dF = eps . F``. Adding ``eps`` straight onto F asks for
+    ``l = eps . F^-1``, the same thing only at ``F = I`` and wrong by order
+    ``||F - I||`` everywhere else.
+
+    Measured by Pixel Agent E against the analytic DDSDDE that
+    Jeff97/growth-of-shell's Trachea.for writes by hand, at pass9's recorded
+    state, worst componentwise relative error of a centred difference:
+
+        reference built as           h=1e-1    h=1e-2    h=1e-3    h=1e-4
+        dF = eps,     + sigma.delta  7.97e-03  7.97e-03  7.97e-03  7.97e-03
+        dF = eps . F, + sigma.delta  7.12e-06  2.40e-06  9.74e-04  4.78e-03
+
+    ``DFGRD1`` on the right is the REAL dummy argument, which still holds the
+    unperturbed gradient: the shadow ``DFGRD1_OTI`` is being written in this
+    very loop, and reading it back would fold the perturbation into its own
+    push-forward.
+    """
+    lines = [_comment_line(form, "OTIS finite-strain seed: dF = eps . F for each DSTRAN direction")]
+    # Written out over the three columns rather than looped, because a fixed-form
+    # statement has 66 columns to say this in and
+    # "DFGRD1_OTI(1,OTI_HI) = DFGRD1_OTI(1,OTI_HI) + 0.5D0*OTI_E4*DFGRD1(2,OTI_HI)"
+    # does not fit. Continuing it onto a second line would also put the factor
+    # "DFGRD1(2," on one physical line and "OTI_HI)" on the next, and every
+    # reader of the emitted seed -- the semantic checks and seeded_kinematics
+    # among them -- works a physical line at a time.
+    for row, column, coefficient, direction in _finite_strain_seed_terms(ntens):
+        weight = "" if coefficient == 1.0 else "0.5D0*"
+        for index in (1, 2, 3):
+            lines.append(_stmt(
+                form,
+                f"DFGRD1_OTI({row},{index}) = DFGRD1_OTI({row},{index})"
+                f" + {weight}{_seed_basis_name(direction)}*DFGRD1({column},{index})"))
     return lines
 
 
@@ -3166,6 +3219,22 @@ _DFGRD1_SEED_LINE = re.compile(
     flags=re.IGNORECASE,
 )
 
+#: The push-forward form, ``DFGRD1_OTI(i,k) = DFGRD1_OTI(i,k) + c*Ed*DFGRD1(j,k)``
+#: inside a loop over k. What this carries is still one entry of the strain
+#: increment -- ``eps(i,j) = c`` for direction d -- so it reads back as the
+#: same (row, column, coefficient, direction) tuple the additive form did, and
+#: every caller that reconstructs the perturbation from those tuples keeps
+#: working unchanged. The loop index is read as a name rather than a digit,
+#: and the same name has to appear in all three subscripts or the line is
+#: writing one entry from another and is not a seed injection.
+_DFGRD1_PUSHFORWARD_SEED_LINE = re.compile(
+    r"\bDFGRD1_OTI\s*\(\s*(\d+)\s*,\s*(\w+)\s*\)\s*=\s*"
+    r"DFGRD1_OTI\s*\(\s*(\d+)\s*,\s*(\w+)\s*\)\s*\+\s*"
+    r"(0\.5D0\s*\*)?(?:OTI_)?E(\d+)\s*\*\s*"
+    r"DFGRD1\s*\(\s*(\d+)\s*,\s*(\w+)\s*\)",
+    flags=re.IGNORECASE,
+)
+
 
 def parse_finite_dfgrd1_seed_line(line: str) -> tuple[int, int, float, int] | None:
     """``(row, column, coefficient, direction)`` for one emitted DFGRD1 seed line.
@@ -3173,7 +3242,23 @@ def parse_finite_dfgrd1_seed_line(line: str) -> tuple[int, int, float, int] | No
     ``None`` for any other line. The accumulated entry has to be the same one
     being read, or the line is an injection into a different entry and is not
     part of this map.
+
+    Both emitted forms are read: the push-forward one this transform writes
+    now, and the additive ``+ E1`` one every source in the transform store was
+    converted with before it. A reader that understood only the new form would
+    report every stored source as driving no kinematic input at all, which is
+    the verdict "not gradient-driven" -- and that is the field the corpus
+    classifies tangents by.
     """
+    match = _DFGRD1_PUSHFORWARD_SEED_LINE.search(line)
+    if match:
+        row, index, read_row, read_index = (match.group(i) for i in (1, 2, 3, 4))
+        column, factor_index = match.group(7), match.group(8)
+        if (row, index.upper()) != (read_row, read_index.upper()):
+            return None
+        if index.upper() != factor_index.upper():
+            return None
+        return int(row), int(column), 0.5 if match.group(5) else 1.0, int(match.group(6))
     match = _DFGRD1_SEED_LINE.search(line)
     if not match:
         return None
@@ -3243,7 +3328,13 @@ def seeded_kinematics(transformed_source: str, dstran: str = "DSTRAN") -> Seeded
         gradient_seed = parse_finite_dfgrd1_seed_line(line)
         if gradient_seed is not None:
             row, column, coefficient, direction = gradient_seed
-            gradient.setdefault(direction, []).append((row, column, coefficient))
+            # The push-forward form writes the same strain entry once per
+            # column of F. What it describes is one entry of eps, and a reader
+            # that summed the repeats would get three times the perturbation
+            # it was told about.
+            terms = gradient.setdefault(direction, [])
+            if (row, column, coefficient) not in terms:
+                terms.append((row, column, coefficient))
     return SeededKinematics(
         dstran=strain,
         dfgrd1={direction: tuple(sorted(terms)) for direction, terms in sorted(gradient.items())},
@@ -3459,9 +3550,54 @@ def _explicit_ddsdde_assignment_rows(config: dict[str, Any], extraction_region: 
     return sorted(rows, key=lambda row: min((_as_int(value) for value in (row.get("line_numbers") or []) if _as_int(value)), default=0))
 
 
+def direct_component_count_expression(argument_variables: set[str]) -> str:
+    """A Fortran expression for the number of direct stress components.
+
+    NDI when the selected routine has it, which every UMAT written to the
+    Abaqus interface does. A model routine reached through a wrapper may not,
+    and then NTENS-NSHR says the same thing; failing both, MIN(3,NTENS) is
+    right for every element type in this corpus except plane stress, and it is
+    a fallback rather than an answer.
+    """
+    names = {name.upper() for name in argument_variables}
+    if "NDI" in names:
+        return "NDI"
+    if "NSHR" in names and "NTENS" in names:
+        return "NTENS-NSHR"
+    return "MIN(3,NTENS)"
+
+
 def _ddsdde_extraction_lines(
-    form: str, mappings: dict[str, str], ntens: int, order: int = 1, nbases: int | None = None
+    form: str, mappings: dict[str, str], ntens: int, order: int = 1, nbases: int | None = None,
+    kirchhoff_direct_columns: str = "",
 ) -> list[str]:
+    """The lines that read the tangent out of the seeded stress.
+
+    ``kirchhoff_direct_columns``, when given, is a Fortran expression for the
+    number of direct components, and asking for it says this source's tangent
+    is taken with respect to the deformation gradient. Abaqus's DDSDDE under
+    nlgeom is the Jacobian of the Jaumann rate of the Kirchhoff stress divided
+    by J,
+
+        DDSDDE(ij,kl) = d sigma_ij / d eps_kl  +  sigma_ij delta_kl
+
+    and GETIM returns only the first term. In Voigt storage ``delta_kl`` is one
+    on the direct columns and zero on the shear columns, so the whole of the
+    second term is: add the row's stress component to every direct column of
+    that row.
+
+    It is not a small term. Measured by Pixel Agent E over 67 gradient-driven
+    corpus entries and 134 states, the converted tangent's relative Frobenius
+    residual against the corrected reference divided by ``|sigma|/|DDSDDE|``
+    has median 1.370, p10 0.927, p90 1.422 -- one term, not sixty-seven
+    defects. 0 of 67 reached the 1e-6 tolerance without it; 61 of them had
+    been recorded "verified" against a reference that inherited the
+    transform's own definition of its input and so could not falsify it.
+
+    A DSTRAN-driven source asks for nothing here and its extraction is emitted
+    byte-identical to before: its seed already is the strain increment, and
+    small-strain DDSDDE carries no such term.
+    """
     stress = mappings.get("stress", "STRESS")
     ddsdde = mappings.get("ddsdde", "DDSDDE")
     if form == "fixed":
@@ -3471,18 +3607,35 @@ def _ddsdde_extraction_lines(
             "         DO OTI_J = 1, NTENS",
             f"            {ddsdde}(OTI_I,OTI_J) =",
             f"     1      GETIM({stress}_OTI(OTI_I),OTI_J)",
+        ]
+        if kirchhoff_direct_columns:
+            lines.extend([
+                _comment_line(form, "OTIS Kirchhoff term: DDSDDE(ij,kl) += sigma_ij * delta_kl"),
+                f"            IF (OTI_J .LE. {kirchhoff_direct_columns}) {ddsdde}(OTI_I,OTI_J) =",
+                f"     1      {ddsdde}(OTI_I,OTI_J) + REAL({stress}_OTI(OTI_I))",
+            ])
+        lines.extend([
             "         END DO",
             "      END DO",
-        ]
+        ])
     else:
         lines = [
             _comment_line(form, "OTIS DDSDDE extraction: DDSDDE(i,j) = d STRESS(i) / d DSTRAN(j)"),
             _stmt(form, "DO OTI_I = 1, NTENS"),
             _stmt(form, "   DO OTI_J = 1, NTENS"),
             _stmt(form, f"      {ddsdde}(OTI_I, OTI_J) = GETIM({stress}_OTI(OTI_I), OTI_J)"),
+        ]
+        if kirchhoff_direct_columns:
+            lines.extend([
+                _comment_line(form, "OTIS Kirchhoff term: DDSDDE(ij,kl) += sigma_ij * delta_kl"),
+                _stmt(form, f"      IF (OTI_J .LE. {kirchhoff_direct_columns}) "
+                            f"{ddsdde}(OTI_I, OTI_J) = {ddsdde}(OTI_I, OTI_J) "
+                            f"+ REAL({stress}_OTI(OTI_I))"),
+            ])
+        lines.extend([
             _stmt(form, "   END DO"),
             _stmt(form, "END DO"),
-        ]
+        ])
     if order and order > 1:
         lines.extend(_higher_order_jacobian_lines(form, mappings, ntens, order, nbases or ntens))
     return lines
@@ -6817,7 +6970,20 @@ def _line_is_transform_executable(line: str) -> bool:
 
 
 def _is_allowed_real_shadow_source(line: str, name: str) -> bool:
-    return bool(re.search(rf"\b{re.escape(name)}_OTI\s*\([^)]*\)\s*=\s*{re.escape(name)}\s*\([^)]*\)", line, flags=re.IGNORECASE))
+    """Whether a line may name the REAL array without losing a derivative.
+
+    Two shapes may. Copying the argument into its shadow is the one this
+    started as. The finite-strain seed is the other: ``dF = eps . F`` has to
+    read the UNPERTURBED gradient to push the direction forward, and reading
+    the shadow there would fold the perturbation into its own push-forward.
+    Without this the seed lines themselves failed
+    finite_strain_path_uses_oti_versions, which exists to catch a stress path
+    that reads the real gradient -- which these are not.
+    """
+    if re.search(rf"\b{re.escape(name)}_OTI\s*\([^)]*\)\s*=\s*{re.escape(name)}\s*\([^)]*\)",
+                 line, flags=re.IGNORECASE):
+        return True
+    return name.upper() == "DFGRD1" and _is_finite_dfgrd1_seed_line(line)
 
 
 def _active_region_lines(source: str, start_line: int, end_line: int) -> list[str]:
