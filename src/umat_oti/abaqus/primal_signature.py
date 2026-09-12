@@ -634,14 +634,12 @@ def _apply_isolation(signature: Signature, raised: dict, raise_,
     verdict = getattr(isolation, "verdict", None)
     if verdict is None:                      # a plain dict from JSON
         verdict = isolation.get("verdict")
-        get = isolation.get
         beyond = isolation.get("output_slots_beyond_rounding") or []
         total = isolation.get("output_slots_total") or 0
         differing = isolation.get("output_slots_differing") or 0
         call_index = isolation.get("call_index")
         worst_input = isolation.get("worst_input_relative") or 0.0
     else:
-        get = lambda name, default=None: getattr(isolation, name, default)
         beyond = isolation.output_slots_beyond_rounding
         total = isolation.output_slots_total
         differing = isolation.output_slots_differing
@@ -721,7 +719,16 @@ def _apply_isolation(signature: Signature, raised: dict, raise_,
                 "hypothesis says must differ", FROM_PROBE))
 
     # SINGLE_OUTPUT_SLOT predicts exactly the shape ITERATIVE_SOLVER forbids.
-    if beyond and fraction <= 0.25:
+    # It also claims the moved components are wrong by far more than rounding,
+    # and that half of it has to be tested too. From-2D-to-2D-Scallop,
+    # From-3D-to-3D-SeaShell and Alex_Shocked/Growth-Alex each move three or
+    # fewer of fifteen components at the first controlled call -- the right
+    # SHAPE -- but by 1.1e-10, 6.9e-10 and 2.9e-10 of their field, which is
+    # what a constant carried at the wrong precision looks like and not what a
+    # destroyed slot looks like. Raising "one output slot corrupted" for them
+    # put a strong claim on a marginal number, and the cut it sat just above
+    # was a sorting threshold, not a finding.
+    if beyond and fraction <= 0.25 and worst_output > SINGLE_PRECISION_EPSILON:
         hypothesis = raised.get(SINGLE_OUTPUT_SLOT) or raise_(_single_output_slot)
         hypothesis.support(controlled)
         named = ", ".join(
@@ -827,15 +834,29 @@ class RecordedConfirmation:
     fortran_index: int
     original: float
     transformed: float
-    #: The named component must be the ONLY one beyond rounding. That is the
-    #: substance of the claim: a call reproduced except for this one slot.
-    sole_slot_beyond_rounding: bool = True
+    #: How many components the experiment saw move beyond rounding. The match
+    #: requires the same count: "one slot of 154 moved" and "nine of twelve
+    #: moved" are different findings and a confirmation of one must not stand
+    #: in for the other.
+    slots_beyond_rounding: int = 1
+
+    @staticmethod
+    def _same(left: float, right: float) -> bool:
+        """Equality that a NaN can satisfy.
+
+        The simplified_curing finding IS a NaN, and ``nan == nan`` is False:
+        keyed on equality alone, the one confirmation built for a non-finite
+        result could never match the measurement it was built from.
+        """
+        if math.isnan(left) and math.isnan(right):
+            return True
+        return left == right
 
     def matches(self, isolation) -> bool:
         beyond = (isolation.get("output_slots_beyond_rounding")
                   if isinstance(isolation, dict)
                   else isolation.output_slots_beyond_rounding) or []
-        if self.sole_slot_beyond_rounding and len(beyond) != 1:
+        if len(beyond) != self.slots_beyond_rounding:
             return False
         for slot in beyond:
             block = slot.get("block") if isinstance(slot, dict) else slot.block
@@ -845,7 +866,8 @@ class RecordedConfirmation:
             right = (slot.get("transformed") if isinstance(slot, dict)
                      else slot.transformed)
             if (block, index) == (self.block, self.fortran_index) and \
-                    left == self.original and right == self.transformed:
+                    self._same(left, self.original) and \
+                    self._same(right, self.transformed):
                 return True
         return False
 
@@ -861,13 +883,26 @@ CONFIRMED_FINDINGS: tuple = (
             "-- with -1.6982275886200392e-30 where the author's build writes "
             "-73.46290748654624, while returning all four stress components "
             "and the other 149 state variables to within 5e-17 of the "
-            "author's build from bit-identical arguments. The failure is the "
-            "writing of that one slot. Which statement writes it is NOT "
-            "established here: the slot is the actual argument passed by "
-            "element address to STRAINRATE_OTI, LATENTHARDEN_OTI and "
-            "ITERATION_OTI, which are compiled into a separate object "
-            "(umat_oti_helpers.o) with array dummies, and that is a lead, not "
-            "a finding"),
+            "author's build from bit-identical arguments. Replayed outside "
+            "Abaqus from the recorded arguments, the generated source "
+            "reproduces the solver's wrong value BIT FOR BIT when built with "
+            "the flags the solver used, and returns the CORRECT value when "
+            "built with -no-vec, -O1, -O0, -check bounds, without -align "
+            "array64byte, without -auto, or without -fstack-protector-strong. "
+            "Compiling the OTI helper unit with -no-vec does not change it; "
+            "compiling the generated UMAT unit with -no-vec does. So the "
+            "defect is in what ifort makes of the generated UMAT unit at -O2 "
+            "with vectorisation on, not in the arithmetic the unit expresses. "
+            "Two mechanisms were tested and REFUTED: adding SEQUENCE to the "
+            "OTI derived type does not change the value (so the "
+            "non-conforming sequence association at "
+            "CALL STRAINRATE_OTI(..., STATEV_OTI(2*NSLPTL+1), ...) is not by "
+            "itself the cause), and neither -fno-alias, -fno-inline, "
+            "-qno-opt-dynamic-align nor -qopt-zmm-usage=low changes it. Which "
+            "construct in the unit is miscompiled is NOT established: a "
+            "CDIR$ NOVECTOR on any of three unrelated loops removes the "
+            "corruption, which is what a codegen-sensitive defect looks like "
+            "and not what a single wrong loop looks like"),
         reproduction=Reproduction(
             held_fixed=(
                 "the deck, the element, the integration point, the increment "
@@ -890,7 +925,100 @@ CONFIRMED_FINDINGS: tuple = (
             repeatable=True),
         block="STATEV", fortran_index=25,
         original=-73.46290748654624,
-        transformed=-1.6982275886200392e-30),
+        transformed=-1.6982275886200392e-30,
+        slots_beyond_rounding=1),
+
+    RecordedConfirmation(
+        hypothesis=SINGLE_OUTPUT_SLOT,
+        root_cause=(
+            "the generated source calls the OTI helper ROTSIG_OTI, whose "
+            "first dummy is declared TYPE(ONUMM3N1) :: S(NDI+NSHR), and "
+            "passes it the REAL*8 array element statev(1): "
+            "`call ROTSIG_OTI(statev(1), DROT_OTI, EELAS_OTI, 2, ndi, nshr)`. "
+            "There is no explicit interface, so nothing catches it. The "
+            "helper reads four consecutive doubles of the author's state "
+            "array as one OTI number -- S(1)%R=statev(1), S(1)%E1=statev(2), "
+            "S(1)%E2=statev(3), S(1)%E3=statev(4), S(2)%R=statev(5) -- and "
+            "the rotated elastic strain written back into statev(1:ntens) "
+            "therefore carries values from elsewhere in the state array. "
+            "STATEV(3) comes back as 333.5668828923864, a stress-sized "
+            "number, where the author's build has 6.660008321683725e-04, a "
+            "strain. Distinguished from the crystal-plasticity defect by "
+            "measurement: this one reproduces identically at -O0 and with "
+            "-no-vec, so it is what the source says, not what the compiler "
+            "made of it. Noted separately and NOT established: the "
+            "transformed file also defines a harness-supplied ROTSIG, which "
+            "the original file does not, so one build's user library carries "
+            "a definition the other's does not. Which ROTSIG the transformed "
+            "build actually calls depends on ELF interposition order and was "
+            "not determined here"),
+        reproduction=Reproduction(
+            held_fixed=(
+                "the deck, the element, the integration point and the entry "
+                "state of call 8 (element 1, point 1, increment 2), which the "
+                "two builds received bit-identically; and the optimisation "
+                "level, varied from -O0 to the solver's own flags without "
+                "changing the result"),
+            varied="only the build: the author's source compiled unchanged "
+                   "against the OTI-transformed source of the same file",
+            observed=(
+                "4 of 26 output components move beyond rounding and 22 do "
+                "not; STATEV(3) is 6.660008321683725e-04 in the original and "
+                "333.5668828923864 in the transformed build. Replayed "
+                "offline from the recorded arguments the transformed source "
+                "returns the same 333.5668828923864 at every optimisation "
+                "level tried, so the difference is in the source and not in "
+                "its compilation"),
+            where="corpus_run/pass9/work/f425611a8d9036c13b6f1d58",
+            repeatable=True),
+        block="STATEV", fortran_index=3,
+        original=0.0006660008321683725,
+        transformed=333.5668828923864,
+        slots_beyond_rounding=4),
+
+    RecordedConfirmation(
+        hypothesis=DIFFERENT_FUNCTION,
+        root_cause=(
+            "two independent faults meet at the first call. (1) The deck "
+            "generated for this entry carries no *INITIAL CONDITIONS, "
+            "TYPE=SOLUTION, USER, so Abaqus never calls the author's own "
+            "SDVINI, and the degree of cure STATEV(1) starts at exactly 0 "
+            "rather than at the 1.d-15 the author writes there with the "
+            "comment 'Initial cure (small non-zero value)'. Zero is the "
+            "singular point of the rate law. (2) The generated helper "
+            "declares the author's `double precision K, Beta, n, m, TK, "
+            "max_cure` as TYPE(ONUMM6N1), so `(cure/max_cure)**m` resolves to "
+            "ONUMM6N1_POW_OO instead of ONUMM6N1_POW_OR. Measured side by "
+            "side on the shipped module: q**0.4d0 returns R = 0.0 with NaN "
+            "imaginary parts, and q**oti(0.4) returns R = NaN. The real part "
+            "is lost in ONUMM6N1_F2EVAL, which forms `RES = RES + COEF*DX` "
+            "with whole-number arithmetic where the one-argument FEVAL "
+            "touches only the imaginary components: COEF is "
+            "0.4*0**(-0.6) = +Inf, DX%R has just been set to 0, and Inf*0 is "
+            "NaN in the real slot. The author's build survives the same deck "
+            "because IEEE 0.0**0.4 is 0.0"),
+        reproduction=Reproduction(
+            held_fixed=(
+                "the deck, the element, the integration point and every "
+                "argument of call 0 -- the first UMAT call of the analysis -- "
+                "which both builds received bit-identically with STRESS0, "
+                "DSTRAN and STATEV0 all zero"),
+            varied="only the build; and then, inside the transformed build, "
+                   "only the declared type of the exponent",
+            observed=(
+                "the original returns STRESS = 0 in all six components and "
+                "STATEV(3) = 1.2470275728981441E-02; the transformed build "
+                "returns NaN in all six stresses and in STATEV(1), (2) and "
+                "(4), with the same STATEV(3). Replayed offline from the "
+                "recorded arguments the transformed source reproduces that "
+                "exactly. Reducing it to the operation alone: with a real "
+                "exponent the real part survives, with an OTI exponent it "
+                "does not"),
+            where="corpus_run/pass9/work/a3f970a8788b998cd2fef291",
+            repeatable=True),
+        block="STRESS", fortran_index=1,
+        original=0.0, transformed=float("nan"),
+        slots_beyond_rounding=9),
 )
 
 

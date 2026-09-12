@@ -24,6 +24,16 @@ large the final disagreement is.
 Nothing here goes into a verification build. A trace-writing source writes on
 every pass of every loop, which changes the cost of a run by orders and can
 change what the optimiser does with the loop body. It is for the experiment.
+
+One outcome worth recording, so that nobody spends a queue slot re-deriving
+it: for the three crystal-plasticity entries this module was written for, the
+different-iterate hypothesis was refuted WITHOUT a traced run. The probe
+already showed both builds taking two equilibrium passes in every one of 140
+increments, and the controlled call showed 153 of 154 outputs agreeing while
+one state slot moved by a quarter of its field. A solve that stopped at a
+different iterate moves everything it writes. The instrument stands for the
+next source that raises the hypothesis -- ``ahartloper/UVCplanestress.for``
+has a real ``DO WHILE`` and is the live candidate -- not for that one.
 """
 from __future__ import annotations
 
