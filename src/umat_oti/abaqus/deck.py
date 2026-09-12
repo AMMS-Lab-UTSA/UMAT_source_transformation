@@ -346,7 +346,8 @@ def generate_deck(manifest: VerificationManifest) -> str:
         lines.append(f"{index}, {_fmt(x)}, {_fmt(y)}"
                      + ("" if plane else f", {_fmt(z)}"))
     lines.append(f"*ELEMENT, TYPE={manifest.element_type}, ELSET=ONE")
-    lines.append("1, " + ", ".join(str(index) for index, *_ in nodes))
+    label = int(getattr(manifest, "element_label", 1) or 1)
+    lines.append(f"{label}, " + ", ".join(str(index) for index, *_ in nodes))
     if manifest.isothermal_temperature is not None:
         lines.append("*NSET, NSET=ALL")
         lines.append(", ".join(str(index) for index, *_ in nodes))

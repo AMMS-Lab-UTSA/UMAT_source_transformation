@@ -912,6 +912,14 @@ def plan(source: Path, repository: Path, name: str = "",
         name=name or source.stem[:40],
         source=source,
         element_type=settled.element,
+        # The author's own numbering for this material's elements, where the
+        # deck gave one. A UMAT is handed NOEL and some of the corpus indexes
+        # with it, so calling the single element 1 is not always the neutral
+        # choice it looks like: irfancn/Abaqus-UEL-elastic computes
+        # kelem = noel - 185 against elements the author numbers from 186, and
+        # at NOEL=1 that reads a COMMON block at -184 and takes Abaqus down
+        # with a signal 11 inside the element loop.
+        element_label=material.first_element_label or 1,
         # Either witness settles it. The routine reading the deformation
         # gradient means the MATERIAL is finite-strain; the author's own step
         # carrying NLGEOM=YES means the PROBLEM is, and a cohesive element
