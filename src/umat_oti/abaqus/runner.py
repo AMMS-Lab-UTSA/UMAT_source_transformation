@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Sequence
 
+from umat_oti.abaqus import include_shim
 from umat_oti.abaqus.job_status import JobStatus, classify_job
 
 #: Read one integration point's history out of an ODB. Runs under Abaqus's own
@@ -121,6 +122,11 @@ def run_job(
     command = [abaqus_command() or "abaqus", f"job={job}", f"input={job}.inp",
                "interactive", f"double={double}"]
     if user_source is not None:
+        # A source may carry a preprocessor #INCLUDE written in uppercase,
+        # which -fpp cannot resolve against the shipped lowercase filename.
+        # The shim offers each header under both spellings; nothing is removed
+        # from the search path and the author's source is untouched.
+        include_shim.install(work_dir)
         bundle = work_dir / f"{job}_user.f"
         text = Path(user_source).read_text(errors="replace")
         for extra in extra_sources:
