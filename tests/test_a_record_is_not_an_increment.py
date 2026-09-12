@@ -181,3 +181,53 @@ def test_an_infinity_spoils_an_increment_as_surely_as_a_nan():
     records = _increment(1)
     records[3]["STATEV"] = [math.inf]
     assert group(records).complete_increments == 0
+
+
+def test_a_cohesive_element_reports_the_points_on_its_interface():
+    """Cohesive elements integrate across the face, not through the volume.
+
+    Until these were listed, ``points_for`` returned 0 for every cohesive deck
+    and the count fell back to being inferred from the history. That inference
+    is right for a run that completed and wrong for a truncated one, where the
+    count it infers is whatever the last partial increment happened to write --
+    and five of the filed cohesive decks exist precisely because their runs are
+    expected to be difficult.
+    """
+    from umat_oti.abaqus import frames
+
+    assert frames.points_for("COH2D4") == 2
+    assert frames.points_for("COH2D4T") == 2
+    assert frames.points_for("COH3D6") == 3
+    assert frames.points_for("COH3D8") == 4
+    assert frames.points_for("COH3D8T") == 4
+    # and the coupled variant is the same element as far as counting goes
+    for plain in ("COH2D4", "COH3D6", "COH3D8"):
+        assert frames.points_for(plain) == frames.points_for(plain + "T")
+
+
+def test_a_truncated_cohesive_increment_is_not_counted_as_complete():
+    """The point of knowing the count: 4 of 8 records is half an increment.
+
+    A COH3D8 writes four material points per increment. A run that died partway
+    through increment 2 leaves two of them, and inferring the count from the
+    history would read those two as the whole of a complete increment.
+    """
+    from umat_oti.abaqus import frames
+
+    records = []
+    for increment, points in ((1, 4), (2, 2)):
+        for point in range(1, points + 1):
+            records.append({"step": 1, "increment": increment,
+                            "element": 1, "point": point,
+                            "STRESS": [1.0, 0.0, 0.0],
+                            "STATEV": [0.5], "DDSDDE": [1.0]})
+
+    inferred = frames.group(records)
+    told = frames.group(records, expected_points=frames.points_for("COH3D8"))
+
+    assert told.complete_increments == 1
+    assert told.material_points_per_increment == 4
+    assert told.first_incomplete_increment["increment"] == 2
+    assert told.first_incomplete_increment["points"] == 2
+    # and this is what the fallback would have said instead
+    assert inferred.complete_increments >= told.complete_increments

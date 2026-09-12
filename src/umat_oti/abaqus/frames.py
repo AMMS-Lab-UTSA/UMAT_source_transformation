@@ -262,6 +262,18 @@ POINTS_PER_ELEMENT = {
     "CPE4": 4, "CPE4H": 4, "CPE4R": 1, "CPE3": 1, "CPE8": 9, "CPE8R": 4,
     "CPS4": 4, "CPS4R": 1, "CPS3": 1, "CPS8": 9, "CPS8R": 4,
     "CAX4": 4, "CAX4H": 4, "CAX4R": 1, "CAX3": 1, "CAX8": 9, "CAX8R": 4,
+    # Cohesive elements integrate on the interface, not through the volume, so
+    # the count follows the face: four nodes across in 2D give 2 points, the
+    # six-node triangular prism gives 3 and the eight-node hexahedron gives 4.
+    # The coupled temperature-displacement variants integrate the traction the
+    # same way and differ only in the degrees of freedom they carry.
+    # Without these, points_for returns 0 for every cohesive deck and group()
+    # infers the count from the history -- which is correct for a run that
+    # completed and silently wrong for a truncated one, where the inferred
+    # count is whatever the final partial increment happened to write.
+    "COH2D4": 2, "COH2D4T": 2,
+    "COH3D6": 3, "COH3D6T": 3,
+    "COH3D8": 4, "COH3D8T": 4,
 }
 
 
