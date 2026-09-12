@@ -275,6 +275,21 @@ def _rigid_body_restraint(segment: LoadingSegment, nodes,
     for index, *_rest in nodes:
         for dof in sorted(constrained):
             lines.append(f"{index}, {dof}, {dof}, 0.0")
+    clamped = tuple(dof for dof in segment.clamped_face if 1 <= dof <= limit)
+    if clamped:
+        # The author's own support, applied to the face at minimum x -- their
+        # LeftEnd. It restrains the growth without preventing it: the opposite
+        # face is still free, so the element can change volume and a nearly
+        # incompressible material is never asked to do so against its own bulk
+        # modulus. That distinction is the difference between a stress of the
+        # order of the material's constants and one 1e4 times them.
+        smallest = min(float(node[1]) for node in nodes)
+        span = max(float(node[1]) for node in nodes) - smallest
+        edge = smallest + 1e-9 * max(span, 1.0)
+        for node in nodes:
+            if float(node[1]) <= edge:
+                for dof in clamped:
+                    lines.append(f"{node[0]}, {dof}, {dof}, 0.0")
     anchor, along_x, along_y = _restraint_nodes(nodes)
     free = [dof for dof in range(1, limit + 1) if dof not in constrained]
     for dof in free:

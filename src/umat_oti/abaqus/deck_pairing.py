@@ -229,7 +229,18 @@ class DeckMaterial:
     #: materials are defined in ``MML_U2/SHELL_TCT_IM.inp`` and its
     #: ``*Shell Section`` names one of them; the other six are siblings.
     explicit: bool = False
+    #: How many elements the deck declares. A deck with ONE is the author's
+    #: own single-element test, which is the experiment this harness is trying
+    #: to reconstruct -- ``harshaa765__Bilinear-CZM-UMAT`` publishes one and
+    #: its README calls it "Single element patch test".
+    element_count: int = 0
     steps: int = 0
+    #: Whether any ``*STEP`` of this deck carries ``NLGEOM=YES``. The author
+    #: saying the geometry is nonlinear is a statement about the problem, and
+    #: a routine that never touches DFGRD can still be run in a step whose
+    #: element formulation is finite-strain -- the cohesive patch test opens
+    #: to half its own thickness and its author wrote ``nlgeom=YES``.
+    nlgeom: bool = False
     step_periods: tuple[float, ...] = ()
     user_initial_state: bool = False
 
@@ -239,7 +250,8 @@ class DeckMaterial:
                 "unsymmetric": self.unsymmetric,
                 "elements": list(self.elements),
                 "sections": list(self.sections), "explicit": self.explicit,
-                "steps": self.steps,
+                "element_count": self.element_count, "steps": self.steps,
+                "nlgeom": self.nlgeom,
                 "step_periods": list(self.step_periods),
                 "user_initial_state": self.user_initial_state}
 
@@ -298,6 +310,8 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
     user_state = False
     mode = ""
     pending_static = False
+    element_count = 0
+    nlgeom = False
 
     attributions = elements_by_material(text)
 
@@ -340,8 +354,11 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
                     user_state = user_state or (
                         "USER" in keyword_match.group(2).upper())
                 mode = ""
+            elif keyword == "ELEMENT":
+                mode = "element"
             elif keyword == "STEP":
                 steps += 1
+                nlgeom = nlgeom or parameters.get("NLGEOM", "").upper() == "YES"
                 mode = ""
             elif keyword in ("STATIC", "VISCO", "DYNAMIC",
                              "COUPLEDTEMPERATURE-DISPLACEMENT"):
@@ -355,6 +372,10 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
             numbers = _numbers(line)
             if len(numbers) >= 2:
                 periods.append(numbers[1])
+            continue
+        if mode == "element":
+            if line.split(",")[0].strip().lstrip("-").isdigit():
+                element_count += 1
             continue
         if mode == "depvar":
             numbers = _numbers(line)
@@ -374,8 +395,8 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
                      constants=material.constants, depvar=material.depvar,
                      values=material.values, unsymmetric=material.unsymmetric,
                      elements=material.elements, sections=material.sections,
-                     explicit=material.explicit,
-                     steps=steps, step_periods=tuple(periods),
+                     explicit=material.explicit, element_count=element_count,
+                     steps=steps, step_periods=tuple(periods), nlgeom=nlgeom,
                      user_initial_state=user_state)
         for material in found)
 
@@ -604,6 +625,15 @@ def pair(source: Path, repository: Path,
         # one merely defined beside it is a sibling. Seven materials are
         # defined in MML_U2/SHELL_TCT_IM.inp and its *Shell Section names one.
         attached = 2 if material.explicit else (1 if material.elements else 0)
+        # The author's own single-element test IS the experiment this harness
+        # builds. Where one exists it outranks a benchmark of the same
+        # material: ``harshaa765__Bilinear-CZM-UMAT`` publishes both a DCB and
+        # a one-element patch test, and the patch test is the verification.
+        single = 1 if material.element_count == 1 else 0
+        if single:
+            reasons.append(f"{material.deck.name} declares exactly one "
+                           f"element, so it is the author's own "
+                           f"single-element test of this material")
         if attached:
             reasons.append(f"a section in {material.deck.name} attaches "
                            f"{material.name} to "
@@ -636,7 +666,10 @@ def pair(source: Path, repository: Path,
         if same_directory:
             reasons.append("the deck sits in the source's own directory")
         # Tightest fit last: among equals, the block that publishes exactly
-        # what the routine reads is likelier to be its own.
+        # what the routine reads is likelier to be its own, and among decks
+        # whose names are equally close the SHORTER name is the base variant
+        # rather than a mesh study of it -- ``l1-is-1--l2-is-11-H0001.inp``
+        # rather than ``l1-is-1--l2-is-11-H0001-M15.inp``.
         slack = abs(material.constants - demand.nprops)
         # Naming evidence, in any of the forms an author leaves it: the
         # README, a file stem that contains the source's, or a block sitting
@@ -655,8 +688,17 @@ def pair(source: Path, repository: Path,
                 f"values past the end would be whatever the array happens to "
                 f"be followed by, not constants an author published"))
             continue
-        scored.append(((by_readme, supplied, by_stages, affinity,
-                        attached, same_directory, -slack),
+        # Order matters and was once wrong. The step structure used to rank
+        # ABOVE the source's own directory, and it moved
+        # ``ParabolicDown/Th002/BodyForce-Growth-2Stages.for`` onto an ArcUp
+        # deck two directories away: the routine branches at total times 1, 2
+        # and 3, and the author's own ParabolicDown deck runs only two steps.
+        # That is the author saying their experiment stopped before the third
+        # branch, not evidence that the deck beside the source is somebody
+        # else's. A deck in the source's own directory outranks it.
+        scored.append(((by_readme, supplied, single, affinity, attached,
+                        same_directory, by_stages, -slack,
+                        -len(material.deck.name)),
                        material, reasons))
 
     if not scored:
@@ -704,7 +746,15 @@ def pair(source: Path, repository: Path,
             f"the routine's highest literal subscript is PROPS({demand.nprops}) "
             f"and it also indexes PROPS by a variable, so the {best.constants} "
             f"constants of {best.name} are taken on the deck's word")
-    if best_key[0] == 0 and best_key[2] <= 0 and best_key[3] == 0:
+    if positional:
+        score, detail = geometry_of(best.deck)
+        box_axes = 3
+        if score < box_axes and detail:
+            warnings.append(
+                f"this routine reads COORDS, so the mesh it runs on is part "
+                f"of what it computes, and the constants it hard-codes "
+                f"account for only {score} of this mesh's extents ({detail})")
+    if best_key[0] == 0 and best_key[3] == 0 and best_key[6] <= 0:
         warnings.append(
             "nothing in the repository states this pairing: it rests on the "
             "material block fitting what the routine reads")
