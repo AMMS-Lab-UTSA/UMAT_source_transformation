@@ -685,11 +685,16 @@ def settle(source_text: str, source_name: str, deck_text: str = "",
     provenance = (f"{deck_name}: {where}" if where else
                   (f"{deck_name} names no element for material "
                    f"{material or '(unnamed)'}" if deck_text else "no deck"))
-    # The tensor size the source fills is handed to the chooser, because a
-    # deck that says "shell" is saying "three plane-stress components" and
-    # whether the source agrees decides whether the substitution is honest.
+    # The tensor size the source fills is handed to the chooser ONLY when the
+    # deck named an element, because there it is a cross-check: a deck that
+    # says "shell" is saying "three plane-stress components", and whether the
+    # source agrees decides whether the substitution is honest. Handing it over
+    # when the deck named nothing turns the hint into the deck's own answer,
+    # and the richer reason this function builds from the source's evidence --
+    # "a DO loop bounded at 4 fills the whole of STRESS" -- is then never
+    # reached.
     from_the_deck = choose(kinds, provenance=provenance,
-                           ntens_hint=from_the_source.ntens)
+                           ntens_hint=from_the_source.ntens if kinds else 0)
 
     # A cohesive element in the deck settles the question outright: the
     # author drove this material as a traction-separation law, and the
@@ -734,11 +739,13 @@ def settle(source_text: str, source_name: str, deck_text: str = "",
             Formulation(author_elements=kinds, family="cohesive",
                         provenance=provenance,
                         reason=("this source names itself a cohesive law, so "
-                                "it is handed separations rather than a strain "
-                                "tensor; this harness drives COH2D4 and "
-                                "COH3D8, and no deck here says which of them "
-                                "the author used, so the number of separation "
-                                "components is unsettled")),
+                                "it is handed separations and returns "
+                                "tractions rather than a strain and a stress "
+                                "tensor. This harness drives COH2D4 and "
+                                "COH3D8; nothing in the deck paired with it "
+                                "says which of the two the author used, so how "
+                                "many separation components the routine is "
+                                "called with is unsettled")),
             from_the_source, kinds,
             agreement="the source names itself a cohesive law")
     if from_the_source.known:
@@ -773,3 +780,136 @@ def settle(source_text: str, source_name: str, deck_text: str = "",
                             "every 7 sources in this corpus are")),
         from_the_source, kinds,
         agreement="neither says; three-dimensional continuum is assumed")
+
+
+# ---------------------------------------------------------------------------
+# the frame the author ran the material in
+# ---------------------------------------------------------------------------
+@dataclass(frozen=True)
+class Orientation:
+    """The local axes a deck gives a material, exactly as the deck writes them.
+
+    Two halves, and both are the author's. ``*ORIENTATION`` names the frame --
+    six numbers giving a point on the local 1-axis and a point in the local
+    1-2 plane, then an axis and an angle to rotate about it. A composite
+    ``*SHELL SECTION`` then rotates each ply again on its own data line.
+
+    ``CAEAssistant-Group``'s deck carries both::
+
+        *Orientation, name=Ori-1
+                  1.,  0.,  0.,  0.,  1.,  0.
+        3, 0.
+        *Shell Section, elset=..., composite, orientation=Ori-1, layup=...
+        0.1, 3, COMPOSITE, 30., Ply-1
+
+    and the harness refused it saying "this harness can read the orientation's
+    name but not its axes, and will not run the material in a frame its author
+    never published". The axes are published: they are the global ones, and
+    the ply is turned thirty degrees about the shell normal.
+    """
+
+    axes: tuple[float, ...] = ()
+    rotation: tuple[int, float] = (3, 0.0)
+    provenance: str = ""
+
+    @property
+    def known(self) -> bool:
+        return len(self.axes) == 6
+
+    def as_dict(self) -> dict:
+        return {"axes": list(self.axes), "rotation": list(self.rotation),
+                "provenance": self.provenance}
+
+
+def _floats(line: str) -> list[float]:
+    out: list[float] = []
+    for piece in str(line or "").split(","):
+        piece = piece.strip()
+        if not piece:
+            continue
+        try:
+            out.append(float(piece.replace("D", "E").replace("d", "e")))
+        except ValueError:
+            return out
+    return out
+
+
+def read_orientation(deck_text: str, material: str = "") -> Orientation:
+    """The frame this deck runs ``material`` in, or an empty answer.
+
+    Returns nothing rather than a default. An orientation this harness made up
+    would run an anisotropic material along axes its author did not choose,
+    and for a material whose whole behaviour is directional that is a
+    different material.
+    """
+    frames: dict[str, tuple[list[float], tuple[int, float]]] = {}
+    section_orientation = ""
+    ply_angle: Optional[float] = None
+    section_line = ""
+    wanted = (material or "").upper()
+
+    mode = ""
+    name = ""
+    pending: list[float] = []
+    for number, raw in enumerate(deck_text.splitlines(), start=1):
+        line = raw.rstrip()
+        if not line.strip() or line.lstrip().startswith("**"):
+            continue
+        found = _KEYWORD.match(line)
+        if found:
+            keyword = "".join(found.group(1).split()).upper()
+            parameters = _parameters(found.group(2))
+            if keyword == "ORIENTATION":
+                name = parameters.get("NAME", "").upper()
+                pending = []
+                mode = "orientation"
+                continue
+            if keyword in {"".join(part.split()) for part in _SECTIONS}:
+                if wanted and parameters.get("MATERIAL", "").upper() == wanted:
+                    section_orientation = parameters.get("ORIENTATION", "").upper()
+                    section_line = f"line {number}: {line.strip()[:90]}"
+                    mode = "section"
+                elif "COMPOSITE" in found.group(2).upper():
+                    section_orientation = (parameters.get("ORIENTATION", "")
+                                           .upper() or section_orientation)
+                    section_line = section_line or f"line {number}: {line.strip()[:90]}"
+                    mode = "composite"
+                else:
+                    mode = ""
+                continue
+            mode = ""
+            continue
+        if mode == "orientation":
+            numbers = _floats(line)
+            if len(pending) < 6 and len(numbers) >= 6:
+                pending = numbers[:6]
+                continue
+            if pending and len(numbers) >= 2:
+                frames[name] = (pending, (int(numbers[0]), float(numbers[1])))
+                mode = ""
+            continue
+        if mode in ("section", "composite"):
+            # A composite ply line is ``thickness, nip, material, angle, name``
+            # and the angle is the author turning that ply.
+            fields = [field.strip() for field in line.split(",")]
+            if len(fields) >= 4 and wanted and fields[2].upper() == wanted:
+                try:
+                    ply_angle = float(fields[3])
+                except ValueError:
+                    ply_angle = None
+            mode = ""
+            continue
+
+    if not frames:
+        return Orientation()
+    chosen = section_orientation or next(iter(frames))
+    frame = frames.get(chosen)
+    if frame is None:
+        return Orientation()
+    axes, (axis, angle) = frame
+    total = angle + (ply_angle or 0.0)
+    detail = (f"*ORIENTATION {chosen}: axes {axes}, rotation {angle:g} about "
+              f"axis {axis}")
+    if ply_angle:
+        detail += f"; the ply is turned a further {ply_angle:g} ({section_line})"
+    return Orientation(tuple(axes), (axis, total), detail)

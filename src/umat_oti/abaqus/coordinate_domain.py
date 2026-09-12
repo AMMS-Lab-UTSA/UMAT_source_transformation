@@ -299,6 +299,10 @@ class AuthorElement:
     nodes: tuple[tuple[int, float, float, float], ...]
 
     @property
+    def node_count(self) -> int:
+        return len(self.nodes)
+
+    @property
     def centroid(self) -> tuple[float, float, float]:
         count = float(len(self.nodes)) or 1.0
         return tuple(sum(node[axis + 1] for node in self.nodes) / count
@@ -586,9 +590,34 @@ def place(source_text: str, deck_text: str,
 # ---------------------------------------------------------------------------
 # does this deck's mesh have the shape the source hard-codes?
 # ---------------------------------------------------------------------------
+#: ``name = number``, and ``name = number op number``. The second form is not
+#: decoration: ``Experiment-DRAGONSKIN20-Flat/Th01/PureGrowth.for`` writes
+#: ``h = 0.1/20.0`` and ``L = 1.0/10.0``, so reading only bare literals said
+#: that source declared no geometry at all -- and it declares a plate a tenth
+#: as long as every other one in its repository.
 _SCALAR = re.compile(
-    r"^\s*(?:\d+\s+)?([A-Za-z_]\w*)\s*=\s*([-+]?\d+(?:\.\d*)?(?:[EeDd][-+]?\d+)?)"
+    r"^\s*(?:\d+\s+)?([A-Za-z_]\w*)\s*=\s*"
+    r"([-+]?\d+(?:\.\d*)?(?:[EeDd][-+]?\d+)?"
+    r"(?:\s*[*/]\s*[-+]?\d+(?:\.\d*)?(?:[EeDd][-+]?\d+)?)?)"
     r"\s*(?:!.*)?$")
+
+
+def _literal(text: str) -> Optional[float]:
+    """A number, or a product or quotient of two, as an author writes one."""
+    body = str(text or "").replace("D", "E").replace("d", "e")
+    try:
+        return float(body)
+    except ValueError:
+        pass
+    for operator, apply in (("/", lambda a, b: a / b if b else None),
+                            ("*", lambda a, b: a * b)):
+        if operator in body:
+            left, _, right = body.partition(operator)
+            try:
+                return apply(float(left), float(right))
+            except (ValueError, ZeroDivisionError):
+                return None
+    return None
 
 
 def declared_lengths(source_text: str,
@@ -621,11 +650,8 @@ def declared_lengths(source_text: str,
         match = _SCALAR.match(line)
         if not match:
             continue
-        try:
-            value = float(match.group(2).replace("D", "E").replace("d", "e"))
-        except ValueError:                         # pragma: no cover
-            continue
-        if value > 0.0:
+        value = _literal(match.group(2))
+        if value is not None and value > 0.0:
             found[match.group(1).upper()] = value
     if not only_positional:
         return found

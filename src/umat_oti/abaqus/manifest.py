@@ -56,6 +56,15 @@ class LoadingSegment:
     #: tensor, and driving it with ``strain`` would drive a different
     #: quantity. Empty for every non-cohesive segment.
     separation: tuple[float, ...] = ()
+    #: Degrees of freedom held on EVERY node of the face at minimum x, as the
+    #: author's own support holds one end of their plate. Only meaningful
+    #: beside a time-driven or body-force segment, where the element is
+    #: otherwise free: it turns a freely growing element -- which is close to
+    #: traction-free by construction, and so close to saying nothing -- into a
+    #: partly restrained one that carries a real stress. The other face stays
+    #: free, so the volume can still change and a nearly incompressible
+    #: material is not asked to change volume against its own bulk modulus.
+    clamped_face: tuple[int, ...] = ()
     #: Nothing is prescribed and nothing is loaded; only the clock advances
     #: over ``period``. This is the whole experiment for a law whose driver is
     #: TIME -- a growth stretch, a swelling, an ageing -- and the segment that

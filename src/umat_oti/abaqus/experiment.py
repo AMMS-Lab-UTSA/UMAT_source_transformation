@@ -175,6 +175,71 @@ def time_driven_state_slots(source_text: str) -> dict[int, str]:
     return slots
 
 
+#: Names that are the clock itself rather than something a law computes from
+#: it. A state variable assigned nothing but these is a RECORD of the time,
+#: not a growth quantity -- ``BodyForce-Growth-2Stages.for`` writes
+#: ``STATEV(9) = (TIME(2)+DTIME)`` -- and it moves in every run by definition,
+#: including the runs this family's criterion exists to reject.
+_CLOCK_ONLY = {"TIME", "DTIME", "TOTALT", "KSTEP", "KINC"}
+
+
+#: Which of the two clocks a law reads. TIME(1) is the time within the current
+#: STEP and restarts at zero in the next one; TIME(2) is the time since the
+#: analysis began and does not.
+_STEP_CLOCK = re.compile(r"\bTIME\s*\(\s*1\s*\)", re.IGNORECASE)
+_TOTAL_CLOCK = re.compile(r"\bTIME\s*\(\s*2\s*\)", re.IGNORECASE)
+
+
+def clock_read(source_text: str) -> str:
+    """``"step"``, ``"total"``, ``"both"`` or ``""`` -- which clock drives this law.
+
+    It decides whether the experiment may have more than one step, and getting
+    it wrong throws the whole history away. ``PureGrowth.for`` ramps its growth
+    in ``(TIME(1)+DTIME)/TotalT``, and TIME(1) restarts at zero when a step
+    ends: a second step would reset the growth tensor to the identity and the
+    run would look like a model that ungrew. ``BodyForce-Growth-2Stages.for``
+    ramps in ``TIME(2)`` and branches on it at 1, 2 and 3, so it REQUIRES three
+    steps to reach its own third branch.
+    """
+    body = _executable(source_text)
+    step = bool(_STEP_CLOCK.search(body))
+    total = bool(_TOTAL_CLOCK.search(body))
+    if step and total:
+        return "both"
+    if step:
+        return "step"
+    if total:
+        return "total"
+    return ""
+
+
+def growth_state_slots(source_text: str) -> dict[int, str]:
+    """The state variables that hold a growth QUANTITY, not the clock.
+
+    A growth criterion has to watch the growth tensor. Watching every slot the
+    clock reaches watches the clock as well, and a slot assigned
+    ``(TIME(2)+DTIME)`` moves by construction in any run of any length -- so a
+    criterion built on it is met by the run it was written to reject.
+
+    Measured on the three sources this separates: ``PureGrowth.for`` keeps G11
+    in STATEV(8) and the norm of the growth tensor in STATEV(9), and this
+    keeps both; ``BodyForce-Growth-2Stages.for`` keeps G11 in STATEV(8) and
+    the elapsed time in STATEV(9), and this keeps only the first;
+    ``umat_iso_morph_Abaqus.f`` keeps the growth multiplier in statev(1) and
+    its cube in statev(2), and this keeps both.
+    """
+    slots = time_driven_state_slots(source_text)
+    kept: dict[int, str] = {}
+    for slot, statement in slots.items():
+        head = statement.split("<-")[0]
+        _target, _, expression = head.partition("=")
+        names = {name.upper() for name
+                 in re.findall(r"[A-Za-z_]\w*", expression)}
+        if names - _CLOCK_ONLY:
+            kept[slot] = statement
+    return kept
+
+
 def applies_a_body_force(source_text: str) -> tuple[bool, str]:
     """Does this file's DLOAD actually apply anything?
 
@@ -460,6 +525,7 @@ def build(source_text: str, manifest: VerificationManifest, *,
           deck_periods: Sequence[float] = (),
           body_force: tuple = (), held: tuple = (),
           body_force_provenance: str = "",
+          clamp_a_face: bool = False,
           strain: float = 0.01) -> Experiment:
     """The experiment this source is for, as a manifest ready to be written.
 
@@ -524,6 +590,23 @@ def build(source_text: str, manifest: VerificationManifest, *,
                          "much of the growth happens, which is the "
                          "constitutive problem and not the numerics"))
         periods = requirement.periods or (requirement.total_time,)
+        clock = clock_read(source_text)
+        if clock == "step" and len(periods) > 1:
+            # A law that reads the time within its STEP cannot be walked
+            # across several of them: the clock restarts and the growth with
+            # it. One step of the whole duration is the only shape that keeps
+            # the history this law was written against.
+            periods = (requirement.total_time,)
+            warnings.append(
+                "this law reads TIME(1), the time within the current step, "
+                "which restarts at zero when a step ends -- so the whole "
+                "duration is run as ONE step. A staged experiment would reset "
+                "its growth tensor to the identity at every boundary")
+        elif clock == "total" and len(periods) == 1 and requirement.total_time:
+            warnings.append(
+                "this law reads TIME(2), the time since the analysis began, "
+                "so its history is continuous across steps and the single "
+                "step here carries the whole of it")
         segments: list[LoadingSegment] = []
         for index, period in enumerate(periods, start=1):
             name = "grow" if len(periods) == 1 else f"stage{index}"
@@ -536,6 +619,17 @@ def build(source_text: str, manifest: VerificationManifest, *,
                 segments.append(let_time_pass(
                     period, increments=INCREMENTS["growth"], name=name,
                     why=requirement.reason[:160]))
+            if clamp_a_face:
+                segments[-1] = replace(
+                    segments[-1], clamped_face=tuple(held or (1, 2)),
+                    name=f"{segments[-1].name}_restrained",
+                    description=(segments[-1].description
+                                 + "; the face at minimum x is held in "
+                                 + ", ".join(str(dof) for dof in (held or (1, 2)))
+                                 + ", as the author's own support holds one end "
+                                   "of their plate, so the growth is resisted "
+                                   "and carries a stress instead of being "
+                                   "traction-free"))
         return Experiment(
             manifest=replace(manifest, loading=tuple(segments),
                              kinematics="finite" if _DFGRD.search(
@@ -547,6 +641,11 @@ def build(source_text: str, manifest: VerificationManifest, *,
                     f"rigid-body motion requires, so the growth produces the "
                     f"deformation rather than fighting a boundary condition "
                     f"the author never wrote"
+                    + (". A face is held in the directions the author's own "
+                       "support holds, so the growth is resisted and the "
+                       "element carries a stress: a freely growing element is "
+                       "traction-free by construction, and an agreement about "
+                       "a zero is not a verification" if clamp_a_face else "")
                     + (f", and the author's own body force is applied through "
                        f"the source's DLOAD ({body_force_provenance})"
                        if body_force else "")),
@@ -585,14 +684,45 @@ def build(source_text: str, manifest: VerificationManifest, *,
 
     # Strain-driven, plane stress, finite strain, rate dependent: the driver
     # IS the strain, and the amplitude search is the right instrument for
-    # choosing how far. Say what the family is and leave the loading alone.
+    # choosing how far. What this decides is the SHAPE of the path, which the
+    # search does not: how many legs it has and whether it reverses.
+    loading = manifest.loading or _strain_path(
+        strain, reverses=len(deck_periods) >= 2,
+        components=geometry.ntens)
+    shape = ("out, back through zero and out again, because the author's own "
+             "deck runs " + str(len(deck_periods)) + " steps and a deck that "
+             "reverses is a deck whose material was expected to behave "
+             "differently on the way back"
+             if len(deck_periods) >= 2 else
+             "extension, compression and shear, which is the smallest set "
+             "that reaches a threshold in any of the three")
     return Experiment(
-        manifest=manifest, family=chosen, criterion=criterion,
+        manifest=replace(manifest, loading=loading),
+        family=chosen, criterion=criterion,
         requirement=requirement,
-        reason=("the driver of this source is the strain increment, so the "
-                "amplitude search chooses the experiment and this adds only "
-                "what the family needs beside it"),
+        reason=(f"the driver of this source is the strain increment, so the "
+                f"amplitude search chooses how far and this chooses the shape: "
+                f"{shape}"),
         warnings=tuple(warnings))
+
+
+def _strain_path(strain: float, reverses: bool,
+                 components: int = 6) -> tuple[LoadingSegment, ...]:
+    """The legs a strain-driven experiment is made of.
+
+    Three questions a single monotonic extension cannot answer: whether the
+    material is different in compression, whether it does anything under
+    deviatoric loading, and -- when the author's own deck reverses -- whether
+    it comes back the way it went out. The author's step count decides the
+    last: ``MML_U2/SHELL_TCT_IM.inp`` runs TENS1, COMP1 and TESN2, which is a
+    tension-compression-tension test, and a monotonic path would verify a
+    kinematic-hardening model on the half of it that looks isotropic.
+    """
+    from umat_oti.abaqus.manifest import compression, cyclic
+
+    if reverses:
+        return cyclic(strain) + (simple_shear(strain),)
+    return (uniaxial(strain), compression(strain), simple_shear(strain))
 
 
 # ---------------------------------------------------------------------------
@@ -652,7 +782,7 @@ def plan(source: Path, repository: Path, name: str = "",
     from umat_oti.abaqus.body_force import read_loads, read_restraints
     from umat_oti.abaqus.coordinate_domain import (coordinate_aliases, place,
                                                    reads_coordinates)
-    from umat_oti.abaqus.formulation import settle
+    from umat_oti.abaqus.formulation import read_orientation, settle
 
     source = Path(source)
     text = source_text if source_text is not None else source.read_text(
@@ -695,7 +825,15 @@ def plan(source: Path, repository: Path, name: str = "",
         name=name or source.stem[:40],
         source=source,
         element_type=settled.element,
-        kinematics="finite" if _DFGRD.search(_executable(text)) else "small strain",
+        # Either witness settles it. The routine reading the deformation
+        # gradient means the MATERIAL is finite-strain; the author's own step
+        # carrying NLGEOM=YES means the PROBLEM is, and a cohesive element
+        # opened to half its own thickness is one whether or not its law reads
+        # DFGRD. Running a deck the author wrote NLGEOM=YES for without it
+        # would be running a different analysis.
+        kinematics=("finite"
+                    if (_DFGRD.search(_executable(text)) or material.nlgeom)
+                    else "small strain"),
         props=tuple(material.values),
         nprops=material.constants,
         nstatv=max(material.depvar, 1),
@@ -709,6 +847,12 @@ def plan(source: Path, repository: Path, name: str = "",
         node_provenance=node_provenance,
         plane_strain_directions=restraints.everywhere,
     )
+    frame = read_orientation(deck_text, material.name)
+    if frame.known:
+        base = replace(base, orientation_axes=frame.axes,
+                       orientation_rotation=frame.rotation,
+                       orientation_provenance=(
+                           f"{Path(material.deck).name}: {frame.provenance}"))
     family = classify(
         text, element=settled.element,
         family_of_element=(settled.formulation.family
@@ -722,3 +866,316 @@ def plan(source: Path, repository: Path, name: str = "",
         held=restraints.supports or (1, 2),
         body_force_provenance=loads.provenance)
     return Plan(source, built, pairing, settled, placement, restraints, loads)
+
+
+# ---------------------------------------------------------------------------
+# what would count as having run the experiment
+# ---------------------------------------------------------------------------
+#: How much a growth quantity has to move before the growth has happened. One
+#: percent of its own initial value -- a growth stretch starts at 1, so this is
+#: a stretch of 1.01. Below that the element is the element the author started
+#: with, and a comparison of two builds there is a comparison of the part every
+#: build gets right.
+GROWTH_MOVEMENT = 0.01
+
+#: How far above the material's own constants a stress may go before the
+#: response stops being about the material.
+#:
+#: An elastic constant IS a stress: it is what the material carries at unit
+#: strain. A thousand times it is either a strain of a thousand or arithmetic
+#: that has left the model, and no single-element experiment here is driven
+#: past a few tens of percent. Measured on BodyForce-Growth-2Stages.for under
+#: the deck this module replaces: peak stress 1.575e13 against a material
+#: block carrying one constant, 1e8 -- a ratio of 157,500, returned by a run
+#: that was finite, complete, and reported as verified. The same model sat at
+#: about 4e13 at the SMALLEST amplitude the search probed, so no amplitude
+#: would have rescued that deck; the deck was wrong.
+PLAUSIBLE_STRESS_MULTIPLE = 1.0e3
+
+
+@dataclass(frozen=True)
+class Finding:
+    """Whether one criterion was met, and the number that says so.
+
+    ``met`` is None when the run does not carry what the criterion needs.
+    That is a third answer and not a failure: "the probe recorded no state
+    variables" and "the growth tensor did not move" are different findings,
+    and reporting the first as the second would blame the model for the
+    instrument.
+    """
+
+    name: str
+    met: Optional[bool]
+    reason: str
+    magnitude: float = 0.0
+
+    def as_dict(self) -> dict:
+        return {"name": self.name, "met": self.met, "reason": self.reason,
+                "magnitude": self.magnitude}
+
+
+def _values(record: dict, key: str) -> list[float]:
+    out: list[float] = []
+    for value in (record.get(key) or ()):
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(number):
+            out.append(number)
+    return out
+
+
+def _results(records: Sequence[dict]) -> list[dict]:
+    return [record for record in (records or ())
+            if record.get("kind") != "entry"]
+
+
+def growth_developed(records: Sequence[dict], slots: dict) -> Finding:
+    """Did the GROWTH TENSOR develop, or did some other state variable move?
+
+    The slots are the ones the source itself computes from the clock, found by
+    name in :func:`time_driven_state_slots`. ``PureGrowth.for`` has nine state
+    variables and three of them move under any loading at all -- it caches the
+    point's coordinates in the first three -- so "a state variable changed" is
+    true of it from the first increment and says nothing about growth.
+
+    What this asks is whether the quantity the growth law computes actually
+    ran: at least one clock-driven slot changed by 1% or more of its own
+    starting value. For a growth stretch, which starts at one, that is a
+    stretch of 1.01.
+    """
+    results = _results(records)
+    if not results:
+        return Finding("growth developed", None,
+                       "this run recorded no completed UMAT calls")
+    if not slots:
+        return Finding("growth developed", None,
+                       "no state variable in this source is computed from the "
+                       "clock, so there is no growth quantity to watch")
+    first = _values(results[0], "STATEV")
+    last = _values(results[-1], "STATEV")
+    if not first or not last:
+        return Finding("growth developed", None,
+                       "the probe recorded no state variables, so whether the "
+                       "growth quantities moved cannot be read off this run")
+    moved: list[tuple[int, float]] = []
+    for slot in sorted(slots):
+        index = slot - 1
+        if index >= len(first) or index >= len(last):
+            continue
+        scale = abs(first[index]) or 1.0
+        moved.append((slot, abs(last[index] - first[index]) / scale))
+    if not moved:
+        return Finding("growth developed", None,
+                       f"this source computes STATEV"
+                       f"{sorted(slots)} from the clock and the probe recorded "
+                       f"{len(first)} state variables, so those slots are not "
+                       f"in this run")
+    best_slot, best = max(moved, key=lambda pair: pair[1])
+    detail = ", ".join(f"STATEV({slot}) moved {value:.3%}"
+                       for slot, value in moved)
+    if best >= GROWTH_MOVEMENT:
+        return Finding("growth developed", True,
+                       f"the growth quantities this source computes from the "
+                       f"clock developed: {detail}", best)
+    return Finding(
+        "growth developed", False,
+        f"the growth quantities this source computes from the clock barely "
+        f"moved: {detail}. The largest, STATEV({best_slot}), changed "
+        f"{best:.3%} of its starting value against the {GROWTH_MOVEMENT:.0%} "
+        f"this family needs, so whatever this run agreed about is the "
+        f"material near its initial state", best)
+
+
+def stress_stays_on_the_material_scale(records: Sequence[dict],
+                                       props: Sequence[float]) -> Finding:
+    """Is the response the size the material's own constants say it can be?
+
+    The check the lead's :mod:`umat_oti.abaqus.plausibility` makes in general,
+    stated here as a coverage criterion because for the growth family it is
+    not a safety net but part of what "the experiment ran" means. A growth
+    deck whose element sits where the growth tensor's determinant passes
+    through zero returns finite, complete, monotone numbers that are 1e5 times
+    the only material constant in the deck -- and every generic activation
+    indicator fires on them.
+    """
+    results = _results(records)
+    if not results:
+        return Finding("stress on the material scale", None,
+                       "this run recorded no completed UMAT calls")
+    scale = max((abs(float(value)) for value in (props or ())
+                 if math.isfinite(float(value))), default=0.0)
+    peak = 0.0
+    for record in results:
+        for value in _values(record, "STRESS"):
+            peak = max(peak, abs(value))
+    if not scale:
+        return Finding("stress on the material scale", None,
+                       f"this material publishes no constant to measure a "
+                       f"stress against; the peak was {peak:g}")
+    ratio = peak / scale
+    if ratio <= PLAUSIBLE_STRESS_MULTIPLE:
+        return Finding("stress on the material scale", True,
+                       f"the peak stress is {peak:g}, which is {ratio:.3g} "
+                       f"times the largest constant this material publishes "
+                       f"({scale:g})", ratio)
+    return Finding(
+        "stress on the material scale", False,
+        f"the peak stress is {peak:g} against a largest material constant of "
+        f"{scale:g} -- a ratio of {ratio:.4g}, past the "
+        f"{PLAUSIBLE_STRESS_MULTIPLE:g} this allows. A response that far above "
+        f"the material's own scale is arithmetic that has left the model, and "
+        f"two builds agreeing on it agree about the same departure", ratio)
+
+
+def deformed_under_the_load(records: Sequence[dict]) -> Finding:
+    """Did the element move at all, when nothing prescribed that it should?
+
+    The whole point of a body-force segment. No displacement is imposed beyond
+    the rigid-body restraint, so a strain still at zero at the end of the step
+    means DLOAD was never called or returned nothing -- which is exactly the
+    failure this family exists to catch and is invisible to any amplitude,
+    because there is no amplitude in the deck to raise.
+    """
+    from umat_oti.abaqus.activation import strain_at
+
+    results = _results(records)
+    if not results:
+        return Finding("deformed under the load", None,
+                       "this run recorded no completed UMAT calls")
+    reached = 0.0
+    for record in results:
+        for value in strain_at(record):
+            reached = max(reached, abs(value))
+    if reached > 1e-10:
+        return Finding("deformed under the load", True,
+                       f"the element reached a strain of {reached:g} with no "
+                       f"displacement prescribed, so the load did work on it",
+                       reached)
+    return Finding("deformed under the load", False,
+                   "no displacement was prescribed and the strain never left "
+                   "zero, so nothing drove this element: either DLOAD was "
+                   "never called or it returned nothing", reached)
+
+
+def cohesive_softened(records: Sequence[dict]) -> Finding:
+    """Did the traction FALL while the separation rose?
+
+    Softening is the whole of a cohesive law. An opening that stops on the
+    elastic branch verifies a penalty stiffness, which is one number the
+    author wrote down, and says nothing about the damage evolution that is the
+    model.
+    """
+    from umat_oti.abaqus.activation import strain_at
+
+    results = _results(records)
+    pairs: list[tuple[float, float]] = []
+    for record in results:
+        separation = strain_at(record)
+        traction = _values(record, "STRESS")
+        if separation and traction:
+            pairs.append((separation[0], traction[0]))
+    if len(pairs) < 4:
+        return Finding("softened after onset", None,
+                       f"only {len(pairs)} increments carry both a separation "
+                       f"and a traction, which is too few to see a branch")
+    peak = max(pairs, key=lambda pair: pair[1])
+    after = [pair for pair in pairs if pair[0] > peak[0]]
+    if not after:
+        return Finding("softened after onset", False,
+                       f"the traction rose to {peak[1]:g} at a separation of "
+                       f"{peak[0]:g} and the run never opened further, so this "
+                       f"path stayed on the elastic branch", 0.0)
+    lowest = min(pair[1] for pair in after)
+    drop = (peak[1] - lowest) / abs(peak[1]) if peak[1] else 0.0
+    if drop > 0.05:
+        return Finding("softened after onset", True,
+                       f"the traction peaked at {peak[1]:g} at a separation of "
+                       f"{peak[0]:g} and fell to {lowest:g} as the separation "
+                       f"rose further -- a drop of {drop:.1%}", drop)
+    return Finding("softened after onset", False,
+                   f"the traction peaked at {peak[1]:g} and had fallen only "
+                   f"{drop:.1%} by the end of the opening, so this path did "
+                   f"not reach the softening branch", drop)
+
+
+def direct_strain_produced_shear(records: Sequence[dict]) -> Finding:
+    """Did a pure direct strain produce a shear stress?
+
+    The observable that says a material's own axes reached the routine. In a
+    frame aligned with the loading there is no such coupling; in a rotated one
+    there always is, and a build that lost the rotation returns zero here and
+    agrees with nothing.
+    """
+    from umat_oti.abaqus.activation import strain_at
+
+    results = _results(records)
+    best = 0.0
+    for record in results:
+        separation = strain_at(record)
+        stress = _values(record, "STRESS")
+        if len(stress) < 3 or len(separation) < 3:
+            continue
+        direct = max(abs(value) for value in separation[:2])
+        shear = max(abs(value) for value in separation[2:])
+        if direct <= 0.0 or shear > 1e-12:
+            continue
+        size = max(abs(value) for value in stress) or 1.0
+        best = max(best, max(abs(value) for value in stress[2:]) / size)
+    if not best:
+        return Finding("direct strain produced shear", None,
+                       "no increment in this run applied a direct strain with "
+                       "no shear, so the coupling has nothing to show up in")
+    if best > 1e-3:
+        return Finding("direct strain produced shear", True,
+                       f"a prescribed direct strain produced a shear stress "
+                       f"{best:.3%} of the largest component, which only a "
+                       f"rotated material frame does", best)
+    return Finding("direct strain produced shear", False,
+                   f"a prescribed direct strain produced a shear stress only "
+                   f"{best:.3%} of the largest component, which is what an "
+                   f"unrotated frame gives", best)
+
+
+#: Criteria a family needs which this module cannot measure from one run's
+#: probe records, stated so that a run request can carry them anyway.
+DECLARED_ONLY: dict[str, tuple[str, ...]] = {
+    "rate dependent": (
+        "the same strain path walked over two different step periods must "
+        "return two different stresses at the same strain -- two runs, so it "
+        "is checked by the pair and not by either one",),
+    "finite strain": (
+        "a superposed rigid rotation must leave the material response "
+        "unchanged, which needs a second run whose path is the first one "
+        "rotated",),
+}
+
+
+def assess(family: Family, records: Sequence[dict],
+           manifest: VerificationManifest,
+           source_text: str = "") -> tuple[Finding, ...]:
+    """Every criterion this family carries, measured against one run.
+
+    The plausibility of the response is checked for EVERY family, not only for
+    the ones whose criterion mentions it. It is the check that would have
+    caught the growth run this module exists because of: finite, complete,
+    monotone, active by every generic indicator, and 1e5 times the size the
+    material can be.
+    """
+    findings: list[Finding] = [
+        stress_stays_on_the_material_scale(records, manifest.props)]
+    if family.name == "growth":
+        findings.append(growth_developed(
+            records, growth_state_slots(source_text)))
+        if any(segment.body_force for segment in manifest.loading):
+            findings.append(deformed_under_the_load(records))
+    elif family.name == "body force":
+        findings.append(deformed_under_the_load(records))
+    elif family.name == "cohesive":
+        findings.append(cohesive_softened(records))
+    elif family.name == "oriented":
+        findings.append(direct_strain_produced_shear(records))
+    for statement in DECLARED_ONLY.get(family.name, ()):
+        findings.append(Finding(statement[:40], None, statement))
+    return tuple(findings)
