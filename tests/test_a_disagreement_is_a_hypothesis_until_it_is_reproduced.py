@@ -333,10 +333,22 @@ def test_two_magnitudes_far_apart_are_not_a_sign_flip():
 # the contract with the caller
 # ---------------------------------------------------------------------------
 def test_the_signature_is_recorded_beside_the_comparison():
+    """And it is the REVIEWING form that is called, not the bare classifier.
+
+    ``classify`` raises the hypotheses from the summary numbers alone -- a sign
+    flip, a Newton loop in the text -- and everything it produces is open by
+    construction. ``review_entry`` takes the same summary and then goes to the
+    recorded calls in the job's own work directory to try to confirm or refute
+    each one. Wiring the call site to ``classify`` would leave the five
+    confirmed root causes and the twenty-one refutations in a branch's tests
+    and never write them to the results file, and every disagreement in the
+    corpus would be reported at the level of a guess.
+    """
     import pathlib
     text = pathlib.Path(__file__).resolve().parents[1].joinpath(
         "tools", "verify_store_in_abaqus.py").read_text()
-    assert 'record["primal_signature"] = primal_signature.classify(' in text
+    assert 'record["primal_signature"] = primal_signature.review_entry(' in text
+    assert 'primal_signature.classify(' not in text
 
 
 def test_a_signature_never_changes_a_verdict():
