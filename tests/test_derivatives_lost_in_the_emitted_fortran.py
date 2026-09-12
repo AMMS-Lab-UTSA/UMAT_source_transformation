@@ -522,3 +522,36 @@ def test_a_shear_term_written_under_an_inline_if_keeps_its_derivative_when_run(t
     assert shear_value == pytest.approx(80.0 * 4.0e-4, rel=1e-12)
     assert shear_derivative == pytest.approx(80.0, rel=1e-12), (
         "the guarded shear assignment lost its derivative")
+
+
+@pytest.mark.unit
+@pytest.mark.regression
+def test_the_truncation_detector_sees_a_cast_written_under_an_inline_if():
+    """The detector had the same blind spot as the emitter it watches.
+
+    ``_ASSIGNMENT`` and ``_CAST`` take a name, an optional parenthesised
+    subscript and an ``=``, so ``IF (NSHR .GE. 1) SOUT(4) = REAL(SIGMA_OTI)``
+    read as an assignment to a variable called IF: the cast was neither traced
+    into the taint set nor reported as a truncation. The emitter no longer
+    writes that cast, and the detector would now see it if anything did.
+    """
+    from umat_oti.abaqus import truncation
+
+    guarded = (
+        "      DSTRAN_OTI(1) = DSTRAN_OTI(1) + OTI_E1\n"
+        "      SIGMA_OTI = DSTRAN_OTI(1)*2.0D0\n"
+        "      IF (NSHR .GE. 1) SOUT(4) = REAL(SIGMA_OTI)\n"
+        "      TOTAL_OTI = SOUT(4) + 1.0D0\n")
+    finding = truncation.analyse(guarded)
+    assert [t.line for t in finding.truncations] == [3], finding.truncations
+    assert "SOUT" in finding.truncations[0].text.upper()
+
+    # The same statement without the guard was always seen; it still is.
+    plain = guarded.replace("IF (NSHR .GE. 1) ", "")
+    assert [t.line for t in truncation.analyse(plain).truncations] == [3]
+
+    # A block IF opens a block and assigns nothing.
+    assert truncation.analyse(
+        "      DSTRAN_OTI(1) = DSTRAN_OTI(1) + OTI_E1\n"
+        "      IF (X .GT. 0) THEN\n"
+        "      END IF\n").truncations == ()
