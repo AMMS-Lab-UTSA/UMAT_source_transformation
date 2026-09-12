@@ -52,6 +52,12 @@ _IF_RE = re.compile(r"^(\s*(?:\d+\s+)?(?:ELSE\s+)?IF\s*)\(", re.IGNORECASE)
 #: TO's selector is an integer expression -- so the whole statement is left
 #: alone rather than trying to tell a label from a value inside it.
 _LABEL_REFERENCE_STATEMENT_RE = re.compile(r"^\s*(?:GO\s*TO|ASSIGN)\b", re.IGNORECASE)
+#: A FORMAT statement, label and all. Its contents are edit descriptors and not
+#: numbers: ``FORMAT(7(E24.8E3))`` holds no literal ``8E3`` to promote, and
+#: promoting it emitted ``E24.8D3``, which gfortran rejects with "Period
+#: required in format specifier D". No arithmetic can appear in a FORMAT
+#: statement, so the whole statement is left exactly as the author wrote it.
+_FORMAT_STATEMENT_RE = re.compile(r"^\s*(?:\d+\s+)?FORMAT\s*\(", re.IGNORECASE)
 _TYPED_INTRINSIC_MAP = {
     "DABS": "ABS",
     "DACOS": "ACOS",
@@ -458,6 +464,11 @@ def _lift_helper_routine(
     # "Symbol 'n' already has basic type of INTEGER". The names are read ahead
     # of the pass that emits, because the type declaration comes first.
     named_constants = _parameter_statement_names(stitched_lines[1:-1], form)
+    # Read ahead as well, because a DATA statement that gives a whole array its
+    # elements needs the array's shape and nothing in the DATA statement says
+    # what it is. The declaration is above it in every source seen, but reading
+    # the whole routine first does not depend on that being true.
+    declared_extents = _declared_literal_extents(stitched_lines[1:-1], form)
 
     for raw in stitched_lines[1:-1]:
         stripped = _statement_text(raw, form)
@@ -513,7 +524,8 @@ def _lift_helper_routine(
             continue
         data_match = _DATA_RE.match(stripped)
         if data_match:
-            data_assignments.extend(f"    {assignment}" for assignment in _data_to_assignments(data_match.group(1)))
+            data_assignments.extend(f"    {assignment}" for assignment in
+                                    _data_to_assignments(data_match.group(1), declared_extents))
             continue
         external_match = _EXTERNAL_RE.match(stripped)
         if external_match:
@@ -743,6 +755,52 @@ def _parameter_statement_names(raw_lines: Sequence[str], form: str) -> set[str]:
     return names
 
 
+def _declared_literal_extents(raw_lines: Sequence[str], form: str) -> dict[str, tuple[int, ...]]:
+    """Array names this routine declares, with their literal integer extents.
+
+    Only literal extents. ``TENSOR(N,N)`` is an assumed or automatic shape,
+    which no rewrite here can enumerate, and leaving it out means the DATA
+    rewrite below refuses it rather than guessing a length.
+    """
+    extents: dict[str, tuple[int, ...]] = {}
+    for raw in raw_lines:
+        stripped = _statement_text(raw, form)
+        if not stripped:
+            continue
+        stripped = _flattened_attributed_declaration(stripped)
+        payload = ""
+        for matcher in (_DIMENSION_RE, _INTEGER_RE, _REAL_RE):
+            match = matcher.match(stripped)
+            if match:
+                payload = match.group(1)
+                break
+        if not payload:
+            continue
+        for item in split_top_level(payload):
+            entity = parse_entity(item.strip())
+            dimensions = [dimension.strip() for dimension in entity.dimensions]
+            if not dimensions or not all(dimension.isdigit() for dimension in dimensions):
+                continue
+            extents[entity.upper_name] = tuple(int(dimension) for dimension in dimensions)
+    return extents
+
+
+def _column_major_subscript(offset: int, extents: tuple[int, ...]) -> str:
+    """The subscript list for the ``offset``-th element in array element order.
+
+    Fortran's array element order runs the leftmost subscript fastest, and a
+    DATA value list is laid down in exactly that order; so is RESHAPE. Writing
+    the subscripts out rather than building an array constructor keeps every
+    assignment a scalar one, which is what the OTI type's ASSIGNMENT(=) is
+    defined for.
+    """
+    subscripts: list[int] = []
+    for extent in extents:
+        subscripts.append(offset % extent + 1)
+        offset //= extent
+    return ",".join(str(value) for value in subscripts)
+
+
 def _without_names(payload: str, names: set[str]) -> str:
     """``payload`` with any declared entity whose name is in ``names`` removed."""
     kept = [
@@ -829,7 +887,13 @@ def _implicit_oti_names(
 ) -> set[str]:
     result: set[str] = set()
     for line in body:
-        lhs_match = _LHS_ASSIGN_RE.match(line)
+        # An inline IF's target is the assignment it guards, not the word IF.
+        # Reading the whole line left a variable whose only assignment is
+        # written that way out of the implicitly-hypercomplex set, so every
+        # rewrite keyed on that set skipped it.
+        inline_if = _split_inline_if_statement(line)
+        guarded = inline_if[1] if inline_if is not None else line
+        lhs_match = _LHS_ASSIGN_RE.match(guarded)
         if lhs_match:
             name = lhs_match.group(1).upper()
             if name not in declared_non_oti and name not in parameter_names and not _is_implicit_integer_name(name):
@@ -844,6 +908,46 @@ def _implicit_oti_names(
                 continue
             result.add(name)
     return result
+
+
+def _split_inline_if_statement(line: str) -> tuple[str, str] | None:
+    """``IF (cond) stmt`` split into the IF and the statement it guards.
+
+    Returns None when the line does not open with IF, and (prefix, rest) when
+    it does -- including for a block ``IF (cond) THEN``, whose ``rest`` is
+    " THEN" and matches no assignment, so callers need no separate test.
+
+    Without this split, every assignment-shaped rewrite below read the
+    statement as an assignment to a variable called ``IF``: the regexes take a
+    name, an optional parenthesised subscript and an ``=``, and ``[^=]*`` is
+    greedy enough to swallow ``(NSHR .GE. 1) STRESS_OUT(4)`` whole as the
+    subscript. The consequence was silent and numerical.
+    ``_wrap_oti_rhs_assigned_to_a_plain_variable`` then saw a target named IF,
+    which is not hypercomplex, and wrapped the right-hand side in REAL():
+
+        IF(NSHR .GE. 1) STRESS_OUT(4) = REAL(SIGMA(1,2))
+
+    for keisuke58/pde-fem-biofilm's umat_biofilm_visco_phase2.f. The shear
+    stresses kept their values and lost every derivative, so the converted
+    build returned a DDSDDE whose rows 4, 5 and 6 were identically zero
+    against an author's DDSDDE(4,4) of 1.021165e+02 -- with the normal rows,
+    whose assignments are not guarded by an inline IF, correct throughout.
+    """
+    if not re.match(r"^\s*(?:ELSE\s*)?IF\b", line, flags=re.IGNORECASE):
+        return None
+    open_paren = line.find("(")
+    if open_paren < 0:
+        return None
+    depth = 0
+    for index in range(open_paren, len(line)):
+        char = line[index]
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+            if depth == 0:
+                return line[: index + 1], line[index + 1:]
+    return None
 
 
 def _wrap_oti_rhs_assigned_to_a_plain_variable(
@@ -862,7 +966,12 @@ def _wrap_oti_rhs_assigned_to_a_plain_variable(
     """
     if not oti_names:
         return line
-    match = re.match(r"^(\s*)([A-Za-z_]\w*)\s*(\([^=]*\))?\s*=(?!=)(.*)$", line)
+    guard = ""
+    statement = line
+    inline_if = _split_inline_if_statement(line)
+    if inline_if is not None:
+        guard, statement = inline_if
+    match = re.match(r"^(\s*)([A-Za-z_]\w*)\s*(\([^=]*\))?\s*=(?!=)(.*)$", statement)
     if not match:
         return line
     indent, target, subscript, rhs = match.groups()
@@ -878,7 +987,7 @@ def _wrap_oti_rhs_assigned_to_a_plain_variable(
         return line
     if re.match(r"^\s*REAL\s*\(.*\)\s*$", rhs.strip(), flags=re.IGNORECASE):
         return line
-    return f"{indent}{target}{subscript or ''} = REAL({rhs.strip()})"
+    return f"{guard}{indent}{target}{subscript or ''} = REAL({rhs.strip()})"
 
 
 def _expand_sum_over_oti(line: str, oti_names: set[str],
@@ -1020,6 +1129,55 @@ def _real_argument_to_integer_intrinsics(line: str, oti_names: set[str]) -> str:
         search_from = open_paren + 1
 
 
+#: ``DO var = start, end [, step]``, labelled or not. ``DO WHILE (...)`` has
+#: no ``name =`` after the keyword and so cannot match.
+_DO_BOUNDS_RE = re.compile(
+    r"^(\s*(?:\d+\s+)?DO\s+(?:\d+\s*,?\s*)?[A-Za-z_]\w*\s*=\s*)(.+)$",
+    re.IGNORECASE)
+
+
+def _integer_do_bounds_over_oti(line: str, oti_names: set[str]) -> str:
+    """``DO I = 1, X`` with X hypercomplex asks the loop for an OTI trip count.
+
+    A helper that computes a count into a name the implicit rules give the OTI
+    type -- ``X = N/2`` under ``IMPLICIT DOUBLE PRECISION (A-H,O-Z)``, which is
+    how two viscoplastic Mohr-Coulomb sources split a tensor into its normal
+    and shear halves -- is legal Fortran before the lift and
+
+        Error: End expression in DO loop at (1) must be INTEGER
+
+    after it. The loop wanted an integer, the source gave it a real, and the
+    compiler did the conversion; here the conversion has to be written, and
+    INT() of an OTI value is what oti_intrinsics defines. The derivative is
+    dropped deliberately: a trip count is piecewise constant, so it has none.
+
+    Only bounds that mention a name this routine made hypercomplex are
+    touched, so an ordinary integer loop comes out byte-identical.
+    """
+    if not oti_names:
+        return line
+    match = _DO_BOUNDS_RE.match(line)
+    if not match:
+        return line
+    parts = split_top_level(match.group(2))
+    if not 2 <= len(parts) <= 3:
+        return line
+    rebuilt: list[str] = []
+    changed = False
+    for part in parts:
+        bound = part.strip()
+        mentions_oti = any(token.upper() in oti_names
+                           for token in re.findall(r"[A-Za-z_]\w*", bound))
+        if not mentions_oti or re.match(r"^INT\s*\(.*\)$", bound, re.IGNORECASE):
+            rebuilt.append(bound)
+            continue
+        rebuilt.append(f"INT({bound})")
+        changed = True
+    if not changed:
+        return line
+    return match.group(1) + ", ".join(rebuilt)
+
+
 def _rewrite_helper_executable_line(
     line: str,
     lifted_names: set[str],
@@ -1034,6 +1192,7 @@ def _rewrite_helper_executable_line(
     rewritten = _expand_sum_over_oti(rewritten, oti_names, oti_shapes)
     rewritten = _expand_mod_over_oti(rewritten, oti_names)
     rewritten = _real_argument_to_integer_intrinsics(rewritten, oti_names)
+    rewritten = _integer_do_bounds_over_oti(rewritten, oti_names)
     rewritten = _normalize_numeric_literals(rewritten, oti_names)
     rewritten = _wrap_oti_rhs_assigned_to_a_plain_variable(
         rewritten, oti_names, non_numeric_names or set())
@@ -1131,6 +1290,8 @@ def _normalize_numeric_literals(line: str, oti_names: set[str]) -> str:
         return line
     if _LABEL_REFERENCE_STATEMENT_RE.match(line):
         return line
+    if _FORMAT_STATEMENT_RE.match(line):
+        return line
     normalized = re.sub(
         r"(?<!\w)(\d+\.\d*|\.\d+|\d+)[eE]([+-]?\d+)",
         lambda match: f"{match.group(1)}D{match.group(2)}",
@@ -1159,7 +1320,8 @@ def _normalize_real_literal(value: str) -> str:
     return re.sub(r"(?<![A-Za-z0-9_])(\d+\.\d*|\.\d+)(?![A-Za-z0-9_.dDeE])", lambda match: match.group(1) + "D0", promoted)
 
 
-def _data_to_assignments(payload: str) -> list[str]:
+def _data_to_assignments(payload: str,
+                         declared_extents: dict[str, tuple[int, ...]] | None = None) -> list[str]:
     groups: list[tuple[str, str]] = []
     current: list[str] = []
     names = ""
@@ -1190,6 +1352,25 @@ def _data_to_assignments(payload: str) -> list[str]:
                 value_entries.append(clean)
         if len(value_entries) == 1 and len(name_entries) > 1:
             value_entries = value_entries * len(name_entries)
+        # One bare array name against many values is the Fortran 77 way to
+        # initialise a whole array: DATA AMPLITUDE_FACTOR/ 0.08, 0.22, ... /
+        # for a DIMENSION AMPLITUDE_FACTOR(12,12). Counting names against
+        # values called that a shape mismatch and refused the source. The
+        # values are laid down in array element order, which is what
+        # _column_major_subscript writes out, so each one becomes a scalar
+        # assignment to the element it was always going to initialise.
+        if len(name_entries) == 1 and len(value_entries) > 1:
+            extents = (declared_extents or {}).get(
+                name_entries[0].split("(", 1)[0].strip().upper())
+            expected = 1
+            for extent in extents or ():
+                expected *= extent
+            if extents and expected == len(value_entries):
+                for offset, value in enumerate(value_entries):
+                    subscript = _column_major_subscript(offset, extents)
+                    assignments.append(
+                        f"{name_entries[0]}({subscript}) = {_normalize_real_literal(value)}")
+                continue
         if len(value_entries) != len(name_entries):
             raise HelperLiftingError(f"Unsupported DATA statement shape: {payload!r}")
         for name, value in zip(name_entries, value_entries):
@@ -1394,12 +1575,70 @@ def _split_statement(line: str, width: int) -> list[str]:
             last_break = -1
     if current.strip():
         pieces.append(current)
+    elif pieces and pieces[-1].endswith(" &"):
+        # The last safe break was the statement's own last character, so the
+        # remainder is nothing but the continuation indent. Leaving the "&" on
+        # the piece before it promises a continuation line that is never
+        # emitted, and gfortran then reads whatever statement follows as part
+        # of this one: a lifted header wrapped this way was joined to its own
+        # "use otim6n1" line and reported as "Syntax error in SUBROUTINE
+        # statement". Nothing continues, so nothing says it does.
+        pieces[-1] = pieces[-1][: -len(" &")].rstrip()
     return pieces or [line]
+
+
+def _free_form_continuation_stitch(lines: list[str]) -> list[str]:
+    """Free-form lines joined at their trailing ``&`` into whole statements.
+
+    Free form was previously passed through a filter and nothing else, so a
+    statement written across several lines reached the lifter as several
+    fragments. The first fragment of
+
+        subroutine j2_isotropic_3d(E, nu, sigma_y0, H, &
+                                   stress, statev, ddsdde)
+
+    is not a subroutine header any regular expression can read, and the lift
+    stopped with "Cannot parse helper header"; a PARAMETER statement split the
+    same way handed ``&`` to the entry splitter as if it were a named
+    constant. Five corpus sources -- two ``.for`` files written in free form
+    with tab indentation, three ``.f90`` -- were refused for one of those two
+    reasons alone.
+
+    This is the rule :func:`umat_oti.fortran.parser._free_logical_lines`
+    already applies, kept in step with it: the ``&`` is dropped, a leading
+    ``&`` on the continuation is dropped as well, and the halves are joined
+    with one space. Comment and blank lines between continuations do not break
+    the statement, which is what the standard says and what sources in the
+    wild do.
+    """
+    merged: list[str] = []
+    pending = ""
+    for raw in lines:
+        clean = strip_inline_comment(raw).rstrip()
+        if not clean.strip():
+            continue
+        continued = clean.endswith("&")
+        if continued:
+            clean = clean[:-1].rstrip()
+        if pending:
+            part = clean.lstrip()
+            if part.startswith("&"):
+                part = part[1:].lstrip()
+            pending = f"{pending} {part}".rstrip() if part else pending
+        else:
+            pending = clean.strip()
+        if not continued:
+            if pending:
+                merged.append(pending)
+            pending = ""
+    if pending:
+        merged.append(pending)
+    return merged
 
 
 def _continuation_stitch(lines: list[str], form: str) -> list[str]:
     if form != "fixed":
-        return [line for line in lines if _statement_text(line, form)]
+        return _free_form_continuation_stitch(lines)
     merged: list[str] = []
     for raw in lines:
         raw = _expand_fixed_form_tabs(raw)

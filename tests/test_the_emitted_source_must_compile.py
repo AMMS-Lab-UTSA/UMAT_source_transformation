@@ -93,5 +93,10 @@ def test_the_refusal_says_what_to_change():
     # pieces that are contiguous in the source rather than on the sentence
     # they compose at runtime.
     assert "will not rename an " in body
-    assert "Renaming it in" in body
+    assert "Renaming the variable in the source would resolve it" in body
     assert "compiles and computes something else" in body
+    # Only the two names the transform writes calls to itself still refuse.
+    # The rest are renamed on import, which leaves the author's variable and
+    # every reference to it exactly as written; asserting that here keeps the
+    # refusal from quietly widening back to all six.
+    assert "GENERICS_THE_TRANSFORM_CALLS_ITSELF" in body

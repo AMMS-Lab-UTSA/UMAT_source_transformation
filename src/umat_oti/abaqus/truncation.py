@@ -99,12 +99,42 @@ class Finding:
             f"whatever it contributed")
 
 
+#: A one-line logical IF and the statement it guards. ``_ASSIGNMENT`` and
+#: ``_CAST`` both take a name, an optional parenthesised subscript and an
+#: ``=``, and ``[^=]*`` is greedy enough to swallow ``(NSHR .GE. 1) SOUT(4)``
+#: whole as the subscript -- so ``IF (NSHR .GE. 1) SOUT(4) = REAL(SIGMA(1,2))``
+#: read as an assignment to a variable called IF, and a truncation written
+#: that way was neither traced nor reported. Splitting the guard off is what
+#: the emitters do for the same reason.
+_INLINE_IF = re.compile(r"^(\s*(?:\d+\s+)?(?:ELSE\s*)?IF\s*)\(", re.IGNORECASE)
+
+
+def _without_the_inline_if_guard(line: str) -> str:
+    """``IF (cond) stmt`` reduced to ``stmt``; any other line unchanged.
+
+    A block ``IF (cond) THEN`` reduces to " THEN", which matches no assignment
+    and so needs no separate test.
+    """
+    match = _INLINE_IF.match(line)
+    if not match:
+        return line
+    depth = 0
+    for index in range(match.end() - 1, len(line)):
+        if line[index] == "(":
+            depth += 1
+        elif line[index] == ")":
+            depth -= 1
+            if depth == 0:
+                return line[index + 1:]
+    return line
+
+
 def _code_lines(text: str) -> Iterable[tuple]:
     for number, line in enumerate(text.splitlines(), start=1):
         stripped = line.strip()
         if not stripped or stripped[0] == "!" or line[0] in "cC*":
             continue
-        yield number, line.split("!")[0]
+        yield number, _without_the_inline_if_guard(line.split("!")[0])
 
 
 def _names(text: str) -> set:
