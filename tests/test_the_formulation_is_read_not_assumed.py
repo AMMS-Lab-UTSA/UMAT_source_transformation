@@ -121,7 +121,17 @@ def test_when_they_disagree_the_source_decides():
 
 def test_a_cohesive_law_is_refused_rather_than_driven_as_plane_stress():
     """A cohesive law is handed tractions and separations. Three components
-    does not make it plane stress."""
+    does not make it plane stress.
+
+    What the refusal RESTS ON has changed, and the claim has not. A cohesive
+    law is now drivable -- Abaqus calls a UMAT for a ``*COHESIVE SECTION,
+    RESPONSE=TRACTION SEPARATION``, and ``harshaa765__Bilinear-CZM-UMAT``
+    publishes a one-element COH3D8 patch test of exactly that. What is refused
+    here is the case this test builds: a source that names itself a cohesive
+    law with NO deck beside it, where COH2D4 hands the routine two separation
+    components and COH3D8 hands it three, and nothing says which the author
+    used. Driving it as plane stress is still wrong; driving it as the wrong
+    cohesive element would be too."""
     settled = settle("      subroutine umat(stress)\n      end\n",
                      "Bilinear_CZM_UMAT.for")
     assert not settled.element
