@@ -417,3 +417,108 @@ def test_the_region_classifier_publishes_the_ddsdde_reads_the_check_needs():
         path.write_text(_READS_DDSDDE_BACK, encoding="utf-8")
         summary = detect_candidate_regions(parse_fortran_file(path))["summary"]
     assert summary["ddsdde_stress_input_lines"], summary
+
+
+# ---------------------------------------------------------------------------
+# The same defect, compiled and run
+# ---------------------------------------------------------------------------
+
+_GUARDED_SHEAR_HELPER = """\
+      SUBROUTINE SHEARCORE(DE,EG,ELAM,NSHR,SOUT)
+      IMPLICIT REAL*8(A-H,O-Z)
+      DIMENSION DE(6),SOUT(6)
+      SOUT(1)=(ELAM+2.0D0*EG)*DE(1)
+      SOUT(2)=(ELAM+2.0D0*EG)*DE(2)
+      SOUT(3)=(ELAM+2.0D0*EG)*DE(3)
+      IF (NSHR .GE. 1) SOUT(4)=EG*DE(4)
+      IF (NSHR .GE. 2) SOUT(5)=EG*DE(5)
+      IF (NSHR .GE. 3) SOUT(6)=EG*DE(6)
+      RETURN
+      END
+"""
+
+_LIFTED_DRIVER = """\
+program drv
+  use master_parameters, only: DP
+  use otim6n1
+  use oti_intrinsics
+  use umat_oti_helpers
+  implicit none
+  type(ONUMM6N1) :: de(6), sout(6), eg, elam
+  integer :: i
+  do i = 1, 6
+     de(i) = 0.0d0
+     sout(i) = 0.0d0
+  end do
+  eg = 80.0d0
+  elam = 120.0d0
+  de(1) = 1.0d-4
+  de(4) = 4.0d-4
+  ! One seeded direction each, so GETIM(sout(i), j) is d sout(i) / d de(j).
+  de(1)%e1 = 1.0d0
+  de(4)%e4 = 1.0d0
+  call shearcore_oti(de, eg, elam, 3, sout)
+  write(*,'(4ES26.17)') sout(1)%R, sout(1)%e1, sout(4)%R, sout(4)%e4
+end program drv
+"""
+
+
+@pytest.mark.slow
+@pytest.mark.fortran
+@pytest.mark.regression
+@needs_gfortran
+def test_a_shear_term_written_under_an_inline_if_keeps_its_derivative_when_run(tmp_path):
+    """The lifted helper returns d(shear stress)/d(shear strain), not zero.
+
+    Before the fix the lifter emitted ``IF (NSHR .GE. 1) SOUT(4) =
+    REAL(EG*DE(4))`` and the derivative was discarded while the value stayed
+    right. Compiled and run here: sout(4) = 3.2000e-02 with derivative
+    8.0000e+01 = EG, against 0.0 before.
+
+    The same defect, measured on the corpus source it was found in
+    (keisuke58/pde-fem-biofilm/umat_biofilm_visco_phase2.f) with a driver
+    around its converted build: DDSDDE rows 4, 5 and 6 were identically zero
+    in every entry, and DDSDDE(4,4) came out 1.1616e+00 after the fix against
+    the author's own finite-difference 1.1802e+00, while STRESS was unchanged
+    to 2.5e-16 in both.
+    """
+    from umat_oti.fortran.parser import parse_fortran_file
+    from umat_oti.oti.module_generator import generate_otilib_module
+    from umat_oti.transform.helper_lifting import lift_helper_set_source, wrap_free_form
+    from umat_oti.transform.parameter_sensitivity_transform import _emit_intrinsic_extensions
+
+    source = tmp_path / "shear.f"
+    source.write_text(_GUARDED_SHEAR_HELPER, encoding="utf-8")
+    parsed = parse_fortran_file(source)
+    lifted = lift_helper_set_source(parsed, ["SHEARCORE"],
+                                    module_name="otim6n1", type_name="ONUMM6N1")
+    # The shape, before anything is compiled: the guarded assignment keeps its
+    # hypercomplex right-hand side.
+    assert "IF (NSHR .GE. 1) SOUT(4)=EG*DE(4)" in lifted.source.replace("  ", " ")
+    assert "REAL(EG*DE(4))" not in lifted.source
+
+    module = generate_otilib_module(output_dir=tmp_path, ntens=6, order=1)
+    (tmp_path / "oti_intrinsics.f90").write_text(
+        _emit_intrinsic_extensions(module.module_name, module.type_name), encoding="utf-8")
+    (tmp_path / "umat_oti_helpers.f90").write_text(
+        "module umat_oti_helpers\ncontains\n" + wrap_free_form(lifted.source)
+        + "\nend module umat_oti_helpers\n", encoding="utf-8")
+    (tmp_path / "drv.f90").write_text(_LIFTED_DRIVER, encoding="utf-8")
+
+    units = ["master_parameters.f90", "real_utils.f90", f"{module.module_name}.f90",
+             "oti_intrinsics.f90", "umat_oti_helpers.f90", "drv.f90"]
+    done = subprocess.run(
+        [GFORTRAN, "-ffree-form", "-ffree-line-length-none", "-w", "-I.", "-J.",
+         *units, "-o", "drv"],
+        cwd=str(tmp_path), capture_output=True, text=True, timeout=900)
+    assert done.returncode == 0, done.stderr[-4000:]
+    run = subprocess.run(["./drv"], cwd=str(tmp_path), capture_output=True,
+                         text=True, timeout=120)
+    assert run.returncode == 0, run.stderr
+    direct_value, direct_derivative, shear_value, shear_derivative = (
+        float(x) for x in run.stdout.split())
+    assert direct_value == pytest.approx(280.0 * 1.0e-4, rel=1e-12)
+    assert direct_derivative == pytest.approx(280.0, rel=1e-12)
+    assert shear_value == pytest.approx(80.0 * 4.0e-4, rel=1e-12)
+    assert shear_derivative == pytest.approx(80.0, rel=1e-12), (
+        "the guarded shear assignment lost its derivative")
