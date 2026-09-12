@@ -234,6 +234,13 @@ class DeckMaterial:
     #: to reconstruct -- ``harshaa765__Bilinear-CZM-UMAT`` publishes one and
     #: its README calls it "Single element patch test".
     element_count: int = 0
+    #: The lowest element label the deck gives an element of this material's
+    #: type. Normally nothing depends on it, but a UMAT is handed ``NOEL`` and
+    #: some of the corpus indexes with it: ``irfancn/Abaqus-UEL-elastic``
+    #: computes ``kelem = noel - 185`` because its own ``decoy`` elements are
+    #: numbered 186 upward, and a deck that calls its one element 1 sends that
+    #: routine reading at -184. Zero means the deck said nothing useful.
+    first_element_label: int = 0
     steps: int = 0
     #: Whether any ``*STEP`` of this deck carries ``NLGEOM=YES``. The author
     #: saying the geometry is nonlinear is a statement about the problem, and
@@ -251,6 +258,7 @@ class DeckMaterial:
                 "elements": list(self.elements),
                 "sections": list(self.sections), "explicit": self.explicit,
                 "element_count": self.element_count, "steps": self.steps,
+                "first_element_label": self.first_element_label,
                 "nlgeom": self.nlgeom,
                 "step_periods": list(self.step_periods),
                 "user_initial_state": self.user_initial_state}
@@ -311,6 +319,11 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
     mode = ""
     pending_static = False
     element_count = 0
+    element_block_type = ""
+    #: The lowest label each ``*ELEMENT, TYPE=`` block numbers, so a material
+    #: can be given the label its OWN element type starts at rather than the
+    #: deck's first element, which in a mixed deck belongs to somebody else.
+    lowest_label: dict = {}
     nlgeom = False
 
     attributions = elements_by_material(text)
@@ -356,6 +369,7 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
                 mode = ""
             elif keyword == "ELEMENT":
                 mode = "element"
+                element_block_type = parameters.get("TYPE", "").upper()
             elif keyword == "STEP":
                 steps += 1
                 nlgeom = nlgeom or parameters.get("NLGEOM", "").upper() == "YES"
@@ -374,8 +388,14 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
                 periods.append(numbers[1])
             continue
         if mode == "element":
-            if line.split(",")[0].strip().lstrip("-").isdigit():
+            head = line.split(",")[0].strip()
+            if head.lstrip("-").isdigit():
                 element_count += 1
+                if element_block_type:
+                    label = int(head)
+                    lowest = lowest_label.get(element_block_type)
+                    if lowest is None or label < lowest:
+                        lowest_label[element_block_type] = label
             continue
         if mode == "depvar":
             numbers = _numbers(line)
@@ -396,6 +416,9 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
                      values=material.values, unsymmetric=material.unsymmetric,
                      elements=material.elements, sections=material.sections,
                      explicit=material.explicit, element_count=element_count,
+                     first_element_label=min(
+                         (lowest_label[kind.upper()] for kind in material.elements
+                          if kind.upper() in lowest_label), default=0),
                      steps=steps, step_periods=tuple(periods), nlgeom=nlgeom,
                      user_initial_state=user_state)
         for material in found)

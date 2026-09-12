@@ -97,6 +97,21 @@ class VerificationManifest:
 
     # ---- the material point ------------------------------------------------
     element_type: str = "C3D8"
+    #: The label the single element carries in the generated deck.
+    #:
+    #: Normally 1, and normally nothing depends on it. But a UMAT is handed
+    #: ``NOEL`` and some of the corpus indexes with it. ``irfancn/
+    #: Abaqus-UEL-elastic`` computes ``kelem = noel - nelem`` with ``nelem=185``
+    #: because the author's own elements start at 186; with ``NOEL=1`` that is
+    #: ``-184``, the routine reads far outside a COMMON block, and Abaqus dies
+    #: with a signal 11 inside the element loop -- a segmentation fault that
+    #: reads as the author's code being broken and is entirely our numbering.
+    #:
+    #: So where the author's deck is known, the element takes a label the
+    #: author's own model uses. Nothing downstream assumes 1: the probe records
+    #: carry the label Abaqus reports and :mod:`umat_oti.abaqus.frames` groups
+    #: on whatever that is.
+    element_label: int = 1
     #: Where the element sits, as ``(id, x, y, z)`` per node. Empty means the
     #: registry's reference geometry, which is a unit cube at the origin.
     #:
