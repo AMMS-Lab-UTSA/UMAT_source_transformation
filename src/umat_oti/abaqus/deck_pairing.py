@@ -487,6 +487,84 @@ def _one_stem_affinity(source: Path, deck: Path) -> tuple[int, str]:
     return 0, ""
 
 
+#: ``NAME = PROPS(n)``, which is a routine saying what its n-th constant is.
+#: The name keeps its own literal subscript, because an array element is a
+#: different constant from its siblings. ``xn0(1) = props(5)`` in one routine
+#: and ``xn0(3) = props(5)`` in another are not the same constant, and reading
+#: both as "XN0" said two routines agreed about a fibre direction when they
+#: had it in different slots.
+_NAMED_PROP = re.compile(
+    r"^\s*(?:\d+\s+)?([A-Za-z_]\w*(?:\s*\(\s*\d+\s*\))?)\s*=\s*"
+    r"PROPS\s*\(\s*(\d+)\s*\)\s*$", re.IGNORECASE)
+
+
+def named_constants(source_text: str) -> dict[int, str]:
+    """What this routine calls each of its constants, by position.
+
+    ``lam = props(1)``, ``tau = props(4)``, ``xn0(1) = props(5)``. A routine
+    that names its constants has documented its own material block, and two
+    routines that name the same constants in the same order take the same
+    block.
+    """
+    found: dict[int, str] = {}
+    for line in _code_lines(source_text):
+        match = _NAMED_PROP.match(line.split("!")[0])
+        if match:
+            found.setdefault(int(match.group(2)),
+                             "".join(match.group(1).split()).upper())
+    return found
+
+
+def sibling_constants(source: Path, repository: Path,
+                      source_text: str) -> str:
+    """What a near-namesake of this source reads, and where the two diverge.
+
+    A refusal that says "no published block fits" is right and not yet
+    useful. ``umat_area_morph_Abaqus.f`` reads seven constants and no deck
+    publishes seven -- but its sibling ``umat_area_morph.f`` sits in the same
+    directory, this repository's README pairs it with ``sheet_noload.inp``,
+    and the two routines agree on ``lam = props(1)`` and ``mu = props(2)``
+    and diverge from the third. So what is missing is not a material: it is
+    two numbers, ``tmax`` and ``tau``, and this says which.
+    """
+    mine = named_constants(source_text)
+    if not mine:
+        return ""
+    stem = Path(source).stem.lower()
+    notes: list[str] = []
+    for other in sorted(Path(source).parent.glob("*")):
+        if other == Path(source) or other.suffix not in _SOURCE_SUFFIXES:
+            continue
+        theirs_stem = other.stem.lower()
+        if not (stem.startswith(theirs_stem) or theirs_stem.startswith(stem)):
+            continue
+        try:
+            theirs = named_constants(other.read_text(errors="replace"))
+        except OSError:                            # pragma: no cover
+            continue
+        if not theirs:
+            continue
+        shared = sorted(index for index in set(mine) & set(theirs)
+                        if mine[index] == theirs[index])
+        only_mine = sorted(index for index in mine
+                           if index not in shared)
+        if not shared:
+            continue
+        notes.append(
+            f"its near-namesake {other.name} reads "
+            f"PROPS(1:{max(theirs)}) and agrees with this routine on "
+            + ", ".join(f"PROPS({index})={mine[index]}" for index in shared[:6])
+            + (f"; what this routine reads and that one does not is "
+               + ", ".join(f"PROPS({index})={mine[index]}"
+                           for index in only_mine[:6])
+               if only_mine else ""))
+    if not notes:
+        return ""
+    return (". The constants are not all unpublished: " + "; ".join(notes[:2])
+            + ". A block for this routine would be that one's values with "
+              "those positions filled in, and nobody has published them")
+
+
 @dataclass(frozen=True)
 class Pairing:
     """The deck a verification reads its material from, and why that one."""
@@ -498,6 +576,11 @@ class Pairing:
     rejected: tuple[tuple[str, str], ...] = ()
     alternatives: tuple[str, ...] = ()
     warnings: tuple[str, ...] = ()
+    #: Where the search went and what it found there. A refusal is a statement
+    #: about this pipeline until it says where it looked -- the pattern
+    #: ``where_we_looked()`` in the verification tool already sets -- so the
+    #: scan is recorded rather than the negative asserted.
+    searched: dict = field(default_factory=dict)
 
     @property
     def found(self) -> bool:
@@ -509,7 +592,40 @@ class Pairing:
                 "refusal": self.refusal,
                 "rejected": [list(pair) for pair in self.rejected],
                 "alternatives": list(self.alternatives),
-                "warnings": list(self.warnings)}
+                "warnings": list(self.warnings),
+                "searched": dict(self.searched)}
+
+
+def _where_we_looked(repository: Path, decks: Sequence[Path],
+                     materials: Sequence[DeckMaterial],
+                     demand: Demand) -> dict:
+    """Every place a material block was looked for, and what was in it.
+
+    Named the way the verification tool names it, and carrying the same three
+    things: which repository, how many files were opened, and what each one
+    published. The counts are what make the refusal checkable -- a reader who
+    doubts "no material published here can feed this routine" can compare the
+    listed constant counts against the demand without opening anything.
+    """
+    published = sorted({material.constants for material in materials
+                        if material.constants})
+    return {
+        "repository": str(repository),
+        "decks_scanned": len(decks),
+        "decks": [str(Path(deck).relative_to(repository)) for deck in decks][:40],
+        "decks_not_listed": max(0, len(decks) - 40),
+        "material_blocks_found": len(materials),
+        "constant_counts_published": published,
+        "depvar_counts_published": sorted({material.depvar
+                                           for material in materials}),
+        "expected_nprops": demand.nprops,
+        "expected_nstatv": demand.nstatv,
+        "nprops_is_exact": demand.props_exact,
+        "scanner": "umat_oti.abaqus.deck_pairing.pair",
+        "documentation": ("every *.md, *.rst and *.txt in the repository was "
+                          "read for a table naming this source file beside an "
+                          "input file"),
+    }
 
 
 #: Materials already read out of a repository, so that a run pairing every
@@ -571,12 +687,18 @@ def pair(source: Path, repository: Path,
     demand = demanded(source_text)
     stages = declared_stages(source_text)
     materials = tuple(pool) if pool is not None else candidates(source, repository)
+    decks = sorted({material.deck for material in materials}) if pool is not None \
+        else sorted(deck for deck in Path(repository).rglob("*")
+                    if deck.is_file() and deck.suffix in _DECK_SUFFIXES)
+    searched = _where_we_looked(Path(repository), decks, materials, demand)
     if not materials:
-        return Pairing(demand=demand,
+        return Pairing(demand=demand, searched=searched,
                        refusal=(f"{Path(repository).name} publishes no deck "
                                 f"with a *USER MATERIAL block, so there is "
                                 f"nothing here that says what this routine is "
-                                f"made of"))
+                                f"made of. Searched {len(decks)} .inp file(s) "
+                                f"in {repository}, and every .md, .rst and "
+                                f".txt in it for a table naming this source"))
 
     stated = stated_pairs(repository)
     named = stated.get(source.name.lower(), set())
@@ -605,10 +727,33 @@ def pair(source: Path, repository: Path,
     rejected: list[tuple[str, str]] = []
     for material in materials:
         ok, why_not = demand.admits(material.constants, material.depvar)
+        surplus = ""
+        if not ok and material.constants > demand.nprops and material.depvar >= demand.nstatv:
+            # Over-supply is re-admitted on the same naming evidence that
+            # re-admits under-supply, and for the same reason: a block in the
+            # source's own directory is the author's material even when it
+            # publishes one constant the code does not reach.
+            # ``notched_plate_CZM_random_mesh_shear.inp`` publishes twelve and
+            # its czmHealing.f reads eleven -- because the twelfth,
+            # ``Eps_crit = PROPS(12)``, is commented out and hard-coded to
+            # -1e-15 instead. The source's own header still lists it:
+            # ``PROPS={Kplus,...,mu,Eps_crit}``. Rejecting that deck sent the
+            # routine to a deck in a different benchmark directory.
+            if (material.deck.name.lower() in named
+                    or material.deck.parent == source.parent
+                    or _stem_affinity(source, material.deck)[0] >= 2):
+                ok = True
+                surplus = (f"this block publishes {material.constants} "
+                           f"constants and the routine's literal subscripts "
+                           f"reach PROPS({demand.nprops}); the extra "
+                           f"{material.constants - demand.nprops} are read by "
+                           f"Abaqus and not by the routine")
         if not ok:
             rejected.append((f"{material.deck.name}:{material.name}", why_not))
             continue
         reasons: list[str] = []
+        if surplus:
+            reasons.append(surplus)
         by_readme = 1 if material.deck.name.lower() in named else 0
         if by_readme:
             reasons.append(f"{Path(repository).name}'s README states that "
@@ -703,12 +848,52 @@ def pair(source: Path, repository: Path,
 
     if not scored:
         detail = "; ".join(f"{where}: {why}" for where, why in rejected[:6])
+        counts = ", ".join(str(count) for count
+                           in searched["constant_counts_published"]) or "none"
         return Pairing(
-            demand=demand, rejected=tuple(rejected),
+            demand=demand, rejected=tuple(rejected), searched=searched,
             refusal=(f"no material published in {Path(repository).name} can "
                      f"feed this routine. It reads PROPS(1:{demand.nprops}) "
-                     f"and writes STATEV(1:{demand.nstatv}); the blocks that "
-                     f"exist are rejected because {detail}"))
+                     f"and writes STATEV(1:{demand.nstatv}). Searched: "
+                     f"{searched['decks_scanned']} .inp file(s) in "
+                     f"{repository}, carrying {searched['material_blocks_found']}"
+                     f" *USER MATERIAL block(s) whose constant counts are "
+                     f"{counts}; and every .md, .rst and .txt in the "
+                     f"repository for a table naming this source beside an "
+                     f"input file. Every block was rejected: {detail}"
+                     + sibling_constants(source, Path(repository), source_text)
+                     + ". Supplying constants from anywhere else would be "
+                       "inventing them"))
+
+    # A block in the source's OWN directory that was rejected outright is a
+    # finding about the author's own deck, and reaching past it into another
+    # directory buries it. ``Benchmarks/Notched_plate_shear/czmHealing.f``
+    # writes STATEV(13) and the deck beside it declares ``*Depvar 12``, which
+    # is a write past the end of the array Abaqus allocates; the only other
+    # admissible block in that repository belongs to a different benchmark
+    # with a different toughness. Running the second in place of the first
+    # would verify one experiment's routine against another's material and
+    # hide a defect in the author's deck behind it.
+    beside_it = [material for material in materials
+                 if material.deck.parent == source.parent]
+    rejected_names = {where for where, _why in rejected}
+    if beside_it and all(f"{material.deck.name}:{material.name}"
+                         in rejected_names for material in beside_it):
+        if not any(material.deck.parent == source.parent
+                   for _key, material, _why in scored):
+            detail = "; ".join(f"{where}: {why}" for where, why in rejected
+                               if where in {f"{m.deck.name}:{m.name}"
+                                            for m in beside_it})[:600]
+            return Pairing(
+                demand=demand, rejected=tuple(rejected), searched=searched,
+                refusal=(f"the deck beside this source publishes a material "
+                         f"this routine cannot be run with, and the only "
+                         f"blocks that fit belong to other directories of "
+                         f"{Path(repository).name}. Beside it: {detail}. "
+                         f"Using another experiment's constants would verify "
+                         f"this routine against a material its author did not "
+                         f"give it, and would bury what is wrong with the "
+                         f"deck its author did"))
 
     scored.sort(key=lambda item: item[0], reverse=True)
     best_key = scored[0][0]
@@ -741,6 +926,14 @@ def pair(source: Path, repository: Path,
             f"author's deck allocates. Whatever they return is not a material "
             f"constant, and a difference between two builds in a quantity that "
             f"depends on them is not a difference about this material")
+    if demand.props_exact and best.constants > demand.nprops:
+        warnings.append(
+            f"the routine's literal subscripts reach PROPS({demand.nprops}) "
+            f"and {best.name} publishes {best.constants}. The surplus is "
+            f"accepted because this block is named as this routine's; a "
+            f"constant the routine never reads cannot change what it computes, "
+            f"but NPROPS does, so both builds are handed the same "
+            f"{best.constants}")
     if not demand.props_exact and best.constants > demand.nprops:
         warnings.append(
             f"the routine's highest literal subscript is PROPS({demand.nprops}) "
@@ -765,7 +958,7 @@ def pair(source: Path, repository: Path,
             + ", ".join(sorted(f"{m.deck.name}:{m.name}" for m in tied)[:6])
             + "); the first by name is used and the rest are recorded")
     return Pairing(
-        material=best, demand=demand,
+        material=best, demand=demand, searched=searched,
         why="; ".join(reasons) or "it is the only admissible material block",
         rejected=tuple(rejected[:12]),
         alternatives=tuple(sorted(f"{m.deck.name}:{m.name}" for m in tied[1:])),
