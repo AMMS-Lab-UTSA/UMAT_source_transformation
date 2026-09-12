@@ -191,6 +191,31 @@ def test_most_of_the_call_moving_names_a_different_function_not_a_path():
     assert DIFFERENT_FUNCTION in {h.name for h in signature.hypotheses}
 
 
+def test_the_right_shape_at_the_wrong_size_is_not_a_corrupted_slot():
+    """From-2D-to-2D-Scallop moves three of fifteen output components at the
+    first controlled call -- the SHAPE "one output slot corrupted" predicts --
+    by 1.058e-10 of the stress field: STRESS(1) is 1475386.6392696765 against
+    1475386.61473371, which is 1.66e-08 of its own value. That is what a
+    constant carried at the wrong precision looks like; the destroyed slot in
+    huang_umat_97 moved 24.9% of its field. Raising the strong claim for the
+    small number put it on the threshold the slots were binned with rather
+    than on a finding."""
+    small = [ci.SlotDifference("STRESS", 0, 1475386.6392696765,
+                               1475386.61473371),
+             ci.SlotDifference("STRESS", 1, 1475817.057395969,
+                               1475817.0328115039),
+             ci.SlotDifference("STRESS", 2, 1474142.8321616524,
+                               1474142.8076254616)]
+    isolation = _isolation(beyond=small, total=15, differing=5, call_index=0)
+    isolation.scales = {"STRESS": 231989629.52393734}
+    signature = classify({"worst_stress_relative": 5.855e-05,
+                          "worst_stress_at": [83, 1, 1372.13, 1372.05]},
+                         PLAIN, 280, isolation=isolation)
+    names = {h.name for h in signature.hypotheses}
+    assert SINGLE_OUTPUT_SLOT not in names
+    assert REDUCED_PRECISION_INPUT in names
+
+
 def test_a_slots_size_is_read_through_its_own_field_not_off_a_missing_attribute():
     """``SlotDifference`` carries ``relative_to(scale)`` as a method.
     ``getattr(slot, "relative_to_block_scale", 0.0)`` returned the default for
@@ -322,3 +347,72 @@ def test_a_signature_never_changes_a_verdict():
     block = text[text.index('record["primal_signature"]'):]
     block = block[:block.index('seen["primal_agrees"]')]
     assert "agrees" not in block and "tolerance" not in block
+
+
+# ---------------------------------------------------------------------------
+# the recorded confirmations, checked against what they were built from
+# ---------------------------------------------------------------------------
+def test_a_confirmation_matches_only_the_measurement_it_was_built_from():
+    """A confirmation has to be re-checkable, not remembered. Each recorded
+    finding names the exact component and the exact two values the controlled
+    call produced, and the number of components that moved. Change any of
+    them and the hypothesis goes back to open."""
+    from umat_oti.abaqus.primal_signature import CONFIRMED_FINDINGS
+
+    for finding in CONFIRMED_FINDINGS:
+        matching = ci.Isolation(
+            verdict=ci.SAME_INPUTS_DIFFERENT_OUTPUTS,
+            output_slots_beyond_rounding=[
+                ci.SlotDifference(finding.block, finding.fortran_index - 1,
+                                  finding.original, finding.transformed)]
+            + [ci.SlotDifference("STATEV", 90 + n, 1.0, 2.0)
+               for n in range(finding.slots_beyond_rounding - 1)])
+        assert finding.matches(matching), finding.hypothesis
+        moved = ci.Isolation(
+            verdict=ci.SAME_INPUTS_DIFFERENT_OUTPUTS,
+            output_slots_beyond_rounding=[
+                ci.SlotDifference(finding.block, finding.fortran_index - 1,
+                                  finding.original, 1.25e-7)]
+            + [ci.SlotDifference("STATEV", 90 + n, 1.0, 2.0)
+               for n in range(finding.slots_beyond_rounding - 1)])
+        assert not finding.matches(moved), finding.hypothesis
+        fewer = ci.Isolation(
+            verdict=ci.SAME_INPUTS_DIFFERENT_OUTPUTS,
+            output_slots_beyond_rounding=[
+                ci.SlotDifference(finding.block, finding.fortran_index - 1,
+                                  finding.original, finding.transformed)])
+        assert finding.matches(fewer) == (finding.slots_beyond_rounding == 1)
+
+
+def test_a_recorded_nan_finding_can_match_its_own_nan():
+    """simplified_curing's confirmation IS a NaN, and ``nan == nan`` is False.
+    Keyed on equality alone it could never match the measurement it was built
+    from, and the entry would have read as unconfirmed for ever."""
+    from umat_oti.abaqus.primal_signature import CONFIRMED_FINDINGS
+
+    nan_findings = [f for f in CONFIRMED_FINDINGS
+                    if isinstance(f.transformed, float)
+                    and math.isnan(f.transformed)]
+    assert nan_findings, "the NaN finding is registered"
+    finding = nan_findings[0]
+    isolation = ci.Isolation(
+        verdict=ci.SAME_INPUTS_DIFFERENT_OUTPUTS,
+        output_slots_beyond_rounding=[
+            ci.SlotDifference(finding.block, finding.fortran_index - 1,
+                              finding.original, float("nan"))]
+        + [ci.SlotDifference("STRESS", n, 0.0, float("nan"))
+           for n in range(1, finding.slots_beyond_rounding)])
+    assert finding.matches(isolation)
+
+
+def test_every_recorded_confirmation_names_what_it_held_fixed():
+    """The field is not decorative: ``confirm`` refuses without it, and a
+    reproduction that cannot say what was held fixed was not an experiment."""
+    from umat_oti.abaqus.primal_signature import CONFIRMED_FINDINGS
+
+    for finding in CONFIRMED_FINDINGS:
+        assert finding.reproduction.held_fixed.strip()
+        assert finding.reproduction.varied.strip()
+        assert finding.reproduction.observed.strip()
+        assert finding.reproduction.repeatable
+        assert finding.root_cause.strip()

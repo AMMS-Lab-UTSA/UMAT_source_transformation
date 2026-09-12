@@ -28,6 +28,44 @@ from umat_oti.abaqus.probe import _first_executable, _routine_span, instrument
 
 pytestmark = pytest.mark.unit
 
+
+def _discovery_cache():
+    """Where the downloaded corpus sources live on this machine.
+
+    Configurable, and skipped when absent. Written as a bare relative path
+    (``discovery_cache/...``) it resolved only when pytest happened to be run
+    from one particular directory, so the test skipped everywhere instead of
+    running anywhere -- which reads exactly like a passing suite.
+    """
+    import os
+    import pathlib as _pathlib
+
+    import pytest as _pytest
+
+    where = _pathlib.Path(
+        os.environ.get("UMAT_OTI_DISCOVERY_CACHE")
+        or _pathlib.Path.home() / "softwarex_work" / "discovery_cache")
+    if not where.is_dir():
+        _pytest.skip(f"no discovery cache at {where}; "
+                     f"set UMAT_OTI_DISCOVERY_CACHE")
+    return where
+
+
+def _abaqus_public_interfaces():
+    """Abaqus's own header directory, or a skip."""
+    import os
+    import pathlib as _pathlib
+
+    import pytest as _pytest
+
+    where = _pathlib.Path(
+        os.environ.get("UMAT_OTI_ABAQUS_HEADERS")
+        or "/usr/SIMULIA/EstProducts/2021/SMAUsubs/PublicInterfaces")
+    if not where.is_dir():
+        _pytest.skip(f"no Abaqus headers at {where}; "
+                     f"set UMAT_OTI_ABAQUS_HEADERS")
+    return where
+
 WITH_DIRECTIVE = """\
       SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,
      1 RPL,DDSDDT,DRPLDE,DRPLDT,
@@ -91,12 +129,12 @@ def test_the_instrumented_source_compiles_where_the_pass9_one_did_not():
     ifort = shutil.which("ifort")
     if ifort is None:
         pytest.skip("no ifort on PATH")
-    source = Path("discovery_cache/"
-                  "Worlthen__20220314-abqus-simulation/abaqus/original/"
-                  "array_with_two_pixel_z.for")
-    include = Path("/usr/SIMULIA/EstProducts/2021/SMAUsubs/PublicInterfaces")
-    if not source.exists() or not include.exists():
-        pytest.skip("the corpus source or the Abaqus headers are not here")
+    include = _abaqus_public_interfaces()
+    source = _discovery_cache() / (
+        "Worlthen__20220314-abqus-simulation/abaqus/original/"
+        "array_with_two_pixel_z.for")
+    if not source.is_file():
+        pytest.skip(f"{source.name} is not in the discovery cache")
     text, _ = instrument(source.read_text(errors="replace"), "original")
     with tempfile.TemporaryDirectory() as work:
         shim = Path(work) / "inc"

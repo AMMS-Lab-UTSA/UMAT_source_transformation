@@ -20,6 +20,44 @@ from umat_oti.abaqus.internal_iteration import (
 
 pytestmark = pytest.mark.unit
 
+
+def _discovery_cache():
+    """Where the downloaded corpus sources live on this machine.
+
+    Configurable, and skipped when absent. Written as a bare relative path
+    (``discovery_cache/...``) it resolved only when pytest happened to be run
+    from one particular directory, so the test skipped everywhere instead of
+    running anywhere -- which reads exactly like a passing suite.
+    """
+    import os
+    import pathlib as _pathlib
+
+    import pytest as _pytest
+
+    where = _pathlib.Path(
+        os.environ.get("UMAT_OTI_DISCOVERY_CACHE")
+        or _pathlib.Path.home() / "softwarex_work" / "discovery_cache")
+    if not where.is_dir():
+        _pytest.skip(f"no discovery cache at {where}; "
+                     f"set UMAT_OTI_DISCOVERY_CACHE")
+    return where
+
+
+def _abaqus_public_interfaces():
+    """Abaqus's own header directory, or a skip."""
+    import os
+    import pathlib as _pathlib
+
+    import pytest as _pytest
+
+    where = _pathlib.Path(
+        os.environ.get("UMAT_OTI_ABAQUS_HEADERS")
+        or "/usr/SIMULIA/EstProducts/2021/SMAUsubs/PublicInterfaces")
+    if not where.is_dir():
+        _pytest.skip(f"no Abaqus headers at {where}; "
+                     f"set UMAT_OTI_ABAQUS_HEADERS")
+    return where
+
 F77_LOOP = """\
       SUBROUTINE UMAT(STRESS,STATEV,PROPS,NOEL,NPT,KINC)
       DIMENSION STRESS(6),STATEV(4)
@@ -160,11 +198,13 @@ def test_the_traced_crystal_plasticity_source_compiles():
     from pathlib import Path
 
     ifort = shutil.which("ifort")
-    source = Path("discovery_cache/"
-                  "RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for")
-    include = Path("/usr/SIMULIA/EstProducts/2021/SMAUsubs/PublicInterfaces")
-    if ifort is None or not source.exists() or not include.exists():
-        pytest.skip("needs ifort, the corpus source and the Abaqus headers")
+    if ifort is None:
+        pytest.skip("no ifort on PATH")
+    include = _abaqus_public_interfaces()
+    source = _discovery_cache() / (
+        "RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for")
+    if not source.is_file():
+        pytest.skip(f"{source.name} is not in the discovery cache")
     instrumentation = instrument_internal_loops(
         source.read_text(errors="replace"), "original")
     assert instrumentation.usable
