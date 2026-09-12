@@ -85,13 +85,22 @@ def test_a_cohesive_element_is_in_the_registry_with_the_tensor_it_hands_over():
     assert (planar.ndi, planar.nshr, planar.ntens) == (1, 1, 2)
 
 
-def test_the_coupled_cohesive_element_stays_refused_and_says_why():
+def test_the_coupled_cohesive_element_is_refused_only_where_no_temperature_is():
     """COH2D4T hands the UMAT a temperature, and a healing law whose kinetics
-    are ``Exp(-Ea/(8.34*TEMP))`` divides by zero at TEMP=0."""
-    assert is_supported("COH2D4T") is False
+    are ``Exp(-Ea/(8.34*TEMP))`` divides by zero at TEMP=0. So it is refused
+    when no temperature is published -- and only then.
+
+    This test first asserted that COH2D4T was unsupported outright. That was
+    the registry's state and not the obstacle: the obstacle is the number, and
+    ``lucassalmon83860-bit``'s own deck states it twice (``*Initial
+    Conditions, type=TEMPERATURE / Set-3, 673.`` and ``SINK = 273 + 400`` in
+    the source's FILM routine). The element is in the registry now; what is
+    still refused is running it at a temperature nobody wrote down."""
+    assert is_supported("COH2D4T") is True
     formulation = choose(("COH2D4T",), provenance="the author's deck")
     assert formulation.element == ""
-    assert "temperature" in formulation.reason
+    assert "no temperature is published" in formulation.reason
+    assert "divide by zero in an Arrhenius term" in formulation.reason
 
 
 def test_a_deck_the_author_wrote_settles_which_cohesive_element_to_run():
@@ -207,3 +216,96 @@ def test_an_orientation_reaches_the_deck_as_the_author_wrote_it():
     assert "1.0, 0.0, 0.0, 0.0, 1.0, 0.0" in text
     assert "3, 30.0" in text
     assert "ORIENTATION=LOCAL" in text
+
+
+def test_a_coupled_cohesive_law_runs_at_a_temperature_its_author_published():
+    """The refusal said a temperature "cannot be invented", and it was right:
+    ``at = PROPS(8)*Exp(-PROPS(9)/(8.34*TEMP))`` divides by zero at TEMP=0. It
+    was wrong that none is available. ``fuel_pellet_quarter_CZM.inp`` says
+    ``*Initial Conditions, type=TEMPERATURE / Set-3, 673.`` and the source's
+    own FILM routine sets ``SINK = 273 + 400`` -- the same 673, stated twice
+    and by both halves of the model."""
+    from umat_oti.abaqus.formulation import stated_temperature
+
+    deck = ("*Initial Conditions, type=TEMPERATURE\nSet-3, 673.\n"
+            "*Initial Conditions, type=TEMPERATURE\nSet-8, 673.\n")
+    value, provenance = stated_temperature(deck)
+    assert value == 673.0
+    assert "673" in provenance and "2 node set" in provenance
+
+    chosen = choose(("COH2D4T",), provenance="fuel.inp", temperature=673.0)
+    assert chosen.element == "COH2D4T"
+    assert "ISOTHERMALLY at 673" in chosen.reason
+    assert "temperature DEPENDENCE" in chosen.reason
+
+
+def test_two_different_stated_temperatures_are_not_one_to_choose_between():
+    """Picking which of them a single element sits at would be choosing the
+    experiment, so it is refused rather than averaged."""
+    from umat_oti.abaqus.formulation import stated_temperature
+
+    value, why = stated_temperature(
+        "*Initial Conditions, type=TEMPERATURE\nSet-3, 673.\n"
+        "*Initial Conditions, type=TEMPERATURE\nSet-9, 293.\n")
+    assert value is None
+    assert "2 different initial temperatures" in why
+    assert choose(("COH2D4T",), provenance="d", temperature=None).element == ""
+
+
+def test_the_coupled_deck_holds_the_temperature_rather_than_solving_for_it():
+    """A single element has no neighbour to conduct to, so the temperature the
+    author's model solves for cannot be reproduced. It is set as an initial
+    condition and held on degree of freedom 11 at every node, in a TRANSIENT
+    coupled step -- the law integrates its damage in DTIME, so a steady-state
+    step would ask it for the answer after its kinetics have finished."""
+    from umat_oti.abaqus.manifest import separate
+
+    manifest = VerificationManifest(
+        name="HEAL", source=Path("h.f"), element_type="COH2D4T",
+        props=tuple(range(1, 12)), nstatv=14,
+        isothermal_temperature=673.0,
+        temperature_provenance="fuel.inp line 14156",
+        loading=(separate(1e-7, increments=10),))
+    text = generate_deck(manifest)
+    assert "*INITIAL CONDITIONS, TYPE=TEMPERATURE" in text
+    assert "ALL, 673.0" in text
+    assert "*COUPLED TEMPERATURE-DISPLACEMENT" in text
+    assert "STEADY STATE" not in text
+    for node in (1, 2, 3, 4):
+        assert f"{node}, 11, 11, 673.0" in text
+    # The separation still reaches the top face: the cohesive branch is chosen
+    # on the SECTION, not on a kind string that gained a word.
+    assert "3, 2, 2, 1e-07" in text
+
+
+def test_how_far_to_open_is_read_from_whatever_the_law_calls_its_constants():
+    """Two parameterisations, one method. The bilinear law names a strength
+    and writes its own onset ``DELTA_NC = TAU_N/A_KN``; the healing law names
+    no strength at all and compares ``2(1-Da)*Kplus*eps^2/2`` against
+    ``Gc*Da``, so its scale is ``sqrt(Gc/Kplus)``."""
+    from umat_oti.abaqus.experiment import OPEN_PAST_ONSET, cohesive_scales
+
+    bilinear = cohesive_scales(
+        "      A_KN = PROPS(1)\n      TAU_N = PROPS(2)\n      G_NC = PROPS(5)\n",
+        (2000., 200., 200., 200., 100.))
+    assert bilinear[0] == pytest.approx(0.1)
+    assert bilinear[1] == pytest.approx(0.55)
+    assert "halfway down the softening branch" in bilinear[2]
+
+    energetic = cohesive_scales(
+        "      DKplus=PROPS(1)\n      Gc=PROPS(7)\n",
+        (4.92219e16, 0., 0., 0., 0., 0., 3.25))
+    assert energetic[0] == pytest.approx((3.25 / 4.92219e16) ** 0.5)
+    assert energetic[1] == pytest.approx(OPEN_PAST_ONSET * energetic[0])
+    assert "no strength at all" in energetic[2]
+
+
+def test_a_family_with_no_element_to_substitute_says_which_tensor_it_wanted():
+    """"Do not hand a UMAT the continuum stress tensor" is true of a shell
+    too, and a shell is drivable. What makes an axisymmetric shell different
+    is that nothing in the registry hands two direct components and no shear,
+    so there is nothing to substitute -- which is a different sentence."""
+    refused = choose(("SAX1",), provenance="deck")
+    assert refused.element == ""
+    assert "meridional and hoop" in refused.reason
+    assert "NTENS=2" in refused.reason

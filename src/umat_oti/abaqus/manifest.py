@@ -107,6 +107,20 @@ class VerificationManifest:
     #: :mod:`umat_oti.abaqus.coordinate_domain`.
     node_coordinates: tuple[tuple[int, float, float, float], ...] = ()
     node_provenance: str = ""
+    #: The temperature to hold every node at, and where that number came
+    #: from. Only meaningful on a coupled temperature-displacement element.
+    #:
+    #: Held, not solved. A single element has no neighbour to conduct to, no
+    #: gap to radiate across and no surface to film from, so the temperature
+    #: the author's own model SOLVES for cannot be reproduced at one element.
+    #: What can be reproduced is a temperature the author STATED:
+    #: ``*Initial Conditions, type=TEMPERATURE / Set-3, 673.``. The experiment
+    #: is then isothermal at the author's own 673 K, which exercises the
+    #: law at that temperature and does not exercise its temperature
+    #: dependence -- and the second half of that sentence belongs in every
+    #: report of it.
+    isothermal_temperature: Optional[float] = None
+    temperature_provenance: str = ""
     #: Degrees of freedom the author's deck constrains on EVERY node, which is
     #: a statement about the material's kinematics rather than a support.
     #: ``Plate-1.WholeRegion, 3, 3`` beside a plane-strain growth problem is

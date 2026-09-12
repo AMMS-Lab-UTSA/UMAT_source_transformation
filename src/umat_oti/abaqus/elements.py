@@ -25,6 +25,17 @@ Refusals are deliberate, not gaps waiting to be filled:
   a thermal contract this harness does not drive.
 * User elements (``U1``, ``U3``) are the author's own element, not ours.
 
+Coupled temperature-displacement cohesive elements are here too, and were
+refused outright before. ``lucassalmon83860-bit``'s healing law runs on
+COH2D4T and computes its kinetics as ``PROPS(8)*Exp(-PROPS(9)/(8.34*TEMP))``,
+which at TEMP=0 divides by zero -- so the refusal was right that a temperature
+cannot be invented. It is not right that none is available: that author's deck
+says ``*Initial Conditions, type=TEMPERATURE / Set-3, 673.`` and the source's
+own FILM routine sets ``SINK = 273 + 400``, the same 673. An ISOTHERMAL
+experiment at the author's own 673 K invents nothing. What it does not
+exercise is the temperature DEPENDENCE, and that is said where the experiment
+is built rather than left to be assumed.
+
 Cohesive elements are here, and were not. A cohesive law IS drivable: Abaqus
 calls a UMAT for a ``*COHESIVE SECTION, RESPONSE=TRACTION SEPARATION``, hands
 it NDI=1 direct and NSHR=1 (2D) or 2 (3D) shear components, and what it calls
@@ -164,7 +175,7 @@ def _axisymmetric(name, nodes, note=""):
     return ElementGeometry(name, nodes, 2, 3, 1, False, note)
 
 
-def _cohesive(name, nodes, dimension, nshr, note=""):
+def _cohesive(name, nodes, dimension, nshr, note="", coupled=False):
     """A traction-separation element: one direct component, one or two shear.
 
     ``needs_thickness`` is True because ``*COHESIVE SECTION`` takes the
@@ -173,7 +184,8 @@ def _cohesive(name, nodes, dimension, nshr, note=""):
     which is what the law's own comments call it.
     """
     return ElementGeometry(name, nodes, dimension, 1, nshr, True, note,
-                           section="COHESIVE", kind="cohesive")
+                           section="COHESIVE",
+                           kind="cohesive thermal" if coupled else "cohesive")
 
 
 SUPPORTED: dict[str, ElementGeometry] = {
@@ -201,6 +213,12 @@ SUPPORTED: dict[str, ElementGeometry] = {
                   "the author's own single-element patch test in "
                   "harshaa765__Bilinear-CZM-UMAT is one of these"),
         _cohesive("COH2D4", _COH_QUAD4, 2, 1),
+        _cohesive("COH2D4T", _COH_QUAD4, 2, 1, coupled=True,
+                  note="coupled temperature-displacement: the UMAT is called "
+                       "with TEMP, and this harness drives it only at a "
+                       "temperature the author published"),
+        _cohesive("COH3D8T", _COH_HEX8, 3, 2, coupled=True,
+                  note="coupled temperature-displacement"),
     )
 }
 
@@ -218,9 +236,9 @@ _REFUSALS: tuple[tuple[str, str], ...] = (
 
 _STRUCTURAL = {
     "COH": ("a cohesive element is supported in its displacement-only form "
-            "(COH2D4, COH3D8); the coupled temperature-displacement form "
-            "calls the UMAT with a temperature this harness does not drive, "
-            "and a healing or ageing law read at TEMP=0 is not the law"),
+            "(COH2D4, COH3D8) and in its coupled temperature-displacement "
+            "form (COH2D4T, COH3D8T), the latter only where the author "
+            "published the temperature to hold it at"),
     "S": "a shell hands the UMAT a plane-stress tensor it must enforce itself",
     "M": "a membrane carries no bending and imposes plane stress",
     "B": "a beam integrates a cross-section rather than a material point",
