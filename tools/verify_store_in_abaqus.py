@@ -1742,6 +1742,13 @@ class JobEvidence:
     instrumented: bool = False
     warnings: tuple[str, ...] = ()
     reasons: tuple[str, ...] = ()
+    #: What the driver printed, kept only for a job that did not complete.
+    #: Three entries left no .dat, no .msg and no .odb, so the compiler's own
+    #: diagnostic on the console was the only evidence there was -- and this
+    #: reduction dropped it. They were diagnosable afterwards only by
+    #: reproducing the compile offline with each job's own flags, which
+    #: happened to be possible and will not always be.
+    console_tail: str = ""
 
 
 def job_evidence(report: dict) -> JobEvidence:
@@ -1771,6 +1778,7 @@ def job_evidence(report: dict) -> JobEvidence:
         instrumented=bool(report.get("instrumented")),
         warnings=tuple(warnings),
         reasons=tuple(report.get("reasons") or ()),
+        console_tail=str(report.get("console") or ""),
     )
 
 
@@ -1872,11 +1880,19 @@ def common_finite_prefix(original: list, transformed: list,
     left = frames.group(original, expected_points)
     right = frames.group(transformed, expected_points)
     grouping = {"original": left.as_dict(), "transformed": right.as_dict()}
+    # -1 means ONLY "no truncation was applied". Whether the histories are
+    # finite is a separate question and is answered separately: conflating
+    # the two reported complete_finite_verification_run = True for ten
+    # HelixUp entries whose ORIGINAL build carries NaN in all six stresses
+    # of 72 of its 80 records, because the two builds parted company at
+    # different increments and the "they diverged" branch returns -1 too.
+    grouping["both_finite_throughout"] = bool(left.complete and right.complete)
     if left.complete and right.complete:
         return list(original), list(transformed), -1, grouping
     if left.complete_increments != right.complete_increments:
         # They parted company. Hand back the histories whole so the ordinary
-        # comparison reports it, which is what should happen.
+        # comparison reports it, which is what should happen -- and it is NOT
+        # a finite pair.
         return list(original), list(transformed), -1, grouping
     return left.prefix(), right.prefix(), left.complete_increments, grouping
 
@@ -3196,6 +3212,10 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         "instrumented": original_job.instrumented,
         "warnings": list(original_job.warnings),
         "reasons": list(original_job.reasons),
+        # Kept only for a job that did not complete, and then always: for a
+        # job that left no .dat, .msg or .odb it is the only evidence there is.
+        "console_tail": ("" if original_job.completed
+                         else original_job.console_tail),
     }
     # post_analysis_wrapup_failure and the nonzero exit code that comes with it
     # live here, beside the result, and never in the verdict.
@@ -3238,6 +3258,10 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         "instrumented": transformed_job.instrumented,
         "warnings": list(transformed_job.warnings),
         "reasons": list(transformed_job.reasons),
+        # Kept only for a job that did not complete, and then always: for a
+        # job that left no .dat, .msg or .odb it is the only evidence there is.
+        "console_tail": ("" if transformed_job.completed
+                         else transformed_job.console_tail),
     }
     record["warnings"] += [f"transformed: {w}" for w in transformed_job.warnings]
     seen["transformed_completed"] = transformed_job.completed
@@ -3313,10 +3337,13 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     # the numbers and the source so the cluster can be worked as clusters.
     if not primal.agrees:
         try:
-            record["primal_signature"] = primal_signature.classify(
-                primal.as_dict(),
-                Path(original).read_text(errors="replace"),
-                stopped_at if stopped_at > 0 else 0).as_dict()
+            # review_entry, not classify: the summary numbers raise the
+            # hypotheses and the recorded CALLS decide which survive. Without
+            # this the record keeps every hypothesis open and the
+            # confirmations and refutations live only in a branch's tests.
+            record["primal_signature"] = primal_signature.review_entry(
+                primal.as_dict(), work,
+                Path(original).read_text(errors="replace")).as_dict()
         except OSError:                            # pragma: no cover
             pass
     seen["primal_agrees"] = primal.agrees
@@ -3337,7 +3364,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                 "present", True)
             for side in ("original", "transformed")),
         # Nothing anywhere in either history is a NaN or an infinity.
-        "complete_history_finite": stopped_at < 0,
+        "complete_history_finite": bool(grouping.get("both_finite_throughout")),
         "primal_agreed": bool(primal.agrees),
         # Set where the tangent is decided, not here.
         "derivatives_verified": False,
@@ -3355,7 +3382,11 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     record["mechanically_informative"] = {"informative": informative,
                                           "reason": informative_why}
     seen["mechanically_informative"] = informative
-    record["complete_finite_verification_run"] = stopped_at < 0
+    # Read from the grouping, not from the truncation flag. "No truncation
+    # was applied" and "nothing in either history is non-finite" are
+    # different facts, and one of them is the one a verdict may rest on.
+    record["complete_finite_verification_run"] = bool(
+        grouping.get("both_finite_throughout"))
     if stopped_at >= 0:
         record["primal"]["both_builds_non_finite_from_increment"] = stopped_at + 1
         record["primal"]["complete_increments_compared"] = stopped_at
