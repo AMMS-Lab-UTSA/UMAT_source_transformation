@@ -78,7 +78,8 @@ def _nodes_for(element_type: str) -> tuple[tuple, ...]:
 
 
 def _displacement(node: tuple[float, float, float],
-                  strain: tuple[float, ...]) -> tuple[float, float, float]:
+                  strain: tuple[float, ...],
+                  rotation: tuple[float, ...] = ()) -> tuple[float, float, float]:
     """Where a corner goes under a homogeneous engineering strain.
 
     Engineering shear, halved onto the symmetric off-diagonal entries, so that
@@ -88,10 +89,24 @@ def _displacement(node: tuple[float, float, float],
     """
     e11, e22, e33, g12, g13, g23 = (tuple(strain) + (0.0,) * 6)[:6]
     x, y, z = node
-    return (
+    moved = (
         e11 * x + 0.5 * g12 * y + 0.5 * g13 * z,
         0.5 * g12 * x + e22 * y + 0.5 * g23 * z,
         0.5 * g13 * x + 0.5 * g23 * y + e33 * z,
+    )
+    if not rotation:
+        return moved
+
+    # A superposed rigid rotation. The corner's new POSITION is Q(X + u), so
+    # the displacement that puts it there is Q(X + u) - X. Written on the
+    # position rather than on the displacement because a rotation acts on
+    # where the material is, not on how far it moved.
+    q = tuple(rotation) + (0.0,) * 9
+    px, py, pz = x + moved[0], y + moved[1], z + moved[2]
+    return (
+        q[0] * px + q[1] * py + q[2] * pz - x,
+        q[3] * px + q[4] * py + q[5] * pz - y,
+        q[6] * px + q[7] * py + q[8] * pz - z,
     )
 
 
@@ -198,7 +213,8 @@ def _boundary_for(segment: LoadingSegment, nodes, plane: bool = False,
                                      plane_strain=plane_strain)
     lines = []
     for index, x, y, z in nodes:
-        ux, uy, uz = _displacement((x, y, z), segment.strain)
+        ux, uy, uz = _displacement((x, y, z), segment.strain,
+                                   getattr(segment, "rotation", ()))
         components = (ux, uy) if plane else (ux, uy, uz)
         for dof, value in enumerate(components, start=1):
             lines.append(f"{index}, {dof}, {dof}, {_fmt(value)}")

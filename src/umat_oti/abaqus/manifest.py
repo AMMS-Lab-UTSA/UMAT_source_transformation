@@ -71,6 +71,18 @@ class LoadingSegment:
     #: makes such a law's development visible without changing the
     #: constitutive problem by shortening its clock.
     time_only: bool = False
+    #: A rigid rotation superposed on this segment, row-major 3x3, or empty
+    #: for none. The nodes are driven to ``Q(I+E)X`` instead of ``(I+E)X``, so
+    #: Abaqus hands the routine ``F = Q(I+E)`` and a DROT carrying Q. The
+    #: strain the material sees is unchanged; only the frame it is presented in
+    #: moves. That is what objectivity means, and losing DROT is what it
+    #: catches -- a conversion can agree perfectly in an unrotated frame and
+    #: drop the rotation term with nothing to show for it.
+    #:
+    #: LAST in the field order deliberately. Every other field here has been
+    #: passed positionally somewhere, and inserting this one after ``strain``
+    #: silently bound ``increments`` to it.
+    rotation: tuple[float, ...] = ()
 
     @property
     def driven_by(self) -> str:
@@ -583,3 +595,39 @@ def off_axis(strain: float = 0.01, increments: int = 10) -> LoadingSegment:
                      "is off the material's own axes; the shear stress it "
                      "produces is the evidence that the orientation reached "
                      "the routine"))
+
+
+#: The rotation superposed to test objectivity, row-major 3x3.
+#:
+#: Thirty degrees about the axis (1,1,1)/sqrt(3) in three dimensions. Chosen
+#: to be far from any symmetry of the element and of the loading: a rotation
+#: about a coordinate axis, or by ninety degrees, permutes components rather
+#: than mixing them, and a conversion that dropped DROT could reproduce the
+#: answer by accident. Every component of Q is nonzero here.
+OBJECTIVITY_ROTATION: tuple[float, ...] = (
+    0.9106836025229592, -0.24401693585629242, 0.3333333333333333,
+    0.3333333333333333, 0.9106836025229592, -0.24401693585629242,
+    -0.24401693585629242, 0.3333333333333333, 0.9106836025229592,
+)
+
+#: The same angle about z, for a two-dimensional element. An out-of-plane
+#: rotation would take the element out of its own plane, which is a different
+#: analysis rather than the same one seen from a different frame.
+OBJECTIVITY_ROTATION_PLANE: tuple[float, ...] = (
+    0.8660254037844387, -0.49999999999999994, 0.0,
+    0.49999999999999994, 0.8660254037844387, 0.0,
+    0.0, 0.0, 1.0,
+)
+
+
+def rotated(loading, plane: bool = False):
+    """The same loading with a rigid rotation superposed on every segment.
+
+    The material is driven along exactly the same strain path; only the frame
+    it is presented in moves. A routine that handles DROT correctly returns
+    the same response rotated, and a conversion that dropped DROT does not.
+    """
+    from dataclasses import replace as _replace
+
+    turn = OBJECTIVITY_ROTATION_PLANE if plane else OBJECTIVITY_ROTATION
+    return tuple(_replace(segment, rotation=turn) for segment in loading)
