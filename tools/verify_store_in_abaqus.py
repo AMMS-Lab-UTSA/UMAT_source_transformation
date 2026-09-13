@@ -102,7 +102,8 @@ from umat_oti.abaqus.experiment import (                                # noqa: 
     assess, plan as plan_experiment)
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
     LoadingSegment, NEEDS_MATERIAL_DATA, VerificationManifest, at_rate, hold,
-    reverse, simple_shear, uniaxial, under_body_force)
+    reverse, rotated as rotated_loading, simple_shear, uniaxial,
+    under_body_force)
 from umat_oti.abaqus.rate_search import (                               # noqa: E402
     HOLD_PERIODS, RATE_FACTOR, probe_time)
 from umat_oti.abaqus.job_status import blocking_statements
@@ -3204,6 +3205,7 @@ def _is_informative(record: dict, manifest: VerificationManifest,
         except Exception as error:              # pragma: no cover - defensive
             record["coverage_error"] = f"{type(error).__name__}: {error}"
             findings = ()
+    findings = _measured_instead_of_declared(findings, record)
     record["coverage"] = [finding.as_dict() for finding in findings]
     failed = [finding for finding in findings if finding.met is False]
     if failed:
@@ -3223,6 +3225,51 @@ def _is_informative(record: dict, manifest: VerificationManifest,
     return bool(activation.activated and plausible.plausible), "; ".join(said)
 
 
+def _measured_instead_of_declared(findings, record: dict):
+    """Replace a criterion that only declares itself with the run that made it.
+
+    ``experiment.DECLARED_ONLY`` states the criteria that cannot be read off a
+    single run's probe records -- objectivity needs the same path in a rotated
+    frame, rate dependence needs the same path over two step periods. They come
+    back as ``met=None`` by construction, which is honest for one run and wrong
+    for a verdict: left alone, every finite-strain and rate-dependent entry
+    would sit at ``informativeness_not_established`` forever on a question this
+    harness never asked rather than one it could not answer.
+
+    So where the harness DID run the second experiment, its result replaces the
+    declaration. Where it did not, the declaration stands and the entry stays
+    unestablished, which is the correct reading of an unasked question.
+    """
+    from umat_oti.abaqus.experiment import Finding
+
+    objectivity = record.get("objectivity") or {}
+    replaced = []
+    for finding in findings:
+        if finding.met is None and "rigid rotation" in finding.reason:
+            if not objectivity.get("ran"):
+                replaced.append(finding)
+                continue
+            agreed = objectivity.get("agreed")
+            replaced.append(Finding(
+                "objectivity under a superposed rotation",
+                None if agreed is None else bool(agreed),
+                objectivity.get("reason", ""),
+                float(objectivity.get("worst_stress_relative") or 0.0)))
+            continue
+        if finding.met is None and "two different step periods" in finding.reason:
+            rate = record.get("rate_dependence") or {}
+            if rate.get("measured") is None:
+                replaced.append(finding)
+                continue
+            replaced.append(Finding(
+                "rate dependence over two step periods",
+                bool(rate.get("measured")), str(rate.get("reason", "")),
+                float(rate.get("relative") or 0.0)))
+            continue
+        replaced.append(finding)
+    return tuple(replaced)
+
+
 def _family_of(experiment: Optional[dict]):
     """The Family object the planner recorded, rebuilt from its dictionary.
 
@@ -3237,6 +3284,171 @@ def _family_of(experiment: Optional[dict]):
     return Family(name, str(recorded.get("driver") or ""),
                   tuple(recorded.get("evidence") or ()),
                   tuple(recorded.get("notes") or ()))
+
+def _family_name(experiment: Optional[dict]) -> str:
+    return str(((experiment or {}).get("family") or {}).get("name") or "")
+
+
+def _objective_response(base: Sequence[dict], turned: Sequence[dict],
+                        rotation: Sequence[float]) -> dict:
+    """Is the rotated run's stress the base run's stress rotated?
+
+    ``sigma' = Q sigma Q^T``, component by component, over the increments both
+    runs walked. This is a property of the AUTHOR's routine: a law that
+    ignores DROT answers in the frame it was handed and gives a different
+    tensor here. It is recorded because it is worth knowing about a published
+    material, and it is kept apart from ``agreed`` -- which is the question
+    about the transform -- so that a non-objective model is never reported as
+    a conversion failure.
+    """
+    q = [list(rotation[0:3]), list(rotation[3:6]), list(rotation[6:9])]
+    # Voigt (11, 22, 33, 12, 13, 23) to the full symmetric matrix and back.
+    index = ((0, 0), (1, 1), (2, 2), (0, 1), (0, 2), (1, 2))
+
+    worst, compared = 0.0, 0
+    for before, after in zip(base, turned):
+        left = before.get("STRESS") or []
+        right = after.get("STRESS") or []
+        if len(left) < 6 or len(right) < 6:
+            # Fewer than six components means a 2D element, where the rotation
+            # is in-plane and the out-of-plane row is untouched; the same
+            # arithmetic applies but the missing components cannot be filled in
+            # here without assuming which they are.
+            continue
+        sigma = [[0.0] * 3 for _ in range(3)]
+        for slot, (row, column) in enumerate(index):
+            sigma[row][column] = sigma[column][row] = float(left[slot])
+        rotated_sigma = [
+            [sum(q[i][a] * sigma[a][b] * q[j][b]
+                 for a in range(3) for b in range(3)) for j in range(3)]
+            for i in range(3)]
+        scale = max((abs(value) for row in sigma for value in row), default=0.0)
+        if scale <= 0.0:
+            continue
+        for slot, (row, column) in enumerate(index):
+            gap = abs(rotated_sigma[row][column] - float(right[slot])) / scale
+            worst = max(worst, gap)
+            compared += 1
+
+    if not compared:
+        return {"objective": None,
+                "objectivity_reason": ("no increment carried six stress "
+                                       "components in both runs, so Q sigma "
+                                       "Q^T could not be formed")}
+    # The same tolerance the primal comparison uses would be too tight here:
+    # the rotated run solves a different linear system and its equilibrium
+    # iterates differ in the last digits. A part in 1e-8 of the stress field is
+    # far below any real frame error, which is order one.
+    objective = worst < 1e-8
+    return {
+        "objective": objective,
+        "objectivity_worst_relative": worst,
+        "compared_components": compared,
+        "objectivity_reason": (
+            f"the author's own response {'is' if objective else 'is NOT'} the "
+            f"unrotated response rotated: worst |Q sigma Q^T - sigma'| is "
+            f"{worst:.3e} of the stress field over {compared} components"),
+    }
+
+
+def run_objectivity(manifest: VerificationManifest, original_call: dict,
+                    transformed_call: dict, work: Path, timeout: int, *,
+                    tolerance: float, near_zero_fraction: float,
+                    support=None, base_history: Sequence[dict] = ()) -> dict:
+    """Run both builds again with a rigid rotation superposed on the path.
+
+    The material is driven along exactly the same strain history; only the
+    frame it is presented in moves, so Abaqus hands the routine F = Q(I+E) and
+    a DROT carrying Q. Two separate facts come out of the pair, and they are
+    not the same fact:
+
+    ``agreed``
+        whether the CONVERTED build still matches the original on the rotated
+        path. This is the one that is about the transform, and it is what a
+        dropped DROT breaks: the conversion can agree perfectly in an unrotated
+        frame and lose the rotation term without anything noticing.
+
+    ``objective``
+        whether the ORIGINAL's own response is the unrotated response rotated.
+        That is a property of the author's model, recorded because it is worth
+        knowing and never charged to the conversion: a routine that is not
+        objective is faithfully converted by a conversion that reproduces its
+        non-objectivity exactly.
+    """
+    turned = replace(manifest, loading=rotated_loading(
+        manifest.loading, plane=manifest.ntens == 3 and manifest.ndi == 2))
+    answer: dict = {"ran": False, "agreed": None, "objective": None,
+                    "rotation": list(turned.loading[0].rotation)
+                    if turned.loading else [],
+                    "reason": ""}
+    if not turned.loading:
+        answer["reason"] = "this experiment has no prescribed-strain segment"
+        return answer
+
+    where = Path(work) / "objectivity"
+    try:
+        left, right = build_plan(
+            turned, Path(original_call["source"]),
+            Path(transformed_call["source"]), where, timeout,
+            form=original_call.get("form", ""),
+            data_roots=original_call.get("data_roots", ()))
+    except Exception as error:                     # pragma: no cover
+        answer["reason"] = f"could not plan the rotated run: {error}"
+        return answer
+
+    # The rotated run is a new working directory, and the transformed build
+    # needs the same compiled support modules there: without them ifort stops
+    # at "error #7002: Error in opening the compiled module file" before Abaqus
+    # reaches its input processor, which is the harness's fault and would have
+    # been recorded as the rotated run failing.
+    if support is not None and getattr(support, "ok", False):
+        rotated_transformed = Path(right["work_dir"])
+        rotated_transformed.mkdir(parents=True, exist_ok=True)
+        install_support(support, rotated_transformed)
+
+    reports = {}
+    for name, call in (("original", left), ("transformed", right)):
+        report = run_one(**call)
+        evidence = job_evidence(report)
+        answer[name] = {"completed": evidence.completed,
+                        "reasons": list(evidence.reasons)}
+        if not evidence.completed:
+            answer["reason"] = (
+                f"the {name} build did not complete on the rotated path: "
+                + "; ".join(evidence.reasons)[:200])
+            return answer
+        reports[name] = report
+
+    answer["ran"] = True
+    # Read the same way the unrotated pair is read: through history_of, which
+    # prefers the JSON run_one saved and falls back to the probe file.
+    rotated_original = history_of(Path(left["work_dir"]), left["job"])
+    rotated_transformed = history_of(Path(right["work_dir"]), right["job"])
+    left_history, right_history, _, _ = common_finite_prefix(
+        rotated_original, rotated_transformed,
+        expected_points=frames.points_for(turned.element_type))
+    if not left_history or not right_history:
+        answer["reason"] = ("the rotated run produced no pair of increments "
+                            "both builds walked")
+        return answer
+
+    pair = compare_primal(left_history, right_history, tolerance=tolerance,
+                          near_zero_fraction=near_zero_fraction)
+    answer["agreed"] = bool(pair.agrees)
+    # And whether the AUTHOR's own response is objective, which is a different
+    # question and is never charged to the conversion: a routine that ignores
+    # DROT is faithfully converted by a conversion that ignores it identically.
+    answer.update(_objective_response(base_history, rotated_original,
+                                      turned.loading[0].rotation))
+    answer["worst_stress_relative"] = pair.worst_stress_relative
+    answer["worst_state_relative"] = pair.worst_state_relative
+    answer["reason"] = (
+        f"the converted build {'agrees with' if pair.agrees else 'differs from'}"
+        f" the original on the same path presented in a rotated frame, worst "
+        f"stress difference {pair.worst_stress_relative:.3e} against a "
+        f"tolerance of {tolerance:g}")
+    return answer
+
 
 def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                cache_root: Path, work_root: Path, *, timeout: int,
@@ -3436,6 +3648,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     # never needed to run; and an Abaqus job costs a licence token this machine
     # contends for, so spending one on a build that cannot link is waste.
     support = support_plan(stored.directory, stored.entry_source)
+    support_built = None
     record["support"] = {"units": len(support.units),
                          "required": support.build_required,
                          "ok": None, "reason": support.refusal}
@@ -3446,6 +3659,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         transformed_dir = Path(transformed_call["work_dir"])
         transformed_dir.mkdir(parents=True, exist_ok=True)
         built = build_support(support.units, transformed_dir)
+        support_built = built
         seen["support_ok"] = built.ok
         record["support"].update(ok=built.ok, reason=built.reason,
                                  objects=len(built.objects))
@@ -3638,6 +3852,20 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         # about the part every build gets right.
         "mechanically_informative": False,
     }
+    # Objectivity, where the family asks for it. It cannot be measured from
+    # one run -- it is a statement about two -- so the pair is run here, on the
+    # same strain path presented in a rotated frame, and the finding is put in
+    # the record for the gate to read. Without this the criterion stays at
+    # "not measured" forever and 54 finite-strain entries can never establish
+    # their informativeness, which would be an internal gap recorded as an
+    # unanswerable question.
+    if _family_name(record.get("experiment")) == "finite strain":
+        record["objectivity"] = run_objectivity(
+            manifest, original_call, transformed_call, work, timeout,
+            tolerance=manifest.primal_tolerance,
+            near_zero_fraction=manifest.near_zero_fraction,
+            support=support_built, base_history=compared_original)
+
     informative, informative_why = _is_informative(
         record, manifest, compared_original, original,
         record.get("discovery") or {}, record.get("experiment"))
