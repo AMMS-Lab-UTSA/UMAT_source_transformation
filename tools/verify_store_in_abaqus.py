@@ -98,6 +98,8 @@ from umat_oti.abaqus.elements import geometry_for as element_geometry   # noqa: 
 from umat_oti.abaqus.formulation import settle                          # noqa: E402
 from umat_oti.abaqus import (frames, primal_signature,                  # noqa: E402
                              plausibility, safe_loading, time_scale)
+from umat_oti.abaqus.experiment import (                                # noqa: E402
+    assess, plan as plan_experiment)
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
     LoadingSegment, NEEDS_MATERIAL_DATA, VerificationManifest, at_rate, hold,
     reverse, simple_shear, uniaxial, under_body_force)
@@ -531,6 +533,11 @@ class ManifestPlan:
     #: Where material constants were looked for, when none were found. A
     #: refusal that does not say where it searched is a claim, not a finding.
     searched: Optional[dict] = None
+    #: The experiment the planner decided, whole: which family this source
+    #: belongs to, what would count as having exercised it, what drives it,
+    #: and the evidence for each of those. Carried even when the plan refused,
+    #: because the refusal's reasoning is the part worth reading.
+    experiment: Optional[dict] = None
 
 
 _SOLUTION_STATE = re.compile(
@@ -643,6 +650,143 @@ def where_we_looked(source_id: str, proposal: Optional[dict]) -> str:
             f"inventing them")
 
 
+def _portable(value, cache_root: Path):
+    """The same structure with this machine's cache prefix taken out.
+
+    A results file is evidence somebody else reads, and the repository audit
+    fails a build that writes an absolute home path into one. The planner's
+    refusals quote the directories they searched -- which is exactly what makes
+    them findings rather than claims -- so the paths are kept and only the part
+    that names this machine is removed.
+    """
+    root = str(Path(cache_root).resolve())
+    if isinstance(value, str):
+        return value.replace(root + "/", "").replace(root, "<cache>")
+    if isinstance(value, dict):
+        return {key: _portable(item, cache_root) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_portable(item, cache_root) for item in value]
+    return value
+
+
+def _from_experiment(plan: "ManifestPlan", answer, source_id: str,
+                     cache_root: Path, *, inferred_nstatv: int,
+                     fd_steps: Sequence[float],
+                     row: Optional[dict] = None) -> "ManifestPlan":
+    """Fill a ManifestPlan from a planned experiment, and keep the old guards.
+
+    The planner decides the experiment. It does not get to decide that a
+    missing requirement is acceptable, so ``missing_requirements()`` and the
+    state-count check below still run against whatever it produced -- they are
+    about whether the manifest can be executed honestly, which is a separate
+    question from whether the experiment is the right one.
+    """
+    manifest = answer.manifest
+    if fd_steps:
+        manifest = replace(manifest, fd_steps=tuple(fd_steps))
+
+    pairing = answer.pairing
+    material = getattr(pairing, "material", None) if pairing is not None else None
+    deck_relative = ""
+    if material is not None:
+        try:
+            deck_relative = str(Path(material.deck).relative_to(cache_root))
+        except ValueError:
+            deck_relative = str(material.deck)
+        plan.deck = deck_relative
+        plan.material_block = material.name or "(unnamed)"
+    if answer.settled is not None and hasattr(answer.settled, "as_dict"):
+        # Scrubbed like everything else recorded: the formulation's provenance
+        # names the deck it read, and it reads it by absolute path.
+        plan.formulation = _portable(answer.settled.as_dict(), cache_root)
+
+    # Four things the record needs that the planner does not set, because they
+    # are about how this harness reports a run rather than about the physics.
+    #
+    # The source path must be portable. An absolute path names this machine and
+    # nothing else, and a manifest is evidence somebody else has to be able to
+    # read -- the registry audit fails on one.
+    relative, _ = portable_source(cache_root / source_id)
+    # The deck must be named the way the corpus names it. Two repositories
+    # publish a job.inp and a basename cannot tell them apart.
+    provenance = manifest.material_provenance
+    if deck_relative and deck_relative not in provenance:
+        provenance = f"{deck_relative}: {provenance}"
+    # And the manifest has to say that its loading is a probe THIS harness
+    # chose, not the loading the author ran. Everything downstream that reports
+    # a result reads that sentence out of the manifest.
+    notes = manifest.notes or PROBE_NOTE
+    # The deck's own material name, because it becomes CMNAME and several
+    # routines in this corpus branch on it -- taking a different path, or
+    # refusing outright, under a name their author never used. The source's
+    # stem is the fallback for an unnamed block and is a label inside a
+    # generated deck, never this entry's identity.
+    block = getattr(material, "name", "") if material is not None else ""
+    name = (block or Path(source_id).stem or "umat")[:60]
+    manifest = replace(manifest, source=Path(relative), name=name,
+                       material_provenance=provenance, notes=notes)
+
+    # The kinematics witness, from the deck, kept separate from the planner's
+    # reason for the experiment: "the author's own step carries NLGEOM=YES" is
+    # a fact about the deck and belongs in the record under its own name.
+    provenance_of_kinematics = ""
+    if material is not None:
+        try:
+            deck_text = Path(material.deck).read_text(
+                encoding="utf-8", errors="replace")
+        except OSError:
+            deck_text = ""
+        if deck_text:
+            provenance_of_kinematics = deck_kinematics(
+                deck_text, Path(material.deck).name).provenance
+    plan.kinematics_provenance = _portable(
+        provenance_of_kinematics or answer.experiment.reason, cache_root)
+    plan.experiment = _portable(answer.experiment.as_dict(), cache_root)
+    # The triage scan recorded a kinematics for every source and it recorded it
+    # from the source text alone. Where the author's deck says otherwise the
+    # deck wins -- it is the analysis the material was published to run in --
+    # and the disagreement is written down rather than resolved in silence.
+    declared = (row or {}).get("kinematics") or ""
+    if declared and declared != manifest.kinematics:
+        plan.kinematics_note = (
+            f"the triage scan called this source {declared}; the paired deck "
+            f"runs it as {manifest.kinematics}, and the deck is what the "
+            f"manifest follows")
+
+    refusals = list(manifest.missing_requirements())
+    # An anisotropic law's local axes ARE part of the material. The planner can
+    # now read them where the deck publishes them, so the refusal applies only
+    # where it could not: running a material in a frame its author never
+    # described and calling the result verified would be a statement about a
+    # model nobody wrote down.
+    orientation = getattr(material, "orientation", "") if material else ""
+    if orientation and not getattr(manifest, "orientation_axes", ()):
+        refusals.append(
+            f"the deck uses this material with *ORIENTATION {orientation}, and "
+            f"the local axes of an anisotropic material are part of what it is "
+            f"made of. This harness read the orientation's name but not its "
+            f"axes, and will not run the material in a frame its author never "
+            f"published")
+    # A state count nobody published is not the same fact as one read from a
+    # deck. The transform's inference is a bound derived from the subscripts
+    # the source itself applies, so it is used and always reported as an
+    # inference; only a source with neither is refused, because there the
+    # number really would be invented here.
+    declared_state = getattr(material, "nstatv", None) if material else None
+    if declared_state is None and not inferred_nstatv and not manifest.nstatv:
+        refusals.append(
+            "the paired deck declares no *DEPVAR and the transform inferred no "
+            "state-variable count, so nobody has established how many this "
+            "material has. A UMAT that writes past the end of an array of one "
+            "either corrupts memory or measures a truncated state")
+
+    plan.refusals = tuple(refusals)
+    plan.manifest = manifest
+    plan.stage = "manifest_refused" if refusals else ""
+    plan.reason = "; ".join(refusals)
+    return plan
+
+
 def build_manifest(
     source_id: str,
     row: Optional[dict],
@@ -690,6 +834,59 @@ def build_manifest(
             plan.reason = entry_kind.reason
             plan.entry_classification = entry_kind.as_dict()
             return plan
+
+    # The experiment comes from the source and the repository that published
+    # it, not from one rule applied to all of them. Four decisions were
+    # universal here and the corpus is not: which deck the constants come from,
+    # where the element stands, what drives it, and what would count as having
+    # exercised it. Each of those was wrong for a family that can be named --
+    # a growth law is driven by its own clock and not by a prescribed strain, a
+    # cohesive law by a separation, a body-force problem by DLOAD, which is
+    # never called when every node's displacement is prescribed.
+    #
+    # Measured before switching, offline, over all 1933 proposal rows: 198
+    # entries that already produced a manifest still produce one, 364 that
+    # produced none now do, and 21 stop. Exactly one of those 21 had reached
+    # 'verified' -- mholla__growth/umats/umat_iso_Mandel.f -- and withdrawing
+    # it is the point rather than the cost: the routine reads PROPS(1:5) by
+    # literal subscript, so it names every constant it takes, and every block
+    # published in that repository declares 8, 9 or 12. It was being verified
+    # against five numbers that mean something else.
+    experiment_plan = None
+    if source_path.is_file():
+        try:
+            experiment_plan = plan_experiment(
+                source_path, cache_root / Path(source_id).parts[0])
+        except Exception as error:            # pragma: no cover - defensive
+            # A crash in planning is this harness's fault and is recorded as
+            # such. It must not be reported as anything about the source.
+            plan.stage = "manifest_refused"
+            plan.reason = (f"the experiment planner raised "
+                           f"{type(error).__name__}: {error}")
+            return plan
+
+    if experiment_plan is not None:
+        plan.experiment = _portable(
+            experiment_plan.experiment.as_dict(), cache_root)
+        pairing = experiment_plan.pairing
+        if pairing is not None and not pairing.found:
+            # Not "this harness has no experiment for it". The constants are
+            # missing, and saying which and where we looked is the whole
+            # difference between a finding and a shrug.
+            plan.stage = NEEDS_MATERIAL_DATA
+            plan.reason = _portable(pairing.refusal, cache_root)
+            plan.searched = _portable(
+                dict(getattr(pairing, "searched", {}) or {}), cache_root)
+            return plan
+        if not experiment_plan.found:
+            plan.stage = "manifest_refused"
+            plan.reason = _portable(
+                experiment_plan.experiment.refusal, cache_root)
+            return plan
+        return _from_experiment(plan, experiment_plan, source_id, cache_root,
+                                inferred_nstatv=int(
+                                    (proposal or {}).get("nstatv_inferred") or 0),
+                                fd_steps=fd_steps, row=row)
 
     proposed = str(((proposal or {}).get("pairing") or {}).get("proposed") or "")
     if not proposed:
@@ -1336,6 +1533,23 @@ def discover_loading(manifest: VerificationManifest, original: Path,
     """
     record: dict = {"ran": False, "reason": "adaptive discovery was not enabled"}
     if not enabled:
+        return manifest, record
+
+    # An amplitude search only means something where an amplitude is what
+    # drives the material. A growth law is driven by its own clock, a cohesive
+    # law by a separation, a body-force problem by DLOAD -- and raising "the
+    # strain" on any of them raises a number that does not appear in the law.
+    # On the growth family the search ran from 8e-07 to 1, found the model
+    # non-finite at every amplitude, and reported that as a property of the
+    # source; the model was non-finite because the unit cube stood on
+    # x^2 - y^2 = 0, which no amplitude was ever going to change.
+    driver = manifest.loading[0].driven_by if manifest.loading else "strain"
+    if driver != "strain":
+        record["reason"] = (
+            f"the driver of this source is {driver}, not a prescribed strain, "
+            f"so there is no amplitude to search: raising one would raise a "
+            f"number that does not appear in this law")
+        record["driver"] = driver
         return manifest, record
 
     attempts_dir = Path(work_dir) / "discovery"
@@ -2563,6 +2777,11 @@ def _material_columns(plan: ManifestPlan) -> dict[str, Any]:
         "kinematics_note": plan.kinematics_note,
         "entry_classification": plan.entry_classification,
         "formulation": plan.formulation,
+        # The experiment the planner decided and why: the family, what drives
+        # it, what would count as having exercised it, and the source lines
+        # that settled each. The verdict gate reads the family back out of
+        # this to ask the criterion that belongs to it.
+        "experiment": plan.experiment,
         # Where constants were looked for, when none were found. A refusal
         # that does not say where it searched is a claim, not a finding.
         "searched_for_material_data": plan.searched,
@@ -2920,7 +3139,8 @@ def run_association_control(manifest: VerificationManifest, original: Path,
 
 def _is_informative(record: dict, manifest: VerificationManifest,
                     history: Sequence[dict], original: Path,
-                    discovery: dict) -> tuple[Optional[bool], str]:
+                    discovery: dict,
+                    experiment: Optional[dict] = None) -> tuple[Optional[bool], str]:
     """Did the experiment this verdict rests on exercise anything real?
 
     Three questions, all measured on the FROZEN run rather than on a probe,
@@ -2968,12 +3188,55 @@ def _is_informative(record: dict, manifest: VerificationManifest,
     record["response_plausibility"] = plausible.as_dict()
     said.append(plausible.reason())
 
+    # And the criterion this family actually carries. The generic detector
+    # cannot certify itself: it fired on the withdrawn growth run, where the
+    # quantity that moved was STATEV(9) holding TIME(2)+DTIME -- a clock, which
+    # advances in every run by construction -- while the growth tensor in
+    # STATEV(8) moved 3.75%. A growth experiment is informative when the GROWTH
+    # developed, and only the family knows which slots those are.
+    findings: tuple = ()
+    family = _family_of(experiment)
+    if family is not None:
+        try:
+            findings = assess(family, list(history), manifest, text,
+                              amplitude=discovery.get("chosen_amplitude") or 0.0,
+                              attempts=discovery.get("attempts") or ())
+        except Exception as error:              # pragma: no cover - defensive
+            record["coverage_error"] = f"{type(error).__name__}: {error}"
+            findings = ()
+    record["coverage"] = [finding.as_dict() for finding in findings]
+    failed = [finding for finding in findings if finding.met is False]
+    if failed:
+        return False, "; ".join(
+            said + [f.reason for f in failed])
+    said.extend(f.reason for f in findings)
+
     if not plausible.checks:
         # Nothing supplied a scale to check against. That is not a failure and
         # it is not a pass: it is an unmeasured answer, and the ladder reads
         # it as one.
-        return (None if not activation.activated else None), "; ".join(said)
+        return None, "; ".join(said)
+    # A criterion the family carries but the run could not answer leaves the
+    # whole question unestablished rather than passed.
+    if any(finding.met is None for finding in findings):
+        return None, "; ".join(said)
     return bool(activation.activated and plausible.plausible), "; ".join(said)
+
+
+def _family_of(experiment: Optional[dict]):
+    """The Family object the planner recorded, rebuilt from its dictionary.
+
+    The record carries the plan as data so a results file can be read without
+    importing this package; the gate needs the object back.
+    """
+    recorded = (experiment or {}).get("family") or {}
+    name = str(recorded.get("name") or "")
+    if not name:
+        return None
+    from umat_oti.abaqus.experiment import Family
+    return Family(name, str(recorded.get("driver") or ""),
+                  tuple(recorded.get("evidence") or ()),
+                  tuple(recorded.get("notes") or ()))
 
 def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                cache_root: Path, work_root: Path, *, timeout: int,
@@ -3377,7 +3640,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     }
     informative, informative_why = _is_informative(
         record, manifest, compared_original, original,
-        record.get("discovery") or {})
+        record.get("discovery") or {}, record.get("experiment"))
     record["evidence"]["mechanically_informative"] = informative
     record["mechanically_informative"] = {"informative": informative,
                                           "reason": informative_why}
