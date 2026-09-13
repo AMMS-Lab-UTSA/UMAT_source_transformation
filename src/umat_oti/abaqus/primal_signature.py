@@ -339,6 +339,124 @@ _FILE_IO = re.compile(r"^\s*(OPEN|READ)\s*\(", re.IGNORECASE | re.MULTILINE)
 _SAVED = re.compile(r"^\s*(SAVE|COMMON)\b", re.IGNORECASE | re.MULTILINE)
 
 
+# ---------------------------------------------------------------------------
+# an untransformed actual argument at an OTI-typed dummy
+# ---------------------------------------------------------------------------
+#: The generated unit calls helpers whose dummies are declared by
+#: ``implicit type(ONUMM<m>N<n>) (a-h,o-z)`` and ``implicit integer (i-n)``.
+#: The caller's own untransformed variables are typed by ABA_PARAM.INC's
+#: ``IMPLICIT REAL*8(A-H,O-Z)``. Where the transform leaves a variable
+#: untransformed and still routes it into a helper, an 8-byte REAL is passed to
+#: a dummy that is several times that size -- five doubles for ONUMM4N1 -- and
+#: the callee's first store to it runs off the end of the caller's frame.
+#: There is no explicit interface anywhere in the generated code, so neither
+#: the compiler nor ``-check bounds`` says anything about it.
+#:
+#: Measured on ``RitioL/PolyFatigueCrackSim``: ``CALL LUDCMP_OTI(WORKST_OTI,
+#: NSLPTL, ND, INDX, DDCMP)`` writes 40 bytes into the 8 that DDCMP occupies,
+#: and that 32-byte overrun is the whole of the STATEV(25) corruption. Adding
+#: ``TYPE(ONUMM4N1) :: DDCMP`` and changing nothing else repairs it at the
+#: solver's own flags with vectorisation on.
+_CALL_TO_A_HELPER = re.compile(r"\s*CALL\s+(\w+_OTI)\s*\((.*)\)\s*$",
+                               re.IGNORECASE)
+#: A name ABA_PARAM.INC types INTEGER. Its counterpart dummy is typed INTEGER
+#: by the helper's own ``implicit integer (i-n)``, so the two agree.
+_IMPLICIT_INTEGER = "IJKLMN"
+
+
+@dataclass(frozen=True)
+class MistypedArgument:
+    """One actual argument whose type cannot match the dummy it reaches."""
+
+    line: int
+    callee: str
+    position: int
+    actual: str
+
+    def describe(self) -> str:
+        return (f"line {self.line}: {self.callee} receives {self.actual} at "
+                f"argument {self.position}, which no declaration in the "
+                f"generated unit gives an OTI type, so it is REAL*8 by "
+                f"ABA_PARAM.INC while the dummy is the OTI derived type")
+
+
+def _statements_of_fixed_form(source_text: str):
+    """Fixed-form lines with their continuations joined, comments dropped.
+
+    Yields ``(statement, line_number)`` where the line number is that of the
+    statement's FIRST line, which is the one a traceback names.
+    """
+    statements: list = []
+    numbers: list = []
+    for index, line in enumerate(source_text.splitlines()):
+        if not line.strip() or line[:1] in "Cc*!":
+            continue
+        body = line[6:] if len(line) > 6 else ""
+        continued = len(line) > 5 and line[5] not in (" ", "0")
+        if continued and statements:
+            statements[-1] += body
+        else:
+            statements.append(body)
+            numbers.append(index + 1)
+    return list(zip(statements, numbers))
+
+
+def _arguments_of(text: str) -> list:
+    """Split an argument list on commas that are not inside a subscript."""
+    out: list = []
+    depth = 0
+    current = ""
+    for character in text:
+        if character == "(":
+            depth += 1
+        elif character == ")":
+            depth -= 1
+        if character == "," and depth == 0:
+            out.append(current.strip())
+            current = ""
+        else:
+            current += character
+    if current.strip():
+        out.append(current.strip())
+    return out
+
+
+def mistyped_oti_arguments(source_text: str) -> list:
+    """Actual arguments the generated unit hands to an OTI dummy untransformed.
+
+    Source-text evidence, and only that: it says the construct is written, not
+    that the call ran or that any output moved. Confirming one takes what
+    confirmed DDCMP -- declare the variable with the callee's type, change
+    nothing else, rebuild at the solver's flags, and see the output move.
+
+    Deliberately conservative. An argument is reported only when it is a bare
+    variable or array element whose name ABA_PARAM.INC types REAL, which the
+    transform did not rename to ``_OTI``. Expressions are skipped, because an
+    expression of OTI operands has the OTI type whatever its leading name
+    looks like, and names in ``I``-``N`` are skipped, because the helper types
+    those dummies INTEGER by the same first-letter rule and the two agree.
+    """
+    found: list = []
+    for statement, number in _statements_of_fixed_form(source_text):
+        match = _CALL_TO_A_HELPER.match(statement.strip())
+        if match is None:
+            continue
+        callee = match.group(1).upper()
+        for position, actual in enumerate(_arguments_of(match.group(2)), 1):
+            name = re.match(r"([A-Za-z]\w*)", actual)
+            if name is None:
+                continue
+            base = name.group(1).upper()
+            if base.endswith("_OTI"):
+                continue
+            if base[0] in _IMPLICIT_INTEGER:
+                continue
+            if re.search(r"[-+*/]", actual):
+                continue
+            found.append(MistypedArgument(number, callee, position, actual))
+    return found
+
+
 def _closeness(left: float, right: float) -> float:
     scale = max(abs(left), abs(right))
     return abs(abs(left) - abs(right)) / scale if scale else 0.0
