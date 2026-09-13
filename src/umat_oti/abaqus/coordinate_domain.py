@@ -68,6 +68,24 @@ _CORNERS: dict[str, int] = {
     "CPE3": 3, "CPS3": 3, "CAX3": 3,
     "COH3D8": 8, "COH3D8T": 8, "COH2D4": 4, "COH2D4T": 4, "COH3D6": 6,
     "S4": 4, "S4R": 4, "S8R": 4, "S3": 3, "S3R": 3,
+    # Coupled temperature-displacement, piezoelectric, pore-pressure and
+    # incompatible-mode variants. Each is the same geometry as the sibling
+    # above it and differs only in the degrees of freedom its nodes carry, so
+    # the corner count is the sibling's. They are listed because the corpus
+    # publishes them: C3D8IH is what both refused Jeff97 growth-of-shell decks
+    # declare, and leaving it out refused two entries that verify, for a
+    # missing table row rather than anything about the material.
+    "C3D8I": 8, "C3D8IH": 8, "C3D8RH": 8,
+    "C3D8T": 8, "C3D8RT": 8, "C3D8E": 8, "EC3D8RT": 8,
+    "C3D20T": 8, "C3D20E": 8, "C3D20P": 8,
+    "C3D4T": 4, "C3D10HS": 4,
+    "CPE4I": 4, "CPE4T": 4, "CPE4RT": 4, "CPE8T": 4, "CPE3T": 3,
+    "CPS3T": 3, "CPS6": 3,
+    "CAX4T": 4, "CAX4RT": 4, "CAX3T": 3,
+    # Generalised plane strain: four corners in the plane, and the two
+    # reference nodes that carry the thickness change are not corners.
+    "CPEG3": 3, "CPEG4": 4, "CPEG4H": 4, "CPEG4R": 4, "CPEG8": 4,
+    "CPEG8H": 4, "CPEG8R": 4,
 }
 
 

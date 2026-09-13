@@ -319,6 +319,7 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
     mode = ""
     pending_static = False
     element_count = 0
+    in_material = False
     element_block_type = ""
     #: The lowest label each ``*ELEMENT, TYPE=`` block numbers, so a material
     #: can be given the label its OWN element type starts at rather than the
@@ -329,7 +330,11 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
     attributions = elements_by_material(text)
 
     def flush() -> None:
-        if name and constants:
+        # ``in_material`` rather than ``name``: a *MATERIAL block that carries
+        # no NAME= still publishes its constants, and those are the thing being
+        # looked for. Dropping it refused a deck that names what the routine is
+        # made of because the author left the label off.
+        if in_material and constants:
             kinds, where = attributions.get(
                 name.upper(), attributions.get("", ((), "")))
             found.append(DeckMaterial(
@@ -350,6 +355,7 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
             if keyword == "MATERIAL":
                 flush()
                 name = parameters.get("NAME", "")
+                in_material = True
                 depvar, constants, values, unsymm = 0, 0, [], False
                 mode = ""
             elif keyword == "DEPVAR":

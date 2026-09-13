@@ -221,23 +221,50 @@ def test_the_manifest_names_the_deck_and_the_block_it_read(tmp_path: Path):
     assert plan.manifest.missing_requirements() == ()
 
 
-def test_a_source_with_no_paired_deck_needs_material_data(tmp_path: Path):
-    """No deck means no constants, and no constants means no run.
+def test_a_repository_that_publishes_no_constants_needs_material_data(tmp_path: Path):
+    """No constants anywhere means no run.
 
     The alternative -- inventing a plausible elastic vector -- produces a job
     that runs, a comparison that passes and a result about a material the
     author never described.
+
+    The refusal is decided by searching the repository, NOT by whether an
+    earlier proposal happened to name a deck. Those were the same thing while
+    the proposal was the only pairing there was; they are not the same thing
+    now, and the invariant worth protecting is this one -- that a repository
+    with nothing in it is refused, and that the refusal says where it looked.
     """
-    cache = _cache_with_deck(tmp_path)
+    cache = tmp_path / "cache"
+    source = cache / "owner__name/sub/umat.for"
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text(_cache_with_deck(tmp_path / "scratch").joinpath(
+        "owner__name/sub/umat.for").read_text(), encoding="utf-8")
+
     plan = build_manifest("owner__name/sub/umat.for", _row(),
                           _proposal(deck=""), cache)
     assert plan.stage == "needs_material_data"
     assert plan.manifest is None
-    assert "no material constants are published" in plan.reason
     # ...and it says where it looked, because a refusal that does not is a
     # claim about somebody's repository rather than a finding about it.
     assert "Searched" in plan.reason
     assert plan.searched is not None and "documentation" in plan.searched
+
+
+def test_a_deck_the_proposal_never_named_is_still_found(tmp_path: Path):
+    """The proposal is one witness to the pairing and no longer the only one.
+
+    ``owner__name`` publishes exactly one deck and it carries the constants
+    this routine needs. Refusing because an earlier pass did not write its name
+    down would be recording a gap in our own bookkeeping as a gap in somebody's
+    repository.
+    """
+    cache = _cache_with_deck(tmp_path)
+    plan = build_manifest("owner__name/sub/umat.for", _row(),
+                          _proposal(deck=""), cache)
+    assert plan.stage == ""
+    assert plan.manifest is not None
+    assert plan.deck == "owner__name/decks/job.inp"
+    assert plan.manifest.props == (210000.0, 0.3, 250.0)
 
 
 def test_a_deck_with_no_material_block_needs_material_data(tmp_path: Path):
@@ -248,13 +275,23 @@ def test_a_deck_with_no_material_block_needs_material_data(tmp_path: Path):
     assert plan.manifest is None
 
 
-def test_a_paired_deck_missing_from_the_cache_needs_material_data(tmp_path: Path):
-    """A named file that is not there is not a licence to make one up."""
-    cache = _cache_with_deck(tmp_path)
-    plan = build_manifest("owner__name/sub/umat.for", _row(),
-                          _proposal(deck="owner__name/decks/absent.inp"), cache)
-    assert plan.stage == "needs_material_data"
-    assert "not in the cache" in plan.reason
+def test_a_named_deck_that_is_absent_does_not_stop_the_one_that_is_there():
+    """A stale name is a fact about the proposal, not about the repository.
+
+    The proposal points at ``absent.inp``, which nobody published. What IS
+    published is ``job.inp``, with the constants this routine reads. The old
+    path refused on the strength of the missing name; the planner searches and
+    finds the deck that exists. Inventing constants is still refused -- that is
+    the test above -- but a bad pointer is not the same as no data.
+    """
+    import tempfile
+    with tempfile.TemporaryDirectory() as where:
+        cache = _cache_with_deck(Path(where))
+        plan = build_manifest(
+            "owner__name/sub/umat.for", _row(),
+            _proposal(deck="owner__name/decks/absent.inp"), cache)
+        assert plan.stage == ""
+        assert plan.deck == "owner__name/decks/job.inp"
 
 
 def test_the_material_block_named_by_the_pairing_is_the_one_read(tmp_path: Path):
