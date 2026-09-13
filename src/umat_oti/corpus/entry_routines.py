@@ -99,7 +99,6 @@ HELPER_OR_MODULE_ONLY = "helper_or_module_only"
 DUPLICATE_SOURCE = "duplicate_of_another_source"
 INCOMPLETE_OR_CORRUPT = "incomplete_or_corrupt_source"
 MISSING_EXTERNAL_DEPENDENCY = "missing_external_dependency"
-
 REFUSAL_CLASSES: tuple[str, ...] = (
     GENUINE_UMAT,
     OTHER_ABAQUS_ROUTINE,
@@ -122,6 +121,34 @@ _UNIT = re.compile(
     re.IGNORECASE)
 
 _CALL = re.compile(r"\bCALL\s+([A-Za-z_]\w*)", re.IGNORECASE)
+
+#: A main program. It is a program unit, it is never an Abaqus entry point,
+#: and a file whose only unit is one is a driver somebody wrote to exercise a
+#: UMAT that lives somewhere else. Recognised so that such a file quotes its
+#: own first line as the evidence for "this is not a UMAT", rather than coming
+#: out as ``no SUBROUTINE or FUNCTION was found`` -- a true sentence that reads
+#: as though the file were unparseable.
+_PROGRAM = re.compile(r"^\s*PROGRAM\s+([A-Za-z_]\w*)\s*$", re.IGNORECASE)
+_END_PROGRAM = re.compile(r"^\s*END\s*PROGRAM(?:\s+[A-Za-z_]\w*)?\s*$",
+                          re.IGNORECASE)
+
+#: The opening and closing of an INTERFACE block, including a named operator
+#: or assignment interface and the ABSTRACT form.
+#:
+#: Everything between them is a DECLARATION of a routine defined elsewhere --
+#: it has no body, and it is not a program unit of this file.
+#: ``sas229__geomat/tests/umat_integration.f90`` is a ``program main`` that
+#: declares a 37-argument ``subroutine umat`` in an interface block at line 7
+#: so that it can CALL it; the routine itself is in a C++ library this
+#: repository does not publish as Fortran. Read without this rule, that
+#: declaration matched the UMAT interface exactly, the file was classified as
+#: a genuine UMAT, and a test driver with no constitutive code in it sat in
+#: the count of UMATs this project had failed to convert.
+_INTERFACE = re.compile(
+    r"^\s*(?:ABSTRACT\s+)?INTERFACE\s*"
+    r"(?:[A-Za-z_]\w*|OPERATOR\s*\(.*?\)|ASSIGNMENT\s*\(\s*=\s*\))?\s*$",
+    re.IGNORECASE)
+_END_INTERFACE = re.compile(r"^\s*END\s*INTERFACE(?:\s+.*)?$", re.IGNORECASE)
 #: The end of a PROGRAM UNIT, and nothing else. Written as `END\s*$` or
 #: `END SUBROUTINE [name]` / `END FUNCTION [name]`.
 #:
@@ -155,6 +182,8 @@ class ProgramUnit:
         that happens to share the name, and saying otherwise is how a UEL's
         private kernel came to be driven as a material.
         """
+        if self.kind == "PROGRAM":
+            return None
         counts = INTERFACES.get(self.name.upper())
         if counts is None:
             return None
@@ -231,11 +260,32 @@ def program_units(source: str, form: str = "",
     units: list[ProgramUnit] = []
     current: Optional[ProgramUnit] = None
     by_name: dict[str, ProgramUnit] = {}
+    #: How many INTERFACE blocks deep the reader is. A header inside one is a
+    #: declaration of somebody else's routine, not a unit of this file.
+    interface_depth = 0
 
     for logical in logical_lines_from_text(source, form):
         text = getattr(logical, "text", str(logical))
         numbers = getattr(logical, "line_numbers", ()) or ()
         number = numbers[0] if numbers else 0
+        if _END_INTERFACE.match(text):
+            interface_depth = max(0, interface_depth - 1)
+            continue
+        if _INTERFACE.match(text):
+            interface_depth += 1
+            continue
+        if interface_depth:
+            continue
+        main = _PROGRAM.match(text)
+        if main:
+            current = ProgramUnit(name=main.group(1), kind="PROGRAM",
+                                  line=number)
+            units.append(current)
+            by_name.setdefault(main.group(1).upper(), current)
+            continue
+        if _END_PROGRAM.match(text):
+            current = None
+            continue
         header = _UNIT.match(text)
         if header:
             kind = header.group(1).upper()
@@ -266,8 +316,24 @@ def _resolve_calls(source: str, form: str,
                    by_name: dict[str, ProgramUnit]) -> None:
     """Who calls whom, independent of declaration order."""
     current = ""
+    interface_depth = 0
     for logical in logical_lines_from_text(source, form):
         text = getattr(logical, "text", str(logical))
+        if _END_INTERFACE.match(text):
+            interface_depth = max(0, interface_depth - 1)
+            continue
+        if _INTERFACE.match(text):
+            interface_depth += 1
+            continue
+        if interface_depth:
+            continue
+        main = _PROGRAM.match(text)
+        if main:
+            current = main.group(1).upper()
+            continue
+        if _END_PROGRAM.match(text):
+            current = ""
+            continue
         header = _UNIT.match(text)
         if header:
             current = header.group(2).upper()
