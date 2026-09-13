@@ -145,11 +145,15 @@ def _entry_panel(entry, work_dir: Path, st) -> None:
                 with st.expander(f"{job} log"):
                     st.write(job_log(work_dir, entry.key, job))
 
+    # Drawn whenever a signature was recorded, and NOT only where a primal
+    # block sits beside it: a panel hidden behind another field's presence is
+    # a blank, and a blank reads as "nobody classified this".
+    if entry.primal_signature:
+        _signature_panel(entry, st)
+
     if entry.primal:
         st.markdown("**Original against converted, over the whole history**")
         st.write(entry.primal)
-        if entry.primal_signature:
-            _signature_panel(entry, st)
         series = histories(work_dir, entry.key)
         if series:
             st.line_chart({name: [row[0] if row else None
