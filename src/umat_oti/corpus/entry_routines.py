@@ -99,6 +99,16 @@ HELPER_OR_MODULE_ONLY = "helper_or_module_only"
 DUPLICATE_SOURCE = "duplicate_of_another_source"
 INCOMPLETE_OR_CORRUPT = "incomplete_or_corrupt_source"
 MISSING_EXTERNAL_DEPENDENCY = "missing_external_dependency"
+#: The file presents the 37-argument Abaqus UMAT interface and publishes no
+#: constitutive model inside it: nowhere in the file is STRESS or DDSDDE
+#: assigned, and the routine makes no CALL through which either could be
+#: written. There is nothing in such a file for any transformer to convert and
+#: nothing in it for any verification to check -- not because the transform
+#: refused it, but because the author published a template. See
+#: :func:`umat_outputs_written` for the evidence, which is recorded on every
+#: record whether or not this class ends up being the one that wins.
+PUBLISHED_STUB = "published_stub_no_constitutive_content"
+
 REFUSAL_CLASSES: tuple[str, ...] = (
     GENUINE_UMAT,
     OTHER_ABAQUS_ROUTINE,
@@ -106,6 +116,7 @@ REFUSAL_CLASSES: tuple[str, ...] = (
     DUPLICATE_SOURCE,
     INCOMPLETE_OR_CORRUPT,
     MISSING_EXTERNAL_DEPENDENCY,
+    PUBLISHED_STUB,
 )
 
 #: The classes that say the work is this repository's. Kept as a set so a
@@ -458,6 +469,108 @@ def _classify_one_form(source: str, form: str,
                 f"{unit.line}{callee_note}"))
 
 
+#: An assignment whose target is one of the two outputs a UMAT exists to
+#: produce. Written against a LOGICAL line, so a continued statement is one
+#: line and a fixed-form continuation marker is never read as a target. Matches
+#: both the indexed form -- ``STRESS(I) = ...``, ``DDSDDE(1:NTENS,1) = ...`` --
+#: and the whole-array form ``STRESS = SIGC``. The whole-array form is the one
+#: that matters here: it is how a 1694-line Mohr-Coulomb UMAT writes its
+#: answer, and a rule that only saw subscripts would call that file empty.
+_WRITES_OUTPUT = re.compile(
+    r"^\s*(?:\d+\s+)?(STRESS|DDSDDE)\s*(?:\([^=]*\))?\s*=(?!=)",
+    re.IGNORECASE)
+
+#: Any CALL at all. A UMAT that writes neither output itself but hands STRESS
+#: to a subroutine is not empty, it is delegating, and this module has no way
+#: to follow the delegation without resolving the callee. So the presence of a
+#: single CALL is enough to withhold the stub verdict: the evidence for
+#: "nothing is computed here" has to be that nothing could be.
+_ANY_CALL = re.compile(r"\bCALL\s+[A-Za-z_]\w*", re.IGNORECASE)
+
+
+@dataclass(frozen=True)
+class OutputEvidence:
+    """Where a file was searched for a stress or tangent update, and what was
+    found there.
+
+    A verdict of "this file computes nothing" that does not say where it
+    looked is a claim, not a finding, so this carries the search itself: how
+    many logical lines were read, under which source form, how many CALL
+    statements were seen, and the first line that assigns STRESS or DDSDDE
+    where there is one.
+    """
+
+    writes_stress: bool
+    writes_ddsdde: bool
+    calls: int
+    logical_lines: int
+    source_form: str
+    first_write: str = ""
+    first_write_line: int = 0
+
+    @property
+    def writes_nothing(self) -> bool:
+        return not (self.writes_stress or self.writes_ddsdde)
+
+    @property
+    def is_declaration_only(self) -> bool:
+        """No output written, and no CALL that could have written one."""
+        return self.writes_nothing and self.calls == 0
+
+    @property
+    def where_it_searched(self) -> str:
+        return (f"{self.logical_lines} logical lines of the whole file, read "
+                f"as {self.source_form} form, searched for an assignment to "
+                f"STRESS or DDSDDE in either indexed or whole-array form, and "
+                f"for any CALL that could write one")
+
+    def as_dict(self) -> dict:
+        return {"writes_stress": self.writes_stress,
+                "writes_ddsdde": self.writes_ddsdde,
+                "calls": self.calls,
+                "logical_lines": self.logical_lines,
+                "source_form": self.source_form,
+                "first_write": self.first_write,
+                "first_write_line": self.first_write_line,
+                "declaration_only": self.is_declaration_only,
+                "where_it_searched": self.where_it_searched}
+
+
+def umat_outputs_written(source: str, form: str = "",
+                         path: Optional[Path] = None) -> OutputEvidence:
+    """Whether this file ever assigns the two outputs a UMAT must return.
+
+    Asked of the whole file rather than of the entry routine alone, because a
+    UMAT whose stress update lives in a sibling subroutine in the same file
+    still computes a stress, and narrowing the search to one unit would report
+    such a file as empty.
+    """
+    if not form:
+        form = (detect_source_form(path, source) if path is not None
+                else detect_form_from_text(source))
+    stress = ddsdde = False
+    calls = read = 0
+    first = ""
+    first_line = 0
+    for logical in logical_lines_from_text(source, form):
+        text = getattr(logical, "text", str(logical))
+        numbers = getattr(logical, "line_numbers", ()) or ()
+        read += 1
+        match = _WRITES_OUTPUT.match(text)
+        if match:
+            if match.group(1).upper() == "STRESS":
+                stress = True
+            else:
+                ddsdde = True
+            if not first:
+                first = text.strip()[:200]
+                first_line = numbers[0] if numbers else 0
+        calls += len(_ANY_CALL.findall(text))
+    return OutputEvidence(writes_stress=stress, writes_ddsdde=ddsdde,
+                          calls=calls, logical_lines=read, source_form=form,
+                          first_write=first, first_write_line=first_line)
+
+
 def source_line(source: str, number: int) -> str:
     """One physical line of the author's file, verbatim.
 
@@ -528,7 +641,8 @@ def classify_refusal(found: Classification, *,
                      duplicate_of: str = "",
                      missing_externals: tuple = (),
                      text_rejected: Optional[bool] = None,
-                     compiler_evidence: str = "") -> RefusalVerdict:
+                     compiler_evidence: str = "",
+                     outputs: Optional[OutputEvidence] = None) -> RefusalVerdict:
     """What a refused source is, from evidence about the source.
 
     THE TRANSFORMER'S REFUSAL IS NOT AN INPUT HERE, and that is deliberate. A
@@ -553,7 +667,14 @@ def classify_refusal(found: Classification, *,
        -- a file that fails because a module was never published beside it is
        the next question's answer, not this one's.
     4. **Was everything it needs published?** An unresolved USE or INCLUDE.
-    5. **Everything else is ours.** A UMAT, whole, with its companions, that
+    5. **Is there a constitutive model in it at all?** A file that presents
+       the UMAT interface and never assigns STRESS or DDSDDE anywhere, and
+       makes no CALL that could assign either, is a template somebody
+       published. Asked LAST, so it can only ever refine what would otherwise
+       have been called ours -- it never overrides a more specific answer, and
+       it is the only rung whose evidence is a search of the whole file rather
+       than of its headers.
+    6. **Everything else is ours.** A UMAT, whole, with its companions, that
        this transformer could not convert.
 
     ``text_rejected`` being ``None`` means the compile did not settle it, and
@@ -562,7 +683,7 @@ def classify_refusal(found: Classification, *,
     project's own unfinished work rather than the corpus's incompleteness.
     """
     base = _file_verdict(found, missing_externals, text_rejected,
-                         compiler_evidence)
+                         compiler_evidence, outputs)
     if not duplicate_of:
         return base
     return replace(
@@ -575,7 +696,8 @@ def classify_refusal(found: Classification, *,
 
 def _file_verdict(found: Classification, missing_externals: tuple,
                   text_rejected: Optional[bool],
-                  compiler_evidence: str) -> RefusalVerdict:
+                  compiler_evidence: str,
+                  outputs: Optional[OutputEvidence] = None) -> RefusalVerdict:
     """What the file is, considered on its own."""
     missing = tuple(str(name) for name in missing_externals if str(name))
 
@@ -620,6 +742,17 @@ def _file_verdict(found: Classification, missing_externals: tuple,
             entry_routine=found.entry_routine, entry_line=found.entry_line,
             evidence=compiler_evidence or found.entry_text,
             basis="the author's own text is rejected by the compiler")
+
+    if outputs is not None and outputs.is_declaration_only:
+        return RefusalVerdict(
+            PUBLISHED_STUB, entry_interface=found.entry_interface,
+            entry_routine=found.entry_routine, entry_line=found.entry_line,
+            evidence=found.entry_text,
+            basis=("this file presents the Abaqus UMAT interface and "
+                   "publishes no constitutive model inside it: "
+                   + outputs.where_it_searched
+                   + " -- nothing was assigned and no CALL was made. It is a "
+                     "template, not a transform this project owes"))
 
     return RefusalVerdict(
         GENUINE_UMAT, entry_interface=found.entry_interface,
