@@ -21,6 +21,13 @@ from umat_oti.app.corpus_view import (DID_NOT_HOLD, MODES, NOT_ESTABLISHED,
 
 #: A one-line gloss for every terminal state, so a table of them is readable
 #: without the reader having to hold the vocabulary in their head.
+#:
+#: The page's own wording wins where it has some; anything it does not gloss
+#: falls back to :data:`umat_oti.abaqus.terminal_states.MEANING`, which is
+#: where the meaning of a state now lives -- beside the state itself, so that
+from umat_oti.abaqus import terminal_states
+
+#: adding a rung without giving it words is no longer possible.
 GLOSS = {
     "fully_verified": "both builds ran, agreed over the whole history, and "
                       "the tangent matched a converged difference",
@@ -52,6 +59,9 @@ GLOSS = {
     "not_attempted": "this run did not reach it",
     "harness_error": "the run broke, not the model",
 }
+
+# Anything the page does not word itself takes the state's own meaning.
+GLOSS = {**terminal_states.MEANING, **GLOSS}
 
 
 def render(results_dir: Path, work_dir: Path, *, st=None) -> None:
