@@ -364,8 +364,25 @@ def main(argv: Optional[list[str]] = None) -> int:
             "# Corpus verification report", "",
             f"{len(entries)} acquired entries, of which {len(umats)} present a "
             f"UMAT interface to Abaqus.", "",
-            f"**{verified} fully verified**"
-            + (f" ({100.0 * verified / len(umats):.1f}% of the UMATs)." if umats else "."),
+            f"**{verified} fully verified.**", "",
+            # Two rates, each naming what it is a rate OF. "12.0% of the
+            # UMATs" named neither: "the UMATs" is not a defined population,
+            # and the figure was quoted against a third count that is neither
+            # of the two denominators the registry keeps apart -- files that
+            # present the interface, which includes ones with no material
+            # constants published, ones whose modules were never published,
+            # and ones whose bodies are empty.
+            f"* {verified} of {len(entries)} acquired entries -- "
+            f"{100.0 * verified / len(entries):.1f}% of acquired entries"
+            if entries else "",
+            (f"* {verified} of {len(umats)} entries presenting a UMAT "
+             f"interface -- {100.0 * verified / len(umats):.1f}% of entries "
+             f"presenting a UMAT interface. This is NOT the same as the "
+             f"adequately specified genuine UMATs: it still counts files with "
+             f"no material constants published, files whose modules were never "
+             f"published beside them, and files whose UMAT body is empty. "
+             f"`paper_results/corpus/CORPUS_VERIFICATION.md` keeps those two "
+             f"denominators apart and names both." if umats else ""),
             "",
             "Only `fully_verified` counts. It means the source transformed and",
             "compiled, Abaqus ran the ORIGINAL, Abaqus ran the CONVERTED build",
