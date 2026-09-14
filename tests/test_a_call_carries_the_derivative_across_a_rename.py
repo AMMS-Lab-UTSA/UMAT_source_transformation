@@ -193,3 +193,45 @@ def test_a_logical_line_beginning_with_c_is_not_a_comment(statement):
     """
     lines = logical_lines_from_text(statement + "\n", "fixed")
     assert [line.text for line in lines] == [statement.strip()]
+
+
+#: The reproduction that kept the effect table out of the default path.
+#:
+#: Two statements about one variable, in that order, where the first sits in a
+#: region the classifier kept real and the second is a one-line IF. The branch
+#: pass rewrites any line in the selected routine that mentions a promoted
+#: name, wherever it sits; the assignment pass only rewrites lines in a
+#: selected region. Where they disagree the guard reads the shadow, which at
+#: that point still holds the zero the initialiser wrote.
+CLAMP_THAT_LOST_ITS_SUBJECT = """\
+      ALPHA_G  = TEMP + DTEMP
+      IF (REAL(ALPHA_G_OTI) .LT. 0.0D0) ALPHA_G_OTI = 0.0D0
+      ALPHA_G_OTI = ALPHA_G
+"""
+
+
+def test_a_guard_rewritten_without_its_assignment_reads_the_initialiser():
+    """The emitted shape that makes a clamp disappear, named so it is findable.
+
+    Measured on keisuke58/pde-fem-biofilm's umat_biofilm_visco_phase2.f, which
+    the corpus verification marks verified: with the cross-routine effect table
+    wired in, ALPHA_G's region stops being a transformed one, the assignment
+    stays real, the one-line IF is still rewritten to the shadow, and the
+    growth parameter is no longer clamped at zero.
+
+    This is an assertion about the SHAPE, not about the transform -- the
+    transform no longer emits it, because the table is not wired in. It is here
+    so that whoever fixes the branch pass has the reproduction rather than the
+    story.
+    """
+    lines = [line.text for line in logical_lines_from_text(
+        CLAMP_THAT_LOST_ITS_SUBJECT, "fixed")]
+    guard, copy_in = lines[1], lines[2]
+    # The guard reads and writes the shadow ...
+    assert "ALPHA_G_OTI" in guard
+    # ... and the only assignment that gives the shadow a value comes after it.
+    assert copy_in.startswith("ALPHA_G_OTI =")
+    assert lines.index(guard) < lines.index(copy_in)
+    # The real name is what the value was computed into, and nothing copies it
+    # into the shadow before the guard runs.
+    assert lines[0].startswith("ALPHA_G ")

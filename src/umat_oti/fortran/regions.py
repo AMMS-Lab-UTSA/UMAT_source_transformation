@@ -171,8 +171,12 @@ class DependencySummary:
 
 def detect_candidate_regions(parsed: ParsedFortranSource) -> dict[str, Any]:
     source_lines = parsed.text.splitlines()
+    # _routine_effect_table is NOT passed here, and the reason is written in
+    # its docstring: the validation round found the edges correct and the
+    # emitter not ready for them. Until that is fixed the table is available
+    # to a caller that asks for it and is not the default.
     assignments = _assignments(parsed.logical_lines) + _call_effect_assignments(
-        parsed.logical_lines, _routine_effect_table(parsed))
+        parsed.logical_lines)
     block_ranges = _block_ranges(parsed.logical_lines)
     dependency_summary = _dependency_summary(parsed, assignments)
     signals = _assignment_signals(assignments, dependency_summary, block_ranges)
@@ -323,6 +327,26 @@ def _routine_effect_table(
     helper calling a helper carries the dependency through. Mutual recursion
     cannot spin: the set of positions only grows and is bounded by the
     argument count.
+
+    **Not wired into detect_candidate_regions, on the evidence of a validation
+    round.** Re-emitting all 391 triage rows with these edges in place moved 44
+    outputs and took 240 sources to 246, with no fully_verified output changed
+    -- and regressed one source that the corpus verification does mark
+    verified. On keisuke58/pde-fem-biofilm's umat_biofilm_visco_phase2.f the
+    new classification moves ALPHA_G's region from a transformed one to a
+    kept-real one, and the emitter then rewrites
+
+        IF (ALPHA_G .LT. 0.0D0) ALPHA_G = 0.0D0
+
+    to the shadow while leaving the assignment above it real, because the
+    branch-line pass rewrites any line in the selected routine that mentions a
+    promoted name whatever region it is in, and the assignment pass is
+    region-bound. The clamp then reads the zero the initialiser left and the
+    growth parameter is never clamped. The edges are right; the emitter is one
+    region boundary away from dropping a statement's effect in any source, and
+    fixing THAT is the prerequisite. Keeping the table computable and tested
+    means the next attempt starts from a measured position rather than from
+    this note.
 
     What it deliberately does NOT record: a dependency the callee picks up
     through a COMMON block, a module variable, a SAVEd local, or a callee this
