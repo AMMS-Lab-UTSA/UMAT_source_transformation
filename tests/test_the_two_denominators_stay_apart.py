@@ -68,9 +68,19 @@ def test_nothing_internal_takes_a_source_out_of_the_umat_denominator():
     excluded = [r for r in registry()["records"]
                 if r["adequately_specified"] is False]
     assert excluded, "nothing was excluded from D2 at all"
+    # "duplicate" is the third allowed value and it is deliberately not
+    # "external": a second copy is not blocked by anything, its one answer is
+    # already counted against the copy that carries it, and calling it an
+    # external blocker would inflate how much of the corpus is somebody
+    # else's problem. What may never appear is "internal".
     offenders = [(r["source_id"], r["adequacy_kind"]) for r in excluded
-                 if r["adequacy_kind"] != "external"]
+                 if r["adequacy_kind"] not in ("external", "duplicate")]
     assert not offenders, offenders
+    # A second copy of a file that is not a UMAT is answered by the earlier
+    # rung and keeps that answer: it is external because the file it copies is
+    # external, not because it is a copy.
+    assert all(r["adequacy_kind"] == "duplicate" or r["is_umat"] is False
+               for r in excluded if r["duplicate_of"])
 
 
 def test_every_exclusion_names_the_evidence_that_established_it():

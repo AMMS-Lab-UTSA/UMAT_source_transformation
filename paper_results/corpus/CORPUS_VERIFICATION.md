@@ -36,6 +36,16 @@ Neither figure may be quoted without the words after it. They are answers to two
 
 `fully_verified` means the source transformed and compiled, Abaqus ran the ORIGINAL, Abaqus ran the CONVERTED build on the same deck, their stress and state histories agreed over the whole path, and the OTI tangent agreed with a finite difference of the original at several states along it. Compiling is not working, running is not verified, and unknown is never verified.
 
+## Finished, and unfinished
+
+Over D1, the 391 acquired sources. The three lines are never added together into a completion figure: pooling what somebody else published with what this project has not finished would be a claim about the corpus made out of facts about the pipeline.
+
+| | entries in D1 |
+| --- | ---: |
+| verified | 41 |
+| blocked outside this repository | 112 |
+| work remaining here | 238 |
+
 ## What excluded a source from D2
 
 | reason | external or internal | sources |
@@ -44,8 +54,17 @@ Neither figure may be quoted without the words after it. They are answers to two
 | missing_material_data | **EXTERNAL** | 36 |
 | external_dependency_unavailable | **EXTERNAL** | 15 |
 | incomplete_or_corrupt_source | **EXTERNAL** | 15 |
-| line-for-line identical to another acquired source | **EXTERNAL** | 13 |
+| line-for-line identical to another acquired source | neither -- a second copy | 13 |
 | this file presents the Abaqus UMAT interface and publishes no constitu | **EXTERNAL** | 3 |
+
+A second copy is not an external blocker and is not counted as one: nothing about it is blocked, its one answer is already counted against the copy that carries it, and filing it under "somebody else's problem" would inflate how much of the corpus is.
+
+### Where a terminal state and its cause disagree
+
+2 source(s) are excluded from D2 for a reason that is EXTERNAL while their terminal state is INTERNAL. That is not a contradiction being hidden, it is a vocabulary that is one word short: `umat_oti.abaqus.terminal_states` has no state for "the author published a template", and the nearest existing one, `incomplete_or_corrupt_source`, is glossed "the file does not compile as published" -- which is false of a template, since a template compiles. Rather than borrow a state that would make the interface say something untrue, these are left at the state the transform gave them, which is INTERNAL. That overstates this project's own unfinished work and understates nobody else's, which is the only direction the error may go. Adding a state for it is a change to a module this registry does not own.
+
+* `matmodlab__matmodlab2/matmodlab2/umat/umats/umat_stub.f90` -- terminal state `transform_refused` (INTERNAL); excluded from D2 because this file presents the Abaqus UMAT interface and publishes no constitutive model inside it: 16 logical lines of the whole file, read as free form, searched for an assignment to STRESS or DDSDDE in eit
+* `zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/Adapters/UMAT_Adapter.f90` -- terminal state `transform_refused` (INTERNAL); excluded from D2 because this file presents the Abaqus UMAT interface and publishes no constitutive model inside it: 9 logical lines of the whole file, read as free form, searched for an assignment to STRESS or DDSDDE in eith
 
 ## Every terminal state, and whose move it is
 
@@ -73,7 +92,7 @@ D1 column sums to 391; D2 column sums to 264.
 
 ## What is left here, by cluster
 
-Each of these is a limitation of this pipeline and not of the corpus. Largest first, because that is the order they are worth fixing in.
+Each of these is a limitation of this pipeline, not of the corpus. Largest first, because that is the order they are worth fixing in.
 
 | cluster | sources in D1 | of which in D2 |
 | --- | ---: | ---: |
