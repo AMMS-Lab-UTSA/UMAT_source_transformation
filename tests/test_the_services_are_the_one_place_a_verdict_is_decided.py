@@ -247,3 +247,140 @@ def test_the_service_and_the_command_line_tool_produce_the_same_fixture(tmp_path
                 "material", "material_point", "verification", "schema",
                 "source_sha256"):
         assert mine.get(key) == theirs.get(key), key
+
+
+def test_the_regression_command_is_built_by_the_service_not_a_callback():
+    """The interface must not assemble this; there is one place that does.
+
+    Asserted over the argument list rather than by running it. Running a real
+    regression takes Abaqus licence tokens, which this agent does not spend.
+    """
+    from umat_oti.services import RegressionService  # noqa: PLC0415
+
+    service = RegressionService()
+    command = service.regression_command(
+        work_dir=Path("/w"), results_dir=Path("/r"), only="j2", limit=5,
+        jobs=2, timeout=1200)
+
+    assert command[0] == sys.executable
+    assert command[1].endswith("verify_store_in_abaqus.py")
+    # A replay, not a search: the frozen experiment is reproduced.
+    assert "--mode" in command and command[command.index("--mode") + 1] == "regression"
+    assert "--no-discovery" in command
+    assert command[command.index("--baseline") + 1].endswith("baseline.json")
+    assert command[command.index("--work-dir") + 1] == "/w"
+    assert command[command.index("--results-dir") + 1] == "/r"
+    assert command[command.index("--only") + 1] == "j2"
+    assert command[command.index("--limit") + 1] == "5"
+    assert command[command.index("--jobs") + 1] == "2"
+    # Every element is a separate argv entry: nothing is a shell string.
+    assert all(isinstance(part, str) for part in command)
+    assert not any(" " in part and not part.startswith("/") for part in command)
+
+
+def test_a_default_regression_asks_for_one_job_because_the_pool_is_shared():
+    from umat_oti.services import RegressionService  # noqa: PLC0415
+
+    command = RegressionService().regression_command(
+        work_dir=Path("/w"), results_dir=Path("/r"))
+    assert command[command.index("--jobs") + 1] == "1"
+    assert "--only" not in command
+    assert "--limit" not in command
+
+
+def test_submit_run_hands_the_command_to_the_job_manager_untouched(tmp_path):
+    """The submitted job carries exactly the argv the service built.
+
+    The execution service is stubbed so nothing is spawned: this pins the
+    handover, not the run.
+    """
+    from umat_oti.services import RegressionService, ServiceResult  # noqa: PLC0415
+
+    service = RegressionService()
+    if not service.baseline_path.is_file():
+        pytest.skip("no baseline in this checkout")
+
+    seen = {}
+
+    class StubExecution:
+        def submit_local(self, *, case_id, command, kind="local_run",
+                         source_paths=(), metadata=None):
+            seen.update(case_id=case_id, command=list(command), kind=kind,
+                        metadata=dict(metadata or {}))
+            return ServiceResult(service="abaqus_execution", outcome="running",
+                                 data={"job_id": "stub"})
+
+    result = service.submit_run(StubExecution(), work_dir=tmp_path / "w",
+                                results_dir=tmp_path / "r", only="j2")
+    assert result.outcome == "running"
+    assert seen["kind"] == "regression"
+    assert seen["command"] == service.regression_command(
+        work_dir=tmp_path / "w", results_dir=tmp_path / "r", only="j2")
+    assert seen["metadata"]["baseline"] == str(service.baseline_path)
+
+
+def test_a_regression_refuses_to_start_without_a_baseline(tmp_path):
+    """A regression with no baseline would compare against nothing."""
+    from umat_oti.services import RegressionService  # noqa: PLC0415
+
+    service = RegressionService(baseline_path=tmp_path / "absent.json")
+
+    class Exploding:
+        def submit_local(self, **kwargs):  # pragma: no cover - must not run
+            raise AssertionError("nothing may be spawned without a baseline")
+
+    result = service.submit_run(Exploding(), work_dir=tmp_path / "w",
+                                results_dir=tmp_path / "r")
+    assert result.ok is False
+    assert result.outcome == "refused"
+    assert result.blockers[0].code == "baseline_missing"
+
+
+def test_did_not_run_is_never_folded_into_agreed_or_disagreed(tmp_path):
+    """The three outcomes stay three, and the counts sum to the baseline."""
+    from umat_oti.services import RegressionService  # noqa: PLC0415
+
+    baseline = tmp_path / "baseline.json"
+    baseline.write_text(json.dumps({"entries": [
+        {"id": "a", "source": "a.for", "stage": "verified"},
+        {"id": "b", "source": "b.for", "stage": "verified"},
+        {"id": "c", "source": "c.for", "stage": "verified"},
+    ]}), encoding="utf-8")
+    results = tmp_path / "results.jsonl"
+    results.write_text(
+        json.dumps({"source": "a.for", "stage": "verified"}) + "\n"
+        + json.dumps({"source": "b.for", "stage": "primal_disagreed"}) + "\n",
+        encoding="utf-8")
+
+    report = RegressionService(baseline_path=baseline).run_all(results)
+    data = report.data
+    assert [o.source_id for o in data.agreed] == ["a.for"]
+    assert [o.source_id for o in data.disagreed] == ["b.for"]
+    assert [o.source_id for o in data.did_not_run] == ["c.for"]
+    assert data.denominator_check == {"entries_in_baseline": 3, "sums_to": 3,
+                                      "sums": True}
+    assert data.passed is False
+    assert report.outcome == "failed"
+    assert "did not run" in data.did_not_run[0].detail
+
+
+def test_a_regression_where_nothing_disagreed_but_something_missed_is_incomplete(tmp_path):
+    """Incomplete is not passed. This is the distinction the rule exists for."""
+    from umat_oti.services import RegressionService  # noqa: PLC0415
+
+    baseline = tmp_path / "baseline.json"
+    baseline.write_text(json.dumps({"entries": [
+        {"id": "a", "source": "a.for", "stage": "verified"},
+        {"id": "b", "source": "b.for", "stage": "verified"},
+    ]}), encoding="utf-8")
+    results = tmp_path / "results.jsonl"
+    results.write_text(
+        json.dumps({"source": "a.for", "stage": "verified"}) + "\n",
+        encoding="utf-8")
+
+    report = RegressionService(baseline_path=baseline).run_all(results)
+    assert report.data.disagreed == []
+    assert len(report.data.did_not_run) == 1
+    assert report.data.passed is False
+    assert report.outcome == "incomplete"
+    assert any(p.code == "fixtures_did_not_run" for p in report.warnings)
