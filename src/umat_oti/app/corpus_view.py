@@ -648,10 +648,13 @@ def what_may_be_claimed(row: dict) -> dict:
 
     The rule this function exists to keep: the page does not call an entry
     verified where ``mechanically_informative`` is false or was never
-    established. On pass10, 3 of the 10 entries at ``verified`` carry no
-    informativeness measurement at all -- agreement with nothing established
-    about whether the material did anything. That is a real result and it is
-    not a verification of the material's behaviour, so it is not shown as one.
+    established. Measured on the finished pass10 round, 44 entries reached the
+    stage ``verified`` and 38 may be called it. Of the six that may not, 3
+    carry no informativeness measurement at all -- agreement with nothing
+    established about whether the material did anything -- and 3 had their raw
+    primal comparison disagree and then explained. All six are real results
+    and none of them is a verification of the material's behaviour, so none is
+    shown as one.
     """
     stage = str(row.get("stage") or "")
     state = from_stage(stage, str(row.get("reason") or "")).state
@@ -659,8 +662,16 @@ def what_may_be_claimed(row: dict) -> dict:
     measured = row.get("evidence") or {}
     informative = measured.get("mechanically_informative")
 
+    complete = not tally["never established"] and not tally["did not hold"]
+    # 108 of the 254 pass10 entries never reached a run at all. Naming ONE
+    # unestablished gate over such an entry implies the other five were fine;
+    # all six are unestablished and the qualifier says so.
+    nothing_measured = len(tally["never established"]) == len(EVIDENCE_GATES)
+
     qualifier = ""
-    if informative is None:
+    if nothing_measured:
+        qualifier = "nothing measured"
+    elif informative is None:
         qualifier = "informativeness not established"
     elif informative is False:
         qualifier = "the material did nothing over this run"
@@ -672,11 +683,8 @@ def what_may_be_claimed(row: dict) -> dict:
         qualifier = ", ".join(n.replace("_", " ") + " did not hold"
                               for n in tally["did not hold"])
 
-    complete = not tally["never established"] and not tally["did not hold"]
-    # 108 of the 254 pass10 entries never reached a run at all, and telling
-    # those "agreement only" would report an agreement that never happened.
-    # Nothing measured is its own answer and it is said as one.
-    nothing_measured = len(tally["never established"]) == len(EVIDENCE_GATES)
+    # Telling an entry that never ran "agreement only" would report an
+    # agreement that never happened. Nothing measured is its own answer.
     if complete:
         claim = "verified: all six gates were measured and all six hold"
     elif nothing_measured:

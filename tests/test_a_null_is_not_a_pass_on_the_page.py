@@ -458,6 +458,9 @@ def test_an_entry_that_never_ran_is_not_told_it_agreed():
     assert "agreement" not in said, (
         "nothing ran, so there is no agreement to report either way")
     assert not calls_it_verified(said)
+    assert claimed["qualified state"] == "missing_material_data (nothing measured)", (
+        "naming ONE unestablished gate over an entry where all six are "
+        "unestablished implies the other five were fine")
 
 
 def test_a_page_over_an_unestablished_gate_warns_rather_than_congratulates():
@@ -888,6 +891,36 @@ def test_the_entries_that_never_ran_are_not_told_they_agreed(corpus):
         assert "agreement" not in entry.verdict["what may be claimed"], \
             entry.source_id
         assert entry.verdict["may be called verified"] is False
+        assert entry.verdict["qualified state"].endswith("(nothing measured)"), \
+            entry.source_id
+
+
+def test_every_qualified_state_names_the_gate_that_decides_it(corpus):
+    """20 distinct qualified states over the 254, and a bare terminal state
+    appears only where all six gates were measured and all six hold.
+
+    This is what stops the page pooling answers the record keeps apart:
+    ``primal_disagreed`` alone is 4 different findings once the gates are
+    attached to it -- two gates down, the material having done nothing,
+    informativeness unmeasured, or three gates down including finiteness.
+    """
+    states = {}
+    for entry in corpus.entries:
+        states[entry.verdict["qualified state"]] = \
+            states.get(entry.verdict["qualified state"], 0) + 1
+    assert len(states) == 20
+
+    bare = [name for name in states if "(" not in name]
+    assert bare == ["fully_verified"], (
+        "an unqualified state is a claim that all six gates were measured "
+        "and all six hold; only one state on this round earns that")
+    assert states["fully_verified"] == 38
+
+    # the same terminal state, split by which gates decided it
+    disagreed = {name: n for name, n in states.items()
+                 if name.startswith("primal_disagreed")}
+    assert len(disagreed) == 4, disagreed
+    assert sum(disagreed.values()) == 62
 
 
 def test_both_objectivity_facts_survive_the_whole_corpus(corpus):
