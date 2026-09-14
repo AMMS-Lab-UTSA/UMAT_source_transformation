@@ -35,6 +35,7 @@ from umat_oti.abaqus.constant_folding import (LOAD_ROUTINES, fold,
                                               fold_expression, role_of,
                                               routines)
 from umat_oti.abaqus.experiment import (classify, clock_reading,
+                                        growth_developed,
                                         state_is_not_its_own,
                                         deformed_under_the_load,
                                         growth_state_slots,
@@ -407,3 +408,105 @@ def test_the_ghost_umats_in_the_corpus_are_the_two_that_are_ghosts():
             pytest.skip(f"corpus source not cached: {relative}")
         assert state_is_not_its_own(path.read_text(errors="replace"),
                                     path=path)
+
+
+# ---------------------------------------------------------------------------
+# a small growth and a short run are two different failures
+# ---------------------------------------------------------------------------
+def _grown(to, at_time):
+    return [{"kind": "result", "time": 0.0, "STATEV": [0.0] * 7 + [1.0, 1.0]},
+            {"kind": "result", "time": at_time,
+             "STATEV": [0.0] * 7 + [to, 1.0]}]
+
+
+def test_a_growth_that_ran_its_whole_clock_is_not_a_run_that_stopped_early():
+    """``BodyForce-Growth-2Stages.for`` builds its growth on the author's own
+    ``Epsilon = RhoR*fZ*L/C0``, and C0 is the single constant the deck
+    publishes. At the 25 MPa deck that caps |G11-1| at 0.2997% anywhere in the
+    element, so no experiment of any length reaches 1%; at the 1 MPa deck the
+    same source reaches 75% and passes. Two pass10 entries failed at 0.383% and
+    0.195% having run the whole of their clock, and a message that says only
+    "the material near its initial state" invites lengthening a complete run."""
+    complete = growth_developed(_grown(1.00383, 2.2), {8: "G11"},
+                                total_time=2.2)
+    assert complete.met is False
+    assert "not a short run" in complete.reason
+    assert "this model's growth is small" in complete.reason
+
+    truncated = growth_developed(_grown(1.00383, 2.2), {8: "G11"},
+                                 total_time=10.0)
+    assert truncated.met is False
+    assert "cut off rather than small" in truncated.reason
+
+
+def test_the_threshold_itself_does_not_move():
+    """The distinction is in what the failure SAYS, not in what it takes to
+    pass. A growth of 0.383% is still not a growth of 1%."""
+    assert growth_developed(_grown(1.00383, 2.2), {8: "G11"},
+                            total_time=2.2).met is False
+    assert growth_developed(_grown(1.02, 2.2), {8: "G11"},
+                            total_time=2.2).met is True
+
+
+# ---------------------------------------------------------------------------
+# the Fortran the fold has to survive without ever claiming too much
+# ---------------------------------------------------------------------------
+def _routine(body: str) -> str:
+    return ("      SUBROUTINE UMAT(S)\n" + body + "      RETURN\n      END\n")
+
+
+@pytest.mark.parametrize("label,body,expected", [
+    ("a labelled DO poisons its body, and CONTINUE closes it",
+     "        X = 1.0\n        DO 100 I=1,3\n          X = 2.0\n"
+     "  100   CONTINUE\n        Y = X\n", {"X": None, "Y": None}),
+    ("a loop variable is never a constant",
+     "        DO I=1,3\n          A = I\n        END DO\n",
+     {"I": None, "A": None}),
+    ("ELSE IF does not unbalance the nesting",
+     "        IF (A .GT. 1) THEN\n          Q = 1.0\n"
+     "        ELSE IF (A .GT. 0) THEN\n          Q = 2.0\n"
+     "        ELSE\n          Q = 3.0\n        END IF\n        Z = 4.0\n",
+     {"Q": None, "Z": 4.0}),
+    ("a repeated agreeing assignment still pins",
+     "        T = 1.0\n        T = 1.0\n        W = T*5.0\n",
+     {"T": 1.0, "W": 5.0}),
+    ("a disagreeing reassignment pins nothing",
+     "        T = 1.0\n        T = 2.0\n        W = T*5.0\n",
+     {"T": None, "W": None}),
+    ("an accumulation pins nothing",
+     "        T = 1.0\n        T = T + 1.0\n", {"T": None}),
+    ("an array constructor does not crash the parser",
+     "        Seq=(/ 1,5,9,2,3,6 /)\n        G = 2.0\n",
+     {"SEQ": None, "G": 2.0}),
+])
+def test_the_fold_reads_real_fortran_without_overclaiming(label, body,
+                                                          expected):
+    folding = fold(_routine(body))
+    assert {name: folding.value(name) for name in expected} == expected, label
+
+
+def test_a_parameter_declaration_is_a_constant_by_the_language_s_own_rules():
+    """It cannot be assigned, so it is the one place a value can be read
+    without a dataflow argument."""
+    folding = fold(_routine("      PARAMETER (ONE=1.0,TWO=2.0)\n"
+                            "        X = ONE + TWO*3.0\n"))
+    assert folding.value("X") == 7.0
+
+
+def test_both_fortran_exponent_spellings_and_a_literal_divide_by_zero():
+    assert fold_expression("1.5d0*2.0") == 3.0
+    assert fold_expression("1.5E-3*2.0") == 0.003
+    assert fold_expression("1.0/0.0") is None
+    # annihilation reaches inside an intrinsic's argument
+    assert fold_expression("Sqrt(4.0 + Y*0.0)") == 2.0
+
+
+def test_no_entry_this_reclassifies_contains_a_goto():
+    """A backward jump can re-enter a region read as straight-line, so the
+    module records GOTOs rather than assuming them away. Over the 1933 corpus
+    proposals, none of the sources whose family this changes has one -- so for
+    them the straight-line reading is not a reading but an exactness."""
+    for relative in ("Examples-In-Section-3/ArcDown/Th001/PureGravity.for",
+                     "Examples-In-Section-3/Flat/Th001/PureGrowth.for"):
+        path = jeff97(relative)
+        assert fold(path.read_text(errors="replace"), path=path).jumps == ()

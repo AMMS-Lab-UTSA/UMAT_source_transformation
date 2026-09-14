@@ -1297,7 +1297,8 @@ def _results(records: Sequence[dict]) -> list[dict]:
             if record.get("kind") != "entry"]
 
 
-def growth_developed(records: Sequence[dict], slots: dict) -> Finding:
+def growth_developed(records: Sequence[dict], slots: dict,
+                     total_time: float = 0.0) -> Finding:
     """Did the GROWTH TENSOR develop, or did some other state variable move?
 
     The slots are the ones the source itself computes from the clock, found by
@@ -1310,6 +1311,19 @@ def growth_developed(records: Sequence[dict], slots: dict) -> Finding:
     ran: at least one clock-driven slot changed by 1% or more of its own
     starting value. For a growth stretch, which starts at one, that is a
     stretch of 1.01.
+
+    ``total_time`` is how long the experiment was supposed to run, and it is
+    carried so that a failure can say WHICH failure it is. Two entries in the
+    pass10 corpus run failed this at 0.383% and 0.195% having run the whole of
+    their author's clock, and they are not short runs:
+    ``BodyForce-Growth-2Stages.for`` builds its growth on the author's own
+    dimensionless parameter ``Epsilon = RhoR*fZ*L/C0``, where C0 is the single
+    constant the deck publishes. At the 25 MPa deck that parameter caps
+    ``|G11 - 1|`` at 0.2997% anywhere in the element, so no experiment of any
+    length reaches 1% -- the model's own growth is small. At the 1 MPa deck the
+    same source reaches 75% and the criterion passes. A message that says only
+    "the material near its initial state" invites the reader to lengthen a run
+    that was already complete.
     """
     results = _results(records)
     if not results:
@@ -1345,13 +1359,31 @@ def growth_developed(records: Sequence[dict], slots: dict) -> Finding:
         return Finding("growth developed", True,
                        f"the growth quantities this source computes from the "
                        f"clock developed: {detail}", best)
+    reached = 0.0
+    for record in results:
+        try:
+            reached = max(reached, float(record.get("time") or 0.0))
+        except (TypeError, ValueError):
+            continue
+    if total_time > 0.0 and reached >= 0.99 * total_time:
+        how = (f". The run reached {reached:g} of the {total_time:g} this "
+               f"source's own law is written against, so it is not a short "
+               f"run: this model's growth is small, and whether that is "
+               f"enough to verify it on is a question about the model and not "
+               f"about the experiment")
+    elif total_time > 0.0:
+        how = (f". The run reached only {reached:g} of the {total_time:g} "
+               f"this source's own law is written against, so the growth was "
+               f"cut off rather than small")
+    else:
+        how = (", so whatever this run agreed about is the material near its "
+               "initial state")
     return Finding(
         "growth developed", False,
         f"the growth quantities this source computes from the clock barely "
         f"moved: {detail}. The largest, STATEV({best_slot}), changed "
         f"{best:.3%} of its starting value against the {GROWTH_MOVEMENT:.0%} "
-        f"this family needs, so whatever this run agreed about is the "
-        f"material near its initial state", best)
+        f"this family needs" + how, best)
 
 
 def stress_stays_on_the_material_scale(records: Sequence[dict],
@@ -1579,7 +1611,9 @@ def assess(family: Family, records: Sequence[dict],
                                            attempts=attempts)]
     if family.name == "growth":
         findings.append(growth_developed(
-            records, growth_state_slots(source_text)))
+            records, growth_state_slots(source_text),
+            total_time=sum(segment.period
+                           for segment in manifest.loading)))
         if any(segment.body_force for segment in manifest.loading):
             findings.append(deformed_under_the_load(records, manifest.props))
     elif family.name == "body force":
