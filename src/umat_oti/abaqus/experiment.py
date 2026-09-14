@@ -157,7 +157,8 @@ def time_driven_names(source_text: str) -> dict[str, str]:
     return found
 
 
-def time_driven_state_slots(source_text: str) -> dict[int, str]:
+def time_driven_state_slots(source_text: str,
+                            path: Optional[Path] = None) -> dict[int, str]:
     """Which STATEV slots hold a quantity the clock decides.
 
     Directly, where the routine writes ``STATEV(1) = 1.0 + ... TIME(1) ...``,
@@ -165,6 +166,14 @@ def time_driven_state_slots(source_text: str) -> dict[int, str]:
     writes ``STATEV(8) = G11``. Those slots are the ones a growth criterion
     has to watch: ``PureGrowth.for`` moves three of its nine state variables
     under any loading at all, and only two of them are the growth tensor.
+
+    This is the set the clock REACHES, read from the shape of the code and
+    nothing else. It is deliberately wider than the set the clock DECIDES:
+    ``STATEV(9) = (TIME(2)+DTIME)`` is reached by the clock and is the clock,
+    and ``STATEV(8) = G11`` is reached by the clock in a source whose own
+    constants fix G11 at 1.0 for all time. Narrowing the two is
+    :func:`clock_reading`'s job, and keeping the wide reading separate is what
+    lets a record say which of the two a slot failed.
     """
     driven = time_driven_names(source_text)
     slots: dict[int, str] = {}
@@ -181,6 +190,153 @@ def time_driven_state_slots(source_text: str) -> dict[int, str]:
 #: ``STATEV(9) = (TIME(2)+DTIME)`` -- and it moves in every run by definition,
 #: including the runs this family's criterion exists to reject.
 _CLOCK_ONLY = {"TIME", "DTIME", "TOTALT", "KSTEP", "KINC"}
+
+
+@dataclass(frozen=True)
+class ClockReading:
+    """Which quantities the clock DECIDES, separated from the ones it touches.
+
+    Three ways a statement can read as clock-driven without the clock deciding
+    anything, each measured on the corpus:
+
+    ``constant`` -- the routine's own literal constants make the clock's
+    coefficient zero. ``PureGravity.for`` writes the ordinary growth ramp
+    ``DtltaG11 = (Lambda1z0 + Y*Lambda1z1 - 1.0)*(TIME(1)+DTIME)/TotalT`` two
+    lines after ``Lambda1z0 = 1.0`` and ``Lambda1z1 = 0.0``, so the increment
+    is identically zero and G is the identity for all time.
+
+    ``load_only`` -- the quantity is computed by a load definition and not by
+    the material. The same file's ``SUBROUTINE DLOAD`` ends with
+    ``F = TargetF*TIME(1)/TotalT``, which is gravity being switched on over the
+    step. That is a load ramp; the body-force family is what it is for, and
+    reading it as growth put a body-force problem in the growth family.
+
+    ``clock_only`` -- the slot holds the time itself.
+    ``BodyForce-Growth-2Stages.for`` writes ``STATEV(9) = (TIME(2)+DTIME)``,
+    which moves in every run of any length by construction.
+
+    What is left in ``driven`` is what the clock actually decides.
+    """
+
+    driven: dict = field(default_factory=dict)
+    slots: dict = field(default_factory=dict)
+    constant: dict = field(default_factory=dict)
+    load_only: dict = field(default_factory=dict)
+    clock_only: dict = field(default_factory=dict)
+    #: Routines whose straight-line reading a GOTO could invalidate. Empty for
+    #: every entry in the corpus whose family this changes; carried so that a
+    #: caller who wants the stronger guarantee can ask for it.
+    jumps: tuple = ()
+
+    @property
+    def found(self) -> bool:
+        return bool(self.driven)
+
+    def as_dict(self) -> dict:
+        return {"driven": dict(self.driven),
+                "slots": {str(slot): statement
+                          for slot, statement in self.slots.items()},
+                "constant": dict(self.constant),
+                "load_only": dict(self.load_only),
+                "clock_only": dict(self.clock_only),
+                "jumps": list(self.jumps)}
+
+
+def clock_reading(source_text: str,
+                  path: Optional[Path] = None) -> ClockReading:
+    """Separate the quantities the clock decides from the ones it only touches.
+
+    :func:`time_driven_names` reads the SHAPE of the code: which assignments
+    reach TIME, directly or through a chain of copies. Shape is where it has to
+    start -- these laws write their growth in a dozen different spellings -- but
+    shape alone put thirteen ``PureGravity.for`` variants into the growth family
+    and then failed them all for a growth that never happened. The gate was
+    right; the family was wrong.
+
+    Three filters turn the shape into a reading, each of them a general
+    statement about Fortran and none of them about this repository:
+
+    1. **A quantity the routine's own constants pin to a value is not computed
+       from the clock.** :mod:`umat_oti.abaqus.constant_folding` propagates the
+       literal assignments and folds the expression; a name that comes out with
+       a value does not depend on the clock, whatever the statement looks like.
+       The fold is one-directional -- it says "constant" or "undecided", never
+       "varies" -- so a growth law it cannot evaluate stays a growth law. The
+       sibling ``HelixUp/.../PureGravity.for`` writes the same statements
+       against the point's coordinate X and is undecidable here, which is why
+       it is still growth and still verified.
+
+    2. **A quantity only a load definition computes is a load ramp.** Growth is
+       a property of a material, so it has to be the material routine that
+       computes it. DLOAD computing a force that rises with TIME is the author
+       describing how gravity is applied, not a material growing.
+
+    3. **A slot holding the clock itself is not a growth quantity.** Kept from
+       the reading this module already made: a slot assigned nothing but TIME
+       and DTIME moves in every run by definition, including the runs the
+       criterion exists to reject.
+    """
+    from umat_oti.abaqus import constant_folding
+
+    if not _TIME_READ.search(_code(source_text)):
+        return ClockReading()
+    try:
+        folding = constant_folding.fold(source_text, path=path)
+    except Exception:                                      # pragma: no cover
+        folding = constant_folding.Folding()
+    units = folding.units or (constant_folding.Routine(
+        "", "", "material", 1, frozenset(), source_text or ""),)
+
+    driven: dict[str, str] = {}
+    constant: dict[str, str] = {}
+    load_only: dict[str, str] = {}
+    clock_only: dict[str, str] = {}
+    #: Names a load definition computes from the clock, so that one the
+    #: MATERIAL also computes is not thrown away with them.
+    from_a_load: dict[str, str] = {}
+    for unit in units:
+        # Per routine, because a name is a name only inside one.
+        # ``PureGravity.for`` computes the scalar body force F from the clock
+        # in its DLOAD and assigns the deformation gradient to a different F
+        # in its UMAT; read as one namespace, the load ramp made the material
+        # look like a growth law and no filter downstream could undo it.
+        shaped = time_driven_names(unit.text)
+        if not shaped:
+            continue
+        for name, statement in shaped.items():
+            pinned = folding.constant_in(unit.name, name)
+            if pinned is not None:
+                constant.setdefault(name, (
+                    f"{statement} -- but this routine's own constants make it "
+                    f"{pinned.value:g} for all time"
+                    + (f" ({pinned.statement})" if pinned.statement else "")))
+                continue
+            head = statement.split("<-")[0]
+            _target, _, expression = head.partition("=")
+            words = {word.upper() for word
+                     in re.findall(r"[A-Za-z_]\w*", expression)}
+            if not words - _CLOCK_ONLY:
+                clock_only.setdefault(name, f"{statement} -- this is the clock itself")
+                continue
+            if unit.role == "load":
+                where = unit.name or "a load definition"
+                from_a_load.setdefault(name, (
+                    f"{statement} -- computed in {where}, so it is the shape "
+                    f"of the loading in time and not a material quantity"))
+                continue
+            driven[name] = statement
+    for name, why in from_a_load.items():
+        if name not in driven:
+            load_only[name] = why
+
+    slots: dict[int, str] = {}
+    for name, statement in driven.items():
+        match = _STATEV_SLOT.match(name)
+        if match:
+            slots[int(match.group(1))] = statement
+    return ClockReading(driven=driven, slots=slots, constant=constant,
+                        load_only=load_only, clock_only=clock_only,
+                        jumps=tuple(folding.jumps))
 
 
 #: Which of the two clocks a law reads. TIME(1) is the time within the current
@@ -226,18 +382,90 @@ def growth_state_slots(source_text: str) -> dict[int, str]:
     keeps both; ``BodyForce-Growth-2Stages.for`` keeps G11 in STATEV(8) and
     the elapsed time in STATEV(9), and this keeps only the first;
     ``umat_iso_morph_Abaqus.f`` keeps the growth multiplier in statev(1) and
-    its cube in statev(2), and this keeps both.
+    its cube in statev(2), and this keeps both; ``PureGravity.for`` keeps a G11
+    its own constants fix at 1.0 in STATEV(8) and the norm of an identity
+    tensor in STATEV(9), and this keeps NEITHER -- which is the whole reason
+    that source is not a growth experiment.
     """
-    slots = time_driven_state_slots(source_text)
-    kept: dict[int, str] = {}
-    for slot, statement in slots.items():
-        head = statement.split("<-")[0]
-        _target, _, expression = head.partition("=")
-        names = {name.upper() for name
-                 in re.findall(r"[A-Za-z_]\w*", expression)}
-        if names - _CLOCK_ONLY:
-            kept[slot] = statement
-    return kept
+    return dict(clock_reading(source_text).slots)
+
+
+_STATEV_WRITE = re.compile(
+    r"^\s*(?:\d+\s+)?STATEV\s*\(([^)]*)\)\s*=\s*(.+)$", re.IGNORECASE)
+_COMMON_BLOCK = re.compile(
+    r"^\s*(?:\d+\s+)?COMMON\s*/\s*\w+\s*/\s*(.+)$", re.IGNORECASE)
+_ARRAY_READ = re.compile(r"^\s*([A-Za-z_]\w*)\s*\(")
+
+
+def state_is_not_its_own(source_text: str,
+                         path: Optional[Path] = None) -> str:
+    """Does this routine COMPUTE its state variables, or copy them in?
+
+    A material routine whose every ``STATEV`` write reads an array out of a
+    COMMON block does not own its state. Something else fills that block, and
+    driven on its own the routine reports zeros however it is loaded -- so "no
+    state variable moved" is a fact about the experiment's reach and not about
+    the material, and no amplitude, clock or load will change it.
+
+    Returns the reason, or ``""`` when the routine computes its own state.
+
+    Two sources in the corpus do this, and both are the same construction: a
+    phase-field or user element carries the mechanics and a ghost continuum
+    element carries a UMAT whose only job is to put the element's results
+    somewhere the ODB can see them. ``hamza-djeloud__thesis_project/
+    plate_with_notch.for`` ends its UMAT with::
+
+        NELEMAN = NOEL - TWO*N_ELEM
+        DO I=1,NSTATV
+         STATEV(I)=USRVAR(NELEMAN,I,NPT)
+        END DO
+
+    where ``COMMON/KUSER/USRVAR`` is written by the two UELs above it, and its
+    own constitutive content is ``STRESS = STRESS + DDSDDE*DSTRAN`` at the
+    E = 1e-11 its author's deck publishes. In pass10 it reached
+    ``experiment_not_informative`` on "4 smooth states on a material that never
+    activates", which is exactly right and says nothing about why.
+    """
+    from umat_oti.abaqus import constant_folding
+
+    try:
+        units = constant_folding.routines(source_text, path=path)
+    except Exception:                                      # pragma: no cover
+        return ""
+    for unit in units:
+        if unit.role != "material":
+            continue
+        lines = statements(unit.text)
+        shared: set[str] = set()
+        for line in lines:
+            block = _COMMON_BLOCK.match(line)
+            if not block:
+                continue
+            for piece in re.split(r",(?![^()]*\))", block.group(1)):
+                name = piece.split("(")[0].strip().upper()
+                if name:
+                    shared.add(name)
+        if not shared:
+            continue
+        writes = [match for match in (_STATEV_WRITE.match(line)
+                                      for line in lines) if match]
+        if not writes:
+            continue
+        copied = []
+        for write in writes:
+            read = _ARRAY_READ.match(write.group(2))
+            if read is None or read.group(1).upper() not in shared:
+                copied = []
+                break
+            copied.append(write.group(0).strip()[:80])
+        if copied:
+            return (f"every state variable {unit.name or 'this routine'} "
+                    f"writes is copied out of a COMMON block rather than "
+                    f"computed -- {copied[0]} -- so something else fills it. "
+                    f"Driven on its own this routine reports the same state "
+                    f"however it is loaded, and no amplitude, clock or load "
+                    f"reaches what that state is for")
+    return ""
 
 
 def applies_a_body_force(source_text: str) -> tuple[bool, str]:
@@ -363,7 +591,8 @@ MEANINGFUL_ACTIVATION: dict[str, str] = {
 def classify(source_text: str, *, element: str = "",
              family_of_element: str = "", props: Sequence[float] = (),
              reads_coordinates: bool = False,
-             oriented: bool = False) -> Family:
+             oriented: bool = False,
+             path: Optional[Path] = None) -> Family:
     """Which experiment family this source belongs to, from what it reads.
 
     Ordered by how much the answer changes the experiment. A cohesive law is
@@ -377,13 +606,35 @@ def classify(source_text: str, *, element: str = "",
     evidence: list[str] = []
     notes: list[str] = []
 
-    driven = time_driven_names(source_text)
-    slots = time_driven_state_slots(source_text)
+    reading = clock_reading(source_text, path=path)
+    driven = reading.driven
+    slots = reading.slots
+    # A source whose growth-shaped statements all fold to constants is not a
+    # growth law, and saying so is worth a note wherever it lands: the reader
+    # of a body-force verification needs to know that the file it came from
+    # writes a growth tensor and switches it off.
+    if reading.constant:
+        # STATEV slots first. They are the names the growth criterion would
+        # have watched, so they are what a reader of the refusal needs to see
+        # before the list is cut short.
+        named = sorted(reading.constant,
+                       key=lambda name: (not name.startswith("STATEV"), name))
+        notes.append(
+            "this routine writes "
+            + ", ".join(named[:4])
+            + " in the shape of a law computed from the clock, but its own "
+              "literal constants fix "
+            + ("them" if len(reading.constant) > 1 else "it")
+            + " for all time, so the clock decides nothing here: "
+            + "; ".join(reading.constant[name] for name in named)[:320])
     has_body_force, body_force_why = applies_a_body_force(source_text)
     finite = bool(_DFGRD.search(text))
     rate = bool(_PER_DTIME.search(text)) or bool(
         re.search(r"\bDTIME\b[^\n]*\*\*", text))
 
+    borrowed = state_is_not_its_own(source_text, path=path)
+    if borrowed:
+        notes.append(borrowed)
     if reads_coordinates:
         notes.append("this routine reads COORDS, so where the element sits is "
                      "part of what it computes")
@@ -424,6 +675,14 @@ def classify(source_text: str, *, element: str = "",
         return Family("growth", "time", tuple(evidence), tuple(notes))
 
     if has_body_force:
+        if reading.load_only:
+            notes.append(
+                "the clock appears in this source's load definition -- "
+                + "; ".join(reading.load_only[name]
+                            for name in sorted(reading.load_only))[:200]
+                + " -- which is how far the author ramps the load, and is "
+                  "carried by the body-force segment rather than by a growth "
+                  "criterion")
         return Family("body force", "body force", (body_force_why,),
                       tuple(notes))
 
@@ -607,6 +866,7 @@ def _cohesive_onset(props: Sequence[float]) -> Optional[tuple[float, float]]:
 
 def build(source_text: str, manifest: VerificationManifest, *,
           family: Optional[Family] = None,
+          path: Optional[Path] = None,
           deck_periods: Sequence[float] = (),
           body_force: tuple = (), held: tuple = (),
           body_force_provenance: str = "",
@@ -626,7 +886,8 @@ def build(source_text: str, manifest: VerificationManifest, *,
         family_of_element=geometry.kind if geometry.kind == "cohesive" else "",
         props=manifest.props,
         reads_coordinates=bool(manifest.node_coordinates),
-        oriented=manifest.orientation_axes is not None)
+        oriented=manifest.orientation_axes is not None,
+        path=path or manifest.source)
     criterion = MEANINGFUL_ACTIVATION.get(chosen.name, "")
     requirement = time_scale.required_total_time(
         source_text, manifest.props, deck_periods)
@@ -960,9 +1221,10 @@ def plan(source: Path, repository: Path, name: str = "",
                            if settled.formulation.family == "cohesive"
                            else settled.formulation.family),
         props=base.props, reads_coordinates=bool(coordinate_aliases(text)),
-        oriented=base.orientation_axes is not None)
+        oriented=base.orientation_axes is not None, path=source)
     built = build(
-        text, base, family=family, deck_periods=material.step_periods,
+        text, base, family=family, path=source,
+        deck_periods=material.step_periods,
         body_force=(loads.components if (has_force and loads.driven) else ()),
         held=restraints.supports or (1, 2),
         body_force_provenance=loads.provenance)
@@ -1035,7 +1297,8 @@ def _results(records: Sequence[dict]) -> list[dict]:
             if record.get("kind") != "entry"]
 
 
-def growth_developed(records: Sequence[dict], slots: dict) -> Finding:
+def growth_developed(records: Sequence[dict], slots: dict,
+                     total_time: float = 0.0) -> Finding:
     """Did the GROWTH TENSOR develop, or did some other state variable move?
 
     The slots are the ones the source itself computes from the clock, found by
@@ -1048,6 +1311,19 @@ def growth_developed(records: Sequence[dict], slots: dict) -> Finding:
     ran: at least one clock-driven slot changed by 1% or more of its own
     starting value. For a growth stretch, which starts at one, that is a
     stretch of 1.01.
+
+    ``total_time`` is how long the experiment was supposed to run, and it is
+    carried so that a failure can say WHICH failure it is. Two entries in the
+    pass10 corpus run failed this at 0.383% and 0.195% having run the whole of
+    their author's clock, and they are not short runs:
+    ``BodyForce-Growth-2Stages.for`` builds its growth on the author's own
+    dimensionless parameter ``Epsilon = RhoR*fZ*L/C0``, where C0 is the single
+    constant the deck publishes. At the 25 MPa deck that parameter caps
+    ``|G11 - 1|`` at 0.2997% anywhere in the element, so no experiment of any
+    length reaches 1% -- the model's own growth is small. At the 1 MPa deck the
+    same source reaches 75% and the criterion passes. A message that says only
+    "the material near its initial state" invites the reader to lengthen a run
+    that was already complete.
     """
     results = _results(records)
     if not results:
@@ -1083,13 +1359,31 @@ def growth_developed(records: Sequence[dict], slots: dict) -> Finding:
         return Finding("growth developed", True,
                        f"the growth quantities this source computes from the "
                        f"clock developed: {detail}", best)
+    reached = 0.0
+    for record in results:
+        try:
+            reached = max(reached, float(record.get("time") or 0.0))
+        except (TypeError, ValueError):
+            continue
+    if total_time > 0.0 and reached >= 0.99 * total_time:
+        how = (f". The run reached {reached:g} of the {total_time:g} this "
+               f"source's own law is written against, so it is not a short "
+               f"run: this model's growth is small, and whether that is "
+               f"enough to verify it on is a question about the model and not "
+               f"about the experiment")
+    elif total_time > 0.0:
+        how = (f". The run reached only {reached:g} of the {total_time:g} "
+               f"this source's own law is written against, so the growth was "
+               f"cut off rather than small")
+    else:
+        how = (", so whatever this run agreed about is the material near its "
+               "initial state")
     return Finding(
         "growth developed", False,
         f"the growth quantities this source computes from the clock barely "
         f"moved: {detail}. The largest, STATEV({best_slot}), changed "
         f"{best:.3%} of its starting value against the {GROWTH_MOVEMENT:.0%} "
-        f"this family needs, so whatever this run agreed about is the "
-        f"material near its initial state", best)
+        f"this family needs" + how, best)
 
 
 def stress_stays_on_the_material_scale(records: Sequence[dict],
@@ -1133,7 +1427,15 @@ def stress_stays_on_the_material_scale(records: Sequence[dict],
                    report.reason(), worst)
 
 
-def deformed_under_the_load(records: Sequence[dict]) -> Finding:
+#: A strain below which "the element moved" is a statement about round-off
+#: rather than about a load. The comparison this pipeline makes is relative
+#: and its tolerance is 1e-10, so a strain at that size is not resolved by the
+#: instrument that would have to see it.
+RESOLVED_STRAIN = 1e-10
+
+
+def deformed_under_the_load(records: Sequence[dict],
+                            props: Sequence[float] = ()) -> Finding:
     """Did the element move at all, when nothing prescribed that it should?
 
     The whole point of a body-force segment. No displacement is imposed beyond
@@ -1141,6 +1443,30 @@ def deformed_under_the_load(records: Sequence[dict]) -> Finding:
     means DLOAD was never called or returned nothing -- which is exactly the
     failure this family exists to catch and is invisible to any amplitude,
     because there is no amplitude in the deck to raise.
+
+    **What this criterion does NOT establish, stated because the same shape of
+    gap is what put thirteen sources in the wrong family.** "Moved at all" is a
+    threshold at the resolution of the instrument, not at a size that means
+    anything mechanically, and a criterion whose threshold sits there can be
+    met by a run that exercised nothing. Measured on the ten ``PureGravity.for``
+    entries this module reclassifies: they reach strains of 5.5e-07 to 1.4e-05
+    and peak stresses 1.3e-06 to 3.1e-05 of their own largest material
+    constant. The load did work on the element -- that much is established and
+    it is what this criterion claims -- but the response is linear-elastic at
+    microstrain, and an agreement there is an agreement about the part every
+    build gets right.
+
+    The threshold is deliberately NOT raised to fix that, because there is no
+    honest number to raise it to. A growth stretch starts at one, so "1% of its
+    initial value" is a statement about the quantity; a body force produces a
+    strain that depends on the specimen's SPAN, and a single element has no
+    span. Picking a percentage here would be choosing the experiment rather
+    than reading it, which is the thing this module exists to stop. What is
+    reported instead is the size the strain reached against the scale the
+    problem supplies, so the weakness is visible in the record rather than
+    hidden behind a boolean. Whether a single element can carry a body-force
+    experiment that means anything is a question for a run, and it is filed as
+    one.
     """
     from umat_oti.abaqus.activation import strain_at
 
@@ -1149,13 +1475,24 @@ def deformed_under_the_load(records: Sequence[dict]) -> Finding:
         return Finding("deformed under the load", None,
                        "this run recorded no completed UMAT calls")
     reached = 0.0
+    stress = 0.0
     for record in results:
         for value in strain_at(record):
             reached = max(reached, abs(value))
-    if reached > 1e-10:
+        for value in _values(record, "STRESS"):
+            stress = max(stress, abs(value))
+    scale = max((abs(float(value)) for value in props or ()), default=0.0)
+    against = ""
+    if scale > 0.0 and stress > 0.0:
+        against = (f". It carried a peak stress of {stress:g} against a "
+                   f"largest material constant of {scale:g}, a ratio of "
+                   f"{stress / scale:.3e}, which is how far into the "
+                   f"material's own range this load reached")
+    if reached > RESOLVED_STRAIN:
         return Finding("deformed under the load", True,
                        f"the element reached a strain of {reached:g} with no "
-                       f"displacement prescribed, so the load did work on it",
+                       f"displacement prescribed, so the load did work on it"
+                       + against,
                        reached)
     return Finding("deformed under the load", False,
                    "no displacement was prescribed and the strain never left "
@@ -1274,11 +1611,13 @@ def assess(family: Family, records: Sequence[dict],
                                            attempts=attempts)]
     if family.name == "growth":
         findings.append(growth_developed(
-            records, growth_state_slots(source_text)))
+            records, growth_state_slots(source_text),
+            total_time=sum(segment.period
+                           for segment in manifest.loading)))
         if any(segment.body_force for segment in manifest.loading):
-            findings.append(deformed_under_the_load(records))
+            findings.append(deformed_under_the_load(records, manifest.props))
     elif family.name == "body force":
-        findings.append(deformed_under_the_load(records))
+        findings.append(deformed_under_the_load(records, manifest.props))
     elif family.name == "cohesive":
         findings.append(cohesive_softened(records))
     elif family.name == "oriented":
