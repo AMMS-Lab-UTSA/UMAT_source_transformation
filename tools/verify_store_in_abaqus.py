@@ -96,8 +96,9 @@ from umat_oti.corpus.entry_routines import classify as classify_entry   # noqa: 
 from umat_oti.fortran.normalize import detect_source_form              # noqa: E402
 from umat_oti.abaqus.elements import geometry_for as element_geometry   # noqa: E402
 from umat_oti.abaqus.formulation import settle                          # noqa: E402
-from umat_oti.abaqus import (frames, primal_signature,                  # noqa: E402
-                             plausibility, safe_loading, time_scale)
+from umat_oti.abaqus import (call_isolation, frames,                    # noqa: E402
+                             primal_signature, plausibility, safe_loading,
+                             time_scale)
 from umat_oti.abaqus.experiment import (                                # noqa: E402
     assess, plan as plan_experiment)
 from umat_oti.abaqus.manifest import (                                  # noqa: E402
@@ -121,6 +122,24 @@ from umat_oti.store import TransformStore                               # noqa: 
 
 #: Every outcome an entry can be recorded as, in the order an entry passes
 #: through them. The index in this tuple is how far the entry got; the last
+#: The two builds' histories differ, and the recorded CALLS say the difference
+#: did not start in the routine.
+#:
+#: EXTERNAL, about the experiment rather than the transform. The arguments the
+#: two builds were handed had already parted before the call whose outputs
+#: differ, so what the routine returned there is not attributable to the
+#: routine. Sixteen of the sixty-two disagreements in pass10 are this, all at
+#: call 8 and all in one family, and calling them "the two builds do not
+#: compute the same stress" was a claim the evidence underneath did not carry.
+ARGUMENTS_DIVERGED = "arguments_diverged_before_the_routine"
+
+#: INTERNAL, and about this harness. Every paired call in the probe record
+#: returned bit-identical outputs and the history comparison reported a
+#: difference anyway. Twelve entries in pass10 are in this shape. Whatever
+#: those twelve mean, they are not evidence that a converted routine computes a
+#: different stress, and they must not be reported as though they were.
+DISAGREEMENT_NOT_IN_ANY_CALL = "disagreement_not_in_any_recorded_call"
+
 #: rung is the only one that may be called verified.
 STAGES: tuple[str, ...] = (
     "needs_material_data",
@@ -131,6 +150,8 @@ STAGES: tuple[str, ...] = (
     "original_job_failed",
     "transformed_job_failed",
     "primal_disagreed",
+    ARGUMENTS_DIVERGED,
+    DISAGREEMENT_NOT_IN_ANY_CALL,
     "derivative_truncated",
     "tangent_not_verified",
     "verified",
@@ -261,6 +282,10 @@ class StageEvidence:
     transformed_completed: bool = False
     #: None when the comparison never ran.
     primal_agrees: Optional[bool] = None
+    #: What the recorded CALLS say about a disagreement the histories report.
+    #: A verdict from :mod:`umat_oti.abaqus.call_isolation`, or "" when the
+    #: probe records were not there to ask.
+    call_isolation: str = ""
     #: The converted source takes the real part of a seed-carrying expression
     #: and uses the result. The stress is still right and every derivative
     #: computed through that point is short by whatever it contributed, so
@@ -299,6 +324,14 @@ def classify_stage(evidence: StageEvidence) -> str:
     if not evidence.transformed_completed:
         return "transformed_job_failed"
     if evidence.primal_agrees is not True:
+        # "The two builds do not compute the same stress" is a claim about the
+        # ROUTINE, and the recorded calls are what can support it. Where they
+        # say the arguments had already parted, or that no call differed at
+        # all, the claim is somebody else's or ours -- not the transform's.
+        if evidence.call_isolation == call_isolation.INPUTS_ALREADY_DIVERGED:
+            return ARGUMENTS_DIVERGED
+        if evidence.call_isolation == call_isolation.NO_DIVERGENCE:
+            return DISAGREEMENT_NOT_IN_ANY_CALL
         return "primal_disagreed"
     # Before the derivative work, not after it. There is no reason to spend a
     # replay ladder on an experiment that has not been shown to exercise the
@@ -3880,6 +3913,20 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     # range says nothing about which share a cause. The signature is read off
     # the numbers and the source so the cluster can be worked as clusters.
     if not primal.agrees:
+        # Ask the recorded calls what the histories are disagreeing about,
+        # before anything calls it a disagreement between two routines.
+        try:
+            left_calls, right_calls = call_isolation.read_pair(work)
+            isolation = call_isolation.isolate_first_divergence(
+                left_calls, right_calls)
+            record["call_isolation"] = isolation.as_dict()
+            seen["call_isolation"] = isolation.verdict
+        except (OSError, ValueError) as error:
+            record["call_isolation"] = {
+                "verdict": "",
+                "reason": (f"the probe records could not be read, so what the "
+                           f"histories disagree about was not established: "
+                           f"{type(error).__name__}: {error}")}
         try:
             # review_entry, not classify: the summary numbers raise the
             # hypotheses and the recorded CALLS decide which survive. Without
