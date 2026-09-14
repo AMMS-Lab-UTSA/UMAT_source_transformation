@@ -83,6 +83,14 @@ class LoadingSegment:
     #: passed positionally somewhere, and inserting this one after ``strain``
     #: silently bound ``increments`` to it.
     rotation: tuple[float, ...] = ()
+    #: Whether this segment is the one in which the rotation itself is applied,
+    #: turning the element from the identity to ``rotation`` at zero strain.
+    #: Only that segment needs amplitude tables. Once the rotation is FIXED, a
+    #: plain prescribed displacement is exact: Abaqus interpolates linearly
+    #: between the two end positions, and a fixed Q commutes with a linear
+    #: interpolation -- Q.lerp(a, b) = lerp(Qa, Qb) -- so every intermediate
+    #: state is precisely the rotated intermediate state of the unrotated run.
+    rotation_lead_in: bool = False
 
     @property
     def driven_by(self) -> str:
@@ -630,4 +638,29 @@ def rotated(loading, plane: bool = False):
     from dataclasses import replace as _replace
 
     turn = OBJECTIVITY_ROTATION_PLANE if plane else OBJECTIVITY_ROTATION
-    return tuple(_replace(segment, rotation=turn) for segment in loading)
+    if not loading:
+        return ()
+    # A lead-in that turns the undeformed element from the identity to Q at
+    # zero strain, then the author's own path with Q held fixed.
+    #
+    # Without the lead-in the rotation has to ramp inside the first segment,
+    # and a ramping rotation cannot be written as a prescribed displacement:
+    # Abaqus interpolates it linearly, half of a rotation's displacement is
+    # the chord rather than half the rotation, and the element is squashed.
+    # Driving it by amplitude tables instead fixed that but broke something
+    # else -- with OP=NEW each segment's table restarts from the undeformed
+    # state, so a reversal segment walked 0 to -E where the unrotated run
+    # walks +E to -E. Measured: at step 2 increment 1 the unrotated run
+    # carried a stress trace of 0.0211 and the "rotated" one carried
+    # -5.85e-07, because its element had been unloaded.
+    lead_in = LoadingSegment(
+        name="rigid_rotation_lead_in",
+        strain=tuple(0.0 for _ in (loading[0].strain or (0.0,))),
+        increments=max(int(loading[0].increments), 8),
+        period=loading[0].period,
+        description=("the element is turned rigidly from the identity to the "
+                     "superposed rotation at zero strain, which an objective "
+                     "material answers with no change at all"),
+        rotation=turn, rotation_lead_in=True)
+    return (lead_in,) + tuple(
+        _replace(segment, rotation=turn) for segment in loading)

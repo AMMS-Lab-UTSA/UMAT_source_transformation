@@ -16,6 +16,8 @@ statement about the constitutive law.
 """
 from __future__ import annotations
 
+import math
+
 from typing import Iterable
 
 from umat_oti.abaqus.elements import UnsupportedElement, geometry_for
@@ -108,6 +110,78 @@ def _displacement(node: tuple[float, float, float],
         q[3] * px + q[4] * py + q[5] * pz - y,
         q[6] * px + q[7] * py + q[8] * pz - z,
     )
+
+
+def _axis_and_angle(rotation: tuple[float, ...]) -> tuple[tuple[float, float, float], float]:
+    """The axis and angle of a rotation matrix, so it can be interpolated.
+
+    Taken from the matrix rather than stored beside it, because the matrix is
+    what the manifest records and two representations of one rotation would
+    eventually disagree.
+    """
+    q = [list(rotation[0:3]), list(rotation[3:6]), list(rotation[6:9])]
+    trace = q[0][0] + q[1][1] + q[2][2]
+    cosine = max(-1.0, min(1.0, (trace - 1.0) / 2.0))
+    angle = math.acos(cosine)
+    if angle < 1e-12:
+        return (0.0, 0.0, 1.0), 0.0
+    scale = 2.0 * math.sin(angle)
+    axis = ((q[2][1] - q[1][2]) / scale,
+            (q[0][2] - q[2][0]) / scale,
+            (q[1][0] - q[0][1]) / scale)
+    return axis, angle
+
+
+def _rotation_at(fraction: float, rotation: tuple[float, ...]) -> tuple[float, ...]:
+    """The part of this rotation reached at ``fraction`` of the segment.
+
+    Rodrigues about the same axis. This is the whole reason the rotated path
+    needs amplitude tables: Abaqus ramps a prescribed displacement LINEARLY,
+    and half of a rotation's displacement is not half a rotation -- it is the
+    chord, which shrinks the element. Driven that way a 30 degree rotation
+    passed through states whose stress trace differed from the unrotated run's
+    by a factor of 24, and the run was not the same deformation at all.
+    """
+    (x, y, z), angle = _axis_and_angle(rotation)
+    theta = angle * fraction
+    c, s, k = math.cos(theta), math.sin(theta), 1.0 - math.cos(theta)
+    return (
+        c + x * x * k,      x * y * k - z * s,  x * z * k + y * s,
+        y * x * k + z * s,  c + y * y * k,      y * z * k - x * s,
+        z * x * k - y * s,  z * y * k + x * s,  c + z * z * k,
+    )
+
+
+def _rotated_amplitudes(segment: LoadingSegment, nodes, plane: bool,
+                        tag: str) -> tuple[list, list]:
+    """One tabular amplitude per driven degree of freedom, and its BOUNDARY.
+
+    At fraction f of the segment the corner is required to be at
+    ``Q(f) (I + f E) X``, so the material walks the SAME strain history it
+    walks unrotated while the frame turns with it. The magnitude on the
+    BOUNDARY line is 1.0 and the displacement itself lives in the table, which
+    is what lets each degree of freedom follow its own path.
+    """
+    samples = max(int(segment.increments), 1)
+    amplitudes: list = []
+    boundaries: list = []
+    dofs = 2 if plane else 3
+    for index, x, y, z in nodes:
+        for dof in range(1, dofs + 1):
+            name = f"ROT_{tag}_N{index}_D{dof}"
+            rows = []
+            for step in range(samples + 1):
+                fraction = step / samples
+                partial = tuple(value * fraction for value in segment.strain)
+                moved = _displacement((x, y, z), partial,
+                                      _rotation_at(fraction, segment.rotation))
+                rows.append(f"{_fmt(fraction * segment.period)}, "
+                            f"{_fmt(moved[dof - 1])}")
+            amplitudes.append(f"*AMPLITUDE, NAME={name}, DEFINITION=TABULAR")
+            amplitudes += rows
+            boundaries.append(f"*BOUNDARY, OP=NEW, AMPLITUDE={name}")
+            boundaries.append(f"{index}, {dof}, {dof}, 1.0")
+    return amplitudes, boundaries
 
 
 def _fmt(value: float) -> str:
@@ -399,6 +473,25 @@ def generate_deck(manifest: VerificationManifest) -> str:
                   "*INITIAL CONDITIONS, TYPE=TEMPERATURE",
                   "ALL, " + _fmt(float(manifest.isothermal_temperature))]
 
+    # Amplitude tables live in the MODEL data section, before the first step,
+    # so every rotated segment's tables are built here and referenced below.
+    rotated_boundaries: dict = {}
+    model_amplitudes: list = []
+    for order, segment in enumerate(manifest.loading):
+        if not getattr(segment, "rotation", ()) or segment.body_force \
+                or segment.time_only or geometry.section == "COHESIVE":
+            continue
+        if not getattr(segment, "rotation_lead_in", False):
+            # Q is fixed through this segment, so the plain prescribed
+            # displacement is exact and is also what keeps the segment
+            # continuous with the one before it.
+            continue
+        tables, boundaries = _rotated_amplitudes(segment, nodes, plane,
+                                                 tag=str(order))
+        model_amplitudes += tables
+        rotated_boundaries[order] = boundaries
+    lines += model_amplitudes
+
     nlgeom = "YES" if manifest.kinematics == "finite" else "NO"
     coupled = geometry.kind.endswith("thermal")
     # TRANSIENT, which is the default form. A healing law integrates its own
@@ -407,7 +500,7 @@ def generate_deck(manifest: VerificationManifest) -> str:
     # own kinetics have finished, which is not what its author ran.
     procedure = ("*COUPLED TEMPERATURE-DISPLACEMENT"
                  if coupled else "*STATIC")
-    for segment in manifest.loading:
+    for order, segment in enumerate(manifest.loading):
         increment = 1.0 / max(segment.increments, 1)
         lines += [
             f"** {segment.name}: {segment.description}",
@@ -416,10 +509,16 @@ def generate_deck(manifest: VerificationManifest) -> str:
             f"{_fmt(increment * segment.period)}, {_fmt(segment.period)}, "
             f"{_fmt(increment * segment.period * 1e-5)}, "
             f"{_fmt(increment * segment.period)}",
-            "*BOUNDARY, OP=NEW",
         ]
-        lines += _boundary_for(segment, nodes, plane, geometry=geometry,
-                               plane_strain=manifest.plane_strain_directions)
+        if order in rotated_boundaries:
+            # Each degree of freedom follows its own table, so each needs its
+            # own BOUNDARY block; a single block cannot carry more than one
+            # amplitude.
+            lines += rotated_boundaries[order]
+        else:
+            lines.append("*BOUNDARY, OP=NEW")
+            lines += _boundary_for(segment, nodes, plane, geometry=geometry,
+                                   plane_strain=manifest.plane_strain_directions)
         if manifest.isothermal_temperature is not None:
             held = _fmt(float(manifest.isothermal_temperature))
             for index, *_rest in nodes:

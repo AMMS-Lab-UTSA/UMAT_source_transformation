@@ -3289,6 +3289,24 @@ def _family_name(experiment: Optional[dict]) -> str:
     return str(((experiment or {}).get("family") or {}).get("name") or "")
 
 
+def _after_lead_in(records: Sequence[dict]) -> list[dict]:
+    """The rotated run without its rotation step, renumbered to match the base.
+
+    The lead-in is step 1 and carries no strain at all; the author's own path
+    starts at step 2. Left in place it would be compared against the base run's
+    first loading step, which is a different deformation.
+    """
+    kept = []
+    for record in records:
+        step = int(record.get("step") or 0)
+        if step <= 1:
+            continue
+        moved = dict(record)
+        moved["step"] = step - 1
+        kept.append(moved)
+    return kept
+
+
 def _objective_response(base: Sequence[dict], turned: Sequence[dict],
                         rotation: Sequence[float]) -> dict:
     """Is the rotated run's stress the base run's stress rotated?
@@ -3305,7 +3323,7 @@ def _objective_response(base: Sequence[dict], turned: Sequence[dict],
     # Voigt (11, 22, 33, 12, 13, 23) to the full symmetric matrix and back.
     index = ((0, 0), (1, 1), (2, 2), (0, 1), (0, 2), (1, 2))
 
-    worst, compared = 0.0, 0
+    worst, corotational, compared = 0.0, 0.0, 0
     for before, after in zip(base, turned):
         left = before.get("STRESS") or []
         right = after.get("STRESS") or []
@@ -3326,8 +3344,16 @@ def _objective_response(base: Sequence[dict], turned: Sequence[dict],
         if scale <= 0.0:
             continue
         for slot, (row, column) in enumerate(index):
-            gap = abs(rotated_sigma[row][column] - float(right[slot])) / scale
-            worst = max(worst, gap)
+            worst = max(worst, abs(rotated_sigma[row][column]
+                                   - float(right[slot])) / scale)
+            # Abaqus hands a UMAT its stress in the CO-ROTATIONAL frame, which
+            # turns with the material. Under a superposed rigid rotation that
+            # frame turns too, so an objective routine returns the same
+            # COMPONENTS -- not the components rotated. Both are measured
+            # because which convention applies is a fact to be read off the
+            # runs rather than asserted from the manual.
+            corotational = max(corotational, abs(sigma[row][column]
+                                                 - float(right[slot])) / scale)
             compared += 1
 
     if not compared:
@@ -3337,17 +3363,46 @@ def _objective_response(base: Sequence[dict], turned: Sequence[dict],
                                        "Q^T could not be formed")}
     # The same tolerance the primal comparison uses would be too tight here:
     # the rotated run solves a different linear system and its equilibrium
-    # iterates differ in the last digits. A part in 1e-8 of the stress field is
+    # iterates differ in the last digits. A part in 1e-6 of the stress field is
     # far below any real frame error, which is order one.
-    objective = worst < 1e-8
+    #
+    # This number only means anything if the rotated run really walked the same
+    # strain path in a turning frame. It did not, the first time it was built:
+    # a prescribed displacement is ramped LINEARLY by Abaqus, half of a
+    # rotation's displacement is the chord rather than half the rotation, and
+    # every intermediate increment was a differently distorted state. The
+    # measured evidence was that the stress TRACE differed between the two runs
+    # by a factor of 24 -- and a rotation preserves the trace -- so the runs
+    # were not the same deformation and the verdict was meaningless. It read
+    # "objective: False" for 8 of 9 published models, which was a false claim
+    # about somebody else's science and is exactly the kind of thing that must
+    # never be reported. The path is now driven by one tabular amplitude per
+    # degree of freedom, so the corner is required to be at Q(f)(I + f E)X at
+    # every sampled fraction f.
+    # WHICH FRAME THE RECORDED STRESS IS IN WAS SETTLED BY MEASUREMENT, not by
+    # reading the manual. On NeoHookean_umat.for over 1680 components, with the
+    # rotated path finally correct, the two candidates came out:
+    #
+    #     |Q sigma Q^T - sigma'|   4.405e-13      <- this one
+    #     |sigma       - sigma'|   7.023e-01
+    #
+    # So the history carries stress in the GLOBAL basis and an objective
+    # response rotates with it. The co-rotational figure is kept beside it as
+    # the cross-check, because the day it is the small one is the day this
+    # assumption stopped holding and the record should show that rather than
+    # quietly report a non-objective model.
+    objective = worst < 1e-6
     return {
         "objective": objective,
         "objectivity_worst_relative": worst,
+        "objectivity_worst_corotational": corotational,
         "compared_components": compared,
         "objectivity_reason": (
             f"the author's own response {'is' if objective else 'is NOT'} the "
             f"unrotated response rotated: worst |Q sigma Q^T - sigma'| is "
-            f"{worst:.3e} of the stress field over {compared} components"),
+            f"{worst:.3e} of the stress field over {compared} components "
+            f"(the same comparison without rotating gives {corotational:.3e}, "
+            f"and the smaller of the two says which basis the history is in)"),
     }
 
 
@@ -3424,6 +3479,17 @@ def run_objectivity(manifest: VerificationManifest, original_call: dict,
     # prefers the JSON run_one saved and falls back to the probe file.
     rotated_original = history_of(Path(left["work_dir"]), left["job"])
     rotated_transformed = history_of(Path(right["work_dir"]), right["job"])
+    # The rotated run carries one extra step at the front -- the lead-in that
+    # turns the element from the identity to Q at zero strain -- so its steps
+    # are renumbered down by one before anything is compared with the base run.
+    # Comparing without this aligned the base run's first loading step against
+    # the rotation itself.
+    lead_in = 1 if (turned.loading
+                    and getattr(turned.loading[0], "rotation_lead_in", False)) else 0
+    if lead_in:
+        rotated_original = _after_lead_in(rotated_original)
+        rotated_transformed = _after_lead_in(rotated_transformed)
+
     left_history, right_history, _, _ = common_finite_prefix(
         rotated_original, rotated_transformed,
         expected_points=frames.points_for(turned.element_type))
@@ -3440,6 +3506,7 @@ def run_objectivity(manifest: VerificationManifest, original_call: dict,
     # DROT is faithfully converted by a conversion that ignores it identically.
     answer.update(_objective_response(base_history, rotated_original,
                                       turned.loading[0].rotation))
+    answer["lead_in_steps_dropped"] = lead_in
     answer["worst_stress_relative"] = pair.worst_stress_relative
     answer["worst_state_relative"] = pair.worst_state_relative
     answer["reason"] = (
