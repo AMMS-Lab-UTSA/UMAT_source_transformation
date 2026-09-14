@@ -25,10 +25,16 @@ Two hypotheses died here and these tests hold them dead:
 * a compiler bug. The author's own source is clean under ``-init=snan,arrays``
   and returns ``-73.46290748654624`` under every build tried.
 * the sequence association at ``CALL ITERATION_OTI(STATEV_OTI(NSLPTL+1),
-  STATEV_OTI(2*NSLPTL+1), ...)``. The author's original contains that same
-  overlapping pair and compiles correctly, and ``-assume dummy_aliases`` --
-  the flag that actually turns off the no-alias assumption about dummy
-  arguments, which ``-fno-alias`` does not -- leaves the value unchanged.
+  STATEV_OTI(2*NSLPTL+1), ...)``. Three separate reasons, any one of which is
+  enough. The author's original contains the same pair and compiles
+  correctly. ``-assume dummy_aliases`` -- the flag that actually turns off the
+  no-alias assumption about dummy arguments, which ``-fno-alias`` does not --
+  leaves the value unchanged. And the premise is false: the callee declares
+  ``GAMMA(NSLPTL)`` and ``TAUSLP(NSLPTL)`` explicitly, so the storage the two
+  dummies cover is ``STATEV(NSLPTL+1 : 2*NSLPTL)`` and
+  ``STATEV(2*NSLPTL+1 : 3*NSLPTL)``. Those ABUT. They do not overlap, there is
+  no aliasing to exploit, and a minimal reproducer of the same shape gives the
+  same answer at -O2 with and without vectorisation.
 """
 import os
 import pathlib
@@ -131,3 +137,20 @@ def test_the_confirmation_names_the_construct_and_not_a_flag():
     assert "-assume dummy_aliases" in cause
     assert slot[0].original == -73.46290748654624
     assert slot[0].transformed == -1.6982275886200392e-30
+
+
+def test_the_two_statev_sections_abut_and_do_not_overlap():
+    """The refutation is arithmetic, not a flag.
+
+    ``ITERATION_OTI`` declares ``GAMMA(NSLPTL)`` and ``TAUSLP(NSLPTL)``
+    explicitly, so each dummy covers exactly NSLPTL elements from where its
+    actual argument starts. Passing ``STATEV(NSLPTL+1)`` and
+    ``STATEV(2*NSLPTL+1)`` therefore hands the callee two runs of storage that
+    meet end to end. "Two overlapping sections of the same array" describes a
+    construct that is not in this file.
+    """
+    nslptl = 12
+    gamma = range(nslptl + 1, 2 * nslptl + 1)
+    tauslp = range(2 * nslptl + 1, 3 * nslptl + 1)
+    assert set(gamma).isdisjoint(tauslp)
+    assert max(gamma) + 1 == min(tauslp)
