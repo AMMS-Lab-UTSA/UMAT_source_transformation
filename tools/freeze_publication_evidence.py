@@ -110,6 +110,20 @@ TRUNCATION_KEYS = ("complete_finite_verification_run",
                    "first_incomplete_increment")
 
 
+def _said(destination: Path) -> str:
+    """A snapshot's path, said relative to the repository where it is under
+    it and in full where it is not.
+
+    ``relative_to`` raises rather than falling back, so a run given an
+    ``--out-root`` outside the checkout used to crash on the line that reports
+    success -- after the snapshot had been written.
+    """
+    try:
+        return str(destination.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(destination)
+
+
 def _walk(payload, path: str = ""):
     """Every leaf of a decoded JSON document with the path that reaches it."""
     if isinstance(payload, dict):
@@ -406,7 +420,7 @@ def main(argv: list[str] | None = None) -> int:
     destination = args.out_root / name
     if destination.exists() and not args.force:
         print(f"a snapshot for these commits already exists at "
-              f"{destination.relative_to(REPO_ROOT)}. Refusing to overwrite it: "
+              f"{_said(destination)}. Refusing to overwrite it: "
               "figures and tables cite it by path. Pass --force only if you mean "
               "to replace it.", file=sys.stderr)
         return 3
@@ -491,7 +505,7 @@ def main(argv: list[str] | None = None) -> int:
     checksums.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     print(f"froze {len(copied)} evidence files into "
-          f"{destination.relative_to(REPO_ROOT)}")
+          f"{_said(destination)}")
     if missing:
         print(f"absent (recorded, not silently skipped): {', '.join(missing)}")
     print(f"umat  {umat['commit']}  dirty={umat['worktree_dirty']}")

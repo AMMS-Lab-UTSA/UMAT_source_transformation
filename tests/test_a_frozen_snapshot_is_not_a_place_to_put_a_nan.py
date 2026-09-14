@@ -242,7 +242,11 @@ def test_a_clean_snapshot_still_freezes_and_records_that_it_was_checked(
                         ("tables/t.csv", "tables/t.json", "tables/absent.csv"))
     out = tmp_path / "frozen"
     assert freezer.main(["--out-root", str(out), "--label", "trial"]) == 0
-    manifest = json.loads((out / "trial" / "MANIFEST.json").read_text())
+    # The directory carries the companion repository's commit beside the
+    # label, so it is found rather than assumed.
+    written = [d for d in out.iterdir() if d.is_dir()]
+    assert len(written) == 1 and written[0].name.startswith("trial")
+    manifest = json.loads((written[0] / "MANIFEST.json").read_text())
     check = manifest["finiteness_check"]
     assert check["files_read"] == 2
     assert check["problems_found"] == []
@@ -265,8 +269,10 @@ def test_the_escape_hatch_marks_the_snapshot_as_uncitable(tmp_path,
     out = tmp_path / "frozen"
     assert freezer.main(["--out-root", str(out), "--label", "broken",
                          "--allow-non-finite"]) == 0
+    written = [d for d in out.iterdir() if d.is_dir()]
+    assert len(written) == 1 and written[0].name.startswith("broken")
     check = json.loads(
-        (out / "broken" / "MANIFEST.json").read_text())["finiteness_check"]
+        (written[0] / "MANIFEST.json").read_text())["finiteness_check"]
     assert check["frozen_anyway"] is True
     assert check["problems_found"]
 
@@ -342,7 +348,7 @@ def test_a_nan_outside_the_carried_window_is_refused(control, tmp_path):
     assert "OUTSIDE the carried window" in said
     assert "STRESS[0] is nan at record 31" in said
     assert "prefix of a failed analysis" in said
-    assert said.count("- ") == 1, (
+    assert said.count("\n  - ") == 1, (
         "only the whole-history reading fires: the carried window is finite, "
         "which is the whole point")
 
