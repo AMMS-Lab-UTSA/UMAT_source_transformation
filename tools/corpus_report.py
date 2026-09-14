@@ -87,6 +87,16 @@ FROM_ABAQUS_STAGE: dict[str, str] = {
     # behaviour, so it got as far as a primal parity and no further.
     "experiment_not_informative": "primal_parity_passed",
     "informativeness_not_established": "primal_parity_passed",
+    # The author published the UMAT interface and no constitutive content.
+    # There is nothing to drive, and it never reached a manifest.
+    "published_stub_no_constitutive_content": BLOCKED,
+    # Both builds ran and their histories differ, and the recorded calls say
+    # where the difference is NOT. Both got as far as a primal comparison --
+    # which is the rung they stopped at, whichever way the comparison is
+    # eventually resolved. Filing either under BLOCKED would report a source
+    # that ran two Abaqus analyses as one that never got out of the gate.
+    "arguments_diverged_before_the_routine": "abaqus_transformed_passed",
+    "disagreement_not_in_any_recorded_call": "abaqus_transformed_passed",
 }
 
 

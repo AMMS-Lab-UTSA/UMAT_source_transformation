@@ -1190,14 +1190,26 @@ def plan(source: Path, repository: Path, name: str = "",
         kinematics=("finite"
                     if (_DFGRD.search(_executable(text)) or material.nlgeom)
                     else "small strain"),
-        props=tuple(material.values),
+        # ``usable``, not ``values``. A block whose data line still carries
+        # ``<lam>`` published some of its numbers and not others, and the ones
+        # it published have moved: ``{{youngs_modulus}}, 0.3`` reads as a
+        # one-element vector holding 0.3, which would arrive at the routine as
+        # PROPS(1) -- Poisson's ratio in Young's modulus's slot, a material
+        # nobody wrote, driven to a plausible-looking answer. An empty tuple
+        # stops the manifest at "no material constants", which is the truth.
+        props=tuple(material.values) if material.usable else (),
         nprops=material.constants,
         nstatv=max(material.depvar, 1),
         unsymmetric=material.unsymmetric,
         material_provenance=(f"{Path(material.deck).name} *MATERIAL "
                              f"{material.name}: {material.constants} "
                              f"constants, *DEPVAR {material.depvar} -- "
-                             f"{pairing.why}"),
+                             f"{pairing.why}"
+                             + (f" -- read through the deck's own *PARAMETER "
+                                f"block, which defines "
+                                f"{', '.join(material.substituted)}"
+                                if material.substituted and material.usable
+                                else "")),
         initial_state_from_user_subroutine=material.user_initial_state,
         node_coordinates=nodes,
         node_provenance=node_provenance,

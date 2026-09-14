@@ -2,10 +2,10 @@
 
 391 acquired entries, of which 341 present a UMAT interface to Abaqus.
 
-**41 fully verified.**
+**55 fully verified.**
 
-* 41 of 391 acquired entries -- 10.5% of acquired entries
-* 41 of 341 entries presenting a UMAT interface -- 12.0% of entries presenting a UMAT interface. This is NOT the same as the adequately specified genuine UMATs: it still counts files with no material constants published, files whose modules were never published beside them, and files whose UMAT body is empty. `paper_results/corpus/CORPUS_VERIFICATION.md` keeps those two denominators apart and names both.
+* 55 of 391 acquired entries -- 14.1% of acquired entries
+* 55 of 341 entries presenting a UMAT interface -- 16.1% of entries presenting a UMAT interface. This is NOT the same as the adequately specified genuine UMATs: it still counts files with no material constants published, files whose modules were never published beside them, and files whose UMAT body is empty. `paper_results/corpus/CORPUS_VERIFICATION.md` keeps those two denominators apart and names both.
 
 Only `fully_verified` counts. It means the source transformed and
 compiled, Abaqus ran the ORIGINAL, Abaqus ran the CONVERTED build
@@ -18,86 +18,23 @@ and running is not verified.
 
 | status | entries |
 | --- | --- |
-| `acquired` | 126 |
-| `metadata_resolved` | 11 |
-| `transformed` | 41 |
+| `acquired` | 131 |
+| `metadata_resolved` | 9 |
+| `transformed` | 38 |
 | `compiled` | 9 |
-| `abaqus_original_passed` | 8 |
-| `abaqus_transformed_passed` | 62 |
-| `primal_parity_passed` | 39 |
-| `fully_verified` | 41 |
+| `abaqus_original_passed` | 6 |
+| `abaqus_transformed_passed` | 64 |
+| `primal_parity_passed` | 25 |
+| `fully_verified` | 55 |
 | `not_a_umat` | 50 |
 | `blocked_with_evidence` | 4 |
-
-## Reconciliation problems
-
-- irfancn__Abaqus-UEL-elastic/uel_elastic.for is promoted into umat/ but its status is 'compiled', not fully_verified
-- Jeff97__growth-of-circular-plate/Bending/Growth-CASE1.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th01/BodyForce-Growth-2Stages.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th01/BodyForce-Growth-2Stages.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th01/BodyForce-Growth-2Stages.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th001/BodyForce-Growth-2Stages.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th005/BodyForce-Growth-2Stages.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th001/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th005/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th01/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/PureGravity.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th01/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th001/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th005/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th002/PureGrowth.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th005/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-Flat/Th005/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th01/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-Flat/Th01/PureGrowth.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th002/PureGrowth.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th001/PureGrowth.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th01/PureGrowth.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur3.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example4-Torus/Growth-MinSur3.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example3-Sphere/Growth-MinSur3.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Sphere/10/Growth-Sphere.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- Jeff97__Realization-of-planar-and-surface-conformal-mappings/Instability_Analysis/Growth-Sphere.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- mholla__growth/umats/umat_area_morph.f is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- mholla__growth/umats/umat_fiber_morph.f is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- RitioL__PolyFatigueCrackSim/CPFEM-val/subroutines_revised.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- RitioL__PolyFatigueCrackSim/workplace/subroutines3_revised.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified
-- AlexanderJFDR__Hyperelastic_phase_field/umat/NeoHookean_umat.for reached fully_verified but was not promoted into the verified collection
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th001/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th002/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th005-Visualization/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002-Visualization/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th002/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGrowth.for reached fully_verified but was not promoted into the verified collection
-- Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/PathSensitivity/Th001-1MPa/BodyForce-Growth-GravityFirst.for reached fully_verified but was not promoted into the verified collection
-- irfancn__Abaqus-UMAT-viscoelastic/umat_viscoelastic.for reached fully_verified but was not promoted into the verified collection
-- keisuke58__pde-fem-biofilm/umat_biofilm_visco_phase2.f reached fully_verified but was not promoted into the verified collection
-- mholla__BMMB24/simulations/input files/umat_transverseIsotropicStretch.f reached fully_verified but was not promoted into the verified collection
-- mholla__growth/umats/umat_area_stretch.f reached fully_verified but was not promoted into the verified collection
-- mholla__growth/umats/umat_iso_stretch.f reached fully_verified but was not promoted into the verified collection
-- mholla__growth/umats/umat_transverse.f reached fully_verified but was not promoted into the verified collection
 
 ## Every UMAT entry
 
 | source                                                     | status                     | iface |    primal |   tangent | states |
 |------------------------------------------------------------|----------------------------|-------|-----------|-----------|--------|
 | simcoon/testBin/Umats/UMABA/external/UMAT_ABAQUS_ELASTIC.f | transformed                | -     |         - |         - |      - |
-| b_materials/UMATERIALS/CAUCHY3D-DP/hyplast_Cauchy3D-DP.for | transformed                | -     |         - |         - |      - |
+| b_materials/UMATERIALS/CAUCHY3D-DP/hyplast_Cauchy3D-DP.for | acquired                   | UMAT  |         - |         - |      - |
 | derJFDR__Hyperelastic_phase_field/umat/NeoHookean_umat.for | fully_verified             | -     |  0.00e+00 |  8.13e-10 |    2/2 |
 | gyrosKarakalas__UMAT_3D/UMAT_3D_Coupled_ML_IP_Original.for | transformed                | -     |         - |         - |      - |
 | enics-constitutive/examples/umat/src/umat_linear_elastic.f | transformed                | -     |         - |         - |      - |
@@ -106,7 +43,7 @@ and running is not verified.
 | BristolCompositesInstitute__abaci/test/data/umat.f         | fully_verified             | -     |  0.00e+00 |  1.12e-14 |    4/4 |
 | istolCompositesInstitute__abaqus-modern-fortran/src/umat.f | acquired                   | UMAT  |         - |         - |      - |
 | utine-for-3D-Composite-fatigue-simulation-Fortran-Code.for | acquired                   | UMAT  |         - |         - |      - |
-| CAE_ASSISTANT_UMAT_Subroutine_ABAQUS_COMPOSITE_FATIGUE.for | transformed                | -     |         - |         - |      - |
+| CAE_ASSISTANT_UMAT_Subroutine_ABAQUS_COMPOSITE_FATIGUE.for | acquired                   | UMAT  |         - |         - |      - |
 | stant-Group__Abaqus-UEL-Subroutine/Abaqus_UEL_Subroutine.f | acquired                   | UMAT  |         - |         - |      - |
 | mposite-curing/Path_Dependent-Abaqus-Curing-Subroutine.for | blocked_with_evidence      | -     |         - |         - |      - |
 | c-Elasticity-Isothermal-Suboutine/ISOTROPIC-ELASTICITY.for | fully_verified             | -     |  0.00e+00 |  1.07e-14 |    4/4 |
@@ -120,7 +57,7 @@ and running is not verified.
 | aei__Implant-Fibrotic-Capsule/CellMatrixModel_20241204.for | acquired                   | UMAT  |         - |         - |      - |
 | uaTT__STEEL-3dPointClouds/AutoGen/ALLcombinedSolid_CMN.for | acquired                   | UMAT  |         - |         - |      - |
 | uaTT__STEEL-3dPointClouds/AutoGen/ALLcombinedSolid_DMN.for | acquired                   | UMAT  |         - |         - |      - |
-| echanics__Paraqus/examples/example_abaqus_extrusion_umat.f | transformed                | -     |         - |         - |      - |
+| echanics__Paraqus/examples/example_abaqus_extrusion_umat.f | acquired                   | UMAT  |         - |         - |      - |
 | _Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f | acquired                   | UMAT  |         - |         - |      - |
 | _Gradient_Enhanced_Damage_UMAT/src/UMAT_DamThermMech_1_H.f | acquired                   | UMAT  |         - |         - |      - |
 | control-of-shell/Abaqus_Files/2Dto2D/From-2D-to-2D-Axe.for | abaqus_transformed_passed  | -     |  1.92e-04 |         - |      - |
@@ -135,16 +72,16 @@ and running is not verified.
 | e-control-of-shell/Abaqus_Files/Beetle_Taxi/Growth-Car.for | abaqus_original_passed     | -     |         - |         - |      - |
 | -control-of-shell/Abaqus_Files/FaceChange/Growth-Robot.for | abaqus_transformed_passed  | -     |  1.95e+00 |         - |      - |
 | es-In-Section-3/ArcDown/Th001/BodyForce-Growth-2Stages.for | fully_verified             | -     |  0.00e+00 |  2.31e-07 |    2/2 |
-| Forces/Examples-In-Section-3/ArcDown/Th001/PureGravity.for | primal_parity_passed       | -     |  3.13e-08 |  4.19e-08 |    4/4 |
+| Forces/Examples-In-Section-3/ArcDown/Th001/PureGravity.for | fully_verified             | -     |  3.13e-08 |  4.19e-08 |    4/4 |
 | -Forces/Examples-In-Section-3/ArcDown/Th001/PureGrowth.for | fully_verified             | -     |  2.06e-12 |  2.31e-07 |    2/2 |
 | es-In-Section-3/ArcDown/Th002/BodyForce-Growth-2Stages.for | fully_verified             | -     |  0.00e+00 |  5.65e-08 |    2/2 |
-| Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for | primal_parity_passed       | -     |  2.77e-09 |  5.08e-09 |    4/4 |
+| Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for | fully_verified             | -     |  2.77e-09 |  5.08e-09 |    4/4 |
 | -Forces/Examples-In-Section-3/ArcDown/Th002/PureGrowth.for | fully_verified             | -     |  0.00e+00 |  5.65e-08 |    2/2 |
 | 3/ArcDown/Th005-Visualization/BodyForce-Growth-2Stages.for | fully_verified             | -     |  2.33e-05 |  3.66e-09 |    2/2 |
 | es-In-Section-3/ArcDown/Th005/BodyForce-Growth-2Stages.for | primal_parity_passed       | -     |  1.71e-12 |  1.11e-06 |    1/2 |
 | -Forces/Examples-In-Section-3/ArcDown/Th005/PureGrowth.for | primal_parity_passed       | -     |  1.71e-12 |  1.11e-06 |    1/2 |
 | les-In-Section-3/ArcDown/Th01/BodyForce-Growth-2Stages.for | primal_parity_passed       | -     |  0.00e+00 |  1.77e-05 |    1/2 |
-| -Forces/Examples-In-Section-3/ArcDown/Th01/PureGravity.for | primal_parity_passed       | -     |  5.45e-06 |  4.38e-09 |    4/4 |
+| -Forces/Examples-In-Section-3/ArcDown/Th01/PureGravity.for | fully_verified             | -     |  5.45e-06 |  4.38e-09 |    4/4 |
 | y-Forces/Examples-In-Section-3/ArcDown/Th01/PureGrowth.for | primal_parity_passed       | -     |  0.00e+00 |  1.77e-05 |    1/2 |
 | ples-In-Section-3/ArcUp/Th001/BodyForce-Growth-2Stages.for | fully_verified             | -     |  0.00e+00 |  1.03e-07 |    2/2 |
 | dy-Forces/Examples-In-Section-3/ArcUp/Th001/PureGrowth.for | fully_verified             | -     |  7.75e-12 |  1.03e-07 |    2/2 |
@@ -154,19 +91,19 @@ and running is not verified.
 | ples-In-Section-3/ArcUp/Th005/BodyForce-Growth-2Stages.for | primal_parity_passed       | -     |  0.00e+00 |  1.88e-05 |    1/2 |
 | dy-Forces/Examples-In-Section-3/ArcUp/Th005/PureGrowth.for | primal_parity_passed       | -     |  0.00e+00 |  1.88e-05 |    1/2 |
 | mples-In-Section-3/ArcUp/Th01/BodyForce-Growth-2Stages.for | fully_verified             | -     |  3.69e-11 |  6.59e-07 |    2/2 |
-| dy-Forces/Examples-In-Section-3/ArcUp/Th01/PureGravity.for | primal_parity_passed       | -     |  5.45e-06 |  4.38e-09 |    4/4 |
+| dy-Forces/Examples-In-Section-3/ArcUp/Th01/PureGravity.for | fully_verified             | -     |  5.45e-06 |  4.38e-09 |    4/4 |
 | ody-Forces/Examples-In-Section-3/ArcUp/Th01/PureGrowth.for | fully_verified             | -     |  3.69e-11 |  6.59e-07 |    2/2 |
 | mples-In-Section-3/Flat/Th001/BodyForce-Growth-2Stages.for | primal_parity_passed       | -     |  0.00e+00 |  2.68e-11 |    2/2 |
-| ody-Forces/Examples-In-Section-3/Flat/Th001/PureGrowth.for | primal_parity_passed       | -     |  0.00e+00 |  2.68e-11 |    4/4 |
+| ody-Forces/Examples-In-Section-3/Flat/Th001/PureGrowth.for | fully_verified             | -     |  0.00e+00 |  1.59e-10 |    2/2 |
 | on-3/Flat/Th002-Visualization/BodyForce-Growth-2Stages.for | fully_verified             | -     |  0.00e+00 |  3.64e-09 |    2/2 |
 | mples-In-Section-3/Flat/Th002/BodyForce-Growth-2Stages.for | fully_verified             | -     |  0.00e+00 |  2.68e-11 |    2/2 |
-| ody-Forces/Examples-In-Section-3/Flat/Th002/PureGrowth.for | primal_parity_passed       | -     |  0.00e+00 |  2.68e-11 |    4/4 |
+| ody-Forces/Examples-In-Section-3/Flat/Th002/PureGrowth.for | fully_verified             | -     |  0.00e+00 |  1.59e-10 |    2/2 |
 | on-3/Flat/Th005-Visualization/BodyForce-Growth-2Stages.for | fully_verified             | -     |  0.00e+00 |  3.66e-09 |    2/2 |
 | mples-In-Section-3/Flat/Th005/BodyForce-Growth-2Stages.for | fully_verified             | -     |  0.00e+00 |  2.68e-11 |    2/2 |
-| dy-Forces/Examples-In-Section-3/Flat/Th005/PureGravity.for | primal_parity_passed       | -     |  3.19e-05 |  4.58e-09 |    4/4 |
-| ody-Forces/Examples-In-Section-3/Flat/Th005/PureGrowth.for | primal_parity_passed       | -     |  0.00e+00 |  2.68e-11 |    4/4 |
+| dy-Forces/Examples-In-Section-3/Flat/Th005/PureGravity.for | fully_verified             | -     |  3.19e-05 |  4.58e-09 |    4/4 |
+| ody-Forces/Examples-In-Section-3/Flat/Th005/PureGrowth.for | fully_verified             | -     |  0.00e+00 |  1.59e-10 |    2/2 |
 | amples-In-Section-3/Flat/Th01/BodyForce-Growth-2Stages.for | primal_parity_passed       | -     |  5.47e-12 |  2.68e-11 |    4/4 |
-| Body-Forces/Examples-In-Section-3/Flat/Th01/PureGrowth.for | primal_parity_passed       | -     |  0.00e+00 |  2.68e-11 |    4/4 |
+| Body-Forces/Examples-In-Section-3/Flat/Th01/PureGrowth.for | fully_verified             | -     |  0.00e+00 |  1.59e-10 |    2/2 |
 | es-In-Section-3/HelixUp/Th001/BodyForce-Growth-2Stages.for | fully_verified             | -     |  2.10e-09 |  5.68e-11 |    2/2 |
 | Forces/Examples-In-Section-3/HelixUp/Th001/PureGravity.for | abaqus_transformed_passed  | -     |  1.66e-10 |         - |      - |
 | es-In-Section-3/HelixUp/Th002/BodyForce-Growth-2Stages.for | fully_verified             | -     |  6.76e-11 |  5.38e-11 |    2/2 |
@@ -178,21 +115,21 @@ and running is not verified.
 | les-In-Section-3/HelixUp/Th01/BodyForce-Growth-2Stages.for | primal_parity_passed       | -     |  0.00e+00 |  5.96e-08 |    2/2 |
 | -Forces/Examples-In-Section-3/HelixUp/Th01/PureGravity.for | primal_parity_passed       | -     |  0.00e+00 |  3.64e-07 |    2/2 |
 | Section-3/ParabolicDown/Th001/BodyForce-Growth-2Stages.for | fully_verified             | -     |  0.00e+00 |  3.92e-11 |    2/2 |
-| /Examples-In-Section-3/ParabolicDown/Th001/PureGravity.for | primal_parity_passed       | -     |  3.13e-08 |  4.19e-08 |    4/4 |
+| /Examples-In-Section-3/ParabolicDown/Th001/PureGravity.for | fully_verified             | -     |  3.13e-08 |  4.19e-08 |    4/4 |
 | Section-3/ParabolicDown/Th002/BodyForce-Growth-2Stages.for | fully_verified             | -     |  0.00e+00 |  4.05e-11 |    2/2 |
 | s/Examples-In-Section-3/ParabolicDown/Th002/PureGrowth.for | abaqus_transformed_passed  | -     |  4.89e-10 |         - |      - |
 | Section-3/ParabolicDown/Th005/BodyForce-Growth-2Stages.for | fully_verified             | -     |  0.00e+00 |  8.26e-11 |    2/2 |
-| /Examples-In-Section-3/ParabolicDown/Th005/PureGravity.for | primal_parity_passed       | -     |  3.19e-05 |  4.58e-09 |    4/4 |
+| /Examples-In-Section-3/ParabolicDown/Th005/PureGravity.for | fully_verified             | -     |  3.19e-05 |  4.58e-09 |    4/4 |
 | es/Examples-In-Section-3/ParabolicDown/Th01/PureGrowth.for | abaqus_transformed_passed  | -     |  4.18e-10 |         - |      - |
 | ces/Examples-In-Section-3/ParabolicUp/Th001/PureGrowth.for | abaqus_transformed_passed  | -     |  2.28e-09 |         - |      - |
 | ces/Examples-In-Section-3/ParabolicUp/Th002/PureGrowth.for | abaqus_transformed_passed  | -     |  1.13e-09 |         - |      - |
 | In-Section-3/ParabolicUp/Th01/BodyForce-Growth-2Stages.for | fully_verified             | -     |  0.00e+00 |  5.68e-08 |    2/2 |
-| ion-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGravity.for | primal_parity_passed       | -     |  1.42e-08 |  1.83e-08 |    4/4 |
+| ion-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGravity.for | fully_verified             | -     |  1.42e-08 |  1.83e-08 |    4/4 |
 | tion-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGrowth.for | fully_verified             | -     |  0.00e+00 |  7.50e-07 |    2/2 |
 | ection-4/Experiment-DRAGONSKIN20-Flat/Th005/PureGrowth.for | primal_parity_passed       | -     |  0.00e+00 |  3.00e-07 |    2/2 |
 | Section-4/Experiment-DRAGONSKIN20-Flat/Th01/PureGrowth.for | abaqus_transformed_passed  | -     |  2.21e-10 |         - |      - |
-| ion-4/Experiment-ECOFLEX0030-ArcDown/Th005/PureGravity.for | primal_parity_passed       | -     |  2.75e-06 |  2.15e-09 |    4/4 |
-| tion-4/Experiment-ECOFLEX0030-ArcDown/Th01/PureGravity.for | primal_parity_passed       | -     |  1.26e-08 |  1.94e-08 |    4/4 |
+| ion-4/Experiment-ECOFLEX0030-ArcDown/Th005/PureGravity.for | fully_verified             | -     |  2.75e-06 |  2.15e-09 |    4/4 |
+| tion-4/Experiment-ECOFLEX0030-ArcDown/Th01/PureGravity.for | fully_verified             | -     |  1.26e-08 |  1.94e-08 |    4/4 |
 | riment-ECOFLEX0030-Flat/Th005/BodyForce-Growth-2Stages.for | primal_parity_passed       | -     |  0.00e+00 |  1.19e-07 |    2/2 |
 | Section-4/Experiment-ECOFLEX0030-Flat/Th005/PureGrowth.for | primal_parity_passed       | -     |  0.00e+00 |  1.19e-07 |    2/2 |
 | eriment-ECOFLEX0030-Flat/Th01/BodyForce-Growth-2Stages.for | primal_parity_passed       | -     |  1.24e-11 |  3.32e-11 |    2/2 |
@@ -305,7 +242,7 @@ and running is not verified.
 | ahartloper__UVC_MatMod/Abaqus/UVCuniaxial.for              | acquired                   | UMAT  |         - |         - |      - |
 | ahartloper__UVC_MatMod/Abaqus/UVCuniaxial_IS.for           | acquired                   | UMAT  |         - |         - |      - |
 | artorg-unibe-ch__HFE/02_CODE/abq/UMAT_BIPHASIC.f           | transformed                | -     |         - |         - |      - |
-| ic/HETVAL_nonLocalLemaitre/HETVAL_lemaitreDamageNonLocal.f | abaqus_transformed_passed  | -     |  0.00e+00 |         - |      - |
+| ic/HETVAL_nonLocalLemaitre/HETVAL_lemaitreDamageNonLocal.f | abaqus_transformed_passed  | -     |  1.67e+00 |         - |      - |
 | mage-UMAT-Public/nonLocalLemaitre/lemaitreDamageNonLocal.f | fully_verified             | -     |  0.00e+00 |  8.72e-16 |    2/2 |
 | am/abaqusUMATs/abaqusUmatMohrCoulomb/MohrCoulombAbaqus.for | acquired                   | UMAT  |         - |         - |      - |
 | bennifuchs__TsaiWu-Fortran/abaqus-umat-interface.f90       | acquired                   | UMAT  |         - |         - |      - |
@@ -346,8 +283,8 @@ and running is not verified.
 | ls/official_examples/umat/umat_mises_plasticity_official.f | compiled                   | -     |         - |         - |      - |
 | urry__pipelining/elmerfem/fem/src/modules/ElasticSolve.F90 | acquired                   | UMAT  |         - |         - |      - |
 | jpsferreira__UMAT-ABAQUS/src/_umat.for                     | acquired                   | UMAT  |         - |         - |      - |
-| jpsferreira__UMAT-ABAQUS/test_in_abaqus/umat_general.for   | metadata_resolved          | -     |         - |         - |      - |
-| jpsferreira__UMAT-ABAQUS/umat_general.for                  | metadata_resolved          | -     |         - |         - |      - |
+| jpsferreira__UMAT-ABAQUS/test_in_abaqus/umat_general.for   | acquired                   | UMAT  |         - |         - |      - |
+| jpsferreira__UMAT-ABAQUS/umat_general.for                  | acquired                   | UMAT  |         - |         - |      - |
 | keisuke58__pde-fem-biofilm/umat_biofilm_visco.f            | acquired                   | UMAT  |         - |         - |      - |
 | keisuke58__pde-fem-biofilm/umat_biofilm_visco_2ch.f        | transformed                | -     |         - |         - |      - |
 | keisuke58__pde-fem-biofilm/umat_biofilm_visco_phase2.f     | fully_verified             | -     |  0.00e+00 |  4.15e-11 |    2/2 |
@@ -418,15 +355,15 @@ and running is not verified.
 | aqus_ufl/examples/small_strain_j2_umat/small_strain_j2.for | acquired                   | UMAT  |         - |         - |      - |
 | all_strain_viscoelastic_umat/small_strain_viscoelastic.for | acquired                   | UMAT  |         - |         - |      - |
 | jason__umat_finite_viscoelasticity/UMAT/VISC_OGDEN_1EL.for | transformed                | -     |         - |         - |      - |
-| jason__umat_finite_viscoelasticity/UMAT/VISC_OGDEN_2EL.for | abaqus_original_passed     | -     |         - |         - |      - |
-| jason__umat_finite_viscoelasticity/UMAT/VISC_OGDEN_3EL.for | abaqus_original_passed     | -     |         - |         - |      - |
+| jason__umat_finite_viscoelasticity/UMAT/VISC_OGDEN_2EL.for | abaqus_transformed_passed  | -     |       inf |         - |      - |
+| jason__umat_finite_viscoelasticity/UMAT/VISC_OGDEN_3EL.for | abaqus_transformed_passed  | -     |       inf |         - |      - |
 | _finite_viscoelasticity/report/chapters/VISC_OGDEN_2EL.for | blocked_with_evidence      | -     |         - |         - |      - |
 | _viscoelasticity/simulation_input_files/VISC_OGDEN_1EL.for | transformed                | -     |         - |         - |      - |
 | _viscoelasticity/simulation_input_files/VISC_OGDEN_2EL.for | blocked_with_evidence      | -     |         - |         - |      - |
 | _viscoelasticity/simulation_input_files/VISC_OGDEN_3EL.for | blocked_with_evidence      | -     |         - |         - |      - |
 | thelfer__tfel/mtest/tests/mtest/castem/umat.f              | acquired                   | UMAT  |         - |         - |      - |
-| theysy__mml_subroutine_public/MML_U2/MML_U2.for            | abaqus_transformed_passed  | -     |  1.61e+00 |         - |      - |
-| theysy__mml_subroutine_public/MML_U3/MML_U3.FOR            | abaqus_transformed_passed  | -     |  1.68e+00 |         - |      - |
+| theysy__mml_subroutine_public/MML_U2/MML_U2.for            | abaqus_transformed_passed  | -     |  1.00e+00 |         - |      - |
+| theysy__mml_subroutine_public/MML_U3/MML_U3.FOR            | abaqus_transformed_passed  | -     |  1.00e+00 |         - |      - |
 | tmfrln__paraqus/examples/example_abaqus_extrusion_umat.f   | acquired                   | UMAT  |         - |         - |      - |
 | rge/archives/fortran_fixed_form/yu_kinematic_3d_abaqus.for | acquired                   | UMAT  |         - |         - |      - |
 | orge/archives/fortran_fixed_form/yu_kinematic_3d_fixed.for | acquired                   | UMAT  |         - |         - |      - |

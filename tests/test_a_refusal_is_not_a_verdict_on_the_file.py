@@ -109,13 +109,13 @@ def test_the_same_refusal_text_classifies_two_files_differently():
 
 
 def test_a_refused_umat_that_builds_stays_this_project_s_problem():
-    """100 of the 151 are whole UMATs whose published text ifort accepts,
+    """102 of the 154 are whole UMATs whose published text ifort accepts,
     whose companions are all in the repository, and which do compute a stress
     or a tangent somewhere in the file. They stay ``transform_refused`` and
     ``internal``: there is nothing wrong with those files, and the work is
     ours."""
     ours = [r for r in refusals() if r["refusal_class"] == GENUINE_UMAT]
-    assert len(ours) == 100, len(ours)
+    assert len(ours) == 102, len(ours)
     for record in ours:
         assert record["terminal_state"] == "transform_refused"
         assert record["kind"] == "internal"
@@ -124,29 +124,29 @@ def test_a_refused_umat_that_builds_stays_this_project_s_problem():
 
 
 def test_the_refusal_classes_partition_the_141_refusals():
-    """151 refusals, seven classes, every record in exactly one, and the class
+    """154 refusals, seven classes, every record in exactly one, and the class
     names are the ones the module defines rather than free text."""
     rows = refusals()
-    assert len(rows) == 151, len(rows)
+    assert len(rows) == 154, len(rows)
     counts = {}
     for record in rows:
         assert record["refusal_class"] in REFUSAL_CLASSES, record
         counts[record["refusal_class"]] = counts.get(
             record["refusal_class"], 0) + 1
     assert counts == {
-        GENUINE_UMAT: 100,
+        GENUINE_UMAT: 102,
         MISSING_EXTERNAL_DEPENDENCY: 16,
-        HELPER_OR_MODULE_ONLY: 14,
+        HELPER_OR_MODULE_ONLY: 15,
         INCOMPLETE_OR_CORRUPT: 11,
         DUPLICATE_SOURCE: 6,
         OTHER_ABAQUS_ROUTINE: 2,
         PUBLISHED_STUB: 2,
     }, counts
-    assert sum(counts.values()) == 151
+    assert sum(counts.values()) == 154
 
 
 def test_every_refused_source_quotes_the_line_it_was_classified_from():
-    """A classification nobody can check is an assertion. All 151 carry the
+    """A classification nobody can check is an assertion. All 154 carry the
     line of the author's own file that decided it, and that line really is in
     that file at the line number recorded beside it."""
     for record in refusals():
@@ -245,7 +245,7 @@ def test_a_file_too_damaged_to_parse_is_not_filed_as_a_helper():
 
 
 def test_a_compile_that_settles_nothing_leaves_the_work_ours():
-    """Nine refused sources fail the offline compile with diagnostics an
+    """Eleven refused sources fail the offline compile with diagnostics an
     unresolved USE would also produce -- an undeclared name, a kind parameter
     that is not constant. None of those is evidence the file is broken, so
     the verdict stays genuine_umat with ``refusal_class_confident`` false:
@@ -253,7 +253,7 @@ def test_a_compile_that_settles_nothing_leaves_the_work_ours():
     completeness."""
     unsure = [r for r in refusals()
               if r["refusal_class_confident"] is False]
-    assert len(unsure) == 9, [r["source_id"] for r in unsure]
+    assert len(unsure) == 11, [r["source_id"] for r in unsure]
     for record in unsure:
         # One of the nine is a second copy of another of them. A duplicate
         # keeps the underlying answer -- "as a file it is genuine_umat" is

@@ -1,20 +1,268 @@
 {
+  "finite_verification_run": {
+    "complete_finite_verification_run": true,
+    "coverage_given_up": null,
+    "discovery_usable_prefix": null,
+    "evidence": {
+      "abaqus_job_completed": true,
+      "all_requested_outputs_present": true,
+      "complete_history_finite": true,
+      "derivatives_verified": true,
+      "mechanically_informative": true,
+      "primal_agreed": false
+    },
+    "failure_mechanism": null,
+    "history_grouping": {
+      "both_finite_throughout": true,
+      "original": {
+        "complete": true,
+        "complete_increments": 60,
+        "first_incomplete_increment": null,
+        "first_non_finite_material_point": null,
+        "material_points_per_increment": 8,
+        "raw_output_records": 480,
+        "total_increments": 60
+      },
+      "transformed": {
+        "complete": true,
+        "complete_increments": 60,
+        "first_incomplete_increment": null,
+        "first_non_finite_material_point": null,
+        "material_points_per_increment": 8,
+        "raw_output_records": 480,
+        "total_increments": 60
+      }
+    },
+    "mechanically_informative": {
+      "informative": true,
+      "reason": "the source normalises its clock by TOTALT = 1 (TotalT=1.0); this experiment runs to a total time of 3, which is 300.0% of it (above the 25% search heuristic -- what that fraction MEANS depends on whether TOTALT is a growth normalisation, a relaxation time or a numerical parameter, which this cannot read off a name); the material is active over the run that was verified (state_change, departure_from_linearity); the response sits within the scales this problem supplies: peak stress 6.173e+06 against a largest material constant of 1e+06, a ratio of 6.173; the response sits within the scales this problem supplies: peak stress 6.173e+06 against a largest material constant of 1e+06, a ratio of 6.173; the growth quantities this source computes from the clock developed: STATEV(8) moved 38.774%"
+    },
+    "safe_loading_reconstructed": null,
+    "segment_repair": null,
+    "time_scale_coverage": {
+      "enough": true,
+      "fraction": 3.0,
+      "reaches_heuristic": true,
+      "reason": "the source normalises its clock by TOTALT = 1 (TotalT=1.0); this experiment runs to a total time of 3, which is 300.0% of it (above the 25% search heuristic -- what that fraction MEANS depends on whether TOTALT is a growth normalisation, a relaxation time or a numerical parameter, which this cannot read off a name)",
+      "scale": {
+        "declared": true,
+        "evidence": "TotalT=1.0",
+        "name": "TOTALT",
+        "value": 1.0
+      },
+      "total_time": 3.0
+    }
+  },
+  "frozen_manifest": {
+    "bundle": [],
+    "compiler_flags": [],
+    "element_label": 1,
+    "element_type": "C3D8H",
+    "fd_steps": [
+      0.1,
+      0.01,
+      0.001,
+      0.0001,
+      1e-05,
+      1e-06,
+      1e-07,
+      1e-08
+    ],
+    "initial_state_from_user_subroutine": false,
+    "initial_statev": [],
+    "initial_statev_provenance": "",
+    "isothermal_temperature": null,
+    "kinematics": "finite",
+    "loading": [
+      {
+        "body_force": [],
+        "clamped_face": [],
+        "description": "no strain is prescribed and no load is applied; the step runs for 1 of analysis time so that whatever this law does with the clock is what the element does (this routine switches its own law at total times 1, 2, 3, so it is written for 3 steps of periods 1, 1, 1. An experiment that stops inside the first of them nev)",
+        "held": [],
+        "increments": 20,
+        "name": "stage1",
+        "period": 1.0,
+        "rotation": [],
+        "rotation_lead_in": false,
+        "separation": [],
+        "strain": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time_only": true
+      },
+      {
+        "body_force": [],
+        "clamped_face": [],
+        "description": "no strain is prescribed and no load is applied; the step runs for 1 of analysis time so that whatever this law does with the clock is what the element does (this routine switches its own law at total times 1, 2, 3, so it is written for 3 steps of periods 1, 1, 1. An experiment that stops inside the first of them nev)",
+        "held": [],
+        "increments": 20,
+        "name": "stage2",
+        "period": 1.0,
+        "rotation": [],
+        "rotation_lead_in": false,
+        "separation": [],
+        "strain": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time_only": true
+      },
+      {
+        "body_force": [],
+        "clamped_face": [],
+        "description": "no strain is prescribed and no load is applied; the step runs for 1 of analysis time so that whatever this law does with the clock is what the element does (this routine switches its own law at total times 1, 2, 3, so it is written for 3 steps of periods 1, 1, 1. An experiment that stops inside the first of them nev)",
+        "held": [],
+        "increments": 20,
+        "name": "stage3",
+        "period": 1.0,
+        "rotation": [],
+        "rotation_lead_in": false,
+        "separation": [],
+        "strain": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time_only": true
+      }
+    ],
+    "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/Beam-Gravity-Growth-C0-1MPa.inp: Beam-Gravity-Growth-C0-1MPa.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-Gravity-Growth-C0-1MPa.inp attaches neoHookean to C3D20H; the two names share growth; the routine branches on 3 total-time boundaries and this deck runs 2 steps; the deck sits in the source's own directory; the constants this routine hard-codes account for this mesh: axis 1 spans 1 = DETF; axis 2 spans 0.01 = 2*H",
+    "name": "neoHookean",
+    "ndi": 3,
+    "near_zero_fraction": 1e-08,
+    "node_coordinates": [
+      [
+        16,
+        0.0,
+        0.00499999989,
+        0.0
+      ],
+      [
+        2529,
+        0.00179856119,
+        0.00499999989,
+        0.0
+      ],
+      [
+        6137,
+        0.00179856119,
+        0.00666666683,
+        0.0
+      ],
+      [
+        2807,
+        0.0,
+        0.00666666683,
+        0.0
+      ],
+      [
+        13,
+        0.0,
+        0.00499999989,
+        0.00100000005
+      ],
+      [
+        1697,
+        0.00179856119,
+        0.00499999989,
+        0.00100000005
+      ],
+      [
+        5583,
+        0.00179856119,
+        0.00666666683,
+        0.00100000005
+      ],
+      [
+        2252,
+        0.0,
+        0.00666666683,
+        0.00100000005
+      ]
+    ],
+    "node_provenance": "element 1669 (C3D20H) of Beam-Gravity-Growth-C0-1MPa.inp, reduced to its corner nodes: this routine caches its point's position (READX=COORDS(1), READY=COORDS(2), READZ=COORDS(3), STATEV(1)=COORDS(1), STATEV(2)=COORDS(2), STATEV(3)=COORDS(3), X=COORDS(1), Y=COORDS(2), Z=COORDS(3)) and builds no divisor out of it that this module can evaluate, so one element of the author's own mesh is used and its coordinates are the author's; not evaluated: (40.*H*L*(1+16*PI**2*X**4)**1.5)",
+    "notes": "loading is a declared probe chosen by this harness, not read from any deck and not this source's own loading history. Material constants, nstatv, unsymmetry and kinematics ARE read from the paired deck.",
+    "nprops": 1,
+    "nshr": 3,
+    "nstatv": 9,
+    "ntens": 6,
+    "orientation": null,
+    "orientation_axes": null,
+    "orientation_provenance": "",
+    "orientation_rotation": null,
+    "outputs": [
+      "S",
+      "SDV"
+    ],
+    "perturbation_components": [],
+    "plane_strain_directions": [
+      3
+    ],
+    "primal_tolerance": 1e-10,
+    "props": [
+      1000000.0
+    ],
+    "source": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/BodyForce-Growth-2Stages.for",
+    "source_form": "fixed",
+    "status": "ready",
+    "temperature_provenance": "this deck states no *INITIAL CONDITIONS, TYPE=TEMPERATURE, so there is no temperature of the author's to hold a single element at",
+    "unsymmetric": false
+  },
+  "frozen_states": [
+    {
+      "increment": 4,
+      "record_index": 3
+    },
+    {
+      "increment": 2,
+      "record_index": 241
+    }
+  ],
+  "frozen_tolerances": {
+    "fd_steps": [
+      0.1,
+      0.01,
+      0.001,
+      0.0001,
+      1e-05,
+      1e-06,
+      1e-07,
+      1e-08
+    ],
+    "primal": 1e-10,
+    "tangent": "1e-6 relative at the best step, corroborated by at least two step sizes spanning a decade -- one step cannot separate truncation error from cancellation"
+  },
   "loading": {
+    "chosen_amplitude": null,
     "kind": "verification probe, chosen by this pipeline",
-    "not_the_authors_history": "This is a controlled probe -- prescribed extension, then shear, then a reversal -- and NOT a reproduction of the author's own example. A result here says the conversion agrees with the original under this probe."
+    "not_the_authors_history": "This is a controlled probe -- an amplitude searched for on the ORIGINAL until the material did something, then shear, then a reversal, and a hold where the material turned out to care about time. NOT a reproduction of the author's own example. A result here says the conversion agrees with the original under this probe.",
+    "search": null,
+    "time_dependence": null
   },
   "material": {
     "block": "neoHookean",
-    "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/Beam-Gravity-C0-100MPa.inp",
-    "deck_digest": "dfaee26b8a70df4a",
+    "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/Beam-Gravity-Growth-C0-1MPa.inp",
+    "deck_digest": "8064393431293442",
     "meaning": "not established: the deck gives values, not names. The constants are the author's; what they mean is not certified here.",
     "props_count": 1,
-    "provenance": "Beam-Gravity-C0-100MPa.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 (paired deck Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/Beam-Gravity-C0-100MPa.inp)"
+    "provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/Beam-Gravity-Growth-C0-1MPa.inp: Beam-Gravity-Growth-C0-1MPa.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-Gravity-Growth-C0-1MPa.inp attaches neoHookean to C3D20H; the two names share growth; the routine branches on 3 total-time boundaries and this deck runs 2 steps; the deck sits in the source's own directory; the constants this routine hard-codes account for this mesh: axis 1 spans 1 = DETF; axis 2 spans 0.01 = 2*H"
   },
   "material_point": {
-    "element_type": "C3D4",
+    "element_type": "C3D8H",
     "kinematics": "finite",
-    "kinematics_provenance": "Beam-Gravity-C0-100MPa.inp line 32896: *Step, name=Growth, nlgeom=YES, inc=200",
+    "kinematics_provenance": "Beam-Gravity-Growth-C0-1MPa.inp line 32898: *Step, name=Growth, nlgeom=YES, inc=50",
     "nstatv": 9,
     "ntens": 6,
     "unsymmetric": false
@@ -23,5 +271,5 @@
   "schema": "umat-oti/verification-contract/1.0",
   "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/BodyForce-Growth-2Stages.for",
   "source_sha256": "2bddf53d578f85b344f7d9c3daaefa4496d972a194fe14a364ac05a364f57866",
-  "transform_fingerprint": "e4257779bd847cc4"
+  "transform_fingerprint": "b0d27ee53c630500"
 }

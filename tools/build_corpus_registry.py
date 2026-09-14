@@ -122,16 +122,134 @@ def refuse_machine_paths(text: str, what: str) -> str:
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "tools"))
 
-from umat_oti.abaqus.terminal_states import (EXTERNAL, FULLY_VERIFIED,  # noqa: E402
-                                             INTERNAL, WAITS_FOR_INPUT,
-                                             from_stage, from_transform_failure,
-                                             kind_of)
+from umat_oti.abaqus.terminal_states import (EXTERNAL, FROM_STAGE,  # noqa: E402
+                                             FULLY_VERIFIED, INTERNAL,
+                                             WAITS_FOR_INPUT, Verdict,
+                                             from_transform_failure)
+from umat_oti.abaqus.terminal_states import kind_of as _shared_kind_of  # noqa: E402
+
+
+class UntranslatableStage(ValueError):
+    """A rung the registry has no corpus verdict for.
+
+    This is an exception and not a default ON PURPOSE. ``from_stage`` answers
+    ``not_attempted`` for a name it does not know, which is INTERNAL and reads
+    "no batch ever reached this source" -- and three pass11 entries settled at
+    ``arguments_diverged_before_the_routine``, a rung the verification tool
+    added and the shared table had not been told about. Translated by the
+    default they became three sources nobody had tried, filed under this
+    project's own column, with the evidence that the difference was in the
+    author's own deck sitting unread in the record.
+
+    A registry cannot notice that. The whole point of it is to be the thing
+    that notices, so an unknown rung stops the build.
+    """
+
+
+#: Rungs the verification tool emits that ``umat_oti.abaqus.terminal_states``
+#: does not yet carry, with the owner each one belongs to. This table is a
+#: STOPGAP and says so: the shared module is where these belong, and the
+#: consistency check below makes the day they arrive there a no-op rather than
+#: a contradiction.
+#:
+#: ``arguments_diverged_before_the_routine`` is EXTERNAL. The two builds were
+#: handed arguments that had already parted before the call whose outputs
+#: differ, so what the routine returned there is not attributable to the
+#: routine, and calling it "the converted build computes a different stress"
+#: is a claim the recorded calls do not carry.
+#:
+#: ``disagreement_not_in_any_recorded_call`` is INTERNAL, and about THIS
+#: HARNESS. Every paired call returned bit-identical outputs and the history
+#: comparison reported a difference anyway. Whatever that is, it is a defect in
+#: how this pipeline compares two histories, and filing it as anything else
+#: would be charging somebody else for our own measurement.
+LOCAL_STATES: dict[str, str] = {
+    "arguments_diverged_before_the_routine": "external",
+    "disagreement_not_in_any_recorded_call": "internal",
+}
+
+#: Rungs that translate to themselves, kept beside the shared table so the
+#: registry's published vocabulary is the union and nothing is invented at the
+#: point of use.
+_LOCAL_FROM_STAGE = {state: state for state in LOCAL_STATES}
+
+
+def kind_of(state: str) -> str:
+    """Who has to move next, over the shared vocabulary AND the local one.
+
+    The shared module answers "internal" for any state it has not heard of,
+    which is the safe direction and the wrong answer for
+    ``arguments_diverged_before_the_routine``: it would report somebody else's
+    deck as this project's unfinished work.
+    """
+    if state in LOCAL_STATES:
+        return LOCAL_STATES[state]
+    return _shared_kind_of(state)
+
+
+def translate_stage(stage: str, reason: str = "") -> Verdict:
+    """The corpus verdict for a batch rung, or a refusal to guess at one."""
+    name = str(stage or "")
+    if name in FROM_STAGE:
+        state = FROM_STAGE[name]
+        if name in LOCAL_STATES and _shared_kind_of(state) != LOCAL_STATES[name]:
+            raise UntranslatableStage(
+                f"{name!r} is {LOCAL_STATES[name]} here and "
+                f"{_shared_kind_of(state)} in "
+                f"umat_oti.abaqus.terminal_states. Two answers to 'whose move "
+                f"is it?' is worse than none; delete the entry in "
+                f"LOCAL_STATES once the shared table carries it, or fix "
+                f"whichever of the two is wrong.")
+        return Verdict(state=state, kind=kind_of(state), reason=reason)
+    if name in _LOCAL_FROM_STAGE:
+        state = _LOCAL_FROM_STAGE[name]
+        return Verdict(state=state, kind=kind_of(state), reason=reason)
+    raise UntranslatableStage(
+        f"the verification batch settled an entry at {name!r} and this "
+        f"registry has no corpus verdict for it. Add it to "
+        f"umat_oti.abaqus.terminal_states.FROM_STAGE with the kind it belongs "
+        f"to -- external if the answer lies in what somebody published, "
+        f"internal if it lies in this repository -- or to LOCAL_STATES in "
+        f"{Path(__file__).name} until it can go there. It must NOT be left to "
+        f"default: the default is 'not_attempted', which reads as 'no batch "
+        f"reached this source' and is internal.")
+
+
+#: Every state this registry can publish, in one place, so the vocabulary the
+#: report prints and the vocabulary it translates into cannot drift.
+ALL_EXTERNAL = tuple(EXTERNAL) + (WAITS_FOR_INPUT,) + tuple(
+    state for state, kind in LOCAL_STATES.items()
+    if kind == "external" and state not in EXTERNAL)
+ALL_INTERNAL = tuple(INTERNAL) + tuple(
+    state for state, kind in LOCAL_STATES.items()
+    if kind == "internal" and state not in INTERNAL)
 
 #: A one-line gloss for every terminal state, read from the page that already
 #: has to have one. Imported rather than restated so the report and the
 #: interface cannot drift into describing the same state two different ways,
 #: and because a table of state names is not a human-readable report.
-from umat_oti.app.corpus_tab import GLOSS as STATE_MEANS  # noqa: E402
+from umat_oti.app.corpus_tab import GLOSS as _SHARED_GLOSS  # noqa: E402
+
+#: Glosses for the states the shared page does not carry one for. A state
+#: printed with an empty "what it means" column is a name, and a table of
+#: names is not a human-readable report -- which is the whole reason the
+#: glosses are imported rather than restated in the first place.
+_LOCAL_GLOSS = {
+    "arguments_diverged_before_the_routine":
+        "the two builds' histories differ, and the recorded calls say the "
+        "arguments had already parted before the call whose outputs differ, "
+        "so what the routine returned there is not attributable to it",
+    "disagreement_not_in_any_recorded_call":
+        "every paired call returned bit-identical outputs and the history "
+        "comparison reported a difference anyway -- a defect in how this "
+        "harness compares two histories, not a finding about the routine",
+    "published_stub_no_constitutive_content":
+        "the author published the UMAT interface and no constitutive "
+        "content: a routine that assigns neither STRESS nor DDSDDE and "
+        "makes no call",
+}
+
+STATE_MEANS = {**_LOCAL_GLOSS, **_SHARED_GLOSS}
 
 DEFAULT_CACHE = Path(os.environ.get("UMAT_OTI_DISCOVERY_CACHE")
                      or REPO.parent / "discovery_cache")
@@ -300,6 +418,28 @@ class Record:
     verified_on_every_gate: Optional[bool] = None
     #: Which gates did not read true, and in what way.
     gates_not_true: str = ""
+    #: Whether a CONTROL that actually ran explains why ``primal_agreed``
+    #: reads false beside a verdict of verified.
+    #:
+    #: Three values, and the third is the point. ``True``: a control ran and
+    #: accounted for the difference. ``False``: a control ran and did NOT --
+    #: which is a different answer from never having asked, and leaving it as
+    #: None would report a measurement that happened as one that did not.
+    #: ``None``: no control was needed, which is every entry whose two builds
+    #: agreed.
+    #:
+    #: Read from ``evidence`` where the batch recorded it. pass11 predates the
+    #: flag, so for that file it is DERIVED from the two things the batch did
+    #: write -- ``primal.explained_by_declared_precision`` and
+    #: ``primal.explained_by_operation_order`` -- and
+    #: ``control_flag_provenance`` says which of the two happened, because a
+    #: derived field that cannot be told from a recorded one is a field a
+    #: reader cannot check.
+    primal_difference_explained_by_a_measured_control: Optional[bool] = None
+    control_flag_provenance: str = ""
+    #: Which control ran, and the number it measured. A verdict that rests on
+    #: a control is only as good as the control being visible.
+    primal_control: str = ""
 
     def as_dict(self) -> dict:
         return dict(self.__dict__)
@@ -457,6 +597,62 @@ def _gate_state(evidence, gate: str) -> str:
     if value is False:
         return GATE_FALSE
     return GATE_NULL
+
+
+#: The key the verification tool writes for the control chain, once it writes
+#: it. Named rather than spelled out at each use so the recorded field and the
+#: derived one cannot come to be spelled differently.
+CONTROL_GATE = "primal_difference_explained_by_a_measured_control"
+
+
+def _control_explanation(row: dict) -> tuple:
+    """Does a measured control explain this entry's primal difference?
+
+    Returns the flag, where the flag came from, and what the control measured.
+
+    The flag is READ where the batch recorded it and DERIVED where it did not,
+    and the difference is reported rather than smoothed over. A registry that
+    silently derived a field the batch is supposed to write would go on
+    reporting the derivation long after the batch started disagreeing with it.
+    """
+    evidence = row.get("evidence")
+    primal = row.get("primal") or {}
+    precision = row.get("precision_control") or {}
+    association = row.get("association_control") or {}
+    if isinstance(evidence, dict) and CONTROL_GATE in evidence:
+        recorded = evidence[CONTROL_GATE]
+        flag = recorded if isinstance(recorded, bool) else None
+        where = f"read from evidence.{CONTROL_GATE}"
+    elif primal.get("explained_by_declared_precision") is True:
+        flag, where = True, "derived from primal.explained_by_declared_precision"
+    elif primal.get("explained_by_operation_order") is True:
+        flag, where = True, "derived from primal.explained_by_operation_order"
+    elif precision or association:
+        # A control was run and did not account for it. NOT None: not-measured
+        # and measured-and-refuted are different answers.
+        flag, where = False, ("derived: a control ran and did not account for "
+                              "the difference")
+    elif primal.get("agrees") is True:
+        flag, where = None, "no control was needed: the two builds agreed"
+    else:
+        flag, where = None, "no control is recorded for this entry"
+
+    detail = ""
+    if primal.get("explained_by_declared_precision") is True:
+        detail = str(precision.get("reason") or "")[:400]
+    elif primal.get("explained_by_operation_order") is True:
+        own = primal.get("own_sensitivity")
+        mine = primal.get("worst_stress_relative")
+        detail = (
+            f"the two builds differ by {mine:.3e} and this model differs from "
+            f"itself by {own:.3e} under {association.get('how') or 'reordering'}"
+            if isinstance(own, float) and isinstance(mine, float) else
+            str(association.get("reason") or "")[:400])
+    elif flag is False:
+        detail = (str(primal.get("own_sensitivity_unmeasured") or "")
+                  or str(association.get("reason") or "")
+                  or str(precision.get("reason") or ""))[:400]
+    return flag, where, detail
 
 
 def census(rows: list, key, denominator_name: str) -> dict:
@@ -1069,9 +1265,13 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
         record.gates_not_true = "; ".join(
             f"{gate}={state}" for gate, state in states.items()
             if state != GATE_TRUE)[:400]
+        (record.primal_difference_explained_by_a_measured_control,
+         record.control_flag_provenance,
+         record.primal_control) = _control_explanation(row)
         record.key = str(row.get("key") or record.key)
         record.stage = str(row.get("stage") or "")
-        verdict = from_stage(record.stage, str(row.get("reason") or "")[:500])
+        verdict = translate_stage(record.stage,
+                                  str(row.get("reason") or "")[:500])
         record.terminal_state, record.kind = verdict.state, verdict.kind
         record.reason = verdict.reason
         record.transformed = True
@@ -1148,12 +1348,28 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             compiles = False
         elif record.refusal_class:
             compiles = True if compiles else None
-        verdict = from_transform_failure(
-            record.reason, compiles=compiles,
-            companions_missing=(record.refusal_class ==
-                                "missing_external_dependency"),
-            is_umat=(record.is_umat if record.refusal_class
-                     else _is_a_umat(cache, record.source_id)))
+        # A file that presents the UMAT interface and publishes no
+        # constitutive model is EXTERNAL, and it is the one refusal class
+        # ``from_transform_failure`` has no parameter for. Left to it, both
+        # published stubs came back ``transform_refused`` -- INTERNAL, glossed
+        # "the transform could not convert it, our work" -- when there is no
+        # model to convert: matmodlab2's umat_stub.f90 is 16 logical lines
+        # that assign neither STRESS nor DDSDDE and make no CALL, and the
+        # ufc-fem-kernel adapter is 9 whose body is a PRINT.
+        #
+        # Only where the classification is CONFIDENT. An unsettled read of the
+        # file leaves the verdict where it was, which keeps the error in the
+        # direction that overstates this project's own unfinished work.
+        if record.refusal_class == "published_stub_no_constitutive_content" \
+                and record.refusal_class_confident:
+            verdict = translate_stage(record.refusal_class, record.reason)
+        else:
+            verdict = from_transform_failure(
+                record.reason, compiles=compiles,
+                companions_missing=(record.refusal_class ==
+                                    "missing_external_dependency"),
+                is_umat=(record.is_umat if record.refusal_class
+                         else _is_a_umat(cache, record.source_id)))
         record.terminal_state, record.kind = verdict.state, verdict.kind
 
     for record in records.values():
@@ -1382,6 +1598,22 @@ def summarise(records: list) -> dict:
         "reached_the_verified_rung_but_failed_a_gate": sorted(
             f"{r.source_id} ({r.gates_not_true})" for r in verified
             if not r.verified_on_every_gate),
+        # The same set again, split by whether a control that RAN accounts for
+        # the gate that reads false. The two numbers are published side by
+        # side and neither replaces the other: an entry whose primal
+        # comparison failed and whose control explained it is not the same
+        # thing as one that agreed outright, and it is not the same thing as
+        # one nobody measured either.
+        "verified_rung_with_a_gate_explained_by_a_measured_control": sorted(
+            f"{r.source_id} ({r.gates_not_true}; {r.primal_control})"
+            for r in verified
+            if not r.verified_on_every_gate
+            and r.primal_difference_explained_by_a_measured_control is True),
+        "verified_rung_with_a_gate_no_control_explains": sorted(
+            f"{r.source_id} ({r.gates_not_true}; {r.control_flag_provenance})"
+            for r in verified
+            if not r.verified_on_every_gate
+            and r.primal_difference_explained_by_a_measured_control is not True),
         "evidence_gate_census": gate_census(records),
         # Every other count this registry publishes, put through the same
         # proof. Each states the population it was taken over and each raises
@@ -1429,8 +1661,8 @@ def summarise(records: list) -> dict:
             r.source_id for r in records if not r.acquisition_url),
         "by_terminal_state": dict(sorted(by_state.items(), key=lambda kv: -kv[1])),
         "by_kind": dict(by_kind),
-        "external_total": sum(by_state[s] for s in EXTERNAL) + by_state[WAITS_FOR_INPUT],
-        "internal_total": sum(by_state[s] for s in INTERNAL),
+        "external_total": sum(by_state[s] for s in ALL_EXTERNAL),
+        "internal_total": sum(by_state[s] for s in ALL_INTERNAL),
         "internal_clusters": {state: len(names)
                               for state, names in sorted(
                                   clusters.items(), key=lambda kv: -len(kv[1]))},
@@ -1536,6 +1768,7 @@ def markdown(records: list, summary: dict) -> str:
                       f"longer exists, and none of those is read as a verdict "
                       f"about the entry that is in the store now."]
 
+    inputs = summary.get("inputs") or {}
     lines += [
         "",
         "## How to regenerate every number in this report",
@@ -1543,8 +1776,13 @@ def markdown(records: list, summary: dict) -> str:
         "```",
         "UMAT_OTI_DISCOVERY_CACHE=<the acquisition cache> \\",
         "python tools/build_corpus_registry.py \\",
-        "    --transform <run>/transform_all_postB.json \\",
-        "    --abaqus <run>/pass10/results/store_verification.jsonl \\",
+        # The files THIS report was built from, not an example of the shape
+        # they take. A regeneration recipe naming a different run is a recipe
+        # that reproduces different numbers, and it named pass10's for as long
+        # as the table four lines above named pass11's.
+        f"    --transform <run>/{Path(inputs.get('transform_report') or '').name or 'transform_batch.json'} \\",
+        f"    --abaqus <run>/{'/'.join(str(inputs.get('verification_results') or '').split('/')[-3:]) or 'results/store_verification.jsonl'} \\",
+        f"    --store-fingerprint {inputs.get('store_fingerprint') or ''} \\",
         "    --audit-refusals",
         "```",
         "",
@@ -1775,9 +2013,15 @@ def markdown(records: list, summary: dict) -> str:
             lines.append(f"| `{name}` | {mark} | {count} |")
         lines += ["",
                   "`published_stub_no_constitutive_content` is EXTERNAL as a "
-                  "cause and INTERNAL as a terminal state, for the reason "
-                  "given under \"Where a terminal state and its cause "
-                  "disagree\" above."]
+                  "cause AND as a terminal state. A file that presents the "
+                  "UMAT interface and assigns neither STRESS nor DDSDDE "
+                  "anywhere is not a model this project failed to convert -- "
+                  "there is nothing there to convert. It used to come back "
+                  "`transform_refused`, which is INTERNAL and glossed \"the "
+                  "transform could not convert it, our work\", because "
+                  "`from_transform_failure` has no parameter for this class; "
+                  "the registry now routes it, and only where the "
+                  "classification is confident."]
         unsure = summary.get("refusals_not_confidently_classified") or []
         lines += ["",
                   f"{len(unsure)} of them are held at `genuine_umat` because "
@@ -1941,10 +2185,21 @@ def markdown(records: list, summary: dict) -> str:
                     f"{here.get('not_established_present_but_null', 0)}, so "
                     f"{here.get('not_established_total', 0)} are not "
                     f"established. **Both are right and neither means "
-                    f"anything without the denominator beside it.** The "
-                    f"absent key belongs to the superseded rows: it is a "
-                    f"question the earlier batch's schema did not ask, not a "
-                    f"question this run failed to answer.",
+                    f"anything without the denominator beside it.**"
+                    + (" The absent key belongs to the superseded rows: it "
+                       "is a question the earlier batch's schema did not "
+                       "ask, not a question this run failed to answer."
+                       if mech.get("absent", 0) else
+                       " No row in this file is missing the key: every row "
+                       "was written by one batch against one store, so the "
+                       "two censuses coincide. A key that is ABSENT and a "
+                       "key that is PRESENT AND NULL are still counted "
+                       "apart, because they are different answers -- a "
+                       "question that was never asked and a question that "
+                       "was asked and not answered -- and a census that "
+                       "pooled them would stop adding up the moment a "
+                       "resumed pass put both kinds of row in one file "
+                       "again."),
                 ]
 
     stale = summary.get("verification_rows_at_a_stale_fingerprint") or []
@@ -2123,8 +2378,8 @@ def main(argv: Optional[list] = None) -> int:
             "a finite difference of the original at several smooth states"),
         "terminal_states": {
             "verified": [FULLY_VERIFIED],
-            "external": list(EXTERNAL) + [WAITS_FOR_INPUT],
-            "internal": list(INTERNAL),
+            "external": list(ALL_EXTERNAL),
+            "internal": list(ALL_INTERNAL),
         },
         "summary": summary,
         "records": [r.as_dict() for r in records],
