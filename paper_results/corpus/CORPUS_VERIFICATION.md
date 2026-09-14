@@ -129,9 +129,11 @@ Each of these is a limitation of this pipeline, not of the corpus. Largest first
 | `missing_external_dependency` | **EXTERNAL** | 16 |
 | `helper_or_module_only` | **EXTERNAL** | 14 |
 | `incomplete_or_corrupt_source` | **EXTERNAL** | 11 |
-| `duplicate_of_another_source` | **EXTERNAL** | 6 |
+| `duplicate_of_another_source` | neither -- a second copy | 6 |
 | `other_abaqus_routine` | **EXTERNAL** | 2 |
 | `published_stub_no_constitutive_content` | **EXTERNAL** | 2 |
+
+`published_stub_no_constitutive_content` is EXTERNAL as a cause and INTERNAL as a terminal state, for the reason given under "Where a terminal state and its cause disagree" above.
 
 9 of them are held at `genuine_umat` because the offline compile did not settle whether the published text builds. That is the safe direction: it counts the work as ours.
 

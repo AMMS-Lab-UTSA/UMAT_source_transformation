@@ -1557,9 +1557,16 @@ def markdown(records: list, summary: dict) -> str:
                   "| what the file is | external or internal | sources |",
                   "| --- | --- | ---: |"]
         for name, count in summary.get("refusals_by_class", {}).items():
-            mark = ("**INTERNAL**" if name == "genuine_umat"
-                    else "**EXTERNAL**")
+            mark = {"genuine_umat": "**INTERNAL**",
+                    "duplicate_of_another_source":
+                        "neither -- a second copy",
+                    }.get(name, "**EXTERNAL**")
             lines.append(f"| `{name}` | {mark} | {count} |")
+        lines += ["",
+                  "`published_stub_no_constitutive_content` is EXTERNAL as a "
+                  "cause and INTERNAL as a terminal state, for the reason "
+                  "given under \"Where a terminal state and its cause "
+                  "disagree\" above."]
         unsure = summary.get("refusals_not_confidently_classified") or []
         lines += ["",
                   f"{len(unsure)} of them are held at `genuine_umat` because "
