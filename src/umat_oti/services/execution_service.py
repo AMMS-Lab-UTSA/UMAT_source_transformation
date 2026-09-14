@@ -26,6 +26,7 @@ and reports that rather than signalling anything.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional, Sequence
@@ -35,11 +36,31 @@ from .results import Provenance, ServiceResult, repo_commit
 from umat_oti.jobs import JobManager, JobRecord
 from umat_oti.jobs.records import STATUS_QUEUED, utc_now
 
-__all__ = ["RunTicket", "AbaqusExecutionService", "DEFAULT_QUEUE"]
+__all__ = ["RunTicket", "AbaqusExecutionService", "DEFAULT_QUEUE",
+           "default_queue_root", "QUEUE_ENVIRONMENT_VARIABLE"]
 
 SERVICE = "abaqus_execution"
 
-DEFAULT_QUEUE = Path("/home/ammslab3/softwarex_work/abaqus_queue")
+#: Environment variable naming the lead's Abaqus queue directory.
+QUEUE_ENVIRONMENT_VARIABLE = "UMAT_OTI_ABAQUS_QUEUE"
+
+
+def default_queue_root() -> Path:
+    """Where the lead's queue lives, derived rather than written down.
+
+    An absolute path to somebody's home directory in the source is a path that
+    is wrong on every other machine, and this repository has a standards test
+    that says so. The queue sits beside the checkout, so it is derived from the
+    checkout; ``UMAT_OTI_ABAQUS_QUEUE`` overrides that for anyone whose layout
+    differs.
+    """
+    override = os.environ.get(QUEUE_ENVIRONMENT_VARIABLE)
+    if override:
+        return Path(override).expanduser()
+    return REPO_ROOT.parent / "abaqus_queue"
+
+
+DEFAULT_QUEUE = default_queue_root()
 
 
 @dataclass
@@ -71,11 +92,11 @@ class AbaqusExecutionService:
     """Request and track Abaqus work without ever spawning Abaqus."""
 
     def __init__(self, manager: JobManager, *,
-                 queue_root: Path = DEFAULT_QUEUE,
+                 queue_root: Optional[Path] = None,
                  repo_root: Path = REPO_ROOT,
                  filed_by: str = "Agent 5 (backend services)") -> None:
         self.manager = manager
-        self.queue_root = Path(queue_root)
+        self.queue_root = Path(queue_root) if queue_root else default_queue_root()
         self.repo_root = Path(repo_root)
         self.filed_by = filed_by
 
