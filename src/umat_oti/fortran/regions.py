@@ -135,6 +135,13 @@ class AssignmentInfo:
     line_index: int
     line_numbers: tuple[int, ...]
     text: str
+    #: True when this edge was not read off an assignment statement but
+    #: INFERRED from what a called routine does to its dummy arguments. The
+    #: distinction matters in exactly one place -- :func:`_constant_variables`
+    #: -- and the reason is in that function's docstring: an inferred edge is
+    #: evidence that a dependency exists and is never evidence that no other
+    #: dependency exists.
+    inferred: bool = False
 
 
 @dataclass
@@ -164,7 +171,12 @@ class DependencySummary:
 
 def detect_candidate_regions(parsed: ParsedFortranSource) -> dict[str, Any]:
     source_lines = parsed.text.splitlines()
-    assignments = _assignments(parsed.logical_lines) + _call_effect_assignments(parsed.logical_lines)
+    # _routine_effect_table is NOT passed here, and the reason is written in
+    # its docstring: the validation round found the edges correct and the
+    # emitter not ready for them. Until that is fixed the table is available
+    # to a caller that asks for it and is not the default.
+    assignments = _assignments(parsed.logical_lines) + _call_effect_assignments(
+        parsed.logical_lines)
     block_ranges = _block_ranges(parsed.logical_lines)
     dependency_summary = _dependency_summary(parsed, assignments)
     signals = _assignment_signals(assignments, dependency_summary, block_ranges)
@@ -193,41 +205,201 @@ def _assignments(logical_lines: tuple[FortranLogicalLine, ...]) -> list[Assignme
     return result
 
 
-def _call_effect_assignments(logical_lines: tuple[FortranLogicalLine, ...]) -> list[AssignmentInfo]:
+#: ``CALL NAME(args)``, whole. Written once here because three functions need
+#: it and a second copy drifted from this one on continuation handling.
+CALL_RE = re.compile(r"^\s*CALL\s+(\w+)\s*\((.*)\)\s*$", flags=re.IGNORECASE)
+
+#: How many times the effect table is recomputed before it is taken as
+#: settled. A chain caller -> helper -> helper -> helper needs one pass per
+#: link, and the deepest chain measured over the 391-source corpus is three;
+#: the bound is here so that mutual recursion terminates rather than because
+#: a fourth pass would be wrong to run.
+_EFFECT_PASSES = 6
+
+
+def _call_effect_assignments(
+    logical_lines: tuple[FortranLogicalLine, ...],
+    effect_table: dict[str, dict[int, set[int]]] | None = None,
+) -> list[AssignmentInfo]:
+    """The dependency edges a CALL statement creates, as if they were assignments.
+
+    Two sources of effect, and they answer different questions.
+
+    :data:`TRANSFORMABLE_HELPER_EFFECTS` is a hand-checked table of utility
+    routines this corpus keeps meeting -- KMLT, KINVER, DOTPROD. Each entry
+    was read against the routine's own source and records its COMPLETE effect:
+    these arguments out, those arguments in, nothing else. That is why an
+    edge from the table is allowed to establish constancy.
+
+    ``effect_table`` is inferred, by :func:`_routine_effect_table`, from the
+    body of a routine DEFINED IN THIS FILE. It is what makes the walk survive
+    a rename at the call boundary. A UMAT that hands its work to
+
+        call umat_h(stress, statev, ddsdde, sse, time, dtime, coords,
+       #            props, dfgrd1, ...)
+
+    is read correctly by the flat walk only because the caller happens to have
+    named its actuals after the callee's dummies. Rename one --
+    ``call kernel(sig, sdv, jac, ..., fnew)`` -- and every edge from FNEW to
+    SIG is invisible, the deformation gradient reaches nothing, and the
+    quantities computed from it land in no category at all and are emitted
+    with ``REAL()`` around them. That is a wrong tangent with a right stress,
+    which is the failure this project exists to catch.
+    """
     result: list[AssignmentInfo] = []
     for line_index, line in enumerate(logical_lines):
         if not _is_executable_line(line.text):
             continue
-        match = re.match(r"^\s*CALL\s+(\w+)\s*\((.*)\)\s*$", line.text, flags=re.IGNORECASE)
+        match = CALL_RE.match(line.text)
         if not match:
             continue
         callee = match.group(1).upper()
-        effect = TRANSFORMABLE_HELPER_EFFECTS.get(callee)
-        if not effect:
-            continue
         arguments = [argument.strip() for argument in split_top_level(match.group(2))]
-        rhs_tokens = {_base_name(arguments[index]) for index in effect["inputs"] if int(index) < len(arguments)}
-        rhs_tokens.discard("")
-        output_indexes = effect["output"]
-        if isinstance(output_indexes, int):
-            output_indexes = (output_indexes,)
-        for output_index in output_indexes:
-            output_index = int(output_index)
-            if output_index >= len(arguments):
-                continue
-            lhs = _base_name(arguments[output_index])
-            if not lhs:
-                continue
+        effect = TRANSFORMABLE_HELPER_EFFECTS.get(callee)
+        if effect:
+            rhs_tokens = {_base_name(arguments[index]) for index in effect["inputs"] if int(index) < len(arguments)}
+            rhs_tokens.discard("")
+            output_indexes = effect["output"]
+            if isinstance(output_indexes, int):
+                output_indexes = (output_indexes,)
+            for output_index in output_indexes:
+                output_index = int(output_index)
+                if output_index >= len(arguments):
+                    continue
+                lhs = _base_name(arguments[output_index])
+                if not lhs:
+                    continue
+                result.append(
+                    AssignmentInfo(
+                        lhs=lhs,
+                        rhs_tokens=rhs_tokens,
+                        line_index=line_index,
+                        line_numbers=line.line_numbers,
+                        text=line.text,
+                    )
+                )
+            continue
+        for edge in _inferred_edges_for_call(callee, arguments, effect_table or {}):
             result.append(
                 AssignmentInfo(
-                    lhs=lhs,
-                    rhs_tokens=rhs_tokens,
+                    lhs=edge[0],
+                    rhs_tokens=edge[1],
                     line_index=line_index,
                     line_numbers=line.line_numbers,
                     text=line.text,
+                    inferred=True,
                 )
             )
     return result
+
+
+def _inferred_edges_for_call(
+    callee: str,
+    arguments: list[str],
+    effect_table: dict[str, dict[int, set[int]]],
+) -> list[tuple[str, set[str]]]:
+    """``(written actual, actuals it depends on)`` for one call site."""
+    effect = effect_table.get(callee)
+    if not effect:
+        return []
+    actuals = [_base_name(argument) for argument in arguments]
+    edges: list[tuple[str, set[str]]] = []
+    for output_index, input_indexes in sorted(effect.items()):
+        if output_index >= len(actuals) or not actuals[output_index]:
+            continue
+        rhs = {actuals[index] for index in input_indexes
+               if index < len(actuals) and actuals[index]}
+        rhs.discard(actuals[output_index])
+        edges.append((actuals[output_index], rhs))
+    return edges
+
+
+def _routine_effect_table(
+    parsed: ParsedFortranSource,
+) -> dict[str, dict[int, set[int]]]:
+    """For each routine in this file, which dummy arguments it writes.
+
+    ``{"UMAT_H": {0: {8, 7}, 1: {8}}}`` reads: UMAT_H assigns its argument 0
+    from its arguments 8 and 7, and its argument 1 from argument 8. Positions
+    and not names, because a position is what survives the call boundary.
+
+    Computed to a fixed point over :data:`_EFFECT_PASSES` rounds so that a
+    helper calling a helper carries the dependency through. Mutual recursion
+    cannot spin: the set of positions only grows and is bounded by the
+    argument count.
+
+    **Not wired into detect_candidate_regions, on the evidence of a validation
+    round.** Re-emitting all 391 triage rows with these edges in place moved 44
+    outputs and took 240 sources to 246, with no fully_verified output changed
+    -- and regressed one source that the corpus verification does mark
+    verified. On keisuke58/pde-fem-biofilm's umat_biofilm_visco_phase2.f the
+    new classification moves ALPHA_G's region from a transformed one to a
+    kept-real one, and the emitter then rewrites
+
+        IF (ALPHA_G .LT. 0.0D0) ALPHA_G = 0.0D0
+
+    to the shadow while leaving the assignment above it real, because the
+    branch-line pass rewrites any line in the selected routine that mentions a
+    promoted name whatever region it is in, and the assignment pass is
+    region-bound. The clamp then reads the zero the initialiser left and the
+    growth parameter is never clamped. The edges are right; the emitter is one
+    region boundary away from dropping a statement's effect in any source, and
+    fixing THAT is the prerequisite. Keeping the table computable and tested
+    means the next attempt starts from a measured position rather than from
+    this note.
+
+    What it deliberately does NOT record: a dependency the callee picks up
+    through a COMMON block, a module variable, a SAVEd local, or a callee this
+    file does not define. Those exist and cannot be expressed as a position,
+    so every entry here is a LOWER bound on what the routine depends on.
+    :func:`_constant_variables` is the one place that distinction changes an
+    answer, and it is handled there.
+    """
+    bodies: dict[str, Any] = {}
+    for routine in getattr(parsed, "subroutines", ()) or ():
+        name = str(routine.name).upper()
+        # A file that defines one name twice -- a common way of shipping a
+        # 2-D and a 3-D variant -- gets the first definition. Merging two
+        # bodies under one name would invent edges belonging to neither.
+        bodies.setdefault(name, routine)
+    table: dict[str, dict[int, set[int]]] = {name: {} for name in bodies}
+    if not table:
+        return table
+    for _pass in range(_EFFECT_PASSES):
+        grew = False
+        for name, routine in bodies.items():
+            positions: dict[str, int] = {}
+            for index, argument in enumerate(routine.args):
+                positions.setdefault(str(argument).strip().upper(), index)
+            if not positions:
+                continue
+            inner = _assignments(routine.lines)
+            for line in routine.lines:
+                if not _is_executable_line(line.text):
+                    continue
+                match = CALL_RE.match(line.text)
+                if not match:
+                    continue
+                inner_callee = match.group(1).upper()
+                if inner_callee == name:
+                    continue
+                arguments = [argument.strip() for argument in split_top_level(match.group(2))]
+                for lhs, rhs in _inferred_edges_for_call(inner_callee, arguments, table):
+                    inner.append(AssignmentInfo(lhs, rhs, 0, line.line_numbers,
+                                                line.text, inferred=True))
+            written = {assignment.lhs for assignment in inner}
+            for dummy, index in positions.items():
+                if dummy not in written:
+                    continue
+                depends = _upstream_dependencies_for(dummy, inner) - {dummy}
+                found = {positions[token] for token in depends if token in positions}
+                before = table[name].get(index)
+                if before is None or not found <= before:
+                    table[name][index] = (before or set()) | found
+                    grew = True
+        if not grew:
+            break
+    return table
 
 
 def _dependency_summary(parsed: ParsedFortranSource, assignments: list[AssignmentInfo]) -> DependencySummary:
@@ -245,6 +417,7 @@ def _dependency_summary(parsed: ParsedFortranSource, assignments: list[Assignmen
         written,
         {name for name, record in variables.items() if "read" not in record.access and "write" not in record.access},
         _dummy_arguments(parsed),
+        {assignment.lhs for assignment in assignments if assignment.inferred},
     )
     finite_strain_path_variables = _finite_strain_path_variables(upstream_to_stress, constant_variables)
     stress_path_variables = (downstream_from_dstran & (upstream_to_stress | {"STRESS"})) | finite_strain_path_variables | {"DSTRAN", "STRESS"}
@@ -357,6 +530,7 @@ def _constant_variables(
     written_variables: set[str],
     declaration_only_variables: set[str],
     dummy_arguments: set[str] | None = None,
+    inferred_call_outputs: set[str] | None = None,
 ) -> set[str]:
     """Names whose value carries no derivative, on the evidence of *every*
     assignment to them.
@@ -391,6 +565,19 @@ def _constant_variables(
     hypercomplex and carries a zero derivative part; the cost of accepting is
     a silent truncation, so the asymmetry decides it.
 
+    ``inferred_call_outputs`` is refused for the same reason one step further
+    out. These are names a CALL writes, where the effect was INFERRED from the
+    callee's body rather than read from a checked table. That inference is a
+    lower bound: it sees what the callee does to its dummy arguments and
+    cannot see what it takes from a COMMON block, a module variable, a SAVEd
+    local or a callee this file does not define. Constancy is a claim that
+    NOTHING else contributed, so a lower bound can never establish it -- while
+    the same lower bound is perfectly good evidence for the path walks, which
+    only ask whether a dependency exists. The hand-checked
+    TRANSFORMABLE_HELPER_EFFECTS entries are not refused: each was read against
+    the routine's own source and records its complete effect, which is the
+    property this test needs and the inferred table does not have.
+
     The same argument covers every DUMMY ARGUMENT, and it had to: a routine's
     arguments arrive with values from its caller, and no assignment inside it
     accounts for them. A plane-strain UMAT squares up the out-of-plane part
@@ -421,7 +608,9 @@ def _constant_variables(
     # The ones the harness declares constant stay constant: PROPS and STRAN
     # are dummy arguments too, and they are in the set above because the
     # method says so, not because a fixed point inferred it.
-    arrived_from_the_caller = set(dummy_arguments or ()) - constants
+    arrived_from_the_caller = (
+        set(dummy_arguments or ()) | set(inferred_call_outputs or ())
+    ) - constants
     changed = True
     while changed:
         changed = False
@@ -429,8 +618,10 @@ def _constant_variables(
             if name in constants:
                 continue
             if name in arrived_from_the_caller:
-                # A dummy argument's value comes from outside; no set of
-                # assignments inside the routine accounts for it.
+                # A dummy argument's value comes from outside, and a name a
+                # CALL writes has an effect this walk has only a lower bound
+                # for; in neither case does the set of assignments visible
+                # here account for the value.
                 continue
             if any(name in assignment.rhs_tokens for assignment in name_assignments):
                 continue
