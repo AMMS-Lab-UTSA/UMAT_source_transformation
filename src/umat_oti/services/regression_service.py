@@ -18,12 +18,19 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 
-from ._support import REPO_ROOT, read_jsonl
+from ._support import REPO_ROOT, TOOLS, read_jsonl
 from .gates import FALSE, NOT_ESTABLISHED, TRUE, read_gates
 from .results import Provenance, ServiceResult, repo_commit
 from umat_oti.jobs.records import utc_now
 
-__all__ = ["FixtureOutcome", "RegressionReport", "RegressionService"]
+__all__ = ["FixtureOutcome", "RegressionReport", "RegressionService",
+           "REGRESSION_TOOL"]
+
+#: The batch tool that replays the frozen experiments. Building its argument
+#: list is this service's job and not a screen's: the interface must not
+#: assemble a command, and two places that build it drift apart the first time
+#: a flag changes.
+REGRESSION_TOOL = "verify_store_in_abaqus.py"
 
 SERVICE = "regression"
 
@@ -245,8 +252,92 @@ class RegressionService:
         result.evidence_paths["results"] = str(results_path)
         return result
 
+    # -- running -----------------------------------------------------------
+
+    def regression_command(self, *, work_dir: Path, results_dir: Path,
+                           only: str = "", limit: int = 0, jobs: int = 1,
+                           timeout: Optional[int] = None) -> list[str]:
+        """The argv for a regression replay. Built here, never in a callback.
+
+        A replay rather than a search: ``--mode regression --no-discovery``
+        against the frozen baseline, so the run reproduces the recorded
+        experiment instead of looking for a new one. ``--jobs`` defaults to 1
+        because the licence pool is shared and contended.
+        """
+        import sys  # noqa: PLC0415
+
+        command = [
+            sys.executable, str(TOOLS / REGRESSION_TOOL),
+            "--mode", "regression",
+            "--no-discovery",
+            "--baseline", str(self.baseline_path),
+            "--work-dir", str(Path(work_dir)),
+            "--results-dir", str(Path(results_dir)),
+            "--jobs", str(int(jobs)),
+        ]
+        if only:
+            command += ["--only", str(only)]
+        if limit:
+            command += ["--limit", str(int(limit))]
+        if timeout:
+            command += ["--timeout", str(int(timeout))]
+        return command
+
+    def submit_run(self, execution, *, work_dir: Path, results_dir: Path,
+                   case_id: str = "regression", only: str = "",
+                   limit: int = 0, jobs: int = 1,
+                   timeout: Optional[int] = None) -> ServiceResult:
+        """Start a regression replay as a tracked, cancellable job.
+
+        ``execution`` is an :class:`~umat_oti.services.AbaqusExecutionService`.
+        The replay is a local process this workflow owns, so it is spawned and
+        tracked by its exact pid -- which is what makes it stoppable. The
+        Abaqus jobs it launches are its own children inside the process group
+        it was given; stopping it stops them, and nothing outside that group is
+        ever signalled.
+        """
+        result = ServiceResult(
+            service=SERVICE, outcome="submitted",
+            provenance=self._provenance(work_dir=str(work_dir),
+                                        results_dir=str(results_dir),
+                                        only=only, jobs=jobs))
+        tool = TOOLS / REGRESSION_TOOL
+        if not tool.is_file():
+            result.add("regression_tool_missing",
+                       f"{tool} is not present, so a regression cannot be run. "
+                       f"The replay rules are not reimplemented here.",
+                       where=str(tool))
+            result.outcome = "refused"
+            return result
+        if not self.baseline_path.is_file():
+            result.add("baseline_missing",
+                       f"{self.baseline_path} does not exist; a regression "
+                       f"with no baseline would compare against nothing",
+                       where=str(self.baseline_path))
+            result.outcome = "refused"
+            return result
+
+        command = self.regression_command(work_dir=work_dir,
+                                          results_dir=results_dir, only=only,
+                                          limit=limit, jobs=jobs,
+                                          timeout=timeout)
+        submitted = execution.submit_local(
+            case_id=case_id, command=command, kind="regression",
+            source_paths=[self.baseline_path],
+            metadata={"baseline": str(self.baseline_path),
+                      "results_dir": str(results_dir),
+                      "only": only, "jobs": jobs})
+        result.data = submitted.data
+        result.problems.extend(submitted.problems)
+        result.ok = submitted.ok
+        result.outcome = submitted.outcome
+        result.evidence_paths.update(submitted.evidence_paths)
+        return result
+
     def run_selected(self, source_ids: list[str], results_path: Path) -> ServiceResult:
+        """Compare only these entries against the baseline."""
         return self.compare_to_baseline(results_path, only=source_ids)
 
     def run_all(self, results_path: Path) -> ServiceResult:
+        """Compare every baseline entry against this results file."""
         return self.compare_to_baseline(results_path)
