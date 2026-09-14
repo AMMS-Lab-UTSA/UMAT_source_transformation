@@ -208,3 +208,114 @@ def analyse(converted: str) -> Finding:
                                       tuple(carried[:4])))
     return Finding(seeded=seeded, truncations=tuple(truncations),
                    harmless=harmless)
+
+#: A line the transform commented out, with the original statement after the
+#: marker. The emitters write both spellings; ``OTIS-SKIP:`` is the one that
+#: carries a statement, the bare ``C`` re-comment carries a continuation.
+_SKIPPED = re.compile(r"^[!Cc*]\s*OTIS-SKIP:\s*(.*)$")
+
+#: A Fortran assignment's target name, allowing a leading statement label and
+#: an array subscript.
+_SKIP_TARGET = re.compile(r"^\s*(?:\d+\s+)?(?:\d+\s+)?([A-Za-z_]\w*)\s*"
+                          r"(?:\([^=]*\))?\s*=(?!=)")
+
+
+@dataclass(frozen=True)
+class LiveSkip:
+    """A variable a skipped region defined, which live code reads afterwards."""
+
+    name: str
+    defined_at: int
+    read_at: int
+    text: str
+
+
+def skipped_definitions_read_later(converted: str) -> tuple:
+    """Variables a "tangent helper" skip deleted that the stress path still reads.
+
+    The transform classifies a region as a tangent helper when its outputs feed
+    only the old DDSDDE block, and comments the region out. When such a region
+    also DEFINES something the stress path reads afterwards, the reading code
+    is left with whatever the declaration initialised -- zero -- and the
+    converted routine returns a stress that is not the author's, silently, with
+    no blocker and a clean compile.
+
+    MEASURED on ``thealanjason__umat_finite_viscoelasticity/UMAT/
+    VISC_OGDEN_1EL.for`` (store key fc2b59d324a69a9e922be039). Its
+    transform_report records one skipped region, TANGENT-007, lines 249-338,
+    with the reason "DDEVTAUDEPSE feeds only the old DDSDDE/tangent block".
+    Those lines are the whole local Newton return map of the Maxwell branch,
+    and they also define ``Je`` and ``DEVTAU``. Twenty lines later the stress
+    path still reads both::
+
+        PVTAU_OTI(I) = DEVTAU_OTI(I) + KVIS/TWO*(JE_OTI*JE_OTI-ONE)
+
+    with ``JE_OTI`` and ``DEVTAU_OTI`` left at the 0.0D0 their declarations
+    gave them. At ``F = I`` the original returns STRESS = 0 exactly and the
+    converted build returns -30.6931 on all three direct components, which is
+    ``-KVIS/2`` for that deck's ``KVIS = 61.3862`` to six figures: the
+    ``(Je^2 - 1)`` term evaluated at ``Je = 0``. At the finite-strain state
+    used elsewhere in this file the converted stress is 6.476e+00 wrong
+    relative to the original, its DDSDDE has all three direct columns equal and
+    column 4 identically zero, and the residual against a corrected reference
+    is 6.7e-01, flat over six decades of step.
+
+    The existing semantic checks do not catch it: they guard reads of DDSDDE
+    after a disabled assignment, not reads of a skipped region's outputs. Every
+    one of them passed on this file, and ``blockers`` and ``warnings`` are both
+    empty.
+
+    Over pass10's 254 store entries this fires on 25. None is among the 44
+    verified. Three are ``primal_disagreed``, and all three of those are
+    recorded as "N compared values are not finite", which is what dividing by a
+    quantity left at zero produces; three more are ``transformed_job_failed``.
+    It is silent on all eight sources whose tangents are confirmed in
+    :mod:`umat_oti.validation.finite_strain_tangent`.
+
+    Returns one :class:`LiveSkip` per (name, first live read). A name the
+    skipped region only reads, or that live code re-defines before reading, is
+    not reported.
+    """
+    lines = converted.splitlines()
+    defined: dict[str, int] = {}
+    for number, line in enumerate(lines, start=1):
+        match = _SKIPPED.match(line)
+        if not match:
+            continue
+        target = _SKIP_TARGET.match(match.group(1))
+        if target:
+            defined.setdefault(target.group(1).upper(), number)
+    if not defined:
+        return ()
+    findings: list[LiveSkip] = []
+    seen: set = set()
+    for number, statement in _code_lines(converted):
+        target = _SKIP_TARGET.match(statement)
+        assigned = target.group(1).upper() if target else ""
+        read_part = statement[target.end():] if target else statement
+        for name in _names(read_part):
+            base = name[:-4] if name.upper().endswith("_OTI") else name
+            for candidate in (name, base):
+                key = candidate.upper()
+                if key in defined and key not in seen and number > defined[key]:
+                    seen.add(key)
+                    findings.append(LiveSkip(
+                        name=candidate, defined_at=defined[key], read_at=number,
+                        text=statement.strip()[:120]))
+        if assigned:
+            # Re-defined by live code before any read: the skip cost nothing.
+            # The promoted shadow and the author's name are one variable, so
+            # the match has to run BOTH ways -- the skipped line carries the
+            # author's "Je" and the live line the emitted "JE_OTI". Stripping
+            # only one direction leaves every re-definition unrecognised and
+            # reports a name that live code had already replaced.
+            bare = assigned[:-4] if assigned.endswith("_OTI") else assigned
+            for key in {assigned, bare, bare + "_OTI"}:
+                # Only an assignment AFTER the skipped one restores the value.
+                # One before it is the declaration's initialiser -- the
+                # "JE_OTI = 0.0D0" the transform emits for every promoted
+                # variable -- and that is the zero the reading code goes on to
+                # use. Popping on it hides exactly the case being looked for.
+                if key in defined and key not in seen and number > defined[key]:
+                    defined.pop(key, None)
+    return tuple(findings)
