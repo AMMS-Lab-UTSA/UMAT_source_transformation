@@ -1736,8 +1736,13 @@ def main(argv: Optional[list] = None) -> int:
     }
     import io
     rows = io.StringIO()
+    # LF, not the CRLF csv writes by default: the row text is checked for
+    # machine paths and written through write_text like the other two
+    # artefacts, and a file whose line endings change on every rebuild shows
+    # up as a diff that is about nothing.
     writer = csv.DictWriter(rows, fieldnames=list(records[0].as_dict())
-                            if records else ["source_id"])
+                            if records else ["source_id"],
+                            lineterminator="\n")
     writer.writeheader()
     for record in records:
         writer.writerow(record.as_dict())
