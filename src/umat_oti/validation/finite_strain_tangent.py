@@ -48,6 +48,89 @@ written out by hand. That source's shear tangent is reproduced by the
 reference here to 4.03e-11; its direct block sits 3.9e-03 away, which is
 ``|sigma|/|DDSDDE|`` at that state, because the author left the Kirchhoff term
 out.
+
+INDEPENDENTLY CONFIRMED
+-----------------------
+
+The definition above was implemented in the transform by another agent. What
+follows checks that implementation against sources it was not developed on,
+spanning different constitutive kinds, with both binaries built offline by
+gfortran and sharing no code: the reference is the author's own file compiled
+as it stands, the value under test is the transform store's emitted Fortran,
+and the only thing in common is a driver that contains no constitutive law.
+
+Relative Frobenius residual of the converted DDSDDE against a centred
+difference of the ORIGINAL compiled routine, over a ladder of absolute step
+sizes from 1e-2 to 1e-8. The three ablations are computed from the same stress
+evaluations, so a residual that does not move between them is a statement
+about the definition rather than about the arithmetic::
+
+  source                                     kind          dF=eps   dF=eps    dF=eps.F  dF=eps.F  minimum at  plateau
+                                                           no K     +K        no K      +K
+  AlexanderJFDR/NeoHookean_umat.for          hyperelastic  1.15e-01 5.03e-02  7.95e-02  9.69e-11  h=1e-5      1e-5,1e-6
+  mholla/umat_iso_stretch.f  (no growth)     growth        1.06e-01 5.17e-02  6.97e-02  1.11e-10  h=1e-6      1e-5,1e-6
+  mholla/umat_iso_stretch.f  (growing)       growth        2.74e-01 7.11e-02  2.09e-01  3.79e-11  h=1e-5      1e-5,1e-6
+  abuganza/UMAT_Tissue_3d.f                  damage        9.10e-02 5.25e-02  5.47e-02  8.27e-11  h=1e-6      1e-6
+  abuganza/UMAT_Tissue_2d_plane_strain.f     2D, NTENS=4   8.52e-02 6.10e-02  4.38e-02  8.98e-11  h=1e-6      1e-5..1e-7
+  keisuke58/umat_biofilm_visco_phase2.f      viscoelastic  8.78e-02 5.07e-02  5.36e-02  2.52e-11  h=1e-5      1e-5
+  mholla/umat_transverse.f   (growing)       anisotropic   7.99e-01 1.22e-01  5.73e-01  6.25e-11  h=1e-5      1e-5,1e-6
+  mholla__BMMB24/umat_transverseIsotropicStretch.f
+                                             anisotropic   9.19e-02 5.05e-02  5.85e-02  1.36e-10  h=1e-6      1e-5,1e-6
+
+Nine states of eight sources across six constitutive kinds. In every one the
+three wrong definitions are flat to four significant figures over six decades
+of step size, and the right one falls as ``h^2`` for three decades, turns at a
+genuine minimum, and rises again as cancellation takes over. The converted
+stress is unchanged throughout: worst relative difference from the original
+ranges from exactly 0 to 1.06e-09.
+
+That the three wrong columns are FLAT is the whole point. A step-independent
+residual is a different function, not a truncation error, and reporting its
+smallest value as "the closest step agreed only to X" describes a wrong
+formula as a convergence failure. See :func:`is_step_independent`.
+
+WHERE THE STATES CAME FROM, AND WHY THEY ARE SMOOTH
+---------------------------------------------------
+
+A centred difference across a yield surface, a damage onset or any other
+corner returns the slope of a chord, which is not a derivative of anything and
+which no step size makes converge. Every state above was established smooth by
+measurement, not by assumption, on two independent signatures:
+
+* The forward and backward one-sided slopes of a C^1 function differ by O(h)
+  and so fall by ten per decade of h. Reported as
+  ``||D+ - D-|| / ||D_centred||`` per direction; across all nine states above
+  the largest decay ratio is 0.100, i.e. exactly one decade per decade.
+* Any internal variable that is a discrete decision is identical either side
+  of the state. A continuous one differs by O(h); dividing the two-sided gap
+  by h separates them, with a floor at 1e-10 of the variable's own size so
+  that a variable whose two sides agree to the last bit -- for a pure shear,
+  ``det(F +/- h eps.F) = det(F)(1 - h^2/4 ...)`` -- is not flagged.
+
+The growth and damage laws were run on BOTH sides of their criteria where
+they have one: ``umat_iso_stretch.f`` at ``phi_g = detF/theta_g - tcr`` equal
+to -4.32e-02 and to +8.87e-02, and ``umat_transverse.f`` with both its area
+and fibre criteria active. ``UMAT_Tissue_3d.f`` has two branches -- the
+recruitment cut-off at ``lam < gama = 0.66`` and the memory update at
+``lam > lam_m`` -- and at the state used every fibre stretch is near 1, while
+the memory enters the stress only through the OLD ``lam_m``, a frozen input.
+
+A smoothness test that never fires proves nothing, so it was run on a corner.
+``umat_iso_stretch.f`` at ``det F = 1.1000``, which puts ``phi_g`` exactly on
+zero::
+
+  direction                1   2   3   (cross the branch)    4   5   6   (do not)
+  ||D+ - D-||/||D_c||   5.81e-01                          6.16e-04
+  at h ten times smaller 5.80e-01                          6.16e-05
+  and ten times smaller  5.79e-01                          6.16e-06
+
+The three directions that change ``det F`` straddle the corner and their
+one-sided slopes stay a fixed distance apart over three decades; the three
+shears do not change ``det F`` to first order, stay on one branch, and decay
+by exactly ten per decade. The residual ladder at that state is flat at
+2.63e-01 with a ratio of 1.01 between its largest and smallest entry -- no
+minimum anywhere in it. The test localises the corner to the directions that
+cross it.
 """
 from __future__ import annotations
 
@@ -70,9 +153,17 @@ def as_matrix(nine: Sequence) -> list[list[float]]:
     reader that accepted only one of them would raise on the other at the
     moment it was asked to correct a perturbation, which is the moment it must
     not fail quietly or loudly.
+
+    A row is anything that is not a number, rather than a ``list`` or a
+    ``tuple`` specifically. The narrower test passed the corpus, which hands
+    this a flat list of nine, and failed on a caller holding the gradient as
+    rows of some other sequence type: those rows fell through to
+    ``float(row)``, which raises "only 0-dimensional arrays can be converted
+    to Python scalars" from inside a perturbation, several frames from
+    anything that names a deformation gradient.
     """
     rows = list(nine)
-    if rows and isinstance(rows[0], (list, tuple)):
+    if rows and not isinstance(rows[0], (int, float)):
         flat = [float(value) for row in rows for value in row]
     else:
         flat = [float(value) for value in rows]
