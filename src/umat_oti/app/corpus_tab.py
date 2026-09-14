@@ -13,7 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from umat_oti.app.corpus_view import (MODES, NOT_ESTABLISHED,
+from umat_oti.app.corpus_view import (DID_NOT_HOLD, MODES, NOT_ESTABLISHED,
                                       componentwise_errors, deck_text,
                                       evidence_paths, fd_plateau, histories,
                                       job_log, load_run, run_command,
@@ -311,8 +311,8 @@ def _objectivity_panel(entry, st) -> None:
     st.markdown("**Objectivity: two different claims, kept apart**")
     st.table(rows)
     for row in rows:
-        if row["holds"] == "no":
-            st.error(f"{row['finding']}: no. {row['why']}")
+        if row["holds"] == DID_NOT_HOLD:
+            st.error(f"{row['finding']}: {DID_NOT_HOLD}. {row['why']}")
         elif not row["established"]:
             st.warning(f"{row['finding']}: {NOT_ESTABLISHED}. {row['why']}")
     with st.expander("the rotation and what was compared in it"):
@@ -334,7 +334,7 @@ def _informativeness_panel(entry, st) -> None:
         st.warning("whether the material did anything over the run that was "
                    "verified is " + NOT_ESTABLISHED + ": "
                    + str(entry.informativeness.get("why") or ""))
-    elif entry.informativeness.get("holds") == "no":
+    elif entry.informativeness.get("holds") == DID_NOT_HOLD:
         st.error(str(entry.informativeness.get("why") or ""))
 
     st.markdown("**Against the source's own clock**")
