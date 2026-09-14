@@ -73,15 +73,30 @@ def test_the_rows_in_the_file_add_up_to_the_sources_the_registry_counts():
 
 
 def test_the_two_verified_numbers_are_reconciled_and_the_smaller_one_is_right():
-    """44 rows at stage `verified` and 41 sources verified are both true
-    statements about the file. Only one of them is a count of sources."""
+    """A count of ROWS and a count of SOURCES are different numbers, and only
+    the second is a verification rate.
+
+    pass10 made the difference visible: 44 rows at stage `verified` against 41
+    sources, because the results file is append-only and three sources
+    verified under the old store and again under the new one. pass11 was
+    written fresh -- 237 rows, 237 distinct keys, no resumed pass underneath
+    it -- so the two numbers coincide.
+
+    What is asserted is therefore the ARITHMETIC, which holds either way, and
+    that the registry publishes the source count. Pinning "there must be a
+    double count" would make this test fail on the cleanest input it can be
+    given, which is the wrong way round."""
     r = reconciliation()
     double = r["verified_rows_that_double_count_a_source"]
     assert (r["store_entries_that_verified"] + len(double)
             == r["rows_at_stage_verified_in_the_whole_file"])
     assert summary()["fully_verified"] == r["store_entries_that_verified"]
-    assert double, "nothing was double counted, so there is nothing to explain"
-    assert r["why_the_two_verified_numbers_differ"]
+    if double:
+        assert r["why_the_two_verified_numbers_differ"]
+    else:
+        assert r["rows_at_a_superseded_store_fingerprint"] == 0, (
+            "no verified row double-counts a source, so no row in the file "
+            "may be about a store that has since been rebuilt either")
 
 
 def test_neither_the_row_key_nor_the_digest_could_have_been_the_identity():
@@ -99,10 +114,18 @@ def test_neither_the_row_key_nor_the_digest_could_have_been_the_identity():
 def test_a_superseded_row_never_becomes_a_verdict():
     """Unknown is never verified. A source whose only verification row was
     produced against a store that has since been rebuilt gets no stage from
-    it, and its record says what the row was and why it does not count."""
+    it, and its record says what the row was and why it does not count.
+
+    pass11 carries no such row -- it was written fresh rather than resumed
+    onto an earlier pass's file, and all 237 of its rows are at the current
+    fingerprint. So the rule is checked where it applies AND the absence is
+    checked against the reconciliation, rather than the test quietly passing
+    on an empty list or failing because the input got cleaner."""
     registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
     stale = [r for r in registry["records"] if r["superseded_verification"]]
-    assert stale, "no record carries a superseded row"
+    if not stale:
+        assert reconciliation()["rows_at_a_superseded_store_fingerprint"] == 0
+        return
     for record in stale:
         assert record["terminal_state"] != "fully_verified", record["source_id"]
         assert record["verification_fingerprint"] == "", record["source_id"]

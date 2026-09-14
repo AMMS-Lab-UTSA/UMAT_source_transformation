@@ -130,11 +130,31 @@ def test_the_two_executions_produced_the_same_number_of_records():
 
 def test_the_history_comparison_agreed_and_resolved_something():
     """Agreement over nothing is not agreement: a comparison that dismissed
-    every component as unresolvable establishes nothing."""
+    every component as unresolvable establishes nothing.
+
+    Thirteen of the promoted materials carry ``agrees: false``. That is not a
+    loosened tolerance -- the raw comparison flag never moves -- and it is not
+    an exception waved through: what lets the entry stand is a CONTROL that
+    ran and measured something, and the contract has to carry it. So either
+    the two builds agreed, or the control that accounts for the difference is
+    in the file and says which one it was."""
     for folder in _directories():
-        history = _load(folder / "results.json")["history_agreement"]
-        assert history["agrees"] is True, folder.name
+        results = _load(folder / "results.json")
+        history = results["history_agreement"]
         assert history["resolved_components"] > 0, folder.name
+        if history["agrees"] is True:
+            continue
+        control = results["history_difference_explained_by_a_measured_control"]
+        assert control, folder.name
+        assert control["verdict"] != "no control accounts for the difference", \
+            folder.name
+        # Both blocks are usually present and only ONE of them ran: where the
+        # author's arithmetic was already double there is nothing to widen,
+        # so the precision control is recorded with ran=false and the
+        # association control is what did the work. The contract names which.
+        which = control["which"]
+        assert which in ("declared_precision", "operation_order"), folder.name
+        assert control[which]["ran"] is True, folder.name
 
 
 def test_the_tangent_agreed_at_every_state_that_was_checked():

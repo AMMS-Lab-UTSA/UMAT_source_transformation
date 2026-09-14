@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "irfancn/Abaqus-UMAT-viscoelastic",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "794840d3b3bc26679277fc9588d1bb2e8a942e03ccd6d1ec048119bdf4452c85",
+  "source_id": "irfancn__Abaqus-UMAT-viscoelastic/umat_viscoelastic.for",
+  "upstream": "https://github.com/irfancn/Abaqus-UMAT-viscoelastic",
+  "verified_bytes_sha256": "794840d3b3bc26679277fc9588d1bb2e8a942e03ccd6d1ec048119bdf4452c85",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}

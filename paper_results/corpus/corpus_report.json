@@ -4,79 +4,18 @@
   "inventory": 391,
   "umat_entries": 341,
   "counts": {
-    "transformed": 41,
-    "fully_verified": 41,
-    "acquired": 126,
+    "transformed": 38,
+    "acquired": 131,
+    "fully_verified": 55,
     "not_a_umat": 50,
     "blocked_with_evidence": 4,
-    "primal_parity_passed": 39,
-    "abaqus_transformed_passed": 62,
-    "abaqus_original_passed": 8,
+    "primal_parity_passed": 25,
+    "abaqus_transformed_passed": 64,
+    "abaqus_original_passed": 6,
     "compiled": 9,
-    "metadata_resolved": 11
+    "metadata_resolved": 9
   },
-  "reconciliation_problems": [
-    "irfancn__Abaqus-UEL-elastic/uel_elastic.for is promoted into umat/ but its status is 'compiled', not fully_verified",
-    "Jeff97__growth-of-circular-plate/Bending/Growth-CASE1.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th01/BodyForce-Growth-2Stages.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th01/BodyForce-Growth-2Stages.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th01/BodyForce-Growth-2Stages.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th001/BodyForce-Growth-2Stages.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th005/BodyForce-Growth-2Stages.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th001/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th005/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th01/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/PureGravity.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th01/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/PureGravity.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th001/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th005/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th002/PureGrowth.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th005/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-Flat/Th005/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th01/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-Flat/Th01/PureGrowth.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/PureGrowth.for is promoted into umat/ but its status is 'primal_parity_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th002/PureGrowth.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th001/PureGrowth.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th01/PureGrowth.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur3.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example4-Torus/Growth-MinSur3.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example3-Sphere/Growth-MinSur3.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Sphere/10/Growth-Sphere.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Instability_Analysis/Growth-Sphere.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "mholla__growth/umats/umat_area_morph.f is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "mholla__growth/umats/umat_fiber_morph.f is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "RitioL__PolyFatigueCrackSim/CPFEM-val/subroutines_revised.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "RitioL__PolyFatigueCrackSim/workplace/subroutines3_revised.for is promoted into umat/ but its status is 'abaqus_transformed_passed', not fully_verified",
-    "AlexanderJFDR__Hyperelastic_phase_field/umat/NeoHookean_umat.for reached fully_verified but was not promoted into the verified collection",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th001/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th002/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th005-Visualization/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002-Visualization/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th002/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/BodyForce-Growth-2Stages.for reached fully_verified but was not promoted into the verified collection",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGrowth.for reached fully_verified but was not promoted into the verified collection",
-    "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/PathSensitivity/Th001-1MPa/BodyForce-Growth-GravityFirst.for reached fully_verified but was not promoted into the verified collection",
-    "irfancn__Abaqus-UMAT-viscoelastic/umat_viscoelastic.for reached fully_verified but was not promoted into the verified collection",
-    "keisuke58__pde-fem-biofilm/umat_biofilm_visco_phase2.f reached fully_verified but was not promoted into the verified collection",
-    "mholla__BMMB24/simulations/input files/umat_transverseIsotropicStretch.f reached fully_verified but was not promoted into the verified collection",
-    "mholla__growth/umats/umat_area_stretch.f reached fully_verified but was not promoted into the verified collection",
-    "mholla__growth/umats/umat_iso_stretch.f reached fully_verified but was not promoted into the verified collection",
-    "mholla__growth/umats/umat_transverse.f reached fully_verified but was not promoted into the verified collection"
-  ],
+  "reconciliation_problems": [],
   "entries": [
     {
       "source_id": "3MAH__simcoon/testBin/Umats/UMABA/external/UMAT_ABAQUS_ELASTIC.f",
@@ -97,14 +36,14 @@
     },
     {
       "source_id": "AlexSTA1993__numerical_geolab/numerical_geolab_materials/UMATERIALS/CAUCHY3D-DP/hyplast_Cauchy3D-DP.for",
-      "status": "transformed",
-      "reason": "no material constants are published for this source: its repository (AlexSTA1993/numerical_geolab) contains no .inp file at all, and no document in it carries a *MATERIAL or *USER MATERIAL block naming this routine. Searched: every .inp in the repository, and every .md, .rst and .txt in it for an embedded material block",
+      "status": "acquired",
+      "reason": "STRESS_OTI is passed to USERMATERIAL, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it.; DSTRAN_OTI is passed to USE",
       "repository": "AlexSTA1993/numerical_geolab",
       "is_umat": true,
-      "entry_interface": "",
-      "transformed": true,
+      "entry_interface": "UMAT",
+      "transformed": false,
       "compiled": false,
-      "abaqus_stage": "needs_material_data",
+      "abaqus_stage": "",
       "material_provenance": "",
       "worst_stress_relative": null,
       "worst_tangent_relative": null,
@@ -127,7 +66,7 @@
       "worst_tangent_relative": 8.128453177032093e-10,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "alexanderjfdr-hyperelastic_phase_field--neohookean-umat--10759f1f"
     },
     {
       "source_id": "AnargyrosKarakalas__UMAT_3D/UMAT_3D_Coupled_ML_IP_Original.for",
@@ -284,14 +223,14 @@
     },
     {
       "source_id": "CAEAssistant-Group__Abaqus-CAE-UMAT-subroutine-for-Composite-fatigue-simulation/CAE_ASSISTANT_UMAT_Subroutine_ABAQUS_COMPOSITE_FATIGUE.for",
-      "status": "transformed",
-      "reason": "no material constants are published for this source. Searched 1 .inp file(s) in CAEAssistant-Group/Abaqus-CAE-UMAT-subroutine-for-Composite-fatigue-simulation, and every .md, .rst and .txt in it for an embedded *MATERIAL block naming this routine: none of the 1 decks publishes at least 2 constants under *User Material or *UEL PROPERTY, which is how far the PROPS references of UMAT in this source r",
+      "status": "acquired",
+      "reason": "Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call FAILURECRITERIONFIBER2D at lines [216, 217], rewriting ['FIBER_FAILURE', 'S12', 'SIG', 'XC', 'XT'], but helper lifting is not yet safe here: Helper lifting requires source definitions for ['FAILUREC",
       "repository": "CAEAssistant-Group/Abaqus-CAE-UMAT-subroutine-for-Composite-fatigue-simulation",
       "is_umat": true,
-      "entry_interface": "",
-      "transformed": true,
+      "entry_interface": "UMAT",
+      "transformed": false,
       "compiled": false,
-      "abaqus_stage": "needs_material_data",
+      "abaqus_stage": "",
       "material_provenance": "",
       "worst_stress_relative": null,
       "worst_tangent_relative": null,
@@ -556,14 +495,14 @@
     },
     {
       "source_id": "InstituteOfMechanics__Paraqus/examples/example_abaqus_extrusion_umat.f",
-      "status": "transformed",
-      "reason": "no material constants are published for this source. Searched 2 .inp file(s) in InstituteOfMechanics/Paraqus, and every .md, .rst and .txt in it for an embedded *MATERIAL block naming this routine: none of the 2 decks publishes at least 2 constants under *User Material or *UEL PROPERTY, which is how far the PROPS references of UMAT in this source reach. Supplying constants from anywhere else would",
+      "status": "acquired",
+      "reason": "Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call CALCDET33 at lines [39], rewriting ['DETJ', 'DFGRD1'], but helper lifting is not yet safe here: Helper lifting for CALCINV33 reached external or undefined callee DGETRF. Add lifting support for that",
       "repository": "InstituteOfMechanics/Paraqus",
       "is_umat": true,
-      "entry_interface": "",
-      "transformed": true,
+      "entry_interface": "UMAT",
+      "transformed": false,
       "compiled": false,
-      "abaqus_stage": "needs_material_data",
+      "abaqus_stage": "",
       "material_provenance": "",
       "worst_stress_relative": null,
       "worst_tangent_relative": null,
@@ -811,14 +750,14 @@
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGravity.for",
-      "status": "primal_parity_passed",
+      "status": "fully_verified",
       "reason": "the two builds differ by 3.127e-08, and this model differs from ITSELF by 5.805e-03 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck sits in the source's own directory",
       "worst_stress_relative": 3.1271218117836596e-08,
       "worst_tangent_relative": 4.188094576350499e-08,
@@ -858,18 +797,18 @@
       "worst_tangent_relative": 5.6541398114883765e-08,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--085498eb"
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for",
-      "status": "primal_parity_passed",
+      "status": "fully_verified",
       "reason": "the two builds differ by 2.768e-09, and this model differs from ITSELF by 2.575e-04 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck sits in the source's own directory",
       "worst_stress_relative": 2.7677345050358277e-09,
       "worst_tangent_relative": 5.081773154300109e-09,
@@ -943,7 +882,7 @@
       "worst_tangent_relative": 1.110996943297583e-06,
       "states_checked": 2,
       "states_agreeing": 1,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--2e3ea178"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/BodyForce-Growth-2Stages.for",
@@ -964,14 +903,14 @@
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/PureGravity.for",
-      "status": "primal_parity_passed",
+      "status": "fully_verified",
       "reason": "the two builds differ by 5.446e-06, and this model differs from ITSELF by 1.074e-04 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck sits in the source's own directory",
       "worst_stress_relative": 5.445669422106039e-06,
       "worst_tangent_relative": 4.37929235246065e-09,
@@ -994,7 +933,7 @@
       "worst_tangent_relative": 1.7718330382284978e-05,
       "states_checked": 2,
       "states_agreeing": 1,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--25bd9a49"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th001/BodyForce-Growth-2Stages.for",
@@ -1011,7 +950,7 @@
       "worst_tangent_relative": 1.0282034797734057e-07,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--0a899e15"
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th001/PureGrowth.for",
@@ -1045,7 +984,7 @@
       "worst_tangent_relative": 1.8508446417206572e-07,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--e80db777"
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th002/PureGrowth.for",
@@ -1079,7 +1018,7 @@
       "worst_tangent_relative": 3.6634166084957122e-09,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--3dd037c1"
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th005/BodyForce-Growth-2Stages.for",
@@ -1113,7 +1052,7 @@
       "worst_tangent_relative": 1.8770362393307018e-05,
       "states_checked": 2,
       "states_agreeing": 1,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--3e1f1c43"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/BodyForce-Growth-2Stages.for",
@@ -1134,14 +1073,14 @@
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGravity.for",
-      "status": "primal_parity_passed",
+      "status": "fully_verified",
       "reason": "the two builds differ by 5.446e-06, and this model differs from ITSELF by 1.074e-04 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck sits in the source's own directory",
       "worst_stress_relative": 5.445669422106039e-06,
       "worst_tangent_relative": 4.37929235246065e-09,
@@ -1181,23 +1120,23 @@
       "worst_tangent_relative": 2.676108796212344e-11,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--acf71219"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th001/PureGrowth.for",
-      "status": "primal_parity_passed",
-      "reason": "agreed at all 4 states where a difference could be taken (increments 1, 10, 3, 12); 2 smooth elastic, 2 smooth activated state(s) verified; worst of them: agreed to 2.676e-11 over a plateau of 5 step sizes, 1e-07 to 0.001",
+      "status": "fully_verified",
+      "reason": "agreed at all 2 states where a difference could be taken (increments 4, 2); 2 smooth state(s) inside the activated regime (2 loading, 0 unloading), which is the whole of this material: it is activated from its first increment and never stops, so there is no elastic branch to verify on and every state that can be measured is inside the activated one; worst of them: agreed to 1.590e-10 over a platea",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th001/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck's name 'Beam-PureGrowth.inp' contains the whole of the source's stem 'puregrowth'; the deck sits in the source's own directory",
       "worst_stress_relative": 0.0,
-      "worst_tangent_relative": 2.6761049815103793e-11,
-      "states_checked": 4,
-      "states_agreeing": 4,
+      "worst_tangent_relative": 1.5904262558830231e-10,
+      "states_checked": 2,
+      "states_agreeing": 2,
       "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--080267b4"
     },
     {
@@ -1215,7 +1154,7 @@
       "worst_tangent_relative": 3.6428967035066536e-09,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--940317e4"
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002/BodyForce-Growth-2Stages.for",
@@ -1232,23 +1171,23 @@
       "worst_tangent_relative": 2.676108796212344e-11,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--c5781158"
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002/PureGrowth.for",
-      "status": "primal_parity_passed",
-      "reason": "agreed at all 4 states where a difference could be taken (increments 1, 10, 3, 12); 2 smooth elastic, 2 smooth activated state(s) verified; worst of them: agreed to 2.676e-11 over a plateau of 5 step sizes, 1e-07 to 0.001",
+      "status": "fully_verified",
+      "reason": "agreed at all 2 states where a difference could be taken (increments 4, 2); 2 smooth state(s) inside the activated regime (2 loading, 0 unloading), which is the whole of this material: it is activated from its first increment and never stops, so there is no elastic branch to verify on and every state that can be measured is inside the activated one; worst of them: agreed to 1.590e-10 over a platea",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck's name 'Beam-PureGrowth.inp' contains the whole of the source's stem 'puregrowth'; the deck sits in the source's own directory",
       "worst_stress_relative": 0.0,
-      "worst_tangent_relative": 2.676108796212344e-11,
-      "states_checked": 4,
-      "states_agreeing": 4,
+      "worst_tangent_relative": 1.590426722781527e-10,
+      "states_checked": 2,
+      "states_agreeing": 2,
       "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--05282f9c"
     },
     {
@@ -1287,14 +1226,14 @@
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/PureGravity.for",
-      "status": "primal_parity_passed",
+      "status": "fully_verified",
       "reason": "the two builds differ by 3.186e-05, and this model differs from ITSELF by 1.307e-04 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck sits in the source's own directory",
       "worst_stress_relative": 3.185742904271599e-05,
       "worst_tangent_relative": 4.580714913440997e-09,
@@ -1304,19 +1243,19 @@
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/PureGrowth.for",
-      "status": "primal_parity_passed",
-      "reason": "agreed at all 4 states where a difference could be taken (increments 1, 10, 3, 12); 2 smooth elastic, 2 smooth activated state(s) verified; worst of them: agreed to 2.676e-11 over a plateau of 5 step sizes, 1e-07 to 0.001",
+      "status": "fully_verified",
+      "reason": "agreed at all 2 states where a difference could be taken (increments 4, 2); 2 smooth state(s) inside the activated regime (2 loading, 0 unloading), which is the whole of this material: it is activated from its first increment and never stops, so there is no elastic branch to verify on and every state that can be measured is inside the activated one; worst of them: agreed to 1.590e-10 over a platea",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck's name 'Beam-PureGrowth.inp' contains the whole of the source's stem 'puregrowth'; the deck sits in the source's own directory",
       "worst_stress_relative": 0.0,
-      "worst_tangent_relative": 2.676108796212344e-11,
-      "states_checked": 4,
-      "states_agreeing": 4,
+      "worst_tangent_relative": 1.5904258833540447e-10,
+      "states_checked": 2,
+      "states_agreeing": 2,
       "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--af0f3f65"
     },
     {
@@ -1334,23 +1273,23 @@
       "worst_tangent_relative": 2.676108796212344e-11,
       "states_checked": 4,
       "states_agreeing": 4,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--2e2a4197"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th01/PureGrowth.for",
-      "status": "primal_parity_passed",
-      "reason": "agreed at all 4 states where a difference could be taken (increments 1, 10, 3, 12); 2 smooth elastic, 2 smooth activated state(s) verified; worst of them: agreed to 2.676e-11 over a plateau of 5 step sizes, 1e-07 to 0.001",
+      "status": "fully_verified",
+      "reason": "agreed at all 2 states where a difference could be taken (increments 4, 2); 2 smooth state(s) inside the activated regime (2 loading, 0 unloading), which is the whole of this material: it is activated from its first increment and never stops, so there is no elastic branch to verify on and every state that can be measured is inside the activated one; worst of them: agreed to 1.590e-10 over a platea",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th01/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck's name 'Beam-PureGrowth.inp' contains the whole of the source's stem 'puregrowth'; the deck sits in the source's own directory",
       "worst_stress_relative": 0.0,
-      "worst_tangent_relative": 2.676108796212344e-11,
-      "states_checked": 4,
-      "states_agreeing": 4,
+      "worst_tangent_relative": 1.5904258833540457e-10,
+      "states_checked": 2,
+      "states_agreeing": 2,
       "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--8e9f6e6a"
     },
     {
@@ -1385,7 +1324,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--4711f8fc"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th002/BodyForce-Growth-2Stages.for",
@@ -1504,7 +1443,7 @@
       "worst_tangent_relative": 5.957256308080458e-08,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--9a8233f1"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th01/PureGravity.for",
@@ -1521,7 +1460,7 @@
       "worst_tangent_relative": 3.6381787158680785e-07,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--2baebbe8"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th001/BodyForce-Growth-2Stages.for",
@@ -1542,14 +1481,14 @@
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th001/PureGravity.for",
-      "status": "primal_parity_passed",
+      "status": "fully_verified",
       "reason": "the two builds differ by 3.127e-08, and this model differs from ITSELF by 5.805e-03 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th001/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck sits in the source's own directory",
       "worst_stress_relative": 3.1271218117836596e-08,
       "worst_tangent_relative": 4.188094576350499e-08,
@@ -1572,7 +1511,7 @@
       "worst_tangent_relative": 4.048510268038536e-11,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--8f497bc7"
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th002/PureGrowth.for",
@@ -1589,7 +1528,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--b5a6af52"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/BodyForce-Growth-2Stages.for",
@@ -1606,18 +1545,18 @@
       "worst_tangent_relative": 8.263507118462496e-11,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--9c29a16c"
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/PureGravity.for",
-      "status": "primal_parity_passed",
+      "status": "fully_verified",
       "reason": "the two builds differ by 3.186e-05, and this model differs from ITSELF by 1.307e-04 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck sits in the source's own directory",
       "worst_stress_relative": 3.185742904271599e-05,
       "worst_tangent_relative": 4.580714913440997e-09,
@@ -1640,7 +1579,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--fb6cae8e"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th001/PureGrowth.for",
@@ -1657,7 +1596,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--d66a2899"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th002/PureGrowth.for",
@@ -1674,7 +1613,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--21006342"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th01/BodyForce-Growth-2Stages.for",
@@ -1695,14 +1634,14 @@
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGravity.for",
-      "status": "primal_parity_passed",
+      "status": "fully_verified",
       "reason": "the two builds differ by 1.417e-08, and this model differs from ITSELF by 1.860e-03 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the constants this routine hard-codes account for this mesh: axis 1 spans 1 = DETF; axis 2 spans 0.01 = 2*H",
       "worst_stress_relative": 1.4173430665206867e-08,
       "worst_tangent_relative": 1.828932300747658e-08,
@@ -1725,7 +1664,7 @@
       "worst_tangent_relative": 7.502799565782897e-07,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--bf5e3f13"
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-Flat/Th005/PureGrowth.for",
@@ -1742,7 +1681,7 @@
       "worst_tangent_relative": 2.9959761832456566e-07,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--7088b08d"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-Flat/Th01/PureGrowth.for",
@@ -1759,18 +1698,18 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--a335bdb6"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th005/PureGravity.for",
-      "status": "primal_parity_passed",
+      "status": "fully_verified",
       "reason": "the two builds differ by 2.746e-06, and this model differs from ITSELF by 5.266e-05 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the constants this routine hard-codes account for this mesh: axis 1 spans 1 = DETF; axis 2 spans 0.1 = L",
       "worst_stress_relative": 2.745924629714173e-06,
       "worst_tangent_relative": 2.1534393168009516e-09,
@@ -1780,14 +1719,14 @@
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th01/PureGravity.for",
-      "status": "primal_parity_passed",
+      "status": "fully_verified",
       "reason": "the two builds differ by 1.255e-08, and this model differs from ITSELF by 2.897e-03 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "experiment_not_informative",
+      "abaqus_stage": "verified",
       "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the constants this routine hard-codes account for this mesh: axis 1 spans 1 = DETF; axis 2 spans 0.01 = 2*H",
       "worst_stress_relative": 1.2551317627593694e-08,
       "worst_tangent_relative": 1.937213600941555e-08,
@@ -1810,7 +1749,7 @@
       "worst_tangent_relative": 1.1894343138456541e-07,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--b7e14fbe"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th005/PureGrowth.for",
@@ -1827,7 +1766,7 @@
       "worst_tangent_relative": 1.1894343138456541e-07,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--10bb19c0"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th01/BodyForce-Growth-2Stages.for",
@@ -1844,7 +1783,7 @@
       "worst_tangent_relative": 3.318868934023347e-11,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--08bddb69"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/PathSensitivity/Th001-1MPa/BodyForce-Growth-GravityFirst.for",
@@ -1861,7 +1800,7 @@
       "worst_tangent_relative": 5.6426412372724665e-11,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-gravityfirst--fdf03c02"
     },
     {
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/PathSensitivity/Th001-5MPa/BodyForce-Growth-Simultaneous.for",
@@ -1980,7 +1919,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur3--162e8ca2"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example1/Growth-MinSur1.for",
@@ -2025,13 +1964,13 @@
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "primal_disagreed",
+      "abaqus_stage": "arguments_diverged_before_the_routine",
       "material_provenance": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-Min1.inp: Growth-Min1.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 9 -- a section in Growth-Min1.inp attaches NeoHookean to C3D20H; the two names share growth; the constants this routine hard-codes account for this mesh: axis 1 spans 1 = G33; axis 2 spans 1 = G33",
       "worst_stress_relative": 1.724114597871157,
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur3--bbe506c0"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example4-Torus/Growth-MinSur3.for",
@@ -2042,13 +1981,13 @@
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "primal_disagreed",
+      "abaqus_stage": "arguments_diverged_before_the_routine",
       "material_provenance": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-Min1.inp: Growth-Min1.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 9 -- a section in Growth-Min1.inp attaches NeoHookean to C3D20H; the two names share growth; the constants this routine hard-codes account for this mesh: axis 1 spans 1 = G33; axis 2 spans 1 = G33",
       "worst_stress_relative": 1.724114597871157,
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur3--3fe59e3b"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Bunny/Part1/ABAQUS_files/Growth-Bunny-Part1.for",
@@ -2116,7 +2055,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-sphere--cad0f277"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/2D/EX/10/Growth-EX.for",
@@ -2218,7 +2157,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-sphere--0780b4d3"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/Alex/20470/Growth-Alex.for",
@@ -2280,13 +2219,13 @@
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "primal_disagreed",
+      "abaqus_stage": "arguments_diverged_before_the_routine",
       "material_provenance": "Jeff97__growth-of-circular-plate/Bending/CASE1.inp: CASE1.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 4 -- a section in CASE1.inp attaches NeoHookean to CAX4H; the two names agree on case1, which is a value the author varied rather than a word every file of this kind carries; the deck sits in the source's own directory",
       "worst_stress_relative": 1.999499833277759,
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "jeff97-growth-of-circular-plate--growth-case1--7c052969"
+      "promoted_to": ""
     },
     {
       "source_id": "Jeff97__growth-of-circular-plate/Bending/Growth-CASE2.for",
@@ -3119,7 +3058,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "ritiol-polyfatiguecracksim--subroutines-revised--3150a919"
+      "promoted_to": ""
     },
     {
       "source_id": "RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for",
@@ -3136,7 +3075,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "ritiol-polyfatiguecracksim--huang-umat-97--013d8a21"
+      "promoted_to": ""
     },
     {
       "source_id": "RitioL__PolyFatigueCrackSim/workplace/subroutines3_revised.for",
@@ -3153,7 +3092,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "ritiol-polyfatiguecracksim--subroutines3-revised--603ef702"
+      "promoted_to": ""
     },
     {
       "source_id": "Shi2oon__DIC2ABAQUS/OXFORD-UMAT/Example - Polycrytal with PROPS/OXFORD-UMAT.f",
@@ -3328,7 +3267,7 @@
     {
       "source_id": "Worlthen__20220314-abqus-simulation/abaqus/original/array_with_two_pixel_z.for",
       "status": "abaqus_transformed_passed",
-      "reason": "1440 compared values are not finite, so nothing about this pair is established: a comparison against NaN is False and leaves the worst difference reading as zero; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was ne",
+      "reason": "2520 compared values are not finite, so nothing about this pair is established: a comparison against NaN is False and leaves the worst difference reading as zero; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was ne",
       "repository": "Worlthen/20220314-abqus-simulation",
       "is_umat": true,
       "entry_interface": "",
@@ -3379,7 +3318,7 @@
     {
       "source_id": "abuganza__BayesianCalibrationSkinGrowth/GOH_Example.f",
       "status": "acquired",
-      "reason": "FGINVMAT_OTI is passed to DOUBLEDOT, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it.; Semantic check failed: no_ot",
+      "reason": "FGINVMAT_OTI is passed to DOUBLEDOT, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it.; STRESSMAT is passed to MOVE6",
       "repository": "abuganza/BayesianCalibrationSkinGrowth",
       "is_umat": true,
       "entry_interface": "UMAT",
@@ -3413,7 +3352,7 @@
     {
       "source_id": "abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/GOH/BC1_50cc/GOH_50cc.f",
       "status": "acquired",
-      "reason": "FGINVMAT_OTI is passed to DOUBLEDOT, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it.; Semantic check failed: no_ot",
+      "reason": "FGINVMAT_OTI is passed to DOUBLEDOT, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it.; STRESSMAT is passed to MOVE6",
       "repository": "abuganza/BayesianCalibrationSkinGrowth",
       "is_umat": true,
       "entry_interface": "UMAT",
@@ -3430,7 +3369,7 @@
     {
       "source_id": "abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/GOH/BC1_55cc/GOH_55cc.f",
       "status": "acquired",
-      "reason": "FGINVMAT_OTI is passed to DOUBLEDOT, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it.; Semantic check failed: no_ot",
+      "reason": "FGINVMAT_OTI is passed to DOUBLEDOT, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it.; STRESSMAT is passed to MOVE6",
       "repository": "abuganza/BayesianCalibrationSkinGrowth",
       "is_umat": true,
       "entry_interface": "UMAT",
@@ -3498,7 +3437,7 @@
     {
       "source_id": "abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/SampleSimulation/GOH_Example.f",
       "status": "acquired",
-      "reason": "FGINVMAT_OTI is passed to DOUBLEDOT, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it.; Semantic check failed: no_ot",
+      "reason": "FGINVMAT_OTI is passed to DOUBLEDOT, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it.; STRESSMAT is passed to MOVE6",
       "repository": "abuganza/BayesianCalibrationSkinGrowth",
       "is_umat": true,
       "entry_interface": "UMAT",
@@ -3549,7 +3488,7 @@
     {
       "source_id": "abuganza__UMAT_anisotropic_damage/UMAT_Tissue_2d_plane_stress.f",
       "status": "primal_parity_passed",
-      "reason": "the converted source drops the derivative at 42 assignment(s) and then uses the result: line 345, `detf = REAL(+DFGRD1_OTI(1,1)*(DFGRD1_OTI(2,2)*DFGRD1_OTI(3,3)-`, takes the real part of an expression descended from DFGRD1_OTI. From there the quantity behaves like a constant, so the stress is still right and every derivative computed through it is short by whatever it contributed",
+      "reason": "the converted source drops the derivative at 18 assignment(s) and then uses the result: line 345, `detf = REAL(+DFGRD1_OTI(1,1)*(DFGRD1_OTI(2,2)*DFGRD1_OTI(3,3)-`, takes the real part of an expression descended from DFGRD1_OTI. From there the quantity behaves like a constant, so the stress is still right and every derivative computed through it is short by whatever it contributed",
       "repository": "abuganza/UMAT_anisotropic_damage",
       "is_umat": true,
       "entry_interface": "",
@@ -3719,7 +3658,7 @@
     {
       "source_id": "awhelanUCD__Lemaitre-damage-UMAT-Public/HETVAL_nonLocalLemaitre/HETVAL_lemaitreDamageNonLocal.f",
       "status": "abaqus_transformed_passed",
-      "reason": "worst stress difference 0.000e+00, worst state difference 1.880e+00, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was never perturbed and its sensitivity to being perturbed is unmeasur",
+      "reason": "worst stress difference 1.665e+00, worst state difference 1.000e+00, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was never perturbed and its sensitivity to being perturbed is unmeasur",
       "repository": "awhelanUCD/Lemaitre-damage-UMAT-Public",
       "is_umat": true,
       "entry_interface": "",
@@ -3727,7 +3666,7 @@
       "compiled": false,
       "abaqus_stage": "primal_disagreed",
       "material_provenance": "awhelanUCD__Lemaitre-damage-UMAT-Public/HETVAL_nonLocalLemaitre/HETVAL_axiSymmetricNotchedBar.inp: HETVAL_axiSymmetricNotchedBar.inp *MATERIAL Material-1: 7 constants, *DEPVAR 23 -- a section in HETVAL_axiSymmetricNotchedBar.inp attaches Material-1 to CAX4T; the two names share hetval; the deck sits in the source's own directory",
-      "worst_stress_relative": 0.0,
+      "worst_stress_relative": 1.6653222006598132,
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
@@ -4258,7 +4197,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "irfancn-abaqus-uel-elastic--uel-elastic--8e98b0b5"
+      "promoted_to": ""
     },
     {
       "source_id": "irfancn__Abaqus-UMAT-elastic/umat_elastic.for",
@@ -4292,7 +4231,7 @@
       "worst_tangent_relative": 1.0022561322035677e-14,
       "states_checked": 4,
       "states_agreeing": 4,
-      "promoted_to": ""
+      "promoted_to": "irfancn-abaqus-umat-viscoelastic--umat-viscoelastic--c6ae96a7"
     },
     {
       "source_id": "j-machacek__numgeo-hardening-soil-bricks/src/hs-bricks-umat/umat.f90",
@@ -4891,15 +4830,15 @@
     },
     {
       "source_id": "jpsferreira__UMAT-ABAQUS/test_in_abaqus/umat_general.for",
-      "status": "metadata_resolved",
-      "reason": "no material constants",
+      "status": "acquired",
+      "reason": "K1 is passed to ANISOMAT_OTI, whose dummy argument K1 the lifted body declares as the OTI type. The lifted helpers are external subprograms, so Fortran's implicit interface makes that compile and the callee then reads one REAL as a whole hypercomplex element -- the stress is computed from reinterpre",
       "repository": "jpsferreira/UMAT-ABAQUS",
       "is_umat": true,
-      "entry_interface": "",
-      "transformed": true,
+      "entry_interface": "UMAT",
+      "transformed": false,
       "compiled": false,
-      "abaqus_stage": "manifest_refused",
-      "material_provenance": "jpsferreira__UMAT-ABAQUS/test_in_abaqus/sec_ud.inp: sec_ud.inp *MATERIAL UD: 6 constants, *DEPVAR 2 -- the deck sits in the source's own directory",
+      "abaqus_stage": "",
+      "material_provenance": "",
       "worst_stress_relative": null,
       "worst_tangent_relative": null,
       "states_checked": null,
@@ -4908,15 +4847,15 @@
     },
     {
       "source_id": "jpsferreira__UMAT-ABAQUS/umat_general.for",
-      "status": "metadata_resolved",
-      "reason": "no material constants",
+      "status": "acquired",
+      "reason": "K1 is passed to ANISOMAT_OTI, whose dummy argument K1 the lifted body declares as the OTI type. The lifted helpers are external subprograms, so Fortran's implicit interface makes that compile and the callee then reads one REAL as a whole hypercomplex element -- the stress is computed from reinterpre",
       "repository": "jpsferreira/UMAT-ABAQUS",
       "is_umat": true,
-      "entry_interface": "",
-      "transformed": true,
+      "entry_interface": "UMAT",
+      "transformed": false,
       "compiled": false,
-      "abaqus_stage": "manifest_refused",
-      "material_provenance": "jpsferreira__UMAT-ABAQUS/test_in_abaqus/sec_ud.inp: sec_ud.inp *MATERIAL UD: 6 constants, *DEPVAR 2 -- it is the only admissible material block",
+      "abaqus_stage": "",
+      "material_provenance": "",
       "worst_stress_relative": null,
       "worst_tangent_relative": null,
       "states_checked": null,
@@ -4972,7 +4911,7 @@
       "worst_tangent_relative": 4.154195681729178e-11,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "keisuke58-pde-fem-biofilm--umat-biofilm-visco-phase2--42eacbd5"
     },
     {
       "source_id": "learnitmyway__Paperboard/Fortran/umat.f90",
@@ -5312,7 +5251,7 @@
       "worst_tangent_relative": 7.297481356890325e-08,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "mholla-bmmb24--umat-transverseisotropicstretch--5f279d11"
     },
     {
       "source_id": "mholla__SOFT24/simulations/UMAT_axon_tension.f",
@@ -5346,7 +5285,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "mholla-growth--umat-area-morph--aa3193e5"
+      "promoted_to": ""
     },
     {
       "source_id": "mholla__growth/umats/umat_area_morph_Abaqus.f",
@@ -5397,7 +5336,7 @@
       "worst_tangent_relative": 1.3518998421843298e-10,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "mholla-growth--umat-area-stretch--cbfc24ef"
     },
     {
       "source_id": "mholla__growth/umats/umat_fiber_morph.f",
@@ -5414,7 +5353,7 @@
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
-      "promoted_to": "mholla-growth--umat-fiber-morph--726933a8"
+      "promoted_to": ""
     },
     {
       "source_id": "mholla__growth/umats/umat_fiber_morph_Abaqus.f",
@@ -5550,7 +5489,7 @@
       "worst_tangent_relative": 1.3518998421843298e-10,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "mholla-growth--umat-iso-stretch--890619c1"
     },
     {
       "source_id": "mholla__growth/umats/umat_neohooke.f",
@@ -5618,7 +5557,7 @@
       "worst_tangent_relative": 1.3518998421843298e-10,
       "states_checked": 2,
       "states_agreeing": 2,
-      "promoted_to": ""
+      "promoted_to": "mholla-growth--umat-transverse--f34d96fb"
     },
     {
       "source_id": "mkhadijeh26__UMAT_for_Viscoelastictiy/Fortran Code_Basic_Viscoelasticity/ABAQUS_DSR_EXAMPLE/ViscoelasticityCode3.f",
@@ -6319,16 +6258,16 @@
     },
     {
       "source_id": "thealanjason__umat_finite_viscoelasticity/UMAT/VISC_OGDEN_2EL.for",
-      "status": "abaqus_original_passed",
-      "reason": "transformed.sta does not say 'THE ANALYSIS HAS COMPLETED SUCCESSFULLY'; transformed.msg does not report an error count; the transform emitted Fortran the compiler will not accept: the unmodified source does not compile with Abaqus's own compile line: VISC_OGDEN_2EL_oti.for(28): error #7013: This module file was not generated by any release of this compiler.   [OTI_INTRINSICS]",
+      "status": "abaqus_transformed_passed",
+      "reason": "4896 compared values are not finite, so nothing about this pair is established: a comparison against NaN is False and leaves the worst difference reading as zero; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was ne",
       "repository": "thealanjason/umat_finite_viscoelasticity",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "transformed_job_failed",
+      "abaqus_stage": "primal_disagreed",
       "material_provenance": "thealanjason__umat_finite_viscoelasticity/simulation_input_files/Uniaxial/2EL/uniaxial_tension/pt1/pt1.inp: pt1.inp *MATERIAL VISCOELASTIC_OGDEN: 13 constants, *DEPVAR 12 -- pt1.inp declares exactly one element, so it is the author's own single-element test of this material; a section in pt1.inp attaches VISCOELASTIC_OGDEN to C3D8H; the material is called 'VISCOELASTIC_OGDEN', which carries the source's own name",
-      "worst_stress_relative": null,
+      "worst_stress_relative": Infinity,
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
@@ -6336,16 +6275,16 @@
     },
     {
       "source_id": "thealanjason__umat_finite_viscoelasticity/UMAT/VISC_OGDEN_3EL.for",
-      "status": "abaqus_original_passed",
-      "reason": "transformed.sta does not say 'THE ANALYSIS HAS COMPLETED SUCCESSFULLY'; transformed.msg does not report an error count; the transform emitted Fortran the compiler will not accept: the unmodified source does not compile with Abaqus's own compile line: VISC_OGDEN_3EL_oti.for(33): error #7013: This module file was not generated by any release of this compiler.   [OTI_INTRINSICS]",
+      "status": "abaqus_transformed_passed",
+      "reason": "6528 compared values are not finite, so nothing about this pair is established: a comparison against NaN is False and leaves the worst difference reading as zero; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was ne",
       "repository": "thealanjason/umat_finite_viscoelasticity",
       "is_umat": true,
       "entry_interface": "",
       "transformed": true,
       "compiled": false,
-      "abaqus_stage": "transformed_job_failed",
+      "abaqus_stage": "primal_disagreed",
       "material_provenance": "thealanjason__umat_finite_viscoelasticity/simulation_input_files/Uniaxial/3EL/uniaxial_tension/pt1/pt1.inp: pt1.inp *MATERIAL VISCOELASTIC_OGDEN: 18 constants, *DEPVAR 18 -- pt1.inp declares exactly one element, so it is the author's own single-element test of this material; a section in pt1.inp attaches VISCOELASTIC_OGDEN to C3D8H; the material is called 'VISCOELASTIC_OGDEN', which carries the source's own name",
-      "worst_stress_relative": null,
+      "worst_stress_relative": Infinity,
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
@@ -6443,9 +6382,9 @@
       "repository": "theysy/UMAT_optimization_public",
       "is_umat": false,
       "entry_interface": "",
-      "transformed": true,
+      "transformed": false,
       "compiled": false,
-      "abaqus_stage": "not_a_umat",
+      "abaqus_stage": "",
       "material_provenance": "",
       "worst_stress_relative": null,
       "worst_tangent_relative": null,
@@ -6473,7 +6412,7 @@
     {
       "source_id": "theysy__mml_subroutine_public/MML_U2/MML_U2.for",
       "status": "abaqus_transformed_passed",
-      "reason": "512 compared values are not finite, so nothing about this pair is established: a comparison against NaN is False and leaves the worst difference reading as zero; and this model differs from itself by only 9.967e-08 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
+      "reason": "worst stress difference 1.000e+00, worst state difference 2.000e+00, against a tolerance of 1e-10; and this model differs from itself by only 9.967e-08 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
       "repository": "theysy/mml_subroutine_public",
       "is_umat": true,
       "entry_interface": "",
@@ -6481,7 +6420,7 @@
       "compiled": false,
       "abaqus_stage": "primal_disagreed",
       "material_provenance": "theysy__mml_subroutine_public/MML_U2/SHELL_TCT_IM.inp: SHELL_TCT_IM.inp *MATERIAL TR1180_HAH20_U2: 40 constants, *DEPVAR 65 -- SHELL_TCT_IM.inp declares exactly one element, so it is the author's own single-element test of this material; a section in SHELL_TCT_IM.inp attaches TR1180_HAH20_U2 to S4R; the material is called 'TR1180_HAH20_U2', which carries the source's own name; the deck sits in the source's own directory",
-      "worst_stress_relative": 1.6139185383308903,
+      "worst_stress_relative": 1.0,
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,
@@ -6490,7 +6429,7 @@
     {
       "source_id": "theysy__mml_subroutine_public/MML_U3/MML_U3.FOR",
       "status": "abaqus_transformed_passed",
-      "reason": "548 compared values are not finite, so nothing about this pair is established: a comparison against NaN is False and leaves the worst difference reading as zero; and this model differs from itself by only 8.168e-06 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
+      "reason": "420 compared values are not finite, so nothing about this pair is established: a comparison against NaN is False and leaves the worst difference reading as zero; and this model differs from itself by only 8.168e-06 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
       "repository": "theysy/mml_subroutine_public",
       "is_umat": true,
       "entry_interface": "",
@@ -6498,7 +6437,7 @@
       "compiled": false,
       "abaqus_stage": "primal_disagreed",
       "material_provenance": "theysy__mml_subroutine_public/MML_U3/SHELL_TCT_IM.inp: SHELL_TCT_IM.inp *MATERIAL TR1180_HAH20_U3: 40 constants, *DEPVAR 70 -- SHELL_TCT_IM.inp declares exactly one element, so it is the author's own single-element test of this material; a section in SHELL_TCT_IM.inp attaches TR1180_HAH20_U3 to S4R; the material is called 'TR1180_HAH20_U3', which carries the source's own name; the deck sits in the source's own directory",
-      "worst_stress_relative": 1.683115162032055,
+      "worst_stress_relative": 1.0,
       "worst_tangent_relative": null,
       "states_checked": null,
       "states_agreeing": null,

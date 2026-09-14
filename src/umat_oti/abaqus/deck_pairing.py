@@ -75,6 +75,35 @@ _TABLE_ROW = re.compile(r"^\s*\|(.+)\|\s*$")
 _DECK_SUFFIXES = (".inp", ".INP")
 _SOURCE_SUFFIXES = (".f", ".for", ".f90", ".F", ".FOR", ".F90", ".f77")
 
+#: A name a data line still leaves standing after substitution. ``<name>`` is
+#: Abaqus's own ``*PARAMETER`` syntax; ``{{name}}`` is a templating engine's,
+#: and a file carrying one is a template rather than a deck -- but both mean
+#: the same thing here, which is that the author did not write this number in
+#: this file, and a vector holding one is not a material.
+_UNRESOLVED = re.compile(r"<\s*[A-Za-z_][A-Za-z0-9_]*\s*>"
+                         r"|\{\{\s*[A-Za-z_][A-Za-z0-9_]*\s*\}\}")
+
+#: ``{{name}}``, rewritten to ``<name>`` so one substitution serves both.
+_BRACES = re.compile(r"\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}")
+
+#: A scalar binding of a name to a number in a committed file --
+#: ``"youngs_modulus": 210000`` in a README, ``youngs_modulus = 210000`` in a
+#: script. This is how a placeholder's value is looked for OUTSIDE the deck,
+#: and it is deliberately narrow: a binding of the exact name to one number,
+#: nothing else. A list (``YOUNGS_MODULUS_LIST = [190000, 200000, 210000]``)
+#: is a sweep and not a material, and does not match.
+def _binding(name: str) -> "re.Pattern":
+    return re.compile(
+        r"""(?:["']%s["']\s*:|(?<![\w."'])%s\s*=)\s*"""
+        r"""([-+]?\d+(?:\.\d*)?(?:[eEdD][-+]?\d+)?)\s*(?:[,}\)\]]|$)"""
+        % (re.escape(name), re.escape(name)), re.IGNORECASE | re.MULTILINE)
+
+
+#: Where a placeholder's value is looked for when the deck does not define it.
+#: Documentation and the scripts that drive the deck, never another deck: a
+#: number found in a second .inp is a different analysis's material.
+_PROVENANCE_SUFFIXES = (".md", ".rst", ".txt", ".py", ".json", ".yaml", ".yml")
+
 
 def _code_lines(text: str) -> Iterable[str]:
     for line in (text or "").splitlines():
@@ -250,6 +279,36 @@ class DeckMaterial:
     nlgeom: bool = False
     step_periods: tuple[float, ...] = ()
     user_initial_state: bool = False
+    #: The ``*PARAMETER`` names this block's data lines were written in terms
+    #: of and which were resolved from the deck's own definitions, in the order
+    #: they appear. Recorded because a constant read through a substitution is
+    #: still the author's number and the reader is entitled to see that it was
+    #: not read literally.
+    substituted: tuple[str, ...] = ()
+    #: The placeholders that are STILL standing after substitution. A block
+    #: with any of these does not publish a material: its values tuple is
+    #: short, and every constant after the gap has moved one position left.
+    #: `usable` is what callers must ask; `constants` is only what the author
+    #: declared.
+    unresolved: tuple[str, ...] = ()
+    #: ``*INCLUDE, INPUT=`` targets this deck names and which are not in the
+    #: repository. This is where a refusal points: the author deferred the
+    #: numbers to a file nobody committed.
+    unresolved_includes: tuple[str, ...] = ()
+
+    @property
+    def usable(self) -> bool:
+        """Whether this block publishes a material vector that can feed a run.
+
+        Declaring ``CONSTANTS=9`` and then writing nine ``<name>`` tokens is
+        not publishing nine constants. Neither is publishing six of them and
+        leaving three standing -- worse, because the six that were read have
+        silently moved into the wrong slots. So both the count and the absence
+        of leftovers are required, and a caller that wants the author's own
+        numbers asks this rather than reading ``values``.
+        """
+        return bool(self.values) and not self.unresolved \
+            and len(self.values) == (self.constants or len(self.values))
 
     def as_dict(self) -> dict:
         return {"deck": str(self.deck), "material": self.name,
@@ -261,7 +320,11 @@ class DeckMaterial:
                 "first_element_label": self.first_element_label,
                 "nlgeom": self.nlgeom,
                 "step_periods": list(self.step_periods),
-                "user_initial_state": self.user_initial_state}
+                "user_initial_state": self.user_initial_state,
+                "substituted": list(self.substituted),
+                "unresolved": list(self.unresolved),
+                "unresolved_includes": list(self.unresolved_includes),
+                "usable": self.usable}
 
 
 def _parameters(remainder: str) -> dict:
@@ -283,29 +346,147 @@ def _numbers(line: str) -> list[float]:
         piece = piece.strip()
         if not piece:
             continue
-        try:
-            out.append(float(piece.replace("D", "E").replace("d", "e")))
-        except ValueError:
+        number = _one_number(piece)
+        if number is None:
             return out
+        out.append(number)
     return out
 
 
-def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, ...]:
+#: A bare ``<name>`` or ``{{name}}``, read off the line BEFORE substitution so
+#: the names that were resolved can be named in the provenance.
+_NAME_IN = re.compile(r"<\s*([A-Za-z_][A-Za-z0-9_]*)\s*>"
+                      r"|\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}")
+
+
+def _one_number(piece: str) -> Optional[float]:
+    """One data-line token as a number, or None when it is not one.
+
+    Separate from `_numbers` because the two callers want opposite things from
+    a token they cannot read. A ``*STATIC`` line wants to stop -- what follows
+    is not more of the same list. A material data line wants to carry on and
+    have the gap RECORDED, because the author may have written the rest of the
+    vector perfectly well.
+    """
+    try:
+        return float(piece.replace("D", "E").replace("d", "e"))
+    except ValueError:
+        return None
+
+
+def published_placeholder_values(repository: Path, names: Sequence[str],
+                                 skip: Optional[Path] = None) -> dict:
+    """What the repository states, elsewhere, that a deck's placeholder holds.
+
+    A deck templated for a driver -- ``{{youngs_modulus}}, 0.3`` -- does not
+    publish its first constant. The repository may still publish it, and where
+    it does, using that is allowed only because it is RECORDED: the answer
+    carries the file and line of every binding it read.
+
+    Where it does NOT, this is what says so. ``Yutu0k__ABQflow`` binds
+    ``youngs_modulus`` to 210000 in README.md, README.zh-CN.md, four pages of
+    docs and one integration test -- and to 200000 in
+    ``test/integration/test_stage_separation.py:32``. Eight against one is a
+    vote and not a reading, so the repository has published no value for that
+    constant, and the nine places it was looked for are returned so the
+    refusal can name them.
+
+    Three rules keep this from becoming a way to invent constants.
+
+    * The binding must name the placeholder EXACTLY and give it ONE number.
+      ``YOUNGS_MODULUS_LIST = [190000, 200000, 210000]`` is a sweep, not a
+      material, and does not match.
+    * Every binding found must agree. Where the repository says two different
+      things, it has not published a value, and the disagreement is returned
+      instead so the refusal can name it.
+    * Decks are never read. A number in another ``.inp`` is another analysis's
+      material -- that is the mistake this whole module exists to prevent.
+    """
+    wanted = [name for name in dict.fromkeys(names) if name]
+    if not wanted:
+        return {}
+    patterns = {name: _binding(name) for name in wanted}
+    found: dict[str, list] = {name: [] for name in wanted}
+    for path in sorted(Path(repository).rglob("*")):
+        if not path.is_file() or path.suffix.lower() not in _PROVENANCE_SUFFIXES:
+            continue
+        if skip is not None and path == skip:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:                            # pragma: no cover - guard
+            continue
+        for name, pattern in patterns.items():
+            for match in pattern.finditer(text):
+                value = _one_number(match.group(1))
+                if value is None:
+                    continue
+                line = text[:match.start()].count("\n") + 1
+                where = f"{path.relative_to(repository).as_posix()}:{line}"
+                found[name].append((value, where))
+    answer: dict = {}
+    for name, hits in found.items():
+        if not hits:
+            continue
+        distinct = sorted({value for value, _where in hits})
+        answer[name] = {
+            "value": distinct[0] if len(distinct) == 1 else None,
+            "agrees": len(distinct) == 1,
+            "values_found": distinct,
+            "stated_in": [where for _value, where in hits][:8],
+            "bindings": len(hits),
+        }
+    return answer
+
+
+def materials_in(deck: Path, text: Optional[str] = None,
+                 extra_parameters: Optional[dict] = None
+                 ) -> tuple[DeckMaterial, ...]:
     """Every user material a deck publishes, with the elements that use it.
 
     Element types are resolved through the section keyword rather than by
     position, because a deck that defines several materials attaches each to
     its own element set -- and a UMAT driven on the wrong one is handed a
     tensor of the wrong size.
+
+    ``*PARAMETER`` substitution and ``*INCLUDE`` splicing happen first, because
+    Abaqus does them first. Six entries of this corpus were classified as
+    publishing no material constants on the strength of a data line reading
+    ``<lam>, <mu>, <xn0_1>, ...``, and five of those decks define ``lam`` and
+    ``mu`` in a ``*PARAMETER`` block at the top of the very same file. Reading
+    them is not inventing them; it is reading what Abaqus reads. The
+    substitution machinery is imported from ``umat_oti.corpus.abaqus_deck``
+    rather than restated, because two implementations of "what does this deck
+    publish?" are two answers waiting to disagree.
     """
     from umat_oti.abaqus.formulation import elements_by_material
+    from umat_oti.corpus.abaqus_deck import (_parameter_table, _substituted,
+                                             _with_includes)
 
+    unresolved_includes: tuple[str, ...] = ()
     if text is None:
         try:
-            text = Path(deck).read_text(errors="replace")
-        except OSError:
+            spliced, missing = _with_includes(Path(deck))
+        except OSError:                            # pragma: no cover - guard
             return ()
-    lines = text.splitlines()
+        if not spliced:
+            return ()
+        lines = spliced
+        unresolved_includes = tuple(dict.fromkeys(missing))
+    else:
+        lines = text.splitlines()
+    # The table is built over the SPLICED lines, so a deck that keeps its
+    # parameters in an included file gets them, and a deck whose include is
+    # missing gets none of them and says which file it wanted.
+    substitutions = _parameter_table(lines)
+    # Values the CALLER established elsewhere and is answerable for recording.
+    # The deck's own definitions win: a file that states its own number has
+    # stated it, whatever a README says about the same name.
+    if extra_parameters:
+        substitutions = {**{str(name).upper(): value
+                            for name, value in extra_parameters.items()},
+                         **substitutions}
+    text = "\n".join(lines)
 
     found: list[DeckMaterial] = []
     steps = 0
@@ -314,6 +495,8 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
     depvar = 0
     constants = 0
     values: list[float] = []
+    substituted: list[str] = []
+    unresolved: list[str] = []
     unsymm = False
     user_state = False
     mode = ""
@@ -341,7 +524,10 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
                 deck=Path(deck), name=name, constants=constants, depvar=depvar,
                 values=tuple(values[:constants]), unsymmetric=unsymm,
                 elements=tuple(kinds), sections=(where,) if where else (),
-                explicit=where.startswith("line ")))
+                explicit=where.startswith("line "),
+                substituted=tuple(dict.fromkeys(substituted)),
+                unresolved=tuple(dict.fromkeys(unresolved)),
+                unresolved_includes=unresolved_includes))
 
     for raw in lines:
         line = raw.rstrip()
@@ -357,6 +543,7 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
                 name = parameters.get("NAME", "")
                 in_material = True
                 depvar, constants, values, unsymm = 0, 0, [], False
+                substituted, unresolved = [], []
                 mode = ""
             elif keyword == "DEPVAR":
                 mode = "depvar"
@@ -411,7 +598,33 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
                 depvar = _whole(line.split(",")[0])
             mode = ""
         elif mode == "props":
-            values.extend(_numbers(line))
+            # What Abaqus does to this line before it reads numbers off it.
+            # `_numbers` stops at the first token it cannot read, so an
+            # unsubstituted name used to truncate the vector at that point
+            # rather than merely shortening it -- which is why the substitution
+            # has to happen here and not be left to the reader downstream.
+            # ``{{name}}`` is a templating engine's syntax and ``<name>`` is
+            # Abaqus's own, and they mean the same thing here. Rewriting the
+            # first into the second sends both through ONE substitution rather
+            # than growing a second one that would drift from it -- but what
+            # is REPORTED unresolved is the author's own spelling, because a
+            # file carrying ``{{name}}`` is a template and a reader has to be
+            # able to see that from the refusal.
+            for placeholder in _NAME_IN.finditer(line):
+                name_in_line = (placeholder.group(1) or placeholder.group(2)
+                                or "")
+                if name_in_line.upper() in substitutions:
+                    substituted.append(name_in_line)
+                else:
+                    unresolved.append(placeholder.group(0))
+            resolved = _substituted(_BRACES.sub(r"<\1>", line), substitutions)
+            for piece in resolved.split(","):
+                piece = piece.strip()
+                if not piece:
+                    continue
+                number = _one_number(piece)
+                if number is not None:
+                    values.append(number)
     flush()
     # The step count and the *INITIAL CONDITIONS keyword belong to the deck
     # rather than to any one material, and both are only known once the whole
@@ -426,7 +639,10 @@ def materials_in(deck: Path, text: Optional[str] = None) -> tuple[DeckMaterial, 
                          (lowest_label[kind.upper()] for kind in material.elements
                           if kind.upper() in lowest_label), default=0),
                      steps=steps, step_periods=tuple(periods), nlgeom=nlgeom,
-                     user_initial_state=user_state)
+                     user_initial_state=user_state,
+                     substituted=material.substituted,
+                     unresolved=material.unresolved,
+                     unresolved_includes=material.unresolved_includes)
         for material in found)
 
 
@@ -650,6 +866,23 @@ def _where_we_looked(repository: Path, decks: Sequence[Path],
         "expected_nprops": demand.nprops,
         "expected_nstatv": demand.nstatv,
         "nprops_is_exact": demand.props_exact,
+        # The blocks that declare a count and do not hold the numbers, and the
+        # file each one defers them to. Without this a refusal reads "no
+        # material constants", which is a statement about the parser; with it
+        # the reader is told the author wrote ``<lam>, <mu>, ...`` and named
+        # ``param.param``, and can go and look.
+        "blocks_with_unresolved_constants": [
+            {"deck": Path(material.deck).name,
+             "material": material.name,
+             "declares_constants": material.constants,
+             "left_standing": list(material.unresolved),
+             "deferred_to": list(material.unresolved_includes)}
+            for material in materials if material.unresolved][:20],
+        "blocks_resolved_from_the_decks_own_parameters": [
+            {"deck": Path(material.deck).name,
+             "material": material.name,
+             "names": list(material.substituted)}
+            for material in materials if material.substituted][:20],
         "scanner": "umat_oti.abaqus.deck_pairing.pair",
         "documentation": ("every *.md, *.rst and *.txt in the repository was "
                           "read for a table naming this source file beside an "
@@ -870,8 +1103,27 @@ def pair(source: Path, repository: Path,
         # That is the author saying their experiment stopped before the third
         # branch, not evidence that the deck beside the source is somebody
         # else's. A deck in the source's own directory outranks it.
-        scored.append(((by_readme, supplied, single, affinity, attached,
-                        same_directory, by_stages, -slack,
+        # FIRST, above every other kind of evidence: does this block actually
+        # hold numbers? A deck that declares CONSTANTS=9 and writes nine
+        # ``<name>`` tokens it never defines is not publishing a material, and
+        # a deck that does define them is -- whatever the README says about
+        # either. abuganza__BayesianCalibrationSkinGrowth publishes both: five
+        # Isotropic decks defer their nine constants to an uncommitted
+        # ``param.param``, and ``Iso_Example.inp`` defines the same nine in a
+        # ``*PARAMETER`` block of its own. It is never a rejection, because a
+        # repository whose only block is unresolved has to say so rather than
+        # report that nothing was found.
+        has_numbers = 1 if material.usable else 0
+        if not has_numbers and material.unresolved:
+            reasons.append(
+                f"{material.deck.name} declares {material.constants} "
+                f"constants and leaves "
+                f"{', '.join(material.unresolved[:9])} standing"
+                + (f", deferred to {', '.join(material.unresolved_includes)}, "
+                   f"which is not in the repository"
+                   if material.unresolved_includes else ""))
+        scored.append(((has_numbers, by_readme, supplied, single, affinity,
+                        attached, same_directory, by_stages, -slack,
                         -len(material.deck.name)),
                        material, reasons))
 
@@ -923,6 +1175,88 @@ def pair(source: Path, repository: Path,
                          f"this routine against a material its author did not "
                          f"give it, and would bury what is wrong with the "
                          f"deck its author did"))
+
+    # The author's own deck fits, holds placeholders the deck itself never
+    # defines, and the REPOSITORY states what they hold. That is provenance,
+    # and it is usable only because every binding read is named below, in the
+    # pairing's own reason and in ``searched``. Attempted last, after every
+    # deck in the repository has failed to supply the numbers, and only for
+    # the block this source was already paired with -- so it can complete a
+    # material, never choose one.
+    best_so_far = max(scored, key=lambda item: item[0])[1]
+    if best_so_far.unresolved and not best_so_far.usable:
+        names = [re.sub(r"[<>{}\s]", "", token)
+                 for token in best_so_far.unresolved]
+        stated = published_placeholder_values(Path(repository), names,
+                                              skip=best_so_far.deck)
+        searched["placeholder_values_stated_elsewhere"] = stated
+        if names and all(stated.get(name, {}).get("agrees") for name in names):
+            table = {name: stated[name]["value"] for name in names}
+            completed = [material for material
+                         in materials_in(best_so_far.deck,
+                                         extra_parameters=table)
+                         if material.name == best_so_far.name
+                         and material.usable]
+            if completed:
+                where = "; ".join(
+                    f"{name}={table[name]:g} stated in "
+                    f"{', '.join(stated[name]['stated_in'][:3])}"
+                    for name in names)
+                scored = [((key[0] + 1,) + key[1:], completed[0],
+                           why + [f"{best_so_far.deck.name} is a template: it "
+                                  f"leaves {', '.join(best_so_far.unresolved)}"
+                                  f" standing, and "
+                                  f"{Path(repository).name} states the "
+                                  f"value(s) -- {where}"])
+                          if material is best_so_far else (key, material, why)
+                          for key, material, why in scored]
+
+    # The same refusal, for the case where the author's own deck FITS and
+    # simply does not hold the numbers. Ranking a resolvable block above an
+    # unresolved one is right within a directory and wrong across
+    # directories: abuganza__BayesianCalibrationSkinGrowth/.../BC1_50cc
+    # defers its nine constants to an uncommitted ``param.param``, and
+    # ``Iso_Example.inp`` two directories away defines nine of its own. They
+    # are not the same material -- the example's kk=0.432 appears nowhere in
+    # the ``Iso_lam_mu_k.txt`` grid the parameter study draws from, and its
+    # tcrt, mm and nn (1.1567, 1, 1) are the study's (1.1982, 0, 0) -- so
+    # taking them would be answering a question about one experiment with
+    # another's constants. The deck the author gave this source is the one
+    # that decides, and what is wrong with it is that a file is missing.
+    unresolved_beside_it = [material for material in beside_it
+                            if material.unresolved
+                            and f"{material.deck.name}:{material.name}"
+                            not in rejected_names]
+    if unresolved_beside_it and not any(
+            material.deck.parent == source.parent and material.usable
+            for _key, material, _why in scored):
+        first = unresolved_beside_it[0]
+        deferred = sorted({target for material in unresolved_beside_it
+                           for target in material.unresolved_includes})
+        return Pairing(
+            demand=demand, rejected=tuple(rejected), searched=searched,
+            refusal=(
+                f"the deck beside this source declares {first.constants} "
+                f"constants and does not publish them: "
+                f"{first.deck.name} writes "
+                f"{', '.join(first.unresolved[:9])} on its *USER MATERIAL "
+                f"data line"
+                + (f" and defers the definitions to "
+                   f"{', '.join(deferred)}, which is not in the repository"
+                   if deferred else
+                   ", and nothing in the file defines those names")
+                + f". Searched: the deck's own *PARAMETER blocks, every "
+                  f"*INCLUDE it names, every .md, .rst, .txt, .py, .json and "
+                  f".yaml file in {Path(repository).name} for a stated value "
+                  f"of those names, and the other "
+                  f"{searched['decks_scanned']} .inp file(s) in the "
+                  f"repository"
+                + (f". Blocks that DO publish {demand.nprops} constants exist "
+                   f"elsewhere in this repository, and they belong to other "
+                   f"experiments: using them would answer a question about "
+                   f"this one with another one's material"
+                   if any(material.usable for _key, material, _why in scored)
+                   else ". Nothing anywhere in the repository publishes them")))
 
     scored.sort(key=lambda item: item[0], reverse=True)
     best_key = scored[0][0]

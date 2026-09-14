@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "keisuke58/pde-fem-biofilm",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "6322a9f88f5de7b3a8ae36ac796f00939e3453a17cb27aa353f63a8b1692ee0f",
+  "source_id": "keisuke58__pde-fem-biofilm/umat_biofilm_visco_phase2.f",
+  "upstream": "https://github.com/keisuke58/pde-fem-biofilm",
+  "verified_bytes_sha256": "6322a9f88f5de7b3a8ae36ac796f00939e3453a17cb27aa353f63a8b1692ee0f",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}

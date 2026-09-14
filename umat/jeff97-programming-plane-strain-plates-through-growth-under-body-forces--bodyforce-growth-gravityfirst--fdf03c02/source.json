@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "7b0bb76413199c6a585000fdaacd7a5d17df07ca58ed215192531d7502009f32",
+  "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/PathSensitivity/Th001-1MPa/BodyForce-Growth-GravityFirst.for",
+  "upstream": "https://github.com/Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+  "verified_bytes_sha256": "7b0bb76413199c6a585000fdaacd7a5d17df07ca58ed215192531d7502009f32",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}

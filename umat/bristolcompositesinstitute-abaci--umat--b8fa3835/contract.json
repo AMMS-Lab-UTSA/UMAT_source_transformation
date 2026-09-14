@@ -1,18 +1,257 @@
 {
+  "finite_verification_run": {
+    "complete_finite_verification_run": true,
+    "coverage_given_up": null,
+    "discovery_usable_prefix": {
+      "complete": true,
+      "complete_increments": 35,
+      "first_incomplete_increment": null,
+      "first_non_finite_material_point": null,
+      "last_complete_step_increment": [
+        4,
+        5
+      ],
+      "material_points_per_increment": 8,
+      "raw_output_records": 280,
+      "total_increments": 35
+    },
+    "evidence": {
+      "abaqus_job_completed": true,
+      "all_requested_outputs_present": true,
+      "complete_history_finite": true,
+      "derivatives_verified": true,
+      "mechanically_informative": true,
+      "primal_agreed": true
+    },
+    "failure_mechanism": null,
+    "history_grouping": {
+      "both_finite_throughout": true,
+      "original": {
+        "complete": true,
+        "complete_increments": 35,
+        "first_incomplete_increment": null,
+        "first_non_finite_material_point": null,
+        "material_points_per_increment": 8,
+        "raw_output_records": 280,
+        "total_increments": 35
+      },
+      "transformed": {
+        "complete": true,
+        "complete_increments": 35,
+        "first_incomplete_increment": null,
+        "first_non_finite_material_point": null,
+        "material_points_per_increment": 8,
+        "raw_output_records": 280,
+        "total_increments": 35
+      }
+    },
+    "mechanically_informative": {
+      "informative": true,
+      "reason": "this source declares no time scale of its own, so there is nothing here to measure the experiment's duration against; the material is active over the run that was verified (departure_from_linearity); the response sits within the scales this problem supplies: peak stress 13.46 against a largest material constant of 1000, a ratio of 0.01346; peak stress 13.46 against 13.46 expected by proportionality from 0.03365 at an amplitude of 2.5e-05, a ratio of 1; the response sits within the scales this problem supplies: peak stress 13.46 against a largest material constant of 1000, a ratio of 0.01346; peak stress 13.46 against 13.46 expected by proportionality from 0.03365 at an amplitude of 2.5e-05, a ratio of 1"
+    },
+    "safe_loading_reconstructed": null,
+    "segment_repair": null,
+    "time_scale_coverage": {
+      "enough": true,
+      "fraction": 0.0,
+      "reaches_heuristic": false,
+      "reason": "this source declares no time scale of its own, so there is nothing here to measure the experiment's duration against",
+      "scale": {
+        "declared": false,
+        "evidence": "",
+        "name": "",
+        "value": 0.0
+      },
+      "total_time": 13.0
+    }
+  },
+  "frozen_manifest": {
+    "bundle": [],
+    "compiler_flags": [],
+    "element_label": 1,
+    "element_type": "C3D8",
+    "fd_steps": [
+      0.1,
+      0.01,
+      0.001,
+      0.0001,
+      1e-05,
+      1e-06,
+      1e-07,
+      1e-08
+    ],
+    "initial_state_from_user_subroutine": false,
+    "initial_statev": [],
+    "initial_statev_provenance": "",
+    "isothermal_temperature": null,
+    "kinematics": "small strain",
+    "loading": [
+      {
+        "body_force": [],
+        "clamped_face": [],
+        "description": "prescribed extension along x, lateral faces free to move only in their own plane",
+        "held": [],
+        "increments": 10,
+        "name": "uniaxial",
+        "period": 1.0,
+        "rotation": [],
+        "rotation_lead_in": false,
+        "separation": [],
+        "strain": [
+          0.010000000000000002,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time_only": false
+      },
+      {
+        "body_force": [],
+        "clamped_face": [],
+        "description": "prescribed engineering shear in the x-y plane",
+        "held": [],
+        "increments": 10,
+        "name": "simple_shear",
+        "period": 1.0,
+        "rotation": [],
+        "rotation_lead_in": false,
+        "separation": [],
+        "strain": [
+          0.0,
+          0.0,
+          0.0,
+          0.010000000000000002,
+          0.0,
+          0.0
+        ],
+        "time_only": false
+      },
+      {
+        "body_force": [],
+        "clamped_face": [],
+        "description": "reversal of uniaxial to exercise state evolution",
+        "held": [],
+        "increments": 10,
+        "name": "uniaxial_reversed",
+        "period": 1.0,
+        "rotation": [],
+        "rotation_lead_in": false,
+        "separation": [],
+        "strain": [
+          -0.005000000000000001,
+          -0.0,
+          -0.0,
+          -0.0,
+          -0.0,
+          -0.0
+        ],
+        "time_only": false
+      },
+      {
+        "body_force": [],
+        "clamped_face": [],
+        "description": "the strain of uniaxial held for 10 of step time, so that stress change means time dependence",
+        "held": [],
+        "increments": 5,
+        "name": "uniaxial_hold",
+        "period": 10.0,
+        "rotation": [],
+        "rotation_lead_in": false,
+        "separation": [],
+        "strain": [
+          0.010000000000000002,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "time_only": false
+      }
+    ],
+    "material_provenance": "BristolCompositesInstitute__abaci/example/jobs/test-job.inp: test-job.inp *MATERIAL umat_elastic: 2 constants, *DEPVAR 1 -- test-job.inp declares exactly one element, so it is the author's own single-element test of this material; a section in test-job.inp attaches umat_elastic to CPE4R; the material is called 'umat_elastic', which carries the source's own name",
+    "name": "umat_elastic",
+    "ndi": 3,
+    "near_zero_fraction": 1e-08,
+    "node_coordinates": [],
+    "node_provenance": "",
+    "notes": "loading is a declared probe chosen by this harness, not read from any deck and not this source's own loading history. Material constants, nstatv, unsymmetry and kinematics ARE read from the paired deck.",
+    "nprops": 2,
+    "nshr": 3,
+    "nstatv": 1,
+    "ntens": 6,
+    "orientation": null,
+    "orientation_axes": null,
+    "orientation_provenance": "",
+    "orientation_rotation": null,
+    "outputs": [
+      "S",
+      "SDV"
+    ],
+    "perturbation_components": [],
+    "plane_strain_directions": [],
+    "primal_tolerance": 1e-10,
+    "props": [
+      1000.0,
+      0.3
+    ],
+    "source": "BristolCompositesInstitute__abaci/test/data/umat.f",
+    "source_form": "fixed",
+    "status": "ready",
+    "temperature_provenance": "this deck states no *INITIAL CONDITIONS, TYPE=TEMPERATURE, so there is no temperature of the author's to hold a single element at",
+    "unsymmetric": false
+  },
+  "frozen_states": [
+    {
+      "increment": 1,
+      "record_index": 0
+    },
+    {
+      "increment": 4,
+      "record_index": 93
+    },
+    {
+      "increment": 2,
+      "record_index": 186
+    },
+    {
+      "increment": 5,
+      "record_index": 279
+    }
+  ],
+  "frozen_tolerances": {
+    "fd_steps": [
+      0.1,
+      0.01,
+      0.001,
+      0.0001,
+      1e-05,
+      1e-06,
+      1e-07,
+      1e-08
+    ],
+    "primal": 1e-10,
+    "tangent": "1e-6 relative at the best step, corroborated by at least two step sizes spanning a decade -- one step cannot separate truncation error from cancellation"
+  },
   "loading": {
+    "chosen_amplitude": 0.010000000000000002,
     "kind": "verification probe, chosen by this pipeline",
-    "not_the_authors_history": "This is a controlled probe -- prescribed extension, then shear, then a reversal -- and NOT a reproduction of the author's own example. A result here says the conversion agrees with the original under this probe."
+    "not_the_authors_history": "This is a controlled probe -- an amplitude searched for on the ORIGINAL until the material did something, then shear, then a reversal, and a hold where the material turned out to care about time. NOT a reproduction of the author's own example. A result here says the conversion agrees with the original under this probe.",
+    "search": "activated at 2.5e-05; the transition lies between 2e-05 and 2.5e-05, found in 5 runs of the original",
+    "time_dependence": "this material is time dependent: the same strain path applied over 100 times less step time gives a stress that differs by 6.667e-01 relative; and stress moved by 6.667e-01 relative while the strain was held. No amplitude would have found that, because raising the strain does not make time pass"
   },
   "material": {
     "block": "umat_elastic",
     "deck": "BristolCompositesInstitute__abaci/example/jobs/test-job.inp",
-    "deck_digest": "94a5342ac1130a37",
+    "deck_digest": "2c84e826110efd78",
     "meaning": "not established: the deck gives values, not names. The constants are the author's; what they mean is not certified here.",
     "props_count": 2,
-    "provenance": "test-job.inp *MATERIAL umat_elastic: 2 constants, *DEPVAR 1 (paired deck BristolCompositesInstitute__abaci/example/jobs/test-job.inp)"
+    "provenance": "BristolCompositesInstitute__abaci/example/jobs/test-job.inp: test-job.inp *MATERIAL umat_elastic: 2 constants, *DEPVAR 1 -- test-job.inp declares exactly one element, so it is the author's own single-element test of this material; a section in test-job.inp attaches umat_elastic to CPE4R; the material is called 'umat_elastic', which carries the source's own name"
   },
   "material_point": {
-    "element_type": "C3D4",
+    "element_type": "C3D8",
     "kinematics": "small strain",
     "kinematics_provenance": "no *STEP in test-job.inp sets NLGEOM, which is Abaqus's default of NLGEOM=NO",
     "nstatv": 1,
@@ -23,5 +262,5 @@
   "schema": "umat-oti/verification-contract/1.0",
   "source_id": "BristolCompositesInstitute__abaci/test/data/umat.f",
   "source_sha256": "fde9e0e60814d4bcc1dd6e08bedefa6dad90ce367160e293c8648d3ab915f2d4",
-  "transform_fingerprint": "e4257779bd847cc4"
+  "transform_fingerprint": "b0d27ee53c630500"
 }

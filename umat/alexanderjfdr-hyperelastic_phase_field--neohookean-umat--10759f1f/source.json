@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "AlexanderJFDR/Hyperelastic_phase_field",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "565d307f0679dcb9377d0ccf04e601082c115590707af15bb6d193a25ef836a9",
+  "source_id": "AlexanderJFDR__Hyperelastic_phase_field/umat/NeoHookean_umat.for",
+  "upstream": "https://github.com/AlexanderJFDR/Hyperelastic_phase_field",
+  "verified_bytes_sha256": "565d307f0679dcb9377d0ccf04e601082c115590707af15bb6d193a25ef836a9",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}

@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "3225b56ba03c584db6d6831b421ff2ea0b637eef9b8fe8e06a088ad3255f195f",
+  "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGrowth.for",
+  "upstream": "https://github.com/Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+  "verified_bytes_sha256": "3225b56ba03c584db6d6831b421ff2ea0b637eef9b8fe8e06a088ad3255f195f",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}
