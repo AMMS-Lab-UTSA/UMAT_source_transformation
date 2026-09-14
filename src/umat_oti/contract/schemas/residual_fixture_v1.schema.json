@@ -1,0 +1,413 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/santiagarcia/UMAT_source_transformation/schemas/residual_fixture_v1.schema.json",
+  "title": "Frozen stress/state/tangent history, and the Residual Assembler's inputs (v1)",
+  "x-contract-version": "2.0.0",
+  "x-what-this-is": "The ingredients one verified corpus case produced, frozen so the Residual Assembler can be driven from what the pipeline actually emits rather than from a reference model written to make the assembler pass. It holds numbers the pipeline computed and the identity of the file they came from, never the file.",
+  "x-three-state-rule": "Every field typed [boolean, null] has three answers and null is never a pass. A fixture frozen before a check existed does not carry that check's key; refusing it would treat 'frozen before the check' as 'failed the check', and passing it silently would treat it as 'passed'. So claims_checked and claims_not_carried name which is which.",
+  "type": "object",
+  "required": [
+    "schema",
+    "source_id",
+    "source_sha256",
+    "transform_fingerprint",
+    "material",
+    "material_point",
+    "original",
+    "converted"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "umat-oti/residual-fixture/1"
+    },
+    "generated": {
+      "type": "string"
+    },
+    "what_this_is": {
+      "type": "string"
+    },
+    "source_id": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*/$).*/.*$",
+      "description": "Identity is the path within the corpus cache, never a basename."
+    },
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "repository": {
+      "type": "string"
+    },
+    "transform_fingerprint": {
+      "type": "string",
+      "minLength": 1,
+      "description": "REQUIRED. The transform this fixture's numbers were produced by. A consumer must refuse a fixture whose fingerprint does not match the store it is read beside: the numbers are evidence about a transform that has since changed."
+    },
+    "deck_digest": {
+      "type": "string"
+    },
+    "material": {
+      "type": "object",
+      "required": [
+        "provenance",
+        "props"
+      ],
+      "additionalProperties": true,
+      "description": "Provenance is REQUIRED here, not optional. A fixture is what later runs are compared against forever after; a constant in one with no provenance is indistinguishable from an invented one.",
+      "properties": {
+        "provenance": {
+          "type": "string",
+          "minLength": 1
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "nstatv": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "deck": {
+      "type": "string"
+    },
+    "material_point": {
+      "type": "object",
+      "required": [
+        "ntens",
+        "voigt_order"
+      ],
+      "additionalProperties": true,
+      "description": "The tensor convention the arrays below are written in. Stated rather than assumed: engineering shear read as tensorial is wrong by two in three components and right everywhere else.",
+      "properties": {
+        "element_type": {
+          "type": "string"
+        },
+        "ntens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ndi": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "nshr": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "kinematics": {
+          "type": "string",
+          "enum": [
+            "small strain",
+            "finite"
+          ]
+        },
+        "voigt_order": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "worst_stress_relative": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "worst_state_relative": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tangent": {
+          "type": "string"
+        },
+        "states_agreeing": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "states_checked": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "finite_history": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Whether the run behind this fixture was finite END TO END, not only over the carried window. Six increments out of hundreds are finite in a run that went to NaN at increment 200, so scanning only what is carried cannot tell a verification from the salvageable prefix of a failed analysis.",
+      "properties": {
+        "rule": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "abaqus_job_completed": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "all_requested_outputs_present": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "complete_history_finite": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "primal_agreed": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "derivatives_verified": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mechanically_informative": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "primal_difference_explained_by_a_measured_control": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "complete_finite_verification_run": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "history_grouping": {
+          "type": "object"
+        },
+        "increments_carried": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Distinct (step, increment, time) among those rows. This is what 'how long is this history' means."
+        },
+        "increments_requested": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "window_starts_at_record": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "why_that_record": {
+          "type": "string"
+        },
+        "records_carried": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Rows in the carried history. NOT the number of increments."
+        },
+        "material_points_per_increment": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Rows per increment, or 0 when uneven. Uneven is not a number to average."
+        },
+        "material_point_carried": {
+          "type": [
+            "integer",
+            "string",
+            "null"
+          ],
+          "description": "Which integration point these rows are, so a reader is not left assuming the element had only one."
+        },
+        "material_points_available": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "How many points the RUN wrote, which is not how many are kept."
+        },
+        "records_requested": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "records_available": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
+      },
+      "required": [
+        "records_carried",
+        "increments_carried",
+        "material_points_per_increment"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "material_points_per_increment": {
+                "const": 1
+              }
+            },
+            "required": [
+              "material_points_per_increment"
+            ]
+          },
+          "then": {
+            "description": "one point per increment means one row per increment; anything else is two counts confused",
+            "properties": {}
+          }
+        }
+      ]
+    },
+    "claims_checked": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "claims_not_carried": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "original": {
+      "$ref": "#/definitions/history"
+    },
+    "converted": {
+      "$ref": "#/definitions/history"
+    }
+  },
+  "definitions": {
+    "history": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The stress / state / tangent history at one material point: what the Residual Assembler consumes. 'original' is the author's build; 'converted' is the transformed build. Both are carried because the difference between them is the evidence, and a fixture holding only one of them cannot be differenced.",
+      "items": {
+        "type": "object",
+        "required": [
+          "element",
+          "point",
+          "step",
+          "increment",
+          "time",
+          "strain",
+          "dstrain",
+          "stress",
+          "state",
+          "ddsdde"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "increment": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "time": {
+            "type": "number"
+          },
+          "strain": {
+            "$ref": "#/definitions/finiteVector"
+          },
+          "dstrain": {
+            "$ref": "#/definitions/finiteVector"
+          },
+          "stress": {
+            "$ref": "#/definitions/finiteVector"
+          },
+          "state": {
+            "$ref": "#/definitions/finiteVector"
+          },
+          "ddsdde": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/finiteVector"
+              }
+            ],
+            "description": "The material tangent, row-major, ntens*ntens long. In the list because a fixture whose stress is finite and whose tangent is not would freeze a NaN that only shows up once somebody assembles a stiffness."
+          },
+          "element": {
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Which element. Half of the material-point identity."
+          },
+          "point": {
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Which integration point. A C3D8 writes one row per point per increment, so without this rows cannot be grouped."
+          },
+          "step": {
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Which step. REQUIRED, and half the identity of an increment: Abaqus restarts increment numbering in every step, so (increment, time) alone cannot say which *BOUNDARY block was in force."
+          }
+        }
+      }
+    },
+    "finiteVector": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "description": "JSON has no NaN or Infinity literal, so a non-finite value can only arrive as a string or a null; both are refused by this type. A NaN frozen into a fixture does not fail, it propagates, and the comparison that should have caught it is being made against the NaN."
+      }
+    }
+  },
+  "x-identity-rule": "FIVE fields name one row: element, point, step, increment, time. Abaqus numbers increments from 1 again in every step, so a four-step J2 cycle has four increment 1s -- measured on the committed j2_props fixture, where they carry stresses of 269.2, 1571.5, -264.0 and -182.6, four different states of the material. A consumer reconstructing boundary conditions from 'increment' alone picked the wrong one and was wrong by 3.0 relative: a different deformation, not a tolerance. element and point are the other half -- a C3D8 writes one row per integration point, so without them rows cannot be grouped into increments at all.",
+  "x-count-rule": "RECORDS and INCREMENTS are two counts and neither may stand for the other. A record is one material point of one increment, so a 35-increment C3D8 history is 280 records. An exporter reported records as increments, a loader compared one against the other, and a complete history was refused as '35 of the 280 asked for'. records_carried = increments_carried x material_points_per_increment whenever the points per increment are even; 0 there means uneven, which is not a number to average because an increment short of a point did not produce the state a comparison would compare."
+}

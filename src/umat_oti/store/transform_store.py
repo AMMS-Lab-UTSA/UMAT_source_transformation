@@ -73,7 +73,10 @@ FINGERPRINTED = ("*.py", "*.f90", "*.f", "*.for", "*.inc")
 #: probes, comparisons, the finite-difference replay; ``app`` is the interface;
 #: ``assist`` is advisory and may never touch published evidence;
 #: ``publication`` renders it; ``store`` is this file's own package, which
-#: computes the fingerprint and cannot be an input to it.
+#: computes the fingerprint and cannot be an input to it; ``contract`` is the
+#: versioned data contract with Residual_Assembler -- it describes what a
+#: finished transform is published AS, never how one is produced, and nothing
+#: on the transform side imports it.
 #: ``tests/test_the_fingerprint_covers_the_transform.py`` enforces both halves:
 #: every exemption is dropped the moment a transform module imports one.
 #:
@@ -82,7 +85,8 @@ FINGERPRINTED = ("*.py", "*.f90", "*.f", "*.for", "*.inc")
 #: transforms stale and demanded they be rebuilt before any of them could be
 #: re-verified -- so the cost of looking harder at the evidence was paid in
 #: re-deriving the evidence, which is precisely backwards.
-NOT_TRANSFORM_CODE = ("abaqus", "app", "assist", "publication", "store")
+NOT_TRANSFORM_CODE = ("abaqus", "app", "assist", "contract",
+                      "publication", "store")
 
 
 def transform_fingerprint(package_root: Optional[Path] = None) -> str:
