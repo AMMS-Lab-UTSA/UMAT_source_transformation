@@ -1276,6 +1276,29 @@ class DiagnosedEntry:
 #:         props = (906512.0, ~0.499) -- one deck family, one mechanism
 #:     4   nothing above fits
 #:
+#: And 28 of those 62 do not carry a claim about the routine at all. Run
+#: ``isolate_first_divergence`` over each entry's own probe records, asking for
+#: the first divergence BEYOND ROUNDING, and the 62 split:
+#:
+#:    34   same_inputs_different_outputs -- the routine was handed the same
+#:         arguments and returned different numbers. This is what
+#:         ``primal_disagreed`` is supposed to mean, and for these it does
+#:    16   inputs_already_diverged -- the ARGUMENTS had already parted before
+#:         the outputs did, so what the routine returned is not attributable
+#:         to the routine. From-2D-to-2D-Axe is one: by call 8 the two builds
+#:         were being handed DSTRAN differing by 1.47e-03 of its scale
+#:    12   no_divergence_in_paired_calls -- the two builds returned
+#:         BIT-IDENTICAL outputs, beyond rounding, at every recorded call, and
+#:         the entry is still stage primal_disagreed
+#:
+#: ``compare_primal`` pairs the two CONVERGED histories positionally and scores
+#: them. It never asks whether the two builds were still being handed the same
+#: arguments by the time they parted, so it cannot tell "the routine computes a
+#: different function" from "the solve went somewhere else". The code that can
+#: tell them apart is already in this package and the corpus stage does not
+#: call it. Until it does, 28 of the 62 rows in the project's largest failure
+#: cluster say something the evidence underneath them does not support.
+#:
 #: So the largest cluster in the project's largest failure stage is not a
 #: transform defect at all: it is decks whose own conditioning multiplies a
 #: last bit by 1e+08 before it reaches the solver. That is worth fixing in the

@@ -83,3 +83,49 @@ def test_no_pass10_entry_is_compared_at_misaligned_records():
     if not checked:
         pytest.skip("no pass10 work directories with both histories on disk")
     assert offenders == []
+
+
+@pytest.mark.integration
+def test_not_every_primal_disagreed_entry_carries_a_claim_about_the_routine():
+    """28 of pass10's 62 do not, and the code that says so is already here.
+
+    ``compare_primal`` scores the two CONVERGED histories and never asks
+    whether the builds were still being handed the same arguments by the time
+    they parted. ``isolate_first_divergence`` does ask. Over the 62 it returns
+    ``same_inputs_different_outputs`` for 34, ``inputs_already_diverged`` for
+    16, and ``no_divergence_in_paired_calls`` -- bit-identical outputs beyond
+    rounding at every recorded call -- for 12.
+
+    This test does not pin those counts; they move as the transform and the
+    experiments change. It pins the thing that must stay true: the two
+    questions are different, and an entry whose probe records show no
+    divergence at all is not evidence that the routine disagrees.
+    """
+    from umat_oti.abaqus.call_isolation import (isolate_first_divergence,
+                                                read_pair)
+    root = pathlib.Path(
+        os.environ.get("UMAT_OTI_CORPUS_RUN")
+        or pathlib.Path.home() / "softwarex_work" / "corpus_run") / "pass10"
+    results = root / "results" / "store_verification.jsonl"
+    if not results.is_file():
+        pytest.skip(f"no pass10 results at {results}")
+    seen = {}
+    for line in results.read_text().splitlines():
+        record = json.loads(line)
+        if record.get("stage") != "primal_disagreed":
+            continue
+        work = root / "work" / str(record.get("key"))
+        if not (work / "original" / "original_probe.txt").is_file():
+            continue
+        original, transformed = read_pair(work)
+        verdict = isolate_first_divergence(
+            original, transformed, require_beyond_rounding=True).verdict
+        seen[verdict] = seen.get(verdict, 0) + 1
+    if not seen:
+        pytest.skip("no pass10 probe records on this machine")
+    # The whole point: the stage label does not distinguish these, and it must
+    # not be read as though it did.
+    assert len(seen) > 1, (
+        "every primal_disagreed entry reached the same isolation verdict, so "
+        "either the corpus changed shape or the isolation stopped "
+        f"discriminating: {seen}")
