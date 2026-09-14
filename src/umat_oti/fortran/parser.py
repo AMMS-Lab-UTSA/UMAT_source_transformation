@@ -141,22 +141,167 @@ def _collapse_spaces(text: str) -> str:
     return re.sub(r"\s+", " ", text.strip())
 
 
+#: An INTERFACE block opener. ``interface``, ``abstract interface``, a named
+#: generic ``interface swap``, and the operator forms ``interface operator(+)``
+#: / ``interface assignment(=)`` are all of them.
+INTERFACE_OPEN_RE = re.compile(
+    r"^\s*(?:abstract\s+)?interface\b"
+    r"(?:\s*(?:\w+|operator\s*\(.*\)|assignment\s*\(\s*=\s*\)))?\s*$",
+    flags=re.IGNORECASE,
+)
+#: Its closer. ``endinterface`` is the no-space spelling fixed form allows.
+INTERFACE_CLOSE_RE = re.compile(
+    r"^\s*end\s*interface(\s+.*)?$", flags=re.IGNORECASE)
+
+#: The prefixes a subprogram header may carry before the keyword. Fortran
+#: allows them in any order and Fortran 2008 adds ``module``; a header that
+#: carries one is a definition exactly like a header that does not.
+SUBPROGRAM_PREFIX = r"(?:(?:recursive|pure|impure|elemental|non_recursive|module)\s+)*"
+
+#: ``[prefix] SUBROUTINE name(args)``.
+#:
+#: The argument list stays REQUIRED, and the reason is fixed-form column
+#: arithmetic rather than Fortran: ``  end subroutine umat`` indented two
+#: columns has its first six characters read as the label field, so the
+#: statement text handed to this pattern is the bare ``subroutine umat``.
+#: Accepting that spelling made four sahmotaman sources report a UMAT whose
+#: whole body was one line long -- a routine invented out of a line that ends
+#: one. An argument-less SUBROUTINE is legal and is not found here; finding it
+#: needs the form detection fixed first, not a looser pattern.
+SUBROUTINE_HEADER_RE = re.compile(
+    rf"^\s*{SUBPROGRAM_PREFIX}subroutine\s+(?P<name>\w+)\s*\((?P<args>.*)\)\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+def _interface_body_line_indexes(
+    logical_lines: tuple[FortranLogicalLine, ...],
+) -> frozenset[int]:
+    """Indexes of the lines that sit inside an INTERFACE block.
+
+    An interface body states the signature of a procedure defined SOMEWHERE
+    ELSE -- usually not in this file at all -- and it is written with the same
+    words as a definition:
+
+        interface
+            pure subroutine MohrCoulombStressReturn(Sigma, nsigma, ...)
+                ...declarations only...
+            end subroutine MohrCoulombStressReturn
+        end interface
+
+    Read as source, that ``end subroutine`` closes whatever program unit is
+    open. In MohrCoulombAbaqus.for the open unit is UMAT itself, whose
+    interface block sits in its declaration section, so UMAT was recorded as
+    spanning lines 1-141 when its body runs to 245. Every anchor the transform
+    looks for -- the stress update, the tangent output, both extraction points
+    -- lives after line 141 and was discarded for being outside the routine,
+    and the refusal named four missing anchors rather than the one parse that
+    lost them.
+
+    Blocks nest: an interface body may not contain another interface, but a
+    routine may open one, so the depth counter is what ends the outer block.
+    """
+    inside: set[int] = set()
+    depth = 0
+    for index, line in enumerate(logical_lines):
+        if INTERFACE_CLOSE_RE.match(line.text):
+            if depth:
+                depth -= 1
+                inside.add(index)
+            continue
+        if INTERFACE_OPEN_RE.match(line.text):
+            depth += 1
+            inside.add(index)
+            continue
+        if depth:
+            inside.add(index)
+    return frozenset(inside)
+
+
+#: A procedure header as it is written inside an interface body: the same
+#: words as a definition, with or without prefixes, subroutine or function.
+_INTERFACE_PROCEDURE_RE = re.compile(
+    rf"^\s*(?:(?:{TYPE_PATTERN})\s+)?{SUBPROGRAM_PREFIX}"
+    r"(?:subroutine|function)\s+(?P<name>\w+)\s*(?:\(|$)",
+    flags=re.IGNORECASE,
+)
+#: ``module procedure NAME`` / ``procedure NAME``, the other way a generic
+#: interface names a real procedure.
+_INTERFACE_MODULE_PROCEDURE_RE = re.compile(
+    r"^\s*(?:module\s+)?procedure\s*(?:::)?\s*(?P<names>[\w\s,]+?)\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+def interface_declared_procedures(
+    logical_lines: tuple[FortranLogicalLine, ...],
+) -> frozenset[str]:
+    """Upper-case names an INTERFACE block declares to be procedures.
+
+    These are not definitions -- :func:`parse_subroutines` and
+    :func:`parse_function_subprograms` skip them, and the lifter must not be
+    offered a body that is not there -- but they are still proof about the
+    NAME: ``Convert_array_to_tensor(stress, 1.0_DP)`` is a call, not a
+    subscript. The submodule idiom is where it matters, because the interface
+    body is the only place the argument list appears at all: the
+    implementation is written ``module procedure convert_array_to_tensor``
+    with no signature. Reading the call as a subscript reported a promoted
+    array with no confirmed shape and refused a source that was fine.
+    """
+    return frozenset(
+        str(row["name"]) for row in interface_declared_procedure_sites(logical_lines))
+
+
+def interface_declared_procedure_sites(
+    logical_lines: tuple[FortranLogicalLine, ...],
+) -> list[dict[str, object]]:
+    """:func:`interface_declared_procedures`, with the line each was declared on.
+
+    The lines are what makes a refusal a diagnostic rather than a verdict: a
+    file whose only UMAT is an interface body can be told apart, in the message
+    itself, from a file that has no UMAT anywhere.
+    """
+    rows: list[dict[str, object]] = []
+    seen: set[str] = set()
+    for index in sorted(_interface_body_line_indexes(logical_lines)):
+        line = logical_lines[index]
+        names: list[str] = []
+        match = _INTERFACE_PROCEDURE_RE.match(line.text)
+        if match:
+            names = [match.group("name").upper()]
+        else:
+            match = _INTERFACE_MODULE_PROCEDURE_RE.match(line.text)
+            if match:
+                names = [name.strip().upper()
+                         for name in match.group("names").split(",") if name.strip()]
+        for name in names:
+            if name in seen:
+                continue
+            seen.add(name)
+            rows.append({"name": name, "line_numbers": list(line.line_numbers)})
+    return rows
+
+
 def parse_subroutines(logical_lines: tuple[FortranLogicalLine, ...]) -> tuple[ParsedSubroutine, ...]:
     routines: list[ParsedSubroutine] = []
+    interface_lines = _interface_body_line_indexes(logical_lines)
     index = 0
     while index < len(logical_lines):
         line = logical_lines[index]
-        match = re.match(r"^\s*subroutine\s+(\w+)\s*\((.*)\)\s*$", line.text, flags=re.IGNORECASE)
+        if index in interface_lines:
+            index += 1
+            continue
+        match = SUBROUTINE_HEADER_RE.match(line.text)
         if not match:
             index += 1
             continue
-        name = match.group(1)
-        args = tuple(arg.strip() for arg in split_top_level(match.group(2)) if arg.strip())
+        name = match.group("name")
+        args = tuple(arg.strip() for arg in split_top_level(match.group("args") or "") if arg.strip())
         routine_lines = [line]
         index += 1
         while index < len(logical_lines):
             routine_lines.append(logical_lines[index])
-            if re.match(
+            if index not in interface_lines and re.match(
                 r"^\s*end\s*(subroutine(\s+\w+)?)?\s*$",
                 logical_lines[index].text,
                 flags=re.IGNORECASE,
@@ -205,9 +350,13 @@ def parse_function_subprograms(
     keyword, so a consumer that needs the distinction still has it.
     """
     routines: list[ParsedSubroutine] = []
+    interface_lines = _interface_body_line_indexes(logical_lines)
     index = 0
     while index < len(logical_lines):
         line = logical_lines[index]
+        if index in interface_lines:
+            index += 1
+            continue
         match = FUNCTION_HEADER_RE.match(line.text)
         if not match:
             index += 1
@@ -219,7 +368,7 @@ def parse_function_subprograms(
         index += 1
         while index < len(logical_lines):
             routine_lines.append(logical_lines[index])
-            if re.match(
+            if index not in interface_lines and re.match(
                 r"^\s*end\s*(function(\s+\w+)?)?\s*$",
                 logical_lines[index].text,
                 flags=re.IGNORECASE,

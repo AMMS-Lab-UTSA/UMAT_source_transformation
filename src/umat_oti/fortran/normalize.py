@@ -68,6 +68,26 @@ def form_evidence(text: str) -> dict[str, int]:
       numeric, which is fixed form's continuation marker.
     """
     free = fixed = 0
+    # A letter in column 6 is legal as a continuation marker and is almost
+    # never used as one. It is, on the other hand, exactly what a free-form
+    # file indented five spaces looks like:
+    #
+    #      use controls          <- "u" sits in column 6
+    #
+    # Counting those made 73 such statements in sahmotaman's umat_subroutine.for
+    # outvote the 72 lines that could only be free form, and the file was read
+    # by column: every statement lost its first six characters, no header
+    # matched, and the refusal said the source defines no routine at all.
+    #
+    # So a letter marker is held back and counted only where the file ALSO
+    # uses a conventional marker -- a digit, "&", "+", "." -- somewhere, which
+    # is what a genuinely fixed-form file that happens to use a letter once
+    # does. Measured over all 391 cached sources: seven files carry a letter
+    # in column 6 at all; six of them use nothing else and are free-form
+    # sources in a .f or .for file, and the seventh (sd104400/OPA_Modeling)
+    # carries 4 letters beside 35 digits and stays fixed.
+    lettered = 0
+    conventional = 0
     for line in text.splitlines():
         if not line.strip():
             continue
@@ -89,7 +109,11 @@ def form_evidence(text: str) -> dict[str, int]:
             continue
         if marker.strip() and marker != "0" and (not head.strip()
                                                  or head.strip().isdigit()):
-            fixed += 1
+            if marker.isalpha():
+                lettered += 1
+            else:
+                conventional += 1
+                fixed += 1
             continue
         # Columns 1-5 may hold only a label in fixed form. A letter there is
         # not a label, and the line cannot be fixed form.
@@ -99,6 +123,8 @@ def form_evidence(text: str) -> dict[str, int]:
         body = line.split("!")[0].rstrip()
         if body.endswith("&"):
             free += 1
+    if conventional:
+        fixed += lettered
     return {"free": free, "fixed": fixed}
 
 

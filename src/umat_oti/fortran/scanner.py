@@ -7,7 +7,10 @@ from typing import Any
 from umat_oti.core.diagnostics import unsupported_report
 from umat_oti.fortran.interface_detection import umat_like_routines
 from umat_oti.fortran.normalize import detect_source_form
-from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines, split_top_level
+from umat_oti.fortran.parser import (
+    interface_declared_procedure_sites, logical_lines_from_text,
+    parse_subroutines, split_top_level,
+)
 from umat_oti.fortran.regions import _is_executable_line, detect_candidate_regions
 from umat_oti.fortran.variables import ASSIGNMENT_RE, TOKEN_RE, collect_variables
 from umat_oti.core.model import CallSite, FortranLogicalLine, ParsedFortranSource, UnsupportedFeature
@@ -71,6 +74,7 @@ def analyze_fortran_source(path: Path) -> dict[str, Any]:
         "detected_umat_routines": umat_like_routines(parsed),
         "detected_variables": [record.to_json() for record in collect_variables(parsed).values()],
         "file_io": _scan_file_io(parsed.logical_lines),
+        "interface_declared_procedures": interface_declared_procedure_sites(parsed.logical_lines),
         "finite_strain": _finite_strain_analysis(parsed.logical_lines, detected_regions["regions"]),
         "form": parsed.form,
         "has_subroutine_umat": any(routine.upper_name == "UMAT" for routine in parsed.subroutines),

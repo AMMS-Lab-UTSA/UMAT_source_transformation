@@ -171,12 +171,17 @@ class DependencySummary:
 
 def detect_candidate_regions(parsed: ParsedFortranSource) -> dict[str, Any]:
     source_lines = parsed.text.splitlines()
-    # _routine_effect_table is NOT passed here, and the reason is written in
-    # its docstring: the validation round found the edges correct and the
-    # emitter not ready for them. Until that is fixed the table is available
-    # to a caller that asks for it and is not the default.
+    # The inferred effect table IS passed here now. It was held back because
+    # the emitter could drop a statement's effect when a region boundary
+    # moved -- the branch pass rewrote a logical IF into the shadow domain
+    # while the assignment pass left its effect real -- and moving boundaries
+    # is exactly what these edges do. That asymmetry is fixed;
+    # ``branch_rewrite_is_domain_consistent`` in source_transform carries the
+    # assignment pass's own gates, and installing it changed no emitted byte
+    # over all 391 triage rows. See _routine_effect_table for what the edges
+    # are and what they deliberately do not record.
     assignments = _assignments(parsed.logical_lines) + _call_effect_assignments(
-        parsed.logical_lines)
+        parsed.logical_lines, _routine_effect_table(parsed))
     block_ranges = _block_ranges(parsed.logical_lines)
     dependency_summary = _dependency_summary(parsed, assignments)
     signals = _assignment_signals(assignments, dependency_summary, block_ranges)
@@ -328,25 +333,23 @@ def _routine_effect_table(
     cannot spin: the set of positions only grows and is bounded by the
     argument count.
 
-    **Not wired into detect_candidate_regions, on the evidence of a validation
-    round.** Re-emitting all 391 triage rows with these edges in place moved 44
-    outputs and took 240 sources to 246, with no fully_verified output changed
-    -- and regressed one source that the corpus verification does mark
-    verified. On keisuke58/pde-fem-biofilm's umat_biofilm_visco_phase2.f the
-    new classification moves ALPHA_G's region from a transformed one to a
-    kept-real one, and the emitter then rewrites
+    Wired into :func:`detect_candidate_regions`. It was held back for one
+    round, and the reason is worth keeping because it is what the gate in
+    ``source_transform.branch_rewrite_is_domain_consistent`` exists for. These
+    edges move region boundaries, and on keisuke58/pde-fem-biofilm's
+    umat_biofilm_visco_phase2.f moving one took ALPHA_G's region from a
+    transformed one to a kept-real one. The emitter then rewrote
 
         IF (ALPHA_G .LT. 0.0D0) ALPHA_G = 0.0D0
 
-    to the shadow while leaving the assignment above it real, because the
-    branch-line pass rewrites any line in the selected routine that mentions a
-    promoted name whatever region it is in, and the assignment pass is
-    region-bound. The clamp then reads the zero the initialiser left and the
-    growth parameter is never clamped. The edges are right; the emitter is one
-    region boundary away from dropping a statement's effect in any source, and
-    fixing THAT is the prerequisite. Keeping the table computable and tested
-    means the next attempt starts from a measured position rather than from
-    this note.
+    into the shadow domain while leaving the assignment above it real,
+    because the branch pass rewrote any line of the selected routine that
+    mentioned a promoted name wherever it sat and the assignment pass would
+    not touch an assignment above the seed insertion point. The clamp read the
+    zero the initialiser left, never fired, and the growth parameter kept a
+    negative value. The edges were right and the emitter was one region
+    boundary away from dropping a statement's effect in ANY source. That is
+    now a gate rather than a hazard.
 
     What it deliberately does NOT record: a dependency the callee picks up
     through a COMMON block, a module variable, a SAVEd local, or a callee this
