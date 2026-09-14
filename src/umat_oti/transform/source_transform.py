@@ -219,6 +219,34 @@ def transform_umat_to_oti_from_config(
         report_path = _write_report(output_dir, report)
         return TransformResult(False, output_dir, report_path=report_path, blockers=blockers, warnings=warnings, report=report)
 
+    # Lifted before the rewrite rather than after it. The rewrite has to know
+    # which of a helper's dummy arguments the lifted body declares as the OTI
+    # type, because an actual argument reaching one of those has to be a
+    # shadow whatever role the classifier gave it -- the lifted helpers are
+    # external subprograms and the implicit interface hides the mismatch. The
+    # lifting does not read anything the rewrite produces, so the order is
+    # free to be this way round.
+    helper_source_path: Path | None = None
+    lifted_helper_text = ""
+    oti_helper_dummies: dict[str, list[str | None]] = {}
+    if helper_lift_names:
+        lifted_helpers = lift_helper_set_source(
+            parsed,
+            helper_lift_names,
+            module_name=module_result.module_name,
+            type_name=module_result.type_name,
+            helper_output_copies=_helper_output_copies(config),
+            helper_output_surfaces=_helper_output_surfaces(config),
+        )
+        # Wrapped before it is written. gfortran is given
+        # -ffree-line-length-none and would take the file as it stands, but
+        # Abaqus compiles user subroutines with ifort, which truncates at 7200
+        # characters; stitching a source's fixed-form continuations into single
+        # free-form statements produced one line of 14858. The wrap only moves
+        # line breaks, so the statement text is unchanged.
+        lifted_helper_text = wrap_free_form(lifted_helpers.source)
+        oti_helper_dummies = oti_typed_dummies_of_lifted_helpers(lifted_helper_text)
+
     rewrite = _transform_source_text(
         source_text=source_text,
         parsed=parsed,
@@ -233,6 +261,7 @@ def transform_umat_to_oti_from_config(
         variable_shapes=variable_shapes,
         argument_variables=argument_variables,
         lifted_helper_names=set(helper_lift_names),
+        oti_helper_dummies=oti_helper_dummies,
         tangent_context=tangent_context,
         config=config,
     )
@@ -241,25 +270,9 @@ def transform_umat_to_oti_from_config(
     transformed_path = output_dir / transformed_name
     transformed_path.write_text(transformed_source, encoding="utf-8")
 
-    helper_source_path: Path | None = None
-    if helper_lift_names:
-        lifted_helpers = lift_helper_set_source(
-            parsed,
-            helper_lift_names,
-            module_name=module_result.module_name,
-            type_name=module_result.type_name,
-            helper_output_copies=_helper_output_copies(config),
-            helper_output_surfaces=_helper_output_surfaces(config),
-        )
+    if lifted_helper_text:
         helper_source_path = output_dir / "umat_oti_helpers.f90"
-        # Wrapped before it is written. gfortran is given
-        # -ffree-line-length-none and would take the file as it stands, but
-        # Abaqus compiles user subroutines with ifort, which truncates at 7200
-        # characters; stitching a source's fixed-form continuations into single
-        # free-form statements produced one line of 14858. The wrap only moves
-        # line breaks, so the statement text is unchanged.
-        helper_source_path.write_text(
-            wrap_free_form(lifted_helpers.source), encoding="utf-8")
+        helper_source_path.write_text(lifted_helper_text, encoding="utf-8")
 
     # The extension module that supplies what the vendored algebra leaves out:
     # SIGN, SQRT, MIN, MAX and the mixed-kind arithmetic Fortran would have
@@ -327,6 +340,7 @@ def transform_umat_to_oti_from_config(
         tangent_context=tangent_context,
         extraction_insertion_region_id=rewrite.extraction_insertion_region_id,
         lifted_helper_names=set(helper_lift_names or ()),
+        lifted_helper_source=lifted_helper_text,
         config=config,
     )
     warnings.extend(sanity_warnings)
@@ -2096,6 +2110,7 @@ def _transform_source_text(
     variable_shapes: dict[str, str],
     argument_variables: set[str],
     lifted_helper_names: set[str],
+    oti_helper_dummies: dict[str, list[str | None]] | None = None,
     tangent_context: TangentRegionContext,
     config: dict[str, Any],
 ) -> TransformRewrite:
@@ -2137,7 +2152,9 @@ def _transform_source_text(
     old_region_by_line = _region_by_line(tangent_regions_to_skip)
     removable_io_by_line = _removable_file_io_by_line(config)
     stress_line_numbers = _line_set(regions["stress"])
-    lifted_helper_argument_shadows = _lifted_helper_argument_shadow_names(config, regions["stress"], lifted_helper_names, variable_shapes)
+    lifted_helper_argument_shadows = _lifted_helper_argument_shadow_names(
+        config, regions["stress"], lifted_helper_names, variable_shapes,
+        oti_helper_dummies or {})
     # Shapes are collected across the whole file under bare names, and two
     # routines may declare the same name differently -- these UEL files
     # declare AUX1(NTENS,NDOFEL) in the element routine and AUX1(NTENS,NTENS)
@@ -5608,13 +5625,47 @@ def _lifted_helper_argument_shadow_names(
     stress_regions: list[dict[str, Any]],
     lifted_helper_names: set[str],
     variable_shapes: dict[str, str],
+    oti_helper_dummies: dict[str, list[str | None]] | None = None,
 ) -> set[str]:
+    """Caller-side names that need a shadow because a helper call takes one.
+
+    The keep-real exclusion below is the role classifier having its say, and
+    it is right for an INLINEABLE helper, whose body is written out at the
+    call site in whatever types the surrounding code uses.
+
+    It is not the classifier's call for a LIFTED helper. The lifted body
+    declares a dummy TYPE(ONUMM..) or it does not, and that decision is already
+    made -- by the lifter, recorded in ``oti_helper_dummies``, read back off
+    the emitted module text. An actual argument arriving at an OTI dummy has
+    to be a shadow whatever role the classifier gave it, because the lifted
+    helpers are external subprograms: the implicit interface takes a REAL
+    against a hypercomplex dummy without a word, and the callee then reads the
+    first of seven doubles as the whole number.
+
+    Measured on keisuke58/pde-fem-biofilm's umat_biofilm_visco_phase2.f, where
+    DFGRD_P and STRESS_PERT are tangent-only by every honest reading -- they
+    build the source's own finite-difference Jacobian -- and are handed
+    straight to BIOFILM_STRESS_CORE_OTI, whose F_IN and STRESS_OUT the lifted
+    body types ONUMM6N1.
+    """
     helper_names = set(INLINEABLE_HELPERS) | set(lifted_helper_names)
     if not helper_names:
         return set()
     analysis = _dict(config.get("analysis"))
     keep_real_names = _roles_from_config(config)["keep_real"]
     known_variables = set(_variable_role_items(config)) | {name.upper() for name in variable_shapes}
+    dummies = oti_helper_dummies or {}
+    # Which names the source itself declares with a real type. Needed because
+    # the implicit-integer guess below is a guess about a NAME, and a source is
+    # free to declare DOUBLE PRECISION M0(3,3) -- jpsferreira/UMAT-ABAQUS does,
+    # and hands M0 to a helper whose matching dummy the lifted body types OTI.
+    # Vetoing the shadow on the initial letter left a real 3x3 array receiving
+    # a hypercomplex one through an implicit interface.
+    declared_real = {
+        name for name, row in _variable_role_items(config).items()
+        if str(row.get("detected_type") or row.get("detected type") or "")
+        .strip().lower().startswith(("real", "double"))
+    }
     result: set[str] = set()
     for row in analysis.get("stress_path_helpers", []) or []:
         if not isinstance(row, dict):
@@ -5623,12 +5674,35 @@ def _lifted_helper_argument_shadow_names(
         line_numbers = tuple(_as_int(value) for value in row.get("line_numbers", []) or [] if _as_int(value))
         if callee not in helper_names or not line_numbers:
             continue
-        if not _line_numbers_intersect(line_numbers, stress_regions):
+        # Positions the lifted body typed OTI, for this callee. Empty for an
+        # inlineable helper and for anything not lifted, which leaves the
+        # behaviour below exactly as it was for those.
+        required = dummies.get(f"{callee}_OTI") or dummies.get(callee) or []
+        arguments = list(row.get("arguments", []) or [])
+        required_names = {
+            _helper_argument_base_name(arguments[index])
+            for index, dummy in enumerate(required)
+            if dummy is not None and index < len(arguments)
+        }
+        required_names.discard("")
+        # The region gate belongs to the classifier's question -- "does this
+        # call sit on the stress path" -- and not to the type question. A
+        # lifted body is hypercomplex at every one of its call sites, so an
+        # actual arriving at an OTI dummy needs a shadow wherever the call is.
+        # The gate still governs every other argument, which is what it was
+        # written for.
+        if not required_names and not _line_numbers_intersect(line_numbers, stress_regions):
             continue
-        for name in _helper_argument_base_names(row.get("arguments", []) or []):
-            if name in INTRINSIC_TOKEN_NAMES or _is_implicit_integer_name(name):
+        in_stress_region = _line_numbers_intersect(line_numbers, stress_regions)
+        for name in _helper_argument_base_names(arguments):
+            if not in_stress_region and name not in required_names:
                 continue
-            if name in keep_real_names:
+            if name in INTRINSIC_TOKEN_NAMES:
+                continue
+            if _is_implicit_integer_name(name) and not (
+                    name in required_names and name in declared_real):
+                continue
+            if name in keep_real_names and name not in required_names:
                 continue
             if known_variables and name not in known_variables:
                 continue
@@ -5842,6 +5916,168 @@ def oti_arguments_into_untransformed_calls(
     return found
 
 
+def oti_typed_dummies_of_lifted_helpers(
+    lifted_helper_source: str,
+) -> dict[str, list[str | None]]:
+    """Per lifted routine, the dummy argument names the lifted body made hypercomplex.
+
+    Read off the emitted module text rather than predicted from the original
+    declarations. The lifter decides the type of every dummy -- integer stays
+    integer, CHARACTER and LOGICAL are copied through, an implicit I-N name
+    stays integer, everything else becomes the OTI type -- and any second
+    implementation of that rule is a place the two can disagree without
+    anything noticing. This reads the artifact, so there is nothing to drift
+    from.
+
+    The value is positional: entry ``i`` is the dummy's name when the lifted
+    body typed it OTI, and None when it did not. Positions and not names,
+    because the caller's actual argument at that position is what has to
+    match, whatever the caller happens to call it.
+    """
+    result: dict[str, list[str | None]] = {}
+    current = ""
+    arguments: list[str] = []
+    oti_names: set[str] = set()
+    pending_header = ""
+
+    def close() -> None:
+        if current:
+            result[current] = [name if name.upper() in oti_names else None
+                               for name in arguments]
+
+    for raw in lifted_helper_source.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("!"):
+            continue
+        joined = pending_header + line
+        if joined.endswith("&"):
+            pending_header = joined[:-1].rstrip() + " "
+            continue
+        pending_header = ""
+        header = re.match(r"^\s*(?:recursive\s+|pure\s+|elemental\s+)*"
+                          r"(?:subroutine|function)\s+(\w+)\s*\((.*)\)\s*$",
+                          joined, flags=re.IGNORECASE)
+        if header:
+            close()
+            current = header.group(1).upper()
+            arguments = [item.strip() for item in split_top_level(header.group(2))
+                         if item.strip()]
+            oti_names = set()
+            continue
+        declaration = re.match(r"^\s*type\s*\(\s*\w+\s*\)\s*::\s*(.+)$",
+                               joined, flags=re.IGNORECASE)
+        if declaration and current:
+            for item in split_top_level(declaration.group(1)):
+                name = _helper_argument_base_name(item)
+                if name:
+                    oti_names.add(name)
+    close()
+    return result
+
+
+def _helper_argument_base_name(argument: str) -> str:
+    match = re.match(r"\s*([A-Za-z_]\w*)", str(argument))
+    return match.group(1).upper() if match else ""
+
+
+def real_arguments_into_oti_helper_dummies(
+    transformed_source: str,
+    form: str,
+    lifted_helper_source: str,
+    type_name: str,
+) -> list[tuple[str, str, str]]:
+    """CALLs that hand a REAL value to a lifted helper's hypercomplex dummy.
+
+    The mirror image of :func:`oti_arguments_into_untransformed_calls`, and it
+    had to be written because that one only looks one way. The lifted helpers
+    are free-standing external subprograms, not module procedures -- see the
+    compile order, which compiles umat_oti_helpers.f90 separately and USEs
+    nothing from it -- so the call is through an implicit interface in this
+    direction too. A DOUBLE PRECISION array against a TYPE(ONUMM6N1) dummy
+    compiles, links, and reads the first of seven doubles as the whole number.
+
+    Measured on keisuke58/pde-fem-biofilm's umat_biofilm_visco_phase2.f, whose
+    perturbation block passes DFGRD_P and STRESS_PERT -- both left real by the
+    role classifier -- to BIOFILM_STRESS_CORE_OTI, whose first dummy the lifted
+    body declares TYPE(ONUMM6N1) :: F_IN(3,3). gfortran compiles it without a
+    diagnostic.
+
+    Returns (callee, argument, dummy) triples so the message can name the
+    position as the callee sees it.
+    """
+    dummies = oti_typed_dummies_of_lifted_helpers(lifted_helper_source)
+    if not dummies:
+        return []
+    shadow_names = _names_declared_with_type(transformed_source, type_name, form)
+    found: list[tuple[str, str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    # No comment filter here, and it must not be added back. The logical-line
+    # reader has already dropped every comment and stitched the continuations,
+    # so what arrives begins in column 1 -- and _is_commented, which is right
+    # about a RAW fixed-form line, reads "CALL" as a comment marker because it
+    # starts with C. With that guard in place this check saw no call at all
+    # and passed every source it exists to fail.
+    for line in logical_lines_from_text(transformed_source, form):
+        match = re.match(r"^\s*(?:\d+\s+)?CALL\s+([A-Za-z_]\w*)\s*\((.*)\)\s*$",
+                         line.text, flags=re.IGNORECASE)
+        if not match:
+            continue
+        callee = match.group(1).upper()
+        expected = dummies.get(callee)
+        if not expected:
+            continue
+        actuals = list(split_top_level(match.group(2)))
+        for index, dummy in enumerate(expected):
+            if dummy is None or index >= len(actuals):
+                continue
+            name = _helper_argument_base_name(actuals[index])
+            if not name:
+                # A literal or an expression opening with one. Its type is
+                # whatever Fortran gives it and the compiler will say so;
+                # only a name can be silently reinterpreted.
+                continue
+            if name in shadow_names or name.upper().startswith("OTI_"):
+                continue
+            key = (callee, name)
+            if key in seen:
+                continue
+            seen.add(key)
+            found.append((callee, name, str(dummy).upper()))
+    return found
+
+
+def _names_declared_with_type(source: str, type_name: str, form: str = "fixed") -> set[str]:
+    """Every name the transformed source declares as the OTI type.
+
+    Read from the stitched logical lines and with the attribute list allowed
+    between the type and the ``::``. Both were learned the same way: a
+    declaration written
+
+        TYPE(ONUMM4N1), ALLOCATABLE :: ALPHA_K_OTI(:, :)
+
+    does not match a pattern that puts ``::`` straight after the parenthesis,
+    and a declaration list long enough to continue does not match a pattern
+    applied to raw lines. Either miss makes a perfectly good shadow look like
+    a real variable to the caller-side type check, which then refuses the
+    source and names the shadow as the offender.
+    """
+    if not type_name:
+        return set()
+    result: set[str] = set()
+    pattern = re.compile(
+        rf"^\s*TYPE\s*\(\s*{re.escape(type_name)}\s*\)\s*(?:,[^:]*)?::\s*(.+)$",
+        flags=re.IGNORECASE)
+    for line in logical_lines_from_text(source, form):
+        match = pattern.match(line.text)
+        if not match:
+            continue
+        for item in split_top_level(match.group(1)):
+            name = _helper_argument_base_name(item)
+            if name:
+                result.add(name)
+    return result
+
+
 def _semantic_checks(
     *,
     transformed_source: str,
@@ -5855,6 +6091,7 @@ def _semantic_checks(
     extraction_insertion_region_id: str,
     ddsdde_output_method: str = "GETIM(STRESS_OTI(i), j)",
     lifted_helper_names: set[str] | None = None,
+    lifted_helper_source: str = "",
     config: dict[str, Any],
 ) -> tuple[dict[str, bool], list[str]]:
     warnings: list[str] = []
@@ -5940,8 +6177,23 @@ def _semantic_checks(
             "interface makes that compile and the callee then reads a "
             "hypercomplex element as a single REAL, so the result is wrong "
             "with nothing to show for it.")
+    # The same question asked the other way round. See
+    # real_arguments_into_oti_helper_dummies: the lifted helpers are external
+    # subprograms, so the implicit interface hides a REAL actual against a
+    # hypercomplex dummy exactly as well as it hides the reverse.
+    reversed_leak = real_arguments_into_oti_helper_dummies(
+        transformed_source, form, lifted_helper_source, type_name)
+    for callee, argument, dummy in reversed_leak[:6]:
+        warnings.append(
+            f"{argument} is passed to {callee}, whose dummy argument {dummy} "
+            "the lifted body declares as the OTI type. The lifted helpers are "
+            "external subprograms, so Fortran's implicit interface makes that "
+            "compile and the callee then reads one REAL as a whole "
+            "hypercomplex element -- the stress is computed from "
+            "reinterpreted memory with nothing to show for it.")
     semantic_checks = {
         "no_oti_argument_reaches_an_untransformed_call": not leaked,
+        "no_real_argument_reaches_an_oti_helper_dummy": not reversed_leak,
         "dstran_initialization_before_seed": bool(seed_init_line and seed_lines and seed_init_line < min(seed_lines)),
         # The ordering is asked of every stress expression, not only of the
         # ones that name the seed. Restricting it to consumers is strictly
