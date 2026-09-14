@@ -390,3 +390,99 @@ def test_a_regression_where_nothing_disagreed_but_something_missed_is_incomplete
     assert report.data.passed is False
     assert report.outcome == "incomplete"
     assert any(p.code == "fixtures_did_not_run" for p in report.warnings)
+
+
+def test_no_service_and_no_job_module_imports_the_exempt_harness():
+    """The fingerprint boundary, pinned for the packages this work added.
+
+    ``umat_oti.store.transform_store`` fingerprints every module under
+    ``umat_oti`` except ``abaqus``, ``app``, ``assist``, ``publication`` and
+    ``store``, and keys stored transforms on it. A fingerprinted module that
+    imported the harness would let a change to the harness alter what
+    fingerprinted code does without moving the fingerprint, and a stale
+    transform would be served as current.
+
+    ``tests/test_the_fingerprint_covers_the_transform`` already checks the whole
+    package. This checks the same thing for ``services`` and ``jobs`` alone, so
+    the failure names the module that crossed it rather than a list of four.
+    """
+    import ast  # noqa: PLC0415
+
+    from umat_oti.store.transform_store import NOT_TRANSFORM_CODE  # noqa: PLC0415
+
+    package = SRC / "umat_oti"
+    offenders = []
+    for sub in ("services", "jobs"):
+        assert sub not in NOT_TRANSFORM_CODE, (
+            f"{sub} is fingerprinted code; if it is ever exempted, this test "
+            f"is the wrong test rather than a passing one")
+        for module in sorted((package / sub).rglob("*.py")):
+            if "__pycache__" in module.parts:
+                continue
+            tree = ast.parse(module.read_text(errors="replace"),
+                             filename=str(module))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    reached = [alias.name for alias in node.names]
+                elif isinstance(node, ast.ImportFrom):
+                    reached = [f"{'.' * node.level}{node.module or ''}"]
+                else:
+                    continue
+                for name in reached:
+                    bare = name.lstrip(".")
+                    head = bare.split(".")[0] if name.startswith(".") else ""
+                    owner = (bare.split(".")[1] if bare.startswith("umat_oti.")
+                             else head)
+                    if owner in NOT_TRANSFORM_CODE:
+                        offenders.append(
+                            f"{module.relative_to(package)} imports {name}")
+    assert offenders == [], offenders
+
+
+def test_the_planner_and_the_generator_are_injected_not_imported():
+    """The consequence of that boundary, stated as behaviour.
+
+    Asked to plan without a planner, the service refuses and says what to pass.
+    It does not reach for the import through importlib to get past the check --
+    that would leave the exemption genuinely unsound while looking sound.
+    """
+    from umat_oti.services import ExperimentService  # noqa: PLC0415
+
+    service = ExperimentService()
+
+    refused = service.plan_deck(Path("/nonexistent.for"), Path("/repo"))
+    assert refused.outcome == "refused"
+    assert refused.blockers[0].code == "no_planner_supplied"
+    assert "umat_oti.abaqus.experiment.plan" in refused.blockers[0].message
+    assert "read_plan()" in refused.blockers[0].message
+
+    no_generator = service.generate_deck(object())
+    assert no_generator.outcome == "refused"
+    assert no_generator.blockers[0].code == "no_generator_supplied"
+
+    # Injected, it delegates and adds nothing of its own.
+    generated = service.generate_deck("MANIFEST",
+                                      generator=lambda m: f"*HEADING\n{m}\n")
+    assert generated.ok is True
+    assert generated.data == {"deck": "*HEADING\nMANIFEST\n"}
+
+    code = _code(SRC / "umat_oti" / "services" / "experiment_service.py")
+    assert "importlib" not in code, (
+        "the boundary must not be evaded by a dynamic import")
+
+
+@pytest.mark.integration
+def test_reading_a_plan_accounts_for_every_record_and_needs_no_harness():
+    from umat_oti.services import ExperimentService  # noqa: PLC0415
+
+    records = _records()
+    service = ExperimentService()
+    outcomes = [service.read_plan(r).outcome for r in records]
+    assert len(outcomes) == 237
+    assert set(outcomes) <= {"read", "refused", "not_established"}
+    # Every rung that refuses to build an experiment reads as a refusal, and
+    # every refusal carries the text.
+    for record in records:
+        plan = service.read_plan(record)
+        if plan.outcome == "refused":
+            assert plan.data.refusal, record.get("key")
