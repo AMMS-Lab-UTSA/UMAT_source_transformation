@@ -36,6 +36,17 @@ EXTERNAL: tuple[str, ...] = (
     "not_a_umat",
     "incomplete_or_corrupt_source",
     "external_dependency_unavailable",
+    #: The author published the INTERFACE and no constitutive content: a file
+    #: presenting the 37-argument UMAT header that assigns neither STRESS nor
+    #: DDSDDE anywhere and makes no CALL at all. matmodlab2's umat_stub.f90 is
+    #: 22 lines; the ufc-fem-kernel adapter is 55, and its body is one PRINT.
+    #:
+    #: External, and its own state rather than a borrowed one. It was sitting
+    #: at transform_refused, which is INTERNAL and says this project could not
+    #: convert a model -- there is no model. incomplete_or_corrupt_source was
+    #: the near miss and is worse than nothing: it is glossed "does not
+    #: compile", and a template compiles perfectly well.
+    "published_stub_no_constitutive_content",
 )
 
 #: Unfinished, and ours. Named as precisely as the evidence allows, because
@@ -75,6 +86,8 @@ FROM_STAGE: dict[str, str] = {
     "waits_for_input": WAITS_FOR_INPUT,
     "manifest_refused": "unsupported_formulation",
     "experiment_not_generated": "experiment_not_generated",
+    "published_stub_no_constitutive_content":
+        "published_stub_no_constitutive_content",
     "experiment_not_informative": "experiment_not_informative",
     "informativeness_not_established": "informativeness_not_established",
     "support_build_failed": "support_build_failed",
