@@ -386,7 +386,14 @@ def fixture_from(row: dict, work_dir: Path, increments: int = INCREMENTS, *,
     if start is None:
         start = window_start(row, available, increments)
     start = max(0, min(int(start), max(0, available - 1)))
-    take = min(increments, available - start)
+    # 0 means the whole history: every increment this run recorded at the
+    # carried point. Six increments is a good default for a fixture whose job
+    # is to pin arithmetic, and a bad one for a fixture whose job is to show
+    # a BEHAVIOUR -- six increments of a J2 cycle is six increments of the
+    # first loading, with the yield, the unloading and the reversal all
+    # outside the window.
+    take = (available - start if int(increments) <= 0
+            else min(increments, available - start))
     original = original[start:]
     converted = converted[start:]
     # The deck both builds were driven by, verbatim. It is a file this
@@ -522,8 +529,12 @@ def fixture_from(row: dict, work_dir: Path, increments: int = INCREMENTS, *,
             # What was ASKED for, beside what was got. Without it a short
             # window is indistinguishable from a short request, and a fixture
             # built on however far a failed analysis got reads as deliberate.
-            "records_requested": increments,
-            "increments_requested": increments,
+            # What was asked for, resolved: 0 asked for everything, and
+            # everything is what the window carries, so the short-window check
+            # compares like with like instead of refusing a complete history.
+            "records_requested": take if int(increments) <= 0 else increments,
+            "increments_requested": take if int(increments) <= 0 else increments,
+            "whole_history_requested": int(increments) <= 0,
             "records_available": available,
             "records_requested_from": {"original": len(original_records),
                                        "transformed": len(converted_records)},
