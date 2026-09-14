@@ -457,6 +457,36 @@ def derived_type_names(source_text: str | None) -> frozenset[str]:
     return frozenset(names)
 
 
+def _interface_declared_procedures(source_text: str) -> frozenset[str]:
+    """Procedure names an INTERFACE block declares, read in both source forms.
+
+    Same union, and for the same reason, as :func:`_function_spans`: the form
+    belongs to the file and reading a file under the other form's rules yields
+    fragments no header pattern matches, so neither reading invents a name.
+
+    These names are not definitions -- nothing here can lift a body that is
+    only a signature -- but the source has stated that each is a procedure,
+    which settles the one question this module is asking: ``NAME(...)`` here
+    is a call and not a subscript.
+    """
+    if not source_text:
+        return frozenset()
+    try:
+        from umat_oti.fortran.parser import (  # noqa: PLC0415
+            interface_declared_procedures, logical_lines_from_text,
+        )
+    except Exception:
+        return frozenset()
+    names: set[str] = set()
+    for form in ("fixed", "free"):
+        try:
+            names.update(interface_declared_procedures(
+                logical_lines_from_text(source_text, form)))
+        except Exception:
+            continue
+    return frozenset(names)
+
+
 def defined_function_names(source_text: str) -> frozenset[str]:
     """Names this source defines as FUNCTIONs. Calls, not arrays or variables."""
     return frozenset(_function_spans(source_text))
@@ -492,7 +522,8 @@ def call_names_that_are_not_variables(source_text: str | None) -> frozenset[str]
         )
     }
     return frozenset((INTRINSIC_CALL_NAMES - assigned_names(source_text))
-                     | functions | derived_type_names(source_text))
+                     | functions | derived_type_names(source_text)
+                     | _interface_declared_procedures(source_text))
 
 
 

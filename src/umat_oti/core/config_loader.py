@@ -1478,7 +1478,57 @@ def _compact_selected_umat(source: dict[str, Any], analysis: dict[str, Any]) -> 
     selected = _first_detected_umat(analysis)
     if selected:
         return selected
-    raise ValueError("Compact configuration source file does not contain a detectable UMAT routine.")
+    raise ValueError(_no_detectable_umat_message(analysis))
+
+
+def _no_detectable_umat_message(analysis: dict[str, Any]) -> str:
+    """Why this source has no UMAT to transform, in terms of what it does have.
+
+    "does not contain a detectable UMAT routine" is a verdict, not a
+    diagnostic: it names no construct and no line, so the reader cannot tell a
+    parser that failed from a file that genuinely defines nothing. Three cases
+    are distinguishable from the analysis alone and are worth distinguishing,
+    because the first two are not failures of this transformer at all:
+
+    * the UMAT appears only as an INTERFACE body -- a test driver declaring the
+      routine it links against, which is defined in another file;
+    * the file defines other program units but no UMAT among them;
+    * the file defines no program unit at all.
+    """
+    declared = [row for row in analysis.get("interface_declared_procedures", []) or []
+                if isinstance(row, dict)]
+    defined = [str(row.get("name", "")).upper()
+               for row in analysis.get("detected_subroutines", []) or []
+               if isinstance(row, dict) and row.get("name")]
+    defined += [str(row.get("name", "")).upper()
+                for row in analysis.get("detected_functions", []) or []
+                if isinstance(row, dict) and row.get("name")]
+    interface_umat = next(
+        (row for row in declared if str(row.get("name", "")).upper() == "UMAT"), None)
+    if interface_umat is not None and not defined:
+        numbers = [int(value) for value in (interface_umat.get("line_numbers") or [])
+                   if str(value).lstrip("-").isdigit()]
+        where = (f"line {numbers[0]}" if len(numbers) == 1
+                 else f"lines {numbers[0]}-{numbers[-1]}" if numbers else "an INTERFACE block")
+        return (
+            "This source declares UMAT in an INTERFACE block at "
+            f"{where} and defines no program unit of its own. An interface "
+            "body is a signature, not a body: the UMAT it names is compiled "
+            "from another file, and there is nothing here to transform. "
+            "Point the transform at the file that defines UMAT.")
+    if defined:
+        listed = ", ".join(sorted(set(defined))[:8])
+        more = "" if len(set(defined)) <= 8 else f", and {len(set(defined)) - 8} more"
+        return (
+            "This source defines no routine named UMAT and none whose argument "
+            f"list matches the Abaqus UMAT interface. It defines: {listed}{more}. "
+            "Name the routine to transform with source.umat in the "
+            "configuration if the material lives in one of them.")
+    return (
+        "This source defines no SUBROUTINE and no FUNCTION that the Fortran "
+        "reader could parse, so there is no routine here to transform. Check "
+        "the source form -- a free-form file named .f or .for is read by "
+        "column and yields no statements -- or that the file is Fortran at all.")
 
 
 def _selected_umat_arguments(analysis: dict[str, Any], selected_umat: str) -> list[str]:
