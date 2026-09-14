@@ -2,7 +2,10 @@
 
 391 acquired entries, of which 341 present a UMAT interface to Abaqus.
 
-**41 fully verified** (12.0% of the UMATs).
+**41 fully verified.**
+
+* 41 of 391 acquired entries -- 10.5% of acquired entries
+* 41 of 341 entries presenting a UMAT interface -- 12.0% of entries presenting a UMAT interface. This is NOT the same as the adequately specified genuine UMATs: it still counts files with no material constants published, files whose modules were never published beside them, and files whose UMAT body is empty. `paper_results/corpus/CORPUS_VERIFICATION.md` keeps those two denominators apart and names both.
 
 Only `fully_verified` counts. It means the source transformed and
 compiled, Abaqus ran the ORIGINAL, Abaqus ran the CONVERTED build
