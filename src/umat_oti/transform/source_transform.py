@@ -2385,11 +2385,6 @@ def _transform_source_text(
         or _dead_old_tangent_store(lines, line_number, ddsdde_insert_after_line,
                                    ddsdde_name, form)
     }
-    disabled_old_region_lines = _keep_stores_read_outside_the_tangent_block(
-        lines, form, disabled_old_region_lines, selected_routine_span,
-        set(old_region_by_line),
-        governed_elsewhere={ddsdde_name, mappings.get("stress", "STRESS"),
-                            mappings.get("statev", "STATEV")})
     # A source that used DDSDDE as its own working store keeps that use, in a
     # shadow of its own, rather than reading back the array the caller zeroed.
     # Nothing to do where DDSDDE is already promoted (the reads are renamed
@@ -8448,85 +8443,6 @@ def _stmt(form: str, text: str) -> str:
 
 def _comment_line(form: str, text: str) -> str:
     return f"C     {text}" if form == "fixed" else f"! {text}"
-
-
-def _keep_stores_read_outside_the_tangent_block(
-    lines: list[str],
-    form: str,
-    disabled: set[int],
-    span: tuple[int, int],
-    old_region_lines: set[int],
-    governed_elsewhere: set[str] = frozenset(),
-) -> set[int]:
-    """Un-disable an old-tangent store whose value the rest of the routine reads.
-
-    Commenting out a statement removes the value it produced, which is right
-    when nothing outside the tangent block wants it and wrong the moment
-    something does. The emitter already asks this for one name --
-    :func:`_dead_old_tangent_store` looks for a read of DDSDDE between the
-    store and the extraction -- and the question has to be asked about the
-    OTHER names an old-tangent region writes, because a region is a span of
-    lines and a span drawn around a hand-coded tangent takes its working
-    variables in with it.
-
-    abuganza/GOH_Example.f is where it surfaced, and it took the offline
-    stress-parity gate to see it: with the call-effect edges in place DETF and
-    FINV are classified tangent-only -- correctly, the stress is built from
-    BE, XI and FFBAR and reaches neither -- so the block computing them was
-    commented out, while
-
-        I1BAR = detf**(-2.d0/3.d0)*I1
-
-    twenty lines below survived in a region that is not the tangent's and read
-    a DETF nothing assigns. The file compiled, ran, and returned NaN in all
-    six stress components against an original that returns finite values.
-
-    A reader only counts when it lies OUTSIDE every old-tangent region. A read
-    from inside the block is the block using its own working variable, and
-    keeping the store for that reason un-disables the tangent this transform
-    exists to replace: measured, counting those moved 118 outputs and took the
-    corpus from 217 entries that compile to 148.
-
-    ``governed_elsewhere`` holds the names other rules already decide --
-    DDSDDE, STRESS, STATEV. Including DDSDDE un-disabled the old tangent in
-    175 sources, every one of which then failed the semantic check that says
-    the old tangent must be disabled.
-
-    Iterated, because un-disabling a store makes it a surviving line.
-    """
-    if not disabled:
-        return disabled
-    kept = set(disabled)
-    excluded = {str(value).upper() for value in governed_elsewhere}
-    statements: dict[int, str] = {}
-    for line_number in range(span[0], min(span[1], len(lines)) + 1):
-        raw = lines[line_number - 1]
-        if _is_commented(raw):
-            continue
-        text = _statement_line_segment(raw, form).strip()
-        if text:
-            statements[line_number] = text
-    assigned_name: dict[int, str] = {}
-    for line_number in kept:
-        text = statements.get(line_number, "")
-        match = re.match(r"^\s*([A-Za-z_]\w*)\s*(?:\([^=]*\))?\s*=(?!=)", text)
-        if not match or re.match(
-                r"^\s*(?:IF|DO|ELSE|END|WRITE|READ|CALL|GO\s*TO|GOTO)\b",
-                text, flags=re.IGNORECASE):
-            continue
-        name = match.group(1).upper()
-        if name not in excluded:
-            assigned_name[line_number] = name
-    outside = [text for line_number, text in statements.items()
-               if line_number not in old_region_lines]
-    scanned = [without_real_literals(_statement_without_inline_comment(text))
-               for text in outside]
-    restored = set()
-    for line_number, name in assigned_name.items():
-        pattern = re.compile(rf"\b{re.escape(name)}\b", flags=re.IGNORECASE)
-        if any(pattern.search(text) for text in scanned):
-            restored.add(line_number)
-    return kept - restored
 
 
 def _dead_old_tangent_store(
