@@ -409,13 +409,41 @@ OBJECTIVITY_CLAIMS = (
      "the converted build agrees with the original on a rotated path",
      "the transform: whether converting the source changed what it computes "
      "in a rotated frame",
-     "worst_stress_relative"),
+     "worst_stress_relative",
+     None),
     ("objective",
      "the author's own response to a rotated path is Q sigma Q^T",
      "the model: whether the published source is frame indifferent, which is "
      "a property of what its author wrote and not of this pipeline",
-     "objectivity_worst_relative"),
+     "objectivity_worst_relative",
+     "objectivity_worst_corotational"),
 )
+
+#: What each objectivity magnitude is, in the words of the comparison that
+#: produced it. Both are shown side by side and always, because they are the
+#: two halves of one question and either alone answers it wrongly.
+#:
+#: ``objectivity_worst_relative`` is the VERDICT: the author's response
+#: compared against Q sigma Q^T in the global frame. ``objectivity_worst_
+#: corotational`` is the CROSS-CHECK: the same comparison made without
+#: rotating. The smaller of the two says which basis the solver wrote the
+#: history in, and that is the only thing that distinguishes a model which is
+#: genuinely not frame indifferent from a history recorded co-rotationally.
+#:
+#: This project once published 8 of 9 models as non-objective off the global
+#: number alone. Showing one without the other is how that happens, so both
+#: are on the page or the test that guards this module fails.
+OBJECTIVITY_MAGNITUDES = {
+    "worst_stress_relative":
+        "worst stress difference, converted build against original, on the "
+        "rotated path",
+    "objectivity_worst_relative":
+        "worst departure from Q sigma Q^T measured in the global frame -- "
+        "this is the verdict",
+    "objectivity_worst_corotational":
+        "the same departure measured without rotating -- the cross-check; "
+        "the smaller of the two says which basis the history is in",
+}
 
 
 def objectivity_rows(row: dict) -> list:
@@ -431,15 +459,26 @@ def objectivity_rows(row: dict) -> list:
                "objective": str(block.get("objectivity_reason")
                                 or block.get("reason") or "")}
     rows = []
-    for name, what, about, magnitude in OBJECTIVITY_CLAIMS:
+    for name, what, about, magnitude, cross in OBJECTIVITY_CLAIMS:
         value = block.get(name)
-        rows.append(finding(what, value,
-                            reasons[name] if value is not None else
-                            ("no rotated-frame comparison was run for this "
-                             "entry" if not block else
-                             "this run recorded no measurement of it"),
-                            magnitude=block.get(magnitude),
-                            about=about))
+        row = finding(what, value,
+                      reasons[name] if value is not None else
+                      ("no rotated-frame comparison was run for this "
+                       "entry" if not block else
+                       "this run recorded no measurement of it"),
+                      magnitude=block.get(magnitude),
+                      about=about)
+        row["what the magnitude is"] = OBJECTIVITY_MAGNITUDES[magnitude]
+        # The cross-check travels WITH the verdict, in the same row, so that
+        # no rendering of this table can show one and drop the other. A
+        # caller that prints only ``magnitude`` still has to explain a column
+        # it left out; a caller that drops a whole separate row does not.
+        row["cross-check"] = block.get(cross) if cross else None
+        row["cross-check established"] = (
+            cross is not None and block.get(cross) is not None)
+        row["what the cross-check is"] = (
+            OBJECTIVITY_MAGNITUDES[cross] if cross else "")
+        rows.append(row)
     return rows
 
 
@@ -452,6 +491,10 @@ def objectivity_detail(row: dict) -> dict:
     block = row.get("objectivity")
     if not isinstance(block, dict) or not block:
         return {"ran": three_state(None),
+                "worst departure from Q sigma Q^T in the author's own "
+                "response, global frame -- the verdict": None,
+                "the same departure without rotating -- the cross-check": None,
+                "lead-in steps dropped before the comparison": None,
                 "why": "this run carries no objectivity block at all, so "
                        "neither claim was established"}
     return {
@@ -462,11 +505,102 @@ def objectivity_detail(row: dict) -> dict:
             block.get("worst_stress_relative"),
         "worst state difference, converted against original":
             block.get("worst_state_relative"),
-        "worst departure from Q sigma Q^T in the author's own response":
+        "worst departure from Q sigma Q^T in the author's own response, "
+        "global frame -- the verdict":
             block.get("objectivity_worst_relative"),
+        "the same departure without rotating -- the cross-check":
+            block.get("objectivity_worst_corotational"),
+        # A rotated path has to get moving before the comparison means
+        # anything, and the batch drops the lead-in steps where it does not.
+        # How many it dropped is part of reading the number above it: a
+        # comparison over a path that had not started yet agrees about
+        # nothing, exactly as an experiment in which the material sat still
+        # does.
+        "lead-in steps dropped before the comparison":
+            block.get("lead_in_steps_dropped"),
         "the original's own job": block.get("original"),
         "the converted build's own job": block.get("transformed"),
     }
+
+
+def objectivity_frame_reading(row: dict) -> dict:
+    """Which basis the history is recorded in, read off the two magnitudes.
+
+    The two objectivity magnitudes are not symmetric and a page that shows
+    them as a pair of numbers has not finished the job.
+    ``objectivity_worst_relative`` is the global-frame figure and the verdict
+    rests on it; ``objectivity_worst_corotational`` is the same departure
+    measured without rotating, and it is the cross-check.
+
+    What makes the pair readable is which of them is SMALLER. On
+    NeoHookean_umat.for over 1680 components the global figure is 4.405e-13
+    and the corotational one is 7.023e-01: the global one is smaller by twelve
+    orders of magnitude, the solver wrote the history in the global frame, and
+    the verdict means what it says. The day the corotational figure is the
+    small one, the history is co-rotational, the global comparison is being
+    made in the wrong basis, and the large global number is an artefact of the
+    frame rather than a model that is not frame indifferent.
+
+    This project once published 8 of 9 models as non-objective. That is the
+    shape of the error, and it is invisible unless somebody says which number
+    is smaller and what that means. So this function says it, in a sentence,
+    rather than leaving a reader to compare two exponents.
+    """
+    block = row.get("objectivity")
+    block = block if isinstance(block, dict) else {}
+    verdict = block.get("objectivity_worst_relative")
+    check = block.get("objectivity_worst_corotational")
+
+    reading = {
+        "the verdict, global frame": verdict,
+        "the cross-check, unrotated": check,
+        "lead-in steps dropped": block.get("lead_in_steps_dropped"),
+        "components compared": block.get("compared_components"),
+    }
+    if verdict is None or check is None:
+        # One of the two absent is not a frame this can be read off. Saying
+        # which one is missing matters: a reader who sees only a verdict has
+        # no way to know the check was never taken.
+        missing = []
+        if verdict is None:
+            missing.append("the global-frame figure the verdict rests on")
+        if check is None:
+            missing.append("the unrotated cross-check")
+        reading["frame the history is in"] = NOT_ESTABLISHED
+        reading["what this means"] = (
+            "this cannot be read: " + " and ".join(missing) + " was not "
+            "recorded, and one magnitude alone cannot say which basis the "
+            "history is in")
+        reading["the frame assumption holds"] = None
+        return reading
+
+    try:
+        verdict_value, check_value = abs(float(verdict)), abs(float(check))
+    except (TypeError, ValueError):               # pragma: no cover
+        reading["frame the history is in"] = NOT_ESTABLISHED
+        reading["what this means"] = "the recorded magnitudes are not numbers"
+        reading["the frame assumption holds"] = None
+        return reading
+
+    if verdict_value <= check_value:
+        reading["frame the history is in"] = "global"
+        reading["the frame assumption holds"] = True
+        reading["what this means"] = (
+            f"the global-frame comparison is the smaller of the two "
+            f"({verdict_value:.3e} against {check_value:.3e}), so the solver "
+            f"wrote this history in the global frame and the verdict above is "
+            f"a statement about the model")
+    else:
+        reading["frame the history is in"] = "corotational"
+        reading["the frame assumption holds"] = False
+        reading["what this means"] = (
+            f"the UNROTATED comparison is the smaller of the two "
+            f"({check_value:.3e} against {verdict_value:.3e}), so this history "
+            f"is recorded co-rotationally and the global-frame figure is "
+            f"measuring the frame rather than the model. The objectivity "
+            f"verdict above must not be read as a finding about this material "
+            f"until the comparison is made in the basis the history is in")
+    return reading
 
 
 # ---------------------------------------------------------------------------
@@ -912,6 +1046,10 @@ class EntryView:
     objectivity: list = field(default_factory=list)
     #: The rest of the objectivity block, the rotation included.
     objectivity_detail: dict = field(default_factory=dict)
+    #: Which basis the history is recorded in, read off the two magnitudes,
+    #: and what that means for the verdict above it. See
+    #: :func:`objectivity_frame_reading`.
+    objectivity_frame: dict = field(default_factory=dict)
     #: Whether the material did anything over the run that was verified.
     informativeness: dict = field(default_factory=dict)
     #: Whether the response fits the scales the problem supplies, per check.
@@ -928,6 +1066,15 @@ class EntryView:
     #: What may honestly be claimed about this entry, and which gate decides
     #: it. See :func:`verdict`.
     verdict: dict = field(default_factory=dict)
+    #: The batch's record for this entry, exactly as it was written.
+    #:
+    #: Carried so that a panel needing a field this dataclass does not name
+    #: reads the record rather than growing a second parser for it. It is
+    #: deliberately absent from :meth:`as_dict`: the named fields ARE the
+    #: declared shape, and serialising the raw record beside them would put
+    #: every value on the page twice, once translated and once not, with
+    #: nothing saying which a reader should believe.
+    raw: dict = field(default_factory=dict, repr=False)
 
     def as_dict(self) -> dict:
         record = {name: getattr(self, name) for name in
@@ -939,7 +1086,8 @@ class EntryView:
                    "history", "experiment", "material_search",
                    "primal_signature", "run_manifest", "loading",
                    "planned_experiment", "coverage", "objectivity",
-                   "objectivity_detail", "informativeness", "plausibility",
+                   "objectivity_detail", "objectivity_frame",
+                   "informativeness", "plausibility",
                    "plausibility_overall", "time_scale", "signature",
                    "material_search_finding", "verdict")}
         record["requirements"] = [r.as_dict() for r in self.requirements]
@@ -1157,6 +1305,7 @@ def entry_view(row: dict, work_dir: Optional[Path] = None) -> EntryView:
         truncation=dict(row.get("truncation") or {}),
         precision_control=dict(row.get("precision_control") or {}),
         association_control=dict(row.get("association_control") or {}),
+        raw=dict(row),
         requirements=_requirements(row),
         artifacts=_artifacts(row, work_dir),
         seconds=row.get("seconds"),
@@ -1172,6 +1321,7 @@ def entry_view(row: dict, work_dir: Optional[Path] = None) -> EntryView:
         coverage=coverage_rows(row),
         objectivity=objectivity_rows(row),
         objectivity_detail=objectivity_detail(row),
+        objectivity_frame=objectivity_frame_reading(row),
         informativeness=informativeness_row(row),
         plausibility=plausibility_rows(row),
         plausibility_overall=plausibility_overall(row),
