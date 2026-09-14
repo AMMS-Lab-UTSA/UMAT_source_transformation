@@ -554,19 +554,24 @@ def test_there_is_a_path_to_every_piece_of_evidence_on_the_page(control):
     the claim rests on something on disk, the file under this entry's work
     directory.
 
-    Measured on the control: 16 claims, of which 10 point at a file. Six of
-    those ten are present in this trimmed fixture and four are not -- the
-    replay directory, the discovery directory, the precision control and the
-    association control were left out or never ran -- and the page says so for
-    each rather than showing a path that is not there as though it were.
+    Measured on the control: 21 claims, of which 12 point at a file. Six of
+    those twelve are present in this trimmed fixture and six are not -- the
+    replay directory, the discovery directory, the precision control, the
+    association control and the two objectivity claims were left out or never
+    ran -- and the page says so for each rather than showing a path that is
+    not there as though it were.
+
+    The count moved from 16 to 21 when the record grew five columns nothing
+    displayed: the planned experiment, the family's coverage criteria, the
+    response plausibility, and objectivity's two separate claims.
     """
     rows = evidence_paths(control)
-    assert len(rows) == len(EVIDENCE_LOCATIONS) == 16
+    assert len(rows) == len(EVIDENCE_LOCATIONS) == 21
     assert all(row["field in the record"] for row in rows)
     on_disk = [row for row in rows if row["on disk"]]
-    assert len(on_disk) == 10
+    assert len(on_disk) == 12
     assert len([row for row in on_disk if row["present"]]) == 6
-    assert len([row for row in on_disk if row["present"] is False]) == 4
+    assert len([row for row in on_disk if row["present"] is False]) == 6
     for row in on_disk:
         assert str(WORK) in row["on disk"], row
     for row in rows:
