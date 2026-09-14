@@ -21,7 +21,8 @@
       "complete_history_finite": true,
       "derivatives_verified": true,
       "mechanically_informative": true,
-      "primal_agreed": false
+      "primal_agreed": false,
+      "primal_difference_explained_by_a_measured_control": true
     },
     "failure_mechanism": null,
     "history_grouping": {
@@ -263,5 +264,5 @@
   "schema": "umat-oti/verification-contract/1.0",
   "source_id": "irfancn__Abaqus-UMAT-viscoelastic/umat_viscoelastic.for",
   "source_sha256": "794840d3b3bc26679277fc9588d1bb2e8a942e03ccd6d1ec048119bdf4452c85",
-  "transform_fingerprint": "b0d27ee53c630500"
+  "transform_fingerprint": "94a92c01814f107a"
 }

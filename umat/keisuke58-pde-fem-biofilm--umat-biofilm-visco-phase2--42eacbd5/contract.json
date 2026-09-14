@@ -21,7 +21,8 @@
       "complete_history_finite": true,
       "derivatives_verified": true,
       "mechanically_informative": true,
-      "primal_agreed": true
+      "primal_agreed": true,
+      "primal_difference_explained_by_a_measured_control": null
     },
     "failure_mechanism": null,
     "history_grouping": {
@@ -257,5 +258,5 @@
   "schema": "umat-oti/verification-contract/1.0",
   "source_id": "keisuke58__pde-fem-biofilm/umat_biofilm_visco_phase2.f",
   "source_sha256": "6322a9f88f5de7b3a8ae36ac796f00939e3453a17cb27aa353f63a8b1692ee0f",
-  "transform_fingerprint": "b0d27ee53c630500"
+  "transform_fingerprint": "94a92c01814f107a"
 }

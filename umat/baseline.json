@@ -1,6 +1,18 @@
 {
   "entries": [
     {
+      "id": "abuganza-bayesiancalibrationskingrowth--iso-example--4679f5db",
+      "source": "abuganza__BayesianCalibrationSkinGrowth/Iso_Example.f",
+      "source_sha256": "1c13974aae6809670024dbf4046fff8ee3502a2e34bc0a613d3532e746225a60",
+      "stage": "verified"
+    },
+    {
+      "id": "abuganza-bayesiancalibrationskingrowth--iso-example--9242e1db",
+      "source": "abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/SampleSimulation/Iso_Example.f",
+      "source_sha256": "1c13974aae6809670024dbf4046fff8ee3502a2e34bc0a613d3532e746225a60",
+      "stage": "verified"
+    },
+    {
       "id": "alexanderjfdr-hyperelastic_phase_field--neohookean-umat--10759f1f",
       "source": "AlexanderJFDR__Hyperelastic_phase_field/umat/NeoHookean_umat.for",
       "source_sha256": "565d307f0679dcb9377d0ccf04e601082c115590707af15bb6d193a25ef836a9",
@@ -333,6 +345,6 @@
   ],
   "promoted_from": "an Abaqus verification batch; see each material's results.json",
   "schema": "umat-oti/regression-baseline/1.0",
-  "transform_fingerprint": "b0d27ee53c630500",
+  "transform_fingerprint": "94a92c01814f107a",
   "what_this_is": "The materials a regression run is required to re-verify. Written by promotion, never by a regression run: a gate that rewrites its own baseline cannot fail."
 }

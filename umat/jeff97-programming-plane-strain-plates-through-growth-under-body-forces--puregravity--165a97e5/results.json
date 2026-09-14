@@ -176,7 +176,7 @@
   },
   "reason": "the two builds differ by 3.127e-08, and this model differs from ITSELF by 5.805e-03 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all 4 states where a difference could be taken (increments 1, 10, 3, 12); 2 smooth elastic, 2 smooth activated state(s) verified; worst of them: agreed to 4.188e-08 over a plateau of 2 step sizes, 0.01 to 0.1",
   "schema": "umat-oti/verification-results/1.0",
-  "seconds": 66.7,
+  "seconds": 67.1,
   "stage": "verified",
   "support_build": {
     "objects": 5,

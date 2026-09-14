@@ -439,6 +439,6 @@
   "count": 29,
   "schema": "umat-oti/withdrawn-contracts/1.0",
   "what_this_is": "Contracts that used to stand in this collection and were taken down because they could not be reproduced at the current transform fingerprint. A frozen contract is a claim that a regression may be compared against; one measured against a transform that no longer exists is not. The numbers each carried are recorded here as what they now are -- a record of what used to be claimed, not evidence about the material.",
-  "withdrawn_at_fingerprint": "b0d27ee53c630500",
+  "withdrawn_at_fingerprint": "94a92c01814f107a",
   "withdrawn_at_this_promotion": 0
 }

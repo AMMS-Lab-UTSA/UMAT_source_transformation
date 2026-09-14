@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "abuganza/BayesianCalibrationSkinGrowth",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "1c13974aae6809670024dbf4046fff8ee3502a2e34bc0a613d3532e746225a60",
+  "source_id": "abuganza__BayesianCalibrationSkinGrowth/Iso_Example.f",
+  "upstream": "https://github.com/abuganza/BayesianCalibrationSkinGrowth",
+  "verified_bytes_sha256": "1c13974aae6809670024dbf4046fff8ee3502a2e34bc0a613d3532e746225a60",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}
