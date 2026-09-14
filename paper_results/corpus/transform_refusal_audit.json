@@ -1,9 +1,9 @@
 {
  "schema": "umat-oti/transform-refusal-audit/1",
- "generated": "2026-09-11T17:06:30+00:00",
+ "generated": "2026-09-13T01:01:16+00:00",
  "what_this_is": "for each source the transformer refused: whether the author's own text is accepted by ifort -syntax-only, what it USEs or INCLUDEs that was never published beside it, and which companion units the repository does publish. No Abaqus process was started. A refusal is not evidence for any of these; this file is.",
  "sources": {
-  "AnargyrosKarakalas__UMAT_3D/UMAT_3D_Coupled_ML_IP_Original.for": {
+  "AlexSTA1993__numerical_geolab/numerical_geolab_materials/UMATERIALS/CAUCHY3D-DP/hyplast_Cauchy3D-DP.for": {
    "missing_externals": [],
    "companions": [],
    "compiler": "ifort",
@@ -85,6 +85,16 @@
    "text_rejected": true,
    "evidence": "the published source, line 362: Syntax error, found END-OF-STATEMENT when expecting one of: ( <IDENTIFIER> <CHAR_CON_KIND_PARAM> <CHAR_NAM_KIND_PARAM> <CHARACTER_CONSTANT> <INTEGER_CONSTANT> ...",
    "basis": "ifort rejected the published text with 22 parse diagnostic(s) under fixed form",
+   "source_form": "fixed"
+  },
+  "CAEAssistant-Group__Abaqus-CAE-UMAT-subroutine-for-Composite-fatigue-simulation/CAE_ASSISTANT_UMAT_Subroutine_ABAQUS_COMPOSITE_FATIGUE.for": {
+   "missing_externals": [],
+   "companions": [],
+   "compiler": "ifort",
+   "compiles": false,
+   "text_rejected": true,
+   "evidence": "the published source, line 17: Syntax error, found '==' when expecting one of: ( : % [ . = =>",
+   "basis": "ifort rejected the published text with 4 parse diagnostic(s) under fixed form",
    "source_form": "fixed"
   },
   "CAEAssistant-Group__Abaqus-UEL-Subroutine/Abaqus_UEL_Subroutine.f": {
@@ -227,6 +237,16 @@
    "basis": "ifort -syntax-only accepted the published text as fixed form",
    "source_form": "fixed"
   },
+  "InstituteOfMechanics__Paraqus/examples/example_abaqus_extrusion_umat.f": {
+   "missing_externals": [],
+   "companions": [],
+   "compiler": "ifort",
+   "compiles": true,
+   "text_rejected": false,
+   "evidence": "",
+   "basis": "ifort -syntax-only accepted the published text as fixed form",
+   "source_form": "fixed"
+  },
   "InstituteOfMechanics__Phase_Trafos_Carbon_Repartitioning/simulations/UMAT/umat_main.f": {
    "missing_externals": [
     "include mkl_lapack.f90",
@@ -277,6 +297,42 @@
    "companions": [
     "KianAbd__vCANN_FEM/TensorFlow/hessian_and_third_derivative.f90",
     "KianAbd__vCANN_FEM/Abaqus/umat_vCANN.f90"
+   ],
+   "compiler": "ifort",
+   "compiles": false,
+   "text_rejected": null,
+   "evidence": "",
+   "basis": "the offline compile failed, but every diagnostic is one an unresolved USE or INCLUDE would also produce, so it settles nothing about the file",
+   "source_form": "free"
+  },
+  "KianAbd__vCANN_FEM/Abaqus/umat_vCANN.f90": {
+   "missing_externals": [],
+   "companions": [
+    "KianAbd__vCANN_FEM/TensorFlow/hessian_and_third_derivative.f90"
+   ],
+   "compiler": "ifort",
+   "compiles": false,
+   "text_rejected": null,
+   "evidence": "",
+   "basis": "the offline compile failed, but every diagnostic is one an unresolved USE or INCLUDE would also produce, so it settles nothing about the file",
+   "source_form": "free"
+  },
+  "KianAbd__vCANN_FEM/Abaqus/umat_vCANN.for": {
+   "missing_externals": [],
+   "companions": [
+    "KianAbd__vCANN_FEM/TensorFlow/hessian_and_third_derivative.f90"
+   ],
+   "compiler": "ifort",
+   "compiles": false,
+   "text_rejected": null,
+   "evidence": "",
+   "basis": "the offline compile failed, but every diagnostic is one an unresolved USE or INCLUDE would also produce, so it settles nothing about the file",
+   "source_form": "free"
+  },
+  "KianAbd__vCANN_FEM/TensorFlow/Results_Liao_Thermo/20260601-103627/UMAT/umat_vCANN.for": {
+   "missing_externals": [],
+   "companions": [
+    "KianAbd__vCANN_FEM/TensorFlow/hessian_and_third_derivative.f90"
    ],
    "compiler": "ifort",
    "compiles": false,
@@ -517,6 +573,46 @@
    "basis": "the offline compile failed, but every diagnostic is one an unresolved USE or INCLUDE would also produce, so it settles nothing about the file",
    "source_form": "free"
   },
+  "abuganza__BayesianCalibrationSkinGrowth/GOH_Example.f": {
+   "missing_externals": [],
+   "companions": [],
+   "compiler": "ifort",
+   "compiles": true,
+   "text_rejected": false,
+   "evidence": "",
+   "basis": "ifort -syntax-only accepted the published text as fixed form",
+   "source_form": "fixed"
+  },
+  "abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/GOH/BC1_50cc/GOH_50cc.f": {
+   "missing_externals": [],
+   "companions": [],
+   "compiler": "ifort",
+   "compiles": true,
+   "text_rejected": false,
+   "evidence": "",
+   "basis": "ifort -syntax-only accepted the published text as fixed form",
+   "source_form": "fixed"
+  },
+  "abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/GOH/BC1_55cc/GOH_55cc.f": {
+   "missing_externals": [],
+   "companions": [],
+   "compiler": "ifort",
+   "compiles": true,
+   "text_rejected": false,
+   "evidence": "",
+   "basis": "ifort -syntax-only accepted the published text as fixed form",
+   "source_form": "fixed"
+  },
+  "abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/SampleSimulation/GOH_Example.f": {
+   "missing_externals": [],
+   "companions": [],
+   "compiler": "ifort",
+   "compiles": true,
+   "text_rejected": false,
+   "evidence": "",
+   "basis": "ifort -syntax-only accepted the published text as fixed form",
+   "source_form": "fixed"
+  },
   "adtzlr__ttb/docs/examples/Abaqus/umat_nh_ttb.f": {
    "missing_externals": [],
    "companions": [],
@@ -666,6 +762,16 @@
    "basis": "the offline compile failed, but every diagnostic is one an unresolved USE or INCLUDE would also produce, so it settles nothing about the file",
    "source_form": "free"
   },
+  "compas-dev__compas_fea2/data/umat/umat-hooke-iso.f": {
+   "missing_externals": [],
+   "companions": [],
+   "compiler": "ifort",
+   "compiles": true,
+   "text_rejected": false,
+   "evidence": "",
+   "basis": "ifort -syntax-only accepted the published text as fixed form",
+   "source_form": "fixed"
+  },
   "core-marine-dev__elmerfem/fem/src/modules/ElasticSolve.F90": {
    "missing_externals": [
     "module Adaptive",
@@ -731,16 +837,6 @@
     "include ./Dependencies/quartic.f90",
     "module PolynomialRoots"
    ],
-   "companions": [],
-   "compiler": "ifort",
-   "compiles": true,
-   "text_rejected": false,
-   "evidence": "",
-   "basis": "ifort -syntax-only accepted the published text as fixed form",
-   "source_form": "fixed"
-  },
-  "harshaa765__UMATFile/UMAT.for": {
-   "missing_externals": [],
    "companions": [],
    "compiler": "ifort",
    "compiles": true,
@@ -911,26 +1007,6 @@
    "basis": "ifort -syntax-only accepted the published text as fixed form",
    "source_form": "fixed"
   },
-  "jpsferreira__UMAT-ABAQUS/test_in_abaqus/umat_general.for": {
-   "missing_externals": [],
-   "companions": [],
-   "compiler": "ifort",
-   "compiles": true,
-   "text_rejected": false,
-   "evidence": "",
-   "basis": "ifort -syntax-only accepted the published text as fixed form",
-   "source_form": "fixed"
-  },
-  "jpsferreira__UMAT-ABAQUS/umat_general.for": {
-   "missing_externals": [],
-   "companions": [],
-   "compiler": "ifort",
-   "compiles": true,
-   "text_rejected": false,
-   "evidence": "",
-   "basis": "ifort -syntax-only accepted the published text as fixed form",
-   "source_form": "fixed"
-  },
   "keisuke58__pde-fem-biofilm/umat_biofilm_visco.f": {
    "missing_externals": [],
    "companions": [],
@@ -971,37 +1047,19 @@
    "basis": "ifort -syntax-only accepted the published text as free form",
    "source_form": "free"
   },
-  "luisez1988__Viscoplastic-SSMC/UMAT_SSMCWStrainRates_Zambrano.for": {
-   "missing_externals": [],
+  "makkemal__NGIMASEM/usermat.F": {
+   "missing_externals": [
+    "include impcom.inc"
+   ],
    "companions": [],
    "compiler": "ifort",
    "compiles": false,
    "text_rejected": true,
-   "evidence": "the published source, line 29: Syntax error, found '&' when expecting one of: * <IDENTIFIER>",
-   "basis": "ifort rejected the published text with 1 parse diagnostic(s) under free form",
-   "source_form": "free"
-  },
-  "luisez1988__Viscoplastic_MC_coupled/UMAT_MCWStrainRates_Zambrano.for": {
-   "missing_externals": [],
-   "companions": [],
-   "compiler": "ifort",
-   "compiles": false,
-   "text_rejected": true,
-   "evidence": "the published source, line 29: Syntax error, found '&' when expecting one of: * <IDENTIFIER>",
-   "basis": "ifort rejected the published text with 1 parse diagnostic(s) under free form",
-   "source_form": "free"
+   "evidence": "the published source, line 350: Syntax error, found END-OF-STATEMENT when expecting one of: :: ) ( , : * . % + - [ . = ** / // .LT. < .LE. <= .EQ. == ...",
+   "basis": "ifort rejected the published text with 2 parse diagnostic(s) under fixed form",
+   "source_form": "fixed"
   },
   "marioruiarruda__Hashin_2D_UMAT/umat_hashin_f90.f90": {
-   "missing_externals": [],
-   "companions": [],
-   "compiler": "ifort",
-   "compiles": true,
-   "text_rejected": false,
-   "evidence": "",
-   "basis": "ifort -syntax-only accepted the published text as free form",
-   "source_form": "free"
-  },
-  "marioruiarruda__Hashin_3D_UMAT/umat_hashin3D_f90.f90": {
    "missing_externals": [],
    "companions": [],
    "compiler": "ifort",
@@ -1036,6 +1094,16 @@
    "companions": [
     "matmodlab__matmodlab2/matmodlab2/umat/tensalg.f90"
    ],
+   "compiler": "ifort",
+   "compiles": true,
+   "text_rejected": false,
+   "evidence": "",
+   "basis": "ifort -syntax-only accepted the published text as free form",
+   "source_form": "free"
+  },
+  "matmodlab__matmodlab2/matmodlab2/umat/umats/umat_neohooke.f90": {
+   "missing_externals": [],
+   "companions": [],
    "compiler": "ifort",
    "compiles": true,
    "text_rejected": false,
@@ -1295,6 +1363,16 @@
    "basis": "the offline compile failed, but every diagnostic is one an unresolved USE or INCLUDE would also produce, so it settles nothing about the file",
    "source_form": "fixed"
   },
+  "nsundar__PFM_UMAT_ElastoPlastic/UMAT_phasefield_plasticity.f": {
+   "missing_externals": [],
+   "companions": [],
+   "compiler": "ifort",
+   "compiles": false,
+   "text_rejected": null,
+   "evidence": "",
+   "basis": "the offline compile failed, but every diagnostic is one an unresolved USE or INCLUDE would also produce, so it settles nothing about the file",
+   "source_form": "free"
+  },
   "patrickstaubach__abaqus-explicit/examples/_pile_driving/HPP_Staubach_explicit.f": {
    "missing_externals": [],
    "companions": [
@@ -1329,6 +1407,16 @@
    "text_rejected": null,
    "evidence": "",
    "basis": "the offline compile failed, but every diagnostic is one an unresolved USE or INCLUDE would also produce, so it settles nothing about the file",
+   "source_form": "fixed"
+  },
+  "phhannequart__UMAT_sma_hannequart/UMAT_sma_hannequart.for": {
+   "missing_externals": [],
+   "companions": [],
+   "compiler": "ifort",
+   "compiles": true,
+   "text_rejected": false,
+   "evidence": "",
+   "basis": "ifort -syntax-only accepted the published text as fixed form",
    "source_form": "fixed"
   },
   "philipcardiff__paper-code-vertex-centred-elastoplastic/src/abaqusUMATs/abaqusUmatLinearElastic/abaqusUmatLinearElastic.f": {
@@ -1541,6 +1629,16 @@
    "basis": "ifort -syntax-only accepted the published text as fixed form",
    "source_form": "fixed"
   },
+  "tmfrln__paraqus/examples/example_abaqus_extrusion_umat.f": {
+   "missing_externals": [],
+   "companions": [],
+   "compiler": "ifort",
+   "compiles": true,
+   "text_rejected": false,
+   "evidence": "",
+   "basis": "ifort -syntax-only accepted the published text as fixed form",
+   "source_form": "fixed"
+  },
   "toruinaba__manforge/archives/fortran_fixed_form/yu_kinematic_3d_abaqus.for": {
    "missing_externals": [],
    "companions": [],
@@ -1590,6 +1688,16 @@
    "evidence": "",
    "basis": "ifort -syntax-only accepted the published text as free form",
    "source_form": "free"
+  },
+  "victorlefevre__UMAT_Lefevre_Sozio_Lopez-Pamies/Examples/C3D8H/UT kappa_mu=1/UMAT_KLP_RK5_hybrid.f": {
+   "missing_externals": [],
+   "companions": [],
+   "compiler": "ifort",
+   "compiles": true,
+   "text_rejected": false,
+   "evidence": "",
+   "basis": "ifort -syntax-only accepted the published text as fixed form",
+   "source_form": "fixed"
   },
   "vishalsubbiah__Abaqus-Multi-scale-modelling/Abaqus/umatcode3.f": {
    "missing_externals": [],

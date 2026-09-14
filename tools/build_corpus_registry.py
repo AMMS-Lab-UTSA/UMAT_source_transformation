@@ -57,6 +57,44 @@ def _relative_to_repo(path) -> str:
         return str(Path(path).resolve().relative_to(REPO))
     except (ValueError, OSError):
         return Path(path).name
+
+
+#: A path under someone's home directory, or under a per-process scratch
+#: directory. Either one names the machine a run happened on, and a registry
+#: that carries one cannot be reproduced from a clean clone --
+#: ``tools/audit_repository_standards.py`` fails the build on it, and this
+#: registry has failed on exactly that before.
+#:
+#: The strings that can carry one are not the obvious ones. They are the
+#: compiler's own diagnostics, which name the temporary directory the syntax
+#: pass ran in, and they arrive inside ``classification_basis`` and
+#: ``compile_defect`` having been copied out of an audit file written on
+#: another day. So the check is applied to the SERIALISED payload, after
+#: everything has been assembled and immediately before it is written, which
+#: is the only place that sees every string that is about to be published.
+MACHINE_PATH = re.compile(
+    r"(?:/home/[a-z][-a-z0-9_]*|/Users/[A-Za-z][-A-Za-z0-9_]*"
+    r"|/tmp/[A-Za-z0-9][-A-Za-z0-9_.]*|/var/folders/[A-Za-z0-9])/")
+
+
+def refuse_machine_paths(text: str, what: str) -> str:
+    """The text, or an exception naming the first machine path in it.
+
+    Scrubbing silently would be worse than failing: a registry that quietly
+    dropped part of a compiler diagnostic would still be published, and the
+    reader would have no way to know a line had been edited. So this refuses,
+    the build stops, and whoever added the field decides what belongs there.
+    """
+    found = MACHINE_PATH.search(text or "")
+    if not found:
+        return text
+    line = text[:found.start()].count("\n") + 1
+    excerpt = text[max(0, found.start() - 60):found.end() + 60]
+    raise ValueError(
+        f"{what} would publish a machine path at line {line}: ...{excerpt}... "
+        f"Every path a reviewer reads must be relative to the repository; "
+        f"use _relative_to_repo(), or keep the machine-specific part out of "
+        f"the field entirely.")
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "tools"))
 
@@ -64,6 +102,12 @@ from umat_oti.abaqus.terminal_states import (EXTERNAL, FULLY_VERIFIED,  # noqa: 
                                              INTERNAL, WAITS_FOR_INPUT,
                                              from_stage, from_transform_failure,
                                              kind_of)
+
+#: A one-line gloss for every terminal state, read from the page that already
+#: has to have one. Imported rather than restated so the report and the
+#: interface cannot drift into describing the same state two different ways,
+#: and because a table of state names is not a human-readable report.
+from umat_oti.app.corpus_tab import GLOSS as STATE_MEANS  # noqa: E402
 
 DEFAULT_CACHE = Path(os.environ.get("UMAT_OTI_DISCOVERY_CACHE")
                      or REPO.parent / "discovery_cache")
@@ -117,6 +161,28 @@ class Record:
     refusal_class_confident: Optional[bool] = None
     duplicate_of: str = ""
     companion_files: str = ""
+    #: Where the whole file was searched for the two outputs a UMAT exists to
+    #: produce, and what was found. Recorded on EVERY record and not only on
+    #: the ones it decided, because a reader checking "is this a real UMAT?"
+    #: needs the search itself and not the verdict that came out of it.
+    writes_stress: Optional[bool] = None
+    writes_ddsdde: Optional[bool] = None
+    output_calls: Optional[int] = None
+    output_first_write: str = ""
+    output_first_write_line: Optional[int] = None
+    output_search: str = ""
+    #: THE SECOND DENOMINATOR. Whether this source is an adequately specified
+    #: genuine UMAT -- a file that presents the Abaqus UMAT interface, is a
+    #: distinct member of the corpus, builds as published, has everything it
+    #: USEs published beside it, and has a constitutive model inside it. The
+    #: 391 acquired sources are the first denominator; this is the subset any
+    #: verification rate may be quoted against, and ``adequacy_basis`` names
+    #: the evidence that excluded a source from it.
+    adequately_specified: Optional[bool] = None
+    adequacy_basis: str = ""
+    #: Whether the thing that excluded it is a fact about somebody's published
+    #: repository ("external") or a limitation of this project ("internal").
+    adequacy_kind: str = ""
     terminal_state: str = "not_attempted"
     kind: str = "internal"
     reason: str = ""
@@ -152,6 +218,19 @@ class Record:
     compile_defect: str = ""
     key: str = ""
     seconds: Optional[float] = None
+    #: The store fingerprint the verification row was produced against, and
+    #: whether that is the fingerprint of the store as it stands now. A stage
+    #: recorded against a store that has since been rebuilt is evidence about
+    #: a transformed file that no longer exists, and reading it as evidence
+    #: about the current one is how a stale verdict becomes a verification.
+    verification_fingerprint: str = ""
+    verification_is_current: Optional[bool] = None
+    #: Which results file the row was read from, named so every number in the
+    #: report can be traced to a file on disk.
+    verification_source: str = ""
+    #: For anything that is not fully_verified: the named reason, with the
+    #: evidence behind it. Never "the transformer refused it" on its own.
+    not_verified_reason: str = ""
 
     def as_dict(self) -> dict:
         return dict(self.__dict__)
@@ -182,6 +261,34 @@ def _rows(path: Optional[Path]) -> list:
     if isinstance(payload, dict):
         return payload.get("entries") or payload.get("rows") or []
     return payload or []
+
+
+def _fingerprint_latest(rows: list, store_fingerprint: str) -> list:
+    """One row per source: the newest one that is about the CURRENT store.
+
+    An append-only results file accumulates rows across passes, and a pass
+    that resumed from a previous one carries rows from before the store was
+    rebuilt. Taking the last row per source would let a stale row win simply
+    by having been appended later. So a row whose fingerprint matches the
+    store the registry is being built for always beats one that does not, and
+    only where a source has no matching row at all does the stale one survive
+    -- kept so the registry can say what it was and why it does not count,
+    rather than reporting silence.
+    """
+    if not store_fingerprint:
+        return rows
+    current: dict = {}
+    stale: dict = {}
+    for row in rows:
+        source_id = str(row.get("source") or "")
+        if not source_id:
+            continue
+        if str(row.get("fingerprint") or "") == store_fingerprint:
+            current[source_id] = row
+        else:
+            stale[source_id] = row
+    return list(current.values()) + [row for source_id, row in stale.items()
+                                     if source_id not in current]
 
 
 # ---------------------------------------------------------------------------
@@ -564,7 +671,7 @@ def offline_syntax_audit(cache: Path, source_ids, *, compiler: str = "") -> dict
 def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
           cache: Optional[Path], *, compile_check: bool = False,
           inventory_ids=None, provenance: Optional[dict] = None,
-          audit: Optional[dict] = None) -> list:
+          audit: Optional[dict] = None, store_fingerprint: str = "") -> list:
     """Every acquired artefact, its terminal state, and the evidence for it.
 
     ``inventory_ids`` is the denominator and is seeded first, so a source the
@@ -626,7 +733,8 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
     duplicates = duplicate_map(cache, sorted(records)) if cache else {}
     if cache and Path(cache).is_dir():
         from umat_oti.abaqus.companions import repository_files, resolve
-        from umat_oti.corpus.entry_routines import classify, classify_refusal
+        from umat_oti.corpus.entry_routines import (classify, classify_refusal,
+                                                    umat_outputs_written)
         from umat_oti.store.transform_store import file_digest
 
         for record in records.values():
@@ -642,6 +750,20 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             record.duplicate_of = duplicates.get(record.source_id, "")
 
             found = classify(text, path=source)
+            # Where the file was searched for a stress or tangent update, and
+            # what was found. Done for every acquired source, not only the
+            # refused ones: a file that presents the UMAT interface and
+            # assigns neither output anywhere is a template whoever wrote it
+            # published, and that is a fact worth carrying whether or not the
+            # transformer ever reached it.
+            outputs = umat_outputs_written(text, form=found.source_form,
+                                           path=source)
+            record.writes_stress = outputs.writes_stress
+            record.writes_ddsdde = outputs.writes_ddsdde
+            record.output_calls = outputs.calls
+            record.output_first_write = outputs.first_write
+            record.output_first_write_line = outputs.first_write_line or None
+            record.output_search = outputs.where_it_searched
             record.source_form = found.source_form
             record.entry_interface = found.entry_interface
             record.entry_routine = found.entry_routine
@@ -664,7 +786,8 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
                 found, duplicate_of=record.duplicate_of,
                 missing_externals=tuple(missing),
                 text_rejected=evidence.get("text_rejected"),
-                compiler_evidence=str(evidence.get("evidence") or ""))
+                compiler_evidence=str(evidence.get("evidence") or ""),
+                outputs=outputs)
             # The refusal class answers "the transformer refused this -- what
             # was it?", so it is only recorded where there was a refusal. What
             # the file IS is recorded either way, because a transformed file
@@ -680,12 +803,38 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
                 record.entry_evidence = verdict.evidence
 
     # What Abaqus made of the ones that got that far. This overrides the
-    # transform's verdict, because it is later and it is about a real run.
-    for row in _rows(abaqus_report):
+    # transform's verdict, because it is later and it is about a real run --
+    # but only where it is about the SAME transformed file. A verification row
+    # carries the fingerprint of the store it ran against; the store was
+    # rebuilt, and a row from before that rebuild describes a transformed file
+    # that no longer exists. pass9 is 250 rows, every one of them at
+    # fingerprint ff94800b1884bcc0, against a store that is now
+    # 668e7e64c1371b47. Joining those on source_id alone would have reported
+    # 67 sources as verified on evidence about different generated Fortran.
+    verification_file = _relative_to_repo(abaqus_report) if abaqus_report else ""
+    for row in _fingerprint_latest(_rows(abaqus_report), store_fingerprint):
         source_id = str(row.get("source") or "")
         if not source_id:
             continue
         record = _seed(source_id)
+        record.verification_source = verification_file
+        record.verification_fingerprint = str(row.get("fingerprint") or "")
+        record.verification_is_current = (
+            None if not store_fingerprint or not record.verification_fingerprint
+            else record.verification_fingerprint == store_fingerprint)
+        if record.verification_is_current is False:
+            # Not a verdict about the entry that is in the store now. The row
+            # is kept -- its fingerprint and its stage are recorded -- but it
+            # decides nothing, and the record stays at whatever the transform
+            # established, which for a stored entry is "no batch has reached
+            # it at this fingerprint yet".
+            record.not_verified_reason = (
+                f"the only verification row for this source was produced "
+                f"against store fingerprint {record.verification_fingerprint} "
+                f"and the store is now {store_fingerprint}; it reached "
+                f"`{row.get('stage')}` there, which is evidence about a "
+                f"transformed file that has since been rebuilt")
+            continue
         record.key = str(row.get("key") or record.key)
         record.stage = str(row.get("stage") or "")
         verdict = from_stage(record.stage, str(row.get("reason") or "")[:500])
@@ -772,7 +921,103 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             is_umat=(record.is_umat if record.refusal_class
                      else _is_a_umat(cache, record.source_id)))
         record.terminal_state, record.kind = verdict.state, verdict.kind
+
+    for record in records.values():
+        (record.adequately_specified, record.adequacy_basis,
+         record.adequacy_kind) = _adequacy(record)
+        if record.terminal_state != FULLY_VERIFIED:
+            record.not_verified_reason = (record.not_verified_reason
+                                          or _why_not_verified(record))
     return sorted(records.values(), key=lambda r: r.source_id)
+
+
+#: The terminal states that say the source itself cannot be driven, because of
+#: something nobody published. Each is already classified external in
+#: umat_oti.abaqus.terminal_states; they are listed again here because this is
+#: the rule that decides the SECOND DENOMINATOR, and a denominator whose
+#: membership rule lives somewhere else is a denominator nobody can check.
+NOT_ADEQUATELY_SPECIFIED_STATES = (
+    "incomplete_or_corrupt_source",
+    "external_dependency_unavailable",
+    "missing_material_data",
+    WAITS_FOR_INPUT,
+)
+
+
+def _adequacy(record: Record) -> tuple:
+    """Is this an adequately specified genuine UMAT, and if not, whose fault?
+
+    THE SECOND DENOMINATOR. The first is the 391 sources the acquisition
+    brought back; this is the subset a verification rate may honestly be
+    quoted against. Every exclusion below is a fact about somebody's published
+    repository, and every one of them names the evidence that established it.
+
+    NOTHING INTERNAL MAY SHRINK THIS SET. A source this project's transformer
+    could not convert, whose deck this project could not generate, whose
+    experiment this project could not make informative, stays inside it and
+    counts against us -- that is the whole point of separating the two
+    denominators rather than quoting one number. The assertion is
+    ``tests/test_the_two_denominators_stay_apart.py``.
+    """
+    if not record.sha256:
+        return (None, "the acquisition inventory names this source but the "
+                      "cache does not hold it, so nothing about it was "
+                      "established by parsing", "internal")
+    if record.is_umat is False:
+        return (False, ("this file's Abaqus entry point is not a UMAT: "
+                        + (record.classification_basis
+                           or record.entry_evidence))[:600], "external")
+    if record.duplicate_of:
+        return (False, (f"line-for-line identical to {record.duplicate_of}, "
+                        f"which carries the same answer; counting both would "
+                        f"count one source twice"), "external")
+    if (record.entry_interface == "UMAT" and record.output_calls == 0
+            and record.writes_stress is False and record.writes_ddsdde is False):
+        return (False, ("this file presents the Abaqus UMAT interface and "
+                        "publishes no constitutive model inside it: "
+                        + record.output_search
+                        + " -- nothing was assigned and no CALL was made")[:600],
+                "external")
+    if record.terminal_state in NOT_ADEQUATELY_SPECIFIED_STATES:
+        return (False, (f"{record.terminal_state}: "
+                        + (record.reason or record.classification_basis
+                           or record.missing_companions
+                           or record.compile_defect))[:600], "external")
+    basis = (f"presents the Abaqus UMAT interface at line {record.entry_line}"
+             if record.entry_line else "presents the Abaqus UMAT interface")
+    if record.output_first_write:
+        basis += (f", and assigns an output at line "
+                  f"{record.output_first_write_line}: "
+                  f"{record.output_first_write}")
+    return (True, (basis + "; nothing external excludes it")[:600], "")
+
+
+def _why_not_verified(record: Record) -> str:
+    """The NAMED reason this source is not verified, with its evidence.
+
+    Never "the transformer refused it": that is an answer about the
+    transformer. Where the transform is what stopped it, the reason names the
+    transformer's own diagnostic AND the parse that established the file is a
+    whole UMAT, so a reader can see that the work is this project's.
+    """
+    parts = [f"terminal state `{record.terminal_state}` "
+             f"({record.kind}; "
+             f"{'somebody else' if record.kind == 'external' else 'this project'}"
+             f" has to move next)"]
+    if record.terminal_state == "not_attempted":
+        parts.append("no batch has produced a row for this source at the "
+                     "current store fingerprint; this is an absence of a "
+                     "verdict, not a verdict")
+    if record.reason:
+        parts.append(f"recorded reason: {record.reason}")
+    for label, value in (("classification", record.classification_basis),
+                         ("missing beside it", record.missing_companions),
+                         ("compile defect", record.compile_defect),
+                         ("output search", record.output_search)):
+        if value:
+            parts.append(f"{label}: {value}")
+            break
+    return "; ".join(parts)[:900]
 
 
 def _is_a_umat(cache: Optional[Path], source_id: str) -> Optional[bool]:
@@ -850,10 +1095,51 @@ def summarise(records: list) -> dict:
             clusters[record.terminal_state].append(record.source_id)
     refused = [r for r in records if r.refusal_class]
     by_refusal = Counter(r.refusal_class for r in refused)
+
+    # THE TWO DENOMINATORS, kept apart and both named. Quoting a rate without
+    # saying which of them it is against is the failure this block exists to
+    # prevent, so neither is ever computed as a bare percentage here: the
+    # numerator and the denominator are both published and the reader divides.
+    adequate = [r for r in records if r.adequately_specified]
+    excluded = [r for r in records if r.adequately_specified is False]
+    unknown = [r for r in records if r.adequately_specified is None]
+    internal_exclusions = sorted(r.source_id for r in excluded
+                                 if r.adequacy_kind != "external")
     return {
         "acquired": len(records),
         "genuine_umats": len(umats),
+        "adequately_specified_genuine_umats": len(adequate),
+        "denominators": {
+            "acquired_sources": {
+                "count": len(records),
+                "means": "every artefact the acquisition brought back, one "
+                         "record each, seeded from the discovery inventory",
+                "verified": len([r for r in verified
+                                 if True]),
+            },
+            "adequately_specified_genuine_umats": {
+                "count": len(adequate),
+                "means": "the subset that presents the Abaqus UMAT interface, "
+                         "is a distinct member of the corpus, has a "
+                         "constitutive model inside it, builds as published, "
+                         "has everything it USEs published beside it, and has "
+                         "material constants published for it",
+                "verified": len([r for r in verified if r.adequately_specified]),
+                "excluded": len(excluded),
+                "excluded_for_an_internal_reason": internal_exclusions,
+                "unknown": [r.source_id for r in unknown],
+            },
+        },
+        "adequacy_exclusions_by_kind": dict(
+            Counter(r.adequacy_kind or "external" for r in excluded)),
         "fully_verified": len(verified),
+        "fully_verified_and_adequately_specified": len(
+            [r for r in verified if r.adequately_specified]),
+        "verification_rows_at_a_stale_fingerprint": sorted(
+            r.source_id for r in records if r.verification_is_current is False),
+        "records_with_no_named_reason": sorted(
+            r.source_id for r in records
+            if r.terminal_state != FULLY_VERIFIED and not r.not_verified_reason),
         "transform_refused": len(refused),
         "refusals_by_class": dict(sorted(by_refusal.items(),
                                          key=lambda kv: -kv[1])),
@@ -877,57 +1163,190 @@ def summarise(records: list) -> dict:
     }
 
 
+def _pct(numerator: int, denominator: int, name: str) -> str:
+    """A percentage that names its denominator, or nothing at all.
+
+    A rate quoted without saying what it is a rate OF is the single most
+    misleading thing this report could print, so the denominator is written
+    into the string itself and there is no way to ask for one without it.
+    """
+    if not denominator:
+        return f"{numerator} of 0 {name}"
+    return (f"{numerator} of {denominator} {name} "
+            f"({100.0 * numerator / denominator:.1f}% of {name})")
+
+
 def markdown(records: list, summary: dict) -> str:
+    inputs = summary.get("inputs") or {}
+    denominators = summary.get("denominators") or {}
+    acquired = summary["acquired"]
+    adequate = summary.get("adequately_specified_genuine_umats", 0)
+    verified = summary["fully_verified"]
+    verified_adequate = summary.get("fully_verified_and_adequately_specified",
+                                    verified)
+
     lines = [
         "# Corpus verification",
         "",
-        f"{summary['acquired']} acquired artefacts, of which "
-        f"{summary['genuine_umats']} present a UMAT interface to Abaqus.",
+        "Every acquired source has a record here. Each one is named by its "
+        "path inside the acquisition cache and never by its basename: "
+        "eighteen of them are called `umat.f90` or `UMAT.f`, and a basename "
+        "identifies none of those.",
         "",
-        f"**{summary['fully_verified']} fully verified.**",
+        "## Where every number below comes from",
         "",
-        "`fully_verified` means the source transformed and compiled, Abaqus ran",
-        "the ORIGINAL, Abaqus ran the CONVERTED build on the same deck, their",
-        "stress and state histories agreed over the whole path, and the OTI",
-        "tangent agreed with a finite difference of the original at several",
-        "states along it. Compiling is not working and running is not verified.",
+        "| input | file |",
+        "| --- | --- |",
+    ]
+    for label, key in (("acquisition inventory (the denominator)",
+                        "inventory_path"),
+                       ("transform report", "transform_report"),
+                       ("Abaqus verification results", "verification_results"),
+                       ("offline compile evidence", "refusal_audit"),
+                       ("acquisition cache", "discovery_cache")):
+        value = inputs.get(key) or (summary.get("inventory") or {}).get("path", "")
+        if value:
+            lines.append(f"| {label} | `{value}` |")
+    if inputs.get("store_fingerprint"):
+        lines += ["", f"The transform store this registry describes is at "
+                      f"fingerprint `{inputs['store_fingerprint']}`. A "
+                      f"verification row carries the fingerprint of the store "
+                      f"it ran against; a row from before the store was "
+                      f"rebuilt is evidence about a transformed file that no "
+                      f"longer exists, and none of those is read as a verdict "
+                      f"about the entry that is in the store now."]
+
+    lines += [
         "",
-        "## Finished, and unfinished",
+        "## Two denominators, and which is which",
         "",
-        "| | entries |",
-        "| --- | ---: |",
-        f"| verified | {summary['by_kind'].get('verified', 0)} |",
-        f"| blocked outside this repository | {summary['external_total']} |",
-        f"| work remaining here | {summary['internal_total']} |",
+        "There are two populations in this report and they are never pooled. "
+        "Every rate below says which one it is a rate of.",
         "",
-        "## Every terminal state",
+        f"**D1 -- {acquired} acquired sources.** Everything the acquisition "
+        "brought back, whatever it turned out to be. This is the honest "
+        "denominator for \"what happened to the corpus we collected\".",
         "",
-        "| terminal state | whose move | entries |",
+        f"**D2 -- {adequate} adequately specified genuine UMATs.** The subset "
+        "of D1 that presents the Abaqus UMAT interface, is a distinct member "
+        "of the corpus rather than a second copy of another one, has a "
+        "constitutive model inside it, builds as its author published it, has "
+        "everything it USEs or INCLUDEs published beside it, and has material "
+        "constants published somewhere in its repository. This is the honest "
+        "denominator for \"what happened to the UMATs that could be driven at "
+        "all\".",
+        "",
+        "**Every exclusion from D2 is a fact about somebody else's published "
+        "repository, and each one names the evidence that established it.** "
+        "Nothing this project failed to do removes a source from D2: a source "
+        "whose transform this project refused, whose deck this project could "
+        "not generate, whose experiment this project could not make "
+        "informative, all stay in D2 and count against us. That is why there "
+        "are two denominators rather than one number.",
+        "",
+        "| | verified | denominator |",
+        "| --- | ---: | ---: |",
+        f"| D1 acquired sources | {verified} | {acquired} |",
+        f"| D2 adequately specified genuine UMATs | {verified_adequate} | "
+        f"{adequate} |",
+        "",
+        f"* {_pct(verified, acquired, 'acquired sources (D1)')}",
+        f"* {_pct(verified_adequate, adequate, 'adequately specified genuine UMATs (D2)')}",
+        "",
+        "`fully_verified` means the source transformed and compiled, Abaqus "
+        "ran the ORIGINAL, Abaqus ran the CONVERTED build on the same deck, "
+        "their stress and state histories agreed over the whole path, and the "
+        "OTI tangent agreed with a finite difference of the original at "
+        "several states along it. Compiling is not working, running is not "
+        "verified, and unknown is never verified.",
+    ]
+
+    excluded_internal = (denominators.get(
+        "adequately_specified_genuine_umats") or {}).get(
+            "excluded_for_an_internal_reason") or []
+    unknown = (denominators.get("adequately_specified_genuine_umats")
+               or {}).get("unknown") or []
+    if excluded_internal:
+        lines += ["", f"**{len(excluded_internal)} source(s) were excluded "
+                      f"from D2 for a reason that is NOT external.** That is "
+                      f"a defect in this report, not a result: " +
+                  ", ".join(f"`{name}`" for name in excluded_internal[:10])]
+    if unknown:
+        lines += ["", f"{len(unknown)} source(s) could not be placed in or "
+                      f"out of D2 because the acquisition cache does not hold "
+                      f"the file. They are counted in D1, excluded from D2's "
+                      f"numerator and denominator both, and named here: " +
+                  ", ".join(f"`{name}`" for name in unknown[:10])]
+
+    lines += [
+        "",
+        "## What excluded a source from D2",
+        "",
+        "| reason | external or internal | sources |",
         "| --- | --- | ---: |",
     ]
+    reasons: dict = defaultdict(list)
+    for record in records:
+        if record.adequately_specified is False:
+            head = record.adequacy_basis.split(":")[0].strip()[:70]
+            reasons[(head, record.adequacy_kind or "external")].append(
+                record.source_id)
+    for (head, kind), names in sorted(reasons.items(), key=lambda kv: -len(kv[1])):
+        mark = "EXTERNAL" if kind == "external" else "INTERNAL"
+        lines.append(f"| {head} | **{mark}** | {len(names)} |")
+
+    lines += [
+        "",
+        "## Every terminal state, and whose move it is",
+        "",
+        "EXTERNAL means the answer lies in what somebody published and no "
+        "further engineering here changes it. INTERNAL means the answer lies "
+        "in this repository and the work is ours. Where it was not clear "
+        "which of the two a state is, it is INTERNAL -- overstating this "
+        "project's own unfinished work rather than the corpus's "
+        "incompleteness is the only direction the error may go.",
+        "",
+        "| terminal state | external or internal | what it means | of D1 | of D2 |",
+        "| --- | --- | --- | ---: | ---: |",
+    ]
+    in_d2 = Counter(r.terminal_state for r in records if r.adequately_specified)
     for state, count in summary["by_terminal_state"].items():
-        lines.append(f"| `{state}` | {kind_of(state)} | {count} |")
+        kind = kind_of(state)
+        mark = ("VERIFIED" if kind == "verified"
+                else "**EXTERNAL**" if kind == "external" else "**INTERNAL**")
+        lines.append(f"| `{state}` | {mark} | {STATE_MEANS.get(state, '')} | "
+                     f"{count} | {in_d2.get(state, 0)} |")
+    lines += ["", f"D1 column sums to {acquired}; D2 column sums to "
+                  f"{sum(in_d2.values())}."]
+
     lines += ["", "## What is left here, by cluster", "",
-              "Each of these is a limitation of this pipeline, not of the "
-              "corpus. They are listed largest first because that is the "
-              "order they are worth fixing in.", "",
-              "| cluster | entries |", "| --- | ---: |"]
+              "Each of these is a limitation of this pipeline and not of the "
+              "corpus. Largest first, because that is the order they are "
+              "worth fixing in.", "",
+              "| cluster | sources in D1 | of which in D2 |",
+              "| --- | ---: | ---: |"]
     for state, count in summary["internal_clusters"].items():
-        lines.append(f"| `{state}` | {count} |")
+        lines.append(f"| `{state}` | {count} | {in_d2.get(state, 0)} |")
 
     if summary.get("transform_refused"):
         lines += ["", "## What the transformer refused, and what those files are",
                   "",
                   f"{summary['transform_refused']} sources were refused by the "
-                  "transformer. A REFUSAL IS A FACT ABOUT THE TRANSFORMER. Each "
-                  "of these was then classified by parsing the file itself -- "
-                  "its Abaqus entry point, its digest against every other "
-                  "acquired source, and an offline compile of the author's own "
-                  "text -- and the classification below rests on that evidence "
-                  "and never on the refusal.", "",
-                  "| what the file is | entries |", "| --- | ---: |"]
+                  "transformer. A REFUSAL IS A FACT ABOUT THE TRANSFORMER and "
+                  "never about the file. Each of these was then classified by "
+                  "parsing the file itself -- its Abaqus entry point read out "
+                  "of the source text, its lines matched against every other "
+                  "acquired source, an offline `ifort -syntax-only` pass over "
+                  "the author's own text, the companion resolution, and a "
+                  "search of the whole file for an assignment to STRESS or "
+                  "DDSDDE. The classification below rests on that evidence and "
+                  "never on the refusal.", "",
+                  "| what the file is | external or internal | sources |",
+                  "| --- | --- | ---: |"]
         for name, count in summary.get("refusals_by_class", {}).items():
-            lines.append(f"| `{name}` | {count} |")
+            mark = ("**INTERNAL**" if name == "genuine_umat"
+                    else "**EXTERNAL**")
+            lines.append(f"| `{name}` | {mark} | {count} |")
         unsure = summary.get("refusals_not_confidently_classified") or []
         lines += ["",
                   f"{len(unsure)} of them are held at `genuine_umat` because "
@@ -935,19 +1354,52 @@ def markdown(records: list, summary: dict) -> str:
                   "text builds. That is the safe direction: it counts the work "
                   "as ours."]
 
-    lines += ["", "## Every entry", "",
-              "| source | terminal state | element | primal | tangent | states |",
-              "| --- | --- | --- | ---: | ---: | --- |"]
+    stale = summary.get("verification_rows_at_a_stale_fingerprint") or []
+    if stale:
+        lines += ["", "## Verification rows that do not describe this store",
+                  "",
+                  f"{len(stale)} source(s) have a verification row produced "
+                  f"against a different store fingerprint. Whatever rung they "
+                  f"reached there, it is evidence about a transformed file "
+                  f"that has since been rebuilt, so none of them is counted as "
+                  f"verified here and each is recorded as `not_attempted` at "
+                  f"the current fingerprint -- an absence of a verdict, which "
+                  f"is not the same as a verdict.", ""]
+        for name in stale[:40]:
+            lines.append(f"* `{name}`")
+
+    lines += ["", "## Every source that is not verified, and why",
+              "",
+              "One row per source, with the NAMED reason and the evidence "
+              "behind it. \"The transformer refused it\" is never a reason "
+              "here: it is an answer about the transformer.",
+              "",
+              "| source | terminal state | external/internal | in D2 | reason |",
+              "| --- | --- | --- | :-: | --- |"]
     for record in records:
+        if record.terminal_state == FULLY_VERIFIED:
+            continue
+        kind = ("EXTERNAL" if record.kind == "external" else "INTERNAL")
+        member = "yes" if record.adequately_specified else "no"
+        reason = record.not_verified_reason.replace("|", "/")[:400]
+        lines.append(f"| `{record.source_id}` | `{record.terminal_state}` | "
+                     f"{kind} | {member} | {reason} |")
+
+    lines += ["", "## Every verified source", "",
+              "| source | element | worst primal | worst tangent | states |",
+              "| --- | --- | ---: | ---: | --- |"]
+    for record in records:
+        if record.terminal_state != FULLY_VERIFIED:
+            continue
         primal = ("" if record.worst_stress_relative is None
                   else f"{record.worst_stress_relative:.2e}")
         tangent = ("" if record.worst_tangent_relative is None
                    else f"{record.worst_tangent_relative:.2e}")
         states = ("" if record.tangent_states_checked is None
-                  else f"{record.tangent_states_agreeing}/{record.tangent_states_checked}")
-        lines.append(
-            f"| {record.source_id[-70:]} | `{record.terminal_state}` | "
-            f"{record.element_type} | {primal} | {tangent} | {states} |")
+                  else f"{record.tangent_states_agreeing}/"
+                       f"{record.tangent_states_checked}")
+        lines.append(f"| `{record.source_id}` | {record.element_type} | "
+                     f"{primal} | {tangent} | {states} |")
     return "\n".join(lines) + "\n"
 
 
@@ -983,6 +1435,14 @@ def main(argv: Optional[list] = None) -> int:
                              "ifort -syntax-only and write the evidence to "
                              "--refusal-audit. No Abaqus process is started "
                              "and no licence token is drawn")
+    parser.add_argument("--store-fingerprint", default="",
+                        help="the transform-store fingerprint the registry is "
+                             "being built for. A verification row carries the "
+                             "fingerprint of the store it ran against, and a "
+                             "row from before the store was rebuilt is "
+                             "evidence about a transformed file that no "
+                             "longer exists. Defaults to the fingerprint the "
+                             "--transform report records")
     parser.add_argument("--compile-check", action="store_true",
                         help="compile every unreached source with Abaqus's own "
                              "compile line, so a transform refusal on a file "
@@ -1016,11 +1476,27 @@ def main(argv: Optional[list] = None) -> int:
             "sources": audit}, indent=1) + "\n", encoding="utf-8")
         print(f"  wrote {args.refusal_audit}")
 
+    fingerprint = args.store_fingerprint
+    if not fingerprint and args.transform and Path(args.transform).is_file():
+        fingerprint = str(json.loads(Path(args.transform).read_text(
+            encoding="utf-8")).get("fingerprint") or "")
+
     records = build(args.transform, args.abaqus, args.cache_dir,
                     compile_check=args.compile_check,
                     inventory_ids=inventory_ids, provenance=provenance,
-                    audit=audit)
+                    audit=audit, store_fingerprint=fingerprint)
     summary = summarise(records)
+    summary["inputs"] = {
+        # Every number in the report has to be traceable to a file on disk
+        # that the report names. These are those files, as the repository
+        # sees them -- never as one machine happened to.
+        "transform_report": _relative_to_repo(args.transform),
+        "verification_results": (_relative_to_repo(args.abaqus)
+                                 if args.abaqus else ""),
+        "store_fingerprint": fingerprint,
+        "refusal_audit": _relative_to_repo(args.refusal_audit),
+        "discovery_cache": _relative_to_repo(args.cache_dir),
+    }
     summary["inventory"] = {
         # Relative to the repository where possible: the audit fails the
         # build on an absolute home path, and a registry that records where
@@ -1051,16 +1527,20 @@ def main(argv: Optional[list] = None) -> int:
         "summary": summary,
         "records": [r.as_dict() for r in records],
     }
+    import io
+    rows = io.StringIO()
+    writer = csv.DictWriter(rows, fieldnames=list(records[0].as_dict())
+                            if records else ["source_id"])
+    writer.writeheader()
+    for record in records:
+        writer.writerow(record.as_dict())
+
     for path, text in ((args.json_path, json.dumps(payload, indent=1) + "\n"),
-                       (args.markdown, markdown(records, summary))):
+                       (args.markdown, markdown(records, summary)),
+                       (args.csv_path, rows.getvalue())):
+        refuse_machine_paths(text, _relative_to_repo(path))
         Path(path).parent.mkdir(parents=True, exist_ok=True)
-        Path(path).write_text(text, encoding="utf-8")
-    with open(args.csv_path, "w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(records[0].as_dict())
-                                if records else ["source_id"])
-        writer.writeheader()
-        for record in records:
-            writer.writerow(record.as_dict())
+        Path(path).write_text(text, encoding="utf-8", newline="")
 
     print(f"  {summary['acquired']} artefacts, {summary['genuine_umats']} UMATs, "
           f"{summary['fully_verified']} fully verified")
