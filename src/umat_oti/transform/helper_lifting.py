@@ -32,8 +32,38 @@ class LiftedHelperSet:
     source: str
 
 
-_HEADER_RE = re.compile(r"^\s*SUBROUTINE\s+([A-Z_][A-Z0-9_]*)\s*\((.*)\)\s*$", re.IGNORECASE)
+#: A subroutine header, prefixes and all. ``PURE`` and ``RECURSIVE`` are
+#: ordinary in externally authored Fortran -- every one of the fourteen
+#: routines in MohrCoulombAbaqus.for is written ``pure subroutine`` -- and a
+#: prefix the pattern did not admit made the lifter refuse the routine with
+#: "Cannot parse helper header", which reads as a limitation of the source.
+#: The prefix is captured so it can be ACTED ON rather than just dropped: see
+#: :data:`_UNLIFTABLE_PREFIXES`.
+_HEADER_RE = re.compile(
+    r"^\s*(?P<prefix>(?:(?:RECURSIVE|PURE|IMPURE|ELEMENTAL|NON_RECURSIVE|MODULE)\s+)*)"
+    r"SUBROUTINE\s+([A-Z_][A-Z0-9_]*)\s*\((.*)\)\s*$",
+    re.IGNORECASE)
+
+#: Prefixes the lifted copy cannot simply drop.
+#:
+#: PURE and RECURSIVE can be: the lifted routine is regenerated with a header
+#: of its own, it is called only from code this transform also emits, and
+#: nothing it is called from is itself PURE, so a non-pure copy is accepted
+#: everywhere the original was.
+#:
+#: ELEMENTAL cannot. An elemental routine is called with array actuals and
+#: applied element by element, and a scalar copy of it called the same way is
+#: a different program. Refusing by name is the honest answer; silently
+#: dropping the keyword would compile and would rank as a shape mismatch or,
+#: worse, would not.
+_UNLIFTABLE_PREFIXES = ("ELEMENTAL",)
 _CALL_RE = re.compile(r"\bCALL\s+([A-Z_][A-Z0-9_]*)\s*\(", re.IGNORECASE)
+#: The same two patterns the parser uses, against stitched statement text.
+_INTERFACE_OPEN_RE = re.compile(
+    r"^\s*(?:ABSTRACT\s+)?INTERFACE\b"
+    r"(?:\s*(?:\w+|OPERATOR\s*\(.*\)|ASSIGNMENT\s*\(\s*=\s*\)))?\s*$",
+    re.IGNORECASE)
+_INTERFACE_CLOSE_RE = re.compile(r"^\s*END\s*INTERFACE(\s+.*)?$", re.IGNORECASE)
 _PARAMETER_RE = re.compile(r"^\s*PARAMETER\s*\((.*)\)\s*$", re.IGNORECASE)
 _DIMENSION_RE = re.compile(r"^\s*DIMENSION\s*(?:::)?\s*(.*)$", re.IGNORECASE)
 _INTEGER_RE = re.compile(r"^\s*INTEGER(?:\s*\*\s*\d+|\s*\([^)]*\))?\s*(?:::)?\s*(.*)$", re.IGNORECASE)
@@ -431,8 +461,17 @@ def _lift_helper_routine(
     header_match = _HEADER_RE.match(header_text)
     function_match = None if header_match else FUNCTION_HEADER_RE.match(header_text)
     if header_match:
-        original_name = header_match.group(1).upper()
-        raw_args = header_match.group(2)
+        prefixes = header_match.group("prefix").upper().split()
+        refused = [word for word in prefixes if word in _UNLIFTABLE_PREFIXES]
+        if refused:
+            raise HelperLiftingError(
+                f"{routine.name} is declared {' '.join(refused)} at "
+                f"{stitched_lines[0].strip()!r}. An ELEMENTAL routine is "
+                f"applied element by element to array actuals; a lifted "
+                f"scalar copy called the same way is a different program, so "
+                f"this transform does not lift one.")
+        original_name = header_match.group(2).upper()
+        raw_args = header_match.group(3)
         result_name = ""
         declared_result_type = ""
     elif function_match:
@@ -470,13 +509,37 @@ def _lift_helper_routine(
     # the whole routine first does not depend on that being true.
     declared_extents = _declared_literal_extents(stitched_lines[1:-1], form)
 
+    interface_depth = 0
     for raw in stitched_lines[1:-1]:
         stripped = _statement_text(raw, form)
         if not stripped:
             continue
+        # An INTERFACE block declares routines defined somewhere else. Copied
+        # into the lifted body it produces a second declaration of every dummy
+        # argument the interface bodies name -- MohrCoulombStressReturn
+        # declares explicit interfaces for the eight routines it calls, and
+        # the lifted copy came out with "integer :: nsigma" nine times over
+        # and failed to compile on "Symbol 'nsigma' already has basic type of
+        # INTEGER". The lifted helpers are external subprograms called through
+        # an implicit interface like every other one this emits, so the block
+        # is dropped rather than rewritten.
+        if _INTERFACE_CLOSE_RE.match(stripped):
+            interface_depth = max(0, interface_depth - 1)
+            continue
+        if _INTERFACE_OPEN_RE.match(stripped):
+            interface_depth += 1
+            continue
+        if interface_depth:
+            continue
         if stripped.upper().startswith("INCLUDE "):
             continue
         if re.match(r"^\s*IMPLICIT\s+", stripped, re.IGNORECASE):
+            continue
+        retyped = _retyped_attributed_declaration(stripped, type_name)
+        if retyped is not None:
+            prelude.append(f"    {retyped}")
+            declaration_oti_names.update(
+                _declared_names(retyped.split("::", 1)[1]))
             continue
         stripped = _flattened_attributed_declaration(stripped)
         parameter_match = _PARAMETER_RE.match(stripped)
@@ -644,9 +707,63 @@ def _lift_helper_routine(
             lines.extend(_helper_output_surface_lines(helper_output_surfaces))
         if re.match(r"^\s*RETURN\b", rewritten, re.IGNORECASE) and helper_output_copies:
             lines.extend(_helper_output_copy_lines(helper_output_copies))
+        surviving = _unsupported_intrinsic_over_oti(rewritten, oti_names)
+        if surviving:
+            raise HelperLiftingError(
+                f"{routine.name} applies {surviving} to a differentiated value "
+                f"at {_source_line_label(routine, statement)}: "
+                f"{statement.strip()!r}. The OTI algebra declares no "
+                f"{surviving} over the type and none can be written inside an "
+                f"expression here -- a reduction over a run-time extent needs "
+                f"a loop, which is a statement. Left in, it compiles nowhere; "
+                f"wrapped in REAL it would compile and drop the derivative.")
         lines.append(f"    {label_prefix}{rewritten}")
     lines.append(f"end {unit} {original_name.lower()}_oti")
     return "\n".join(lines)
+
+
+#: The intrinsics the OTI algebra has no form of, in the lifted body's own
+#: spelling. The same four the main pass blocks on
+#: (``_INTRINSICS_WITHOUT_AN_OTI_FORM`` in source_transform); MOD and SUM have
+#: expanders above and only reach here when the expander could not apply.
+_UNSUPPORTED_OVER_OTI = ("SUM", "PRODUCT", "MOD", "ATAN2")
+
+
+def _unsupported_intrinsic_over_oti(line: str, oti_names: set[str]) -> str:
+    """Which unsupported intrinsic this rewritten line applies to an OTI value.
+
+    Asked AFTER the expanders have run, so a SUM that was written out term by
+    term does not report itself. The main pass has blocked on these four since
+    ahartloper/UVC_MatMod stopped at "'array' argument of 'sum' intrinsic must
+    have a numeric type", but it reads the CALLER's stress regions only: a
+    lifted helper doing the same thing produced the same compile error with no
+    blocker in front of it, and a compile error in a log is not a diagnostic
+    anybody asked this transform for.
+    """
+    if not oti_names:
+        return ""
+    for intrinsic in _UNSUPPORTED_OVER_OTI:
+        for match in re.finditer(rf"(?<![A-Za-z0-9_%]){intrinsic}\s*\(", line,
+                                 flags=re.IGNORECASE):
+            close = _matching_paren_index(line, match.end() - 1)
+            if close < 0:
+                continue
+            argument = line[match.end():close]
+            if any(re.search(rf"\b{re.escape(name)}\b", argument, flags=re.IGNORECASE)
+                   for name in oti_names):
+                return intrinsic
+    return ""
+
+
+def _source_line_label(routine: ParsedSubroutine, statement: str) -> str:
+    """"line N" for the statement, or the routine's span when it is not found."""
+    wanted = re.sub(r"\s+", "", statement).upper()
+    for line in routine.lines:
+        if re.sub(r"\s+", "", line.text).upper() == wanted and line.line_numbers:
+            return f"line {line.line_numbers[0]}"
+    numbers = [number for line in routine.lines for number in line.line_numbers]
+    return (f"a line between {min(numbers)} and {max(numbers)}"
+            if numbers else "an unrecorded line")
 
 
 def _result_type_spec(declared_type: str, result_name: str, type_name: str) -> str:
@@ -705,9 +822,58 @@ def _helper_indexed_name(name: str, indices: list[int]) -> str:
 #: writing the entity out longhand. DIMENSION becomes the entity's own
 #: array-spec, INTENT is optional on a module procedure's dummy, and PARAMETER
 #: becomes the PARAMETER statement the lifter already rewrites. Anything else
-#: -- SAVE, ALLOCATABLE, POINTER -- changes what the declaration means, so it
-#: is left exactly as written rather than silently dropped.
+#: -- SAVE, ALLOCATABLE, POINTER, OPTIONAL -- changes what the declaration
+#: means, so it is left exactly as written rather than silently dropped, and
+#: :func:`_retyped_attributed_declaration` carries it through instead.
 _EXPRESSIBLE_ATTRIBUTES = ("dimension", "intent", "parameter")
+
+#: Attributes the longhand form absorbs, so they are not repeated beside the
+#: retyped declaration. DIMENSION is folded into each entity's array-spec, and
+#: INTENT is dropped because the lifted routine is an external subprogram with
+#: no explicit interface, where it constrains nothing and would only have to
+#: agree with a caller nobody declares.
+_ABSORBED_ATTRIBUTES = ("dimension", "intent")
+
+
+def _retyped_attributed_declaration(stripped: str, type_name: str) -> str | None:
+    """An attributed declaration rewritten to the OTI type, attributes kept.
+
+    ``_flattened_attributed_declaration`` returns the statement untouched when
+    it carries an attribute the longhand form cannot say, and the type matcher
+    below then reads ``REAL(8)`` and takes ", intent(out), optional :: Dinv(..)"
+    as its entity list, emitting
+
+        type(ONUMM6N1) :: intent(out), optional :: Dinv(nsigma,nsigma)
+
+    -- two double-colons in one declaration, which is not Fortran and stops
+    the build. MohrCoulombAbaqus.for declares ``real(8), intent(out),
+    optional :: Dinv(nsigma,nsigma)`` for its elastic-matrix helper.
+
+    Only the type changes. OPTIONAL stays, because a body that calls
+    ``PRESENT(Dinv)`` needs it and a caller is free to omit the argument;
+    SAVE, ALLOCATABLE and POINTER stay for the same reason -- each says
+    something about the variable that the entity list cannot.
+
+    Returns None when there is nothing here of this shape, so the caller falls
+    through to the paths it already had.
+    """
+    declaration = parse_declaration_line(stripped)
+    if declaration is None or not declaration.attributes:
+        return None
+    if declaration.kind != "real" or declaration.has_parameter_attribute:
+        return None
+    if all(attribute.strip().lower().startswith(_EXPRESSIBLE_ATTRIBUTES)
+           for attribute in declaration.attributes):
+        return None
+    kept = [attribute.strip() for attribute in declaration.attributes
+            if not attribute.strip().lower().startswith(_ABSORBED_ATTRIBUTES)]
+    entities = ", ".join(entity.render() for entity in declaration.entities)
+    if not entities:
+        return None
+    prefix = f"type({type_name})"
+    if kept:
+        prefix += ", " + ", ".join(kept)
+    return f"{prefix} :: {entities}"
 
 
 def _flattened_attributed_declaration(stripped: str) -> str:
@@ -1292,8 +1458,17 @@ def _normalize_numeric_literals(line: str, oti_names: set[str]) -> str:
         return line
     if _FORMAT_STATEMENT_RE.match(line):
         return line
+    # A literal that already carries an explicit kind -- ``1.0e-10_8`` -- is
+    # left exactly as the author wrote it. Its precision is stated, so there
+    # is nothing here to widen, and rewriting the exponent letter produces
+    # ``1.0D-10_8``: two kind markers on one literal, which gfortran rejects
+    # with "Real number has a 'd' exponent and an explicit kind". 141 literals
+    # in MohrCoulombAbaqus.for are written that way. The lookahead has to
+    # exclude every identifier character, not just the underscore: a bare
+    # ``(?!_)`` backtracks -- 1.0e-10_8 then matches as 1.0e-1 with "0_8" left
+    # standing -- and produces the same illegal literal by a longer route.
     normalized = re.sub(
-        r"(?<!\w)(\d+\.\d*|\.\d+|\d+)[eE]([+-]?\d+)",
+        r"(?<!\w)(\d+\.\d*|\.\d+|\d+)[eE]([+-]?\d+)(?![\w.])",
         lambda match: f"{match.group(1)}D{match.group(2)}",
         line,
     )
@@ -1316,7 +1491,7 @@ def _contains_oti_name(line: str, oti_names: set[str]) -> bool:
 
 
 def _normalize_real_literal(value: str) -> str:
-    promoted = re.sub(r"(?<!\w)(\d+\.\d*|\.\d+|\d+)[eE]([+-]?\d+)", lambda match: f"{match.group(1)}D{match.group(2)}", value)
+    promoted = re.sub(r"(?<!\w)(\d+\.\d*|\.\d+|\d+)[eE]([+-]?\d+)(?![\w.])", lambda match: f"{match.group(1)}D{match.group(2)}", value)
     return re.sub(r"(?<![A-Za-z0-9_])(\d+\.\d*|\.\d+)(?![A-Za-z0-9_.dDeE])", lambda match: match.group(1) + "D0", promoted)
 
 

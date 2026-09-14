@@ -22,7 +22,8 @@ from umat_oti.fortran.normalize import detect_source_form, strip_inline_comment
 from umat_oti.fortran.parser import (
     logical_lines_from_text, parse_entity, parse_subroutines, split_top_level,
 )
-from umat_oti.fortran.regions import INTRINSIC_TOKEN_NAMES, _is_executable_line
+from umat_oti.fortran.regions import (
+    INTRINSIC_TOKEN_NAMES, _is_executable_line, _routine_effect_table)
 from umat_oti.oti.module_generator import OtilibGenerationError, generate_otilib_module
 from umat_oti.transform.abaqus_utility_definitions import available_definitions, definition_text
 from umat_oti.transform.helper_lifting import HelperLiftingError, helper_lift_closure, lift_helper_set_source, wrap_free_form
@@ -148,7 +149,19 @@ def transform_umat_to_oti_from_config(
     module_name = f"otim{oti_directions}n{order}" if oti_directions else ""
     type_name = f"ONUMM{oti_directions}N{order}" if oti_directions else ""
     tangent_context = _tangent_region_context(config, regions["old_tangent"], regions["stress"], source_text)
-    helper_roots = _liftable_helper_roots(config, roles, regions["stress"])
+    helper_roots = _liftable_helper_roots(
+        config, roles, regions["stress"], selected_umat, parsed)
+    # The roots the narrow rule alone would have produced, kept so that
+    # widening can add reach and cannot take any away. A root the widening
+    # found may drag a closure into a callee nothing can lift -- KUMATCHECKS
+    # in victorlefevre/UMAT_KLP_RK5_hybrid.f calls Abaqus's own STDB_ABQERR,
+    # which is in the solver and not in the file -- and a source that
+    # transformed before must not stop transforming because the lifter was
+    # offered MORE work. When the widened closure fails, the narrow one is
+    # tried, and whatever leak remains is reported by the leak check exactly
+    # as it was.
+    narrow_roots = _liftable_helper_roots(
+        config, roles, regions["stress"], selected_umat, parsed, widen=False)
     helper_lift_names: tuple[str, ...] = ()
     helper_lift_issue = ""
     # A helper root the solver provides rather than the author. ROTSIG is
@@ -173,6 +186,14 @@ def transform_umat_to_oti_from_config(
             helper_lift_names = helper_lift_closure(parsed, helper_roots, selected_umat=selected_umat)
         except HelperLiftingError as exc:
             helper_lift_issue = str(exc)
+            if set(narrow_roots) < set(helper_roots):
+                try:
+                    helper_lift_names = helper_lift_closure(
+                        parsed, narrow_roots, selected_umat=selected_umat)
+                except HelperLiftingError:
+                    pass
+                else:
+                    helper_lift_issue = ""
     blockers = _readiness_blockers(config, roles, regions, mappings, ntens, selected_umat, source_text, helper_lift_issue="", parsed=parsed)
     blockers.extend(tangent_context.blockers)
     warnings: list[str] = []
@@ -721,26 +742,159 @@ def _liftable_helper_roots(
     config: dict[str, Any],
     roles: dict[str, set[str]],
     stress_regions: list[dict[str, Any]],
+    selected_umat: str = "",
+    parsed: Any = None,
+    widen: bool = True,
 ) -> tuple[str, ...]:
+    """Every routine this file defines that will be handed a shadow.
+
+    Two sources of root, and the second one exists because the first was not
+    the same question the emitter answers.
+
+    ``stress_path_helpers`` is a call inside the DETECTED stress-update
+    interval. That is where a helper that computes the stress usually sits, and
+    it was the whole rule. But the emitter does not rewrite arguments by
+    interval: it rewrites a promoted name wherever it appears in the selected
+    routine. abuganza/GOH_Example.f is the clean case -- ``DOUBLEDOT`` is
+    called with FGINVMAT twenty lines below the interval, the emitter rewrote
+    the actual to FGINVMAT_OTI, and the callee was never offered to the lifter
+    because it was not in the list. Fortran's implicit interface then made the
+    call compile, and DOUBLEDOT read the first REAL of a seven-word
+    hypercomplex element as though it were the whole value. The leak check
+    caught it and refused the source, correctly, for a reason that was this
+    function's to avoid.
+
+    So the second source is: any CALL in the selected routine that receives a
+    name the emitter will rewrite. Restricted to callees THIS FILE DEFINES,
+    because a root with no body is not a root -- ``helper_lift_closure``
+    raises on it, and an external callee's leak is a true external blocker
+    that the warning already states in full. Nothing here turns an external
+    into a root, and nothing here removes the leak check: the widening only
+    gives the lifter more of what it can actually lift.
+    """
     analysis = _dict(config.get("analysis"))
     active_names = roles["seed"] | roles["promote"]
     roots: list[str] = []
     seen: set[str] = set()
+
+    def _add(callee: str, arguments: Any, names: set[str] | None = None) -> None:
+        name = str(callee or "").upper()
+        if not name or name in seen or name in INLINEABLE_HELPERS:
+            return
+        if not (_helper_argument_base_names(arguments or [])
+                & (active_names if names is None else names)):
+            return
+        seen.add(name)
+        roots.append(name)
+
     for row in analysis.get("stress_path_helpers", []) or []:
         if not isinstance(row, dict):
             continue
-        callee = str(row.get("callee", "")).upper()
         line_numbers = tuple(_as_int(value) for value in row.get("line_numbers", []) or [] if _as_int(value))
-        if not callee or not line_numbers or callee in INLINEABLE_HELPERS:
+        if not line_numbers or not _line_numbers_intersect(line_numbers, stress_regions):
             continue
-        if not _line_numbers_intersect(line_numbers, stress_regions):
-            continue
-        rewritten_arguments = _helper_argument_base_names(row.get("arguments", []) or []) & active_names
-        if not rewritten_arguments or callee in seen:
-            continue
-        seen.add(callee)
-        roots.append(callee)
+        _add(row.get("callee", ""), row.get("arguments", []))
+
+    if not widen:
+        return tuple(roots)
+    defined_here = _names_defined_in_this_file(analysis)
+    if not defined_here:
+        return tuple(roots)
+    span = _selected_routine_span_from_analysis(analysis, selected_umat)
+    calls = [
+        row for row in analysis.get("calls", []) or []
+        if isinstance(row, dict)
+        and str(row.get("callee", "")).upper() in defined_here
+        and str(row.get("callee", "")).upper() != (selected_umat or "UMAT").upper()
+        and (not span or any(
+            span[0] <= _as_int(value) <= span[1]
+            for value in row.get("line_numbers", []) or []))
+    ]
+    if not calls:
+        return tuple(roots)
+    # Shadows spread through the calls, so the roots have to be found the same
+    # way. In abuganza/GOH_Example.f the emitter lifts MOVE6TO33, whose second
+    # dummy the lifted body types ONUMM6N1, so FGINVMAT -- which the role
+    # classifier calls neither seed nor promoted -- comes back a shadow; and
+    # DOUBLEDOT twenty lines further down is handed it. One pass over the
+    # active names never reaches DOUBLEDOT, because at that point FGINVMAT is
+    # not active. So this runs to a fixed point: a call that receives a shadow
+    # makes its callee a root, and the arguments that callee WRITES become
+    # shadows in turn.
+    #
+    # What spreads is not "this argument is an output" but "this argument sits
+    # at a dummy the lifted body types OTI", and the lifter types every REAL
+    # dummy that way. So a call that receives one shadow makes shadows of all
+    # its real arguments -- which is exactly what
+    # _lifted_helper_argument_shadow_names does on the emitting side, and the
+    # two have to agree or one of them produces the leak the other checks for.
+    # Integer-named arguments are excluded by the same rule it uses: a loop
+    # bound handed to a helper is a loop bound in the lifted body too.
+    declared_real = _names_declared_real(config)
+    shadowed = set(active_names)
+    for _pass in range(len(calls) + 1):
+        grew = False
+        for row in calls:
+            callee = str(row.get("callee", "")).upper()
+            arguments = [str(value) for value in row.get("arguments", []) or []]
+            actuals = _helper_argument_base_names(arguments)
+            # Either this call receives a shadow, or the callee is already a
+            # root -- in which case EVERY call site of it gets a lifted,
+            # hypercomplex-dummied body, so this one's actuals are shadows too
+            # even where none of them was a shadow before. MOVE6TO33 is that
+            # case in abuganza/GOH_Example.f: rooted from the stress interval,
+            # called again below it on CONST2, which is how CONST2 comes to be
+            # a shadow at all.
+            if not (actuals & shadowed) and callee not in seen:
+                continue
+            if callee not in seen:
+                _add(callee, arguments, shadowed)
+                grew = grew or callee in seen
+            carried = {
+                name for name in actuals
+                if name not in INTRINSIC_TOKEN_NAMES
+                and (not _is_implicit_integer_name(name) or name in declared_real)
+            }
+            if carried - shadowed:
+                shadowed |= carried
+                grew = True
+        if not grew:
+            break
     return tuple(roots)
+
+
+def _names_declared_real(config: dict[str, Any]) -> set[str]:
+    """Names the source declares with a real type, upper-case."""
+    return {
+        name for name, row in _variable_role_items(config).items()
+        if isinstance(row, dict)
+        and str(row.get("detected_type") or row.get("detected type") or "")
+        .strip().lower().startswith(("real", "double"))
+    }
+
+
+def _names_defined_in_this_file(analysis: dict[str, Any]) -> set[str]:
+    """Upper-case names of every program unit the source itself defines."""
+    names: set[str] = set()
+    for key in ("detected_subroutines", "detected_functions"):
+        for row in analysis.get(key, []) or []:
+            if isinstance(row, dict) and row.get("name"):
+                names.add(str(row["name"]).upper())
+    return names
+
+
+def _selected_routine_span_from_analysis(
+    analysis: dict[str, Any], selected_umat: str,
+) -> tuple[int, int] | None:
+    target = (selected_umat or "UMAT").upper()
+    for row in analysis.get("detected_subroutines", []) or []:
+        if not isinstance(row, dict) or str(row.get("name", "")).upper() != target:
+            continue
+        numbers = [_as_int(value) for value in row.get("line_numbers", []) or []]
+        numbers = [number for number in numbers if number]
+        if len(numbers) >= 2:
+            return min(numbers), max(numbers)
+    return None
 
 
 def _local_newton_blockers(config: dict[str, Any], roles: dict[str, set[str]]) -> list[str]:
@@ -2136,7 +2290,7 @@ def _transform_source_text(
     # gets the Kirchhoff term; see _ddsdde_extraction_lines. A DSTRAN-driven
     # small-strain source asks for "" and its extraction is unchanged.
     kirchhoff_direct_columns = (
-        direct_component_count_expression(argument_variables)
+        direct_component_count_expression(argument_variables, ntens)
         if _dfgrd1_carries_the_seed(roles, mappings, seed_dfgrd1_enabled) else "")
     seed_insert_before_line = _seed_insert_before_line(config) or declaration_insert_before
     if seed_insert_before_line and seed_insert_before_line < declaration_insert_before:
@@ -2386,6 +2540,11 @@ def _transform_source_text(
         # removed back into the model.
         if (_line_in_span(line_number, selected_routine_span)
                 and not _is_commented(line)
+                and branch_rewrite_is_domain_consistent(
+                    logical_branch_line or line, line_number,
+                    seed_insert_before_line=seed_insert_before_line,
+                    disabled_lines=disabled_old_region_lines,
+                    stale_shadow_names=shadow_sync_dirty_names)
                 and _is_promoted_branch_line(logical_branch_line or line, names_for(line_number))):
             output[-1] = _transform_executable_line(logical_branch_line or line, names_for(line_number), type_name, lifted_helper_names)
             helper_continuation_skip_lines.update(branch_continuation_lines)
@@ -2564,7 +2723,13 @@ def _transform_source_text(
             output.extend(_helper_surface_sync_lines(form, helper_call_line or line, helper_output_surfaces))
             shadow_sync_dirty_names.difference_update(_assigned_shadow_names(helper_call_line or line, helper_call_sync_names))
             helper_continuation_skip_lines.update(continuation_lines)
-        elif _line_in_span(line_number, selected_routine_span) and _is_promoted_branch_line(line, names_for(line_number)):
+        elif (_line_in_span(line_number, selected_routine_span)
+                and branch_rewrite_is_domain_consistent(
+                    line, line_number,
+                    seed_insert_before_line=seed_insert_before_line,
+                    disabled_lines=disabled_old_region_lines,
+                    stale_shadow_names=shadow_sync_dirty_names)
+                and _is_promoted_branch_line(line, names_for(line_number))):
             output[-1] = _transform_executable_line(line, names_for(line_number), type_name, lifted_helper_names)
             shadow_sync_dirty_names.difference_update(_assigned_shadow_names(line, helper_call_sync_names))
         if real_output_insert_after_line == line_number and not real_extraction_inserted:
@@ -3165,20 +3330,43 @@ def _dfgrd1_carries_the_seed(
     return "DFGRD1" in roles["promote"] and mappings.get("dstran", "DSTRAN") in roles["seed"]
 
 
+#: The off-diagonal pairs an engineering shear direction stands for, in
+#: Abaqus's order: 12, then 13, then 23.
+_SHEAR_POSITIONS = ((1, 2), (1, 3), (2, 3))
+
+
 def _finite_strain_seed_terms(ntens: int) -> list[tuple[int, int, float, int]]:
     """``(row, column, coefficient, direction)`` for the seeded strain directions.
 
     One entry per non-zero position of the strain increment each Voigt
-    direction stands for: the three direct directions put a one on a diagonal
+    direction stands for: a direct direction puts a one on a diagonal
     position, and an engineering shear puts a half on each of the two
     off-diagonal positions that make it symmetric.
+
+    WHICH direction is which comes from :func:`voigt_layout`, and that is the
+    correction. The direct directions used to be the first ``min(ntens, 3)``
+    unconditionally, so at NTENS=3 -- plane stress, which carries (11, 22, 12)
+    -- direction 3 seeded E33: a component the element does not have, on an
+    axis it holds no stress along. The tangent's third row and column were
+    then derivatives with respect to a through-thickness stretch, while the
+    Kirchhoff term beside them asked NDI, got 2, and treated the same column
+    as a shear. The two halves of one tangent disagreed about what column 3
+    means.
+
+    NTENS 4 and 6 are unchanged by this: (3, 1) and (3, 3) put the direct
+    directions in exactly the places the old expression did.
     """
+    direct_count, shear_count = voigt_layout(ntens)
     terms: list[tuple[int, int, float, int]] = []
-    for row, column, direction in [(1, 1, 1), (2, 2, 2), (3, 3, 3)][: min(ntens, 3)]:
-        terms.append((row, column, 1.0, direction))
-    for row, column, direction in [(1, 2, 4), (2, 1, 4), (1, 3, 5), (3, 1, 5), (2, 3, 6), (3, 2, 6)]:
-        if ntens >= direction:
-            terms.append((row, column, 0.5, direction))
+    for index in range(direct_count):
+        terms.append((index + 1, index + 1, 1.0, index + 1))
+    for shear_index in range(shear_count):
+        if shear_index >= len(_SHEAR_POSITIONS):
+            break
+        row, column = _SHEAR_POSITIONS[shear_index]
+        direction = direct_count + shear_index + 1
+        terms.append((row, column, 0.5, direction))
+        terms.append((column, row, 0.5, direction))
     return terms
 
 
@@ -3567,20 +3755,61 @@ def _explicit_ddsdde_assignment_rows(config: dict[str, Any], extraction_region: 
     return sorted(rows, key=lambda row: min((_as_int(value) for value in (row.get("line_numbers") or []) if _as_int(value)), default=0))
 
 
-def direct_component_count_expression(argument_variables: set[str]) -> str:
+#: ``(NDI, NSHR)`` for each NTENS an Abaqus element presents.
+#:
+#: NTENS is NDI+NSHR and the two are not independent: a continuum element type
+#: fixes both. 6 is 3-D, 4 is plane strain or axisymmetric, 3 is PLANE STRESS
+#: -- and that is the entry the transform had wrong. Plane stress carries
+#: (11, 22, 12): two direct components and one shear, not three direct ones.
+#: One corpus author says so in the file, beside the component: "I am treating
+#: sigma(3) as sigma12".
+#:
+#: 2 and 1 are the degenerate uniaxial and biaxial cases; nothing in this
+#: corpus presents 5, and a value not listed falls back to MIN(3, NTENS),
+#: which is the old behaviour and is stated as a fallback rather than an
+#: answer.
+ABAQUS_VOIGT_LAYOUT: dict[int, tuple[int, int]] = {
+    1: (1, 0),
+    2: (2, 0),
+    3: (2, 1),
+    4: (3, 1),
+    6: (3, 3),
+}
+
+
+def voigt_layout(ntens: int) -> tuple[int, int]:
+    """``(ndi, nshr)`` for this NTENS. The single place that decides it."""
+    count = int(ntens or 0)
+    layout = ABAQUS_VOIGT_LAYOUT.get(count)
+    if layout is not None:
+        return layout
+    direct = max(0, min(3, count))
+    return direct, max(0, count - direct)
+
+
+def direct_component_count_expression(
+    argument_variables: set[str], ntens: int = 0,
+) -> str:
     """A Fortran expression for the number of direct stress components.
 
     NDI when the selected routine has it, which every UMAT written to the
     Abaqus interface does. A model routine reached through a wrapper may not,
-    and then NTENS-NSHR says the same thing; failing both, MIN(3,NTENS) is
-    right for every element type in this corpus except plane stress, and it is
-    a fallback rather than an answer.
+    and then NTENS-NSHR says the same thing.
+
+    Failing both, the count comes from :func:`voigt_layout` as a literal --
+    the transform is specialised to one NTENS already, the OTI module is built
+    with that many directions, so there is nothing runtime about it. It used
+    to be ``MIN(3,NTENS)``, which is 3 at NTENS=3 and so said three direct
+    components for a plane-stress element that has two. The Kirchhoff term
+    added the row's stress to a column that carries a shear.
     """
     names = {name.upper() for name in argument_variables}
     if "NDI" in names:
         return "NDI"
     if "NSHR" in names and "NTENS" in names:
         return "NTENS-NSHR"
+    if int(ntens or 0) in ABAQUS_VOIGT_LAYOUT:
+        return str(voigt_layout(ntens)[0])
     return "MIN(3,NTENS)"
 
 
@@ -5314,6 +5543,109 @@ def _is_promoted_branch_line(line: str, replacement_names: dict[str, str]) -> bo
     return any(re.search(rf"\b{re.escape(name)}\b", scanned, flags=re.IGNORECASE) for name in replacement_names)
 
 
+#: A logical IF -- ``IF (cond) statement`` -- as opposed to the block forms
+#: ``IF (cond) THEN``, ``ELSE IF (cond) THEN``. The trailing statement is the
+#: branch's EFFECT, and it is the half this module has to keep in one domain
+#: with the assignment pass.
+_LOGICAL_IF_RE = re.compile(
+    r"^\s*(?:ELSE\s*)?IF\s*\((?P<condition>.*)\)\s*(?P<action>\S.*?)\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+def branch_rewrite_is_domain_consistent(
+    line: str,
+    line_number: int,
+    *,
+    seed_insert_before_line: int,
+    disabled_lines: set[int],
+    stale_shadow_names: set[str] = frozenset(),
+) -> bool:
+    """May the branch pass move this statement into the OTI domain?
+
+    The branch pass and the assignment pass rewrite different halves of the
+    same statement, and a logical IF is both halves at once:
+
+        IF (ALPHA_G .LT. 0.0D0) ALPHA_G = 0.0D0
+
+    The assignment pass will not touch an assignment that sits above the seed
+    insertion point, because no shadow holds anything there yet -- the
+    initialisation block has not been emitted. The branch pass had no such
+    gate and fired on any line of the selected routine that mentioned a
+    promoted name, so it rewrote the statement above into
+
+        IF (REAL(ALPHA_G_OTI) .LT. 0.0D0) ALPHA_G_OTI = 0.0D0
+
+    whose condition reads the declaration's uninitialised shadow rather than
+    the value the line above computed, and whose effect lands in a store the
+    real ALPHA_G never reads. The clamp compiles, runs, and does nothing, and
+    the real variable keeps the negative value the author wrote the clamp to
+    remove. Nothing downstream can see that: both halves are consistently in
+    the shadow domain, so no leak check fires.
+
+    Three gates, and all three are the assignment pass's own:
+
+    * the statement must sit at or after the seed insertion point, where the
+      shadows exist;
+    * the statement must not be one the emitter has decided to comment out.
+      ``disabled_old_region_lines`` is the old tangent block; a DDSDDE store
+      written as ``IF (cond) DDSDDE(I,J) = ...`` reached the branch pass
+      first, was rewritten into live OTI code, and never reached the arm that
+      would have disabled it -- so an old tangent the transform reports as
+      replaced was still being written;
+    * no name the statement touches may have a STALE shadow. The emitter
+      already tracks that set -- ``shadow_sync_dirty_names``, the names whose
+      real value has been written since their shadow was last filled -- and a
+      name in it is precisely a name the assignment pass has just left in the
+      real domain. That is the ALPHA_G case above stated exactly, and it is
+      the one the seed gate does not catch: the clamp sits well below the seed
+      block, so only the staleness of ALPHA_G_OTI distinguishes it.
+
+    A condition-only branch (``IF (...) THEN``) has no effect to disagree
+    about. Inside a disabled region it is left standing on purpose -- see
+    :func:`_comment_old_line`, which refuses to comment out a block opener
+    because that would unbalance the block -- and its guard may still be
+    rewritten: the body below it is commented out either way, and the real
+    names the untouched guard would read are no longer assigned anywhere in
+    the emitted routine. Only the seed gate applies to it, and it applies for
+    the same reason it applies to everything else: above the seed insertion
+    point the shadows hold nothing.
+    """
+    if seed_insert_before_line and line_number < seed_insert_before_line:
+        return False
+    if line_number in disabled_lines and _branch_carries_an_effect(line):
+        return False
+    if stale_shadow_names and _mentions_any_name(line, stale_shadow_names):
+        return False
+    return True
+
+
+def _mentions_any_name(line: str, names: set[str]) -> bool:
+    """Does this statement read or write any of ``names``?
+
+    Real literals are blanked first, for the reason ``_is_promoted_branch_line``
+    blanks them: the D of ``1.D-12`` is not a reference to a variable called D.
+    """
+    scanned = without_real_literals(_statement_without_inline_comment(line))
+    return any(re.search(rf"\b{re.escape(name)}\b", scanned, flags=re.IGNORECASE)
+               for name in names)
+
+
+def _branch_carries_an_effect(line: str) -> bool:
+    """Is this a logical IF -- ``IF (cond) statement`` -- rather than a block one?
+
+    The distinction is the whole point: a block opener states a condition and
+    nothing else, while a logical IF states a condition AND the statement it
+    guards, and that statement is an effect the emitter may have decided to
+    disable.
+    """
+    match = _LOGICAL_IF_RE.match(_statement_without_inline_comment(line))
+    if match is None:
+        return False
+    action = match.group("action").strip()
+    return bool(action) and not re.match(r"^THEN\b", action, flags=re.IGNORECASE)
+
+
 def _real_wrapped_oti_tokens(condition: str) -> str:
     token_pattern = re.compile(r"\b[A-Za-z_]\w*_OTI(?:\([^()]*\))?", flags=re.IGNORECASE)
 
@@ -5667,9 +5999,7 @@ def _lifted_helper_argument_shadow_names(
         .strip().lower().startswith(("real", "double"))
     }
     result: set[str] = set()
-    for row in analysis.get("stress_path_helpers", []) or []:
-        if not isinstance(row, dict):
-            continue
+    for row in _calls_reaching_helpers(config, helper_names):
         callee = str(row.get("callee", "")).upper()
         line_numbers = tuple(_as_int(value) for value in row.get("line_numbers", []) or [] if _as_int(value))
         if callee not in helper_names or not line_numbers:
@@ -5708,6 +6038,50 @@ def _lifted_helper_argument_shadow_names(
                 continue
             result.add(name)
     return result
+
+
+def _calls_reaching_helpers(
+    config: dict[str, Any], helper_names: set[str],
+) -> list[dict[str, Any]]:
+    """Every call site of a lifted or inlineable helper in the selected routine.
+
+    ``stress_path_helpers`` was the only source, and it lists calls inside the
+    DETECTED stress-update interval. A lifted body is hypercomplex at every one
+    of its call sites, not only the ones inside that interval, so a call below
+    it handed its actual a REAL against an OTI dummy through Fortran's implicit
+    interface -- which compiles, and reads the first of seven doubles as the
+    whole number. abuganza/GOH_Example.f calls DOUBLEDOT three times below the
+    interval; the reverse-leak check caught every one.
+
+    The two lists are merged rather than swapped, because a stress_path_helpers
+    row carries its own ``reason`` and a caller may be reading it.
+    """
+    analysis = _dict(config.get("analysis"))
+    rows: list[dict[str, Any]] = []
+    seen: set[tuple[str, tuple[int, ...]]] = set()
+
+    def _remember(row: dict[str, Any]) -> None:
+        callee = str(row.get("callee", "")).upper()
+        numbers = tuple(_as_int(value) for value in row.get("line_numbers", []) or [] if _as_int(value))
+        if not callee or not numbers or (callee, numbers) in seen:
+            return
+        seen.add((callee, numbers))
+        rows.append(row)
+
+    for row in analysis.get("stress_path_helpers", []) or []:
+        if isinstance(row, dict):
+            _remember(row)
+    span = _selected_routine_span_from_analysis(analysis, _selected_umat(config))
+    for row in analysis.get("calls", []) or []:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("callee", "")).upper() not in helper_names:
+            continue
+        numbers = [_as_int(value) for value in row.get("line_numbers", []) or []]
+        if span and not any(span[0] <= number <= span[1] for number in numbers if number):
+            continue
+        _remember({**row, "reason": "call to a lifted helper in the selected routine"})
+    return rows
 
 
 def _is_implicit_integer_name(name: str) -> bool:
@@ -6295,16 +6669,48 @@ def _active_lines_with_numbers(source: str) -> list[tuple[int, str]]:
     return [(index, line) for index, line in enumerate(source.splitlines(), start=1) if not _is_commented(line)]
 
 
+#: ``INTERFACE`` / ``END INTERFACE``, in the spellings a UMAT's declaration
+#: section uses. Kept here rather than imported from the parser because this
+#: scanner reads the EMITTED text line by line, not a parsed statement list.
+_INTERFACE_OPEN_LINE_RE = re.compile(
+    r"^\s*(?:ABSTRACT\s+)?INTERFACE\b"
+    r"(?:\s*(?:\w+|OPERATOR\s*\(.*\)|ASSIGNMENT\s*\(\s*=\s*\)))?\s*$",
+    flags=re.IGNORECASE,
+)
+_INTERFACE_CLOSE_LINE_RE = re.compile(
+    r"^\s*END\s*INTERFACE(\s+.*)?$", flags=re.IGNORECASE)
+
+
 def _active_lines_in_selected_subroutine(active_lines: list[tuple[int, str]], selected_umat: str) -> list[tuple[int, str]]:
+    """The emitted lines of the routine the contract selected.
+
+    An INTERFACE block in the routine's declaration section is skipped whole,
+    because an interface body ends with ``end subroutine NAME`` and this scan
+    stops at the first line that looks like one. MohrCoulombAbaqus.for
+    declares explicit interfaces for the two routines its UMAT calls, so the
+    slice ended 104 lines above the stress update: every ordering check then
+    ran over the declaration section alone and reported the seed missing, the
+    stress update missing, and the extraction out of order. Five true
+    statements about the wrong 141 lines.
+    """
     selected = selected_umat.upper() or "UMAT"
     result: list[tuple[int, str]] = []
     in_selected = False
+    interface_depth = 0
     for line_number, line in active_lines:
         if not in_selected and re.match(rf"^\s*SUBROUTINE\s+{re.escape(selected)}\b", line, flags=re.IGNORECASE):
             in_selected = True
         if not in_selected:
             continue
         result.append((line_number, line))
+        if _INTERFACE_CLOSE_LINE_RE.match(line):
+            interface_depth = max(0, interface_depth - 1)
+            continue
+        if _INTERFACE_OPEN_LINE_RE.match(line):
+            interface_depth += 1
+            continue
+        if interface_depth:
+            continue
         if _is_subroutine_end_line(line):
             break
     return result or active_lines

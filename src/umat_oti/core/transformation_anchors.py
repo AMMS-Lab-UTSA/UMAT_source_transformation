@@ -27,6 +27,12 @@ TANGENT_REGION_ROLES = (
 )
 COMPLETED_KEEP_REAL_ARGUMENT_NAMES = {"IFLAG", "NUMFIELDV", "NVALUE"}
 
+#: How many arguments Abaqus passes a UMAT: STRESS through KINC, with JSTEP or
+#: KSTEP in the 36th place depending on the release. A routine with this many
+#: and the wrong NAMES is the interface under other names; a routine with a
+#: different count is a different routine.
+ABAQUS_UMAT_ARGUMENT_COUNT = 37
+
 
 def build_transformation_anchors(config: dict[str, Any], source_text: str = "") -> dict[str, Any]:
     analysis = _dict(config.get("analysis"))
@@ -122,7 +128,7 @@ def build_transformation_anchors(config: dict[str, Any], source_text: str = "") 
         if output_region:
             output_regions = [output_region]
 
-    ddsdde_insert_after = _post_output_insert_line(source_lines, output_region) or last_stress_end
+    ddsdde_insert_after = _post_output_insert_line(source_lines, output_region, umat_span) or last_stress_end
     real_output_line = _real_output_insert_after_line(source_lines, stress_regions, mappings)
     real_insert_after = _branch_safe_real_output_insert_after_line(source_lines, real_output_line, output_region) or real_output_line or last_stress_end or ddsdde_insert_after
     ddsdde_insert_after = max(ddsdde_insert_after, real_insert_after)
@@ -439,14 +445,39 @@ def _not_an_abaqus_umat_issue(
     ddsdde = str(mappings.get("ddsdde") or "DDSDDE").upper()
     if stress in arguments or ddsdde in arguments:
         return None
+    # Two quite different situations reach here and the message has to tell
+    # them apart, because only one of them is about the file. A routine with
+    # four arguments called from a PROGRAM in the same file is not a UMAT and
+    # nothing can make it one. A routine with the UMAT argument COUNT whose
+    # author spelled the dummies his own way -- sahmotaman's TMM-FE sources
+    # declare subroutine umat(sigma, sv, C, sse, delta_w_p, ...) -- IS the
+    # Abaqus interface, and what is missing is the mapping from this file's
+    # names onto it. Reporting that one as "not an Abaqus UMAT" says the
+    # source is wrong when the configuration is incomplete.
+    if len(arguments) == ABAQUS_UMAT_ARGUMENT_COUNT:
+        return {
+            "kind": "umat_interface_uses_the_authors_own_argument_names",
+            "message": (
+                f"SUBROUTINE {(selected_umat or 'UMAT').upper()} takes "
+                f"{len(arguments)} arguments -- the number Abaqus passes a "
+                f"UMAT -- but names them ({', '.join(arguments)}), so neither "
+                f"{stress} nor {ddsdde} appears among them. This is the "
+                "Abaqus interface under the author's own names; say which of "
+                "them carries the stress and which the tangent in "
+                "mapping.stress and mapping.ddsdde, and the transform can "
+                "read it."
+            ),
+            "required_json_field": "mapping.stress",
+        }
     return {
         "kind": "selected_routine_is_not_an_abaqus_umat",
         "message": (
             f"SUBROUTINE {(selected_umat or 'UMAT').upper()} is declared as "
-            f"({', '.join(arguments)}) and receives neither {stress} nor "
-            f"{ddsdde}. That is not the argument list Abaqus calls a UMAT "
-            "with, so this routine has no stress or tangent output for the "
-            "transform to write into."
+            f"({', '.join(arguments)}) -- {len(arguments)} arguments, where "
+            f"Abaqus passes a UMAT {ABAQUS_UMAT_ARGUMENT_COUNT} -- and "
+            f"receives neither {stress} nor {ddsdde}. That is not the "
+            "argument list Abaqus calls a UMAT with, so this routine has no "
+            "stress or tangent output for the transform to write into."
         ),
         "required_json_field": "source.selected_umat_name",
     }
@@ -1264,15 +1295,58 @@ def _enclosing_do_end(source_lines: list[str], line_number: int,
 
 
 
-def _post_output_insert_line(source_lines: list[str], output_region: dict[str, Any] | None) -> int:
+#: The end of a program unit: ``END``, ``END SUBROUTINE``, ``END SUBROUTINE
+#: NAME``, and the FUNCTION / PROGRAM / MODULE spellings. Not ``END IF`` or
+#: ``END DO``, which close a block inside one.
+#:
+#: The unit keyword is REQUIRED when a name follows it. Written as an optional
+#: keyword followed by an optional name, the pattern reads ``END IF`` as "END,
+#: unit keyword omitted, name IF" -- and the walk that looks for the END IF
+#: closing an old tangent's branch then stopped AT it instead of returning it,
+#: which put the GETIM extraction inside the ``IF (NTENS == 6)`` arm of
+#: PlatypusBytes' linear-elastic UMAT. Every element that is not 3-D would
+#: have returned the caller's DDSDDE untouched.
+_PROGRAM_UNIT_END_RE = re.compile(
+    r"^\s*END\s*$"
+    r"|^\s*END\s*(?:SUBROUTINE|FUNCTION|PROGRAM|MODULE|SUBMODULE|BLOCK\s*DATA)"
+    r"(?:\s+\w+)?\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+def _post_output_insert_line(
+    source_lines: list[str],
+    output_region: dict[str, Any] | None,
+    span: tuple[int, int] | None = None,
+) -> int:
+    """The line the DDSDDE extraction must follow, given the old tangent store.
+
+    The old store may sit inside an IF, and the extraction has to go after the
+    whole branch rather than inside one arm of it, so the scan walks forward
+    looking for the matching END IF.
+
+    It is bounded by the selected routine, and that bound is not decoration.
+    The scan used to stop only at a RETURN, and a routine that ends with
+    ``end subroutine UMAT`` and no RETURN -- Fortran 90 style, which most of
+    the free-form half of this corpus is written in -- has none. On
+    MohrCoulombAbaqus.for the walk left UMAT at line 245, carried on through
+    MohrCoulombStressReturn, and returned the first END IF it met there: line
+    417. The extraction point then sat 172 lines inside a different routine,
+    where neither STRESS_OTI nor DDSDDE is in scope, and every ordering check
+    that compares it against the stress regions failed -- correctly, and about
+    a line the search should never have reached.
+    """
     if not output_region:
         return 0
     end = _as_int(output_region.get("end_line"))
     if not end:
         return 0
-    for line_number in range(end + 1, len(source_lines) + 1):
+    last = min(len(source_lines), span[1]) if span else len(source_lines)
+    for line_number in range(end + 1, last + 1):
         line = source_lines[line_number - 1]
         if re.match(r"^\s*RETURN\b", line, flags=re.IGNORECASE):
+            break
+        if _PROGRAM_UNIT_END_RE.match(line):
             break
         if re.match(r"^\s*END\s*IF\b", line, flags=re.IGNORECASE):
             return line_number
