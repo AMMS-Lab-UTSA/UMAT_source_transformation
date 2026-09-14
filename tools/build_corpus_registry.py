@@ -1383,6 +1383,33 @@ def summarise(records: list) -> dict:
             f"{r.source_id} ({r.gates_not_true})" for r in verified
             if not r.verified_on_every_gate),
         "evidence_gate_census": gate_census(records),
+        # Every other count this registry publishes, put through the same
+        # proof. Each states the population it was taken over and each raises
+        # rather than being published if it does not sum to it -- so a
+        # classification that quietly stopped covering some of its records
+        # stops the build instead of appearing as a table that is four short.
+        "censuses": {
+            "terminal_state": census(
+                records, lambda r: r.terminal_state, "acquired sources (D1)"),
+            "whose_move_it_is": census(
+                records, lambda r: r.kind, "acquired sources (D1)"),
+            "adequately_specified": census(
+                records, lambda r: str(r.adequately_specified),
+                "acquired sources (D1)"),
+            "why_excluded_from_d2": census(
+                excluded, lambda r: r.adequacy_kind or "external",
+                "sources excluded from D2"),
+            "what_the_refused_files_are": census(
+                refused, lambda r: r.refusal_class,
+                "sources the transformer refused"),
+            "entry_interface": census(
+                records, lambda r: r.entry_interface or "none",
+                "acquired sources (D1)"),
+            "transformed": census(
+                records, lambda r: str(r.transformed), "acquired sources (D1)"),
+            "compiled": census(
+                records, lambda r: str(r.compiled), "acquired sources (D1)"),
+        },
         "verification_rows_at_a_stale_fingerprint": sorted(
             r.source_id for r in records if r.verification_is_current is False),
         "records_with_no_named_reason": sorted(
