@@ -36,15 +36,22 @@ There are two populations in this report and they are never pooled. Every rate b
 
 **Nothing internal may shrink D2.** Every exclusion from it is a fact about somebody else's published repository, and each one names the evidence that established it. Nothing this project failed to do removes a source from D2: a source whose transform this project refused, whose deck this project could not generate, whose experiment this project could not make informative, all stay in D2 and count against us. That is why there are two denominators rather than one number.
 
-| | verified | denominator |
-| --- | ---: | ---: |
-| D1 acquired sources | 41 | 391 |
-| D2 adequately specified genuine UMATs | 41 | 264 |
+| | reached the `verified` rung | verified on every gate | denominator |
+| --- | ---: | ---: | ---: |
+| D1 acquired sources | 41 | 38 | 391 |
+| D2 adequately specified genuine UMATs | 41 | 38 | 264 |
+
+**Verified on every gate is the stricter number and it is the one to quote.** The two columns differ by the 3 entries that reached the batch's `verified` rung with one of the six evidence gates not reading true; they are named below.
+
+* 38 of 391 acquired sources (D1) -- 9.7% of acquired sources (D1)
+* 38 of 264 adequately specified genuine UMATs (D2) -- 14.4% of adequately specified genuine UMATs (D2)
+
+Against the looser rung instead:
 
 * 41 of 391 acquired sources (D1) -- 10.5% of acquired sources (D1)
 * 41 of 264 adequately specified genuine UMATs (D2) -- 15.5% of adequately specified genuine UMATs (D2)
 
-Neither figure may be quoted without the words after it. They are answers to two different questions and the larger one is not the better one.
+No figure above may be quoted without the words after it. They are answers to different questions and the larger one is not the better one.
 
 `fully_verified` means the source transformed and compiled, Abaqus ran the ORIGINAL, Abaqus ran the CONVERTED build on the same deck, their stress and state histories agreed over the whole path, and the OTI tangent agreed with a finite difference of the original at several states along it. Compiling is not working, running is not verified, and unknown is never verified.
 
@@ -158,15 +165,46 @@ The row key cannot collapse the duplicates: it is derived from the STORE ENTRY, 
 * `CAEAssistant-Group__Abaqus-CAE-UMAT-subroutine-for-Composite-fatigue-simulation/CAE_ASSISTANT_UMAT_Subroutine_ABAQUS_COMPOSITE_FATIGUE.for`
 * `InstituteOfMechanics__Paraqus/examples/example_abaqus_extrusion_umat.f`
 
-### 'verified' counted two ways
+### 'verified' counted three ways
 
-The file contains 44 rows at stage `verified`. 41 STORE ENTRIES verified. The difference is exactly the 3 source(s) that verified under the old store and verified again under the new one, whose old row is still in the file:
+Three different numbers are all true statements about this run and only one of them is a count of sources that passed everything. All three are named here rather than one being chosen.
+
+| number | what it counts |
+| ---: | --- |
+| 44 | rows in the results file at stage `verified`. A row count over an append-only file, not a census: it counts 3 source(s) twice. |
+| 41 | store entries at the current fingerprint that reached the batch's `verified` rung. This is what the run's own console reported. |
+| **38** | **store entries that reached that rung AND read true on all six evidence gates.** The strict number. |
+
+44 minus 41 is exactly the 3 source(s) that verified under the old store and verified again under the new one, whose old row is still in the file:
 
 * `AlexanderJFDR__Hyperelastic_phase_field/umat/NeoHookean_umat.for`
 * `BristolCompositesInstitute__abaci/test/data/umat.f`
 * `CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/ISOTROPIC-ELASTICITY.for`
 
-**41 is the number this registry publishes.** The results file is append-only and this pass resumed onto the file an earlier pass had been writing, so it carries rows from before the store was rebuilt. Counting rows counts a source that verified under both stores twice. The number of STORE ENTRIES that verified is the one published here; a row count over an append-only file is not a census.
+41 minus 38 is the 3 entries that reached the rung with a gate not reading true. Each one's `reason` explains why the batch accepted it anyway; that explanation is in the registry beside the gate, and it is not the same thing as the gate reading true:
+
+* `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005-Visualization/BodyForce-Growth-2Stages.for (primal_agreed=false)`
+* `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/BodyForce-Growth-2Stages.for (primal_agreed=false)`
+* `irfancn__Abaqus-UMAT-viscoelastic/umat_viscoelastic.for (primal_agreed=false)`
+
+**38 is the number to quote, and 41 is the number the console reported.** The results file is append-only and this pass resumed onto the file an earlier pass had been writing, so it carries rows from before the store was rebuilt. Counting rows counts a source that verified under both stores twice. The number of STORE ENTRIES that verified is the one published here; a row count over an append-only file is not a census.
+
+### The six evidence gates, and what 'not established' covers
+
+A gate can read true, read false, be present and hold nothing, or not be there at all. **The last two both mean not established**, and they are counted separately because they have different causes: a key holding null is a question the run asked and could not answer, and a key that is not there is a question that batch's schema never asked. A census that counts one and drops the other comes out short of its own denominator and still reads perfectly well.
+
+Denominator: 142 entries whose verification row at the current store fingerprint carries an evidence block. Every row below sums to it.
+
+| gate | true | false | null | key absent | not established | sums to |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `abaqus_job_completed` | 142 | 0 | 0 | 0 | 0 | 142 |
+| `all_requested_outputs_present` | 142 | 0 | 0 | 0 | 0 | 142 |
+| `complete_history_finite` | 138 | 4 | 0 | 0 | 0 | 142 |
+| `derivatives_verified` | 60 | 82 | 0 | 0 | 0 | 142 |
+| `primal_agreed` | 61 | 81 | 0 | 0 | 0 | 142 |
+| `mechanically_informative` | 113 | 22 | 7 | 0 | 7 | 142 |
+
+The same census over a different denominator gives a different answer, and that is the whole reason the denominator has to be stated. Over 146 rows in the results file carrying an evidence block, at any store fingerprint, `mechanically_informative` reads true on 113, false on 22, null on 7 and is absent on 4 -- so 11 are not established. Over the 142 entries in the store now it is absent on 0 and null on 7, so 7 are not established. **Both are right and neither means anything without the denominator beside it.** The absent key belongs to the superseded rows: it is a question the earlier batch's schema did not ask, not a question this run failed to answer.
 
 ### Sources left with no verdict at this fingerprint
 

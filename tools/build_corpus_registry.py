@@ -275,6 +275,31 @@ class Record:
     #: For anything that is not fully_verified: the named reason, with the
     #: evidence behind it. Never "the transformer refused it" on its own.
     not_verified_reason: str = ""
+    #: Each of the six evidence gates, as one of five words: ``true``,
+    #: ``false``, ``null`` (the key is there and holds nothing), ``absent``
+    #: (the key is not there at all) or ``no_evidence_block``.
+    #:
+    #: A MISSING KEY AND A PRESENT-AND-NULL KEY ARE BOTH "NOT ESTABLISHED",
+    #: and a census that counts one and silently drops the other does not add
+    #: up to its own denominator. Over the whole results file the
+    #: ``mechanically_informative`` gate reads true on 113, false on 22, null
+    #: on 7 and is absent on 4 -- 146 rows carrying an evidence block -- and a
+    #: count that saw only the null ones reported 142 and reconciled with
+    #: nothing.
+    gate_abaqus_job_completed: str = ""
+    gate_all_requested_outputs_present: str = ""
+    gate_complete_history_finite: str = ""
+    gate_derivatives_verified: str = ""
+    gate_primal_agreed: str = ""
+    gate_mechanically_informative: str = ""
+    #: Whether every one of the six reads true. This is a STRICTER answer than
+    #: the batch's ``verified`` rung, and the two are published side by side
+    #: rather than one being chosen: three entries reached the rung with
+    #: ``primal_agreed`` false and a written explanation of why the difference
+    #: is the model's own conditioning.
+    verified_on_every_gate: Optional[bool] = None
+    #: Which gates did not read true, and in what way.
+    gates_not_true: str = ""
 
     def as_dict(self) -> dict:
         return dict(self.__dict__)
@@ -370,8 +395,25 @@ def verification_reconciliation(abaqus_report: Optional[Path],
         "rows_at_stage_verified_in_the_whole_file": sum(
             1 for r in rows if str(r.get("stage") or "") == "verified"),
         "store_entries_that_verified": len(verified_now),
+        "store_entries_that_verified_on_every_gate": sum(
+            1 for r in current if str(r.get("stage") or "") == "verified"
+            and all(_gate_state(r.get("evidence"), gate) == GATE_TRUE
+                    for gate in EVIDENCE_GATES)),
         "verified_rows_that_double_count_a_source": sorted(
             name for name in stale_verified if name in verified_now),
+        "evidence_gate_census_over_the_whole_file": {
+            "denominator": len([r for r in rows
+                                if isinstance(r.get("evidence"), dict)]),
+            "denominator_is": ("rows in the results file carrying an evidence "
+                               "block, at any store fingerprint"),
+            "gates": {
+                gate: {
+                    state: sum(1 for r in rows
+                               if isinstance(r.get("evidence"), dict)
+                               and _gate_state(r["evidence"], gate) == state)
+                    for state in (GATE_TRUE, GATE_FALSE, GATE_NULL, GATE_ABSENT)
+                } for gate in EVIDENCE_GATES},
+        },
         "why_the_two_verified_numbers_differ": (
             "The results file is append-only and this pass resumed onto the "
             "file an earlier pass had been writing, so it carries rows from "
@@ -380,6 +422,67 @@ def verification_reconciliation(abaqus_report: Optional[Path],
             "that verified is the one published here; a row count over an "
             "append-only file is not a census."),
     }
+
+
+#: The six things a run has to establish before an entry may be called
+#: verified, in the order the batch writes them.
+EVIDENCE_GATES: tuple[str, ...] = (
+    "abaqus_job_completed",
+    "all_requested_outputs_present",
+    "complete_history_finite",
+    "derivatives_verified",
+    "primal_agreed",
+    "mechanically_informative",
+)
+
+#: The five states a gate can be in. The last three all mean "not
+#: established", and they are kept apart because they have different causes: a
+#: key holding null is a question the run asked and could not answer, a key
+#: that is not there at all is a question that batch's schema did not ask, and
+#: no evidence block is a run that never got far enough to ask any of them.
+GATE_TRUE, GATE_FALSE = "true", "false"
+GATE_NULL, GATE_ABSENT, GATE_NO_BLOCK = "null", "absent", "no_evidence_block"
+GATE_NOT_ESTABLISHED = (GATE_NULL, GATE_ABSENT, GATE_NO_BLOCK)
+
+
+def _gate_state(evidence, gate: str) -> str:
+    """What one gate reads, distinguishing missing from present-and-null."""
+    if not isinstance(evidence, dict):
+        return GATE_NO_BLOCK
+    if gate not in evidence:
+        return GATE_ABSENT
+    value = evidence[gate]
+    if value is True:
+        return GATE_TRUE
+    if value is False:
+        return GATE_FALSE
+    return GATE_NULL
+
+
+def census(rows: list, key, denominator_name: str) -> dict:
+    """A count that proves its own arithmetic or refuses to be published.
+
+    Every census in this registry has to sum to a denominator it states. The
+    rule is here rather than at each call site because the failure it prevents
+    is silent: a count taken over "records where the key is present and null"
+    drops the records where the key is ABSENT, comes out four short of its own
+    population, and reads perfectly well.
+    """
+    counts: dict[str, int] = {}
+    for row in rows:
+        value = str(key(row))
+        counts[value] = counts.get(value, 0) + 1
+    total = sum(counts.values())
+    if total != len(rows):
+        raise ValueError(
+            f"a census over {denominator_name} counted {total} of "
+            f"{len(rows)}: {counts}. A census that does not sum to its own "
+            f"denominator is a finding about the data, not a number to "
+            f"publish.")
+    return {"denominator": len(rows),
+            "denominator_is": denominator_name,
+            "counts": dict(sorted(counts.items(), key=lambda kv: -kv[1])),
+            "sums_to_the_denominator": True}
 
 
 def _fingerprint_latest(rows: list, store_fingerprint: str) -> list:
@@ -957,6 +1060,15 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             record.verification_fingerprint = ""
             continue
         record.verification_sha256 = str(row.get("source_sha256") or "")
+        evidence = row.get("evidence")
+        states = {gate: _gate_state(evidence, gate) for gate in EVIDENCE_GATES}
+        for gate, state in states.items():
+            setattr(record, f"gate_{gate}", state)
+        record.verified_on_every_gate = all(
+            state == GATE_TRUE for state in states.values())
+        record.gates_not_true = "; ".join(
+            f"{gate}={state}" for gate, state in states.items()
+            if state != GATE_TRUE)[:400]
         record.key = str(row.get("key") or record.key)
         record.stage = str(row.get("stage") or "")
         verdict = from_stage(record.stage, str(row.get("reason") or "")[:500])
@@ -1262,6 +1374,15 @@ def summarise(records: list) -> dict:
         "fully_verified": len(verified),
         "fully_verified_and_adequately_specified": len(
             [r for r in verified if r.adequately_specified]),
+        "verified_on_every_gate": len(
+            [r for r in verified if r.verified_on_every_gate]),
+        "verified_on_every_gate_and_adequately_specified": len(
+            [r for r in verified
+             if r.verified_on_every_gate and r.adequately_specified]),
+        "reached_the_verified_rung_but_failed_a_gate": sorted(
+            f"{r.source_id} ({r.gates_not_true})" for r in verified
+            if not r.verified_on_every_gate),
+        "evidence_gate_census": gate_census(records),
         "verification_rows_at_a_stale_fingerprint": sorted(
             r.source_id for r in records if r.verification_is_current is False),
         "records_with_no_named_reason": sorted(
@@ -1303,6 +1424,41 @@ def _pct(numerator: int, denominator: int, name: str) -> str:
             f"{100.0 * numerator / denominator:.1f}% of {name}")
 
 
+def gate_census(records: list) -> dict:
+    """Each of the six gates, over the entries a verification row reached.
+
+    Four states per gate, and they are published separately because three of
+    them mean "not established" for three different reasons. The census is
+    taken over the entries that HAVE an evidence block, which is the only
+    population the question can be asked of, and that denominator is stated
+    beside every count.
+    """
+    with_block = [r for r in records
+                  if r.gate_abaqus_job_completed
+                  and r.gate_abaqus_job_completed != GATE_NO_BLOCK]
+    out: dict = {
+        "denominator": len(with_block),
+        "denominator_is": ("entries whose verification row at the current "
+                           "store fingerprint carries an evidence block"),
+        "a_missing_key_and_a_null_key_are_both": "not established",
+        "gates": {},
+    }
+    for gate in EVIDENCE_GATES:
+        counted = census(with_block, lambda r, g=gate: getattr(r, f"gate_{g}"),
+                         out["denominator_is"])
+        counts = counted["counts"]
+        out["gates"][gate] = {
+            "true": counts.get(GATE_TRUE, 0),
+            "false": counts.get(GATE_FALSE, 0),
+            "not_established_present_but_null": counts.get(GATE_NULL, 0),
+            "not_established_key_absent": counts.get(GATE_ABSENT, 0),
+            "not_established_total": sum(counts.get(state, 0)
+                                         for state in GATE_NOT_ESTABLISHED),
+            "sums_to": counted["denominator"],
+        }
+    return out
+
+
 def markdown(records: list, summary: dict) -> str:
     inputs = summary.get("inputs") or {}
     denominators = summary.get("denominators") or {}
@@ -1311,6 +1467,9 @@ def markdown(records: list, summary: dict) -> str:
     verified = summary["fully_verified"]
     verified_adequate = summary.get("fully_verified_and_adequately_specified",
                                     verified)
+    gated = summary.get("verified_on_every_gate", verified)
+    gated_adequate = summary.get(
+        "verified_on_every_gate_and_adequately_specified", gated)
 
     basenames = Counter(r.source_id.rsplit("/", 1)[-1].lower()
                         for r in records)
@@ -1399,18 +1558,30 @@ def markdown(records: list, summary: dict) -> str:
         "informative, all stay in D2 and count against us. That is why there "
         "are two denominators rather than one number.",
         "",
-        "| | verified | denominator |",
-        "| --- | ---: | ---: |",
-        f"| D1 acquired sources | {verified} | {acquired} |",
+        "| | reached the `verified` rung | verified on every gate | "
+        "denominator |",
+        "| --- | ---: | ---: | ---: |",
+        f"| D1 acquired sources | {verified} | {gated} | {acquired} |",
         f"| D2 adequately specified genuine UMATs | {verified_adequate} | "
-        f"{adequate} |",
+        f"{gated_adequate} | {adequate} |",
+        "",
+        "**Verified on every gate is the stricter number and it is the one to "
+        "quote.** The two columns differ by the "
+        f"{verified - gated} entr{'y' if verified - gated == 1 else 'ies'} "
+        "that reached the batch's `verified` rung with one of the six "
+        "evidence gates not reading true; they are named below.",
+        "",
+        f"* {_pct(gated, acquired, 'acquired sources (D1)')}",
+        f"* {_pct(gated_adequate, adequate, 'adequately specified genuine UMATs (D2)')}",
+        "",
+        "Against the looser rung instead:",
         "",
         f"* {_pct(verified, acquired, 'acquired sources (D1)')}",
         f"* {_pct(verified_adequate, adequate, 'adequately specified genuine UMATs (D2)')}",
         "",
-        "Neither figure may be quoted without the words after it. They are "
-        "answers to two different questions and the larger one is not the "
-        "better one.",
+        "No figure above may be quoted without the words after it. They are "
+        "answers to different questions and the larger one is not the better "
+        "one.",
         "",
         "`fully_verified` means the source transformed and compiled, Abaqus "
         "ran the ORIGINAL, Abaqus ran the CONVERTED build on the same deck, "
@@ -1638,26 +1809,110 @@ def markdown(records: list, summary: dict) -> str:
             lines.append(f"* `{name}`")
 
         double = recon.get("verified_rows_that_double_count_a_source") or []
+        rung = recon.get("store_entries_that_verified", 0)
+        strict = recon.get("store_entries_that_verified_on_every_gate", 0)
+        raw = recon.get("rows_at_stage_verified_in_the_whole_file", 0)
         lines += [
             "",
-            "### 'verified' counted two ways",
+            "### 'verified' counted three ways",
             "",
-            f"The file contains "
-            f"{recon.get('rows_at_stage_verified_in_the_whole_file', 0)} rows "
-            f"at stage `verified`. "
-            f"{recon.get('store_entries_that_verified', 0)} STORE ENTRIES "
-            f"verified. The difference is exactly the "
-            f"{len(double)} source(s) that verified under the old store and "
-            f"verified again under the new one, whose old row is still in the "
-            f"file:",
+            "Three different numbers are all true statements about this run "
+            "and only one of them is a count of sources that passed "
+            "everything. All three are named here rather than one being "
+            "chosen.",
+            "",
+            "| number | what it counts |",
+            "| ---: | --- |",
+            f"| {raw} | rows in the results file at stage `verified`. A row "
+            f"count over an append-only file, not a census: it counts "
+            f"{len(double)} source(s) twice. |",
+            f"| {rung} | store entries at the current fingerprint that "
+            f"reached the batch's `verified` rung. This is what the run's own "
+            f"console reported. |",
+            f"| **{strict}** | **store entries that reached that rung AND "
+            f"read true on all six evidence gates.** The strict number. |",
+            "",
+            f"{raw} minus {rung} is exactly the {len(double)} source(s) that "
+            f"verified under the old store and verified again under the new "
+            f"one, whose old row is still in the file:",
             "",
         ]
         for name in double:
             lines.append(f"* `{name}`")
+        failed = summary.get(
+            "reached_the_verified_rung_but_failed_a_gate") or []
         lines += ["",
-                  f"**{recon.get('store_entries_that_verified', 0)} is the "
-                  f"number this registry publishes.** " +
+                  f"{rung} minus {strict} is the {len(failed)} entr"
+                  f"{'y' if len(failed) == 1 else 'ies'} that reached the "
+                  f"rung with a gate not reading true. Each one's `reason` "
+                  f"explains why the batch accepted it anyway; that "
+                  f"explanation is in the registry beside the gate, and it is "
+                  f"not the same thing as the gate reading true:",
+                  ""]
+        for name in failed:
+            lines.append(f"* `{name}`")
+        lines += ["",
+                  "**" + str(strict) + " is the number to quote, and " +
+                  str(rung) + " is the number the console reported.** " +
                   recon.get("why_the_two_verified_numbers_differ", "")]
+
+        gates = (summary.get("evidence_gate_census") or {})
+        if gates.get("gates"):
+            lines += [
+                "",
+                "### The six evidence gates, and what 'not established' covers",
+                "",
+                "A gate can read true, read false, be present and hold "
+                "nothing, or not be there at all. **The last two both mean "
+                "not established**, and they are counted separately because "
+                "they have different causes: a key holding null is a question "
+                "the run asked and could not answer, and a key that is not "
+                "there is a question that batch's schema never asked. A "
+                "census that counts one and drops the other comes out short "
+                "of its own denominator and still reads perfectly well.",
+                "",
+                f"Denominator: {gates['denominator']} "
+                f"{gates['denominator_is']}. Every row below sums to it.",
+                "",
+                "| gate | true | false | null | key absent | not established |"
+                " sums to |",
+                "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+            ]
+            for gate, counts in gates["gates"].items():
+                lines.append(
+                    f"| `{gate}` | {counts['true']} | {counts['false']} | "
+                    f"{counts['not_established_present_but_null']} | "
+                    f"{counts['not_established_key_absent']} | "
+                    f"{counts['not_established_total']} | {counts['sums_to']} |")
+
+            whole = (recon.get(
+                "evidence_gate_census_over_the_whole_file") or {})
+            if whole.get("gates"):
+                mech = whole["gates"].get("mechanically_informative") or {}
+                here = gates["gates"].get("mechanically_informative") or {}
+                lines += [
+                    "",
+                    "The same census over a different denominator gives a "
+                    "different answer, and that is the whole reason the "
+                    "denominator has to be stated. Over "
+                    f"{whole['denominator']} {whole['denominator_is']}, "
+                    f"`mechanically_informative` reads true on "
+                    f"{mech.get('true', 0)}, false on {mech.get('false', 0)}, "
+                    f"null on {mech.get('null', 0)} and is absent on "
+                    f"{mech.get('absent', 0)} -- so "
+                    f"{mech.get('null', 0) + mech.get('absent', 0)} are not "
+                    f"established. Over the "
+                    f"{gates['denominator']} entries in the store now it is "
+                    f"absent on {here.get('not_established_key_absent', 0)} "
+                    f"and null on "
+                    f"{here.get('not_established_present_but_null', 0)}, so "
+                    f"{here.get('not_established_total', 0)} are not "
+                    f"established. **Both are right and neither means "
+                    f"anything without the denominator beside it.** The "
+                    f"absent key belongs to the superseded rows: it is a "
+                    f"question the earlier batch's schema did not ask, not a "
+                    f"question this run failed to answer.",
+                ]
 
     stale = summary.get("verification_rows_at_a_stale_fingerprint") or []
     if stale:
