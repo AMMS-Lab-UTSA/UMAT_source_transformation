@@ -1,0 +1,444 @@
+{
+  "contracts": [
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "irfancn-abaqus-uel-elastic--uel-elastic--8e98b0b5",
+      "reaches_now": "original_job_failed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'original_job_failed', not 'verified'. original.sta was not written, so the analysis left no record; original.msg does not report an error count",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 4.757796403504876e-13
+      },
+      "repository": "irfancn/Abaqus-UEL-elastic",
+      "source_id": "irfancn__Abaqus-UEL-elastic/uel_elastic.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-growth-of-circular-plate--growth-case1--7c052969",
+      "reaches_now": "arguments_diverged_before_the_routine",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'arguments_diverged_before_the_routine', not 'verified'. worst stress difference 1.999e+00, worst state difference 0.000e+00, against a tolerance of 1e-10; and this model differs from itself by only 1.991e+00 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 8.795220332026072e-09
+      },
+      "repository": "Jeff97/growth-of-circular-plate",
+      "source_id": "Jeff97__growth-of-circular-plate/Bending/Growth-CASE1.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--08bddb69",
+      "reaches_now": "experiment_not_informative",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'experiment_not_informative', not 'verified'. agreed at all 2 states where a difference could be taken (increments 4, 2); 2 smooth state(s) inside the activated regime (2 loading, 0 unloading), which is the whole of this material: it is activated from its first increment and never stops, so there is no elastic branch to verify on and every state that can be measured is inside the activated one; worst of them: agreed to 3.319e-11 over a platea",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 5.393576051035949e-07
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th01/BodyForce-Growth-2Stages.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--2e2a4197",
+      "reaches_now": "experiment_not_informative",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'experiment_not_informative', not 'verified'. agreed at all 4 states where a difference could be taken (increments 1, 10, 3, 12); 2 smooth state(s) inside the activated regime (2 loading, 0 unloading), which is the whole of this material: its response is nonlinear but REVERSIBLE, so there is no irreversible branch to cross and no elastic-versus-plastic split to span; worst of them: agreed to 2.676e-11 over a plateau of 5 step sizes, 1e-07 to ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 9.714139131907311e-08
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th01/BodyForce-Growth-2Stages.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--9a8233f1",
+      "reaches_now": "tangent_not_verified",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'tangent_not_verified', not 'verified'. every state where a difference could be taken agreed, but 1 smooth state(s) inside the activated regime, loading and unloading together, and two are needed. This material has activated by its second increment and never stops -- there is no elastic branch to verify on, so all the evidence has to come from inside the activated regime",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 2.2980728472875852e-07
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th01/BodyForce-Growth-2Stages.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--acf71219",
+      "reaches_now": "experiment_not_informative",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'experiment_not_informative', not 'verified'. agreed at all 2 states where a difference could be taken (increments 4, 2); 2 smooth state(s) inside the activated regime (2 loading, 0 unloading), which is the whole of this material: it is activated from its first increment and never stops, so there is no elastic branch to verify on and every state that can be measured is inside the activated one; worst of them: agreed to 2.676e-11 over a platea",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 2.1314989637814578e-07
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th001/BodyForce-Growth-2Stages.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--b7e14fbe",
+      "reaches_now": "tangent_not_verified",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'tangent_not_verified', not 'verified'. every state where a difference could be taken agreed, but 1 smooth state(s) inside the activated regime, loading and unloading together, and two are needed. This material has activated by its second increment and never stops -- there is no elastic branch to verify on, so all the evidence has to come from inside the activated regime",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 3.658173787536877e-08
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th005/BodyForce-Growth-2Stages.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--2baebbe8",
+      "reaches_now": "tangent_not_verified",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'tangent_not_verified', not 'verified'. every state where a difference could be taken agreed, but 1 smooth state(s) inside the activated regime, loading and unloading together, and two are needed. This material has activated by its second increment and never stops -- there is no elastic branch to verify on, so all the evidence has to come from inside the activated regime",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 2.2980728472875852e-07
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th01/PureGravity.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--4711f8fc",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 1.656e-10, worst state difference 0.000e+00, against a tolerance of 1e-10; and this model differs from itself by only 1.242e-10 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 2.2980728472875852e-07
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/PureGravity.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--10bb19c0",
+      "reaches_now": "tangent_not_verified",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'tangent_not_verified', not 'verified'. every state where a difference could be taken agreed, but 1 smooth state(s) inside the activated regime, loading and unloading together, and two are needed. This material has activated by its second increment and never stops -- there is no elastic branch to verify on, so all the evidence has to come from inside the activated regime",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 3.341329211792821e-08
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-Flat/Th005/PureGrowth.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--21006342",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 1.128e-09, worst state difference 0.000e+00, against a tolerance of 1e-10; and this model differs from itself by only 7.517e-11 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 6.341848800586945e-08
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th002/PureGrowth.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--25bd9a49",
+      "reaches_now": "tangent_not_verified",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'tangent_not_verified', not 'verified'. agreed at 1 of 2 states along the loading path where a difference could be taken; increment 2 did not: the closest step agreed only to 1.772e-05, against a tolerance of 1e-06; and the converted build differs from the author's own DDSDDE by 2.979e-08, so there are two candidate tangents and the difference is not close enough to either to choose between them",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 1.3571694450940988e-11,
+        "worst_tangent_relative": 1.8132245549431612e-07
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/PureGrowth.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--2e3ea178",
+      "reaches_now": "tangent_not_verified",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'tangent_not_verified', not 'verified'. agreed at 1 of 2 states along the loading path where a difference could be taken; increment 4 did not: the closest step agreed only to 1.111e-06, against a tolerance of 1e-06; and the converted build differs from the author's own DDSDDE by 5.962e-08, so there are two candidate tangents and the difference is not close enough to either to choose between them",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 1.3571694450940988e-11,
+        "worst_tangent_relative": 1.8132245549431612e-07
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005/PureGrowth.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--3e1f1c43",
+      "reaches_now": "tangent_not_verified",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'tangent_not_verified', not 'verified'. agreed at 1 of 2 states along the loading path where a difference could be taken; increment 4 did not: the closest step agreed only to 1.877e-05, against a tolerance of 1e-06; and the converted build differs from the author's own DDSDDE by 5.959e-08, so there are two candidate tangents and the difference is not close enough to either to choose between them",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 8.522817692214808e-08
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th005/PureGrowth.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--7088b08d",
+      "reaches_now": "tangent_not_verified",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'tangent_not_verified', not 'verified'. every state where a difference could be taken agreed, but 1 smooth state(s) inside the activated regime, loading and unloading together, and two are needed. This material has activated by its second increment and never stops -- there is no elastic branch to verify on, so all the evidence has to come from inside the activated regime",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 9.417820064670711e-08
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-Flat/Th005/PureGrowth.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--a335bdb6",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 2.210e-10, worst state difference 0.000e+00, against a tolerance of 1e-10; and this model differs from itself by only 1.170e-10 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 1.2182175210826544e-07
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-Flat/Th01/PureGrowth.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--b5a6af52",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 4.892e-10, worst state difference 0.000e+00, against a tolerance of 1e-10; and this model differs from itself by only 4.685e-10 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 1.6794012574255499e-12,
+        "worst_tangent_relative": 4.084354436911972e-08
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th002/PureGrowth.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--d66a2899",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 2.277e-09, worst state difference 0.000e+00, against a tolerance of 1e-10; and this model differs from itself by only 4.629e-10 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 6.341848800586945e-08
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th001/PureGrowth.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--fb6cae8e",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 4.176e-10, worst state difference 0.000e+00, against a tolerance of 1e-10; and this model differs from itself by only 1.762e-10 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 1.6794012574255499e-12,
+        "worst_tangent_relative": 4.084354436911972e-08
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th01/PureGrowth.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur3--162e8ca2",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 4.603e-01, worst state difference 9.546e-08, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was never perturbed and its sensitivity to being perturbed is unmeasur",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 2.2403044788289233e-08
+      },
+      "repository": "Jeff97/Realization-of-planar-and-surface-conformal-mappings",
+      "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-MinSur3.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur3--3fe59e3b",
+      "reaches_now": "arguments_diverged_before_the_routine",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'arguments_diverged_before_the_routine', not 'verified'. worst stress difference 1.724e+00, worst state difference 1.515e-08, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was never perturbed and its sensitivity to being perturbed is unmeasur",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 2.751694736902614e-08
+      },
+      "repository": "Jeff97/Realization-of-planar-and-surface-conformal-mappings",
+      "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example4-Torus/Growth-MinSur3.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur3--bbe506c0",
+      "reaches_now": "arguments_diverged_before_the_routine",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'arguments_diverged_before_the_routine', not 'verified'. worst stress difference 1.724e+00, worst state difference 1.515e-08, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was never perturbed and its sensitivity to being perturbed is unmeasur",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 2.751694736902614e-08
+      },
+      "repository": "Jeff97/Realization-of-planar-and-surface-conformal-mappings",
+      "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example3-Sphere/Growth-MinSur3.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-sphere--0780b4d3",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 2.649e-01, worst state difference 7.637e-07, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was never perturbed and its sensitivity to being perturbed is unmeasur",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 2.2403044788289233e-08
+      },
+      "repository": "Jeff97/Realization-of-planar-and-surface-conformal-mappings",
+      "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Sphere/10/Growth-Sphere.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-sphere--cad0f277",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 4.603e-01, worst state difference 9.546e-08, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was never perturbed and its sensitivity to being perturbed is unmeasur",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 2.2403044788289233e-08
+      },
+      "repository": "Jeff97/Realization-of-planar-and-surface-conformal-mappings",
+      "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Instability_Analysis/Growth-Sphere.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "mholla-growth--umat-area-morph--aa3193e5",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 7.965e-02, worst state difference 0.000e+00, against a tolerance of 1e-10; and this model differs from itself by only 7.759e-02 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 2.7397176541059145e-07
+      },
+      "repository": "mholla/growth",
+      "source_id": "mholla__growth/umats/umat_area_morph.f",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "mholla-growth--umat-fiber-morph--726933a8",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 2.000e+00, worst state difference 0.000e+00, against a tolerance of 1e-10; and this model differs from itself by only 2.000e+00 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 8.47601095477161e-08
+      },
+      "repository": "mholla/growth",
+      "source_id": "mholla__growth/umats/umat_fiber_morph.f",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "ritiol-polyfatiguecracksim--huang-umat-97--013d8a21",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 1.876e+00, worst state difference 1.986e+00, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was never perturbed and its sensitivity to being perturbed is unmeasur",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 3.0862416181171968e-09
+      },
+      "repository": "RitioL/PolyFatigueCrackSim",
+      "source_id": "RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "ritiol-polyfatiguecracksim--subroutines-revised--3150a919",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 1.869e+00, worst state difference 1.991e+00, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was never perturbed and its sensitivity to being perturbed is unmeasur",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 2.154293643778099e-09
+      },
+      "repository": "RitioL/PolyFatigueCrackSim",
+      "source_id": "RitioL__PolyFatigueCrackSim/CPFEM-val/subroutines_revised.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "e4257779bd847cc4",
+      "id": "ritiol-polyfatiguecracksim--subroutines3-revised--603ef702",
+      "reaches_now": "primal_disagreed",
+      "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'primal_disagreed', not 'verified'. worst stress difference 1.869e+00, worst state difference 1.991e+00, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was never perturbed and its sensitivity to being perturbed is unmeasur",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 3,
+        "states_checked": 3,
+        "worst_stress_relative": 0.0,
+        "worst_tangent_relative": 2.154293643778099e-09
+      },
+      "repository": "RitioL/PolyFatigueCrackSim",
+      "source_id": "RitioL__PolyFatigueCrackSim/workplace/subroutines3_revised.for",
+      "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    }
+  ],
+  "count": 29,
+  "schema": "umat-oti/withdrawn-contracts/1.0",
+  "what_this_is": "Contracts that used to stand in this collection and were taken down because they could not be reproduced at the current transform fingerprint. A frozen contract is a claim that a regression may be compared against; one measured against a transform that no longer exists is not. The numbers each carried are recorded here as what they now are -- a record of what used to be claimed, not evidence about the material.",
+  "withdrawn_at_fingerprint": "b0d27ee53c630500",
+  "withdrawn_at_this_promotion": 0
+}

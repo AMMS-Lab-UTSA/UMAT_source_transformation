@@ -7,16 +7,15 @@
 Both builds ran in Abaqus on the same generated deck, under the same
 physical conditions.
 
-- **Original execution**: completed, 30 converged records.
-- **Converted OTI execution**: completed, 30 converged records.
-- **Stress and state history**: agreed to 0.000e+00 on stress and 0.000e+00 on state, over 109 resolved components.
-- **OTI tangent against a finite difference of the ORIGINAL**: agreed at 3 of 3 states along the loading path, worst 5.239e-07.
+- **Original execution**: completed, 280 converged records.
+- **Converted OTI execution**: completed, 280 converged records.
+- **Stress and state history**: agreed to 0.000e+00 on stress and 0.000e+00 on state, over 992 resolved components.
+- **OTI tangent against a finite difference of the ORIGINAL**: agreed at 2 of 2 states along the loading path, worst 8.071e-10.
 
 | state | increment | best relative | verdict |
 | --- | --- | --- | --- |
-| 0 | 1 | 1.582e-09 | agreed |
-| 14 | 5 | 5.239e-07 | agreed |
-| 29 | 10 | 8.138e-10 | agreed |
+| 3 | 4 | 8.019e-10 | agreed |
+| 141 | 2 | 8.071e-10 | agreed |
 
 ## What was NOT established
 

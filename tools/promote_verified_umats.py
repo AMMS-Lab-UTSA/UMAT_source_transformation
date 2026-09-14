@@ -265,6 +265,44 @@ def results_from(row: dict) -> dict:
         "abaqus_original": row.get("original"),
         "abaqus_converted": row.get("transformed"),
         "history_agreement": row.get("primal"),
+        # Where the two histories did NOT agree outright, the CONTROL that
+        # accounts for the difference, whole. Thirteen of the 55 are in that
+        # shape and a contract that recorded only ``agrees: false`` beside a
+        # verdict of verified would be unreadable: the raw comparison flag
+        # never moves, and what lets the entry climb is a measured control --
+        # the author's own declared precision, or how far this model moves
+        # when its arithmetic is reordered. A contract resting on a control
+        # has to carry the control.
+        "history_difference_explained_by_a_measured_control": (
+            None if (row.get("primal") or {}).get("agrees") is True else {
+                "declared_precision": row.get("precision_control"),
+                "operation_order": row.get("association_control"),
+                # WHICH control decided, named rather than left to be worked
+                # out from two blocks. Both are usually present and only one
+                # of them ran: where the author's arithmetic was already
+                # double there is nothing to widen, so precision_control is
+                # recorded with ran=false and the association control is the
+                # one that did the work.
+                "which": (
+                    "declared_precision"
+                    if (row.get("primal") or {}).get(
+                        "explained_by_declared_precision") else
+                    "operation_order"
+                    if (row.get("primal") or {}).get(
+                        "explained_by_operation_order") else "none"),
+                "verdict": (
+                    "the author declares a variable at single precision and "
+                    "the original with that declaration alone widened agrees "
+                    "with the converted build"
+                    if (row.get("primal") or {}).get(
+                        "explained_by_declared_precision") else
+                    "this model differs from ITSELF by more than the two "
+                    "builds differ, when the same source is compiled so that "
+                    "the same mathematics is computed differently"
+                    if (row.get("primal") or {}).get(
+                        "explained_by_operation_order") else
+                    "no control accounts for the difference"),
+            }),
         "tangent_agreement": {
             "states_checked": tangent.get("states_checked"),
             "states_agreeing": tangent.get("states_agreeing"),
@@ -443,6 +481,127 @@ def promote(row: dict, root: Path, work_root: Path, cache: Path) -> dict:
     }
 
 
+class WithdrawalRefused(ValueError):
+    """A withdrawal that would be taken on evidence that cannot support it."""
+
+
+def standing_materials(root: Path) -> dict:
+    """What the collection holds right now, by id.
+
+    Read from ``registry.json`` where there is one, because that is what
+    records the fingerprint each contract was frozen at; the directories are
+    used only to notice a material the registry has lost track of, which is a
+    contract standing with nothing at all saying what produced it.
+    """
+    standing: dict = {}
+    registry = root / "registry.json"
+    if registry.is_file():
+        try:
+            payload = json.loads(registry.read_text(encoding="utf-8"))
+        except ValueError:                         # pragma: no cover - guard
+            payload = {}
+        for entry in payload.get("materials", []) or []:
+            if entry.get("id"):
+                standing[str(entry["id"])] = dict(entry)
+    for folder in sorted(p for p in root.glob("*") if p.is_dir()):
+        standing.setdefault(folder.name, {
+            "id": folder.name,
+            "source_id": "",
+            "transform_fingerprint": "",
+            "orphaned": "this directory is not in registry.json, so nothing "
+                        "on disk says which run froze it",
+        })
+    return standing
+
+
+def withdraw(identifier: str, folder: Path, standing: dict, reason: str,
+             now_at: str, fingerprint: str) -> dict:
+    """Take one contract down and write down why.
+
+    A frozen contract is a claim: these numbers are what this material does,
+    and a regression may be compared against them. It stops being one the
+    moment it cannot be reproduced -- the recorded tangent was measured
+    against a transform that no longer exists, so a later run agreeing with it
+    would be agreeing with an artefact of the old conversion, and a later run
+    disagreeing with it would be reported as a regression in code that is
+    correct.
+
+    Deleting it quietly would be worse than leaving it: a reader comparing an
+    old paper against this collection has to be able to find out what happened
+    to a material that used to be here. So the directory goes and the record
+    stays, naming the fingerprint it was frozen at, the fingerprint that
+    replaced it, and the rung it reaches now.
+    """
+    if not reason:                                 # pragma: no cover - guard
+        raise WithdrawalRefused(
+            f"{identifier} may not be withdrawn without a reason: a contract "
+            f"removed with nothing recorded is indistinguishable from one "
+            f"that was never there")
+    was = dict(standing.get(identifier) or {})
+    if folder.is_dir():
+        shutil.rmtree(folder)
+    return {
+        "id": identifier,
+        "source_id": was.get("source_id", ""),
+        "repository": was.get("repository", ""),
+        "frozen_at_fingerprint": was.get("transform_fingerprint", ""),
+        "withdrawn_at_fingerprint": fingerprint,
+        "reason": reason,
+        "reaches_now": now_at,
+        "recorded_numbers_that_are_no_longer_evidence": {
+            "worst_tangent_relative": was.get("worst_tangent_relative"),
+            "worst_stress_relative": was.get("worst_stress_relative"),
+            "states_agreeing": was.get("states_agreeing"),
+            "states_checked": was.get("states_checked"),
+        },
+    }
+
+
+def withdrawals(root: Path, standing: dict, promoted_ids: set, rows: list,
+                fingerprint: str, *, apply: bool = True) -> list:
+    """Every contract that may no longer stand, with the reason for each.
+
+    The reason is the entry's own current rung wherever the run produced one.
+    Where it produced none, the reason is that and not a verdict: a source the
+    pass never reached is not a source the pass refused, and withdrawing it as
+    though the evidence had gone against it would invent a result.
+    """
+    by_source = {str(row.get("source") or ""): row for row in rows}
+    taken: list = []
+    for identifier, entry in sorted(standing.items()):
+        if identifier in promoted_ids:
+            continue
+        source_id = str(entry.get("source_id") or "")
+        row = by_source.get(source_id)
+        frozen_at = str(entry.get("transform_fingerprint") or "")
+        if row is None:
+            now_at = "not attempted in this run"
+            reason = (
+                f"this contract was frozen at transform fingerprint "
+                f"{frozen_at or 'an unrecorded one'} and the run at "
+                f"{fingerprint} produced no row for "
+                f"{source_id or 'the source it names'}, so nothing at the "
+                f"current fingerprint reproduces it. It is withdrawn because "
+                f"it cannot be reproduced, NOT because it was refused -- "
+                f"no evidence in this run speaks against the material")
+        else:
+            now_at = str(row.get("stage") or "")
+            reason = (
+                f"this contract was frozen at transform fingerprint "
+                f"{frozen_at or 'an unrecorded one'}; at {fingerprint} the "
+                f"same source reaches {now_at!r}, not {VERIFIED!r}. "
+                f"{str(row.get('reason') or '')[:400]}")
+        if apply:
+            taken.append(withdraw(identifier, root / identifier, standing,
+                                  reason, now_at, fingerprint))
+        else:
+            taken.append({"id": identifier, "source_id": source_id,
+                          "frozen_at_fingerprint": frozen_at,
+                          "withdrawn_at_fingerprint": fingerprint,
+                          "reason": reason, "reaches_now": now_at})
+    return taken
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -460,6 +619,12 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--dry-run", action="store_true",
                         help="say what would be promoted and write nothing")
+    parser.add_argument("--keep-stale", action="store_true",
+                        help="leave standing any contract this run does not "
+                             "reproduce, instead of withdrawing it. Only for "
+                             "inspecting a run: a contract frozen at a "
+                             "transform fingerprint that no longer exists is "
+                             "not evidence about anything")
     args = parser.parse_args(argv)
 
     if args.status:
@@ -507,6 +672,17 @@ def main(argv: Optional[list[str]] = None) -> int:
         return 0
 
     args.root.mkdir(parents=True, exist_ok=True)
+    # What is standing BEFORE anything is written, so a contract that this run
+    # replaces can still be told from one it has no evidence about.
+    standing = standing_materials(args.root)
+    fingerprints = {str(row.get("fingerprint") or "") for row in verified}
+    fingerprint = sorted(fingerprints)[0] if len(fingerprints) == 1 else ""
+    if len(fingerprints) > 1:
+        print(f"  NOTE: this run's verified rows carry "
+              f"{len(fingerprints)} different transform fingerprints "
+              f"({', '.join(sorted(f or '(none)' for f in fingerprints))}); "
+              f"no single fingerprint can be recorded for the collection")
+
     entries = []
     refused = 0
     for row in verified:
@@ -524,6 +700,73 @@ def main(argv: Optional[list[str]] = None) -> int:
         return 1
     entries.sort(key=lambda entry: entry["id"])
 
+    # Everything that was standing and is not in this run's promotions. A
+    # partial run may not do this: it has looked at part of the corpus and
+    # would take down contracts it simply did not consider.
+    promoted_ids = {entry["id"] for entry in entries}
+    taken: list = []
+    contracts: list = []
+    partial = bool(args.limit) or args.keep_stale
+    if partial:
+        would = withdrawals(args.root, standing, promoted_ids, rows,
+                            fingerprint, apply=False)
+        if would:
+            print(f"  {len(would)} standing contract(s) are NOT reproduced by "
+                  f"this run and are being LEFT STANDING because "
+                  + ("--limit makes this a partial run" if args.limit
+                     else "--keep-stale was given")
+                  + ". A contract that cannot be reproduced at the current "
+                    "fingerprint is not evidence; re-run without it to "
+                    "withdraw them")
+    else:
+        taken = withdrawals(args.root, standing, promoted_ids, rows,
+                            fingerprint)
+        for entry in taken:
+            print(f"  WITHDRAWN {entry['id']}: {entry['reaches_now']}")
+        # The withdrawal record ACCUMULATES. A second promotion that took
+        # nothing down used to rewrite the file as though nothing had ever
+        # been withdrawn, which is how a collection loses the account of what
+        # it used to claim -- the one thing a reader comparing an old paper
+        # against it has to be able to find. A material that is withdrawn and
+        # later promoted again drops out, because it stands once more.
+        history: dict = {}
+        existing = args.root / "withdrawn.json"
+        if existing.is_file():
+            try:
+                for entry in (json.loads(existing.read_text(encoding="utf-8"))
+                              .get("contracts") or []):
+                    if entry.get("id"):
+                        history[str(entry["id"])] = entry
+            except ValueError:                     # pragma: no cover - guard
+                pass
+        history.update({entry["id"]: entry for entry in taken})
+        for identifier in promoted_ids:
+            history.pop(identifier, None)
+        contracts = [history[key] for key in sorted(history)]
+        # Written whenever the file exists, not only when it has contents: a
+        # material that was withdrawn and is now promoted again STANDS, and
+        # leaving it listed as withdrawn beside its own live directory is a
+        # collection saying two things about the same material.
+        if contracts or existing.is_file():
+            _json(existing, {
+                "schema": "umat-oti/withdrawn-contracts/1.0",
+                "what_this_is": (
+                    "Contracts that used to stand in this collection and were "
+                    "taken down because they could not be reproduced at the "
+                    "current transform fingerprint. A frozen contract is a "
+                    "claim that a regression may be compared against; one "
+                    "measured against a transform that no longer exists is "
+                    "not. The numbers each carried are recorded here as what "
+                    "they now are -- a record of what used to be claimed, not "
+                    "evidence about the material."),
+                "withdrawn_at_fingerprint": fingerprint,
+                "count": len(contracts),
+                "withdrawn_at_this_promotion": len(taken),
+                "contracts": contracts,
+            })
+            print(f"  wrote {existing} with {len(contracts)} withdrawal(s), "
+                  f"{len(taken)} of them taken now")
+
     _json(args.root / "registry.json", {
         "schema": "umat-oti/verified-registry/1.0",
         "what_this_is": (
@@ -538,10 +781,53 @@ def main(argv: Optional[list[str]] = None) -> int:
             "own example. The meaning of the material constants is not "
             "certified. Parameter sensitivities and higher orders are not "
             "covered by a tangent check."),
+        # The fingerprint everything here was frozen at. One number for the
+        # whole collection, because that is the claim: these contracts are
+        # reproducible against THIS transform. A collection carrying contracts
+        # from several is a collection whose numbers cannot all be checked.
+        "transform_fingerprint": fingerprint,
+        "results_read": str(args.results.name),
         "count": len(entries),
         "materials": entries,
+        "withdrawn": {
+            "count": len(contracts),
+            "at_this_promotion": [entry["id"] for entry in taken],
+            "why": ("recorded in withdrawn.json: each was frozen at a "
+                    "transform fingerprint that no longer exists, and its "
+                    "recorded tangent was measured against generated Fortran "
+                    "this repository no longer produces"),
+        } if taken else {"count": 0, "at_this_promotion": [], "why": ""},
     })
     print(f"  wrote {args.root / 'registry.json'} with {len(entries)} materials")
+
+    # The regression baseline IS the promoted set, and it is written here
+    # because its own header says so: "written by promotion, never by a
+    # regression run -- a gate that rewrites its own baseline cannot fail."
+    # It was not being written by anything, and after a withdrawal that is not
+    # a stale file, it is a gate that demands the re-verification of 29
+    # materials this collection no longer holds and can therefore never pass.
+    baseline = args.root / "baseline.json"
+    if not partial:
+        _json(baseline, {
+            "schema": "umat-oti/regression-baseline/1.0",
+            "what_this_is": (
+                "The materials a regression run is required to re-verify. "
+                "Written by promotion, never by a regression run: a gate that "
+                "rewrites its own baseline cannot fail."),
+            "promoted_from": (
+                "an Abaqus verification batch; see each material's "
+                "results.json"),
+            "transform_fingerprint": fingerprint,
+            "entries": [{"source": entry["source_id"],
+                         "stage": VERIFIED,
+                         "id": entry["id"],
+                         "source_sha256": entry["source_sha256"]}
+                        for entry in entries],
+        })
+        print(f"  wrote {baseline} with {len(entries)} entries")
+    elif baseline.is_file():
+        print(f"  LEFT {baseline.name} as it stands: a partial run must not "
+              f"rewrite the gate it would be measured by")
     for entry in entries[:10]:
         print(f"    {entry['id']}")
     if len(entries) > 10:

@@ -1,0 +1,10 @@
+{
+  "redistributed_here": false,
+  "repository": "mholla/growth",
+  "schema": "umat-oti/source-identity/1.0",
+  "sha256": "869907d36a7efc5b7594c2fd35eb9c8e802ef839ac8749a6665e772fd23240e8",
+  "source_id": "mholla__growth/umats/umat_area_stretch.f",
+  "upstream": "https://github.com/mholla/growth",
+  "verified_bytes_sha256": "869907d36a7efc5b7594c2fd35eb9c8e802ef839ac8749a6665e772fd23240e8",
+  "why": "not redistributed: a public repository without an explicit licence grant is not permission to redistribute. Fetch it with tools/materialize_umat_sources.py"
+}
