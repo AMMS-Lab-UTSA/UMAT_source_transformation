@@ -52,11 +52,35 @@ REPO = Path(__file__).resolve().parents[1]
 
 
 def _relative_to_repo(path) -> str:
-    """A path as the repository sees it, not as one machine happened to."""
+    """A path as the repository sees it, not as one machine happened to.
+
+    An input that lives outside the repository still has to be NAMED, because
+    every number in the report has to be traceable to a file on disk. Falling
+    back to the bare filename does not do that: three different verification
+    passes wrote a file called ``store_verification.jsonl``, and a report that
+    cites one of them by basename cites all three.
+
+    So enough of the tail is kept to identify which file it was --
+    ``pass10/results/store_verification.jsonl`` -- and everything at or above
+    the home directory is dropped first, so a username can never survive into
+    a published field.
+    """
+    resolved = Path(path).resolve()
     try:
-        return str(Path(path).resolve().relative_to(REPO))
+        return str(resolved.relative_to(REPO))
     except (ValueError, OSError):
-        return Path(path).name
+        pass
+    parts = [part for part in resolved.parts if part not in ("/", "")]
+    try:
+        home = [part for part in Path.home().resolve().parts
+                if part not in ("/", "")]
+    except (OSError, RuntimeError):
+        home = []
+    if home and parts[:len(home)] == home:
+        parts = parts[len(home):]
+    if home:
+        parts = [part for part in parts if part != home[-1]]
+    return "/".join(parts[-3:]) if parts else resolved.name
 
 
 #: A path under someone's home directory, or under a per-process scratch
@@ -228,6 +252,19 @@ class Record:
     #: Which results file the row was read from, named so every number in the
     #: report can be traced to a file on disk.
     verification_source: str = ""
+    #: The sha256 of the ACQUIRED file the verification row says it ran, as the
+    #: row recorded it, and whether that agrees with the sha256 this registry
+    #: computed from the cache. A row that names a different file is not
+    #: evidence about this one however well the paths line up.
+    verification_sha256: str = ""
+    verification_sha256_agrees: Optional[bool] = None
+    #: A verification row for this source that was produced against an earlier
+    #: store and is therefore about generated Fortran that no longer exists.
+    #: Recorded rather than discarded, because a reader comparing this registry
+    #: against the raw results file needs to see which rows were set aside and
+    #: why -- and because "the file says 44 verified" and "41 sources verified"
+    #: have to be reconcilable from what is written down.
+    superseded_verification: str = ""
     #: For anything that is not fully_verified: the named reason, with the
     #: evidence behind it. Never "the transformer refused it" on its own.
     not_verified_reason: str = ""
@@ -261,6 +298,81 @@ def _rows(path: Optional[Path]) -> list:
     if isinstance(payload, dict):
         return payload.get("entries") or payload.get("rows") or []
     return payload or []
+
+
+def verification_reconciliation(abaqus_report: Optional[Path],
+                                store_fingerprint: str) -> dict:
+    """Why the results file holds more rows than the store holds entries.
+
+    Two numbers disagreed and a registry that cannot explain its own
+    denominator is not evidence, so the arithmetic is written down rather than
+    asserted.
+
+    ``pass10/results/store_verification.jsonl`` holds 254 rows for a store of
+    240 entries. 240 of those rows carry the fingerprint of the store as it
+    stands; the other 14 carry the fingerprint of the store as it stood before
+    the re-transform, and are there because the results file is append-only
+    and the pass resumed onto the file an earlier pass had been writing. 11 of
+    those 14 sources were re-run at the current fingerprint, so both rows exist
+    for them; the remaining 3 are no longer in the store at all, because the
+    re-transform refused them. 240 + 3 = 243 distinct sources, 254 rows.
+
+    The key cannot collapse them: it is derived from the STORE ENTRY, so the
+    same source under two fingerprints has two keys and all 254 are distinct.
+    The source sha256 cannot collapse them either, in the other direction: 240
+    rows carry only 232 distinct source digests, because several acquired
+    files are byte-identical to another acquired file and both transformed.
+    The identity is the PATH INSIDE THE CACHE, and the digest is what
+    corroborates that the row is about the file this registry read.
+
+    The same append-only leftovers are why the file contains 44 rows at stage
+    ``verified`` while the run reported 41 of 240. Three sources verified under
+    the old store and verified again under the new one; counting rows counts
+    them twice. 41 is the number of store entries that verified, and it is the
+    one this registry publishes.
+    """
+    rows = _rows(abaqus_report)
+    if not rows:
+        return {}
+    current = [r for r in rows if str(r.get("fingerprint") or "") == store_fingerprint]
+    stale = [r for r in rows if str(r.get("fingerprint") or "") != store_fingerprint]
+    current_sources = {str(r.get("source") or "") for r in current}
+    verified_now = {str(r.get("source") or "") for r in current
+                    if str(r.get("stage") or "") == "verified"}
+    stale_verified = [str(r.get("source") or "") for r in stale
+                      if str(r.get("stage") or "") == "verified"]
+    return {
+        "file": _relative_to_repo(abaqus_report) if abaqus_report else "",
+        "store_fingerprint": store_fingerprint,
+        "rows_in_the_file": len(rows),
+        "rows_at_the_current_store_fingerprint": len(current),
+        "rows_at_a_superseded_store_fingerprint": len(stale),
+        "distinct_sources_in_the_file": len(
+            {str(r.get("source") or "") for r in rows}),
+        "distinct_keys_in_the_file": len(
+            {str(r.get("key") or "") for r in rows}),
+        "distinct_source_digests_at_the_current_fingerprint": len(
+            {str(r.get("source_sha256") or "") for r in current}),
+        "sources_counted_by_this_registry": len(current_sources),
+        "superseded_rows_whose_source_was_rerun": sorted(
+            str(r.get("source") or "") for r in stale
+            if str(r.get("source") or "") in current_sources),
+        "superseded_rows_whose_source_is_no_longer_in_the_store": sorted(
+            str(r.get("source") or "") for r in stale
+            if str(r.get("source") or "") not in current_sources),
+        "rows_at_stage_verified_in_the_whole_file": sum(
+            1 for r in rows if str(r.get("stage") or "") == "verified"),
+        "store_entries_that_verified": len(verified_now),
+        "verified_rows_that_double_count_a_source": sorted(
+            name for name in stale_verified if name in verified_now),
+        "why_the_two_verified_numbers_differ": (
+            "The results file is append-only and this pass resumed onto the "
+            "file an earlier pass had been writing, so it carries rows from "
+            "before the store was rebuilt. Counting rows counts a source that "
+            "verified under both stores twice. The number of STORE ENTRIES "
+            "that verified is the one published here; a row count over an "
+            "append-only file is not a census."),
+    }
 
 
 def _fingerprint_latest(rows: list, store_fingerprint: str) -> list:
@@ -828,13 +940,16 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             # decides nothing, and the record stays at whatever the transform
             # established, which for a stored entry is "no batch has reached
             # it at this fingerprint yet".
-            record.not_verified_reason = (
-                f"the only verification row for this source was produced "
-                f"against store fingerprint {record.verification_fingerprint} "
-                f"and the store is now {store_fingerprint}; it reached "
-                f"`{row.get('stage')}` there, which is evidence about a "
-                f"transformed file that has since been rebuilt")
+            record.superseded_verification = (
+                f"a verification row for this source reached "
+                f"`{row.get('stage')}` against store fingerprint "
+                f"{record.verification_fingerprint}, and the store is now "
+                f"{store_fingerprint}; that row is evidence about generated "
+                f"Fortran that has since been rebuilt, so it decides nothing "
+                f"here")
+            record.verification_fingerprint = ""
             continue
+        record.verification_sha256 = str(row.get("source_sha256") or "")
         record.key = str(row.get("key") or record.key)
         record.stage = str(row.get("stage") or "")
         verdict = from_stage(record.stage, str(row.get("reason") or "")[:500])
@@ -923,11 +1038,13 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
         record.terminal_state, record.kind = verdict.state, verdict.kind
 
     for record in records.values():
+        if record.verification_sha256 and record.sha256:
+            record.verification_sha256_agrees = (
+                record.verification_sha256 == record.sha256)
         (record.adequately_specified, record.adequacy_basis,
          record.adequacy_kind) = _adequacy(record)
         if record.terminal_state != FULLY_VERIFIED:
-            record.not_verified_reason = (record.not_verified_reason
-                                          or _why_not_verified(record))
+            record.not_verified_reason = _why_not_verified(record)
     return sorted(records.values(), key=lambda r: r.source_id)
 
 
@@ -1008,6 +1125,8 @@ def _why_not_verified(record: Record) -> str:
         parts.append("no batch has produced a row for this source at the "
                      "current store fingerprint; this is an absence of a "
                      "verdict, not a verdict")
+    if record.superseded_verification:
+        parts.append(record.superseded_verification)
     if record.reason:
         parts.append(f"recorded reason: {record.reason}")
     for label, value in (("classification", record.classification_basis),
@@ -1172,8 +1291,8 @@ def _pct(numerator: int, denominator: int, name: str) -> str:
     """
     if not denominator:
         return f"{numerator} of 0 {name}"
-    return (f"{numerator} of {denominator} {name} "
-            f"({100.0 * numerator / denominator:.1f}% of {name})")
+    return (f"{numerator} of {denominator} {name} -- "
+            f"{100.0 * numerator / denominator:.1f}% of {name}")
 
 
 def markdown(records: list, summary: dict) -> str:
@@ -1236,8 +1355,9 @@ def markdown(records: list, summary: dict) -> str:
         "denominator for \"what happened to the UMATs that could be driven at "
         "all\".",
         "",
-        "**Every exclusion from D2 is a fact about somebody else's published "
-        "repository, and each one names the evidence that established it.** "
+        "**Nothing internal may shrink D2.** Every exclusion from it is a "
+        "fact about somebody else's published repository, and each one names "
+        "the evidence that established it. "
         "Nothing this project failed to do removes a source from D2: a source "
         "whose transform this project refused, whose deck this project could "
         "not generate, whose experiment this project could not make "
@@ -1252,6 +1372,10 @@ def markdown(records: list, summary: dict) -> str:
         "",
         f"* {_pct(verified, acquired, 'acquired sources (D1)')}",
         f"* {_pct(verified_adequate, adequate, 'adequately specified genuine UMATs (D2)')}",
+        "",
+        "Neither figure may be quoted without the words after it. They are "
+        "answers to two different questions and the larger one is not the "
+        "better one.",
         "",
         "`fully_verified` means the source transformed and compiled, Abaqus "
         "ran the ORIGINAL, Abaqus ran the CONVERTED build on the same deck, "
@@ -1288,8 +1412,13 @@ def markdown(records: list, summary: dict) -> str:
     reasons: dict = defaultdict(list)
     for record in records:
         if record.adequately_specified is False:
-            head = record.adequacy_basis.split(":")[0].strip()[:70]
-            reasons[(head, record.adequacy_kind or "external")].append(
+            head = record.adequacy_basis.split(":")[0].strip()
+            if head.startswith("line-for-line identical to"):
+                # One row, not one per source it is a copy of: the reader is
+                # being told how many sources are second copies, and naming
+                # each original here would turn a census into a list.
+                head = "line-for-line identical to another acquired source"
+            reasons[(head[:70], record.adequacy_kind or "external")].append(
                 record.source_id)
     for (head, kind), names in sorted(reasons.items(), key=lambda kv: -len(kv[1])):
         mark = "EXTERNAL" if kind == "external" else "INTERNAL"
@@ -1354,19 +1483,95 @@ def markdown(records: list, summary: dict) -> str:
                   "text builds. That is the safe direction: it counts the work "
                   "as ours."]
 
+    recon = summary.get("verification_file_reconciliation") or {}
+    if recon:
+        lines += [
+            "", "## Why the results file holds more rows than the store holds "
+                "entries",
+            "",
+            "The results file is append-only and this pass resumed onto the "
+            "file an earlier pass had been writing, so it carries rows from "
+            "before the transform store was rebuilt. A row count over that "
+            "file is not a census of the store, and the two places this shows "
+            "up are reconciled here rather than asserted.",
+            "",
+            "| | count |",
+            "| --- | ---: |",
+            f"| rows in `{recon.get('file', '')}` | "
+            f"{recon.get('rows_in_the_file', 0)} |",
+            f"| of those, at the current store fingerprint "
+            f"`{recon.get('store_fingerprint', '')}` | "
+            f"{recon.get('rows_at_the_current_store_fingerprint', 0)} |",
+            f"| of those, at a superseded store fingerprint | "
+            f"{recon.get('rows_at_a_superseded_store_fingerprint', 0)} |",
+            f"| distinct sources named in the file | "
+            f"{recon.get('distinct_sources_in_the_file', 0)} |",
+            f"| distinct row keys in the file | "
+            f"{recon.get('distinct_keys_in_the_file', 0)} |",
+            f"| **sources this registry counts** | "
+            f"**{recon.get('sources_counted_by_this_registry', 0)}** |",
+            "",
+            "The row key cannot collapse the duplicates: it is derived from "
+            "the STORE ENTRY, so the same source under two fingerprints has "
+            "two keys and every row key in the file is distinct. The source "
+            "digest cannot collapse them either, in the other direction: the "
+            f"{recon.get('rows_at_the_current_store_fingerprint', 0)} current "
+            f"rows carry only "
+            f"{recon.get('distinct_source_digests_at_the_current_fingerprint', 0)} "
+            "distinct source digests, because several acquired files are "
+            "byte-identical to another acquired file and both transformed. "
+            "**The identity is the path inside the acquisition cache**, and "
+            "the digest is what corroborates that a row is about the file "
+            "this registry read.",
+            "",
+            f"{len(recon.get('superseded_rows_whose_source_was_rerun') or [])} "
+            "of the superseded rows are for sources that were re-run at the "
+            "current fingerprint, so the current row is used and the old one "
+            "is set aside. The remaining "
+            f"{len(recon.get('superseded_rows_whose_source_is_no_longer_in_the_store') or [])} "
+            "are for sources that are no longer in the store at all, because "
+            "the re-transform refused them; whatever rung they reached under "
+            "the old store, it is evidence about generated Fortran that no "
+            "longer exists:",
+            "",
+        ]
+        for name in (recon.get(
+                "superseded_rows_whose_source_is_no_longer_in_the_store") or []):
+            lines.append(f"* `{name}`")
+
+        double = recon.get("verified_rows_that_double_count_a_source") or []
+        lines += [
+            "",
+            "### 'verified' counted two ways",
+            "",
+            f"The file contains "
+            f"{recon.get('rows_at_stage_verified_in_the_whole_file', 0)} rows "
+            f"at stage `verified`. "
+            f"{recon.get('store_entries_that_verified', 0)} STORE ENTRIES "
+            f"verified. The difference is exactly the "
+            f"{len(double)} source(s) that verified under the old store and "
+            f"verified again under the new one, whose old row is still in the "
+            f"file:",
+            "",
+        ]
+        for name in double:
+            lines.append(f"* `{name}`")
+        lines += ["",
+                  f"**{recon.get('store_entries_that_verified', 0)} is the "
+                  f"number this registry publishes.** " +
+                  recon.get("why_the_two_verified_numbers_differ", "")]
+
     stale = summary.get("verification_rows_at_a_stale_fingerprint") or []
     if stale:
-        lines += ["", "## Verification rows that do not describe this store",
+        lines += ["", "### Sources left with no verdict at this fingerprint",
                   "",
-                  f"{len(stale)} source(s) have a verification row produced "
-                  f"against a different store fingerprint. Whatever rung they "
-                  f"reached there, it is evidence about a transformed file "
-                  f"that has since been rebuilt, so none of them is counted as "
-                  f"verified here and each is recorded as `not_attempted` at "
-                  f"the current fingerprint -- an absence of a verdict, which "
-                  f"is not the same as a verdict.", ""]
-        for name in stale[:40]:
-            lines.append(f"* `{name}`")
+                  f"{len(stale)} source(s) have a verification row only at a "
+                  f"superseded fingerprint -- the same ones listed above. None "
+                  f"is counted as verified. Each is recorded at whatever the "
+                  f"transform established for it at this fingerprint, which "
+                  f"is an absence of a verdict and not the same as a verdict, "
+                  f"and each one's record carries the superseded row's rung so "
+                  f"the two files can be reconciled by a reader."]
 
     lines += ["", "## Every source that is not verified, and why",
               "",
@@ -1486,6 +1691,8 @@ def main(argv: Optional[list] = None) -> int:
                     inventory_ids=inventory_ids, provenance=provenance,
                     audit=audit, store_fingerprint=fingerprint)
     summary = summarise(records)
+    summary["verification_file_reconciliation"] = verification_reconciliation(
+        args.abaqus, fingerprint)
     summary["inputs"] = {
         # Every number in the report has to be traceable to a file on disk
         # that the report names. These are those files, as the repository

@@ -6,7 +6,7 @@ about somebody else's repository, each needs its own evidence, and reading a
 refusal as any of them moves work out of this project's column and into the
 corpus's -- the one direction the error must never go.
 
-So every one of the 141 refused sources was classified by parsing the file:
+So every one of the 151 refused sources was classified by parsing the file:
 its Abaqus entry point read from the source text, its lines matched against
 every other acquired source, and an offline ifort ``-syntax-only`` pass over
 the author's own text with Abaqus's real ``aba_param.inc`` on the include path
@@ -15,12 +15,13 @@ process was started and no licence token was drawn.
 
 The measured split, from ``paper_results/corpus/corpus_registry.json``:
 
-    genuine_umat                   96   ours: a whole UMAT we could not convert
+    genuine_umat                  100   ours: a whole UMAT we could not convert
     missing_external_dependency    16   a USE or INCLUDE nobody published
-    helper_or_module_only          12   no Abaqus entry point at all
-    incomplete_or_corrupt_source   12   ifort rejects the published text
-    duplicate_of_another_source     3   line-for-line a copy of another source
+    helper_or_module_only          14   no Abaqus entry point at all
+    incomplete_or_corrupt_source   11   ifort rejects the published text
+    duplicate_of_another_source     6   line-for-line a copy of another source
     other_abaqus_routine            2   the entry point is a UEL
+    published_stub_...              2   the UMAT body computes nothing at all
 """
 import csv
 import json
@@ -39,6 +40,7 @@ from umat_oti.corpus.entry_routines import (DUPLICATE_SOURCE,  # noqa: E402
                                             INCOMPLETE_OR_CORRUPT,
                                             MISSING_EXTERNAL_DEPENDENCY,
                                             OTHER_ABAQUS_ROUTINE,
+                                            PUBLISHED_STUB,
                                             REFUSAL_CLASSES, classify,
                                             classify_refusal)
 
@@ -66,12 +68,12 @@ def cached(source_id: str):
 # the rule itself
 # ---------------------------------------------------------------------------
 def test_not_a_umat_is_never_reached_from_a_transform_refusal():
-    """Every one of the 14 refused sources whose terminal state is
-    ``not_a_umat`` got there because PARSING the file found an Abaqus entry
-    point that is not a UMAT, or found none at all -- 2 UELs, 1 second copy of
-    a UEL, and 12 files with no Abaqus interface. None got there because the
-    transformer refused it, and every one of the 14 quotes the line of the
-    author's own file it was read from."""
+    """Every refused source whose terminal state is ``not_a_umat`` got there
+    because PARSING the file found an Abaqus entry point that is not a UMAT,
+    or found none at all -- 2 UELs, 1 second copy of a UEL, and 14 files with
+    no Abaqus interface. None got there because the transformer refused it,
+    and every one quotes the line of the author's own file it was read
+    from."""
     external = [r for r in refusals() if r["terminal_state"] == "not_a_umat"]
     assert external, "no refused source reached not_a_umat at all"
     for record in external:
@@ -107,12 +109,13 @@ def test_the_same_refusal_text_classifies_two_files_differently():
 
 
 def test_a_refused_umat_that_builds_stays_this_project_s_problem():
-    """96 of the 141 are whole UMATs whose published text ifort accepts and
-    whose companions are all in the repository. They stay ``transform_refused``
-    and ``internal``: there is nothing wrong with those files, and the work is
+    """100 of the 151 are whole UMATs whose published text ifort accepts,
+    whose companions are all in the repository, and which do compute a stress
+    or a tangent somewhere in the file. They stay ``transform_refused`` and
+    ``internal``: there is nothing wrong with those files, and the work is
     ours."""
     ours = [r for r in refusals() if r["refusal_class"] == GENUINE_UMAT]
-    assert len(ours) == 96, len(ours)
+    assert len(ours) == 100, len(ours)
     for record in ours:
         assert record["terminal_state"] == "transform_refused"
         assert record["kind"] == "internal"
@@ -121,28 +124,29 @@ def test_a_refused_umat_that_builds_stays_this_project_s_problem():
 
 
 def test_the_refusal_classes_partition_the_141_refusals():
-    """141 refusals, six classes, every record in exactly one, and the class
+    """151 refusals, seven classes, every record in exactly one, and the class
     names are the ones the module defines rather than free text."""
     rows = refusals()
-    assert len(rows) == 141, len(rows)
+    assert len(rows) == 151, len(rows)
     counts = {}
     for record in rows:
         assert record["refusal_class"] in REFUSAL_CLASSES, record
         counts[record["refusal_class"]] = counts.get(
             record["refusal_class"], 0) + 1
     assert counts == {
-        GENUINE_UMAT: 96,
+        GENUINE_UMAT: 100,
         MISSING_EXTERNAL_DEPENDENCY: 16,
-        HELPER_OR_MODULE_ONLY: 12,
-        INCOMPLETE_OR_CORRUPT: 12,
-        DUPLICATE_SOURCE: 3,
+        HELPER_OR_MODULE_ONLY: 14,
+        INCOMPLETE_OR_CORRUPT: 11,
+        DUPLICATE_SOURCE: 6,
         OTHER_ABAQUS_ROUTINE: 2,
+        PUBLISHED_STUB: 2,
     }, counts
-    assert sum(counts.values()) == 141
+    assert sum(counts.values()) == 151
 
 
 def test_every_refused_source_quotes_the_line_it_was_classified_from():
-    """A classification nobody can check is an assertion. All 141 carry the
+    """A classification nobody can check is an assertion. All 151 carry the
     line of the author's own file that decided it, and that line really is in
     that file at the line number recorded beside it."""
     for record in refusals():
@@ -150,6 +154,8 @@ def test_every_refused_source_quotes_the_line_it_was_classified_from():
         assert record["classification_basis"], record["source_id"]
         if record["refusal_class"] in (INCOMPLETE_OR_CORRUPT,):
             continue                  # the evidence is the compiler's, below
+        if record["refusal_class"] == DUPLICATE_SOURCE:
+            continue                  # the evidence is the other copy
         path = CACHE / record["source_id"]
         if not path.is_file() or not record["entry_line"]:
             continue
@@ -239,7 +245,7 @@ def test_a_file_too_damaged_to_parse_is_not_filed_as_a_helper():
 
 
 def test_a_compile_that_settles_nothing_leaves_the_work_ours():
-    """Six refused sources fail the offline compile with diagnostics an
+    """Nine refused sources fail the offline compile with diagnostics an
     unresolved USE would also produce -- an undeclared name, a kind parameter
     that is not constant. None of those is evidence the file is broken, so
     the verdict stays genuine_umat with ``refusal_class_confident`` false:
@@ -247,9 +253,17 @@ def test_a_compile_that_settles_nothing_leaves_the_work_ours():
     completeness."""
     unsure = [r for r in refusals()
               if r["refusal_class_confident"] is False]
-    assert len(unsure) == 6, [r["source_id"] for r in unsure]
+    assert len(unsure) == 9, [r["source_id"] for r in unsure]
     for record in unsure:
-        assert record["refusal_class"] == GENUINE_UMAT
+        # One of the nine is a second copy of another of them. A duplicate
+        # keeps the underlying answer -- "as a file it is genuine_umat" is
+        # written into its basis -- so an unsettled compile leaves that one
+        # ours too, which is the same safe direction.
+        assert record["refusal_class"] in (GENUINE_UMAT, DUPLICATE_SOURCE), \
+            record["source_id"]
+        if record["refusal_class"] == DUPLICATE_SOURCE:
+            assert f"as a file it is {GENUINE_UMAT}" in \
+                record["classification_basis"], record["source_id"]
         assert record["kind"] == "internal"
 
 
@@ -261,7 +275,7 @@ def test_a_second_copy_of_a_uel_is_still_not_a_umat():
     count of UMATs."""
     duplicates = [r for r in refusals()
                   if r["refusal_class"] == DUPLICATE_SOURCE]
-    assert len(duplicates) == 3, len(duplicates)
+    assert len(duplicates) == 6, len(duplicates)
     for record in duplicates:
         assert record["duplicate_of"], record["source_id"]
         assert record["duplicate_of"] != record["source_id"]
