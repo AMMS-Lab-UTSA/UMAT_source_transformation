@@ -149,7 +149,13 @@ def test_the_different_iterate_hypothesis_is_refuted_and_the_slot_confirmed(key)
     assert by_name[ITERATIVE_SOLVER].confirmation_status == REFUTED
     assert by_name[SINGLE_OUTPUT_SLOT].confirmation_status == CONFIRMED
     assert by_name[SINGLE_OUTPUT_SLOT].reproduction.repeatable
-    assert "STATEV(2*NSLPTL+1)" in by_name[SINGLE_OUTPUT_SLOT].confirmed_root_cause
+    # The slot's identity is carried by block and index, which is checked
+    # above. What the root cause has to name is the CONSTRUCT, because
+    # "STATEV(2*NSLPTL+1) is wrong" restates the symptom. It is an 8-byte
+    # REAL*8 DDCMP reaching a 40-byte TYPE(ONUMM4N1) dummy in LUDCMP_OTI.
+    cause = by_name[SINGLE_OUTPUT_SLOT].confirmed_root_cause
+    assert "DDCMP" in cause and "LUDCMP_OTI" in cause
+    assert "TYPE(ONUMM4N1) :: DDCMP" in cause
 
 
 @pytest.mark.parametrize("key", sorted(TRIO))

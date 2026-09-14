@@ -1256,6 +1256,32 @@ class DiagnosedEntry:
     confirmation_status: str = CONFIRMED
 
 
+#: The pass10 census of the 62 ``primal_disagreed`` entries, clustered by
+#: MECHANISM rather than by magnitude. Ordering them by worst difference puts
+#: the crystal-plasticity memory overrun (1.876) next to a growth model whose
+#: solver drifted (1.999) and reads as one failure; they have nothing in
+#: common and need opposite fixes.
+#:
+#:     3   the ORIGINAL build goes non-finite -- not evidence about the
+#:         transform either way, whatever number is reported beside it
+#:     4   a REAL*8 actual reaches an OTI-typed dummy. CONFIRMED: a memory
+#:         overrun. ``mistyped_oti_arguments`` finds these by grep
+#:    11   the author wrote an inexact quotient of default REAL literals and
+#:         the transform promoted it to double. CONFIRMED on the abuganza
+#:         damage pair; ``inexact_single_precision_literals`` finds these
+#:    40   the deck's Poisson ratio is in [0.49, 0.5). CONFIRMED on
+#:         From-2D-to-2D-Axe: 1-2*NU cancels, the volumetric penalty reaches
+#:         3e+08, and it amplifies the last bit into DDSDDE while leaving the
+#:         STRESS bit-identical. 39 of the 40 are Jeff97 growth models at
+#:         props = (906512.0, ~0.499) -- one deck family, one mechanism
+#:     4   nothing above fits
+#:
+#: So the largest cluster in the project's largest failure stage is not a
+#: transform defect at all: it is decks whose own conditioning multiplies a
+#: last bit by 1e+08 before it reaches the solver. That is worth fixing in the
+#: tangent and in the experiment design, and it is NOT a reason to widen a
+#: tolerance -- the two entries below show why the same reported magnitude can
+#: mean opposite things.
 #: Entries diagnosed offline, by replaying recorded calls. Every one names a
 #: control that was actually run, not a construct that was read.
 DIAGNOSED_ENTRIES: tuple = (
