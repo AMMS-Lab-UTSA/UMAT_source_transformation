@@ -26,6 +26,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from umat_oti.core.config_loader import _no_detectable_umat_message  # noqa: E402
+from umat_oti.core.transformation_anchors import (  # noqa: E402
+    ABAQUS_UMAT_ARGUMENT_COUNT, _not_an_abaqus_umat_issue)
 from umat_oti.fortran.scanner import analyze_fortran_source  # noqa: E402
 
 pytestmark = pytest.mark.unit
@@ -78,3 +80,42 @@ def test_an_unparseable_file_points_at_the_source_form(tmp_path):
     message = _message("this is not fortran at all\n", "notes.f", tmp_path)
     assert "source form" in message
     assert "free-form file named .f or .for" in message
+
+
+# --------------------------------------------------------------------------
+# A UMAT under the author's own argument names is not "not a UMAT"
+
+
+def _issue(arguments):
+    analysis = {"detected_subroutines": [{"name": "UMAT", "arguments": list(arguments),
+                                          "line_numbers": [1, 400]}]}
+    return _not_an_abaqus_umat_issue(analysis, {}, "UMAT")
+
+
+def test_a_renamed_interface_is_reported_as_a_mapping_gap_not_a_wrong_file():
+    """sahmotaman's TMM-FE sources declare the Abaqus interface under other names.
+
+    ``subroutine umat(sigma, sv, C, sse, delta_w_p, ...)`` takes the 37
+    arguments Abaqus passes a UMAT and spells none of them STRESS or DDSDDE.
+    Reporting that as "not an Abaqus UMAT" says the source is wrong when the
+    configuration is incomplete, and sends the reader to look for a UMAT that
+    is already in front of them.
+    """
+    arguments = ["SIGMA", "SV", "C"] + [f"A{index}" for index in range(4, 38)]
+    assert len(arguments) == ABAQUS_UMAT_ARGUMENT_COUNT
+    issue = _issue(arguments)
+    assert issue["kind"] == "umat_interface_uses_the_authors_own_argument_names"
+    assert issue["required_json_field"] == "mapping.stress"
+    assert "37 arguments" in issue["message"] and "SIGMA" in issue["message"]
+
+
+def test_a_four_argument_demonstration_routine_is_still_not_a_umat():
+    """The case the original check was written for keeps its own verdict."""
+    issue = _issue(["A", "B", "C", "D"])
+    assert issue["kind"] == "selected_routine_is_not_an_abaqus_umat"
+    assert "4 arguments" in issue["message"]
+    assert str(ABAQUS_UMAT_ARGUMENT_COUNT) in issue["message"]
+
+
+def test_the_real_interface_is_never_reported_at_all():
+    assert _issue(["STRESS", "STATEV", "DDSDDE"]) is None
