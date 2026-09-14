@@ -51,6 +51,26 @@ GLOSS = {
                             "-- ours",
     "not_attempted": "this run did not reach it",
     "harness_error": "the run broke, not the model",
+    #: A file with the 37-argument UMAT header that assigns neither STRESS nor
+    #: DDSDDE and makes no CALL: the author published the interface and no
+    #: constitutive content. External, and its own state rather than a
+    #: borrowed one -- "does not compile" is what
+    #: incomplete_or_corrupt_source is glossed, and a template compiles
+    #: perfectly well.
+    "published_stub_no_constitutive_content":
+        "the author published a template with no material in it",
+    #: The two builds were handed different arguments, so whatever differs
+    #: happened before either routine was entered. Not a difference between
+    #: the routines, and so not ours.
+    "arguments_diverged_before_the_routine":
+        "the two builds were not given the same arguments, so they were never "
+        "asked the same question",
+    #: The histories differ and no recorded call accounts for it: the
+    #: difference is real and the explanation is missing. Ours, because what
+    #: is missing is our instrumentation rather than their file.
+    "disagreement_not_in_any_recorded_call":
+        "the builds differ and no call this harness recorded accounts for it "
+        "-- ours",
 }
 
 
