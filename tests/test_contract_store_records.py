@@ -56,10 +56,18 @@ def adapted(rows):
 
 
 def test_every_row_is_accounted_for(rows, adapted):
+    """237 in, 237 out, however they divide.
+
+    The division depends on whether the checkout has a word for
+    ``arguments_diverged_before_the_routine``: before it arrived, 234 rows
+    became records and 3 became refusals; after, all 237 translate and the
+    three are EXTERNAL. What must never change is that the two add to 237 --
+    a row that is neither carried nor refused is a row dropped in silence.
+    """
     assert len(rows) == 237
     assert adapted.total == 237
-    assert len(adapted.records) == 234
-    assert len(adapted.errors) == 3
+    assert len(adapted.records) + len(adapted.errors) == 237
+    assert (len(adapted.records), len(adapted.errors)) in ((234, 3), (237, 0))
 
 
 def test_every_adapted_record_validates_against_the_schema(adapted):
@@ -80,9 +88,11 @@ def test_every_refusal_validates_against_the_error_schema(adapted):
 
 
 def test_a_refusal_never_silently_becomes_a_record(adapted, rows):
+    """Whatever is refused is not also carried, and together they are the whole
+    store. With nothing refused the second half still has to hold."""
     refused_paths = {e["identity"]["path"] for e in adapted.errors}
     carried_paths = {r.identity.path for r in adapted.records}
-    assert refused_paths and not (refused_paths & carried_paths)
+    assert not (refused_paths & carried_paths)
     assert len(refused_paths | carried_paths) == 237
 
 
@@ -138,7 +148,7 @@ def test_a_declared_depvar_is_distinguished_from_an_inferred_state_count(adapted
     unknown = [r for r in adapted.records
                if r.material.nstatv_from_depvar.is_not_established()]
     assert declared and unknown
-    assert len(declared) + len(inferred) + len(unknown) == 234
+    assert len(declared) + len(inferred) + len(unknown) == len(adapted.records)
     for record in declared:
         assert "*DEPVAR" in record.material.provenance
 
@@ -222,7 +232,7 @@ def test_whether_the_assembler_may_drive_itself_from_an_entry_is_three_state(ada
             unmeasured.append((record, why))
         else:
             refused.append((record, why))
-    assert len(usable) + len(unmeasured) + len(refused) == 234
+    assert len(usable) + len(unmeasured) + len(refused) == len(adapted.records)
     # A refusal is a finding; an unmeasured entry is a queue item; and the
     # contract does not merge them, because the work they imply is different.
     assert usable and refused
@@ -280,9 +290,15 @@ def test_the_seventh_field_is_recovered_from_the_record_never_invented(adapted):
     counts = {"true": 0, "false": 0, "not-established": 0}
     for record in adapted.records:
         counts[getattr(record.evidence, SEVENTH).spelling()] += 1
+    # 83 rows have a measured-false primal; 19 of them carry a measured
+    # explanation and 64 do not. How many reach a RECORD depends on whether
+    # this checkout can translate the three arguments_diverged rows, all of
+    # which are among the 64.
     assert counts["true"] == 19
-    assert counts["false"] == 61      # 64 rows - the 3 refused, all of them false
-    assert counts["not-established"] == 154
+    assert counts["false"] in (61, 64)
+    assert counts["true"] + counts["false"] + counts["not-established"] == \
+        len(adapted.records)
+    assert counts["false"] == 64 - len(adapted.errors)
     # And never true where the builds agreed: there was no difference to explain.
     for record in adapted.records:
         if record.evidence.primal_agreed.is_true():
