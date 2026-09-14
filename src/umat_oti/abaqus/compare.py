@@ -346,6 +346,17 @@ class TangentComparison:
     #: Fourteen rows of one batch carried exactly this signature, with the
     #: absolute error bit-identical from a step of 1e-3 to one of 1e-8.
     zero_difference_steps: int = 0
+    #: The worst relative error over the entries the ladder can actually
+    #: adjudicate, each taken at its own best step. See
+    #: :func:`adjudicate_entries`: this is a second reading of the same sweep,
+    #: not a loosened tolerance, and ``best.relative`` is unchanged beside it.
+    resolved_relative: float = 0.0
+    #: Entries excused because the gap was no larger than what the ladder
+    #: resolves there, and how many entries were adjudicated at all.
+    unresolved_entries: int = 0
+    adjudicated_entries: int = 0
+    #: The entry that decides ``resolved_relative``, one-based.
+    resolved_worst_entry: tuple = ()
     notes: str = ""
 
     def as_dict(self) -> dict:
@@ -362,12 +373,128 @@ class TangentComparison:
             "near_zero_entries": self.near_zero_entries,
             "non_finite_entries": self.non_finite_entries,
             "zero_difference_steps": self.zero_difference_steps,
+            "resolved_relative": self.resolved_relative,
+            "unresolved_entries": self.unresolved_entries,
+            "adjudicated_entries": self.adjudicated_entries,
+            "resolved_worst_entry": list(self.resolved_worst_entry),
             "notes": self.notes,
         }
 
 
 def _frobenius(values: Iterable[float]) -> float:
     return math.sqrt(sum(value * value for value in values))
+
+
+@dataclass
+class EntryVerdict:
+    """One entry of a tangent, and what the difference ladder can say about it."""
+
+    row: int
+    column: int
+    oti: float
+    #: The ladder's own answer, from the two consecutive steps that came
+    #: closest to each other.
+    reference: float
+    #: How far apart those two steps were. Nothing outside the
+    #: finite-difference family enters this, so using it to adjudicate the OTI
+    #: value is not circular.
+    resolution: float
+    #: The step at the near end of that pair.
+    step: float
+    absolute: float
+    relative: float
+    #: True when the gap is no larger than what the ladder resolves there, so
+    #: the difference cannot call the entry wrong.
+    within_resolution: bool
+    #: True when the reference places this entry below the structural-zero
+    #: floor, a fixed fraction of the largest entry of the same tangent.
+    structural_zero: bool = False
+
+
+def adjudicate_entries(
+    oti: Sequence[Sequence[float]], differences: dict,
+    *, near_zero_fraction: float = 1e-8,
+) -> list[EntryVerdict]:
+    """Each entry at its OWN best step, rather than all of them at one step.
+
+    A tangent's entries differ in size by many decades, and the step that
+    determines one best does not determine another best. Scoring the worst
+    component at a single step common to the whole matrix therefore reports
+    the entry whose optimum is furthest from that step, and no tolerance
+    changes that.
+
+    MEASURED offline with gfortran, on ``Jeff97__Programming-Plane-Strain-
+    Plates-through-Growth-Under-Body-Forces/.../ArcDown/Th01/BodyForce-Growth-
+    2Stages.for`` at the state pass10 recorded (store key
+    a3838e454d55be2d25821bfc, replay state1). Scoring offline-built matrices
+    with this module's own ``compare_tangent`` reproduces that run's sweep to
+    every digit -- 1e-1:4.936e-05, 1e-2:1.772e-05, 1e-3:1.767e-04,
+    1e-4:1.767e-03 -- and its verdict, "the closest step agreed only to
+    1.772e-05, against a tolerance of 1e-06". Over the same sweep the relative
+    FROBENIUS residual is 2.268e-12.
+
+    The entry that decides it is DDSDDE(3,4) = 3.609726e+02 against a matrix
+    whose largest entry is 2.0023e+10 -- 1.803e-08 of it, above the 1e-8
+    structural-zero floor by a factor of 1.8, so it is scored against itself.
+    The ladder's answers there are
+
+        step        1e-1        1e-2        1e-3        1e-4        1e-5
+        DDSDDE(3,4) 360.973810  360.979019  360.908833  361.610288  367.346645
+
+    whose flattest pair is 1e-1/1e-2, 5.2e-03 apart, straddling the OTI value.
+    What stops it converging further is the routine being differenced: seeing
+    this entry means seeing STRESS(3) move by 2.514e-01 out of 9.394456e+06,
+    and backing the implied noise out of the error at each step (``error*2h``)
+    gives 8.27e-06, 4.46e-06, 4.44e-06, 4.44e-06, 4.44e-06 -- flat over four
+    decades at 4.44e-06, which is 4.73e-13 of STRESS(3). One ulp there is
+    1.863e-09, or 1.98e-16 relative, so the original routine delivers its own
+    stress about 2400 ulp short of the arithmetic it is computed in. A fixed
+    noise divided by ``2h`` is an error that GROWS as the step shrinks, which
+    is the 1/h ramp in the sweep above.
+
+    No tolerance is moved here. An entry the ladder cannot determine to better
+    than the gap being scored is reported as unresolved rather than as a
+    disagreement, because "the closest step agreed only to 1.772e-05" says the
+    transform is wrong and the measurement above says it is not. This is the
+    discipline :mod:`umat_oti.validation.tangent_validation` already applies
+    entry by entry; store verification scored against a fixed fraction of the
+    matrix instead.
+    """
+    verdicts: list[EntryVerdict] = []
+    finite_oti = [v for row in oti for v in row if math.isfinite(v)]
+    scale = max((abs(v) for v in finite_oti), default=0.0)
+    floor = near_zero_fraction * scale
+    steps = sorted(differences, reverse=True)
+    usable = [(step, differences[step]) for step in steps
+              if all(math.isfinite(v) for row in differences[step] for v in row)]
+    for i, row in enumerate(oti):
+        for j, value in enumerate(row):
+            series = [(step, matrix[i][j]) for step, matrix in usable
+                      if i < len(matrix) and j < len(matrix[i])]
+            if len(series) < 2 or not math.isfinite(value):
+                continue
+            near, far = min(zip(series, series[1:]),
+                            key=lambda pair: abs(pair[0][1] - pair[1][1]))
+            resolution = abs(near[1] - far[1])
+            reference = 0.5 * (near[1] + far[1])
+            absolute = abs(value - reference)
+            # Whether an entry is a zero of the matrix is a property of the
+            # REFERENCE, not of the value being checked: deciding it from
+            # max(|reference|,|value|) would let a large bogus value escape the
+            # zero test by being large. Two rounding residues divided by each
+            # other give a relative error of order one about neither of them,
+            # and without this every structural zero reads as 1.000.
+            structural_zero = abs(reference) <= floor
+            denominator = (scale if structural_zero
+                           else max(abs(reference), abs(value)))
+            verdicts.append(EntryVerdict(
+                row=i + 1, column=j + 1, oti=value, reference=reference,
+                resolution=resolution, step=near[0], absolute=absolute,
+                relative=absolute / denominator if denominator else 0.0,
+                structural_zero=structural_zero,
+                within_resolution=(absolute <= resolution
+                                   or (structural_zero and abs(value) <= floor))))
+    return verdicts
 
 
 def compare_tangent(
@@ -446,6 +573,18 @@ def compare_tangent(
             usable.append(point)
 
     comparison.sweep = tuple(points)
+
+    # The same sweep, read entry by entry rather than step by step.
+    verdicts = adjudicate_entries(oti, differences)
+    comparison.adjudicated_entries = len(verdicts)
+    comparison.unresolved_entries = sum(1 for v in verdicts
+                                        if v.within_resolution)
+    decided = [v for v in verdicts if not v.within_resolution]
+    if decided:
+        worst = max(decided, key=lambda v: v.relative)
+        comparison.resolved_relative = worst.relative
+        comparison.resolved_worst_entry = (worst.row, worst.column)
+
     if not usable:
         comparison.notes = (
             f"every step produced a value that is not finite "
