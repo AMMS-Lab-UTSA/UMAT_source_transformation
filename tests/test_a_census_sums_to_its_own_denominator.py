@@ -105,21 +105,34 @@ def test_every_gate_census_sums_to_the_denominator_it_states():
 
 def test_the_same_census_over_a_different_denominator_is_published_beside_it():
     """The 7-against-11 disagreement, written down rather than resolved by
-    picking one. Over the results file as a whole the key is absent on some
-    rows; over the store as it stands it never is, because the absent key
-    belongs to a superseded batch's schema."""
+    picking one.
+
+    A MISSING KEY AND A PRESENT-AND-NULL KEY ARE BOTH "NOT ESTABLISHED", and a
+    census that counts one and silently drops the other does not add up to its
+    own denominator. In pass10 the `mechanically_informative` gate was absent
+    on four rows over the whole file and never absent over the store as it
+    stood, because the absent key belonged to a superseded batch's schema.
+
+    pass11 has no superseded rows, so the key is absent nowhere and the two
+    censuses coincide. The invariant being kept is that BOTH censuses sum to
+    the denominators they state and that the two ways of being unestablished
+    are counted apart -- which is what fails when the distinction is dropped,
+    whether or not any row happens to exercise it today."""
     recon = registry()["summary"]["verification_file_reconciliation"]
     whole = recon["evidence_gate_census_over_the_whole_file"]
     here = registry()["summary"]["evidence_gate_census"]
     assert whole["denominator"] >= here["denominator"]
     for gate, counts in whole["gates"].items():
         assert sum(counts.values()) == whole["denominator"], gate
-    mech = whole["gates"]["mechanically_informative"]
-    assert mech["absent"] > 0, (
-        "if the absent key ever goes away, this test has nothing to hold and "
-        "the paragraph in the report that explains it should go too")
-    assert here["gates"]["mechanically_informative"][
-        "not_established_key_absent"] == 0
+        assert set(counts) == {"true", "false", "null", "absent"}, gate
+    mech = here["gates"]["mechanically_informative"]
+    assert mech["not_established_total"] == (
+        mech["not_established_present_but_null"]
+        + mech["not_established_key_absent"])
+    assert whole["gates"]["mechanically_informative"]["absent"] == \
+        mech["not_established_key_absent"], (
+            "the store census and the whole-file census disagree about how "
+            "many rows never asked the question")
 
 
 def test_every_record_with_a_verification_row_carries_all_six_gates():

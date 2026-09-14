@@ -1,0 +1,297 @@
+{
+  "abaqus_converted": {
+    "completed": true,
+    "console_tail": "",
+    "converged_records": 320,
+    "increments": 40,
+    "instrumented": true,
+    "reasons": [],
+    "warnings": []
+  },
+  "abaqus_original": {
+    "completed": true,
+    "console_tail": "",
+    "converged_records": 320,
+    "increments": 40,
+    "instrumented": true,
+    "reasons": [],
+    "warnings": []
+  },
+  "history_agreement": {
+    "agrees": true,
+    "increments": 320,
+    "indistinguishable_components": 3520,
+    "non_finite_components": 0,
+    "non_finite_original": 0,
+    "non_finite_transformed": 0,
+    "reason": "",
+    "records_original": 320,
+    "records_transformed": 320,
+    "resolved_components": 3520,
+    "unresolved_components": 960,
+    "worst_state_at": [],
+    "worst_state_relative": 0.0,
+    "worst_stress_at": [],
+    "worst_stress_relative": 0.0
+  },
+  "history_difference_explained_by_a_measured_control": null,
+  "reason": "agreed at all 2 states where a difference could be taken (increments 4, 2); 2 smooth state(s) inside the activated regime (2 loading, 0 unloading), which is the whole of this material: it is activated from its first increment and never stops, so there is no elastic branch to verify on and every state that can be measured is inside the activated one; worst of them: agreed to 3.643e-09 at the best step and within 1e-06 at 3 of 8 step sizes, 0.001 to 0.1: 2 decades of perturbation size, over which truncation and cancellation error scale oppositely, so agreement at both ends is not one regime flattering itself",
+  "schema": "umat-oti/verification-results/1.0",
+  "seconds": 45.2,
+  "stage": "verified",
+  "support_build": {
+    "objects": 5,
+    "ok": true,
+    "reason": "",
+    "required": true,
+    "units": 5
+  },
+  "tangent_agreement": {
+    "driven_through": "deformation gradient",
+    "fd_steps": [
+      0.1,
+      0.01,
+      0.001,
+      0.0001,
+      1e-05,
+      1e-06,
+      1e-07,
+      1e-08
+    ],
+    "per_state": [
+      {
+        "comparison": {
+          "adjudicated_entries": 36,
+          "best_frobenius": 167.3037993564794,
+          "best_relative": 3.6428967035066536e-09,
+          "best_step": 0.1,
+          "increment": 0,
+          "near_zero_entries": 24,
+          "non_finite_entries": 0,
+          "notes": "",
+          "point": 1,
+          "resolved_relative": 1.4901167043089548e-14,
+          "resolved_worst_entry": [
+            6,
+            6
+          ],
+          "stable_range": [
+            0.1,
+            0.1
+          ],
+          "sweep": [
+            {
+              "absolute": 72.87241589125892,
+              "frobenius": 167.3037993564794,
+              "relative": 3.6428967035066536e-09,
+              "step": 0.1
+            },
+            {
+              "absolute": 728.8035815449625,
+              "frobenius": 2035.3664648705933,
+              "relative": 3.643293737750843e-08,
+              "step": 0.01
+            },
+            {
+              "absolute": 3049.1925010681152,
+              "frobenius": 5477.922493089582,
+              "relative": 1.5242932699079957e-07,
+              "step": 0.001
+            },
+            {
+              "absolute": 57709.382678985596,
+              "frobenius": 143761.16209317636,
+              "relative": 2.884975747392291e-06,
+              "step": 0.0001
+            },
+            {
+              "absolute": 233833.6160850525,
+              "frobenius": 701401.0652755937,
+              "relative": 1.1689357334830116e-05,
+              "step": 1e-05
+            },
+            {
+              "absolute": 6063861.273101807,
+              "frobenius": 15001659.213840403,
+              "relative": 0.0003031328105722091,
+              "step": 1e-06
+            },
+            {
+              "absolute": 35218007.09551239,
+              "frobenius": 105639932.05032885,
+              "relative": 0.0017605504138048637,
+              "step": 1e-07
+            },
+            {
+              "absolute": 402032247.20173645,
+              "frobenius": 1135583964.8291752,
+              "relative": 0.02009761759890611,
+              "step": 1e-08
+            }
+          ],
+          "unresolved_entries": 33,
+          "zero_difference_steps": 0
+        },
+        "increment": 4,
+        "perturbation_scale": 3.047375776026951e-07,
+        "reason": "agreed to 3.643e-09 at the best step and within 1e-06 at 3 of 8 step sizes, 0.001 to 0.1: 2 decades of perturbation size, over which truncation and cancellation error scale oppositely, so agreement at both ends is not one regime flattering itself",
+        "record_index": 3,
+        "verified": true
+      },
+      {
+        "comparison": {
+          "adjudicated_entries": 36,
+          "best_frobenius": 109.27821436813448,
+          "best_relative": 1.822917132420564e-09,
+          "best_step": 0.1,
+          "increment": 0,
+          "near_zero_entries": 24,
+          "non_finite_entries": 0,
+          "notes": "",
+          "point": 1,
+          "resolved_relative": 2.422475734349088e-07,
+          "resolved_worst_entry": [
+            1,
+            2
+          ],
+          "stable_range": [
+            0.01,
+            0.1
+          ],
+          "sweep": [
+            {
+              "absolute": 36.459228515625,
+              "frobenius": 109.27821436813448,
+              "relative": 1.822917132420564e-09,
+              "step": 0.1
+            },
+            {
+              "absolute": 109.34532165527344,
+              "frobenius": 327.8261104694795,
+              "relative": 5.466179581516563e-09,
+              "step": 0.01
+            },
+            {
+              "absolute": 4846.5449142456055,
+              "frobenius": 12051.019044740551,
+              "relative": 2.4227908839190065e-07,
+              "step": 0.001
+            },
+            {
+              "absolute": 68034.12108230591,
+              "frobenius": 118420.43769029228,
+              "relative": 3.4010765349302325e-06,
+              "step": 0.0001
+            },
+            {
+              "absolute": 223507.48760986328,
+              "frobenius": 670431.231486774,
+              "relative": 1.1173153515551536e-05,
+              "step": 1e-05
+            },
+            {
+              "absolute": 6053538.155261993,
+              "frobenius": 10910888.96991206,
+              "relative": 0.0003026167572473134,
+              "step": 1e-06
+            },
+            {
+              "absolute": 35207699.02481842,
+              "frobenius": 105609016.38338351,
+              "relative": 0.0017600351147502526,
+              "step": 1e-07
+            },
+            {
+              "absolute": 402042779.4273567,
+              "frobenius": 1060770656.571602,
+              "relative": 0.020098144104245427,
+              "step": 1e-08
+            }
+          ],
+          "unresolved_entries": 32,
+          "zero_difference_steps": 0
+        },
+        "increment": 2,
+        "perturbation_scale": 3.0473742030717287e-07,
+        "reason": "agreed to 1.823e-09 over a plateau of 2 step sizes, 0.01 to 0.1",
+        "record_index": 161,
+        "verified": true
+      }
+    ],
+    "states_agreeing": 2,
+    "states_checked": 2,
+    "worst_state": {
+      "adjudicated_entries": 36,
+      "best_frobenius": 167.3037993564794,
+      "best_relative": 3.6428967035066536e-09,
+      "best_step": 0.1,
+      "increment": 0,
+      "near_zero_entries": 24,
+      "non_finite_entries": 0,
+      "notes": "",
+      "point": 1,
+      "resolved_relative": 1.4901167043089548e-14,
+      "resolved_worst_entry": [
+        6,
+        6
+      ],
+      "stable_range": [
+        0.1,
+        0.1
+      ],
+      "sweep": [
+        {
+          "absolute": 72.87241589125892,
+          "frobenius": 167.3037993564794,
+          "relative": 3.6428967035066536e-09,
+          "step": 0.1
+        },
+        {
+          "absolute": 728.8035815449625,
+          "frobenius": 2035.3664648705933,
+          "relative": 3.643293737750843e-08,
+          "step": 0.01
+        },
+        {
+          "absolute": 3049.1925010681152,
+          "frobenius": 5477.922493089582,
+          "relative": 1.5242932699079957e-07,
+          "step": 0.001
+        },
+        {
+          "absolute": 57709.382678985596,
+          "frobenius": 143761.16209317636,
+          "relative": 2.884975747392291e-06,
+          "step": 0.0001
+        },
+        {
+          "absolute": 233833.6160850525,
+          "frobenius": 701401.0652755937,
+          "relative": 1.1689357334830116e-05,
+          "step": 1e-05
+        },
+        {
+          "absolute": 6063861.273101807,
+          "frobenius": 15001659.213840403,
+          "relative": 0.0003031328105722091,
+          "step": 1e-06
+        },
+        {
+          "absolute": 35218007.09551239,
+          "frobenius": 105639932.05032885,
+          "relative": 0.0017605504138048637,
+          "step": 1e-07
+        },
+        {
+          "absolute": 402032247.20173645,
+          "frobenius": 1135583964.8291752,
+          "relative": 0.02009761759890611,
+          "step": 1e-08
+        }
+      ],
+      "unresolved_entries": 33,
+      "zero_difference_steps": 0
+    }
+  },
+  "warnings": []
+}

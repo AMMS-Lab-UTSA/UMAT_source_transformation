@@ -7,16 +7,15 @@
 Both builds ran in Abaqus on the same generated deck, under the same
 physical conditions.
 
-- **Original execution**: completed, 30 converged records.
-- **Converted OTI execution**: completed, 30 converged records.
-- **Stress and state history**: agreed to 0.000e+00 on stress and 0.000e+00 on state, over 254 resolved components.
-- **OTI tangent against a finite difference of the ORIGINAL**: agreed at 3 of 3 states along the loading path, worst 1.538e-07.
+- **Original execution**: completed, 320 converged records.
+- **Converted OTI execution**: completed, 320 converged records.
+- **Stress and state history**: agreed to 0.000e+00 on stress and 0.000e+00 on state, over 3200 resolved components.
+- **OTI tangent against a finite difference of the ORIGINAL**: agreed at 2 of 2 states along the loading path, worst 2.676e-11.
 
 | state | increment | best relative | verdict |
 | --- | --- | --- | --- |
-| 0 | 1 | 1.929e-10 | agreed |
-| 10 | 1 | 1.538e-07 | agreed |
-| 21 | 2 | 8.786e-08 | agreed |
+| 3 | 4 | 2.676e-11 | agreed |
+| 161 | 2 | 2.676e-11 | agreed |
 
 ## What was NOT established
 
@@ -29,10 +28,6 @@ physical conditions.
   sensitivities, higher orders, or loading regimes outside this probe.
 - Physical correctness of the model itself is not in question here.
   What is established is that the conversion agrees with the original.
-
-## Scope limit recorded during the run
-
-both builds returned finite numbers for 22 increments and both went non-finite at increment 23, at the same increment and in the same components. The comparison covers the 22 increments in which the model produced numbers; nothing is claimed beyond them.
 
 ## Files
 
