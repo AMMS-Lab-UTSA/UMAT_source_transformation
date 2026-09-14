@@ -1,0 +1,770 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/santiagarcia/UMAT_source_transformation/schemas/umat_contract_v1.schema.json",
+  "title": "UMAT/Residual-Assembler shared data contract (v1)",
+  "x-contract-version": "2.0.0",
+  "x-breaking-change": "A MAJOR bump is required for: removing or renaming any field; narrowing any type; changing the meaning of a value; adding a required field; adding a member to terminalState.state or to the six evidence gates. Anything a reader at the previous version could MISREAD rather than fail on is breaking. 2.0.0 was exactly that: two terminal states were added, and a 1.0.0 consumer switching on the enum exhaustively fell through on both -- onto 'not_attempted', which is INTERNAL and says the run never happened, for three entries that ran.",
+  "x-three-state-rule": "Every field typed [boolean, null] has THREE answers. null and an absent key are the SAME answer -- not established -- and neither is a pass. A consumer must not test these with plain truthiness.",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "identity",
+    "transform_fingerprint",
+    "terminal",
+    "evidence"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "contract_version": {
+      "$ref": "#/definitions/contractVersion"
+    },
+    "identity": {
+      "$ref": "#/definitions/identity"
+    },
+    "transform_fingerprint": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Digest of the transform code this record was produced at. A consumer must be able to refuse a fixture or a record produced at a different one: the frozen collection was once found to hold 67 materials whose tangent numbers predated a correction and were evidence of nothing."
+    },
+    "terminal": {
+      "$ref": "#/definitions/terminalState"
+    },
+    "evidence": {
+      "$ref": "#/definitions/evidence"
+    },
+    "material": {
+      "$ref": "#/definitions/material"
+    },
+    "interface": {
+      "$ref": "#/definitions/interface"
+    },
+    "convention": {
+      "$ref": "#/definitions/tensorConvention"
+    },
+    "kinematics": {
+      "$ref": "#/definitions/kinematics"
+    },
+    "formulation": {
+      "$ref": "#/definitions/formulation"
+    },
+    "derivatives": {
+      "$ref": "#/definitions/derivatives"
+    },
+    "manifest": {
+      "$ref": "#/definitions/manifest"
+    },
+    "fixtures": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/fixtureReference"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "envelope": {
+      "$ref": "#/definitions/resultEnvelope"
+    }
+  },
+  "definitions": {
+    "contractVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "MAJOR.MINOR.PATCH. A record with no version is refused: the reader would be guessing that its fields mean what its own version says they mean."
+    },
+    "tristate": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "true = measured and held. false = measured and did not hold. null = NOT ESTABLISHED, which is also what an absent key means. null is never a pass. A string or a number here is refused: '0', 'false' and 'no' are all truthy strings."
+    },
+    "identity": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": true,
+      "description": "Identity is the path within the corpus cache PLUS the source digest. Never a basename: 23 basenames in the frozen corpus name more than one source file and account for 108 of 237 entries.",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 3,
+          "pattern": "^(?!/)(?!.*/$).*/.*$",
+          "description": "Path within the corpus cache, repository segment first. At least one separator, because a bare basename is not an identity; not absolute, so the record identifies the same source on another machine."
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "store_key": {
+          "type": "string"
+        }
+      }
+    },
+    "terminalState": {
+      "type": "object",
+      "required": [
+        "state",
+        "owner"
+      ],
+      "additionalProperties": true,
+      "description": "The final answer and whose move it is. The vocabulary is defined in umat_oti/abaqus/terminal_states.py and published here, because the consuming repository cannot import that module. Adding a member is a BREAKING change: a consumer switching on it exhaustively falls through, and the fall-through used to be 'not_attempted' -- INTERNAL, 'the run never happened' -- which it said about three entries that ran and whose arguments diverged before the routine, an EXTERNAL fact.",
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "arguments_diverged_before_the_routine",
+            "derivative_truncated",
+            "disagreement_not_in_any_recorded_call",
+            "experiment_not_generated",
+            "experiment_not_informative",
+            "external_dependency_unavailable",
+            "fully_verified",
+            "harness_error",
+            "incomplete_or_corrupt_source",
+            "informativeness_not_established",
+            "missing_material_data",
+            "not_a_umat",
+            "not_attempted",
+            "original_job_failed",
+            "primal_disagreed",
+            "published_stub_no_constitutive_content",
+            "support_build_failed",
+            "tangent_not_verified",
+            "transform_refused",
+            "transformed_job_failed",
+            "unsupported_formulation",
+            "waits_for_input"
+          ]
+        },
+        "owner": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "EXTERNAL",
+            "INTERNAL"
+          ],
+          "description": "EXTERNAL is a fact about somebody's published repository. INTERNAL is a limitation of this project. NONE is fully_verified, which has no next move. An internal limitation transmitted as an external blocker claims somebody else's file is at fault for this project's gap."
+        },
+        "finished": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "stage": {
+          "type": "string",
+          "description": "The producing run's own word for the rung, kept so a reader can get back to its artefacts."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "fully_verified"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "owner": {
+                "const": "NONE"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "arguments_diverged_before_the_routine",
+                  "external_dependency_unavailable",
+                  "incomplete_or_corrupt_source",
+                  "missing_material_data",
+                  "not_a_umat",
+                  "published_stub_no_constitutive_content",
+                  "waits_for_input"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "owner": {
+                "const": "EXTERNAL"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "derivative_truncated",
+                  "disagreement_not_in_any_recorded_call",
+                  "experiment_not_generated",
+                  "experiment_not_informative",
+                  "harness_error",
+                  "informativeness_not_established",
+                  "not_attempted",
+                  "original_job_failed",
+                  "primal_disagreed",
+                  "support_build_failed",
+                  "tangent_not_verified",
+                  "transform_refused",
+                  "transformed_job_failed",
+                  "unsupported_formulation"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "owner": {
+                "const": "INTERNAL"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Six gates, never one boolean, plus a seventh field that explains a false primal. Every one is three-state. There is deliberately no summary boolean over them: it would hide the distinctions each was bought with.",
+      "properties": {
+        "abaqus_job_completed": {
+          "$ref": "#/definitions/tristate"
+        },
+        "all_requested_outputs_present": {
+          "$ref": "#/definitions/tristate"
+        },
+        "complete_history_finite": {
+          "$ref": "#/definitions/tristate"
+        },
+        "primal_agreed": {
+          "$ref": "#/definitions/tristate"
+        },
+        "derivatives_verified": {
+          "$ref": "#/definitions/tristate"
+        },
+        "mechanically_informative": {
+          "$ref": "#/definitions/tristate"
+        },
+        "primal_difference_explained_by_a_measured_control": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/tristate"
+            }
+          ],
+          "description": "true where a control ran and explained a false primal_agreed; false where a control ran and did not; null where none was needed -- which is every entry whose builds agreed, and every record produced before this field existed."
+        }
+      },
+      "not": {
+        "description": "A control cannot explain a difference there was none of.",
+        "properties": {
+          "primal_agreed": {
+            "const": true
+          },
+          "primal_difference_explained_by_a_measured_control": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "primal_agreed",
+          "primal_difference_explained_by_a_measured_control"
+        ]
+      }
+    },
+    "material": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Property values and their provenance TOGETHER. A value with no provenance is indistinguishable from an invented one, and this project does not invent material constants.",
+      "properties": {
+        "props": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "provenance": {
+          "type": "string",
+          "description": "Which deck, which *MATERIAL block, how many constants, and whether the state count came from a *DEPVAR."
+        },
+        "deck": {
+          "type": "string"
+        },
+        "material_block": {
+          "type": "string"
+        },
+        "constants_declared": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "nstatv_from_depvar": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/tristate"
+            }
+          ],
+          "description": "true = the deck declared *DEPVAR. false = the count was inferred from the source, which is a weaker claim. null = neither happened."
+        },
+        "searched": {
+          "type": "object",
+          "description": "What was searched when no material data was found, so 'we looked' is distinguishable from 'we missed it'."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "props": {
+                "type": "array",
+                "minItems": 1
+              }
+            },
+            "required": [
+              "props"
+            ]
+          },
+          "then": {
+            "required": [
+              "provenance"
+            ],
+            "properties": {
+              "provenance": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "interface": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Argument sizes. null is not established, not zero.",
+      "properties": {
+        "ntens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "ndi": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "nshr": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "nstatv": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "nprops": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "unsymmetric": {
+          "$ref": "#/definitions/tristate"
+        }
+      }
+    },
+    "tensorConvention": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "A consumer assembling with the wrong shear convention gets an answer wrong by a factor of two in three components and right everywhere else, which is the hardest kind of wrong to notice. So it is stated, never assumed.",
+      "properties": {
+        "voigt_order": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "11",
+              "22",
+              "33",
+              "12",
+              "13",
+              "23"
+            ]
+          }
+        },
+        "shear": {
+          "type": "string",
+          "enum": [
+            "engineering",
+            "tensorial"
+          ]
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "kinematics": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Small strain seeds DSTRAN; finite strain must seed the deformation gradient. Guessing differentiates the wrong quantity, so an unrecognised value is refused rather than defaulted.",
+      "properties": {
+        "regime": {
+          "type": "string",
+          "enum": [
+            "",
+            "small strain",
+            "finite"
+          ]
+        },
+        "provenance": {
+          "type": "string",
+          "description": "The deck line that said so, e.g. '*Step, name=Growth, nlgeom=YES'."
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "formulation": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "family": {
+          "type": "string"
+        },
+        "element_verified_on": {
+          "type": "string"
+        },
+        "deck_elements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "agreement": {
+          "type": "string"
+        },
+        "provenance": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "derivatives": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "What the generated build can differentiate. 'verified' is the SAME three-state value as evidence.derivatives_verified, restated here so a reader of this section need not reach into the evidence block -- never a second opinion about it.",
+      "properties": {
+        "seed": {
+          "type": "string",
+          "enum": [
+            "",
+            "DSTRAN",
+            "DFGRD1",
+            "PROPS"
+          ]
+        },
+        "responses": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "STRESS",
+              "STATEV",
+              "DDSDDE"
+            ]
+          }
+        },
+        "order": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "verified": {
+          "$ref": "#/definitions/tristate"
+        },
+        "states_checked": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "states_agreeing": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "states_unmeasured": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "driven_through": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "manifest": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "The experiment the verdict rests on, as the pipeline generated it. Carried whole rather than summarised: a consumer that wants to reproduce the run needs the deck it was run with, not a description of it.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "element_type": {
+          "type": "string"
+        },
+        "element_label": {
+          "type": [
+            "integer",
+            "string",
+            "null"
+          ]
+        },
+        "ntens": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "ndi": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "nshr": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "nstatv": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "nprops": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "props": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "number"
+          }
+        },
+        "kinematics": {
+          "type": "string"
+        },
+        "material_provenance": {
+          "type": "string"
+        },
+        "initial_statev_provenance": {
+          "type": "string"
+        },
+        "orientation_provenance": {
+          "type": "string"
+        },
+        "temperature_provenance": {
+          "type": "string"
+        },
+        "node_provenance": {
+          "type": "string"
+        },
+        "unsymmetric": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "primal_tolerance": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "fd_steps": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "number"
+          }
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "fixtureReference": {
+      "type": "object",
+      "required": [
+        "path",
+        "transform_fingerprint"
+      ],
+      "additionalProperties": true,
+      "description": "A frozen regression fixture. transform_fingerprint is required: a fixture that does not say which transform produced its numbers cannot be told apart from one that predates a correction.",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "identity": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/identity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transform_fingerprint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema": {
+          "type": "string",
+          "const": "umat-oti/residual-fixture/1"
+        },
+        "deck_digest": {
+          "type": "string"
+        },
+        "increments_carried": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "claims_checked": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "claims_not_carried": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence": {
+          "$ref": "#/definitions/evidence"
+        }
+      }
+    },
+    "resultEnvelope": {
+      "type": "object",
+      "required": [
+        "service",
+        "call_succeeded",
+        "verdict"
+      ],
+      "additionalProperties": true,
+      "description": "An envelope is not a verdict. 'call_succeeded' says the service RAN, which is true of every entry it managed to look at INCLUDING the ones it refuses; 'verdict' says what is true of the subject. Reading the first as the second offered all 237 corpus materials as verified when 42 are true on all six gates and 55 reach a verified terminal state. They carry different names AND different types -- a bool and a three-state -- because two booleans side by side are two things that look alike.",
+      "properties": {
+        "service": {
+          "type": "string",
+          "minLength": 1
+        },
+        "call_succeeded": {
+          "type": "boolean",
+          "description": "Did the service run to completion? Two answers, because the call either ran or it did not. Never a statement about the science."
+        },
+        "subject": {
+          "type": "string"
+        },
+        "verdict": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/tristate"
+            }
+          ],
+          "description": "What is true of the SUBJECT. Three-state: a call that succeeded and measured nothing gets null, which is neither a pass nor a refusal."
+        },
+        "verdict_reason": {
+          "type": "string"
+        },
+        "outcome": {
+          "type": "string",
+          "description": "The service's own word for what the CALL did. Not a verdict."
+        },
+        "problems": {
+          "type": "array"
+        },
+        "evidence_paths": {
+          "type": "object"
+        }
+      },
+      "not": {
+        "description": "'ok' is ServiceResult's word for whether the call ran. An envelope that carries it beside a verdict has two fields that look like success, which is the confusion this shape exists to make impossible.",
+        "required": [
+          "ok"
+        ]
+      }
+    }
+  }
+}
