@@ -91,8 +91,9 @@ MATERIAL_ROUTINES = frozenset({
 #: DLOAD ends with ``F = TargetF*TIME(1)/TotalT``, which is gravity switched on
 #: over the step and is exactly what the body-force family is for.
 LOAD_ROUTINES = frozenset({
-    "DLOAD", "VDLOAD", "UTRACLOAD", "DISP", "UAMP", "UFIELD", "UTEMP",
-    "UPRESS", "UMASFL", "UFLUID", "UMOTION", "URDFIL", "UEXTERNALDB"})
+    "DLOAD", "VDLOAD", "UTRACLOAD", "DISP", "VDISP", "UAMP", "VUAMP",
+    "UFIELD", "UTEMP", "UPRESS", "UMASFL", "UFLUID", "UMOTION", "URDFIL",
+    "UEXTERNALDB", "UEPACTIVATIONVOL"})
 
 
 def role_of(name: str, arguments: int = -1) -> str:
