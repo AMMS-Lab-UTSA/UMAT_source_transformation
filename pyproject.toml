@@ -92,6 +92,15 @@ where = ["src"]
 	"support/pyoti_templates/LICENSE",
 	"support/pyoti_templates/*.md",
 ]
+# The shared data contract's schemas and its lock are read at run time by
+# umat_oti.contract.schema, which validates every record crossing to
+# Residual_Assembler. Without this they are omitted from a wheel and
+# load_schema raises on first use -- and an editable install hides that
+# completely, because the source tree is still on disk.
+"umat_oti.contract" = [
+	"schemas/*.json",
+	"contract_lock.json",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

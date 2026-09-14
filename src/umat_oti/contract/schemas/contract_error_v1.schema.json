@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/santiagarcia/UMAT_source_transformation/schemas/contract_error_v1.schema.json",
+  "title": "Contract error envelope (v1)",
+  "x-contract-version": "2.0.0",
+  "x-why": "A bare message string cannot be switched on, cannot be counted, and cannot be told apart from another error with similar wording -- which is how two different failures end up in one bucket. Every error crossing the boundary answers three questions: whose problem it is, whether it is terminal, and what is still true.",
+  "type": "object",
+  "required": [
+    "code",
+    "owner",
+    "message"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "code": {
+      "type": "string",
+      "pattern": "^(contract|external|internal)\\.[a-z0-9_]+$",
+      "description": "Namespaced by owner. The namespace and the owner field must agree; a mismatch means an internal limitation being transmitted as an external blocker, or the reverse."
+    },
+    "owner": {
+      "type": "string",
+      "enum": [
+        "EXTERNAL",
+        "INTERNAL",
+        "CONTRACT"
+      ],
+      "description": "EXTERNAL waits on somebody else's published repository. INTERNAL is work in this project. CONTRACT is the boundary itself being wrong -- a version mismatch, a schema violation, a field this reader has never heard of -- and is the only one of the three fixed by changing the contract."
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "terminal": {
+      "type": "boolean",
+      "description": "A terminal error is an answer. A non-terminal one is a step that failed and may be retried. Reporting a retryable failure as terminal inflates the count of finished entries."
+    },
+    "identity": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "established": {
+      "type": "object",
+      "description": "Three-state facts that survived the failure. An error does not erase the gates measured before it, and a consumer should not have to treat a late failure as though nothing had been measured.",
+      "additionalProperties": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      }
+    },
+    "detail": {
+      "type": "object"
+    },
+    "contract_version": {
+      "type": "string"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "code": {
+            "pattern": "^contract\\."
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "then": {
+        "properties": {
+          "owner": {
+            "const": "CONTRACT"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "code": {
+            "pattern": "^external\\."
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "then": {
+        "properties": {
+          "owner": {
+            "const": "EXTERNAL"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "code": {
+            "pattern": "^internal\\."
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "then": {
+        "properties": {
+          "owner": {
+            "const": "INTERNAL"
+          }
+        }
+      }
+    }
+  ]
+}
