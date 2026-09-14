@@ -1,0 +1,10 @@
+{
+  "x-contract-version": "2.0.0",
+  "title": "The transform generation this contract's evidence belongs to",
+  "why": "A fixture or a store record is evidence about the transform that produced it, and only about that one. The frozen collection was once found to hold 67 materials whose tangent numbers predated a correction and were evidence of nothing -- they looked exactly like current ones. So the current fingerprint is recorded in ONE place that both repositories read, rather than as a constant hard-coded on each side where the two can drift silently.",
+  "transform_fingerprint": "b0d27ee53c630500",
+  "computed_by": "umat_oti.store.transform_fingerprint",
+  "covers": "every file under src/umat_oti whose suffix is .py, .f90, .f, .for or .inc, except the subpackages listed in umat_oti.store.transform_store.NOT_TRANSFORM_CODE, which cannot change a stored transform",
+  "how_to_update": "Run umat_oti.store.transform_fingerprint(), put the result here, regenerate contract_lock.json, and copy both into Residual_Assembler/schemas/. Everything frozen at the previous value is now evidence about a transform that no longer exists: re-freeze it or read it only as history. This is NOT a contract version bump -- the shape of the agreement is unchanged; what changed is which evidence is current.",
+  "consumers_must": "refuse a fixture whose transform_fingerprint differs from this value as a regression baseline, and treat a fixture carrying no fingerprint as NOT ESTABLISHED rather than as current"
+}
