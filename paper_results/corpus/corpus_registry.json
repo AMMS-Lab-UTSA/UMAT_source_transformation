@@ -1,6 +1,6 @@
 {
  "schema": "umat-oti/corpus-registry/1",
- "generated": "2026-09-14T01:56:24+00:00",
+ "generated": "2026-09-14T01:58:07+00:00",
  "what_counts_as_verified": "only fully_verified, and it is reached by a source that transformed, compiled, ran in Abaqus as the original, ran as the converted build on the same deck, agreed with itself over the whole stress and state history, and whose OTI tangent agreed with a finite difference of the original at several smooth states",
  "terminal_states": {
   "verified": [

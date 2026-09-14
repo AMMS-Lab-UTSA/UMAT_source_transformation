@@ -1345,6 +1345,26 @@ def markdown(records: list, summary: dict) -> str:
 
     lines += [
         "",
+        "## How to regenerate every number in this report",
+        "",
+        "```",
+        "UMAT_OTI_DISCOVERY_CACHE=<the acquisition cache> \\",
+        "python tools/build_corpus_registry.py \\",
+        "    --transform <run>/transform_all_postB.json \\",
+        "    --abaqus <run>/pass10/results/store_verification.jsonl \\",
+        "    --audit-refusals",
+        "```",
+        "",
+        "`--audit-refusals` re-runs the offline `ifort -syntax-only` pass over "
+        "every source the transformer refused and rewrites "
+        "`paper_results/corpus/transform_refusal_audit.json`. It is needed "
+        "whenever the set of refused sources changes and not otherwise; "
+        "without it the recorded evidence is read back, so the registry "
+        "rebuilds to the same answers on a machine with no Fortran compiler. "
+        "**No Abaqus process is started by any of this and no licence token "
+        "is drawn.** The store fingerprint is read from the transform report "
+        "unless `--store-fingerprint` overrides it.",
+        "",
         "## Two denominators, and which is which",
         "",
         "There are two populations in this report and they are never pooled. "
