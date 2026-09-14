@@ -49,10 +49,26 @@ STATUSES: tuple[str, ...] = (
     "fully_verified",
 )
 
-#: Off the ladder. Neither of these is a rung, and neither may be counted as
+#: Off the ladder. None of these is a rung, and none may be counted as
 #: progress toward one.
 NOT_A_UMAT = "not_a_umat"
 BLOCKED = "blocked_with_evidence"
+#: The author published the 37-argument interface and no material model: it
+#: assigns no stress, no tangent, and calls nothing.
+#:
+#: Its own status rather than a borrowed one, and off the ladder rather than on
+#: it. Every available alternative is wrong in a way that matters. BLOCKED is
+#: what the map's own guard exists to prevent. NOT_A_UMAT is false about it --
+#: a stub DOES present the interface, which is the whole of what it is.
+#: metadata_resolved, which this first borrowed, is a RUNG, and this table's
+#: own docstring says the status an entry is in is the furthest it GOT: a
+#: template is not one step's progress toward verifying a model that does not
+#: exist. Agent 6 declined to guess this and escalated it, which was right.
+PUBLISHED_STUB = "published_stub"
+
+#: Every status that is not a rung, in one place, so adding another cannot be
+#: half-done: the counts, the tables and the guard all read this.
+OFF_THE_LADDER: tuple[str, ...] = (NOT_A_UMAT, BLOCKED, PUBLISHED_STUB)
 
 #: Which Abaqus stage means which status. The batch's ladder and this report's
 #: status model are two vocabularies for the same run, and mapping them here
@@ -83,9 +99,7 @@ FROM_ABAQUS_STAGE: dict[str, str] = {
     # terminal_states carries, not the rung.
     "arguments_diverged_before_the_routine": "abaqus_transformed_passed",
     "disagreement_not_in_any_recorded_call": "abaqus_transformed_passed",
-    # No model to transform, so the furthest rung is the metadata. Not BLOCKED:
-    # nothing about this file is blocked, the author published a template.
-    "published_stub_no_constitutive_content": "metadata_resolved",
+    "published_stub_no_constitutive_content": PUBLISHED_STUB,
     "incomplete_or_corrupt_source": BLOCKED,
     "external_dependency_unavailable": BLOCKED,
     "both_builds_non_finite": "abaqus_transformed_passed",
@@ -263,7 +277,7 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
                 problems.append(
                     f"{entry.source_id} reached fully_verified but was not "
                     f"promoted into the verified collection")
-        if entry.status not in STATUSES and entry.status not in (NOT_A_UMAT, BLOCKED):
+        if entry.status not in STATUSES and entry.status not in OFF_THE_LADDER:
             problems.append(f"{entry.source_id} has status {entry.status!r}, "
                             f"which is not one of the named states")
 
@@ -336,7 +350,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     verified = tally.get("fully_verified", 0)
 
     print(f"corpus inventory: {len(entries)} entries")
-    for status in STATUSES + (NOT_A_UMAT, BLOCKED):
+    for status in STATUSES + OFF_THE_LADDER:
         if tally.get(status):
             print(f"  {tally[status]:>4}  {status}")
     print(f"\n  {len(umats)} present a UMAT interface to Abaqus")
@@ -403,7 +417,7 @@ def main(argv: Optional[list[str]] = None) -> int:
             "## Where every entry stands", "",
             "| status | entries |", "| --- | --- |",
         ]
-        for status in STATUSES + (NOT_A_UMAT, BLOCKED):
+        for status in STATUSES + OFF_THE_LADDER:
             if tally.get(status):
                 body.append(f"| `{status}` | {tally[status]} |")
         if problems:
