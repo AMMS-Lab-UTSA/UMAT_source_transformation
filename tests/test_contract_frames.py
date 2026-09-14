@@ -31,12 +31,23 @@ def _fixtures() -> list:
     return []
 
 
-def _five_field_fixture():
+def _five_field_fixture(*, spanning_steps: bool = False):
+    """A committed fixture carrying all five identity fields.
+
+    ``spanning_steps`` asks for one whose rows cross a step boundary. That is
+    the only place an increment number can collide, because Abaqus restarts the
+    numbering in each step -- so once every fixture carries five fields, taking
+    the first one gets a single-step history with nothing to collide, and a
+    test written against that is asserting which fixture sorts first.
+    """
     for path in _fixtures():
         payload = json.loads(path.read_text())
         rows = payload.get("original") or []
-        if rows and all(f in rows[0] for f in IDENTITY_FIELDS):
-            return path, payload
+        if not (rows and all(f in rows[0] for f in IDENTITY_FIELDS)):
+            continue
+        if spanning_steps and len({r.get("step") for r in rows}) < 2:
+            continue
+        return path, payload
     return None, None
 
 
@@ -86,10 +97,15 @@ def test_four_increment_ones_are_four_different_rows():
 
 
 def test_the_real_fixture_shows_the_collision():
-    """Measured on the committed five-field fixture rather than asserted."""
-    path, payload = _five_field_fixture()
+    """Measured on a committed fixture that crosses a step boundary.
+
+    Which is where the collision lives: Abaqus restarts increment numbering in
+    every step, so a single-step history has nothing to collide and says
+    nothing either way.
+    """
+    path, payload = _five_field_fixture(spanning_steps=True)
     if payload is None:
-        pytest.skip("no five-field fixture in the checkout beside this one")
+        pytest.skip("no committed fixture spans more than one step")
     rows = payload["original"]
     by_increment_alone = {r["increment"] for r in rows}
     by_full_key = {increment_key(r).as_tuple() for r in rows}
