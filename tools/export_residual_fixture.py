@@ -225,11 +225,15 @@ def why_this_may_not_be_frozen(row: dict, carried: dict) -> list:
     # clamps itself to whatever is on disk and the artefact records the
     # shortened number as though it had been asked for.
     evidence = carried.get("finite_history") or {}
-    asked = evidence.get("increments_requested")
-    got = evidence.get("increments_carried")
+    # Compared in RECORDS, because that is what was asked for: --increments
+    # bounds the window in probe records, and an increment of a C3D8 is eight
+    # of them. Comparing a record count against an increment count reads a
+    # complete 35-increment history as 35 of 200 and refuses it.
+    asked = evidence.get("records_requested", evidence.get("increments_requested"))
+    got = evidence.get("records_carried", evidence.get("increments_carried"))
     if isinstance(asked, int) and isinstance(got, int) and got < asked:
         problems.append(
-            f"{source}: the window carries {got} increment(s) of the {asked} "
+            f"{source}: the window carries {got} record(s) of the {asked} "
             f"asked for, because only {evidence.get('records_available')} "
             f"record(s) are on disk from {evidence.get('records_requested_from')}"
             f" -- a fixture that is short is a fixture built on however far "
@@ -369,9 +373,36 @@ def fixture_from(row: dict, work_dir: Path, increments: int = INCREMENTS, *,
     # not the run recorded a manifest beside it.
     entry = (original[0] or {}).get("entry") or {}
 
+    def _increments_in(records) -> int:
+        """How many distinct increments these records cover."""
+        return len({(r.get("step"), r.get("increment"), r.get("time"))
+                    for r in records})
+
+    def _points_per_increment(records) -> int:
+        """How many material points each increment carries, or 0 if uneven.
+
+        Uneven is not a number to average: an increment short of a point did
+        not produce the state a comparison would compare, and saying "about
+        seven" would hide exactly that.
+        """
+        import collections
+        counts = collections.Counter(
+            (r.get("step"), r.get("increment"), r.get("time")) for r in records)
+        seen = set(counts.values())
+        return seen.pop() if len(seen) == 1 else 0
+
     def point(record: dict) -> dict:
         from umat_oti.abaqus.activation import increment_of, strain_at
         return {
+            # WHICH material point this is, not only which increment. Without
+            # these two a consumer cannot group the records, and a C3D8 hands
+            # back one record per integration point per increment: the fixture
+            # read 200 records as "200 increments" when there were 35 distinct
+            # (increment, time) pairs in it, and the Residual Assembler --
+            # which has to integrate over the points of an element -- had no
+            # way to tell them apart.
+            "element": record.get("element"),
+            "point": record.get("point"),
             "increment": record.get("increment"),
             "time": record.get("time"),
             "strain": strain_at(record),
@@ -435,10 +466,19 @@ def fixture_from(row: dict, work_dir: Path, increments: int = INCREMENTS, *,
             "complete_finite_verification_run": at_either_level(
                 row, "complete_finite_verification_run"),
             "history_grouping": at_either_level(row, "history_grouping"),
-            "increments_carried": take,
+            # Records, and increments, are two different counts. A record is
+            # one material point of one increment; the number of increments is
+            # what a reader means by "how long is this history". Reporting the
+            # first as the second is the error this project keeps a whole
+            # module to prevent -- see umat_oti.abaqus.frames.
+            "records_carried": take,
+            "increments_carried": _increments_in(original[:take]),
+            "material_points_per_increment": _points_per_increment(
+                original[:take]),
             # What was ASKED for, beside what was got. Without it a short
             # window is indistinguishable from a short request, and a fixture
             # built on however far a failed analysis got reads as deliberate.
+            "records_requested": increments,
             "increments_requested": increments,
             "records_available": available,
             "records_requested_from": {"original": len(original_records),
@@ -491,7 +531,14 @@ def main(argv: Optional[list] = None) -> int:
     parser.add_argument("--only", default="",
                         help="substring of the source's path within the cache")
     parser.add_argument("--limit", type=int, default=0)
-    parser.add_argument("--increments", type=int, default=INCREMENTS)
+    parser.add_argument("--increments", type=int, default=INCREMENTS,
+                        help="how many probe RECORDS the frozen window "
+                             "carries. One increment of a C3D8 is eight of "
+                             "them, one per integration point, so the "
+                             "artefact reports records_carried and "
+                             "increments_carried separately and this bounds "
+                             "the first. The name is kept for the callers "
+                             "that already use it.")
     parser.add_argument("--start", type=int, default=None,
                         help="record index the frozen window begins at; by "
                              "default the first record a tangent verified at")
@@ -517,7 +564,10 @@ def main(argv: Optional[list] = None) -> int:
         stem = Path(str(row.get("source"))).stem.lower()
         path = args.out / f"{stem}--{name}.json"
         path.write_text(json.dumps(fixture, indent=1) + "\n", encoding="utf-8")
-        print(f"  wrote {path.name}  ({len(fixture['original'])} increments, "
+        _history = fixture.get("finite_history") or {}
+        print(f"  wrote {path.name}  ({len(fixture['original'])} records = "
+              f"{_history.get('increments_carried')} increments x "
+              f"{_history.get('material_points_per_increment')} points, "
               f"{fixture['material_point']['element_type']})")
         written += 1
     print(f"  {written} fixture(s) frozen and {refused} refused, from "

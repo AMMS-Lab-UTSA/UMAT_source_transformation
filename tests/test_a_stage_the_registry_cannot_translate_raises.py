@@ -77,11 +77,23 @@ def test_an_unknown_stage_raises_rather_than_defaulting():
 
 def test_the_default_it_refuses_is_the_one_that_would_be_wrong():
     """The state an unknown rung used to become, named here so the reason this
-    test exists survives the code it guards."""
-    from umat_oti.abaqus.terminal_states import from_stage, kind_of as shared
-    assert from_stage("a_rung_nobody_has_taught_this_registry").state == \
-        "not_attempted"
+    test exists survives the code it guards.
+
+    The shared vocabulary no longer HAS that default -- an unmapped rung raises
+    rather than becoming anything. This test was written while it still did,
+    and what it was protecting is worth keeping: the default was
+    ``not_attempted``, which is INTERNAL and says the run never happened, so an
+    unmapped rung was reported as this project's own unfinished work twice
+    over. Both halves are asserted: that the old answer would have been wrong,
+    and that it is no longer given.
+    """
+    import pytest as _pytest
+
+    from umat_oti.abaqus.terminal_states import (UntranslatedStage, from_stage,
+                                                 kind_of as shared)
     assert shared("not_attempted") == "internal"
+    with _pytest.raises(UntranslatedStage):
+        from_stage("a_rung_nobody_has_taught_this_registry")
 
 
 def test_every_rung_the_verification_tool_can_settle_at_is_translatable():

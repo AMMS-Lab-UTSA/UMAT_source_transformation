@@ -106,24 +106,67 @@ def _eligible(entry: Any) -> bool:
     is conservative in the right direction: it can only ever refuse something
     the exporter would have taken, never offer something it would refuse.
     """
+    # BOTH, never either. The six gates decide whether this material was
+    # verified; the service decides whether a fixture can be frozen from it,
+    # which is a WEAKER question -- the exporter needs a complete finite
+    # history and asks three of the six. Taking the service's answer alone
+    # offered 139 materials on a screen where only 42 are verified. The service
+    # may therefore refuse something the gates admit, and may never admit
+    # something the gates refuse.
+    if not may_say_verified(entry):
+        return False
+
     service = _eligibility_service()
-    if service is not None:
-        raw = entry if isinstance(entry, dict) else getattr(entry, "raw", None)
-        if isinstance(raw, dict) and raw:
-            try:
-                answer = service.eligible(raw)
-            except Exception:                      # pragma: no cover
-                answer = None
-            for name in ("eligible", "ok", "may_be_called_verified"):
-                value = (answer.get(name) if isinstance(answer, dict)
-                         else getattr(answer, name, None))
-                if isinstance(value, bool):
-                    return value
-                data = (answer.get("data") if isinstance(answer, dict)
-                        else getattr(answer, "data", None))
-                if isinstance(data, dict) and isinstance(data.get(name), bool):
-                    return data[name]
-    return may_say_verified(entry)
+    if service is None:
+        return True
+    raw = entry if isinstance(entry, dict) else getattr(entry, "raw", None)
+    if not (isinstance(raw, dict) and raw):
+        return True
+    try:
+        answer = service.eligible(raw)
+    except Exception:                              # pragma: no cover
+        return True
+    verdict = _verdict_in(answer)
+    return True if verdict is None else verdict
+
+
+#: The names that carry the SERVICE'S ANSWER about one entry.
+#:
+#: ``ok`` is deliberately not among them. It is the envelope's flag, and it
+#: means the service call itself succeeded -- which is true of every entry the
+#: service managed to look at, including the ones it refuses. Reading it as the
+#: verdict offered all 237 corpus entries to the Residual Assembler as
+#: verified, among them entries at needs_material_data where every one of the
+#: six gates reads "not established", while the service was returning
+#: ``eligible=False`` with three named reasons. That is the one thing this
+#: screen must never do.
+VERDICT_FIELDS = ("eligible", "may_be_called_verified", "verified")
+
+
+def _verdict_in(answer: Any) -> "bool | None":
+    """The service's eligibility answer, or None if it did not give one.
+
+    None rather than False, because "the service did not answer" and "the
+    service said no" are different facts and only the caller knows what to do
+    with the first. The payload may be a dict or a dataclass, so both are
+    asked; an envelope is unwrapped once.
+    """
+    def _read(holder: Any) -> "bool | None":
+        for name in VERDICT_FIELDS:
+            value = (holder.get(name) if isinstance(holder, dict)
+                     else getattr(holder, name, None))
+            if isinstance(value, bool):
+                return value
+        return None
+
+    if answer is None:
+        return None
+    found = _read(answer)
+    if found is not None:
+        return found
+    payload = (answer.get("data") if isinstance(answer, dict)
+               else getattr(answer, "data", None))
+    return _read(payload) if payload is not None else None
 
 
 def _fixture(entry: Any) -> Fixture:
