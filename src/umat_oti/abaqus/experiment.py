@@ -167,14 +167,21 @@ def time_driven_state_slots(source_text: str,
     has to watch: ``PureGrowth.for`` moves three of its nine state variables
     under any loading at all, and only two of them are the growth tensor.
 
-    A slot the routine's OWN CONSTANTS pin to a value is not one of them, and
-    is removed here -- see :func:`clock_reading`. ``PureGravity.for`` writes
-    ``STATEV(8) = G11`` where G11 folds to 1.0 for all time, and reading that
-    statement as "the clock decides STATEV(8)" is how ten of those entries
-    came to be measured against a growth that the source switches off.
+    This is the set the clock REACHES, read from the shape of the code and
+    nothing else. It is deliberately wider than the set the clock DECIDES:
+    ``STATEV(9) = (TIME(2)+DTIME)`` is reached by the clock and is the clock,
+    and ``STATEV(8) = G11`` is reached by the clock in a source whose own
+    constants fix G11 at 1.0 for all time. Narrowing the two is
+    :func:`clock_reading`'s job, and keeping the wide reading separate is what
+    lets a record say which of the two a slot failed.
     """
-    reading = clock_reading(source_text, path=path)
-    return dict(reading.slots)
+    driven = time_driven_names(source_text)
+    slots: dict[int, str] = {}
+    for name, statement in driven.items():
+        slot = _STATEV_SLOT.match(name)
+        if slot:
+            slots[int(slot.group(1))] = statement
+    return slots
 
 
 #: Names that are the clock itself rather than something a law computes from
@@ -383,6 +390,84 @@ def growth_state_slots(source_text: str) -> dict[int, str]:
     return dict(clock_reading(source_text).slots)
 
 
+_STATEV_WRITE = re.compile(
+    r"^\s*(?:\d+\s+)?STATEV\s*\(([^)]*)\)\s*=\s*(.+)$", re.IGNORECASE)
+_COMMON_BLOCK = re.compile(
+    r"^\s*(?:\d+\s+)?COMMON\s*/\s*\w+\s*/\s*(.+)$", re.IGNORECASE)
+_ARRAY_READ = re.compile(r"^\s*([A-Za-z_]\w*)\s*\(")
+
+
+def state_is_not_its_own(source_text: str,
+                         path: Optional[Path] = None) -> str:
+    """Does this routine COMPUTE its state variables, or copy them in?
+
+    A material routine whose every ``STATEV`` write reads an array out of a
+    COMMON block does not own its state. Something else fills that block, and
+    driven on its own the routine reports zeros however it is loaded -- so "no
+    state variable moved" is a fact about the experiment's reach and not about
+    the material, and no amplitude, clock or load will change it.
+
+    Returns the reason, or ``""`` when the routine computes its own state.
+
+    Two sources in the corpus do this, and both are the same construction: a
+    phase-field or user element carries the mechanics and a ghost continuum
+    element carries a UMAT whose only job is to put the element's results
+    somewhere the ODB can see them. ``hamza-djeloud__thesis_project/
+    plate_with_notch.for`` ends its UMAT with::
+
+        NELEMAN = NOEL - TWO*N_ELEM
+        DO I=1,NSTATV
+         STATEV(I)=USRVAR(NELEMAN,I,NPT)
+        END DO
+
+    where ``COMMON/KUSER/USRVAR`` is written by the two UELs above it, and its
+    own constitutive content is ``STRESS = STRESS + DDSDDE*DSTRAN`` at the
+    E = 1e-11 its author's deck publishes. In pass10 it reached
+    ``experiment_not_informative`` on "4 smooth states on a material that never
+    activates", which is exactly right and says nothing about why.
+    """
+    from umat_oti.abaqus import constant_folding
+
+    try:
+        units = constant_folding.routines(source_text, path=path)
+    except Exception:                                      # pragma: no cover
+        return ""
+    for unit in units:
+        if unit.role != "material":
+            continue
+        lines = statements(unit.text)
+        shared: set[str] = set()
+        for line in lines:
+            block = _COMMON_BLOCK.match(line)
+            if not block:
+                continue
+            for piece in re.split(r",(?![^()]*\))", block.group(1)):
+                name = piece.split("(")[0].strip().upper()
+                if name:
+                    shared.add(name)
+        if not shared:
+            continue
+        writes = [match for match in (_STATEV_WRITE.match(line)
+                                      for line in lines) if match]
+        if not writes:
+            continue
+        copied = []
+        for write in writes:
+            read = _ARRAY_READ.match(write.group(2))
+            if read is None or read.group(1).upper() not in shared:
+                copied = []
+                break
+            copied.append(write.group(0).strip()[:80])
+        if copied:
+            return (f"every state variable {unit.name or 'this routine'} "
+                    f"writes is copied out of a COMMON block rather than "
+                    f"computed -- {copied[0]} -- so something else fills it. "
+                    f"Driven on its own this routine reports the same state "
+                    f"however it is loaded, and no amplitude, clock or load "
+                    f"reaches what that state is for")
+    return ""
+
+
 def applies_a_body_force(source_text: str) -> tuple[bool, str]:
     """Does this file's DLOAD actually apply anything?
 
@@ -529,20 +614,27 @@ def classify(source_text: str, *, element: str = "",
     # of a body-force verification needs to know that the file it came from
     # writes a growth tensor and switches it off.
     if reading.constant:
+        # STATEV slots first. They are the names the growth criterion would
+        # have watched, so they are what a reader of the refusal needs to see
+        # before the list is cut short.
+        named = sorted(reading.constant,
+                       key=lambda name: (not name.startswith("STATEV"), name))
         notes.append(
             "this routine writes "
-            + ", ".join(sorted(reading.constant)[:4])
+            + ", ".join(named[:4])
             + " in the shape of a law computed from the clock, but its own "
               "literal constants fix "
             + ("them" if len(reading.constant) > 1 else "it")
             + " for all time, so the clock decides nothing here: "
-            + "; ".join(reading.constant[name]
-                        for name in sorted(reading.constant))[:320])
+            + "; ".join(reading.constant[name] for name in named)[:320])
     has_body_force, body_force_why = applies_a_body_force(source_text)
     finite = bool(_DFGRD.search(text))
     rate = bool(_PER_DTIME.search(text)) or bool(
         re.search(r"\bDTIME\b[^\n]*\*\*", text))
 
+    borrowed = state_is_not_its_own(source_text, path=path)
+    if borrowed:
+        notes.append(borrowed)
     if reads_coordinates:
         notes.append("this routine reads COORDS, so where the element sits is "
                      "part of what it computes")
@@ -1303,7 +1395,15 @@ def stress_stays_on_the_material_scale(records: Sequence[dict],
                    report.reason(), worst)
 
 
-def deformed_under_the_load(records: Sequence[dict]) -> Finding:
+#: A strain below which "the element moved" is a statement about round-off
+#: rather than about a load. The comparison this pipeline makes is relative
+#: and its tolerance is 1e-10, so a strain at that size is not resolved by the
+#: instrument that would have to see it.
+RESOLVED_STRAIN = 1e-10
+
+
+def deformed_under_the_load(records: Sequence[dict],
+                            props: Sequence[float] = ()) -> Finding:
     """Did the element move at all, when nothing prescribed that it should?
 
     The whole point of a body-force segment. No displacement is imposed beyond
@@ -1311,6 +1411,30 @@ def deformed_under_the_load(records: Sequence[dict]) -> Finding:
     means DLOAD was never called or returned nothing -- which is exactly the
     failure this family exists to catch and is invisible to any amplitude,
     because there is no amplitude in the deck to raise.
+
+    **What this criterion does NOT establish, stated because the same shape of
+    gap is what put thirteen sources in the wrong family.** "Moved at all" is a
+    threshold at the resolution of the instrument, not at a size that means
+    anything mechanically, and a criterion whose threshold sits there can be
+    met by a run that exercised nothing. Measured on the ten ``PureGravity.for``
+    entries this module reclassifies: they reach strains of 5.5e-07 to 1.4e-05
+    and peak stresses 1.3e-06 to 3.1e-05 of their own largest material
+    constant. The load did work on the element -- that much is established and
+    it is what this criterion claims -- but the response is linear-elastic at
+    microstrain, and an agreement there is an agreement about the part every
+    build gets right.
+
+    The threshold is deliberately NOT raised to fix that, because there is no
+    honest number to raise it to. A growth stretch starts at one, so "1% of its
+    initial value" is a statement about the quantity; a body force produces a
+    strain that depends on the specimen's SPAN, and a single element has no
+    span. Picking a percentage here would be choosing the experiment rather
+    than reading it, which is the thing this module exists to stop. What is
+    reported instead is the size the strain reached against the scale the
+    problem supplies, so the weakness is visible in the record rather than
+    hidden behind a boolean. Whether a single element can carry a body-force
+    experiment that means anything is a question for a run, and it is filed as
+    one.
     """
     from umat_oti.abaqus.activation import strain_at
 
@@ -1319,13 +1443,24 @@ def deformed_under_the_load(records: Sequence[dict]) -> Finding:
         return Finding("deformed under the load", None,
                        "this run recorded no completed UMAT calls")
     reached = 0.0
+    stress = 0.0
     for record in results:
         for value in strain_at(record):
             reached = max(reached, abs(value))
-    if reached > 1e-10:
+        for value in _values(record, "STRESS"):
+            stress = max(stress, abs(value))
+    scale = max((abs(float(value)) for value in props or ()), default=0.0)
+    against = ""
+    if scale > 0.0 and stress > 0.0:
+        against = (f". It carried a peak stress of {stress:g} against a "
+                   f"largest material constant of {scale:g}, a ratio of "
+                   f"{stress / scale:.3e}, which is how far into the "
+                   f"material's own range this load reached")
+    if reached > RESOLVED_STRAIN:
         return Finding("deformed under the load", True,
                        f"the element reached a strain of {reached:g} with no "
-                       f"displacement prescribed, so the load did work on it",
+                       f"displacement prescribed, so the load did work on it"
+                       + against,
                        reached)
     return Finding("deformed under the load", False,
                    "no displacement was prescribed and the strain never left "
@@ -1446,9 +1581,9 @@ def assess(family: Family, records: Sequence[dict],
         findings.append(growth_developed(
             records, growth_state_slots(source_text)))
         if any(segment.body_force for segment in manifest.loading):
-            findings.append(deformed_under_the_load(records))
+            findings.append(deformed_under_the_load(records, manifest.props))
     elif family.name == "body force":
-        findings.append(deformed_under_the_load(records))
+        findings.append(deformed_under_the_load(records, manifest.props))
     elif family.name == "cohesive":
         findings.append(cohesive_softened(records))
     elif family.name == "oriented":
