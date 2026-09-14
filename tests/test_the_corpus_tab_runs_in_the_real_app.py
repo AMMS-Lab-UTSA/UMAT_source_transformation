@@ -99,6 +99,54 @@ def test_a_directory_with_no_run_says_so_instead_of_a_blank_panel(tmp_path,
     assert "No corpus round has written" in _text(app)
 
 
+#: The finished corpus round. 7 GB of Abaqus output, so it lives beside the
+#: checkout rather than in it and this skips where it is not on the machine.
+PASS10 = Path(os.environ.get("UMAT_OTI_CORPUS_RUN_10")
+              or REPO_ROOT.parent / "corpus_run" / "pass10")
+
+
+@pytest.mark.skipif(
+    not (PASS10 / "results" / "store_verification.jsonl").is_file(),
+    reason="the finished pass10 corpus round is not on this machine")
+def test_the_finished_round_draws_in_streamlit_itself(monkeypatch):
+    """The requirement, end to end, through the app a user launches.
+
+    A recorder proves the page asked for the right things. This proves a
+    reader of the real interface meets the record: the three states, the six
+    gates as six, the planned experiment, and objectivity's two claims.
+
+    The entry Streamlit selects by default is the first of the 254 --
+    ``3MAH__simcoon/.../UMAT_ABAQUS_ELASTIC.f``, for which nothing ran -- so
+    this also pins the case where six gates are unmeasured at once, which is
+    where a two-state rendering would have to lie six times.
+    """
+    monkeypatch.setenv("UMAT_OTI_CORPUS_RESULTS", str(PASS10 / "results"))
+    monkeypatch.setenv("UMAT_OTI_CORPUS_WORK", str(PASS10 / "work"))
+    app = AppTest.from_file(str(APP), default_timeout=600.0).run()
+    assert not app.exception, app.exception
+    shown = _text(app)
+
+    assert "Corpus verification" in shown
+    assert "254 entries settled" in shown
+    for said in ("not established",          # the third state, on screen
+                 "holds",                    # the column it is in
+                 "mechanically informative",  # the sixth gate, by name
+                 "Why this source was driven this way",
+                 "Objectivity: two different claims, kept apart",
+                 "What was measured, gate by gate",
+                 "Against the source's own clock"):
+        assert said in shown, said
+
+    # Nothing on this entry may be drawn as a success: nothing was measured
+    # on it. And the claim says that rather than reporting an agreement.
+    assert not app.success, "an entry that never ran is not a success"
+    banners = " ".join(str(getattr(el, "value", el)) for el in app.info)
+    assert "nothing was measured" in banners
+    assert "none of them holds and none of them failed" in banners
+    warnings = " ".join(str(getattr(el, "value", el)) for el in app.warning)
+    assert "not established" in warnings
+
+
 def test_the_page_starts_no_run_by_merely_being_opened(a_run):
     results, _work = a_run
     AppTest.from_file(str(APP), default_timeout=240.0).run()

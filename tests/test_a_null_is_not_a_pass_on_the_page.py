@@ -552,6 +552,30 @@ def test_an_empty_family_inside_a_recorded_experiment_is_not_a_family():
 # ---------------------------------------------------------------------------
 # informativeness, the clock, and whether the response fits the problem
 # ---------------------------------------------------------------------------
+def test_an_absence_says_which_absence_it_is():
+    """Three different reasons a thing was never established, and saying the
+    wrong one invents a fact. 108 of the 254 pass10 entries never reached a
+    run at all; telling those "this run predates the informativeness gate"
+    would be describing a run that does not exist.
+    """
+    nothing_ran = informativeness_row({"key": "k", "source": "s.for"})
+    assert nothing_ran["holds"] == NOT_ESTABLISHED
+    assert "nothing ran for this entry" in nothing_ran["why"]
+
+    predates = informativeness_row({"evidence": {"primal_agreed": True}})
+    assert predates["holds"] == NOT_ESTABLISHED
+    assert "predates the informativeness gate" in predates["why"]
+
+    said = informativeness_row({
+        "evidence": {"mechanically_informative": None},
+        "mechanically_informative": {
+            "informative": None,
+            "reason": "the source normalises its clock by TOTALT = 10"}})
+    assert said["holds"] == NOT_ESTABLISHED
+    assert "TOTALT" in said["why"], (
+        "where the record gives its own reason, that is the one shown")
+
+
 def test_whether_the_material_did_anything_is_three_state_too():
     assert informativeness_row(RECORD)["holds"] == NOT_ESTABLISHED
     did = informativeness_row({"mechanically_informative": {
@@ -834,6 +858,25 @@ def test_no_entry_the_page_cannot_vouch_for_is_called_verified(corpus):
     for entry in explained:
         assert entry.verdict["what the batch recorded after a gate that did "
                              "not hold"]["primal_agreed"], entry.source_id
+
+
+def test_every_absence_in_the_round_says_which_absence_it_is(corpus):
+    """Measured over the 254: 108 where nothing ran, 4 whose run predates the
+    gate, and 7 where the record gives its own reason. A single sentence
+    covering all three would describe a run that does not exist for 108 of
+    them."""
+    reasons = {}
+    for entry in corpus.entries:
+        if entry.informativeness["established"]:
+            continue
+        key = ("nothing ran" if "nothing ran for this entry"
+               in entry.informativeness["why"] else
+               "predates the gate" if "predates the informativeness gate"
+               in entry.informativeness["why"] else "the record's own reason")
+        reasons[key] = reasons.get(key, 0) + 1
+    assert reasons == {"nothing ran": 108, "predates the gate": 4,
+                       "the record's own reason": 7}
+    assert sum(reasons.values()) == 119
 
 
 def test_the_entries_that_never_ran_are_not_told_they_agreed(corpus):
