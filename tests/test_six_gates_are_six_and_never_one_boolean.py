@@ -20,6 +20,7 @@ The numbers here are executed against the real pass11 file where it is present:
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -36,8 +37,13 @@ from umat_oti.services.gates import (  # noqa: E402
 
 pytestmark = pytest.mark.unit
 
-PASS11 = Path("/home/ammslab3/softwarex_work/corpus_run/pass11/results"
-              "/store_verification.jsonl")
+#: The real verification run. Derived from the checkout rather than written
+#: out, so this file carries no absolute path into somebody else's home.
+#: ``UMAT_OTI_CORPUS_RUN`` overrides it; every test using it skips when absent.
+PASS11 = Path(os.environ.get(
+    "UMAT_OTI_CORPUS_RUN",
+    str(Path(__file__).resolve().parents[1].parent / "corpus_run" / "pass11"
+        / "results" / "store_verification.jsonl")))
 ALL_TRUE = {gate: True for gate in GATES}
 
 

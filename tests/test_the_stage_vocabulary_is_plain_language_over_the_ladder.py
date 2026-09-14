@@ -121,8 +121,12 @@ def test_every_stage_of_the_real_pass11_file_translates():
     """The vocabulary is checked against the stages that actually occur."""
     import json  # noqa: PLC0415
 
-    path = Path("/home/ammslab3/softwarex_work/corpus_run/pass11/results"
-                "/store_verification.jsonl")
+    import os  # noqa: PLC0415
+
+    path = Path(os.environ.get(
+        "UMAT_OTI_CORPUS_RUN",
+        str(Path(__file__).resolve().parents[1].parent / "corpus_run"
+            / "pass11" / "results" / "store_verification.jsonl")))
     if not path.is_file():
         pytest.skip(f"{path} is not on this machine")
     stages = {json.loads(line).get("stage")
