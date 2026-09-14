@@ -1370,8 +1370,17 @@ DIAGNOSED_ENTRIES: tuple = (
                 "its own DFGRD1 at that call -- TWICE the whole transform "
                 "difference -- so at this call the transform sits inside the "
                 "model's own last-bit noise. That is a statement about this "
-                "deck's conditioning and is NOT a reason to widen a tolerance"),
-            where="corpus_run/pass10/work/d6c1a1095875c2d4007280d6",
+                "deck's conditioning and is NOT a reason to widen a tolerance. "
+                "isolate_first_divergence over this entry's own probe records "
+                "reaches the same verdict independently: inputs_already_"
+                "diverged at call 8, where the arguments differed by 1.47e-03 "
+                "of DSTRAN's scale, so what the routine returned after that is "
+                "not attributable to the routine"),
+            where="corpus_run/pass10/work/d6c1a1095875c2d4007280d6 -- NOT "
+                  "verif_work/axe4, which holds the OTHER Axe entry "
+                  "(c14b3e1b76081216b57abbf8, 35 increments, strain-driven) "
+                  "and agrees; reading that one as this one is how the "
+                  "disagreement stayed hidden",
             repeatable=True)),
 )
 
