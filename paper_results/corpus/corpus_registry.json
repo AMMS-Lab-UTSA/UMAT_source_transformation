@@ -1,6 +1,6 @@
 {
  "schema": "umat-oti/corpus-registry/1",
- "generated": "2026-09-14T02:14:13+00:00",
+ "generated": "2026-09-14T02:16:04+00:00",
  "what_counts_as_verified": "only fully_verified, and it is reached by a source that transformed, compiled, ran in Abaqus as the original, ran as the converted build on the same deck, agreed with itself over the whole stress and state history, and whose OTI tangent agreed with a finite difference of the original at several smooth states",
  "terminal_states": {
   "verified": [
@@ -114,6 +114,100 @@
      "not_established_total": 7,
      "sums_to": 142
     }
+   }
+  },
+  "censuses": {
+   "terminal_state": {
+    "denominator": 391,
+    "denominator_is": "acquired sources (D1)",
+    "counts": {
+     "transform_refused": 107,
+     "primal_disagreed": 62,
+     "not_a_umat": 45,
+     "fully_verified": 41,
+     "missing_material_data": 36,
+     "tangent_not_verified": 19,
+     "experiment_not_informative": 18,
+     "external_dependency_unavailable": 16,
+     "incomplete_or_corrupt_source": 15,
+     "unsupported_formulation": 11,
+     "original_job_failed": 9,
+     "transformed_job_failed": 8,
+     "support_build_failed": 2,
+     "informativeness_not_established": 1,
+     "derivative_truncated": 1
+    },
+    "sums_to_the_denominator": true
+   },
+   "whose_move_it_is": {
+    "denominator": 391,
+    "denominator_is": "acquired sources (D1)",
+    "counts": {
+     "internal": 238,
+     "external": 112,
+     "verified": 41
+    },
+    "sums_to_the_denominator": true
+   },
+   "adequately_specified": {
+    "denominator": 391,
+    "denominator_is": "acquired sources (D1)",
+    "counts": {
+     "True": 264,
+     "False": 127
+    },
+    "sums_to_the_denominator": true
+   },
+   "why_excluded_from_d2": {
+    "denominator": 127,
+    "denominator_is": "sources excluded from D2",
+    "counts": {
+     "external": 114,
+     "duplicate": 13
+    },
+    "sums_to_the_denominator": true
+   },
+   "what_the_refused_files_are": {
+    "denominator": 151,
+    "denominator_is": "sources the transformer refused",
+    "counts": {
+     "genuine_umat": 100,
+     "missing_external_dependency": 16,
+     "helper_or_module_only": 14,
+     "incomplete_or_corrupt_source": 11,
+     "duplicate_of_another_source": 6,
+     "other_abaqus_routine": 2,
+     "published_stub_no_constitutive_content": 2
+    },
+    "sums_to_the_denominator": true
+   },
+   "entry_interface": {
+    "denominator": 391,
+    "denominator_is": "acquired sources (D1)",
+    "counts": {
+     "UMAT": 341,
+     "none": 25,
+     "UEL": 25
+    },
+    "sums_to_the_denominator": true
+   },
+   "transformed": {
+    "denominator": 391,
+    "denominator_is": "acquired sources (D1)",
+    "counts": {
+     "True": 240,
+     "False": 151
+    },
+    "sums_to_the_denominator": true
+   },
+   "compiled": {
+    "denominator": 391,
+    "denominator_is": "acquired sources (D1)",
+    "counts": {
+     "True": 212,
+     "False": 179
+    },
+    "sums_to_the_denominator": true
    }
   },
   "verification_rows_at_a_stale_fingerprint": [

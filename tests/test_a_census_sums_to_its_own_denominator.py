@@ -138,6 +138,40 @@ def test_every_record_with_a_verification_row_carries_all_six_gates():
 # ---------------------------------------------------------------------------
 # three numbers, all published
 # ---------------------------------------------------------------------------
+def test_every_census_the_registry_publishes_states_and_sums_to_a_denominator():
+    """Not only the gates. Every table in the registry -- terminal states,
+    whose move it is, what the refused files are, which interface each
+    presents -- was taken over a named population and adds up to it, and the
+    build stops rather than publishing one that does not."""
+    censuses = registry()["summary"]["censuses"]
+    assert len(censuses) >= 6, sorted(censuses)
+    for name, counted in censuses.items():
+        assert counted["denominator_is"], name
+        assert counted["denominator"] > 0, name
+        assert sum(counted["counts"].values()) == counted["denominator"], name
+        assert counted["sums_to_the_denominator"] is True, name
+    # And the ones that say they are over D1 really are.
+    d1 = registry()["summary"]["acquired"]
+    for name in ("terminal_state", "whose_move_it_is", "entry_interface",
+                 "transformed", "compiled", "adequately_specified"):
+        assert censuses[name]["denominator"] == d1 == 391, name
+
+
+def test_a_census_over_a_field_that_stops_covering_its_records_stops_the_build():
+    """The guard is in the counting, so a classification that grew a case it
+    does not handle cannot be published as a table that is quietly short."""
+    class Row:
+        def __init__(self, value):
+            self.value = value
+
+    rows = [Row("a"), Row("b"), Row(None)]
+    counted = census(rows, lambda r: str(r.value), "three fixture rows")
+    assert counted["denominator"] == 3
+    assert counted["counts"]["None"] == 1, (
+        "a None has to be counted as a value, not dropped -- that is the "
+        "whole finding this module exists for")
+
+
 def test_the_three_verified_numbers_are_all_named_and_reconcile():
     summary = registry()["summary"]
     recon = summary["verification_file_reconciliation"]
