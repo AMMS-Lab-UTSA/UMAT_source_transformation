@@ -111,6 +111,17 @@ class Recorder:
         return " ".join(parts)
 
 
+def calls_it_verified(claim: str) -> bool:
+    """Whether a sentence calls this entry verified.
+
+    ``derivatives_verified`` is the name of a gate and contains the word, so a
+    plain substring test would read the gate's name as the verdict. The gate
+    name is removed before asking.
+    """
+    return "verified" in (claim.replace("derivatives_verified", "")
+                          .replace("derivatives verified", ""))
+
+
 def drawn(row: dict) -> Recorder:
     recorder = Recorder()
     _entry_panel(entry_view(row), Path("/nowhere"), recorder)
@@ -399,8 +410,12 @@ def test_verified_never_appears_where_informativeness_was_never_established():
         "the batch's own word is carried unedited -- a verdict rendered "
         "differently here than in the evidence is a second opinion")
     assert claimed["all six gates hold"] is False
-    assert "verified" not in claimed["what may be claimed"]
-    assert "agreement only" in claimed["what may be claimed"]
+    assert claimed["may be called verified"] is False
+    assert not calls_it_verified(claimed["what may be claimed"])
+    assert "mechanically_informative never established" in \
+        claimed["what may be claimed"]
+    assert "a gate nobody measured is not a gate that passed" in \
+        claimed["what may be claimed"]
     assert claimed["qualified state"] == \
         "fully_verified (informativeness not established)"
 
@@ -410,9 +425,10 @@ def test_verified_never_appears_where_the_material_did_nothing():
                evidence=dict(RECORD["evidence"],
                              mechanically_informative=False))
     claimed = what_may_be_claimed(row)
-    assert "verified" not in claimed["what may be claimed"]
+    assert claimed["may be called verified"] is False
+    assert not calls_it_verified(claimed["what may be claimed"])
     assert "the material did nothing over this run" in claimed["qualified state"]
-    assert "not a verification of the material's behaviour" in \
+    assert "not a verification of its behaviour" in \
         claimed["what may be claimed"]
 
 
@@ -420,8 +436,28 @@ def test_verified_is_said_only_when_all_six_were_measured_and_all_six_hold():
     row = dict(RECORD, evidence={name: True for name, _, _ in EVIDENCE_GATES})
     claimed = what_may_be_claimed(row)
     assert claimed["all six gates hold"] is True
+    assert claimed["may be called verified"] is True
     assert claimed["what may be claimed"].startswith("verified")
     assert claimed["qualified state"] == "fully_verified"
+
+
+def test_an_entry_that_never_ran_is_not_told_it_agreed():
+    """108 of the 254 pass10 entries never reached a run at all -- no deck, no
+    material, not a UMAT. Reporting those as "agreement only, informativeness
+    not established" would claim an agreement that never happened, which is
+    the same error as calling a null a pass wearing different words.
+    """
+    claimed = what_may_be_claimed({"key": "k", "source": "s.for",
+                                   "stage": "needs_material_data"})
+    assert claimed["nothing was measured"] is True
+    assert claimed["may be called verified"] is False
+    assert len(claimed["gates never established"]) == len(EVIDENCE_GATES) == 6
+    said = claimed["what may be claimed"]
+    assert said.startswith("nothing was measured")
+    assert "none of them holds and none of them failed" in said
+    assert "agreement" not in said, (
+        "nothing ran, so there is no agreement to report either way")
+    assert not calls_it_verified(said)
 
 
 def test_a_page_over_an_unestablished_gate_warns_rather_than_congratulates():
@@ -657,44 +693,239 @@ def test_the_page_decides_nothing_the_record_did_not(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# the rule against the real corpus rather than against a fixture of it
+# the rule against the whole finished corpus rather than against a fixture
 # ---------------------------------------------------------------------------
-@pytest.mark.skipif(not PASS10_RESULTS.is_file(),
-                    reason="the pass10 corpus round is not on this machine")
-def test_across_the_real_corpus_no_unestablished_gate_is_ever_rendered_as_a_pass():
-    """The measurement that made this file necessary.
+#: What the finished pass10 round measures, read through the page's own loader.
+#: Written out because these are the numbers the assertions below are about,
+#: and a test whose expected value is a variable is a test nobody can check.
+#:
+#: Reproduce with::
+#:
+#:     python -c "import sys,collections; sys.path.insert(0,'src'); \
+#:       from pathlib import Path; \
+#:       from umat_oti.app.corpus_view import load_run, EVIDENCE_GATES; \
+#:       v=load_run(Path('../corpus_run/pass10/results')); \
+#:       print(len(v.entries), v.by_terminal_state)"
+PASS10_ENTRIES = 254
+PASS10_WITH_EVIDENCE = 146
+#: gate -> (held, did not hold, never established), over the 146 entries that
+#: carry an evidence block at all.
+PASS10_GATES = {
+    "abaqus_job_completed": (146, 0, 0),
+    "all_requested_outputs_present": (146, 0, 0),
+    "complete_history_finite": (142, 4, 0),
+    "primal_agreed": (65, 81, 0),
+    "derivatives_verified": (63, 83, 0),
+    "mechanically_informative": (113, 22, 11),
+}
 
-    On pass10: 10 entries reached ``verified`` and 3 of them carry no
-    ``mechanically_informative`` measurement. None of the three may carry the
-    word "verified" in what the page says may be claimed about it, and every
-    ``met=null`` coverage criterion in the round renders as not established.
+
+@pytest.fixture(scope="module")
+def corpus():
+    if not PASS10_RESULTS.is_file():
+        pytest.skip("the finished pass10 corpus round is not on this machine")
+    return load_run(PASS10_RESULTS.parent)
+
+
+def test_the_finished_round_reaches_the_page_whole(corpus):
+    assert len(corpus.entries) == PASS10_ENTRIES
+    assert corpus.finished is True
+    assert len(corpus.by_terminal_state) == 13, (
+        "13 distinct terminal states, from fully_verified down to "
+        "derivative_truncated; a page that showed fewer would be pooling "
+        "answers the record keeps apart")
+
+
+def test_the_six_gates_do_not_move_together_which_is_why_there_are_six(corpus):
+    """The measurement that justifies the whole design.
+
+    If the six always agreed, one tick would carry them. They do not. Over the
+    146 entries carrying an evidence block: every one had its job complete and
+    every requested output present, 4 went non-finite anyway, 81 disagreed on
+    the primal, 83 failed on derivatives, and 11 were never measured for
+    informativeness at all. Collapsed into one word, five of those findings
+    disappear.
     """
-    view = load_run(PASS10_RESULTS.parent)
-    verified = [e for e in view.entries if e.stage == "verified"]
-    assert verified, "the round settled nothing at verified"
+    with_evidence = [e for e in corpus.entries
+                     if any(row["established"] for row in e.evidence)]
+    assert len(with_evidence) == PASS10_WITH_EVIDENCE
+
+    measured = {}
+    for name, _what, _where in EVIDENCE_GATES:
+        rows = [{r["field"]: r for r in e.evidence}[name]
+                for e in with_evidence]
+        measured[name] = (sum(r["holds"] == HELD for r in rows),
+                          sum(r["holds"] == DID_NOT_HOLD for r in rows),
+                          sum(r["holds"] == NOT_ESTABLISHED for r in rows))
+    assert measured == PASS10_GATES
+
+    assert len(set(measured.values())) > 1, (
+        "the six gates are not one measurement wearing six names")
+    assert measured["abaqus_job_completed"][0] != \
+        measured["complete_history_finite"][0], (
+        "Abaqus printing THE ANALYSIS HAS COMPLETED SUCCESSFULLY is a "
+        "statement about the solver: 146 jobs completed and 4 of them "
+        "returned values that are not numbers")
+
+
+def test_the_eleven_entries_nobody_measured_render_as_a_third_thing(corpus):
+    """The single most important rendering requirement in this project.
+
+    11 of the 146 entries carrying an evidence block have
+    ``mechanically_informative`` null. Not one of them may render as either of
+    the other two states, and the string they render as is neither of the
+    other two strings.
+    """
+    unmeasured = [e for e in corpus.entries
+                  if {r["field"]: r for r in e.evidence}[
+                      "mechanically_informative"]["holds"] == NOT_ESTABLISHED
+                  and any(row["established"] for row in e.evidence)]
+    assert len(unmeasured) == 11
+    for entry in unmeasured:
+        row = {r["field"]: r for r in entry.evidence}["mechanically_informative"]
+        assert row["holds"] == NOT_ESTABLISHED
+        assert row["holds"] != HELD and row["holds"] != DID_NOT_HOLD
+        assert row["established"] is False
+        assert row["passed"] is None, (
+            "the boolean a caller might read stays None rather than becoming "
+            "a False, so a caller cannot collapse three states into two")
+        assert entry.informativeness["holds"] == NOT_ESTABLISHED
+
+
+def test_no_entry_the_page_cannot_vouch_for_is_called_verified(corpus):
+    """44 entries reached ``verified``; 3 of them carry no informativeness
+    measurement. None of the three may carry the word."""
+    verified = [e for e in corpus.entries if e.stage == "verified"]
+    assert len(verified) == 44
     unestablished = [e for e in verified
                      if "mechanically_informative" in
                      e.verdict["gates never established"]]
-    assert unestablished, (
+    assert len(unestablished) == 3, (
         "this test is measuring nothing if the round has no such entry")
     for entry in unestablished:
-        assert "verified" not in entry.verdict["what may be claimed"], \
+        assert entry.verdict["may be called verified"] is False, entry.source_id
+        assert not calls_it_verified(entry.verdict["what may be claimed"]), \
             entry.source_id
-        assert entry.verdict["qualified state"].endswith(
-            "(informativeness not established)"), entry.source_id
-        assert entry.informativeness["holds"] == NOT_ESTABLISHED
+        assert entry.verdict["qualified state"] == \
+            "fully_verified (informativeness not established)", entry.source_id
+        assert entry.verdict["the batch's terminal state"] == "fully_verified", (
+            "the batch's own word is still carried, unedited")
 
-    nulls = [row for entry in view.entries for row in entry.coverage
-             if not row["established"]]
-    assert nulls, "the round records no unmeasured criterion"
-    for row in nulls:
-        assert row["holds"] == NOT_ESTABLISHED
-        assert row["why"], "an unmeasured criterion says why it was not"
+    did_nothing = [e for e in corpus.entries
+                   if {r["field"]: r for r in e.evidence}[
+                       "mechanically_informative"]["holds"] == DID_NOT_HOLD]
+    assert len(did_nothing) == 22
+    for entry in did_nothing:
+        assert entry.verdict["may be called verified"] is False, entry.source_id
+        assert not calls_it_verified(entry.verdict["what may be claimed"]), \
+            entry.source_id
 
-    disagreeing = [entry for entry in view.entries
-                   if {r["holds"] for r in entry.objectivity} == {HELD,
-                                                                  DID_NOT_HOLD}]
-    assert disagreeing, (
-        "pass10 carries an entry whose transform agreed in a rotated frame "
-        "and whose model is not objective; if it stops doing so this test is "
-        "measuring nothing")
+    # 44 reached the stage and 38 may be called it. The six that may not split
+    # two ways and the page keeps them apart: 3 whose informativeness nobody
+    # measured, and 3 whose raw primal comparison disagreed and was then
+    # explained -- by the author's own declared precision, or by the same
+    # mathematics reassociated. Both facts are true at once and both are shown.
+    may = [e for e in corpus.entries if e.verdict["may be called verified"]]
+    assert len(may) == 38
+    assert all(e.stage == "verified" for e in may)
+    explained = [e for e in verified
+                 if e.verdict["gates that did not hold"] == ["primal_agreed"]]
+    assert len(explained) == 3
+    for entry in explained:
+        assert entry.verdict["what the batch recorded after a gate that did "
+                             "not hold"]["primal_agreed"], entry.source_id
+
+
+def test_the_entries_that_never_ran_are_not_told_they_agreed(corpus):
+    """108 of the 254 never reached a run the gates could be measured on."""
+    nothing = [e for e in corpus.entries if e.verdict["nothing was measured"]]
+    assert len(nothing) == 108
+    for entry in nothing:
+        assert len(entry.verdict["gates never established"]) == 6
+        assert "agreement" not in entry.verdict["what may be claimed"], \
+            entry.source_id
+        assert entry.verdict["may be called verified"] is False
+
+
+def test_both_objectivity_facts_survive_the_whole_corpus(corpus):
+    """8 entries carry a completed objectivity pair. On 7 of them the two
+    facts DISAGREE -- the converted build agreed with the original on a
+    rotated path and the author's own response is not Q sigma Q^T -- which is
+    exactly the pair one tick would destroy."""
+    pairs = [e for e in corpus.entries
+             if all(row["established"] for row in e.objectivity)]
+    assert len(pairs) == 8
+    outcomes = {}
+    for entry in pairs:
+        key = tuple(row["holds"] for row in entry.objectivity)
+        outcomes[key] = outcomes.get(key, 0) + 1
+    assert outcomes == {(HELD, DID_NOT_HOLD): 7, (DID_NOT_HOLD, DID_NOT_HOLD): 1}
+
+    disagreeing = [e for e in pairs
+                   if e.objectivity[0]["holds"] != e.objectivity[1]["holds"]]
+    assert len(disagreeing) == 7
+    for entry in disagreeing:
+        transform, model = entry.objectivity
+        assert "the transform" in transform["what it is about"]
+        assert "the model" in model["what it is about"]
+        assert transform["why"] != model["why"], entry.source_id
+        assert model["magnitude"] is not None, (
+            "a model that is not objective says by how much")
+        assert any("Q sigma Q^T" in said for said in
+                   entry.verdict["findings outside the six gates"]), \
+            entry.source_id
+
+
+def test_every_unmeasured_coverage_criterion_says_why_it_was_not(corpus):
+    """Over the round: 260 criteria met, 21 not met, and 12 that nobody could
+    measure -- and the 12 are the ones a two-state rendering would have to
+    lie about."""
+    tally = {HELD: 0, DID_NOT_HOLD: 0, NOT_ESTABLISHED: 0}
+    for entry in corpus.entries:
+        for row in entry.coverage:
+            tally[row["holds"]] += 1
+    assert tally == {HELD: 260, DID_NOT_HOLD: 21, NOT_ESTABLISHED: 12}
+    for entry in corpus.entries:
+        for row in entry.coverage:
+            if row["holds"] == NOT_ESTABLISHED:
+                assert row["established"] is False
+                assert row["why"], (
+                    "an unmeasured criterion says why it was not, or it is "
+                    "indistinguishable from one nobody wrote down")
+
+
+def test_the_planned_experiment_reaches_the_page_for_every_family(corpus):
+    """8 families across the round, 78 entries with none settled. A family
+    that never reached the page would be a reading of somebody's source that
+    nobody can disagree with."""
+    families = {}
+    for entry in corpus.entries:
+        name = entry.planned_experiment["family"]
+        families[name] = families.get(name, 0) + 1
+    assert families == {NOT_ESTABLISHED: 78, "growth": 129, "finite strain": 22,
+                        "strain driven": 13, "plane stress": 7, "cohesive": 2,
+                        "rate dependent": 2, "oriented": 1}
+    settled = [e for e in corpus.entries
+               if e.planned_experiment["family"] != NOT_ESTABLISHED]
+    assert all(e.planned_experiment["why this source was driven this way"]
+               for e in settled)
+
+
+def test_every_entry_in_the_round_draws_without_raising(corpus):
+    """A page that raises on one record shows nothing for the whole round.
+    All 254, drawn, including the 108 that never reached an evidence block."""
+    drawn_count = 0
+    for entry in corpus.entries:
+        recorder = Recorder()
+        _entry_panel(entry, Path("/nowhere"), recorder)
+        page = recorder.texts()
+        assert entry.source_id or entry.key
+        # whatever else it says, it never says a null held
+        for row in list(entry.coverage) + list(entry.objectivity) + \
+                [entry.informativeness, entry.time_scale]:
+            if not row["established"]:
+                assert row["holds"] == NOT_ESTABLISHED
+        assert NOT_ESTABLISHED in page or all(
+            row["established"] for row in entry.evidence), entry.source_id
+        drawn_count += 1
+    assert drawn_count == PASS10_ENTRIES

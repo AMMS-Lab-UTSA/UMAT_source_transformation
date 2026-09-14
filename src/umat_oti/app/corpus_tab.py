@@ -202,8 +202,15 @@ def _verdict_panel(entry, st) -> None:
     verdict = entry.verdict or {}
     st.markdown(f"**{verdict.get('qualified state', entry.terminal_state)}**")
     claim = verdict.get("what may be claimed") or ""
-    if verdict.get("all six gates hold"):
+    if verdict.get("may be called verified"):
         st.success(claim)
+    elif verdict.get("nothing was measured"):
+        # Its own channel. An entry that never reached a run is not a warning
+        # about this pipeline's evidence -- nobody published what the material
+        # is made of, or the file is not a UMAT -- and drawing it beside the
+        # entries whose gates nobody got round to measuring would pool two
+        # answers the record keeps apart.
+        st.info(claim)
     elif verdict.get("gates never established"):
         st.warning(claim)
     else:
