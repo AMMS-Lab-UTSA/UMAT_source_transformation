@@ -13,7 +13,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from umat_oti.app.corpus_view import (MODES, componentwise_errors, deck_text,
+from umat_oti.app.corpus_view import (DID_NOT_HOLD, MODES, NOT_ESTABLISHED,
+                                      componentwise_errors, deck_text,
                                       evidence_paths, fd_plateau, histories,
                                       job_log, load_run, run_command,
                                       start_run)
@@ -96,6 +97,7 @@ def render(results_dir: Path, work_dir: Path, *, st=None) -> None:
 
 def _entry_panel(entry, work_dir: Path, st) -> None:
     st.markdown(f"### {entry.source_id}")
+    _verdict_panel(entry, st)
     st.write({"terminal state": entry.terminal_state, "kind": entry.kind,
               "stage the batch reached": entry.stage})
     st.info(entry.reason or "no reason recorded")
@@ -105,6 +107,7 @@ def _entry_panel(entry, work_dir: Path, st) -> None:
     # measurements the verdict rests on and which of them nobody made.
     st.markdown("**What was measured, gate by gate**")
     st.table(entry.evidence)
+    _gate_tally_panel(entry, st)
 
     st.markdown("**Manifest and where every number came from**")
     st.write(entry.manifest)
@@ -114,9 +117,12 @@ def _entry_panel(entry, work_dir: Path, st) -> None:
     if entry.loading:
         st.markdown("**The loading history it walked, segment by segment**")
         st.table(entry.loading)
-    if entry.material_search:
-        with st.expander("what was read while looking for material constants"):
-            st.write(entry.material_search)
+    if entry.material_search_finding:
+        st.markdown("**Where the material constants were looked for**")
+        st.table([entry.material_search_finding])
+        if entry.material_search:
+            with st.expander("the pairing scan's own record"):
+                st.write(entry.material_search)
     if entry.formulation:
         st.markdown("**Formulation**")
         st.write(entry.formulation)
@@ -124,7 +130,11 @@ def _entry_panel(entry, work_dir: Path, st) -> None:
     st.markdown("**What is missing**")
     st.table([r.as_dict() for r in entry.requirements])
 
+    _planned_experiment_panel(entry, st)
+    _coverage_panel(entry, st)
+    _objectivity_panel(entry, st)
     _experiment_panel(entry, st)
+    _informativeness_panel(entry, st)
     _history_panel(entry, st)
 
     if entry.jobs:
@@ -135,12 +145,15 @@ def _entry_panel(entry, work_dir: Path, st) -> None:
                 with st.expander(f"{job} log"):
                     st.write(job_log(work_dir, entry.key, job))
 
+    # Drawn whenever a signature was recorded, and NOT only where a primal
+    # block sits beside it: a panel hidden behind another field's presence is
+    # a blank, and a blank reads as "nobody classified this".
+    if entry.primal_signature:
+        _signature_panel(entry, st)
+
     if entry.primal:
         st.markdown("**Original against converted, over the whole history**")
         st.write(entry.primal)
-        if entry.primal_signature:
-            st.markdown("**What kind of disagreement this is**")
-            st.write(entry.primal_signature)
         series = histories(work_dir, entry.key)
         if series:
             st.line_chart({name: [row[0] if row else None
@@ -170,6 +183,190 @@ def _entry_panel(entry, work_dir: Path, st) -> None:
     if text:
         with st.expander("the generated deck"):
             st.code(text)
+
+
+def _verdict_panel(entry, st) -> None:
+    """What this entry may honestly be called, before anything else on it.
+
+    The batch's own terminal state is carried unedited. What is added is the
+    qualification the six gates make necessary, in the channel that matches
+    it: a complete six is a success, a gate that did not hold is an error, and
+    a gate nobody established is a WARNING -- a third channel, because a
+    measurement that was never made is neither a pass nor a failure and a
+    reader must not have to read the text to tell which of the three it is.
+
+    Measured on pass10: 3 of the 10 entries the batch settled at ``verified``
+    carry no informativeness measurement at all. The word "verified" does not
+    appear over any of them here.
+    """
+    verdict = entry.verdict or {}
+    st.markdown(f"**{verdict.get('qualified state', entry.terminal_state)}**")
+    claim = verdict.get("what may be claimed") or ""
+    if verdict.get("may be called verified"):
+        st.success(claim)
+    elif verdict.get("nothing was measured"):
+        # Its own channel. An entry that never reached a run is not a warning
+        # about this pipeline's evidence -- nobody published what the material
+        # is made of, or the file is not a UMAT -- and drawing it beside the
+        # entries whose gates nobody got round to measuring would pool two
+        # answers the record keeps apart.
+        st.info(claim)
+    elif verdict.get("gates never established"):
+        st.warning(claim)
+    else:
+        st.error(claim)
+
+
+def _gate_tally_panel(entry, st) -> None:
+    """The six split three ways, so the split cannot be read as a two-way one.
+
+    A page that lists "5 of 6 passed" has already merged "did not hold" with
+    "nobody measured it", and those are the two findings a reader most needs
+    apart: one is a result about the source and the other is a hole in this
+    pipeline's evidence.
+    """
+    verdict = entry.verdict or {}
+    st.write({
+        "gates that hold": verdict.get("gates that hold") or [],
+        "gates that did not hold": verdict.get("gates that did not hold") or [],
+        f"gates {NOT_ESTABLISHED} -- neither a pass nor a failure":
+            verdict.get("gates never established") or [],
+    })
+    after = verdict.get(
+        "what the batch recorded after a gate that did not hold") or {}
+    for gate, said in after.items():
+        st.caption(f"{gate.replace('_', ' ')}: {said}")
+    # Findings the six gates do not cover, on the page beside them rather
+    # than under them: a source can pass every gate this pipeline measures
+    # and still be a source whose own response is not frame indifferent.
+    outside = verdict.get("findings outside the six gates") or []
+    if outside:
+        st.markdown("**What the record says that the six gates do not cover**")
+        for said in outside:
+            st.warning(said)
+
+
+def _planned_experiment_panel(entry, st) -> None:
+    """Why this source was driven the way it was, quoted from the source.
+
+    The loading path says what was driven. This says why: which family of
+    behaviour the source was read as, what criterion an experiment for that
+    family has to meet, and which lines of the source settled it. A reader who
+    cannot see the quoted lines cannot disagree with the reading, and a
+    reading nobody can disagree with is not evidence.
+    """
+    plan = entry.planned_experiment or {}
+    st.markdown("**Why this source was driven this way**")
+    if not plan.get("recorded"):
+        st.warning("this run records no planned experiment, so why this "
+                   "source was driven the way it was is " + NOT_ESTABLISHED)
+    st.write({k: v for k, v in plan.items()
+              if k not in ("recorded", "the source lines that settled it",
+                           "notes this family carries", "warnings")})
+    lines = plan.get("the source lines that settled it") or []
+    if lines:
+        st.caption("the source lines that settled the family:")
+        for line in lines:
+            st.code(str(line))
+    for note in plan.get("notes this family carries") or ():
+        st.caption(f"note: {note}")
+    for warning in plan.get("warnings") or ():
+        st.warning(str(warning))
+
+
+def _coverage_panel(entry, st) -> None:
+    """The family's own criteria, each with three possible answers.
+
+    ``met=null`` is NOT MEASURED and is shown as ``not established``: on
+    pass10 one criterion reads "no increment in this run applied a direct
+    strain with no shear, so the coupling has nothing to show up in", and a
+    page that rendered that as met would be claiming a coupling was exercised
+    by an experiment that never presented it.
+    """
+    if not entry.coverage:
+        return
+    st.markdown("**The criteria this family of behaviour has to meet**")
+    st.table(entry.coverage)
+    unestablished = [row["finding"] for row in entry.coverage
+                     if not row["established"]]
+    if unestablished:
+        st.warning("not measured on this run, so neither met nor unmet: "
+                   + "; ".join(unestablished))
+
+
+def _objectivity_panel(entry, st) -> None:
+    """Two facts, two rows, never one tick.
+
+    "agreed" is about THE TRANSFORM -- the converted build and the original
+    computed the same thing on a rotated path. "objective" is about THE MODEL
+    -- the author's own response to a rotated path is the unrotated response
+    rotated. On pass10 the NeoHookean entry has agreed=true and
+    objective=false, its own response missing Q sigma Q^T by 9.02 relative, so
+    merging them would report this pipeline's success as the published
+    source's correctness.
+    """
+    rows = entry.objectivity or []
+    if not any(row["established"] for row in rows) and not entry.objectivity_detail:
+        return
+    st.markdown("**Objectivity: two different claims, kept apart**")
+    st.table(rows)
+    for row in rows:
+        if row["holds"] == DID_NOT_HOLD:
+            st.error(f"{row['finding']}: {DID_NOT_HOLD}. {row['why']}")
+        elif not row["established"]:
+            st.warning(f"{row['finding']}: {NOT_ESTABLISHED}. {row['why']}")
+    with st.expander("the rotation and what was compared in it"):
+        st.write(entry.objectivity_detail)
+
+
+def _informativeness_panel(entry, st) -> None:
+    """Whether there is any behaviour under the agreement, and at what scale.
+
+    Agreement about a material sitting still is agreement about the part every
+    build gets right. This is the gate that says whether there was anything
+    else, the clock the experiment ran against, and whether the response it
+    produced fits the scales the problem supplies.
+    """
+    st.markdown("**Did the material do anything, and does the response fit "
+                "the problem**")
+    st.table([entry.informativeness])
+    if not entry.informativeness.get("established"):
+        st.warning("whether the material did anything over the run that was "
+                   "verified is " + NOT_ESTABLISHED + ": "
+                   + str(entry.informativeness.get("why") or ""))
+    elif entry.informativeness.get("holds") == DID_NOT_HOLD:
+        st.error(str(entry.informativeness.get("why") or ""))
+
+    st.markdown("**Against the source's own clock**")
+    st.table([entry.time_scale])
+
+    if entry.plausibility or entry.plausibility_overall.get("established"):
+        st.markdown("**Whether the response fits the scales this problem "
+                    "supplies**")
+        st.table([entry.plausibility_overall] + list(entry.plausibility))
+
+
+def _signature_panel(entry, st) -> None:
+    """Hypotheses about a disagreement, each with its own confirmation status.
+
+    A stage is not a diagnosis. Every hypothesis carries whether it was
+    confirmed, refuted or still needs evidence, and ``confirmed_root_cause``
+    is shown as ``not established`` wherever the record holds null -- which is
+    every hypothesis that is not settled. A list without the statuses reads as
+    a set of conclusions.
+    """
+    st.markdown("**What kind of disagreement this is -- hypotheses, not a "
+                "diagnosis**")
+    rows = entry.signature or []
+    if rows:
+        st.table(rows)
+        confirmed = [row for row in rows
+                     if row["confirmed root cause"] != NOT_ESTABLISHED]
+        if not confirmed:
+            st.warning("no root cause is confirmed: every hypothesis below "
+                       "is " + NOT_ESTABLISHED)
+    with st.expander("the signature block as the batch wrote it"):
+        st.write(entry.primal_signature)
 
 
 def _experiment_panel(entry, st) -> None:

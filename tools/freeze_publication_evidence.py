@@ -11,13 +11,25 @@ Nothing is overwritten. Each freeze lands in its own directory; a second freeze
 at the same commits is refused unless --force is given, because silently
 replacing a snapshot that figures already cite is how a paper ends up with
 numbers nobody can reproduce.
+
+And nothing that is not a number is frozen at all. Every .json and .csv file
+is read before it is copied, and a snapshot carrying a NaN, an infinity, or a
+marker saying a published number came off an analysis that stopped before it
+finished is refused with the value named. This is the same rule
+``export_residual_fixture.py`` applies to a regression fixture and for the same
+reason: a snapshot is what a figure cites, so it is the one artefact nothing
+downstream can catch an error in. A NaN in it does not fail -- it propagates,
+and SHA256SUMS blesses it on the way past.
 """
 
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
+import io
 import json
+import math
 import platform
 import shutil
 import subprocess
@@ -75,6 +87,164 @@ EVIDENCE = (
     "tables/paper_tables.docx",
     "PAPER_READY_SUMMARY.md",
 )
+
+
+class EvidenceRefused(ValueError):
+    """A snapshot that may not be frozen, said in terms of what is wrong."""
+
+
+#: What a cell or a JSON string can spell that is not a number. Checked as
+#: text as well as as a float because ``json.loads`` decodes the bare literals
+#: ``NaN`` and ``Infinity`` happily, and because a value that reached a CSV as
+#: the string "nan" is still a NaN the moment a figure plots it.
+NON_FINITE_WORDS = frozenset(
+    ("nan", "-nan", "+nan", "inf", "-inf", "+inf",
+     "infinity", "-infinity", "+infinity"))
+
+#: Keys that mark a recorded result as resting on an analysis that did not run
+#: finite from end to end. They appear in a record only about that record's
+#: own run, so finding one means a file being frozen as evidence contains a
+#: number taken from a truncated analysis -- not that a report counted one.
+TRUNCATION_KEYS = ("complete_finite_verification_run",
+                   "first_non_finite_material_point",
+                   "first_incomplete_increment")
+
+
+def _said(destination: Path) -> str:
+    """A snapshot's path, said relative to the repository where it is under
+    it and in full where it is not.
+
+    ``relative_to`` raises rather than falling back, so a run given an
+    ``--out-root`` outside the checkout used to crash on the line that reports
+    success -- after the snapshot had been written.
+    """
+    try:
+        return str(destination.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(destination)
+
+
+def _walk(payload, path: str = ""):
+    """Every leaf of a decoded JSON document with the path that reaches it."""
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            yield from _walk(value, f"{path}.{key}")
+    elif isinstance(payload, (list, tuple)):
+        for index, value in enumerate(payload):
+            yield from _walk(value, f"{path}[{index}]")
+    else:
+        yield path, payload
+
+
+def _walk_nodes(payload, path: str = ""):
+    """Every node, branches included.
+
+    Separate from :func:`_walk` because a truncation marker is a DICT --
+    ``first_non_finite_material_point`` is ``{"element": 1, "point": 3,
+    "increment": 6}`` -- and a leaves-only walk descends straight past it into
+    its three integers, none of which is named anything a check would notice.
+    """
+    yield path, payload
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            yield from _walk_nodes(value, f"{path}.{key}")
+    elif isinstance(payload, (list, tuple)):
+        for index, value in enumerate(payload):
+            yield from _walk_nodes(value, f"{path}[{index}]")
+
+
+def not_a_number_in(path: Path, relative: str) -> list:
+    """Every value in one evidence file that is not a finite number.
+
+    A figure is only as trustworthy as the file behind it, and a NaN frozen
+    into a snapshot does not fail: it propagates. Matplotlib draws a gap, a
+    mean over it comes back NaN, a table cell renders as "nan", and the
+    snapshot's SHA256SUMS says the whole thing was checked. So it is refused
+    at freeze time rather than argued about at read time.
+
+    Text files only. A PNG is not scanned -- what a figure is drawn FROM is in
+    this list beside it, and that is the file a number comes out of.
+    """
+    problems: list = []
+    suffix = path.suffix.lower()
+    if suffix not in (".json", ".csv"):
+        return problems
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError as error:
+        return [f"{relative} could not be read: {error}"]
+
+    if suffix == ".json":
+        try:
+            payload = json.loads(text)
+        except ValueError as error:
+            return [f"{relative} is not valid JSON: {error}"]
+        for where, value in _walk(payload, relative):
+            if isinstance(value, bool):
+                continue
+            if isinstance(value, float) and not math.isfinite(value):
+                problems.append(f"{where} is {value}")
+            elif isinstance(value, str) and \
+                    value.strip().lower() in NON_FINITE_WORDS:
+                problems.append(f"{where} is the string {value!r}")
+        return problems
+
+    for line, row in enumerate(csv.reader(io.StringIO(text)), start=1):
+        for column, cell in enumerate(row, start=1):
+            if cell.strip().lower() in NON_FINITE_WORDS:
+                problems.append(
+                    f"{relative} line {line} column {column} is {cell!r}")
+    return problems
+
+
+def rests_on_a_truncated_analysis(path: Path, relative: str) -> list:
+    """Where an evidence file publishes a number taken from a run that stopped.
+
+    Abaqus printing THE ANALYSIS HAS COMPLETED SUCCESSFULLY is a statement
+    about the solver, not about the routine it called: a job completes while
+    its UMAT returns values that are not numbers, and the finite prefix of
+    such a run looks exactly like a short successful one. A snapshot that
+    froze a number off that prefix would give a paper a figure nobody can
+    catch an error in, so the markers the pipeline writes about its own runs
+    are refused here the same way a NaN is.
+    """
+    problems: list = []
+    if path.suffix.lower() != ".json":
+        return problems
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, ValueError):
+        return problems
+    for where, value in _walk_nodes(payload, relative):
+        name = where.rsplit(".", 1)[-1].split("[")[0]
+        if name not in TRUNCATION_KEYS:
+            continue
+        if name == "complete_finite_verification_run" and value is False:
+            problems.append(
+                f"{where} is false: this file publishes a result from a run "
+                f"that was not finite from end to end")
+        elif name != "complete_finite_verification_run" and value is not None:
+            problems.append(
+                f"{where} is {value!r}: this file publishes a result from an "
+                f"analysis that stopped before it finished, and the finite "
+                f"prefix of a failed run looks exactly like a short "
+                f"successful one")
+    return problems
+
+
+def why_this_snapshot_may_not_be_frozen(present: list) -> list:
+    """Every reason this evidence may not be frozen, rather than the first.
+
+    ``present`` is (relative path, absolute path) for each evidence file that
+    exists. A file listed and absent is recorded as absent by the caller and
+    is not a reason to refuse -- a snapshot that says what is missing is
+    honest; one that says a NaN is a number is not.
+    """
+    problems: list = []
+    for relative, path in present:
+        problems.extend(not_a_number_in(path, relative))
+        problems.extend(rests_on_a_truncated_analysis(path, relative))
+    return problems
 
 
 def sha256(path: Path) -> str:
@@ -232,6 +402,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--force", action="store_true",
                         help="overwrite a snapshot already frozen at these commits")
     parser.add_argument("--label", default=None)
+    parser.add_argument(
+        "--allow-non-finite", action="store_true",
+        help="freeze anyway, recording the refusal as a warning. For "
+             "inspecting a broken round only: a snapshot frozen with this "
+             "must not be cited.")
     args = parser.parse_args(argv)
 
     umat = repository_state(REPO_ROOT)
@@ -245,20 +420,39 @@ def main(argv: list[str] | None = None) -> int:
     destination = args.out_root / name
     if destination.exists() and not args.force:
         print(f"a snapshot for these commits already exists at "
-              f"{destination.relative_to(REPO_ROOT)}. Refusing to overwrite it: "
+              f"{_said(destination)}. Refusing to overwrite it: "
               "figures and tables cite it by path. Pass --force only if you mean "
               "to replace it.", file=sys.stderr)
         return 3
+    # Read the evidence BEFORE anything is written. A snapshot is what a
+    # figure cites, so a refused freeze must leave no directory behind for a
+    # later reader to mistake for a half-written one.
+    present, missing = [], []
+    for relative in EVIDENCE:
+        source = RESULTS / relative
+        (present.append((relative, source)) if source.is_file()
+         else missing.append(relative))
+    problems = why_this_snapshot_may_not_be_frozen(present)
+    if problems and not args.allow_non_finite:
+        print("this evidence may not be frozen:\n  - "
+              + "\n  - ".join(problems), file=sys.stderr)
+        print("\nA number that is not a number does not fail downstream, it "
+              "propagates: a figure draws a gap, a mean over it comes back "
+              "NaN, and SHA256SUMS says the whole snapshot was checked. Fix "
+              "the run that produced these rather than freezing them.",
+              file=sys.stderr)
+        return 4
+    if problems:
+        print(f"WARNING: freezing {len(problems)} non-finite or truncated "
+              f"value(s) because --allow-non-finite was given. This snapshot "
+              f"must not be cited.", file=sys.stderr)
+
     if destination.exists():
         shutil.rmtree(destination)
     (destination / "evidence").mkdir(parents=True)
 
-    copied, missing = [], []
-    for relative in EVIDENCE:
-        source = RESULTS / relative
-        if not source.is_file():
-            missing.append(relative)
-            continue
+    copied = []
+    for relative, source in present:
         target = destination / "evidence" / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
@@ -276,6 +470,16 @@ def main(argv: list[str] | None = None) -> int:
         "verification_gates": gates(),
         "evidence_files": copied,
         "evidence_files_absent": missing,
+        "finiteness_check": {
+            "rule": ("every .json and .csv file in this snapshot was read "
+                     "before it was copied and contains no NaN, no infinity "
+                     "and no marker that a published number was taken from an "
+                     "analysis that stopped before it finished. Refused at "
+                     "freeze time by why_this_snapshot_may_not_be_frozen()."),
+            "files_read": len(present),
+            "problems_found": problems,
+            "frozen_anyway": bool(problems),
+        },
         "regeneration_commands": [
             "python tools/run_parameter_sensitivity_sweep.py",
             "python tools/run_internal_jacobian_round.py",
@@ -301,7 +505,7 @@ def main(argv: list[str] | None = None) -> int:
     checksums.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     print(f"froze {len(copied)} evidence files into "
-          f"{destination.relative_to(REPO_ROOT)}")
+          f"{_said(destination)}")
     if missing:
         print(f"absent (recorded, not silently skipped): {', '.join(missing)}")
     print(f"umat  {umat['commit']}  dirty={umat['worktree_dirty']}")

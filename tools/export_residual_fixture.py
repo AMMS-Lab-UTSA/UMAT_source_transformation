@@ -67,6 +67,14 @@ REQUIRED_GATES = ("abaqus_job_completed", "all_requested_outputs_present",
 #: freeze a NaN that only shows up once somebody assembles a stiffness.
 CARRIED_ARRAYS = ("strain", "dstrain", "stress", "state", "ddsdde")
 
+#: The arrays scanned across the WHOLE probe history rather than only the
+#: carried window, under the names the probe writes them. A window is six
+#: increments out of hundreds, and a run that went to NaN at increment 200 has
+#: a perfectly finite window at increment 4 -- so scanning only what is
+#: carried cannot tell a verification apart from the salvageable prefix of a
+#: failed analysis.
+PROBE_ARRAYS = ("STRESS", "STATEV", "DDSDDE")
+
 
 class FixtureRefused(ValueError):
     """A case that may not be frozen, said in terms of what is wrong with it."""
@@ -103,6 +111,53 @@ def not_a_number(values, label: str) -> list:
         if not math.isfinite(number):
             problems.append(f"{label}[{index}] is {number}")
     return problems
+
+
+def scan_whole_history(records: list, side: str) -> dict:
+    """Every value in an ENTIRE probe history that is not a finite number.
+
+    The third reading, and the one the other two cannot do. What the batch
+    recorded is a claim about the run; the carried window is six increments of
+    it; this is every number the run wrote. A fixture is not allowed to be the
+    finite prefix of an analysis that stopped being numbers later on, because
+    such a fixture is evidence that a run which failed produced a baseline --
+    and the failure is then invisible in every comparison made against it.
+
+    Returns the count scanned and the first offending value, named down to the
+    record, the array and the index, so a refusal points at a number rather
+    than at a file.
+    """
+    scanned = 0
+    for position, record in enumerate(records or ()):
+        if not isinstance(record, dict):
+            continue
+        for name in PROBE_ARRAYS:
+            for index, value in enumerate(record.get(name) or ()):
+                scanned += 1
+                try:
+                    number = float(value)
+                except (TypeError, ValueError):
+                    return {"side": side, "values_scanned": scanned,
+                            "records_scanned": position + 1,
+                            "first_non_finite": {
+                                "record": position, "array": name,
+                                "index": index, "value": repr(value),
+                                "increment": record.get("increment"),
+                                "element": record.get("element"),
+                                "point": record.get("point"),
+                                "time": record.get("time")}}
+                if not math.isfinite(number):
+                    return {"side": side, "values_scanned": scanned,
+                            "records_scanned": position + 1,
+                            "first_non_finite": {
+                                "record": position, "array": name,
+                                "index": index, "value": str(number),
+                                "increment": record.get("increment"),
+                                "element": record.get("element"),
+                                "point": record.get("point"),
+                                "time": record.get("time")}}
+    return {"side": side, "values_scanned": scanned,
+            "records_scanned": len(records or ()), "first_non_finite": None}
 
 
 def why_this_may_not_be_frozen(row: dict, carried: dict) -> list:
@@ -163,6 +218,46 @@ def why_this_may_not_be_frozen(row: dict, carried: dict) -> list:
                 f"{source}: the {side} history stops being numbers at element "
                 f"{non_finite.get('element')} point {non_finite.get('point')} "
                 f"of increment {non_finite.get('increment')}")
+
+    # -- the window was not carved out of a run that stopped early --------
+    # A regression fixture that is short is a fixture built on however far a
+    # failed analysis happened to get. Worse, it is short SILENTLY: the window
+    # clamps itself to whatever is on disk and the artefact records the
+    # shortened number as though it had been asked for.
+    evidence = carried.get("finite_history") or {}
+    asked = evidence.get("increments_requested")
+    got = evidence.get("increments_carried")
+    if isinstance(asked, int) and isinstance(got, int) and got < asked:
+        problems.append(
+            f"{source}: the window carries {got} increment(s) of the {asked} "
+            f"asked for, because only {evidence.get('records_available')} "
+            f"record(s) are on disk from {evidence.get('records_requested_from')}"
+            f" -- a fixture that is short is a fixture built on however far "
+            f"an analysis got before it stopped, and nothing downstream can "
+            f"tell that from a run that was meant to be that length")
+
+    # -- and every number the run wrote, not only the ones being carried ---
+    # A window of six increments out of hundreds is finite in a run that went
+    # to NaN at increment 200. Scanning only the window cannot tell a
+    # verification apart from the salvageable prefix of a failed analysis.
+    for side, scan in (evidence.get("whole_history") or {}).items():
+        if not isinstance(scan, dict):
+            continue
+        if not scan.get("records_scanned"):
+            problems.append(
+                f"{source}: the {side} probe history on disk is empty, so no "
+                f"reading of the numbers themselves was possible")
+            continue
+        where = scan.get("first_non_finite")
+        if where:
+            problems.append(
+                f"{source}: the {side} history stops being numbers OUTSIDE "
+                f"the carried window -- {where.get('array')}"
+                f"[{where.get('index')}] is {where.get('value')} at record "
+                f"{where.get('record')}, increment {where.get('increment')}, "
+                f"element {where.get('element')} point {where.get('point')}. "
+                f"The window is finite and the run is not, so a fixture taken "
+                f"from it would be the prefix of a failed analysis")
 
     # -- and the numbers themselves ---------------------------------------
     ntens = int((carried.get("material_point") or {}).get("ntens") or 0)
@@ -248,6 +343,10 @@ def fixture_from(row: dict, work_dir: Path, increments: int = INCREMENTS, *,
     converted = _history(work_dir, key, "transformed")
     if not original or not converted:
         return None
+    # Kept whole beside the window, because the check that a fixture is not
+    # the finite prefix of a failed run has to read the records the window
+    # does NOT carry.
+    original_records, converted_records = list(original), list(converted)
     manifest = row.get("manifest") or {}
     available = min(len(original), len(converted))
     if start is None:
@@ -337,6 +436,18 @@ def fixture_from(row: dict, work_dir: Path, increments: int = INCREMENTS, *,
                 row, "complete_finite_verification_run"),
             "history_grouping": at_either_level(row, "history_grouping"),
             "increments_carried": take,
+            # What was ASKED for, beside what was got. Without it a short
+            # window is indistinguishable from a short request, and a fixture
+            # built on however far a failed analysis got reads as deliberate.
+            "increments_requested": increments,
+            "records_available": available,
+            "records_requested_from": {"original": len(original_records),
+                                       "transformed": len(converted_records)},
+            # Every number the run wrote, scanned, not only the ones carried.
+            "whole_history": {
+                "original": scan_whole_history(original_records, "original"),
+                "transformed": scan_whole_history(converted_records,
+                                                  "transformed")},
             "window_starts_at_record": start,
             "why_that_record": (
                 "the first record the pipeline verified a tangent at, whose "

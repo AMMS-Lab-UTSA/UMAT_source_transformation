@@ -252,6 +252,12 @@ def evidence_rows(row: dict) -> list:
         rows.append({
             "gate": name.replace("_", " "),
             "field": name,
+            # The same three words every other finding on the page uses. Two
+            # vocabularies for one concept is how a reader ends up wondering
+            # whether "not measured" here and "not established" there are
+            # different things. They are not.
+            "holds": three_state(value),
+            "established": value is not None,
             "measured": NOT_MEASURED if value is None else _said(value),
             "passed": None if value is None else bool(value),
             "what it measures": what,
@@ -260,6 +266,493 @@ def evidence_rows(row: dict) -> list:
                          if value is False else ""),
         })
     return rows
+
+
+# ---------------------------------------------------------------------------
+# three states, and why there have to be three
+# ---------------------------------------------------------------------------
+#: What a recorded finding is called when the record holds ``null`` for it.
+#: A step whose result was never established is not a step that passed and it
+#: is not a step that failed: it is a hole in the evidence. Rendering a null
+#: as either invents a measurement nobody made, and a null shown as a pass is
+#: the worst thing this interface can do -- so the three are three strings
+#: that cannot be mistaken for one another on a page.
+NOT_ESTABLISHED = "not established"
+HELD = "yes"
+DID_NOT_HOLD = "no"
+
+
+def three_state(value: Any) -> str:
+    """One recorded finding as exactly one of three words.
+
+    ``None`` is :data:`NOT_ESTABLISHED` and nothing else. There is deliberately
+    no default and no truthiness shortcut that would let an absent measurement
+    fall through to "no": "nobody measured it" and "it was measured and it
+    failed" are different findings and a reader is entitled to both.
+    """
+    if value is None:
+        return NOT_ESTABLISHED
+    return HELD if bool(value) else DID_NOT_HOLD
+
+
+def finding(name: str, value: Any, reason: str = "", *,
+            magnitude: Any = None, about: str = "") -> dict:
+    """One finding as a row: what it is, whether it holds, and why.
+
+    ``established`` is carried beside ``holds`` so a table can be read without
+    parsing a word, and so a caller cannot collapse the three states back into
+    two by treating the string as a boolean.
+    """
+    return {
+        "finding": name,
+        "holds": three_state(value),
+        "established": value is not None,
+        "recorded": value,
+        "what it is about": about,
+        "magnitude": magnitude,
+        "why": reason,
+    }
+
+
+# ---------------------------------------------------------------------------
+# the experiment that was PLANNED, as opposed to what the search had to do
+# ---------------------------------------------------------------------------
+def planned_experiment(row: dict) -> dict:
+    """Why this source was driven the way it was, in the record's own words.
+
+    Distinct from :func:`experiment_settlement`, which is what the amplitude
+    search had to do to get a run that finishes. This is the decision before
+    that: which family of behaviour the source was read as, what criterion an
+    experiment for that family has to meet, and which lines of the source
+    settled it. A page that shows only the loading path shows what was driven
+    and not why, and "why" is the part a reader has to be able to disagree
+    with.
+
+    An entry whose ``experiment`` block is empty -- 5 of the 38 pass10 records
+    that carry one -- is reported as not established rather than as a blank,
+    because a blank reads as "there was nothing to say".
+    """
+    plan = row.get("experiment")
+    if not isinstance(plan, dict) or not plan:
+        return {
+            "recorded": False,
+            "family": NOT_ESTABLISHED,
+            "driven by": NOT_ESTABLISHED,
+            "the criterion this experiment must meet": NOT_ESTABLISHED,
+            "what the experiment is required to do": NOT_ESTABLISHED,
+            "why this source was driven this way": NOT_ESTABLISHED,
+            "the source lines that settled it": [],
+            "notes this family carries": [],
+            "what stopped one being planned": "",
+            "warnings": [],
+        }
+    family = plan.get("family") if isinstance(plan.get("family"), dict) else {}
+    return {
+        "recorded": True,
+        "family": str(family.get("name") or "") or NOT_ESTABLISHED,
+        "driven by": str(family.get("driver") or "") or NOT_ESTABLISHED,
+        "the criterion this experiment must meet":
+            str(plan.get("criterion") or "") or NOT_ESTABLISHED,
+        "what the experiment is required to do":
+            str(plan.get("requirement") or "") or NOT_ESTABLISHED,
+        "why this source was driven this way":
+            str(plan.get("reason") or "") or NOT_ESTABLISHED,
+        # Quoted, not summarised: these are the lines of the source that
+        # decided the family, and a reader who cannot see them cannot check
+        # the decision.
+        "the source lines that settled it": list(family.get("evidence") or ()),
+        "notes this family carries": list(family.get("notes") or ()),
+        "what stopped one being planned": str(plan.get("refusal") or ""),
+        "warnings": list(plan.get("warnings") or ()),
+    }
+
+
+def coverage_rows(row: dict) -> list:
+    """The family's own criteria, each as a finding with three states.
+
+    ``met`` is the record's, unedited. ``met=null`` means NOT MEASURED and is
+    rendered as such: on pass10 one criterion reads "no increment in this run
+    applied a direct strain with no shear, so the coupling has nothing to show
+    up in", and showing that as a met criterion would claim a coupling was
+    exercised when the experiment never presented it.
+    """
+    rows = []
+    for entry in row.get("coverage") or ():
+        if not isinstance(entry, dict):
+            continue
+        rows.append(finding(
+            str(entry.get("name") or "an unnamed criterion"),
+            entry.get("met"),
+            str(entry.get("reason") or ""),
+            magnitude=entry.get("magnitude"),
+            about="a criterion of the family this source was read as"))
+    return rows
+
+
+# ---------------------------------------------------------------------------
+# objectivity: two different facts that must not be merged
+# ---------------------------------------------------------------------------
+#: The two claims the objectivity block holds, kept apart on purpose.
+#:
+#: ``agreed`` is about THE TRANSFORM: the converted build and the original,
+#: run on the same path presented in a rotated frame, computed the same thing.
+#: ``objective`` is about THE MODEL: the author's own response to a rotated
+#: path is the unrotated response rotated, which is what objectivity means.
+#:
+#: They are independent, and on pass10 they are measured to differ. The
+#: NeoHookean entry verified with ``agreed=true`` and ``objective=false``, the
+#: author's own response missing Q sigma Q^T by 9.02 relative -- so a page
+#: that merged them into one tick would report the transform's success as the
+#: model's correctness and hide a finding about the published source.
+OBJECTIVITY_CLAIMS = (
+    ("agreed",
+     "the converted build agrees with the original on a rotated path",
+     "the transform: whether converting the source changed what it computes "
+     "in a rotated frame",
+     "worst_stress_relative"),
+    ("objective",
+     "the author's own response to a rotated path is Q sigma Q^T",
+     "the model: whether the published source is frame indifferent, which is "
+     "a property of what its author wrote and not of this pipeline",
+     "objectivity_worst_relative"),
+)
+
+
+def objectivity_rows(row: dict) -> list:
+    """The objectivity block as two findings, never as one.
+
+    Returns two rows always -- one per claim in :data:`OBJECTIVITY_CLAIMS` --
+    so that a record which measured one and not the other shows a measurement
+    beside a "not established" rather than a single word covering both.
+    """
+    block = row.get("objectivity")
+    block = block if isinstance(block, dict) else {}
+    reasons = {"agreed": str(block.get("reason") or ""),
+               "objective": str(block.get("objectivity_reason")
+                                or block.get("reason") or "")}
+    rows = []
+    for name, what, about, magnitude in OBJECTIVITY_CLAIMS:
+        value = block.get(name)
+        rows.append(finding(what, value,
+                            reasons[name] if value is not None else
+                            ("no rotated-frame comparison was run for this "
+                             "entry" if not block else
+                             "this run recorded no measurement of it"),
+                            magnitude=block.get(magnitude),
+                            about=about))
+    return rows
+
+
+def objectivity_detail(row: dict) -> dict:
+    """Everything else the objectivity block carries, named.
+
+    The rotation itself is here because "in a rotated frame" is not checkable
+    until the frame is on the page: it is the nine entries of Q, row major.
+    """
+    block = row.get("objectivity")
+    if not isinstance(block, dict) or not block:
+        return {"ran": three_state(None),
+                "why": "this run carries no objectivity block at all, so "
+                       "neither claim was established"}
+    return {
+        "ran": three_state(block.get("ran")),
+        "the rotation Q, row major": list(block.get("rotation") or ()),
+        "components compared": block.get("compared_components"),
+        "worst stress difference, converted against original":
+            block.get("worst_stress_relative"),
+        "worst state difference, converted against original":
+            block.get("worst_state_relative"),
+        "worst departure from Q sigma Q^T in the author's own response":
+            block.get("objectivity_worst_relative"),
+        "the original's own job": block.get("original"),
+        "the converted build's own job": block.get("transformed"),
+    }
+
+
+# ---------------------------------------------------------------------------
+# did the material do anything, and does the response fit the problem
+# ---------------------------------------------------------------------------
+def informativeness_row(row: dict) -> dict:
+    """Whether the run a verdict rests on exercised the material at all.
+
+    Three states, and the middle one is the point: 3 of the 10 pass10 entries
+    that reached ``verified`` carry no informativeness measurement at all.
+    Agreement about a material sitting still is agreement about the part every
+    build gets right, and "nobody measured whether it sat still" is not the
+    same claim as "it did something".
+    """
+    block = field_anywhere(row, "mechanically_informative")
+    block = block if isinstance(block, dict) else {}
+    measured = row.get("evidence") or {}
+    recorded = measured.get("mechanically_informative")
+    value = block.get("informative") if "informative" in block else recorded
+    # Three different absences, and saying the wrong one is its own dishonesty.
+    # 108 of the 254 pass10 entries never reached a run at all, and telling
+    # those "this run predates the informativeness gate" invents a run.
+    if not measured:
+        absent = ("nothing ran for this entry, so there was no run over which "
+                  "the material could have done anything")
+    elif recorded is None:
+        absent = ("this run predates the informativeness gate, so whether the "
+                  "material did anything over it was never measured")
+    else:
+        absent = ""
+    return finding(
+        "the material did something over the run that was verified",
+        value,
+        str(block.get("reason") or "") or absent,
+        about="whether there is any behaviour under the agreement")
+
+
+def plausibility_rows(row: dict) -> list:
+    """Each plausibility check as its own finding.
+
+    A peak stress is plausible against the scales the problem supplies or it
+    is not, and the record keeps one check per scale. Summed into a single
+    "plausible" they would hide which scale the response failed against.
+    """
+    block = row.get("response_plausibility")
+    block = block if isinstance(block, dict) else {}
+    rows = []
+    for check in block.get("checks") or ():
+        if not isinstance(check, dict):
+            continue
+        rows.append(finding(
+            str(check.get("name") or "an unnamed check"),
+            check.get("plausible"),
+            str(check.get("detail") or ""),
+            magnitude=check.get("measured"),
+            about=f"measured against {check.get('against')}"))
+    return rows
+
+
+def plausibility_overall(row: dict) -> dict:
+    block = row.get("response_plausibility")
+    block = block if isinstance(block, dict) else {}
+    return finding("the response fits the scales this problem supplies",
+                   block.get("plausible") if block else None,
+                   "" if block else "no plausibility check is recorded for "
+                                    "this entry",
+                   about="the response as a whole")
+
+
+def time_scale_row(row: dict) -> dict:
+    """Whether the experiment ran long enough for the clock the source keeps.
+
+    ``enough`` is three-state for the same reason everything else here is: a
+    source that declares no time scale of its own is not a source whose
+    experiment was too short, and the record says which of those it is.
+    """
+    block = field_anywhere(row, "time_scale_coverage")
+    block = block if isinstance(block, dict) else {}
+    scale = block.get("scale") if isinstance(block.get("scale"), dict) else {}
+    row_out = finding(
+        "the experiment reached the time scale the source declares",
+        block.get("enough") if block else None,
+        str(block.get("reason") or "") or
+        "no time-scale measurement is recorded for this entry",
+        magnitude=block.get("fraction"),
+        about="how long the run was against the source's own clock")
+    row_out["the source declares a time scale"] = three_state(
+        scale.get("declared") if scale else None)
+    row_out["that scale"] = scale.get("name") or ""
+    row_out["its value"] = scale.get("value")
+    row_out["the experiment's total time"] = block.get("total_time")
+    row_out["reaches the heuristic"] = three_state(
+        block.get("reaches_heuristic") if block else None)
+    return row_out
+
+
+def signature_rows(row: dict) -> list:
+    """Each hypothesis about a primal disagreement, with its own status.
+
+    A stage is not a diagnosis. The record keeps hypotheses, and each one
+    carries whether it was confirmed, refuted, or still needs evidence -- and
+    ``confirmed_root_cause`` is null on every hypothesis that is not settled.
+    A page that showed the list without the status would read as a set of
+    conclusions.
+    """
+    block = field_anywhere(row, "primal_signature")
+    block = block if isinstance(block, dict) else {}
+    rows = []
+    for entry in block.get("hypotheses") or ():
+        if not isinstance(entry, dict):
+            continue
+        status = str(entry.get("confirmation_status") or "") or NOT_ESTABLISHED
+        cause = entry.get("confirmed_root_cause")
+        rows.append({
+            "hypothesis": entry.get("hypothesis"),
+            "what it claims": entry.get("claim"),
+            "confirmation status": status,
+            "confirmed root cause":
+                NOT_ESTABLISHED if cause is None else str(cause),
+            "what would confirm it": entry.get("what_would_confirm"),
+            "what would refute it": entry.get("what_would_refute"),
+            "supporting evidence": [
+                e.get("statement") for e in entry.get("supporting_evidence") or ()
+                if isinstance(e, dict)],
+            "contradicting evidence": [
+                e.get("statement") for e in
+                entry.get("contradicting_evidence") or ()
+                if isinstance(e, dict)],
+            "reproduced": three_state(entry.get("reproduction")),
+        })
+    return rows
+
+
+def material_search_row(row: dict) -> dict:
+    """Where constants were looked for, as a finding rather than a blank.
+
+    "Nobody published what this material is made of" is a claim until it names
+    the files it read; this carries the scan's own account beside a three-state
+    answer to whether anything was found.
+    """
+    searched = field_anywhere(row, "searched_for_material_data")
+    searched = searched if isinstance(searched, dict) else {}
+    provenance = str(row.get("material_provenance") or "")
+    # True where a deck published them, False where a scan ran and found
+    # none, and None where no scan is recorded at all -- which is "nobody
+    # looked here", not "there is nothing to find".
+    found = True if provenance else (False if searched else None)
+    out = finding("constants for this source were found",
+                  found,
+                  _where_constants_were_looked_for(row),
+                  about="what the pairing scan read")
+    out["repository scanned"] = searched.get("repository") or NOT_ESTABLISHED
+    out["decks read"] = searched.get("decks_scanned")
+    out["what the scan found"] = searched.get("evidence") or ""
+    return out
+
+
+# ---------------------------------------------------------------------------
+# what the six gates say about the stage, and what may be claimed
+# ---------------------------------------------------------------------------
+def gate_tally(row: dict) -> dict:
+    """The six gates split three ways: held, did not hold, never established."""
+    measured = row.get("evidence") or {}
+    held, broke, unestablished = [], [], []
+    for name, _what, _where in EVIDENCE_GATES:
+        value = measured.get(name)
+        (unestablished if value is None else held if value else broke).append(name)
+    return {"held": held, "did not hold": broke,
+            "never established": unestablished}
+
+
+def what_may_be_claimed(row: dict) -> dict:
+    """What this entry may honestly be called, and which gate decides it.
+
+    The batch's own terminal state is carried unedited -- a verdict rendered
+    differently here than in the evidence is a second opinion nobody can cite.
+    What is added is the qualification the six gates make necessary, because
+    ``fully_verified`` is one word and the six are the measurements under it.
+
+    The rule this function exists to keep: the page does not call an entry
+    verified where ``mechanically_informative`` is false or was never
+    established. Measured on the finished pass10 round, 44 entries reached the
+    stage ``verified`` and 38 may be called it. Of the six that may not, 3
+    carry no informativeness measurement at all -- agreement with nothing
+    established about whether the material did anything -- and 3 had their raw
+    primal comparison disagree and then explained. All six are real results
+    and none of them is a verification of the material's behaviour, so none is
+    shown as one.
+    """
+    stage = str(row.get("stage") or "")
+    state = from_stage(stage, str(row.get("reason") or "")).state
+    tally = gate_tally(row)
+    measured = row.get("evidence") or {}
+    informative = measured.get("mechanically_informative")
+
+    complete = not tally["never established"] and not tally["did not hold"]
+    # 108 of the 254 pass10 entries never reached a run at all. Naming ONE
+    # unestablished gate over such an entry implies the other five were fine;
+    # all six are unestablished and the qualifier says so.
+    nothing_measured = len(tally["never established"]) == len(EVIDENCE_GATES)
+
+    qualifier = ""
+    if nothing_measured:
+        qualifier = "nothing measured"
+    elif informative is None:
+        qualifier = "informativeness not established"
+    elif informative is False:
+        qualifier = "the material did nothing over this run"
+    elif tally["never established"]:
+        qualifier = (", ".join(n.replace("_", " ")
+                               for n in tally["never established"])
+                     + " not established")
+    elif tally["did not hold"]:
+        qualifier = ", ".join(n.replace("_", " ") + " did not hold"
+                              for n in tally["did not hold"])
+
+    # Telling an entry that never ran "agreement only" would report an
+    # agreement that never happened. Nothing measured is its own answer.
+    if complete:
+        claim = "verified: all six gates were measured and all six hold"
+    elif nothing_measured:
+        claim = ("nothing was measured: this entry never reached a run the "
+                 "six gates could be measured on, so none of them holds and "
+                 "none of them failed")
+    elif informative is False:
+        claim = ("the material did nothing over this run. Agreement about a "
+                 "material sitting still is agreement about the part every "
+                 "build gets right, so this is not a verification of its "
+                 "behaviour")
+    elif tally["did not hold"]:
+        claim = ("not complete on the six gates: "
+                 + ", ".join(n + " did not hold" for n in tally["did not hold"]))
+        if tally["never established"]:
+            claim += ("; " + ", ".join(tally["never established"])
+                      + " never established")
+    else:
+        # Every gate that was measured holds, and at least one was not.
+        claim = (", ".join(tally["never established"])
+                 + " never established, so nothing here may be called a "
+                 "verification -- the gates that were measured hold, and a "
+                 "gate nobody measured is not a gate that passed")
+
+    followups = {name: what_the_batch_recorded_after(row, name)
+                 for name in tally["did not hold"]}
+
+    # Findings the record keeps that the six gates do not cover. They are
+    # listed apart rather than folded into the claim, because they are about
+    # different things: the gates are about whether this pipeline verified
+    # the conversion, and these are about the source somebody published.
+    # Measured on pass10: the NeoHookean entry passes all six gates and its
+    # author's own response misses Q sigma Q^T by 9.02 relative. A headline
+    # that carried only the six would be true and would still hide that.
+    outside = []
+    for row_out in objectivity_rows(row):
+        if row_out["holds"] == DID_NOT_HOLD:
+            outside.append(f"{row_out['finding']}: no -- {row_out['why']}")
+    for row_out in coverage_rows(row):
+        if row_out["holds"] == DID_NOT_HOLD:
+            outside.append(f"the criterion {row_out['finding']!r} was not "
+                           f"met: {row_out['why']}")
+        elif not row_out["established"]:
+            outside.append(f"the criterion {row_out['finding']!r} was "
+                           f"{NOT_ESTABLISHED}: {row_out['why']}")
+
+    return {
+        "the batch's terminal state": state,
+        "the stage the batch reached": stage,
+        # The batch's word with the gates' qualification attached, so a bare
+        # "verified" cannot stand anywhere on the page over an entry whose
+        # informativeness nobody measured.
+        "qualified state": f"{state} ({qualifier})" if qualifier else state,
+        "what may be claimed": claim,
+        # The machine-readable form of the rule, so a caller does not have to
+        # parse prose to honour it: TRUE only when all six were measured and
+        # all six hold. Anything else, and this entry is not to be presented
+        # as a verification of the material's behaviour.
+        "may be called verified": complete,
+        "nothing was measured": nothing_measured,
+        "all six gates hold": complete,
+        "gates that hold": tally["held"],
+        "gates that did not hold": tally["did not hold"],
+        "gates never established": tally["never established"],
+        "what the batch recorded after a gate that did not hold":
+            {k: v for k, v in followups.items() if v},
+        "findings outside the six gates": outside,
+    }
 
 
 def history_rows(row: dict) -> list:
@@ -405,6 +898,36 @@ class EntryView:
     run_manifest: dict = field(default_factory=dict)
     #: The loading path, segment by segment. See :func:`loading_rows`.
     loading: list = field(default_factory=list)
+    #: The experiment that was PLANNED and why -- the family the source was
+    #: read as, the criterion, and the source lines that settled it. Distinct
+    #: from :attr:`experiment`, which is what the search had to DO to get a
+    #: run that finishes. See :func:`planned_experiment`.
+    planned_experiment: dict = field(default_factory=dict)
+    #: The family's own criteria as findings, each three-state. See
+    #: :func:`coverage_rows`.
+    coverage: list = field(default_factory=list)
+    #: Two findings, never one: whether the converted build agreed with the
+    #: original on a rotated path (the transform), and whether the author's
+    #: own response is Q sigma Q^T (the model). See :func:`objectivity_rows`.
+    objectivity: list = field(default_factory=list)
+    #: The rest of the objectivity block, the rotation included.
+    objectivity_detail: dict = field(default_factory=dict)
+    #: Whether the material did anything over the run that was verified.
+    informativeness: dict = field(default_factory=dict)
+    #: Whether the response fits the scales the problem supplies, per check.
+    plausibility: list = field(default_factory=list)
+    #: The same, as the record's own overall answer.
+    plausibility_overall: dict = field(default_factory=dict)
+    #: How long the run was against the source's own declared clock.
+    time_scale: dict = field(default_factory=dict)
+    #: Each hypothesis about a primal disagreement, with its own confirmation
+    #: status. See :func:`signature_rows`.
+    signature: list = field(default_factory=list)
+    #: Where constants were looked for, as a three-state finding.
+    material_search_finding: dict = field(default_factory=dict)
+    #: What may honestly be claimed about this entry, and which gate decides
+    #: it. See :func:`verdict`.
+    verdict: dict = field(default_factory=dict)
 
     def as_dict(self) -> dict:
         record = {name: getattr(self, name) for name in
@@ -414,7 +937,11 @@ class EntryView:
                    "precision_control", "association_control",
                    "artifacts", "seconds", "evidence",
                    "history", "experiment", "material_search",
-                   "primal_signature", "run_manifest", "loading")}
+                   "primal_signature", "run_manifest", "loading",
+                   "planned_experiment", "coverage", "objectivity",
+                   "objectivity_detail", "informativeness", "plausibility",
+                   "plausibility_overall", "time_scale", "signature",
+                   "material_search_finding", "verdict")}
         record["requirements"] = [r.as_dict() for r in self.requirements]
         return record
 
@@ -641,6 +1168,17 @@ def entry_view(row: dict, work_dir: Optional[Path] = None) -> EntryView:
         primal_signature=dict(field_anywhere(row, "primal_signature") or {}),
         run_manifest=dict(row.get("manifest") or {}),
         loading=loading_rows(row),
+        planned_experiment=planned_experiment(row),
+        coverage=coverage_rows(row),
+        objectivity=objectivity_rows(row),
+        objectivity_detail=objectivity_detail(row),
+        informativeness=informativeness_row(row),
+        plausibility=plausibility_rows(row),
+        plausibility_overall=plausibility_overall(row),
+        time_scale=time_scale_row(row),
+        signature=signature_rows(row),
+        material_search_finding=material_search_row(row),
+        verdict=what_may_be_claimed(row),
     )
 
 
@@ -882,6 +1420,8 @@ EVIDENCE_LOCATIONS = (
      "searched_for_material_data", ""),
     ("the loading history the experiment walked", "manifest.loading",
      "original/original.inp"),
+    ("why this source was driven this way at all", "experiment", ""),
+    ("the family's own criteria, met and not met", "coverage", ""),
     ("what the search did to arrive at it", "discovery", "discovery"),
     ("what Abaqus did with it", "original / transformed",
      "original/original.sta"),
@@ -890,6 +1430,12 @@ EVIDENCE_LOCATIONS = (
     ("whether the material did anything", "mechanically_informative", ""),
     ("how long the experiment ran against the source's own clock",
      "time_scale_coverage", ""),
+    ("whether the response fits the scales the problem supplies",
+     "response_plausibility", ""),
+    ("whether converting the source changed what it computes in a rotated "
+     "frame", "objectivity.agreed", "objectivity"),
+    ("whether the author's own response is Q sigma Q^T",
+     "objectivity.objective", "objectivity"),
     ("the two builds' stress and state, compared", "primal",
      "transformed/transformed_history.json"),
     ("what kind of disagreement it is", "primal_signature", ""),
