@@ -52,11 +52,73 @@ REPO = Path(__file__).resolve().parents[1]
 
 
 def _relative_to_repo(path) -> str:
-    """A path as the repository sees it, not as one machine happened to."""
+    """A path as the repository sees it, not as one machine happened to.
+
+    An input that lives outside the repository still has to be NAMED, because
+    every number in the report has to be traceable to a file on disk. Falling
+    back to the bare filename does not do that: three different verification
+    passes wrote a file called ``store_verification.jsonl``, and a report that
+    cites one of them by basename cites all three.
+
+    So enough of the tail is kept to identify which file it was --
+    ``pass10/results/store_verification.jsonl`` -- and everything at or above
+    the home directory is dropped first, so a username can never survive into
+    a published field.
+    """
+    resolved = Path(path).resolve()
     try:
-        return str(Path(path).resolve().relative_to(REPO))
+        return str(resolved.relative_to(REPO))
     except (ValueError, OSError):
-        return Path(path).name
+        pass
+    parts = [part for part in resolved.parts if part not in ("/", "")]
+    try:
+        home = [part for part in Path.home().resolve().parts
+                if part not in ("/", "")]
+    except (OSError, RuntimeError):
+        home = []
+    if home and parts[:len(home)] == home:
+        parts = parts[len(home):]
+    if home:
+        parts = [part for part in parts if part != home[-1]]
+    return "/".join(parts[-3:]) if parts else resolved.name
+
+
+#: A path under someone's home directory, or under a per-process scratch
+#: directory. Either one names the machine a run happened on, and a registry
+#: that carries one cannot be reproduced from a clean clone --
+#: ``tools/audit_repository_standards.py`` fails the build on it, and this
+#: registry has failed on exactly that before.
+#:
+#: The strings that can carry one are not the obvious ones. They are the
+#: compiler's own diagnostics, which name the temporary directory the syntax
+#: pass ran in, and they arrive inside ``classification_basis`` and
+#: ``compile_defect`` having been copied out of an audit file written on
+#: another day. So the check is applied to the SERIALISED payload, after
+#: everything has been assembled and immediately before it is written, which
+#: is the only place that sees every string that is about to be published.
+MACHINE_PATH = re.compile(
+    r"(?:/home/[a-z][-a-z0-9_]*|/Users/[A-Za-z][-A-Za-z0-9_]*"
+    r"|/tmp/[A-Za-z0-9][-A-Za-z0-9_.]*|/var/folders/[A-Za-z0-9])/")
+
+
+def refuse_machine_paths(text: str, what: str) -> str:
+    """The text, or an exception naming the first machine path in it.
+
+    Scrubbing silently would be worse than failing: a registry that quietly
+    dropped part of a compiler diagnostic would still be published, and the
+    reader would have no way to know a line had been edited. So this refuses,
+    the build stops, and whoever added the field decides what belongs there.
+    """
+    found = MACHINE_PATH.search(text or "")
+    if not found:
+        return text
+    line = text[:found.start()].count("\n") + 1
+    excerpt = text[max(0, found.start() - 60):found.end() + 60]
+    raise ValueError(
+        f"{what} would publish a machine path at line {line}: ...{excerpt}... "
+        f"Every path a reviewer reads must be relative to the repository; "
+        f"use _relative_to_repo(), or keep the machine-specific part out of "
+        f"the field entirely.")
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "tools"))
 
@@ -64,6 +126,12 @@ from umat_oti.abaqus.terminal_states import (EXTERNAL, FULLY_VERIFIED,  # noqa: 
                                              INTERNAL, WAITS_FOR_INPUT,
                                              from_stage, from_transform_failure,
                                              kind_of)
+
+#: A one-line gloss for every terminal state, read from the page that already
+#: has to have one. Imported rather than restated so the report and the
+#: interface cannot drift into describing the same state two different ways,
+#: and because a table of state names is not a human-readable report.
+from umat_oti.app.corpus_tab import GLOSS as STATE_MEANS  # noqa: E402
 
 DEFAULT_CACHE = Path(os.environ.get("UMAT_OTI_DISCOVERY_CACHE")
                      or REPO.parent / "discovery_cache")
@@ -117,6 +185,35 @@ class Record:
     refusal_class_confident: Optional[bool] = None
     duplicate_of: str = ""
     companion_files: str = ""
+    #: Where the whole file was searched for the two outputs a UMAT exists to
+    #: produce, and what was found. Recorded on EVERY record and not only on
+    #: the ones it decided, because a reader checking "is this a real UMAT?"
+    #: needs the search itself and not the verdict that came out of it.
+    writes_stress: Optional[bool] = None
+    writes_ddsdde: Optional[bool] = None
+    output_calls: Optional[int] = None
+    output_first_write: str = ""
+    output_first_write_line: Optional[int] = None
+    output_search: str = ""
+    #: THE SECOND DENOMINATOR. Whether this source is an adequately specified
+    #: genuine UMAT -- a file that presents the Abaqus UMAT interface, is a
+    #: distinct member of the corpus, builds as published, has everything it
+    #: USEs published beside it, and has a constitutive model inside it. The
+    #: 391 acquired sources are the first denominator; this is the subset any
+    #: verification rate may be quoted against, and ``adequacy_basis`` names
+    #: the evidence that excluded a source from it.
+    adequately_specified: Optional[bool] = None
+    adequacy_basis: str = ""
+    #: Why it is outside D2, on the axis that matters: "external" -- somebody
+    #: published something that cannot be driven; "duplicate" -- it is a
+    #: second copy and its one answer is already counted against the copy that
+    #: carries it; "internal" -- a limitation of this project, which must
+    #: never appear, because an internal limitation may not shrink a
+    #: denominator. A duplicate is deliberately NOT called external: nothing
+    #: about it is blocked, and listing it under a heading of external
+    #: blockers would inflate how much of the corpus is somebody else's
+    #: problem.
+    adequacy_kind: str = ""
     terminal_state: str = "not_attempted"
     kind: str = "internal"
     reason: str = ""
@@ -152,6 +249,57 @@ class Record:
     compile_defect: str = ""
     key: str = ""
     seconds: Optional[float] = None
+    #: The store fingerprint the verification row was produced against, and
+    #: whether that is the fingerprint of the store as it stands now. A stage
+    #: recorded against a store that has since been rebuilt is evidence about
+    #: a transformed file that no longer exists, and reading it as evidence
+    #: about the current one is how a stale verdict becomes a verification.
+    verification_fingerprint: str = ""
+    verification_is_current: Optional[bool] = None
+    #: Which results file the row was read from, named so every number in the
+    #: report can be traced to a file on disk.
+    verification_source: str = ""
+    #: The sha256 of the ACQUIRED file the verification row says it ran, as the
+    #: row recorded it, and whether that agrees with the sha256 this registry
+    #: computed from the cache. A row that names a different file is not
+    #: evidence about this one however well the paths line up.
+    verification_sha256: str = ""
+    verification_sha256_agrees: Optional[bool] = None
+    #: A verification row for this source that was produced against an earlier
+    #: store and is therefore about generated Fortran that no longer exists.
+    #: Recorded rather than discarded, because a reader comparing this registry
+    #: against the raw results file needs to see which rows were set aside and
+    #: why -- and because "the file says 44 verified" and "41 sources verified"
+    #: have to be reconcilable from what is written down.
+    superseded_verification: str = ""
+    #: For anything that is not fully_verified: the named reason, with the
+    #: evidence behind it. Never "the transformer refused it" on its own.
+    not_verified_reason: str = ""
+    #: Each of the six evidence gates, as one of five words: ``true``,
+    #: ``false``, ``null`` (the key is there and holds nothing), ``absent``
+    #: (the key is not there at all) or ``no_evidence_block``.
+    #:
+    #: A MISSING KEY AND A PRESENT-AND-NULL KEY ARE BOTH "NOT ESTABLISHED",
+    #: and a census that counts one and silently drops the other does not add
+    #: up to its own denominator. Over the whole results file the
+    #: ``mechanically_informative`` gate reads true on 113, false on 22, null
+    #: on 7 and is absent on 4 -- 146 rows carrying an evidence block -- and a
+    #: count that saw only the null ones reported 142 and reconciled with
+    #: nothing.
+    gate_abaqus_job_completed: str = ""
+    gate_all_requested_outputs_present: str = ""
+    gate_complete_history_finite: str = ""
+    gate_derivatives_verified: str = ""
+    gate_primal_agreed: str = ""
+    gate_mechanically_informative: str = ""
+    #: Whether every one of the six reads true. This is a STRICTER answer than
+    #: the batch's ``verified`` rung, and the two are published side by side
+    #: rather than one being chosen: three entries reached the rung with
+    #: ``primal_agreed`` false and a written explanation of why the difference
+    #: is the model's own conditioning.
+    verified_on_every_gate: Optional[bool] = None
+    #: Which gates did not read true, and in what way.
+    gates_not_true: str = ""
 
     def as_dict(self) -> dict:
         return dict(self.__dict__)
@@ -182,6 +330,187 @@ def _rows(path: Optional[Path]) -> list:
     if isinstance(payload, dict):
         return payload.get("entries") or payload.get("rows") or []
     return payload or []
+
+
+def verification_reconciliation(abaqus_report: Optional[Path],
+                                store_fingerprint: str) -> dict:
+    """Why the results file holds more rows than the store holds entries.
+
+    Two numbers disagreed and a registry that cannot explain its own
+    denominator is not evidence, so the arithmetic is written down rather than
+    asserted.
+
+    ``pass10/results/store_verification.jsonl`` holds 254 rows for a store of
+    240 entries. 240 of those rows carry the fingerprint of the store as it
+    stands; the other 14 carry the fingerprint of the store as it stood before
+    the re-transform, and are there because the results file is append-only
+    and the pass resumed onto the file an earlier pass had been writing. 11 of
+    those 14 sources were re-run at the current fingerprint, so both rows exist
+    for them; the remaining 3 are no longer in the store at all, because the
+    re-transform refused them. 240 + 3 = 243 distinct sources, 254 rows.
+
+    The key cannot collapse them: it is derived from the STORE ENTRY, so the
+    same source under two fingerprints has two keys and all 254 are distinct.
+    The source sha256 cannot collapse them either, in the other direction: 240
+    rows carry only 232 distinct source digests, because several acquired
+    files are byte-identical to another acquired file and both transformed.
+    The identity is the PATH INSIDE THE CACHE, and the digest is what
+    corroborates that the row is about the file this registry read.
+
+    The same append-only leftovers are why the file contains 44 rows at stage
+    ``verified`` while the run reported 41 of 240. Three sources verified under
+    the old store and verified again under the new one; counting rows counts
+    them twice. 41 is the number of store entries that verified, and it is the
+    one this registry publishes.
+    """
+    rows = _rows(abaqus_report)
+    if not rows:
+        return {}
+    current = [r for r in rows if str(r.get("fingerprint") or "") == store_fingerprint]
+    stale = [r for r in rows if str(r.get("fingerprint") or "") != store_fingerprint]
+    current_sources = {str(r.get("source") or "") for r in current}
+    verified_now = {str(r.get("source") or "") for r in current
+                    if str(r.get("stage") or "") == "verified"}
+    stale_verified = [str(r.get("source") or "") for r in stale
+                      if str(r.get("stage") or "") == "verified"]
+    return {
+        "file": _relative_to_repo(abaqus_report) if abaqus_report else "",
+        "store_fingerprint": store_fingerprint,
+        "rows_in_the_file": len(rows),
+        "rows_at_the_current_store_fingerprint": len(current),
+        "rows_at_a_superseded_store_fingerprint": len(stale),
+        "distinct_sources_in_the_file": len(
+            {str(r.get("source") or "") for r in rows}),
+        "distinct_keys_in_the_file": len(
+            {str(r.get("key") or "") for r in rows}),
+        "distinct_source_digests_at_the_current_fingerprint": len(
+            {str(r.get("source_sha256") or "") for r in current}),
+        "sources_counted_by_this_registry": len(current_sources),
+        "superseded_rows_whose_source_was_rerun": sorted(
+            str(r.get("source") or "") for r in stale
+            if str(r.get("source") or "") in current_sources),
+        "superseded_rows_whose_source_is_no_longer_in_the_store": sorted(
+            str(r.get("source") or "") for r in stale
+            if str(r.get("source") or "") not in current_sources),
+        "rows_at_stage_verified_in_the_whole_file": sum(
+            1 for r in rows if str(r.get("stage") or "") == "verified"),
+        "store_entries_that_verified": len(verified_now),
+        "store_entries_that_verified_on_every_gate": sum(
+            1 for r in current if str(r.get("stage") or "") == "verified"
+            and all(_gate_state(r.get("evidence"), gate) == GATE_TRUE
+                    for gate in EVIDENCE_GATES)),
+        "verified_rows_that_double_count_a_source": sorted(
+            name for name in stale_verified if name in verified_now),
+        "evidence_gate_census_over_the_whole_file": {
+            "denominator": len([r for r in rows
+                                if isinstance(r.get("evidence"), dict)]),
+            "denominator_is": ("rows in the results file carrying an evidence "
+                               "block, at any store fingerprint"),
+            "gates": {
+                gate: {
+                    state: sum(1 for r in rows
+                               if isinstance(r.get("evidence"), dict)
+                               and _gate_state(r["evidence"], gate) == state)
+                    for state in (GATE_TRUE, GATE_FALSE, GATE_NULL, GATE_ABSENT)
+                } for gate in EVIDENCE_GATES},
+        },
+        "why_the_two_verified_numbers_differ": (
+            "The results file is append-only and this pass resumed onto the "
+            "file an earlier pass had been writing, so it carries rows from "
+            "before the store was rebuilt. Counting rows counts a source that "
+            "verified under both stores twice. The number of STORE ENTRIES "
+            "that verified is the one published here; a row count over an "
+            "append-only file is not a census."),
+    }
+
+
+#: The six things a run has to establish before an entry may be called
+#: verified, in the order the batch writes them.
+EVIDENCE_GATES: tuple[str, ...] = (
+    "abaqus_job_completed",
+    "all_requested_outputs_present",
+    "complete_history_finite",
+    "derivatives_verified",
+    "primal_agreed",
+    "mechanically_informative",
+)
+
+#: The five states a gate can be in. The last three all mean "not
+#: established", and they are kept apart because they have different causes: a
+#: key holding null is a question the run asked and could not answer, a key
+#: that is not there at all is a question that batch's schema did not ask, and
+#: no evidence block is a run that never got far enough to ask any of them.
+GATE_TRUE, GATE_FALSE = "true", "false"
+GATE_NULL, GATE_ABSENT, GATE_NO_BLOCK = "null", "absent", "no_evidence_block"
+GATE_NOT_ESTABLISHED = (GATE_NULL, GATE_ABSENT, GATE_NO_BLOCK)
+
+
+def _gate_state(evidence, gate: str) -> str:
+    """What one gate reads, distinguishing missing from present-and-null."""
+    if not isinstance(evidence, dict):
+        return GATE_NO_BLOCK
+    if gate not in evidence:
+        return GATE_ABSENT
+    value = evidence[gate]
+    if value is True:
+        return GATE_TRUE
+    if value is False:
+        return GATE_FALSE
+    return GATE_NULL
+
+
+def census(rows: list, key, denominator_name: str) -> dict:
+    """A count that proves its own arithmetic or refuses to be published.
+
+    Every census in this registry has to sum to a denominator it states. The
+    rule is here rather than at each call site because the failure it prevents
+    is silent: a count taken over "records where the key is present and null"
+    drops the records where the key is ABSENT, comes out four short of its own
+    population, and reads perfectly well.
+    """
+    counts: dict[str, int] = {}
+    for row in rows:
+        value = str(key(row))
+        counts[value] = counts.get(value, 0) + 1
+    total = sum(counts.values())
+    if total != len(rows):
+        raise ValueError(
+            f"a census over {denominator_name} counted {total} of "
+            f"{len(rows)}: {counts}. A census that does not sum to its own "
+            f"denominator is a finding about the data, not a number to "
+            f"publish.")
+    return {"denominator": len(rows),
+            "denominator_is": denominator_name,
+            "counts": dict(sorted(counts.items(), key=lambda kv: -kv[1])),
+            "sums_to_the_denominator": True}
+
+
+def _fingerprint_latest(rows: list, store_fingerprint: str) -> list:
+    """One row per source: the newest one that is about the CURRENT store.
+
+    An append-only results file accumulates rows across passes, and a pass
+    that resumed from a previous one carries rows from before the store was
+    rebuilt. Taking the last row per source would let a stale row win simply
+    by having been appended later. So a row whose fingerprint matches the
+    store the registry is being built for always beats one that does not, and
+    only where a source has no matching row at all does the stale one survive
+    -- kept so the registry can say what it was and why it does not count,
+    rather than reporting silence.
+    """
+    if not store_fingerprint:
+        return rows
+    current: dict = {}
+    stale: dict = {}
+    for row in rows:
+        source_id = str(row.get("source") or "")
+        if not source_id:
+            continue
+        if str(row.get("fingerprint") or "") == store_fingerprint:
+            current[source_id] = row
+        else:
+            stale[source_id] = row
+    return list(current.values()) + [row for source_id, row in stale.items()
+                                     if source_id not in current]
 
 
 # ---------------------------------------------------------------------------
@@ -564,7 +893,7 @@ def offline_syntax_audit(cache: Path, source_ids, *, compiler: str = "") -> dict
 def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
           cache: Optional[Path], *, compile_check: bool = False,
           inventory_ids=None, provenance: Optional[dict] = None,
-          audit: Optional[dict] = None) -> list:
+          audit: Optional[dict] = None, store_fingerprint: str = "") -> list:
     """Every acquired artefact, its terminal state, and the evidence for it.
 
     ``inventory_ids`` is the denominator and is seeded first, so a source the
@@ -626,7 +955,8 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
     duplicates = duplicate_map(cache, sorted(records)) if cache else {}
     if cache and Path(cache).is_dir():
         from umat_oti.abaqus.companions import repository_files, resolve
-        from umat_oti.corpus.entry_routines import classify, classify_refusal
+        from umat_oti.corpus.entry_routines import (classify, classify_refusal,
+                                                    umat_outputs_written)
         from umat_oti.store.transform_store import file_digest
 
         for record in records.values():
@@ -642,6 +972,20 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             record.duplicate_of = duplicates.get(record.source_id, "")
 
             found = classify(text, path=source)
+            # Where the file was searched for a stress or tangent update, and
+            # what was found. Done for every acquired source, not only the
+            # refused ones: a file that presents the UMAT interface and
+            # assigns neither output anywhere is a template whoever wrote it
+            # published, and that is a fact worth carrying whether or not the
+            # transformer ever reached it.
+            outputs = umat_outputs_written(text, form=found.source_form,
+                                           path=source)
+            record.writes_stress = outputs.writes_stress
+            record.writes_ddsdde = outputs.writes_ddsdde
+            record.output_calls = outputs.calls
+            record.output_first_write = outputs.first_write
+            record.output_first_write_line = outputs.first_write_line or None
+            record.output_search = outputs.where_it_searched
             record.source_form = found.source_form
             record.entry_interface = found.entry_interface
             record.entry_routine = found.entry_routine
@@ -664,7 +1008,8 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
                 found, duplicate_of=record.duplicate_of,
                 missing_externals=tuple(missing),
                 text_rejected=evidence.get("text_rejected"),
-                compiler_evidence=str(evidence.get("evidence") or ""))
+                compiler_evidence=str(evidence.get("evidence") or ""),
+                outputs=outputs)
             # The refusal class answers "the transformer refused this -- what
             # was it?", so it is only recorded where there was a refusal. What
             # the file IS is recorded either way, because a transformed file
@@ -680,12 +1025,50 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
                 record.entry_evidence = verdict.evidence
 
     # What Abaqus made of the ones that got that far. This overrides the
-    # transform's verdict, because it is later and it is about a real run.
-    for row in _rows(abaqus_report):
+    # transform's verdict, because it is later and it is about a real run --
+    # but only where it is about the SAME transformed file. A verification row
+    # carries the fingerprint of the store it ran against; the store was
+    # rebuilt, and a row from before that rebuild describes a transformed file
+    # that no longer exists. pass9 is 250 rows, every one of them at
+    # fingerprint ff94800b1884bcc0, against a store that is now
+    # 668e7e64c1371b47. Joining those on source_id alone would have reported
+    # 67 sources as verified on evidence about different generated Fortran.
+    verification_file = _relative_to_repo(abaqus_report) if abaqus_report else ""
+    for row in _fingerprint_latest(_rows(abaqus_report), store_fingerprint):
         source_id = str(row.get("source") or "")
         if not source_id:
             continue
         record = _seed(source_id)
+        record.verification_source = verification_file
+        record.verification_fingerprint = str(row.get("fingerprint") or "")
+        record.verification_is_current = (
+            None if not store_fingerprint or not record.verification_fingerprint
+            else record.verification_fingerprint == store_fingerprint)
+        if record.verification_is_current is False:
+            # Not a verdict about the entry that is in the store now. The row
+            # is kept -- its fingerprint and its stage are recorded -- but it
+            # decides nothing, and the record stays at whatever the transform
+            # established, which for a stored entry is "no batch has reached
+            # it at this fingerprint yet".
+            record.superseded_verification = (
+                f"a verification row for this source reached "
+                f"`{row.get('stage')}` against store fingerprint "
+                f"{record.verification_fingerprint}, and the store is now "
+                f"{store_fingerprint}; that row is evidence about generated "
+                f"Fortran that has since been rebuilt, so it decides nothing "
+                f"here")
+            record.verification_fingerprint = ""
+            continue
+        record.verification_sha256 = str(row.get("source_sha256") or "")
+        evidence = row.get("evidence")
+        states = {gate: _gate_state(evidence, gate) for gate in EVIDENCE_GATES}
+        for gate, state in states.items():
+            setattr(record, f"gate_{gate}", state)
+        record.verified_on_every_gate = all(
+            state == GATE_TRUE for state in states.values())
+        record.gates_not_true = "; ".join(
+            f"{gate}={state}" for gate, state in states.items()
+            if state != GATE_TRUE)[:400]
         record.key = str(row.get("key") or record.key)
         record.stage = str(row.get("stage") or "")
         verdict = from_stage(record.stage, str(row.get("reason") or "")[:500])
@@ -772,7 +1155,107 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             is_umat=(record.is_umat if record.refusal_class
                      else _is_a_umat(cache, record.source_id)))
         record.terminal_state, record.kind = verdict.state, verdict.kind
+
+    for record in records.values():
+        if record.verification_sha256 and record.sha256:
+            record.verification_sha256_agrees = (
+                record.verification_sha256 == record.sha256)
+        (record.adequately_specified, record.adequacy_basis,
+         record.adequacy_kind) = _adequacy(record)
+        if record.terminal_state != FULLY_VERIFIED:
+            record.not_verified_reason = _why_not_verified(record)
     return sorted(records.values(), key=lambda r: r.source_id)
+
+
+#: The terminal states that say the source itself cannot be driven, because of
+#: something nobody published. Each is already classified external in
+#: umat_oti.abaqus.terminal_states; they are listed again here because this is
+#: the rule that decides the SECOND DENOMINATOR, and a denominator whose
+#: membership rule lives somewhere else is a denominator nobody can check.
+NOT_ADEQUATELY_SPECIFIED_STATES = (
+    "incomplete_or_corrupt_source",
+    "external_dependency_unavailable",
+    "missing_material_data",
+    WAITS_FOR_INPUT,
+)
+
+
+def _adequacy(record: Record) -> tuple:
+    """Is this an adequately specified genuine UMAT, and if not, whose fault?
+
+    THE SECOND DENOMINATOR. The first is the 391 sources the acquisition
+    brought back; this is the subset a verification rate may honestly be
+    quoted against. Every exclusion below is a fact about somebody's published
+    repository, and every one of them names the evidence that established it.
+
+    NOTHING INTERNAL MAY SHRINK THIS SET. A source this project's transformer
+    could not convert, whose deck this project could not generate, whose
+    experiment this project could not make informative, stays inside it and
+    counts against us -- that is the whole point of separating the two
+    denominators rather than quoting one number. The assertion is
+    ``tests/test_the_two_denominators_stay_apart.py``.
+    """
+    if not record.sha256:
+        return (None, "the acquisition inventory names this source but the "
+                      "cache does not hold it, so nothing about it was "
+                      "established by parsing", "internal")
+    if record.is_umat is False:
+        return (False, ("this file's Abaqus entry point is not a UMAT: "
+                        + (record.classification_basis
+                           or record.entry_evidence))[:600], "external")
+    if record.duplicate_of:
+        return (False, (f"line-for-line identical to {record.duplicate_of}, "
+                        f"which carries the same answer; counting both would "
+                        f"count one source twice"), "duplicate")
+    if (record.entry_interface == "UMAT" and record.output_calls == 0
+            and record.writes_stress is False and record.writes_ddsdde is False):
+        return (False, ("this file presents the Abaqus UMAT interface and "
+                        "publishes no constitutive model inside it: "
+                        + record.output_search
+                        + " -- nothing was assigned and no CALL was made")[:600],
+                "external")
+    if record.terminal_state in NOT_ADEQUATELY_SPECIFIED_STATES:
+        return (False, (f"{record.terminal_state}: "
+                        + (record.reason or record.classification_basis
+                           or record.missing_companions
+                           or record.compile_defect))[:600], "external")
+    basis = (f"presents the Abaqus UMAT interface at line {record.entry_line}"
+             if record.entry_line else "presents the Abaqus UMAT interface")
+    if record.output_first_write:
+        basis += (f", and assigns an output at line "
+                  f"{record.output_first_write_line}: "
+                  f"{record.output_first_write}")
+    return (True, (basis + "; nothing external excludes it")[:600], "")
+
+
+def _why_not_verified(record: Record) -> str:
+    """The NAMED reason this source is not verified, with its evidence.
+
+    Never "the transformer refused it": that is an answer about the
+    transformer. Where the transform is what stopped it, the reason names the
+    transformer's own diagnostic AND the parse that established the file is a
+    whole UMAT, so a reader can see that the work is this project's.
+    """
+    parts = [f"terminal state `{record.terminal_state}` "
+             f"({record.kind}; "
+             f"{'somebody else' if record.kind == 'external' else 'this project'}"
+             f" has to move next)"]
+    if record.terminal_state == "not_attempted":
+        parts.append("no batch has produced a row for this source at the "
+                     "current store fingerprint; this is an absence of a "
+                     "verdict, not a verdict")
+    if record.superseded_verification:
+        parts.append(record.superseded_verification)
+    if record.reason:
+        parts.append(f"recorded reason: {record.reason}")
+    for label, value in (("classification", record.classification_basis),
+                         ("missing beside it", record.missing_companions),
+                         ("compile defect", record.compile_defect),
+                         ("output search", record.output_search)):
+        if value:
+            parts.append(f"{label}: {value}")
+            break
+    return "; ".join(parts)[:900]
 
 
 def _is_a_umat(cache: Optional[Path], source_id: str) -> Optional[bool]:
@@ -850,10 +1333,88 @@ def summarise(records: list) -> dict:
             clusters[record.terminal_state].append(record.source_id)
     refused = [r for r in records if r.refusal_class]
     by_refusal = Counter(r.refusal_class for r in refused)
+
+    # THE TWO DENOMINATORS, kept apart and both named. Quoting a rate without
+    # saying which of them it is against is the failure this block exists to
+    # prevent, so neither is ever computed as a bare percentage here: the
+    # numerator and the denominator are both published and the reader divides.
+    adequate = [r for r in records if r.adequately_specified]
+    excluded = [r for r in records if r.adequately_specified is False]
+    unknown = [r for r in records if r.adequately_specified is None]
+    internal_exclusions = sorted(r.source_id for r in excluded
+                                 if r.adequacy_kind not in ("external",
+                                                            "duplicate"))
     return {
         "acquired": len(records),
         "genuine_umats": len(umats),
+        "adequately_specified_genuine_umats": len(adequate),
+        "denominators": {
+            "acquired_sources": {
+                "count": len(records),
+                "means": "every artefact the acquisition brought back, one "
+                         "record each, seeded from the discovery inventory",
+                "verified": len([r for r in verified
+                                 if True]),
+            },
+            "adequately_specified_genuine_umats": {
+                "count": len(adequate),
+                "means": "the subset that presents the Abaqus UMAT interface, "
+                         "is a distinct member of the corpus, has a "
+                         "constitutive model inside it, builds as published, "
+                         "has everything it USEs published beside it, and has "
+                         "material constants published for it",
+                "verified": len([r for r in verified if r.adequately_specified]),
+                "excluded": len(excluded),
+                "excluded_for_an_internal_reason": internal_exclusions,
+                "unknown": [r.source_id for r in unknown],
+            },
+        },
+        "adequacy_exclusions_by_kind": dict(
+            Counter(r.adequacy_kind or "external" for r in excluded)),
         "fully_verified": len(verified),
+        "fully_verified_and_adequately_specified": len(
+            [r for r in verified if r.adequately_specified]),
+        "verified_on_every_gate": len(
+            [r for r in verified if r.verified_on_every_gate]),
+        "verified_on_every_gate_and_adequately_specified": len(
+            [r for r in verified
+             if r.verified_on_every_gate and r.adequately_specified]),
+        "reached_the_verified_rung_but_failed_a_gate": sorted(
+            f"{r.source_id} ({r.gates_not_true})" for r in verified
+            if not r.verified_on_every_gate),
+        "evidence_gate_census": gate_census(records),
+        # Every other count this registry publishes, put through the same
+        # proof. Each states the population it was taken over and each raises
+        # rather than being published if it does not sum to it -- so a
+        # classification that quietly stopped covering some of its records
+        # stops the build instead of appearing as a table that is four short.
+        "censuses": {
+            "terminal_state": census(
+                records, lambda r: r.terminal_state, "acquired sources (D1)"),
+            "whose_move_it_is": census(
+                records, lambda r: r.kind, "acquired sources (D1)"),
+            "adequately_specified": census(
+                records, lambda r: str(r.adequately_specified),
+                "acquired sources (D1)"),
+            "why_excluded_from_d2": census(
+                excluded, lambda r: r.adequacy_kind or "external",
+                "sources excluded from D2"),
+            "what_the_refused_files_are": census(
+                refused, lambda r: r.refusal_class,
+                "sources the transformer refused"),
+            "entry_interface": census(
+                records, lambda r: r.entry_interface or "none",
+                "acquired sources (D1)"),
+            "transformed": census(
+                records, lambda r: str(r.transformed), "acquired sources (D1)"),
+            "compiled": census(
+                records, lambda r: str(r.compiled), "acquired sources (D1)"),
+        },
+        "verification_rows_at_a_stale_fingerprint": sorted(
+            r.source_id for r in records if r.verification_is_current is False),
+        "records_with_no_named_reason": sorted(
+            r.source_id for r in records
+            if r.terminal_state != FULLY_VERIFIED and not r.not_verified_reason),
         "transform_refused": len(refused),
         "refusals_by_class": dict(sorted(by_refusal.items(),
                                          key=lambda kv: -kv[1])),
@@ -877,57 +1438,346 @@ def summarise(records: list) -> dict:
     }
 
 
+def _pct(numerator: int, denominator: int, name: str) -> str:
+    """A percentage that names its denominator, or nothing at all.
+
+    A rate quoted without saying what it is a rate OF is the single most
+    misleading thing this report could print, so the denominator is written
+    into the string itself and there is no way to ask for one without it.
+    """
+    if not denominator:
+        return f"{numerator} of 0 {name}"
+    return (f"{numerator} of {denominator} {name} -- "
+            f"{100.0 * numerator / denominator:.1f}% of {name}")
+
+
+def gate_census(records: list) -> dict:
+    """Each of the six gates, over the entries a verification row reached.
+
+    Four states per gate, and they are published separately because three of
+    them mean "not established" for three different reasons. The census is
+    taken over the entries that HAVE an evidence block, which is the only
+    population the question can be asked of, and that denominator is stated
+    beside every count.
+    """
+    with_block = [r for r in records
+                  if r.gate_abaqus_job_completed
+                  and r.gate_abaqus_job_completed != GATE_NO_BLOCK]
+    out: dict = {
+        "denominator": len(with_block),
+        "denominator_is": ("entries whose verification row at the current "
+                           "store fingerprint carries an evidence block"),
+        "a_missing_key_and_a_null_key_are_both": "not established",
+        "gates": {},
+    }
+    for gate in EVIDENCE_GATES:
+        counted = census(with_block, lambda r, g=gate: getattr(r, f"gate_{g}"),
+                         out["denominator_is"])
+        counts = counted["counts"]
+        out["gates"][gate] = {
+            "true": counts.get(GATE_TRUE, 0),
+            "false": counts.get(GATE_FALSE, 0),
+            "not_established_present_but_null": counts.get(GATE_NULL, 0),
+            "not_established_key_absent": counts.get(GATE_ABSENT, 0),
+            "not_established_total": sum(counts.get(state, 0)
+                                         for state in GATE_NOT_ESTABLISHED),
+            "sums_to": counted["denominator"],
+        }
+    return out
+
+
 def markdown(records: list, summary: dict) -> str:
+    inputs = summary.get("inputs") or {}
+    denominators = summary.get("denominators") or {}
+    acquired = summary["acquired"]
+    adequate = summary.get("adequately_specified_genuine_umats", 0)
+    verified = summary["fully_verified"]
+    verified_adequate = summary.get("fully_verified_and_adequately_specified",
+                                    verified)
+    gated = summary.get("verified_on_every_gate", verified)
+    gated_adequate = summary.get(
+        "verified_on_every_gate_and_adequately_specified", gated)
+
+    basenames = Counter(r.source_id.rsplit("/", 1)[-1].lower()
+                        for r in records)
+    worst, worst_count = (basenames.most_common(1) or [("", 0)])[0]
+    shared = sum(count for count in basenames.values() if count > 1)
+
     lines = [
         "# Corpus verification",
         "",
-        f"{summary['acquired']} acquired artefacts, of which "
-        f"{summary['genuine_umats']} present a UMAT interface to Abaqus.",
+        "Every acquired source has a record here, and each one is named by "
+        "its path inside the acquisition cache -- never by its basename. "
+        f"{shared} of the {acquired} share a basename with at least one "
+        f"other source, and {worst_count} of them are called `{worst}`. A "
+        "registry keyed on the basename would hold one row where the corpus "
+        "holds " + str(worst_count) + " files.",
         "",
-        f"**{summary['fully_verified']} fully verified.**",
+        "## Where every number below comes from",
         "",
-        "`fully_verified` means the source transformed and compiled, Abaqus ran",
-        "the ORIGINAL, Abaqus ran the CONVERTED build on the same deck, their",
-        "stress and state histories agreed over the whole path, and the OTI",
-        "tangent agreed with a finite difference of the original at several",
-        "states along it. Compiling is not working and running is not verified.",
+        "| input | file |",
+        "| --- | --- |",
+    ]
+    for label, key in (("acquisition inventory (the denominator)",
+                        "inventory_path"),
+                       ("transform report", "transform_report"),
+                       ("Abaqus verification results", "verification_results"),
+                       ("offline compile evidence", "refusal_audit"),
+                       ("acquisition cache", "discovery_cache")):
+        value = inputs.get(key) or (summary.get("inventory") or {}).get("path", "")
+        if value:
+            lines.append(f"| {label} | `{value}` |")
+    if inputs.get("store_fingerprint"):
+        lines += ["", f"The transform store this registry describes is at "
+                      f"fingerprint `{inputs['store_fingerprint']}`. A "
+                      f"verification row carries the fingerprint of the store "
+                      f"it ran against; a row from before the store was "
+                      f"rebuilt is evidence about a transformed file that no "
+                      f"longer exists, and none of those is read as a verdict "
+                      f"about the entry that is in the store now."]
+
+    lines += [
+        "",
+        "## How to regenerate every number in this report",
+        "",
+        "```",
+        "UMAT_OTI_DISCOVERY_CACHE=<the acquisition cache> \\",
+        "python tools/build_corpus_registry.py \\",
+        "    --transform <run>/transform_all_postB.json \\",
+        "    --abaqus <run>/pass10/results/store_verification.jsonl \\",
+        "    --audit-refusals",
+        "```",
+        "",
+        "`--audit-refusals` re-runs the offline `ifort -syntax-only` pass over "
+        "every source the transformer refused and rewrites "
+        "`paper_results/corpus/transform_refusal_audit.json`. It is needed "
+        "whenever the set of refused sources changes and not otherwise; "
+        "without it the recorded evidence is read back, so the registry "
+        "rebuilds to the same answers on a machine with no Fortran compiler. "
+        "**No Abaqus process is started by any of this and no licence token "
+        "is drawn.** The store fingerprint is read from the transform report "
+        "unless `--store-fingerprint` overrides it.",
+        "",
+        "## Two denominators, and which is which",
+        "",
+        "There are two populations in this report and they are never pooled. "
+        "Every rate below says which one it is a rate of.",
+        "",
+        f"**D1 -- {acquired} acquired sources.** Everything the acquisition "
+        "brought back, whatever it turned out to be. This is the honest "
+        "denominator for \"what happened to the corpus we collected\".",
+        "",
+        f"**D2 -- {adequate} adequately specified genuine UMATs.** The subset "
+        "of D1 that presents the Abaqus UMAT interface, is a distinct member "
+        "of the corpus rather than a second copy of another one, has a "
+        "constitutive model inside it, builds as its author published it, has "
+        "everything it USEs or INCLUDEs published beside it, and has material "
+        "constants published somewhere in its repository. This is the honest "
+        "denominator for \"what happened to the UMATs that could be driven at "
+        "all\".",
+        "",
+        "**Nothing internal may shrink D2.** Every exclusion from it is a "
+        "fact about somebody else's published repository, and each one names "
+        "the evidence that established it. "
+        "Nothing this project failed to do removes a source from D2: a source "
+        "whose transform this project refused, whose deck this project could "
+        "not generate, whose experiment this project could not make "
+        "informative, all stay in D2 and count against us. That is why there "
+        "are two denominators rather than one number.",
+        "",
+        "| | reached the `verified` rung | verified on every gate | "
+        "denominator |",
+        "| --- | ---: | ---: | ---: |",
+        f"| D1 acquired sources | {verified} | {gated} | {acquired} |",
+        f"| D2 adequately specified genuine UMATs | {verified_adequate} | "
+        f"{gated_adequate} | {adequate} |",
+        "",
+        "**Verified on every gate is the stricter number and it is the one to "
+        "quote.** The two columns differ by the "
+        f"{verified - gated} entr{'y' if verified - gated == 1 else 'ies'} "
+        "that reached the batch's `verified` rung with one of the six "
+        "evidence gates not reading true; they are named below.",
+        "",
+        f"* {_pct(gated, acquired, 'acquired sources (D1)')}",
+        f"* {_pct(gated_adequate, adequate, 'adequately specified genuine UMATs (D2)')}",
+        "",
+        "Against the looser rung instead:",
+        "",
+        f"* {_pct(verified, acquired, 'acquired sources (D1)')}",
+        f"* {_pct(verified_adequate, adequate, 'adequately specified genuine UMATs (D2)')}",
+        "",
+        "No figure above may be quoted without the words after it. They are "
+        "answers to different questions and the larger one is not the better "
+        "one.",
+        "",
+        "`fully_verified` means the source transformed and compiled, Abaqus "
+        "ran the ORIGINAL, Abaqus ran the CONVERTED build on the same deck, "
+        "their stress and state histories agreed over the whole path, and the "
+        "OTI tangent agreed with a finite difference of the original at "
+        "several states along it. Compiling is not working, running is not "
+        "verified, and unknown is never verified.",
         "",
         "## Finished, and unfinished",
         "",
-        "| | entries |",
+        "Over D1, the "
+        f"{acquired} acquired sources. The three lines are never added "
+        "together into a completion figure: pooling what somebody else "
+        "published with what this project has not finished would be a claim "
+        "about the corpus made out of facts about the pipeline.",
+        "",
+        "| | entries in D1 |",
         "| --- | ---: |",
-        f"| verified | {summary['by_kind'].get('verified', 0)} |",
+        f"| reached the `verified` rung | "
+        f"{summary['by_kind'].get('verified', 0)} |",
         f"| blocked outside this repository | {summary['external_total']} |",
         f"| work remaining here | {summary['internal_total']} |",
         "",
-        "## Every terminal state",
+        f"Of the {summary['by_kind'].get('verified', 0)} on the first line, "
+        f"{gated} read true on all six evidence gates. The rung and the gates "
+        f"are different questions and this table asks the rung's, because it "
+        f"is the one whose three lines partition D1.",
+    ]
+
+    excluded_internal = (denominators.get(
+        "adequately_specified_genuine_umats") or {}).get(
+            "excluded_for_an_internal_reason") or []
+    unknown = (denominators.get("adequately_specified_genuine_umats")
+               or {}).get("unknown") or []
+    if excluded_internal:
+        lines += ["", f"**{len(excluded_internal)} source(s) were excluded "
+                      f"from D2 for a reason that is NOT external.** That is "
+                      f"a defect in this report, not a result: " +
+                  ", ".join(f"`{name}`" for name in excluded_internal[:10])]
+    if unknown:
+        lines += ["", f"{len(unknown)} source(s) could not be placed in or "
+                      f"out of D2 because the acquisition cache does not hold "
+                      f"the file. They are counted in D1, excluded from D2's "
+                      f"numerator and denominator both, and named here: " +
+                  ", ".join(f"`{name}`" for name in unknown[:10])]
+
+    lines += [
         "",
-        "| terminal state | whose move | entries |",
+        "## What excluded a source from D2",
+        "",
+        "| reason | external or internal | sources |",
         "| --- | --- | ---: |",
     ]
+    reasons: dict = defaultdict(list)
+    for record in records:
+        if record.adequately_specified is False:
+            head = record.adequacy_basis.split(":")[0].strip()
+            if head.startswith("line-for-line identical to"):
+                # One row, not one per source it is a copy of: the reader is
+                # being told how many sources are second copies, and naming
+                # each original here would turn a census into a list.
+                head = "line-for-line identical to another acquired source"
+            reasons[(head[:70], record.adequacy_kind or "external")].append(
+                record.source_id)
+    for (head, kind), names in sorted(reasons.items(), key=lambda kv: -len(kv[1])):
+        mark = {"external": "**EXTERNAL**",
+                "duplicate": "neither -- a second copy",
+                }.get(kind, "**INTERNAL**")
+        lines.append(f"| {head} | {mark} | {len(names)} |")
+    lines += ["",
+              "A second copy is not an external blocker and is not counted as "
+              "one: nothing about it is blocked, its one answer is already "
+              "counted against the copy that carries it, and filing it under "
+              "\"somebody else's problem\" would inflate how much of the "
+              "corpus is."]
+
+    # A source can be excluded from D2 for an external reason and still sit at
+    # an INTERNAL terminal state, because the two vocabularies are not the
+    # same size. Saying so is the point: a reader who found the contradiction
+    # themselves would be right to distrust everything around it.
+    mismatched = [r for r in records
+                  if r.adequately_specified is False
+                  and r.adequacy_kind == "external"
+                  and r.kind == "internal"]
+    mismatched.sort(key=lambda r: r.source_id)
+    if mismatched:
+        lines += [
+            "",
+            "### Where a terminal state and its cause disagree",
+            "",
+            f"{len(mismatched)} source(s) are excluded from D2 for a reason "
+            "that is EXTERNAL while their terminal state is INTERNAL. That is "
+            "not a contradiction being hidden, it is a vocabulary that is one "
+            "word short: `umat_oti.abaqus.terminal_states` has no state for "
+            "\"the author published a template\", and the nearest existing "
+            "one, `incomplete_or_corrupt_source`, is glossed \"the file does "
+            "not compile as published\" -- which is false of a template, since "
+            "a template compiles. Rather than borrow a state that would make "
+            "the interface say something untrue, these are left at the state "
+            "the transform gave them, which is INTERNAL. That overstates this "
+            "project's own unfinished work and understates nobody else's, "
+            "which is the only direction the error may go. Adding a state for "
+            "it is a change to a module this registry does not own.",
+            "",
+        ]
+        for record in mismatched:
+            lines.append(f"* `{record.source_id}` -- terminal state "
+                         f"`{record.terminal_state}` (INTERNAL); excluded from "
+                         f"D2 because {record.adequacy_basis[:200]}")
+
+    lines += [
+        "",
+        "## Every terminal state, and whose move it is",
+        "",
+        "EXTERNAL means the answer lies in what somebody published and no "
+        "further engineering here changes it. INTERNAL means the answer lies "
+        "in this repository and the work is ours. Where it was not clear "
+        "which of the two a state is, it is INTERNAL -- overstating this "
+        "project's own unfinished work rather than the corpus's "
+        "incompleteness is the only direction the error may go.",
+        "",
+        "| terminal state | external or internal | what it means | of D1 | of D2 |",
+        "| --- | --- | --- | ---: | ---: |",
+    ]
+    in_d2 = Counter(r.terminal_state for r in records if r.adequately_specified)
     for state, count in summary["by_terminal_state"].items():
-        lines.append(f"| `{state}` | {kind_of(state)} | {count} |")
+        kind = kind_of(state)
+        mark = ("VERIFIED" if kind == "verified"
+                else "**EXTERNAL**" if kind == "external" else "**INTERNAL**")
+        lines.append(f"| `{state}` | {mark} | {STATE_MEANS.get(state, '')} | "
+                     f"{count} | {in_d2.get(state, 0)} |")
+    lines += ["", f"D1 column sums to {acquired}; D2 column sums to "
+                  f"{sum(in_d2.values())}."]
+
     lines += ["", "## What is left here, by cluster", "",
               "Each of these is a limitation of this pipeline, not of the "
-              "corpus. They are listed largest first because that is the "
-              "order they are worth fixing in.", "",
-              "| cluster | entries |", "| --- | ---: |"]
+              "corpus. Largest first, because that is the order they are "
+              "worth fixing in.", "",
+              "| cluster | sources in D1 | of which in D2 |",
+              "| --- | ---: | ---: |"]
     for state, count in summary["internal_clusters"].items():
-        lines.append(f"| `{state}` | {count} |")
+        lines.append(f"| `{state}` | {count} | {in_d2.get(state, 0)} |")
 
     if summary.get("transform_refused"):
         lines += ["", "## What the transformer refused, and what those files are",
                   "",
                   f"{summary['transform_refused']} sources were refused by the "
-                  "transformer. A REFUSAL IS A FACT ABOUT THE TRANSFORMER. Each "
-                  "of these was then classified by parsing the file itself -- "
-                  "its Abaqus entry point, its digest against every other "
-                  "acquired source, and an offline compile of the author's own "
-                  "text -- and the classification below rests on that evidence "
-                  "and never on the refusal.", "",
-                  "| what the file is | entries |", "| --- | ---: |"]
+                  "transformer. A REFUSAL IS A FACT ABOUT THE TRANSFORMER and "
+                  "never about the file. Each of these was then classified by "
+                  "parsing the file itself -- its Abaqus entry point read out "
+                  "of the source text, its lines matched against every other "
+                  "acquired source, an offline `ifort -syntax-only` pass over "
+                  "the author's own text, the companion resolution, and a "
+                  "search of the whole file for an assignment to STRESS or "
+                  "DDSDDE. The classification below rests on that evidence and "
+                  "never on the refusal.", "",
+                  "| what the file is | external or internal | sources |",
+                  "| --- | --- | ---: |"]
         for name, count in summary.get("refusals_by_class", {}).items():
-            lines.append(f"| `{name}` | {count} |")
+            mark = {"genuine_umat": "**INTERNAL**",
+                    "duplicate_of_another_source":
+                        "neither -- a second copy",
+                    }.get(name, "**EXTERNAL**")
+            lines.append(f"| `{name}` | {mark} | {count} |")
+        lines += ["",
+                  "`published_stub_no_constitutive_content` is EXTERNAL as a "
+                  "cause and INTERNAL as a terminal state, for the reason "
+                  "given under \"Where a terminal state and its cause "
+                  "disagree\" above."]
         unsure = summary.get("refusals_not_confidently_classified") or []
         lines += ["",
                   f"{len(unsure)} of them are held at `genuine_umat` because "
@@ -935,19 +1785,221 @@ def markdown(records: list, summary: dict) -> str:
                   "text builds. That is the safe direction: it counts the work "
                   "as ours."]
 
-    lines += ["", "## Every entry", "",
-              "| source | terminal state | element | primal | tangent | states |",
+    recon = summary.get("verification_file_reconciliation") or {}
+    if recon:
+        lines += [
+            "", "## Why the results file holds more rows than the store holds "
+                "entries",
+            "",
+            "The results file is append-only and this pass resumed onto the "
+            "file an earlier pass had been writing, so it carries rows from "
+            "before the transform store was rebuilt. A row count over that "
+            "file is not a census of the store, and the two places this shows "
+            "up are reconciled here rather than asserted.",
+            "",
+            "| | count |",
+            "| --- | ---: |",
+            f"| rows in `{recon.get('file', '')}` | "
+            f"{recon.get('rows_in_the_file', 0)} |",
+            f"| of those, at the current store fingerprint "
+            f"`{recon.get('store_fingerprint', '')}` | "
+            f"{recon.get('rows_at_the_current_store_fingerprint', 0)} |",
+            f"| of those, at a superseded store fingerprint | "
+            f"{recon.get('rows_at_a_superseded_store_fingerprint', 0)} |",
+            f"| distinct sources named in the file | "
+            f"{recon.get('distinct_sources_in_the_file', 0)} |",
+            f"| distinct row keys in the file | "
+            f"{recon.get('distinct_keys_in_the_file', 0)} |",
+            f"| **sources this registry counts** | "
+            f"**{recon.get('sources_counted_by_this_registry', 0)}** |",
+            "",
+            "The row key cannot collapse the duplicates: it is derived from "
+            "the STORE ENTRY, so the same source under two fingerprints has "
+            "two keys and every row key in the file is distinct. The source "
+            "digest cannot collapse them either, in the other direction: the "
+            f"{recon.get('rows_at_the_current_store_fingerprint', 0)} current "
+            f"rows carry only "
+            f"{recon.get('distinct_source_digests_at_the_current_fingerprint', 0)} "
+            "distinct source digests, because several acquired files are "
+            "byte-identical to another acquired file and both transformed. "
+            "**The identity is the path inside the acquisition cache**, and "
+            "the digest is what corroborates that a row is about the file "
+            "this registry read.",
+            "",
+            f"{len(recon.get('superseded_rows_whose_source_was_rerun') or [])} "
+            "of the superseded rows are for sources that were re-run at the "
+            "current fingerprint, so the current row is used and the old one "
+            "is set aside. The remaining "
+            f"{len(recon.get('superseded_rows_whose_source_is_no_longer_in_the_store') or [])} "
+            "are for sources that are no longer in the store at all, because "
+            "the re-transform refused them; whatever rung they reached under "
+            "the old store, it is evidence about generated Fortran that no "
+            "longer exists:",
+            "",
+        ]
+        for name in (recon.get(
+                "superseded_rows_whose_source_is_no_longer_in_the_store") or []):
+            lines.append(f"* `{name}`")
+
+        double = recon.get("verified_rows_that_double_count_a_source") or []
+        rung = recon.get("store_entries_that_verified", 0)
+        strict = recon.get("store_entries_that_verified_on_every_gate", 0)
+        raw = recon.get("rows_at_stage_verified_in_the_whole_file", 0)
+        lines += [
+            "",
+            "### 'verified' counted three ways",
+            "",
+            "Three different numbers are all true statements about this run "
+            "and only one of them is a count of sources that passed "
+            "everything. All three are named here rather than one being "
+            "chosen.",
+            "",
+            "| number | what it counts |",
+            "| ---: | --- |",
+            f"| {raw} | rows in the results file at stage `verified`. A row "
+            f"count over an append-only file, not a census: it counts "
+            f"{len(double)} source(s) twice. |",
+            f"| {rung} | store entries at the current fingerprint that "
+            f"reached the batch's `verified` rung. This is what the run's own "
+            f"console reported. |",
+            f"| **{strict}** | **store entries that reached that rung AND "
+            f"read true on all six evidence gates.** The strict number. |",
+            "",
+            f"{raw} minus {rung} is exactly the {len(double)} source(s) that "
+            f"verified under the old store and verified again under the new "
+            f"one, whose old row is still in the file:",
+            "",
+        ]
+        for name in double:
+            lines.append(f"* `{name}`")
+        failed = summary.get(
+            "reached_the_verified_rung_but_failed_a_gate") or []
+        lines += ["",
+                  f"{rung} minus {strict} is the {len(failed)} entr"
+                  f"{'y' if len(failed) == 1 else 'ies'} that reached the "
+                  f"rung with a gate not reading true. Each one's `reason` "
+                  f"explains why the batch accepted it anyway; that "
+                  f"explanation is in the registry beside the gate, and it is "
+                  f"not the same thing as the gate reading true:",
+                  ""]
+        for name in failed:
+            lines.append(f"* `{name}`")
+        lines += ["",
+                  "**" + str(strict) + " is the number to quote, and " +
+                  str(rung) + " is the number the console reported.** " +
+                  recon.get("why_the_two_verified_numbers_differ", "")]
+
+        gates = (summary.get("evidence_gate_census") or {})
+        if gates.get("gates"):
+            lines += [
+                "",
+                "### The six evidence gates, and what 'not established' covers",
+                "",
+                "A gate can read true, read false, be present and hold "
+                "nothing, or not be there at all. **The last two both mean "
+                "not established**, and they are counted separately because "
+                "they have different causes: a key holding null is a question "
+                "the run asked and could not answer, and a key that is not "
+                "there is a question that batch's schema never asked. A "
+                "census that counts one and drops the other comes out short "
+                "of its own denominator and still reads perfectly well.",
+                "",
+                f"Denominator: {gates['denominator']} "
+                f"{gates['denominator_is']}. Every row below sums to it.",
+                "",
+                "| gate | true | false | null | key absent | not established |"
+                " sums to |",
+                "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+            ]
+            for gate, counts in gates["gates"].items():
+                lines.append(
+                    f"| `{gate}` | {counts['true']} | {counts['false']} | "
+                    f"{counts['not_established_present_but_null']} | "
+                    f"{counts['not_established_key_absent']} | "
+                    f"{counts['not_established_total']} | {counts['sums_to']} |")
+
+            whole = (recon.get(
+                "evidence_gate_census_over_the_whole_file") or {})
+            if whole.get("gates"):
+                mech = whole["gates"].get("mechanically_informative") or {}
+                here = gates["gates"].get("mechanically_informative") or {}
+                lines += [
+                    "",
+                    "The same census over a different denominator gives a "
+                    "different answer, and that is the whole reason the "
+                    "denominator has to be stated. Over "
+                    f"{whole['denominator']} {whole['denominator_is']}, "
+                    f"`mechanically_informative` reads true on "
+                    f"{mech.get('true', 0)}, false on {mech.get('false', 0)}, "
+                    f"null on {mech.get('null', 0)} and is absent on "
+                    f"{mech.get('absent', 0)} -- so "
+                    f"{mech.get('null', 0) + mech.get('absent', 0)} are not "
+                    f"established. Over the "
+                    f"{gates['denominator']} entries in the store now it is "
+                    f"absent on {here.get('not_established_key_absent', 0)} "
+                    f"and null on "
+                    f"{here.get('not_established_present_but_null', 0)}, so "
+                    f"{here.get('not_established_total', 0)} are not "
+                    f"established. **Both are right and neither means "
+                    f"anything without the denominator beside it.** The "
+                    f"absent key belongs to the superseded rows: it is a "
+                    f"question the earlier batch's schema did not ask, not a "
+                    f"question this run failed to answer.",
+                ]
+
+    stale = summary.get("verification_rows_at_a_stale_fingerprint") or []
+    if stale:
+        lines += ["", "### Sources left with no verdict at this fingerprint",
+                  "",
+                  f"{len(stale)} source(s) have a verification row only at a "
+                  f"superseded fingerprint -- the same ones listed above. None "
+                  f"is counted as verified. Each is recorded at whatever the "
+                  f"transform established for it at this fingerprint, which "
+                  f"is an absence of a verdict and not the same as a verdict, "
+                  f"and each one's record carries the superseded row's rung so "
+                  f"the two files can be reconciled by a reader."]
+
+    lines += ["", "## Every source that is not verified, and why",
+              "",
+              "One row per source, with the NAMED reason and the evidence "
+              "behind it. \"The transformer refused it\" is never a reason "
+              "here: it is an answer about the transformer.",
+              "",
+              "| source | terminal state | external/internal | in D2 | reason |",
+              "| --- | --- | --- | :-: | --- |"]
+    for record in records:
+        if record.terminal_state == FULLY_VERIFIED:
+            continue
+        kind = ("EXTERNAL" if record.kind == "external" else "INTERNAL")
+        member = "yes" if record.adequately_specified else "no"
+        reason = record.not_verified_reason.replace("|", "/")[:400]
+        lines.append(f"| `{record.source_id}` | `{record.terminal_state}` | "
+                     f"{kind} | {member} | {reason} |")
+
+    lines += ["", "## Every source that reached the `verified` rung", "",
+              "`all six gates` says whether every evidence gate read true. "
+              "Where it does not, the gate that did not is named: the entry "
+              "is one the batch accepted with a written explanation, and an "
+              "explanation is not the same thing as the gate reading true.",
+              "",
+              "| source | all six gates | element | worst primal | "
+              "worst tangent | states |",
               "| --- | --- | --- | ---: | ---: | --- |"]
     for record in records:
+        if record.terminal_state != FULLY_VERIFIED:
+            continue
+        gate_note = ("yes" if record.verified_on_every_gate
+                     else f"**no** -- {record.gates_not_true}")
         primal = ("" if record.worst_stress_relative is None
                   else f"{record.worst_stress_relative:.2e}")
         tangent = ("" if record.worst_tangent_relative is None
                    else f"{record.worst_tangent_relative:.2e}")
         states = ("" if record.tangent_states_checked is None
-                  else f"{record.tangent_states_agreeing}/{record.tangent_states_checked}")
-        lines.append(
-            f"| {record.source_id[-70:]} | `{record.terminal_state}` | "
-            f"{record.element_type} | {primal} | {tangent} | {states} |")
+                  else f"{record.tangent_states_agreeing}/"
+                       f"{record.tangent_states_checked}")
+        lines.append(f"| `{record.source_id}` | {gate_note} | "
+                     f"{record.element_type} | {primal} | {tangent} | "
+                     f"{states} |")
     return "\n".join(lines) + "\n"
 
 
@@ -983,6 +2035,14 @@ def main(argv: Optional[list] = None) -> int:
                              "ifort -syntax-only and write the evidence to "
                              "--refusal-audit. No Abaqus process is started "
                              "and no licence token is drawn")
+    parser.add_argument("--store-fingerprint", default="",
+                        help="the transform-store fingerprint the registry is "
+                             "being built for. A verification row carries the "
+                             "fingerprint of the store it ran against, and a "
+                             "row from before the store was rebuilt is "
+                             "evidence about a transformed file that no "
+                             "longer exists. Defaults to the fingerprint the "
+                             "--transform report records")
     parser.add_argument("--compile-check", action="store_true",
                         help="compile every unreached source with Abaqus's own "
                              "compile line, so a transform refusal on a file "
@@ -1016,11 +2076,29 @@ def main(argv: Optional[list] = None) -> int:
             "sources": audit}, indent=1) + "\n", encoding="utf-8")
         print(f"  wrote {args.refusal_audit}")
 
+    fingerprint = args.store_fingerprint
+    if not fingerprint and args.transform and Path(args.transform).is_file():
+        fingerprint = str(json.loads(Path(args.transform).read_text(
+            encoding="utf-8")).get("fingerprint") or "")
+
     records = build(args.transform, args.abaqus, args.cache_dir,
                     compile_check=args.compile_check,
                     inventory_ids=inventory_ids, provenance=provenance,
-                    audit=audit)
+                    audit=audit, store_fingerprint=fingerprint)
     summary = summarise(records)
+    summary["verification_file_reconciliation"] = verification_reconciliation(
+        args.abaqus, fingerprint)
+    summary["inputs"] = {
+        # Every number in the report has to be traceable to a file on disk
+        # that the report names. These are those files, as the repository
+        # sees them -- never as one machine happened to.
+        "transform_report": _relative_to_repo(args.transform),
+        "verification_results": (_relative_to_repo(args.abaqus)
+                                 if args.abaqus else ""),
+        "store_fingerprint": fingerprint,
+        "refusal_audit": _relative_to_repo(args.refusal_audit),
+        "discovery_cache": _relative_to_repo(args.cache_dir),
+    }
     summary["inventory"] = {
         # Relative to the repository where possible: the audit fails the
         # build on an absolute home path, and a registry that records where
@@ -1051,16 +2129,25 @@ def main(argv: Optional[list] = None) -> int:
         "summary": summary,
         "records": [r.as_dict() for r in records],
     }
+    import io
+    rows = io.StringIO()
+    # LF, not the CRLF csv writes by default: the row text is checked for
+    # machine paths and written through write_text like the other two
+    # artefacts, and a file whose line endings change on every rebuild shows
+    # up as a diff that is about nothing.
+    writer = csv.DictWriter(rows, fieldnames=list(records[0].as_dict())
+                            if records else ["source_id"],
+                            lineterminator="\n")
+    writer.writeheader()
+    for record in records:
+        writer.writerow(record.as_dict())
+
     for path, text in ((args.json_path, json.dumps(payload, indent=1) + "\n"),
-                       (args.markdown, markdown(records, summary))):
+                       (args.markdown, markdown(records, summary)),
+                       (args.csv_path, rows.getvalue())):
+        refuse_machine_paths(text, _relative_to_repo(path))
         Path(path).parent.mkdir(parents=True, exist_ok=True)
-        Path(path).write_text(text, encoding="utf-8")
-    with open(args.csv_path, "w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(records[0].as_dict())
-                                if records else ["source_id"])
-        writer.writeheader()
-        for record in records:
-            writer.writerow(record.as_dict())
+        Path(path).write_text(text, encoding="utf-8", newline="")
 
     print(f"  {summary['acquired']} artefacts, {summary['genuine_umats']} UMATs, "
           f"{summary['fully_verified']} fully verified")

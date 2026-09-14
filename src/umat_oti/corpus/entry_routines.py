@@ -11,7 +11,7 @@ deformation gradient that kernel never reads: the difference came out
 identically zero at every step size, and the row was recorded as a tangent
 failure. Nothing about anyone's UMAT was tested.
 
-So classification here rests on three things a filename cannot fake:
+So classification here rests on four things a filename cannot fake:
 
 * the routine's **name**,
 * its **exact dummy-argument count**, because the Abaqus interfaces are
@@ -20,7 +20,13 @@ So classification here rests on three things a filename cannot fake:
   that happens to be called ``UMAT``,
 * whether any **other unit in the same file calls it**, because a routine
   reached only through a sibling is that sibling's callee and not the file's
-  entry point.
+  entry point,
+* whether it is a **definition at all**, because a header inside an
+  ``INTERFACE`` block declares a routine implemented somewhere else. A test
+  driver that declares a 37-argument ``subroutine umat`` so that it can CALL
+  it matches the interface perfectly and contains no constitutive code, and
+  reading that declaration as a definition put a driver inside the count of
+  UMATs this project had failed to convert.
 
 What this module does not do is decide whether a UMAT is any good. It decides
 what interface a file presents to Abaqus, so that a result is attributed to
@@ -35,9 +41,20 @@ broken, and it is not evidence that anything is missing beside it. Each of
 those is a separate claim needing its own evidence, and
 :func:`classify_refusal` is where the evidence is combined -- the parsed entry
 point, a digest match against another acquired source, an offline compile of
-the author's own text, and the companion resolution. A refusal with none of
-that evidence behind it stays :data:`GENUINE_UMAT`, which is the answer that
-keeps the work in our column rather than moving it into the corpus's.
+the author's own text, the companion resolution, and a search of the whole
+file for an assignment to either output a UMAT exists to produce. A refusal
+with none of that evidence behind it stays :data:`GENUINE_UMAT`, which is the
+answer that keeps the work in our column rather than moving it into the
+corpus's.
+
+The last of those rungs, :data:`PUBLISHED_STUB`, is the only one that can
+move work the other way, so it is asked last and it is gated hard: the file
+must present the UMAT interface, assign neither STRESS nor DDSDDE anywhere in
+indexed or whole-array form, and make no CALL through which either could have
+been assigned. :func:`umat_outputs_written` returns the search itself --
+how many logical lines were read, under which source form, and what was
+looked for -- because a verdict of "this file computes nothing" that does not
+say where it looked is a claim and not a finding.
 """
 from __future__ import annotations
 
@@ -99,6 +116,15 @@ HELPER_OR_MODULE_ONLY = "helper_or_module_only"
 DUPLICATE_SOURCE = "duplicate_of_another_source"
 INCOMPLETE_OR_CORRUPT = "incomplete_or_corrupt_source"
 MISSING_EXTERNAL_DEPENDENCY = "missing_external_dependency"
+#: The file presents the 37-argument Abaqus UMAT interface and publishes no
+#: constitutive model inside it: nowhere in the file is STRESS or DDSDDE
+#: assigned, and the routine makes no CALL through which either could be
+#: written. There is nothing in such a file for any transformer to convert and
+#: nothing in it for any verification to check -- not because the transform
+#: refused it, but because the author published a template. See
+#: :func:`umat_outputs_written` for the evidence, which is recorded on every
+#: record whether or not this class ends up being the one that wins.
+PUBLISHED_STUB = "published_stub_no_constitutive_content"
 
 REFUSAL_CLASSES: tuple[str, ...] = (
     GENUINE_UMAT,
@@ -107,6 +133,7 @@ REFUSAL_CLASSES: tuple[str, ...] = (
     DUPLICATE_SOURCE,
     INCOMPLETE_OR_CORRUPT,
     MISSING_EXTERNAL_DEPENDENCY,
+    PUBLISHED_STUB,
 )
 
 #: The classes that say the work is this repository's. Kept as a set so a
@@ -122,6 +149,34 @@ _UNIT = re.compile(
     re.IGNORECASE)
 
 _CALL = re.compile(r"\bCALL\s+([A-Za-z_]\w*)", re.IGNORECASE)
+
+#: A main program. It is a program unit, it is never an Abaqus entry point,
+#: and a file whose only unit is one is a driver somebody wrote to exercise a
+#: UMAT that lives somewhere else. Recognised so that such a file quotes its
+#: own first line as the evidence for "this is not a UMAT", rather than coming
+#: out as ``no SUBROUTINE or FUNCTION was found`` -- a true sentence that reads
+#: as though the file were unparseable.
+_PROGRAM = re.compile(r"^\s*PROGRAM\s+([A-Za-z_]\w*)\s*$", re.IGNORECASE)
+_END_PROGRAM = re.compile(r"^\s*END\s*PROGRAM(?:\s+[A-Za-z_]\w*)?\s*$",
+                          re.IGNORECASE)
+
+#: The opening and closing of an INTERFACE block, including a named operator
+#: or assignment interface and the ABSTRACT form.
+#:
+#: Everything between them is a DECLARATION of a routine defined elsewhere --
+#: it has no body, and it is not a program unit of this file.
+#: ``sas229__geomat/tests/umat_integration.f90`` is a ``program main`` that
+#: declares a 37-argument ``subroutine umat`` in an interface block at line 7
+#: so that it can CALL it; the routine itself is in a C++ library this
+#: repository does not publish as Fortran. Read without this rule, that
+#: declaration matched the UMAT interface exactly, the file was classified as
+#: a genuine UMAT, and a test driver with no constitutive code in it sat in
+#: the count of UMATs this project had failed to convert.
+_INTERFACE = re.compile(
+    r"^\s*(?:ABSTRACT\s+)?INTERFACE\s*"
+    r"(?:[A-Za-z_]\w*|OPERATOR\s*\(.*?\)|ASSIGNMENT\s*\(\s*=\s*\))?\s*$",
+    re.IGNORECASE)
+_END_INTERFACE = re.compile(r"^\s*END\s*INTERFACE(?:\s+.*)?$", re.IGNORECASE)
 #: The end of a PROGRAM UNIT, and nothing else. Written as `END\s*$` or
 #: `END SUBROUTINE [name]` / `END FUNCTION [name]`.
 #:
@@ -155,6 +210,8 @@ class ProgramUnit:
         that happens to share the name, and saying otherwise is how a UEL's
         private kernel came to be driven as a material.
         """
+        if self.kind == "PROGRAM":
+            return None
         counts = INTERFACES.get(self.name.upper())
         if counts is None:
             return None
@@ -231,11 +288,32 @@ def program_units(source: str, form: str = "",
     units: list[ProgramUnit] = []
     current: Optional[ProgramUnit] = None
     by_name: dict[str, ProgramUnit] = {}
+    #: How many INTERFACE blocks deep the reader is. A header inside one is a
+    #: declaration of somebody else's routine, not a unit of this file.
+    interface_depth = 0
 
     for logical in logical_lines_from_text(source, form):
         text = getattr(logical, "text", str(logical))
         numbers = getattr(logical, "line_numbers", ()) or ()
         number = numbers[0] if numbers else 0
+        if _END_INTERFACE.match(text):
+            interface_depth = max(0, interface_depth - 1)
+            continue
+        if _INTERFACE.match(text):
+            interface_depth += 1
+            continue
+        if interface_depth:
+            continue
+        main = _PROGRAM.match(text)
+        if main:
+            current = ProgramUnit(name=main.group(1), kind="PROGRAM",
+                                  line=number)
+            units.append(current)
+            by_name.setdefault(main.group(1).upper(), current)
+            continue
+        if _END_PROGRAM.match(text):
+            current = None
+            continue
         header = _UNIT.match(text)
         if header:
             kind = header.group(1).upper()
@@ -266,8 +344,24 @@ def _resolve_calls(source: str, form: str,
                    by_name: dict[str, ProgramUnit]) -> None:
     """Who calls whom, independent of declaration order."""
     current = ""
+    interface_depth = 0
     for logical in logical_lines_from_text(source, form):
         text = getattr(logical, "text", str(logical))
+        if _END_INTERFACE.match(text):
+            interface_depth = max(0, interface_depth - 1)
+            continue
+        if _INTERFACE.match(text):
+            interface_depth += 1
+            continue
+        if interface_depth:
+            continue
+        main = _PROGRAM.match(text)
+        if main:
+            current = main.group(1).upper()
+            continue
+        if _END_PROGRAM.match(text):
+            current = ""
+            continue
         header = _UNIT.match(text)
         if header:
             current = header.group(2).upper()
@@ -392,6 +486,108 @@ def _classify_one_form(source: str, form: str,
                 f"{unit.line}{callee_note}"))
 
 
+#: An assignment whose target is one of the two outputs a UMAT exists to
+#: produce. Written against a LOGICAL line, so a continued statement is one
+#: line and a fixed-form continuation marker is never read as a target. Matches
+#: both the indexed form -- ``STRESS(I) = ...``, ``DDSDDE(1:NTENS,1) = ...`` --
+#: and the whole-array form ``STRESS = SIGC``. The whole-array form is the one
+#: that matters here: it is how a 1694-line Mohr-Coulomb UMAT writes its
+#: answer, and a rule that only saw subscripts would call that file empty.
+_WRITES_OUTPUT = re.compile(
+    r"^\s*(?:\d+\s+)?(STRESS|DDSDDE)\s*(?:\([^=]*\))?\s*=(?!=)",
+    re.IGNORECASE)
+
+#: Any CALL at all. A UMAT that writes neither output itself but hands STRESS
+#: to a subroutine is not empty, it is delegating, and this module has no way
+#: to follow the delegation without resolving the callee. So the presence of a
+#: single CALL is enough to withhold the stub verdict: the evidence for
+#: "nothing is computed here" has to be that nothing could be.
+_ANY_CALL = re.compile(r"\bCALL\s+[A-Za-z_]\w*", re.IGNORECASE)
+
+
+@dataclass(frozen=True)
+class OutputEvidence:
+    """Where a file was searched for a stress or tangent update, and what was
+    found there.
+
+    A verdict of "this file computes nothing" that does not say where it
+    looked is a claim, not a finding, so this carries the search itself: how
+    many logical lines were read, under which source form, how many CALL
+    statements were seen, and the first line that assigns STRESS or DDSDDE
+    where there is one.
+    """
+
+    writes_stress: bool
+    writes_ddsdde: bool
+    calls: int
+    logical_lines: int
+    source_form: str
+    first_write: str = ""
+    first_write_line: int = 0
+
+    @property
+    def writes_nothing(self) -> bool:
+        return not (self.writes_stress or self.writes_ddsdde)
+
+    @property
+    def is_declaration_only(self) -> bool:
+        """No output written, and no CALL that could have written one."""
+        return self.writes_nothing and self.calls == 0
+
+    @property
+    def where_it_searched(self) -> str:
+        return (f"{self.logical_lines} logical lines of the whole file, read "
+                f"as {self.source_form} form, searched for an assignment to "
+                f"STRESS or DDSDDE in either indexed or whole-array form, and "
+                f"for any CALL that could write one")
+
+    def as_dict(self) -> dict:
+        return {"writes_stress": self.writes_stress,
+                "writes_ddsdde": self.writes_ddsdde,
+                "calls": self.calls,
+                "logical_lines": self.logical_lines,
+                "source_form": self.source_form,
+                "first_write": self.first_write,
+                "first_write_line": self.first_write_line,
+                "declaration_only": self.is_declaration_only,
+                "where_it_searched": self.where_it_searched}
+
+
+def umat_outputs_written(source: str, form: str = "",
+                         path: Optional[Path] = None) -> OutputEvidence:
+    """Whether this file ever assigns the two outputs a UMAT must return.
+
+    Asked of the whole file rather than of the entry routine alone, because a
+    UMAT whose stress update lives in a sibling subroutine in the same file
+    still computes a stress, and narrowing the search to one unit would report
+    such a file as empty.
+    """
+    if not form:
+        form = (detect_source_form(path, source) if path is not None
+                else detect_form_from_text(source))
+    stress = ddsdde = False
+    calls = read = 0
+    first = ""
+    first_line = 0
+    for logical in logical_lines_from_text(source, form):
+        text = getattr(logical, "text", str(logical))
+        numbers = getattr(logical, "line_numbers", ()) or ()
+        read += 1
+        match = _WRITES_OUTPUT.match(text)
+        if match:
+            if match.group(1).upper() == "STRESS":
+                stress = True
+            else:
+                ddsdde = True
+            if not first:
+                first = text.strip()[:200]
+                first_line = numbers[0] if numbers else 0
+        calls += len(_ANY_CALL.findall(text))
+    return OutputEvidence(writes_stress=stress, writes_ddsdde=ddsdde,
+                          calls=calls, logical_lines=read, source_form=form,
+                          first_write=first, first_write_line=first_line)
+
+
 def source_line(source: str, number: int) -> str:
     """One physical line of the author's file, verbatim.
 
@@ -462,7 +658,8 @@ def classify_refusal(found: Classification, *,
                      duplicate_of: str = "",
                      missing_externals: tuple = (),
                      text_rejected: Optional[bool] = None,
-                     compiler_evidence: str = "") -> RefusalVerdict:
+                     compiler_evidence: str = "",
+                     outputs: Optional[OutputEvidence] = None) -> RefusalVerdict:
     """What a refused source is, from evidence about the source.
 
     THE TRANSFORMER'S REFUSAL IS NOT AN INPUT HERE, and that is deliberate. A
@@ -487,7 +684,14 @@ def classify_refusal(found: Classification, *,
        -- a file that fails because a module was never published beside it is
        the next question's answer, not this one's.
     4. **Was everything it needs published?** An unresolved USE or INCLUDE.
-    5. **Everything else is ours.** A UMAT, whole, with its companions, that
+    5. **Is there a constitutive model in it at all?** A file that presents
+       the UMAT interface and never assigns STRESS or DDSDDE anywhere, and
+       makes no CALL that could assign either, is a template somebody
+       published. Asked LAST, so it can only ever refine what would otherwise
+       have been called ours -- it never overrides a more specific answer, and
+       it is the only rung whose evidence is a search of the whole file rather
+       than of its headers.
+    6. **Everything else is ours.** A UMAT, whole, with its companions, that
        this transformer could not convert.
 
     ``text_rejected`` being ``None`` means the compile did not settle it, and
@@ -496,7 +700,7 @@ def classify_refusal(found: Classification, *,
     project's own unfinished work rather than the corpus's incompleteness.
     """
     base = _file_verdict(found, missing_externals, text_rejected,
-                         compiler_evidence)
+                         compiler_evidence, outputs)
     if not duplicate_of:
         return base
     return replace(
@@ -509,7 +713,8 @@ def classify_refusal(found: Classification, *,
 
 def _file_verdict(found: Classification, missing_externals: tuple,
                   text_rejected: Optional[bool],
-                  compiler_evidence: str) -> RefusalVerdict:
+                  compiler_evidence: str,
+                  outputs: Optional[OutputEvidence] = None) -> RefusalVerdict:
     """What the file is, considered on its own."""
     missing = tuple(str(name) for name in missing_externals if str(name))
 
@@ -554,6 +759,17 @@ def _file_verdict(found: Classification, missing_externals: tuple,
             entry_routine=found.entry_routine, entry_line=found.entry_line,
             evidence=compiler_evidence or found.entry_text,
             basis="the author's own text is rejected by the compiler")
+
+    if outputs is not None and outputs.is_declaration_only:
+        return RefusalVerdict(
+            PUBLISHED_STUB, entry_interface=found.entry_interface,
+            entry_routine=found.entry_routine, entry_line=found.entry_line,
+            evidence=found.entry_text,
+            basis=("this file presents the Abaqus UMAT interface and "
+                   "publishes no constitutive model inside it: "
+                   + outputs.where_it_searched
+                   + " -- nothing was assigned and no CALL was made. It is a "
+                     "template, not a transform this project owes"))
 
     return RefusalVerdict(
         GENUINE_UMAT, entry_interface=found.entry_interface,
