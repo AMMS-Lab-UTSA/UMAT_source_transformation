@@ -214,3 +214,72 @@ def test_a_gradient_given_as_rows_of_any_sequence_is_read():
 def test_a_short_gradient_is_padded_rather_than_raising():
     assert as_matrix([1.0, 2.0]) == [[1.0, 2.0, 0.0], [0.0, 0.0, 0.0],
                                      [0.0, 0.0, 0.0]]
+
+
+# ---------------------------------------------------------------------------
+# The reference must not quietly fall back to the seed map
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+@pytest.mark.regression
+def test_a_gradient_driven_reference_is_not_the_seed_map_difference():
+    """A reference that shares the seed's definition cannot falsify the seed.
+
+    pass10 recorded ``best_relative`` 8.432916579511807e-10 for
+    ``AlexanderJFDR__Hyperelastic_phase_field/umat/NeoHookean_umat.for`` (store
+    key b02211fef691bb6a2b174039) and 1.8013861063013595e-06 for
+    ``Jeff97/.../From-2D-to-2D-Axe.for`` (key c14b3e1b76081216b57abbf8). Both
+    stored conversions predate the finite-strain fix; their emitted seed is the
+    additive ``DFGRD1_OTI(i,j) += Ek`` and they carry no Kirchhoff term.
+
+    Built offline with gfortran at pass10's own recorded replay states, those
+    two numbers are reproduced to every digit by scoring the stale conversion
+    against a reference with NEITHER correction -- 8.4329e-10 and 1.8014e-06.
+    Against the corrected reference the same conversions sit at 3.7456e-02 and
+    7.5000e-01, and their re-transforms agree to 8.1285e-10 and 2.7275e-08.
+
+    So a verdict was taken on a reference that had neither correction. Running
+    ``difference_tangent`` today over those same replay directories applies
+    both, so the artifacts do not say which line dropped them -- and the sweep
+    field that would have said, ``reference_definition``, is set but never
+    serialised into the record.
+
+    What is pinned here is the invariant: with a deformation gradient in hand,
+    the assembled reference differs from the raw seed-map difference by exactly
+    the Kirchhoff term, on the direct columns and nowhere else. When they are
+    equal, the reference has fallen back to differentiating what the seed
+    differentiates, and the comparison has lost its power to falsify.
+    """
+    from umat_oti.abaqus.replay import _as_the_solver_defines_it
+
+    raw = [[10.0, 2.0, 3.0, 0.5], [2.0, 11.0, 4.0, 0.25],
+           [3.0, 4.0, 12.0, 0.75], [0.5, 0.25, 0.75, 6.0]]
+    stress = [1.0, -2.0, 0.5, 0.125]
+    ndi = 3
+
+    corrected = _as_the_solver_defines_it(raw, stress, ndi, correct=True)
+    uncorrected = _as_the_solver_defines_it(raw, stress, ndi, correct=False)
+
+    assert uncorrected == raw
+    assert corrected != uncorrected, (
+        "with a gradient in hand the reference must carry sigma_ij delta_kl; "
+        "equal to the seed-map difference means it differentiates whatever the "
+        "seed differentiated and cannot falsify it")
+    for i in range(4):
+        for j in range(4):
+            expected = raw[i][j] + (stress[i] if j < ndi else 0.0)
+            assert corrected[i][j] == pytest.approx(expected, rel=1e-15)
+
+
+@pytest.mark.unit
+def test_half_a_correction_is_not_applied():
+    """Without the push-forward the Kirchhoff term is withheld too.
+
+    Each half alone leaves a residual of the same order as doing nothing, and
+    of the opposite sign on the shear rows: applying one would move the
+    reference away from both definitions rather than towards either.
+    """
+    from umat_oti.abaqus.replay import _as_the_solver_defines_it
+
+    raw = [[10.0, 2.0, 0.0], [2.0, 11.0, 0.0], [0.0, 0.0, 6.0]]
+    assert _as_the_solver_defines_it(raw, [1.0, 1.0, 1.0], 2, correct=False) == raw
