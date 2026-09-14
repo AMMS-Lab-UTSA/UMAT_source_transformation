@@ -363,3 +363,38 @@ def read_pair(work_dir: Path) -> tuple[list[dict], list[dict]]:
     work_dir = Path(work_dir)
     return (parse_probe(work_dir / "original" / "original_probe.txt"),
             parse_probe(work_dir / "transformed" / "transformed_probe.txt"))
+
+
+def history_misalignments(original: Sequence[dict],
+                          transformed: Sequence[dict]) -> list:
+    """Records where the two builds' histories are not the same point.
+
+    ``compare_primal`` pairs the two converged histories with a positional
+    ``zip``. Its only structural guard is that the two have the same LENGTH,
+    and it does not go through :mod:`umat_oti.abaqus.frames`, which groups by
+    ``(step, increment, element, point)`` precisely so that record i of one
+    build cannot be a different increment of the other. Equal length is not
+    equal alignment: two histories can have the same number of records and
+    still be offset, if one carries an extra step at the front, or emits its
+    integration points in a different order, or drops a record in one place
+    and gains one in another. The comparison would report a number either way,
+    and that number would mean nothing.
+
+    Measured over pass10: zero of the 142 entries whose two histories are both
+    on disk and the same length are misaligned, so no result in that pass is
+    an alignment artefact. That is a fact about this corpus, not a property of
+    the comparison, and it is why this returns the offending records rather
+    than a bare True: the next run is not covered by the last one's luck.
+
+    Returns ``(index, original_key, transformed_key)`` for each record that
+    does not match, in order.
+    """
+    out: list = []
+    for index, (left, right) in enumerate(zip(original, transformed)):
+        key_left = (left.get("step"), left.get("increment"),
+                    left.get("element"), left.get("point"))
+        key_right = (right.get("step"), right.get("increment"),
+                     right.get("element"), right.get("point"))
+        if key_left != key_right:
+            out.append((index, key_left, key_right))
+    return out
