@@ -1,5 +1,12 @@
 """Where job records live, so that closing the interface does not lose a run.
 
+Named ``persistence`` rather than ``store`` on purpose. ``umat_oti.store`` is
+an unrelated thing -- the content-addressed cache of transformed sources -- and
+it is exempt from the transform fingerprint. A module here called ``store``
+gave this package a relative ``from .store import ...`` that the fingerprint's
+boundary check reads as a reach into that exempt package, and a boundary check
+that cannot tell the two apart is one somebody will eventually silence.
+
 One JSON document per job under ``<root>/jobs/<job_id>.json``, plus an
 append-only ``<job_id>.events.jsonl`` beside it. The directory listing *is* the
 index: there is no second index file that could disagree with the records, and

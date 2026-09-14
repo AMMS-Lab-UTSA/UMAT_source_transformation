@@ -38,7 +38,7 @@ from .stages import (
     require_stage_for_internal, stage_by_key, stage_for_internal,
     unmapped_internal_names,
 )
-from .store import JobStore, atomic_write_text
+from .persistence import JobStore, atomic_write_text
 
 __all__ = [
     "CancelOutcome", "JobManager", "UnknownJob",

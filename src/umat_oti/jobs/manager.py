@@ -47,7 +47,7 @@ from .reporter import read_stage_events
 from .stages import (
     STAGE_KEYS, STATE_FAILED, STATE_NOT_RUN, STATE_RUNNING, STATE_SUCCEEDED,
 )
-from .store import JobStore
+from .persistence import JobStore
 
 __all__ = ["CancelOutcome", "JobManager", "UnknownJob"]
 
