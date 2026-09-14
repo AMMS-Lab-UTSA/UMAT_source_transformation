@@ -3957,6 +3957,16 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         # Nothing anywhere in either history is a NaN or an infinity.
         "complete_history_finite": bool(grouping.get("both_finite_throughout")),
         "primal_agreed": bool(primal.agrees),
+        # The RAW comparison above never moves. Where it is false and the
+        # entry still climbs, it is because a CONTROL was run and measured
+        # something: that the author declared a variable at single precision,
+        # or that the model differs from ITSELF by more than the two builds
+        # differ when its own arithmetic is reordered. Recorded as its own
+        # flag so that "primal_agreed false" beside "verified" reads as the
+        # chain it is rather than as a contradiction a reader has to
+        # reconstruct out of a reason string. None means no control was
+        # needed, which is the case for every entry whose builds agreed.
+        "primal_difference_explained_by_a_measured_control": None,
         # Set where the tangent is decided, not here.
         "derivatives_verified": False,
         # Whether the experiment the verdict rests on exercised anything.
@@ -4048,6 +4058,8 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             seen["primal_agrees"] = True
             precision_note = control["reason"]
             record["primal"]["explained_by_declared_precision"] = True
+            record["evidence"][
+                "primal_difference_explained_by_a_measured_control"] = True
             record["primal"]["control"] = control["comparison"]
             reference_source = Path(control["source"])
         else:
@@ -4062,6 +4074,8 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                 data_roots=data_roots,
                 increments_compared=(stopped_at if stopped_at >= 0 else None))
             record["association_control"] = association
+            record["evidence"][
+                "primal_difference_explained_by_a_measured_control"] = False
             own = association.get("worst_stress_relative")
             mine = primal.worst_stress_relative
             if (association.get("ran") and association.get("measured")
@@ -4078,6 +4092,8 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                     f"own operations, so the difference is this model's "
                     f"conditioning and not the transform's")
                 record["primal"]["explained_by_operation_order"] = True
+                record["evidence"][
+                    "primal_difference_explained_by_a_measured_control"] = True
                 record["primal"]["own_sensitivity"] = own
             else:
                 if association.get("ran") and association.get("measured") \
