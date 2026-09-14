@@ -483,14 +483,24 @@ def informativeness_row(row: dict) -> dict:
     """
     block = field_anywhere(row, "mechanically_informative")
     block = block if isinstance(block, dict) else {}
-    recorded = (row.get("evidence") or {}).get("mechanically_informative")
+    measured = row.get("evidence") or {}
+    recorded = measured.get("mechanically_informative")
     value = block.get("informative") if "informative" in block else recorded
+    # Three different absences, and saying the wrong one is its own dishonesty.
+    # 108 of the 254 pass10 entries never reached a run at all, and telling
+    # those "this run predates the informativeness gate" invents a run.
+    if not measured:
+        absent = ("nothing ran for this entry, so there was no run over which "
+                  "the material could have done anything")
+    elif recorded is None:
+        absent = ("this run predates the informativeness gate, so whether the "
+                  "material did anything over it was never measured")
+    else:
+        absent = ""
     return finding(
         "the material did something over the run that was verified",
         value,
-        str(block.get("reason") or "") or
-        ("this run predates the informativeness gate, so whether the material "
-         "did anything over it was never measured"),
+        str(block.get("reason") or "") or absent,
         about="whether there is any behaviour under the agreement")
 
 
