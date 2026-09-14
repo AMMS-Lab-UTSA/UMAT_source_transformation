@@ -1312,13 +1312,20 @@ def markdown(records: list, summary: dict) -> str:
     verified_adequate = summary.get("fully_verified_and_adequately_specified",
                                     verified)
 
+    basenames = Counter(r.source_id.rsplit("/", 1)[-1].lower()
+                        for r in records)
+    worst, worst_count = (basenames.most_common(1) or [("", 0)])[0]
+    shared = sum(count for count in basenames.values() if count > 1)
+
     lines = [
         "# Corpus verification",
         "",
-        "Every acquired source has a record here. Each one is named by its "
-        "path inside the acquisition cache and never by its basename: "
-        "eighteen of them are called `umat.f90` or `UMAT.f`, and a basename "
-        "identifies none of those.",
+        "Every acquired source has a record here, and each one is named by "
+        "its path inside the acquisition cache -- never by its basename. "
+        f"{shared} of the {acquired} share a basename with at least one "
+        f"other source, and {worst_count} of them are called `{worst}`. A "
+        "registry keyed on the basename would hold one row where the corpus "
+        "holds " + str(worst_count) + " files.",
         "",
         "## Where every number below comes from",
         "",

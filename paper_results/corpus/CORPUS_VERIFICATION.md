@@ -1,6 +1,6 @@
 # Corpus verification
 
-Every acquired source has a record here. Each one is named by its path inside the acquisition cache and never by its basename: eighteen of them are called `umat.f90` or `UMAT.f`, and a basename identifies none of those.
+Every acquired source has a record here, and each one is named by its path inside the acquisition cache -- never by its basename. 180 of the 391 share a basename with at least one other source, and 26 of them are called `bodyforce-growth-2stages.for`. A registry keyed on the basename would hold one row where the corpus holds 26 files.
 
 ## Where every number below comes from
 
