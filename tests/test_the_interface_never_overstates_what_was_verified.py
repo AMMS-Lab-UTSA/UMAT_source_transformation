@@ -37,9 +37,8 @@ from umat_oti.app.plain_language import (PLAIN,             # noqa: E402
                                          verified_summary)
 from umat_oti.app.unified_app import area_view, default_text  # noqa: E402
 
-PASS11 = Path(os.environ.get(
-    "UMAT_OTI_PASS11",
-    "/home/ammslab3/softwarex_work/corpus_run/pass11/results"))
+PASS11 = Path(os.environ.get("UMAT_OTI_PASS11") or (
+    Path.home() / "softwarex_work" / "corpus_run" / "pass11" / "results"))
 RECORD = PASS11 / "store_verification.jsonl"
 
 pass11_only = pytest.mark.skipif(

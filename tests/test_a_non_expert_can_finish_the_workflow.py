@@ -42,9 +42,8 @@ from umat_oti.app.unified_app import (AREAS, area_view,  # noqa: E402
 
 #: The finished pass11 round. Outside the repository because the corpus is not
 #: redistributable; the tests that need it skip where it is absent.
-PASS11 = Path(os.environ.get(
-    "UMAT_OTI_PASS11",
-    "/home/ammslab3/softwarex_work/corpus_run/pass11/results"))
+PASS11 = Path(os.environ.get("UMAT_OTI_PASS11") or (
+    Path.home() / "softwarex_work" / "corpus_run" / "pass11" / "results"))
 
 #: The bundled J2 control, which ships with the repository.
 CONTROL = REPO / "tests" / "fixtures" / "corpus"
