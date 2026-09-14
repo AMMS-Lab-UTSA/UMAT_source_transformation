@@ -38,6 +38,35 @@ from transform_all import (  # noqa: E402
     transform_one, work_dir_for)
 
 
+def transform_package_in_use() -> str:
+    """Where the umat_oti this process will transform with actually lives.
+
+    ``umat_oti`` is pip-installed editable against one checkout, so a bare
+    import from a worktree resolves to the OTHER tree's source. A before/after
+    snapshot taken that way measures a package neither side edited, and reports
+    "nothing changed" for a change that is there -- or reports somebody else's
+    merge as this change. The sys.path insert at the top of this file is what
+    prevents it; this states the outcome so that every snapshot carries the
+    answer rather than relying on the insert having worked.
+    """
+    import umat_oti
+    return str(Path(umat_oti.__file__).resolve().parent)
+
+
+def _assert_the_package_is_this_tree() -> str:
+    found = transform_package_in_use()
+    expected = str((REPO_ROOT / "src" / "umat_oti").resolve())
+    if found != expected:
+        raise SystemExit(
+            f"refusing to snapshot: this process would transform with\n"
+            f"  {found}\n"
+            f"but this tool lives in\n"
+            f"  {expected}\n"
+            f"An editable install is shadowing the worktree. Run with "
+            f"PYTHONPATH={REPO_ROOT / 'src'} or fix sys.path.")
+    return found
+
+
 class _NoStore:
     """A store that holds nothing, so every row is transformed afresh."""
 
@@ -94,6 +123,8 @@ def main(argv=None) -> int:
         default=REPO_ROOT / "paper_results/discovery/proposed_corpus_entries.json")
     args = parser.parse_args(argv)
 
+    package = _assert_the_package_is_this_tree()
+    print(f"  transforming with {package}")
     rows = select_work(read_work_list(args.triage), every=args.every,
                        only=args.only, limit=args.limit)
     proposals: dict = {}
@@ -129,6 +160,7 @@ def main(argv=None) -> int:
                 print(f"  [{done}/{total}]", flush=True)
     records.sort(key=lambda r: r["source_id"])
     summary = {
+        "transform_package": package,
         "selected": plan.selected,
         "transformed": sum(1 for r in records if r["ok"]),
         "failed": sum(1 for r in records if not r["ok"]),
