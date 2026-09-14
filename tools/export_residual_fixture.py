@@ -80,6 +80,27 @@ class FixtureRefused(ValueError):
     """A case that may not be frozen, said in terms of what is wrong with it."""
 
 
+def _one_material_point(original, converted):
+    """The two histories reduced to a single integration point.
+
+    The point with the most increments recorded, so a partially written point
+    never decides the window; ties go to the lowest label, so two runs of the
+    same deck choose the same one. Records with no point at all are left alone
+    -- that is a probe that wrote one point to begin with, and there is
+    nothing to choose between.
+    """
+    import collections
+
+    labelled = [r for r in original if r.get("point") is not None]
+    if not labelled:
+        return original, converted, None
+    counts = collections.Counter(r.get("point") for r in labelled)
+    best = max(sorted(counts), key=lambda label: counts[label])
+    return ([r for r in original if r.get("point") == best],
+            [r for r in converted if r.get("point") == best],
+            best)
+
+
 def at_either_level(row: dict, name: str) -> Any:
     """A field the batch writes at the top of a record in some runs and inside
     ``discovery`` in others. Absent from both is ``None``, which is "never
@@ -352,6 +373,15 @@ def fixture_from(row: dict, work_dir: Path, increments: int = INCREMENTS, *,
     # does NOT carry.
     original_records, converted_records = list(original), list(converted)
     manifest = row.get("manifest") or {}
+    # ONE material point, which is what this artefact has always claimed to be
+    # and what every fixture frozen before this was. An element hands back one
+    # record per integration point per increment -- a C3D8 gives eight -- and
+    # carrying all of them made --increments count records instead, so a
+    # complete 35-increment J2 history was written as "280 increments" and the
+    # nine points of it that matter were buried among 245 repetitions of the
+    # same homogeneous state. The point is named in the artefact, so a reader
+    # knows which one it is rather than assuming there was only ever one.
+    original, converted, carried_point = _one_material_point(original, converted)
     available = min(len(original), len(converted))
     if start is None:
         start = window_start(row, available, increments)
@@ -378,6 +408,10 @@ def fixture_from(row: dict, work_dir: Path, increments: int = INCREMENTS, *,
         return len({(r.get("step"), r.get("increment"), r.get("time"))
                     for r in records})
 
+    def _points_available(records) -> int:
+        """How many integration points the RUN wrote, not how many are kept."""
+        return len({r.get("point") for r in records if r.get("point") is not None})
+
     def _points_per_increment(records) -> int:
         """How many material points each increment carries, or 0 if uneven.
 
@@ -403,6 +437,12 @@ def fixture_from(row: dict, work_dir: Path, increments: int = INCREMENTS, *,
             # way to tell them apart.
             "element": record.get("element"),
             "point": record.get("point"),
+            # The STEP, which is half the identity of an increment: Abaqus
+            # numbers increments from 1 again in every step, so a four-step
+            # J2 cycle has four increment 1s and (increment, time) alone
+            # cannot tell a consumer which *BOUNDARY block was in force.
+            # Reconstructing the strain without it was wrong by 3.0 relative.
+            "step": record.get("step"),
             "increment": record.get("increment"),
             "time": record.get("time"),
             "strain": strain_at(record),
@@ -475,6 +515,10 @@ def fixture_from(row: dict, work_dir: Path, increments: int = INCREMENTS, *,
             "increments_carried": _increments_in(original[:take]),
             "material_points_per_increment": _points_per_increment(
                 original[:take]),
+            # Which integration point these records are, so a reader is not
+            # left to assume the element only ever had one.
+            "material_point_carried": carried_point,
+            "material_points_available": _points_available(original_records),
             # What was ASKED for, beside what was got. Without it a short
             # window is indistinguishable from a short request, and a fixture
             # built on however far a failed analysis got reads as deliberate.
