@@ -141,6 +141,25 @@ def _names(text: str) -> set:
     return {name.upper() for name in _NAME.findall(text)}
 
 
+def _read_names(line: str) -> set:
+    """The names this statement READS.
+
+    For a statement that is not an assignment -- a CALL, an IF, a WRITE -- that
+    is every name in it. For an assignment it is every name to the right of the
+    ``=``, plus any name inside the subscript on the left, because ``A(I) = X``
+    reads I and X and writes A. The target itself is not read by its own
+    assignment, and treating it as though it were is what let a run of
+    element-by-element writes report each other as consumers.
+    """
+    body = _without_the_inline_if_guard(line)
+    assigned = _ASSIGNMENT.match(body)
+    if not assigned or "=" not in body:
+        return _names(body)
+    head, _sep, tail = body.partition("=")
+    subscript = head[head.find("("):] if "(" in head else ""
+    return _names(tail) | _names(subscript)
+
+
 def analyse(converted: str) -> Finding:
     """Trace the seed through the converted source and find where it is cut.
 
@@ -198,8 +217,20 @@ def analyse(converted: str) -> Finding:
         if target in SANCTIONED:
             continue
         # Used again? A value taken out of the hypercomplex domain and never
-        # read is a diagnostic print, not a defect.
-        used = any(target in _names(later)
+        # read is a diagnostic print, not a defect. "Read" and not "mentioned":
+        # the name on the LEFT of a later assignment is a mention and is not a
+        # use, and counting it as one made this module contradict itself on
+        # every array filled element by element.
+        #
+        # Measured on the converted abuganza/BayesianCalibrationSkinGrowth
+        # Iso_Example.f, which writes b(1) through b(6), each a REAL() cast of
+        # a seeded expression, and reads b nowhere afterwards -- its only
+        # consumer is the old tangent block, which the transform has commented
+        # out. b(1)..b(5) were reported as defects because a later line names
+        # b; b(6), identical in kind and last in the run, was recorded harmless
+        # because none does. Six such casts, in five sources, were the whole of
+        # that verdict.
+        used = any(target in _read_names(later)
                    for _n, later in lines[index + 1:index + 400])
         if not used:
             harmless += 1
