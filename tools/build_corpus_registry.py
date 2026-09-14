@@ -204,8 +204,15 @@ class Record:
     #: the evidence that excluded a source from it.
     adequately_specified: Optional[bool] = None
     adequacy_basis: str = ""
-    #: Whether the thing that excluded it is a fact about somebody's published
-    #: repository ("external") or a limitation of this project ("internal").
+    #: Why it is outside D2, on the axis that matters: "external" -- somebody
+    #: published something that cannot be driven; "duplicate" -- it is a
+    #: second copy and its one answer is already counted against the copy that
+    #: carries it; "internal" -- a limitation of this project, which must
+    #: never appear, because an internal limitation may not shrink a
+    #: denominator. A duplicate is deliberately NOT called external: nothing
+    #: about it is blocked, and listing it under a heading of external
+    #: blockers would inflate how much of the corpus is somebody else's
+    #: problem.
     adequacy_kind: str = ""
     terminal_state: str = "not_attempted"
     kind: str = "internal"
@@ -1087,7 +1094,7 @@ def _adequacy(record: Record) -> tuple:
     if record.duplicate_of:
         return (False, (f"line-for-line identical to {record.duplicate_of}, "
                         f"which carries the same answer; counting both would "
-                        f"count one source twice"), "external")
+                        f"count one source twice"), "duplicate")
     if (record.entry_interface == "UMAT" and record.output_calls == 0
             and record.writes_stress is False and record.writes_ddsdde is False):
         return (False, ("this file presents the Abaqus UMAT interface and "
@@ -1223,7 +1230,8 @@ def summarise(records: list) -> dict:
     excluded = [r for r in records if r.adequately_specified is False]
     unknown = [r for r in records if r.adequately_specified is None]
     internal_exclusions = sorted(r.source_id for r in excluded
-                                 if r.adequacy_kind != "external")
+                                 if r.adequacy_kind not in ("external",
+                                                            "duplicate"))
     return {
         "acquired": len(records),
         "genuine_umats": len(umats),
@@ -1383,6 +1391,20 @@ def markdown(records: list, summary: dict) -> str:
         "OTI tangent agreed with a finite difference of the original at "
         "several states along it. Compiling is not working, running is not "
         "verified, and unknown is never verified.",
+        "",
+        "## Finished, and unfinished",
+        "",
+        "Over D1, the "
+        f"{acquired} acquired sources. The three lines are never added "
+        "together into a completion figure: pooling what somebody else "
+        "published with what this project has not finished would be a claim "
+        "about the corpus made out of facts about the pipeline.",
+        "",
+        "| | entries in D1 |",
+        "| --- | ---: |",
+        f"| verified | {summary['by_kind'].get('verified', 0)} |",
+        f"| blocked outside this repository | {summary['external_total']} |",
+        f"| work remaining here | {summary['internal_total']} |",
     ]
 
     excluded_internal = (denominators.get(
@@ -1421,8 +1443,50 @@ def markdown(records: list, summary: dict) -> str:
             reasons[(head[:70], record.adequacy_kind or "external")].append(
                 record.source_id)
     for (head, kind), names in sorted(reasons.items(), key=lambda kv: -len(kv[1])):
-        mark = "EXTERNAL" if kind == "external" else "INTERNAL"
-        lines.append(f"| {head} | **{mark}** | {len(names)} |")
+        mark = {"external": "**EXTERNAL**",
+                "duplicate": "neither -- a second copy",
+                }.get(kind, "**INTERNAL**")
+        lines.append(f"| {head} | {mark} | {len(names)} |")
+    lines += ["",
+              "A second copy is not an external blocker and is not counted as "
+              "one: nothing about it is blocked, its one answer is already "
+              "counted against the copy that carries it, and filing it under "
+              "\"somebody else's problem\" would inflate how much of the "
+              "corpus is."]
+
+    # A source can be excluded from D2 for an external reason and still sit at
+    # an INTERNAL terminal state, because the two vocabularies are not the
+    # same size. Saying so is the point: a reader who found the contradiction
+    # themselves would be right to distrust everything around it.
+    mismatched = [r for r in records
+                  if r.adequately_specified is False
+                  and r.adequacy_kind == "external"
+                  and r.kind == "internal"]
+    mismatched.sort(key=lambda r: r.source_id)
+    if mismatched:
+        lines += [
+            "",
+            "### Where a terminal state and its cause disagree",
+            "",
+            f"{len(mismatched)} source(s) are excluded from D2 for a reason "
+            "that is EXTERNAL while their terminal state is INTERNAL. That is "
+            "not a contradiction being hidden, it is a vocabulary that is one "
+            "word short: `umat_oti.abaqus.terminal_states` has no state for "
+            "\"the author published a template\", and the nearest existing "
+            "one, `incomplete_or_corrupt_source`, is glossed \"the file does "
+            "not compile as published\" -- which is false of a template, since "
+            "a template compiles. Rather than borrow a state that would make "
+            "the interface say something untrue, these are left at the state "
+            "the transform gave them, which is INTERNAL. That overstates this "
+            "project's own unfinished work and understates nobody else's, "
+            "which is the only direction the error may go. Adding a state for "
+            "it is a change to a module this registry does not own.",
+            "",
+        ]
+        for record in mismatched:
+            lines.append(f"* `{record.source_id}` -- terminal state "
+                         f"`{record.terminal_state}` (INTERNAL); excluded from "
+                         f"D2 because {record.adequacy_basis[:200]}")
 
     lines += [
         "",
@@ -1449,7 +1513,7 @@ def markdown(records: list, summary: dict) -> str:
                   f"{sum(in_d2.values())}."]
 
     lines += ["", "## What is left here, by cluster", "",
-              "Each of these is a limitation of this pipeline and not of the "
+              "Each of these is a limitation of this pipeline, not of the "
               "corpus. Largest first, because that is the order they are "
               "worth fixing in.", "",
               "| cluster | sources in D1 | of which in D2 |",
