@@ -457,6 +457,81 @@ def mistyped_oti_arguments(source_text: str) -> list:
     return found
 
 
+# ---------------------------------------------------------------------------
+# a constant the author wrote at single precision
+# ---------------------------------------------------------------------------
+#: ``1./3.`` is a quotient of two DEFAULT REAL literals, so Fortran evaluates
+#: it in single precision and then widens the single-precision result. It is
+#: not 1/3 to double precision: it is 0.3333333432674408, which differs from
+#: 0.33333333333333331 by 9.93e-09 relative. ``ABA_PARAM.INC``'s
+#: ``IMPLICIT REAL*8`` does not change this -- implicit typing types VARIABLES,
+#: never literal constants -- and Abaqus does not compile user subroutines with
+#: ``-r8``, so nothing rescues it.
+#:
+#: The transform re-emits these as ``1.0D0/3.0D0``. That is the more accurate
+#: arithmetic, and it makes the transformed build disagree with the author's.
+#: Measured on ``abuganza/UMAT_anisotropic_damage``: the author writes
+#: ``sigmaiso(i) = sigmabar(i) - (1./3.)*tr_sigmabar`` for i=1,2,3 and nothing
+#: of the kind for the shear components, so the promoted constant lands as one
+#: common additive offset on exactly the three normal stresses.
+#:
+#: Only quotients whose value is not a dyadic rational matter. ``1./2.`` and
+#: ``3./4.`` are exact in both precisions and are not reported.
+_LITERAL_RATIO = re.compile(
+    r"(?<![\dDdEe.])(\d+)\.(\d*)\s*/\s*(\d+)\.(\d*)(?![\dDdEe])")
+
+
+def inexact_single_precision_literals(source_text: str) -> list:
+    """Default-real literal quotients the author evaluates in single precision.
+
+    Source-text evidence. It says the constant is written that way, not that
+    the statement ran or that any output moved. Confirming one takes what
+    confirmed the damage case: promote it in the ORIGINAL, change nothing
+    else, and see the original reproduce the transformed build.
+    """
+    from fractions import Fraction
+
+    found: list = []
+    for match in _LITERAL_RATIO.finditer(source_text):
+        numerator = f"{match.group(1)}.{match.group(2) or '0'}"
+        denominator = f"{match.group(3)}.{match.group(4) or '0'}"
+        try:
+            value = Fraction(numerator) / Fraction(denominator)
+        except ZeroDivisionError:
+            continue
+        # Exactly representable in binary iff the reduced denominator is a
+        # power of two. Those agree in both precisions and are not evidence.
+        if value.denominator & (value.denominator - 1):
+            found.append(match.group(0))
+    return found
+
+
+def first_call_difference(original_history: list,
+                          transformed_history: list) -> float:
+    """The largest absolute output difference at the FIRST recorded call.
+
+    The cheapest discriminator there is, and it needs no rebuild. A difference
+    here cannot be the path, the solver or accumulated state: there is no path
+    yet. Agreement here with disagreement later says the opposite -- whatever
+    separated the builds did so through the history, and the entry's reported
+    number is measured at inputs the two builds no longer share.
+
+    Returns ``inf`` if either build's first record is not finite, and 0.0 if
+    there is nothing to compare.
+    """
+    if not original_history or not transformed_history:
+        return 0.0
+    left, right = original_history[0], transformed_history[0]
+    worst = 0.0
+    for block in ("STRESS", "STATEV"):
+        for x, y in zip(left.get(block) or (), right.get(block) or ()):
+            if not (math.isfinite(x) and math.isfinite(y)):
+                return math.inf
+            worst = max(worst, abs(x - y))
+    return worst
+
+
+
 def _closeness(left: float, right: float) -> float:
     scale = max(abs(left), abs(right))
     return abs(abs(left) - abs(right)) / scale if scale else 0.0
@@ -1159,6 +1234,120 @@ CONFIRMED_FINDINGS: tuple = (
         slots_beyond_rounding=9),
 )
 
+
+
+@dataclass(frozen=True)
+class DiagnosedEntry:
+    """One corpus entry taken to a confirmed root cause.
+
+    Separate from ``RecordedConfirmation`` because these are not keyed to a
+    single moved output slot. The crystal-plasticity finding is: one slot of
+    154 moved. These two are not that shape -- one is a common offset across
+    three components with nothing beyond rounding anywhere, and the other has
+    the stress agreeing bit for bit while the tangent does not -- and forcing
+    them into the slot-matching shape would record them as something they are
+    not.
+    """
+
+    source: str
+    hypothesis: str
+    root_cause: str
+    reproduction: Reproduction
+    confirmation_status: str = CONFIRMED
+
+
+#: Entries diagnosed offline, by replaying recorded calls. Every one names a
+#: control that was actually run, not a construct that was read.
+DIAGNOSED_ENTRIES: tuple = (
+    DiagnosedEntry(
+        source="abuganza__UMAT_anisotropic_damage/"
+               "UMAT_Tissue_2d_plane_strain.f",
+        hypothesis=REDUCED_PRECISION_INPUT,
+        root_cause=(
+            "the AUTHOR's constant is the single-precision one and the "
+            "transform's is correct. The author writes "
+            "`sigmaiso(i) = sigmabar(i) - (1./3.)*tr_sigmabar` for i=1,2,3. "
+            "`1./3.` is a quotient of two DEFAULT REAL literals, so it is "
+            "evaluated in single precision: 0.3333333432674408, not "
+            "0.33333333333333331. ABA_PARAM.INC's IMPLICIT REAL*8 does not "
+            "reach literal constants and Abaqus does not compile with -r8. "
+            "The transform re-emits it as `(1.0D0/3.0D0)`. The difference "
+            "between the two constants, 9.93e-09 relative, multiplies "
+            "tr_sigmabar and lands as ONE COMMON ADDITIVE OFFSET on exactly "
+            "the three normal stresses -- the shear component is assigned "
+            "without the term and does not move. The offset is therefore "
+            "proportional to tr_sigmabar, hence to mu0 = props(1), which is "
+            "what the controlled sweep measured: doubling props(1) doubles "
+            "the difference and none of the other nine props changes it. "
+            "This entry is the transform being MORE accurate than the source, "
+            "and the harness reporting the improvement as a disagreement"),
+        reproduction=Reproduction(
+            held_fixed="the recorded entry state of the first call of the "
+                       "analysis, handed bit-identically to both builds, and "
+                       "the compiler flags from the job's own .com",
+            varied="one literal constant in the ORIGINAL source: `(1./3.)` "
+                   "promoted to `(1.0D0/3.0D0)`, and nothing else",
+            observed=(
+                "as built, the two differ by 7.145e-11 on STRESS(1), (2) and "
+                "(3) -- the same absolute offset on all three -- and by "
+                "2.8e-16 on STRESS(4). With the one constant promoted, the "
+                "ORIGINAL returns the TRANSFORMED build's STRESS(1) bit for "
+                "bit; promoting `(-2./3.)` as well reproduces the transformed "
+                "build bit for bit in every component. Promoting `(-2./3.)` "
+                "ALONE changes nothing, so the carrier is the deviatoric "
+                "projection and not the `detf**` exponent. The author's own "
+                "model moves only 4.44e-15 when one ulp is added to its own "
+                "input, which is 16000 times SMALLER than the difference, so "
+                "this is not round-off and must not be recorded as round-off"),
+            where="corpus_run/pass10/work/d08cead8f57af10c6eb7e138",
+            repeatable=True)),
+
+    DiagnosedEntry(
+        source="Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto2D/"
+               "From-2D-to-2D-Axe.for",
+        hypothesis=ROUND_OFF_GROWTH,
+        root_cause=(
+            "the stress agrees bit for bit and the TANGENT does not, and the "
+            "deck is conditioned so that the tangent amplifies the last bit "
+            "by 3e+08. props are (EMOD, ENU) = (906512.0, 0.4995), and the "
+            "source forms `D1 = SIX*(ONE-TWO*ENU)/EMOD`: 1 - 2*0.4995 is a "
+            "cancellation leaving 0.001, so D1 = 6.6e-09 and the volumetric "
+            "penalty 2/D1 is 3.0e+08. Replayed from the recorded entry state "
+            "of the first call, the two builds return STRESS bit-identically "
+            "in all six components and DDSDDE differing by 6.95e-07 of its "
+            "own scale (210 on 3.03e+08) in 25 of 36 components. Abaqus "
+            "steers Newton with DDSDDE, so the two builds converge to "
+            "different displacement fields: at the very first CONVERGED "
+            "record the solver already hands the two UMATs DSTRAN differing "
+            "by 4.4e-07 relative -- the same order as the tangent difference. "
+            "Every later record is therefore compared at inputs the two "
+            "builds no longer share, and over 20 increments of a growth model "
+            "that drift compounds into the reported 1.920e-04. The pass9 "
+            "entry hid this behind a strain-driven experiment that never "
+            "developed growth; the disagreement was always there"),
+        reproduction=Reproduction(
+            held_fixed="the recorded entry state, handed bit-identically to "
+                       "both builds, and the job's own compiler flags",
+            varied="only the build, and separately props(2) = ENU, to test "
+                   "whether the difference tracks the 1/D1 amplification",
+            observed=(
+                "at the first call both builds return the same six stresses "
+                "to the last bit while the tangent differs by 6.95e-07 of its "
+                "scale. At record 99 (element 1, point 5, increment 20) the "
+                "two RECORDED histories differ by 0.837 on STRESS(4), but "
+                "replayed from one entry state the two builds differ by "
+                "3.35e-08 and agree exactly on STRESS(4) -- seven orders of "
+                "magnitude apart, which is the accumulation and not the call. "
+                "Halving ENU raises D1 by 500 and drops the difference by the "
+                "same factor, so the carrier is the volumetric penalty. The "
+                "author's own model moves 6.72e-08 when ONE ULP is added to "
+                "its own DFGRD1 at that call -- TWICE the whole transform "
+                "difference -- so at this call the transform sits inside the "
+                "model's own last-bit noise. That is a statement about this "
+                "deck's conditioning and is NOT a reason to widen a tolerance"),
+            where="corpus_run/pass10/work/d6c1a1095875c2d4007280d6",
+            repeatable=True)),
+)
 
 def apply_recorded_confirmations(signature: Signature, isolation) -> Signature:
     """Mark a hypothesis confirmed when a recorded reproduction still matches.
