@@ -9,7 +9,8 @@
       "complete_history_finite": true,
       "derivatives_verified": true,
       "mechanically_informative": true,
-      "primal_agreed": false
+      "primal_agreed": false,
+      "primal_difference_explained_by_a_measured_control": true
     },
     "failure_mechanism": null,
     "history_grouping": {
@@ -250,5 +251,5 @@
   "schema": "umat-oti/verification-contract/1.0",
   "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGravity.for",
   "source_sha256": "878939fcfc17816c26b73b6e41193614d70d0c0d6e6e6ec8c5b2a095602c6767",
-  "transform_fingerprint": "b0d27ee53c630500"
+  "transform_fingerprint": "94a92c01814f107a"
 }

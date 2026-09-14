@@ -9,7 +9,8 @@
       "complete_history_finite": true,
       "derivatives_verified": true,
       "mechanically_informative": true,
-      "primal_agreed": true
+      "primal_agreed": true,
+      "primal_difference_explained_by_a_measured_control": null
     },
     "failure_mechanism": null,
     "history_grouping": {
@@ -184,5 +185,5 @@
   "schema": "umat-oti/verification-contract/1.0",
   "source_id": "mholla__BMMB24/simulations/input files/umat_transverseIsotropicStretch.f",
   "source_sha256": "86b46e9534766ffd3be69f79df4a89b03cc2687a10a74d6cf479cc3d4b5f7a3d",
-  "transform_fingerprint": "b0d27ee53c630500"
+  "transform_fingerprint": "94a92c01814f107a"
 }

@@ -21,7 +21,8 @@
       "complete_history_finite": true,
       "derivatives_verified": true,
       "mechanically_informative": true,
-      "primal_agreed": true
+      "primal_agreed": true,
+      "primal_difference_explained_by_a_measured_control": null
     },
     "failure_mechanism": null,
     "history_grouping": {
@@ -263,5 +264,5 @@
   "schema": "umat-oti/verification-contract/1.0",
   "source_id": "mholla__growth/umats/umat_transverse.f",
   "source_sha256": "bda19ea00223fc72b3589a7496c0925fb88e36bc4a79b5c5c49c1dac09d27628",
-  "transform_fingerprint": "b0d27ee53c630500"
+  "transform_fingerprint": "94a92c01814f107a"
 }

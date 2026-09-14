@@ -42,7 +42,7 @@
   "history_difference_explained_by_a_measured_control": null,
   "reason": "agreed at all 2 states where a difference could be taken (increments 4, 2); 2 smooth state(s) inside the activated regime (2 loading, 0 unloading), which is the whole of this material: it is activated from its first increment and never stops, so there is no elastic branch to verify on and every state that can be measured is inside the activated one; worst of them: agreed to 5.377e-11 over a plateau of 4 step sizes, 1e-05 to 0.01",
   "schema": "umat-oti/verification-results/1.0",
-  "seconds": 47.2,
+  "seconds": 49.5,
   "stage": "verified",
   "support_build": {
     "objects": 5,

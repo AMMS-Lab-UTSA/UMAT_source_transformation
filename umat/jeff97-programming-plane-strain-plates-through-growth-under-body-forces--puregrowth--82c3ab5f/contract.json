@@ -9,7 +9,8 @@
       "complete_history_finite": true,
       "derivatives_verified": true,
       "mechanically_informative": true,
-      "primal_agreed": true
+      "primal_agreed": true,
+      "primal_difference_explained_by_a_measured_control": null
     },
     "failure_mechanism": null,
     "history_grouping": {
@@ -229,5 +230,5 @@
   "schema": "umat-oti/verification-contract/1.0",
   "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th001/PureGrowth.for",
   "source_sha256": "9b3ccb786ae1aa3998382b66df6d02f50f4b5eb5d5a1e625ecf16fbd1b9da513",
-  "transform_fingerprint": "b0d27ee53c630500"
+  "transform_fingerprint": "94a92c01814f107a"
 }

@@ -178,7 +178,7 @@
   },
   "reason": "the two builds differ by 2.334e-05, and this model differs from ITSELF by 3.734e-05 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all 2 states where a difference could be taken (increments 4, 2); 2 smooth state(s) inside the activated regime (2 loading, 0 unloading), which is the whole of this material: it is activated from its first increment and never stops, so there is no elastic branch to verify on and every state that can be measured is inside the activated one; worst of them: agreed to 3.663e-09 over a plateau of 2 step sizes, 0.01 to 0.1",
   "schema": "umat-oti/verification-results/1.0",
-  "seconds": 68.9,
+  "seconds": 71.1,
   "stage": "verified",
   "support_build": {
     "objects": 5,

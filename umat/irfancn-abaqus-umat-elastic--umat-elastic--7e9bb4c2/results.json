@@ -37,7 +37,7 @@
   "history_difference_explained_by_a_measured_control": null,
   "reason": "agreed at all 4 states where a difference could be taken (increments 1, 4, 2, 5); 4 smooth states on a material that never activates, which is the whole of it; worst of them: agreed to 1.002e-14 at the best step and within 1e-06 at 8 of 8 step sizes, 1e-08 to 0.1: 7 decades of perturbation size, over which truncation and cancellation error scale oppositely, so agreement at both ends is not one regime flattering itself",
   "schema": "umat-oti/verification-results/1.0",
-  "seconds": 153.1,
+  "seconds": 139.7,
   "stage": "verified",
   "support_build": {
     "objects": 4,
