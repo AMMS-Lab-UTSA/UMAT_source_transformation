@@ -174,12 +174,12 @@ def signal_exact_pid(pid: int, *, expected_identity: Optional[str],
     pid = int(pid)
     if pid <= 0:
         return _refused(pid, "",
-                             "the record carries no usable pid, so there is "
-                             "nothing to signal")
+                        "the record carries no usable pid, so there is "
+                        "nothing to signal")
     if pid == os.getpid():
         return _refused(pid, "",
-                             "that pid is this process; refusing to signal "
-                             "the manager itself")
+                        "that pid is this process; refusing to signal "
+                        "the manager itself")
 
     if expected_identity is not None:
         current = identity_of(pid)
@@ -213,8 +213,8 @@ def signal_exact_pid(pid: int, *, expected_identity: Optional[str],
             pgid = os.getpgid(pid)
         except OSError as error:
             return _refused(pid, "",
-                                 f"the process group of pid {pid} could not be "
-                                 f"read ({error}); nothing was signalled")
+                            f"the process group of pid {pid} could not be "
+                            f"read ({error}); nothing was signalled")
         if pgid != pid:
             return _refused(
                 pid, "",
@@ -232,10 +232,10 @@ def signal_exact_pid(pid: int, *, expected_identity: Optional[str],
     except OSError as error:
         if error.errno == errno.ESRCH:
             return _refused(pid, scope,
-                                 f"pid {pid} no longer exists; the process had "
-                                 f"already ended when the stop was delivered")
+                            f"pid {pid} no longer exists; the process had "
+                            f"already ended when the stop was delivered")
         return _refused(pid, scope,
-                             f"signalling pid {pid} failed: {error}")
+                        f"signalling pid {pid} failed: {error}")
     return SignalOutcome(signalled=True, pid=target, signal=int(sig),
                          scope=scope, pid_considered=pid,
                          reason=(f"signal {int(sig)} delivered to "
