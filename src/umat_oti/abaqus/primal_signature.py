@@ -339,6 +339,199 @@ _FILE_IO = re.compile(r"^\s*(OPEN|READ)\s*\(", re.IGNORECASE | re.MULTILINE)
 _SAVED = re.compile(r"^\s*(SAVE|COMMON)\b", re.IGNORECASE | re.MULTILINE)
 
 
+# ---------------------------------------------------------------------------
+# an untransformed actual argument at an OTI-typed dummy
+# ---------------------------------------------------------------------------
+#: The generated unit calls helpers whose dummies are declared by
+#: ``implicit type(ONUMM<m>N<n>) (a-h,o-z)`` and ``implicit integer (i-n)``.
+#: The caller's own untransformed variables are typed by ABA_PARAM.INC's
+#: ``IMPLICIT REAL*8(A-H,O-Z)``. Where the transform leaves a variable
+#: untransformed and still routes it into a helper, an 8-byte REAL is passed to
+#: a dummy that is several times that size -- five doubles for ONUMM4N1 -- and
+#: the callee's first store to it runs off the end of the caller's frame.
+#: There is no explicit interface anywhere in the generated code, so neither
+#: the compiler nor ``-check bounds`` says anything about it.
+#:
+#: Measured on ``RitioL/PolyFatigueCrackSim``: ``CALL LUDCMP_OTI(WORKST_OTI,
+#: NSLPTL, ND, INDX, DDCMP)`` writes 40 bytes into the 8 that DDCMP occupies,
+#: and that 32-byte overrun is the whole of the STATEV(25) corruption. Adding
+#: ``TYPE(ONUMM4N1) :: DDCMP`` and changing nothing else repairs it at the
+#: solver's own flags with vectorisation on.
+_CALL_TO_A_HELPER = re.compile(r"\s*CALL\s+(\w+_OTI)\s*\((.*)\)\s*$",
+                               re.IGNORECASE)
+#: A name ABA_PARAM.INC types INTEGER. Its counterpart dummy is typed INTEGER
+#: by the helper's own ``implicit integer (i-n)``, so the two agree.
+_IMPLICIT_INTEGER = "IJKLMN"
+
+
+@dataclass(frozen=True)
+class MistypedArgument:
+    """One actual argument whose type cannot match the dummy it reaches."""
+
+    line: int
+    callee: str
+    position: int
+    actual: str
+
+    def describe(self) -> str:
+        return (f"line {self.line}: {self.callee} receives {self.actual} at "
+                f"argument {self.position}, which no declaration in the "
+                f"generated unit gives an OTI type, so it is REAL*8 by "
+                f"ABA_PARAM.INC while the dummy is the OTI derived type")
+
+
+def _statements_of_fixed_form(source_text: str):
+    """Fixed-form lines with their continuations joined, comments dropped.
+
+    Yields ``(statement, line_number)`` where the line number is that of the
+    statement's FIRST line, which is the one a traceback names.
+    """
+    statements: list = []
+    numbers: list = []
+    for index, line in enumerate(source_text.splitlines()):
+        if not line.strip() or line[:1] in "Cc*!":
+            continue
+        body = line[6:] if len(line) > 6 else ""
+        continued = len(line) > 5 and line[5] not in (" ", "0")
+        if continued and statements:
+            statements[-1] += body
+        else:
+            statements.append(body)
+            numbers.append(index + 1)
+    return list(zip(statements, numbers))
+
+
+def _arguments_of(text: str) -> list:
+    """Split an argument list on commas that are not inside a subscript."""
+    out: list = []
+    depth = 0
+    current = ""
+    for character in text:
+        if character == "(":
+            depth += 1
+        elif character == ")":
+            depth -= 1
+        if character == "," and depth == 0:
+            out.append(current.strip())
+            current = ""
+        else:
+            current += character
+    if current.strip():
+        out.append(current.strip())
+    return out
+
+
+def mistyped_oti_arguments(source_text: str) -> list:
+    """Actual arguments the generated unit hands to an OTI dummy untransformed.
+
+    Source-text evidence, and only that: it says the construct is written, not
+    that the call ran or that any output moved. Confirming one takes what
+    confirmed DDCMP -- declare the variable with the callee's type, change
+    nothing else, rebuild at the solver's flags, and see the output move.
+
+    Deliberately conservative. An argument is reported only when it is a bare
+    variable or array element whose name ABA_PARAM.INC types REAL, which the
+    transform did not rename to ``_OTI``. Expressions are skipped, because an
+    expression of OTI operands has the OTI type whatever its leading name
+    looks like, and names in ``I``-``N`` are skipped, because the helper types
+    those dummies INTEGER by the same first-letter rule and the two agree.
+    """
+    found: list = []
+    for statement, number in _statements_of_fixed_form(source_text):
+        match = _CALL_TO_A_HELPER.match(statement.strip())
+        if match is None:
+            continue
+        callee = match.group(1).upper()
+        for position, actual in enumerate(_arguments_of(match.group(2)), 1):
+            name = re.match(r"([A-Za-z]\w*)", actual)
+            if name is None:
+                continue
+            base = name.group(1).upper()
+            if base.endswith("_OTI"):
+                continue
+            if base[0] in _IMPLICIT_INTEGER:
+                continue
+            if re.search(r"[-+*/]", actual):
+                continue
+            found.append(MistypedArgument(number, callee, position, actual))
+    return found
+
+
+# ---------------------------------------------------------------------------
+# a constant the author wrote at single precision
+# ---------------------------------------------------------------------------
+#: ``1./3.`` is a quotient of two DEFAULT REAL literals, so Fortran evaluates
+#: it in single precision and then widens the single-precision result. It is
+#: not 1/3 to double precision: it is 0.3333333432674408, which differs from
+#: 0.33333333333333331 by 9.93e-09 relative. ``ABA_PARAM.INC``'s
+#: ``IMPLICIT REAL*8`` does not change this -- implicit typing types VARIABLES,
+#: never literal constants -- and Abaqus does not compile user subroutines with
+#: ``-r8``, so nothing rescues it.
+#:
+#: The transform re-emits these as ``1.0D0/3.0D0``. That is the more accurate
+#: arithmetic, and it makes the transformed build disagree with the author's.
+#: Measured on ``abuganza/UMAT_anisotropic_damage``: the author writes
+#: ``sigmaiso(i) = sigmabar(i) - (1./3.)*tr_sigmabar`` for i=1,2,3 and nothing
+#: of the kind for the shear components, so the promoted constant lands as one
+#: common additive offset on exactly the three normal stresses.
+#:
+#: Only quotients whose value is not a dyadic rational matter. ``1./2.`` and
+#: ``3./4.`` are exact in both precisions and are not reported.
+_LITERAL_RATIO = re.compile(
+    r"(?<![\dDdEe.])(\d+)\.(\d*)\s*/\s*(\d+)\.(\d*)(?![\dDdEe])")
+
+
+def inexact_single_precision_literals(source_text: str) -> list:
+    """Default-real literal quotients the author evaluates in single precision.
+
+    Source-text evidence. It says the constant is written that way, not that
+    the statement ran or that any output moved. Confirming one takes what
+    confirmed the damage case: promote it in the ORIGINAL, change nothing
+    else, and see the original reproduce the transformed build.
+    """
+    from fractions import Fraction
+
+    found: list = []
+    for match in _LITERAL_RATIO.finditer(source_text):
+        numerator = f"{match.group(1)}.{match.group(2) or '0'}"
+        denominator = f"{match.group(3)}.{match.group(4) or '0'}"
+        try:
+            value = Fraction(numerator) / Fraction(denominator)
+        except ZeroDivisionError:
+            continue
+        # Exactly representable in binary iff the reduced denominator is a
+        # power of two. Those agree in both precisions and are not evidence.
+        if value.denominator & (value.denominator - 1):
+            found.append(match.group(0))
+    return found
+
+
+def first_call_difference(original_history: list,
+                          transformed_history: list) -> float:
+    """The largest absolute output difference at the FIRST recorded call.
+
+    The cheapest discriminator there is, and it needs no rebuild. A difference
+    here cannot be the path, the solver or accumulated state: there is no path
+    yet. Agreement here with disagreement later says the opposite -- whatever
+    separated the builds did so through the history, and the entry's reported
+    number is measured at inputs the two builds no longer share.
+
+    Returns ``inf`` if either build's first record is not finite, and 0.0 if
+    there is nothing to compare.
+    """
+    if not original_history or not transformed_history:
+        return 0.0
+    left, right = original_history[0], transformed_history[0]
+    worst = 0.0
+    for block in ("STRESS", "STATEV"):
+        for x, y in zip(left.get(block) or (), right.get(block) or ()):
+            if not (math.isfinite(x) and math.isfinite(y)):
+                return math.inf
+            worst = max(worst, abs(x - y))
+    return worst
+
+
+
 def _closeness(left: float, right: float) -> float:
     scale = max(abs(left), abs(right))
     return abs(abs(left) - abs(right)) / scale if scale else 0.0
@@ -878,31 +1071,40 @@ CONFIRMED_FINDINGS: tuple = (
     RecordedConfirmation(
         hypothesis=SINGLE_OUTPUT_SLOT,
         root_cause=(
-            "the transformed build writes exactly one of the 150 state "
-            "variables -- STATEV(2*NSLPTL+1), the first resolved shear stress "
-            "-- with -1.6982275886200392e-30 where the author's build writes "
-            "-73.46290748654624, while returning all four stress components "
-            "and the other 149 state variables to within 5e-17 of the "
-            "author's build from bit-identical arguments. Replayed outside "
-            "Abaqus from the recorded arguments, the generated source "
-            "reproduces the solver's wrong value BIT FOR BIT when built with "
-            "the flags the solver used, and returns the CORRECT value when "
-            "built with -no-vec, -O1, -O0, -check bounds, without -align "
-            "array64byte, without -auto, or without -fstack-protector-strong. "
-            "Compiling the OTI helper unit with -no-vec does not change it; "
-            "compiling the generated UMAT unit with -no-vec does. So the "
-            "defect is in what ifort makes of the generated UMAT unit at -O2 "
-            "with vectorisation on, not in the arithmetic the unit expresses. "
-            "Two mechanisms were tested and REFUTED: adding SEQUENCE to the "
-            "OTI derived type does not change the value (so the "
-            "non-conforming sequence association at "
-            "CALL STRAINRATE_OTI(..., STATEV_OTI(2*NSLPTL+1), ...) is not by "
-            "itself the cause), and neither -fno-alias, -fno-inline, "
-            "-qno-opt-dynamic-align nor -qopt-zmm-usage=low changes it. Which "
-            "construct in the unit is miscompiled is NOT established: a "
-            "CDIR$ NOVECTOR on any of three unrelated loops removes the "
-            "corruption, which is what a codegen-sensitive defect looks like "
-            "and not what a single wrong loop looks like"),
+            "the generated unit passes an untransformed REAL*8 actual "
+            "argument to an OTI-typed dummy, and the callee's store runs off "
+            "the end of it. `CALL LUDCMP_OTI(WORKST_OTI, NSLPTL, ND, INDX, "
+            "DDCMP)` passes DDCMP, which no declaration in the generated unit "
+            "mentions and which ABA_PARAM.INC's IMPLICIT REAL*8(A-H,O-Z) "
+            "therefore makes an 8-byte scalar. The callee declares its fifth "
+            "dummy through `implicit type(ONUMM4N1) (a-h,o-z)`, so D is a "
+            "40-byte derived type, and `D=1.0D0` at the top of LUDCMP_OTI "
+            "writes 40 bytes into those 8. Every call overruns the caller's "
+            "frame by 32 bytes. There is no explicit interface, so nothing "
+            "diagnoses it. That is why the value moved with -auto, with "
+            "-align array64byte, with -fstack-protector-strong, with -O1 and "
+            "with -no-vec: each of those changes what occupies the 32 bytes "
+            "after DDCMP, and none of them removes the write. CONFIRMED by "
+            "repair: adding the single line `TYPE(ONUMM4N1) :: DDCMP` to the "
+            "generated unit, changing nothing else and building at the "
+            "solver's own flags with vectorisation ON, returns "
+            "-73.4629074865463 in place of -1.6982275886200392e-30. The same "
+            "unit audited for this class of mismatch shows one more instance, "
+            "`CALL LUBKSB_OTI(..., DDGDDE(1,I))`, where DDGDDE is REAL*8 "
+            "DDGDDE(ND,6) and the dummy is TYPE(ONUMM4N1) :: B(N): that one "
+            "reads 60 doubles where 12 were written, which -init=snan,arrays "
+            "catches as `forrtl: error (65): floating invalid` at that call. "
+            "It is a real defect of the same class but it is NOT this "
+            "corruption: patching that call out alone leaves STATEV(25) at "
+            "-1.6982275886200392e-30. REFUTED along the way: this is not a "
+            "compiler bug (the author's own source is clean under "
+            "-init=snan,arrays and returns -73.46290748654624 under every "
+            "build tried), and it is not the sequence association at "
+            "CALL ITERATION_OTI(STATEV_OTI(NSLPTL+1), STATEV_OTI(2*NSLPTL+1), "
+            "...) -- the author's original contains that same overlapping "
+            "pair and compiles correctly, and `-assume dummy_aliases`, which "
+            "is the flag that actually disables the no-alias assumption about "
+            "dummy arguments, does not change the value"),
         reproduction=Reproduction(
             held_fixed=(
                 "the deck, the element, the integration point, the increment "
@@ -912,14 +1114,25 @@ CONFIRMED_FINDINGS: tuple = (
                 "own scale; both builds took two solver passes in every one "
                 "of the 140 increments, so the number of passes is held fixed "
                 "as well"),
-            varied="only the build: the author's source compiled unchanged "
-                   "against the OTI-transformed source of the same file",
+            varied="first only the build -- the author's source compiled "
+                   "unchanged against the OTI-transformed source of the same "
+                   "file -- and then, holding the build fixed at the solver's "
+                   "own flags, exactly one line of the generated source: the "
+                   "declaration `TYPE(ONUMM4N1) :: DDCMP`",
             observed=(
                 "of 154 output components, 153 agree -- the four stresses to "
                 "5.0e-17 of the stress field -- and exactly one does not: "
                 "STATEV(25) is -73.46290748654624 in the original and "
                 "-1.6982275886200392e-30 in the transformed build, a "
-                "difference of 24.9% of the state field"),
+                "difference of 24.9% of the state field. Replayed offline "
+                "from the recorded arguments of that call, the generated "
+                "source reproduces -1.6982275886200392e-30 bit for bit; with "
+                "the one declaration added and nothing else changed it "
+                "returns -73.4629074865463, and it keeps returning it under "
+                "-no-vec, -O1, -heap-arrays and -init=snan,arrays. The "
+                "unrepaired source returns the right answer under -no-vec and "
+                "the wrong one again under -no-vec -heap-arrays, which is "
+                "what distinguishes a repair from a coincidence"),
             where="corpus_run/pass9/work/{0d97f9db648d23a064062989,"
                   "73bdb227267602e659445b72,71a0523bc387a9b773773a24}",
             repeatable=True),
@@ -1021,6 +1234,178 @@ CONFIRMED_FINDINGS: tuple = (
         slots_beyond_rounding=9),
 )
 
+
+
+@dataclass(frozen=True)
+class DiagnosedEntry:
+    """One corpus entry taken to a confirmed root cause.
+
+    Separate from ``RecordedConfirmation`` because these are not keyed to a
+    single moved output slot. The crystal-plasticity finding is: one slot of
+    154 moved. These two are not that shape -- one is a common offset across
+    three components with nothing beyond rounding anywhere, and the other has
+    the stress agreeing bit for bit while the tangent does not -- and forcing
+    them into the slot-matching shape would record them as something they are
+    not.
+    """
+
+    source: str
+    hypothesis: str
+    root_cause: str
+    reproduction: Reproduction
+    confirmation_status: str = CONFIRMED
+
+
+#: The pass10 census of the 62 ``primal_disagreed`` entries, clustered by
+#: MECHANISM rather than by magnitude. Ordering them by worst difference puts
+#: the crystal-plasticity memory overrun (1.876) next to a growth model whose
+#: solver drifted (1.999) and reads as one failure; they have nothing in
+#: common and need opposite fixes.
+#:
+#:     3   the ORIGINAL build goes non-finite -- not evidence about the
+#:         transform either way, whatever number is reported beside it
+#:     4   a REAL*8 actual reaches an OTI-typed dummy. CONFIRMED: a memory
+#:         overrun. ``mistyped_oti_arguments`` finds these by grep
+#:    11   the author wrote an inexact quotient of default REAL literals and
+#:         the transform promoted it to double. CONFIRMED on the abuganza
+#:         damage pair; ``inexact_single_precision_literals`` finds these
+#:    40   the deck's Poisson ratio is in [0.49, 0.5). CONFIRMED on
+#:         From-2D-to-2D-Axe: 1-2*NU cancels, the volumetric penalty reaches
+#:         3e+08, and it amplifies the last bit into DDSDDE while leaving the
+#:         STRESS bit-identical. 39 of the 40 are Jeff97 growth models at
+#:         props = (906512.0, ~0.499) -- one deck family, one mechanism
+#:     4   nothing above fits
+#:
+#: And 28 of those 62 do not carry a claim about the routine at all. Run
+#: ``isolate_first_divergence`` over each entry's own probe records, asking for
+#: the first divergence BEYOND ROUNDING, and the 62 split:
+#:
+#:    34   same_inputs_different_outputs -- the routine was handed the same
+#:         arguments and returned different numbers. This is what
+#:         ``primal_disagreed`` is supposed to mean, and for these it does
+#:    16   inputs_already_diverged -- the ARGUMENTS had already parted before
+#:         the outputs did, so what the routine returned is not attributable
+#:         to the routine. From-2D-to-2D-Axe is one: by call 8 the two builds
+#:         were being handed DSTRAN differing by 1.47e-03 of its scale
+#:    12   no_divergence_in_paired_calls -- the two builds returned
+#:         BIT-IDENTICAL outputs, beyond rounding, at every recorded call, and
+#:         the entry is still stage primal_disagreed
+#:
+#: ``compare_primal`` pairs the two CONVERGED histories positionally and scores
+#: them. It never asks whether the two builds were still being handed the same
+#: arguments by the time they parted, so it cannot tell "the routine computes a
+#: different function" from "the solve went somewhere else". The code that can
+#: tell them apart is already in this package and the corpus stage does not
+#: call it. Until it does, 28 of the 62 rows in the project's largest failure
+#: cluster say something the evidence underneath them does not support.
+#:
+#: So the largest cluster in the project's largest failure stage is not a
+#: transform defect at all: it is decks whose own conditioning multiplies a
+#: last bit by 1e+08 before it reaches the solver. That is worth fixing in the
+#: tangent and in the experiment design, and it is NOT a reason to widen a
+#: tolerance -- the two entries below show why the same reported magnitude can
+#: mean opposite things.
+#: Entries diagnosed offline, by replaying recorded calls. Every one names a
+#: control that was actually run, not a construct that was read.
+DIAGNOSED_ENTRIES: tuple = (
+    DiagnosedEntry(
+        source="abuganza__UMAT_anisotropic_damage/"
+               "UMAT_Tissue_2d_plane_strain.f",
+        hypothesis=REDUCED_PRECISION_INPUT,
+        root_cause=(
+            "the AUTHOR's constant is the single-precision one and the "
+            "transform's is correct. The author writes "
+            "`sigmaiso(i) = sigmabar(i) - (1./3.)*tr_sigmabar` for i=1,2,3. "
+            "`1./3.` is a quotient of two DEFAULT REAL literals, so it is "
+            "evaluated in single precision: 0.3333333432674408, not "
+            "0.33333333333333331. ABA_PARAM.INC's IMPLICIT REAL*8 does not "
+            "reach literal constants and Abaqus does not compile with -r8. "
+            "The transform re-emits it as `(1.0D0/3.0D0)`. The difference "
+            "between the two constants, 9.93e-09 relative, multiplies "
+            "tr_sigmabar and lands as ONE COMMON ADDITIVE OFFSET on exactly "
+            "the three normal stresses -- the shear component is assigned "
+            "without the term and does not move. The offset is therefore "
+            "proportional to tr_sigmabar, hence to mu0 = props(1), which is "
+            "what the controlled sweep measured: doubling props(1) doubles "
+            "the difference and none of the other nine props changes it. "
+            "This entry is the transform being MORE accurate than the source, "
+            "and the harness reporting the improvement as a disagreement"),
+        reproduction=Reproduction(
+            held_fixed="the recorded entry state of the first call of the "
+                       "analysis, handed bit-identically to both builds, and "
+                       "the compiler flags from the job's own .com",
+            varied="one literal constant in the ORIGINAL source: `(1./3.)` "
+                   "promoted to `(1.0D0/3.0D0)`, and nothing else",
+            observed=(
+                "as built, the two differ by 7.145e-11 on STRESS(1), (2) and "
+                "(3) -- the same absolute offset on all three -- and by "
+                "2.8e-16 on STRESS(4). With the one constant promoted, the "
+                "ORIGINAL returns the TRANSFORMED build's STRESS(1) bit for "
+                "bit; promoting `(-2./3.)` as well reproduces the transformed "
+                "build bit for bit in every component. Promoting `(-2./3.)` "
+                "ALONE changes nothing, so the carrier is the deviatoric "
+                "projection and not the `detf**` exponent. The author's own "
+                "model moves only 4.44e-15 when one ulp is added to its own "
+                "input, which is 16000 times SMALLER than the difference, so "
+                "this is not round-off and must not be recorded as round-off"),
+            where="corpus_run/pass10/work/d08cead8f57af10c6eb7e138",
+            repeatable=True)),
+
+    DiagnosedEntry(
+        source="Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto2D/"
+               "From-2D-to-2D-Axe.for",
+        hypothesis=ROUND_OFF_GROWTH,
+        root_cause=(
+            "the stress agrees bit for bit and the TANGENT does not, and the "
+            "deck is conditioned so that the tangent amplifies the last bit "
+            "by 3e+08. props are (EMOD, ENU) = (906512.0, 0.4995), and the "
+            "source forms `D1 = SIX*(ONE-TWO*ENU)/EMOD`: 1 - 2*0.4995 is a "
+            "cancellation leaving 0.001, so D1 = 6.6e-09 and the volumetric "
+            "penalty 2/D1 is 3.0e+08. Replayed from the recorded entry state "
+            "of the first call, the two builds return STRESS bit-identically "
+            "in all six components and DDSDDE differing by 6.95e-07 of its "
+            "own scale (210 on 3.03e+08) in 25 of 36 components. Abaqus "
+            "steers Newton with DDSDDE, so the two builds converge to "
+            "different displacement fields: at the very first CONVERGED "
+            "record the solver already hands the two UMATs DSTRAN differing "
+            "by 4.4e-07 relative -- the same order as the tangent difference. "
+            "Every later record is therefore compared at inputs the two "
+            "builds no longer share, and over 20 increments of a growth model "
+            "that drift compounds into the reported 1.920e-04. The pass9 "
+            "entry hid this behind a strain-driven experiment that never "
+            "developed growth; the disagreement was always there"),
+        reproduction=Reproduction(
+            held_fixed="the recorded entry state, handed bit-identically to "
+                       "both builds, and the job's own compiler flags",
+            varied="only the build, and separately props(2) = ENU, to test "
+                   "whether the difference tracks the 1/D1 amplification",
+            observed=(
+                "at the first call both builds return the same six stresses "
+                "to the last bit while the tangent differs by 6.95e-07 of its "
+                "scale. At record 99 (element 1, point 5, increment 20) the "
+                "two RECORDED histories differ by 0.837 on STRESS(4), but "
+                "replayed from one entry state the two builds differ by "
+                "3.35e-08 and agree exactly on STRESS(4) -- seven orders of "
+                "magnitude apart, which is the accumulation and not the call. "
+                "Halving ENU raises D1 by 500 and drops the difference by the "
+                "same factor, so the carrier is the volumetric penalty. The "
+                "author's own model moves 6.72e-08 when ONE ULP is added to "
+                "its own DFGRD1 at that call -- TWICE the whole transform "
+                "difference -- so at this call the transform sits inside the "
+                "model's own last-bit noise. That is a statement about this "
+                "deck's conditioning and is NOT a reason to widen a tolerance. "
+                "isolate_first_divergence over this entry's own probe records "
+                "reaches the same verdict independently: inputs_already_"
+                "diverged at call 8, where the arguments differed by 1.47e-03 "
+                "of DSTRAN's scale, so what the routine returned after that is "
+                "not attributable to the routine"),
+            where="corpus_run/pass10/work/d6c1a1095875c2d4007280d6 -- NOT "
+                  "verif_work/axe4, which holds the OTHER Axe entry "
+                  "(c14b3e1b76081216b57abbf8, 35 increments, strain-driven) "
+                  "and agrees; reading that one as this one is how the "
+                  "disagreement stayed hidden",
+            repeatable=True)),
+)
 
 def apply_recorded_confirmations(signature: Signature, isolation) -> Signature:
     """Mark a hypothesis confirmed when a recorded reproduction still matches.
