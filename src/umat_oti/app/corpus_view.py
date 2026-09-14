@@ -252,6 +252,12 @@ def evidence_rows(row: dict) -> list:
         rows.append({
             "gate": name.replace("_", " "),
             "field": name,
+            # The same three words every other finding on the page uses. Two
+            # vocabularies for one concept is how a reader ends up wondering
+            # whether "not measured" here and "not established" there are
+            # different things. They are not.
+            "holds": three_state(value),
+            "established": value is not None,
             "measured": NOT_MEASURED if value is None else _said(value),
             "passed": None if value is None else bool(value),
             "what it measures": what,
@@ -657,21 +663,33 @@ def what_may_be_claimed(row: dict) -> dict:
                               for n in tally["did not hold"])
 
     complete = not tally["never established"] and not tally["did not hold"]
+    # 108 of the 254 pass10 entries never reached a run at all, and telling
+    # those "agreement only" would report an agreement that never happened.
+    # Nothing measured is its own answer and it is said as one.
+    nothing_measured = len(tally["never established"]) == len(EVIDENCE_GATES)
     if complete:
-        claim = ("verified: all six gates were measured and all six hold")
+        claim = "verified: all six gates were measured and all six hold"
+    elif nothing_measured:
+        claim = ("nothing was measured: this entry never reached a run the "
+                 "six gates could be measured on, so none of them holds and "
+                 "none of them failed")
     elif informative is False:
-        claim = ("agreement over an experiment the material did nothing in. "
-                 "This is not a verification of the material's behaviour: "
-                 "agreement about a material sitting still is agreement about "
-                 "the part every build gets right")
-    elif informative is None:
-        claim = ("agreement only. Whether the material did anything over this "
-                 "run was never established, so nothing here may be called a "
-                 "verification of it")
-    else:
-        broke = tally["did not hold"] or tally["never established"]
+        claim = ("the material did nothing over this run. Agreement about a "
+                 "material sitting still is agreement about the part every "
+                 "build gets right, so this is not a verification of its "
+                 "behaviour")
+    elif tally["did not hold"]:
         claim = ("not complete on the six gates: "
-                 + ", ".join(n.replace("_", " ") for n in broke))
+                 + ", ".join(n + " did not hold" for n in tally["did not hold"]))
+        if tally["never established"]:
+            claim += ("; " + ", ".join(tally["never established"])
+                      + " never established")
+    else:
+        # Every gate that was measured holds, and at least one was not.
+        claim = (", ".join(tally["never established"])
+                 + " never established, so nothing here may be called a "
+                 "verification -- the gates that were measured hold, and a "
+                 "gate nobody measured is not a gate that passed")
 
     followups = {name: what_the_batch_recorded_after(row, name)
                  for name in tally["did not hold"]}
@@ -703,6 +721,12 @@ def what_may_be_claimed(row: dict) -> dict:
         # informativeness nobody measured.
         "qualified state": f"{state} ({qualifier})" if qualifier else state,
         "what may be claimed": claim,
+        # The machine-readable form of the rule, so a caller does not have to
+        # parse prose to honour it: TRUE only when all six were measured and
+        # all six hold. Anything else, and this entry is not to be presented
+        # as a verification of the material's behaviour.
+        "may be called verified": complete,
+        "nothing was measured": nothing_measured,
         "all six gates hold": complete,
         "gates that hold": tally["held"],
         "gates that did not hold": tally["did not hold"],
