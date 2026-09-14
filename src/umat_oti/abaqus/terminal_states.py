@@ -36,6 +36,11 @@ EXTERNAL: tuple[str, ...] = (
     "not_a_umat",
     "incomplete_or_corrupt_source",
     "external_dependency_unavailable",
+    #: The two builds' histories differ and the recorded CALLS say the
+    #: arguments had already parted before the call whose outputs differ, so
+    #: what the routine returned there is not attributable to the routine.
+    #: External: about the experiment, not about the conversion.
+    "arguments_diverged_before_the_routine",
     #: The author published the INTERFACE and no constitutive content: a file
     #: presenting the 37-argument UMAT header that assigns neither STRESS nor
     #: DDSDDE anywhere and makes no CALL at all. matmodlab2's umat_stub.f90 is
@@ -61,6 +66,11 @@ INTERNAL: tuple[str, ...] = (
     "original_job_failed",
     "transformed_job_failed",
     "primal_disagreed",
+    #: Every paired call in the probe record returned bit-identical outputs and
+    #: the history comparison reported a difference anyway. Whatever those
+    #: entries are, they are not evidence that a converted routine computes a
+    #: different stress. Ours, and ours to explain.
+    "disagreement_not_in_any_recorded_call",
     "derivative_truncated",
     "tangent_not_verified",
     "not_attempted",
@@ -95,10 +105,44 @@ FROM_STAGE: dict[str, str] = {
     "transformed_job_failed": "transformed_job_failed",
     "both_builds_non_finite": "primal_disagreed",
     "primal_disagreed": "primal_disagreed",
+    "arguments_diverged_before_the_routine":
+        "arguments_diverged_before_the_routine",
+    "disagreement_not_in_any_recorded_call":
+        "disagreement_not_in_any_recorded_call",
+    "published_stub_no_constitutive_content":
+        "published_stub_no_constitutive_content",
     "derivative_truncated": "derivative_truncated",
     "tangent_not_verified": "tangent_not_verified",
     "harness_error": "harness_error",
 }
+
+
+#: What each state MEANS, in one line, in plain language.
+#:
+#: Here rather than on the page, because the meaning of a terminal state is a
+#: property of the state and not of whatever is rendering it. It used to live
+#: in the GUI package and the corpus registry imported it from there, so a
+#: report's vocabulary depended on a display module -- and adding a state was
+#: possible without giving it a meaning at all, which is how three new rungs
+#: reached a results file with no words attached.
+MEANING: dict[str, str] = {
+    FULLY_VERIFIED: "both builds ran, agreed over the whole history, and the "
+                    "tangent matched a converged difference",
+    "arguments_diverged_before_the_routine":
+        "the two runs were handed different arguments before the call whose "
+        "answers differ, so the difference is not the routine's",
+    "disagreement_not_in_any_recorded_call":
+        "every call we recorded returned the same answer in both builds, and "
+        "the comparison reported a difference anyway -- ours to explain",
+    "published_stub_no_constitutive_content":
+        "the author published the interface and no material model: it assigns "
+        "no stress, no tangent, and calls nothing",
+}
+
+
+def meaning_of(state: str) -> str:
+    """The one-line gloss for a state, or "" where none is written yet."""
+    return MEANING.get(str(state or ""), "")
 
 
 @dataclass(frozen=True)
@@ -126,9 +170,37 @@ def kind_of(state: str) -> str:
     return "internal"
 
 
+class UntranslatedStage(KeyError):
+    """A batch rung this vocabulary has no word for."""
+
+
 def from_stage(stage: str, reason: str = "") -> Verdict:
-    """The corpus verdict for a batch rung, with the batch's own reason kept."""
-    state = FROM_STAGE.get(str(stage or ""), "not_attempted")
+    """The corpus verdict for a batch rung, with the batch's own reason kept.
+
+    An unknown stage RAISES. It used to fall through to ``not_attempted``,
+    which is internal and means "this run did not reach it", and that silent
+    default did real damage the moment two new rungs were added: three entries
+    that ran and whose ARGUMENTS diverged -- an external fact -- were reported
+    as runs that never happened, booked into this project's own column. A
+    default that quietly invents a verdict for a stage nobody mapped will do
+    that again for the next rung, so it is gone.
+
+    An EMPTY stage still answers ``not_attempted``, because that is what an
+    entry with no rung recorded actually is.
+    """
+    name = str(stage or "")
+    if not name:
+        return Verdict(state="not_attempted", kind=kind_of("not_attempted"),
+                       reason=reason)
+    try:
+        state = FROM_STAGE[name]
+    except KeyError:
+        raise UntranslatedStage(
+            f"{name!r} is a verification stage this vocabulary has no word "
+            f"for. Add it to FROM_STAGE and to EXTERNAL or INTERNAL, deciding "
+            f"deliberately whose problem it is -- when unsure, internal. It "
+            f"must not default: the default was 'not_attempted', which says a "
+            f"run never happened and files it as ours.") from None
     return Verdict(state=state, kind=kind_of(state), reason=reason)
 
 

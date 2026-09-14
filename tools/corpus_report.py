@@ -76,6 +76,16 @@ FROM_ABAQUS_STAGE: dict[str, str] = {
     # ran both builds and agreed over its whole history as "blocked with
     # evidence" -- true of nothing about it.
     "derivative_truncated": "primal_parity_passed",
+    # Both builds ran and their histories differ; what the recorded CALLS say
+    # about that difference decides whose it is. Either way the transformed
+    # build ran, so the furthest rung reached is the same one primal_disagreed
+    # reports -- the difference between them is the OWNER, which
+    # terminal_states carries, not the rung.
+    "arguments_diverged_before_the_routine": "abaqus_transformed_passed",
+    "disagreement_not_in_any_recorded_call": "abaqus_transformed_passed",
+    # No model to transform, so the furthest rung is the metadata. Not BLOCKED:
+    # nothing about this file is blocked, the author published a template.
+    "published_stub_no_constitutive_content": "metadata_resolved",
     "incomplete_or_corrupt_source": BLOCKED,
     "external_dependency_unavailable": BLOCKED,
     "both_builds_non_finite": "abaqus_transformed_passed",
