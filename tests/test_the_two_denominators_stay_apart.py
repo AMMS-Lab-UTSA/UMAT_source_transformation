@@ -249,7 +249,7 @@ def test_the_builder_refuses_to_write_a_machine_path_rather_than_scrubbing_it():
     for offender in (
             "ifort: error in /home/someone/work/scratch/umat.f",   # machine-path-fixture: the home-directory shape the audit fails a build on
             "catastrophic error: /tmp/claude-1000/xyz/aba_param.inc",  # machine-path-fixture: the scratch shape a compiler diagnostic arrives in
-            "/Users/someone/Desktop/umat.for",                     # machine-path-fixture: the macOS home shape
+            "/Users/someone/Desktop/umat.for",                     # machine-path-fixture: the macOS home-directory shape, which the /home pattern alone does not catch
     ):
         with pytest.raises(ValueError) as raised:
             refuse_machine_paths(offender, "a fixture record")
