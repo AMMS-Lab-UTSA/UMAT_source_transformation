@@ -11,7 +11,7 @@ deformation gradient that kernel never reads: the difference came out
 identically zero at every step size, and the row was recorded as a tangent
 failure. Nothing about anyone's UMAT was tested.
 
-So classification here rests on three things a filename cannot fake:
+So classification here rests on four things a filename cannot fake:
 
 * the routine's **name**,
 * its **exact dummy-argument count**, because the Abaqus interfaces are
@@ -20,7 +20,13 @@ So classification here rests on three things a filename cannot fake:
   that happens to be called ``UMAT``,
 * whether any **other unit in the same file calls it**, because a routine
   reached only through a sibling is that sibling's callee and not the file's
-  entry point.
+  entry point,
+* whether it is a **definition at all**, because a header inside an
+  ``INTERFACE`` block declares a routine implemented somewhere else. A test
+  driver that declares a 37-argument ``subroutine umat`` so that it can CALL
+  it matches the interface perfectly and contains no constitutive code, and
+  reading that declaration as a definition put a driver inside the count of
+  UMATs this project had failed to convert.
 
 What this module does not do is decide whether a UMAT is any good. It decides
 what interface a file presents to Abaqus, so that a result is attributed to
@@ -35,9 +41,20 @@ broken, and it is not evidence that anything is missing beside it. Each of
 those is a separate claim needing its own evidence, and
 :func:`classify_refusal` is where the evidence is combined -- the parsed entry
 point, a digest match against another acquired source, an offline compile of
-the author's own text, and the companion resolution. A refusal with none of
-that evidence behind it stays :data:`GENUINE_UMAT`, which is the answer that
-keeps the work in our column rather than moving it into the corpus's.
+the author's own text, the companion resolution, and a search of the whole
+file for an assignment to either output a UMAT exists to produce. A refusal
+with none of that evidence behind it stays :data:`GENUINE_UMAT`, which is the
+answer that keeps the work in our column rather than moving it into the
+corpus's.
+
+The last of those rungs, :data:`PUBLISHED_STUB`, is the only one that can
+move work the other way, so it is asked last and it is gated hard: the file
+must present the UMAT interface, assign neither STRESS nor DDSDDE anywhere in
+indexed or whole-array form, and make no CALL through which either could have
+been assigned. :func:`umat_outputs_written` returns the search itself --
+how many logical lines were read, under which source form, and what was
+looked for -- because a verdict of "this file computes nothing" that does not
+say where it looked is a claim and not a finding.
 """
 from __future__ import annotations
 
