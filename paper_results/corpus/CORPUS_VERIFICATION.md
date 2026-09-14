@@ -61,9 +61,11 @@ Over D1, the 391 acquired sources. The three lines are never added together into
 
 | | entries in D1 |
 | --- | ---: |
-| verified | 41 |
+| reached the `verified` rung | 41 |
 | blocked outside this repository | 112 |
 | work remaining here | 238 |
+
+Of the 41 on the first line, 38 read true on all six evidence gates. The rung and the gates are different questions and this table asks the rung's, because it is the one whose three lines partition D1.
 
 ## What excluded a source from D2
 
@@ -567,48 +569,50 @@ One row per source, with the NAMED reason and the evidence behind it. "The trans
 | `zning8251-jpg__ufc-fem-kernel/ufc_core/L6_AP/Input/Script/AP_InpScript_User.f90` | `not_a_umat` | EXTERNAL | no | terminal state `not_a_umat` (external; somebody else has to move next); recorded reason: anchors not located: selected_routine_is_not_an_abaqus_umat; classification: no unit matches an Abaqus user-subroutine interface; the offline compile failed, but every diagnostic is one an unresolved USE or INCLUDE would also produce, so it settles nothing about the file |
 | `zorkzou__UniMoVib/src/math.f90` | `not_a_umat` | EXTERNAL | no | terminal state `not_a_umat` (external; somebody else has to move next); recorded reason: anchors not located: selected_routine_is_not_an_abaqus_umat; classification: a unit shares an Abaqus name but not its interface: UMAT takes 2 arguments where the interface takes 37; ifort -syntax-only accepted the published text as free form |
 
-## Every verified source
+## Every source that reached the `verified` rung
 
-| source | element | worst primal | worst tangent | states |
-| --- | --- | ---: | ---: | --- |
-| `AlexanderJFDR__Hyperelastic_phase_field/umat/NeoHookean_umat.for` | C3D8 | 0.00e+00 | 8.13e-10 | 2/2 |
-| `BristolCompositesInstitute__abaci/test/data/umat.f` | C3D8 | 0.00e+00 | 1.12e-14 | 4/4 |
-| `CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/ISOTROPIC-ELASTICITY.for` | C3D8 | 0.00e+00 | 1.07e-14 | 4/4 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 2.31e-07 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGrowth.for` | C3D8H | 2.06e-12 | 2.31e-07 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 5.65e-08 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGrowth.for` | C3D8H | 0.00e+00 | 5.65e-08 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005-Visualization/BodyForce-Growth-2Stages.for` | C3D8H | 2.33e-05 | 3.66e-09 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th001/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 1.03e-07 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th001/PureGrowth.for` | C3D8H | 7.75e-12 | 1.03e-07 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th002/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 1.85e-07 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th002/PureGrowth.for` | C3D8H | 0.00e+00 | 1.85e-07 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th005-Visualization/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 3.66e-09 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/BodyForce-Growth-2Stages.for` | C3D8H | 3.69e-11 | 6.59e-07 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGrowth.for` | C3D8H | 3.69e-11 | 6.59e-07 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002-Visualization/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 3.64e-09 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 2.68e-11 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005-Visualization/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 3.66e-09 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 2.68e-11 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/BodyForce-Growth-2Stages.for` | C3D8H | 2.10e-09 | 5.68e-11 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th002/BodyForce-Growth-2Stages.for` | C3D8H | 6.76e-11 | 5.38e-11 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th002/PureGravity.for` | C3D8H | 9.31e-11 | 7.73e-11 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th002/PureGrowth.for` | C3D8H | 6.76e-11 | 5.38e-11 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th005/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 5.14e-11 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th005/PureGravity.for` | C3D8H | 0.00e+00 | 5.14e-11 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th005/PureGrowth.for` | C3D8H | 0.00e+00 | 5.14e-11 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th001/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 3.92e-11 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th002/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 4.05e-11 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 8.26e-11 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th01/BodyForce-Growth-2Stages.for` | C3D8H | 0.00e+00 | 5.68e-08 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGrowth.for` | C3D8H | 0.00e+00 | 7.50e-07 | 2/2 |
-| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/PathSensitivity/Th001-1MPa/BodyForce-Growth-GravityFirst.for` | C3D8H | 0.00e+00 | 5.64e-11 | 2/2 |
-| `Sina-Taghizadeh__UMAT_Hyperelastic/CompresibleNeoHookean.for` | C3D8 | 0.00e+00 | 8.07e-10 | 2/2 |
-| `awhelanUCD__Lemaitre-damage-UMAT-Public/nonLocalLemaitre/lemaitreDamageNonLocal.f` | CPS4 | 0.00e+00 | 8.72e-16 | 2/2 |
-| `irfancn__Abaqus-UMAT-elastic/umat_elastic.for` | C3D8 | 0.00e+00 | 1.00e-14 | 4/4 |
-| `irfancn__Abaqus-UMAT-viscoelastic/umat_viscoelastic.for` | C3D8 | 6.50e-05 | 1.00e-14 | 4/4 |
-| `keisuke58__pde-fem-biofilm/umat_biofilm_visco_phase2.f` | C3D8 | 0.00e+00 | 4.15e-11 | 2/2 |
-| `mholla__BMMB24/simulations/input files/umat_transverseIsotropicStretch.f` | C3D8 | 0.00e+00 | 7.30e-08 | 2/2 |
-| `mholla__growth/umats/umat_area_stretch.f` | C3D8 | 0.00e+00 | 1.35e-10 | 2/2 |
-| `mholla__growth/umats/umat_iso_stretch.f` | C3D8 | 0.00e+00 | 1.35e-10 | 2/2 |
-| `mholla__growth/umats/umat_transverse.f` | C3D8 | 0.00e+00 | 1.35e-10 | 2/2 |
+`all six gates` says whether every evidence gate read true. Where it does not, the gate that did not is named: the entry is one the batch accepted with a written explanation, and an explanation is not the same thing as the gate reading true.
+
+| source | all six gates | element | worst primal | worst tangent | states |
+| --- | --- | --- | ---: | ---: | --- |
+| `AlexanderJFDR__Hyperelastic_phase_field/umat/NeoHookean_umat.for` | yes | C3D8 | 0.00e+00 | 8.13e-10 | 2/2 |
+| `BristolCompositesInstitute__abaci/test/data/umat.f` | yes | C3D8 | 0.00e+00 | 1.12e-14 | 4/4 |
+| `CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/ISOTROPIC-ELASTICITY.for` | yes | C3D8 | 0.00e+00 | 1.07e-14 | 4/4 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 2.31e-07 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGrowth.for` | yes | C3D8H | 2.06e-12 | 2.31e-07 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 5.65e-08 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGrowth.for` | yes | C3D8H | 0.00e+00 | 5.65e-08 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005-Visualization/BodyForce-Growth-2Stages.for` | **no** -- primal_agreed=false | C3D8H | 2.33e-05 | 3.66e-09 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th001/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 1.03e-07 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th001/PureGrowth.for` | yes | C3D8H | 7.75e-12 | 1.03e-07 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th002/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 1.85e-07 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th002/PureGrowth.for` | yes | C3D8H | 0.00e+00 | 1.85e-07 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th005-Visualization/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 3.66e-09 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/BodyForce-Growth-2Stages.for` | yes | C3D8H | 3.69e-11 | 6.59e-07 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGrowth.for` | yes | C3D8H | 3.69e-11 | 6.59e-07 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002-Visualization/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 3.64e-09 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th002/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 2.68e-11 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005-Visualization/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 3.66e-09 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 2.68e-11 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/BodyForce-Growth-2Stages.for` | **no** -- primal_agreed=false | C3D8H | 2.10e-09 | 5.68e-11 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th002/BodyForce-Growth-2Stages.for` | yes | C3D8H | 6.76e-11 | 5.38e-11 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th002/PureGravity.for` | yes | C3D8H | 9.31e-11 | 7.73e-11 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th002/PureGrowth.for` | yes | C3D8H | 6.76e-11 | 5.38e-11 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th005/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 5.14e-11 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th005/PureGravity.for` | yes | C3D8H | 0.00e+00 | 5.14e-11 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th005/PureGrowth.for` | yes | C3D8H | 0.00e+00 | 5.14e-11 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th001/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 3.92e-11 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th002/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 4.05e-11 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 8.26e-11 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicUp/Th01/BodyForce-Growth-2Stages.for` | yes | C3D8H | 0.00e+00 | 5.68e-08 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGrowth.for` | yes | C3D8H | 0.00e+00 | 7.50e-07 | 2/2 |
+| `Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/PathSensitivity/Th001-1MPa/BodyForce-Growth-GravityFirst.for` | yes | C3D8H | 0.00e+00 | 5.64e-11 | 2/2 |
+| `Sina-Taghizadeh__UMAT_Hyperelastic/CompresibleNeoHookean.for` | yes | C3D8 | 0.00e+00 | 8.07e-10 | 2/2 |
+| `awhelanUCD__Lemaitre-damage-UMAT-Public/nonLocalLemaitre/lemaitreDamageNonLocal.f` | yes | CPS4 | 0.00e+00 | 8.72e-16 | 2/2 |
+| `irfancn__Abaqus-UMAT-elastic/umat_elastic.for` | yes | C3D8 | 0.00e+00 | 1.00e-14 | 4/4 |
+| `irfancn__Abaqus-UMAT-viscoelastic/umat_viscoelastic.for` | **no** -- primal_agreed=false | C3D8 | 6.50e-05 | 1.00e-14 | 4/4 |
+| `keisuke58__pde-fem-biofilm/umat_biofilm_visco_phase2.f` | yes | C3D8 | 0.00e+00 | 4.15e-11 | 2/2 |
+| `mholla__BMMB24/simulations/input files/umat_transverseIsotropicStretch.f` | yes | C3D8 | 0.00e+00 | 7.30e-08 | 2/2 |
+| `mholla__growth/umats/umat_area_stretch.f` | yes | C3D8 | 0.00e+00 | 1.35e-10 | 2/2 |
+| `mholla__growth/umats/umat_iso_stretch.f` | yes | C3D8 | 0.00e+00 | 1.35e-10 | 2/2 |
+| `mholla__growth/umats/umat_transverse.f` | yes | C3D8 | 0.00e+00 | 1.35e-10 | 2/2 |

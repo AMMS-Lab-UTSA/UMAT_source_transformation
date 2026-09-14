@@ -1627,9 +1627,15 @@ def markdown(records: list, summary: dict) -> str:
         "",
         "| | entries in D1 |",
         "| --- | ---: |",
-        f"| verified | {summary['by_kind'].get('verified', 0)} |",
+        f"| reached the `verified` rung | "
+        f"{summary['by_kind'].get('verified', 0)} |",
         f"| blocked outside this repository | {summary['external_total']} |",
         f"| work remaining here | {summary['internal_total']} |",
+        "",
+        f"Of the {summary['by_kind'].get('verified', 0)} on the first line, "
+        f"{gated} read true on all six evidence gates. The rung and the gates "
+        f"are different questions and this table asks the rung's, because it "
+        f"is the one whose three lines partition D1.",
     ]
 
     excluded_internal = (denominators.get(
@@ -1970,12 +1976,20 @@ def markdown(records: list, summary: dict) -> str:
         lines.append(f"| `{record.source_id}` | `{record.terminal_state}` | "
                      f"{kind} | {member} | {reason} |")
 
-    lines += ["", "## Every verified source", "",
-              "| source | element | worst primal | worst tangent | states |",
-              "| --- | --- | ---: | ---: | --- |"]
+    lines += ["", "## Every source that reached the `verified` rung", "",
+              "`all six gates` says whether every evidence gate read true. "
+              "Where it does not, the gate that did not is named: the entry "
+              "is one the batch accepted with a written explanation, and an "
+              "explanation is not the same thing as the gate reading true.",
+              "",
+              "| source | all six gates | element | worst primal | "
+              "worst tangent | states |",
+              "| --- | --- | --- | ---: | ---: | --- |"]
     for record in records:
         if record.terminal_state != FULLY_VERIFIED:
             continue
+        gate_note = ("yes" if record.verified_on_every_gate
+                     else f"**no** -- {record.gates_not_true}")
         primal = ("" if record.worst_stress_relative is None
                   else f"{record.worst_stress_relative:.2e}")
         tangent = ("" if record.worst_tangent_relative is None
@@ -1983,8 +1997,9 @@ def markdown(records: list, summary: dict) -> str:
         states = ("" if record.tangent_states_checked is None
                   else f"{record.tangent_states_agreeing}/"
                        f"{record.tangent_states_checked}")
-        lines.append(f"| `{record.source_id}` | {record.element_type} | "
-                     f"{primal} | {tangent} | {states} |")
+        lines.append(f"| `{record.source_id}` | {gate_note} | "
+                     f"{record.element_type} | {primal} | {tangent} | "
+                     f"{states} |")
     return "\n".join(lines) + "\n"
 
 
