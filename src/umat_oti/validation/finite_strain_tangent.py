@@ -131,6 +131,42 @@ by exactly ten per decade. The residual ladder at that state is flat at
 2.63e-01 with a ratio of 1.01 between its largest and smallest entry -- no
 minimum anywhere in it. The test localises the corner to the directions that
 cross it.
+
+WHAT NTENS=3 MEANS, AND WHAT THE SEED ASSUMES IT MEANS
+------------------------------------------------------
+
+Two of the eight sources above are not three-dimensional, and the tensor size
+alone does not say which Voigt components a UMAT is being handed. NTENS=4 is
+plane strain: NDI=3, NSHR=1, components 11, 22, 33, 12. NTENS=3 is plane
+stress: NDI=2, NSHR=1, components 11, 22, 12 -- there is no 33 column.
+
+The seed the transform emits maps directions 1..3 onto the three diagonal
+positions whenever ``min(ntens, 3)`` allows, so at NTENS=3 it seeds direction
+3 as ``E33``. For plane stress the third direction is the engineering shear,
+which wants half on ``(1,2)`` and half on ``(2,1)``. Read back from the only
+NTENS=3 entry in the corpus,
+``abuganza__UMAT_anisotropic_damage/UMAT_Tissue_2d_plane_stress.f`` (store key
+368b46da86f02422635ea06e), the emitted seed is::
+
+    {1: ((1, 1, 1.0),), 2: ((2, 2, 1.0),), 3: ((3, 3, 1.0),)}
+
+and that source's own author wrote, at the line that packs its answer for
+Abaqus, "I am treating sigma(3) as sigma12". So column 3 of that converted
+tangent is a derivative with respect to an out-of-plane stretch where the
+solver asked for one with respect to an in-plane shear.
+
+The two halves of the correction disagree with each other about this: the
+Kirchhoff term asks ``direct_component_count_expression`` for the number of
+direct components and gets ``NDI``, which is 2 at run time and right, while
+the seed has already assumed 3. Nothing here is measured against a run,
+because that entry is blocked at ``derivative_truncated`` before any tangent
+comparison happens -- 42 assignments take the real part of an expression that
+carries a seed -- so the seed defect has never reached a verdict and is
+recorded rather than demonstrated.
+
+NTENS=4 is not affected: ``(1,1), (2,2), (3,3)`` and a half-weighted ``(1,2)``
+pair is exactly plane strain, and the plane-strain row of the table above
+confirms it at 8.98e-11.
 """
 from __future__ import annotations
 
