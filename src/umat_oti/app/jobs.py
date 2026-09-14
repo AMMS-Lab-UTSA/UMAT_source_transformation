@@ -113,6 +113,22 @@ def _load_stages() -> tuple:
         from umat_oti.jobs import stages as service_stages   # noqa: PLC0415
     except Exception:
         return _FALLBACK_STAGES
+    # Which internal rungs the SERVICE claims, and under which step. The
+    # service owns the ladder, so where the two tables disagree about where a
+    # rung belongs, the service decides. Unioning them instead let one rung be
+    # claimed by two steps -- experiment_not_generated, support_build_failed,
+    # transformed and verified all were -- and then plain_stage() resolved it
+    # to whichever came last, so the round trip from a step to its own rung
+    # and back landed somewhere else.
+    claimed: dict = {}
+    for stage in getattr(service_stages, "STAGES", ()) or ():
+        key = getattr(stage, "key", None) or (
+            stage.get("key") if isinstance(stage, dict) else None)
+        for name in (getattr(stage, "internal_names", None) or (
+                stage.get("internal_names") if isinstance(stage, dict) else ())
+                or ()):
+            claimed.setdefault(name, key)
+
     loaded = []
     for stage in getattr(service_stages, "STAGES", ()) or ():
         key = getattr(stage, "key", None) or (
@@ -131,10 +147,39 @@ def _load_stages() -> tuple:
             # says what it is doing while it runs, which a progress panel
             # needs and a job record has no reason to carry.
             "explains": fallback.get("explains", ""),
-            "internal": tuple(sorted(set(internal)
-                                     | set(fallback.get("internal", ())))),
+            # The fallback contributes only names the service does not place
+            # somewhere else. A name the service assigns to another step is
+            # that step's, not this one's.
+            "internal": tuple(sorted(
+                set(internal) | {name for name in fallback.get("internal", ())
+                                 if claimed.get(name, key) == key})),
         })
-    return tuple(loaded) or _FALLBACK_STAGES
+
+    table = tuple(loaded) or _FALLBACK_STAGES
+    _refuse_an_ambiguous_table(table)
+    return table
+
+
+def _refuse_an_ambiguous_table(table) -> None:
+    """A rung belongs to one step, or the translation is not a translation.
+
+    Raised rather than resolved, because every way of resolving it silently
+    picks a winner by table order, and the reader of a progress panel has no
+    way to know a step was chosen by accident.
+    """
+    seen: dict = {}
+    clashes: dict = {}
+    for stage in table:
+        for name in stage["internal"]:
+            if name in seen and seen[name] != stage["key"]:
+                clashes.setdefault(name, [seen[name]]).append(stage["key"])
+            seen.setdefault(name, stage["key"])
+    if clashes:
+        raise ValueError(
+            "these internal rungs are claimed by more than one plain stage, "
+            "so translating one and back does not return it: "
+            + "; ".join(f"{name} -> {sorted(set(keys))}"
+                        for name, keys in sorted(clashes.items())))
 
 
 #: The ladder this interface renders. Nine steps, fixed order.

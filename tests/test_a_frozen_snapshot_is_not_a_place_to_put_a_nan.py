@@ -291,7 +291,7 @@ def test_a_fixture_carved_out_of_a_truncated_run_is_refused(control, tmp_path):
     with pytest.raises(FixtureRefused) as raised:
         freeze(control, work)
     said = str(raised.value)
-    assert f"3 increment(s) of the {INCREMENTS} asked for" in said
+    assert f"3 record(s) of the {INCREMENTS} asked for" in said
     assert "however far an analysis got before it stopped" in said
 
 
@@ -437,7 +437,7 @@ def test_the_two_new_refusals_are_reported_beside_the_old_ones(control,
     row = dict(control, stage="primal_disagreed", evidence={})
     problems = why_this_may_not_be_frozen(row, fixture_from(row, work))
     assert any("settled at 'primal_disagreed'" in p for p in problems)
-    assert any("increment(s) of the 6 asked for" in p for p in problems)
+    assert any("record(s) of the 6 asked for" in p for p in problems)
     assert sum("evidence." in p for p in problems) == 3
 
 

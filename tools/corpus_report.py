@@ -111,9 +111,11 @@ FROM_ABAQUS_STAGE: dict[str, str] = {
     # behaviour, so it got as far as a primal parity and no further.
     "experiment_not_informative": "primal_parity_passed",
     "informativeness_not_established": "primal_parity_passed",
-    # The author published the UMAT interface and no constitutive content.
-    # There is nothing to drive, and it never reached a manifest.
-    "published_stub_no_constitutive_content": BLOCKED,
+    # (published_stub_no_constitutive_content is mapped above, to its own
+    # off-the-ladder status. It was briefly mapped here to BLOCKED as well --
+    # a duplicate key, so the second silently won and the first looked right
+    # while doing nothing. Nothing about a template is blocked: its author
+    # published exactly what they meant to.)
     # Both builds ran and their histories differ, and the recorded calls say
     # where the difference is NOT. Both got as far as a primal comparison --
     # which is the rung they stopped at, whichever way the comparison is
