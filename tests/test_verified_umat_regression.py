@@ -4,8 +4,11 @@ This is the durable gate. The tests in ``test_verified_umat_collection.py``
 check that the committed evidence is internally sound; this one checks that it
 is still TRUE, by executing the materials again.
 
-Marked ``abaqus`` and deselected by default, because it needs a licence and
-takes as long as the batch does. The offline suite must never depend on it,
+Marked ``abaqus`` and ``corpus_pass``, and deselected by default through
+``addopts`` (select it with ``-m corpus_pass``), because it needs a licence and
+takes as long as the batch does -- it re-runs every store entry, not only the
+baseline. It used to be collected by every plain ``pytest``, which made each
+suite run in any worktree a full corpus pass. The offline suite must never depend on it,
 and -- the point that matters -- its absence must never read as a pass. A run
 without Abaqus SKIPS here and FAILS in the strict command:
 
@@ -44,6 +47,7 @@ def _required():
             json.loads(BASELINE.read_text(encoding="utf-8"))["entries"]]
 
 
+@pytest.mark.corpus_pass
 def test_every_promoted_material_still_verifies(tmp_path):
     """The whole baseline, in one strict run.
 

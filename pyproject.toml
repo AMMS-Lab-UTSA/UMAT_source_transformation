@@ -104,7 +104,10 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+# The whole-store regression is a full real-Abaqus corpus pass (hours, every
+# licence token it can get). It runs only when asked for by name with
+# `-m corpus_pass`; a suite run in an agent worktree must never start one.
+addopts = "-ra -m 'not corpus_pass'"
 markers = [
 	"unit: pure-Python logic; no compiler, no network, milliseconds",
 	"integration: several components together, still offline and redistributable",
@@ -113,6 +116,7 @@ markers = [
 	"network: reaches the public internet; excluded from the offline suite",
 	"fortran: needs a Fortran compiler on PATH",
 	"abaqus: needs a licensed Abaqus installation; cannot run in public CI",
+	"corpus_pass: re-runs the whole store in Abaqus; deselected unless selected with -m corpus_pass",
 	"arc: needs the documented HPC environment and its scheduler",
 	"publication: regenerates or checks a published table or figure",
 	"browser: drives the interface in a real browser; needs Playwright and a downloaded Chromium",
