@@ -36,11 +36,6 @@ EXTERNAL: tuple[str, ...] = (
     "not_a_umat",
     "incomplete_or_corrupt_source",
     "external_dependency_unavailable",
-    #: The two builds' histories differ and the recorded CALLS say the
-    #: arguments had already parted before the call whose outputs differ, so
-    #: what the routine returned there is not attributable to the routine.
-    #: External: about the experiment, not about the conversion.
-    "arguments_diverged_before_the_routine",
     #: The author published the INTERFACE and no constitutive content: a file
     #: presenting the 37-argument UMAT header that assigns neither STRESS nor
     #: DDSDDE anywhere and makes no CALL at all. matmodlab2's umat_stub.f90 is
@@ -66,6 +61,18 @@ INTERNAL: tuple[str, ...] = (
     "original_job_failed",
     "transformed_job_failed",
     "primal_disagreed",
+    #: The two builds' histories differ and the recorded CALLS say the
+    #: arguments had already parted before the call whose outputs differ.
+    #: Internal. It was filed EXTERNAL, as "about the experiment, not about the
+    #: conversion" -- but the experiment is this project's deck, and in a
+    #: paired run the arguments of a later call are computed by the solver from
+    #: the outputs of the earlier calls of THAT build. All three entries that
+    #: carry it parted at call 8 of increment 1, the first Newton iteration
+    #: after seven calls whose returned tangent drove the update; one of them
+    #: had DSTRAN(6) 1.03e-14 against 1.80e-14. Nothing about that is a fact
+    #: about somebody's published repository, and filing it there removed
+    #: three primal disagreements from this project's own column.
+    "arguments_diverged_before_the_routine",
     #: The two builds disagree and a control measured WHY. Internal, and not
     #: verified: an explanation for a disagreement is not agreement. It lived
     #: briefly as an override that set the primal gate true, and thirteen
@@ -137,7 +144,8 @@ MEANING: dict[str, str] = {
                     "tangent matched a converged difference",
     "arguments_diverged_before_the_routine":
         "the two runs were handed different arguments before the call whose "
-        "answers differ, so the difference is not the routine's",
+        "answers differ; the solver computed those arguments from each build's "
+        "own earlier outputs, so where the paths parted is ours to find",
     "disagreement_not_in_any_recorded_call":
         "every call we recorded returned the same answer in both builds, and "
         "the comparison reported a difference anyway -- ours to explain",

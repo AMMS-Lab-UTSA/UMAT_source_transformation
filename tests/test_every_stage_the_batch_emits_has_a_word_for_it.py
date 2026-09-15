@@ -70,21 +70,21 @@ def test_an_empty_stage_is_still_not_attempted():
 
 
 def test_the_two_new_rungs_carry_the_owner_the_evidence_supports():
-    """arguments_diverged is about the EXPERIMENT -- the two builds were handed
-    different arguments before the call whose outputs differ, so the routine is
-    not what produced the difference. disagreement_not_in_any_recorded_call is
-    about THIS HARNESS -- every paired call was bit-identical and the history
-    comparison reported a difference anyway."""
-    assert ts.from_stage("arguments_diverged_before_the_routine").kind == "external"
+    """arguments_diverged is ours -- the two builds were handed different
+    arguments before the call whose outputs differ, and the solver computed
+    those arguments from each build's own earlier outputs on this project's
+    deck. disagreement_not_in_any_recorded_call is about THIS HARNESS -- every
+    paired call was bit-identical and the history comparison reported a
+    difference anyway. Neither is a fact about somebody's published file."""
+    assert ts.from_stage("arguments_diverged_before_the_routine").kind == "internal"
     assert ts.from_stage("disagreement_not_in_any_recorded_call").kind == "internal"
 
 
-def test_the_three_entries_that_exposed_this_are_external_now():
+def test_the_three_entries_that_exposed_this_are_internal():
     records = [r for r in _pass11()
                if r.get("stage") == "arguments_diverged_before_the_routine"]
     if not records:
         pytest.skip("no entry reached arguments_diverged in this run")
     for record in records:
         verdict = ts.from_stage(record["stage"])
-        assert verdict.kind == "external"
-        assert verdict.finished is True
+        assert verdict.kind == "internal"

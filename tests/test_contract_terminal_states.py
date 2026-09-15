@@ -156,10 +156,10 @@ def test_the_two_states_added_after_the_default_did_damage_are_published():
     the vocabulary had no word for what they did. Both new words are here, and
     on the side the evidence puts them."""
     assert PUBLISHED_OWNERS["arguments_diverged_before_the_routine"] == \
-        EXTERNAL_OWNER
+        INTERNAL_OWNER
     assert PUBLISHED_OWNERS["disagreement_not_in_any_recorded_call"] == \
         INTERNAL_OWNER
-    assert owner_of("arguments_diverged_before_the_routine") == EXTERNAL_OWNER
+    assert owner_of("arguments_diverged_before_the_routine") == INTERNAL_OWNER
     assert owner_of("disagreement_not_in_any_recorded_call") == INTERNAL_OWNER
 
 
@@ -169,7 +169,8 @@ def test_the_three_rows_that_broke_the_default_are_never_not_attempted(rows):
     Three of the 237 entries carry stage
     ``arguments_diverged_before_the_routine``. They RAN, produced output, and
     were isolated to a call whose INPUTS already differed before the routine
-    was entered -- an external fact about somebody's file. The vocabulary had
+    was entered -- inputs the solver computed from each build's own earlier
+    outputs, on this project's deck. The vocabulary had
     no word for it, so ``from_stage`` answered ``not_attempted``: INTERNAL,
     "this project never tried", booked into this project's own column.
 
@@ -190,9 +191,9 @@ def test_the_three_rows_that_broke_the_default_are_never_not_attempted(rows):
             assert "not_attempted" in str(exc)
             assert "FROM_STAGE" in str(exc)
             continue
-        # This checkout has the word. It must be the external one.
+        # This checkout has the word, and it is this project's.
         assert state.state == "arguments_diverged_before_the_routine"
-        assert state.owner == EXTERNAL_OWNER
+        assert state.owner == INTERNAL_OWNER
         assert state.state != "not_attempted"
 
 
@@ -213,9 +214,9 @@ def test_every_other_real_row_translates_with_an_owner(rows):
         assert owners[EXTERNAL_OWNER] == 67      # 36 + 27 + 4
         assert owners[INTERNAL_OWNER] == 112
     else:
-        # The three arguments_diverged entries are EXTERNAL, not ours.
-        assert owners[EXTERNAL_OWNER] == 70
-        assert owners[INTERNAL_OWNER] == 112
+        # The three arguments_diverged entries are INTERNAL: ours to locate.
+        assert owners[EXTERNAL_OWNER] == 67
+        assert owners[INTERNAL_OWNER] == 115
 
 
 def test_no_real_row_becomes_not_attempted(rows):

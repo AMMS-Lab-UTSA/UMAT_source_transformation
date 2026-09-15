@@ -429,14 +429,14 @@ def test_every_stage_in_the_real_record_has_a_word_of_its_own(records):
 
 @pass11_only
 def test_the_three_new_states_carry_the_right_owner(records):
-    """``arguments_diverged_before_the_routine`` is the file's, not ours."""
+    """``arguments_diverged_before_the_routine`` is ours, not the file's."""
     diverged = [r for r in records
                 if r.get("stage") == "arguments_diverged_before_the_routine"]
     assert len(diverged) == 3
     for record in diverged:
         status = plain_status(record)
-        assert status.kind == "external"
-        assert status.whose_move == "the author of this UMAT"
+        assert status.kind == "internal"
+        assert status.whose_move == "this program"
         assert "not given the same starting point" in status.headline
 
     # The other two are not in pass11 yet and must still be named.

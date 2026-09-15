@@ -56,7 +56,20 @@ from typing import NamedTuple
 #:   required. A 1.0.0 reader took one count and would read a 280-record
 #:   history as 280 increments.
 #: * The result envelope separates ``call_succeeded`` from ``verdict``.
-CONTRACT_VERSION = "2.0.0"
+#: 3.0.0, MAJOR, for two changes an older reader would MISREAD rather than
+#: fail on:
+#:
+#: * ``terminalState.state`` gained ``primal_mismatch_explained`` (INTERNAL).
+#:   A primal comparison that failed and that a measured control accounts for
+#:   used to travel as ``fully_verified`` with the primal gate rewritten to
+#:   true; thirteen entries crossed the boundary that way. A 2.x reader has no
+#:   word for the state and would fall through.
+#: * ``arguments_diverged_before_the_routine`` changed owner, EXTERNAL to
+#:   INTERNAL, and its error code moved from ``external.`` to ``internal.``.
+#:   The arguments that parted were computed by the solver from each build's
+#:   own earlier outputs on this project's deck; a 2.x reader would book three
+#:   of this project's primal disagreements against somebody else's file.
+CONTRACT_VERSION = "3.0.0"
 
 #: The name this repository answers to in a handshake message.
 SPEAKER = "UMAT_source_transformation"

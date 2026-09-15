@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/santiagarcia/UMAT_source_transformation/schemas/contract_error_v1.schema.json",
   "title": "Contract error envelope (v1)",
-  "x-contract-version": "2.0.0",
+  "x-contract-version": "3.0.0",
   "x-why": "A bare message string cannot be switched on, cannot be counted, and cannot be told apart from another error with similar wording -- which is how two different failures end up in one bucket. Every error crossing the boundary answers three questions: whose problem it is, whether it is terminal, and what is still true.",
   "type": "object",
   "required": [

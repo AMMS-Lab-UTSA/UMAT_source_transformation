@@ -138,8 +138,19 @@ def test_the_schema_refuses_an_owner_the_vocabulary_disagrees_with():
 
 def test_the_schema_refuses_a_terminal_state_outside_the_vocabulary():
     with pytest.raises(SchemaViolation):
-        validate(_record(terminal={"state": "arguments_diverged_before_the_routine",
+        validate(_record(terminal={"state": "a_state_nobody_published",
                                    "owner": "INTERNAL"}), "umat_contract")
+
+
+def test_the_schema_refuses_the_owner_arguments_diverged_used_to_have():
+    """EXTERNAL at 2.0.0, INTERNAL from 3.0.0. The arguments that parted were
+    computed from each build's own earlier outputs on this project's deck, so
+    a record still booking it against the author's file is refused."""
+    with pytest.raises(SchemaViolation):
+        validate(_record(terminal={"state": "arguments_diverged_before_the_routine",
+                                   "owner": "EXTERNAL"}), "umat_contract")
+    validate(_record(terminal={"state": "arguments_diverged_before_the_routine",
+                               "owner": "INTERNAL"}), "umat_contract")
 
 
 def test_the_schema_refuses_material_constants_with_no_provenance():
