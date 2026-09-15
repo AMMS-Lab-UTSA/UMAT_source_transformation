@@ -1,9 +1,9 @@
 {
   "answers": "Do the generated stress derivatives of order two and above match an independent 80-digit reference at every increment of the path?",
   "command": "python tools/figures/build_higher_order_figure.py",
-  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "commit": "9525b996cf0b9b5963a805520fae366743794b88",
   "figure": "figure_higher_order_verification",
-  "generated_at": "2026-08-27T15:25:05.322992+00:00",
+  "generated_at": "2026-09-15T13:43:14.122828+00:00",
   "inputs": [
     {
       "bytes": 235213,

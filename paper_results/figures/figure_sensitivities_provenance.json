@@ -1,9 +1,9 @@
 {
   "answers": "How does the material point's response depend on each material constant along the loading path, and does the independent reference agree?",
   "command": "python tools/figures/build_sensitivity_figure.py",
-  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "commit": "9525b996cf0b9b5963a805520fae366743794b88",
   "figure": "figure_sensitivities",
-  "generated_at": "2026-08-27T15:25:02.297717+00:00",
+  "generated_at": "2026-09-15T13:43:09.248560+00:00",
   "inputs": [
     {
       "bytes": 1848832,

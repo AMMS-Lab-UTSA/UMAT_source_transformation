@@ -1,9 +1,9 @@
 {
   "answers": "What is actually blocking each eligible source that no route has verified?",
   "command": "python tools/figures/build_acquisition_figures.py",
-  "commit": "489806911fe5ddc5a9ac1ede812a0c7e84a98e81",
+  "commit": "9525b996cf0b9b5963a805520fae366743794b88",
   "figure": "figure_remaining_blockers",
-  "generated_at": "2026-08-27T22:14:21.361273+00:00",
+  "generated_at": "2026-09-15T13:43:12.253946+00:00",
   "inputs": [
     {
       "bytes": 33275,

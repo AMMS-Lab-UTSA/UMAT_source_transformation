@@ -2,7 +2,7 @@
   "caption": "Parameter and state sensitivities across the model collection. Rows the reference cannot adjudicate are split by reason: those below what a centred difference resolves, and those whose stencil straddles a branch boundary. Every attempted model is listed, verified or not.",
   "column_count": 8,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "63bf39bed285c8253cd6d370e7ef1a010d184b4b",
+  "commit": "9525b996cf0b9b5963a805520fae366743794b88",
   "environment": {
     "abaqus": "Abaqus JOB abaqus",
     "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
@@ -16,12 +16,12 @@
     ],
     "exclusion_reason": "reported only in the illustrative tables"
   },
-  "generated_at": "2026-08-28T13:45:57.943388+00:00",
+  "generated_at": "2026-09-15T13:39:44.195608+00:00",
   "inputs": [
     {
-      "bytes": 43756,
+      "bytes": 43755,
       "path": "paper_results/parameter_sensitivity/parameter_sensitivity_round.json",
-      "sha256": "8c6219a7fa3293cb626e66a6e27b604b96da503bb72f6b46250d461cfeca33e7"
+      "sha256": "465f459846f2e3e728cda1a688b04731509025e0d42b571d87091a10dea0285e"
     }
   ],
   "notes": "",

@@ -1,9 +1,9 @@
 {
   "answers": "How much of the collected UMAT corpus reached numerical verification, and where did the rest stop?",
   "command": "python tools/figures/build_collection_figures.py",
-  "commit": "489806911fe5ddc5a9ac1ede812a0c7e84a98e81",
+  "commit": "9525b996cf0b9b5963a805520fae366743794b88",
   "figure": "figure_collection_coverage",
-  "generated_at": "2026-08-27T22:14:22.548300+00:00",
+  "generated_at": "2026-09-15T13:43:10.294169+00:00",
   "inputs": [
     {
       "bytes": 33275,

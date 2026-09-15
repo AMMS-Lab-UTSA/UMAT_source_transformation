@@ -1,9 +1,9 @@
 {
   "answers": "Does the generated consistent tangent match an independent closed-form reference at every increment of the path?",
   "command": "python tools/figures/build_tangent_figure.py",
-  "commit": "9bb6d2402d75895f048f5ff4657e2cc9da991c59",
+  "commit": "9525b996cf0b9b5963a805520fae366743794b88",
   "figure": "figure_tangent_verification",
-  "generated_at": "2026-08-27T15:25:03.778267+00:00",
+  "generated_at": "2026-09-15T13:43:07.682335+00:00",
   "inputs": [
     {
       "bytes": 184741,
