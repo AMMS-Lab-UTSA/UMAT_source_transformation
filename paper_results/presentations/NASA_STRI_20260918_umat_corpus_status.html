@@ -1,0 +1,451 @@
+<title>UMAT Corpus Status</title>
+<style>
+:root{
+  --ink:#16202c; --dim:#5b6b7c; --line:#d8e0e8; --bg:#fbfcfd; --card:#fff;
+  --ok:#1a7f52; --bad:#b4342a; --warn:#9a6a10; --flag:#7b3fa0;
+  --okbg:#e9f6ef; --badbg:#fdeeec; --warnbg:#fdf4e3; --flagbg:#f5eefb;
+  --accent:#1f4e79;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ink:#e6edf3; --dim:#9fb0c0; --line:#2b3947; --bg:#0f1720; --card:#16202c;
+  --ok:#5fd39b; --bad:#ff8b7e; --warn:#e8b457; --flag:#c89bec;
+  --okbg:#133024; --badbg:#3a1d1a; --warnbg:#382c14; --flagbg:#2c1f3a; --accent:#7fb6e8;}}
+:root[data-theme="dark"]{
+  --ink:#e6edf3; --dim:#9fb0c0; --line:#2b3947; --bg:#0f1720; --card:#16202c;
+  --ok:#5fd39b; --bad:#ff8b7e; --warn:#e8b457; --flag:#c89bec;
+  --okbg:#133024; --badbg:#3a1d1a; --warnbg:#382c14; --flagbg:#2c1f3a; --accent:#7fb6e8;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);
+  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  padding-block:28px;padding-left:20px;padding-right:20px;max-width:1120px;margin:0 auto}
+h1{font-size:27px;margin:0 0 4px;letter-spacing:-.02em}
+h2{font-size:19px;margin:34px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--line);letter-spacing:-.01em}
+h3{font-size:15px;margin:20px 0 7px;color:var(--accent)}
+.sub{color:var(--dim);margin:0 0 18px;font-size:13.5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:14px 16px;margin:12px 0}
+table{border-collapse:collapse;width:100%;font-size:13.2px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--bg);font-weight:650;font-size:12.4px}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.3px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pill{display:inline-block;padding:1px 7px;border-radius:9px;font-size:11.4px;font-weight:650;white-space:nowrap}
+.p-ok{background:var(--okbg);color:var(--ok)} .p-bad{background:var(--badbg);color:var(--bad)}
+.p-warn{background:var(--warnbg);color:var(--warn)} .p-flag{background:var(--flagbg);color:var(--flag)}
+ul{margin:7px 0;padding-left:20px} li{margin:4px 0}
+.big{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.big div{flex:1 1 130px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:11px 13px}
+.big b{display:block;font-size:25px;line-height:1.1;font-variant-numeric:tabular-nums}
+.big span{font-size:11.8px;color:var(--dim)}
+.flagbox{background:var(--flagbg);border-left:4px solid var(--flag);border-radius:0 7px 7px 0;padding:11px 14px;margin:12px 0}
+.warnbox{background:var(--warnbg);border-left:4px solid var(--warn);border-radius:0 7px 7px 0;padding:11px 14px;margin:12px 0}
+.okbox{background:var(--okbg);border-left:4px solid var(--ok);border-radius:0 7px 7px 0;padding:11px 14px;margin:12px 0}
+.cmd{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;margin:5px 0;overflow-x:auto;white-space:pre}
+img{max-width:100%;border:1px solid var(--line);border-radius:7px}
+.tk{color:var(--dim);font-size:12.6px;font-style:italic;margin:3px 0 0}
+.rule{color:var(--dim);font-size:12.6px}
+@media(max-width:640px){body{font-size:14px}.big div{flex:1 1 100%}h1{font-size:22px}}
+</style>
+
+<h1>UMAT Testing on the Corpus</h1>
+<p class="sub">NASA STRI weekly &middot; 18 September 2026 &middot; evidence package<br>
+All figures from runs made <b>15 September 2026</b> at commit <code>debb2a8</code> (parent <code>9525b99</code>).
+Store fingerprint <code>94a92c01814f107a</code>. Nothing below is carried over from the 11 September deck.</p>
+
+<div class="okbox"><b>Acceptance rule applied throughout.</b> A transformed source, a standalone
+compile, or a standalone driver is <b>not</b> verification. Full acceptance requires a real Abaqus
+analysis of the original and of the converted build on the same deck, agreement over the whole
+history, and finite-difference agreement at smooth states. Every table below states which level it
+is reporting.</div>
+
+<h2>1. Executive summary</h2>
+<ul>
+<li><b>Two complete corpus passes were run this week</b> (pass11, then pass12 after a transformer
+change). pass12 is the current evidence: 244 store entries, 244 distinct keys, no duplicate rows.</li>
+<li><b>Fully accepted rose 42 &rarr; 44</b> on all six evidence gates, and 55 &rarr; 57 at the
+verified terminal state. The gap of 13 is entries whose primal gate is false <i>with a measured
+control explaining it</i> — reported as a third number, never folded into either.</li>
+<li><b>The transformer gained 7 sources and lost none</b>: 237 &rarr; 244 transformed, 211 &rarr; 217
+compiling, refusals 154 &rarr; 147. Cause was not what we thought — the parser had never heard of a
+Fortran <code>INTERFACE</code> block, so an interface body's <code>end subroutine</code> closed the
+enclosing UMAT and nothing past line 141 of a 1694-line file was visible.</li>
+<li><b>Most important measurable result:</b> on the bundled J2 control the OTI tangent matches a
+centred difference of the original to <b>8.25e-11</b>, over a genuine plateau (stable range
+1e-06&ndash;1e-04), at a state proven smooth by one-sided differences agreeing to 2.12e-08.</li>
+<li><b>An interface defect was caught before it shipped:</b> the Residual Assembler screen was
+offering all 237 materials as verified when 42 were — it read a service envelope's
+<code>ok</code> (the call succeeded) as the verdict.</li>
+<li><b>Still incomplete:</b> 102 sources the transformer refuses, 63 primal disagreements, and
+19 tangent entries — 14 of which sit below 1e-6 and are blocked by a smoothness policy, not by a
+wrong tangent.</li>
+<li><b>Next highest priority:</b> the 63 primal disagreements. All 63 are now confirmed
+<code>same_inputs_different_outputs</code> by replaying each entry's own recorded calls, so they are
+genuinely about the converted routine and are the largest honest failure cluster in the project.</li>
+</ul>
+
+<h2>2. Exact corpus status</h2>
+<div class="big">
+<div><b>391</b><span>sources collected</span></div>
+<div><b>391</b><span>acceptable licences</span></div>
+<div><b>346</b><span>genuine UMATs</span></div>
+<div><b>244</b><span>transformed</span></div>
+<div><b>57</b><span>verified rung</span></div>
+<div><b>44</b><span>all six gates</span></div>
+</div>
+
+<div class="wrap"><table>
+<tr><th>Acceptance level</th><th class="n">Count</th><th>Denominator &amp; what it means</th></tr>
+<tr><td>Sources collected</td><td class="n">391</td><td>every artefact acquisition returned, one record each</td></tr>
+<tr><td>Acceptable licences</td><td class="n">391</td><td>MIT 157, Apache-2.0 130, GPL-3.0 76, BSD-3 23, AGPL-3.0 3, BSD-2 1, LGPL-3.0 1 — all redistributable for research; none excluded on licence</td></tr>
+<tr><td>Genuine UMATs</td><td class="n">346</td><td>of 391. Presents the Abaqus UMAT interface, decided by parsing (routine name, exact dummy-argument count, caller analysis) — never by filename</td></tr>
+<tr><td>&nbsp;&nbsp;&hookrightarrow; adequately specified</td><td class="n">260</td><td>the subset that is also a distinct member, has a model inside it, builds as published, and has everything it <code>USE</code>s published beside it. 118 external + 13 duplicate exclusions; <b>zero internal</b></td></tr>
+<tr><td>Successfully transformed</td><td class="n">244</td><td>of 391 attempted; 147 refused with a named blocker</td></tr>
+<tr><td>Standalone compilation passed</td><td class="n">217</td><td>generated Fortran compiles offline (gfortran). <span class="pill p-warn">not verification</span></td></tr>
+<tr><td>Abaqus compilation + original analysis passed</td><td class="n">154</td><td>original build ran to the end of its deck under Abaqus 2021.HF5</td></tr>
+<tr><td>Abaqus nominal analysis passed (both builds)</td><td class="n">148</td><td>converted build also completed; these 148 carry an evidence block</td></tr>
+<tr><td>&nbsp;&nbsp;&hookrightarrow; complete, finite history</td><td class="n">141</td><td>of 148. 7 carry a NaN or infinity somewhere despite Abaqus reporting success</td></tr>
+<tr><td>&nbsp;&nbsp;&hookrightarrow; mechanically informative</td><td class="n">130</td><td>of 148 (12 false, 6 not established) — the loading actually exercised the behaviour</td></tr>
+<tr><td>Primal response matched</td><td class="n">63</td><td>of 148 true, 85 false. Whole stress <i>and</i> state history, every increment both builds walked</td></tr>
+<tr><td><b>DDSDDE verified against finite differences</b></td><td class="n"><b>62</b></td><td>of 148 true, 86 false. Centred difference of the <i>original compiled UMAT</i> at multiple smooth states, over a step plateau</td></tr>
+<tr><td>DSIGMA_DP verified against finite differences</td><td class="n"><span class="pill p-flag">0 in Abaqus</span></td><td>see the flag below — verified for 20 bundled models by standalone driver only</td></tr>
+<tr><td>DSTATEV_DP verified against finite differences</td><td class="n"><span class="pill p-flag">0 in Abaqus</span></td><td>same; and 0 rows measured even standalone</td></tr>
+<tr><td><b>Fully accepted UMATs</b></td><td class="n"><b>44</b></td><td>true on all six evidence gates. 43 of them are also adequately specified</td></tr>
+<tr><td>&nbsp;&nbsp;Reached the verified rung</td><td class="n">57</td><td>13 more, each with <code>primal_agreed</code> false <b>and</b> a measured control explaining it. 0 unexplained</td></tr>
+<tr><td>Blocked — external (somebody's repository)</td><td class="n">122</td><td>45 not a UMAT, 41 missing material data, 16 missing dependency, 15 incomplete source, 3 arguments diverged, 2 published stub</td></tr>
+<tr><td>Blocked — internal (ours)</td><td class="n">212</td><td>102 transform refused, 63 primal disagreed, 19 tangent not verified, 8 original job failed, 6 transformed job failed, 6 unsupported formulation, 4 not informative, 2 support build, 1 each informativeness/truncation</td></tr>
+<tr><td>Untested or unresolved</td><td class="n">0</td><td><code>not_attempted</code> is empty; all 391 carry a named reason, none shorter than 278 characters</td></tr>
+</table></div>
+
+<div class="flagbox"><b>Flag — DSIGMA_DP and DSTATEV_DP are not Abaqus-verified for any corpus source.</b>
+The Abaqus corpus verifier contains <b>zero</b> parameter-sensitivity code
+(<code>grep -c 'DSIGMA_DP\|parameter_sensitivity' tools/verify_store_in_abaqus.py</code> &rarr; 0).
+Parameter sensitivities are produced and FD-checked by a separate
+<b>standalone gfortran driver</b> path (<code>make</code> + running the binary; no Abaqus in the
+log), on the repository's own 20 bundled models — <i>not</i> on the 391 scraped sources. Under the
+stated acceptance rule that is not verification, and it is reported here as a separate level rather
+than added to any corpus count.</div>
+
+<h3>Standalone parameter-sensitivity result (re-run today, not re-tabulated)</h3>
+<p class="rule">The stored sweep input was dated 2026-08-27, so the sweep itself was re-executed rather than the tables rebuilt from it.</p>
+<div class="wrap"><table>
+<tr><th>Funnel stage</th><th class="n">n</th><th>Derivative family</th><th class="n">Entries</th><th class="n">Measured</th><th class="n">Disagreeing</th><th>Worst rel. error</th></tr>
+<tr><td>attempted / transformed / compiled / executed</td><td class="n">20</td><td>DDSDDE</td><td class="n">540</td><td class="n">186</td><td class="n">0</td><td class="mono">2.188e-15</td></tr>
+<tr><td>derivatives verified</td><td class="n">19</td><td>DSIGMA_DP</td><td class="n">480</td><td class="n">75</td><td class="n">0</td><td class="mono">2.480e-08</td></tr>
+<tr><td>parameter directions declared / verified</td><td class="n">84 / 83</td><td>DSTATEV_DP</td><td class="n">80</td><td class="n">0</td><td class="n">0</td><td class="mono">not measured</td></tr>
+<tr><td>comparison rows / agreeing</td><td class="n">14540 / 14539</td><td colspan="4">1 unresolved: <code>m6_fcc</code>, one row below what a centred difference resolves</td></tr>
+</table></div>
+<p class="tk">DSTATEV_DP: 0 of 80 entries measured (60 exact zero, 20 within reference). The claim "state sensitivity verified" is not supportable even standalone.</p>
+
+<h2>3. Status by material-model family</h2>
+<div class="flagbox"><b>Flag — this classification is new and derived for this report.</b> The repository
+classifies the <i>experiment</i> family (what drives a routine) and the <i>element</i> family; it has
+never classified the constitutive model. These rows come from keyword evidence in each source, with
+the matched marker recorded per row in
+<code>corpus_run/material_families.json</code> so every assignment can be checked. Ordered
+most-specific-first; a source matching nothing is left unclassified rather than pushed into a bucket.
+Treat as indicative, not as a verified artefact.</div>
+<div class="wrap"><table>
+<tr><th>Material model family</th><th class="n">Total</th><th class="n">Genuine</th><th class="n">Transformed</th><th class="n">Ran in Abaqus</th><th class="n">Primal</th><th class="n">FD</th><th class="n">Accepted (6 gates)</th><th class="n">Rate</th></tr>
+<tr><td>Growth / morphoelasticity</td><td class="n">149</td><td class="n">149</td><td class="n">144</td><td class="n">124</td><td class="n">52</td><td class="n">51</td><td class="n">36</td><td class="n">24.2%</td></tr>
+<tr><td>Viscoelasticity / rate dependent</td><td class="n">51</td><td class="n">49</td><td class="n">17</td><td class="n">3</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0.0%</td></tr>
+<tr><td>Damage / phase field</td><td class="n">39</td><td class="n">29</td><td class="n">21</td><td class="n">6</td><td class="n">4</td><td class="n">3</td><td class="n">2</td><td class="n">5.1%</td></tr>
+<tr><td>Plasticity</td><td class="n">39</td><td class="n">20</td><td class="n">20</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0.0%</td></tr>
+<tr><td>Hyperelasticity</td><td class="n">26</td><td class="n">22</td><td class="n">10</td><td class="n">5</td><td class="n">3</td><td class="n">3</td><td class="n">3</td><td class="n">11.5%</td></tr>
+<tr><td>Elasticity</td><td class="n">21</td><td class="n">20</td><td class="n">12</td><td class="n">3</td><td class="n">2</td><td class="n">2</td><td class="n">2</td><td class="n">9.5%</td></tr>
+<tr><td>Crystal plasticity</td><td class="n">20</td><td class="n">18</td><td class="n">8</td><td class="n">5</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0.0%</td></tr>
+<tr><td>Concrete / geomaterials</td><td class="n">16</td><td class="n">14</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0.0%</td></tr>
+<tr><td>Other / unclassified</td><td class="n">30</td><td class="n">25</td><td class="n">8</td><td class="n">2</td><td class="n">2</td><td class="n">2</td><td class="n">1</td><td class="n">3.3%</td></tr>
+<tr><th>Total</th><th class="n">391</th><th class="n">346</th><th class="n">244</th><th class="n">148</th><th class="n">63</th><th class="n">62</th><th class="n">44</th><th class="n">11.3%</th></tr>
+</table></div>
+<p class="tk">The corpus is heavily skewed: growth is 38% of it, because one repository publishes many
+parameter variants of the same family. Plasticity (39 sources, 20 transformed) has <b>zero</b> through
+Abaqus — the most under-covered major family, and the reason the bundled J2 control matters as a
+stand-in until real corpus plasticity gets through.</p>
+
+<h2>4. Remaining failures, ranked</h2>
+<div class="wrap"><table>
+<tr><th class="n">n</th><th>Failure category</th><th>Root cause</th><th>Component</th><th>Auto-fixable</th><th>Proposed correction</th><th class="n">Unlocks</th></tr>
+<tr><td class="n">29</td><td>Helper lifting blocked</td><td>callee reaches an external or undefined routine (LAPACK <code>DGESV</code>, <code>DGETRF</code>) the lifter cannot follow</td><td>Transformation</td><td><span class="pill p-warn">partly</span></td><td>lift against a declared interface for the known LAPACK set; refuse the rest by name</td><td class="n">~10</td></tr>
+<tr><td class="n">20</td><td>Anchors not located</td><td>remaining parse blind spots after the INTERFACE fix</td><td>Transformation</td><td><span class="pill p-ok">yes</span></td><td>same method that fixed INTERFACE blocks: widen the unit reader, re-emit all 391, justify every change</td><td class="n">~8</td></tr>
+<tr><td class="n">19</td><td>Semantic check failed</td><td>emitted code fails an internal invariant (seed consumed, DDSDDE ordering)</td><td>Emitter</td><td><span class="pill p-warn">partly</span></td><td>case by case; each is a real defect the check is right to catch</td><td class="n">~6</td></tr>
+<tr><td class="n">17</td><td>Unclassified refusals</td><td>blocker text not yet mapped to a marker</td><td>Transformation</td><td><span class="pill p-ok">yes</span></td><td>extend the marker table so every refusal lands in a named cluster</td><td class="n">0 <span class="rule">(diagnostic only)</span></td></tr>
+<tr><td class="n">14</td><td>OTI argument crosses an implicit interface</td><td>a shadow or a REAL crosses an implicit interface; Fortran compiles it silently and the callee misreads the storage</td><td>Transformation</td><td><span class="pill p-warn">partly</span></td><td>widen lift roots further (22&rarr;11 already done); the 11 remaining callees are genuinely external</td><td class="n">~3</td></tr>
+<tr><td class="n">13</td><td>Callable defined in a <code>USE</code>d module</td><td>the transformer cannot read a module it was not given</td><td>Module resolution</td><td><span class="pill p-warn">partly</span></td><td>stage the module when published beside the source; refuse with the module named otherwise</td><td class="n">~5</td></tr>
+<tr><td class="n">12</td><td>Unsupported intrinsic (<code>SUM</code>)</td><td><code>SUM</code>/<code>PRODUCT</code> over a promoted array has no OTI overload</td><td>OTI support library</td><td><span class="pill p-ok">yes</span></td><td>add the reduction overloads to the support module</td><td class="n">~12</td></tr>
+<tr><td class="n">9</td><td><code>DOUBLE COMPLEX</code> on the stress path</td><td>complex-step differentiation idiom; 17&ndash;86 complex names per source, none tangent-only</td><td>Transformation</td><td><span class="pill p-bad">no</span></td><td><b>documented internal limitation.</b> Would need an OTI algebra over C, doubling the arithmetic corpus-wide to serve 9</td><td class="n">0</td></tr>
+<tr><td class="n">7</td><td>DDSDDE written outside a tangent region</td><td>tangent written in a helper the region analysis does not cover</td><td>Emitter</td><td><span class="pill p-warn">partly</span></td><td>extend region coverage through lifted helpers</td><td class="n">~4</td></tr>
+<tr><td class="n">7</td><td>Allocatable / deferred shape</td><td>shadow extent fixed by a runtime <code>ALLOCATE</code> the declarations cannot see</td><td>Transformation</td><td><span class="pill p-bad">no</span></td><td>needs deferred-shape OTI support; not scoped</td><td class="n">0</td></tr>
+<tr><th class="n">147</th><th colspan="6">Transformation subtotal &mdash; 102 of these are genuine UMATs</th></tr>
+<tr><td class="n">63</td><td><b>Primal disagreement</b></td><td>all 63 confirmed <code>same_inputs_different_outputs</code> by replaying each entry's own recorded calls. 6 are non-finite; the finite 57 span 1.66e-10 to 2.0, median 2.77e-01; 9 are below 1e-6</td><td>Transformation / numerical</td><td><span class="pill p-warn">partly</span></td><td>work by confirmed root cause, not magnitude. Known causes so far: REAL actual at an OTI dummy; the author's own single-precision literal; deck conditioning at &nu;&rarr;0.5</td><td class="n">~20</td></tr>
+<tr><td class="n">19</td><td>Tangent not verified</td><td><b>14 of 18 with a recorded residual are below 1e-6</b> (min 3.42e-11, median 1.19e-07). Blocked by a policy requiring two smooth states, not by a wrong tangent</td><td>Numerical verification</td><td><span class="pill p-ok">yes</span></td><td>establish whether those 14 genuinely have one smooth state or the smoothness test is too strict — without relaxing the tolerance</td><td class="n">~14</td></tr>
+<tr><td class="n">41</td><td>Missing material data</td><td>no published constants; refusals name every place searched</td><td>INP generation</td><td><span class="pill p-bad">external</span></td><td>none — inventing constants is prohibited. <code>*PARAMETER</code>/<code>*INCLUDE</code> resolution already implemented and recovered 0 of these 41</td><td class="n">0</td></tr>
+<tr><td class="n">14</td><td>Abaqus job failed (8 original + 6 transformed)</td><td>build or solver failure with the console retained</td><td>Abaqus / compiler</td><td><span class="pill p-warn">partly</span></td><td>diagnose from the retained console; one class already fixed (uppercase <code>#INCLUDE</code>)</td><td class="n">~6</td></tr>
+<tr><td class="n">6</td><td>Unsupported formulation</td><td>no element drives that formulation (e.g. axisymmetric shell, NTENS=2)</td><td>INP generation</td><td><span class="pill p-bad">no</span></td><td>nothing in the element registry hands those components</td><td class="n">0</td></tr>
+<tr><td class="n">5</td><td>Loading path not informative</td><td>4 not informative + 1 not established: the experiment ran but did not exercise the behaviour</td><td>Loading path</td><td><span class="pill p-ok">yes</span></td><td>extend the family criteria; constant-folding fix already took this 18&rarr;4</td><td class="n">~4</td></tr>
+<tr><td class="n">1</td><td>Derivative truncated</td><td><code>REAL()</code> cast drops the seed before the stress</td><td>Emitter</td><td><span class="pill p-warn">partly</span></td><td>needs cross-routine call-effect dataflow (implemented, validated, held back pending the emitter fix)</td><td class="n">1</td></tr>
+</table></div>
+
+<h2>5. Source-transformation progress</h2>
+<div class="card">
+<h3>Dependency tracing &mdash; the week's biggest single fix</h3>
+<p>The anchor locator was reported as matching only <i>indexed</i> assignment. It was not: the pattern
+always matched <code>DDSDDE = Depc</code>. The real cause was that <code>parse_subroutines</code> had
+never heard of a Fortran <code>INTERFACE</code> block, so in
+<code>MohrCoulombAbaqus.for</code> the interface body's
+<code>end subroutine MohrCoulombStressReturn</code> closed the enclosing UMAT and
+<b>nothing past line 141 of a 1694-line file was visible</b>. The same blindness sat in three more
+readers, one of which walked past the end of the routine into a different one and returned line 417.
+That file now transforms, lifts 14 routines, and stops at a named blocker.</p>
+<p class="tk">Corpus effect, PYTHONHASHSEED=0 over 391 rows: transformed 237&rarr;244, compiled
+211&rarr;217, refused 154&rarr;147, 195 outputs byte-identical, <b>0 newly refused</b>.</p>
+</div>
+<div class="card">
+<h3>OTI variable promotion and the branch pass</h3>
+<p>The branch pass rewrote any line mentioning a promoted name, wherever it sat, while the
+assignment pass is region-bound. Three gates now guard it, the decisive one being <i>no name whose
+shadow is currently stale</i>. It found a live wrong-number bug on the way in:
+<code>if (REAL(REFERATE_OTI) == 0.0d0) RefERate = 2.7e-5</code> always fired, silently overwriting
+the user's <code>PROPS(14)</code>.</p>
+</div>
+<div class="card">
+<h3>Helper-subroutine handling</h3>
+<p>Lift roots are now found to a fixed point over calls to routines the file defines, rather than only
+over callees already in the detected stress-path interval. <b>Forward leaks 22 &rarr; 11</b>, and every
+one of the 11 remaining names a callee its file does not define, checked by parsing each source.
+Crashes in the refusal path: <b>9 &rarr; 0</b>.</p>
+</div>
+<div class="card">
+<h3>DDSDDE extraction &mdash; finite strain</h3>
+<p>Both halves of the Abaqus Jacobian are now emitted where, and only where, the deformation gradient
+carries the seed: the seed is pushed forward (<code>dF = &epsilon;&middot;F</code>) and the Kirchhoff
+term <code>&sigma;<sub>ij</sub>&delta;<sub>kl</sub></code> is added on the NDI direct columns.
+Confirmed independently on nine states across eight sources and six constitutive kinds. The three
+wrong definitions are <b>flat</b> over six decades of step size; only the right one falls as
+h&sup2; and turns at a real minimum.</p>
+<div class="wrap"><table>
+<tr><th>Source (kind)</th><th class="n">dF=&epsilon;</th><th class="n">&epsilon;+K</th><th class="n">&epsilon;&middot;F</th><th class="n">&epsilon;&middot;F + K</th></tr>
+<tr><td>NeoHookean (hyperelastic)</td><td class="n mono">1.15e-1</td><td class="n mono">5.03e-2</td><td class="n mono">7.95e-2</td><td class="n mono"><b>9.69e-11</b></td></tr>
+<tr><td>umat_iso_stretch (growth, growing)</td><td class="n mono">2.74e-1</td><td class="n mono">7.11e-2</td><td class="n mono">2.09e-1</td><td class="n mono"><b>3.79e-11</b></td></tr>
+<tr><td>UMAT_Tissue_3d (damage)</td><td class="n mono">9.10e-2</td><td class="n mono">5.25e-2</td><td class="n mono">5.47e-2</td><td class="n mono"><b>8.27e-11</b></td></tr>
+<tr><td>Tissue 2d plane strain (NTENS=4)</td><td class="n mono">8.52e-2</td><td class="n mono">6.10e-2</td><td class="n mono">4.38e-2</td><td class="n mono"><b>8.98e-11</b></td></tr>
+<tr><td>biofilm (viscoelastic)</td><td class="n mono">8.78e-2</td><td class="n mono">5.07e-2</td><td class="n mono">5.36e-2</td><td class="n mono"><b>2.52e-11</b></td></tr>
+<tr><td>umat_transverse (anisotropic, growing)</td><td class="n mono">7.99e-1</td><td class="n mono">1.22e-1</td><td class="n mono">5.73e-1</td><td class="n mono"><b>6.25e-11</b></td></tr>
+</table></div>
+</div>
+<div class="card">
+<h3>DSIGMA_DP / DSTATEV_DP generation</h3>
+<p>A generic PROPS-seeded transformer exists
+(<code>src/umat_oti/transform/parameter_sensitivity_transform.py</code>) and produces both products
+for any well-formed UMAT plus a contract with a <code>parameters</code> block — with no hard-coded
+J2 equations. It emits a <b>material-point driver and a gfortran Makefile</b>.
+<span class="pill p-flag">standalone only</span> It is not wired into the Abaqus corpus verifier, and
+under the acceptance rule its results are not verification.</p>
+</div>
+<div class="card">
+<h3>Fixed-form / free-form, NTENS, and modules</h3>
+<p>Free-form <code>&amp;</code> continuation stitching, whole-array <code>DATA</code> lists, promoted
+DO bounds and <code>FORMAT</code> edit descriptors all fixed earlier this cycle.
+<code>voigt_layout</code> now maps NTENS to (NDI, NSHR) — 6&rarr;(3,3), 4&rarr;(3,1),
+3&rarr;<b>(2,1)</b> — and <i>both</i> halves of the finite-strain seed read it, so plane stress stops
+disagreeing with itself. Measured: <b>NTENS=4 is 12 of 12 byte-identical, NTENS=6 is 220 of 220</b>;
+only the three NTENS=3 finite-strain sources moved.</p>
+</div>
+<div class="card">
+<h3>Residual-assembler integration and regression tests</h3>
+<p>A versioned data contract (<b>2.0.0</b>) now connects the two repositories, with validation tests
+on both sides. The major bump was decided by the contract's own rule: each change is something a
+1.0.0 reader would <i>misread</i> rather than fail on.</p>
+<ul>
+<li><b>117 commits</b> in UMAT_source_transformation and <b>12</b> in Residual_Assembler since 11 Sept.</li>
+<li><b>113 test files touched</b>, 249 test files total.</li>
+<li>Offline suites: <b>UMAT 3403 passed</b> / 2 skipped; <b>Residual Assembler 284 passed</b> / 9 skipped. Repository audit: 1589 files, 0 failing checks.</li>
+</ul>
+</div>
+
+<h2>6. INP generator</h2>
+<div class="card">
+<h3>How each quantity is decided</h3>
+<table>
+<tr><th>Quantity</th><th>How it is determined &mdash; and from what</th></tr>
+<tr><td><b>NTENS, NDI, NSHR</b></td><td>Two independent witnesses, never the triage row (which recorded 6 for every source because 6 was its default). (1) what the routine's own text does with its tensor — a literal subscript 6 on a tensor array is three-dimensional continuum; (2) what element the author's own deck runs the material on. The element is the authority: Abaqus decides NDI/NSHR from it, and a disagreement is refused rather than resolved silently.</td></tr>
+<tr><td><b>NPROPS, PROPS</b></td><td>The paired deck's own <code>*USER MATERIAL</code> block. Never invented. <code>*PARAMETER</code> and <code>*INCLUDE</code> substitution is resolved, so a deck that defines <code>&lt;lam&gt;</code> inline yields its author's nine constants; a block whose placeholder is still standing is marked unusable rather than read as empty.</td></tr>
+<tr><td><b>NSTATV</b></td><td>The deck's <code>*DEPVAR</code> where published. Otherwise the transform's inference from the subscripts the source actually applies to <code>STATEV</code> — always reported <i>as</i> an inference. Only a source with neither is refused.</td></tr>
+<tr><td><b>Small vs finite strain</b></td><td>Either witness settles it: the routine reading <code>DFGRD</code> means the <i>material</i> is finite-strain; the author's own step carrying <code>NLGEOM=YES</code> means the <i>problem</i> is. Running a deck its author wrote NLGEOM=YES for without it would be a different analysis.</td></tr>
+<tr><td><b>Temperature / time / field / file</b></td><td>Temperature from <code>*INITIAL CONDITIONS, TYPE=TEMPERATURE</code> and the source's own <code>FILM</code> sink. Time dependence from a declared time constant used as a divisor of <code>TIME</code>/<code>DTIME</code>. File dependencies are redirected to staged absolute paths, including literals split mid-directory across a Fortran concatenation.</td></tr>
+<tr><td><b>Loading mode</b></td><td>By constitutive family, not one universal probe: strain-driven, time-driven (growth), separation (cohesive), body force via <code>SUBROUTINE DLOAD</code>, rate/hold (viscoelastic). Prescribing every node's displacement would mean DLOAD is never called.</td></tr>
+<tr><td><b>Where the element sits</b></td><td>One element of the author's own mesh, chosen so every divisor the routine builds from its cached <code>COORDS</code> stays away from zero. Six sources divide by <code>x&sup2;&minus;y&sup2;</code>, and four of a unit cube's eight integration points sit exactly on x=y.</td></tr>
+<tr><td><b>Element label</b></td><td>The author's own numbering where the deck gives one. One source computes <code>kelem = noel - 185</code>; at NOEL=1 that reads a COMMON block at &minus;184 and takes Abaqus down with a signal 11.</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>Changing the experiment until something activates</h3>
+<p>An amplitude search runs real Abaqus jobs <b>on the original only</b> — a loading chosen with the
+converted build in view would be a loading chosen to agree. The search descends, climbs, and retries at
+finer resolution. Crucially, <b>no amplitude search runs where the driver is not a strain</b>: a growth
+law is driven by its own clock, and raising "the strain" on one raises a number that does not appear in
+the law. On the growth family the old universal search ran from 8e-07 to 1, found the model non-finite
+everywhere, and reported that as a property of the source — when the cause was the unit cube standing on
+x&sup2;&minus;y&sup2;=0.</p>
+<p><b>Adequacy is decided by the family's own criterion, not by a generic detector.</b> The generic
+detector cannot certify itself: it fired on a growth run whose growth tensor never moved, because
+<code>STATEV(9)</code> held <code>TIME(2)+DTIME</code> — a clock, which advances in every run by
+construction. Growth slots are now identified from the source's arithmetic, and any slot whose defining
+expression is nothing but the clock is excluded. A constant-folding analysis additionally proves when a
+growth-shaped source computes <i>no growth</i> — <code>PureGravity.for</code> sets its four growth
+stretches to literal constants making the increment identically zero, so the growth tensor is the
+identity for all time and the file is a body-force experiment. That correction took
+<code>experiment_not_informative</code> from <b>18 to 4</b>.</p>
+</div>
+<div class="okbox">
+<h3 style="margin-top:0">End-to-end example &mdash; the bundled J2 control</h3>
+<p><b>Generated manifest</b> (no hand editing): element <code>C3D8</code>, kinematics
+<code>small strain</code>, NTENS 6 / NDI 3 / NSHR 3, NPROPS 4, NSTATV 1, unsymmetric false.<br>
+<span class="rule">NTENS provenance: "the source fills a 6-component tensor (a literal subscript 6 on a
+tensor array, which only a six-component tensor has), which is three-dimensional continuum".<br>
+Material provenance: "j2.inp <code>*MATERIAL J2</code>: 4 constants, <code>*DEPVAR 1</code> — the two
+names agree on j2".</span></p>
+<p><b>Generated loading</b>: four segments — <code>uniaxial</code> (10 inc), <code>simple_shear</code>
+(10), <code>uniaxial_reversed</code> (10), <code>uniaxial_hold</code> (5 inc over period 10.0).</p>
+<p><b>Activation search</b>: 5 Abaqus attempts on the original, amplitudes 1e-04 down to 2.5e-05, all
+activating; chosen amplitude <b>0.01</b>.</p>
+<p><b>Result</b>: all six gates true; the frozen fixture carries the whole cycle at one integration
+point — elastic at EQPLAS <i>exactly</i> 0 (S11 269.23), yield at 2.478519e-04, monotone flow to
+1840.71, <b>elastic unloading where S11 falls to 1571.48 with EQPLAS unchanged</b>, reverse yielding
+to &minus;932.61, reload to 1868.09. Both builds agree over all of it: worst stress relative
+<b>0.0</b>, worst state relative <b>0.0</b>.</p>
+</div>
+
+<h2>7. Numerical verification methodology</h2>
+<p class="rule">original UMAT &rarr; transformed UMAT &rarr; generated Abaqus experiment &rarr; nominal
+comparison &rarr; FD perturbation &rarr; normalisation &rarr; tolerance &rarr; accept / reject</p>
+<div class="card">
+<table>
+<tr><th>Step</th><th>What is done</th></tr>
+<tr><td>Reference</td><td>A centred difference of the <b>original compiled UMAT</b>, replayed offline from the recorded call. It shares no code path with the transform — the only common element is a driver containing no constitutive law.</td></tr>
+<tr><td>Perturbation</td><td>Small strain: <code>dSTRAN</code> per Voigt component. Finite strain: <code>dF = &epsilon;&middot;F</code> (pushed forward), because the Jacobian Abaqus asks for is that of the Jaumann rate of Kirchhoff stress over J.</td></tr>
+<tr><td>Step sizes</td><td>Eight: 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8. The <b>plateau</b> is the evidence, never a single step. An error flat in h is a wrong formula, not a truncation error — that distinction is what identified the missing Kirchhoff term.</td></tr>
+<tr><td>Smoothness gate</td><td>A state is used only if forward and backward one-sided differences agree. A kink's gap is the difference between two limiting derivatives and is of order one; round-off is not. Derivatives are never evaluated across yielding or damage initiation.</td></tr>
+<tr><td>Normalisation</td><td>Relative error against the Frobenius norm of the reference matrix, with entries below a near-zero fraction adjudicated separately rather than divided by.</td></tr>
+<tr><td>Near-zero handling</td><td>Entries that are exactly zero in the reference are counted as <code>near_zero_entries</code> and excluded from the relative measure — reported, not silently dropped. In the J2 state below, 24 of 36 entries are near-zero and 32 unresolved.</td></tr>
+<tr><td>Tolerance</td><td>Primal 1e-10 over the whole history. Tangent accepted on the plateau minimum with the stable range recorded. <b>No tolerance was relaxed this cycle.</b></td></tr>
+</table>
+</div>
+<h3>Representative DDSDDE comparison &mdash; bundled J2, plastic flow</h3>
+<div class="wrap"><table>
+<tr><th>h</th><th class="n">1e-1</th><th class="n">1e-2</th><th class="n">1e-3</th><th class="n">1e-4</th><th class="n">1e-5</th><th class="n">1e-6</th><th class="n">1e-7</th><th class="n">1e-8</th></tr>
+<tr><td>rel. error</td><td class="n mono">5.31e-04</td><td class="n mono">5.32e-06</td><td class="n mono">5.32e-08</td><td class="n mono">5.32e-10</td><td class="n mono"><b>8.25e-11</b></td><td class="n mono">4.50e-10</td><td class="n mono">7.42e-09</td><td class="n mono">5.90e-08</td></tr>
+</table></div>
+<p class="tk">h&sup2; truncation falling for four decades, a true minimum at h=1e-5, then round-off
+rising. Stable range <b>[1e-06, 1e-04]</b>. Regime <code>smooth_inelastic</code> at increment 4 —
+inside plastic flow, not at the yield kink — established because forward and backward one-sided
+differences agree to <b>2.12e-08</b> at h=1e-07. A second state at increment 2 gives 1.93e-11.</p>
+<h3>Representative parameter sensitivity <span class="pill p-flag">standalone</span></h3>
+<p>Bundled J2, four constants (E=210000, &nu;=0.3, SIGY0=250, H=2000), OTI vs centred difference of
+the untransformed build: <b>480 DSIGMA_DP entries, 75 measured, 0 disagreeing, worst relative error
+2.480e-08</b>. Across the 20-model collection: 84 parameter directions declared, 83 verified, 14540
+comparison rows, 14539 agreeing.</p>
+<div class="warnbox"><b>Worst observed accepted error.</b> Corpus DDSDDE, over entries that reached
+full acceptance: <b>7.50e-07</b> (<code>PureGrowth.for</code>), with 6.59e-07 and 2.31e-07 next.
+Best anywhere: 7.00e-16. For comparison, of the 19 entries at <code>tangent_not_verified</code>, 14
+have a best residual <i>below</i> 1e-6 — they are held by the two-smooth-states policy, not by
+disagreement.</div>
+
+<h2>8. GUI integration</h2>
+<div class="okbox"><b>Tested, not described.</b> Everything in this section was executed on
+15 Sept. Screenshots are captures of the running app, not mockups.</div>
+<h3>What runs today</h3>
+<ul>
+<li><b>The workbench (4-step guided workflow)</b> launches and renders — screenshots below, captured
+from the live app at 1366&times;768 and 1440&times;900 with <b>no horizontal overflow</b>.</li>
+<li><b>The unified 8-area interface</b> renders every one of its eight areas over the real pass12 data
+(244 entries), and its Streamlit shell draws its sidebar and 5 buttons when <code>render()</code> is
+called.</li>
+<li><b>Capability probing is live</b>: the Home panel detected Abaqus <b>2021.HF5</b>
+(<code>/usr/bin/abaqus information=release</code>, 314 licences issued, 29 in use) and
+<b>gfortran 9.4.0</b>.</li>
+</ul>
+<div class="flagbox"><b>Flag — the unified interface has no launchable entry point yet.</b>
+<code>unified_app.render(results_dir, work_dir)</code> takes arguments, so
+<code>streamlit run src/umat_oti/app/unified_app.py</code> starts and draws <b>nothing</b> (0
+markdown blocks, 0 buttons — tested). It needs a two-line launcher script. The shipped entry point
+is still <code>streamlit run scripts/app.py</code> (6 tabs, 19 markdown blocks — tested and working).
+<b>I have not driven a verification run end to end from a button.</b> That control is wired to the
+job manager but has only been exercised against a stubbed executor.</div>
+<h3>Home panel, read from pass12</h3>
+<div class="wrap"><table>
+<tr><th>What the user sees</th><th class="n">Value</th></tr>
+<tr><td>materials here</td><td class="n">244</td></tr>
+<tr><td>verified</td><td class="n">44</td></tr>
+<tr><td>reached the last stage</td><td class="n">57</td></tr>
+<tr><td>reached the last stage but not every check passed</td><td class="n">13</td></tr>
+<tr><td>waiting on something you can supply</td><td class="n">41</td></tr>
+<tr><td>waiting on work in this program</td><td class="n">123</td></tr>
+<tr><td>answered by the published file itself</td><td class="n">36</td></tr>
+</table></div>
+<p class="tk">Plain language throughout; no internal stage name, no NDI/NSHR, no Voigt ordering, no
+FD step sizes on the default view. The jargon guard finds <b>0 hits over 296 renders covering all 14
+stages</b>.</p>
+<h3>Safety property that was caught and fixed this week</h3>
+<p>The Residual Assembler screen was offering <b>all 237 materials as verified when 42 were</b>. It
+read <code>ServiceResult.ok</code> — which means <i>the call succeeded</i>, true of every entry the
+service looks at including the ones it refuses — as the verdict, while the service was correctly
+returning <code>eligible=False</code> with three named reasons. It now requires the six gates
+<i>and</i> the service; the screen offers exactly 42 and marks 195 experimental.</p>
+
+<h2>9. Evidence files for the presentation</h2>
+<div class="wrap"><table>
+<tr><th>Slide title</th><th>Path</th><th>Regenerate with</th><th>Takeaway</th></tr>
+<tr><td>Corpus status, all 391</td><td class="mono">paper_results/corpus/CORPUS_VERIFICATION.md<br>paper_results/corpus/corpus_registry.{json,csv}</td><td class="mono">python tools/build_corpus_registry.py --transform corpus_run/transform_all_pass12.json --abaqus corpus_run/pass12/results/store_verification.jsonl</td><td>Every one of the 391 has a named outcome and an owner; none is untested.</td></tr>
+<tr><td>Verification funnel</td><td class="mono">corpus_run/pass12/results/store_verification.jsonl<br>corpus_run/pass12.log</td><td class="mono">python tools/verify_store_in_abaqus.py --work-dir &hellip;/pass12/work --results-dir &hellip;/pass12/results --jobs 6 --mode inventory</td><td>244 entries ran; 44 clear all six gates.</td></tr>
+<tr><td>Tangent verified against finite differences</td><td class="mono">paper_results/figures/figure_tangent_verification.png</td><td class="mono">python tools/figures/build_tangent_figure.py</td><td>4 panels, 4 strain directions, 15 increments, <b>0 disagreeing</b>.</td></tr>
+<tr><td>Parameter sensitivities <span class="pill p-flag">standalone</span></td><td class="mono">paper_results/figures/figure_sensitivities.png<br>paper_results/tables/table5_&hellip;.csv</td><td class="mono">python tools/run_parameter_sensitivity_sweep.py<br>python tools/figures/build_sensitivity_figure.py</td><td>4 constants, 20 increments, 0 disagreeing rows.</td></tr>
+<tr><td>Higher-order derivatives</td><td class="mono">paper_results/figures/figure_higher_order_verification.png</td><td class="mono">python tools/figures/build_higher_order_figure.py</td><td>66 resolved + 474 independent zeros, worst 2.96e-11, 0 withheld.</td></tr>
+<tr><td>Where the corpus is blocked</td><td class="mono">paper_results/figures/figure_remaining_blockers.png</td><td class="mono">python tools/figures/build_acquisition_figures.py</td><td>Blockers are named per source, not pooled.</td></tr>
+<tr><td>Coverage across the collection</td><td class="mono">paper_results/figures/figure_collection_coverage.png<br>figure_verification_routes.png</td><td class="mono">python tools/figures/build_collection_figures.py</td><td>23 models verified by both routes, 12 by the Abaqus route only, 2 by neither.</td></tr>
+<tr><td>The interface a non-expert uses</td><td class="mono">paper_results/figures/figure_gui_source.png<br>_material / _request / _results / _products.png</td><td class="mono">python tools/figures/capture_gui_screenshots.py</td><td>Four steps, plain language, advanced settings collapsed; no overflow at laptop widths.</td></tr>
+<tr><td>Model-family coverage <span class="pill p-flag">new, derived</span></td><td class="mono">corpus_run/material_families.json</td><td class="rule">script in the session scratchpad; marker recorded per row</td><td>Growth is 38% of the corpus; plasticity has 0 through Abaqus.</td></tr>
+<tr><td>Frozen regression baseline</td><td class="mono">umat/baseline.json (57 entries)<br>Residual_Assembler/tests/fixtures/verified/*.json (10)</td><td class="mono">python tools/promote_verified_umats.py --results &hellip;/pass12/&hellip;.jsonl --work-dir &hellip;/pass12/work</td><td>Every fixture re-cut at the current transform; none carried over.</td></tr>
+</table></div>
+
+<h2>10. Final slide</h2>
+<div class="card">
+<h3>Completed this week</h3>
+<ul>
+<li>Two full corpus passes; <b>44</b> UMATs now clear all six evidence gates (was 42), <b>57</b> reach the verified rung.</li>
+<li>Transformer: <b>+7 sources, 0 lost</b>; refusals 154&rarr;147; forward leaks 22&rarr;11; refusal-path crashes 9&rarr;0.</li>
+<li>Root cause named for the crystal-plasticity family: a <b>32-byte stack overrun</b> — an undeclared <code>DDCMP</code> is an 8-byte scalar where the callee's dummy is a 40-byte derived type. Confirmed by repair, with vectorisation on.</li>
+<li>Versioned data contract 2.0.0 across both repositories, with validation tests on both sides.</li>
+<li>Evidence integrity: <b>28 of 62</b> rows in the largest failure cluster were found to be saying more than their evidence supported, and were re-classified.</li>
+</ul>
+<h3>Current blockers</h3>
+<ul>
+<li><b>63 primal disagreements</b> — the largest honest cluster, all confirmed as genuine routine-level differences.</li>
+<li><b>102 genuine UMATs the transformer refuses</b>, led by helper lifting (29) and remaining parse blind spots (20).</li>
+<li><b>Plasticity and crystal plasticity have zero corpus sources through Abaqus</b> — the two families least covered.</li>
+<li><b>No Abaqus-level parameter or state sensitivity</b> for any corpus source.</li>
+</ul>
+<h3>Planned before the next meeting</h3>
+<ul>
+<li>Work the 63 primal disagreements by confirmed root cause, not by magnitude.</li>
+<li>Settle the 14 tangent entries already below 1e-6 — establish whether they truly have one smooth state, without relaxing the tolerance.</li>
+<li>Add <code>SUM</code>/<code>PRODUCT</code> OTI overloads (~12 sources) and widen lift roots (~10).</li>
+<li>Give the unified interface a launchable entry point and drive one verification end to end from the button.</li>
+</ul>
+<h3>Decisions / help needed from David</h3>
+<ul>
+<li><b>Should parameter sensitivity be promoted to the Abaqus level?</b> Today it is standalone-only and therefore not verification under our own rule. Wiring it into the corpus verifier is real work; confirm it is wanted before we spend it.</li>
+<li><b>Is the corpus skew acceptable?</b> Growth is 149 of 391. We can report per-family rates, or de-weight the growth variants, but the choice changes every headline percentage.</li>
+<li><b>DOUBLE COMPLEX (9 sources):</b> recommend recording as a permanent documented limitation rather than building an OTI algebra over C to serve nine sources. Seeking agreement.</li>
+</ul>
+</div>
+
+<h2>Reproducibility flags</h2>
+<div class="warnbox">
+<ul style="margin:0">
+<li><b>Material-model family table (&sect;3) is new and derived for this report</b> by keyword evidence, not an established artefact. Markers recorded per row.</li>
+<li><b>The registry's <code>why_the_two_verified_numbers_differ</code> text is stale.</b> It describes pass11's append-only artefact; pass12 was written to a fresh directory (244 rows = 244 keys, 0 superseded). The 57-vs-44 gap is the gate reason, not appending. Cosmetic, but it should be corrected before the registry is quoted.</li>
+<li><b>Unlock estimates in &sect;4 are engineering judgement</b>, not measurements. Every count to their left is measured.</li>
+<li><b>"Ran in Abaqus" per family in &sect;3</b> is read from the registry's gate field; family assignment carries the caveat above.</li>
+<li>Everything else is from a command run on 15 Sept at commit <code>debb2a8</code> and is re-runnable with the commands in &sect;9.</li>
+</ul>
+</div>
