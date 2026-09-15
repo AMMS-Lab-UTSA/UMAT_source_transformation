@@ -71,7 +71,8 @@ def sensitivity_rows(rows: list[dict]) -> int:
 
 def report(new: dict[str, dict], old: dict[str, dict] | None,
            families: dict[str, str], regression_rows: list[dict] | None = None,
-           verification_rows: list[dict] | None = None) -> dict:
+           verification_rows: list[dict] | None = None,
+           families_basis: str = "not supplied") -> dict:
     d2 = {sid: row for sid, row in new.items() if row.get("adequately_specified") is True}
     excluded = {sid: row for sid, row in new.items() if row.get("adequately_specified") is not True}
     now = {sid for sid, row in d2.items() if accepted(row)}
@@ -143,7 +144,7 @@ def report(new: dict[str, dict], old: dict[str, dict] | None,
         "excluded_by_terminal_state": dict(excluded_terminal.most_common()),
         "excluded_without_an_external_or_duplicate_basis": excluded_not_external,
         "families_d2": {fam: dict(c) for fam, c in sorted(family_rows.items())},
-        "families_basis": "keyword markers in corpus_run/material_families.json (not a physics review)",
+        "families_basis": families_basis,
     }
 
 
@@ -201,15 +202,17 @@ def main() -> int:
     parser.add_argument("--markdown", type=Path)
     args = parser.parse_args()
     families = {}
+    basis = "not supplied"
     if args.families:
-        families = {row["source_id"]: row["family"]
-                    for row in json.loads(args.families.read_text())["rows"]}
+        data = json.loads(args.families.read_text())
+        families = {row["source_id"]: row["family"] for row in data["rows"]}
+        basis = f"{args.families.name}: {data.get('what_this_is', 'no description')}"
     def jsonl(path):
         return [json.loads(line) for line in path.read_text().splitlines()
                 if line.strip()] if path else None
     r = report(_records(args.registry),
                _records(args.previous) if args.previous else None, families,
-               jsonl(args.regression), jsonl(args.verification))
+               jsonl(args.regression), jsonl(args.verification), basis)
     text = markdown(args.label, r)
     if args.json_path:
         args.json_path.write_text(json.dumps(r, indent=2) + "\n")
