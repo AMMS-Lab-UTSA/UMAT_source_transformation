@@ -2,8 +2,17 @@
   "contracts": [
     {
       "frozen_at_fingerprint": "e4257779bd847cc4",
+      "gates_not_true": [
+        "abaqus_job_completed",
+        "all_requested_outputs_present",
+        "complete_history_finite",
+        "primal_agreed",
+        "derivatives_verified",
+        "mechanically_informative"
+      ],
       "id": "irfancn-abaqus-uel-elastic--uel-elastic--8e98b0b5",
-      "reaches_now": "original_job_failed",
+      "reaches_now": "manifest_refused",
+      "reaches_now_as_first_recorded": "original_job_failed",
       "reason": "this contract was frozen at transform fingerprint e4257779bd847cc4; at b0d27ee53c630500 the same source reaches 'original_job_failed', not 'verified'. original.sta was not written, so the analysis left no record; original.msg does not report an error count",
       "recorded_numbers_that_are_no_longer_evidence": {
         "states_agreeing": 3,
@@ -14,6 +23,25 @@
       "repository": "irfancn/Abaqus-UEL-elastic",
       "source_id": "irfancn__Abaqus-UEL-elastic/uel_elastic.for",
       "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "94a92c01814f107a",
+      "gates_not_true": [
+        "primal_agreed"
+      ],
+      "id": "irfancn-abaqus-umat-viscoelastic--umat-viscoelastic--c6ae96a7",
+      "reaches_now": "primal_mismatch_explained",
+      "reaches_now_as_first_recorded": "verified",
+      "reason": "this contract was frozen at transform fingerprint 94a92c01814f107a; at 94a92c01814f107a the same source reaches 'verified', not 'verified'. the original and the converted build differ because the original declares S at single precision and the OTI type is built over doubles. Put to a run: the original with those declarations alone widened to REAL*8 agrees with the converted build to 0.000e+00 over 280 increments, so what the two builds disagree about is the author's own rounding and not the model; agreed at all 4 states where a differ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 4,
+        "states_checked": 4,
+        "worst_stress_relative": 6.499165075259156e-05,
+        "worst_tangent_relative": 1.0022561322035677e-14
+      },
+      "repository": "irfancn/Abaqus-UMAT-viscoelastic",
+      "source_id": "irfancn__Abaqus-UMAT-viscoelastic/umat_viscoelastic.for",
+      "withdrawn_at_fingerprint": "94a92c01814f107a"
     },
     {
       "frozen_at_fingerprint": "e4257779bd847cc4",
@@ -61,6 +89,44 @@
       "withdrawn_at_fingerprint": "b0d27ee53c630500"
     },
     {
+      "frozen_at_fingerprint": "94a92c01814f107a",
+      "gates_not_true": [
+        "primal_agreed"
+      ],
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--382c124d",
+      "reaches_now": "primal_mismatch_explained",
+      "reaches_now_as_first_recorded": "verified",
+      "reason": "this contract was frozen at transform fingerprint 94a92c01814f107a; at 94a92c01814f107a the same source reaches 'verified', not 'verified'. the two builds differ by 2.334e-05, and this model differs from ITSELF by 3.734e-05 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 2,
+        "states_checked": 2,
+        "worst_stress_relative": 2.3336738968688736e-05,
+        "worst_tangent_relative": 3.6634166084957122e-09
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005-Visualization/BodyForce-Growth-2Stages.for",
+      "withdrawn_at_fingerprint": "94a92c01814f107a"
+    },
+    {
+      "frozen_at_fingerprint": "94a92c01814f107a",
+      "gates_not_true": [
+        "primal_agreed"
+      ],
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--7a9469c4",
+      "reaches_now": "primal_mismatch_explained",
+      "reaches_now_as_first_recorded": "verified",
+      "reason": "this contract was frozen at transform fingerprint 94a92c01814f107a; at 94a92c01814f107a the same source reaches 'verified', not 'verified'. the two builds differ by 2.100e-09, and this model differs from ITSELF by 2.362e-09 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 2,
+        "states_checked": 2,
+        "worst_stress_relative": 2.099711597329264e-09,
+        "worst_tangent_relative": 5.6780381194813956e-11
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/BodyForce-Growth-2Stages.for",
+      "withdrawn_at_fingerprint": "94a92c01814f107a"
+    },
+    {
       "frozen_at_fingerprint": "e4257779bd847cc4",
       "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--9a8233f1",
       "reaches_now": "tangent_not_verified",
@@ -106,6 +172,44 @@
       "withdrawn_at_fingerprint": "b0d27ee53c630500"
     },
     {
+      "frozen_at_fingerprint": "94a92c01814f107a",
+      "gates_not_true": [
+        "primal_agreed"
+      ],
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--165a97e5",
+      "reaches_now": "primal_mismatch_explained",
+      "reaches_now_as_first_recorded": "verified",
+      "reason": "this contract was frozen at transform fingerprint 94a92c01814f107a; at 94a92c01814f107a the same source reaches 'verified', not 'verified'. the two builds differ by 3.127e-08, and this model differs from ITSELF by 5.805e-03 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 4,
+        "states_checked": 4,
+        "worst_stress_relative": 3.1271218117836596e-08,
+        "worst_tangent_relative": 4.188094576350499e-08
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th001/PureGravity.for",
+      "withdrawn_at_fingerprint": "94a92c01814f107a"
+    },
+    {
+      "frozen_at_fingerprint": "94a92c01814f107a",
+      "gates_not_true": [
+        "primal_agreed"
+      ],
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--172b43f9",
+      "reaches_now": "primal_mismatch_explained",
+      "reaches_now_as_first_recorded": "verified",
+      "reason": "this contract was frozen at transform fingerprint 94a92c01814f107a; at 94a92c01814f107a the same source reaches 'verified', not 'verified'. the two builds differ by 2.746e-06, and this model differs from ITSELF by 5.266e-05 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 4,
+        "states_checked": 4,
+        "worst_stress_relative": 2.745924629714173e-06,
+        "worst_tangent_relative": 2.1534393168009516e-09
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th005/PureGravity.for",
+      "withdrawn_at_fingerprint": "94a92c01814f107a"
+    },
+    {
       "frozen_at_fingerprint": "e4257779bd847cc4",
       "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--2baebbe8",
       "reaches_now": "tangent_not_verified",
@@ -121,6 +225,25 @@
       "withdrawn_at_fingerprint": "b0d27ee53c630500"
     },
     {
+      "frozen_at_fingerprint": "94a92c01814f107a",
+      "gates_not_true": [
+        "primal_agreed"
+      ],
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--32df7d71",
+      "reaches_now": "primal_mismatch_explained",
+      "reaches_now_as_first_recorded": "verified",
+      "reason": "this contract was frozen at transform fingerprint 94a92c01814f107a; at 94a92c01814f107a the same source reaches 'verified', not 'verified'. the two builds differ by 3.127e-08, and this model differs from ITSELF by 5.805e-03 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 4,
+        "states_checked": 4,
+        "worst_stress_relative": 3.1271218117836596e-08,
+        "worst_tangent_relative": 4.188094576350499e-08
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGravity.for",
+      "withdrawn_at_fingerprint": "94a92c01814f107a"
+    },
+    {
       "frozen_at_fingerprint": "e4257779bd847cc4",
       "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--4711f8fc",
       "reaches_now": "primal_disagreed",
@@ -134,6 +257,139 @@
       "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
       "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/PureGravity.for",
       "withdrawn_at_fingerprint": "b0d27ee53c630500"
+    },
+    {
+      "frozen_at_fingerprint": "94a92c01814f107a",
+      "gates_not_true": [
+        "primal_agreed"
+      ],
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--473589a5",
+      "reaches_now": "primal_mismatch_explained",
+      "reaches_now_as_first_recorded": "verified",
+      "reason": "this contract was frozen at transform fingerprint 94a92c01814f107a; at 94a92c01814f107a the same source reaches 'verified', not 'verified'. the two builds differ by 1.417e-08, and this model differs from ITSELF by 1.860e-03 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 4,
+        "states_checked": 4,
+        "worst_stress_relative": 1.4173430665206867e-08,
+        "worst_tangent_relative": 1.828932300747658e-08
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGravity.for",
+      "withdrawn_at_fingerprint": "94a92c01814f107a"
+    },
+    {
+      "frozen_at_fingerprint": "94a92c01814f107a",
+      "gates_not_true": [
+        "primal_agreed"
+      ],
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--53b3211f",
+      "reaches_now": "primal_mismatch_explained",
+      "reaches_now_as_first_recorded": "verified",
+      "reason": "this contract was frozen at transform fingerprint 94a92c01814f107a; at 94a92c01814f107a the same source reaches 'verified', not 'verified'. the two builds differ by 1.255e-08, and this model differs from ITSELF by 2.897e-03 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 4,
+        "states_checked": 4,
+        "worst_stress_relative": 1.2551317627593694e-08,
+        "worst_tangent_relative": 1.937213600941555e-08
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th01/PureGravity.for",
+      "withdrawn_at_fingerprint": "94a92c01814f107a"
+    },
+    {
+      "frozen_at_fingerprint": "94a92c01814f107a",
+      "gates_not_true": [
+        "primal_agreed"
+      ],
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--58d1d3e0",
+      "reaches_now": "primal_mismatch_explained",
+      "reaches_now_as_first_recorded": "verified",
+      "reason": "this contract was frozen at transform fingerprint 94a92c01814f107a; at 94a92c01814f107a the same source reaches 'verified', not 'verified'. the two builds differ by 5.446e-06, and this model differs from ITSELF by 1.074e-04 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 4,
+        "states_checked": 4,
+        "worst_stress_relative": 5.445669422106039e-06,
+        "worst_tangent_relative": 4.37929235246065e-09
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGravity.for",
+      "withdrawn_at_fingerprint": "94a92c01814f107a"
+    },
+    {
+      "frozen_at_fingerprint": "94a92c01814f107a",
+      "gates_not_true": [
+        "primal_agreed"
+      ],
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--6934cbfc",
+      "reaches_now": "primal_mismatch_explained",
+      "reaches_now_as_first_recorded": "verified",
+      "reason": "this contract was frozen at transform fingerprint 94a92c01814f107a; at 94a92c01814f107a the same source reaches 'verified', not 'verified'. the two builds differ by 3.186e-05, and this model differs from ITSELF by 1.307e-04 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 4,
+        "states_checked": 4,
+        "worst_stress_relative": 3.185742904271599e-05,
+        "worst_tangent_relative": 4.580714913440997e-09
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/PureGravity.for",
+      "withdrawn_at_fingerprint": "94a92c01814f107a"
+    },
+    {
+      "frozen_at_fingerprint": "94a92c01814f107a",
+      "gates_not_true": [
+        "primal_agreed"
+      ],
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--88d6fa35",
+      "reaches_now": "primal_mismatch_explained",
+      "reaches_now_as_first_recorded": "verified",
+      "reason": "this contract was frozen at transform fingerprint 94a92c01814f107a; at 94a92c01814f107a the same source reaches 'verified', not 'verified'. the two builds differ by 2.768e-09, and this model differs from ITSELF by 2.575e-04 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 4,
+        "states_checked": 4,
+        "worst_stress_relative": 2.7677345050358277e-09,
+        "worst_tangent_relative": 5.081773154300109e-09
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for",
+      "withdrawn_at_fingerprint": "94a92c01814f107a"
+    },
+    {
+      "frozen_at_fingerprint": "94a92c01814f107a",
+      "gates_not_true": [
+        "primal_agreed"
+      ],
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--e17c0dc7",
+      "reaches_now": "primal_mismatch_explained",
+      "reaches_now_as_first_recorded": "verified",
+      "reason": "this contract was frozen at transform fingerprint 94a92c01814f107a; at 94a92c01814f107a the same source reaches 'verified', not 'verified'. the two builds differ by 3.186e-05, and this model differs from ITSELF by 1.307e-04 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 4,
+        "states_checked": 4,
+        "worst_stress_relative": 3.185742904271599e-05,
+        "worst_tangent_relative": 4.580714913440997e-09
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/PureGravity.for",
+      "withdrawn_at_fingerprint": "94a92c01814f107a"
+    },
+    {
+      "frozen_at_fingerprint": "94a92c01814f107a",
+      "gates_not_true": [
+        "primal_agreed"
+      ],
+      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--ead57b5c",
+      "reaches_now": "primal_mismatch_explained",
+      "reaches_now_as_first_recorded": "verified",
+      "reason": "this contract was frozen at transform fingerprint 94a92c01814f107a; at 94a92c01814f107a the same source reaches 'verified', not 'verified'. the two builds differ by 5.446e-06, and this model differs from ITSELF by 1.074e-04 when the same source is compiled so that the same mathematics is computed differently (reassociation). The conversion is no further from the original than the original is from another equally valid ordering of its own operations, so the difference is this model's conditioning and not the transform's; agreed at all ",
+      "recorded_numbers_that_are_no_longer_evidence": {
+        "states_agreeing": 4,
+        "states_checked": 4,
+        "worst_stress_relative": 5.445669422106039e-06,
+        "worst_tangent_relative": 4.37929235246065e-09
+      },
+      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
+      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/PureGravity.for",
+      "withdrawn_at_fingerprint": "94a92c01814f107a"
     },
     {
       "frozen_at_fingerprint": "e4257779bd847cc4",
@@ -436,7 +692,7 @@
       "withdrawn_at_fingerprint": "b0d27ee53c630500"
     }
   ],
-  "count": 29,
+  "count": 42,
   "schema": "umat-oti/withdrawn-contracts/1.0",
   "what_this_is": "Contracts that used to stand in this collection and were taken down because they could not be reproduced at the current transform fingerprint. A frozen contract is a claim that a regression may be compared against; one measured against a transform that no longer exists is not. The numbers each carried are recorded here as what they now are -- a record of what used to be claimed, not evidence about the material.",
   "withdrawn_at_fingerprint": "94a92c01814f107a",

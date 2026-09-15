@@ -66,6 +66,12 @@ INTERNAL: tuple[str, ...] = (
     "original_job_failed",
     "transformed_job_failed",
     "primal_disagreed",
+    #: The two builds disagree and a control measured WHY. Internal, and not
+    #: verified: an explanation for a disagreement is not agreement. It lived
+    #: briefly as an override that set the primal gate true, and thirteen
+    #: entries carrying a false gate were counted as verified, promoted into
+    #: the frozen baseline and offered to the Residual Assembler.
+    "primal_mismatch_explained",
     #: Every paired call in the probe record returned bit-identical outputs and
     #: the history comparison reported a difference anyway. Whatever those
     #: entries are, they are not evidence that a converted routine computes a
@@ -105,6 +111,7 @@ FROM_STAGE: dict[str, str] = {
     "transformed_job_failed": "transformed_job_failed",
     "both_builds_non_finite": "primal_disagreed",
     "primal_disagreed": "primal_disagreed",
+    "primal_mismatch_explained": "primal_mismatch_explained",
     "arguments_diverged_before_the_routine":
         "arguments_diverged_before_the_routine",
     "disagreement_not_in_any_recorded_call":
@@ -137,12 +144,59 @@ MEANING: dict[str, str] = {
     "published_stub_no_constitutive_content":
         "the author published the interface and no material model: it assigns "
         "no stress, no tangent, and calls nothing",
+    "primal_mismatch_explained":
+        "the two builds compute different stress and a control measured why -- "
+        "which says where to look, and is not agreement",
 }
 
 
 def meaning_of(state: str) -> str:
     """The one-line gloss for a state, or "" where none is written yet."""
     return MEANING.get(str(state or ""), "")
+
+
+#: Every gate a case must read TRUE on before it may be called verified,
+#: promoted into the frozen baseline, or offered to the Residual Assembler.
+ACCEPTANCE_GATES: tuple[str, ...] = (
+    "abaqus_job_completed", "all_requested_outputs_present",
+    "complete_history_finite", "primal_agreed", "derivatives_verified",
+    "mechanically_informative")
+
+
+def stage_supported_by_gates(row: dict) -> str:
+    """A result row's stage, corrected where its own evidence contradicts it.
+
+    ONE rule, used by the registry, promotion and the interface, so the three
+    cannot disagree about what 'verified' means. A row may say ``verified``
+    while its evidence block holds a gate reading false: thirteen did, because
+    a control measured WHY the two builds differ and the harness read that
+    explanation as agreement. An explanation for a disagreement is not
+    agreement.
+
+    Only an evidence block that CONTRADICTS the word demotes it. A row with no
+    evidence block at all predates the gates, and demoting on an absence would
+    rewrite every older row; currency checks are what catch those.
+    """
+    stage = str(row.get("stage") or "")
+    if stage != "verified":
+        return stage
+    measured = row.get("evidence")
+    if not measured:
+        return stage
+    failing = [gate for gate in ACCEPTANCE_GATES
+               if measured.get(gate) is not True]
+    if not failing:
+        return stage
+    if failing == ["primal_agreed"] and measured.get(
+            "primal_difference_explained_by_a_measured_control") is True:
+        return "primal_mismatch_explained"
+    if "primal_agreed" in failing:
+        return "primal_disagreed"
+    if "derivatives_verified" in failing:
+        return "tangent_not_verified"
+    if "mechanically_informative" in failing:
+        return "experiment_not_informative"
+    return "primal_disagreed"
 
 
 @dataclass(frozen=True)

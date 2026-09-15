@@ -57,7 +57,8 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "tools"))
 
-from export_residual_fixture import (REQUIRED_GATES,  # noqa: E402
+from export_residual_fixture import (ACCEPTANCE_GATES,  # noqa: E402
+                                    REQUIRED_GATES,
                                      at_either_level, not_a_number)
 
 VERIFIED = "verified"
@@ -212,11 +213,16 @@ def why_this_may_not_be_promoted(row: dict, work_root: Path) -> list:
             f"{source}: complete_finite_verification_run is "
             f"{at_either_level(row, 'complete_finite_verification_run')!r}")
     measured = row.get("evidence") or {}
-    for gate in REQUIRED_GATES:
+    # ALL SIX, not the three that say a history exists. Promotion used to check
+    # the three, so an entry whose primal gate read false -- with a control
+    # measuring why, which is an explanation and not agreement -- was promoted
+    # into the baseline and offered as a verified material.
+    for gate in ACCEPTANCE_GATES:
         if measured.get(gate) is not True:
             problems.append(
                 f"{source}: evidence.{gate}="
-                f"{measured.get(gate, 'not measured')!r}")
+                f"{measured.get(gate, 'not measured')!r}, and every one of the "
+                f"six gates must read true before a case may be promoted")
     grouping = at_either_level(row, "history_grouping") or {}
     for side in ("original", "transformed"):
         payload = grouping.get(side)
@@ -585,12 +591,21 @@ def withdrawals(root: Path, standing: dict, promoted_ids: set, rows: list,
                 f"it cannot be reproduced, NOT because it was refused -- "
                 f"no evidence in this run speaks against the material")
         else:
-            now_at = str(row.get("stage") or "")
+            # The stage the row's own GATES support, not the word it carries.
+            # A withdrawal reading "reaches 'verified'" contradicts itself, and
+            # thirteen of them did: their rows said verified while a gate read
+            # false with a control explaining why.
+            from umat_oti.abaqus.terminal_states import stage_supported_by_gates
+            now_at = stage_supported_by_gates(row)
+            failing = [gate for gate in ACCEPTANCE_GATES
+                       if (row.get("evidence") or {}).get(gate) is not True]
             reason = (
                 f"this contract was frozen at transform fingerprint "
                 f"{frozen_at or 'an unrecorded one'}; at {fingerprint} the "
-                f"same source reaches {now_at!r}, not {VERIFIED!r}. "
-                f"{str(row.get('reason') or '')[:400]}")
+                f"same source reaches {now_at!r}, not {VERIFIED!r}"
+                + (f", with {', '.join(failing)} not reading true"
+                   if failing else "")
+                + f". {str(row.get('reason') or '')[:400]}")
         if apply:
             taken.append(withdraw(identifier, root / identifier, standing,
                                   reason, now_at, fingerprint))
@@ -658,7 +673,11 @@ def main(argv: Optional[list[str]] = None) -> int:
         record = json.loads(line)
         latest[str(record.get("key") or record.get("source") or line)] = record
     rows = list(latest.values())
-    verified = [row for row in rows if row.get("stage") == VERIFIED]
+    # Verified by the GATES. A row carrying the word with a gate reading false
+    # is not a candidate for promotion however its stage is spelled.
+    from umat_oti.abaqus.terminal_states import stage_supported_by_gates
+    verified = [row for row in rows
+                if stage_supported_by_gates(row) == VERIFIED]
     if args.limit:
         verified = verified[:args.limit]
 
@@ -742,6 +761,25 @@ def main(argv: Optional[list[str]] = None) -> int:
         history.update({entry["id"]: entry for entry in taken})
         for identifier in promoted_ids:
             history.pop(identifier, None)
+        # An accumulated record says where the material stood WHEN it was
+        # withdrawn. If this run has a row for it, that is refreshed from the
+        # row's own gates, so no record keeps a stage the evidence no longer
+        # supports -- thirteen used to read "reaches 'verified'" beside the
+        # word "withdrawn", because they were withdrawn before the gates, not
+        # the stage string, decided what verified means.
+        from umat_oti.abaqus.terminal_states import stage_supported_by_gates
+        by_source = {str(r.get("source") or ""): r for r in rows}
+        for entry in history.values():
+            row = by_source.get(str(entry.get("source_id") or ""))
+            if row is None:
+                continue
+            current = stage_supported_by_gates(row)
+            if current != entry.get("reaches_now"):
+                entry["reaches_now_as_first_recorded"] = entry.get("reaches_now")
+                entry["reaches_now"] = current
+                failing = [gate for gate in ACCEPTANCE_GATES
+                           if (row.get("evidence") or {}).get(gate) is not True]
+                entry["gates_not_true"] = failing
         contracts = [history[key] for key in sorted(history)]
         # Written whenever the file exists, not only when it has contents: a
         # material that was withdrawn and is now promoted again STANDS, and

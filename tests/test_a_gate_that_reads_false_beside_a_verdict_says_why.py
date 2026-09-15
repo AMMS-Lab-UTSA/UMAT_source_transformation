@@ -78,16 +78,30 @@ def test_the_raw_comparison_flag_is_never_rewritten():
     assert 'evidence"]["primal_agreed"]' not in source
 
 
-def test_the_explanation_is_a_measurement_and_not_a_tolerance():
-    """``seen["primal_agrees"] = True`` is reached only after a control has
-    RUN and returned numbers -- association.get("ran") and .get("measured")
-    both true, and the model's own spread at least as large as the builds'."""
+def test_an_explanation_never_rewrites_the_primal_gate():
+    """A measured explanation for a disagreement is not agreement.
+
+    The harness used to set ``seen["primal_agrees"] = True`` once a control had
+    measured why the two builds differ, and thirteen entries carrying a false
+    primal gate were counted verified, frozen into the baseline and offered to
+    the Residual Assembler. The explanation is still recorded -- it says where
+    to look -- but it routes to the internal rung primal_mismatch_explained and
+    never touches the gate.
+    """
     vs = _verifier()
     source = pathlib.Path(vs.__file__).read_text()
+    assert 'seen["primal_agrees"] = True' not in source
+    assert source.count('seen["primal_explained"] = True') == 2
     guard = source[source.index("own = association.get("):]
-    guard = guard[:guard.index('seen["primal_agrees"] = True')]
+    guard = guard[:guard.index('seen["primal_explained"] = True')]
     assert 'association.get("ran")' in guard
     assert 'association.get("measured")' in guard
     assert "mine <= own" in guard
-    # and no tolerance is widened anywhere near it
     assert "tolerance" not in guard
+    evidence = vs.StageEvidence(
+        material_found=True, original_completed=True, transformed_completed=True,
+        primal_agrees=False, primal_explained=True,
+        mechanically_informative=True, tangent_verified=True)
+    assert vs.classify_stage(evidence) == vs.PRIMAL_MISMATCH_EXPLAINED
+    assert vs.classify_stage(evidence) != vs.VERIFIED
+

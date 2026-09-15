@@ -185,21 +185,31 @@ def test_a_census_over_a_field_that_stops_covering_its_records_stops_the_build()
         "whole finding this module exists for")
 
 
-def test_the_three_verified_numbers_are_all_named_and_reconcile():
+def test_there_is_one_verified_number_and_every_source_is_in_one_class():
+    """Verified means every one of the six gates reads true, and nothing else.
+
+    This used to assert THREE verified numbers that reconciled, the third being
+    entries whose primal gate read false with a control explaining why. That
+    third number was the defect: an explanation for a disagreement is not
+    agreement, and those entries are internal failures. The registry now
+    publishes one verified number and a partition of all 391 with no overlap.
+    """
     summary = registry()["summary"]
     recon = summary["verification_file_reconciliation"]
-    raw = recon["rows_at_stage_verified_in_the_whole_file"]
-    rung = recon["store_entries_that_verified"]
-    strict = recon["store_entries_that_verified_on_every_gate"]
-
-    assert raw >= rung >= strict, (raw, rung, strict)
-    assert rung == summary["fully_verified"]
-    assert strict == summary["verified_on_every_gate"]
-    # raw - rung is the double counting; rung - strict is the gate failures.
-    assert raw - rung == len(recon["verified_rows_that_double_count_a_source"])
-    assert rung - strict == len(
-        summary["reached_the_verified_rung_but_failed_a_gate"])
-
+    verified = recon["store_entries_that_verified"]
+    assert verified == summary["fully_verified"]
+    assert verified == summary["verified_on_every_gate"]
+    assert verified == recon["store_entries_that_verified_on_every_gate"]
+    kinds = summary["by_kind"]
+    assert set(kinds) == {"verified", "external", "internal"}
+    assert kinds["verified"] == verified
+    assert sum(kinds.values()) == summary["acquired"]
+    demoted = recon["rows_demoted_because_their_own_evidence_contradicts_the_word"]
+    assert recon["rows_whose_file_stage_says_verified"] == verified + len(demoted)
+    records = {r["source_id"]: r for r in registry()["records"]}
+    for name in demoted:
+        assert records[name]["terminal_state"] != "fully_verified", name
+        assert records[name]["kind"] == "internal", name
 
 def test_the_strict_number_is_never_larger_than_the_rung():
     """A source cannot pass every gate without reaching the rung."""
@@ -209,18 +219,15 @@ def test_the_strict_number_is_never_larger_than_the_rung():
                 record["source_id"]
 
 
-def test_the_report_names_all_three_and_says_which_to_quote():
+def test_the_report_publishes_one_verified_number():
     if not REPORT.is_file():
         pytest.skip("the report has not been built")
     text = REPORT.read_text(encoding="utf-8")
     recon = registry()["summary"]["verification_file_reconciliation"]
-    assert "counted three ways" in text
-    for number in (recon["rows_at_stage_verified_in_the_whole_file"],
-                   recon["store_entries_that_verified"],
-                   recon["store_entries_that_verified_on_every_gate"]):
-        assert str(number) in text, number
-    assert "is the number to quote" in text
-    assert "not established" in text
-    for name in (registry()["summary"]
-                 ["reached_the_verified_rung_but_failed_a_gate"]):
-        assert name.split(" (")[0] in text, name
+    assert "One verified number" in text
+    assert "counted three ways" not in text
+    assert str(recon["store_entries_that_verified"]) in text
+    assert "primal_mismatch_explained" in text
+    for name in recon["rows_demoted_because_their_own_evidence_contradicts_the_word"]:
+        assert name in text, name
+

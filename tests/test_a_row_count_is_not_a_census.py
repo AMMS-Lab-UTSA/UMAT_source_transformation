@@ -72,32 +72,22 @@ def test_the_rows_in_the_file_add_up_to_the_sources_the_registry_counts():
             ) == r["distinct_sources_in_the_file"]
 
 
-def test_the_two_verified_numbers_are_reconciled_and_the_smaller_one_is_right():
-    """A count of ROWS and a count of SOURCES are different numbers, and only
-    the second is a verification rate.
+def test_a_row_count_is_not_the_verified_count():
+    """A count of ROWS carrying the word and a count of VERIFIED SOURCES are
+    different numbers, and only the second is a verification rate.
 
-    pass10 made the difference visible: 44 rows at stage `verified` against 41
-    sources, because the results file is append-only and three sources
-    verified under the old store and again under the new one. pass11 was
-    written fresh -- 237 rows, 237 distinct keys, no resumed pass underneath
-    it -- so the two numbers coincide.
-
-    What is asserted is therefore the ARITHMETIC, which holds either way, and
-    that the registry publishes the source count. Pinning "there must be a
-    double count" would make this test fail on the cleanest input it can be
-    given, which is the wrong way round."""
+    pass10 showed it through duplication (an append-only file counted three
+    sources twice). pass12 shows it a second way: 57 rows carry the word
+    'verified' and 13 of them hold a gate reading false in their own evidence.
+    What is asserted is the arithmetic, which holds whichever cause is present.
+    """
     r = reconciliation()
     double = r["verified_rows_that_double_count_a_source"]
-    assert (r["store_entries_that_verified"] + len(double)
-            == r["rows_at_stage_verified_in_the_whole_file"])
+    demoted = r["rows_demoted_because_their_own_evidence_contradicts_the_word"]
+    assert (r["store_entries_that_verified"] + len(double) + len(demoted)
+            == r["rows_whose_file_stage_says_verified"])
     assert summary()["fully_verified"] == r["store_entries_that_verified"]
-    if double:
-        assert r["why_the_two_verified_numbers_differ"]
-    else:
-        assert r["rows_at_a_superseded_store_fingerprint"] == 0, (
-            "no verified row double-counts a source, so no row in the file "
-            "may be about a store that has since been rebuilt either")
-
+    assert "there_is_one_verified_number" in r
 
 def test_neither_the_row_key_nor_the_digest_could_have_been_the_identity():
     """The key over-counts and the digest under-counts, so the path inside the

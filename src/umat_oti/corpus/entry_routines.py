@@ -553,6 +553,57 @@ class OutputEvidence:
                 "where_it_searched": self.where_it_searched}
 
 
+def _author_output_names(source: str, form: str,
+                         path: Optional[Path]) -> list:
+    """The author's own names for STRESS and DDSDDE, with the span they hold in.
+
+    The Abaqus UMAT interface is positional: the first dummy argument IS the
+    stress and the third IS the tangent, whatever the author calls them.
+    ``sahmotaman/TMM-FE-Simulation`` writes ``subroutine umat(sigma, sv, C,
+    ...)`` and assigns ``sigma`` and ``C``; a search for the literal names found
+    nothing and the file read as having no stress update at all, while the
+    classifier -- which already reads the interface by position -- called it a
+    genuine UMAT. The two disagreed about the same file.
+
+    Each span runs from the UMAT header to the next unit's header, so an
+    unrelated local called ``C`` in another routine cannot count.
+    """
+    try:
+        units = sorted(program_units(source, form, path), key=lambda u: u.line)
+    except Exception:                              # pragma: no cover - guard
+        return []
+    spans = []
+    for index, unit in enumerate(units):
+        # Only a unit that IS the Abaqus UMAT interface -- name and argument
+        # count -- has a positional stress and tangent. adtzlr/ttb defines
+        # `umat(Siso_arr, C4iso_arr, F_arr, E_arr)`, four arguments, a routine
+        # of its own that shares the name; mapping by position there read its
+        # first argument as a stress and was a false positive.
+        if unit.matches_interface() != "UMAT" or len(unit.arguments) < 3:
+            continue
+        end = units[index + 1].line if index + 1 < len(units) else 10 ** 9
+        names = {}
+        if unit.arguments[0].upper() != "STRESS":
+            names[unit.arguments[0].upper()] = "STRESS"
+        if unit.arguments[2].upper() != "DDSDDE":
+            names[unit.arguments[2].upper()] = "DDSDDE"
+        if names:
+            spans.append((unit.line, end, names))
+    return spans
+
+
+def _author_named_output(text: str, line: int, spans: list) -> str:
+    """STRESS or DDSDDE if this line assigns the author's name for one."""
+    for start, end, names in spans:
+        if not start <= line < end:
+            continue
+        found = re.match(r"^\s*(?:\d+\s+)?([A-Za-z_]\w*)\s*(?:\([^=]*\))?\s*=(?!=)",
+                         text)
+        if found and found.group(1).upper() in names:
+            return names[found.group(1).upper()]
+    return ""
+
+
 def umat_outputs_written(source: str, form: str = "",
                          path: Optional[Path] = None) -> OutputEvidence:
     """Whether this file ever assigns the two outputs a UMAT must return.
@@ -569,13 +620,17 @@ def umat_outputs_written(source: str, form: str = "",
     calls = read = 0
     first = ""
     first_line = 0
+    spans = _author_output_names(source, form, path)
     for logical in logical_lines_from_text(source, form):
         text = getattr(logical, "text", str(logical))
         numbers = getattr(logical, "line_numbers", ()) or ()
         read += 1
         match = _WRITES_OUTPUT.match(text)
-        if match:
-            if match.group(1).upper() == "STRESS":
+        which = match.group(1).upper() if match else ""
+        if not which and spans and numbers:
+            which = _author_named_output(text, numbers[0], spans)
+        if which:
+            if which == "STRESS":
                 stress = True
             else:
                 ddsdde = True

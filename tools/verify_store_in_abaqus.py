@@ -133,6 +133,18 @@ from umat_oti.store import TransformStore                               # noqa: 
 #: compute the same stress" was a claim the evidence underneath did not carry.
 ARGUMENTS_DIVERGED = "arguments_diverged_before_the_routine"
 
+#: The two builds disagree and a CONTROL measured why -- the author declared a
+#: variable at single precision, or the model differs from itself by more than
+#: the builds differ when its own arithmetic is reordered.
+#:
+#: INTERNAL, and NOT verified. This rung existed for a while as an override
+#: that set primal_agrees true, so thirteen entries carrying a false gate were
+#: counted as verified, promoted into the frozen baseline, and offered to the
+#: Residual Assembler. A measured explanation for a disagreement is not
+#: agreement. The explanation is worth having -- it says where to look -- but
+#: the gate stays false and the entry stays ours until the difference is gone.
+PRIMAL_MISMATCH_EXPLAINED = "primal_mismatch_explained"
+
 #: INTERNAL, and about this harness. Every paired call in the probe record
 #: returned bit-identical outputs and the history comparison reported a
 #: difference anyway. Twelve entries in pass10 are in this shape. Whatever
@@ -150,6 +162,7 @@ STAGES: tuple[str, ...] = (
     "original_job_failed",
     "transformed_job_failed",
     "primal_disagreed",
+    PRIMAL_MISMATCH_EXPLAINED,
     ARGUMENTS_DIVERGED,
     DISAGREEMENT_NOT_IN_ANY_CALL,
     "derivative_truncated",
@@ -282,6 +295,12 @@ class StageEvidence:
     transformed_completed: bool = False
     #: None when the comparison never ran.
     primal_agrees: Optional[bool] = None
+    #: A control RAN and measured why the two builds differ -- the author's own
+    #: single precision, or the model's own sensitivity to reordering. It never
+    #: makes primal_agrees true. An explanation for a disagreement is not
+    #: agreement, and an entry carrying one is an internal failure with a named
+    #: cause, not a verification.
+    primal_explained: bool = False
     #: What the recorded CALLS say about a disagreement the histories report.
     #: A verdict from :mod:`umat_oti.abaqus.call_isolation`, or "" when the
     #: probe records were not there to ask.
@@ -332,6 +351,8 @@ def classify_stage(evidence: StageEvidence) -> str:
             return ARGUMENTS_DIVERGED
         if evidence.call_isolation == call_isolation.NO_DIVERGENCE:
             return DISAGREEMENT_NOT_IN_ANY_CALL
+        if evidence.primal_explained:
+            return PRIMAL_MISMATCH_EXPLAINED
         return "primal_disagreed"
     # Before the derivative work, not after it. There is no reason to spend a
     # replay ladder on an experiment that has not been shown to exercise the
@@ -4055,7 +4076,11 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         if control:
             record["precision_control"] = control
         if control.get("agrees"):
-            seen["primal_agrees"] = True
+            # The GATE IS NOT REWRITTEN. The two builds did not agree, and a
+            # control that explains why does not turn a disagreement into
+            # agreement. seen["primal_explained"] carries the explanation to
+            # the ladder, which routes it to its own internal rung.
+            seen["primal_explained"] = True
             precision_note = control["reason"]
             record["primal"]["explained_by_declared_precision"] = True
             record["evidence"][
@@ -4081,7 +4106,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             if (association.get("ran") and association.get("measured")
                     and own is not None and mine is not None
                     and mine <= own):
-                seen["primal_agrees"] = True
+                seen["primal_explained"] = True
                 precision_note = (
                     f"the two builds differ by {mine:.3e}, and this model "
                     f"differs from ITSELF by {own:.3e} when the same source is "

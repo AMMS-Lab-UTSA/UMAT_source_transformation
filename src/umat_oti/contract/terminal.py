@@ -112,6 +112,10 @@ PUBLISHED_OWNERS: dict = {
     "original_job_failed": "INTERNAL",
     "transformed_job_failed": "INTERNAL",
     "primal_disagreed": "INTERNAL",
+    # The two builds disagree and a control measured WHY. Never verified: an
+    # explanation for a disagreement is not agreement. Thirteen entries were
+    # carried across this boundary as verified before the rung existed.
+    "primal_mismatch_explained": "INTERNAL",
     "disagreement_not_in_any_recorded_call": "INTERNAL",
     "derivative_truncated": "INTERNAL",
     "tangent_not_verified": "INTERNAL",

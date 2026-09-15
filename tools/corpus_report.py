@@ -123,6 +123,10 @@ FROM_ABAQUS_STAGE: dict[str, str] = {
     # that ran two Abaqus analyses as one that never got out of the gate.
     "arguments_diverged_before_the_routine": "abaqus_transformed_passed",
     "disagreement_not_in_any_recorded_call": "abaqus_transformed_passed",
+    # Both builds ran and a control measured WHY they differ. Same rung as a
+    # plain disagreement -- the explanation says where to look, not how far the
+    # case got, and it is not agreement.
+    "primal_mismatch_explained": "abaqus_transformed_passed",
 }
 
 

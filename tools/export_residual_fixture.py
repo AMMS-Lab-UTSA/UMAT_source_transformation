@@ -62,6 +62,20 @@ SCHEMA = "umat-oti/residual-fixture/1"
 REQUIRED_GATES = ("abaqus_job_completed", "all_requested_outputs_present",
                   "complete_history_finite")
 
+#: Every gate a case must read TRUE on before it may be CALLED verified,
+#: promoted into the frozen baseline, or offered to the Residual Assembler as a
+#: verified material.
+#:
+#: All six, and the difference from REQUIRED_GATES above is the whole point.
+#: Those three ask whether a history exists to freeze. These six ask whether
+#: the case was verified, which is a stronger question and the only one that
+#: may be answered with the word. Promotion checked the three, so thirteen
+#: entries whose primal gate read FALSE -- with a control measuring why, which
+#: is an explanation and not agreement -- were promoted into the baseline and
+#: offered as verified materials. Nothing may pass on an explained false, an
+#: absent key, a null, or an inferred value.
+from umat_oti.abaqus.terminal_states import ACCEPTANCE_GATES  # noqa: E402
+
 #: The arrays in a carried increment that must be numbers. ``ddsdde`` is in
 #: the list: a fixture whose stress is finite and whose tangent is not would
 #: freeze a NaN that only shows up once somebody assembles a stiffness.

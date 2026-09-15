@@ -30,7 +30,11 @@ from promote_verified_umats import (PromotionRefused,  # noqa: E402
                                     why_this_may_not_be_promoted)
 from umat_oti.app.corpus_view import EVIDENCE_GATES  # noqa: E402
 
-CORPUS = REPO / "tests" / "fixtures" / "corpus"
+# ``corpus`` is the older control, kept as it was: it predates the
+# informativeness gate, so it is the unpromotable specimen other tests lean on.
+# ``corpus_current`` is the same J2 control run again at a current transform,
+# measuring all six gates, which is the only kind promotion may freeze.
+CORPUS = REPO / "tests" / "fixtures" / "corpus_current"
 WORK = CORPUS / "work"
 
 
@@ -48,12 +52,18 @@ def test_a_contract_carries_the_gates_the_page_shows(control):
     """One run, one account of it. The contract names every gate the corpus
     page names, so a reader of ``umat/`` is not shown a shorter story."""
     frozen = contract_from(control)["finite_verification_run"]
-    assert set(frozen["evidence"]) == {
-        name for name, _, _ in EVIDENCE_GATES} - {"mechanically_informative"}, (
-        "the control predates the informativeness gate; every gate the run "
-        "did measure is carried")
+    # This control was run at a current transform, so it measures every gate
+    # -- including mechanically_informative, which the older control predates.
+    # A control missing a gate cannot be promoted at all: promotion requires
+    # all six to read true.
+    assert {name for name, _, _ in EVIDENCE_GATES} <= set(frozen["evidence"]), (
+        "every gate the page shows is carried by the contract")
+    for name, _, _ in EVIDENCE_GATES:
+        assert frozen["evidence"][name] is True, name
     assert frozen["complete_finite_verification_run"] is True
-    assert set(frozen["history_grouping"]) == {"original", "transformed"}
+    # both_finite_throughout was added to the grouping when a -1 from the
+    # prefix search stopped being read as "finite"; the two sides are still there.
+    assert {"original", "transformed"} <= set(frozen["history_grouping"])
     for name in ("discovery_usable_prefix", "safe_loading_reconstructed",
                  "failure_mechanism", "segment_repair", "coverage_given_up",
                  "time_scale_coverage", "mechanically_informative"):
