@@ -1,5 +1,5 @@
 {
-  "count": 57,
+  "count": 44,
   "materials": [
     {
       "artifacts": [
@@ -161,28 +161,6 @@
         "original_history.json",
         "converted_history.json"
       ],
-      "deck": "irfancn__Abaqus-UMAT-viscoelastic/viscoelastic_input.inp",
-      "element_type": "C3D8",
-      "id": "irfancn-abaqus-umat-viscoelastic--umat-viscoelastic--c6ae96a7",
-      "kinematics": "finite",
-      "nstatv": 1,
-      "ntens": 6,
-      "props_count": 3,
-      "repository": "irfancn/Abaqus-UMAT-viscoelastic",
-      "source_id": "irfancn__Abaqus-UMAT-viscoelastic/umat_viscoelastic.for",
-      "source_sha256": "794840d3b3bc26679277fc9588d1bb2e8a942e03ccd6d1ec048119bdf4452c85",
-      "states_agreeing": 4,
-      "states_checked": 4,
-      "transform_fingerprint": "94a92c01814f107a",
-      "worst_stress_relative": 6.499165075259156e-05,
-      "worst_tangent_relative": 1.0022561322035677e-14
-    },
-    {
-      "artifacts": [
-        "generated.inp",
-        "original_history.json",
-        "converted_history.json"
-      ],
       "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/Beam-Gravity-Growth-C0-1MPa.inp",
       "element_type": "C3D8H",
       "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--085498eb",
@@ -242,28 +220,6 @@
       "transform_fingerprint": "94a92c01814f107a",
       "worst_stress_relative": 0.0,
       "worst_tangent_relative": 2.676108796212344e-11
-    },
-    {
-      "artifacts": [
-        "generated.inp",
-        "original_history.json",
-        "converted_history.json"
-      ],
-      "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005-Visualization/Beam-Gravity-Growth-C0-1MPa.inp",
-      "element_type": "C3D8H",
-      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--382c124d",
-      "kinematics": "finite",
-      "nstatv": 9,
-      "ntens": 6,
-      "props_count": 1,
-      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
-      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th005-Visualization/BodyForce-Growth-2Stages.for",
-      "source_sha256": "eed6fed9a2eaf265fe287537981f27384e23d6baaeb169f35927900f3e36b918",
-      "states_agreeing": 2,
-      "states_checked": 2,
-      "transform_fingerprint": "94a92c01814f107a",
-      "worst_stress_relative": 2.3336738968688736e-05,
-      "worst_tangent_relative": 3.6634166084957122e-09
     },
     {
       "artifacts": [
@@ -352,28 +308,6 @@
       "transform_fingerprint": "94a92c01814f107a",
       "worst_stress_relative": 3.690871525073965e-11,
       "worst_tangent_relative": 6.593804950013042e-07
-    },
-    {
-      "artifacts": [
-        "generated.inp",
-        "original_history.json",
-        "converted_history.json"
-      ],
-      "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/Beam-Gravity-Growth-C0-1MPa.inp",
-      "element_type": "C3D8H",
-      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--7a9469c4",
-      "kinematics": "finite",
-      "nstatv": 9,
-      "ntens": 6,
-      "props_count": 1,
-      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
-      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/BodyForce-Growth-2Stages.for",
-      "source_sha256": "2bddf53d578f85b344f7d9c3daaefa4496d972a194fe14a364ac05a364f57866",
-      "states_agreeing": 2,
-      "states_checked": 2,
-      "transform_fingerprint": "94a92c01814f107a",
-      "worst_stress_relative": 2.099711597329264e-09,
-      "worst_tangent_relative": 5.6780381194813956e-11
     },
     {
       "artifacts": [
@@ -601,182 +535,6 @@
         "original_history.json",
         "converted_history.json"
       ],
-      "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th001/Beam-PureGrowth.inp",
-      "element_type": "C3D8H",
-      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--165a97e5",
-      "kinematics": "finite",
-      "nstatv": 9,
-      "ntens": 6,
-      "props_count": 1,
-      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
-      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th001/PureGravity.for",
-      "source_sha256": "1b069d9e3743890f18bd9ed8a49ce90838a539b08b75dcf1aa9d73cc76463fa6",
-      "states_agreeing": 4,
-      "states_checked": 4,
-      "transform_fingerprint": "94a92c01814f107a",
-      "worst_stress_relative": 3.1271218117836596e-08,
-      "worst_tangent_relative": 4.188094576350499e-08
-    },
-    {
-      "artifacts": [
-        "generated.inp",
-        "original_history.json",
-        "converted_history.json"
-      ],
-      "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/Beam-PureGrowth.inp",
-      "element_type": "C3D8H",
-      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--172b43f9",
-      "kinematics": "finite",
-      "nstatv": 9,
-      "ntens": 6,
-      "props_count": 1,
-      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
-      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th005/PureGravity.for",
-      "source_sha256": "80087ac5bb68eff66f2a92205968e0d50393229b0184422f1094a3799e14b8fb",
-      "states_agreeing": 4,
-      "states_checked": 4,
-      "transform_fingerprint": "94a92c01814f107a",
-      "worst_stress_relative": 2.745924629714173e-06,
-      "worst_tangent_relative": 2.1534393168009516e-09
-    },
-    {
-      "artifacts": [
-        "generated.inp",
-        "original_history.json",
-        "converted_history.json"
-      ],
-      "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/Beam-PureGrowth.inp",
-      "element_type": "C3D8H",
-      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--32df7d71",
-      "kinematics": "finite",
-      "nstatv": 9,
-      "ntens": 6,
-      "props_count": 1,
-      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
-      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/PureGravity.for",
-      "source_sha256": "1b069d9e3743890f18bd9ed8a49ce90838a539b08b75dcf1aa9d73cc76463fa6",
-      "states_agreeing": 4,
-      "states_checked": 4,
-      "transform_fingerprint": "94a92c01814f107a",
-      "worst_stress_relative": 3.1271218117836596e-08,
-      "worst_tangent_relative": 4.188094576350499e-08
-    },
-    {
-      "artifacts": [
-        "generated.inp",
-        "original_history.json",
-        "converted_history.json"
-      ],
-      "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/Beam-PureGrowth.inp",
-      "element_type": "C3D8H",
-      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--473589a5",
-      "kinematics": "finite",
-      "nstatv": 9,
-      "ntens": 6,
-      "props_count": 1,
-      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
-      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-DRAGONSKIN20-ArcDown/Th01/PureGravity.for",
-      "source_sha256": "878939fcfc17816c26b73b6e41193614d70d0c0d6e6e6ec8c5b2a095602c6767",
-      "states_agreeing": 4,
-      "states_checked": 4,
-      "transform_fingerprint": "94a92c01814f107a",
-      "worst_stress_relative": 1.4173430665206867e-08,
-      "worst_tangent_relative": 1.828932300747658e-08
-    },
-    {
-      "artifacts": [
-        "generated.inp",
-        "original_history.json",
-        "converted_history.json"
-      ],
-      "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th001/Beam-PureGrowth.inp",
-      "element_type": "C3D8H",
-      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--53b3211f",
-      "kinematics": "finite",
-      "nstatv": 9,
-      "ntens": 6,
-      "props_count": 1,
-      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
-      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-4/Experiment-ECOFLEX0030-ArcDown/Th01/PureGravity.for",
-      "source_sha256": "85c12213d27966e3db39894dff8667d14ab53325e38fb1d8340561c8cc890ae1",
-      "states_agreeing": 4,
-      "states_checked": 4,
-      "transform_fingerprint": "94a92c01814f107a",
-      "worst_stress_relative": 1.2551317627593694e-08,
-      "worst_tangent_relative": 1.937213600941555e-08
-    },
-    {
-      "artifacts": [
-        "generated.inp",
-        "original_history.json",
-        "converted_history.json"
-      ],
-      "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/Beam-PureGrowth.inp",
-      "element_type": "C3D8H",
-      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--58d1d3e0",
-      "kinematics": "finite",
-      "nstatv": 9,
-      "ntens": 6,
-      "props_count": 1,
-      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
-      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcUp/Th01/PureGravity.for",
-      "source_sha256": "c5d5267f94a948a98fd487c3266873822d71463250307b0ac2cc9b8777d61be4",
-      "states_agreeing": 4,
-      "states_checked": 4,
-      "transform_fingerprint": "94a92c01814f107a",
-      "worst_stress_relative": 5.445669422106039e-06,
-      "worst_tangent_relative": 4.37929235246065e-09
-    },
-    {
-      "artifacts": [
-        "generated.inp",
-        "original_history.json",
-        "converted_history.json"
-      ],
-      "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/Beam-PureGrowth.inp",
-      "element_type": "C3D8H",
-      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--6934cbfc",
-      "kinematics": "finite",
-      "nstatv": 9,
-      "ntens": 6,
-      "props_count": 1,
-      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
-      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th005/PureGravity.for",
-      "source_sha256": "a068d55b5e24c2d87d8affecdf6d49e6ad27e2c308f9d09bee46d3384af96df1",
-      "states_agreeing": 4,
-      "states_checked": 4,
-      "transform_fingerprint": "94a92c01814f107a",
-      "worst_stress_relative": 3.185742904271599e-05,
-      "worst_tangent_relative": 4.580714913440997e-09
-    },
-    {
-      "artifacts": [
-        "generated.inp",
-        "original_history.json",
-        "converted_history.json"
-      ],
-      "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/Beam-PureGrowth.inp",
-      "element_type": "C3D8H",
-      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--88d6fa35",
-      "kinematics": "finite",
-      "nstatv": 9,
-      "ntens": 6,
-      "props_count": 1,
-      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
-      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th002/PureGravity.for",
-      "source_sha256": "6c045e71f7236924cdab75e81b73a940b5ca0bbd172456a2cf7c6adb1a335a61",
-      "states_agreeing": 4,
-      "states_checked": 4,
-      "transform_fingerprint": "94a92c01814f107a",
-      "worst_stress_relative": 2.7677345050358277e-09,
-      "worst_tangent_relative": 5.081773154300109e-09
-    },
-    {
-      "artifacts": [
-        "generated.inp",
-        "original_history.json",
-        "converted_history.json"
-      ],
       "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th002/Beam-PureGrowth.inp",
       "element_type": "C3D8H",
       "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--ae2b7023",
@@ -814,50 +572,6 @@
       "transform_fingerprint": "94a92c01814f107a",
       "worst_stress_relative": 0.0,
       "worst_tangent_relative": 5.139295345434366e-11
-    },
-    {
-      "artifacts": [
-        "generated.inp",
-        "original_history.json",
-        "converted_history.json"
-      ],
-      "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/Beam-PureGrowth.inp",
-      "element_type": "C3D8H",
-      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--e17c0dc7",
-      "kinematics": "finite",
-      "nstatv": 9,
-      "ntens": 6,
-      "props_count": 1,
-      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
-      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ParabolicDown/Th005/PureGravity.for",
-      "source_sha256": "a068d55b5e24c2d87d8affecdf6d49e6ad27e2c308f9d09bee46d3384af96df1",
-      "states_agreeing": 4,
-      "states_checked": 4,
-      "transform_fingerprint": "94a92c01814f107a",
-      "worst_stress_relative": 3.185742904271599e-05,
-      "worst_tangent_relative": 4.580714913440997e-09
-    },
-    {
-      "artifacts": [
-        "generated.inp",
-        "original_history.json",
-        "converted_history.json"
-      ],
-      "deck": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/Beam-PureGrowth.inp",
-      "element_type": "C3D8H",
-      "id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--ead57b5c",
-      "kinematics": "finite",
-      "nstatv": 9,
-      "ntens": 6,
-      "props_count": 1,
-      "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
-      "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/PureGravity.for",
-      "source_sha256": "c5d5267f94a948a98fd487c3266873822d71463250307b0ac2cc9b8777d61be4",
-      "states_agreeing": 4,
-      "states_checked": 4,
-      "transform_fingerprint": "94a92c01814f107a",
-      "worst_stress_relative": 5.445669422106039e-06,
-      "worst_tangent_relative": 4.37929235246065e-09
     },
     {
       "artifacts": [

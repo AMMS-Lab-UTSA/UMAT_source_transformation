@@ -187,6 +187,12 @@ def kind_of(state: str) -> str:
     return _shared_kind_of(state)
 
 
+def _stage_the_gates_support(row: dict) -> str:
+    """The shared rule, so the registry cannot drift from promotion or the GUI."""
+    from umat_oti.abaqus.terminal_states import stage_supported_by_gates
+    return stage_supported_by_gates(row)
+
+
 def translate_stage(stage: str, reason: str = "") -> Verdict:
     """The corpus verdict for a batch rung, or a refusal to guess at one."""
     name = str(stage or "")
@@ -532,13 +538,24 @@ def verification_reconciliation(abaqus_report: Optional[Path],
         "superseded_rows_whose_source_is_no_longer_in_the_store": sorted(
             str(r.get("source") or "") for r in stale
             if str(r.get("source") or "") not in current_sources),
-        "rows_at_stage_verified_in_the_whole_file": sum(
+        # The word the FILE carries, kept only so the correction below can be
+        # seen. It is not a count of anything verified.
+        "rows_whose_file_stage_says_verified": sum(
             1 for r in rows if str(r.get("stage") or "") == "verified"),
-        "store_entries_that_verified": len(verified_now),
+        # THE one verified number. A row may say verified while its own
+        # evidence carries a gate reading false; the gates decide.
+        "store_entries_that_verified": sum(
+            1 for r in current
+            if _stage_the_gates_support(r) == "verified"),
         "store_entries_that_verified_on_every_gate": sum(
-            1 for r in current if str(r.get("stage") or "") == "verified"
+            1 for r in current
+            if _stage_the_gates_support(r) == "verified"
             and all(_gate_state(r.get("evidence"), gate) == GATE_TRUE
                     for gate in EVIDENCE_GATES)),
+        "rows_demoted_because_their_own_evidence_contradicts_the_word": sorted(
+            str(r.get("source") or "") for r in current
+            if str(r.get("stage") or "") == "verified"
+            and _stage_the_gates_support(r) != "verified"),
         "verified_rows_that_double_count_a_source": sorted(
             name for name in stale_verified if name in verified_now),
         "evidence_gate_census_over_the_whole_file": {
@@ -554,13 +571,16 @@ def verification_reconciliation(abaqus_report: Optional[Path],
                     for state in (GATE_TRUE, GATE_FALSE, GATE_NULL, GATE_ABSENT)
                 } for gate in EVIDENCE_GATES},
         },
-        "why_the_two_verified_numbers_differ": (
-            "The results file is append-only and this pass resumed onto the "
-            "file an earlier pass had been writing, so it carries rows from "
-            "before the store was rebuilt. Counting rows counts a source that "
-            "verified under both stores twice. The number of STORE ENTRIES "
-            "that verified is the one published here; a row count over an "
-            "append-only file is not a census."),
+        "there_is_one_verified_number": (
+            "store_entries_that_verified. A row may carry the word 'verified' "
+            "while its own evidence block holds a gate reading false -- that "
+            "happened for thirteen entries, where a control measured WHY the "
+            "two builds differ and the harness read the explanation as "
+            "agreement. An explanation for a disagreement is not agreement. "
+            "The stage is decided by the gates, those entries are at the "
+            "INTERNAL rung primal_mismatch_explained, and every one of the "
+            "391 sits in exactly one of verified / external / internal. There "
+            "is no third number."),
     }
 
 
@@ -1269,7 +1289,7 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
          record.control_flag_provenance,
          record.primal_control) = _control_explanation(row)
         record.key = str(row.get("key") or record.key)
-        record.stage = str(row.get("stage") or "")
+        record.stage = _stage_the_gates_support(row)
         verdict = translate_stage(record.stage,
                                   str(row.get("reason") or "")[:500])
         record.terminal_state, record.kind = verdict.state, verdict.kind
@@ -2086,52 +2106,31 @@ def markdown(records: list, summary: dict) -> str:
             lines.append(f"* `{name}`")
 
         double = recon.get("verified_rows_that_double_count_a_source") or []
-        rung = recon.get("store_entries_that_verified", 0)
-        strict = recon.get("store_entries_that_verified_on_every_gate", 0)
-        raw = recon.get("rows_at_stage_verified_in_the_whole_file", 0)
+        verified = recon.get("store_entries_that_verified", 0)
+        file_word = recon.get("rows_whose_file_stage_says_verified", 0)
+        demoted = recon.get(
+            "rows_demoted_because_their_own_evidence_contradicts_the_word") or []
         lines += [
             "",
-            "### 'verified' counted three ways",
+            "### One verified number",
             "",
-            "Three different numbers are all true statements about this run "
-            "and only one of them is a count of sources that passed "
-            "everything. All three are named here rather than one being "
-            "chosen.",
+            f"**{verified}** store entries are verified: every one of the six "
+            f"evidence gates reads true. That is the only number this registry "
+            f"calls verified, and every one of the 391 sources sits in exactly "
+            f"one of verified, external or internal.",
             "",
-            "| number | what it counts |",
-            "| ---: | --- |",
-            f"| {raw} | rows in the results file at stage `verified`. A row "
-            f"count over an append-only file, not a census: it counts "
-            f"{len(double)} source(s) twice. |",
-            f"| {rung} | store entries at the current fingerprint that "
-            f"reached the batch's `verified` rung. This is what the run's own "
-            f"console reported. |",
-            f"| **{strict}** | **store entries that reached that rung AND "
-            f"read true on all six evidence gates.** The strict number. |",
-            "",
-            f"{raw} minus {rung} is exactly the {len(double)} source(s) that "
-            f"verified under the old store and verified again under the new "
-            f"one, whose old row is still in the file:",
+            f"The results file carries the word `verified` on {file_word} rows. "
+            f"{len(demoted)} of those rows hold a gate reading FALSE in their "
+            f"own evidence block, so the word is not what their evidence says. "
+            f"A control measured why the two builds differ and the harness read "
+            f"that explanation as agreement. An explanation for a disagreement "
+            f"is not agreement: they are at the internal rung "
+            f"`primal_mismatch_explained`, counted there and nowhere else.",
             "",
         ]
-        for name in double:
+        for name in demoted:
             lines.append(f"* `{name}`")
-        failed = summary.get(
-            "reached_the_verified_rung_but_failed_a_gate") or []
-        lines += ["",
-                  f"{rung} minus {strict} is the {len(failed)} entr"
-                  f"{'y' if len(failed) == 1 else 'ies'} that reached the "
-                  f"rung with a gate not reading true. Each one's `reason` "
-                  f"explains why the batch accepted it anyway; that "
-                  f"explanation is in the registry beside the gate, and it is "
-                  f"not the same thing as the gate reading true:",
-                  ""]
-        for name in failed:
-            lines.append(f"* `{name}`")
-        lines += ["",
-                  "**" + str(strict) + " is the number to quote, and " +
-                  str(rung) + " is the number the console reported.** " +
-                  recon.get("why_the_two_verified_numbers_differ", "")]
+        lines.append("")
 
         gates = (summary.get("evidence_gate_census") or {})
         if gates.get("gates"):

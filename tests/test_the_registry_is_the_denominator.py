@@ -291,3 +291,59 @@ def test_a_row_the_inventory_never_listed_is_kept_and_named(tmp_path):
                      inventory_ids=["owner__a/umat.for"])}
     assert "owner__c/notaumat.f" in records
     assert len(records) == 4
+
+
+# ---------------------------------------------------------------------------
+# a word a row's own evidence does not support
+# ---------------------------------------------------------------------------
+def _stage_of(row):
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(_Path(__file__).resolve().parents[1] / "tools"))
+    from build_corpus_registry import _stage_the_gates_support
+    return _stage_the_gates_support(row)
+
+
+SIX = ("abaqus_job_completed", "all_requested_outputs_present",
+       "complete_history_finite", "primal_agreed", "derivatives_verified",
+       "mechanically_informative")
+
+
+def test_a_row_saying_verified_on_six_true_gates_keeps_the_word():
+    assert _stage_of({"stage": "verified",
+                      "evidence": {g: True for g in SIX}}) == "verified"
+
+
+def test_an_explained_primal_mismatch_is_not_verified():
+    """The thirteen. A control measured WHY the two builds differ, the harness
+    read the explanation as agreement and set the gate true, and the entries
+    were counted as verified, promoted into the frozen baseline and offered to
+    the Residual Assembler as verified materials. An explanation for a
+    disagreement is not agreement."""
+    evidence = {g: True for g in SIX}
+    evidence["primal_agreed"] = False
+    evidence["primal_difference_explained_by_a_measured_control"] = True
+    assert _stage_of({"stage": "verified", "evidence": evidence}) == \
+        "primal_mismatch_explained"
+
+
+def test_an_unexplained_primal_mismatch_is_a_plain_disagreement():
+    evidence = {g: True for g in SIX}
+    evidence["primal_agreed"] = False
+    assert _stage_of({"stage": "verified", "evidence": evidence}) == \
+        "primal_disagreed"
+
+
+def test_a_row_with_no_evidence_block_is_left_alone():
+    """An absence does not CONTRADICT the stage, and demoting on one would
+    rewrite every row written before the gates existed. Currency is what
+    catches those, not this."""
+    assert _stage_of({"stage": "verified"}) == "verified"
+    assert _stage_of({"stage": "verified", "evidence": {}}) == "verified"
+
+
+def test_the_explained_mismatch_is_internal_and_unfinished():
+    from umat_oti.abaqus.terminal_states import from_stage
+    verdict = from_stage("primal_mismatch_explained")
+    assert verdict.kind == "internal"
+    assert verdict.finished is False

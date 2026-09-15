@@ -115,7 +115,7 @@ def test_a_refused_umat_that_builds_stays_this_project_s_problem():
     ``internal``: there is nothing wrong with those files, and the work is
     ours."""
     ours = [r for r in refusals() if r["refusal_class"] == GENUINE_UMAT]
-    assert len(ours) == 102, len(ours)
+    assert len(ours) == 98, len(ours)
     for record in ours:
         assert record["terminal_state"] == "transform_refused"
         assert record["kind"] == "internal"
@@ -123,26 +123,33 @@ def test_a_refused_umat_that_builds_stays_this_project_s_problem():
         assert record["entry_interface"] == "UMAT"
 
 
-def test_the_refusal_classes_partition_the_141_refusals():
-    """154 refusals, seven classes, every record in exactly one, and the class
-    names are the ones the module defines rather than free text."""
+def test_the_refusal_classes_partition_every_refusal():
+    """Seven classes, every refused record in exactly one, names from the
+    module rather than free text -- and the classes SUM to the refusals.
+
+    The rule is the partition, not the totals: the totals move every time the
+    transformer improves, and they should. They are asserted beside it as the
+    measurement of the day (147 refusals at fingerprint 94a92c01814f107a, down
+    from 154) so a silent drift is still visible, but a refusal landing in no
+    class or in two would fail this whichever way the counts go.
+    """
     rows = refusals()
-    assert len(rows) == 154, len(rows)
     counts = {}
     for record in rows:
         assert record["refusal_class"] in REFUSAL_CLASSES, record
         counts[record["refusal_class"]] = counts.get(
             record["refusal_class"], 0) + 1
+    assert sum(counts.values()) == len(rows), (counts, len(rows))
     assert counts == {
-        GENUINE_UMAT: 102,
+        GENUINE_UMAT: 98,
         MISSING_EXTERNAL_DEPENDENCY: 16,
-        HELPER_OR_MODULE_ONLY: 15,
+        HELPER_OR_MODULE_ONLY: 13,
         INCOMPLETE_OR_CORRUPT: 11,
-        DUPLICATE_SOURCE: 6,
+        DUPLICATE_SOURCE: 5,
         OTHER_ABAQUS_ROUTINE: 2,
         PUBLISHED_STUB: 2,
     }, counts
-    assert sum(counts.values()) == 154
+    assert sum(counts.values()) == 147
 
 
 def test_every_refused_source_quotes_the_line_it_was_classified_from():
@@ -275,7 +282,7 @@ def test_a_second_copy_of_a_uel_is_still_not_a_umat():
     count of UMATs."""
     duplicates = [r for r in refusals()
                   if r["refusal_class"] == DUPLICATE_SOURCE]
-    assert len(duplicates) == 6, len(duplicates)
+    assert len(duplicates) == 5, len(duplicates)
     for record in duplicates:
         assert record["duplicate_of"], record["source_id"]
         assert record["duplicate_of"] != record["source_id"]
