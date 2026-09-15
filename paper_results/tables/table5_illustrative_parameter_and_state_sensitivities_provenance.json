@@ -2,7 +2,7 @@
   "caption": "Every derivative family verified for the illustrative example. \"Measured\" counts entries with a defined relative error; \"exact zero\" counts entries that are exactly zero on both sides, which are verified but measure nothing; \"within reference\" counts entries the reference could not separate from the value. The three add to the entry count, so nothing is dropped.",
   "column_count": 8,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "63bf39bed285c8253cd6d370e7ef1a010d184b4b",
+  "commit": "9525b996cf0b9b5963a805520fae366743794b88",
   "environment": {
     "abaqus": "Abaqus JOB abaqus",
     "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
@@ -12,7 +12,7 @@
   "filters": {
     "model": "the illustrative J2 example only"
   },
-  "generated_at": "2026-08-28T13:45:57.527000+00:00",
+  "generated_at": "2026-09-15T13:39:43.901523+00:00",
   "inputs": [
     {
       "bytes": 184741,

@@ -2,7 +2,7 @@
   "caption": "Higher-order stress derivatives of the illustrative example against an independent 80-digit reference, adjudicated by convergence of the reference itself. A row counts as admitted only when the reference resolved it and the two agree, or when the derivative is shown to be zero on evidence independent of the OTI result. The relative error is reported over resolved rows only, because a relative error on a quantity at the rounding floor measures nothing. Where the reference establishes a zero there is no relative error to report, so the measurement is the largest generated magnitude on those rows, normalised so that a real derivative of the same order would be of order one: on the elastic branch the response is linear and every generated derivative of order two and above is exactly zero.",
   "column_count": 10,
   "command": "python tools/tables/build_paper_tables.py",
-  "commit": "63bf39bed285c8253cd6d370e7ef1a010d184b4b",
+  "commit": "9525b996cf0b9b5963a805520fae366743794b88",
   "environment": {
     "abaqus": "Abaqus JOB abaqus",
     "fortran_compiler": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
@@ -12,7 +12,7 @@
   "filters": {
     "model": "controlled_j2_actual_umat (illustrative example)"
   },
-  "generated_at": "2026-08-28T13:45:57.075855+00:00",
+  "generated_at": "2026-09-15T13:39:43.448757+00:00",
   "inputs": [
     {
       "bytes": 5906,

@@ -1,9 +1,9 @@
 {
   "answers": "How does the corpus go from the files that were acquired to the sources that were verified, and where does the denominator change?",
   "command": "python tools/figures/build_acquisition_figures.py",
-  "commit": "489806911fe5ddc5a9ac1ede812a0c7e84a98e81",
+  "commit": "9525b996cf0b9b5963a805520fae366743794b88",
   "figure": "figure_acquisition_progression",
-  "generated_at": "2026-08-27T22:14:21.050867+00:00",
+  "generated_at": "2026-09-15T13:43:11.919829+00:00",
   "inputs": [
     {
       "bytes": 33275,
