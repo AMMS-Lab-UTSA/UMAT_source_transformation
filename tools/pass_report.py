@@ -51,8 +51,27 @@ def accepted(row: dict) -> bool:
             and all(row.get(f"gate_{gate}") == "true" for gate in ACCEPTANCE_GATES))
 
 
+def replayed(regression_rows: list[dict]) -> dict[str, dict]:
+    """Rows of a regression run that replayed a frozen experiment, by source.
+
+    A frozen replay is the regression fixture being executed: the experiment
+    the material was promoted under, run again at the current transform. Only
+    a row that carries ``frozen`` counts; a row that re-discovered its
+    experiment measured something else.
+    """
+    return {str(row.get("source")): row for row in regression_rows
+            if row.get("frozen")}
+
+
+def sensitivity_rows(rows: list[dict]) -> int:
+    """Verification rows that carry any measured parameter or state sensitivity."""
+    return sum(1 for row in rows
+               if any("sensitiv" in key.lower() for key in row))
+
+
 def report(new: dict[str, dict], old: dict[str, dict] | None,
-           families: dict[str, str]) -> dict:
+           families: dict[str, str], regression_rows: list[dict] | None = None,
+           verification_rows: list[dict] | None = None) -> dict:
     d2 = {sid: row for sid, row in new.items() if row.get("adequately_specified") is True}
     excluded = {sid: row for sid, row in new.items() if row.get("adequately_specified") is not True}
     now = {sid for sid, row in d2.items() if accepted(row)}
@@ -77,8 +96,34 @@ def report(new: dict[str, dict], old: dict[str, dict] | None,
         sid for sid, row in excluded.items()
         if row.get("adequacy_kind") not in ("external", "duplicate"))
 
+    replays = replayed(regression_rows or [])
+    replay_verified = {
+        sid for sid in now
+        if sid in replays and replays[sid].get("stage") == "verified"
+        and all((replays[sid].get("evidence") or {}).get(g) is True
+                for g in ACCEPTANCE_GATES)
+        and replays[sid].get("fingerprint") == new[sid].get("verification_fingerprint")}
+    replay_elsewhere = sorted(
+        sid for sid in now if sid in replays
+        and replays[sid].get("fingerprint") != new[sid].get("verification_fingerprint"))
+    replay_failed = sorted(sid for sid in now if sid in replays
+                           and sid not in replay_verified and sid not in replay_elsewhere)
+    replay_absent = sorted(sid for sid in now if sid not in replays)
+
     return {
         "acceptance_gates": list(ACCEPTANCE_GATES),
+        "regression_replay": {
+            "regression_rows_supplied": len(regression_rows or []),
+            "accepted_and_frozen_replay_verified": len(replay_verified),
+            "accepted_and_frozen_replay_not_verified": replay_failed,
+            "accepted_but_replayed_at_a_different_fingerprint": replay_elsewhere,
+            "accepted_with_no_frozen_replay_in_the_supplied_run": replay_absent,
+        },
+        "sensitivity": {
+            "verification_rows": len(verification_rows or []),
+            "rows_carrying_parameter_or_state_sensitivity_evidence":
+                sensitivity_rows(verification_rows or []),
+        },
         "d2_count": len(d2),
         "d2_count_is_260": len(d2) == D2_DENOMINATOR,
         "accepted_of_d2": len(now),
@@ -112,6 +157,16 @@ def markdown(label: str, r: dict) -> str:
         for name in ("gained", "lost"):
             for sid in r[name]:
                 lines.append(f"- {name}: {sid}")
+    rr = r["regression_replay"]
+    lines += ["", f"Frozen regression replay (from {rr['regression_rows_supplied']} regression rows): "
+              f"{rr['accepted_and_frozen_replay_verified']} accepted cases replayed and verified; "
+              f"{len(rr['accepted_and_frozen_replay_not_verified'])} replayed and not verified; "
+              f"{len(rr['accepted_but_replayed_at_a_different_fingerprint'])} replayed at a different transform fingerprint (not counted); "
+              f"{len(rr['accepted_with_no_frozen_replay_in_the_supplied_run'])} with no replay in the run"]
+    sv = r["sensitivity"]
+    lines += [f"Parameter/state sensitivity evidence: "
+              f"{sv['rows_carrying_parameter_or_state_sensitivity_evidence']} of "
+              f"{sv['verification_rows']} verification rows carry any"]
     lines += ["", "## Not accepted within the 260, by terminal state", ""]
     lines += [f"- {k}: {v}" for k, v in r["d2_not_accepted_by_terminal_state"].items()]
     lines += ["", f"By owner: {r['d2_not_accepted_by_owner']}"]
@@ -137,6 +192,10 @@ def main() -> int:
     parser.add_argument("--registry", type=Path, required=True)
     parser.add_argument("--previous", type=Path)
     parser.add_argument("--families", type=Path)
+    parser.add_argument("--regression", type=Path,
+                        help="store_verification.jsonl of a --mode regression run")
+    parser.add_argument("--verification", type=Path,
+                        help="store_verification.jsonl the registry was built from")
     parser.add_argument("--label", default="corpus pass")
     parser.add_argument("--json", dest="json_path", type=Path)
     parser.add_argument("--markdown", type=Path)
@@ -145,8 +204,12 @@ def main() -> int:
     if args.families:
         families = {row["source_id"]: row["family"]
                     for row in json.loads(args.families.read_text())["rows"]}
+    def jsonl(path):
+        return [json.loads(line) for line in path.read_text().splitlines()
+                if line.strip()] if path else None
     r = report(_records(args.registry),
-               _records(args.previous) if args.previous else None, families)
+               _records(args.previous) if args.previous else None, families,
+               jsonl(args.regression), jsonl(args.verification))
     text = markdown(args.label, r)
     if args.json_path:
         args.json_path.write_text(json.dumps(r, indent=2) + "\n")
