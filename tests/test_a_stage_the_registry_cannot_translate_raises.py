@@ -35,7 +35,7 @@ pytestmark = pytest.mark.unit
 #: test that asks the code what it thinks cannot catch the code changing its
 #: mind.
 REQUIRED = {
-    "arguments_diverged_before_the_routine": "external",
+    "arguments_diverged_before_the_routine": "internal",
     "disagreement_not_in_any_recorded_call": "internal",
     "published_stub_no_constitutive_content": "external",
 }

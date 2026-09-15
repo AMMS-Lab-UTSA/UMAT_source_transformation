@@ -152,11 +152,12 @@ class UntranslatableStage(ValueError):
 #: consistency check below makes the day they arrive there a no-op rather than
 #: a contradiction.
 #:
-#: ``arguments_diverged_before_the_routine`` is EXTERNAL. The two builds were
+#: ``arguments_diverged_before_the_routine`` is INTERNAL. The two builds were
 #: handed arguments that had already parted before the call whose outputs
-#: differ, so what the routine returned there is not attributable to the
-#: routine, and calling it "the converted build computes a different stress"
-#: is a claim the recorded calls do not carry.
+#: differ -- and the solver computed those arguments from each build's own
+#: earlier outputs, on a deck this project generated. It was filed EXTERNAL
+#: here once, which put three of this project's primal disagreements in
+#: somebody else's column; the shared table now carries it as internal.
 #:
 #: ``disagreement_not_in_any_recorded_call`` is INTERNAL, and about THIS
 #: HARNESS. Every paired call returned bit-identical outputs and the history
@@ -164,7 +165,7 @@ class UntranslatableStage(ValueError):
 #: how this pipeline compares two histories, and filing it as anything else
 #: would be charging somebody else for our own measurement.
 LOCAL_STATES: dict[str, str] = {
-    "arguments_diverged_before_the_routine": "external",
+    "arguments_diverged_before_the_routine": "internal",
     "disagreement_not_in_any_recorded_call": "internal",
 }
 
@@ -178,9 +179,8 @@ def kind_of(state: str) -> str:
     """Who has to move next, over the shared vocabulary AND the local one.
 
     The shared module answers "internal" for any state it has not heard of,
-    which is the safe direction and the wrong answer for
-    ``arguments_diverged_before_the_routine``: it would report somebody else's
-    deck as this project's unfinished work.
+    which is the safe direction; a local entry must agree with it the moment
+    the shared table carries the state.
     """
     if state in LOCAL_STATES:
         return LOCAL_STATES[state]
@@ -243,8 +243,9 @@ from umat_oti.app.corpus_tab import GLOSS as _SHARED_GLOSS  # noqa: E402
 _LOCAL_GLOSS = {
     "arguments_diverged_before_the_routine":
         "the two builds' histories differ, and the recorded calls say the "
-        "arguments had already parted before the call whose outputs differ, "
-        "so what the routine returned there is not attributable to it",
+        "arguments had already parted before the call whose outputs differ; "
+        "the solver computed them from each build's own earlier outputs, so "
+        "where the paths parted is this project's to find",
     "disagreement_not_in_any_recorded_call":
         "every paired call returned bit-identical outputs and the history "
         "comparison reported a difference anyway -- a defect in how this "

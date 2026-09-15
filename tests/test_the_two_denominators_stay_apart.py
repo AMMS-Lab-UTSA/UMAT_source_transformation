@@ -194,9 +194,7 @@ def test_every_terminal_state_in_the_report_is_marked_external_or_internal():
     # what this test is checking. The shared table in
     # umat_oti.abaqus.terminal_states does not yet carry every rung the
     # verification tool emits, and answers "internal" for the ones it has not
-    # heard of -- so asking it here would demand that the report file
-    # `arguments_diverged_before_the_routine` as this project's unfinished
-    # work, which is the exact mistake the state was introduced to end.
+    # heard of; the registry's table is what the report prints.
     import sys as _sys
     from pathlib import Path as _Path
     _sys.path.insert(0, str(_Path(__file__).resolve().parents[1] / "tools"))

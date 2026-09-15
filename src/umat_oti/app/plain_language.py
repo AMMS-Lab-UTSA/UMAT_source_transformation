@@ -62,11 +62,11 @@ __all__ = [
 #: file, so it overrides here and :func:`unmapped_stages` keeps the gap
 #: visible until the shared table catches up.
 STAGE_OVERRIDES: dict[str, tuple[str, str]] = {
-    # The two builds were handed different arguments. Whatever happened
-    # happened before either routine was entered, so it is not a difference
-    # between the routines: it is a property of what drove them.
+    # The two builds were handed different arguments -- computed by the solver
+    # from each build's own earlier outputs, on a deck this program generated.
+    # Ours to find where the paths parted; never the author's.
     "arguments_diverged_before_the_routine":
-        ("arguments_diverged_before_the_routine", "external"),
+        ("arguments_diverged_before_the_routine", "internal"),
     # The histories differ and no recorded call accounts for the difference.
     # Ours: the instrumentation did not capture the call that did it.
     "disagreement_not_in_any_recorded_call":
@@ -195,12 +195,13 @@ PLAIN: dict[str, dict[str, Any]] = {
     "arguments_diverged_before_the_routine": {
         "headline": "The two runs were not given the same starting point",
         "means": "The original and the converted version were handed different "
-                 "inputs, so they were never asked the same question. "
-                 "Whatever differs happened before either version of your "
-                 "material was reached.",
-        "whose move": "the author of this UMAT",
+                 "inputs part way through the test. Those inputs come from "
+                 "each version's own earlier answers, so the two runs parted "
+                 "somewhere this program has not yet located. Nothing is "
+                 "wrong with the file you supplied because of this.",
+        "whose move": "this program",
         "provide": "",
-        "retry": False,
+        "retry": True,
     },
     "waits_for_input": {
         "headline": "The source stops and waits for someone to type",

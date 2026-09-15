@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/santiagarcia/UMAT_source_transformation/schemas/residual_fixture_v1.schema.json",
   "title": "Frozen stress/state/tangent history, and the Residual Assembler's inputs (v1)",
-  "x-contract-version": "2.0.0",
+  "x-contract-version": "3.0.0",
   "x-what-this-is": "The ingredients one verified corpus case produced, frozen so the Residual Assembler can be driven from what the pipeline actually emits rather than from a reference model written to make the assembler pass. It holds numbers the pipeline computed and the identity of the file they came from, never the file.",
   "x-three-state-rule": "Every field typed [boolean, null] has three answers and null is never a pass. A fixture frozen before a check existed does not carry that check's key; refusing it would treat 'frozen before the check' as 'failed the check', and passing it silently would treat it as 'passed'. So claims_checked and claims_not_carried name which is which.",
   "type": "object",

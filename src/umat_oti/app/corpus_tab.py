@@ -66,12 +66,12 @@ GLOSS = {
     #: perfectly well.
     "published_stub_no_constitutive_content":
         "the author published a template with no material in it",
-    #: The two builds were handed different arguments, so whatever differs
-    #: happened before either routine was entered. Not a difference between
-    #: the routines, and so not ours.
+    #: The two builds were handed different arguments, computed by the solver
+    #: from each build's own earlier outputs on our deck. Ours to locate.
     "arguments_diverged_before_the_routine":
-        "the two builds were not given the same arguments, so they were never "
-        "asked the same question",
+        "the two builds were handed different arguments part way through, "
+        "computed from their own earlier answers; where they parted is not "
+        "yet located",
     #: The histories differ and no recorded call accounts for it: the
     #: difference is real and the explanation is missing. Ours, because what
     #: is missing is our instrumentation rather than their file.

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/santiagarcia/UMAT_source_transformation/schemas/umat_contract_v1.schema.json",
   "title": "UMAT/Residual-Assembler shared data contract (v1)",
-  "x-contract-version": "2.0.0",
+  "x-contract-version": "3.0.0",
   "x-breaking-change": "A MAJOR bump is required for: removing or renaming any field; narrowing any type; changing the meaning of a value; adding a required field; adding a member to terminalState.state or to the six evidence gates. Anything a reader at the previous version could MISREAD rather than fail on is breaking. 2.0.0 was exactly that: two terminal states were added, and a 1.0.0 consumer switching on the enum exhaustively fell through on both -- onto 'not_attempted', which is INTERNAL and says the run never happened, for three entries that ran.",
   "x-three-state-rule": "Every field typed [boolean, null] has THREE answers. null and an absent key are the SAME answer -- not established -- and neither is a pass. A consumer must not test these with plain truthiness.",
   "type": "object",
@@ -116,7 +116,7 @@
         "owner"
       ],
       "additionalProperties": true,
-      "description": "The final answer and whose move it is. The vocabulary is defined in umat_oti/abaqus/terminal_states.py and published here, because the consuming repository cannot import that module. Adding a member is a BREAKING change: a consumer switching on it exhaustively falls through, and the fall-through used to be 'not_attempted' -- INTERNAL, 'the run never happened' -- which it said about three entries that ran and whose arguments diverged before the routine, an EXTERNAL fact.",
+      "description": "The final answer and whose move it is. The vocabulary is defined in umat_oti/abaqus/terminal_states.py and published here, because the consuming repository cannot import that module. Adding a member is a BREAKING change: a consumer switching on it exhaustively falls through, and the fall-through used to be 'not_attempted' -- INTERNAL, 'the run never happened' -- which it said about three entries that ran and whose arguments diverged before the routine.",
       "properties": {
         "state": {
           "type": "string",
@@ -191,7 +191,6 @@
             "properties": {
               "state": {
                 "enum": [
-                  "arguments_diverged_before_the_routine",
                   "external_dependency_unavailable",
                   "incomplete_or_corrupt_source",
                   "missing_material_data",
@@ -218,6 +217,7 @@
             "properties": {
               "state": {
                 "enum": [
+                  "arguments_diverged_before_the_routine",
                   "derivative_truncated",
                   "disagreement_not_in_any_recorded_call",
                   "experiment_not_generated",
@@ -227,7 +227,7 @@
                   "not_attempted",
                   "original_job_failed",
                   "primal_disagreed",
-            "primal_mismatch_explained",
+                  "primal_mismatch_explained",
                   "support_build_failed",
                   "tangent_not_verified",
                   "transform_refused",

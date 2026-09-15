@@ -28,7 +28,9 @@ publish would arrive at a consumer with no owner, which is the dangerous
 direction, and it is reported by name rather than resolved silently.
 
 Two words were added after the default did its damage:
-``arguments_diverged_before_the_routine`` (EXTERNAL, the three entries above)
+``arguments_diverged_before_the_routine`` (published EXTERNAL at 2.0.0 and
+INTERNAL from 3.0.0: the arguments that parted were computed by the solver from
+each build's own earlier outputs, on this project's deck)
 and ``disagreement_not_in_any_recorded_call`` (INTERNAL -- the histories
 differ and nothing this project recorded accounts for it, which is a gap in
 the recording rather than a fact about the source).
@@ -86,11 +88,12 @@ OWNERS = (VERIFIED_OWNER, EXTERNAL_OWNER, INTERNAL_OWNER)
 #: never happened, and both are here because a consumer switching on this enum
 #: must not fall through on them:
 #:
-#: ``arguments_diverged_before_the_routine`` -- EXTERNAL. The paired call was
-#:     isolated and its INPUTS already differed before the routine was
-#:     entered, so the difference is upstream of the constitutive code. 3 of
-#:     the 237 frozen entries carry it, and the old default answered
-#:     ``not_attempted``, which is INTERNAL and says this project never tried.
+#: ``arguments_diverged_before_the_routine`` -- INTERNAL (it was EXTERNAL at
+#:     2.0.0). The paired call was isolated and its INPUTS already differed
+#:     before the routine was entered -- but those inputs are what the solver
+#:     computed from each build's own earlier outputs, on a deck this project
+#:     generated, so where the two paths parted is this project's to find. It
+#:     is never a fact about somebody's published repository.
 #: ``disagreement_not_in_any_recorded_call`` -- INTERNAL. The histories differ
 #:     and no recorded call accounts for it, which is a gap in what this
 #:     project recorded.
@@ -102,7 +105,7 @@ PUBLISHED_OWNERS: dict = {
     "external_dependency_unavailable": "EXTERNAL",
     "published_stub_no_constitutive_content": "EXTERNAL",
     "waits_for_input": "EXTERNAL",
-    "arguments_diverged_before_the_routine": "EXTERNAL",
+    "arguments_diverged_before_the_routine": "INTERNAL",
     "transform_refused": "INTERNAL",
     "experiment_not_generated": "INTERNAL",
     "experiment_not_informative": "INTERNAL",

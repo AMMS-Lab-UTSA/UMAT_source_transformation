@@ -76,12 +76,11 @@ CODES: dict = {
     "external.waits_for_input":
         "the source blocks on terminal input, so a job holds a licence until "
         "its timeout",
-    "external.arguments_diverged_before_the_routine":
+    "internal.arguments_diverged_before_the_routine":
         "the paired call was isolated and its INPUTS already differed before "
-        "the routine was entered, so the difference is upstream of the "
-        "constitutive code and is not this project's to fix. Three frozen "
-        "entries carry it, and before the vocabulary had a word for them they "
-        "were filed as runs that never happened",
+        "the routine was entered. The solver computed those inputs from each "
+        "build's own earlier outputs on this project's deck, so where the two "
+        "paths parted is this project's to find",
     # -- INTERNAL: this project --------------------------------------------
     "internal.transform_refused":
         "this project's transform could not convert the source",
@@ -151,7 +150,7 @@ class ContractError:
                 else "external.published_stub"
                 if state.state == "published_stub_no_constitutive_content"
                 else "external.waits_for_input" if state.state == "waits_for_input"
-                else "external.arguments_diverged_before_the_routine"
+                else "internal.arguments_diverged_before_the_routine"
                 if state.state == "arguments_diverged_before_the_routine"
                 else "internal.disagreement_not_in_any_recorded_call"
                 if state.state == "disagreement_not_in_any_recorded_call"
