@@ -179,12 +179,47 @@ def preview_tangent_block(source: Path | str, *, ntens: int,
                      if isinstance(row, dict) and row.get("selected_role") == "Promote")
     lines = ([(int(output["start_line"]), int(output["end_line"]))]
              if output.get("start_line") else [])
-    return {"tangent_lines": lines, "carried_variables": carried,
+    kept = _merged([(int(row["start_line"]), int(row["end_line"]))
+                    for row in anchors.get("shared_setup_regions_to_keep") or []
+                    if isinstance(row, dict)
+                    and row.get("role") == "keep_real_required_by_stress_update"])
+    extraction = (anchors.get("ddsdde_extraction") or {}).get("insert_after_line")
+    return {"tangent_lines": lines, "kept_lines": kept,
+            "extraction_after": int(extraction) if extraction else None,
+            "carried_variables": carried,
             "anchor_status": anchor_completion_status(config).get("status"),
             "routine": (config.get("source") or {}).get("selected_umat_name")
             or (config.get("source") or {}).get("detected_umat_name") or "UMAT"}
 
 
+def _merged(spans: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    merged: list[tuple[int, int]] = []
+    for start, end in sorted(spans):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+
 def format_lines(spans: list[tuple[int, int]]) -> str:
     """``[(86, 108)]`` -> ``"86-108"``, the way the screen shows line ranges."""
     return ", ".join(f"{start}-{end}" for start, end in spans) or "(none found)"
+
+
+def describe_tangent_block(preview: dict[str, Any]) -> str:
+    """What happens to the lines that assign DDSDDE, in one line.
+
+    A hand-written tangent after the stress update is *replaced*. An
+    assignment the stress update itself reads (an elastic stiffness used as
+    the predictor) is *kept*. In both cases the OTI extraction that fills
+    DDSDDE is written after the line the anchors name.
+    """
+    parts = []
+    if preview.get("tangent_lines"):
+        parts.append(f"{format_lines(preview['tangent_lines'])} replaced")
+    if preview.get("kept_lines"):
+        parts.append(f"{format_lines(preview['kept_lines'])} kept (read by the stress update)")
+    if preview.get("extraction_after"):
+        parts.append(f"extraction after line {preview['extraction_after']}")
+    return "; ".join(parts) or "(none found)"

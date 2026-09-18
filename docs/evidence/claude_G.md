@@ -35,6 +35,12 @@ docstring lists the new tabs. Nothing else changed.
 
 One marker line: `gui`.
 
+### `tests/test_frontend_equivalence.py`
+
+Two entries in `DELEGATED_FRONT_ENDS`: the new screen must reach
+`run_jacobian_transform`, and `services/jacobian_request.py` must reach
+`run_transformation`.
+
 ### `docs/PROVIDER.md`
 
 The limit bullet "No ... provider-build GUI entry is added" now says that the
@@ -51,13 +57,29 @@ screen and `--regular-object` were added later, and links docs/GUI.md.
   REAL_UMAT.obj, OTI_UMAT.obj, Mapping.json and transform_report.txt. Run it
   with `python -m umat_oti.provider.collaborator`.
 - `src/umat_oti/app/presentation_screens.py`: the two screens.
-- `tests/gui/test_imqcam_developer_screens.py` (AppTest, offline suite, 13
+- `tests/gui/test_imqcam_developer_screens.py` (AppTest, offline suite, 16
   tests), `tests/test_provider_regular_object.py` (5 tests),
-  `tests/gui/test_imqcam_developer_screens_browser.py` (`-m gui`, 4 tests),
+  `tests/gui/test_imqcam_developer_screens_browser.py` (`-m gui`, 5 tests),
   `tests/gui/tangent_reference.py`, `tests/gui/gui_helpers.py`,
   `tests/gui/conftest.py`.
 - `docs/GUI.md`, and the screenshots `docs/screenshots/umat_constitutive_jacobian.png`,
-  `umat_parameter_sensitivities_j2.png` and `umat_parameter_sensitivities_fcc.png`.
+  `umat_constitutive_jacobian_fcc.png`, `umat_parameter_sensitivities_j2.png`
+  and `umat_parameter_sensitivities_fcc.png`.
+
+## REAL_UMAT.obj in Abaqus
+
+One Abaqus 2021.HF5 job, `claudeG_real`, in `../imq_abaqus/claude_G/abaqus_real/`:
+the presentation example `Analysis.inp` with `user=REAL_UMAT.o`. That is the
+package's REAL_UMAT.obj, SHA-256 53bac302..., copied to `.o` because Abaqus on
+Linux rejects any other extension for a precompiled object. The job linked,
+converged all four increments, and ended its .sta with "THE ANALYSIS HAS
+COMPLETED SUCCESSFULLY". The strict export (`residual_core/io/abaqus_odb_export.py`
+in the RA repository) of its ODB equals the reference `imqrp_j2` export (ifort,
+same source; the Residual_Assembler fixture presentation_j2/fields.json) with max
+|difference| 0 for U, RF, CF, S and SDV1 in all five frames. The process then
+aborted with "buffer overflow detected", signal 6, exit code 1, which the
+reference run did not do. This is recorded here and in docs/GUI.md, and is not
+fixed.
 
 ## Consequence for the transform fingerprint
 
@@ -83,9 +105,9 @@ or to pytest's temporary directories, never into the worktree.
 
 ```text
 python -m pytest -q -p no:cacheprovider tests/gui/test_imqcam_developer_screens.py \
-  tests/test_provider_regular_object.py          -> 18 passed (74.5 s)
+  tests/test_provider_regular_object.py          -> 21 passed
 python -m pytest -q -p no:cacheprovider -m gui tests/gui
-                                                 -> 4 passed, 13 deselected (127 s)
+                                                 -> 5 passed, 15 deselected (146 s)
 ```
 
 The measured numbers (J2 transform and tangent against FD of the original;
