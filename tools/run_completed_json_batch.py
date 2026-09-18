@@ -101,7 +101,10 @@ def main() -> int:
                 else:
                     build_validation_workspace(
                         validation_dir=validation_dir,
-                        original_umat=source_path,
+                        # the contract's resolved routine closure when it declares
+                        # dependency_roots: the original needs the same helpers
+                        original_umat=Path((transform_summary.get("dependency_closure") or {}).get(
+                            "resolved_source") or source_path),
                         transformed_umat=Path(row["transformed_source"]),
                         generated_dir=transform_dir,
                         ntens=ntens,

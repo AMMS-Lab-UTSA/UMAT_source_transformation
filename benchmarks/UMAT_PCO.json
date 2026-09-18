@@ -22,6 +22,9 @@
     "TWO",
     "ZERO"
   ],
+  "dependency_roots": [
+    "../UMATs/UMATs/ICP"
+  ],
   "description": "Generated from UMAT source analysis. DDSDDE is configured as d STRESS / d DSTRAN; PROPS remain constants.",
   "jacobian": {
     "output": "STRESS",
