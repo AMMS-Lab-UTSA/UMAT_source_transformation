@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### IMQCAM integration (2026-09-18)
+- **Compiled OTI material provider** (`umat-oti-provider build`): the ORIGINAL
+  UMAT and its OTI lift in one relocatable object with a completed contract
+  (`Mapping.json`); `--regular-object REAL_UMAT.obj` publishes the ORIGINAL
+  alone, `--abaqus-toolchain` builds it with `abaqus make`; objects carry no
+  machine paths and rebuild byte-identically. New entry point
+  `UMAT_OTI_EVAL_TOTAL` carries total derivatives through any UMAT's state.
+- **Per-entry verification** of DSIGMA_DP, DSTATEV_DP and DDSDDE against
+  centred differences of the separately compiled ORIGINAL on the contract's
+  own strain path (J2 and FCC verify with no disagreeing entry).
+- **`umat-oti jacobian`** and the GUI's Constitutive Jacobian and Parameter
+  Sensitivities tabs, byte-identical to the CLI.
+- **Transformer fixes** found by the presentation and corpus reruns, each with
+  a regression test: labelled promoted branches keep their label, inputs of a
+  predictor stiffness stay live, a DATA constant listed under promote stays
+  real, a compact contract can name its helper sources, and a continued
+  assignment to a real variable from a promoted value is rewritten whole.
+- **Corpus pass14** at `da1f183708c19072`: 43 of 260 adequately specified
+  genuine UMATs clear every acceptance gate (`docs/evidence/final_refreeze.md`).
+- `THIRD_PARTY_NOTICES.md` credits the MIT upstream of the ICP UMATs and
+  records that the ICP subfolders are book companion code with no stated
+  licence.
+
 ### Added
 - A deck's own `*PARAMETER` values are substituted into its material
   constants. Abaqus resolves `<name>` at input-processing time, so a deck
