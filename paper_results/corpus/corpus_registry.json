@@ -11,7 +11,6 @@
    "not_a_umat",
    "incomplete_or_corrupt_source",
    "external_dependency_unavailable",
-   "arguments_diverged_before_the_routine",
    "published_stub_no_constitutive_content",
    "waits_for_input"
   ],
@@ -25,6 +24,7 @@
    "original_job_failed",
    "transformed_job_failed",
    "primal_disagreed",
+   "arguments_diverged_before_the_routine",
    "primal_mismatch_explained",
    "disagreement_not_in_any_recorded_call",
    "derivative_truncated",
@@ -148,8 +148,8 @@
     "denominator": 391,
     "denominator_is": "acquired sources (D1)",
     "counts": {
-     "internal": 225,
-     "external": 122,
+     "internal": 228,
+     "external": 119,
      "verified": 44
     },
     "sums_to_the_denominator": true
@@ -280,12 +280,12 @@
    "derivative_truncated": 1
   },
   "by_kind": {
-   "external": 122,
-   "internal": 225,
+   "external": 119,
+   "internal": 228,
    "verified": 44
   },
-  "external_total": 122,
-  "internal_total": 225,
+  "external_total": 119,
+  "internal_total": 228,
   "internal_clusters": {
    "transform_refused": 102,
    "primal_disagreed": 63,
@@ -295,6 +295,7 @@
    "transformed_job_failed": 6,
    "unsupported_formulation": 6,
    "experiment_not_informative": 4,
+   "arguments_diverged_before_the_routine": 3,
    "support_build_failed": 2,
    "informativeness_not_established": 1,
    "derivative_truncated": 1
@@ -433,6 +434,14 @@
    "in_the_registry": 391,
    "in_a_batch_but_not_the_inventory": [],
    "in_the_inventory_but_in_no_batch": []
+  },
+  "evidence_currency": {
+   "status": "historical_only",
+   "historical_store_fingerprint": "94a92c01814f107a",
+   "current_code_fingerprint": "6aa20d22e37f14c9",
+   "current_capability": "NOT ESTABLISHED",
+   "row_currency_means": "verification_is_current is relative to the retained historical store, not current code",
+   "reason": "Classification refresh only; no corpus executable rerun. Original generations, observations and evidence references are retained."
   }
  },
  "records": [
@@ -9701,7 +9710,7 @@
    "adequacy_basis": "presents the Abaqus UMAT interface at line 2, and assigns an output at line 181: STRESS(K1)=EG*(BA1B(K1)-TRBA1B/THREE)+PR; nothing external excludes it",
    "adequacy_kind": "",
    "terminal_state": "arguments_diverged_before_the_routine",
-   "kind": "external",
+   "kind": "internal",
    "reason": "worst stress difference 1.724e+00, worst state difference 1.515e-08, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was never perturbed and its sensitivity to being perturbed is unmeasured -- not zero",
    "stage": "arguments_diverged_before_the_routine",
    "attempted": true,
@@ -9782,7 +9791,7 @@
    "adequacy_basis": "line-for-line identical to Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example3-Sphere/Growth-MinSur3.for, which carries the same answer; counting both would count one source twice",
    "adequacy_kind": "duplicate",
    "terminal_state": "arguments_diverged_before_the_routine",
-   "kind": "external",
+   "kind": "internal",
    "reason": "worst stress difference 1.724e+00, worst state difference 1.515e-08, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bit for bit, so the model was never perturbed and its sensitivity to being perturbed is unmeasured -- not zero",
    "stage": "arguments_diverged_before_the_routine",
    "attempted": true,
@@ -10916,7 +10925,7 @@
    "adequacy_basis": "presents the Abaqus UMAT interface at line 2, and assigns an output at line 147: STRESS(K1)=EG*(BA1B(K1)-TRBA1B/THREE)+PR; nothing external excludes it",
    "adequacy_kind": "",
    "terminal_state": "arguments_diverged_before_the_routine",
-   "kind": "external",
+   "kind": "internal",
    "reason": "worst stress difference 1.999e+00, worst state difference 0.000e+00, against a tolerance of 1e-10; and this model differs from itself by only 1.991e+00 when its arithmetic is reordered, so the difference is larger than its own conditioning accounts for",
    "stage": "arguments_diverged_before_the_routine",
    "attempted": true,

@@ -2,6 +2,12 @@
 
 You have five minutes and want to know whether this software does what it says.
 
+For a non-editable wheel installation, installed GUI launch and the joint
+provider/presentation gate, use
+[docs/evidence/recovery_install.md](docs/evidence/recovery_install.md).
+[docs/PROVIDER.md](docs/PROVIDER.md) documents the compiled provider contract.
+The commands below are the existing source-development reproduction workflow.
+
 ```bash
 git clone https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git
 cd UMAT_source_transformation

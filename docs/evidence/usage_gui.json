@@ -1,0 +1,86 @@
+{
+  "clean_install_verified": false,
+  "phase": "gui",
+  "python": "/home/ammslab3/softwarex_work/.venv/bin/python",
+  "work": "/tmp/recovery_usage_4g11chlm",
+  "environment": {
+    "PYTHONPATH": "/home/ammslab3/softwarex_work/imq-ra-recovery:/home/ammslab3/softwarex_work/imq-umat-recovery/src:/home/ammslab3/otilib/build_py311",
+    "UMAT_OTI_REPO": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+    "PYOTI_PATH": "/home/ammslab3/otilib/build_py311",
+    "OTILIB_ROOT": "/home/ammslab3/otilib/build_py311",
+    "RUN_OTILIB_TESTS": "1"
+  },
+  "commands": [
+    {
+      "name": "compiler",
+      "argv": [
+        "gfortran",
+        "--version"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0\nCopyright (C) 2019 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "stderr": "",
+      "seconds": 0.004095302952919155
+    },
+    {
+      "name": "primary GUI render",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-c",
+        "from streamlit.testing.v1 import AppTest; import sys; app=AppTest.from_file(sys.argv[1]).run(timeout=90); assert not app.exception, list(app.exception); print('rendered', len(app.title), 'titles', len(app.tabs), 'tabs')",
+        "/home/ammslab3/softwarex_work/imq-umat-recovery/src/umat_oti/app/streamlit_app.py"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "rendered 1 titles 7 tabs\n",
+      "stderr": "2026-09-18 12:22:25.191 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "seconds": 2.167850427038502
+    },
+    {
+      "name": "src/umat_oti/app/unified_app.py render",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-c",
+        "from streamlit.testing.v1 import AppTest; import sys; app=AppTest.from_file(sys.argv[1]).run(timeout=90); assert not app.exception, list(app.exception); print('rendered', len(app.title), 'titles', len(app.tabs), 'tabs')",
+        "/home/ammslab3/softwarex_work/imq-umat-recovery/src/umat_oti/app/unified_app.py"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "rendered 0 titles 0 tabs\n",
+      "stderr": "2026-09-18 12:22:27.344 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "seconds": 0.8416020689764991
+    },
+    {
+      "name": "src/umat_oti/app/workbench_app.py render",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-c",
+        "from streamlit.testing.v1 import AppTest; import sys; app=AppTest.from_file(sys.argv[1]).run(timeout=90); assert not app.exception, list(app.exception); print('rendered', len(app.title), 'titles', len(app.tabs), 'tabs')",
+        "/home/ammslab3/softwarex_work/imq-umat-recovery/src/umat_oti/app/workbench_app.py"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "rendered 1 titles 0 tabs\n",
+      "stderr": "2026-09-18 12:22:28.153 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
+      "seconds": 0.9885549049940892
+    },
+    {
+      "name": "primary GUI HTTP launch",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-c",
+        "import json,os,pathlib,sys; sys.path.insert(0,sys.argv[1]); from clean_install_gate import Gate,check_servers; work=pathlib.Path(sys.argv[2]); work.mkdir(); gate=Gate(work); gate.environment.update(os.environ); gate.report['kind']='source-tree-gui-health'; check_servers(gate,sys.executable,{'primary':{'path':sys.argv[3]}}); print(json.dumps(gate.report['servers']))",
+        "/home/ammslab3/softwarex_work/imq-ra-recovery/scripts",
+        "/tmp/recovery_usage_4g11chlm/UMAT_server",
+        "/home/ammslab3/softwarex_work/imq-umat-recovery/scripts/app.py"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "{\"primary\": {\"argv\": [\"/home/ammslab3/softwarex_work/.venv/bin/python\", \"-I\", \"-m\", \"streamlit\", \"run\", \"/home/ammslab3/softwarex_work/imq-umat-recovery/scripts/app.py\", \"--server.address=127.0.0.1\", \"--server.port=50605\", \"--server.headless=true\", \"--browser.gatherUsageStats=false\"], \"url\": \"http://127.0.0.1:50605\", \"ready\": true, \"pid\": 1271845, \"stopped\": true}}\n",
+      "stderr": "",
+      "seconds": 1.2716136109665968
+    }
+  ],
+  "previous_failures": []
+}

@@ -75,11 +75,13 @@ umat-oti = "umat_oti.cli:main"
 umat-oti-config = "umat_oti.cli_json:main"
 umat-oti-batch = "umat_oti.cli_batch:main"
 umat-oti-pipeline = "umat_oti.pipeline.cli:main"
+umat-oti-provider = "umat_oti.provider.build:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
+"umat_oti.provider" = ["contract/*.json", "contract/*.h"]
 # The OTI support sources are read at run time by module generation. Without
 # this they are omitted from a wheel and a pip-installed package raises
 # "OTILIB module generation unavailable" on first use.

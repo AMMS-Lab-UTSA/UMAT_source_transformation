@@ -1,0 +1,271 @@
+{
+  "clean_install_verified": false,
+  "phase": "presentation",
+  "python": "/home/ammslab3/softwarex_work/.venv/bin/python",
+  "work": "/tmp/recovery_usage_u30ngtt2",
+  "environment": {
+    "PYTHONPATH": "/home/ammslab3/softwarex_work/imq-ra-recovery:/home/ammslab3/softwarex_work/imq-umat-recovery/src:/home/ammslab3/otilib/build_py311",
+    "UMAT_OTI_REPO": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+    "PYOTI_PATH": "/home/ammslab3/otilib/build_py311",
+    "OTILIB_ROOT": "/home/ammslab3/otilib/build_py311",
+    "RUN_OTILIB_TESTS": "1"
+  },
+  "commands": [
+    {
+      "name": "compiler",
+      "argv": [
+        "gfortran",
+        "--version"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0\nCopyright (C) 2019 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "stderr": "",
+      "seconds": 0.004298651008866727
+    },
+    {
+      "name": "source-denied presentation",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "scripts/reproduce_presentation_request.py",
+        "consume",
+        "--work",
+        "/tmp/recovery_usage_u30ngtt2/presentation",
+        "--out",
+        "results"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-ra-recovery",
+      "returncode": 0,
+      "stdout": "PRIVATE SOURCE READ DENIAL ACTIVE\nCOLLABORATOR CWD /tmp/recovery_usage_u30ngtt2/presentation/collaborator\nCOLLABORATOR INPUTS ['Analysis.inp', 'Analysis.odb', 'Mapping.json', 'OTI_UMAT.obj', 'sensitivity_request.json']\nrequest executed: 4 scalar results; verified=False\n\n{\n  \"source_read_denial\": true,\n  \"production_rerun_during_consume\": false,\n  \"independent_reference\": \"uniaxial J2: U1=F/E+(F-SIGY0)/H\",\n  \"scaled_derivative_errors\": {\n    \"E\": 1.6568627353483993e-07,\n    \"SIGY0\": 8.673617379884035e-16,\n    \"H\": 8.839354487082118e-09\n  },\n  \"zero_reference_absolute_errors\": {\n    \"nu\": 1.1729503437354757e-09\n  },\n  \"zero_reference_absolute_tolerance\": 1e-08,\n  \"max_equilibrium_error\": 4.120058472760017e-07,\n  \"reaction_value_error\": 0.00012360175412595709,\n  \"stress_value_error\": 0.00012360175412595709,\n  \"state_value_error\": 2.209838492750471e-10,\n  \"passed\": true\n}\n",
+      "stderr": "",
+      "seconds": 1.306843519967515,
+      "proof": {
+        "path": "/tmp/recovery_usage_u30ngtt2/presentation/analytic_checks.json",
+        "sha256": "733c05517c3ace5a135bc75041adfb17ca23402307c526157f96e27255313b16",
+        "data": {
+          "source_read_denial": true,
+          "production_rerun_during_consume": false,
+          "independent_reference": "uniaxial J2: U1=F/E+(F-SIGY0)/H",
+          "scaled_derivative_errors": {
+            "E": 1.6568627353483993e-07,
+            "SIGY0": 8.673617379884035e-16,
+            "H": 8.839354487082118e-09
+          },
+          "zero_reference_absolute_errors": {
+            "nu": 1.1729503437354757e-09
+          },
+          "zero_reference_absolute_tolerance": 1e-08,
+          "max_equilibrium_error": 4.120058472760017e-07,
+          "reaction_value_error": 0.00012360175412595709,
+          "stress_value_error": 0.00012360175412595709,
+          "state_value_error": 2.209838492750471e-10,
+          "passed": true
+        }
+      },
+      "inputs_sha256": {
+        "Analysis.inp": "1cde25bd934403a4c3b341d7deca8d5a47897ae700f4329ab448d72d995b74d3",
+        "Analysis.odb": "54745b97b515de159c3251e8a3ba0ed89ea1c65452e388ef34c8c81794e3b736",
+        "OTI_UMAT.obj": "78b6632db73bc061fe241a0290e5aa6a47dac32089abd65e1483fa4812d3f71c",
+        "Mapping.json": "acb21be0cfdc66c35acd3eb6735dd44e5da2077829e882231293c4c4aaf8c204",
+        "sensitivity_request.json": "f0abfedf13cdf3c0efb117ebea685e314c823efc8b28bc0b741114dcd261807a"
+      },
+      "public_files": [
+        "run_report.txt",
+        "sensitivity_results.json",
+        "sensitivity_tables.csv"
+      ],
+      "public_result": {
+        "schema": "resasm_presentation_results_v1",
+        "status": "completed",
+        "request": {
+          "outputs": [
+            {
+              "name": "mean_loaded_U1",
+              "field": "U",
+              "component": 1,
+              "reduction": "mean",
+              "domain": {
+                "nodes": [
+                  2,
+                  3,
+                  6,
+                  7
+                ]
+              }
+            },
+            {
+              "name": "support_RF1",
+              "field": "RF",
+              "component": 1,
+              "reduction": "sum",
+              "domain": {
+                "nodes": [
+                  1,
+                  4,
+                  5,
+                  8
+                ]
+              }
+            },
+            {
+              "name": "mean_S11",
+              "field": "S",
+              "component": 1,
+              "reduction": "mean"
+            },
+            {
+              "name": "mean_EQPLAS",
+              "field": "SDV",
+              "component": 1,
+              "reduction": "mean"
+            }
+          ],
+          "parameters": [
+            "E",
+            "nu",
+            "SIGY0",
+            "H"
+          ],
+          "domain": {
+            "nodes": "ALL",
+            "elements": "ALL"
+          },
+          "increments": "LAST"
+        },
+        "scope": {
+          "history_increments_replayed": 4,
+          "output_increments": [
+            4
+          ],
+          "element_type": "C3D8",
+          "material": "fingerprint-pinned m3_j2",
+          "integration": "selective_reduced"
+        },
+        "metadata": {
+          "sensitivity_semantics": "total_equilibrated_history",
+          "verified": false,
+          "verification": {
+            "status": "not_run",
+            "passed": null
+          },
+          "max_equilibrium_error": 4.120058472760017e-07,
+          "input_sha256": {
+            "Analysis.inp": "1cde25bd934403a4c3b341d7deca8d5a47897ae700f4329ab448d72d995b74d3",
+            "Analysis.odb": "54745b97b515de159c3251e8a3ba0ed89ea1c65452e388ef34c8c81794e3b736",
+            "OTI_UMAT.obj": "78b6632db73bc061fe241a0290e5aa6a47dac32089abd65e1483fa4812d3f71c",
+            "Mapping.json": "acb21be0cfdc66c35acd3eb6735dd44e5da2077829e882231293c4c4aaf8c204",
+            "sensitivity_request.json": "f0abfedf13cdf3c0efb117ebea685e314c823efc8b28bc0b741114dcd261807a"
+          },
+          "regular_source_hash": "9b779f0c6cadf9c4",
+          "checks": [
+            "mesh ids/coordinates/connectivity",
+            "complete virgin-to-final history",
+            "time/ramped CF loads",
+            "prescribed displacements",
+            "free equilibrium",
+            "IP stress and state",
+            "reactions"
+          ],
+          "odb_tolerances": {
+            "scaled_equilibrium": 1e-05,
+            "stress_rtol": 2e-05,
+            "stress_reaction_atol": "2e-5 * max(max_abs_recorded_field, 1)",
+            "zero_bc_atol": "1e-12 * max_mesh_extent",
+            "state_rtol": 2e-05,
+            "state_atol": 1e-08
+          },
+          "limitations": "one small-strain static step; zero BCs; homogeneous pinned J2; no load/geometry/BC derivatives"
+        },
+        "results": [
+          {
+            "output": "mean_loaded_U1",
+            "field": "U",
+            "component": 1,
+            "reduction": "mean",
+            "domain": {
+              "nodes": [
+                2,
+                3,
+                6,
+                7
+              ]
+            },
+            "increment": 4,
+            "time": 1.0,
+            "value": 0.026428570970892906,
+            "derivatives": {
+              "E": -6.802719961317867e-09,
+              "nu": 1.1729503437354757e-09,
+              "SIGY0": -0.0004999999999999996,
+              "H": -1.249999988950807e-05
+            }
+          },
+          {
+            "output": "support_RF1",
+            "field": "RF",
+            "component": 1,
+            "reduction": "sum",
+            "domain": {
+              "nodes": [
+                1,
+                4,
+                5,
+                8
+              ]
+            },
+            "increment": 4,
+            "time": 1.0,
+            "value": -299.9998763982459,
+            "derivatives": {
+              "E": 1.0842021724855044e-19,
+              "nu": -4.263256414560601e-14,
+              "SIGY0": 3.802513859341161e-15,
+              "H": 1.3097162243624894e-16
+            }
+          },
+          {
+            "output": "mean_S11",
+            "field": "S",
+            "component": 1,
+            "reduction": "mean",
+            "domain": {
+              "elements": [
+                1
+              ]
+            },
+            "increment": 4,
+            "time": 1.0,
+            "value": 299.9998763982459,
+            "derivatives": {
+              "E": -9.2243652605627e-19,
+              "nu": 8.326672657087832e-15,
+              "SIGY0": 8.289954371017996e-15,
+              "H": 1.3702508457194943e-16
+            }
+          },
+          {
+            "output": "mean_EQPLAS",
+            "field": "SDV",
+            "component": 1,
+            "reduction": "mean",
+            "domain": {
+              "elements": [
+                1
+              ]
+            },
+            "increment": 4,
+            "time": 1.0,
+            "value": 0.024999999779016152,
+            "derivatives": {
+              "E": 2.481541837659083e-23,
+              "nu": -7.806255641895632e-18,
+              "SIGY0": -0.0004999999999999996,
+              "H": -1.2499999889508068e-05
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "previous_failures": []
+}

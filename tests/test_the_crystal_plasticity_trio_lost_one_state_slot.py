@@ -76,7 +76,6 @@ from umat_oti.abaqus.primal_signature import (CONFIRMED, ITERATIVE_SOLVER,
 
 pytestmark = pytest.mark.integration
 
-PASS9 = _corpus_run("pass9")
 TRIO = {
     "0d97f9db648d23a064062989":
         "RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for",
@@ -85,11 +84,22 @@ TRIO = {
     "71a0523bc387a9b773773a24":
         "RitioL__PolyFatigueCrackSim/workplace/subroutines3_revised.for",
 }
-CACHE = Path(str(_cache()))
 
 
-def _primal(key):
-    results = PASS9 / "results" / "store_verification.jsonl"
+@pytest.fixture
+def pass9():
+    """The pass9 corpus run, resolved per test so that its absence skips the
+    test that needs it rather than aborting collection of the whole suite."""
+    return _corpus_run("pass9")
+
+
+@pytest.fixture
+def cache():
+    return Path(str(_cache()))
+
+
+def _primal(pass9, key):
+    results = pass9 / "results" / "store_verification.jsonl"
     if not results.exists():
         pytest.skip("the pass9 corpus results are not on this machine")
     for line in results.read_text().splitlines():
@@ -99,11 +109,43 @@ def _primal(key):
     pytest.skip(f"{key} is not in the pass9 results")
 
 
+def test_missing_corpus_and_cache_keep_their_explicit_skip_reasons(tmp_path, monkeypatch):
+    monkeypatch.setenv("UMAT_OTI_CORPUS_RUN", str(tmp_path))
+    monkeypatch.setenv("UMAT_OTI_DISCOVERY_CACHE", str(tmp_path / "cache"))
+    with pytest.raises(pytest.skip.Exception, match="no corpus run at .*pass9"):
+        _corpus_run("pass9")
+    with pytest.raises(pytest.skip.Exception, match="no discovery cache at"):
+        _cache()
+    (tmp_path / "pass9").mkdir()
+    (tmp_path / "cache").mkdir()
+    assert _corpus_run("pass9") == tmp_path / "pass9"
+    assert _cache() == tmp_path / "cache"
+
+
+def test_missing_primal_evidence_keeps_its_explicit_skip_reasons(tmp_path):
+    with pytest.raises(pytest.skip.Exception, match="pass9 corpus results"):
+        _primal(tmp_path, "missing")
+    (tmp_path / "results").mkdir()
+    results = tmp_path / "results" / "store_verification.jsonl"
+    results.write_text(json.dumps({"key": "present"}) + "\n", encoding="utf-8")
+    with pytest.raises(pytest.skip.Exception, match="missing is not in the pass9 results"):
+        _primal(tmp_path, "missing")
+    assert _primal(tmp_path, "present") == {"key": "present"}
+
+
+def test_corrupt_primal_evidence_is_an_error_not_a_skip(tmp_path):
+    (tmp_path / "results").mkdir()
+    results = tmp_path / "results" / "store_verification.jsonl"
+    results.write_text("{corrupt\n", encoding="utf-8")
+    with pytest.raises(json.JSONDecodeError):
+        _primal(tmp_path, "missing")
+
+
 @pytest.mark.parametrize("key", sorted(TRIO))
-def test_the_two_builds_took_the_same_number_of_solver_passes(key):
+def test_the_two_builds_took_the_same_number_of_solver_passes(key, pass9):
     """140 increments, two passes each, in both builds, in all three entries.
     That count is the one the different-iterate hypothesis says must differ."""
-    work = PASS9 / "work" / key
+    work = pass9 / "work" / key
     if not (work / "original" / "original_probe.txt").exists():
         pytest.skip("the pass9 probe records are not on this machine")
     original, transformed = ci.read_pair(work)
@@ -115,9 +157,9 @@ def test_the_two_builds_took_the_same_number_of_solver_passes(key):
 
 
 @pytest.mark.parametrize("key", sorted(TRIO))
-def test_exactly_one_of_one_hundred_and_fifty_state_slots_moved(key):
+def test_exactly_one_of_one_hundred_and_fifty_state_slots_moved(key, pass9):
     """And the stresses of the same call agree to 5.0e-17 of their field."""
-    work = PASS9 / "work" / key
+    work = pass9 / "work" / key
     if not (work / "original" / "original_probe.txt").exists():
         pytest.skip("the pass9 probe records are not on this machine")
     original, transformed = ci.read_pair(work)
@@ -136,12 +178,13 @@ def test_exactly_one_of_one_hundred_and_fifty_state_slots_moved(key):
 
 
 @pytest.mark.parametrize("key", sorted(TRIO))
-def test_the_different_iterate_hypothesis_is_refuted_and_the_slot_confirmed(key):
-    work = PASS9 / "work" / key
+def test_the_different_iterate_hypothesis_is_refuted_and_the_slot_confirmed(
+        key, pass9, cache):
+    work = pass9 / "work" / key
     if not (work / "original" / "original_probe.txt").exists():
         pytest.skip("the pass9 probe records are not on this machine")
-    record = _primal(key)
-    source = CACHE / TRIO[key]
+    record = _primal(pass9, key)
+    source = cache / TRIO[key]
     signature = review_entry(
         record["primal"], work,
         source.read_text(errors="replace") if source.exists() else "")
@@ -159,12 +202,13 @@ def test_the_different_iterate_hypothesis_is_refuted_and_the_slot_confirmed(key)
 
 
 @pytest.mark.parametrize("key", sorted(TRIO))
-def test_the_lost_slot_is_carried_forward_into_the_next_increments_entry_state(key):
+def test_the_lost_slot_is_carried_forward_into_the_next_increments_entry_state(
+    key, pass9):
     """This is how one slot at increment 1 becomes +/-1.99 at record 137: the
     wrong value is written into STATEV(25), Abaqus hands it back as STATEV0 at
     increment 2, and from there the stresses part too -- 531.7907306 against
     531.7907749 at the first call of increment 2."""
-    work = PASS9 / "work" / key
+    work = pass9 / "work" / key
     if not (work / "original" / "original_probe.txt").exists():
         pytest.skip("the pass9 probe records are not on this machine")
     original, transformed = ci.read_pair(work)

@@ -186,6 +186,41 @@ def test_the_report_names_both_denominators_and_keeps_them_apart():
     assert "NOTHING INTERNAL" in text.upper()
 
 
+def test_retained_refresh_preserves_observations_and_retires_currency(tmp_path):
+    from copy import deepcopy
+    from build_corpus_registry import kind_of, main, refresh_retained
+
+    original = registry()
+    untouched = deepcopy(original)
+    records, refreshed = refresh_retained(original)
+    assert original == untouched
+    assert len(records) == len(refreshed["records"]) == 391
+    for before, after in zip(original["records"], refreshed["records"]):
+        assert after == {**before, "kind": kind_of(before["terminal_state"])}
+    for key in ("inputs", "inventory", "verification_file_reconciliation",
+                "denominators", "evidence_gate_census", "fully_verified",
+                "verified_on_every_gate"):
+        assert refreshed["summary"][key] == original["summary"][key]
+    assert refreshed["generated"] == original["generated"]
+    currency = refreshed["summary"]["evidence_currency"]
+    assert currency["status"] == "historical_only"
+    assert currency["current_capability"] == "NOT ESTABLISHED"
+    assert currency["historical_store_fingerprint"] != currency["current_code_fingerprint"]
+    assert refresh_retained(refreshed)[1] == refreshed
+    output = tmp_path / "registry.json"
+    table = tmp_path / "registry.csv"
+    text = tmp_path / "report.md"
+    assert main(["--refresh-retained", str(REGISTRY), "--json", str(output),
+                 "--csv", str(table), "--markdown", str(text)]) == 0
+    assert json.loads(output.read_text()) == refreshed
+    assert "HISTORICAL EVIDENCE ONLY" in text.read_text()
+    assert len(list(csv.DictReader(table.open()))) == 391
+    current = deepcopy(original)
+    current["summary"]["inputs"]["store_fingerprint"] = currency["current_code_fingerprint"]
+    with pytest.raises(ValueError, match="historical store generation"):
+        refresh_retained(current)
+
+
 def test_every_terminal_state_in_the_report_is_marked_external_or_internal():
     """For every terminal state the report has to say whose move it is. A
     table of state names with no owner is the thing this project exists not to

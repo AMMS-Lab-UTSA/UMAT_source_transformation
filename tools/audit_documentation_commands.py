@@ -51,6 +51,12 @@ EXTERNAL_MODULES = {"venv", "pip", "pytest", "build", "twine"}
 #: and the repository audit exempts them from the same-shaped path check.
 EXEMPT_PREFIXES = ("docs/development/",)
 
+HISTORICAL_PATH_INVENTORIES = {
+    "docs/BRANCH_IMPLEMENTATION_AUDIT.md":
+        "Inventories paths in historical branches and both repositories, "
+        "including planned destinations; these are not current local paths.",
+}
+
 
 def doc_files() -> list[Path]:
     out = subprocess.run(["git", "ls-files", "-z", "*.md"], cwd=REPO_ROOT,
@@ -85,6 +91,8 @@ def audit() -> list[dict]:
         text = doc.read_text(encoding="utf-8", errors="replace")
 
         for match in _INLINE_PATH.finditer(text):
+            if relative.as_posix() in HISTORICAL_PATH_INVENTORIES:
+                continue
             candidate = match.group(1).rstrip("/")
             root = candidate.split("/", 1)[0]
             if not (REPO_ROOT / root).exists():

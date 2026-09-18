@@ -1,5 +1,17 @@
 # UMAT-OTI
 
+**Current user entry point:** [verified usage report](docs/USAGE_REPORT.md)
+contains installation, captured help, five reproduced example invocations,
+GUI limits and the exact artifact-only presentation connection.
+[Requirement audit](docs/COMPLETION_LEDGER.md): 104 bounded implemented,
+159 partial, 11 unestablished; **0 final clean-install complete, 274 outstanding**.
+
+**Recovery evidence status (2026-09-18):** retained corpus, collection and
+fixture results are historical, not current capability claims. The current
+generation and bounded executable J2 evidence are separated in
+[the evidence refresh record](docs/evidence/recovery_evidence_refresh.md).
+No whole-corpus rerun or committed clean-clone gate is claimed.
+
 [![CI](https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation/actions/workflows/ci.yml/badge.svg)](https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation/actions/workflows/ci.yml)
 [![License: GPL-3.0-only](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE.txt)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
@@ -16,8 +28,9 @@ their own UMAT.
 
 It is meant to be copied, zipped, or shared as its own folder.
 
-The bundled compact-JSON workflow has been smoke-tested inside this directory,
-and the completed 19-case benchmark set transforms successfully from here.
+Earlier compact-JSON smoke and 19-case benchmark results are historical.
+Current bounded provider/local-Jacobian results are recorded in the usage report;
+they do not establish a current whole-benchmark or corpus pass.
 
 ## What Is Included
 
