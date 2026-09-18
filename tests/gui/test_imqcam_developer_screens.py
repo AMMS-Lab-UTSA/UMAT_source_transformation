@@ -74,17 +74,30 @@ def _jacobian_run(source: Path, ntens: int) -> dict:
     return run
 
 
+#: What the screen says about the lines that assign DDSDDE, and the block the
+#: transform report says it replaced. The J2 routine's elastic stiffness at
+#: 38-48 is the predictor the stress update reads, so it stays; the FCC routine
+#: assigns DDSDDE only there (line 132, the slide's "132-132").
+BLOCKS = {
+    "m3_j2": ("86-108 replaced; 38-48 kept (read by the stress update); extraction after line 111", "86-108"),
+    "elastic": ("83-87 replaced; extraction after line 87", "83-87"),
+    "m6_fcc": ("131-133 kept (read by the stress update); extraction after line 189", "(none found)"),
+}
+
+
 @pytest.mark.integration
-@pytest.mark.parametrize("source,ntens,lines", [
-    (J2_SOURCE, 6, "86-108"), (ELASTIC_SOURCE, 4, "83-87"),
-], ids=["m3_j2", "elastic"])
-def test_four_fields_and_one_click_give_what_the_command_line_gives(workspace, source, ntens, lines):
+@pytest.mark.parametrize("source,ntens,model", [
+    (J2_SOURCE, 6, "m3_j2"), (ELASTIC_SOURCE, 4, "elastic"), (FCC_SOURCE, 6, "m6_fcc"),
+], ids=["m3_j2", "elastic", "m6_fcc"])
+def test_four_fields_and_one_click_give_what_the_command_line_gives(workspace, source, ntens, model):
     run = _jacobian_run(source, ntens)
     assert run["exit_code"] == 0
     # "The Jacobian block is found for you": shown before the click, and the
-    # transformer replaced exactly that block.
-    assert run["shown"]["line(s) that assign the tangent"] == lines
-    assert jr.format_lines(run["tangent_lines"]) == lines
+    # transform report agrees about the block it replaced.
+    shown, replaced = BLOCKS[model]
+    assert run["shown"]["line(s) that assign the tangent"] == shown
+    assert run["tangent_block"] == shown
+    assert jr.format_lines(run["tangent_lines"]) == replaced
     assert "STRESS" in run["shown"]["variables carried through the derivative"]
     assert any(label.startswith("Transformed UMAT") for label in run["downloads"])
     assert any(label.startswith("Transform report") for label in run["downloads"])
@@ -98,6 +111,7 @@ def test_four_fields_and_one_click_give_what_the_command_line_gives(workspace, s
     gui_file, cli_file = Path(run["transformed"]), cli_out / Path(run["transformed"]).name
     assert gui_file.read_bytes() == cli_file.read_bytes()
     assert Path(run["drop_in"]).read_bytes() == (cli_out / Path(run["drop_in"]).name).read_bytes()
+    assert json.loads(completed.stdout)["transform_success"] is True
     # And through umat-oti-config with the contract the screen wrote.
     config_out = workspace / "config"
     completed = subprocess.run(
@@ -105,6 +119,26 @@ def test_four_fields_and_one_click_give_what_the_command_line_gives(workspace, s
          "--out", str(config_out)], capture_output=True, text=True)
     assert completed.returncode == 0, completed.stderr
     assert (config_out / gui_file.name).read_bytes() == gui_file.read_bytes()
+
+
+@pytest.mark.integration
+def test_a_routine_that_is_not_a_umat_is_refused_with_the_services_reasons(workspace):
+    source = workspace / "not_a_umat.for"
+    source.write_text("      SUBROUTINE FOO(X)\n      X=1.0\n      RETURN\n      END\n")
+    app = AppTest.from_string(JACOBIAN, default_timeout=180).run()
+    app.text_input(key="pj_path").set_value(str(source)).run()
+    app.button(key="pj_transform").click().run()
+    assert not app.exception
+    run = app.session_state["pj_run"]
+    assert run["exit_code"] != 0 and not run["succeeded"]
+    assert any(e.value.startswith(f"Transform did not succeed (exit code {run['exit_code']}")
+               for e in app.error)
+    assert not app.success and not app.get("download_button")
+    # The command line refuses the same four fields with the same exit code.
+    completed = subprocess.run(
+        [sys.executable, "-m", "umat_oti.cli", "jacobian", str(source), "--ntens", "6",
+         "--out", str(workspace / "cli")], capture_output=True, text=True)
+    assert completed.returncode == run["exit_code"]
 
 
 @pytest.mark.integration
@@ -142,6 +176,32 @@ def test_the_downloaded_umat_returns_the_tangent_of_the_original(workspace, sour
                                      props=props, path=path, ntens=ntens, nstatv=nstatv)
     assert measured["primal_max_abs"] <= 1e-10 * measured["stress_scale"]
     assert max(measured["tangent_scaled_errors"]) < 2e-6, measured["tangent_scaled_errors"]
+
+
+@pytest.mark.slow
+@pytest.mark.fortran
+def test_the_fcc_tangent_is_the_limit_of_the_finite_differences(workspace):
+    """Slide 16's own example: the 12-slip-system crystal, at slide 17's values.
+
+    The path is the provider check path scaled by 0.3, which drives slip on
+    this rate-dependent, explicitly sub-stepped update without leaving the
+    range it integrates (the unscaled path gives non-finite values in the
+    ORIGINAL). Here the centred difference's truncation error, proportional
+    to h**2, dominates at the larger steps, so no fixed step agrees to 2e-6.
+    What is required instead is the behaviour of a derivative the differences
+    converge to: each tenfold reduction of the step reduces the scaled error
+    by at least 50 (h**2 gives 100), and the finest step agrees to 1e-8.
+    """
+    from tangent_reference import compare_with_original
+
+    run = _jacobian_run(FCC_SOURCE, 6)
+    props = [value for _, _, value in FCC_TABLE]
+    measured = compare_with_original(Path(run["drop_in"]), FCC_SOURCE, workspace / "fd",
+                                     props=props, path=J2_PATH * 0.3, ntens=6, nstatv=12)
+    errors = measured["tangent_scaled_errors"]
+    assert measured["primal_max_abs"] <= 1e-10 * measured["stress_scale"]
+    assert errors[0] / errors[1] > 50 and errors[1] / errors[2] > 50, errors
+    assert errors[2] < 1e-8, errors
 
 
 def _provider_app(source: Path, table, nstatv: int, *, j2: bool) -> AppTest:

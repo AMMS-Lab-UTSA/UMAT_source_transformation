@@ -26,6 +26,10 @@ DELEGATED_FRONT_ENDS = {
     "src/umat_oti/cli_batch.py": "run_transformation",
     "src/umat_oti/app/engine.py": "run_transformation",
     "src/umat_oti/app/streamlit_app.py": "run_transformation",
+    # The four-field Jacobian screen and `umat-oti jacobian` share one function,
+    # and that function reaches the service.
+    "src/umat_oti/app/presentation_screens.py": "run_jacobian_transform",
+    "src/umat_oti/services/jacobian_request.py": "run_transformation",
     "src/umat_oti/reports/run_softwarex_evidence.py": "run_transformation",
     "src/umat_oti/pipeline/stages.py": "run_transformation",
 }

@@ -141,7 +141,7 @@ def render_jacobian_screen() -> None:
                       value=", ".join(preview.get("carried_variables") or []),
                       key=f"pj_carried_{hash(str(preview))}")
         st.text_input("line(s) that assign the tangent", disabled=True,
-                      value=jr.format_lines(preview.get("tangent_lines") or []) if preview else "",
+                      value=jr.describe_tangent_block(preview) if preview else "",
                       key=f"pj_lines_{hash(str(preview))}")
         if problem:
             st.error(problem)
@@ -157,6 +157,7 @@ def render_jacobian_screen() -> None:
                 "target": target, "out_dir": str(out_dir), "exit_code": run.exit_code,
                 "succeeded": run.succeeded, "summary": run.summary,
                 "tangent_lines": run.tangent_lines(), "carried": run.carried_variables(),
+                "tangent_block": jr.describe_tangent_block(preview),
                 "contract": str(run.contract_path),
                 "transformed": str(run.transformed_source or ""),
                 "drop_in": str(run.drop_in_source or ""),
@@ -173,13 +174,14 @@ def _render_jacobian_result(run: dict[str, Any] | None) -> None:
         st.info("Load a UMAT on the left and press **Transform**.")
         return
     summary = run["summary"]
-    report = summary.get("report_path") and json.loads(Path(summary["report_path"]).read_text()) or {}
+    report_path = Path(str(summary.get("report_path") or ""))
+    report = json.loads(report_path.read_text()) if report_path.is_file() else {}
     if run["succeeded"]:
         st.success("Transform succeeded")
     else:
         st.error(f"Transform did not succeed (exit code {run['exit_code']}, "
                  f"`{summary.get('status_category') or 'no category'}`)")
-        for field in ("error", "errors", "blockers"):
+        for field in ("error", "errors", "blockers", "completion_issues"):
             if summary.get(field):
                 st.code(json.dumps(summary[field], indent=2, default=str), language="json")
     m1, m2, m3 = st.columns(3)
@@ -194,7 +196,7 @@ def _render_jacobian_result(run: dict[str, Any] | None) -> None:
             f"- the routine now fills **{run['target']} = ∂{run['response']}/∂{run['seed']}** "
             "exactly, from OTI arithmetic (no step size)\n"
             f"- generated `{transformed.name if transformed else '?'}`\n"
-            f"- old tangent block replaced: lines {jr.format_lines(run['tangent_lines'])}\n"
+            f"- lines that assign the tangent: {run.get('tangent_block')}\n"
             f"- carried through the derivative: {', '.join(run['carried'])}\n"
             f"- the generator's own structural checks: {passed}/{len(checks)} passed")
         d1, d2 = st.columns(2)

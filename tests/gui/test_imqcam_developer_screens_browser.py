@@ -101,16 +101,21 @@ def _jacobian(page, source: Path, ntens: int, lines: str):
     return panel
 
 
-@pytest.mark.parametrize("source,ntens,lines,shot", [
-    (J2_SOURCE, 6, "86-108", "umat_constitutive_jacobian.png"),
-    (ELASTIC_SOURCE, 4, "83-87", None),
-], ids=["m3_j2", "elastic"])
-def test_slide16_constitutive_jacobian(page, server, tmp_path, source, ntens, lines, shot):
+J2_BLOCK = "86-108 replaced; 38-48 kept (read by the stress update); extraction after line 111"
+
+
+@pytest.mark.parametrize("source,ntens,lines,replaced,shot", [
+    (J2_SOURCE, 6, J2_BLOCK, "1  (lines 86-108)", "umat_constitutive_jacobian.png"),
+    (ELASTIC_SOURCE, 4, "83-87 replaced; extraction after line 87", "1  (lines 83-87)", None),
+    (FCC_SOURCE, 6, "131-133 kept (read by the stress update); extraction after line 189", "0  ()",
+     "umat_constitutive_jacobian_fcc.png"),
+], ids=["m3_j2", "elastic", "m6_fcc"])
+def test_slide16_constitutive_jacobian(page, server, tmp_path, source, ntens, lines, replaced, shot):
     panel = _jacobian(page, source, ntens, lines)
     transformed = _download(page, panel.get_by_role("button", name=re.compile("^Transformed UMAT")), tmp_path)
     report = _download(page, panel.get_by_role("button", name=re.compile("^Transform report")), tmp_path)
     assert "Transformation    : SUCCESS" in report.read_text()
-    assert f"Old tangent blocks replaced: 1  (lines {lines})" in report.read_text()
+    assert f"Old tangent blocks replaced: {replaced}" in report.read_text()
     completed = subprocess.run(
         [sys.executable, "-m", "umat_oti.cli", "jacobian", str(source), "--ntens", str(ntens),
          "--out", str(tmp_path / "cli")], capture_output=True, text=True,
@@ -134,7 +139,7 @@ def _build(page, panel, *, j2: bool, expected: str):
 
 def test_slide17_parameter_sensitivities_j2(page, server, tmp_path):
     """Take the UMAT from the transform, list E, nu, SIGY0, H, tick, Build."""
-    _jacobian(page, J2_SOURCE, 6, "86-108")
+    _jacobian(page, J2_SOURCE, 6, J2_BLOCK)
     page.get_by_role("tab", name="Parameter Sensitivities", exact=True).click()
     panel = page.get_by_role("tabpanel", name="Parameter Sensitivities")
     expect(panel.get_by_role("heading", name="umat-oti — Parameter Sensitivities")).to_be_visible()

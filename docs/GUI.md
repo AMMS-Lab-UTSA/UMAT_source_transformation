@@ -42,7 +42,7 @@ you. Click Transform."
 | Fortran source file (.for) | an upload, or a path on this machine |
 | Number of stress components (NTENS) | 3, 4 or 6. The screen suggests a value from the source; the user decides |
 | differentiate with respect to / of the output / write into | `DSTRAN` / `STRESS` / `DDSDDE` by default |
-| Tangent block (detected automatically) | read-only: the lines the transformer will replace and the variables it will carry through the derivative |
+| Tangent block (detected automatically) | read-only: what happens to the lines that assign DDSDDE, and the variables the transform will carry through the derivative. A hand-written tangent after the stress update is *replaced*. An assignment the stress update itself reads (an elastic stiffness used as the predictor) is *kept*. The OTI extraction that fills DDSDDE is written after the named line |
 
 **What it calls.** `umat_oti.services.jacobian_request.run_jacobian_transform`
 ([source](../src/umat_oti/services/jacobian_request.py)). It writes a compact
@@ -71,8 +71,10 @@ umat-oti-config --config out_dir/jacobian_contract.json --out out_dir2
 **Measured (2026-09-18).**
 
 - m3_j2 (`parameter_sensitivity/models/m3_j2/umat.for`, NTENS 6): the screen
-  finds the old tangent at lines 86-108 and carries DEQPL, EQPLAS, FLOW,
-  SHYDRO, SMISES, STATEV, STRESS, SYIEL0 and SYIELD. It reports 0 blockers,
+  shows "86-108 replaced; 38-48 kept (read by the stress update); extraction
+  after line 111" and carries DEQPL, EQPLAS, FLOW, SHYDRO, SMISES, STATEV,
+  STRESS, SYIEL0 and SYIELD. The slide shows "107-107", the last DDSDDE
+  assignment, for this line field. It reports 0 blockers,
   0 warnings and 21 of 21 structural checks passed. The downloaded
   `umat_oti.for` and the drop-in are byte-identical to the output of
   `umat-oti jacobian` and of `umat-oti-config` with the written contract. The
@@ -83,9 +85,25 @@ umat-oti-config --config out_dir/jacobian_contract.json --out out_dir2
   (stress scale 684). Scaled tangent errors were 3.25e-8, 3.25e-10 and
   2.95e-11 at strain steps 1e-6, 1e-7 and 1e-8.
 - The elastic example (`UMATs/UMATs/ICP/elasticity/elastic.f`, NTENS 4): the
-  screen finds lines 83-87. The transformed `elastic_oti.f` is byte-identical
+  screen shows "83-87 replaced; extraction after line 87". The transformed `elastic_oti.f` is byte-identical
   to what the hand-written `examples/elastic_minimal.json` produces. The
   tangent's scaled errors against FD of the original were at most 2.8e-12.
+- The slide's own example, the FCC crystal-plasticity routine
+  (`parameter_sensitivity/models/m6_fcc/umat.for`, NTENS 6). Its only DDSDDE
+  assignment is the elastic stiffness at line 132, before the stress update;
+  the slide shows "132-132". The screen shows "131-133 kept (read by the
+  stress update); extraction after line 189". It carries BASE, DEP, DG,
+  DGAM, DSUB, GDOT, GRES, HALP, R2, RATIO, STATEV, STRESS and TAU, with
+  21 of 21 structural checks passed, and the output is byte-identical to the
+  CLI's. The drop-in's DDSDDE was compared with centred FD of the original at
+  slide 17's parameter values on the provider check path scaled by 0.3; the
+  unscaled path gives non-finite values in the original. Scaled errors were
+  4.57e-5, 4.57e-7 and 4.57e-9 at steps 1e-6, 1e-7 and 1e-8. Each tenfold
+  step reduction divides the error by 100, which is the h² truncation of the
+  centred difference converging on the OTI value. On the path scaled by 0.1
+  the errors were 1.69e-8, 1.69e-10 and 9.84e-12.
+
+![Constitutive Jacobian on the 12-slip-system FCC routine](screenshots/umat_constitutive_jacobian_fcc.png)
 
 ## Parameter Sensitivities (slides 17 and 41)
 
@@ -102,6 +120,11 @@ Then Build and the OTI-enabled UMAT is automatically generated."
 | parameter / PROPS index / value | one row per parameter. The table starts empty. A source that is byte-identical to a shipped model (`parameter_sensitivity/models/*`) gets a button that fills the table from that model's contract |
 | stress (DSIGMA_DP), state (DSTATEV_DP, auto) | the provider's derivative requests. DSIGMA_DP cannot be switched off because it is what the provider builds. DSTATEV_DP is always carried when NSTATV > 0 |
 | Options | model name (names the canonical `umat_<name>_oti.obj`); verification on/off; require the J2 branch sequence on the check path |
+
+"The UMAT provided by the source transform" is the same source the Constitutive
+Jacobian screen loaded. The provider needs the original routine, because it
+lifts that routine itself with one OTI direction per parameter plus the six
+strain directions. It does not take the DDSDDE-transformed file.
 
 NPROPS is the largest PROPS index in the table, and every slot up to it must
 have a row. The independent check replays the original routine, and that needs
@@ -177,7 +200,7 @@ Exit code 0 means built and verified, 1 means built but not verified, and
 
 | Test | What it drives | Run |
 | --- | --- | --- |
-| `tests/gui/test_imqcam_developer_screens.py` | both screens through `streamlit.testing` (AppTest): GUI output against `umat-oti jacobian` and `umat-oti-config`, the elastic output against the curated example, the downloaded tangent against FD of the original, the J2 and FCC builds against the verifier CLI, and the table and tick rules | the offline suite |
+| `tests/gui/test_imqcam_developer_screens.py` | both screens through `streamlit.testing` (AppTest): GUI output against `umat-oti jacobian` and `umat-oti-config` for m3_j2, elastic and m6_fcc; the elastic output against the curated example; the downloaded tangent against FD of the original (J2, elastic, and the FCC convergence); the J2 and FCC builds against the verifier CLI; and the table and tick rules | the offline suite |
 | `tests/test_provider_regular_object.py` | `umat-oti-provider build --regular-object`: the object is the bundled original; its hash is in the contract; linked alone it replays the original bit for bit | the offline suite |
 | `tests/gui/test_imqcam_developer_screens_browser.py` | the same flows in headless Chromium, as the slides describe them: upload, type the table, tick, click, download. Compares with the CLI and writes the screenshots above | `python -m pytest -m gui tests/gui` |
 
@@ -193,9 +216,19 @@ They are deselected unless `-m gui` is given (see
 - Its independent check uses the provider verifier's fixed seven-increment
   path. A material that cannot integrate that path (m6_fcc) is built but not
   verified.
-- `REAL_UMAT.obj` is compiled with the provider's compiler, gfortran on this
-  machine. Abaqus on Linux normally compiles user subroutines with its own
-  Intel compiler. Linking a gfortran object into an Abaqus job was not tested.
+- `REAL_UMAT.obj` is compiled with the provider's compiler (gfortran here).
+  On Linux, Abaqus accepts a precompiled user object only with the `.o`
+  extension, so it has to be copied to `REAL_UMAT.o`; the bytes stay the
+  same. Measured on 2026-09-18 (Abaqus 2021.HF5, job `claudeG_real`, the
+  presentation example `Analysis.inp`, `user=REAL_UMAT.o`, SHA-256
+  53bac302...): Abaqus linked it with its Intel toolchain and all four
+  increments converged. The .sta ends "THE ANALYSIS HAS COMPLETED
+  SUCCESSFULLY", and the exported U, RF, CF, S and SDV1 of all five frames
+  are identical (max |difference| 0) to the reference job `imqrp_j2`, whose
+  ifort compiled the same source. After the analysis, however, the process
+  aborted with "buffer overflow detected" (signal 6, exit code 1), which the
+  ifort-compiled reference run did not. A production user sees that as a
+  failed job, even though the results are complete.
 - Objects embed absolute build paths in their bounds-check messages, so a
   rebuild does not reproduce them byte for byte. A shared object also reveals
   the developer's directory names, but not the source.
