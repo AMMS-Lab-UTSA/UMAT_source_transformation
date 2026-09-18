@@ -440,6 +440,23 @@ def _dependency_summary(parsed: ParsedFortranSource, assignments: list[Assignmen
         if assignment.lhs in stress_path_variables and "DDSDDE" in assignment.rhs_tokens
     }
     upstream_to_stress_without_target = upstream_to_stress - {"STRESS"}
+    # A source that stores the elastic stiffness in DDSDDE and forms the
+    # predictor stress from it (STRESS = STRESS + DDSDDE*DSTRAN) makes every
+    # input of those early DDSDDE writes an input of the stress, although the
+    # walk above stops at DDSDDE. Without this, UMAT_VPDCL and UMAT_NKH_1.02 had
+    # ELAM classed "feeds only the old tangent", its assignment skipped, and the
+    # kept predictor block read an ELAM nothing had set: the transformed build's
+    # stress differed from the original's by a hydrostatic offset.
+    first_stress_use = min(ddsdde_stress_input_lines, default=0)
+    if first_stress_use:
+        predictor_inputs: set[str] = set()
+        for assignment in assignments:
+            if assignment.lhs == "DDSDDE" and assignment.line_numbers[-1] < first_stress_use:
+                predictor_inputs |= assignment.rhs_tokens
+        for name in set(predictor_inputs) - {"DDSDDE"}:
+            upstream_to_stress_without_target |= _upstream_dependencies_for(
+                name, assignments, stop_lhs={"DDSDDE"})
+        upstream_to_stress_without_target -= {"DDSDDE", "STRESS"}
     upstream_to_ddsdde_without_target = upstream_to_ddsdde - {"DDSDDE"}
     shared_setup_variables = (
         (upstream_to_stress_without_target & upstream_to_ddsdde_without_target)
