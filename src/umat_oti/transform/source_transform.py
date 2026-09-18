@@ -2546,7 +2546,9 @@ def _transform_source_text(
                     disabled_lines=disabled_old_region_lines,
                     stale_shadow_names=shadow_sync_dirty_names)
                 and _is_promoted_branch_line(logical_branch_line or line, names_for(line_number))):
-            output[-1] = _transform_executable_line(logical_branch_line or line, names_for(line_number), type_name, lifted_helper_names)
+            output[-1] = _restore_statement_label(
+                _transform_executable_line(logical_branch_line or line, names_for(line_number), type_name, lifted_helper_names),
+                line, form)
             helper_continuation_skip_lines.update(branch_continuation_lines)
             if real_output_insert_after_line == line_number and not real_extraction_inserted:
                 if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
@@ -2664,7 +2666,9 @@ def _transform_source_text(
                 (None, []) if _is_commented(line)
                 else _logical_assignment_line(lines, line_number, form))
             if logical_assignment_line:
-                output[-1] = _transform_executable_line(logical_assignment_line, names_for(line_number), type_name, lifted_helper_names)
+                output[-1] = _restore_statement_label(
+                    _transform_executable_line(logical_assignment_line, names_for(line_number), type_name, lifted_helper_names),
+                    line, form)
                 shadow_sync_dirty_names.difference_update(_assigned_shadow_names(logical_assignment_line, helper_call_sync_names))
                 helper_continuation_skip_lines.update(assignment_continuation_lines)
                 continue
@@ -4563,6 +4567,45 @@ def _fixed_form_physical_line(line: str) -> str:
     return "      " + remainder
 
 
+def _logical_line_prefix(line: str, form: str) -> str:
+    """Blanked label field and indentation of a statement's first physical line.
+
+    The logical-line helpers rebuild a statement from its segments, and
+    ``_statement_line_segment`` drops the fixed-form label field. Re-prefixing
+    with only the line's leading blanks turned ``  802 IF (IFLAG.EQ.1) THEN``
+    into ``  IF (...) THEN``, a statement starting inside the label field with
+    the label its GOTO targets gone (UMAT_PCL, PCLI, PCLI_R, PCLK). The label is
+    blanked here, so the rewrite passes see an ordinary statement, and put back
+    by ``_restore_statement_label`` once the statement has been rewritten.
+    """
+    if form == "fixed":
+        body = _fixed_form_physical_line(line)[6:]
+        return " " * 6 + body[:len(body) - len(body.lstrip())]
+    match = re.match(r"^(\s*)(\d+\s+)?", line)
+    return match.group(1) + " " * len(match.group(2) or "")
+
+
+def _statement_label(line: str, form: str) -> str:
+    if form == "fixed":
+        label = _fixed_form_physical_line(line)[:5].strip()
+        return label if label.isdigit() else ""
+    match = re.match(r"^\s*(\d+)\s", line)
+    return match.group(1) if match else ""
+
+
+def _restore_statement_label(rewritten: str, original: str, form: str) -> str:
+    """Put the original statement label back on a rewritten logical line."""
+    label = _statement_label(original, form)
+    if not label:
+        return rewritten
+    if form == "fixed":
+        if rewritten[:5].strip():
+            return rewritten
+        return label.rjust(5) + rewritten[5:]
+    indent = original[:len(original) - len(original.lstrip())]
+    return f"{indent}{label} {rewritten.lstrip()}"
+
+
 def _statement_line_segment(line: str, form: str) -> str:
     if form == "fixed":
         line = _fixed_form_physical_line(line)
@@ -4652,7 +4695,7 @@ def _logical_helper_call_line(lines: list[str], start_line: int, form: str) -> t
         next_line_number += 1
     if paren_depth != 0:
         return "", []
-    leading = re.match(r"^(\s*)", lines[start_line - 1]).group(1)
+    leading = _logical_line_prefix(lines[start_line - 1], form)
     logical_line = _join_continuations(segments, form)
     return f"{leading}{logical_line}", consumed_lines
 
@@ -4779,7 +4822,7 @@ def _logical_branch_line(lines: list[str], start_line: int, form: str) -> tuple[
         next_line_number += 1
     if paren_depth != 0:
         return "", []
-    leading = re.match(r"^(\s*)", lines[start_line - 1]).group(1)
+    leading = _logical_line_prefix(lines[start_line - 1], form)
     logical_line = _join_continuations(segments, form)
     return f"{leading}{logical_line}", consumed_lines
 
@@ -4810,7 +4853,7 @@ def _logical_assignment_line(lines: list[str], start_line: int, form: str) -> tu
         next_line_number += 1
     if not consumed_lines:
         return "", []
-    leading = re.match(r"^(\s*)", lines[start_line - 1]).group(1)
+    leading = _logical_line_prefix(lines[start_line - 1], form)
     logical_line = _join_continuations(segments, form)
     return f"{leading}{logical_line}", consumed_lines
 
