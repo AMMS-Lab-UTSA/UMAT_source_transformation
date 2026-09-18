@@ -56,6 +56,36 @@ SHARED_FILES = (REAL_OBJECT, OTI_OBJECT, MAPPING, REPORT)
 #: contracts only (see docs/PROVIDER.md); the screen does not offer others.
 PROVIDER_NTENS = 6
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+LOADING_PATHS = REPO_ROOT / "parameter_sensitivity" / "loading_paths.json"
+
+#: Material-point paths the independent check can replay (the contract's
+#: ``validation.check_path``). Each is strain increments in Voigt order with
+#: engineering shear, one unit time step each.
+CHECK_PATHS = {
+    "provider": "the provider's seven-increment J2 path (docs/PROVIDER.md): elastic, "
+                "plastic, unloading and reverse-plastic increments",
+    "uniaxial": "uniaxial strain, the parameter-sensitivity sweep's declared default "
+                "(parameter_sensitivity/loading_paths.json): 20 increments of 1e-4 in 11",
+    "tension_shear": "tension with shear: 20 increments of 1e-4 in 11 and 1e-4 engineering "
+                     "shear in 12, so that shear stiffness enters the response",
+}
+
+
+def check_path_spec(key: str) -> dict[str, Any] | None:
+    """The ``validation.check_path`` entry for a named path (None: provider default)."""
+    if key == "provider":
+        return None
+    if key == "uniaxial":
+        default = json.loads(LOADING_PATHS.read_text(encoding="utf-8"))["default"]
+        return {"dstran_per_increment": list(default["dstran_per_increment"]),
+                "n_increments": int(default["n_increments"]),
+                "source": "parameter_sensitivity/loading_paths.json default: " + default["rationale"]}
+    if key == "tension_shear":
+        return {"dstran_per_increment": [1e-4, 0.0, 0.0, 1e-4, 0.0, 0.0], "n_increments": 20,
+                "source": CHECK_PATHS["tension_shear"]}
+    raise ValueError(f"unknown check path {key!r}; choose one of {sorted(CHECK_PATHS)}")
+
 
 @dataclass(frozen=True)
 class Parameter:
@@ -122,7 +152,7 @@ def parse_parameters(rows: Sequence[dict[str, Any]]) -> list[Parameter]:
 
 def provider_contract(source_name: str, *, name: str, nstatev: int,
                       parameters: Sequence[Parameter], stress: bool = True,
-                      state: bool = True) -> dict[str, Any]:
+                      state: bool = True, check_path: str = "provider") -> dict[str, Any]:
     """The provider's input contract (``resasm_umat_transform_v2``) for the screen.
 
     NPROPS is the largest listed index, and every slot up to it must be listed:
@@ -152,6 +182,10 @@ def provider_contract(source_name: str, *, name: str, nstatev: int,
     for parameter in parameters:
         values[parameter.props_index - 1] = parameter.value
     stem = f"umat_{model_name(name)}_oti"
+    validation: dict[str, Any] = {"props_values": values}
+    path = check_path_spec(check_path)
+    if path is not None:
+        validation["check_path"] = path
     return {
         "schema": "resasm_umat_transform_v2",
         "source": {"main_file": source_name},
@@ -161,7 +195,7 @@ def provider_contract(source_name: str, *, name: str, nstatev: int,
         "derivative": {"of": "STRESS", "wrt": "PROPS", "order": 1},
         "history": {"path_dependent": bool(nstatev or state)},
         "output": {"object": f"{stem}.obj", "contract": f"{stem}.json"},
-        "validation": {"props_values": values},
+        "validation": validation,
     }
 
 
@@ -229,6 +263,7 @@ def package(contract_path: Path | str, out_dir: Path | str, *, verify: bool = Tr
         "props_values": (contract.get("validation") or {}).get("props_values"),
         "dimensions": contract.get("dimensions"),
         "history": contract.get("history"), "verification_requested": verify,
+        "check_path": (contract.get("validation") or {}).get("check_path"),
         "require_j2_branches": require_j2_branches,
     }
     build_dir = out_dir / "build"
@@ -290,12 +325,11 @@ def package_exit_code(summary: dict[str, Any]) -> int:
 
 
 def headline_errors(result: dict[str, Any]) -> dict[str, float]:
-    """The finest-step scaled errors the screen shows, read from verification.json."""
-    parameter = (result.get("parameter_steps") or [{}])[-1]
-    tangent = (result.get("tangent_steps") or [{}])[-1]
-    return {"DSIGMA_DP vs finite diff.": parameter.get("eval_stress", math.nan),
-            "DSTATEV_DP vs finite diff.": parameter.get("eval_state", math.nan),
-            "DDSDDE vs finite diff.": tangent.get("eval", math.nan)}
+    """Worst relative error among the verified entries of each array (verification.json)."""
+    arrays = result.get("arrays") or {}
+    return {f"{name} vs finite diff.": (arrays.get(name) or {}).get("worst_relative_error_agreeing",
+                                                                   math.nan)
+            for name in ("DSIGMA_DP", "DSTATEV_DP", "DDSDDE")}
 
 
 def render_report(summary: dict[str, Any]) -> str:
@@ -335,23 +369,34 @@ def render_report(summary: dict[str, Any]) -> str:
                   f"exit code {verification.get('exit_code')}"]
         result = verification.get("result") or {}
         if verification.get("passed"):
-            lines += [f"Reference        : {result.get('reference')}",
-                      f"Check path       : {result.get('increments')} increments; branches "
-                      f"{', '.join(result.get('branches') or []) or 'not required'}",
+            criterion = result.get("criterion") or {}
+            lines += [f"Verdict          : {result.get('verdict')}",
+                      f"Reference        : {result.get('reference')}",
+                      f"Check path       : {result.get('increments')} increments; {result.get('path_source')}",
+                      f"J2 branches      : {', '.join(result.get('branches') or []) or 'not required'}",
+                      f"Largest state    : {result.get('state_growth'):.6g} at the end of the path",
                       f"Primal parity    : stress max |diff| {result.get('primal_stress_max_abs'):.3e}, "
                       f"state max |diff| {result.get('primal_state_max_abs'):.3e}",
-                      f"Tolerance        : scaled max error {result.get('scaled_max_error_tolerance')} "
-                      f"({result.get('scaling')})"]
-            for step in result.get("parameter_steps") or []:
-                lines.append(f"  parameter step {step['relative_step']:.0e}: DSIGMA_DP {step['eval_stress']:.3e}"
-                             f"  MARCH {step['march_stress']:.3e}  DSTATEV_DP {step['eval_state']:.3e}")
-            for step in result.get("tangent_steps") or []:
-                lines.append(f"  strain step {step['absolute_step']:.0e}: DDSDDE {step['eval']:.3e}"
-                             f"  MARCH {step['march']:.3e}")
-            plateau = result.get("fd_plateau") or {}
-            lines.append("FD plateau       : " + ", ".join(f"{key} {value:.3e}" for key, value in plateau.items()))
+                      f"Tolerance        : relative {criterion.get('relative_tolerance')} per entry, where "
+                      "the reference determines the entry to within it",
+                      f"Reference value  : {criterion.get('reference_value')}",
+                      f"Uncertainty      : {criterion.get('reference_uncertainty')}",
+                      f"Verdicts         : {criterion.get('verdicts')}",
+                      "", "Array                 columns agree/unresolved   entries agree   zero   "
+                      "unresolved   worst rel. error (agreeing)"]
+            for name, array in (result.get("arrays") or {}).items():
+                lines.append(f"  {name:<20} {array['columns']:>4} {array['agreeing_columns']:>6}/"
+                             f"{array['unresolved_columns']:<10} {array['agrees']:>12} "
+                             f"{array['consistent_with_zero']:>6} {array['reference_unresolved']:>12}   "
+                             f"{array['worst_relative_error_agreeing']:.3e}")
+            unresolved = result.get("unresolved_columns") or []
+            lines.append("Unresolved columns: " + ("none" if not unresolved else ""))
+            for column in unresolved:
+                lines.append(f"  {column['array']} {column['column']}: {column['reason']}")
             comparisons = result.get("comparisons") or {}
-            lines.append(f"Comparisons      : {sum(comparisons.values())} ({comparisons})")
+            lines.append(f"Entries          : {comparisons}")
+            lines.append(f"Every entry      : {Path(str(result.get('entries_csv'))).name} in the "
+                         "verification directory")
             tie = summary.get("tie") or {}
             lines.append("Shipped object   : "
                          + ("returns bit-identical arrays to the verified build on the check path"
@@ -363,9 +408,7 @@ def render_report(summary: dict[str, Any]) -> str:
             lines += ["FAILED -- the verifier's diagnostic:",
                       str(result.get("error") or verification.get("log"))]
     lines += ["", f"Package exit code: {summary.get('exit_code')}", "",
-              "Limits: 3D small-strain first-order STRESS/PROPS providers only (docs/PROVIDER.md).",
-              "Objects are compiled for this platform and compiler; they embed build-directory",
-              "paths in bounds-check messages, so rebuilding does not reproduce them byte for byte."]
+              "Limits: 3D small-strain first-order STRESS/PROPS providers only (docs/PROVIDER.md)."]
     return "\n".join(lines) + "\n"
 
 
