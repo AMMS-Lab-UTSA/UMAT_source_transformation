@@ -1,7 +1,7 @@
 # W3 Provider Recovery Evidence
 
 Date: 2026-09-18. Worktree: `imq-umat-recovery`, integration recovery branch.
-No branches, commits, pushes, edits to original Claude worktrees, Abaqus jobs,
+No branches, commits, pushes, edits to original development worktrees, Abaqus jobs,
 or corpus runs were made by this workstream. Existing recovery edits outside W3
 ownership were left untouched. This is **not clean-install verification**.
 

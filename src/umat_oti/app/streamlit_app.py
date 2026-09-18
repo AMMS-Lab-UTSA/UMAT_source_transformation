@@ -1458,7 +1458,7 @@ def main() -> None:
     )
     with tabs[0]:
         _tab_start()
-    # The two developer screens of the IMQCAM presentation (slides 16-17):
+    # The two developer screens:
     # four fields and one click for the tangent, and the provider build.
     with tabs[1]:
         render_jacobian_screen()

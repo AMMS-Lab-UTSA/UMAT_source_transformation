@@ -1,4 +1,4 @@
-"""The two developer screens of the IMQCAM presentation, driven through AppTest.
+"""The two developer screens, driven through AppTest.
 
 Slide 16/40, "Constitutive Jacobian": load the UMAT, set NTENS, differentiate
 STRESS with respect to DSTRAN and write into DDSDDE; the tangent block is found
@@ -7,7 +7,7 @@ list the parameters with their PROPS index and value, tick the stress and state
 derivatives, Build.
 
 These run in the ordinary offline suite (gfortran, no browser, no Abaqus). The
-same flows in a real browser are in ``test_imqcam_developer_screens_browser.py``
+same flows in a real browser are in ``test_developer_screens_browser.py``
 (``pytest -m gui``). Each test compares the screen's product with the command
 line's product for the same inputs, and the transformed tangent and the built
 provider with an independent reference: centred finite differences of the
@@ -222,7 +222,14 @@ def _provider_app(source: Path, table, nstatv: int, *, j2: bool,
     # abaqus is on PATH. The offline suite builds with the provider's compiler.
     assert app.selectbox(key="pp_check_path").value == "provider"
     app.selectbox(key="pp_check_path").set_value(path)
-    app.checkbox(key="pp_abaqus_toolchain").uncheck().run()
+    toolchain = app.checkbox(key="pp_abaqus_toolchain")
+    if toolchain.disabled:
+        # no abaqus on PATH: the option is offered switched off and cannot be
+        # switched on, so the build already uses the provider's compiler
+        assert toolchain.value is False
+        app.run()
+    else:
+        toolchain.uncheck().run()
     assert not app.button(key="pp_build").disabled, [w.value for w in app.warning]
     app.button(key="pp_build").click().run()
     assert not app.exception, app.exception

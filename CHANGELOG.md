@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### IMQCAM integration (2026-09-18)
+### Connected workflow (2026-09-18)
 - **Compiled OTI material provider** (`umat-oti-provider build`): the ORIGINAL
   UMAT and its OTI lift in one relocatable object with a completed contract
   (`Mapping.json`); `--regular-object REAL_UMAT.obj` publishes the ORIGINAL

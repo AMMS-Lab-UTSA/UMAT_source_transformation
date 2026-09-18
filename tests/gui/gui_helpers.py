@@ -1,4 +1,4 @@
-"""Shared by the IMQCAM GUI tests: a Streamlit server, and hands for a browser.
+"""Shared by the GUI tests: a Streamlit server, and hands for a browser.
 
 The server is started with ``subprocess.Popen`` so the test owns exactly one
 process id, and stops exactly that one. Nothing here looks processes up by name.

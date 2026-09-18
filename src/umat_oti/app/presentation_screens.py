@@ -1,4 +1,4 @@
-"""The two developer screens of the IMQCAM presentation (slides 16-17, 40-41).
+"""The two developer screens: the constitutive Jacobian and the provider build.
 
 ``Constitutive Jacobian``
     Load the UMAT and set NTENS; differentiate STRESS with respect to DSTRAN

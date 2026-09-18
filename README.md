@@ -25,8 +25,8 @@ are separate programs connected by a versioned contract.
 
 **New here?** Read [docs/USAGE_REPORT.md](docs/USAGE_REPORT.md) (installation,
 every command with its real output, the GUIs, examples, troubleshooting), then
-[docs/PRESENTATION_CLAIMS.md](docs/PRESENTATION_CLAIMS.md) for what has been
-reproduced, and how.
+[docs/VERIFICATION_RECORD.md](docs/VERIFICATION_RECORD.md) for what has been
+verified, and how.
 
 ## Install
 
@@ -92,30 +92,29 @@ Transform, Validate (Abaqus), Constitutive Jacobians, Report and Corpus. Every
 button calls the same service function as the CLI and produces byte-identical
 files ([docs/GUI.md](docs/GUI.md)).
 
-## What has been verified
+## Examples and verified results
 
-All numbers below are measured by the commands named, against independent
-references (centred finite differences of the separately compiled original
-with a step-size plateau, analytic formulas, or Abaqus). The full table,
-including what did **not** reproduce, is in
-[docs/PRESENTATION_CLAIMS.md](docs/PRESENTATION_CLAIMS.md).
+Every number below is measured by the command named, against an independent
+reference: centred finite differences of the separately compiled original with
+a step-size plateau, an analytic formula, or Abaqus. The full record, including
+what did **not** reproduce, is [docs/VERIFICATION_RECORD.md](docs/VERIFICATION_RECORD.md).
 
-| Claim (IMQCAM Annual Meeting 2026) | Measured | Command |
+| Example | Measured | Command |
 | --- | --- | --- |
-| DDSDDE of the 18 benchmark UMATs verified in Abaqus | 15/16 runnable from the committed contracts; 18/18 with documented source/input corrections (NKH reads an unset variable) | `python presentation/run_all.py --abaqus` (in Residual_Assembler) |
-| Parameter sensitivities of 20 material models vs FD | 20/20 models, 84/84 directions below 1e-5; worst 1.56e-7 | `python tools/run_parameter_sensitivity_sweep.py` |
-| Constitutive (local) Jacobians of the ICP UMATs | OTI agrees with FD in all 21 (UMAT, Jacobian) pairs; 6 hand-coded Jacobians are wrong (dropped damage factor) | `python presentation/run_all.py` |
-| J2 tangent vs FD of the original | 3e-11 scaled over elastic, plastic and unloading increments | `umat-oti jacobian` + `tests/gui/test_imqcam_developer_screens.py` |
+| DDSDDE of 18 benchmark UMATs (elastic, plastic, viscoplastic, damage, Cosserat) compared with the original in Abaqus | 17 of 18 agree from their committed contracts (12 exactly, 5 within tolerance); UMAT_NKH_1.02 agrees once PROPS(1) = 0, because with PROPS(1) ≠ 0 the source reads a variable it never sets | `python verification/run_all.py --abaqus` (in Residual_Assembler) |
+| Parameter sensitivities DSIGMA_DP of 20 material models against finite differences | 20 of 20 models, 84 of 84 parameter directions below 1e-5; worst 1.56e-7 | `python tools/run_parameter_sensitivity_sweep.py` |
+| Internal (local Newton) Jacobians of the ICP UMATs | OTI agrees with finite differences in all 21 (UMAT, Jacobian) pairs; 6 of the hand-coded Jacobians in those sources drop a damage factor | `python verification/run_all.py` (in Residual_Assembler) |
+| J2 consistent tangent against finite differences of the original | 3e-11 (scaled) over elastic, plastic and unloading increments | `umat-oti jacobian` + `tests/gui/test_developer_screens.py` |
+| Provider verification, J2 and FCC crystal plasticity | every DSIGMA_DP, DSTATEV_DP and DDSDDE entry agrees with finite differences of the original or is consistent with zero; none disagrees | `umat-oti-provider build parameter_sensitivity/models/m6_fcc/contract_v2.json --out <dir>` |
 
 Corpus of 391 UMATs acquired from public repositories, re-transformed and run
-in Abaqus at the current transform (pass14, 2026-09-18): 244 transform, and 43
+in Abaqus at the current transform (2026-09-18): 244 transform, and 43
 of the 260 adequately specified genuine UMATs clear all six acceptance gates
 (Abaqus job, outputs, finite history, primal agreement, verified derivatives,
 informative experiment). Every other source carries a named reason, and the 217
 that are this project's to fix are counted as such. Census:
 [paper_results/corpus/CORPUS_VERIFICATION.md](paper_results/corpus/CORPUS_VERIFICATION.md);
-method: [docs/CORPUS_VERIFICATION.md](docs/CORPUS_VERIFICATION.md); how the
-evidence was re-frozen: [docs/evidence/final_refreeze.md](docs/evidence/final_refreeze.md).
+method: [docs/CORPUS_VERIFICATION.md](docs/CORPUS_VERIFICATION.md).
 
 ## Tests
 
@@ -133,12 +132,11 @@ A skipped test names the missing prerequisite; a skip is not a pass.
 | Document | What it covers |
 | --- | --- |
 | [docs/USAGE_REPORT.md](docs/USAGE_REPORT.md) | Installation, every CLI and GUI entry point, examples, troubleshooting |
-| [docs/PRESENTATION_CLAIMS.md](docs/PRESENTATION_CLAIMS.md) | Every slide claim, how it is reproduced, measured value, status |
+| [docs/VERIFICATION_RECORD.md](docs/VERIFICATION_RECORD.md) | Every verified result, how it is reproduced, the reference and the measured value |
 | [docs/PROVIDER.md](docs/PROVIDER.md) | The compiled OTI provider and its ABI |
 | [docs/GUI.md](docs/GUI.md) | Each GUI screen, with screenshots |
 | [docs/CORPUS_VERIFICATION.md](docs/CORPUS_VERIFICATION.md) | The public-UMAT corpus and its acceptance gates |
 | [docs/SOFTWAREX_REPRODUCTION.md](docs/SOFTWAREX_REPRODUCTION.md) | Reproducing the paper's tables and figures |
-| [docs/COMPLETION_LEDGER.md](docs/COMPLETION_LEDGER.md) | Requirement-by-requirement status |
 | [new_user_umat_starter/](new_user_umat_starter/README.md) | Writing a contract for your own UMAT |
 
 ## Known limits
