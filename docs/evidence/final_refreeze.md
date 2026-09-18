@@ -43,9 +43,11 @@ damage / phase field 2 of 20, elasticity 2 of 10, other 1 of 15, and none yet
 for plasticity (15), crystal plasticity (15), viscoelasticity (22) or
 geomaterials (12).
 
-The continued-assignment fix made two corpus sources compile that did not at
-pass13 (`simplified_curing.for`, and `enhanced_curing.for`, which never had);
-neither changes acceptance, because both stop at later gates. The same fix
+The continued-assignment fix restored the compile of `simplified_curing.for`
+(it compiled at pass13 and stopped compiling after the predictor-input fix
+kept its modulus assignments live) and made `enhanced_curing.for` compile for
+the first time. Neither changes acceptance: both now stop at primal agreement
+(`primal_disagreed`, internal). The same fix
 leaves every other generated source it could touch unchanged: the transformed
 sources of all 19 benchmark contracts (31 files) and the generated sources of
 all 20 parameter-sensitivity providers (180 files) are byte-identical at the
