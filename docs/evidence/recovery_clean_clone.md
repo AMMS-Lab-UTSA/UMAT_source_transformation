@@ -54,7 +54,7 @@ and GCC/gfortran 9.4.0; configure with `-DBUILD_TESTING=OFF`, then sequential
 `cmake --build ... --target oticython --parallel 2` and `--target gendata`.
 The installed RA adapter accepted the fresh build and first/second derivative
 assertions passed. Upstream OTILib's own suite was not run. The exact procedure
-is a separate [RA follow-up document](../../../Residual_Assembler/docs/OTILIB_VENV.md).
+is a separate [RA follow-up document](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/OTILIB_VENV.md).
 
 ## Scientific Input And Repeat
 

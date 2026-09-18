@@ -1,206 +1,155 @@
 # UMAT-OTI
 
-**Current user entry point:** [verified usage report](docs/USAGE_REPORT.md)
-contains installation, captured help, five reproduced example invocations,
-GUI limits and the exact artifact-only presentation connection.
-[Requirement audit](docs/COMPLETION_LEDGER.md): 104 bounded implemented,
-159 partial, 11 unestablished; **0 final clean-install complete, 274 outstanding**.
-
-**Recovery evidence status (2026-09-18):** retained corpus, collection and
-fixture results are historical, not current capability claims. The current
-generation and bounded executable J2 evidence are separated in
-[the evidence refresh record](docs/evidence/recovery_evidence_refresh.md).
-No whole-corpus rerun or committed clean-clone gate is claimed.
-
 [![CI](https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation/actions/workflows/ci.yml/badge.svg)](https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation/actions/workflows/ci.yml)
 [![License: GPL-3.0-only](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE.txt)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 
-**UMAT-OTI** transforms Abaqus user-material subroutine (UMAT) Fortran source so
-that the consistent material tangent (`DDSDDE`) is computed by order-truncated
-imaginary (OTI) automatic differentiation instead of hand-coded or
-finite-difference derivatives. The transformation is driven by a compact JSON
-contract.
+**UMAT-OTI** rewrites the Fortran source of an Abaqus user material (UMAT) so
+that its derivatives are computed exactly by order-truncated imaginary (OTI)
+hypercomplex arithmetic instead of being derived by hand or approximated by
+finite differences. From one real-valued UMAT it produces:
 
-This directory is a standalone source bundle that contains the full UMAT-OTI
-transformation runtime plus the files a new user needs to try the workflow on
-their own UMAT.
+- the consistent tangent `DDSDDE = dSTRESS/dDSTRAN` as a drop-in Abaqus UMAT;
+- local constitutive Jacobians of the model's own internal Newton solve;
+- higher-order stress derivatives;
+- parameter and state sensitivities `DSIGMA_DP = dSTRESS/dPROPS` and
+  `DSTATEV_DP = dSTATEV/dPROPS` over a loading history, packaged as a compiled
+  **OTI material provider** (`OTI_UMAT.obj` + `Mapping.json`) that a
+  collaborator can use without ever seeing the source.
 
-It is meant to be copied, zipped, or shared as its own folder.
+The companion project [Residual_Assembler](https://github.com/AMMS-Lab-UTSA/Residual_Assembler)
+consumes that provider together with a converged Abaqus analysis
+(`Analysis.inp` + `Analysis.odb`) and returns full-field parameter
+sensitivities of the finite-element solution by the residual method. The two
+are separate programs connected by a versioned contract.
 
-Earlier compact-JSON smoke and 19-case benchmark results are historical.
-Current bounded provider/local-Jacobian results are recorded in the usage report;
-they do not establish a current whole-benchmark or corpus pass.
-
-## What Is Included
-
-- `src/umat_oti/`: the full transformation runtime code.
-- `scripts/`: convenience entry scripts (`app.py` GUI launcher, `transform_from_json.py`, `run_json_pipeline.py`).
-- `templates/`: JSON contract templates to copy and edit.
-- `examples/`: example JSON contracts that already work.
-- `user_jsons/`: suggested place to keep your own JSON contracts.
-- `UMATs/`: bundled sample UMAT source files used by the example configs.
-- `benchmarks/`: completed compact JSON contracts (the 19-case benchmark set).
-- `json_files/`: general JSON-contract directory for user-authored configs.
-- `new_user_umat_starter/`: starter docs, templates, examples, and helper scripts.
-- `tools/run_completed_json_batch.py`: batch transform runner.
-- `docs/`: user manual and design notes.
-- `src/umat_oti/oti/support/pyoti_templates/`: bundled pyoti template files used to generate complete OTI Fortran modules inside the standalone package.
-
-## Intended Usage Model
-
-Use this bundle from source.
-
-That means:
-
-1. copy or clone this folder to a machine,
-2. change into this folder,
-3. optionally install it in editable mode,
-4. run the GUI, starter scripts, or CLI from this folder.
-
-The runtime currently relies on this source-tree layout for paths such as
-`benchmarks/`, `UMATs/`, and `umat_oti_workspace/`.
+**New here?** Read [docs/USAGE_REPORT.md](docs/USAGE_REPORT.md) (installation,
+every command with its real output, the GUIs, examples, troubleshooting), then
+[docs/PRESENTATION_CLAIMS.md](docs/PRESENTATION_CLAIMS.md) for what has been
+reproduced, and how.
 
 ## Install
 
-From this directory:
+Linux with Python 3.10 or newer and `gfortran` (tested: Python 3.11.7,
+gfortran 9.4). Abaqus and the Intel compiler are optional and only needed for
+the Abaqus verification paths (tested: Abaqus 2021.HF5, ifort 2023.2.1).
 
 ```bash
-python3 -m pip install -e .
+git clone https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git
+cd UMAT_source_transformation
+python3 -m venv .venv && . .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e ".[test]"
+python -m umat_oti.reproduce --profile smoke      # transform, compile, verify one J2 model (~10 s)
 ```
 
-On ARC, use `/usr/bin/python3.12` instead of the default `python3`.
+A missing `gfortran` or Abaqus is reported by name as
+`blocked_by_external_dependency`; it never reads as a pass.
 
-You do not need to install the package just to run the bundled starter scripts.
-They work directly from this folder.
+## The three things you can do
 
-## Fastest Way For A New User
-
-Use the root-level files first:
-
-1. Copy a JSON template from `templates/` into `user_jsons/` and edit it.
-2. Edit the settings at the top of `scripts/run_json_pipeline.py`.
-3. Run `/usr/bin/python3.12 scripts/run_json_pipeline.py`.
-
-The runner defaults to `examples/`, so if you run it without edits it executes
-the bundled known-good example JSONs first.
-
-`scripts/run_json_pipeline.py` now defaults to `RUN_VALIDATION = False`, so a new user
-can test the transformation path without Abaqus.
-
-Set `RUN_VALIDATION = True` only on a machine where Abaqus is installed and the
-module/load environment is already configured.
-
-If you want one single JSON from the command line instead, use:
+### 1. Constitutive Jacobian (DDSDDE) from four fields
 
 ```bash
-/usr/bin/python3.12 scripts/transform_from_json.py user_jsons/my_new_umat.json --out umat_oti_workspace/my_new_umat
+umat-oti jacobian path/to/umat.for --ntens 6 --out out/j2 --compile
 ```
 
-If you want the deeper helper scripts and reference material, see `new_user_umat_starter/README.md`.
+`--seed DSTRAN --response STRESS --target DDSDDE` are the defaults. The
+transformer finds the existing tangent block itself, promotes the variables
+the derivative chain needs, seeds all `NTENS` strain directions and writes the
+transformed UMAT, the OTI support modules, `compile_order.txt`, a combined
+single-file Abaqus source, `derivative_manifest.json` and `transform_report.txt`
+(21 structural checks). For full control use a JSON contract
+(`umat-oti-config --config contract.json --out DIR`; see
+[new_user_umat_starter/JSON_REFERENCE.md](new_user_umat_starter/JSON_REFERENCE.md)).
 
-## GUI
+### 2. OTI material provider with parameter and state sensitivities
 
-Run the GUI from this directory with:
+```bash
+umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json \
+    --out out/j2_provider --regular-object REAL_UMAT.obj
+```
+
+The compact v2 contract names the parameters and their `PROPS` indices. The
+build compiles the ORIGINAL UMAT unchanged and its OTI lift into one
+relocatable object with the entry points `UMAT`, `UMAT_OTI_INTERNAL`,
+`UMAT_OTI_EVAL`, `UMAT_OTI_MARCH` and `UMAT_OTI_EVAL_TOTAL`
+([docs/PROVIDER.md](docs/PROVIDER.md), [docs/PROVIDER_EVAL_TOTAL.md](docs/PROVIDER_EVAL_TOTAL.md)),
+writes the completed contract (`Mapping.json`), and verifies stress parity and
+every derivative column against centred finite differences of the original.
+
+### 3. The GUI
 
 ```bash
 streamlit run scripts/app.py
 ```
 
-The GUI can load bundled contracts from `benchmarks/` or an uploaded
-JSON file.
+Tabs: **Start here** (one-click demo on the elastic example), **Constitutive
+Jacobian** (upload a UMAT, set NTENS, Transform), **Parameter Sensitivities**
+(parameter table, tick DSIGMA_DP / DSTATEV_DP, Build → `REAL_UMAT.obj`,
+`OTI_UMAT.obj`, `Mapping.json`, `transform_report.txt`), then Load Config,
+Transform, Validate (Abaqus), Constitutive Jacobians, Report and Corpus. Every
+button calls the same service function as the CLI and produces byte-identical
+files ([docs/GUI.md](docs/GUI.md)).
 
-## CLI
+## What has been verified
 
-The package exposes:
+All numbers below are measured by the commands named, against independent
+references (centred finite differences of the separately compiled original
+with a step-size plateau, analytic formulas, or Abaqus). The full table,
+including what did **not** reproduce, is in
+[docs/PRESENTATION_CLAIMS.md](docs/PRESENTATION_CLAIMS.md).
 
-```bash
-umat-oti transform path/to/umat.for --out generated/case_name
-umat-oti-config --config json_files/my_new_umat.json --out umat_oti_workspace/my_new_umat
-umat-oti-batch --config-dir benchmarks --batch-dir umat_oti_workspace/completed_json_batch
-```
+| Claim (IMQCAM Annual Meeting 2026) | Measured | Command |
+| --- | --- | --- |
+| DDSDDE of the 18 benchmark UMATs verified in Abaqus | 15/16 runnable from the committed contracts; 18/18 with documented source/input corrections (NKH reads an unset variable) | `python presentation/run_all.py --abaqus` (in Residual_Assembler) |
+| Parameter sensitivities of 20 material models vs FD | 20/20 models, 84/84 directions below 1e-5; worst 1.56e-7 | `python tools/run_parameter_sensitivity_sweep.py` |
+| Constitutive (local) Jacobians of the ICP UMATs | OTI agrees with FD in all 21 (UMAT, Jacobian) pairs; 6 hand-coded Jacobians are wrong (dropped damage factor) | `python presentation/run_all.py` |
+| J2 tangent vs FD of the original | 3e-11 scaled over elastic, plastic and unloading increments | `umat-oti jacobian` + `tests/gui/test_imqcam_developer_screens.py` |
 
-Without installation, the same JSON-contract path is:
+Corpus of 391 published UMATs acquired from public repositories: see
+[docs/CORPUS_VERIFICATION.md](docs/CORPUS_VERIFICATION.md) for the current
+gate-by-gate census (every entry either verified in Abaqus on all six gates,
+or classified with a named reason).
 
-```bash
-PYTHONPATH=src /usr/bin/python3.12 -m umat_oti.cli_json --config json_files/my_new_umat.json --out umat_oti_workspace/my_new_umat
-```
-
-The top-level wrapper script above is just a simpler front door for the same transformation path.
-
-You can also run the bundled script directly:
-
-```bash
-/usr/bin/python3.12 tools/run_completed_json_batch.py --config-dir benchmarks --batch-dir umat_oti_workspace/completed_json_batch
-```
-
-## Recommended First Files To Read
-
-- `new_user_umat_starter/README.md`
-- `new_user_umat_starter/JSON_REFERENCE.md`
-- `new_user_umat_starter/TROUBLESHOOTING.md`
-- `examples/elastic_minimal.json`
-
-## Known Limits
-
-- The compact JSON layer is working and the completed config set is in the simple top-level format.
-- The standalone bundle transforms the current 19 completed benchmark configs successfully.
-- The standalone no-argument runner now also supports original-vs-transformed validation using the bundled pyoti templates and Abaqus validation pipeline.
-- The bundle now includes the pyoti template files needed for complete OTI module generation, so the minimal-template fallback warning should not appear in normal runs.
-
-## Verifying a corpus
-
-The transformation is one half. The other is establishing, with evidence,
-which of a directory of downloaded UMATs actually work -- and naming, for the
-rest, whose move it is. That loop is described in
-[`docs/CORPUS_VERIFICATION.md`](docs/CORPUS_VERIFICATION.md):
+## Tests
 
 ```bash
-make batch-transform                    # convert every discovered source
-make batch-abaqus                       # run both builds, compare, difference
-make corpus-registry TRANSFORM_REPORT=... ABAQUS_RESULTS=...
-make umat-regress                       # replay the frozen experiments
+python -m pytest -q                    # offline suite: no Abaqus, no network
+python -m pytest -q -m gui             # browser tests of the GUI screens (playwright)
+python -m pytest -q -m abaqus          # tests that need a licensed Abaqus
+python -m pytest -q -m corpus_pass     # re-run the whole store in Abaqus (hours)
 ```
 
-A material is verified when the original ran in Abaqus, the converted build ran
-on the same deck, their stress and state histories agreed over the whole path,
-the loading activated what the material actually does, and the OTI tangent
-agreed with a converged finite difference of the original at several smooth
-states. Compiling is not working and running is not verified.
+A skipped test names the missing prerequisite; a skip is not a pass.
 
-The interface reads the same records: `streamlit run scripts/app.py`, tab 6.
+## Documentation
 
-## Testing
+| Document | What it covers |
+| --- | --- |
+| [docs/USAGE_REPORT.md](docs/USAGE_REPORT.md) | Installation, every CLI and GUI entry point, examples, troubleshooting |
+| [docs/PRESENTATION_CLAIMS.md](docs/PRESENTATION_CLAIMS.md) | Every slide claim, how it is reproduced, measured value, status |
+| [docs/PROVIDER.md](docs/PROVIDER.md) | The compiled OTI provider and its ABI |
+| [docs/GUI.md](docs/GUI.md) | Each GUI screen, with screenshots |
+| [docs/CORPUS_VERIFICATION.md](docs/CORPUS_VERIFICATION.md) | The public-UMAT corpus and its acceptance gates |
+| [docs/SOFTWAREX_REPRODUCTION.md](docs/SOFTWAREX_REPRODUCTION.md) | Reproducing the paper's tables and figures |
+| [docs/COMPLETION_LEDGER.md](docs/COMPLETION_LEDGER.md) | Requirement-by-requirement status |
+| [new_user_umat_starter/](new_user_umat_starter/README.md) | Writing a contract for your own UMAT |
 
-The test suite does not require Abaqus or a Fortran compiler:
+## Known limits
 
-```bash
-python -m pip install -e ".[test]"
-python -m pytest
-```
+- Small-strain kinematics for the parameter-sensitivity provider; finite-strain
+  UMATs are refused with a named reason rather than guessed.
+- Some constructs are refused with a named diagnostic (for example LAPACK
+  calls on the stress path, some helper routines without source); the corpus
+  census lists every refusal and its reason.
+- Windows is not tested; use Linux or WSL.
 
-## Citing
+## Citing, contributing, license
 
-If you use UMAT-OTI in academic work, please cite it using the metadata in
-[CITATION.cff](CITATION.cff). Publication details for the accompanying software
-paper will be added here once available.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
-
-## License
-
-UMAT-OTI is released under the [GNU General Public License v3.0 (GPL-3.0-only)](LICENSE.txt).
-
-This project bundles and builds upon template code from the GPL-licensed
-OTIlib / pyoti library by Mauricio Aristizabal
-(https://github.com/mauriaristi/otilib). Because the combined work incorporates
-GPL-licensed components, UMAT-OTI as a whole is distributed under the GPL-3.0.
-See [COPYRIGHT](COPYRIGHT) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
-for authorship and attribution details.
-
-Bundled and third-party components are documented in
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Note that proprietary Abaqus
-verification-manual UMATs are **not** included in this repository and must be
-obtained from a licensed Abaqus installation.
+Cite with [CITATION.cff](CITATION.cff); contribute via [CONTRIBUTING.md](CONTRIBUTING.md).
+UMAT-OTI is GPL-3.0-only ([LICENSE.txt](LICENSE.txt)); it builds on template
+code from OTILib / pyoti by Mauricio Aristizabal
+(https://github.com/mauriaristi/otilib) — see [COPYRIGHT](COPYRIGHT) and
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Proprietary Abaqus
+verification-manual UMATs are not included.

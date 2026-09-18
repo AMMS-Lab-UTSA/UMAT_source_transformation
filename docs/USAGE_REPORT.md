@@ -315,7 +315,7 @@ not a packaged fixture. Prior real-browser download proof is a local artifact:
 The browser report and desktop image were stored in the RA run's ignored
 `.pytest_cache/presentation_browser_cli_final` directory. They are unavailable
 in a clean clone; no image was duplicated. Complete companion details:
-[presentation interface](../../Residual_Assembler/docs/PRESENTATION_INTERFACE.md).
+[presentation interface](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/PRESENTATION_INTERFACE.md).
 
 ## Requirement Coverage
 
