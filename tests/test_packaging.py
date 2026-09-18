@@ -85,11 +85,12 @@ def test_built_wheel_contains_the_runtime_support_files(tmp_path):
     cross-repository CI of the companion product is what exposed it.
     """
     proc = subprocess.run(
-        [sys.executable, "-m", "pip", "wheel", "--no-deps", "--no-build-isolation",
+        [sys.executable, "-m", "pip", "wheel", "--no-deps",
          "-w", str(tmp_path), str(REPO_ROOT)],
         capture_output=True, text=True)
-    if proc.returncode != 0:
-        pytest.skip(f"could not build a wheel here: {proc.stderr[-400:]}")
+    assert proc.returncode == 0, (
+        "wheel build failed; packaging verification did not pass:\n"
+        + proc.stdout + proc.stderr)
     wheels = list(tmp_path.glob("umat_oti-*.whl")) + list(tmp_path.glob("umat-oti-*.whl"))
     assert wheels, f"no wheel was produced: {proc.stdout[-400:]}"
     with zipfile.ZipFile(wheels[0]) as archive:
