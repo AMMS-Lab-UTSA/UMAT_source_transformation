@@ -77,6 +77,10 @@ def check_path_spec(key: str) -> dict[str, Any] | None:
     if key == "provider":
         return None
     if key == "uniaxial":
+        if not LOADING_PATHS.is_file():
+            raise ValueError("the uniaxial path is the one declared in "
+                             "parameter_sensitivity/loading_paths.json, which this installation "
+                             "does not include; run from a source checkout or choose another path")
         default = json.loads(LOADING_PATHS.read_text(encoding="utf-8"))["default"]
         return {"dstran_per_increment": list(default["dstran_per_increment"]),
                 "n_increments": int(default["n_increments"]),

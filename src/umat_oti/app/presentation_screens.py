@@ -45,11 +45,18 @@ MODELS_DIR = Path(__file__).resolve().parents[3] / "parameter_sensitivity" / "mo
 
 
 def workspace_root() -> Path:
-    """Where the screens write. ``UMAT_OTI_GUI_WORKSPACE`` overrides the default."""
+    """Where the screens write. ``UMAT_OTI_GUI_WORKSPACE`` overrides the default.
+
+    In a source checkout the default is the checkout's git-ignored
+    ``umat_oti_workspace/presentation``; in an installed package, which has no
+    checkout, it is the same directory under the working directory.
+    """
     configured = os.environ.get("UMAT_OTI_GUI_WORKSPACE")
     if configured:
         return Path(configured).expanduser().resolve()
-    return Path(__file__).resolve().parents[3] / "umat_oti_workspace" / "presentation"
+    checkout = Path(__file__).resolve().parents[3]
+    base = checkout if (checkout / "pyproject.toml").is_file() else Path.cwd()
+    return base / "umat_oti_workspace" / "presentation"
 
 
 def _fresh_dir(kind: str, stem: str) -> Path:
