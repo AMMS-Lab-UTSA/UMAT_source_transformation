@@ -14,33 +14,45 @@ there.
 | 13, 28–32 | the compiled OTI provider (Program 1 object consumed by the Residual Assembler) | `python -m umat_oti.provider build parameter_sensitivity/models/<model>/contract_v2.json --out <dir>` (console script `umat-oti-provider`) | builds for 20 of the 21 model directories (m2_elastic3d's contract uses another schema and is refused); DSIGMA_DP within 1.6e-7 of FD for all 20 (RA claim 1) |
 | 28–32 | the flow model `parameter_sensitivity/models/m5_cpflow` | via RA `presentation/claim3_cp_residual_c3d8.py` | OTI vs hand-derived chain rule 2.9e-16 (NRMSE) |
 | 8 | the transformer on the 19 `benchmarks/*.json` contracts and the paired Abaqus validation (`umat_oti.validation.job_builder`, `abaqus_runner`, `compare_results`) | via RA `presentation/claim4_benchmark_ddsdde.py --abaqus` (the functions `tools/run_completed_json_batch.py --validate` uses, with DDSDDE forced into the comparison as in the slide's run) | 18 of 18 slide cases run from their committed contracts, 17 pass (12 exact, 5 within tolerance); NKH needs PROPS(1) = 0 (source defect below) |
+| 9–12, 17, 41 | the developer side of the provider split: `REAL_UMAT.obj` (the ORIGINAL compile), the object with the OTI lift, `Mapping.json`, `transform_report.txt` | `umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out <dir> --regular-object REAL_UMAT.obj` (add `--abaqus-toolchain` to build REAL_UMAT with `abaqus make`), or the GUI's Parameter Sensitivities tab | every DSIGMA_DP / DSTATEV_DP / DDSDDE entry judged against centred FD of the separately compiled ORIGINAL: m3_j2 628 agree, 240 consistent with zero, 0 disagree; m6_fcc (slide-15 values, tension-with-shear path) 4,556 / 1,572 / 112 unresolved / 0; objects rebuild byte-identically and carry no machine paths |
+| 16, 40 | the Constitutive Jacobian screen | `umat-oti jacobian <umat.for> --ntens 6 --out <dir> --compile`, or the GUI tab (byte-identical outputs) | J2 tangent vs FD of the ORIGINAL 3e-11 (scaled) over elastic, plastic and unloading increments (`tests/gui/test_imqcam_developer_screens.py`) |
+| 15, 39 | the m3_j2 and m6_fcc providers the Residual Assembler's history engine replays the full-size cantilevers with (entry point `UMAT_OTI_EVAL_TOTAL`, [PROVIDER_EVAL_TOTAL.md](PROVIDER_EVAL_TOTAL.md)) | [Residual_Assembler examples/presentation_cantilevers](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/examples/presentation_cantilevers/README.md) | see the RA document, slides 15, 33, 39 |
 | 25 | the internal-Jacobian probe (`umat_oti.transform.internal_jacobian`, `local_jacobian_probe`) and the parameter-sensitivity transform | via RA `presentation/claim5_constitutive_jacobians.py`; FJAC alone: `python tools/run_internal_jacobian_round.py` | see the RA document, claim 5 |
 
 ## Defects found by the reproduction (fixed 2026-09-18)
 
-1. `src/umat_oti/transform/source_transform.py` (`884d39e`): a labelled IF whose
+1. `src/umat_oti/transform/source_transform.py` (`7c4975c`): a labelled IF whose
    condition reads a promoted variable (`  802 IF (IFLAG.EQ.1) THEN` in UMAT_PCL,
    PCLI, PCLI_R, PCLK) lost its label and started inside the label field, so the
    Abaqus user file did not compile.
-2. `src/umat_oti/fortran/regions.py` (`884d39e`): in sources that keep the elastic
+2. `src/umat_oti/fortran/regions.py` (`7c4975c`): in sources that keep the elastic
    stiffness in DDSDDE and form the predictor stress from it (UMAT_VPDCL,
    UMAT_NKH_1.02), the inputs of those DDSDDE writes were classed tangent-only and
    their assignments skipped; the transformed stress differed from the original's.
-3. `src/umat_oti/transform/source_transform.py` (`1cd2e58`): a DATA-initialised
+3. `src/umat_oti/transform/source_transform.py` (`b124e39`): a DATA-initialised
    name that nothing assigns but the contract lists under `promote` (UMAT_HIN:
    ONE, TWO, ZERO) made the DATA blocker refuse the file; it is now kept real. An
    assigned DATA name is still refused.
-4. `src/umat_oti/services/transformation.py` (`0b075b4`): a compact contract
+4. `src/umat_oti/services/transformation.py` (`24143f8`): a compact contract
    could not name where the helpers its UMAT calls are published. It may now
    declare `"dependency_roots"`; the closure is resolved, written entry file
    first and transformed, and recorded in the summary as `dependency_closure`.
    `benchmarks/UMAT_PCO.json` declares `../UMATs/UMATs/ICP`;
    `tools/run_completed_json_batch.py --validate` compiles the original from the
    same resolved file.
+5. `src/umat_oti/transform/source_transform.py` (`f11806f`, found by the corpus
+   re-transform after fix 2): an assignment to a kept-real variable whose
+   right-hand side reads a promoted value, continued over several lines, was
+   rewritten from its first physical line only (`EMOD = REAL(A + B *)` with the
+   continuation left dangling), so one corpus source that compiled at every
+   earlier generation stopped compiling. The logical statement is now rewritten
+   whole, as on the stress path; a second corpus source with the same construct
+   now compiles for the first time.
 
 Regression tests: `tests/test_benchmark_transforms_keep_labels_and_predictor_inputs.py`,
 `tests/test_a_data_constant_in_the_promote_list_stays_real.py`,
-`tests/test_a_contract_resolves_its_helper_closure.py`. The transformer edits move
+`tests/test_a_contract_resolves_its_helper_closure.py`,
+`tests/test_continued_assignment_from_promoted_value.py`. The transformer edits move
 the transform fingerprint; `transform_generation.json` has to be re-frozen by the
 lead before
 `tests/test_contract_fixtures.py::test_the_recorded_generation_is_this_worktrees_actual_transform`

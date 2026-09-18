@@ -8,12 +8,18 @@ in this usage audit. Current transform generation remains `6aa20d22e37f14c9`.
 
 ## Supported Scope
 
-The compiled provider path works for bundled elasticity and pinned J2. J2 has
-independently checked primal parity, local tangent, stress/parameter and
-state/parameter derivatives across elastic/plastic/unloading history. The
-advanced example extracts and verifies a local constitutive Jacobian in bundled
-m5_cpflow. These are material-point capabilities, not generic FCC FE or
-arbitrary finite-strain/higher-order provider support.
+The compiled provider builds for 20 of the 21 bundled parameter-sensitivity
+models (m2_elastic3d's contract uses another schema and is refused). Its
+verifier judges every DSIGMA_DP, DSTATEV_DP and DDSDDE entry against centred
+finite differences of the separately compiled ORIGINAL on the contract's own
+strain path: J2 (elastic, plastic and unloading increments) and the FCC crystal
+with the slide-15 constants both verify with no disagreeing entry. The
+additive entry point `UMAT_OTI_EVAL_TOTAL`
+([PROVIDER_EVAL_TOTAL.md](PROVIDER_EVAL_TOTAL.md)) carries total derivatives
+through any UMAT's state, which is what the Residual Assembler's history engine
+uses to replay the full-size presentation cantilevers. The advanced example
+extracts and verifies a local constitutive Jacobian in bundled m5_cpflow.
+Small strain only; finite-strain and higher-order providers are refused.
 
 Latest retained full offline suite: **3324 passed, 125 existing skips, zero
 failures/errors, 5 deselected**, before this audit's wrapper test was added.
@@ -31,11 +37,12 @@ also needs an installed browser). Compiled examples require gfortran and make.
 Linux/gfortran is verified here; other operating systems/compilers are not
 established by this audit. Abaqus/ifort are not needed for the five examples.
 
-Installation recipe from available source checkouts, not a clean-clone claim:
+From a fresh clone:
 
 ```sh
-UMAT="$HOME/softwarex_work/imq-umat-recovery"
-BASE_PYTHON="$HOME/anaconda3/bin/python3.11"
+git clone https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git
+UMAT="$PWD/UMAT_source_transformation"
+BASE_PYTHON=python3.11          # any healthy Python >= 3.10 with venv, ctypes, ssl
 ENV=$(mktemp -d /tmp/umat-env-XXXXXX)
 "$BASE_PYTHON" -m venv "$ENV"
 "$ENV/bin/python" -m pip install "$UMAT[test,paper]"
@@ -43,19 +50,19 @@ ENV=$(mktemp -d /tmp/umat-env-XXXXXX)
 "$ENV/bin/umat-oti-provider" --help
 ```
 
-For connected consumption also install the companion recovery package with
-`gui,yaml,test` extras. Do not use its historical `bridge` pin for this pair.
-The earlier [working-tree wheel gate](evidence/recovery_install.md) isolated
-installed resources in a new venv/scratch HOME; it was not a final-branch clone
-and its wheel hashes predate subsequent changes. Checkout examples and source
-discovery are not all installed wheel resources.
+For connected consumption also install the companion Residual_Assembler
+package with `gui,yaml,test` extras. Do not use its historical `bridge` pin for
+this pair. The joint clean-install gate (below) installs both from their
+wheels; its result for the published `main` commits is in
+[Residual_Assembler docs/evidence/final_clean_clone.md](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/evidence/final_clean_clone.md). Checkout examples and source discovery
+are not all installed wheel resources.
 
-This audit reused the shared environment with explicit recovery imports:
+For work in the source trees, set the imports explicitly:
 
 ```sh
-WORKSPACE="$HOME/softwarex_work"
-UMAT="$WORKSPACE/imq-umat-recovery"
-RA="$WORKSPACE/imq-ra-recovery"
+WORKSPACE="$HOME/softwarex_work"        # where the two clones and the venv live
+UMAT="$WORKSPACE/UMAT_source_transformation"
+RA="$WORKSPACE/Residual_Assembler"
 PY="$WORKSPACE/.venv/bin/python"
 BASE_PYTHON="$HOME/anaconda3/bin/python3.11"
 export PATH="$WORKSPACE/.venv/bin:$PATH"
@@ -80,11 +87,11 @@ argv, cwd and return code. Help confirms flags, not scientific success.
 
 | Installed command | Recovery module / behavior |
 | --- | --- |
-| `umat-oti` | `umat_oti.cli`; subcommands transform and config |
+| `umat-oti` | `umat_oti.cli`; subcommands transform, config and `jacobian SOURCE --ntens N --out DIR [--compile]` (the Constitutive Jacobian screen's command) |
 | `umat-oti-config --config JSON --out DIR --compile` | `umat_oti.cli_json`; compact contract, optional compilation |
 | `umat-oti-pipeline --config JSON --work-dir DIR --compile` | `umat_oti.pipeline.cli`; staged graph and run manifest |
 | `umat-oti-batch --config-dir DIR --batch-dir DIR` | `umat_oti.cli_batch`; batch transformation |
-| `umat-oti-provider build CONTRACT --out DIR --compiler gfortran` | `umat_oti.provider`; relocatable ORIGINAL+OTI object and completed mapping |
+| `umat-oti-provider build CONTRACT --out DIR [--regular-object REAL_UMAT.obj] [--abaqus-toolchain]` | `umat_oti.provider`; relocatable ORIGINAL+OTI object, completed mapping, verification entries; optionally the ORIGINAL alone as `REAL_UMAT.obj`, built with `abaqus make` |
 | `python -m umat_oti.reproduce --profile smoke --out-dir DIR` | Reproduction profiles: smoke, offline, paper, corpus, abaqus |
 
 For example, invoke compact configuration as:
@@ -119,8 +126,9 @@ The joint wheel-gate forwarding help requires its companion path even with help:
 
 The raw capture retains the initial exit-2 missing-argument diagnostic and the
 corrected exit-0 invocation. To run the gate supply a healthy standalone Python,
-the genuine matching ODB and a fresh external work directory as documented in
-the installation evidence. That still tests working-tree wheels, not a clone.
+the genuine matching ODB, optionally `--branch main` and `--cantilever DIR`,
+and a fresh external work directory; Residual_Assembler `docs/USAGE_REPORT.md`
+describes each check. Both trees must be clean.
 
 ## Five Reproduced Examples
 
@@ -233,12 +241,13 @@ HTTP readiness and was stopped by owned PID. No audit URL is still live.
 Installed GUI: locate `umat_oti.app.streamlit_app` using importlib.util and pass
 its installed path to Streamlit, as in the wheel installation evidence.
 
-**GUI equivalence gap:** these recovery GUIs are not a newly implemented
-provider-build/independent-verification screen. There is no demonstrated
-one-click equivalent for all five provider/internal-Jacobian commands. Use the
-CLI to generate their numerical reports and provider artifacts; RA's GUI can
-consume the generated J2 object/mapping. Rendering does not complete U-X6 or
-prove every CLI and GUI workflow is equivalent.
+The primary GUI's **Constitutive Jacobian** tab (upload a UMAT, set NTENS,
+Transform) and **Parameter Sensitivities** tab (parameter table, DSIGMA_DP /
+DSTATEV_DP ticks, Build) call the same service functions as `umat-oti jacobian`
+and `umat-oti-provider build` and write byte-identical files; browser tests
+(`pytest -m gui`, 5 passed on 2026-09-18) click through both
+([GUI.md](GUI.md)). The internal-Jacobian probe and the corpus tools remain
+CLI-only; RA's GUI consumes the generated object and mapping.
 
 ## Connected Collaborator Workflow
 
