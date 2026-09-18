@@ -21,11 +21,11 @@ commands as subprocesses and keeps their real exit codes:
    (the independent check: primal parity against the separately compiled
    ORIGINAL, and centred finite differences of the ORIGINAL over a step sweep).
 
-The verification builds its own copy of the provider, and a build embeds its
-build-directory paths (bounds-check messages), so the two objects are not
-byte-identical. The shipped object is therefore tied to the verified one
-directly: both are loaded through the verifier's own ABI client and evaluated on
-the verification's properties and path, and every returned array is compared.
+The verification builds its own copy of the provider. The build compiles on
+relative file names, so a rebuild reproduces the object byte for byte and the
+copies are compared as bytes; independently, both are loaded through the
+verifier's own ABI client and evaluated on the verification's properties and
+path, and every returned array is compared.
 
 Used by the GUI screen "Parameter Sensitivities" (``streamlit run
 scripts/app.py``) and by ``python -m umat_oti.provider.collaborator``.
@@ -243,14 +243,17 @@ def _tie_shipped_to_verified(shipped: dict[str, Any], verification: dict[str, An
                    for name, a, b in zip(names, arrays[0], arrays[1])}
     shipped_sources = _generated_sources(Path(shipped["build_dir"]))
     verified_sources = _generated_sources(Path(verified["build_dir"]))
-    return {"max_abs_difference": differences,
+    return {"objects_byte_identical":
+                Path(shipped["object"]).read_bytes() == Path(verified["object"]).read_bytes(),
+            "max_abs_difference": differences,
             "identical_outputs": all(value == 0.0 for value in differences.values()),
             "generated_sources_identical": shipped_sources == verified_sources,
             "generated_sources": shipped_sources}
 
 
 def package(contract_path: Path | str, out_dir: Path | str, *, verify: bool = True,
-            require_j2_branches: bool = False, python: str = sys.executable) -> dict[str, Any]:
+            require_j2_branches: bool = False, abaqus_toolchain: bool = False,
+            abaqus: str = "abaqus", python: str = sys.executable) -> dict[str, Any]:
     """Build, verify and publish the four shared files. Never raises for a failed step."""
     contract_path, out_dir = Path(contract_path).resolve(), Path(out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -268,7 +271,8 @@ def package(contract_path: Path | str, out_dir: Path | str, *, verify: bool = Tr
     }
     build_dir = out_dir / "build"
     build = _command([python, "-m", "umat_oti.provider", "build", str(contract_path),
-                      "--out", str(build_dir), "--regular-object", REAL_OBJECT],
+                      "--out", str(build_dir), "--regular-object", REAL_OBJECT,
+                      *(["--abaqus-toolchain", "--abaqus", abaqus] if abaqus_toolchain else [])],
                      logs / "provider_build.log")
     summary["build"] = {key: build[key] for key in ("command", "exit_code", "log")}
     built: dict[str, Any] = {}
@@ -304,10 +308,14 @@ def package(contract_path: Path | str, out_dir: Path | str, *, verify: bool = Tr
         shutil.copy2(built["object"], shared / OTI_OBJECT)
         shutil.copy2(built["regular_object"], shared / REAL_OBJECT)
         shutil.copy2(built["contract"], shared / MAPPING)
-        (shared / REPORT).write_text(render_report(summary), encoding="utf-8")
-        summary["shared"] = {name: {"path": str(shared / name), "sha256": _sha256(shared / name)}
-                             for name in SHARED_FILES}
         summary["canonical"] = {"object": built["object"], "contract": built["contract"]}
+        summary["regular_object"] = json.loads(Path(built["contract"]).read_text()).get("regular_object")
+        summary["shared"] = {name: {"path": str(shared / name), "sha256": _sha256(shared / name)}
+                             for name in SHARED_FILES if name != REPORT}
+        # The report lists the other three files' digests, so it is written
+        # after them and its own digest is added last.
+        (shared / REPORT).write_text(render_report(summary), encoding="utf-8")
+        summary["shared"][REPORT] = {"path": str(shared / REPORT), "sha256": _sha256(shared / REPORT)}
     (out_dir / "package.json").write_text(json.dumps(summary, indent=2, default=str) + "\n",
                                           encoding="utf-8")
     return summary
@@ -358,6 +366,11 @@ def render_report(summary: dict[str, Any]) -> str:
         for name, entry in shared.items():
             if name != REPORT:
                 lines.append(f"  {name:<22} sha256 {entry['sha256']}")
+        regular = summary.get("regular_object") or {}
+        if regular:
+            lines.append(f"REAL_UMAT.obj    : {regular.get('toolchain')}; {regular.get('compiler') or ''}".rstrip("; "))
+            lines.append("  (Abaqus on Linux takes a precompiled user object only with the .o "
+                         "extension: copy it to REAL_UMAT.o and pass user=REAL_UMAT.o)")
     verification = summary.get("verification")
     lines += ["", "Validation", "----------"]
     if not summary.get("verification_requested"):
@@ -399,9 +412,11 @@ def render_report(summary: dict[str, Any]) -> str:
                          "verification directory")
             tie = summary.get("tie") or {}
             lines.append("Shipped object   : "
-                         + ("returns bit-identical arrays to the verified build on the check path"
+                         + ("byte-identical to the verified build" if tie.get("objects_byte_identical")
+                            else "not byte-identical to the verified build")
+                         + ("; returns bit-identical arrays to it on the check path"
                             if tie.get("identical_outputs") else
-                            f"NOT tied to the verified build: {tie}"))
+                            f"; NOT tied to the verified build: {tie}"))
             lines.append("Generated sources identical to the verified build: "
                          f"{tie.get('generated_sources_identical')}")
         else:
@@ -417,11 +432,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("contract", type=Path, help="provider contract (resasm_umat_transform_v2)")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--no-verify", action="store_true", help="build only")
+    parser.add_argument("--abaqus-toolchain", action="store_true",
+                        help="build REAL_UMAT.obj with `abaqus make` (the Abaqus site compiler)")
     parser.add_argument("--j2-branches", action="store_true",
                         help="require the check path to cross elastic, plastic and unloading increments")
     args = parser.parse_args(argv)
     summary = package(args.contract, args.out, verify=not args.no_verify,
-                      require_j2_branches=args.j2_branches)
+                      require_j2_branches=args.j2_branches, abaqus_toolchain=args.abaqus_toolchain)
     print(json.dumps({key: summary.get(key) for key in ("exit_code", "shared", "canonical")},
                      indent=2, default=str))
     return int(summary["exit_code"])
