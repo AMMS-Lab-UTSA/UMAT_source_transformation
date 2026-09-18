@@ -190,7 +190,15 @@ def test_retained_refresh_preserves_observations_and_retires_currency(tmp_path):
     from copy import deepcopy
     from build_corpus_registry import kind_of, main, refresh_retained
 
+    # The rule, not the repository's state: the committed registry may be
+    # current (built from a rerun at this fingerprint) or retained history.
+    # Either way, labelling its store with a real earlier generation (pass12's
+    # 94a92c01814f107a) makes it the retained registry this function exists
+    # to refresh; the refusal for a current store is checked at the end.
     original = registry()
+    original["summary"]["inputs"]["store_fingerprint"] = "94a92c01814f107a"
+    retained = tmp_path / "retained.json"
+    retained.write_text(json.dumps(original), encoding="utf-8")
     untouched = deepcopy(original)
     records, refreshed = refresh_retained(original)
     assert original == untouched
@@ -210,7 +218,7 @@ def test_retained_refresh_preserves_observations_and_retires_currency(tmp_path):
     output = tmp_path / "registry.json"
     table = tmp_path / "registry.csv"
     text = tmp_path / "report.md"
-    assert main(["--refresh-retained", str(REGISTRY), "--json", str(output),
+    assert main(["--refresh-retained", str(retained), "--json", str(output),
                  "--csv", str(table), "--markdown", str(text)]) == 0
     assert json.loads(output.read_text()) == refreshed
     assert "HISTORICAL EVIDENCE ONLY" in text.read_text()

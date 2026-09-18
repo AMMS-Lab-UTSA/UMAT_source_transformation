@@ -2,10 +2,13 @@
 
 **Historical collection, retired from current capability claims (2026-09-18).**
 The 44 retained material contracts record generation `94a92c01814f107a`, not
-current code `6aa20d22e37f14c9`. Every original result, history, source identity,
+current code `da1f183708c19072`. Every original result, history, source identity,
 generation and numerical observation is preserved. The claims below describe
-those historical runs only; they are not current regression baselines. See
-[the inventory and bounded new J2 evidence](../docs/evidence/recovery_evidence_refresh.md).
+those historical runs only; they are not current regression baselines. The
+current census of the whole corpus is pass14 at `da1f183708c19072`
+([paper_results/corpus](../paper_results/corpus/CORPUS_VERIFICATION.md),
+[re-freeze evidence](../docs/evidence/final_refreeze.md)); see also
+[the inventory and bounded J2 evidence](../docs/evidence/recovery_evidence_refresh.md).
 
 Every material in this collection passed **Abaqus verification**. That means,
 for each one:

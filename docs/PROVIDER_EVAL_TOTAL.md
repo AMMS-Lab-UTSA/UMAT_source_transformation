@@ -48,6 +48,6 @@ slip-hardening point) and a total-strain damage fixture that reads STRAN
 FD; a PNEWDT < 1 request is returned.
 
 Note: the transform fingerprint (`umat_oti.store.transform_store`) covers
-`src/umat_oti/provider/`, so adding this routine changed it (6aa20d22e37f14c9
--> d8a3d2445fda0b26); `schemas/transform_generation.json` has to follow at
-the next re-freeze.
+`src/umat_oti/provider/`, so adding this routine changed it. The generation
+was re-frozen with the whole corpus at `da1f183708c19072`
+([evidence/final_refreeze.md](evidence/final_refreeze.md)).
