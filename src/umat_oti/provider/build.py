@@ -17,7 +17,7 @@ from umat_oti.transform.parameter_sensitivity_transform import (
 )
 from umat_oti.validation.parameter_sensitivity_validation import ABA_PARAM
 
-from .emit import CARRY_SIGNATURE, EVAL_SIGNATURE, MARCH_SIGNATURE, emit_wrappers
+from .emit import CARRY_SIGNATURE, EVAL_SIGNATURE, MARCH_SIGNATURE, TOTAL_SIGNATURE, emit_wrappers
 
 
 class ProviderBuildError(ValueError):
@@ -132,7 +132,9 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
         "kinematics": "small_strain", "dimensions": {**dimensions, "nparam": len(parameters)},
         "symbols": {"regular_umat": "umat", "oti_internal": "umat_oti_internal",
                     "oti_eval": "umat_oti_eval_", "oti_eval_signature":
-                    EVAL_SIGNATURE + (CARRY_SIGNATURE if path_dependent else [])},
+                    EVAL_SIGNATURE + (CARRY_SIGNATURE if path_dependent else []),
+                    "oti_eval_total": "umat_oti_eval_total_",
+                    "oti_eval_total_signature": TOTAL_SIGNATURE},
         "replay": {"mode": "path_marching" if path_dependent else "stateless",
                    "carry": ["DSIGMA_DP", "DSTATEV_DP"] if path_dependent else []},
         "march": {"symbol": "umat_oti_march_", "directions": len(parameters) + ntens,
