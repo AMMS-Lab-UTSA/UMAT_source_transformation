@@ -33,10 +33,17 @@ def test_provider_j2_original_fd_and_carryover(j2_provider):
     directory, report = j2_provider
     assert report["passed"]
     assert report["branches"] == ["elastic", "elastic", "plastic", "plastic", "elastic", "plastic", "elastic"]
+    # Every entry of DSIGMA_DP, DSTATEV_DP and DDSDDE (EVAL and MARCH) is judged
+    # against the step ladder: 628 are determined to the tolerance and agree,
+    # 240 are zero to within the reference (elastic increments, zero shear),
+    # none is unresolved and none disagrees; every column agrees.
+    assert report["verdict"] == "verified" and not report["unresolved_columns"]
     assert report["comparisons"] == {
-        "eval_primal": 49, "march_final_primal": 6, "eval_parameter_fd": 588,
-        "march_parameter_fd": 504, "eval_tangent_fd": 756, "march_tangent_fd": 756,
+        "eval_primal": 49, "march_final_primal": 6, "verified_entries": 628,
+        "consistent_with_zero": 240, "reference_unresolved": 0, "disagreeing": 0,
     }
+    assert all(column["verdict"] == "agrees" for column in report["columns"])
+    assert report["path_source"].startswith("provider default")
     assert report["carry_reset_stress_derivative_difference"] > 1
     assert json.loads((directory / "verification.json").read_text())["passed"]
 

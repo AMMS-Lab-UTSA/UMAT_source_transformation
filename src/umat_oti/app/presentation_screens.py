@@ -317,6 +317,9 @@ def render_provider_screen() -> None:
                                   key="pp_model")
             verify = st.checkbox("verify against finite differences of the original routine",
                                  value=True, key="pp_verify")
+            path_key = st.selectbox(
+                "check path (the material-point history the check replays)", list(collaborator.CHECK_PATHS),
+                format_func=lambda key: collaborator.CHECK_PATHS[key], key="pp_check_path")
             j2 = st.checkbox("require the check path to cross elastic, plastic and unloading "
                              "increments (J2-type materials)", value=False, key="pp_j2")
 
@@ -329,7 +332,7 @@ def render_provider_screen() -> None:
                 parameters = collaborator.parse_parameters(_rows_from_editor(table))
                 contract = collaborator.provider_contract(
                     source.name, name=model, nstatev=nstatv, parameters=parameters,
-                    stress=stress, state=state)
+                    stress=stress, state=state, check_path=path_key)
             except ValueError as error:
                 problem = str(error)
         if problem and source is not None:
@@ -360,7 +363,9 @@ def _render_provider_result(summary: dict[str, Any] | None) -> None:
         st.code(build.get("diagnostic") or "", language="text")
         return
     if summary.get("exit_code") == 0:
-        st.success("Build succeeded" + (" and verified" if verification else ""))
+        unresolved = len(((verification or {}).get("result") or {}).get("unresolved_columns") or [])
+        st.success("Build succeeded" + (" and verified" if verification else "")
+                   + (f"; {unresolved} columns unresolved" if unresolved else ""))
     else:
         st.warning("Build succeeded; verification did not pass")
     canonical = Path(summary["canonical"]["object"]).name
@@ -379,13 +384,21 @@ def _render_provider_result(summary: dict[str, Any] | None) -> None:
             e1, e2, e3 = st.columns(3)
             for column, (label, value) in zip((e1, e2, e3), errors.items()):
                 column.metric(label, f"{value:.2e}" if isinstance(value, float) and math.isfinite(value) else "n/a")
+            comparisons = result.get("comparisons") or {}
+            criterion = result.get("criterion") or {}
             st.caption(
-                f"Scaled max errors at the finest step (tolerance "
-                f"{result.get('scaled_max_error_tolerance')}), against centred finite "
-                "differences of the separately compiled original routine over "
-                f"{result.get('increments')} increments. Primal parity: stress "
-                f"{result.get('primal_stress_max_abs'):.1e}, state "
-                f"{result.get('primal_state_max_abs'):.1e}.")
+                "Worst relative error of the verified entries, against centred finite "
+                "differences of the separately compiled original routine over a ladder of "
+                f"steps (tolerance {criterion.get('relative_tolerance')} per entry). Path: "
+                f"{result.get('increments')} increments, {result.get('path_source')}. "
+                f"Primal parity: stress {result.get('primal_stress_max_abs'):.1e}, state "
+                f"{result.get('primal_state_max_abs'):.1e}. Entries: "
+                f"{comparisons.get('verified_entries')} verified, "
+                f"{comparisons.get('consistent_with_zero')} zero to within the reference, "
+                f"{comparisons.get('reference_unresolved')} the reference cannot resolve, "
+                f"{comparisons.get('disagreeing')} disagreeing.")
+            for column in result.get("unresolved_columns") or []:
+                st.warning(f"Unresolved column {column['array']} / {column['column']}: {column['reason']}")
             tie = summary.get("tie") or {}
             if tie.get("identical_outputs"):
                 st.caption("The shipped OTI_UMAT.obj returns bit-identical arrays to the "
@@ -397,10 +410,10 @@ def _render_provider_result(summary: dict[str, Any] | None) -> None:
             st.code(str(result.get("error") or verification.get("log")), language="text")
             if "nonfinite" in str(result.get("error")):
                 st.caption(
-                    "The provider's check path is the fixed seven-increment path of "
-                    "docs/PROVIDER.md (strain increments up to 3.2e-3 per unit time). A "
-                    "routine that cannot integrate it returns non-finite values. The "
-                    "objects are built but not verified.")
+                    "The routine returned non-finite values on the check path. The "
+                    "provider's default path has strain increments up to 3.2e-3 per unit "
+                    "time; a rate-dependent, explicitly integrated model may need a gentler "
+                    "path (Options → check path). The objects are built but not verified.")
     else:
         m2.metric("verification", "not run")
     st.markdown("**Shared with the collaborator** — the source never leaves your machine; "
