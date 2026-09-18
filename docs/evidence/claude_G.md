@@ -107,9 +107,9 @@ The named paths are in `collaborator.CHECK_PATHS`.
   REAL_UMAT.obj, OTI_UMAT.obj, Mapping.json and transform_report.txt. Run it
   with `python -m umat_oti.provider.collaborator`.
 - `src/umat_oti/app/presentation_screens.py`: the two screens.
-- `tests/gui/test_imqcam_developer_screens.py` (AppTest, offline suite, 16
+- `tests/gui/test_imqcam_developer_screens.py` (AppTest, offline suite, 17
   tests), `tests/test_provider_regular_object.py` (9 tests),
-  `tests/test_provider_check_path_and_verdicts.py` (19 tests),
+  `tests/test_provider_check_path_and_verdicts.py` (17 tests),
   `tests/gui/test_imqcam_developer_screens_browser.py` (`-m gui`, 5 tests),
   `tests/gui/tangent_reference.py`, `tests/gui/gui_helpers.py`,
   `tests/gui/conftest.py`.
@@ -166,7 +166,9 @@ fixed.
 `abaqus`, `app`, `assist`, `contract`, `publication` and `store`. The edits to
 `cli.py` and `provider/build.py`, and the new `services/jacobian_request.py`
 and `provider/collaborator.py`, move it from `6aa20d22e37f14c9` (recorded in
-`schemas/transform_generation.json`) to `debe10540f9eff1b`. None of them
+`schemas/transform_generation.json`) to `debe10540f9eff1b`, and the
+follow-up edits to the provider build and verifier move it again, to
+`e39880419502a43d`. None of them
 changes a generated transform: the four-field contract reaches the same
 `run_transformation`, and the elastic output is byte-identical to the
 hand-written contract's. But the hash is deliberately broad, so
@@ -175,6 +177,18 @@ fails on this branch. Updating the generation file is a re-freeze, which is the
 lead's lane (COORDINATION.md); this branch does not touch it. If the lead
 wants the front ends out of the hash, `provider` and the CLI modules meet the
 file's own exemption rule: nothing the transform runs imports them.
+
+## Suites after the follow-up (2026-09-18)
+
+- UMAT offline suite: 3 failed, 3368 passed, 125 skipped, 6 deselected. The 3
+  failures are the two pre-existing documentation audits (absolute paths and
+  stale links in Copilot's recovery evidence) and the fingerprint record
+  above.
+- RA offline suite (`-m "not abaqus and not arc and not network"`): 56 failed,
+  299 passed, 19 skipped, 1 deselected, 5 errors. These are the pre-existing
+  fixture-fingerprint failures, the same as the baseline.
+- UMAT `-m gui`: 5 passed. RA `-m gui`: 1 passed, against the real ODB with a
+  provider built by this branch.
 
 ## Commands and results (2026-09-18)
 
