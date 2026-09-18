@@ -67,5 +67,7 @@ fails on the source defect below and passes (0.7234 / 7.5e-4) with PROPS(1) = 0.
   Universidad EAFIT). The helper routines UMAT_PCO needs are in that family
   (resolved here from `UMAT_ECL_TEMP.for`; upstream also ships them in
   `UELS/UEL8_PCOR.for`), so they may be included under MIT with its notice kept.
-  `THIRD_PARTY_NOTICES.md` currently calls these files the authors' own under
-  GPL-3.0-only, which does not match their MIT upstream; left for the lead.
+  `THIRD_PARTY_NOTICES.md` section 2a now credits that upstream and carries its
+  MIT notice; section 2b records that the ICP subfolders are the companion code
+  of Dunne & Petrinic, *Introduction to Computational Plasticity* (OUP 2005),
+  whose redistribution rights are not stated and must be confirmed before release.

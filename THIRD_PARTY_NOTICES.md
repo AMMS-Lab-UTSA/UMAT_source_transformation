@@ -58,22 +58,85 @@ Upstream reference:
 
 ## 2. Bundled UMAT source files (`UMATs/`)
 
-**Location in this repository:** `UMATs/UMATs/ICP/`
+### 2a. `UMATs/UMATs/ICP/UMAT_*.for` — ABAQUS-US (MIT)
 
-The `UMAT_*.for` constitutive models and the files under `elasticity/`,
-`plasticity_exp/`, `plasticity_imp/`, `spin/`, and `visco/` are the authors' own
-UMAT implementations, distributed as part of this project under GPL-3.0-only.
+The twelve files `UMAT_ECL_TEMP.for`, `UMAT_ECO.for`, `UMAT_HIN.for`,
+`UMAT_NKH_1.02.for`, `UMAT_PCL.for`, `UMAT_PCLI.for`, `UMAT_PCLI_R.for`,
+`UMAT_PCLK.for`, `UMAT_PCO.for`, `UMAT_VPDCL.for`, `UMAT_VPDCL_R.for` and
+`UMAT_VPDCO.for` are **not** the UMAT-OTI authors' work. After line-ending
+normalisation (CRLF to LF) each one is byte-identical to the file of the same
+name under `UMATS/` in
 
-> **NOTE:** The proprietary Abaqus verification-manual UMATs (`umatmst3.f`,
-> `umathrt2.f`, and their `.inp` files) have been **removed** from this
-> repository because they are copyrighted by Dassault Systèmes and cannot be
-> redistributed under an open-source license. Users who wish to reproduce those
-> specific cases must obtain the files from their own licensed Abaqus
-> installation.
->
-> `elastic.f` (`UMATs/UMATs/ICP/elasticity/`) is a minimal isotropic-elasticity
-> UMAT used as the smallest example. If any bundled UMAT is derived from Abaqus
-> documentation examples, confirm redistribution rights before publication.
+- Project: ABAQUS-US (user elements and user materials for Abaqus)
+- Author: Juan Gomez, Universidad EAFIT
+- URL: https://github.com/jgomezc1/ABAQUS-US (branch `master`, checked 2026-09-18
+  by SHA-256 of every file)
+- Upstream license: **MIT** (`LICENSE.md` upstream), reproduced below.
+
+The following files in this repository are adaptations of those UMATs and are
+therefore also covered by the MIT notice below:
+`parameter_sensitivity/models/sweep_real_ECL_TEMP/umat.for`,
+`parameter_sensitivity/models/sweep_real_PCO/umat.for` and
+`parameter_sensitivity/models/sweep_eco/umat.for`.
+
+MIT is GPL-compatible; the files are distributed as part of the GPL-3.0-only
+whole with their MIT notice kept:
+
+```text
+MIT License
+
+Copyright (c) [2015] [Juan Gomez]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+### 2b. `UMATs/UMATs/ICP/{elasticity,plasticity_exp,plasticity_imp,spin,visco}/` and `ICP/index.html` — book companion code (licence not stated)
+
+These files are the companion code of F. Dunne and N. Petrinic,
+*Introduction to Computational Plasticity*, Oxford University Press, 2005
+(ISBN 0 19 856826 6), Appendix B, "Fortran coding available via the OUP
+website"; `index.html` is that appendix page. They are **not** the UMAT-OTI
+authors' work, and neither the files nor the page state a licence. They are
+not covered by this project's GPL-3.0 grant. **Before any publication or
+release, the maintainers must confirm redistribution rights with the authors
+or Oxford University Press, or remove these directories and have users
+download the code from the publisher.**
+
+### 2c. The authors' own UMATs
+
+`UMATs/UMATs/generic_ps/` and the other `parameter_sensitivity/models/*/umat.for`
+files (everything not listed in 2a) are the UMAT-OTI authors' own
+implementations, distributed under GPL-3.0-only.
+
+### 2d. Removed files and the public corpus
+
+The proprietary Abaqus verification-manual UMATs (`umatmst3.f`, `umathrt2.f`
+and their `.inp` files) have been **removed** from this repository because
+they are copyrighted by Dassault Systèmes and cannot be redistributed under an
+open-source license. Users who wish to reproduce those cases must obtain the
+files from their own licensed Abaqus installation.
+
+The public-UMAT corpus under `umat/` commits only each material's identity,
+contract, results and the SHA-256 of the verified source bytes; the sources
+themselves are fetched by `tools/materialize_umat_sources.py` into the
+git-ignored `umat/*/materialized/` and are never redistributed (see
+`umat/.gitignore`).
 
 ---
 
