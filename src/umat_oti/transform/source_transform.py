@@ -2600,7 +2600,7 @@ def _transform_source_text(
                 extraction_insertion_region_id = str(extraction_region.get("region_id", "")) if extraction_region else "before RETURN"
             continue
         if _line_in_span(line_number, selected_routine_span) and line_number not in stress_line_numbers:
-            dirty_assignment_line, _ = _logical_assignment_line(lines, line_number, form)
+            dirty_assignment_line, dirty_continuation_lines = _logical_assignment_line(lines, line_number, form)
             shadow_sync_dirty_names.update(_assigned_shadow_names(dirty_assignment_line or line, helper_call_sync_names))
             promoted_assignment_targets = _assigned_shadow_names(dirty_assignment_line or line, roles["promote"])
             # Also rewrite an assignment to a genuine kept-real variable (one
@@ -2638,8 +2638,20 @@ def _transform_source_text(
                 and seed_insert_before_line
                 and line_number >= seed_insert_before_line
             ):
-                output[-1] = _transform_executable_line(line, names_for(line_number), type_name, lifted_helper_names)
-                shadow_sync_dirty_names.difference_update(_assigned_shadow_names(line, helper_call_sync_names))
+                if dirty_assignment_line:
+                    # A statement continued over several lines is rewritten
+                    # whole, as on the stress path below, and its continuation
+                    # lines are skipped. Rewriting the first physical line
+                    # alone wrapped a fragment in REAL(...) -- "EMOD =
+                    # REAL(A + B *)" -- and left the continuation dangling, so
+                    # the transformed file did not compile.
+                    output[-1] = _restore_statement_label(
+                        _transform_executable_line(dirty_assignment_line, names_for(line_number), type_name, lifted_helper_names),
+                        line, form)
+                    helper_continuation_skip_lines.update(dirty_continuation_lines)
+                else:
+                    output[-1] = _transform_executable_line(line, names_for(line_number), type_name, lifted_helper_names)
+                shadow_sync_dirty_names.difference_update(_assigned_shadow_names(dirty_assignment_line or line, helper_call_sync_names))
         if line_number in stress_line_numbers:
             sprinc_rewrite = sprinc_equivalent_stress_rewrites.get(line_number)
             if sprinc_rewrite is not None:
