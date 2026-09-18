@@ -1,0 +1,2 @@
+include examples/elastic_minimal.json
+include UMATs/UMATs/ICP/elasticity/elastic.f

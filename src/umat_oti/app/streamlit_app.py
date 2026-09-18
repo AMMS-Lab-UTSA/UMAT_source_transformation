@@ -39,6 +39,7 @@ from umat_oti.app.derivative_editor import (
     request_editor_rows,
 )
 from umat_oti.services.transformation import TransformationOptions, run_transformation
+from umat_oti.app.resources import demo_contract, repository_root
 from umat_oti.core.config_loader import load_project_config_json
 from umat_oti.core.derivative_request import DerivativeRequestError
 from umat_oti.validation.abaqus_runner import (
@@ -58,10 +59,10 @@ from umat_oti.validation.job_builder import (
 # ----------------------------------------------------------------------------
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[3]
+    return repository_root() or Path.cwd()
 
 
-WORKSPACE_ROOT = _repo_root() / "umat_oti_workspace"
+WORKSPACE_ROOT = Path(os.environ.get("UMAT_OTI_WORKSPACE", Path.cwd() / "umat_oti_workspace")).expanduser().resolve()
 
 #: Where contracts live, in the order a newcomer should meet them. Each entry
 #: is (directory, what it is). The old single ``json_files_completed/``
@@ -82,7 +83,9 @@ COMPLETED_JSON_DIR = next(
 #: The contract the "Start here" demo drives. Its source is the smallest
 #: of the shipped examples (94 lines, linear elastic, NTENS 4, order 1)
 #: and it ships with the checkout, so the demo needs no setup.
-DEMO_CONFIG = _repo_root() / "examples" / "elastic_minimal.json"
+DEMO_CONFIG = demo_contract(WORKSPACE_ROOT)
+if not any(path == DEMO_CONFIG.parent for path, _ in CONFIG_SOURCES):
+    CONFIG_SOURCES.insert(0, (DEMO_CONFIG.parent, "bundled demo"))
 
 #: The same contract as the picker on tab 1 labels it, so a config loaded by a
 #: shortcut and one loaded from the dropdown are the same entry, not two.

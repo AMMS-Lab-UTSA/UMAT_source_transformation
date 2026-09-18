@@ -312,10 +312,10 @@ The runner copies five existing genuine collaborator artifacts into new scratch
 space, invokes the existing source-denied `consume` path and checks all three
 outputs. It never calls `prepare`. The genuine ODB is an external prerequisite,
 not a packaged fixture. Prior real-browser download proof is a local artifact:
-[browser report](../../imq-ra-recovery/.pytest_cache/presentation_browser_cli_final/browser_report.json)
-and [desktop image](../../imq-ra-recovery/.pytest_cache/presentation_browser_cli_final/desktop.png).
-These cache links are valid here, not guaranteed in a clean clone; no image was
-duplicated. Complete companion details: [presentation interface](../../imq-ra-recovery/docs/PRESENTATION_INTERFACE.md).
+The browser report and desktop image were stored in the RA run's ignored
+`.pytest_cache/presentation_browser_cli_final` directory. They are unavailable
+in a clean clone; no image was duplicated. Complete companion details:
+[presentation interface](../../Residual_Assembler/docs/PRESENTATION_INTERFACE.md).
 
 ## Requirement Coverage
 

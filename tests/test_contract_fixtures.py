@@ -23,6 +23,7 @@ from umat_oti.contract import (FIXTURE_SCHEMA, FixtureFingerprintError,
                                read_fixture_reference, require_current,
                                validate)
 from umat_oti.store import transform_fingerprint
+from repository_paths import verified_fixtures
 
 #: Read from the shared generation file, not written twice. A constant
 #: hard-coded on each side of the boundary is two constants, and the day they
@@ -32,19 +33,22 @@ STORE_FINGERPRINT = current_transform_generation()["transform_fingerprint"]
 #: checkout rather than by absolute path: an absolute path is true on exactly
 #: one computer, and a test that silently skips everywhere else proves nothing
 #: everywhere else.
-RA_FIXTURES_RELATIVE = Path("tests") / "fixtures" / "verified"
-RA_REPO_NAMES = ("imq-ra-recovery", "Residual_Assembler", "wt-RA-contract")
-
-
 def _fixtures() -> list:
     """The committed fixtures, or an empty list where that checkout is absent."""
-    root = Path(__file__).resolve().parents[1]
-    for base in (root.parent, root.parent.parent):
-        for name in RA_REPO_NAMES:
-            directory = base / name / RA_FIXTURES_RELATIVE
-            if directory.is_dir():
-                return sorted(directory.glob("*.json"))
-    return []
+    return verified_fixtures()
+
+
+def test_companion_fixture_locator_honors_arbitrary_names(tmp_path, monkeypatch):
+    from repository_paths import resasm_repo_root
+
+    checkout = tmp_path / "consumer-renamed"
+    (checkout / "residual_core").mkdir(parents=True)
+    monkeypatch.setenv("RESASM_REPO", str(checkout))
+    monkeypatch.chdir(tmp_path)
+    assert resasm_repo_root() == checkout
+    monkeypatch.setenv("RESASM_REPO", str(tmp_path / "missing"))
+    with pytest.raises(FileNotFoundError, match="RESASM_REPO"):
+        resasm_repo_root()
 
 
 def test_the_recorded_generation_is_this_worktrees_actual_transform():

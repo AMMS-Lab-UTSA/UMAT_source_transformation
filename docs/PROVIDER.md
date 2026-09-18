@@ -31,7 +31,7 @@ From the recovery repository root, using the supplied development environment:
 
 ```sh
 export PYTHONPATH="$PWD/src"
-PY=/home/ammslab3/softwarex_work/.venv/bin/python
+PY="${PY:-python3}"
 "$PY" -c 'import umat_oti,sys; print(sys.executable); print(umat_oti.__file__)'
 "$PY" -m umat_oti.provider build \
   parameter_sensitivity/models/m3_j2/contract_v2.json \

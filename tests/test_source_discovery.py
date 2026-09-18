@@ -54,7 +54,11 @@ def test_a_fixed_form_suffix_changes_the_code_only_hash():
         "same bytes, and the duplicate is missed")
 
 
-@pytest.mark.skipif(not SNAPSHOT_ROOT.is_dir(), reason="snapshot root absent")
+@pytest.mark.skipif(
+    not any((SNAPSHOT_ROOT / "permissive/jgomezc1_ABAQUS-US/UMATS" / name).is_file()
+            for name in ("UMAT_ECO.for", "UMAT_PCL.for", "UMAT_PCLK.for")),
+    reason="historical jgomezc1 originals absent; set UMAT_OTI_SNAPSHOT_ROOT to the pinned sources snapshot",
+)
 def test_sources_already_in_the_collection_are_recognised():
     """The regression this exists for: an empty known-set rediscovers everything."""
     known = known_identities(SNAPSHOT_ROOT)

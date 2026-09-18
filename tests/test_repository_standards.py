@@ -59,6 +59,25 @@ def test_historical_inventory_paths_are_not_local_but_commands_and_links_are(
     ]
 
 
+def test_companion_links_use_explicit_checkout_and_still_check_targets(tmp_path, monkeypatch):
+    sys.path.insert(0, str(REPO_ROOT / "tools"))
+    import audit_documentation_commands as audit_module
+
+    root = tmp_path / "arbitrary-producer"
+    companion = tmp_path / "arbitrary-consumer"
+    doc = root / "docs/CURRENT.md"
+    doc.parent.mkdir(parents=True)
+    companion.mkdir()
+    (companion / "README.md").write_text("reference")
+    doc.write_text("[valid](../../Residual_Assembler/README.md)\n"
+                   "[broken](../../Residual_Assembler/absent.md)\n")
+    monkeypatch.setattr(audit_module, "REPO_ROOT", root)
+    monkeypatch.setattr(audit_module, "doc_files", lambda: [doc])
+    monkeypatch.setenv("RESASM_REPO", str(companion))
+    assert audit_module.audit() == [{"doc": "docs/CURRENT.md", "kind": "broken_link",
+                                     "detail": "../../Residual_Assembler/absent.md"}]
+
+
 def test_every_machine_path_fixture_marker_states_a_reason():
     """A marker with nothing after it is a hole, not an exemption.
 

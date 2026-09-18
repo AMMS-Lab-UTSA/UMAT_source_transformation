@@ -15,20 +15,11 @@ import pytest
 from umat_oti.contract import (COUNT_FIELDS, FrameError, IDENTITY_FIELDS,
                                check_counts, count_history, frame_key,
                                group_by_increment, increment_key, point_key)
+from repository_paths import verified_fixtures
 
 #: Found relative to this checkout; an absolute path is true on one computer.
-RA_REPO_NAMES = ("Residual_Assembler", "wt-RA-contract")
-FIXTURES_RELATIVE = Path("tests") / "fixtures" / "verified"
-
-
 def _fixtures() -> list:
-    root = Path(__file__).resolve().parents[1]
-    for base in (root.parent, root.parent.parent):
-        for name in RA_REPO_NAMES:
-            directory = base / name / FIXTURES_RELATIVE
-            if directory.is_dir():
-                return sorted(directory.glob("*.json"))
-    return []
+    return verified_fixtures()
 
 
 def _five_field_fixture(*, spanning_steps: bool = False):
