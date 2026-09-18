@@ -349,7 +349,11 @@ def _execute_and_verify(model: str, contract: dict, out: Path, record: dict) -> 
             "status": "failed",
             "reason": "the transform produced no parameter-sensitivity driver"}
         return
-    build = subprocess.run(["make"], cwd=ps_dir, capture_output=True, text=True)
+    # FC explicitly: GNU make predefines FC=f77, so the Makefile's
+    # "FC ?= gfortran" never applies, and f77 is not installed everywhere
+    # gfortran is.
+    build = subprocess.run(["make", "FC=" + (shutil.which("gfortran") or "gfortran")],
+                           cwd=ps_dir, capture_output=True, text=True)
     if build.returncode != 0 or not driver.exists():
         record["stages"]["executed_oti"] = {
             "status": "failed", "reason": f"OTI driver build failed: {build.stderr[:300]}"}
