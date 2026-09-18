@@ -103,7 +103,8 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
     out_dir = out_dir.expanduser().resolve()
 
     try:
-        config = load_project_config_json(config_path.read_bytes(), origin_path=config_path)
+        payload, closure = _payload_with_resolved_closure(config_path, out_dir)
+        config = load_project_config_json(payload, origin_path=config_path)
     except Exception as exc:
         return {"config": str(config_path), "error": f"{type(exc).__name__}: {exc}"}, 1
 
@@ -146,6 +147,8 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
         "order": settings.get("order"),
         "derivative_requests": [request.to_dict() for request in derivative_requests],
     }
+    if closure:
+        summary["dependency_closure"] = closure
     if completion.get("status") == "needs_json_completion":
         summary["status_category"] = "needs_json_completion"
         return summary, 2
@@ -340,6 +343,56 @@ def _generate_parameter_sensitivity_artifact(
     manifest.write_text(json.dumps(artifact, indent=2, sort_keys=True), encoding="utf-8")
     artifact["manifest"] = str(manifest)
     return artifact
+
+
+def _payload_with_resolved_closure(config_path: Path, out_dir: Path) -> tuple[bytes, dict[str, Any] | None]:
+    """The contract, pointed at its resolved routine closure when it names one.
+
+    A compact contract may declare ``"dependency_roots"``: directories, relative
+    to the contract, that hold the published sources of helper routines the
+    entry file calls but does not define (UMAT_PCO.for calls KCLEAR, KMMULT,
+    ... which its family defines in sibling files). The closure is resolved by
+    ``umat_oti.transform.dependency_resolution`` and written, entry file first
+    so every line anchor of the contract still points at the same statement, to
+    ``<out_dir>/<stem>_resolved<suffix>``; the transformation and every later
+    stage (the paired Abaqus validation reads ``selected_umat_file``) then use
+    that one file. A symbol no root defines is an error, not a guess.
+    """
+    raw_bytes = config_path.read_bytes()
+    raw = json.loads(raw_bytes.decode("utf-8"))
+    roots = raw.get("dependency_roots") if isinstance(raw, dict) else None
+    if not roots:
+        return raw_bytes, None
+    from umat_oti.transform.dependency_resolution import combined_source, resolve_closure
+
+    source_value = raw.get("source")
+    source_text = source_value if isinstance(source_value, str) else str((source_value or {}).get("file", ""))
+    entry_path = (config_path.parent / source_text).resolve()
+    root_paths = [(config_path.parent / str(root)).resolve() for root in roots]
+    graph = resolve_closure(entry_path, entry="UMAT", roots=root_paths)
+    if graph.missing or graph.conflicts:
+        raise ValueError(
+            "dependency_roots do not resolve the closure of " + entry_path.name + ": missing "
+            + ", ".join(m.symbol for m in graph.missing) + "; ambiguous "
+            + ", ".join(d.symbol for d in graph.conflicts))
+    record: dict[str, Any] = {
+        "entry": str(entry_path), "roots": [str(r) for r in root_paths],
+        "multi_file": graph.is_multi_file,
+        "external_definitions": [
+            {"routine": d.name, "file": d.path.name, "lines": [d.start_line, d.end_line]}
+            for d in graph.external_definitions],
+    }
+    if not graph.is_multi_file:
+        return raw_bytes, record
+    out_dir.mkdir(parents=True, exist_ok=True)
+    resolved = out_dir / f"{entry_path.stem}_resolved{entry_path.suffix}"
+    resolved.write_text(combined_source(graph), encoding="utf-8")
+    record["resolved_source"] = str(resolved)
+    if isinstance(source_value, dict):
+        raw["source"] = {**source_value, "file": str(resolved)}
+    else:
+        raw["source"] = str(resolved)
+    return json.dumps(raw).encode("utf-8"), record
 
 
 def _write_combined_source(out_dir: Path, transformed_source: Any) -> Path | None:
