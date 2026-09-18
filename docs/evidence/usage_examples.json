@@ -1,0 +1,904 @@
+{
+  "clean_install_verified": false,
+  "phase": "examples",
+  "python": "/home/ammslab3/softwarex_work/.venv/bin/python",
+  "work": "/tmp/recovery_usage__l41upif",
+  "environment": {
+    "PYTHONPATH": "/home/ammslab3/softwarex_work/imq-ra-recovery:/home/ammslab3/softwarex_work/imq-umat-recovery/src:/home/ammslab3/otilib/build_py311",
+    "UMAT_OTI_REPO": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+    "PYOTI_PATH": "/home/ammslab3/otilib/build_py311",
+    "OTILIB_ROOT": "/home/ammslab3/otilib/build_py311",
+    "RUN_OTILIB_TESTS": "1"
+  },
+  "commands": [
+    {
+      "name": "compiler",
+      "argv": [
+        "gfortran",
+        "--version"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0\nCopyright (C) 2019 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "stderr": "",
+      "seconds": 0.0036563959438353777
+    },
+    {
+      "name": "U-X1",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.validation.parameter_sensitivity_provider",
+        "parameter_sensitivity/models/m1_elastic/contract_v2.json",
+        "--out",
+        "/tmp/recovery_usage__l41upif/U-X1",
+        "--elastic"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "{\n  \"passed\": true,\n  \"reference\": \"separately compiled ORIGINAL UMAT; centered finite differences\",\n  \"provider\": {\n    \"object\": \"/tmp/recovery_usage__l41upif/U-X1/umat_m1_elastic_oti.obj\",\n    \"contract\": \"/tmp/recovery_usage__l41upif/U-X1/umat_m1_elastic_oti.json\",\n    \"build_dir\": \"/tmp/recovery_usage__l41upif/U-X1/build-gmjq85z9\"\n  },\n  \"source_hash\": \"ad9681e53588b47e\",\n  \"object_sha256_full\": \"8e94a6365667c6f500cb08ff1e0926c36fd199b2f9da0241e789fbbb1d928efc\",\n  \"props\": [\n    210000.0,\n    0.3\n  ],\n  \"path\": [\n    [\n      0.0004,\n      0.0,\n      0.0,\n      0.0001,\n      4e-05,\n      -3e-05\n    ],\n    [\n      0.0003,\n      -5e-05,\n      0.0,\n      0.0,\n      0.0,\n      0.0\n    ],\n    [\n      0.0018,\n      -0.0001,\n      5e-05,\n      0.0002,\n      -0.0001,\n      0.0001\n    ],\n    [\n      0.0007,\n      0.0001,\n      -0.0001,\n      -0.0002,\n      0.0002,\n      5e-05\n    ],\n    [\n      -0.0004,\n      4e-05,\n      0.0,\n      -7e-05,\n      0.0,\n      0.0\n    ],\n    [\n      -0.0032,\n      0.0002,\n      -0.0001,\n      -0.0002,\n      0.0001,\n      -0.0001\n    ],\n    [\n      0.0002,\n      0.0,\n      0.0,\n      0.0,\n      0.0,\n      0.0\n    ]\n  ],\n  \"increments\": 7,\n  \"branches\": [],\n  \"parameter_steps\": [\n    {\n      \"relative_step\": 0.0001,\n      \"eval_stress\": 2.384594450034294e-07,\n      \"march_stress\": 2.384594450034294e-07,\n      \"eval_state\": 0.0\n    },\n    {\n      \"relative_step\": 3e-05,\n      \"eval_stress\": 2.1460541423063617e-08,\n      \"march_stress\": 2.1460541423063617e-08,\n      \"eval_state\": 0.0\n    },\n    {\n      \"relative_step\": 1e-05,\n      \"eval_stress\": 2.388387706121852e-09,\n      \"march_stress\": 2.388387706121852e-09,\n      \"eval_state\": 0.0\n    }\n  ],\n  \"tangent_steps\": [\n    {\n      \"absolute_step\": 1e-06,\n      \"eval\": 1.2683726492380623e-13,\n      \"march\": 1.2683726492380623e-13\n    },\n    {\n      \"absolute_step\": 1e-07,\n      \"eval\": 1.6828587113994477e-12,\n      \"march\": 1.6828587113994477e-12\n    },\n    {\n      \"absolute_step\": 1e-08,\n      \"eval\": 1.3067069476098605e-11,\n      \"march\": 1.3067069476098605e-11\n    }\n  ],\n  \"fd_plateau\": {\n    \"stress\": 1.9073817587949263e-08,\n    \"state\": 0.0,\n    \"tangent\": 1.2064725635759377e-11\n  },\n  \"scaled_max_error_tolerance\": 2e-06,\n  \"scaling\": \"parameter: max per column over path/components; tangent: max per increment; floor 1e-12\",\n  \"primal_stress_max_abs\": 2.2737367544323206e-13,\n  \"primal_state_max_abs\": 0.0,\n  \"carry_reset_stress_derivative_difference\": 0.0,\n  \"comparisons\": {\n    \"eval_primal\": 42,\n    \"march_final_primal\": 6,\n    \"eval_parameter_fd\": 252,\n    \"march_parameter_fd\": 252,\n    \"eval_tangent_fd\": 756,\n    \"march_tangent_fd\": 756\n  },\n  \"clean_install_verified\": false\n}\n",
+      "stderr": "",
+      "seconds": 5.982766559987795,
+      "proof": {
+        "path": "/tmp/recovery_usage__l41upif/U-X1/verification.json",
+        "sha256": "c6ebfffbecfab45143e0193aeadd8b53b60ba896836aa421d447cd040779f9af",
+        "data": {
+          "passed": true,
+          "reference": "separately compiled ORIGINAL UMAT; centered finite differences",
+          "provider": {
+            "object": "/tmp/recovery_usage__l41upif/U-X1/umat_m1_elastic_oti.obj",
+            "contract": "/tmp/recovery_usage__l41upif/U-X1/umat_m1_elastic_oti.json",
+            "build_dir": "/tmp/recovery_usage__l41upif/U-X1/build-gmjq85z9"
+          },
+          "source_hash": "ad9681e53588b47e",
+          "object_sha256_full": "8e94a6365667c6f500cb08ff1e0926c36fd199b2f9da0241e789fbbb1d928efc",
+          "props": [
+            210000.0,
+            0.3
+          ],
+          "path": [
+            [
+              0.0004,
+              0.0,
+              0.0,
+              0.0001,
+              4e-05,
+              -3e-05
+            ],
+            [
+              0.0003,
+              -5e-05,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0018,
+              -0.0001,
+              5e-05,
+              0.0002,
+              -0.0001,
+              0.0001
+            ],
+            [
+              0.0007,
+              0.0001,
+              -0.0001,
+              -0.0002,
+              0.0002,
+              5e-05
+            ],
+            [
+              -0.0004,
+              4e-05,
+              0.0,
+              -7e-05,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0032,
+              0.0002,
+              -0.0001,
+              -0.0002,
+              0.0001,
+              -0.0001
+            ],
+            [
+              0.0002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          "increments": 7,
+          "branches": [],
+          "parameter_steps": [
+            {
+              "relative_step": 0.0001,
+              "eval_stress": 2.384594450034294e-07,
+              "march_stress": 2.384594450034294e-07,
+              "eval_state": 0.0
+            },
+            {
+              "relative_step": 3e-05,
+              "eval_stress": 2.1460541423063617e-08,
+              "march_stress": 2.1460541423063617e-08,
+              "eval_state": 0.0
+            },
+            {
+              "relative_step": 1e-05,
+              "eval_stress": 2.388387706121852e-09,
+              "march_stress": 2.388387706121852e-09,
+              "eval_state": 0.0
+            }
+          ],
+          "tangent_steps": [
+            {
+              "absolute_step": 1e-06,
+              "eval": 1.2683726492380623e-13,
+              "march": 1.2683726492380623e-13
+            },
+            {
+              "absolute_step": 1e-07,
+              "eval": 1.6828587113994477e-12,
+              "march": 1.6828587113994477e-12
+            },
+            {
+              "absolute_step": 1e-08,
+              "eval": 1.3067069476098605e-11,
+              "march": 1.3067069476098605e-11
+            }
+          ],
+          "fd_plateau": {
+            "stress": 1.9073817587949263e-08,
+            "state": 0.0,
+            "tangent": 1.2064725635759377e-11
+          },
+          "scaled_max_error_tolerance": 2e-06,
+          "scaling": "parameter: max per column over path/components; tangent: max per increment; floor 1e-12",
+          "primal_stress_max_abs": 2.2737367544323206e-13,
+          "primal_state_max_abs": 0.0,
+          "carry_reset_stress_derivative_difference": 0.0,
+          "comparisons": {
+            "eval_primal": 42,
+            "march_final_primal": 6,
+            "eval_parameter_fd": 252,
+            "march_parameter_fd": 252,
+            "eval_tangent_fd": 756,
+            "march_tangent_fd": 756
+          },
+          "clean_install_verified": false
+        }
+      }
+    },
+    {
+      "name": "U-X2",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.validation.parameter_sensitivity_provider",
+        "parameter_sensitivity/models/m3_j2/contract_v2.json",
+        "--out",
+        "/tmp/recovery_usage__l41upif/U-X2"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "{\n  \"passed\": true,\n  \"reference\": \"separately compiled ORIGINAL UMAT; centered finite differences\",\n  \"provider\": {\n    \"object\": \"/tmp/recovery_usage__l41upif/U-X2/umat_m3_j2_oti.obj\",\n    \"contract\": \"/tmp/recovery_usage__l41upif/U-X2/umat_m3_j2_oti.json\",\n    \"build_dir\": \"/tmp/recovery_usage__l41upif/U-X2/build-dc8x9zel\"\n  },\n  \"source_hash\": \"9b779f0c6cadf9c4\",\n  \"object_sha256_full\": \"dcea2875b8192b5696b10295ece2c1bd25e63e7025593e078b9ea962d6e3a210\",\n  \"props\": [\n    210000.0,\n    0.3,\n    250.0,\n    2000.0\n  ],\n  \"path\": [\n    [\n      0.0004,\n      0.0,\n      0.0,\n      0.0001,\n      4e-05,\n      -3e-05\n    ],\n    [\n      0.0003,\n      -5e-05,\n      0.0,\n      0.0,\n      0.0,\n      0.0\n    ],\n    [\n      0.0018,\n      -0.0001,\n      5e-05,\n      0.0002,\n      -0.0001,\n      0.0001\n    ],\n    [\n      0.0007,\n      0.0001,\n      -0.0001,\n      -0.0002,\n      0.0002,\n      5e-05\n    ],\n    [\n      -0.0004,\n      4e-05,\n      0.0,\n      -7e-05,\n      0.0,\n      0.0\n    ],\n    [\n      -0.0032,\n      0.0002,\n      -0.0001,\n      -0.0002,\n      0.0001,\n      -0.0001\n    ],\n    [\n      0.0002,\n      0.0,\n      0.0,\n      0.0,\n      0.0,\n      0.0\n    ]\n  ],\n  \"increments\": 7,\n  \"branches\": [\n    \"elastic\",\n    \"elastic\",\n    \"plastic\",\n    \"plastic\",\n    \"elastic\",\n    \"plastic\",\n    \"elastic\"\n  ],\n  \"parameter_steps\": [\n    {\n      \"relative_step\": 0.0001,\n      \"eval_stress\": 2.493046730365579e-07,\n      \"march_stress\": 2.493046730365579e-07,\n      \"eval_state\": 9.62371164367706e-09\n    },\n    {\n      \"relative_step\": 3e-05,\n      \"eval_stress\": 2.2436335927155677e-08,\n      \"march_stress\": 2.2436335927155677e-08,\n      \"eval_state\": 8.58137390959326e-10\n    },\n    {\n      \"relative_step\": 1e-05,\n      \"eval_stress\": 2.495089817332248e-09,\n      \"march_stress\": 2.495089817332248e-09,\n      \"eval_state\": 4.78632426878973e-10\n    }\n  ],\n  \"tangent_steps\": [\n    {\n      \"absolute_step\": 1e-06,\n      \"eval\": 2.838732044089759e-08,\n      \"march\": 2.838732044089759e-08\n    },\n    {\n      \"absolute_step\": 1e-07,\n      \"eval\": 2.833701120261542e-10,\n      \"march\": 2.833701120261542e-10\n    },\n    {\n      \"absolute_step\": 1e-08,\n      \"eval\": 2.2909886607673335e-11,\n      \"march\": 2.2909886607673335e-11\n    }\n  ],\n  \"fd_plateau\": {\n    \"stress\": 1.994408000705079e-08,\n    \"state\": 7.515721719070879e-10,\n    \"tangent\": 2.7870660023874207e-10\n  },\n  \"scaled_max_error_tolerance\": 2e-06,\n  \"scaling\": \"parameter: max per column over path/components; tangent: max per increment; floor 1e-12\",\n  \"primal_stress_max_abs\": 5.684341886080802e-14,\n  \"primal_state_max_abs\": 2.168404344971009e-19,\n  \"carry_reset_stress_derivative_difference\": 2720.125996569597,\n  \"comparisons\": {\n    \"eval_primal\": 49,\n    \"march_final_primal\": 6,\n    \"eval_parameter_fd\": 588,\n    \"march_parameter_fd\": 504,\n    \"eval_tangent_fd\": 756,\n    \"march_tangent_fd\": 756\n  },\n  \"clean_install_verified\": false\n}\n",
+      "stderr": "",
+      "seconds": 6.7916072079679,
+      "proof": {
+        "path": "/tmp/recovery_usage__l41upif/U-X2/verification.json",
+        "sha256": "e86abbeed19d1d758d1d46b7fdf16a1eafe5f9dd9608788bc35f0517e8040f2d",
+        "data": {
+          "passed": true,
+          "reference": "separately compiled ORIGINAL UMAT; centered finite differences",
+          "provider": {
+            "object": "/tmp/recovery_usage__l41upif/U-X2/umat_m3_j2_oti.obj",
+            "contract": "/tmp/recovery_usage__l41upif/U-X2/umat_m3_j2_oti.json",
+            "build_dir": "/tmp/recovery_usage__l41upif/U-X2/build-dc8x9zel"
+          },
+          "source_hash": "9b779f0c6cadf9c4",
+          "object_sha256_full": "dcea2875b8192b5696b10295ece2c1bd25e63e7025593e078b9ea962d6e3a210",
+          "props": [
+            210000.0,
+            0.3,
+            250.0,
+            2000.0
+          ],
+          "path": [
+            [
+              0.0004,
+              0.0,
+              0.0,
+              0.0001,
+              4e-05,
+              -3e-05
+            ],
+            [
+              0.0003,
+              -5e-05,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0018,
+              -0.0001,
+              5e-05,
+              0.0002,
+              -0.0001,
+              0.0001
+            ],
+            [
+              0.0007,
+              0.0001,
+              -0.0001,
+              -0.0002,
+              0.0002,
+              5e-05
+            ],
+            [
+              -0.0004,
+              4e-05,
+              0.0,
+              -7e-05,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0032,
+              0.0002,
+              -0.0001,
+              -0.0002,
+              0.0001,
+              -0.0001
+            ],
+            [
+              0.0002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          "increments": 7,
+          "branches": [
+            "elastic",
+            "elastic",
+            "plastic",
+            "plastic",
+            "elastic",
+            "plastic",
+            "elastic"
+          ],
+          "parameter_steps": [
+            {
+              "relative_step": 0.0001,
+              "eval_stress": 2.493046730365579e-07,
+              "march_stress": 2.493046730365579e-07,
+              "eval_state": 9.62371164367706e-09
+            },
+            {
+              "relative_step": 3e-05,
+              "eval_stress": 2.2436335927155677e-08,
+              "march_stress": 2.2436335927155677e-08,
+              "eval_state": 8.58137390959326e-10
+            },
+            {
+              "relative_step": 1e-05,
+              "eval_stress": 2.495089817332248e-09,
+              "march_stress": 2.495089817332248e-09,
+              "eval_state": 4.78632426878973e-10
+            }
+          ],
+          "tangent_steps": [
+            {
+              "absolute_step": 1e-06,
+              "eval": 2.838732044089759e-08,
+              "march": 2.838732044089759e-08
+            },
+            {
+              "absolute_step": 1e-07,
+              "eval": 2.833701120261542e-10,
+              "march": 2.833701120261542e-10
+            },
+            {
+              "absolute_step": 1e-08,
+              "eval": 2.2909886607673335e-11,
+              "march": 2.2909886607673335e-11
+            }
+          ],
+          "fd_plateau": {
+            "stress": 1.994408000705079e-08,
+            "state": 7.515721719070879e-10,
+            "tangent": 2.7870660023874207e-10
+          },
+          "scaled_max_error_tolerance": 2e-06,
+          "scaling": "parameter: max per column over path/components; tangent: max per increment; floor 1e-12",
+          "primal_stress_max_abs": 5.684341886080802e-14,
+          "primal_state_max_abs": 2.168404344971009e-19,
+          "carry_reset_stress_derivative_difference": 2720.125996569597,
+          "comparisons": {
+            "eval_primal": 49,
+            "march_final_primal": 6,
+            "eval_parameter_fd": 588,
+            "march_parameter_fd": 504,
+            "eval_tangent_fd": 756,
+            "march_tangent_fd": 756
+          },
+          "clean_install_verified": false
+        }
+      }
+    },
+    {
+      "name": "U-X3",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.validation.parameter_sensitivity_provider",
+        "parameter_sensitivity/models/m3_j2/contract_v2.json",
+        "--out",
+        "/tmp/recovery_usage__l41upif/U-X3"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "{\n  \"passed\": true,\n  \"reference\": \"separately compiled ORIGINAL UMAT; centered finite differences\",\n  \"provider\": {\n    \"object\": \"/tmp/recovery_usage__l41upif/U-X3/umat_m3_j2_oti.obj\",\n    \"contract\": \"/tmp/recovery_usage__l41upif/U-X3/umat_m3_j2_oti.json\",\n    \"build_dir\": \"/tmp/recovery_usage__l41upif/U-X3/build-bjae4mrj\"\n  },\n  \"source_hash\": \"9b779f0c6cadf9c4\",\n  \"object_sha256_full\": \"8cc14dfaf00b20339899043f834699a92b8eb34bb01d789deeb0c90d94d4c0da\",\n  \"props\": [\n    210000.0,\n    0.3,\n    250.0,\n    2000.0\n  ],\n  \"path\": [\n    [\n      0.0004,\n      0.0,\n      0.0,\n      0.0001,\n      4e-05,\n      -3e-05\n    ],\n    [\n      0.0003,\n      -5e-05,\n      0.0,\n      0.0,\n      0.0,\n      0.0\n    ],\n    [\n      0.0018,\n      -0.0001,\n      5e-05,\n      0.0002,\n      -0.0001,\n      0.0001\n    ],\n    [\n      0.0007,\n      0.0001,\n      -0.0001,\n      -0.0002,\n      0.0002,\n      5e-05\n    ],\n    [\n      -0.0004,\n      4e-05,\n      0.0,\n      -7e-05,\n      0.0,\n      0.0\n    ],\n    [\n      -0.0032,\n      0.0002,\n      -0.0001,\n      -0.0002,\n      0.0001,\n      -0.0001\n    ],\n    [\n      0.0002,\n      0.0,\n      0.0,\n      0.0,\n      0.0,\n      0.0\n    ]\n  ],\n  \"increments\": 7,\n  \"branches\": [\n    \"elastic\",\n    \"elastic\",\n    \"plastic\",\n    \"plastic\",\n    \"elastic\",\n    \"plastic\",\n    \"elastic\"\n  ],\n  \"parameter_steps\": [\n    {\n      \"relative_step\": 0.0001,\n      \"eval_stress\": 2.493046730365579e-07,\n      \"march_stress\": 2.493046730365579e-07,\n      \"eval_state\": 9.62371164367706e-09\n    },\n    {\n      \"relative_step\": 3e-05,\n      \"eval_stress\": 2.2436335927155677e-08,\n      \"march_stress\": 2.2436335927155677e-08,\n      \"eval_state\": 8.58137390959326e-10\n    },\n    {\n      \"relative_step\": 1e-05,\n      \"eval_stress\": 2.495089817332248e-09,\n      \"march_stress\": 2.495089817332248e-09,\n      \"eval_state\": 4.78632426878973e-10\n    }\n  ],\n  \"tangent_steps\": [\n    {\n      \"absolute_step\": 1e-06,\n      \"eval\": 2.838732044089759e-08,\n      \"march\": 2.838732044089759e-08\n    },\n    {\n      \"absolute_step\": 1e-07,\n      \"eval\": 2.833701120261542e-10,\n      \"march\": 2.833701120261542e-10\n    },\n    {\n      \"absolute_step\": 1e-08,\n      \"eval\": 2.2909886607673335e-11,\n      \"march\": 2.2909886607673335e-11\n    }\n  ],\n  \"fd_plateau\": {\n    \"stress\": 1.994408000705079e-08,\n    \"state\": 7.515721719070879e-10,\n    \"tangent\": 2.7870660023874207e-10\n  },\n  \"scaled_max_error_tolerance\": 2e-06,\n  \"scaling\": \"parameter: max per column over path/components; tangent: max per increment; floor 1e-12\",\n  \"primal_stress_max_abs\": 5.684341886080802e-14,\n  \"primal_state_max_abs\": 2.168404344971009e-19,\n  \"carry_reset_stress_derivative_difference\": 2720.125996569597,\n  \"comparisons\": {\n    \"eval_primal\": 49,\n    \"march_final_primal\": 6,\n    \"eval_parameter_fd\": 588,\n    \"march_parameter_fd\": 504,\n    \"eval_tangent_fd\": 756,\n    \"march_tangent_fd\": 756\n  },\n  \"clean_install_verified\": false\n}\n",
+      "stderr": "",
+      "seconds": 7.182416911993641,
+      "proof": {
+        "path": "/tmp/recovery_usage__l41upif/U-X3/verification.json",
+        "sha256": "7bfb61d03a97e422587b1416d440eb476cfc407e7c576fac88882d392093aea5",
+        "data": {
+          "passed": true,
+          "reference": "separately compiled ORIGINAL UMAT; centered finite differences",
+          "provider": {
+            "object": "/tmp/recovery_usage__l41upif/U-X3/umat_m3_j2_oti.obj",
+            "contract": "/tmp/recovery_usage__l41upif/U-X3/umat_m3_j2_oti.json",
+            "build_dir": "/tmp/recovery_usage__l41upif/U-X3/build-bjae4mrj"
+          },
+          "source_hash": "9b779f0c6cadf9c4",
+          "object_sha256_full": "8cc14dfaf00b20339899043f834699a92b8eb34bb01d789deeb0c90d94d4c0da",
+          "props": [
+            210000.0,
+            0.3,
+            250.0,
+            2000.0
+          ],
+          "path": [
+            [
+              0.0004,
+              0.0,
+              0.0,
+              0.0001,
+              4e-05,
+              -3e-05
+            ],
+            [
+              0.0003,
+              -5e-05,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0018,
+              -0.0001,
+              5e-05,
+              0.0002,
+              -0.0001,
+              0.0001
+            ],
+            [
+              0.0007,
+              0.0001,
+              -0.0001,
+              -0.0002,
+              0.0002,
+              5e-05
+            ],
+            [
+              -0.0004,
+              4e-05,
+              0.0,
+              -7e-05,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0032,
+              0.0002,
+              -0.0001,
+              -0.0002,
+              0.0001,
+              -0.0001
+            ],
+            [
+              0.0002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          "increments": 7,
+          "branches": [
+            "elastic",
+            "elastic",
+            "plastic",
+            "plastic",
+            "elastic",
+            "plastic",
+            "elastic"
+          ],
+          "parameter_steps": [
+            {
+              "relative_step": 0.0001,
+              "eval_stress": 2.493046730365579e-07,
+              "march_stress": 2.493046730365579e-07,
+              "eval_state": 9.62371164367706e-09
+            },
+            {
+              "relative_step": 3e-05,
+              "eval_stress": 2.2436335927155677e-08,
+              "march_stress": 2.2436335927155677e-08,
+              "eval_state": 8.58137390959326e-10
+            },
+            {
+              "relative_step": 1e-05,
+              "eval_stress": 2.495089817332248e-09,
+              "march_stress": 2.495089817332248e-09,
+              "eval_state": 4.78632426878973e-10
+            }
+          ],
+          "tangent_steps": [
+            {
+              "absolute_step": 1e-06,
+              "eval": 2.838732044089759e-08,
+              "march": 2.838732044089759e-08
+            },
+            {
+              "absolute_step": 1e-07,
+              "eval": 2.833701120261542e-10,
+              "march": 2.833701120261542e-10
+            },
+            {
+              "absolute_step": 1e-08,
+              "eval": 2.2909886607673335e-11,
+              "march": 2.2909886607673335e-11
+            }
+          ],
+          "fd_plateau": {
+            "stress": 1.994408000705079e-08,
+            "state": 7.515721719070879e-10,
+            "tangent": 2.7870660023874207e-10
+          },
+          "scaled_max_error_tolerance": 2e-06,
+          "scaling": "parameter: max per column over path/components; tangent: max per increment; floor 1e-12",
+          "primal_stress_max_abs": 5.684341886080802e-14,
+          "primal_state_max_abs": 2.168404344971009e-19,
+          "carry_reset_stress_derivative_difference": 2720.125996569597,
+          "comparisons": {
+            "eval_primal": 49,
+            "march_final_primal": 6,
+            "eval_parameter_fd": 588,
+            "march_parameter_fd": 504,
+            "eval_tangent_fd": 756,
+            "march_tangent_fd": 756
+          },
+          "clean_install_verified": false
+        }
+      }
+    },
+    {
+      "name": "U-X4",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.validation.parameter_sensitivity_provider",
+        "parameter_sensitivity/models/m3_j2/contract_v2.json",
+        "--out",
+        "/tmp/recovery_usage__l41upif/U-X4"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "{\n  \"passed\": true,\n  \"reference\": \"separately compiled ORIGINAL UMAT; centered finite differences\",\n  \"provider\": {\n    \"object\": \"/tmp/recovery_usage__l41upif/U-X4/umat_m3_j2_oti.obj\",\n    \"contract\": \"/tmp/recovery_usage__l41upif/U-X4/umat_m3_j2_oti.json\",\n    \"build_dir\": \"/tmp/recovery_usage__l41upif/U-X4/build-bszvgid1\"\n  },\n  \"source_hash\": \"9b779f0c6cadf9c4\",\n  \"object_sha256_full\": \"9316480fda6ef73894985e8dd20bdc047eefac1b9452cdf2b08b3e820714f4c8\",\n  \"props\": [\n    210000.0,\n    0.3,\n    250.0,\n    2000.0\n  ],\n  \"path\": [\n    [\n      0.0004,\n      0.0,\n      0.0,\n      0.0001,\n      4e-05,\n      -3e-05\n    ],\n    [\n      0.0003,\n      -5e-05,\n      0.0,\n      0.0,\n      0.0,\n      0.0\n    ],\n    [\n      0.0018,\n      -0.0001,\n      5e-05,\n      0.0002,\n      -0.0001,\n      0.0001\n    ],\n    [\n      0.0007,\n      0.0001,\n      -0.0001,\n      -0.0002,\n      0.0002,\n      5e-05\n    ],\n    [\n      -0.0004,\n      4e-05,\n      0.0,\n      -7e-05,\n      0.0,\n      0.0\n    ],\n    [\n      -0.0032,\n      0.0002,\n      -0.0001,\n      -0.0002,\n      0.0001,\n      -0.0001\n    ],\n    [\n      0.0002,\n      0.0,\n      0.0,\n      0.0,\n      0.0,\n      0.0\n    ]\n  ],\n  \"increments\": 7,\n  \"branches\": [\n    \"elastic\",\n    \"elastic\",\n    \"plastic\",\n    \"plastic\",\n    \"elastic\",\n    \"plastic\",\n    \"elastic\"\n  ],\n  \"parameter_steps\": [\n    {\n      \"relative_step\": 0.0001,\n      \"eval_stress\": 2.493046730365579e-07,\n      \"march_stress\": 2.493046730365579e-07,\n      \"eval_state\": 9.62371164367706e-09\n    },\n    {\n      \"relative_step\": 3e-05,\n      \"eval_stress\": 2.2436335927155677e-08,\n      \"march_stress\": 2.2436335927155677e-08,\n      \"eval_state\": 8.58137390959326e-10\n    },\n    {\n      \"relative_step\": 1e-05,\n      \"eval_stress\": 2.495089817332248e-09,\n      \"march_stress\": 2.495089817332248e-09,\n      \"eval_state\": 4.78632426878973e-10\n    }\n  ],\n  \"tangent_steps\": [\n    {\n      \"absolute_step\": 1e-06,\n      \"eval\": 2.838732044089759e-08,\n      \"march\": 2.838732044089759e-08\n    },\n    {\n      \"absolute_step\": 1e-07,\n      \"eval\": 2.833701120261542e-10,\n      \"march\": 2.833701120261542e-10\n    },\n    {\n      \"absolute_step\": 1e-08,\n      \"eval\": 2.2909886607673335e-11,\n      \"march\": 2.2909886607673335e-11\n    }\n  ],\n  \"fd_plateau\": {\n    \"stress\": 1.994408000705079e-08,\n    \"state\": 7.515721719070879e-10,\n    \"tangent\": 2.7870660023874207e-10\n  },\n  \"scaled_max_error_tolerance\": 2e-06,\n  \"scaling\": \"parameter: max per column over path/components; tangent: max per increment; floor 1e-12\",\n  \"primal_stress_max_abs\": 5.684341886080802e-14,\n  \"primal_state_max_abs\": 2.168404344971009e-19,\n  \"carry_reset_stress_derivative_difference\": 2720.125996569597,\n  \"comparisons\": {\n    \"eval_primal\": 49,\n    \"march_final_primal\": 6,\n    \"eval_parameter_fd\": 588,\n    \"march_parameter_fd\": 504,\n    \"eval_tangent_fd\": 756,\n    \"march_tangent_fd\": 756\n  },\n  \"clean_install_verified\": false\n}\n",
+      "stderr": "",
+      "seconds": 6.758443036000244,
+      "proof": {
+        "path": "/tmp/recovery_usage__l41upif/U-X4/verification.json",
+        "sha256": "d565064dcc66438fd53ae475fc63aec631e42ad91ba55f1008920718072856cd",
+        "data": {
+          "passed": true,
+          "reference": "separately compiled ORIGINAL UMAT; centered finite differences",
+          "provider": {
+            "object": "/tmp/recovery_usage__l41upif/U-X4/umat_m3_j2_oti.obj",
+            "contract": "/tmp/recovery_usage__l41upif/U-X4/umat_m3_j2_oti.json",
+            "build_dir": "/tmp/recovery_usage__l41upif/U-X4/build-bszvgid1"
+          },
+          "source_hash": "9b779f0c6cadf9c4",
+          "object_sha256_full": "9316480fda6ef73894985e8dd20bdc047eefac1b9452cdf2b08b3e820714f4c8",
+          "props": [
+            210000.0,
+            0.3,
+            250.0,
+            2000.0
+          ],
+          "path": [
+            [
+              0.0004,
+              0.0,
+              0.0,
+              0.0001,
+              4e-05,
+              -3e-05
+            ],
+            [
+              0.0003,
+              -5e-05,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0018,
+              -0.0001,
+              5e-05,
+              0.0002,
+              -0.0001,
+              0.0001
+            ],
+            [
+              0.0007,
+              0.0001,
+              -0.0001,
+              -0.0002,
+              0.0002,
+              5e-05
+            ],
+            [
+              -0.0004,
+              4e-05,
+              0.0,
+              -7e-05,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0032,
+              0.0002,
+              -0.0001,
+              -0.0002,
+              0.0001,
+              -0.0001
+            ],
+            [
+              0.0002,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          "increments": 7,
+          "branches": [
+            "elastic",
+            "elastic",
+            "plastic",
+            "plastic",
+            "elastic",
+            "plastic",
+            "elastic"
+          ],
+          "parameter_steps": [
+            {
+              "relative_step": 0.0001,
+              "eval_stress": 2.493046730365579e-07,
+              "march_stress": 2.493046730365579e-07,
+              "eval_state": 9.62371164367706e-09
+            },
+            {
+              "relative_step": 3e-05,
+              "eval_stress": 2.2436335927155677e-08,
+              "march_stress": 2.2436335927155677e-08,
+              "eval_state": 8.58137390959326e-10
+            },
+            {
+              "relative_step": 1e-05,
+              "eval_stress": 2.495089817332248e-09,
+              "march_stress": 2.495089817332248e-09,
+              "eval_state": 4.78632426878973e-10
+            }
+          ],
+          "tangent_steps": [
+            {
+              "absolute_step": 1e-06,
+              "eval": 2.838732044089759e-08,
+              "march": 2.838732044089759e-08
+            },
+            {
+              "absolute_step": 1e-07,
+              "eval": 2.833701120261542e-10,
+              "march": 2.833701120261542e-10
+            },
+            {
+              "absolute_step": 1e-08,
+              "eval": 2.2909886607673335e-11,
+              "march": 2.2909886607673335e-11
+            }
+          ],
+          "fd_plateau": {
+            "stress": 1.994408000705079e-08,
+            "state": 7.515721719070879e-10,
+            "tangent": 2.7870660023874207e-10
+          },
+          "scaled_max_error_tolerance": 2e-06,
+          "scaling": "parameter: max per column over path/components; tangent: max per increment; floor 1e-12",
+          "primal_stress_max_abs": 5.684341886080802e-14,
+          "primal_state_max_abs": 2.168404344971009e-19,
+          "carry_reset_stress_derivative_difference": 2720.125996569597,
+          "comparisons": {
+            "eval_primal": 49,
+            "march_final_primal": 6,
+            "eval_parameter_fd": 588,
+            "march_parameter_fd": 504,
+            "eval_tangent_fd": 756,
+            "march_tangent_fd": 756
+          },
+          "clean_install_verified": false
+        }
+      }
+    },
+    {
+      "name": "U-X5",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "examples/verify_internal_jacobian.py",
+        "--out",
+        "/tmp/recovery_usage__l41upif/U-X5"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "{\"passed\": true, \"report\": \"/tmp/recovery_usage__l41upif/U-X5/verification.json\"}\n",
+      "stderr": "",
+      "seconds": 3.507296502008103,
+      "proof": {
+        "path": "/tmp/recovery_usage__l41upif/U-X5/verification.json",
+        "sha256": "ce82c6ccc74cb2f189f4ac189ee27864b2adf4bd4e400ad16f5f1451a535c5c9",
+        "data": {
+          "model": "m5_cpflow",
+          "source": "umat.for",
+          "stages": {
+            "solve_discovered": {
+              "status": "succeeded"
+            },
+            "probe_injected": {
+              "status": "succeeded"
+            },
+            "recording_is_non_perturbing": {
+              "status": "succeeded",
+              "max_stress_drift": 0.0,
+              "max_state_drift": 0.0,
+              "reason": null
+            },
+            "converged_iterate_located": {
+              "status": "succeeded",
+              "increment": 20,
+              "iterate": 3.050757889861489e-05,
+              "residual": 0.0
+            },
+            "compiled_original_probe": {
+              "status": "succeeded"
+            },
+            "probe_took_effect": {
+              "status": "succeeded",
+              "residual_evaluations_at_seeded_iterate": 60.0,
+              "recorded_iterate": 3.050757889861489e-05,
+              "seeded_iterate": 3.050757889861489e-05,
+              "reason": null
+            },
+            "compiled_oti_probe": {
+              "status": "succeeded"
+            },
+            "primal_parity": {
+              "status": "succeeded",
+              "worst_relative_difference": 3.017795740819877e-16,
+              "reason": null
+            },
+            "fd_reference_resolved": {
+              "status": "succeeded",
+              "step": 3.0507578898614893e-09,
+              "value": 1.1424307840768504
+            },
+            "jacobian_extracted": {
+              "status": "succeeded",
+              "value": 1.142430784081278
+            },
+            "jacobian_verified": {
+              "status": "succeeded",
+              "reason": null
+            }
+          },
+          "furthest_stage": "jacobian_verified",
+          "rows": [
+            {
+              "increment": 20,
+              "array": "DSTATEV_DP",
+              "component": 3,
+              "parameter": "GSEED",
+              "props_index": 9,
+              "oti_direction": 0,
+              "oti": 1.142430784081278,
+              "reference": 1.1424307840768504,
+              "absolute_error": 4.427569422205124e-12,
+              "relative_error": 3.875569079471939e-12,
+              "judged_by": "within_reference_resolution",
+              "agrees": true,
+              "branch": "local_solve",
+              "branch_crossing": false
+            }
+          ],
+          "solve": {
+            "iteration_variable": "DEQPL",
+            "residual_variable": "F",
+            "hand_coded_jacobian_variable": "DF",
+            "update_sign": "-",
+            "update_line": 107,
+            "loop_start_line": 88,
+            "loop_end_line": 110,
+            "convergence_variable": null,
+            "convergence_tolerance": null,
+            "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used"
+          },
+          "slot_placement_attempts": [
+            {
+              "offset": 0,
+              "increments_with_intact_sentinel": 20,
+              "increments_with_live_counter": 20
+            }
+          ],
+          "slots": {
+            "statev_iterate": 2,
+            "statev_residual": 3,
+            "statev_jacobian": 4,
+            "statev_counter": 5,
+            "statev_sentinel": 6,
+            "nstatv_extended": 6,
+            "props_seed": 9,
+            "nprops_extended": 9,
+            "offset_past_declared_nstatv": 0
+          },
+          "residual_evaluations_per_increment": [
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0
+          ],
+          "target_increment": 20,
+          "converged_iterate": 3.050757889861489e-05,
+          "residual_at_iterate": 0.0,
+          "hand_coded_jacobian": 1.1424307840812775,
+          "injection": {
+            "enclosing_routine": "UMAT",
+            "target_increment": 20,
+            "override_iterate": true,
+            "forced_exit": true,
+            "slots": {
+              "statev_iterate": 2,
+              "statev_residual": 3,
+              "statev_jacobian": 4,
+              "statev_counter": 5,
+              "statev_sentinel": 6,
+              "nstatv_extended": 6,
+              "props_seed": 9,
+              "nprops_extended": 9,
+              "offset_past_declared_nstatv": 0
+            },
+            "solve": {
+              "iteration_variable": "DEQPL",
+              "residual_variable": "F",
+              "hand_coded_jacobian_variable": "DF",
+              "update_sign": "-",
+              "update_line": 107,
+              "loop_start_line": 88,
+              "loop_end_line": 110,
+              "convergence_variable": null,
+              "convergence_tolerance": null,
+              "discovery": "syntactic scan for a scalar Newton update X = X +/- A/B; no symbol whitelist and no model name was used"
+            },
+            "edits": [
+              {
+                "line": 88,
+                "kind": "counter-reset"
+              },
+              {
+                "line": 107,
+                "kind": "record+seed"
+              }
+            ]
+          },
+          "probe_residual_at_iterate": 0.0,
+          "probe_hand_coded_jacobian": 1.1424307840812775,
+          "probe_evaluations": 60.0,
+          "reference_convergence": {
+            "relative_steps": [
+              0.01,
+              0.0031622776601683794,
+              0.001,
+              0.00031622776601683794,
+              0.0001,
+              3.1622776601683795e-05,
+              1e-05,
+              3.162277660168379e-06,
+              1e-06,
+              3.162277660168379e-07,
+              1e-07
+            ],
+            "values": [
+              1.1424308136195065,
+              1.142430787034873,
+              1.1424307843760426,
+              1.1424307841153432,
+              1.1424307840768504,
+              1.142430784078467,
+              1.1424307841373775,
+              1.1424307844858574,
+              1.1424307845482948,
+              1.1424307811143526,
+              1.1424307788287722
+            ],
+            "default_relative_step": 0.0001,
+            "policy": "the finite-difference reference is evaluated over a step ladder; agreement is reported at the step where consecutive answers are flattest, not at a step fixed in advance",
+            "converged_relative_step": 0.0031622776601683794,
+            "converged_reference": 1.1424307840810248,
+            "residual_uncertainty": 4.078959392472825e-13,
+            "oti_vs_converged_reference_absolute": 2.531308496145357e-13,
+            "oti_vs_converged_reference_relative": 2.2157215399106652e-13,
+            "hand_coded_vs_converged_reference_relative": 2.211834309138892e-13
+          },
+          "extracted": {
+            "oti": 1.142430784081278,
+            "finite_difference": 1.1424307840768504,
+            "hand_coded": 1.1424307840812775,
+            "finite_difference_at_converged_step": 1.1424307840810248
+          },
+          "hand_coded_audit": {
+            "absolute_difference": 4.427125332995274e-12,
+            "relative_difference": 3.87518035639476e-12,
+            "note": "the source's own Jacobian is audited against the same reference; it is never used as the reference for the extracted value"
+          },
+          "passed": true,
+          "example_relative_error": 3.875569079471939e-12,
+          "example_tolerance": 1e-08,
+          "clean_install_verified": false
+        }
+      }
+    }
+  ],
+  "previous_failures": []
+}

@@ -1,5 +1,24 @@
 # Branch and implementation audit (2026-09-18)
 
+## Recovery Working-Tree Addendum
+
+The baseline below is preserved as history. Current recovery use is documented
+in [USAGE_REPORT.md](USAGE_REPORT.md), with captured help, five examples,
+all three UMAT GUI renders and genuine source-denied ODB consumption. The
+pinned compiled J2 provider/replay and bounded total neo-Hookean finite
+formulation have independent numerical evidence; generic FCC/full-size and
+higher-order full FE do not. Retained corpus counts are historical.
+Latest retained full suites: RA 419 passed/11 existing skips; UMAT 3324
+passed/125 existing skips/5 deselected, before the new wrapper regression.
+No new analysis job or producer edit occurred in this usage audit.
+The recovery worktrees remain uncommitted.
+
+[Ledger and evidence scope](COMPLETION_LEDGER.md): 104 bounded implemented,
+159 partial, 11 unestablished; 0 clean-install complete, 274 outstanding.
+The previous working-tree wheel gate is not final-branch clean-clone proof.
+
+## Historical Pre-Recovery Inventory
+
 Where every capability the master directive names already exists, in which
 branch, commit or checkout, and what state it is in. Recorded before anything
 was rewritten. Both repositories are covered here; the same file is kept in

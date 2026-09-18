@@ -1739,6 +1739,38 @@ def gate_census(records: list) -> dict:
     return out
 
 
+def refresh_retained(payload: dict) -> tuple:
+    from umat_oti.contract import current_transform_generation
+
+    records = [Record(**row) for row in payload["records"]]
+    for record in records:
+        record.kind = kind_of(record.terminal_state)
+    summary = {**payload["summary"], **summarise(records)}
+    historical = summary["inputs"]["store_fingerprint"]
+    current = current_transform_generation()["transform_fingerprint"]
+    if not historical or historical == current:
+        raise ValueError("retirement requires a named historical store generation")
+    summary["evidence_currency"] = {
+        "status": "historical_only",
+        "historical_store_fingerprint": historical,
+        "current_code_fingerprint": current,
+        "current_capability": "NOT ESTABLISHED",
+        "row_currency_means": "verification_is_current is relative to the retained historical store, not current code",
+        "reason": "Classification refresh only; no corpus executable rerun. Original generations, observations and evidence references are retained.",
+    }
+    refreshed = {
+        **payload,
+        "terminal_states": {
+            "verified": [FULLY_VERIFIED],
+            "external": list(ALL_EXTERNAL),
+            "internal": list(ALL_INTERNAL),
+        },
+        "summary": summary,
+        "records": [record.as_dict() for record in records],
+    }
+    return records, refreshed
+
+
 def markdown(records: list, summary: dict) -> str:
     inputs = summary.get("inputs") or {}
     denominators = summary.get("denominators") or {}
@@ -1771,6 +1803,19 @@ def markdown(records: list, summary: dict) -> str:
         "| input | file |",
         "| --- | --- |",
     ]
+    currency = summary.get("evidence_currency")
+    if currency:
+        lines[2:2] = [
+            "**HISTORICAL EVIDENCE ONLY.** These observations belong to "
+            f"`{currency['historical_store_fingerprint']}`, not current code "
+            f"`{currency['current_code_fingerprint']}`. No corpus executable "
+            "rerun was performed. All verification counts, gate results and "
+            "row currency flags below describe the retained historical store. "
+            "They are retired from current capability claims and regression "
+            "baselines; current corpus capability is NOT ESTABLISHED. Only "
+            "owner classifications and their derived totals were refreshed.",
+            "",
+        ]
     for label, key in (("acquisition inventory (the denominator)",
                         "inventory_path"),
                        ("transform report", "transform_report"),
@@ -2258,11 +2303,33 @@ def markdown(records: list, summary: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def write_registry(records: list, payload: dict, json_path: Path,
+                   csv_path: Path, markdown_path: Path) -> None:
+    import io
+    rows = io.StringIO()
+    writer = csv.DictWriter(rows, fieldnames=list(records[0].as_dict())
+                            if records else ["source_id"], lineterminator="\n")
+    writer.writeheader()
+    for record in records:
+        writer.writerow(record.as_dict())
+    outputs = ((json_path, json.dumps(payload, indent=1) + "\n"),
+               (markdown_path, markdown(records, payload["summary"])),
+               (csv_path, rows.getvalue()))
+    for path, text in outputs:
+        refuse_machine_paths(text, _relative_to_repo(path))
+    for path, text in outputs:
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        Path(path).write_text(text, encoding="utf-8", newline="")
+
+
 def main(argv: Optional[list] = None) -> int:
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--transform", type=Path, required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--transform", type=Path)
+    source.add_argument("--refresh-retained", type=Path,
+                        help="refresh owner classifications from a retained registry; retire its observations as historical without rerunning the corpus")
     parser.add_argument("--abaqus", type=Path, default=None)
     parser.add_argument("--cache-dir", type=Path, default=DEFAULT_CACHE)
     parser.add_argument("--json", dest="json_path", type=Path,
@@ -2304,6 +2371,15 @@ def main(argv: Optional[list] = None) -> int:
                              "that does not build is recorded as the file's "
                              "problem rather than as ours")
     args = parser.parse_args(argv)
+
+    if args.refresh_retained:
+        records, payload = refresh_retained(json.loads(
+            args.refresh_retained.read_text(encoding="utf-8")))
+        write_registry(records, payload, args.json_path, args.csv_path,
+                       args.markdown)
+        print(f"  {len(records)} historical records retained; "
+              f"owners: {payload['summary']['by_kind']}; no executable rerun")
+        return 0
 
     inventory_ids = inventory(args.inventory)
     provenance = acquisition_provenance(args.acquisition or DEFAULT_ACQUISITION)
@@ -2384,25 +2460,8 @@ def main(argv: Optional[list] = None) -> int:
         "summary": summary,
         "records": [r.as_dict() for r in records],
     }
-    import io
-    rows = io.StringIO()
-    # LF, not the CRLF csv writes by default: the row text is checked for
-    # machine paths and written through write_text like the other two
-    # artefacts, and a file whose line endings change on every rebuild shows
-    # up as a diff that is about nothing.
-    writer = csv.DictWriter(rows, fieldnames=list(records[0].as_dict())
-                            if records else ["source_id"],
-                            lineterminator="\n")
-    writer.writeheader()
-    for record in records:
-        writer.writerow(record.as_dict())
-
-    for path, text in ((args.json_path, json.dumps(payload, indent=1) + "\n"),
-                       (args.markdown, markdown(records, summary)),
-                       (args.csv_path, rows.getvalue())):
-        refuse_machine_paths(text, _relative_to_repo(path))
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        Path(path).write_text(text, encoding="utf-8", newline="")
+    write_registry(records, payload, args.json_path, args.csv_path,
+                   args.markdown)
 
     print(f"  {summary['acquired']} artefacts, {summary['genuine_umats']} UMATs, "
           f"{summary['fully_verified']} fully verified")

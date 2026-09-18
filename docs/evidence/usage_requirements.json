@@ -1,0 +1,2906 @@
+{
+  "clean_install_verified": false,
+  "requirements": 274,
+  "completed": 0,
+  "outstanding": 274,
+  "status_counts": {
+    "NOT STARTED": 11,
+    "IN PROGRESS (recovery audit: bounded evidence)": 159,
+    "IMPLEMENTED - not yet reproduced from clean install": 104
+  },
+  "groups": [
+    {
+      "ids": [
+        "U-A*",
+        "R-A*",
+        "T-5",
+        "CI-*",
+        "X-17"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/scripts/clean_install_gate.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/integration/test_clean_install_gate.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/recovery_install.md"
+      ],
+      "command": "$PY scripts/clean_install_gate.py --umat-repo $UMAT --python $BASE_PYTHON --odb /path/to/matching/Analysis.odb",
+      "status": "partial",
+      "scope": "Earlier working-tree wheels in a new venv, installed resources and bounded GUI/J2 use. NOT a final-branch clone; not every example, entire installed suite, OS or external dependency reproduced. BASE_PYTHON is the healthy standalone >=3.10 interpreter selected by the user.",
+      "id": 0,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "U-A1",
+        "R-A1",
+        "X-17",
+        "CI-2",
+        "CI-3",
+        "CI-4",
+        "CI-6",
+        "CI-8",
+        "CI-9",
+        "CI-10",
+        "CI-11"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/scripts/clean_install_gate.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/integration/test_clean_install_gate.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/recovery_install.md"
+      ],
+      "command": "Not established: final committed-pair clean-clone gate remains to be run",
+      "status": "unestablished",
+      "scope": "No final-branch clone. Source tests, scratch outputs and an earlier working-tree wheel gate do not satisfy this row's full release criterion.",
+      "id": 1,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "U-A4",
+        "U-J1",
+        "U-J2",
+        "U-J4",
+        "U-J5",
+        "U-J6"
+      ],
+      "repo": "UMAT",
+      "implementation": [
+        "src/umat_oti/cli_json.py",
+        "src/umat_oti/pipeline/cli.py",
+        "src/umat_oti/cli_batch.py",
+        "src/umat_oti/reproduce.py"
+      ],
+      "tests": [
+        "tests/test_cli.py",
+        "tests/test_pipeline_engine.py"
+      ],
+      "proof": [
+        "docs/evidence/usage_help.json"
+      ],
+      "command": "$PY -m umat_oti.pipeline.cli --list-stages",
+      "status": "partial",
+      "scope": "Actual root/module help and stage listing executed; flags and exit semantics established. Help is not a successful arbitrary contract, batch, resume or reproduction profile.",
+      "id": 2,
+      "clean_install_verified": false,
+      "cwd": "."
+    },
+    {
+      "ids": [
+        "U-J3"
+      ],
+      "repo": "UMAT",
+      "implementation": [
+        "src/umat_oti/pipeline/engine.py"
+      ],
+      "tests": [
+        "tests/test_pipeline_engine.py"
+      ],
+      "proof": [
+        "docs/evidence/recovery_evidence_refresh.md"
+      ],
+      "command": "$PY -m pytest -q tests/test_pipeline_engine.py",
+      "status": "partial",
+      "scope": "Existing source-suite tests cover unchanged-stage reuse, modified/missing artifacts and --no-resume. Not a clean-install all-stage scientific reproduction.",
+      "id": 3,
+      "clean_install_verified": false,
+      "cwd": "."
+    },
+    {
+      "ids": [
+        "U-A5",
+        "U-J7",
+        "U-J8",
+        "U-J9",
+        "R-A7",
+        "R-J16",
+        "T-4",
+        "CI-5"
+      ],
+      "repo": "UMAT",
+      "implementation": [
+        "src/umat_oti/app/streamlit_app.py",
+        "src/umat_oti/app/unified_app.py",
+        "src/umat_oti/app/workbench_app.py"
+      ],
+      "tests": [
+        "tests/test_workbench_gui.py"
+      ],
+      "proof": [
+        "docs/evidence/usage_gui.json"
+      ],
+      "command": "$PY $RA/scripts/audit_recovery_usage.py --umat $UMAT --phase gui",
+      "status": "partial",
+      "scope": "Three UMAT modules and RA primary rendered; both primary HTTP servers started/stopped. Not interactive execution of all examples; UMAT provider/internal-Jacobian GUI equivalent is missing.",
+      "id": 4,
+      "clean_install_verified": false,
+      "cwd": "."
+    },
+    {
+      "ids": [
+        "U-B*"
+      ],
+      "repo": "UMAT",
+      "implementation": [
+        "src/umat_oti/fortran/parser.py",
+        "src/umat_oti/fortran/interface_detection.py",
+        "src/umat_oti/transform/internal_jacobian.py"
+      ],
+      "tests": [
+        "tests/test_source_form_directives.py",
+        "tests/test_internal_jacobian_discovery.py",
+        "tests/test_transform_refusal_is_a_reason.py"
+      ],
+      "proof": [
+        "docs/evidence/recovery_evidence_refresh.md"
+      ],
+      "command": "$PY -m pytest -q tests/test_source_form_directives.py tests/test_internal_jacobian_discovery.py tests/test_transform_refusal_is_a_reason.py",
+      "status": "partial",
+      "scope": "Source-suite parsing/refusal and scalar Newton discovery evidence, plus successful bundled builds. Exhaustive inference of NTENS/NPROPS/NSTATV/dependencies and never-incorrect transformation for arbitrary source is not established.",
+      "id": 5,
+      "clean_install_verified": false,
+      "cwd": "."
+    },
+    {
+      "ids": [
+        "U-C*"
+      ],
+      "repo": "UMAT",
+      "implementation": [
+        "src/umat_oti/core/derivative_request.py",
+        "src/umat_oti/services/contract_adapter.py"
+      ],
+      "tests": [
+        "tests/test_derivative_request.py",
+        "tests/test_contract_adapter.py"
+      ],
+      "proof": [
+        "docs/evidence/recovery_evidence_refresh.md"
+      ],
+      "command": "$PY -m pytest -q tests/test_derivative_request.py tests/test_contract_adapter.py",
+      "status": "partial",
+      "scope": "Compact/extended normalization, named parameters/indices/directions, preserved requests and explicit unsupported kinematics. Schema acceptance alone is not numerical implementation of every requested derivative family.",
+      "id": 6,
+      "clean_install_verified": false,
+      "cwd": "."
+    },
+    {
+      "ids": [
+        "U-D*",
+        "U-F*",
+        "U-G*",
+        "U-I1",
+        "U-I2",
+        "U-I3",
+        "U-I4",
+        "U-I6",
+        "U-I8",
+        "U-I9",
+        "U-I10"
+      ],
+      "repo": "UMAT",
+      "implementation": [
+        "src/umat_oti/provider/build.py",
+        "src/umat_oti/transform/parameter_sensitivity_transform.py",
+        "src/umat_oti/validation/parameter_sensitivity_provider.py"
+      ],
+      "tests": [
+        "tests/test_provider_recovery.py"
+      ],
+      "proof": [
+        "docs/evidence/usage_examples.json",
+        "docs/evidence/recovery_W3.md"
+      ],
+      "command": "$PY -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out /tmp/new-j2-verification",
+      "status": "implemented",
+      "scope": "Bounded fresh elastic/J2 ORIGINAL+OTI provider, local strain tangent, simultaneous PROPS derivatives, separate state buffers and seven-increment carryover; independent ORIGINAL FD. Not generic finite/FCC/higher-order provider support or all-source chain proof.",
+      "id": 7,
+      "clean_install_verified": false,
+      "cwd": "."
+    },
+    {
+      "ids": [
+        "U-D2",
+        "U-D3",
+        "U-D6",
+        "U-I5",
+        "U-I7",
+        "U-I11"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/scripts/regenerate_recovery_fixture.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/contract/test_a_fixture_is_refused_at_the_wrong_fingerprint.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/recovery_fixtures.md"
+      ],
+      "command": "$PY -m pytest -q tests/contract/test_a_fixture_is_refused_at_the_wrong_fingerprint.py",
+      "status": "partial",
+      "scope": "Retained genuine current-generation elasticity/J2 Abaqus original/transformed runs and six independent tangent states. No new analysis in this audit; not all-source correctness or generic combined-source compatibility.",
+      "id": 8,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "U-E*"
+      ],
+      "repo": "UMAT",
+      "implementation": [
+        "src/umat_oti/validation/internal_jacobian_validation.py",
+        "examples/verify_internal_jacobian.py"
+      ],
+      "tests": [
+        "tests/test_internal_jacobian_validation.py"
+      ],
+      "proof": [
+        "docs/evidence/usage_examples.json",
+        "docs/evidence/usage_wrapper.xml"
+      ],
+      "command": "$PY examples/verify_internal_jacobian.py --out /tmp/new-internal-jacobian",
+      "status": "implemented",
+      "scope": "m5_cpflow scalar local solve: seed takes effect, primal recording drift zero, residual Jacobian independently checked against ORIGINAL FD ladder; relative error 3.8755690795e-12 below 1e-8.",
+      "id": 9,
+      "clean_install_verified": false,
+      "cwd": "."
+    },
+    {
+      "ids": [
+        "U-H*"
+      ],
+      "repo": "UMAT",
+      "implementation": [
+        "src/umat_oti/validation/actual_umat_higher_order.py",
+        "src/umat_oti/fortran_emit/higher_order_strain.py"
+      ],
+      "tests": [
+        "tests/test_actual_umat_higher_order.py",
+        "tests/test_higher_order_convergence.py"
+      ],
+      "proof": [
+        "docs/evidence/recovery_evidence_refresh.md"
+      ],
+      "command": "$PY -m pytest -q tests/test_actual_umat_higher_order.py tests/test_higher_order_convergence.py",
+      "status": "partial",
+      "scope": "Retained full source-suite includes actual transformed J2/code_imp material-point order-two-to-four and convergence tests. Not higher-order provider ABI or higher-order global FE support.",
+      "id": 10,
+      "clean_install_verified": false,
+      "cwd": "."
+    },
+    {
+      "ids": [
+        "U-K*"
+      ],
+      "repo": "UMAT",
+      "implementation": [
+        "tools/build_corpus_registry.py"
+      ],
+      "tests": [
+        "tests/test_the_two_denominators_stay_apart.py"
+      ],
+      "proof": [
+        "docs/evidence/recovery_evidence_refresh.md"
+      ],
+      "command": "$PY -m pytest -q tests/test_the_two_denominators_stay_apart.py",
+      "status": "partial",
+      "scope": "Historical D1=391/D2=260 and 44 all-gate records preserved, classifications reconciled; historical 44 is not current corpus verification. No fresh full corpus run; eight former RA materials remain historical-only.",
+      "id": 11,
+      "clean_install_verified": false,
+      "cwd": "."
+    },
+    {
+      "ids": [
+        "U-X1",
+        "U-X2",
+        "U-X3",
+        "U-X4",
+        "U-X5"
+      ],
+      "repo": "UMAT",
+      "implementation": [
+        "src/umat_oti/validation/parameter_sensitivity_provider.py",
+        "examples/verify_internal_jacobian.py"
+      ],
+      "tests": [
+        "tests/test_provider_recovery.py",
+        "tests/test_internal_jacobian_validation.py"
+      ],
+      "proof": [
+        "docs/evidence/usage_examples.json"
+      ],
+      "command": "$PY $RA/scripts/audit_recovery_usage.py --umat $UMAT --phase examples",
+      "status": "implemented",
+      "scope": "Five executed commands: elasticity, J2 tangent, J2 parameter, J2 state, m5 local Jacobian. J2 examples 2-4 intentionally reuse the same comprehensive verifier and are not three different materials.",
+      "id": 12,
+      "clean_install_verified": false,
+      "cwd": "."
+    },
+    {
+      "ids": [
+        "U-X6",
+        "R-X6"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/scripts/audit_recovery_usage.py",
+        "../imq-ra-recovery/docs/USAGE_REPORT.md"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/integration/test_connected_j2.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/usage_examples.json",
+        "../imq-ra-recovery/docs/evidence/usage_gui.json"
+      ],
+      "command": "$PY scripts/audit_recovery_usage.py --umat $UMAT --phase examples",
+      "status": "partial",
+      "scope": "Inputs/commands/tolerances/independent numerical checks/raw reports documented. Not every example has an implemented and interactively verified GUI equivalent, especially UMAT provider/internal Jacobian.",
+      "id": 13,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "R-A4",
+        "R-A5",
+        "R-A9"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/residual_core/algebra/otilib_adapter.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/framework/test_otilib_adapter.py",
+        "../imq-ra-recovery/tests/framework/test_otilib_spring_sensitivity.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/usage_examples.json",
+        "../imq-ra-recovery/docs/evidence/recovery_W1.md"
+      ],
+      "command": "$PY -m pytest -q tests/framework/test_otilib_adapter.py tests/framework/test_otilib_spring_sensitivity.py",
+      "status": "implemented",
+      "scope": "Genuine existing CPython-3.11 pyoti.sparse build located and exercised, unrelated package guarded. Not clean-build or redistribution of OTILib.",
+      "id": 14,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "R-B*"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/residual_core/replay/presentation_inputs.py",
+        "../imq-ra-recovery/residual_core/io/abaqus_inp_parser.py",
+        "../imq-ra-recovery/residual_core/io/neutral_model_io.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/integration/test_presentation_request.py",
+        "../imq-ra-recovery/tests/framework/test_neutral_io.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/usage_presentation.json",
+        "../imq-ra-recovery/docs/evidence/recovery_fixtures.md"
+      ],
+      "command": "$PY -m pytest -q tests/integration/test_presentation_request.py tests/framework/test_neutral_io.py",
+      "status": "partial",
+      "scope": "Strict presentation subset validates actual INP/ODB mesh, U/RF/CF/S/SDV1, time, loads and zero BCs; neutral model round trips. Not general Abaqus keyword coverage; unsupported equilibrium-changing input is refused in this path.",
+      "id": 15,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "R-C*",
+        "R-E*"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/residual_core/formulations/c3d8_kernel.py",
+        "../imq-ra-recovery/residual_core/core/assembler.py",
+        "../imq-ra-recovery/residual_core/core/field_sensitivity.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/framework/test_assembler.py",
+        "../imq-ra-recovery/tests/framework/test_field_sensitivity.py",
+        "../imq-ra-recovery/tests/integration/test_connected_j2.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/usage_examples.json",
+        "../imq-ra-recovery/docs/evidence/recovery_integration.md"
+      ],
+      "command": "$PY -m pytest -q tests/framework/test_assembler.py tests/framework/test_field_sensitivity.py tests/integration/test_connected_j2.py",
+      "status": "implemented",
+      "scope": "Small-strain C3D8 kernels/scatter/partitioning, analytic cube traction, bounded connected J2, archived genuine elastic Abaqus field comparisons. Not arbitrary element families or Abaqus nonlinear model equivalence.",
+      "id": 16,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "R-D*"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/residual_core/formulations/solid_c3d8_finite_strain.py",
+        "../imq-ra-recovery/examples/finite_strain_c3d8/benchmark.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/framework/test_finite_strain_hyperelastic.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/usage_examples.json",
+        "../imq-ra-recovery/docs/evidence/recovery_finite.md"
+      ],
+      "command": "$PY examples/finite_strain_c3d8/benchmark.py --out /tmp/new-finite-example",
+      "status": "partial",
+      "scope": "Exact bounded stateless isotropic total neo-Hookean F/Cauchy/Kirchhoff-Jaumann conversion, spatial volume, geometric/material stiffness, rotations and independent FD. Generic state update/rotation transport for finite UMATs is refused, not implemented.",
+      "id": 17,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "R-F*",
+        "R-I2",
+        "R-I3",
+        "R-I5",
+        "R-I6",
+        "R-I7",
+        "R-I8",
+        "R-I9"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/residual_core/replay/connected.py",
+        "../imq-ra-recovery/residual_core/replay/path_material.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/integration/test_connected_j2.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/usage_examples.json",
+        "../imq-ra-recovery/docs/evidence/recovery_integration.md"
+      ],
+      "command": "$PY scripts/reproduce_imqcam_pipeline.py --skip-abaqus --out /tmp/new-connected-j2",
+      "status": "implemented",
+      "scope": "Pinned first-order J2 compiled EVAL/MARCH, ordered all-IP history and total sensitivity carry; ORIGINAL path/whole-model FD. Dense bounded small-strain engine, not generic material replay/scalability.",
+      "id": 18,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "R-G*",
+        "R-H*",
+        "R-I1"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/residual_core/formulations/c3d8_sensitivity.py",
+        "../imq-ra-recovery/residual_core/core/sensitivity_package.py",
+        "../imq-ra-recovery/residual_core/algebra/otilib_adapter.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/framework/test_otilib_fe_sensitivity.py",
+        "../imq-ra-recovery/tests/framework/test_sensitivity_package.py",
+        "../imq-ra-recovery/tests/framework/test_blackbox_order2_coefficients.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/usage_examples.json",
+        "../imq-ra-recovery/docs/evidence/recovery_W1.md"
+      ],
+      "command": "$PY -m pytest -q tests/framework/test_otilib_fe_sensitivity.py tests/framework/test_sensitivity_package.py tests/framework/test_blackbox_order2_coefficients.py",
+      "status": "partial",
+      "scope": "Genuine OTI scalar propagation at fixed real geometry, analytic order-two templates, bounded first-order FE, coefficient/factorial maps and extracted-real solves. Not universal no-derivative-loss proof, geometric OTI or general higher-order nonlinear FE.",
+      "id": 19,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "R-J*",
+        "R-A6",
+        "R-A8"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/residual_core/ui/cli.py",
+        "../imq-ra-recovery/residual_core/ui/cmd_request.py",
+        "../imq-ra-recovery/residual_core/ui/cmd_replay.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/framework/test_user_layer.py",
+        "../imq-ra-recovery/tests/framework/test_gui_is_a_thin_cli_front_end.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/usage_help.json",
+        "../imq-ra-recovery/docs/evidence/usage_examples.json"
+      ],
+      "command": "$PY scripts/audit_recovery_usage.py --umat $UMAT --phase help",
+      "status": "partial",
+      "scope": "All public subcommand help, backends/modes, example check/run/assemble/replay/request executed. Help-only commands are not arbitrary-model workflow verification; backend declaration is not universal readiness.",
+      "id": 20,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "R-K*",
+        "R-I4"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/residual_core/replay/presentation.py",
+        "../imq-ra-recovery/residual_core/replay/request_reductions.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/integration/test_presentation_request.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/usage_presentation.json",
+        "../imq-ra-recovery/docs/evidence/recovery_presentation.md"
+      ],
+      "command": "$PY scripts/audit_recovery_usage.py --umat $UMAT --phase presentation",
+      "status": "partial",
+      "scope": "Actual source-denied J2 ODB consumption, exact three scalar public outputs, private full fields, executed distinct from verified=false, independent analytic proof separate. Not every legacy backend/report covered.",
+      "id": 21,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "R-X1",
+        "R-X2",
+        "R-X3",
+        "R-X4",
+        "R-X5"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/scripts/audit_recovery_usage.py",
+        "../imq-ra-recovery/templates/user_python_residual/resasm.yml",
+        "../imq-ra-recovery/templates/user_blackbox_order2_residual/resasm.yml",
+        "../imq-ra-recovery/examples/finite_strain_c3d8/benchmark.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/framework/test_blackbox_order2_coefficients.py",
+        "../imq-ra-recovery/tests/framework/test_finite_strain_hyperelastic.py",
+        "../imq-ra-recovery/tests/integration/test_connected_j2.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/usage_examples.json"
+      ],
+      "command": "$PY scripts/audit_recovery_usage.py --umat $UMAT --phase examples",
+      "status": "implemented",
+      "scope": "Five independently checked bounded workflows: direct cubic, order-two executable, cube tractions, compiled J2 total history, two-element finite neo-Hookean. Not generic full FE.",
+      "id": 22,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "X-1",
+        "X-2",
+        "X-3",
+        "X-4",
+        "X-7",
+        "X-8",
+        "X-9",
+        "X-10",
+        "X-11",
+        "X-12",
+        "X-13",
+        "X-14",
+        "X-15",
+        "X-18",
+        "X-19",
+        "T-6",
+        "T-7",
+        "T-9",
+        "T-10"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/scripts/reproduce_imqcam_pipeline.py",
+        "../imq-ra-recovery/residual_core/replay/connected.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/integration/test_connected_j2.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/usage_examples.json",
+        "../imq-ra-recovery/docs/evidence/recovery_integration.md"
+      ],
+      "command": "$PY scripts/reproduce_imqcam_pipeline.py --skip-abaqus --out /tmp/new-j2-reproduction",
+      "status": "implemented",
+      "scope": "Verified bounded nonlinear C3D8 alternative, both HEADs plus dirty-source hashes, fresh provider, solve/replay, total U/S/state sensitivities, FD plateaus, plot/table/manifest. NOT either full-size presentation cantilever or final clean clone.",
+      "id": 23,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "X-5",
+        "X-6",
+        "X-16",
+        "T-8"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/scripts/reproduce_presentation_request.py",
+        "../imq-ra-recovery/residual_core/replay/presentation.py",
+        "../imq-ra-recovery/residual_core/app/streamlit_app.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/integration/test_presentation_request.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/usage_presentation.json",
+        "../imq-ra-recovery/docs/evidence/recovery_presentation.md"
+      ],
+      "command": "$PY scripts/audit_recovery_usage.py --umat $UMAT --phase presentation",
+      "status": "partial",
+      "scope": "Fresh extraction/consumption of existing genuine four-increment J2 ODB and prior actual GUI/browser download proof. No new Abaqus analysis; all-example GUI coverage and full-size models not established.",
+      "id": 24,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    },
+    {
+      "ids": [
+        "T-1",
+        "T-2",
+        "T-3",
+        "T-11",
+        "T-12"
+      ],
+      "repo": "RA",
+      "implementation": [
+        "../imq-ra-recovery/docs/evidence/recovery_fixtures.md",
+        "../imq-ra-recovery/scripts/audit_recovery_usage.py"
+      ],
+      "tests": [
+        "../imq-ra-recovery/tests/contract/test_a_fixture_is_refused_at_the_wrong_fingerprint.py",
+        "../imq-ra-recovery/tests/integration/test_connected_j2.py"
+      ],
+      "proof": [
+        "../imq-ra-recovery/docs/evidence/recovery_fixtures_offline.xml",
+        "../imq-ra-recovery/docs/evidence/recovery_fixtures.md"
+      ],
+      "command": "$PY -m pytest -q -m 'not abaqus and not arc and not network'",
+      "status": "partial",
+      "scope": "Latest retained RA full suite 419 passed/11 existing skips; companion 3324/125 skips/5 deselected before wrapper addition. Focused new wrapper regression and real example captures. Not exhaustive audit of every historic fix or every installed/online test.",
+      "id": 25,
+      "clean_install_verified": false,
+      "cwd": "../imq-ra-recovery"
+    }
+  ],
+  "rows": [
+    {
+      "id": "U-A1",
+      "requirement": "Install from a clean clone",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 1,
+      "status": "NOT STARTED",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-A2",
+      "requirement": "Declare all required Python dependencies",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 0,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-A3",
+      "requirement": "Detect or document compiler requirements",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 0,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-A4",
+      "requirement": "CLI starts",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 2,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-A5",
+      "requirement": "GUI starts",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 4,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-A6",
+      "requirement": "Smoke test runs",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 0,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-A7",
+      "requirement": "Useful errors when optional external software (Abaqus, OTILib, ifort) is unavailable",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 0,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-A8",
+      "requirement": "Every operating system claimed in the documentation is supported or the claim is corrected",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 0,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B1",
+      "requirement": "Source analyzer identifies the UMAT entry routine",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B2",
+      "requirement": "identifies arguments",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B3",
+      "requirement": "identifies NTENS",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B4",
+      "requirement": "identifies NPROPS",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B5",
+      "requirement": "identifies NSTATV",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B6",
+      "requirement": "identifies stress variables",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B7",
+      "requirement": "identifies state variables",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B8",
+      "requirement": "identifies strain increments",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B9",
+      "requirement": "identifies parameter arrays",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B10",
+      "requirement": "identifies existing tangent blocks",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B11",
+      "requirement": "identifies local nonlinear solves",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B12",
+      "requirement": "identifies internal Jacobians",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B13",
+      "requirement": "identifies external dependencies",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B14",
+      "requirement": "identifies unsupported constructs",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B15",
+      "requirement": "Multiline statements, fixed form, free form, continuations, comments, literals and routine boundaries parse correctly",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-B16",
+      "requirement": "Unsupported source receives an explicit diagnostic and is never transformed incorrectly while appearing successful",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 5,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-C1",
+      "requirement": "Compact transformation contract works",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 6,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-C2",
+      "requirement": "Extended derivative schema works",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 6,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-C3",
+      "requirement": "Contract supports material tangent",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 6,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-C4",
+      "requirement": "supports local constitutive Jacobian",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 6,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-C5",
+      "requirement": "supports parameter sensitivity",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 6,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-C6",
+      "requirement": "supports state sensitivity",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 6,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-C7",
+      "requirement": "supports higher derivative order",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 6,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-C8",
+      "requirement": "supports parameter names and PROPS indices",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 6,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-C9",
+      "requirement": "supports OTI directions",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 6,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-C10",
+      "requirement": "supports material-point loading histories",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 6,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-C11",
+      "requirement": "supports replacement ranges",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 6,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-C12",
+      "requirement": "supports promoted variables",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 6,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-C13",
+      "requirement": "Contract validation identifies the exact missing or inconsistent field",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 6,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-D1",
+      "requirement": "Seeds all required DSTRAN directions",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-D2",
+      "requirement": "Preserves the original constitutive update",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 8,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-D3",
+      "requirement": "Promotes every variable required by the derivative chain",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 8,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-D4",
+      "requirement": "Disables or replaces the original tangent block",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-D5",
+      "requirement": "Extracts DDSDDE",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-D6",
+      "requirement": "Generates an Abaqus-compatible source",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 8,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-D7",
+      "requirement": "Verifies primal stress parity",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-D8",
+      "requirement": "Verifies the tangent against an independent reference",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-D9",
+      "requirement": "Works for linear and nonlinear materials",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-E1",
+      "requirement": "Local constitutive Jacobian: seeds the local iterate",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 9,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-E2",
+      "requirement": "preserves the residual evaluation",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 9,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-E3",
+      "requirement": "extracts the internal Jacobian",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 9,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-E4",
+      "requirement": "names the generated output clearly",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 9,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-E5",
+      "requirement": "verifies it against an analytic or finite-difference reference",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 9,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-F1",
+      "requirement": "Computes dSTRESS/dPROPS",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-F2",
+      "requirement": "named stress sensitivities",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-F3",
+      "requirement": "multiple parameter directions in one run",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-F4",
+      "requirement": "sensitivities across several increments",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-F5",
+      "requirement": "elastic and plastic sensitivities",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-F6",
+      "requirement": "verified nonzero derivatives for active parameters",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-G1",
+      "requirement": "Computes dSTATEV/dPROPS",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-G2",
+      "requirement": "state sensitivities across increments",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-G3",
+      "requirement": "correct state carryover",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-G4",
+      "requirement": "correct initialization",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-G5",
+      "requirement": "verified values against an independent reference",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-H1",
+      "requirement": "Higher order: allocates the requested OTI order",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 10,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-H2",
+      "requirement": "generates the correct direction map",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 10,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-H3",
+      "requirement": "extracts repeated and mixed derivatives",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 10,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-H4",
+      "requirement": "applies factorial recovery correctly",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 10,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-H5",
+      "requirement": "reports both coefficients and derivatives",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 10,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-H6",
+      "requirement": "verifies representative repeated and mixed terms",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 10,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-I1",
+      "requirement": "Writes the transformed UMAT",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-I2",
+      "requirement": "OTI module",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-I3",
+      "requirement": "required support sources",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-I4",
+      "requirement": "compile order",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-I5",
+      "requirement": "combined Abaqus source",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 8,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-I6",
+      "requirement": "derivative manifest",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-I7",
+      "requirement": "transformation report",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 8,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-I8",
+      "requirement": "run manifest",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-I9",
+      "requirement": "verification output",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-I10",
+      "requirement": "parameter- and state-sensitivity output",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 7,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-I11",
+      "requirement": "Combined source compiles through the documented Abaqus workflow (abaqus make / job with user=) on this machine",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 8,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-J1",
+      "requirement": "Configuration command (umat-oti-config)",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 2,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-J2",
+      "requirement": "Staged pipeline (umat-oti-pipeline)",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 2,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-J3",
+      "requirement": "Resume behaviour",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 3,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-J4",
+      "requirement": "Stage selection (--only)",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 2,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-J5",
+      "requirement": "Batch command (umat-oti-batch)",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 2,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-J6",
+      "requirement": "Reproduction command (python -m umat_oti.reproduce)",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 2,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-J7",
+      "requirement": "Primary GUI (streamlit run scripts/app.py)",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 4,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-J8",
+      "requirement": "Every secondary GUI still documented (unified_app, workbench)",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 4,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-J9",
+      "requirement": "CLI and GUI call the same application functions and produce equivalent artifacts",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 4,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-K1",
+      "requirement": "Supported UMAT corpus run: every source transforms or is rejected with an accurate named reason",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 11,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-K2",
+      "requirement": "No malformed transformation counted as success",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 11,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-K3",
+      "requirement": "Corpus not reduced and no difficult case removed",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 11,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-X1",
+      "requirement": "Example 1: linear elastic tangent",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 12,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-X2",
+      "requirement": "Example 2: nonlinear J2 tangent",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 12,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-X3",
+      "requirement": "Example 3: parameter sensitivities",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 12,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-X4",
+      "requirement": "Example 4: state sensitivities",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 12,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-X5",
+      "requirement": "Example 5: internal Jacobian / higher derivative / crystal plasticity (advanced verified model)",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 12,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "U-X6",
+      "requirement": "Each example carries inputs, command, expected output, numerical verification, tolerance, machine-readable report, failure diagnostics, GUI equivalent",
+      "repository": "UMAT_source_transformation",
+      "evidence_group": 13,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-A1",
+      "requirement": "Install from a clean clone",
+      "repository": "Residual_Assembler",
+      "evidence_group": 1,
+      "status": "NOT STARTED",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-A2",
+      "requirement": "Install GUI and YAML dependencies",
+      "repository": "Residual_Assembler",
+      "evidence_group": 0,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-A3",
+      "requirement": "Initialize required source dependencies",
+      "repository": "Residual_Assembler",
+      "evidence_group": 0,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-A4",
+      "requirement": "Install or correctly locate OTILib",
+      "repository": "Residual_Assembler",
+      "evidence_group": 14,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-A5",
+      "requirement": "Detect the unrelated pyoti package",
+      "repository": "Residual_Assembler",
+      "evidence_group": 14,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-A6",
+      "requirement": "CLI starts",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-A7",
+      "requirement": "GUI starts",
+      "repository": "Residual_Assembler",
+      "evidence_group": 4,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-A8",
+      "requirement": "Truthful backend statuses listed",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-A9",
+      "requirement": "Smoke example runs",
+      "repository": "Residual_Assembler",
+      "evidence_group": 14,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B1",
+      "requirement": "Reads Abaqus input decks",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B2",
+      "requirement": "neutral JSON models",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B3",
+      "requirement": "nodes",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B4",
+      "requirement": "elements",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B5",
+      "requirement": "element sets",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B6",
+      "requirement": "node sets",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B7",
+      "requirement": "materials",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B8",
+      "requirement": "boundary conditions",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B9",
+      "requirement": "loads",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B10",
+      "requirement": "solution fields",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B11",
+      "requirement": "integration-point fields",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B12",
+      "requirement": "state variables",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B13",
+      "requirement": "reactions",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B14",
+      "requirement": "time and increment data",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-B15",
+      "requirement": "No keyword that changes equilibrium is parsed and silently ignored (implement or precise diagnostic)",
+      "repository": "Residual_Assembler",
+      "evidence_group": 15,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C1",
+      "requirement": "C3D8 small strain: eight-node geometry",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C2",
+      "requirement": "24 element DOFs",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C3",
+      "requirement": "shape functions",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C4",
+      "requirement": "natural derivatives",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C5",
+      "requirement": "spatial derivatives",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C6",
+      "requirement": "isoparametric Jacobian",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C7",
+      "requirement": "Gauss integration",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C8",
+      "requirement": "small-strain B matrix",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C9",
+      "requirement": "Abaqus Voigt order",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C10",
+      "requirement": "element internal force",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C11",
+      "requirement": "material tangent",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C12",
+      "requirement": "element stiffness",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C13",
+      "requirement": "global residual",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C14",
+      "requirement": "global tangent",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C15",
+      "requirement": "constraint partitioning",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C16",
+      "requirement": "free residual",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C17",
+      "requirement": "reactions",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-C18",
+      "requirement": "multi-element assembly",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-D1",
+      "requirement": "C3D8 finite strain: deformation gradient",
+      "repository": "Residual_Assembler",
+      "evidence_group": 17,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-D2",
+      "requirement": "strain measure",
+      "repository": "Residual_Assembler",
+      "evidence_group": 17,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-D3",
+      "requirement": "stress measure",
+      "repository": "Residual_Assembler",
+      "evidence_group": 17,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-D4",
+      "requirement": "tangent measure",
+      "repository": "Residual_Assembler",
+      "evidence_group": 17,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-D5",
+      "requirement": "volume measure",
+      "repository": "Residual_Assembler",
+      "evidence_group": 17,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-D6",
+      "requirement": "state update",
+      "repository": "Residual_Assembler",
+      "evidence_group": 17,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-D7",
+      "requirement": "rotation handling",
+      "repository": "Residual_Assembler",
+      "evidence_group": 17,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-D8",
+      "requirement": "material and geometric contributions",
+      "repository": "Residual_Assembler",
+      "evidence_group": 17,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-D9",
+      "requirement": "residual and tangent assembly",
+      "repository": "Residual_Assembler",
+      "evidence_group": 17,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-D10",
+      "requirement": "Small-strain and finite-strain paths never mix incompatible measures",
+      "repository": "Residual_Assembler",
+      "evidence_group": 17,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-E1",
+      "requirement": "Stress-driven assembly: one C3D8",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-E2",
+      "requirement": "multiple C3D8 elements",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-E3",
+      "requirement": "all integration points",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-E4",
+      "requirement": "global DOF mapping",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-E5",
+      "requirement": "constrained and free DOFs",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-E6",
+      "requirement": "reactions",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-E7",
+      "requirement": "Verified against analytic and Abaqus references",
+      "repository": "Residual_Assembler",
+      "evidence_group": 16,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-F1",
+      "requirement": "Material replay runs: replays increments in order",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-F2",
+      "requirement": "reconstructs strain or deformation at each integration point",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-F3",
+      "requirement": "passes previous state correctly",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-F4",
+      "requirement": "calls the material provider",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-F5",
+      "requirement": "updates stress and state",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-F6",
+      "requirement": "obtains the tangent",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-F7",
+      "requirement": "assembles residual and tangent",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-F8",
+      "requirement": "supports multiple elements",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-F9",
+      "requirement": "useful diagnostics for missing fields",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-F10",
+      "requirement": "No backend claims readiness while material replay crashes",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-G1",
+      "requirement": "OTI propagates through parameter seeding",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-G2",
+      "requirement": "material evaluation",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-G3",
+      "requirement": "state updates",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-G4",
+      "requirement": "stress",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-G5",
+      "requirement": "element residual",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-G6",
+      "requirement": "global residual",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-G7",
+      "requirement": "constraint application",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-G8",
+      "requirement": "derivative extraction",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-G9",
+      "requirement": "sensitivity right-hand sides",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-G10",
+      "requirement": "reporting",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-G11",
+      "requirement": "No derivative loss from float()/dtype=float/unsupported NumPy ops/premature real-part extraction/real-only zeros/unsupported linear algebra/object-array conversion/serialization before extraction",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-G12",
+      "requirement": "Same scalar-generic kernels used for real and OTI values where practical",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-H1",
+      "requirement": "T U^(p) = -R^(p) implemented and verified",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-H2",
+      "requirement": "several parameters in one OTI run",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-H3",
+      "requirement": "several derivative orders where advertised",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-H4",
+      "requirement": "residual parameter derivatives",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-H5",
+      "requirement": "state contributions",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-H6",
+      "requirement": "solution sensitivities",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-H7",
+      "requirement": "direction maps",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-H8",
+      "requirement": "coefficients",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-H9",
+      "requirement": "recovered derivatives",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-H10",
+      "requirement": "parameter rankings",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-H11",
+      "requirement": "full-field sensitivities",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-I1",
+      "requirement": "Material providers: direct Python material",
+      "repository": "Residual_Assembler",
+      "evidence_group": 19,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-I2",
+      "requirement": "compiled UMAT or material object",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-I3",
+      "requirement": "OTI-enabled compiled provider",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-I4",
+      "requirement": "private material-source workflow",
+      "repository": "Residual_Assembler",
+      "evidence_group": 21,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-I5",
+      "requirement": "correct state exchange",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-I6",
+      "requirement": "stress output",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-I7",
+      "requirement": "tangent output",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-I8",
+      "requirement": "derivative output",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-I9",
+      "requirement": "error propagation",
+      "repository": "Residual_Assembler",
+      "evidence_group": 18,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J1",
+      "requirement": "resasm backends",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J2",
+      "requirement": "resasm modes",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J3",
+      "requirement": "resasm inspect",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J4",
+      "requirement": "resasm inspect-model",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J5",
+      "requirement": "resasm requirements",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J6",
+      "requirement": "resasm assemble",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J7",
+      "requirement": "resasm verify",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J8",
+      "requirement": "resasm sensitivity",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J9",
+      "requirement": "resasm init",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J10",
+      "requirement": "resasm init-assembly",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J11",
+      "requirement": "resasm check",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J12",
+      "requirement": "resasm run",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J13",
+      "requirement": "resasm report",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J14",
+      "requirement": "resasm doctor",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J15",
+      "requirement": "resasm template",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-J16",
+      "requirement": "GUI executes the same code paths and never reports success where the CLI reports failure or blocked",
+      "repository": "Residual_Assembler",
+      "evidence_group": 20,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-K1",
+      "requirement": "Reports distinguish: command executed",
+      "repository": "Residual_Assembler",
+      "evidence_group": 21,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-K2",
+      "requirement": "residual assembled",
+      "repository": "Residual_Assembler",
+      "evidence_group": 21,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-K3",
+      "requirement": "equilibrium checked",
+      "repository": "Residual_Assembler",
+      "evidence_group": 21,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-K4",
+      "requirement": "equilibrium passed",
+      "repository": "Residual_Assembler",
+      "evidence_group": 21,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-K5",
+      "requirement": "tangent available",
+      "repository": "Residual_Assembler",
+      "evidence_group": 21,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-K6",
+      "requirement": "tangent verified",
+      "repository": "Residual_Assembler",
+      "evidence_group": 21,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-K7",
+      "requirement": "derivative calculated",
+      "repository": "Residual_Assembler",
+      "evidence_group": 21,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-K8",
+      "requirement": "derivative verified",
+      "repository": "Residual_Assembler",
+      "evidence_group": 21,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-K9",
+      "requirement": "reference resolved",
+      "repository": "Residual_Assembler",
+      "evidence_group": 21,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-K10",
+      "requirement": "Abaqus comparison available",
+      "repository": "Residual_Assembler",
+      "evidence_group": 21,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-K11",
+      "requirement": "unsupported feature detected",
+      "repository": "Residual_Assembler",
+      "evidence_group": 21,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-K12",
+      "requirement": "Public and private outputs separated",
+      "repository": "Residual_Assembler",
+      "evidence_group": 21,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-X1",
+      "requirement": "Example 1: direct Python residual",
+      "repository": "Residual_Assembler",
+      "evidence_group": 22,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-X2",
+      "requirement": "Example 2: higher-order black-box residual",
+      "repository": "Residual_Assembler",
+      "evidence_group": 22,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-X3",
+      "requirement": "Example 3: stress-driven C3D8",
+      "repository": "Residual_Assembler",
+      "evidence_group": 22,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-X4",
+      "requirement": "Example 4: J2 C3D8 material replay with OTI sensitivities",
+      "repository": "Residual_Assembler",
+      "evidence_group": 22,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-X5",
+      "requirement": "Example 5: finite-strain / cantilever / multi-element verified 3D model",
+      "repository": "Residual_Assembler",
+      "evidence_group": 22,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "R-X6",
+      "requirement": "Each example carries inputs, command, expected output, numerical verification, tolerance, machine-readable report, failure diagnostics, GUI equivalent",
+      "repository": "Residual_Assembler",
+      "evidence_group": 13,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-1",
+      "requirement": "Start with a real nonlinear UMAT",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-2",
+      "requirement": "Transform it with UMAT-OTI",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-3",
+      "requirement": "Generate constitutive tangents and parameter/state derivatives",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-4",
+      "requirement": "Compile the OTI-enabled material provider",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-5",
+      "requirement": "Run or load a converged C3D8 Abaqus analysis",
+      "repository": "both",
+      "evidence_group": 24,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-6",
+      "requirement": "Export the required fields",
+      "repository": "both",
+      "evidence_group": 24,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-7",
+      "requirement": "Load the model and fields in Residual Assembler",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-8",
+      "requirement": "Replay the material response",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-9",
+      "requirement": "Assemble the global residual and tangent",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-10",
+      "requirement": "Seed several material parameters",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-11",
+      "requirement": "Calculate dR/dp",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-12",
+      "requirement": "Solve for du/dp",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-13",
+      "requirement": "Recover full-field sensitivities",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-14",
+      "requirement": "Write public and private reports",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-15",
+      "requirement": "Compare against finite differences, an analytic reference, or Abaqus",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-16",
+      "requirement": "Run the same workflow from the GUI",
+      "repository": "both",
+      "evidence_group": 24,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-17",
+      "requirement": "Reproduce it from a clean installation",
+      "repository": "both",
+      "evidence_group": 1,
+      "status": "NOT STARTED",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-18",
+      "requirement": "The IMQCAM Annual Meeting model (J2 cantilever 1,536 C3D8 / FCC cantilever 384 C3D8) recovered and reproduced, or a verified C3D8 nonlinear example on the identical software path",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "X-19",
+      "requirement": "One reproduction command (records both commits, environment, dependencies; transforms; compiles; loads model; assembles; sensitivities; validates; plots/tables; manifest; non-zero on failure)",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "T-1",
+      "requirement": "Unit tests",
+      "repository": "both",
+      "evidence_group": 25,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "T-2",
+      "requirement": "Regression tests",
+      "repository": "both",
+      "evidence_group": 25,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "T-3",
+      "requirement": "Public CLI tests",
+      "repository": "both",
+      "evidence_group": 25,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "T-4",
+      "requirement": "GUI application tests",
+      "repository": "both",
+      "evidence_group": 4,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "T-5",
+      "requirement": "Clean-install tests",
+      "repository": "both",
+      "evidence_group": 0,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "T-6",
+      "requirement": "Analytic comparisons",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "T-7",
+      "requirement": "Finite-difference convergence sweeps",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "T-8",
+      "requirement": "Abaqus comparisons where available",
+      "repository": "both",
+      "evidence_group": 24,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "T-9",
+      "requirement": "Cross-repository integration tests",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "T-10",
+      "requirement": "Example reproduction tests",
+      "repository": "both",
+      "evidence_group": 23,
+      "status": "IMPLEMENTED - not yet reproduced from clean install",
+      "clean_install_verified": false
+    },
+    {
+      "id": "T-11",
+      "requirement": "Every bug fixed during this work has a regression test",
+      "repository": "both",
+      "evidence_group": 25,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "T-12",
+      "requirement": "No deleted failing tests, weakened tolerances, failures turned to warnings, broad exception hiding, skips to reach green, removed hard examples, metadata claiming support, mocked core math in integration tests, or self-comparison replacing independent validation",
+      "repository": "both",
+      "evidence_group": 25,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "CI-1",
+      "requirement": "New empty environments created",
+      "repository": "both",
+      "evidence_group": 0,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "CI-2",
+      "requirement": "Both repositories installed from their final branches",
+      "repository": "both",
+      "evidence_group": 1,
+      "status": "NOT STARTED",
+      "clean_install_verified": false
+    },
+    {
+      "id": "CI-3",
+      "requirement": "Only documented instructions followed",
+      "repository": "both",
+      "evidence_group": 1,
+      "status": "NOT STARTED",
+      "clean_install_verified": false
+    },
+    {
+      "id": "CI-4",
+      "requirement": "Every required example run",
+      "repository": "both",
+      "evidence_group": 1,
+      "status": "NOT STARTED",
+      "clean_install_verified": false
+    },
+    {
+      "id": "CI-5",
+      "requirement": "Both GUIs run",
+      "repository": "both",
+      "evidence_group": 4,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "CI-6",
+      "requirement": "Entire test suites run",
+      "repository": "both",
+      "evidence_group": 1,
+      "status": "NOT STARTED",
+      "clean_install_verified": false
+    },
+    {
+      "id": "CI-7",
+      "requirement": "Cross-repository reproduction run",
+      "repository": "both",
+      "evidence_group": 0,
+      "status": "IN PROGRESS (recovery audit: bounded evidence)",
+      "clean_install_verified": false
+    },
+    {
+      "id": "CI-8",
+      "requirement": "No undeclared local path required",
+      "repository": "both",
+      "evidence_group": 1,
+      "status": "NOT STARTED",
+      "clean_install_verified": false
+    },
+    {
+      "id": "CI-9",
+      "requirement": "No development artifact required",
+      "repository": "both",
+      "evidence_group": 1,
+      "status": "NOT STARTED",
+      "clean_install_verified": false
+    },
+    {
+      "id": "CI-10",
+      "requirement": "No result depends on cached output",
+      "repository": "both",
+      "evidence_group": 1,
+      "status": "NOT STARTED",
+      "clean_install_verified": false
+    },
+    {
+      "id": "CI-11",
+      "requirement": "Generated files can be deleted and recreated",
+      "repository": "both",
+      "evidence_group": 1,
+      "status": "NOT STARTED",
+      "clean_install_verified": false
+    }
+  ],
+  "unmapped": []
+}

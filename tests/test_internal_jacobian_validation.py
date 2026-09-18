@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import shutil
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -86,3 +89,20 @@ def test_m5_cpflow_internal_jacobian_is_extracted_and_verified(tmp_path):
     # The source's own Jacobian is audited against the same reference, never
     # used as the reference for the extracted value.
     assert record["hand_coded_audit"]["relative_difference"] < 1e-8
+
+
+def test_internal_jacobian_example_cli(tmp_path):
+    output = tmp_path / "example"
+    command = [sys.executable, str(REPO_ROOT / "examples/verify_internal_jacobian.py"),
+               "--out", str(output)]
+    completed = subprocess.run(command, capture_output=True, text=True)
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    report = json.loads((output / "verification.json").read_text())
+    assert report["passed"] is True
+    assert report["clean_install_verified"] is False
+    assert report["example_relative_error"] < 1e-8
+    before = (output / "verification.json").read_bytes()
+    repeated = subprocess.run(command, capture_output=True, text=True)
+    assert repeated.returncode == 2
+    assert "existing evidence is preserved" in repeated.stderr
+    assert (output / "verification.json").read_bytes() == before

@@ -32,6 +32,33 @@ def test_documented_commands_and_links_resolve():
     assert problems == [], json.dumps(problems, indent=2)
 
 
+def test_historical_inventory_paths_are_not_local_but_commands_and_links_are(
+        tmp_path, monkeypatch):
+    sys.path.insert(0, str(REPO_ROOT / "tools"))
+    import audit_documentation_commands as audit_module
+
+    (tmp_path / "examples").mkdir()
+    (tmp_path / "docs").mkdir()
+    historical = tmp_path / "docs" / "BRANCH_IMPLEMENTATION_AUDIT.md"
+    historical.write_text(
+        "`examples/from_another_repository`\n"
+        "[missing link](missing.md)\n"
+        "```bash\npython tools/missing.py\n```\n", encoding="utf-8")
+    current = tmp_path / "docs" / "CURRENT.md"
+    current.write_text("`examples/missing_local_example`\n", encoding="utf-8")
+    monkeypatch.setattr(audit_module, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(audit_module, "doc_files", lambda: [historical, current])
+
+    assert audit_module.audit() == [
+        {"doc": "docs/BRANCH_IMPLEMENTATION_AUDIT.md", "kind": "broken_link",
+         "detail": "missing.md"},
+        {"doc": "docs/BRANCH_IMPLEMENTATION_AUDIT.md", "kind": "missing_script",
+         "detail": "tools/missing.py"},
+        {"doc": "docs/CURRENT.md", "kind": "stale_path_reference",
+         "detail": "examples/missing_local_example"},
+    ]
+
+
 def test_every_machine_path_fixture_marker_states_a_reason():
     """A marker with nothing after it is a hole, not an exemption.
 

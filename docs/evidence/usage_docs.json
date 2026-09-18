@@ -1,0 +1,32 @@
+{
+  "clean_install_verified": false,
+  "phase": "docs",
+  "python": "/home/ammslab3/softwarex_work/.venv/bin/python",
+  "work": "/tmp/recovery_usage_52qr8m07",
+  "environment": {
+    "PYTHONPATH": "/home/ammslab3/softwarex_work/imq-ra-recovery:/home/ammslab3/softwarex_work/imq-umat-recovery/src:/home/ammslab3/otilib/build_py311",
+    "UMAT_OTI_REPO": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+    "PYOTI_PATH": "/home/ammslab3/otilib/build_py311",
+    "OTILIB_ROOT": "/home/ammslab3/otilib/build_py311",
+    "RUN_OTILIB_TESTS": "1"
+  },
+  "commands": [
+    {
+      "name": "compiler",
+      "argv": [
+        "gfortran",
+        "--version"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0\nCopyright (C) 2019 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "stderr": "",
+      "seconds": 0.002705835970118642
+    },
+    {
+      "name": "usage report links and commands",
+      "problems": []
+    }
+  ],
+  "previous_failures": []
+}

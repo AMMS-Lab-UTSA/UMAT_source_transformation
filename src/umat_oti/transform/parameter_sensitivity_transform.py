@@ -124,7 +124,8 @@ class NonDifferentiableParameterPathError(ValueError):
 
 
 def transform_umat_for_parameter_sensitivity(
-    *, contract: GenericPSContract, output_dir: Path | str
+    *, contract: GenericPSContract, output_dir: Path | str,
+    extra_directions: int = 0,
 ) -> GenericPSLayout:
     """Emit the OTI-lifted UMAT + driver + Makefile for a generic UMAT."""
     output_dir = Path(output_dir)
@@ -135,12 +136,14 @@ def transform_umat_for_parameter_sensitivity(
         raise ValueError("contract.parameters must not be empty")
     if len(contract.parameter_values) != n_param:
         raise ValueError("parameter_values length must match parameters length")
+    if type(extra_directions) is not int or extra_directions < 0:
+        raise ValueError("extra_directions must be a nonnegative integer")
 
     source_text = contract.umat_source_path.read_text(encoding="utf-8", errors="replace")
     validate_parameter_paths(source_text, contract.parameters)
 
     module_result = generate_otilib_module(
-        output_dir=output_dir, ntens=n_param, order=1
+        output_dir=output_dir, ntens=n_param + extra_directions, order=1
     )
     parsed = _parse_umat_source(contract.umat_source_path)
     umat_and_helpers = _closure_including_umat(parsed)
@@ -160,7 +163,7 @@ def transform_umat_for_parameter_sensitivity(
     lifted_path = output_dir / "umat_oti_lifted.f90"
     lifted_path.write_text(
         _wrap_lifted_in_module(lifted.source, module_name=module_result.module_name,
-                               n_param=n_param),
+                               n_param=n_param + extra_directions),
         encoding="utf-8",
     )
 

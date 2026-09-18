@@ -1,0 +1,227 @@
+{
+  "clean_install_verified": false,
+  "phase": "help",
+  "python": "/home/ammslab3/softwarex_work/.venv/bin/python",
+  "work": "/tmp/recovery_usage_ic1lkpuw",
+  "environment": {
+    "PYTHONPATH": "/home/ammslab3/softwarex_work/imq-ra-recovery:/home/ammslab3/softwarex_work/imq-umat-recovery/src:/home/ammslab3/otilib/build_py311",
+    "UMAT_OTI_REPO": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+    "PYOTI_PATH": "/home/ammslab3/otilib/build_py311",
+    "OTILIB_ROOT": "/home/ammslab3/otilib/build_py311",
+    "RUN_OTILIB_TESTS": "1"
+  },
+  "commands": [
+    {
+      "name": "compiler",
+      "argv": [
+        "gfortran",
+        "--version"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0\nCopyright (C) 2019 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "stderr": "",
+      "seconds": 0.0036991179804317653
+    },
+    {
+      "name": "umat_oti.cli --help",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.cli",
+        "--help"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "usage: umat-oti [-h] {transform,config} ...\n\npositional arguments:\n  {transform,config}\n    transform         Generate an OTIS-enabled UMAT.\n    config            Generate artifacts from a canonical UMAT-OTI JSON\n                      contract.\n\noptions:\n  -h, --help          show this help message and exit\n",
+      "stderr": "",
+      "seconds": 0.14466615801211447
+    },
+    {
+      "name": "umat_oti.cli_json --help",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.cli_json",
+        "--help"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "usage: cli_json.py [-h] --config CONFIG [--out OUT] [--compile]\n\nRun the single-config transform path from a compact JSON contract.\n\noptions:\n  -h, --help       show this help message and exit\n  --config CONFIG  Path to the compact JSON file.\n  --out OUT        Output directory. Defaults to\n                   ./umat_oti_workspace/new_user_runs/<config-stem>.\n  --compile        Compile the generated Fortran units with gfortran.\n",
+      "stderr": "",
+      "seconds": 0.12943600298603997
+    },
+    {
+      "name": "umat_oti.cli_batch --help",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.cli_batch",
+        "--help"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "usage: cli_batch.py [-h] [--config-dir CONFIG_DIR] [--batch-dir BATCH_DIR]\n                    [--validate] [--abaqus-command ABAQUS_COMMAND]\n                    [--abaqus-modules ABAQUS_MODULES]\n                    [--run-prefix RUN_PREFIX] [--reuse-validation-results]\n\nRun transformation/optional validation from completed UMAT JSON contracts.\n\noptions:\n  -h, --help            show this help message and exit\n  --config-dir CONFIG_DIR\n  --batch-dir BATCH_DIR\n  --validate            Run Abaqus validation for semantically clean\n                        transforms.\n  --abaqus-command ABAQUS_COMMAND\n  --abaqus-modules ABAQUS_MODULES\n  --run-prefix RUN_PREFIX\n  --reuse-validation-results\n                        Reuse existing comparison reports instead of rerunning\n                        Abaqus jobs.\n",
+      "stderr": "",
+      "seconds": 0.13638111401814967
+    },
+    {
+      "name": "umat_oti.pipeline.cli --help",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.pipeline.cli",
+        "--help"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "usage: umat-oti-pipeline [-h] [--config CONFIG] [--work-dir WORK_DIR]\n                         [--run-id RUN_ID] [--compile] [--no-resume]\n                         [--only STAGE [STAGE ...]] [--list-stages] [--json]\n\n``umat-oti-pipeline`` -- run the canonical stage graph over one contract.\n\n    umat-oti-pipeline --config examples/code_imp_actual_higher_order.json \\\n                      --work-dir umat_oti_workspace/code_imp --compile\n\nEvery run writes ``run_manifest.json`` into the work directory. Re-running the\nsame contract reuses the stages whose inputs and artifacts are unchanged; pass\n``--no-resume`` to force a cold run, or ``--only`` to run a subset.\n\nThe exit code reports *problems* -- failed or unsupported stages -- and not the\nmere absence of results. A run in which everything was ``not_requested`` exits\nzero because nothing went wrong, while a run blocked on missing external\nsoftware exits 3 so a caller can tell it apart from a real failure.\n\noptions:\n  -h, --help            show this help message and exit\n  --config CONFIG       contract JSON consumed by every front end\n  --work-dir WORK_DIR\n  --run-id RUN_ID\n  --compile             compile the generated Fortran during transformation\n  --no-resume           ignore any cached stage results\n  --only STAGE [STAGE ...]\n                        run only these stages (dependencies still gate them)\n  --list-stages         print the stage graph in dependency order and exit\n  --json                print the run summary as JSON\n",
+      "stderr": "",
+      "seconds": 0.0663705209735781
+    },
+    {
+      "name": "umat_oti.provider --help",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.provider",
+        "--help"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "usage: __main__.py [-h] {build} ...\n\nCompile the original UMAT and current generic lift into one PIC object.\n\npositional arguments:\n  {build}\n    build     build a relocatable provider from a v2 contract\n\noptions:\n  -h, --help  show this help message and exit\n",
+      "stderr": "",
+      "seconds": 0.1501557489973493
+    },
+    {
+      "name": "umat_oti.reproduce --help",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.reproduce",
+        "--help"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "usage: python -m umat_oti.reproduce [-h] --profile\n                                    {smoke,offline,paper,corpus,abaqus}\n                                    [--out-dir OUT_DIR] [--allow-network]\n\nReproduction entry point: ``python -m umat_oti.reproduce --profile <name>``.\n\nA profile is a named, bounded claim about what can be regenerated and what it\ncosts. Each one writes the same five artefacts into its output directory, so a\nreviewer compares runs rather than reading prose:\n\n===========================  ==========================================\n``run_manifest.json``        every step, its status, and why\n``environment.json``         interpreter, compiler, platform, commit\n``claim_matrix.json``        which published claim each step supports\n``artifact_checksums.sha256``  SHA-256 of every file the run produced\n``reproduction_summary.md``  the same thing in a page a human reads\n===========================  ==========================================\n\nExit status distinguishes three outcomes, because collapsing them is how a\nreproduction report comes to overstate itself:\n\n``0``  every requested step succeeded, or was reported as unavailable for a\n       stated external reason\n``1``  a step that should have worked failed\n``2``  the profile could not start at all\n\nA step that needs Abaqus, or the network, or a compiler that is not installed,\nreports ``blocked_by_external_dependency`` and does not fail the run. What it\nmust never do is silently vanish from the denominator.\n\noptions:\n  -h, --help            show this help message and exit\n  --profile {smoke,offline,paper,corpus,abaqus}\n  --out-dir OUT_DIR     where to write the five artefacts (default:\n                        reproduce/<profile>/)\n  --allow-network       permit steps that fetch third-party sources\n",
+      "stderr": "",
+      "seconds": 0.06261604296742007
+    },
+    {
+      "name": "umat_oti.validation.parameter_sensitivity_provider --help",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.validation.parameter_sensitivity_provider",
+        "--help"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "usage: parameter_sensitivity_provider.py [-h] --out OUT [--elastic] contract\n\nIndependent compiled-provider checks against finite differences of ORIGINAL.\nRun with ``python -m umat_oti.validation.parameter_sensitivity_provider\nCONTRACT --out DIR``. This bounded material-point check never invokes Abaqus.\n\npositional arguments:\n  contract\n\noptions:\n  -h, --help  show this help message and exit\n  --out OUT\n  --elastic   do not require the J2 branch sequence\n",
+      "stderr": "",
+      "seconds": 0.24435023596743122
+    },
+    {
+      "name": "umat-oti transform --help",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.cli",
+        "transform",
+        "--help"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "usage: umat-oti transform [-h] --out OUT [--config CONFIG] [--no-validation]\n                          source\n\npositional arguments:\n  source           Path to the source UMAT.\n\noptions:\n  -h, --help       show this help message and exit\n  --out OUT        Output directory for generated files.\n  --config CONFIG  Optional material_point.json validation config.\n  --no-validation  Generate files without running validation.\n",
+      "stderr": "",
+      "seconds": 0.1780209539574571
+    },
+    {
+      "name": "umat-oti config --help",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.cli",
+        "config",
+        "--help"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "usage: umat-oti config [-h] --out OUT [--compile] config\n\npositional arguments:\n  config      Path to a schema 1.1 or legacy project contract.\n\noptions:\n  -h, --help  show this help message and exit\n  --out OUT   Output directory for generated files.\n  --compile   Compile the generated Fortran units with gfortran.\n",
+      "stderr": "",
+      "seconds": 0.1384715409949422
+    },
+    {
+      "name": "provider build --help",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.provider",
+        "build",
+        "--help"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "usage: __main__.py build [-h] --out OUT [--compiler COMPILER] contract\n\npositional arguments:\n  contract\n\noptions:\n  -h, --help           show this help message and exit\n  --out OUT\n  --compiler COMPILER\n",
+      "stderr": "",
+      "seconds": 0.09146338002756238
+    },
+    {
+      "name": "internal Jacobian --help",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "examples/verify_internal_jacobian.py",
+        "--help"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "usage: verify_internal_jacobian.py [-h] --out OUT\n\nReproduce the bundled m5_cpflow local-Jacobian verification without Abaqus.\n\noptions:\n  -h, --help  show this help message and exit\n  --out OUT\n",
+      "stderr": "",
+      "seconds": 0.09009269502712414
+    },
+    {
+      "name": "clean install --help",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "scripts/clean_install_gate.py",
+        "--ra-repo",
+        "/home/ammslab3/softwarex_work/imq-ra-recovery",
+        "--help"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": "usage: clean_install_gate.py [-h] [--ra-repo RA_REPO] --umat-repo UMAT_REPO\n                             --python PYTHON --odb ODB [--abaqus ABAQUS]\n                             [--work WORK]\n\nVerify working-tree wheels together, never claim a committed clean-clone gate.\n\noptions:\n  -h, --help            show this help message and exit\n  --ra-repo RA_REPO\n  --umat-repo UMAT_REPO\n  --python PYTHON       healthy standalone Python >=3.10 with venv, ctypes,\n                        ssl\n  --odb ODB             genuine ODB matching the public presentation deck\n  --abaqus ABAQUS\n  --work WORK\n",
+      "stderr": "",
+      "seconds": 0.10041274299146608
+    },
+    {
+      "name": "pipeline stages",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "-m",
+        "umat_oti.pipeline.cli",
+        "--list-stages"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 0,
+      "stdout": " 1. source_acquisition                 requires: -\n 2. source_inventory                   requires: source_acquisition\n 3. license_classification             requires: source_inventory\n 4. entry_routine_detection            requires: source_inventory\n 5. dependency_closure                 requires: source_inventory, entry_routine_detection\n 6. contract_inference                 requires: source_inventory, dependency_closure\n 7. derivative_request_normalization   requires: contract_inference\n 8. source_transformation              requires: derivative_request_normalization\n 9. oti_support_generation             requires: source_transformation\n10. compilation                        requires: oti_support_generation\n11. material_point_execution           requires: compilation\n12. primal_parity                      requires: material_point_execution\n13. derivative_verification            requires: material_point_execution\n14. abaqus_validation                  requires: compilation\n15. evidence_generation                requires: derivative_verification\n16. distributable_package              requires: evidence_generation\n",
+      "stderr": "",
+      "seconds": 0.061059115978423506
+    }
+  ],
+  "previous_failures": [
+    {
+      "name": "clean install --help",
+      "argv": [
+        "/home/ammslab3/softwarex_work/.venv/bin/python",
+        "scripts/clean_install_gate.py",
+        "--help"
+      ],
+      "cwd": "/home/ammslab3/softwarex_work/imq-umat-recovery",
+      "returncode": 2,
+      "stdout": "",
+      "stderr": "usage: clean_install_gate.py --ra-repo RA_REPO\nclean_install_gate.py: error: the following arguments are required: --ra-repo\n",
+      "seconds": 0.04252503998577595
+    }
+  ]
+}

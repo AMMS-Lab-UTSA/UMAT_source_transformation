@@ -127,9 +127,29 @@ def test_every_service_returns_the_same_envelope():
         json.dumps(payload, default=str)
 
 
+@pytest.fixture
+def denominator_store(tmp_path):
+    """Synthetic counts, not evidence that the external pass11 corpus passed."""
+    records = []
+    for index in range(237):
+        record = {"key": f"synthetic-{index}",
+                  "stage": "verified" if index < 55 else "refused"}
+        if index < 55:
+            evidence = {gate: True for gate in services.GATES}
+            evidence["primal_agreed"] = index < 42
+            evidence[services.SEVENTH] = index >= 42
+            record["evidence"] = evidence
+        records.append(record)
+    path = tmp_path / "store_verification.jsonl"
+    path.write_text("".join(json.dumps(record) + "\n" for record in records),
+                    encoding="utf-8")
+    return path
+
+
 @pytest.mark.integration
 def test_a_filtered_listing_keeps_the_denominator_it_was_drawn_from():
-    """No summary number that hides a distinction."""
+    """Historical PASS11 counts, not current-generation corpus capability."""
+    _records()
     listing = CorpusService(PASS11).list_sources(all_six_hold=True).data
     assert len(listing.sources) == 42
     assert listing.records_in_file == 237, (
@@ -140,6 +160,8 @@ def test_a_filtered_listing_keeps_the_denominator_it_was_drawn_from():
 
 @pytest.mark.integration
 def test_the_summary_reports_both_counts_and_never_one():
+    """Historical PASS11 verdicts retain their original generation semantics."""
+    _records()
     summary = VerificationService().summarise(PASS11).data.as_dict()
     assert summary["records"] == 237
     assert summary["at_stage_verified"] == 55
@@ -151,6 +173,45 @@ def test_the_summary_reports_both_counts_and_never_one():
     for entry in summary["verified_but_not_all_six"]:
         assert entry["gates_that_did_not_hold"] == ["primal_agreed"]
         assert entry[services.SEVENTH]["reading"] == "true"
+
+
+def test_synthetic_filtered_listing_keeps_its_denominator(denominator_store):
+    """Synthetic unit coverage only; not a PASS11 corpus observation."""
+    result = CorpusService(denominator_store).list_sources(all_six_hold=True)
+    assert result.ok, result.as_dict()
+    listing = result.data
+    assert len(listing.sources) == 42
+    assert listing.records_in_file == 237, (
+        "a filtered count must carry what it was filtered from")
+    assert listing.stage_counts["verified"] == 55
+    assert sum(listing.stage_counts.values()) == 237
+
+
+def test_synthetic_summary_reports_both_counts(denominator_store):
+    """Synthetic unit coverage only; not a PASS11 corpus observation."""
+    result = VerificationService().summarise(denominator_store)
+    assert result.ok, result.as_dict()
+    summary = result.data.as_dict()
+    assert summary["records"] == 237
+    assert summary["at_stage_verified"] == 55
+    assert summary["true_on_all_six"] == 42
+    assert summary["verified_but_not_all_six_count"] == 13
+    assert 55 == 42 + 13
+    assert "must never be reported as one number" not in summary
+    assert "different counts" in summary["why_two_numbers"]
+    for entry in summary["verified_but_not_all_six"]:
+        assert entry["gates_that_did_not_hold"] == ["primal_agreed"]
+        assert entry[services.SEVENTH]["reading"] == "true"
+
+
+@pytest.mark.parametrize("service", ["corpus", "verification"])
+def test_missing_results_are_not_a_successful_empty_corpus(tmp_path, service):
+    path = tmp_path / "missing.jsonl"
+    result = (CorpusService(path).list_sources() if service == "corpus"
+              else VerificationService().summarise(path))
+    assert not result.ok
+    assert result.outcome == "no_results_file"
+    assert result.blockers[0].code == "results_file_missing"
 
 
 @pytest.mark.integration
