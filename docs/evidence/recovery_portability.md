@@ -6,7 +6,7 @@ whole-ledger completion. Exact commands, all original failure identities,
 final skip identities, wheel hashes, import paths, browser harness and raw
 artifact digests are in [recovery_portability.json](recovery_portability.json).
 The joint commands and detailed handoff are in the companion
-[portability report](../../../Residual_Assembler/docs/evidence/recovery_portability.md).
+[portability report](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/evidence/recovery_portability.md).
 The earlier [clean-clone report](recovery_clean_clone.md) remains historical.
 
 | Check | Result |

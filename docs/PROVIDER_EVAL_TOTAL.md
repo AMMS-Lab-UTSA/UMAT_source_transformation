@@ -3,7 +3,7 @@
 Every provider built by `umat-oti-provider build <contract_v2.json> --out DIR`
 exports, next to `UMAT_OTI_EVAL` and `UMAT_OTI_MARCH` (unchanged), a third
 routine for whole-model history replay (the Residual Assembler's
-`resasm history`, see its `docs/REPLAY_HISTORY.md`):
+`resasm history`, see [REPLAY_HISTORY.md](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/REPLAY_HISTORY.md) in Residual_Assembler):
 
 ```fortran
 SUBROUTINE UMAT_OTI_EVAL_TOTAL(STRESS,STATEV,DDSDDE,STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,
