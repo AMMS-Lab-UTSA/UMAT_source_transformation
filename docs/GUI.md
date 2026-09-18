@@ -119,7 +119,7 @@ Then Build and the OTI-enabled UMAT is automatically generated."
 | Number of state variables (NSTATV) | the routine's physical state size |
 | parameter / PROPS index / value | one row per parameter. The table starts empty. A source that is byte-identical to a shipped model (`parameter_sensitivity/models/*`) gets a button that fills the table from that model's contract |
 | stress (DSIGMA_DP), state (DSTATEV_DP, auto) | the provider's derivative requests. DSIGMA_DP cannot be switched off because it is what the provider builds. DSTATEV_DP is always carried when NSTATV > 0 |
-| Options | model name (names the canonical `umat_<name>_oti.obj`); verification on/off; require the J2 branch sequence on the check path |
+| Options | model name (names the canonical `umat_<name>_oti.obj`); verification on/off; the **check path** (the provider's seven-increment J2 path, the sweep's declared uniaxial-strain path, or tension with shear); require the J2 branch sequence on the check path; build `REAL_UMAT.obj` with the **Abaqus toolchain** (`abaqus make`; ticked when `abaqus` is on PATH) |
 
 "The UMAT provided by the source transform" is the same source the Constitutive
 Jacobian screen loaded. The provider needs the original routine, because it
@@ -135,18 +135,21 @@ a value in every slot.
 as subprocesses and keeps their exit codes:
 
 ```bash
-python -m umat_oti.provider build contract_v2.json --out out/build --regular-object REAL_UMAT.obj
+python -m umat_oti.provider build contract_v2.json --out out/build --regular-object REAL_UMAT.obj [--abaqus-toolchain]
 python -m umat_oti.validation.parameter_sensitivity_provider contract_v2.json --out out/verification
 ```
 
 The first is `umat-oti-provider build`. The second is the provider's
-independent check: primal parity against the separately compiled ORIGINAL,
-then centred finite differences of the ORIGINAL over a step sweep (see
-[PROVIDER.md](PROVIDER.md)). The verifier builds its own copy of the object,
-and builds embed their build-directory paths, so the two objects are not
-byte-identical. The package therefore evaluates both objects through the
-verifier's own ABI client on the check path and requires bit-identical
-arrays. It also checks that the generated Fortran sources are identical.
+independent check on the contract's `validation.check_path`: primal parity
+against the separately compiled ORIGINAL, then every entry of DSIGMA_DP,
+DSTATEV_DP and DDSDDE against centred differences of the ORIGINAL over a
+ladder of steps, each entry judged *agrees*, *consistent with zero*,
+*reference unresolved* (never counted as agreement) or *disagrees* (see
+[PROVIDER.md](PROVIDER.md)). The verifier builds its own copy of the object.
+Builds compile relative file names and reproduce byte for byte, so the package
+requires the shipped object to be byte-identical to the verified one; it also
+evaluates both through the verifier's ABI client on the check path and checks
+that the generated Fortran sources are identical.
 
 **What it writes.** A fresh directory `provider/<model>-XXXX/` with the staged
 model (`<model>/umat.for`, `contract_v2.json`), `out/build/` (the provider's
@@ -157,10 +160,10 @@ over, in `out/collaborator/`:
 
 | File | Content |
 | --- | --- |
-| `REAL_UMAT.obj` | the ORIGINAL UMAT compiled unchanged: the same object the provider bundles, from the same compiler, flags and source |
+| `REAL_UMAT.obj` | the ORIGINAL UMAT compiled unchanged: with the Abaqus toolchain, what `abaqus make` produces (the Abaqus site compiler and flags, ifort here); otherwise the same object the provider bundles |
 | `OTI_UMAT.obj` | the provider: the original routine plus the differentiated one (`umat_oti_eval_`, `umat_oti_march_`) |
 | `Mapping.json` | the provider's generated contract, unchanged. It records both objects' SHA-256 (`object.sha256_full`, `regular_object.sha256_full`) |
-| `transform_report.txt` | the build and verification commands with their exit codes, the parameter table, primal parity, every FD step's scaled error, the plateau, and the tie between the shipped and the verified object |
+| `transform_report.txt` | the build and verification commands with their exit codes, the parameter table, the check path, primal parity, the per-array counts of verified / zero / unresolved entries with the worst relative error, every unresolved column with its reason, the regular object's toolchain, and the tie between the shipped and the verified object |
 
 All four can be downloaded. The source is not among them. The same package
 from a terminal:
@@ -175,24 +178,35 @@ Exit code 0 means built and verified, 1 means built but not verified, and
 **Measured (2026-09-18).**
 
 - m3_j2 with slide 41's table (E=200000, nu=0.3, SIGY0=250, H=2000, NSTATV 1,
-  J2 branch sequence required): build exit 0, verification exit 0. The check
-  path was elastic, elastic, plastic, plastic, elastic, plastic, elastic.
-  Primal parity: stress 3.6e-15, state 2.2e-19. Scaled errors at the finest
-  step: DSIGMA_DP 2.65e-9, DSTATEV_DP 1.20e-9, DDSDDE 2.95e-11 (tolerance
-  2e-6, every step of the sweep checked, 2,659 comparisons). The shipped object
-  returned bit-identical arrays to the verified build. The slide shows 5.98e-11
-  and 1.37e-10. Those numbers are not reproduced here: this check measures a
-  different quantity, the scaled max error at the finest step of a three-step
-  sweep.
+  the provider's J2 path, J2 branch sequence required): build exit 0,
+  verification exit 0, verdict *verified*. Branches: elastic, elastic,
+  plastic, plastic, elastic, plastic, elastic. Primal parity: stress 3.6e-15,
+  state 2.2e-19. Every column agrees: 628 entries determined to the tolerance
+  and agreeing, 240 zero to within the reference, none unresolved, none
+  disagreeing. Worst relative error of the agreeing entries: DSIGMA_DP 1.9e-9,
+  DSTATEV_DP 3.6e-11, DDSDDE 7.6e-10 (tolerance 2e-6 per entry). The shipped
+  OTI_UMAT.obj is byte-identical to the verified build. The slide shows
+  5.98e-11 and 1.37e-10. Those numbers are not reproduced: this check reports
+  the worst per-entry relative error, a different quantity.
 - m6_fcc with slide 17's ten parameters (C11=168000, C12=121000, C44=75000,
-  g0=13, gsat=55, h0=800, a=2, q=1.4, gd0=0.001, m=0.05; NSTATV 12): **build
-  exit 0**. The Mapping.json lists the ten parameters with their PROPS indices
-  1-10. **Verification exit 2**: "provider/reference contains nonfinite
-  values". The verifier's check path is the fixed J2 path, with strain
-  increments up to 3.2e-3 per unit time. That path drives this explicit,
-  sub-stepped, rate-dependent crystal update to non-finite values in the
-  ORIGINAL routine too. The screen reports the build as not verified and
-  shows the diagnostic.
+  g0=13, gsat=55, h0=800, a=2, q=1.4, gd0=0.001, m=0.05; NSTATV 12) on
+  **tension with shear** (20 increments of 1e-4 in 11 and 1e-4 engineering
+  shear in 12): build exit 0, verification exit 0, verdict *verified*. The
+  slip resistances grow to 2.52 (g0 = 13): the path yields. Primal parity:
+  stress 2.8e-13, state 1.8e-15. All 10 columns of DSIGMA_DP and DSTATEV_DP
+  agree, as do all 6 DDSDDE columns: 4,556 entries agree, 1,572 are zero to
+  within the reference, 112 are unresolved (small entries whose reference
+  scatter exceeds 2e-6 of their size), none disagree. Worst relative errors:
+  DSIGMA_DP 5.7e-8, DSTATEV_DP 1.0e-9, DDSDDE 3.5e-8.
+- The same FCC table on the sweep's declared **uniaxial-strain** path
+  (`parameter_sensitivity/loading_paths.json`, 20 increments of 1e-4 in 11):
+  verdict *verified_with_unresolved_columns*. Nine parameters agree; the C44
+  column is reported unresolved ("every entry is zero to within the
+  reference's resolution"), because uniaxial strain along the cube axis puts
+  no shear stress on the crystal, so the derivative is zero along the path.
+- On the provider's default J2 path the FCC routine returns non-finite values
+  (strain increments up to 3.2e-3 per unit time). The objects are built, the
+  verifier exits 2 with "nonfinite", and the screen says so.
 
 ![Parameter Sensitivities after Build for the ten-parameter FCC model](screenshots/umat_parameter_sensitivities_fcc.png)
 
@@ -201,7 +215,8 @@ Exit code 0 means built and verified, 1 means built but not verified, and
 | Test | What it drives | Run |
 | --- | --- | --- |
 | `tests/gui/test_imqcam_developer_screens.py` | both screens through `streamlit.testing` (AppTest): GUI output against `umat-oti jacobian` and `umat-oti-config` for m3_j2, elastic and m6_fcc; the elastic output against the curated example; the downloaded tangent against FD of the original (J2, elastic, and the FCC convergence); the J2 and FCC builds against the verifier CLI; and the table and tick rules | the offline suite |
-| `tests/test_provider_regular_object.py` | `umat-oti-provider build --regular-object`: the object is the bundled original; its hash is in the contract; linked alone it replays the original bit for bit | the offline suite |
+| `tests/test_provider_regular_object.py` | `umat-oti-provider build --regular-object`: the object is the bundled original; its hash is in the contract; linked alone it replays the original bit for bit; no directory of the developer's appears in either object or the mapping; a rebuild elsewhere is byte-identical; `--abaqus-toolchain` gives the `abaqus make` object (marked `abaqus`) | the offline suite |
+| `tests/test_provider_check_path_and_verdicts.py` | the check path read from the contract; the four verdicts on synthetic ladders; a wrong DSIGMA_DP (all entries by 1e-5, or one entry by 1e-3) is caught; m6_fcc at slide 17's values verifies on tension with shear and reports C44 unresolved on uniaxial strain | the offline suite |
 | `tests/gui/test_imqcam_developer_screens_browser.py` | the same flows in headless Chromium, as the slides describe them: upload, type the table, tick, click, download. Compares with the CLI and writes the screenshots above | `python -m pytest -m gui tests/gui` |
 
 Browser tests start their own Streamlit server and stop that one process id.
@@ -213,22 +228,51 @@ They are deselected unless `-m gui` is given (see
 - The provider screen builds what the provider supports: three-dimensional
   (NTENS 6), small-strain, first-order STRESS-with-respect-to-PROPS providers
   ([PROVIDER.md](PROVIDER.md)).
-- Its independent check uses the provider verifier's fixed seven-increment
-  path. A material that cannot integrate that path (m6_fcc) is built but not
-  verified.
-- `REAL_UMAT.obj` is compiled with the provider's compiler (gfortran here).
-  On Linux, Abaqus accepts a precompiled user object only with the `.o`
-  extension, so it has to be copied to `REAL_UMAT.o`; the bytes stay the
-  same. Measured on 2026-09-18 (Abaqus 2021.HF5, job `claudeG_real`, the
-  presentation example `Analysis.inp`, `user=REAL_UMAT.o`, SHA-256
-  53bac302...): Abaqus linked it with its Intel toolchain and all four
-  increments converged. The .sta ends "THE ANALYSIS HAS COMPLETED
-  SUCCESSFULLY", and the exported U, RF, CF, S and SDV1 of all five frames
-  are identical (max |difference| 0) to the reference job `imqrp_j2`, whose
-  ifort compiled the same source. After the analysis, however, the process
-  aborted with "buffer overflow detected" (signal 6, exit code 1), which the
-  ifort-compiled reference run did not. A production user sees that as a
-  failed job, even though the results are complete.
-- Objects embed absolute build paths in their bounds-check messages, so a
-  rebuild does not reproduce them byte for byte. A shared object also reveals
-  the developer's directory names, but not the source.
+- The check path is a choice, recorded in the report. A column whose derivative
+  is zero along the chosen path (C44 on uniaxial strain) is reported
+  unresolved, not verified; a path that exercises it is needed to verify it.
+- `REAL_UMAT.obj`: on Linux, Abaqus accepts a precompiled user object only with
+  the `.o` extension, so copy it to `REAL_UMAT.o` (same bytes). Built with the
+  provider's compiler it refers to `_gfortran_runtime_error_at` (its bounds
+  checks), which Abaqus does not load; the Abaqus toolchain avoids that. See
+  "REAL_UMAT in Abaqus" below for the teardown abort and its cause.
+
+## REAL_UMAT in Abaqus
+
+Measured on 2026-09-18 with Abaqus 2021.HF5 on the presentation example
+`Analysis.inp` (one C3D8, four increments), jobs `claudeG_*`, one at a time:
+
+| Job | `user=` | How run | .sta | Process |
+| --- | --- | --- | --- | --- |
+| `claudeG_real` | gfortran REAL_UMAT (SHA-256 53bac302...) | as usual | COMPLETED SUCCESSFULLY | aborted: "buffer overflow detected", signal 6, exit 1 |
+| `claudeG_ifort` | `abaqus make` object of the same source | as usual | COMPLETED SUCCESSFULLY | aborted the same way |
+| `claudeG_noLD` | gfortran REAL_UMAT | `LD_LIBRARY_PATH` unset | COMPLETED SUCCESSFULLY | aborted the same way |
+| `claudeG_clean` | `--abaqus-toolchain` REAL_UMAT (SHA-256 deefc08a..., the same bytes the GUI build gives for m3_j2) | in a new PID namespace | COMPLETED SUCCESSFULLY | **clean: "Abaqus JOB claudeG_clean COMPLETED", exit 0** |
+| `claudeG_gfns` | gfortran REAL_UMAT (SHA-256 fed08fae..., path-free build) | in a new PID namespace | COMPLETED SUCCESSFULLY | clean, exit 0 |
+
+The exported U, RF, CF, S and SDV1 of all five frames of `claudeG_clean` and
+`claudeG_gfns` equal the reference job `imqrp_j2` (Abaqus compiling the same
+source) with max |difference| 0.
+
+**The cause is not the compiler of the user object.** The abort's call stack
+(`*.exception`) ends in Abaqus's own finalisation: `SMAAspSupport_finalize ->
+bcu_cleanup -> for_inquire -> ... -> fname_from_piped_fd -> __sprintf_chk ->
+__chk_fail`. That code is in `libifcoremt.so.5`, the Intel Fortran runtime
+bundled with Abaqus. Disassembly shows `fname_from_piped_fd` formatting the
+process ID with `"%d"` into a 7-byte stack buffer (`__sprintf_chk(buf, 1, 7,
+"%d", pid)`). A PID of 1,000,000 or more needs 8 bytes, so glibc's
+FORTIFY check aborts the process. This machine allows PIDs up to 4,194,304
+(`/proc/sys/kernel/pid_max`), and its PIDs are now above 1,000,000. The other
+agents' Abaqus jobs on this machine agree: 205 left an exception file (PIDs
+1,071,012 to 1,684,135), and 204 of them stopped in the same
+`fname_from_piped_fd` frame. They include all 126 cantilever runs, where Abaqus
+compiled the user source with its own ifort. In a PID namespace
+(`unshare -r -p -f --mount-proc`), the solver's PID is small and both
+objects run clean.
+
+What to do: judge a job by its `.sta` (as the brief says), or run it where
+PIDs are below 1,000,000, for example:
+
+```bash
+unshare -r -p -f --mount-proc sh -c 'abaqus job=NAME input=Analysis.inp user=REAL_UMAT.o interactive'
+```

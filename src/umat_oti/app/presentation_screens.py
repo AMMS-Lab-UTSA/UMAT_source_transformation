@@ -410,7 +410,7 @@ def _render_provider_result(summary: dict[str, Any] | None) -> None:
             tie = summary.get("tie") or {}
             if tie.get("identical_outputs"):
                 st.caption("The shipped OTI_UMAT.obj is "
-                           + ("byte-identical to the verified build" if tie.get("objects_byte_identical")
+                           + ("byte-identical to the verified build and" if tie.get("objects_byte_identical")
                               else "not byte-identical to the verified build, but")
                            + " returns bit-identical arrays to it on the check path.")
             else:
