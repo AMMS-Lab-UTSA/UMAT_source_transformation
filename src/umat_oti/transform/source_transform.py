@@ -1763,6 +1763,16 @@ def _roles_with_stress_path_promotions(
     written = _written_names_from_analysis(analysis)
     data_constants = {
         name for name in data_initialised_names(source_text) if name not in written}
+    # Declining to add one is not enough when the contract's own promote list
+    # already carries it: UMAT_HIN's benchmark contract promotes ONE, TWO and
+    # ZERO, which its helpers set by DATA and nothing ever assigns, and the
+    # transform then refused the file. A name with a DATA value and no
+    # assignment is a compile-time constant; nothing seeded can flow into it,
+    # so it stays real. A DATA-initialised name that IS assigned keeps its
+    # promotion and is refused by _data_initialised_shadow_blockers.
+    for name in sorted(data_constants & updated["promote"]):
+        updated["promote"].discard(name)
+        updated["constant"].add(name)
     # A subscript is an INTEGER by the language's own rule, so a name used as
     # one carries no derivative and promoting it emits code gfortran refuses.
     known_arrays = {
