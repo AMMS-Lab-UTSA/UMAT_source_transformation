@@ -163,7 +163,7 @@ def test_slide17_parameter_sensitivities_j2(page, server, tmp_path):
     assert [(p["name"], p["props_index"]) for p in mapping["parameters"]] == \
         [(n, int(i)) for n, i, _ in J2_TABLE]
     report = files["transform_report.txt"].read_text()
-    assert "bit-identical" in report
+    assert "byte-identical to the verified build" in report
     assert _report_table(report) == [(n, i, float(v)) for n, i, v in J2_TABLE]
     save_screenshot(panel, "umat_parameter_sensitivities_j2.png")
 
@@ -182,7 +182,8 @@ def test_slide17_parameter_sensitivities_j2(page, server, tmp_path):
 
     def measured(text):
         return [line for line in text.splitlines()
-                if line.startswith(("  parameter step", "  strain step", "FD plateau", "Primal parity"))]
+                if line.startswith(("  DSIGMA", "  DSTATEV", "  DDSDDE", "Verdict", "Primal parity",
+                                    "Entries", "Unresolved"))]
 
     assert measured(report) == measured(cli_report) and measured(report)
     cli_mapping = json.loads((tmp_path / "cli" / "out" / "collaborator" / "Mapping.json").read_text())
@@ -207,9 +208,15 @@ def test_slide17_parameter_sensitivities_fcc(page, server, tmp_path):
     fill_grid(page, grid, FCC_TABLE)
     assert grid_cells(grid) == [cell for row in FCC_TABLE for cell in row]
     assert panel.get_by_label("Number of state variables (NSTATV)").input_value() == "12"
+    # The provider's default path is too violent for this explicit crystal
+    # update; the check replays tension with shear instead.
+    panel.get_by_text("Options", exact=True).click()
+    settle(page)
+    panel.get_by_role("combobox", name=re.compile("^check path")).click()
+    page.get_by_role("option", name=re.compile("^tension with shear")).click()
+    settle(page)
     panel.get_by_role("button", name="Build OTI object →").click()
-    outcome = panel.get_by_text(re.compile(r"^Build succeeded"))
-    expect(outcome).to_be_visible(timeout=600000)
+    expect(panel.get_by_text("Build succeeded and verified", exact=True)).to_be_visible(timeout=600000)
     settle(page)
     mapping = json.loads(_download(page, panel.get_by_role("button", name=re.compile("^Mapping.json")),
                                    tmp_path).read_text())
@@ -219,4 +226,5 @@ def test_slide17_parameter_sensitivities_fcc(page, server, tmp_path):
     report = _download(page, panel.get_by_role("button", name=re.compile("^transform_report.txt")),
                        tmp_path).read_text()
     assert _report_table(report) == [(n, i, float(v)) for n, i, v in FCC_TABLE]
+    assert "Verdict          : verified" in report and "Unresolved columns: none" in report
     save_screenshot(panel, "umat_parameter_sensitivities_fcc.png")

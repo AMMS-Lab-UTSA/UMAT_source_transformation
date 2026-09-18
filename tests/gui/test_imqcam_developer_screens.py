@@ -204,7 +204,8 @@ def test_the_fcc_tangent_is_the_limit_of_the_finite_differences(workspace):
     assert errors[2] < 1e-8, errors
 
 
-def _provider_app(source: Path, table, nstatv: int, *, j2: bool) -> AppTest:
+def _provider_app(source: Path, table, nstatv: int, *, j2: bool,
+                  path: str = "provider") -> AppTest:
     app = AppTest.from_string(PROVIDER, default_timeout=900).run()
     app.text_input(key="pp_path").set_value(str(source)).run()
     assert not app.exception and not app.error
@@ -217,6 +218,11 @@ def _provider_app(source: Path, table, nstatv: int, *, j2: bool) -> AppTest:
     assert app.checkbox(key="pp_stress").value and app.checkbox(key="pp_state").value
     if j2:
         app.checkbox(key="pp_j2").check().run()
+    # The default path is the provider's; the Abaqus toolchain is ticked when
+    # abaqus is on PATH. The offline suite builds with the provider's compiler.
+    assert app.selectbox(key="pp_check_path").value == "provider"
+    app.selectbox(key="pp_check_path").set_value(path)
+    app.checkbox(key="pp_abaqus_toolchain").uncheck().run()
     assert not app.button(key="pp_build").disabled, [w.value for w in app.warning]
     app.button(key="pp_build").click().run()
     assert not app.exception, app.exception
@@ -235,7 +241,9 @@ def test_the_build_screen_hands_over_the_four_files_for_j2(workspace):
     result = verification["result"]
     assert result["props"] == [value for _, _, value in J2_TABLE]
     assert result["branches"][:4] == ["elastic", "elastic", "plastic", "plastic"]
+    assert result["verdict"] == "verified" and not result["unresolved_columns"]
     assert summary["tie"]["identical_outputs"] and summary["tie"]["generated_sources_identical"]
+    assert summary["tie"]["objects_byte_identical"]
     shared = {name: Path(entry["path"]) for name, entry in summary["shared"].items()}
     assert set(shared) == set(collaborator.SHARED_FILES)
     mapping = json.loads(shared["Mapping.json"].read_text())
@@ -244,7 +252,9 @@ def test_the_build_screen_hands_over_the_four_files_for_j2(workspace):
     assert mapping["regular_object"]["sha256_full"] == _sha(shared["REAL_UMAT.obj"])
     assert [p["name"] for p in mapping["parameters"]] == ["E", "nu", "SIGY0", "H"]
     report = shared["transform_report.txt"].read_text()
-    assert "exit code 0" in report and "bit-identical" in report
+    assert "exit code 0" in report and "byte-identical to the verified build" in report
+    for name in ("REAL_UMAT.obj", "OTI_UMAT.obj", "Mapping.json"):
+        assert f"{name:<22} sha256 {summary['shared'][name]['sha256']}" in report
     labels = [button.label for button in app.get("download_button")]
     for name in collaborator.SHARED_FILES:
         assert any(label.startswith(name) for label in labels), labels
@@ -256,35 +266,56 @@ def test_the_build_screen_hands_over_the_four_files_for_j2(workspace):
                          capture_output=True, text=True)
     assert cli.returncode == verification["exit_code"] == 0
     cli_result = json.loads((workspace / "cli_verify" / "verification.json").read_text())
-    for key in ("parameter_steps", "tangent_steps", "fd_plateau", "primal_stress_max_abs"):
+    for key in ("verdict", "arrays", "columns", "comparisons", "primal_stress_max_abs", "path"):
         assert cli_result[key] == result[key], key
 
 
 @pytest.mark.slow
 @pytest.mark.fortran
-def test_the_build_screen_builds_the_ten_parameter_fcc_and_reports_the_verifier(workspace):
-    """Slide 17's ten crystal-plasticity parameters.
+def test_the_build_screen_builds_and_verifies_the_ten_parameter_fcc(workspace):
+    """Slide 17's ten crystal-plasticity parameters, on the tension-with-shear path.
 
-    The build succeeds. The provider verifier's fixed check path (the J2 path
-    of docs/PROVIDER.md) drives this explicit, sub-stepped crystal update to
-    non-finite values, so the verifier refuses; the screen must say exactly what
-    the verifier said, with its exit code, and must not call the object verified.
+    The provider's default J2 path drives this explicit, sub-stepped crystal
+    update to non-finite values, so the path is chosen on the screen. Every
+    column of DSIGMA_DP and DSTATEV_DP agrees with centred differences of the
+    ORIGINAL, and the command line gives the same verdict and numbers.
     """
-    app = _provider_app(FCC_SOURCE, FCC_TABLE, 12, j2=False)
+    app = _provider_app(FCC_SOURCE, FCC_TABLE, 12, j2=False, path="tension_shear")
     summary = app.session_state["pp_result"]
-    assert summary["build"]["exit_code"] == 0
+    assert summary["build"]["exit_code"] == 0 and summary["exit_code"] == 0
+    assert [s.value for s in app.success] == ["Build succeeded and verified"]
     mapping = json.loads(Path(summary["shared"]["Mapping.json"]["path"]).read_text())
     assert [(p["name"], p["props_index"]) for p in mapping["parameters"]] == \
         [(name, index) for name, index, _ in FCC_TABLE]
     assert mapping["dimensions"] == {"ntens": 6, "nprops": 10, "nstatev": 12, "nparam": 10}
+    result = summary["verification"]["result"]
+    assert result["verdict"] == "verified" and result["props"] == [v for _, _, v in FCC_TABLE]
+    assert {c["column"] for c in result["columns"] if c["array"] == "DSTATEV_DP"
+            and c["verdict"] == "agrees"} == {name for name, _, _ in FCC_TABLE}
     cli = subprocess.run([sys.executable, "-m", "umat_oti.validation.parameter_sensitivity_provider",
                           summary["contract"], "--out", str(workspace / "cli_verify"), "--elastic"],
                          capture_output=True, text=True)
-    assert summary["verification"]["exit_code"] == cli.returncode
-    assert summary["exit_code"] == (0 if cli.returncode == 0 else 1)
-    if cli.returncode:
-        assert "Build succeeded; verification did not pass" in [w.value for w in app.warning]
-        assert "Verification failed" in " ".join(e.value for e in app.error)
+    assert summary["verification"]["exit_code"] == cli.returncode == 0
+    cli_result = json.loads((workspace / "cli_verify" / "verification.json").read_text())
+    for key in ("verdict", "arrays", "columns", "comparisons"):
+        assert cli_result[key] == result[key], key
+
+
+@pytest.mark.slow
+@pytest.mark.fortran
+def test_the_screen_reports_what_the_verifier_refused(workspace):
+    """On the provider's default path the FCC routine returns non-finite values.
+
+    The objects are built; the screen shows the verifier's exit code and
+    diagnostic and does not call them verified.
+    """
+    app = _provider_app(FCC_SOURCE, FCC_TABLE, 12, j2=False, path="provider")
+    summary = app.session_state["pp_result"]
+    assert summary["build"]["exit_code"] == 0 and summary["exit_code"] == 1
+    assert summary["verification"]["exit_code"] == 2
+    assert "nonfinite" in summary["verification"]["result"]["error"]
+    assert "Build succeeded; verification did not pass" in [w.value for w in app.warning]
+    assert "Verification failed" in " ".join(e.value for e in app.error)
 
 
 @pytest.mark.unit
