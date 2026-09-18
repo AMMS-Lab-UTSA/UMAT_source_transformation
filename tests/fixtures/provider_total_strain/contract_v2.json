@@ -1,0 +1,16 @@
+{
+  "schema": "resasm_umat_transform_v2",
+  "source": {"main_file": "umat.for"},
+  "kinematics": "small_strain",
+  "dimensions": {"ntens": 6, "nprops": 5, "nstatev": 1},
+  "parameters": [
+    {"name": "A", "props_index": 4},
+    {"name": "E", "props_index": 1},
+    {"name": "K0", "props_index": 3},
+    {"name": "nu", "props_index": 2}
+  ],
+  "derivative": {"of": "STRESS", "wrt": "PROPS", "order": 1},
+  "history": {"path_dependent": true, "state": ["KAPPA"]},
+  "output": {"object": "umat_total_strain_damage_oti.obj", "contract": "umat_total_strain_damage_oti.json"},
+  "validation": {"props_values": [70000.0, 0.25, 0.0005, 400.0, 0.05]}
+}
