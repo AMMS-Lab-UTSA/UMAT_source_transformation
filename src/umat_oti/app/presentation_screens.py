@@ -26,6 +26,7 @@ import json
 import math
 import os
 import shlex
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -322,6 +323,12 @@ def render_provider_screen() -> None:
                 format_func=lambda key: collaborator.CHECK_PATHS[key], key="pp_check_path")
             j2 = st.checkbox("require the check path to cross elastic, plastic and unloading "
                              "increments (J2-type materials)", value=False, key="pp_j2")
+            abaqus_found = shutil.which("abaqus") is not None
+            abaqus_toolchain = st.checkbox(
+                "build REAL_UMAT.obj with the Abaqus toolchain (`abaqus make`: the compiler and "
+                "flags Abaqus uses for user subroutines)", value=abaqus_found,
+                disabled=not abaqus_found, key="pp_abaqus_toolchain",
+                help=None if abaqus_found else "abaqus is not on PATH")
 
         problem = None
         contract: dict[str, Any] | None = None
@@ -345,7 +352,8 @@ def render_provider_screen() -> None:
             with st.spinner("building the provider, then checking it against finite "
                             "differences of the original routine ..."):
                 summary = collaborator.package(contract_path, work / "out", verify=verify,
-                                               require_j2_branches=j2)
+                                               require_j2_branches=j2,
+                                               abaqus_toolchain=abaqus_toolchain)
             st.session_state["pp_result"] = summary
     with right:
         _render_provider_result(st.session_state.get("pp_result"))
@@ -401,8 +409,10 @@ def _render_provider_result(summary: dict[str, Any] | None) -> None:
                 st.warning(f"Unresolved column {column['array']} / {column['column']}: {column['reason']}")
             tie = summary.get("tie") or {}
             if tie.get("identical_outputs"):
-                st.caption("The shipped OTI_UMAT.obj returns bit-identical arrays to the "
-                           "verified build on the check path.")
+                st.caption("The shipped OTI_UMAT.obj is "
+                           + ("byte-identical to the verified build" if tie.get("objects_byte_identical")
+                              else "not byte-identical to the verified build, but")
+                           + " returns bit-identical arrays to it on the check path.")
             else:
                 st.error(f"The shipped object is not tied to the verified build: {tie}")
         else:
@@ -418,6 +428,12 @@ def _render_provider_result(summary: dict[str, Any] | None) -> None:
         m2.metric("verification", "not run")
     st.markdown("**Shared with the collaborator** — the source never leaves your machine; "
                 "only the compiled objects, the mapping and the report are shared.")
+    regular = summary.get("regular_object") or {}
+    if regular:
+        st.caption(f"REAL_UMAT.obj: {regular.get('toolchain')}"
+                   + (f" ({regular['compiler']})" if regular.get("compiler") else "")
+                   + ". Abaqus on Linux takes a precompiled user object only with the .o "
+                     "extension: copy it to REAL_UMAT.o and pass user=REAL_UMAT.o.")
     shared = summary.get("shared") or {}
     d1, d2 = st.columns(2)
     for index, name in enumerate(collaborator.SHARED_FILES):
