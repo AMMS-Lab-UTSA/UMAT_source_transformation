@@ -107,10 +107,15 @@ including what did **not** reproduce, is in
 | Constitutive (local) Jacobians of the ICP UMATs | OTI agrees with FD in all 21 (UMAT, Jacobian) pairs; 6 hand-coded Jacobians are wrong (dropped damage factor) | `python presentation/run_all.py` |
 | J2 tangent vs FD of the original | 3e-11 scaled over elastic, plastic and unloading increments | `umat-oti jacobian` + `tests/gui/test_imqcam_developer_screens.py` |
 
-Corpus of 391 published UMATs acquired from public repositories: see
-[docs/CORPUS_VERIFICATION.md](docs/CORPUS_VERIFICATION.md) for the current
-gate-by-gate census (every entry either verified in Abaqus on all six gates,
-or classified with a named reason).
+Corpus of 391 UMATs acquired from public repositories, re-transformed and run
+in Abaqus at the current transform (pass14, 2026-09-18): 244 transform, and 43
+of the 260 adequately specified genuine UMATs clear all six acceptance gates
+(Abaqus job, outputs, finite history, primal agreement, verified derivatives,
+informative experiment). Every other source carries a named reason, and the 217
+that are this project's to fix are counted as such. Census:
+[paper_results/corpus/CORPUS_VERIFICATION.md](paper_results/corpus/CORPUS_VERIFICATION.md);
+method: [docs/CORPUS_VERIFICATION.md](docs/CORPUS_VERIFICATION.md); how the
+evidence was re-frozen: [docs/evidence/final_refreeze.md](docs/evidence/final_refreeze.md).
 
 ## Tests
 

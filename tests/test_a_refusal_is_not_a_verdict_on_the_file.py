@@ -252,15 +252,17 @@ def test_a_file_too_damaged_to_parse_is_not_filed_as_a_helper():
 
 
 def test_a_compile_that_settles_nothing_leaves_the_work_ours():
-    """Eleven refused sources fail the offline compile with diagnostics an
+    """Nine refused sources fail the offline compile with diagnostics an
     unresolved USE would also produce -- an undeclared name, a kind parameter
     that is not constant. None of those is evidence the file is broken, so
     the verdict stays genuine_umat with ``refusal_class_confident`` false:
     this project's unfinished work, overstated rather than the corpus's
-    completeness."""
+    completeness. (Eleven before pass14: the two jpsferreira umat_general.for
+    copies had no offline audit then; ifort -syntax-only now accepts them, so
+    their refusal is ours with confidence.)"""
     unsure = [r for r in refusals()
               if r["refusal_class_confident"] is False]
-    assert len(unsure) == 11, [r["source_id"] for r in unsure]
+    assert len(unsure) == 9, [r["source_id"] for r in unsure]
     for record in unsure:
         # One of the nine is a second copy of another of them. A duplicate
         # keeps the underlying answer -- "as a file it is genuine_umat" is

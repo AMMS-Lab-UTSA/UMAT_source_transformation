@@ -1,10 +1,11 @@
 # UMAT-OTI: Current Usage
 
-Audited 2026-09-18 in the recovery working tree, Linux, Python 3.11.7,
-gfortran 9.4.0. **Five example invocations passed bounded numerical checks;
-the 274-requirement program is not complete.** No final-branch clean clone was
-tested, no new Abaqus analysis ran, and no producer transformation code changed
-in this usage audit. Current transform generation remains `6aa20d22e37f14c9`.
+Updated 2026-09-18 for `main` (the final integration of the IMQCAM directive),
+Linux, Python 3.11.7, gfortran 9.4.0, ifort 2023.2.1 and Abaqus 2021.HF5. The
+transform generation is `da1f183708c19072`; the whole corpus was re-run at it
+([evidence/final_refreeze.md](evidence/final_refreeze.md)). The result of the
+clean-install gate for the published `main` commits is in
+[Residual_Assembler docs/evidence/final_clean_clone.md](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/evidence/final_clean_clone.md).
 
 ## Supported Scope
 
@@ -21,12 +22,15 @@ uses to replay the full-size presentation cantilevers. The advanced example
 extracts and verifies a local constitutive Jacobian in bundled m5_cpflow.
 Small strain only; finite-strain and higher-order providers are refused.
 
-Latest retained full offline suite: **3324 passed, 125 existing skips, zero
-failures/errors, 5 deselected**, before this audit's wrapper test was added.
-See [evidence refresh](evidence/recovery_evidence_refresh.md). Missing historical
-pass9/pass10/pass11 data and other recorded gates account for skips; none are
-passes. Older corpus counts, 18/18 or 19-case tangent claims and 20-model
-sensitivity tables are historical, not current-generation reproduction.
+The offline suite (`python -m pytest -q`, with gfortran, OTILib and the
+companion checkout present) is recorded with the clean-clone run linked above.
+Skips name their missing prerequisite (Abaqus-only data, optional corpora) and
+are never counted as passes. The corpus census was re-run at this generation.
+The 20-model sensitivity table and the 18 slide-8 benchmarks were reproduced on
+2026-09-18 on the branches merged here, before the last transformer fix
+(`f11806f`; the sources it generates for all 19 benchmark contracts and all 20
+providers are byte-identical before and after it); the commands in
+[PRESENTATION_CLAIMS.md](PRESENTATION_CLAIMS.md) rerun them.
 
 ## Installation And Environment
 
