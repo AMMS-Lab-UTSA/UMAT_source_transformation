@@ -80,12 +80,12 @@ from it was merged into `agent/F-resasm`. It carries:
   `residual_core/materials/{crystal_plasticity,elastic}_adapter.py`,
   `umat_adapter.py`; `residual_core/umat_adapter_fortran/` (gfortran UMAT replay
   driver).
-- Examples: `examples/replay_elastic_c3d8` (runnable Program-2 demo, FD-validated
-  ~1e-9), `examples/residual_sensitivity_c3d8` (engine self-check + Abaqus
-  comparison, measured 1.7e-5), `examples/abaqus_elastic_c3d8`,
-  `examples/field_residual_sensitivity`.
+- Examples: `Residual_Assembler@origin/cross-platform-hardening:examples/replay_elastic_c3d8` (runnable Program-2 demo, FD-validated
+  ~1e-9), `Residual_Assembler@origin/cross-platform-hardening:examples/residual_sensitivity_c3d8` (engine self-check + Abaqus
+  comparison, measured 1.7e-5), `Residual_Assembler@origin/cross-platform-hardening:examples/abaqus_elastic_c3d8`,
+  `Residual_Assembler@origin/cross-platform-hardening:examples/field_residual_sensitivity`.
 - Tests: `tests/framework/test_{replay_elastic,field_sensitivity,field_recipe_e2e,request_contract,job_validation,abaqus_derivative_export,fcc_cubic_oti,fcc_oriented_oti,otilib_*,solid3d_kernel,umat_backend,project_engine,binary_compat,interface_versions,...}.py`
-  with real Abaqus 2021 fixtures under `tests/abaqus_derivative_export/fixtures/`
+  with real Abaqus 2021 fixtures under `Residual_Assembler@origin/cross-platform-hardening:tests/abaqus_derivative_export/fixtures/`
   (nonuniform single C3D8 with the verification elastic UMAT; FCC cubic C3D8).
 - `results/` — the IMQCAM result scripts: `cp_residual_sensitivities.py`
   (single-IP CP flow, six parameters, OTI vs FD), `cp_mesh_residual.py` (4×4×4
@@ -98,7 +98,7 @@ standalone repository the two-program branch was assembled from; its
 `residual_core/` differs from the branch by 8 files (614 insertions) and
 `tests/` by 3 files, so the branch supersedes it except for the 248 uncommitted
 modifications in that working copy (mostly `UMATs/ICP/**` and
-`tests/verification_zoo/`, snapshot kept outside the repositories).
+`Residual_Assembler@origin/cross-platform-hardening:tests/verification_zoo/`, snapshot kept outside the repositories).
 
 **`UMAT_source_transformation` remote `documents_umat/main` (`84bda86`, 2026-07-21).**
 `oti_provider/` (Program 1): `umat_transform.py` (compact contract → `.obj` with
@@ -117,7 +117,7 @@ still holds the built `umat_m3_j2_oti.obj`, `umat_m5_cpflow_oti.obj`,
 **Current `UMAT_source_transformation` (`98f9d76`)** re-implemented the provider
 as a material-point *driver executable* path rather than the `.obj` ABI:
 `parameter_sensitivity/models/*` (20 models, `contract_v2.json` schema
-`resasm_umat_transform_v2`), `src/umat_oti/services/contract_adapter.adapt_v2_contract`,
+`resasm_umat_transform_v2`), `src/umat_oti/services/contract_adapter.py` (`adapt_v2_contract`),
 `src/umat_oti/transform/parameter_sensitivity_transform.py`,
 `src/umat_oti/validation/parameter_sensitivity_validation.py` (gfortran driver,
 CSV outputs, centred FD, branch-crossing bookkeeping),
