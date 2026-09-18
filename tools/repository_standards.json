@@ -20,6 +20,50 @@
   ],
   "absolute_path_exemptions": [
     {
+      "prefix": "docs/evidence/recovery_portability.json",
+      "reason": "Historical working-tree portability execution record retains exact commands, paths, raw evidence hashes and classified failures; these are provenance, not inputs or configuration required by new runs."
+    },
+    {
+      "prefix": "docs/evidence/usage_ledger.json",
+      "reason": "Historical ledger-audit command transcript preserves exact argv and environment values; this record is not consumed as reproduction configuration."
+    },
+    {
+      "prefix": "docs/evidence/recovery_W3.md",
+      "reason": "Historical provider run record: absolute interpreter and output paths identify the recorded execution, not prerequisites for new runs; current instructions live in docs/PROVIDER.md."
+    },
+    {
+      "prefix": "docs/evidence/recovery_install.md",
+      "reason": "Historical wheel gate transcript: exact machine paths identify the original execution and must not be rewritten as if it ran elsewhere; current portability instructions are recorded separately."
+    },
+    {
+      "prefix": "docs/evidence/usage_docs.json",
+      "reason": "Historical documentation-audit command transcript preserves exact argv and environment values; this record is not consumed as reproduction configuration."
+    },
+    {
+      "prefix": "docs/evidence/usage_examples.json",
+      "reason": "Historical example command transcript preserves exact argv and environment values; this record is not consumed as reproduction configuration."
+    },
+    {
+      "prefix": "docs/evidence/usage_gui.json",
+      "reason": "Historical GUI command transcript preserves exact argv and environment values; this record is not consumed as reproduction configuration."
+    },
+    {
+      "prefix": "docs/evidence/usage_help.json",
+      "reason": "Historical help command transcript preserves exact argv and environment values; this record is not consumed as reproduction configuration."
+    },
+    {
+      "prefix": "docs/evidence/usage_presentation.json",
+      "reason": "Historical genuine ODB replay transcript preserves exact argv and environment values; this record is not consumed as reproduction configuration."
+    },
+    {
+      "prefix": "docs/evidence/recovery_clean_clone.json",
+      "reason": "Historical committed clean-clone failure evidence preserves original paths, logs and digests; rewriting these values would falsify provenance and no reproduction uses them as configuration."
+    },
+    {
+      "prefix": "docs/evidence/recovery_clean_clone.md",
+      "reason": "Historical committed clean-clone report identifies exact temporary execution locations and failures; current portability commands are separate and these paths are not prerequisites."
+    },
+    {
       "prefix": "paper_results/arc_",
       "reason": "archived HPC evidence: these files record where a real Slurm job ran, including its working directory. They are inputs to no reproduction and must not be rewritten."
     },

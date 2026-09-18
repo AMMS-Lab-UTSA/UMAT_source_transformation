@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import re
 import subprocess
 import sys
@@ -82,6 +83,16 @@ def _make_targets() -> set[str]:
 GENERATED_PREFIXES = ("reproduce/", "build/", "dist/", "umat/materialized")
 
 
+def resolve_link(doc: Path, target: str) -> Path:
+    resolved = (doc.parent / target).resolve()
+    companions = {"Residual_Assembler": "RESASM_REPO", "UMAT_source_transformation": "UMAT_OTI_REPO"}
+    for name, variable in companions.items():
+        canonical = REPO_ROOT.parent / name
+        if resolved.is_relative_to(canonical) and os.environ.get(variable):
+            return Path(os.environ[variable]).expanduser().resolve() / resolved.relative_to(canonical)
+    return resolved
+
+
 def audit() -> list[dict]:
     problems: list[dict] = []
     targets = _make_targets()
@@ -119,7 +130,7 @@ def audit() -> list[dict]:
             target = link.group(1).strip()
             if target.startswith(("http://", "https://", "mailto:")):
                 continue
-            resolved = (doc.parent / target).resolve()
+            resolved = resolve_link(doc, target)
             if not resolved.exists():
                 problems.append({"doc": str(relative), "kind": "broken_link",
                                  "detail": target})

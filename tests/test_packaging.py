@@ -18,6 +18,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 #: Read by umat_oti.oti.module_generator at run time.
 REQUIRED_PACKAGE_DATA = (
+    "umat_oti/app/demo_inputs/examples/elastic_minimal.json",
+    "umat_oti/app/demo_inputs/UMATs/UMATs/ICP/elasticity/elastic.f",
     "umat_oti/oti/support/fmod_writer.py",
     "umat_oti/oti/support/master_parameters.f90",
     "umat_oti/oti/support/real_utils.f90",
@@ -92,5 +94,26 @@ def test_built_wheel_contains_the_runtime_support_files(tmp_path):
     assert wheels, f"no wheel was produced: {proc.stdout[-400:]}"
     with zipfile.ZipFile(wheels[0]) as archive:
         names = set(archive.namelist())
+        for relative in ("examples/elastic_minimal.json", "UMATs/UMATs/ICP/elasticity/elastic.f"):
+            assert archive.read("umat_oti/app/demo_inputs/" + relative) == (REPO_ROOT / relative).read_bytes()
     missing = [name for name in REQUIRED_PACKAGE_DATA if name not in names]
     assert not missing, f"the wheel omits runtime data files: {missing}"
+
+
+def test_demo_resources_preserve_relative_source_and_compile(tmp_path, monkeypatch):
+    from umat_oti.app import resources
+    from umat_oti.services.transformation import TransformationOptions, run_transformation
+
+    monkeypatch.setattr(resources, "repository_root", lambda: None)
+    monkeypatch.setattr(resources.resources, "files", lambda package: tmp_path / "package")
+    for relative in resources.DEMO_INPUTS:
+        target = tmp_path / "package/demo_inputs" / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((REPO_ROOT / relative).read_bytes())
+    monkeypatch.chdir(tmp_path)
+    contract = resources.demo_contract(tmp_path / "workspace")
+    assert contract.read_bytes() == (REPO_ROOT / resources.DEMO_INPUTS[0]).read_bytes()
+    summary, code = run_transformation(contract, tmp_path / "generated", TransformationOptions(compile_generated=True))
+    assert code == 0, summary
+    assert summary["transform_success"] is True
+    assert summary["compilation"]["status"] == "compiled"
