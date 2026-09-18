@@ -18,7 +18,7 @@ The same file sits in both repositories.
 | 3. rebuild the registry | `python tools/build_corpus_registry.py --transform <run>/transform_all_pass14.json --abaqus <run>/pass14/results/store_verification.jsonl --store-fingerprint da1f183708c19072 --audit-refusals` | `paper_results/corpus/` rewritten; the refused set changed, so the offline `ifort -syntax-only` audit of every refused source was redone |
 | 4. report against pass13 | `python tools/pass_report.py --registry paper_results/corpus/corpus_registry.json --previous <pass13 registry> --families <run>/material_families.json --label pass14` | 43 of 260 accepted, as in pass13; none gained, none lost |
 | 5. generation and lock | fingerprint written to `transform_generation.json`, `umat_oti.contract.schema.write_lock()`, both copied byte for byte to Residual_Assembler `schemas/` | combined lock digest `4ea5c3a5cc202e54cd1338f35240a65bc7880d71ed0ce4596329068f30598f88` |
-| 6. Residual Assembler fixtures | Residual_Assembler `scripts/regenerate_recovery_fixture.py` for `isotropic-elasticity--f7eb90376a` and `j2_props--2feae9f158` (loading from the retained pass12 manifests, deck byte-identical) | four Abaqus jobs; both verified (tangent agreement 1.1e-14 and 8.3e-11 over a step-size plateau); both now carry `da1f183708c19072`; `residual_core.core.fixture_residual_check`: elasticity 1 held / 2 not established, J2 32 held / 3 not established, the same pattern as at the previous generation |
+| 6. Residual Assembler fixtures | Residual_Assembler [scripts/regenerate_recovery_fixture.py](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/scripts/regenerate_recovery_fixture.py) for `isotropic-elasticity--f7eb90376a` and `j2_props--2feae9f158` (loading from the retained pass12 manifests, deck byte-identical) | four Abaqus jobs; both verified (tangent agreement 1.1e-14 and 8.3e-11 over a step-size plateau); both now carry `da1f183708c19072`; `residual_core.core.fixture_residual_check`: elasticity 1 held / 2 not established, J2 32 held / 3 not established, the same pattern as at the previous generation |
 
 `<run>` is the corpus working directory outside the repositories
 (`softwarex_work/corpus_run`; 12 GB for pass14, not committed). The
@@ -57,7 +57,7 @@ commits before and after it.
 
 The verified collection under `umat/` (44 material contracts, pass12,
 `94a92c01814f107a`) and the ten Residual Assembler fixtures under
-`tests/fixtures/historical/94a92c01814f107a/` are not regenerated here. They
+[tests/fixtures/historical/94a92c01814f107a](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/tree/main/tests/fixtures/historical/94a92c01814f107a) are not regenerated here. They
 keep their recorded generation and numbers, the tests keep refusing them as
 regression baselines, and they are read only as history. Re-promoting the
 collection from pass14 (`tools/promote_verified_umats.py --results
