@@ -184,9 +184,9 @@ Use `PathMaterial` for J2, not the old stateless `objlink` C-ABI adapter.
   in a worker process. These are not recoverable C status codes.
 - Linux/gfortran was exercised. Objects are platform/compiler specific; Windows,
   other Fortran compilers, and binary distribution compatibility are unverified.
-- No C `mat_eval_v1` library, `.resmat` package or provider-build GUI entry is
-  added in this bounded slice. The existing UMAT GUI launches from its installed
-  module; that does not claim a provider GUI workflow.
+- No C `mat_eval_v1` library or `.resmat` package is added in this bounded
+  slice. The provider-build GUI screen (Parameter Sensitivities) and
+  `--regular-object REAL_UMAT.obj` were added later; see [GUI.md](GUI.md).
 - `umat-oti-provider = "umat_oti.provider.build:main"` is now registered and
   exercised in a fresh wheel installation. The `python -m umat_oti.provider`
   entry also remains available.

@@ -122,4 +122,5 @@ markers = [
 	"arc: needs the documented HPC environment and its scheduler",
 	"publication: regenerates or checks a published table or figure",
 	"browser: drives the interface in a real browser; needs Playwright and a downloaded Chromium",
+	"gui: an IMQCAM GUI workflow driven in a headless browser; deselected unless selected with -m gui (tests/gui/conftest.py)",
 ]
