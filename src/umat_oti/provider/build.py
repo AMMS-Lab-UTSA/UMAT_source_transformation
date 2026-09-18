@@ -41,7 +41,17 @@ def _filename(value: str, suffix: str) -> str:
 
 
 def build_provider(contract_path: Path | str, output_dir: Path | str, *,
-                   compiler: str = "gfortran") -> dict:
+                   compiler: str = "gfortran", regular_object: str | None = None) -> dict:
+    """Build the OTI provider; optionally also publish the regular object.
+
+    ``regular_object`` names a second output: the ORIGINAL UMAT compiled
+    unchanged, by the same compiler with the same flags, from the same source
+    -- it is the very object bundled into the provider, published on its own
+    as the regular driver for production analyses. Its SHA-256 is recorded in
+    the completed contract (``regular_object``) so a collaborator can check
+    that the two objects they were given are a matched pair. Without it the
+    build and the contract are exactly as before.
+    """
     contract_path = Path(contract_path).resolve()
     raw = json.loads(contract_path.read_text(encoding="utf-8"))
     if raw.get("schema") != "resasm_umat_transform_v2":
@@ -84,6 +94,10 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
     output = raw.get("output", {})
     object_name = _filename(output.get("object", f"umat_{contract_path.parent.name}_oti.obj"), ".obj")
     json_name = _filename(output.get("contract", f"{Path(object_name).stem}.json"), ".json")
+    if regular_object is not None:
+        regular_object = _filename(regular_object, ".obj")
+        if regular_object == object_name:
+            raise ProviderBuildError("the regular object needs a name different from the OTI object")
     executable = shutil.which(compiler)
     if executable is None:
         raise ProviderBuildError(f"compiler {compiler!r} not on PATH")
@@ -120,8 +134,9 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
     original_object = build_dir / "original_umat.o"
     form = detect_source_form(source, source.read_text(encoding="utf-8"))
     form_flags = ["-ffixed-form", "-ffixed-line-length-none"] if form == "fixed" else ["-ffree-form"]
-    _run([*flags, *form_flags, "-I", str(build_dir), "-c", str(source),
-          "-o", str(original_object)], build_dir)
+    original_command = [*flags, *form_flags, "-I", str(build_dir), "-c", str(source),
+                        "-o", str(original_object)]
+    _run(original_command, build_dir)
     objects.append(str(original_object))
     bundled_object = build_dir / object_name
     _run([executable, "-r", *objects, "-o", str(bundled_object)], build_dir)
@@ -155,12 +170,27 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
                   "transformer": "transform_umat_for_parameter_sensitivity",
                   "sources": build_dir.name, "tangent": "dSTRESS_dDSTRAN_at_fixed_incoming_history"},
     }
+    if regular_object is not None:
+        staged_regular = build_dir / regular_object
+        shutil.copy2(original_object, staged_regular)
+        metadata["regular_object"] = {
+            "file": regular_object,
+            "sha256_full": hashlib.sha256(staged_regular.read_bytes()).hexdigest(),
+            "role": "ORIGINAL UMAT compiled unchanged; the same object is bundled in the OTI provider",
+            "source_sha256_full": hashlib.sha256(source.read_bytes()).hexdigest(),
+            "compile_command": [Path(executable).name, *flags[1:], *form_flags,
+                                "-I", "<build>", "-c", "<source>"],
+        }
     staged_json = build_dir / json_name
     staged_json.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
     shutil.copy2(bundled_object, output_dir / object_name)
     shutil.copy2(staged_json, output_dir / json_name)
-    return {"object": str(output_dir / object_name), "contract": str(output_dir / json_name),
-            "build_dir": str(build_dir)}
+    result = {"object": str(output_dir / object_name), "contract": str(output_dir / json_name),
+              "build_dir": str(build_dir)}
+    if regular_object is not None:
+        shutil.copy2(build_dir / regular_object, output_dir / regular_object)
+        result["regular_object"] = str(output_dir / regular_object)
+    return result
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -170,9 +200,13 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("contract", type=Path)
     build.add_argument("--out", type=Path, required=True)
     build.add_argument("--compiler", default="gfortran")
+    build.add_argument("--regular-object", metavar="NAME.obj",
+                       help="also publish the ORIGINAL UMAT compiled unchanged (same compiler, "
+                            "flags and source) under this name; its SHA-256 goes into the contract")
     args = parser.parse_args(argv)
     try:
-        result = build_provider(args.contract, args.out, compiler=args.compiler)
+        result = build_provider(args.contract, args.out, compiler=args.compiler,
+                                regular_object=args.regular_object)
     except (ValueError, OSError, RuntimeError) as error:
         parser.exit(2, f"provider build failed: {error}\n")
     print(json.dumps(result, indent=2))

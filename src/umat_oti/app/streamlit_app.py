@@ -5,6 +5,10 @@ use (:func:`umat_oti.services.transformation.run_transformation`), so nothing
 on these screens is a second implementation of the transformation:
 
   0. Start here         - what the tool does, and a demo that runs end to end
+     Constitutive Jac.  - four fields and one click: source, NTENS, seed/output/
+                          target; the tangent block is located for you
+     Param. Sensitiv.   - build the OTI provider (REAL_UMAT.obj, OTI_UMAT.obj,
+                          Mapping.json, transform_report.txt) and verify it
   1. Load Config        - pick a JSON contract from the repository or upload one
   2. Transform          - rewrite the UMAT so DDSDDE comes from OTI arithmetic
   3. Validate           - build the workspace, run both Abaqus jobs, extract ODB
@@ -38,6 +42,7 @@ from umat_oti.app.derivative_editor import (
     mapping_editor_rows,
     request_editor_rows,
 )
+from umat_oti.app.presentation_screens import render_jacobian_screen, render_provider_screen
 from umat_oti.services.transformation import TransformationOptions, run_transformation
 from umat_oti.app.resources import demo_contract, repository_root
 from umat_oti.core.config_loader import load_project_config_json
@@ -1447,22 +1452,29 @@ def main() -> None:
     _sidebar(summary)
 
     tabs = st.tabs(
-        ["Start here", "1. Load Config", "2. Transform", "3. Validate",
+        ["Start here", "Constitutive Jacobian", "Parameter Sensitivities",
+         "1. Load Config", "2. Transform", "3. Validate",
          "4. Constitutive Jacobians", "5. Report", "6. Corpus"]
     )
     with tabs[0]:
         _tab_start()
+    # The two developer screens of the IMQCAM presentation (slides 16-17):
+    # four fields and one click for the tangent, and the provider build.
     with tabs[1]:
-        _tab_load_config()
+        render_jacobian_screen()
     with tabs[2]:
-        _tab_transform()
+        render_provider_screen()
     with tabs[3]:
-        _tab_validate()
+        _tab_load_config()
     with tabs[4]:
-        _tab_constitutive()
+        _tab_transform()
     with tabs[5]:
-        _tab_report()
+        _tab_validate()
     with tabs[6]:
+        _tab_constitutive()
+    with tabs[7]:
+        _tab_report()
+    with tabs[8]:
         _tab_corpus()
 
 
