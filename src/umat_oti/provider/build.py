@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -40,17 +41,45 @@ def _filename(value: str, suffix: str) -> str:
     return value
 
 
+def _abaqus_make(abaqus: str, source: Path, work: Path, target: Path) -> dict:
+    """Compile ``source`` with ``abaqus make``; copy its object to ``target``.
+
+    Runs in its own directory on the bare file name, so the object records no
+    directory of the developer's.
+    """
+    work.mkdir()
+    shutil.copy2(source, work / source.name)
+    completed = subprocess.run([abaqus, "make", f"library={source.name}", "directory=."],
+                               cwd=work, text=True, capture_output=True)
+    log = completed.stdout + completed.stderr
+    (work / "abaqus_make.log").write_text(log, encoding="utf-8")
+    produced = work / f"{source.stem}-std.o"
+    if completed.returncode or not produced.is_file():
+        raise ProviderBuildError(f"abaqus make failed ({completed.returncode}):\n{log[-3000:]}")
+    shutil.copy2(produced, target)
+    compilers = [line.strip() for line in log.splitlines() if "Fortran" in line and "Version" in line]
+    return {"toolchain": "abaqus make",
+            "compiler": compilers[0] if compilers else None,
+            "abaqus_make_log": "abaqus_make/abaqus_make.log in the build directory"}
+
+
 def build_provider(contract_path: Path | str, output_dir: Path | str, *,
-                   compiler: str = "gfortran", regular_object: str | None = None) -> dict:
+                   compiler: str = "gfortran", regular_object: str | None = None,
+                   abaqus_toolchain: bool = False, abaqus: str = "abaqus") -> dict:
     """Build the OTI provider; optionally also publish the regular object.
 
     ``regular_object`` names a second output: the ORIGINAL UMAT compiled
-    unchanged, by the same compiler with the same flags, from the same source
-    -- it is the very object bundled into the provider, published on its own
-    as the regular driver for production analyses. Its SHA-256 is recorded in
-    the completed contract (``regular_object``) so a collaborator can check
-    that the two objects they were given are a matched pair. Without it the
-    build and the contract are exactly as before.
+    unchanged from the same source, as the regular driver for production
+    analyses. By default it is the very object bundled into the provider
+    (same compiler, same flags). With ``abaqus_toolchain`` it is built instead
+    the way Abaqus builds user subroutines -- ``abaqus make``, i.e. the
+    compiler and flags of the Abaqus site environment (ifort on Linux) -- so
+    that it links into an Abaqus job against the Fortran runtime Abaqus ships,
+    rather than referring to a gfortran runtime Abaqus does not load. Its
+    SHA-256 is recorded in the completed contract (``regular_object``) so a
+    collaborator can check that the two objects they were given are a
+    matched pair. Without ``regular_object`` the build and the contract are
+    exactly as before.
     """
     contract_path = Path(contract_path).resolve()
     raw = json.loads(contract_path.read_text(encoding="utf-8"))
@@ -98,6 +127,12 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
         regular_object = _filename(regular_object, ".obj")
         if regular_object == object_name:
             raise ProviderBuildError("the regular object needs a name different from the OTI object")
+    if abaqus_toolchain and regular_object is None:
+        raise ProviderBuildError("--abaqus-toolchain builds the regular object; name it with --regular-object")
+    abaqus_executable = shutil.which(abaqus) if abaqus_toolchain else None
+    if abaqus_toolchain and abaqus_executable is None:
+        raise ProviderBuildError(f"Abaqus executable {abaqus!r} not on PATH; the Abaqus toolchain "
+                                 "is `abaqus make`")
     executable = shutil.which(compiler)
     if executable is None:
         raise ProviderBuildError(f"compiler {compiler!r} not on PATH")
@@ -122,24 +157,37 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
     ), encoding="utf-8")
     for include in ("ABA_PARAM.INC", "aba_param.inc", "ABA_PARAM.inc", "aba_param.INC"):
         (build_dir / include).write_text(ABA_PARAM, encoding="utf-8")
-    flags = [executable, "-O1", "-fPIC", "-std=legacy", "-ffree-line-length-none", "-fcheck=bounds"]
+    # Every compile runs inside the build directory on relative file names.
+    # gfortran writes the file name it was given into each bounds-check
+    # message ("At line N of file ..."), and gfortran 9 does not apply
+    # -ffile-prefix-map to those, so an absolute name would ship the
+    # developer's directory names inside the object. The original source is
+    # compiled from a copy under original/ for the same reason; the prefix map
+    # is kept for anything else a newer compiler or -g would record.
+    flags = [executable, "-O1", "-fPIC", "-std=legacy", "-ffree-line-length-none", "-fcheck=bounds",
+             f"-ffile-prefix-map={build_dir}=."]
+    recorded_flags = [Path(executable).name, *flags[1:-1], "-ffile-prefix-map=<build>=."]
     sources = [layout.master_parameters, layout.real_utils, layout.otim_module,
                build_dir / "oti_intrinsics.f90", layout.lifted_umat,
                build_dir / "abaqus_stubs.f90", wrapper]
     objects = []
     for generated_source in sources:
-        obj = generated_source.with_suffix(".o")
-        _run([*flags, "-c", str(generated_source), "-o", str(obj)], build_dir)
-        objects.append(str(obj))
+        relative = os.path.relpath(generated_source, build_dir)
+        obj = str(Path(relative).with_suffix(".o"))
+        _run([*flags, "-c", relative, "-o", obj], build_dir)
+        objects.append(obj)
+    original_copy = build_dir / "original" / source.name
+    original_copy.parent.mkdir()
+    shutil.copy2(source, original_copy)
     original_object = build_dir / "original_umat.o"
     form = detect_source_form(source, source.read_text(encoding="utf-8"))
     form_flags = ["-ffixed-form", "-ffixed-line-length-none"] if form == "fixed" else ["-ffree-form"]
-    original_command = [*flags, *form_flags, "-I", str(build_dir), "-c", str(source),
-                        "-o", str(original_object)]
+    original_command = [*flags, *form_flags, "-I", ".", "-c", f"original/{source.name}",
+                        "-o", original_object.name]
     _run(original_command, build_dir)
-    objects.append(str(original_object))
+    objects.append(original_object.name)
     bundled_object = build_dir / object_name
-    _run([executable, "-r", *objects, "-o", str(bundled_object)], build_dir)
+    _run([executable, "-r", *objects, "-o", object_name], build_dir)
     _run([executable, "-shared", "-Wl,--no-undefined", str(bundled_object),
           "-o", str(build_dir / "provider_link_check.so")], build_dir)
     metadata = {
@@ -172,14 +220,25 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
     }
     if regular_object is not None:
         staged_regular = build_dir / regular_object
-        shutil.copy2(original_object, staged_regular)
+        if abaqus_toolchain:
+            toolchain = _abaqus_make(abaqus_executable, original_copy, build_dir / "abaqus_make",
+                                     staged_regular)
+            role = ("ORIGINAL UMAT compiled unchanged by `abaqus make` (the Abaqus site "
+                    "environment's compiler and flags); the OTI provider bundles its own "
+                    f"{Path(executable).name} build of the same source")
+            command = [Path(abaqus_executable).name, "make", f"library={source.name}"]
+        else:
+            shutil.copy2(original_object, staged_regular)
+            toolchain = {"toolchain": "provider", "compiler": None}
+            role = "ORIGINAL UMAT compiled unchanged; the same object is bundled in the OTI provider"
+            command = [*recorded_flags, *form_flags, "-I", ".", "-c", f"original/{source.name}"]
         metadata["regular_object"] = {
             "file": regular_object,
             "sha256_full": hashlib.sha256(staged_regular.read_bytes()).hexdigest(),
-            "role": "ORIGINAL UMAT compiled unchanged; the same object is bundled in the OTI provider",
+            "role": role,
             "source_sha256_full": hashlib.sha256(source.read_bytes()).hexdigest(),
-            "compile_command": [Path(executable).name, *flags[1:], *form_flags,
-                                "-I", "<build>", "-c", "<source>"],
+            "compile_command": command,
+            **toolchain,
         }
     staged_json = build_dir / json_name
     staged_json.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
@@ -203,10 +262,15 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--regular-object", metavar="NAME.obj",
                        help="also publish the ORIGINAL UMAT compiled unchanged (same compiler, "
                             "flags and source) under this name; its SHA-256 goes into the contract")
+    build.add_argument("--abaqus-toolchain", action="store_true",
+                       help="build the regular object with `abaqus make` (the Abaqus site "
+                            "compiler and flags) instead of the provider's compiler")
+    build.add_argument("--abaqus", default="abaqus", help="Abaqus command for --abaqus-toolchain")
     args = parser.parse_args(argv)
     try:
         result = build_provider(args.contract, args.out, compiler=args.compiler,
-                                regular_object=args.regular_object)
+                                regular_object=args.regular_object,
+                                abaqus_toolchain=args.abaqus_toolchain, abaqus=args.abaqus)
     except (ValueError, OSError, RuntimeError) as error:
         parser.exit(2, f"provider build failed: {error}\n")
     print(json.dumps(result, indent=2))
