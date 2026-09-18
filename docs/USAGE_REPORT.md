@@ -1,6 +1,6 @@
 # UMAT-OTI: Current Usage
 
-Updated 2026-09-18 for `main` (the final integration of the IMQCAM directive),
+Updated 2026-09-18 for `main` (the final integration of both repositories),
 Linux, Python 3.11.7, gfortran 9.4.0, ifort 2023.2.1 and Abaqus 2021.HF5. The
 transform generation is `da1f183708c19072`; the whole corpus was re-run at it
 ([evidence/final_refreeze.md](evidence/final_refreeze.md)). The result of the
@@ -30,7 +30,7 @@ The 20-model sensitivity table and the 18 slide-8 benchmarks were reproduced on
 2026-09-18 on the branches merged here, before the last transformer fix
 (`f11806f`; the sources it generates for all 19 benchmark contracts and all 20
 providers are byte-identical before and after it); the commands in
-[PRESENTATION_CLAIMS.md](PRESENTATION_CLAIMS.md) rerun them.
+[VERIFICATION_RECORD.md](VERIFICATION_RECORD.md) rerun them.
 
 ## Installation And Environment
 
@@ -328,7 +328,7 @@ not a packaged fixture. Prior real-browser download proof is a local artifact:
 The browser report and desktop image were stored in the RA run's ignored
 `.pytest_cache/presentation_browser_cli_final` directory. They are unavailable
 in a clean clone; no image was duplicated. Complete companion details:
-[presentation interface](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/PRESENTATION_INTERFACE.md).
+[presentation interface](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/REQUEST_INTERFACE.md).
 
 ## Requirement Coverage
 

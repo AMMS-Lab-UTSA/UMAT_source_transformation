@@ -1,12 +1,12 @@
-# Claude agent G: the slide-16/40 and slide-17/41 screens
+# The GUI work stream: the slide-16/40 and slide-17/41 screens
 
-Branch `claude/G-2026-09-18`, from the snapshot `f6fcc42` of Copilot's
+Branch `dev/gui`, from the snapshot `f6fcc42` of the recovery line's
 `imq-umat-recovery` working tree. This file lists **every edit to a file that
-Copilot or another front end also owns**, for the merge. New files follow.
+the recovery line or another front end also owns**, for the merge. New files follow.
 
 ## Edits to existing files
 
-### `src/umat_oti/provider/build.py` (Copilot's provider)
+### `src/umat_oti/provider/build.py` (the recovery line's provider)
 
 Added `regular_object: str | None = None` to `build_provider` and the CLI
 flag `--regular-object NAME.obj`, as the lead asked. Slide 11's developer
@@ -48,7 +48,7 @@ screen and `--regular-object` were added later, and links docs/GUI.md.
 
 ### Follow-up (same day): the lead's three items
 
-**`src/umat_oti/validation/parameter_sensitivity_provider.py` (Copilot's verifier).**
+**`src/umat_oti/validation/parameter_sensitivity_provider.py` (the recovery line's verifier).**
 
 - `check_path()`: the path is read from the contract's
   `validation.check_path`, either explicit `increments` or
@@ -71,14 +71,14 @@ screen and `--regular-object` were added later, and links docs/GUI.md.
 - `FD_TOLERANCE` and `_relative_error` stay, because `legacy_check.py` uses
   them.
 
-**`tests/test_provider_recovery.py` (Copilot's test).**
+**`tests/test_provider_recovery.py` (the recovery line's test).**
 `test_provider_j2_original_fd_and_carryover` asserted the old per-step counts.
 It now asserts the new ones (628 verified, 240 zero, 0 unresolved, 0
 disagreeing), that the verdict is `verified`, that every column agrees, and
 that the path is the provider default. m3_j2 is otherwise unchanged: same
 path, same branches, primal parity 5.7e-14 as before, still passes.
 
-**`src/umat_oti/provider/build.py` (Copilot's provider, second edit).**
+**`src/umat_oti/provider/build.py` (the recovery line's provider, second edit).**
 
 - Every compile runs in the build directory on relative names, and the
   original source is compiled from a copy at `original/<name>`. The flags gain
@@ -107,10 +107,10 @@ The named paths are in `collaborator.CHECK_PATHS`.
   REAL_UMAT.obj, OTI_UMAT.obj, Mapping.json and transform_report.txt. Run it
   with `python -m umat_oti.provider.collaborator`.
 - `src/umat_oti/app/presentation_screens.py`: the two screens.
-- `tests/gui/test_imqcam_developer_screens.py` (AppTest, offline suite, 17
+- `tests/gui/test_developer_screens.py` (AppTest, offline suite, 17
   tests), `tests/test_provider_regular_object.py` (9 tests),
   `tests/test_provider_check_path_and_verdicts.py` (17 tests),
-  `tests/gui/test_imqcam_developer_screens_browser.py` (`-m gui`, 5 tests),
+  `tests/gui/test_developer_screens_browser.py` (`-m gui`, 5 tests),
   `tests/gui/tangent_reference.py`, `tests/gui/gui_helpers.py`,
   `tests/gui/conftest.py`.
 - `docs/GUI.md`, and the screenshots `docs/screenshots/umat_constitutive_jacobian.png`,
@@ -119,7 +119,7 @@ The named paths are in `collaborator.CHECK_PATHS`.
 
 ## REAL_UMAT.obj in Abaqus
 
-One Abaqus 2021.HF5 job, `claudeG_real`, in `../imq_abaqus/claude_G/abaqus_real/`:
+One Abaqus 2021.HF5 job, `gui_real`, in `../imq_abaqus/gui/abaqus_real/`:
 the presentation example `Analysis.inp` with `user=REAL_UMAT.o`. That is the
 package's REAL_UMAT.obj, SHA-256 53bac302..., copied to `.o` because Abaqus on
 Linux rejects any other extension for a precompiled object. The job linked,
@@ -153,12 +153,12 @@ fixed.
   the `abaqus make` object and without LD_LIBRARY_PATH. Its stack ends in the
   Intel runtime bundled with Abaqus (`fname_from_piped_fd`), which formats the
   PID into 7 bytes, and this machine's PIDs are above 1,000,000. In a PID
-  namespace, jobs `claudeG_clean` (`--abaqus-toolchain` object) and
-  `claudeG_gfns` (gfortran object) ran clean (exit 0, "COMPLETED"), with
+  namespace, jobs `gui_clean` (`--abaqus-toolchain` object) and
+  `gui_gfns` (gfortran object) ran clean (exit 0, "COMPLETED"), with
   results identical to the reference job.
-  Abaqus jobs run by this agent: claudeG_real, claudeG_ifort, claudeG_noLD,
-  claudeG_clean, claudeG_gfns, one at a time, all under
-  `../imq_abaqus/claude_G/`.
+  Abaqus jobs run by this agent: gui_real, gui_ifort, gui_noLD,
+  gui_clean, gui_gfns, one at a time, all under
+  `../imq_abaqus/gui/`.
 
 ## Consequence for the transform fingerprint
 
@@ -182,7 +182,7 @@ file's own exemption rule: nothing the transform runs imports them.
 
 - UMAT offline suite: 3 failed, 3368 passed, 125 skipped, 6 deselected. The 3
   failures are the two pre-existing documentation audits (absolute paths and
-  stale links in Copilot's recovery evidence) and the fingerprint record
+  stale links in the recovery line's recovery evidence) and the fingerprint record
   above.
 - RA offline suite (`-m "not abaqus and not arc and not network"`): 56 failed,
   299 passed, 19 skipped, 1 deselected, 5 errors. These are the pre-existing
@@ -192,12 +192,12 @@ file's own exemption rule: nothing the transform runs imports them.
 
 ## Commands and results (2026-09-18)
 
-Environment: `PYTHONPATH=<claude-ra-G>:<this worktree>/src:<otilib build_py311>`,
-Python 3.11 venv, gfortran 9.4. Scratch output went to `../imq_abaqus/claude_G/`
+Environment: `PYTHONPATH=<ra-gui>:<this worktree>/src:<otilib build_py311>`,
+Python 3.11 venv, gfortran 9.4. Scratch output went to `../imq_abaqus/gui/`
 or to pytest's temporary directories, never into the worktree.
 
 ```text
-python -m pytest -q -p no:cacheprovider tests/gui/test_imqcam_developer_screens.py \
+python -m pytest -q -p no:cacheprovider tests/gui/test_developer_screens.py \
   tests/test_provider_regular_object.py          -> 21 passed
 python -m pytest -q -p no:cacheprovider -m gui tests/gui
                                                  -> 5 passed, 15 deselected (146 s)

@@ -1,7 +1,7 @@
-# IMQCAM Annual Meeting presentation: claims that rest on this repository
+# Verification record: claims that rest on this repository
 
 The complete claim-by-claim record (every slide, the command, the independent
-reference, the measured value and the status) is `docs/PRESENTATION_CLAIMS.md`
+reference, the measured value and the status) is `docs/VERIFICATION_RECORD.md`
 in the Residual Assembler repository, whose `presentation/` directory holds the
 reproduction scripts (`presentation/run_all.py`). This file lists what those
 scripts run from **this** repository, so a reader of this repository can re-run
@@ -15,8 +15,8 @@ there.
 | 28–32 | the flow model `parameter_sensitivity/models/m5_cpflow` | via RA `presentation/claim3_cp_residual_c3d8.py` | OTI vs hand-derived chain rule 2.9e-16 (NRMSE) |
 | 8 | the transformer on the 19 `benchmarks/*.json` contracts and the paired Abaqus validation (`umat_oti.validation.job_builder`, `abaqus_runner`, `compare_results`) | via RA `presentation/claim4_benchmark_ddsdde.py --abaqus` (the functions `tools/run_completed_json_batch.py --validate` uses, with DDSDDE forced into the comparison as in the slide's run) | 18 of 18 slide cases run from their committed contracts, 17 pass (12 exact, 5 within tolerance); NKH needs PROPS(1) = 0 (source defect below) |
 | 9–12, 17, 41 | the developer side of the provider split: `REAL_UMAT.obj` (the ORIGINAL compile), the object with the OTI lift, `Mapping.json`, `transform_report.txt` | `umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out <dir> --regular-object REAL_UMAT.obj` (add `--abaqus-toolchain` to build REAL_UMAT with `abaqus make`), or the GUI's Parameter Sensitivities tab | every DSIGMA_DP / DSTATEV_DP / DDSDDE entry judged against centred FD of the separately compiled ORIGINAL: m3_j2 628 agree, 240 consistent with zero, 0 disagree; m6_fcc (slide-15 values, tension-with-shear path) 4,556 / 1,572 / 112 unresolved / 0; objects rebuild byte-identically and carry no machine paths |
-| 16, 40 | the Constitutive Jacobian screen | `umat-oti jacobian <umat.for> --ntens 6 --out <dir> --compile`, or the GUI tab (byte-identical outputs) | J2 tangent vs FD of the ORIGINAL 3e-11 (scaled) over elastic, plastic and unloading increments (`tests/gui/test_imqcam_developer_screens.py`) |
-| 15, 39 | the m3_j2 and m6_fcc providers the Residual Assembler's history engine replays the full-size cantilevers with (entry point `UMAT_OTI_EVAL_TOTAL`, [PROVIDER_EVAL_TOTAL.md](PROVIDER_EVAL_TOTAL.md)) | [Residual_Assembler examples/presentation_cantilevers](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/examples/presentation_cantilevers/README.md) | see the RA document, slides 15, 33, 39 |
+| 16, 40 | the Constitutive Jacobian screen | `umat-oti jacobian <umat.for> --ntens 6 --out <dir> --compile`, or the GUI tab (byte-identical outputs) | J2 tangent vs FD of the ORIGINAL 3e-11 (scaled) over elastic, plastic and unloading increments (`tests/gui/test_developer_screens.py`) |
+| 15, 39 | the m3_j2 and m6_fcc providers the Residual Assembler's history engine replays the full-size cantilevers with (entry point `UMAT_OTI_EVAL_TOTAL`, [PROVIDER_EVAL_TOTAL.md](PROVIDER_EVAL_TOTAL.md)) | [Residual_Assembler examples/cantilevers](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/examples/cantilevers/README.md) | see the RA document, slides 15, 33, 39 |
 | 25 | the internal-Jacobian probe (`umat_oti.transform.internal_jacobian`, `local_jacobian_probe`) and the parameter-sensitivity transform | via RA `presentation/claim5_constitutive_jacobians.py`; FJAC alone: `python tools/run_internal_jacobian_round.py` | see the RA document, claim 5 |
 
 ## Defects found by the reproduction (fixed 2026-09-18)

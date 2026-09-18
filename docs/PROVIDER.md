@@ -104,7 +104,7 @@ verdict is `verified`, or `verified_with_unresolved_columns` with each such
 column and its reason listed. Every entry is written to
 `verification_entries.csv`.
 
-Measured 2026-09-18 (docs/evidence/claude_G.md): m3_j2 on the J2 path --
+Measured 2026-09-18 (docs/evidence/gui_screens.md): m3_j2 on the J2 path --
 verified, every column agrees, 628 entries agree, 240 consistent with zero, none
 unresolved, worst relative error 4.8e-10; primal parity unchanged (5.7e-14).
 m6_fcc at the slide-17 values on tension with shear (20 increments of `1e-4` in

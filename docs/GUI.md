@@ -1,9 +1,8 @@
 # The UMAT-OTI GUI
 
 The graphical interface is one Streamlit application. Its first three tabs are
-the developer's side of the IMQCAM presentation workflow: **Start here**,
-**Constitutive Jacobian** (slides 16 and 40) and **Parameter Sensitivities**
-(slides 17 and 41). The numbered tabs after them (**1. Load Config** to
+the developer's side of the workflow: **Start here**, **Constitutive
+Jacobian** and **Parameter Sensitivities**. The numbered tabs after them (**1. Load Config** to
 **6. Corpus**) are the contract-driven console described in the README.
 
 Every button calls the same Python function as a command, so a screen can
@@ -214,10 +213,10 @@ Exit code 0 means built and verified, 1 means built but not verified, and
 
 | Test | What it drives | Run |
 | --- | --- | --- |
-| `tests/gui/test_imqcam_developer_screens.py` | both screens through `streamlit.testing` (AppTest): GUI output against `umat-oti jacobian` and `umat-oti-config` for m3_j2, elastic and m6_fcc; the elastic output against the curated example; the downloaded tangent against FD of the original (J2, elastic, and the FCC convergence); the J2 and FCC builds against the verifier CLI; and the table and tick rules | the offline suite |
+| `tests/gui/test_developer_screens.py` | both screens through `streamlit.testing` (AppTest): GUI output against `umat-oti jacobian` and `umat-oti-config` for m3_j2, elastic and m6_fcc; the elastic output against the curated example; the downloaded tangent against FD of the original (J2, elastic, and the FCC convergence); the J2 and FCC builds against the verifier CLI; and the table and tick rules | the offline suite |
 | `tests/test_provider_regular_object.py` | `umat-oti-provider build --regular-object`: the object is the bundled original; its hash is in the contract; linked alone it replays the original bit for bit; no directory of the developer's appears in either object or the mapping; a rebuild elsewhere is byte-identical; `--abaqus-toolchain` gives the `abaqus make` object (marked `abaqus`) | the offline suite |
 | `tests/test_provider_check_path_and_verdicts.py` | the check path read from the contract; the four verdicts on synthetic ladders; a wrong DSIGMA_DP (all entries by 1e-5, or one entry by 1e-3) is caught; m6_fcc at slide 17's values verifies on tension with shear and reports C44 unresolved on uniaxial strain | the offline suite |
-| `tests/gui/test_imqcam_developer_screens_browser.py` | the same flows in headless Chromium, as the slides describe them: upload, type the table, tick, click, download. Compares with the CLI and writes the screenshots above | `python -m pytest -m gui tests/gui` |
+| `tests/gui/test_developer_screens_browser.py` | the same flows in headless Chromium, as the slides describe them: upload, type the table, tick, click, download. Compares with the CLI and writes the screenshots above | `python -m pytest -m gui tests/gui` |
 
 Browser tests start their own Streamlit server and stop that one process id.
 They are deselected unless `-m gui` is given (see
@@ -240,18 +239,18 @@ They are deselected unless `-m gui` is given (see
 ## REAL_UMAT in Abaqus
 
 Measured on 2026-09-18 with Abaqus 2021.HF5 on the presentation example
-`Analysis.inp` (one C3D8, four increments), jobs `claudeG_*`, one at a time:
+`Analysis.inp` (one C3D8, four increments), jobs `gui_*`, one at a time:
 
 | Job | `user=` | How run | .sta | Process |
 | --- | --- | --- | --- | --- |
-| `claudeG_real` | gfortran REAL_UMAT (SHA-256 53bac302...) | as usual | COMPLETED SUCCESSFULLY | aborted: "buffer overflow detected", signal 6, exit 1 |
-| `claudeG_ifort` | `abaqus make` object of the same source | as usual | COMPLETED SUCCESSFULLY | aborted the same way |
-| `claudeG_noLD` | gfortran REAL_UMAT | `LD_LIBRARY_PATH` unset | COMPLETED SUCCESSFULLY | aborted the same way |
-| `claudeG_clean` | `--abaqus-toolchain` REAL_UMAT (SHA-256 deefc08a..., the same bytes the GUI build gives for m3_j2) | in a new PID namespace | COMPLETED SUCCESSFULLY | **clean: "Abaqus JOB claudeG_clean COMPLETED", exit 0** |
-| `claudeG_gfns` | gfortran REAL_UMAT (SHA-256 fed08fae..., path-free build) | in a new PID namespace | COMPLETED SUCCESSFULLY | clean, exit 0 |
+| `gui_real` | gfortran REAL_UMAT (SHA-256 53bac302...) | as usual | COMPLETED SUCCESSFULLY | aborted: "buffer overflow detected", signal 6, exit 1 |
+| `gui_ifort` | `abaqus make` object of the same source | as usual | COMPLETED SUCCESSFULLY | aborted the same way |
+| `gui_noLD` | gfortran REAL_UMAT | `LD_LIBRARY_PATH` unset | COMPLETED SUCCESSFULLY | aborted the same way |
+| `gui_clean` | `--abaqus-toolchain` REAL_UMAT (SHA-256 deefc08a..., the same bytes the GUI build gives for m3_j2) | in a new PID namespace | COMPLETED SUCCESSFULLY | **clean: "Abaqus JOB gui_clean COMPLETED", exit 0** |
+| `gui_gfns` | gfortran REAL_UMAT (SHA-256 fed08fae..., path-free build) | in a new PID namespace | COMPLETED SUCCESSFULLY | clean, exit 0 |
 
-The exported U, RF, CF, S and SDV1 of all five frames of `claudeG_clean` and
-`claudeG_gfns` equal the reference job `imqrp_j2` (Abaqus compiling the same
+The exported U, RF, CF, S and SDV1 of all five frames of `gui_clean` and
+`gui_gfns` equal the reference job `imqrp_j2` (Abaqus compiling the same
 source) with max |difference| 0.
 
 **The cause is not the compiler of the user object.** The abort's call stack

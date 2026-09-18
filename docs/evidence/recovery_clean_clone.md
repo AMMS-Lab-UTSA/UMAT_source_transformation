@@ -9,7 +9,7 @@ The detailed joint narrative is also retained in the RA recovery checkout at
 
 ## Exact Snapshot
 
-Branch: `integration/imqcam-recovery-2026-09-18` in both LOCAL clones.
+Branch: `integration/recovery-2026-09-18` in both LOCAL clones.
 New parent: `/tmp/imqc_clean_clone_20260918_RwJ8VT`.
 
 | Canonical clone | Full SHA |

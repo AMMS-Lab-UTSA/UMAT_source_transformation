@@ -3654,7 +3654,7 @@
     "repositories": {
       "/tmp/imq_portability_3W4QbqeM/consumer-arbitrary": {
         "head": "5ea3da4bdd250fe6eea79677cec44e59e86de197",
-        "status": " M docs/COMPLETION_LEDGER.md\n M pyproject.toml\n M residual_core/ui/cli.py\n M scripts/audit_recovery_usage.py\n M scripts/reproduce_imqcam_pipeline.py\n M tests/integration/test_clean_install_gate.py\n M tests/integration/test_connected_j2.py\n M tests/integration/test_presentation_request.py\n?? docs/OTILIB_VENV.md\n?? docs/evidence/recovery_clean_clone.json\n?? docs/evidence/recovery_clean_clone.md\n?? tests/integration/repository_paths.py\n"
+        "status": " M docs/COMPLETION_LEDGER.md\n M pyproject.toml\n M residual_core/ui/cli.py\n M scripts/audit_recovery_usage.py\n M scripts/reproduce_connected_pipeline.py\n M tests/integration/test_clean_install_gate.py\n M tests/integration/test_connected_j2.py\n M tests/integration/test_presentation_request.py\n?? docs/OTILIB_VENV.md\n?? docs/evidence/recovery_clean_clone.json\n?? docs/evidence/recovery_clean_clone.md\n?? tests/integration/repository_paths.py\n"
       },
       "/tmp/imq_portability_3W4QbqeM/producer-arbitrary": {
         "head": "dbd8ff229023b57e4231a2250a54e97dc111f547",
@@ -4328,7 +4328,7 @@
           "argv": [
             "/tmp/imq_portability_3W4QbqeM/installed-final/env/bin/python",
             "-I",
-            "scripts/reproduce_imqcam_pipeline.py",
+            "scripts/reproduce_connected_pipeline.py",
             "--skip-abaqus",
             "--provider-repo",
             "/tmp/imq_portability_3W4QbqeM/producer-arbitrary",
@@ -4391,7 +4391,7 @@
                     "-m",
                     "residual_core.ui.cli",
                     "replay",
-                    "/tmp/imq_portability_3W4QbqeM/consumer-arbitrary/examples/imqcam_j2_cantilever/model.json",
+                    "/tmp/imq_portability_3W4QbqeM/consumer-arbitrary/examples/bounded_j2_c3d8/model.json",
                     "--object",
                     "/tmp/imq_portability_3W4QbqeM/examples/R-X4/private/provider/umat_m3_j2_oti.obj",
                     "--contract",
@@ -4469,7 +4469,7 @@
                 "residual_assembler": {
                   "path": "/tmp/imq_portability_3W4QbqeM/consumer-arbitrary",
                   "commit": "5ea3da4bdd250fe6eea79677cec44e59e86de197",
-                  "status": " M docs/COMPLETION_LEDGER.md\n M pyproject.toml\n M residual_core/ui/cli.py\n M scripts/audit_recovery_usage.py\n M scripts/reproduce_imqcam_pipeline.py\n M tests/integration/test_clean_install_gate.py\n M tests/integration/test_connected_j2.py\n M tests/integration/test_presentation_request.py\n?? docs/OTILIB_VENV.md\n?? docs/evidence/recovery_clean_clone.json\n?? docs/evidence/recovery_clean_clone.md\n?? tests/integration/repository_paths.py\n",
+                  "status": " M docs/COMPLETION_LEDGER.md\n M pyproject.toml\n M residual_core/ui/cli.py\n M scripts/audit_recovery_usage.py\n M scripts/reproduce_connected_pipeline.py\n M tests/integration/test_clean_install_gate.py\n M tests/integration/test_connected_j2.py\n M tests/integration/test_presentation_request.py\n?? docs/OTILIB_VENV.md\n?? docs/evidence/recovery_clean_clone.json\n?? docs/evidence/recovery_clean_clone.md\n?? tests/integration/repository_paths.py\n",
                   "source_tree_sha256": "743bcccdfa3c8c886bd00ef98015f2dd768f80cebccc9420695057b83c8e8e1e",
                   "source_sha256": {
                     "residual_core/__init__.py": "9d140b7c994b1282bd8fc0a8ffc18aebae70555ed91fea78723aa7026f2bd8ea",
@@ -4573,9 +4573,9 @@
                     "residual_core/ui/examples.py": "e923027aaabd5d8e76458be020dbf0aae337fdfa0302a6ff464ac9806c8753ad",
                     "residual_core/ui/wizard.py": "79140199fda695af537ed2f61735e3073a92a1bf28c001fe42b1dd4eced98ec4",
                     "residual_core/umat_adapter_fortran/umat_replay.py": "0faab248b9685918a8a927cc84b4400110e64c0ee51441e49d90d2535789aab7",
-                    "scripts/reproduce_imqcam_pipeline.py": "353e8e845476ddc0efba8c809e6e3001fee6188b25e47a65364cb89cb22efa02",
-                    "examples/imqcam_j2_cantilever/README.md": "f2a61f71ac7023081118bfd014fdd664b808ee088e74739092fbd0479e2932a3",
-                    "examples/imqcam_j2_cantilever/model.json": "f3785cf5ccf29226ba603f8a8f20705bde34593b85905eb26958b979e811fc19",
+                    "scripts/reproduce_connected_pipeline.py": "353e8e845476ddc0efba8c809e6e3001fee6188b25e47a65364cb89cb22efa02",
+                    "examples/bounded_j2_c3d8/README.md": "f2a61f71ac7023081118bfd014fdd664b808ee088e74739092fbd0479e2932a3",
+                    "examples/bounded_j2_c3d8/model.json": "f3785cf5ccf29226ba603f8a8f20705bde34593b85905eb26958b979e811fc19",
                     "tests/abaqus_derivative_export/README.md": "224b339d39fde203601fbfff113bb63fafb67138edcb1584e9481d77fa19909b",
                     "tests/abaqus_derivative_export/derivative_layout.json": "a8ff28177ffdebc5dac3f4fc48ee91a0ae3d229af1423f35a6c86bb1b9a03fe1",
                     "tests/abaqus_derivative_export/elastic_export_umat.for": "75dd3a3ba0fa964e24b70c0dc56009ad3324315e63a6df61030cac81805989dd",
@@ -4818,7 +4818,7 @@
                 }
               },
               "model": {
-                "path": "/tmp/imq_portability_3W4QbqeM/consumer-arbitrary/examples/imqcam_j2_cantilever/model.json",
+                "path": "/tmp/imq_portability_3W4QbqeM/consumer-arbitrary/examples/bounded_j2_c3d8/model.json",
                 "sha256": "f3785cf5ccf29226ba603f8a8f20705bde34593b85905eb26958b979e811fc19"
               },
               "provider": {
@@ -6213,7 +6213,7 @@
     }
   ],
   "source_status": {
-    "RA": " M docs/COMPLETION_LEDGER.md\n M pyproject.toml\n M residual_core/ui/cli.py\n M scripts/audit_recovery_usage.py\n M scripts/reproduce_imqcam_pipeline.py\n M scripts/reproduce_presentation_request.py\n M tests/integration/test_clean_install_gate.py\n M tests/integration/test_connected_j2.py\n M tests/integration/test_presentation_request.py\n?? docs/OTILIB_VENV.md\n?? docs/evidence/recovery_clean_clone.json\n?? docs/evidence/recovery_clean_clone.md\n?? docs/evidence/recovery_portability.json\n?? docs/evidence/recovery_portability.md\n?? tests/integration/repository_paths.py\n",
+    "RA": " M docs/COMPLETION_LEDGER.md\n M pyproject.toml\n M residual_core/ui/cli.py\n M scripts/audit_recovery_usage.py\n M scripts/reproduce_connected_pipeline.py\n M scripts/reproduce_presentation_request.py\n M tests/integration/test_clean_install_gate.py\n M tests/integration/test_connected_j2.py\n M tests/integration/test_presentation_request.py\n?? docs/OTILIB_VENV.md\n?? docs/evidence/recovery_clean_clone.json\n?? docs/evidence/recovery_clean_clone.md\n?? docs/evidence/recovery_portability.json\n?? docs/evidence/recovery_portability.md\n?? tests/integration/repository_paths.py\n",
     "UMAT": " M docs/COMPLETION_LEDGER.md\n M docs/PROVIDER.md\n M docs/USAGE_REPORT.md\n M docs/evidence/recovery_install.md\n M pyproject.toml\n M src/umat_oti/app/streamlit_app.py\n M tests/test_contract_fixtures.py\n M tests/test_contract_frames.py\n M tests/test_packaging.py\n M tests/test_repository_standards.py\n M tests/test_source_discovery.py\n M tools/audit_documentation_commands.py\n M tools/repository_standards.json\n?? MANIFEST.in\n?? docs/evidence/recovery_clean_clone.json\n?? docs/evidence/recovery_clean_clone.md\n?? docs/evidence/recovery_portability.json\n?? docs/evidence/recovery_portability.md\n?? setup.py\n?? src/umat_oti/app/resources.py\n?? tests/repository_paths.py\n"
   },
   "validation_harnesses": {

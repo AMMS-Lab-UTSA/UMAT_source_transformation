@@ -5,14 +5,14 @@
 test counts and observations below remain a record of this earlier slice.
 
 Date: 2026-09-18. Checkout: `$HOME/softwarex_work/imq-umat-recovery`.
-Branch: `integration/imqcam-recovery-2026-09-18`, base `d34c7ff`.
+Branch: `integration/recovery-2026-09-18`, base `d34c7ff`.
 This is shared-environment offline evidence, **not clean-install PASS**.
 
 ## Scope and Changes
 
 Read the shared brief and branch implementation audit. No commits, pushes,
 branch changes, subagents, fetches, Abaqus jobs, or whole-corpus passes.
-Original Claude checkout untouched. No edits to the other worker's provider,
+Original the integration line checkout untouched. No edits to the other worker's provider,
 parameter transform, Fortran emitters, parameter validation, provider tests,
 or pyproject. Lead-owned contracts and published corpus artifacts are unchanged.
 
@@ -51,7 +51,7 @@ Observed interpreter: `$WORKSPACE/.venv/bin/python`; package:
 `$RECOVERY/src/umat_oti/__init__.py` (also checked with a runtime assertion).
 Editor-selected interpreter was not established; runtime verification is explicit.
 
-The finished Claude baseline log was read from scratchpad `w4/suite_run1.log`
+The finished the integration line baseline log was read from scratchpad `w4/suite_run1.log`
 in session `91433a98-ad23-4631-8751-56d6f4ba5787`. Its five actual failures were
 reproduced together: **5 failed in 0.82s**. The historical baseline total was
 3291 passed, 125 skipped, 5 failed, 1 deselected, 6 warnings in 423.86s.

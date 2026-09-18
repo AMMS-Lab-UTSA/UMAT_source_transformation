@@ -495,7 +495,7 @@
         "../imq-ra-recovery/docs/evidence/usage_examples.json",
         "../imq-ra-recovery/docs/evidence/recovery_integration.md"
       ],
-      "command": "$PY scripts/reproduce_imqcam_pipeline.py --skip-abaqus --out /tmp/new-connected-j2",
+      "command": "$PY scripts/reproduce_connected_pipeline.py --skip-abaqus --out /tmp/new-connected-j2",
       "status": "implemented",
       "scope": "Pinned first-order J2 compiled EVAL/MARCH, ordered all-IP history and total sensitivity carry; ORIGINAL path/whole-model FD. Dense bounded small-strain engine, not generic material replay/scalability.",
       "id": 18,
@@ -635,7 +635,7 @@
       ],
       "repo": "RA",
       "implementation": [
-        "../imq-ra-recovery/scripts/reproduce_imqcam_pipeline.py",
+        "../imq-ra-recovery/scripts/reproduce_connected_pipeline.py",
         "../imq-ra-recovery/residual_core/replay/connected.py"
       ],
       "tests": [
@@ -645,7 +645,7 @@
         "../imq-ra-recovery/docs/evidence/usage_examples.json",
         "../imq-ra-recovery/docs/evidence/recovery_integration.md"
       ],
-      "command": "$PY scripts/reproduce_imqcam_pipeline.py --skip-abaqus --out /tmp/new-j2-reproduction",
+      "command": "$PY scripts/reproduce_connected_pipeline.py --skip-abaqus --out /tmp/new-j2-reproduction",
       "status": "implemented",
       "scope": "Verified bounded nonlinear C3D8 alternative, both HEADs plus dirty-source hashes, fresh provider, solve/replay, total U/S/state sensitivities, FD plateaus, plot/table/manifest. NOT either full-size presentation cantilever or final clean clone.",
       "id": 23,
@@ -2703,7 +2703,7 @@
     },
     {
       "id": "X-18",
-      "requirement": "The IMQCAM Annual Meeting model (J2 cantilever 1,536 C3D8 / FCC cantilever 384 C3D8) recovered and reproduced, or a verified C3D8 nonlinear example on the identical software path",
+      "requirement": "The presentation model (J2 cantilever 1,536 C3D8 / FCC cantilever 384 C3D8) recovered and reproduced, or a verified C3D8 nonlinear example on the identical software path",
       "repository": "both",
       "evidence_group": 23,
       "status": "IMPLEMENTED - not yet reproduced from clean install",

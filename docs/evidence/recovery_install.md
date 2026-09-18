@@ -6,7 +6,7 @@ hashes still identify the earlier builds; they were not refreshed or promoted
 to a committed clean-clone gate by that repair.
 
 Date: 2026-09-18. Both recovery repositories remained on
-`integration/imqcam-recovery-2026-09-18`; all pre-existing changes were preserved.
+`integration/recovery-2026-09-18`; all pre-existing changes were preserved.
 No commit, push, reset, branch change, subagent, old-worktree or parent VS Code
 configuration edit. No Abaqus analysis job or whole-corpus run was launched.
 
@@ -134,7 +134,7 @@ in either repository: SHA-256
 `54745b97b515de159c3251e8a3ba0ed89ea1c65452e388ef34c8c81794e3b736`.
 Licensed `abaqus python` with odbAccess extracts it; the gate launches no solve.
 The exact three-file interface and physics limits remain in RA's
-[presentation interface](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/PRESENTATION_INTERFACE.md)
+[presentation interface](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/REQUEST_INTERFACE.md)
 and [presentation evidence](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/evidence/recovery_presentation.md).
 
 ## Tests And Unresolved Evidence
