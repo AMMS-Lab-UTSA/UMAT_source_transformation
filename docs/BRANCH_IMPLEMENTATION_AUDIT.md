@@ -180,7 +180,7 @@ driver path as its offline verification.
   venv is Python 3.11.7 with numpy 2.4.6, so `import pyoti` fails there. A
   Python-3.11 build is required (Cython + CMake are available).
 
-## F. Final integration line (2026-09-18, evening)
+## F. Final integration line (2026-09-18 and 2026-09-19)
 
 Three development lines worked on the completion program in parallel: a
 recovery line (committed at 14:36), an independent verification line
@@ -224,6 +224,33 @@ commits are in `git log`.
 | `63306c3` | made on this branch |  | Changelog entry for the integration |
 | `ceef6b4` | made on this branch |  | Branch audit: how the three assistants' work was joined on the final branch |
 | `1352114` | made on this branch |  | Link the Residual Assembler paths in the re-freeze evidence |
+| `4822108` | made on this branch |  | Present the repository by what it does: neutral names, examples without provenance |
+| `09d661b` | made on this branch |  | Pass FC to make in the parameter-sensitivity sweep |
+| `5b97c2f` | made on this branch |  | Keep integers out of the promotion and read lifted helpers' implicit types |
+| `bbcb7c7` | made on this branch |  | Documentation that describes the program as it works now |
+| `661f3af` | made on this branch |  | Re-freeze at 16c9f305df378089: corpus pass15, generation and lock |
+| `c43e0e7` | made on this branch |  | Make CI pass on Python 3.10-3.12 and report what failed |
+| `fbb8dff` | made on this branch |  | Record the pass15 refusal census in the refusal-classification tests |
+| `d65f34b` | made on this branch |  | Six worked examples, installation, command-line and GUI guides |
+| `9dc1945` | made on this branch |  | Attribute the hand-coded FJAC error of VPDCO and VPDCL_R to its real cause |
+| `1847059` | made on this branch |  | Usage report of the program as it works now |
+| `69f1144` | made on this branch |  | Claim only the platform that is tested |
+| `38cce3a` | made on this branch |  | Name a missing ifort; start the plain-language GUI as documented |
+| `4361a35` | made on this branch |  | Test local-Jacobian contracts, replace ranges, pipeline, batch and examples |
+| `1996782` | made on this branch |  | Promote the variable a local-Jacobian request replaces |
+| `5ffdf68` | made on this branch |  | Name a missing ifort in dash's wording; do not call an unreadable tree clean |
+| `faa0360` | made on this branch |  | Re-freeze at dbe9f928191e1d43: corpus pass16, generation and lock |
+| `19e3f89` | made on this branch |  | Let a GUI test fail when Streamlit never settles |
+| `2b45974` | made on this branch |  | Completion-ledger mapping, and the script that sets the ledger from a clean-clone run |
+| `6db975d` | made on this branch |  | Integrity audits against the pre-work baseline (T-11, T-12, CI-3) |
+| `5d9a60e` | made on this branch |  | Record the two tooling commits as outside the T-11 selection |
+| `f2fbd7d` | made on this branch |  | Tests for four earlier corrections that had none |
+| `7566328` | made on this branch |  | Ledger row T-11: demonstrated by the audit and the new tests |
+| `02ebf2d` | made on this branch |  | Record the ledger-row commit as outside the T-11 selection |
+| `0175d05` | made on this branch |  | Reproduce from clean clones by documented steps only |
+| `5dcdd8d` | made on this branch |  | Re-key the reviewed skip of the OTILib-present test |
+| `a2163c5` | made on this branch |  | Completion ledger set from the clean-clone run of bf3600c and 5dcdd8d |
+| `ac6ec75` | made on this branch |  | Record the ledger commit as outside the T-11 selection |
 
 ### Residual_Assembler
 
@@ -251,6 +278,41 @@ commits are in `git log`.
 | `f2abb0b` | made on this branch |  | Document the final state and keep machine paths out of reviewer-facing files |
 | `e195c08` | made on this branch |  | Changelog entry for the integration; README install counts as measured |
 | `3504a02` | made on this branch |  | Branch audit: how the three assistants' work was joined on the final branch |
+| `e03ef60` | made on this branch |  | Present the repository by what it does; run CI against the pinned companion |
+| `8daf75f` | made on this branch |  | Make the offline suite independent of collection order and of Abaqus on the runner |
+| `71cfe86` | made on this branch |  | Skip the two OTILib tests by name without OTILib; pass FC to make; install as users do in CI |
+| `1bc2009` | made on this branch |  | Pin the companion UMAT-OTI at 09d661b |
+| `924ee8c` | made on this branch |  | Documentation that describes the program as it works now; contract tests run on installed copies |
+| `ea1ed80` | made on this branch |  | Re-freeze at 16c9f305df378089: shared generation, lock and the two current fixtures |
+| `133d8c8` | made on this branch |  | Attribute the hand-coded FJAC error of VPDCO and VPDCL_R to its real cause |
+| `d27a6a0` | made on this branch |  | Describe the replay package's material developer in neutral terms |
+| `3bab862` | made on this branch |  | Pin the companion UMAT-OTI at 1847059 |
+| `a3916be` | made on this branch |  | Run the ODB field export under Abaqus Python 2.7 |
+| `7774313` | made on this branch |  | Refuse what cannot be differentiated; exit codes that say what happened |
+| `de8ec64` | made on this branch |  | Hand every provider the bounded engine cannot map to the history engine |
+| `4d34c74` | made on this branch |  | Name the ODB exporter by its real path in its usage text and the CP READMEs |
+| `9e5e3b9` | made on this branch |  | Seven worked examples, installation, command-line and GUI guides |
+| `de92890` | made on this branch |  | Usage report and reference docs that describe the program as it works now |
+| `07703d3` | made on this branch |  | Name the deck keywords that are read but not applied |
+| `6df72c1` | made on this branch |  | Refuse a deformation-gradient material in the small-strain C3D8 by name |
+| `fb3d059` | made on this branch |  | Refuse an unrelated package named pyoti by name |
+| `a392cd5` | made on this branch |  | Test the inspection commands; material specs declare their real measures |
+| `d211658` | made on this branch |  | Test the history report's verdict lines, the walkthroughs and derivative loss |
+| `7dfa511` | made on this branch |  | Count derivatives as verified only when the reference resolved |
+| `8e4cf2f` | made on this branch |  | Readiness that matches what assembles; refuse what the general path cannot place |
+| `d3cdfd5` | made on this branch |  | Walkthrough for the black-box order-2 template (example 8) |
+| `60c8d44` | made on this branch |  | Exit 1 when a verification the user asked for does not pass |
+| `a288783` | made on this branch |  | Re-freeze at dbe9f928191e1d43 and pin UMAT-OTI faa0360 |
+| `83fc0a6` | made on this branch |  | Let a GUI test fail when Streamlit never settles |
+| `7099a1a` | made on this branch |  | Completion-ledger mapping, and the script that sets the ledger from a clean-clone run |
+| `fe85ab8` | made on this branch |  | Integrity audits against the pre-work baseline (T-11, T-12, CI-3) |
+| `225ad61` | made on this branch |  | Record the two tooling commits as outside the T-11 selection |
+| `f4a2073` | made on this branch |  | Tests for five earlier corrections that had none |
+| `b8f7a85` | made on this branch |  | Ledger row T-11: demonstrated by the audit and the new tests |
+| `f2f326d` | made on this branch |  | Record the ledger-row commit as outside the T-11 selection |
+| `bf3600c` | made on this branch |  | Reproduce from clean clones by documented steps only |
+| `acf7c20` | made on this branch |  | Completion ledger set from the clean-clone run of bf3600c and 5dcdd8d |
+| `8316803` | made on this branch |  | Record the ledger commit as outside the T-11 selection |
 
 The independent verification line's other commits, checked file by file against this branch: UMAT
 `9d751b8` and RA `4cd6c12`, `65f791e` are already here (the files are
@@ -258,5 +320,5 @@ identical, or the recovery line's version contains the change and more); UMAT
 `a235ee5` conflicted with the recovery line's provider and is subsumed by it plus
 `5f48e4d`; UMAT `86aea29` registered the provider command, which is
 registered here, and rewrote `docs/PROVIDER.md`, which was revised later
-on this branch; `ecce5ee` (the pass13 registry) is superseded by pass14.
+on this branch; `ecce5ee` (the pass13 registry) is superseded by pass14, pass15 and pass16.
 Nothing was rebased, reset or force-pushed, and no branch was deleted.
