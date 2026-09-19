@@ -20,6 +20,7 @@ same probe in its seeding mode, exactly as ``verify_internal_jacobian`` does.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -57,7 +58,8 @@ def _line_of(lines: list[str], statement: str) -> int:
     return hits[0]
 
 
-def _run_contract(tmp_path: Path, source_text: str, jacobian_statement: str) -> dict:
+def _run_contract(tmp_path: Path, source_text: str, jacobian_statement: str,
+                  *, promote: tuple[str, ...] = ("STRESS",)) -> dict:
     """Transform, compile and run ``source_text`` from a local-Jacobian contract."""
     solve = discover_local_solves(source_text)[0]
     assert (solve.iterate, solve.residual, solve.jacobian) == ("DEQPL", "F", "DF")
@@ -72,11 +74,9 @@ def _run_contract(tmp_path: Path, source_text: str, jacobian_statement: str) -> 
         "name": "m5_local_jacobian",
         "source": model.name,
         "jacobian": {"seed": "DSTRAN", "output": "STRESS", "target": "DDSDDE"},
-        # The replaced Jacobian is promoted by the contract. The transform
-        # promotes the seed and the residual of a request itself, but not the
-        # variable the request replaces, and a hand-coded Jacobian that does
-        # not otherwise depend on a seeded quantity would stay REAL.
-        "promote": ["STRESS", solve.jacobian],
+        # The request's seed, residual and replaced variable are promoted by
+        # the transform itself; the contract does not have to list them.
+        "promote": list(promote),
         "replace": [],
         "ntens": NTENS,
         "order": 1,
@@ -193,8 +193,53 @@ def test_the_contract_request_replaces_a_wrong_hand_coded_jacobian(tmp_path):
     source = M5_UMAT.read_text(encoding="utf-8")
     assert source.count(HAND_CODED_LINE) == 1
     wrong = source.replace(HAND_CODED_LINE, "DF=ONE")
-    run = _run_contract(tmp_path, wrong, "DF=ONE")
+    # Listing the replaced variable in ``promote`` as well is accepted; the
+    # next test shows the same result without it.
+    run = _run_contract(tmp_path, wrong, "DF=ONE", promote=("STRESS", "DF"))
 
     assert run["hand_coded"] == 1.0
     assert _relative(run["hand_coded"], run["finite_difference"]) > 0.1
     assert _relative(run["oti"], run["finite_difference"]) < TOLERANCE, run
+
+
+def test_the_replaced_jacobian_need_not_be_listed_in_promote(tmp_path):
+    """The variable a request replaces is promoted by the request itself.
+
+    ``DF=ONE`` depends on nothing seeded, so only the request can make ``DF``
+    differentiated. When the transform promoted just the request's seed and
+    residual, the extracted slope went into an undeclared, implicitly REAL
+    ``DF_OTI``, the hand-coded line was switched off, and the Newton update
+    divided by a ``DF`` that nothing assigned, while the transform and the
+    compile both reported success.
+    """
+    source = M5_UMAT.read_text(encoding="utf-8")
+    wrong = source.replace(HAND_CODED_LINE, "DF=ONE")
+    run = _run_contract(tmp_path, wrong, "DF=ONE", promote=("STRESS",))
+
+    contract = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))
+    assert "DF" not in contract["promote"]
+    assert "DF" in run["report"]["promoted_variables"]
+    text = run["transformed_source"]
+    # The extraction target is declared as the differentiated type, and the
+    # Newton update divides by it rather than by the switched-off REAL DF.
+    assert re.search(rf"TYPE\(ONUMM{NTENS + 1}N1\)\s*::\s*DF_OTI\s*$", text, re.MULTILINE)
+    assert f"DF_OTI = GETIM(F_OTI, {NTENS + 1})" in text
+    assert "DEQPL_OTI=DEQPL_OTI-F_OTI/DF_OTI" in text
+    assert not re.search(r"(?<![\w%])DF(?![\w(])", _active_text(text))
+
+    # The value the update used is the derivative of the untransformed
+    # residual, not the hand-coded constant.
+    assert run["hand_coded"] == 1.0
+    assert _relative(run["hand_coded"], run["finite_difference"]) > 0.1
+    assert _relative(run["oti"], run["finite_difference"]) < TOLERANCE, run
+    # And the solve that used it reaches the root the original build reaches.
+    worst = max(abs(a - b) / max(abs(b), 1.0)
+                for got, want in zip(run["transformed"].stress, run["original"].stress)
+                for a, b in zip(got, want))
+    assert worst < 1.0e-12
+
+
+def _active_text(source: str) -> str:
+    """The source without its comment lines (fixed form: C, c, * or ! in column 1)."""
+    return "\n".join(line for line in source.splitlines()
+                     if line[:1] not in {"C", "c", "*", "!"} and not line.lstrip().startswith("!"))

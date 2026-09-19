@@ -205,7 +205,9 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
             compiler_name=compiler_name,
             compiler_version=compiler_version,
             warnings=result.warnings,
-            direction_count=int(result.report.get("oti_directions") or ntens),
+            # The directions the OTI module was built with: NTENS strain
+            # directions plus one per local-Jacobian seed direction.
+            direction_count=int((result.report.get("directions_required") or {}).get("total_directions") or ntens),
             generated_files=[*result.generated_files, *([combined] if combined else [])],
             ntens_source=str(settings.get("ntens_source", "")),
             ntens_confidence=str(settings.get("ntens_confidence", "")),

@@ -22,8 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Transformer fixes** found by the presentation and corpus reruns, each with
   a regression test: labelled promoted branches keep their label, inputs of a
   predictor stiffness stay live, a DATA constant listed under promote stays
-  real, a compact contract can name its helper sources, and a continued
-  assignment to a real variable from a promoted value is rewritten whole.
+  real, a compact contract can name its helper sources, a continued
+  assignment to a real variable from a promoted value is rewritten whole,
+  and the variable a local-Jacobian request replaces is promoted. Before, a
+  replaced Jacobian that did not depend on the seed (for example `DF=ONE`)
+  received the extraction in an undeclared variable while the Newton update
+  read the now-unassigned original, and the transform reported success; a
+  request that cannot reach its variable is now refused by name.
 - **Corpus pass15** at `16c9f305df378089`: 43 of 260 adequately specified
   genuine UMATs clear every acceptance gate, as at pass14; four sources that
   passed a real array to a hypercomplex helper dummy are now refused by name
