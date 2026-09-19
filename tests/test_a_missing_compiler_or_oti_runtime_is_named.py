@@ -47,30 +47,30 @@ def _path_without(*tools: str) -> str:
 # --------------------------------------------------------------------------- #
 # ifort
 # --------------------------------------------------------------------------- #
-#: The one step of the Abaqus launcher this test needs: given ``user=``, it
+#: The one step of the Abaqus launcher these tests need: given ``user=``, it
 #: hands its ``compile_fortran`` line, whose compiler is ifort, to the shell.
-#: bash is named explicitly because the validation runner's message is written
-#: for bash's wording, which is what ``/bin/sh`` prints on the Red Hat family
-#: machines that script targets (``module load ... intel/oneapi``).
+#: The shell is named explicitly because the two that ``/bin/sh`` usually is
+#: word the failure differently: bash, ``/bin/sh`` on the Red Hat family
+#: machines the validation scripts target (``module load ... intel/oneapi``),
+#: prints ``ifort: command not found``; dash, ``/bin/sh`` on Debian and
+#: Ubuntu, prints ``ifort: not found``.
 _LAUNCHER = """#!/usr/bin/env bash
 for argument in "$@"; do
-  case "$argument" in user=*) source_file="${argument#user=}" ;; esac
+  case "$argument" in user=*) source_file="${{argument#user=}}" ;; esac
 done
-exec bash -c 'ifort -c "$1"' compile_fortran "$source_file"
+exec {shell} -c 'ifort -c "$1"' compile_fortran "$source_file"
 """
 
 
-def test_the_validation_runner_names_ifort_when_the_compile_line_cannot_find_it(
-        tmp_path, monkeypatch):
-    """``validation.abaqus_runner`` turns bash's 'ifort: command not found'
-    into an instruction, and records it in validation_report.json."""
-    if shutil.which("bash") is None:
-        pytest.skip("bash is not on PATH; the launcher step runs its compile line through bash")
+def _validation_run_whose_compile_line_cannot_find_ifort(tmp_path, monkeypatch, shell: str):
+    """Run the original job through a launcher whose compile line goes through ``shell``."""
+    if shutil.which(shell) is None:
+        pytest.skip(f"{shell} is not on PATH; the launcher step runs its compile line through {shell}")
     summary, code = run_transformation(ELASTIC_CONTRACT, tmp_path / "oti")
     assert code == 0, summary
     launcher = tmp_path / "bin" / "abaqus"
     launcher.parent.mkdir()
-    launcher.write_text(_LAUNCHER, encoding="utf-8")
+    launcher.write_text(_LAUNCHER.format(shell=shell), encoding="utf-8")
     launcher.chmod(launcher.stat().st_mode | stat.S_IXUSR)
 
     validation_dir = tmp_path / "validation"
@@ -84,12 +84,34 @@ def test_the_validation_runner_names_ifort_when_the_compile_line_cannot_find_it(
     monkeypatch.setenv("PATH", _path_without("ifort"))
     result = run_original_job(validation_dir, abaqus_command=str(launcher),
                               abaqus_modules="", run_prefix="", timeout_seconds=120)
+    report = json.loads((validation_dir / "validation_report.json").read_text())
+    return result, report
+
+
+def test_the_validation_runner_names_ifort_when_the_compile_line_cannot_find_it(
+        tmp_path, monkeypatch):
+    """``validation.abaqus_runner`` turns bash's 'ifort: command not found'
+    into an instruction, and records it in validation_report.json."""
+    result, report = _validation_run_whose_compile_line_cannot_find_ifort(
+        tmp_path, monkeypatch, "bash")
 
     assert result.status == "failed"
     assert "ifort: command not found" in result.stderr_excerpt
     assert result.message.startswith("Abaqus started but could not find ifort.")
     assert "Load the Intel compiler module with Abaqus" in result.message
-    report = json.loads((validation_dir / "validation_report.json").read_text())
+    assert report["original_run_status"]["message"] == result.message
+
+
+def test_the_validation_runner_names_ifort_in_dash_wording_too(tmp_path, monkeypatch):
+    """dash, ``/bin/sh`` on Ubuntu, says 'ifort: not found'; the message is the same."""
+    result, report = _validation_run_whose_compile_line_cannot_find_ifort(
+        tmp_path, monkeypatch, "dash")
+
+    assert result.status == "failed"
+    assert "ifort: not found" in result.stderr_excerpt
+    assert "command not found" not in result.stderr_excerpt
+    assert result.message.startswith("Abaqus started but could not find ifort.")
+    assert "Load the Intel compiler module with Abaqus" in result.message
     assert report["original_run_status"]["message"] == result.message
 
 

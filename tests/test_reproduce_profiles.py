@@ -162,3 +162,72 @@ def test_an_unsupported_step_is_not_reported_as_an_external_blocker():
         result = step_corpus(Path(tmp))
     assert result.status == StageStatus.UNSUPPORTED.value
     assert "not an external blocker" in result.reason
+
+
+def _summary_for(directory: Path, environment: dict) -> str:
+    from umat_oti.reproduce import ProfileRun, write_outputs
+
+    out = directory / "out"
+    out.mkdir(parents=True)
+    write_outputs(ProfileRun(profile="smoke", out_dir=out), environment)
+    return (out / "reproduction_summary.md").read_text(encoding="utf-8")
+
+
+def _git_reads_only(monkeypatch, tree: Path, ceiling: Path) -> None:
+    """Point the environment capture at ``tree``, with no repository above ``ceiling``."""
+    import umat_oti.reproduce as reproduce
+
+    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(ceiling))
+    monkeypatch.setattr(reproduce, "REPO_ROOT", tree)
+
+
+def test_a_tree_git_cannot_read_is_not_reported_clean(tmp_path, monkeypatch):
+    """Regression: a copied tree that is not a checkout was summarised "(clean)".
+
+    git fails there, and its failure and a clean tree's empty status both came
+    back as nothing, so the record said clean. The state is unknown, and the
+    record and the summary say so.
+    """
+    from umat_oti.reproduce import capture_environment
+
+    copied = tmp_path / "copied_tree"
+    copied.mkdir()
+    _git_reads_only(monkeypatch, copied, tmp_path)
+
+    environment = capture_environment()
+    repository = environment["repository"]
+    assert repository["commit"] is None
+    assert repository["worktree_dirty"] is None
+    summary = _summary_for(tmp_path, environment)
+    assert "- Commit: not a git checkout (worktree state unknown" in summary
+    assert "(clean)" not in summary
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git not on PATH")
+def test_a_checkout_git_can_read_is_still_reported_clean_or_dirty(tmp_path, monkeypatch):
+    from umat_oti.reproduce import capture_environment
+
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    _git_reads_only(monkeypatch, checkout, tmp_path)
+
+    def git(*args: str) -> None:
+        subprocess.run(["git", "-c", "user.name=test", "-c", "user.email=test@example.org",
+                        *args], cwd=checkout, check=True, capture_output=True)
+
+    git("init", "-q")
+    (checkout / "file.txt").write_text("one\n", encoding="utf-8")
+    git("add", "file.txt")
+    git("commit", "-q", "-m", "one")
+
+    clean = capture_environment()
+    assert clean["repository"]["worktree_dirty"] is False
+    assert " (clean)" in _summary_for(tmp_path / "clean", clean)
+
+    (checkout / "file.txt").write_text("two\n", encoding="utf-8")
+    dirty = capture_environment()
+    assert dirty["repository"]["worktree_dirty"] is True
+    assert dirty["repository"]["dirty_paths"]
+    assert " (worktree dirty)" in _summary_for(tmp_path / "dirty", dirty)

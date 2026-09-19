@@ -136,13 +136,17 @@ def capture_environment() -> dict:
     result.
     """
     def git(*args: str) -> Optional[str]:
+        """What git printed, "" when it printed nothing, None when it failed."""
         try:
             proc = subprocess.run(["git", *args], cwd=REPO_ROOT,
                                   capture_output=True, text=True, timeout=30)
         except (OSError, subprocess.SubprocessError):
             return None
-        return (proc.stdout.strip() or None) if proc.returncode == 0 else None
+        return proc.stdout.strip() if proc.returncode == 0 else None
 
+    # A clean tree prints nothing and a tree git cannot read (a copy that is
+    # not a checkout, or no git at all) fails. Both used to come back None and
+    # be recorded as clean; the second is recorded as unknown (None) instead.
     dirty = git("status", "--porcelain")
     return {
         "captured_at": datetime.now(timezone.utc).isoformat(),
@@ -152,12 +156,12 @@ def capture_environment() -> dict:
         "platform": platform.platform(),
         "machine": platform.machine(),
         "repository": {
-            "url": git("remote", "get-url", "origin"),
-            "commit": git("rev-parse", "HEAD"),
-            "branch": git("rev-parse", "--abbrev-ref", "HEAD"),
-            "worktree_dirty": bool(dirty),
+            "url": git("remote", "get-url", "origin") or None,
+            "commit": git("rev-parse", "HEAD") or None,
+            "branch": git("rev-parse", "--abbrev-ref", "HEAD") or None,
+            "worktree_dirty": None if dirty is None else bool(dirty),
             "dirty_paths": (dirty.splitlines() if dirty else []),
-            "describe": git("describe", "--always", "--dirty"),
+            "describe": git("describe", "--always", "--dirty") or None,
         },
         "repository_root": str(_FOUND_ROOT) if _FOUND_ROOT else None,
         "running_from_source_checkout": _FOUND_ROOT is not None,
@@ -574,6 +578,13 @@ def build_steps(profile: str, allow_network: bool) -> list[Step]:
 # reporting
 # --------------------------------------------------------------------------
 
+def _worktree_state(dirty: Optional[bool]) -> str:
+    """The summary's note on the worktree; None means git could not say."""
+    if dirty is None:
+        return " (worktree state unknown: git could not report it)"
+    return " (worktree dirty)" if dirty else " (clean)"
+
+
 def write_outputs(run: ProfileRun, environment: dict) -> None:
     out = run.out_dir
     results = [s.to_dict() for s in run.steps]
@@ -621,7 +632,7 @@ def write_outputs(run: ProfileRun, environment: dict) -> None:
         f" ({'usable' if environment['toolchain']['abaqus']['available'] else environment['toolchain']['abaqus'].get('reason')})",
         f"- Repository: {environment['repository']['url'] or 'unknown'}",
         f"- Commit: {environment['repository']['commit'] or 'not a git checkout'}"
-        f"{' (worktree dirty)' if environment['repository']['worktree_dirty'] else ' (clean)'}",
+        f"{_worktree_state(environment['repository'].get('worktree_dirty'))}",
         "",
         "## Steps", "",
         "| Step | Status | Detail |", "|---|---|---|",
