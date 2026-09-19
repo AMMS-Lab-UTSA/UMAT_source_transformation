@@ -1,132 +1,191 @@
-# Compiled OTI Provider
+# Compiled OTI provider
 
-This provider restores the legacy Program 1 relocatable-object interface using
-the **current** generic parameter-sensitivity transformer. It does not copy the
-old regex-based inference or reimplement J2. The original author UMAT and the
-generic OTI lift are compiled separately and bundled into one position-independent
-object, with an explicit small-strain replay wrapper.
+This is the reference for the compiled provider: the relocatable object that
+carries a UMAT's parameter sensitivities to the companion
+[Residual Assembler](https://github.com/AMMS-Lab-UTSA/Residual_Assembler). It
+is written for material developers who build a provider and for integrators
+who link one. The step-by-step GUI route is described in [GUI.md](GUI.md).
 
-Verified scope: the repository's `m3_j2` and `m1_elastic` contracts on Linux with
-gfortran. Compilation of another source is not evidence of its physical validity.
-The subsequent working-tree wheel gate also builds m3_j2 using the installed
-`umat-oti-provider` command and copied public inputs, then consumes its binary
-through the installed Residual Assembler. See
-[evidence/recovery_install.md](evidence/recovery_install.md) for installation,
-installed GUI launch, exact gate commands, evidence and remaining failures.
-This is not a final-branch clean-clone verification or a corpus pass.
+## What the provider is
 
-## Build and Verify
+The build takes the author's original UMAT and a `resasm_umat_transform_v2`
+contract. It lifts the UMAT with the current generic parameter-sensitivity
+transformer, which needs no model-specific code. The original routine and the
+lifted routine are compiled separately and bundled into one
+position-independent object, together with explicit small-strain replay
+wrappers.
 
-After wheel installation, the provider command needs only the developer's
-contract/source inputs and gfortran, not a repository import path:
+A collaborator receives the object and its completed mapping, never the
+source. The files that are handed over are:
+
+| File | Content |
+|---|---|
+| `OTI_UMAT.obj` | the provider: the original routine plus the differentiated one |
+| `Mapping.json` | the completed contract the build generates, unchanged |
+| `REAL_UMAT.obj` (optional) | the original UMAT compiled unchanged, for ordinary Abaqus runs |
+| `transform_report.txt` | build and verification commands, exit codes and results |
+
+`python -m umat_oti.provider.collaborator` (and the GUI's Parameter
+Sensitivities screen) produces exactly these four files; see
+[GUI.md](GUI.md#parameter-sensitivities).
+
+**Verified scope.** Linux with gfortran. The independent verifier's full
+results are recorded below for `m3_j2` and `m6_fcc`, and the elastic model
+`m1_elastic` is checked by the same commands. Compiling another source is not
+evidence that it is physically valid.
+
+## Build
+
+With the package installed, the build needs only the contract, the source it
+names and `gfortran`:
 
 ```sh
-umat-oti-provider build /path/to/public_model/contract_v2.json --out /tmp/new_provider
+umat-oti-provider build path/to/model/contract_v2.json --out out/provider
+umat-oti-provider build path/to/model/contract_v2.json --out out/provider \
+  --regular-object REAL_UMAT.obj [--abaqus-toolchain]
 ```
 
-The collaborator receives the generated object and completed mapping, not the
-source. The presentation request does not run the provider build command.
-
-From the recovery repository root, using the supplied development environment:
+From a source checkout the same command is available as a module:
 
 ```sh
-export PYTHONPATH="$PWD/src"
-PY="${PY:-python3}"
-"$PY" -c 'import umat_oti,sys; print(sys.executable); print(umat_oti.__file__)'
-"$PY" -m umat_oti.provider build \
-  parameter_sensitivity/models/m3_j2/contract_v2.json \
-  --out /tmp/imq-recovery-W3-j2
-"$PY" -m umat_oti.validation.parameter_sensitivity_provider \
-  parameter_sensitivity/models/m3_j2/contract_v2.json \
-  --out /tmp/imq-recovery-W3-j2-verified
+python -m umat_oti.provider build \
+  parameter_sensitivity/models/m3_j2/contract_v2.json --out out/m3_j2
 ```
 
-The build compiles every file on a relative name from inside its build
-directory (gfortran writes the name it was given into bounds-check messages and
-gfortran 9 does not remap it), so the objects contain no directory of the
-developer's and a rebuild of the same contract reproduces them byte for byte.
-`--regular-object REAL_UMAT.obj` also publishes the ORIGINAL compiled unchanged;
-with `--abaqus-toolchain` that object is built by `abaqus make` (the Abaqus
-site compiler and flags) instead of by the provider's compiler.
+Use a dedicated output directory outside the model directory. For the J2 model
+the build writes:
 
-The build command prints absolute paths for `object`, `contract`, and `build_dir`.
-It emits `umat_m3_j2_oti.obj` and `umat_m3_j2_oti.json`. Generated sources and the
-link-check shared library are retained in a unique `build-*` subdirectory for
-diagnosis. Use a dedicated output directory outside the original model directory.
-The output JSON describes `resasm_umat_oti_contract_v1` and uses the legacy
-16-character SHA-256 prefix in `object.sha256`; `object.sha256_full` adds the full
-digest. Building runs a no-undefined-symbol shared-library link check, but leaves
-`validation.passed=false` and `validation.status="not_run"`.
+- `umat_m3_j2_oti.obj`, the provider object;
+- `umat_m3_j2_oti.json`, the completed contract (`resasm_umat_oti_contract_v1`);
+- a unique `build-*` subdirectory holding the generated sources and the
+  link-check shared library, kept for diagnosis.
 
-The verification command rebuilds the object, separately compiles the ORIGINAL
-UMAT with the existing reference driver, and writes `verification.json`. Success
-has `passed=true`, the object digest, exact properties/path, comparison counts,
-FD step sizes, plateau checks, and measured errors. Failure exits nonzero and
-writes `passed=false` with the diagnostic; it is not converted to a warning.
+The command prints the absolute paths of `object`, `contract` and `build_dir`
+(and `regular_object` when one was requested).
 
-The check path comes from the contract: `validation.check_path`, either
-`{"increments": [[...6 strain components...], ...]}` or
-`{"dstran_per_increment": [...], "n_increments": N}` (the form
-`parameter_sensitivity/loading_paths.json` uses), each row a strain increment
-over a unit time step. A contract without it -- such as the shipped m3_j2 one
--- is checked on the provider's seven-increment J2 path: elastic, elastic,
-plastic, plastic, elastic unloading, reverse plastic, elastic unloading.
-Properties come from the input contract (`[210000, 0.3, 250, 2000]` for m3_j2),
-not invented defaults.
+**Reproducible objects.** Every file is compiled on a relative name from inside
+its build directory. gfortran writes the name it was given into bounds-check
+messages, and gfortran 9 does not remap it. The objects therefore contain no
+directory of the developer's, and rebuilding the same contract reproduces them
+byte for byte.
 
-Primal parity is required to round-off (stress `rtol=1e-12, atol=1e-10`, state
-`rtol=1e-12, atol=1e-14`). Every derivative entry -- DSIGMA_DP, DSTATEV_DP and
-DDSDDE, from EVAL and from MARCH -- is then judged against centred differences
-of the separately compiled ORIGINAL over the project's half-decade step ladder
-(`reference_resolution.DEFAULT_LADDER`, 1e-2 to 1e-7): parameter steps relative
-to the parameter's own value, strain steps relative to the increment's largest
-component. Parameter perturbations replay the whole path; tangent
-perturbations change only the last increment of each prefix. With the J2 option
-a step that moves any increment onto another branch is left out. The reference
-value is `reference_resolution.converged_value` (the flattest three-step window,
-or its Richardson extrapolation where tighter); its uncertainty is the largest
-of the window's spread, the Richardson residual, the next finer step's distance
-from the estimate, and the cancellation floor `eps*|response|/(2h)`. Each entry
-is then one of:
+**Regular object.** `--regular-object REAL_UMAT.obj` also publishes the
+original UMAT compiled unchanged, with the same compiler and flags as the
+bundled copy. With `--abaqus-toolchain` that object is built by `abaqus make`
+(the Abaqus site compiler and flags) instead. Its SHA-256 is recorded in the
+contract under `regular_object`.
 
-- **agrees**: the reference determines it to within the relative tolerance
-  `2e-6` and the value is within that;
+**Hashes and status.** `object.sha256` holds the legacy 16-character SHA-256
+prefix; `object.sha256_full` holds the full digest. The build runs a
+no-undefined-symbol shared-library link check but leaves
+`validation.passed=false` and `validation.status="not_run"`. Only the verifier
+below can establish that the object is correct.
+
+**Accepted contracts.** The build refuses, with a diagnostic, any contract that
+is not all of the following:
+
+- schema `resasm_umat_transform_v2` with `kinematics: "small_strain"`;
+- `NTENS = 6` and `NPROPS >= 1`;
+- a first-order derivative of `STRESS` with respect to `PROPS` (`DSIGMA_DP`);
+- parameters with unique names and unique PROPS indices;
+- `history.path_dependent = true` whenever there are physical state variables;
+- a single source file (`main_file`) whose entry point is `UMAT`.
+
+## Verify
+
+```sh
+python -m umat_oti.validation.parameter_sensitivity_provider \
+  parameter_sensitivity/models/m3_j2/contract_v2.json --out out/m3_j2_verified
+```
+
+The verifier rebuilds the object and separately compiles the ORIGINAL UMAT with
+the existing reference driver. It writes `verification.json` and
+`verification_entries.csv`. On success `passed=true`, and the report carries the
+object digest, the exact properties and path, comparison counts, step sizes and
+measured errors. On failure the command exits non-zero and writes
+`passed=false` with the diagnostic; a failure is never turned into a warning.
+
+**Check path.** The path comes from the contract's `validation.check_path`,
+in one of two forms:
+
+- `{"increments": [[...six strain components...], ...]}`, or
+- `{"dstran_per_increment": [...], "n_increments": N}` (the form
+  `parameter_sensitivity/loading_paths.json` uses).
+
+Each row is a strain increment in Voigt order with engineering shear, applied
+over a unit time step. A contract without the field, such as the shipped
+`m3_j2` contract, is checked on the provider's seven-increment J2 path:
+elastic, elastic, plastic, plastic, elastic unloading, reverse plastic, elastic
+unloading. Properties come from the contract (`[210000, 0.3, 250, 2000]` for
+`m3_j2`), never from invented defaults.
+
+**Primal parity.** The provider's stress and state must match the separately
+compiled ORIGINAL to round-off: stress `rtol=1e-12, atol=1e-10`, state
+`rtol=1e-12, atol=1e-14`.
+
+**Derivatives.** Every derivative entry (DSIGMA_DP, DSTATEV_DP and DDSDDE,
+from both EVAL and MARCH) is judged against centred differences of the
+separately compiled ORIGINAL. The differences are taken over the project's
+half-decade step ladder (`reference_resolution.DEFAULT_LADDER`, 1e-2 to 1e-7).
+Parameter steps are relative to the parameter's own value; strain steps are
+relative to the increment's largest component. Parameter perturbations replay
+the whole path; tangent perturbations change only the last increment of each
+prefix. Unless `--elastic` is given, the verifier requires the J2 branch
+sequence (elastic, plastic and unloading increments) and leaves out any step
+that moves an increment onto another branch.
+
+The reference value is `reference_resolution.converged_value`: the flattest
+three-step window, or its Richardson extrapolation where that is tighter. Its
+uncertainty is the largest of the window's spread, the Richardson residual, the
+next finer step's distance from the estimate, and the cancellation floor
+`eps*|response|/(2h)`. Each entry is then one of:
+
+- **agrees**: the reference determines the entry to within the relative
+  tolerance `2e-6`, and the value is within that tolerance;
 - **consistent with zero**: both the value and the reference are within the
   reference's uncertainty of zero;
 - **reference unresolved**: the value is within the reference's uncertainty,
-  but that uncertainty is wider than the tolerance -- never counted as a pass;
-- **disagrees**: outside the reference's uncertainty and the tolerance.
+  but that uncertainty is wider than the tolerance. This is never counted as a
+  pass;
+- **disagrees**: the value is outside both the reference's uncertainty and the
+  tolerance.
 
-A column is *agrees* when at least one entry agrees and none disagrees, and
-*unresolved* (with its reason) when no entry is determined. Verification fails
-on any disagreeing entry or an array with no agreeing column; otherwise the
+A column *agrees* when at least one entry agrees and none disagrees. It is
+*unresolved*, with its reason, when no entry is determined. Verification fails
+on any disagreeing entry, or on an array with no agreeing column. Otherwise the
 verdict is `verified`, or `verified_with_unresolved_columns` with each such
-column and its reason listed. Every entry is written to
-`verification_entries.csv`.
+column and its reason listed.
 
-Measured 2026-09-18 (docs/evidence/gui_screens.md): m3_j2 on the J2 path --
-verified, every column agrees, 628 entries agree, 240 consistent with zero, none
-unresolved, worst relative error 4.8e-10; primal parity unchanged (5.7e-14).
-m6_fcc at the slide-17 values on tension with shear (20 increments of `1e-4` in
-11 and `1e-4` engineering shear in 12) -- verified, every column of all ten
-parameters agrees; on the sweep's uniaxial path the C44 column is unresolved
-(no shear stress on the cube axes, so the derivative is zero along the path).
+**Measured (2026-09-18).**
 
-The additional elastic example uses the same commands with `m1_elastic` and the
-verification flag `--elastic`. Stateless EVAL is checked at total strain from
-zero stress; MARCH is checked incrementally. This distinction matters: a
-16-argument EVAL cannot carry derivatives of incoming stress.
+- `m3_j2` on the J2 path: verified, every column agrees; 628 entries agree,
+  240 are consistent with zero, none unresolved; worst relative error 4.8e-10;
+  primal parity 5.7e-14.
+- `m6_fcc` at the ten reference parameter values listed in
+  [GUI.md](GUI.md#parameter-sensitivities), on tension with shear (20
+  increments of `1e-4` in 11 and `1e-4` engineering shear in 12): verified,
+  every column of all ten parameters agrees. On the sweep's uniaxial path the
+  C44 column is unresolved: uniaxial strain along a cube axis puts no shear
+  stress on the crystal, so that derivative is zero along the path.
+
+**Elastic example.** `m1_elastic` uses the same commands with the verifier flag
+`--elastic`. Stateless EVAL is checked at total strain from zero stress; MARCH
+is checked incrementally. The distinction matters because a 16-argument EVAL
+cannot carry derivatives of the incoming stress.
 
 ## Object ABI
 
-gfortran symbols are `umat_`, `umat_oti_internal_`, `umat_oti_eval_`, and
-`umat_oti_march_`. Public replay arguments are double precision arrays/scalars
-and default INTEGER dimensions, passed by reference. Arrays use Fortran column
-order. Voigt order is `11,22,33,12,13,23`, with engineering shear strains.
-Link one material object per shared library using gfortran; the object bundles
-the OTI runtime but the linked library still needs the Fortran runtime.
+The gfortran symbols are `umat_`, `umat_oti_internal_`, `umat_oti_eval_`,
+`umat_oti_eval_total_` and `umat_oti_march_`. Public replay arguments are double
+precision arrays and scalars and default INTEGER dimensions, passed by
+reference. Arrays use Fortran column order. Voigt order is `11,22,33,12,13,23`,
+with engineering shear strains. Link one material object per shared library
+using gfortran: the object bundles the OTI runtime, but the linked library still
+needs the Fortran runtime.
 
-J2 EVAL has exactly 18 arguments:
+### `UMAT_OTI_EVAL`
+
+For path-dependent contracts (such as J2), EVAL has exactly 18 arguments:
 
 ```fortran
 SUBROUTINE UMAT_OTI_EVAL(STRESS,STATEV,DDSDDE,STRAN,DSTRAN, &
@@ -134,22 +193,28 @@ SUBROUTINE UMAT_OTI_EVAL(STRESS,STATEV,DDSDDE,STRAN,DSTRAN, &
   DSIGMA_DP,DSTATEV_DP,DSIGMA_DP_IN,DSTATEV_DP_IN)
 ```
 
-- `STRESS(NTENS)` and `STATEV(NSTATV)` are incoming/outgoing physical values.
+- `STRESS(NTENS)` and `STATEV(NSTATV)` are the incoming and outgoing physical
+  values.
 - `DDSDDE(NTENS,NTENS)` is the lifted stress derivative with respect to the
-  current `DSTRAN`, at fixed incoming stress/state and strain history. It is
-  extracted from extra strain directions, not trusted from the author's tangent.
-- `DSIGMA_DP(NTENS,NPARAM)` and `DSTATEV_DP(NSTATV,NPARAM)` are separate outputs.
-  Incoming arrays of the same shapes seed the full chain rule through the lift.
-  Pass distinct incoming/output buffers. Derivatives never occupy physical SDVs.
-- `STRAN` is the strain at increment start; `TIME(2)` is step/total time.
-- J2 dimensions are `NPROPS=4, NTENS=6, NSTATV=1, NPARAM=4`; parameter columns
-  are `E, nu, SIGY0, H` in contract order. Parameters occupy directions 1-4;
+  current `DSTRAN`, at fixed incoming stress, state and strain history. It is
+  extracted from extra strain directions, not taken from the author's tangent.
+- `DSIGMA_DP(NTENS,NPARAM)` and `DSTATEV_DP(NSTATV,NPARAM)` are separate
+  outputs. The incoming arrays of the same shapes seed the full chain rule
+  through the lift. Pass distinct incoming and output buffers. Derivatives
+  never occupy physical SDVs.
+- `STRAN` is the strain at the start of the increment; `TIME(2)` is step and
+  total time.
+- For J2, `NPROPS=4, NTENS=6, NSTATV=1, NPARAM=4`. The parameter columns are
+  `E, nu, SIGY0, H` in contract order. Parameters occupy OTI directions 1-4;
   the six local strain tangent directions occupy 5-10.
 
-Stateless contracts emit the legacy 16-argument EVAL signature, omitting the two
-incoming derivative arrays. Their incoming parameter sensitivities are zero.
-`history.path_dependent=true` selects the 18-argument form even if there are no
-physical state slots. Any physical state requires the path-dependent form.
+Stateless contracts emit the legacy 16-argument EVAL signature, which omits the
+two incoming derivative arrays; their incoming parameter sensitivities are
+zero. `history.path_dependent=true` selects the 18-argument form even when there
+are no physical state slots. Any physical state requires the path-dependent
+form.
+
+### `UMAT_OTI_MARCH`
 
 MARCH has exactly 11 arguments for both variants:
 
@@ -158,81 +223,87 @@ SUBROUTINE UMAT_OTI_MARCH(PROPS,NPROPS,PATH,NPATH,DTARR, &
   NTENS,NSTATV,NPARAM,DSIG,STROUT,DDOUT)
 ```
 
-`PATH(NTENS,NPATH)` contains increments; `DTARR(NPATH)` contains positive time
-steps. `DSIG(NTENS,NPARAM,NPATH)` and `DDOUT(NTENS,NTENS,NPATH)` contain every
-increment's derivatives/tangent; `STROUT(NTENS)` is final stress. MARCH starts
-at zero physical state/stress/strain, carries stress/state parameter derivatives,
-advances both time values and KINC, and recreates local strain directions each
-increment. Its ABI has no state output; use EVAL for physical and derivative SDVs.
+`PATH(NTENS,NPATH)` holds the strain increments and `DTARR(NPATH)` the positive
+time steps. `DSIG(NTENS,NPARAM,NPATH)` and `DDOUT(NTENS,NTENS,NPATH)` hold every
+increment's derivatives and tangent; `STROUT(NTENS)` is the final stress. MARCH
+starts from zero physical state, stress and strain, carries the stress and
+state parameter derivatives, advances both time values and KINC, and recreates
+the local strain directions at each increment. Its ABI has no state output; use
+EVAL for physical and derivative SDVs.
 
-`UMAT` is the untransformed author's standard Abaqus entry point.
-`UMAT_OTI_INTERNAL` is an implementation-private kernel with the 18 EVAL
-arguments plus an integer increment. It is **not** the old scratch-SDV internal
-UMAT interface; consumers must use EVAL or MARCH.
+### Other symbols
 
-## Original Program 2 Consumption
+- `UMAT` is the author's untransformed, standard Abaqus entry point.
+- `UMAT_OTI_EVAL_TOTAL` returns total derivatives for whole-model history
+  replay; it is described in [PROVIDER_EVAL_TOTAL.md](PROVIDER_EVAL_TOTAL.md).
+- `UMAT_OTI_INTERNAL` is a private kernel with the 18 EVAL arguments plus an
+  integer increment. It is **not** the old scratch-SDV internal UMAT interface;
+  consumers must use EVAL, EVAL_TOTAL or MARCH.
 
-The following verifies the actual replay implementation at
-`origin/cross-platform-hardening`, without checking out or editing that repo:
+## Loading the object in the Residual Assembler replay
+
+`umat_oti.provider.legacy_check` checks that a verified provider loads in the
+Residual Assembler's `PathMaterial` replay:
 
 ```sh
-"$PY" -m umat_oti.provider.legacy_check \
-  /tmp/imq-recovery-W3-j2-verified/verification.json \
+python -m umat_oti.provider.legacy_check out/m3_j2_verified/verification.json \
   --repo ../Residual_Assembler
 ```
 
-It exports unchanged legacy Python files into the verification directory, loads
-the generated object through the old `PathMaterial`, requires `has_march=true`,
-and compares both replay methods to FD of the bundled ORIGINAL UMAT through
-`march_regular`. It writes `legacy_verification.json` with the commit and errors.
-There is no mock material or shim replacing the original consumer.
+It reads the replay code from a Residual Assembler checkout at the git
+reference given by `--ref` (default `origin/cross-platform-hardening`) without
+checking it out or editing it. It exports that replay code into the
+verification directory, loads the generated object through `PathMaterial`, and
+requires `has_march=true`. It then compares both replay methods with finite
+differences of the bundled ORIGINAL UMAT through `march_regular`, and writes
+`legacy_verification.json` with the commit and the errors. No mock material or
+shim replaces the consumer.
 
-Inside an environment using that original Program 2 code:
+In an environment where the Residual Assembler is importable:
 
 ```python
 import json
 from pathlib import Path
 from residual_core.replay.path_material import PathMaterial
 
-output = Path('/tmp/imq-recovery-W3-j2-verified')
-contract = json.loads((output / 'umat_m3_j2_oti.json').read_text())
-verification = json.loads((output / 'verification.json').read_text())
-material = PathMaterial(str(output / contract['object']['file']), contract)
-increments = verification['path']
+output = Path("out/m3_j2_verified")
+contract = json.loads((output / "umat_m3_j2_oti.json").read_text())
+verification = json.loads((output / "verification.json").read_text())
+material = PathMaterial(str(output / contract["object"]["file"]), contract)
+increments = verification["path"]
 times = [1.0] * len(increments)
-full = material.march_oti(verification['props'], increments, times)
-fast = material.march_fast(verification['props'], increments, times)
+full = material.march_oti(verification["props"], increments, times)
+fast = material.march_fast(verification["props"], increments, times)
 assert material.has_march
-assert full[-1]['dsigma_dp'].shape == (6, 4)
-assert full[-1]['dstatev_dp'].shape == (1, 4)
+assert full[-1]["dsigma_dp"].shape == (6, 4)
+assert full[-1]["dstatev_dp"].shape == (1, 4)
 ```
 
-Use `PathMaterial` for J2, not the old stateless `objlink` C-ABI adapter.
+Use `PathMaterial` for J2, not the older stateless `objlink` C-ABI adapter.
 
-## Limits and Integration
+## Limits
 
-- Only 3D, small-strain, first-order STRESS/PROPS contracts are accepted.
-  Finite strain, other tensor dimensions, higher order, explicit alternative
-  derivative-request schemas, extra source files, and non-UMAT entry points fail
-  with diagnostics. There is no claim for the remaining model collection.
-- The legacy EVAL ABI has no KINC argument (it uses 1), deformation gradients,
-  coordinates, rotations, characteristic length, energy history, predefined
-  fields, or cutback return. Wrappers use identity gradients/rotation, zero
-  coordinates/predefined fields/energies, and unit length. MARCH uses temperature
-  293.15 with no temperature increments. Models requiring other context are not
-  established by these checks. J2 and the tested elasticity do not depend on it.
-- Dimension errors, nonpositive MARCH time steps, and UMAT cutback requests abort
-  explicitly with Fortran `ERROR STOP`; this legacy ABI has no status return.
-  Validate dimensions before calling, and isolate untrusted material evaluation
-  in a worker process. These are not recoverable C status codes.
-- Linux/gfortran was exercised. Objects are platform/compiler specific; Windows,
-  other Fortran compilers, and binary distribution compatibility are unverified.
-- No C `mat_eval_v1` library or `.resmat` package is added in this bounded
-  slice. The provider-build GUI screen (Parameter Sensitivities) and
-  `--regular-object REAL_UMAT.obj` were added later; see [GUI.md](GUI.md).
-- `umat-oti-provider = "umat_oti.provider.build:main"` is now registered and
-  exercised in a fresh wheel installation. The `python -m umat_oti.provider`
-  entry also remains available.
-
-Recovery evidence and exact measured results are in
-[evidence/recovery_W3.md](evidence/recovery_W3.md).
+- Only three-dimensional, small-strain, first-order STRESS/PROPS contracts are
+  accepted. Finite strain, other tensor dimensions, higher orders, alternative
+  derivative-request schemas, extra source files and non-UMAT entry points are
+  refused with a diagnostic.
+- The legacy EVAL ABI has no KINC argument (it uses 1), and no deformation
+  gradients, coordinates, rotations, characteristic length, energy history,
+  predefined fields or cutback return. The wrappers use identity gradients and
+  rotation, zero coordinates, predefined fields and energies, and unit length.
+  MARCH uses a temperature of 293.15 with no temperature increments. Models that
+  need other context are not established by these checks; J2 and the tested
+  elasticity do not depend on it. `UMAT_OTI_EVAL_TOTAL` passes COORDS, CELENT,
+  NOEL, NPT, KSTEP and KINC through and returns PNEWDT.
+- In EVAL and MARCH, dimension errors, non-positive MARCH time steps and UMAT
+  cutback requests stop the program with Fortran `ERROR STOP`; that ABI has no
+  status return. Validate dimensions before calling, and run untrusted material
+  evaluation in a separate process.
+- Only Linux with gfortran has been exercised. Objects are platform- and
+  compiler-specific; Windows, other Fortran compilers and binary distribution
+  compatibility are unverified.
+- The provider is a Fortran object only. There is no C `mat_eval_v1` library
+  and no `.resmat` package.
+- `umat-oti-provider` (`umat_oti.provider.build:main`) is a registered console
+  script and has been exercised from a fresh wheel installation; the
+  `python -m umat_oti.provider` entry point remains available.

@@ -1,8 +1,8 @@
 # Reproducing the published results
 
 This document is for a reviewer who has the repository and wants to check what
-it claims. It says what runs without a licence, what does not, what each command
-produces, and how pass and fail are decided.
+it claims. It says what runs without a licence and what does not, what each
+command produces, and how pass and fail are decided.
 
 ## 1. What the software does
 
@@ -14,7 +14,8 @@ and sensitivities of stress and state to material parameters.
 
 The Residual Assembler is a separate product that consumes the transformed
 material and assembles element residuals and structural sensitivities. It lives
-in its own repository and is versioned independently; see §11.
+in its own repository and is versioned independently; see section 13,
+*Versions and compatibility*.
 
 ## 2. What is included
 
@@ -31,10 +32,11 @@ in its own repository and is versioned independently; see §11.
 
 ## 3. What requires Abaqus
 
-Only the paired Abaqus validation behind Table 2. Everything else -- the source
-transformation, compilation, material-point execution, primal parity, and every
-numerical verification against finite differences -- runs with Python and
-`gfortran` alone.
+Only the paired Abaqus validation behind Table 2, and the Abaqus stage of the
+corpus verification ([CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md)).
+Everything else -- the source transformation, compilation, material-point
+execution, primal parity, and every numerical verification against finite
+differences -- runs with Python and `gfortran` alone.
 
 A reviewer without Abaqus can therefore check the central claim of the paper:
 that the transformation produces derivatives agreeing with an independent
@@ -132,9 +134,9 @@ with the virtual environment active.
 | Table 5 — J2 sensitivities | `python tools/validate_table5.py` | `paper_results/parameter_sensitivity/` | A |
 | Table 6 — 20-model sweep | `python tools/run_parameter_sensitivity_sweep.py` | `paper_results/parameter_sensitivity/table6_parameter_sensitivity.csv` | A |
 | Illustrative tangent | `python tools/run_tangent_round.py --work-dir reproduce/tangent --results-dir paper_results/actual_umat_higher_order/j2` | `paper_results/actual_umat_higher_order/j2/table2_ddsdde_illustrative.csv` | A |
-| Paired Abaqus round (local) | `python tools/run_abaqus_paired_round.py --work-dir /tmp/abq --results-dir paper_results/abaqus_paired` | `paper_results/abaqus_paired/abaqus_paired_round.csv` | C |
+| Paired Abaqus round (local) | `python tools/run_abaqus_paired_round.py --work-dir reproduce/abaqus_paired --results-dir paper_results/abaqus_paired` | `paper_results/abaqus_paired/abaqus_paired_round.csv` | C |
 | Source discovery (network) | `python tools/discover_umat_sources.py --out-dir paper_results/discovery --repository-search --known-cache "$UMAT_OTI_DISCOVERY_CACHE"` | `paper_results/discovery/discovered_sources.csv` | B |
-| Discovery triage | `python tools/run_discovery_triage.py --work-dir /tmp/triage --results-dir paper_results/discovery` | `paper_results/discovery/discovery_triage.csv` | B |
+| Discovery triage | `python tools/run_discovery_triage.py --work-dir reproduce/triage --results-dir paper_results/discovery` | `paper_results/discovery/discovery_triage.csv` | B |
 | Source identity registry | `python tools/build_source_identity_registry.py` | `paper_results/generality/source_identity.csv` | A |
 | Data figures | `python tools/figures/build_tangent_figure.py`, `python tools/figures/build_higher_order_figure.py`, `python tools/figures/build_sensitivity_figure.py`, `python tools/figures/build_collection_figures.py`, `python tools/figures/build_acquisition_figures.py` | `paper_results/figures/` | A |
 | Table previews | `python tools/tables/render_table_previews.py` | `paper_results/tables/previews/` | A |
@@ -230,7 +232,7 @@ A model's own hand-written Jacobian is never used as a reference. Where it
 appears (Table 3), it is a third, *audited* column checked against the same
 finite-difference reference as everything else.
 
-## 10b. The advisory model, and what it is not allowed to do
+## 11. The advisory model, and what it is not allowed to do
 
 `umat_oti.assist` can talk to a model running on this machine's loopback
 interface. It exists for one class of problem: a pairing that is written down
@@ -296,7 +298,7 @@ classified line is ever accepted instead. That boundary is conservative rather
 than complete, and it is why a confirmed repair is reported rather than
 shipped.
 
-## 11. Reproducibility tiers
+## 12. Reproducibility tiers
 
 **Tier A — public, offline.** Needs the repository, Python, `gfortran` and the
 redistributable examples. Reproduces the transformations and every numerical
@@ -321,13 +323,17 @@ anywhere else. On the development workstation every Abaqus/Standard job --
 including Abaqus's own verification deck, with no user subroutine -- completes
 its analysis and then aborts with signal 6 while shutting down, inside
 `SMAAspSupport_finalize` where the bundled Intel Fortran runtime calls
-`for_inquire` and glibc's fortify check aborts. The analysis, the results and
-the ODB are unaffected. The runner therefore reads the job's own completion
-statement out of the `.dat` rather than trusting the exit status, and records
-the abort as a caveat on every result it produces. A machine without that
-defect will produce the same numbers with no caveat attached.
+`for_inquire` and glibc's fortify check aborts. The cause was later traced: that
+runtime formats the process ID into a 7-byte buffer, so any job whose PID is
+1,000,000 or more aborts at teardown (details and a workaround in
+[GUI.md](GUI.md), section *Running `REAL_UMAT.obj` in Abaqus*). The analysis,
+the results and the ODB are unaffected. The runner therefore reads the job's
+own completion statement out of the `.dat` rather than trusting the exit
+status, and records the abort as a caveat on every result it produces. A
+machine without that defect will produce the same numbers with no caveat
+attached.
 
-## 12. Versions and compatibility
+## 13. Versions and compatibility
 
 | Component | Version |
 |---|---|
@@ -338,7 +344,7 @@ defect will produce the same numbers with no caveat attached.
 The two repositories are separate products connected by a versioned contract.
 Exchanged artefacts are validated against the published schema.
 
-## 13. Reporting a reproduction problem
+## 14. Reporting a reproduction problem
 
 Open an issue at
 <https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation/issues> with:
@@ -350,12 +356,12 @@ Open an issue at
 A derivative that disagrees with the reference is a real finding and we want to
 know about it. Please include the contract and the source that produced it.
 
-## 14. Which commit corresponds to the manuscript
+## 15. Which commit corresponds to the manuscript
 
 `CITATION.cff` carries the released version, and each release is tagged. The
 evidence files record the commit that produced them: `run_manifest.json` and
 `environment.json` from any profile, and the `execution_commit_sha` and
 `audit_commit_sha` fields inside the archived ARC evidence.
 
-Evidence and manuscript are still converging; a release and DOI will be minted
-once the evidence stops changing, not before.
+No DOI has been minted yet. A release and DOI will be minted once the
+evidence stops changing, not before.

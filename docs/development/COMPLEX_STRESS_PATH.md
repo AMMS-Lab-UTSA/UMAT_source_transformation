@@ -1,16 +1,24 @@
 # DOUBLE COMPLEX on the stress path: not supported, and the reason
 
-**Verdict: an internal limitation of this transform. Ours, not the source's.**
+This development record explains why the transform refuses UMATs that carry
+`DOUBLE COMPLEX` values on the stress path, and how that refusal must be
+counted. It is for anyone working on the transform or on the corpus
+classification. `tests/test_a_complex_stress_path_is_our_limitation.py` pins
+the decision recorded here.
+
+**Verdict: an internal limitation of this transform. The limitation is this
+project's, not the sources'.**
 
 Nine corpus sources are refused with
 
 > `A` is declared DOUBLE COMPLEX and is on the stress path. The OTI type is
 > built over the reals, so there is no complex shadow to promote `A` to, and a
-> real shadow would drop the imaginary part silently.
+> real shadow would drop the imaginary part silently. Complex arithmetic on the
+> stress path is not supported.
 
 All nine are genuine UMATs. Nothing is missing from them, nothing about them is
 malformed, and no companion file would make them transform. The transform
-cannot do it. That sentence is the whole of the classification: this is not an
+cannot handle them. That is the whole of the classification: this is not an
 external blocker and must never be counted as one.
 
 ## The nine
@@ -88,14 +96,15 @@ target type to promote it to.
    numbers -- a viscoelastic model in the frequency domain, say -- looks the
    same to a pattern matcher and would be silently wrecked by the same rewrite.
 
-Neither is a small change and neither is on this project's critical path. The
-refusal is correct, the reason is precise, and the nine stay refused.
+Neither is a small change, and neither is currently planned. The refusal is
+correct, the reason is precise, and the nine stay refused.
 
 ## What must not happen
 
-These nine must not be re-labelled `missing_external_dependency`,
+These nine must not be re-labelled `missing_external_dependency` (or the
+terminal state `external_dependency_unavailable`),
 `incomplete_or_corrupt_source` or anything else that puts the cause outside
 this repository. Their refusal class is `genuine_umat`: the file is a real
-UMAT and the transform is the part that cannot do it. Counting them as
-external would raise a completion percentage by moving our own limitation onto
-somebody else's file.
+UMAT and the transform is the part that cannot handle it. Counting them as
+external would raise a completion percentage by moving this project's own
+limitation onto somebody else's file.

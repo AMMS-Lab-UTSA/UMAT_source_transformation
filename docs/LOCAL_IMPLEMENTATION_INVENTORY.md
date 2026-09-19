@@ -1,20 +1,26 @@
-# Local implementation inventory
+# Local implementation inventory (2026-08-26)
 
-Audit performed 2026-08-26 before the
-SoftwareX publication phase. Its purpose is to establish that the active feature
-branches are the most advanced copies of this work, so that nothing scientific
-is stranded in a directory nobody looks at.
+This is a historical development record. Before the publication phase, every
+other local copy of the two repositories was compared with the active branches,
+so that no scientific work was left in a copy nobody looks at. It is kept for
+provenance; you do not need it to use or reproduce the software.
 
-## Active branches (authoritative)
+## Result
 
-| Repository | Branch | Commit | Upstream | Dirty |
+The active branches were the most advanced copies. No other copy contained
+scientific work that was missing from them, so nothing was ported and no
+directory was copied wholesale.
+
+## Branches audited
+
+| Repository | Branch at the time | Commit | Upstream | Working tree |
 |---|---|---|---|---|
 | `UMAT_source_transformation` | `feature/softwarex-unified-umat-oti` | `ad9a6475def4` | equal | clean |
 | `Residual_Assembler` | `feature/umat-oti-residual-bridge` | `f928acec970a` | equal | clean |
 
-`main` is untouched in both (`fe40e9f`, `00c784a`) and was never checked out.
+`main` was untouched in both repositories at the time (`fe40e9f`, `00c784a`).
 
-## Toolchain
+## Toolchain at the time
 
 | Component | Version |
 |---|---|
@@ -23,65 +29,48 @@ is stranded in a directory nobody looks at.
 | gfortran | GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0 |
 | NumPy | 2.4.6 |
 | Streamlit | 1.62.0 |
-| Abaqus | 2021.HF5, installed and licensed on this machine |
+| Abaqus | 2021.HF5, installed and licensed on the development workstation |
 
-## Other local copies
+## Other copies examined
 
-| Path | Branch | Head | Uncommitted | Verdict |
+| Copy | Branch | Head | Uncommitted files | Verdict |
 |---|---|---|---|---|
-| `~/Documents/UMAT_source_transformation` | `main` | `84bda86` (2026-07-21) | 16 | Nothing to port |
-| `~/Desktop/Residual_Assembler(2)/Residual_Assembler` | `main` | `acdd1bf` | 248 | Previously mined; nothing further |
-| `~/Desktop/Residual_Assembler(2)` | not a repository | — | — | Archive directory |
+| an older `UMAT_source_transformation` checkout | `main` | `84bda86` (2026-07-21) | 16 | nothing to port |
+| an older `Residual_Assembler` checkout | `main` | `acdd1bf` | 248 | previously mined; nothing further |
 
-**`~/Documents/UMAT_source_transformation`.** Its HEAD predates the active
-branch work and its uncommitted files are the `oti_provider/materials/sweep_*`
-directories, which were already imported into
-`parameter_sensitivity/models/` with provenance recorded in
-`parameter_sensitivity/IMPORT_PROVENANCE.json`. Its GUI sources are older
-(2026-06-17 and 2026-06-30) and smaller than the active ones, so there is no
-newer interface work to recover. Nothing was ported.
+**Older `UMAT_source_transformation` checkout.** Its head predated the active
+branch work. Its uncommitted files were the `oti_provider/materials/sweep_*`
+model directories, which had already been imported into
+`parameter_sensitivity/models/` with their provenance recorded in
+`parameter_sensitivity/IMPORT_PROVENANCE.json`. Its GUI sources (2026-06-17 and
+2026-06-30) were older and smaller than the active ones, so there was no newer
+interface work to bring over.
 
-**`~/Desktop/Residual_Assembler(2)/Residual_Assembler`.** Mined in an earlier
-phase; the C3D8 element kernel and material-point validation paths it contributed
-are already present on the active branch. Its remaining differences are build
-outputs and workspace state.
+**Older `Residual_Assembler` checkout.** It had been mined in an earlier phase:
+the C3D8 element kernel and the material-point validation paths it contributed
+were already on the active branch. Its remaining differences were build outputs
+and workspace state. The detailed comparison is in
+[development/INTEGRATION_PLAN.md](development/INTEGRATION_PLAN.md).
 
-## Manuscripts, poster and presentations
+## Manuscript
 
-| File | Size | Modified | Status |
-|---|---|---|---|
-| `~/Desktop/UMAT_OTI_SoftwareX_V4.docx` | 1.7 MB | 2026-08-25 | The V4 manuscript. Preserved unchanged. |
-| `~/Desktop/UMAT_OTI_SoftwareX.docx` | 924 KB | 2026-07-09 | Earlier revision |
-| `~/Desktop/UMAT_OTI_SoftwareX_backup.docx` | 944 KB | 2026-07-09 | Backup of the earlier revision |
-| `~/Desktop/UMAT_OTI_Advances_20260624.pptx` | 9.4 MB | 2026-06-25 | Presentation |
-| `~/Desktop/umat_oti_elastic_demo.pptx` | 36 KB | 2026-06-22 | Presentation |
-| `~/Desktop/umat_oti_workflow_animated.pptx` | 32 KB | 2026-06-21 | Presentation, conceptual workflow animation |
+The V4 manuscript, `UMAT_OTI_SoftwareX_V4.docx`, is held outside this
+repository and was preserved unchanged; its SHA-256 is recorded in
+`docs/manuscript_claims.json`. No V5 manuscript existed at the time, so V5 was
+created from V4. V4 itself is left untouched: the generator does not read it
+and nothing copies it.
 
-**No V5 manuscript existed on this machine.** V5 was therefore created from V4
-rather than located, and V4 is left untouched -- unread by the generator, not
-copied, and byte-identical to the file recorded above.
-
-V5 now lives in the repository at `docs/manuscript/UMAT_OTI_SoftwareX_V5.docx`,
-generated by `tools/manuscript/build_v5_manuscript.py`. Every numerical claim in
-it is substituted from the executed evidence through a mapping that raises on a
-missing key, so it is regenerated rather than edited: an edit made in Word is
-lost at the next build. Edit the text in the generator and the numbers in the
-evidence.
-
-**No poster file was found.** Searched for `*poster*` with document extensions
-across the home directory to depth 6; nothing matched. Recorded as absent rather
-than assumed missing.
+V5 lives in the repository at `docs/manuscript/UMAT_OTI_SoftwareX_V5.docx` and
+is generated by `tools/manuscript/build_v5_manuscript.py`. Every numerical
+claim in it is substituted from the executed evidence through a mapping that
+raises on a missing key. It is therefore regenerated, never edited: an edit
+made in Word is lost at the next build. Edit the text in the generator and the
+numbers in the evidence.
 
 ## Evidence archives and snapshots
 
 | Item | Location | Status |
 |---|---|---|
-| Archived Abaqus paired campaign | `paper_results/arc_791506/` | In repository. Slurm job 791506, host c015, GCC 13.3.0. The Abaqus version was not recorded by that run. |
-| Corpus snapshots | pinned submodules of `Residual_Assembler` | Five permissive repositories at fixed commits |
-| Frozen publication evidence | `paper_results/frozen/` | Created in this phase |
-
-## Consequence
-
-The active branches are the most advanced copies. No divergent implementation
-contains scientific work that is absent from them, so nothing was ported in this
-phase and no directory was copied wholesale.
+| Archived Abaqus paired campaign | `paper_results/arc_791506/` | In the repository. Slurm job 791506, host c015, GCC 13.3.0. The Abaqus version was not recorded by that run. |
+| Corpus snapshots | pinned submodules of `Residual_Assembler` | five permissively licensed repositories at fixed commits |
+| Frozen publication evidence | `paper_results/frozen/` | created in this phase |

@@ -24,8 +24,8 @@ every required part of it.
 | Claim status | Requirements |
 |---|---:|
 | `verified` | 2 |
-| `partially_implemented` | 12 |
-| `unimplemented` | 5 |
+| `partially_implemented` | 13 |
+| `unimplemented` | 4 |
 | `failed` | 1 |
 | `blocked_by_external_dependency` | 1 |
 | **total** | **21** |
@@ -60,12 +60,12 @@ every required part of it.
 
 | ID | Requirement | Repo | Stage | Implementation | Test | Evidence | Execution | Claim |
 |---|---|---|---|---|---|---|---|---|
-| `DOCS-SET` | START_HERE plus contract, CLI, Streamlit, Abaqus, handoff, corpus, troubleshooting and reproduction guides | UMAT_source_transformation | release | -- | -- | -- | `unimplemented` | `unimplemented` |
+| `DOCS-SET` | START_HERE plus contract, CLI, Streamlit, Abaqus, handoff, corpus, troubleshooting and reproduction guides | UMAT_source_transformation | release | -- | -- | -- | `partially_implemented` | `partially_implemented` |
 
 **`DOCS-SET`**
-- blocker: 9 of 9 required documents are absent
-- measured `present`: []
-- measured `absent`: ["START_HERE.md", "docs/CONTRACT_REFERENCE.md", "docs/CLI_REFERENCE.md", "docs/STREAMLIT_TUTORIAL.md", "docs/ABAQUS_VALIDATION.md", "docs/RESIDUAL_ASSEMBLER_HANDOFF.md", "docs/WEB_CORPUS_GUIDE.md", "docs/TROUBLESHOOTING.md", "docs/REPRODUCE_PAPER.md"]
+- blocker: 8 of 9 required documents are absent
+- measured `present`: ["START_HERE.md"]
+- measured `absent`: ["docs/CONTRACT_REFERENCE.md", "docs/CLI_REFERENCE.md", "docs/STREAMLIT_TUTORIAL.md", "docs/ABAQUS_VALIDATION.md", "docs/RESIDUAL_ASSEMBLER_HANDOFF.md", "docs/WEB_CORPUS_GUIDE.md", "docs/TROUBLESHOOTING.md", "docs/REPRODUCE_PAPER.md"]
 
 ## Higher order
 
@@ -96,8 +96,8 @@ every required part of it.
 - measured `verified`: false
 
 **`HO-j2`**
-- measured `rows`: 108
-- measured `rows_supporting_verification`: 108
+- measured `rows`: 540
+- measured `rows_supporting_verification`: 540
 - measured `verified`: true
 
 **`HO-visco_imp`**
@@ -169,7 +169,7 @@ every required part of it.
 
 **`PIPE-ONE-BOUNDARY`**
 - blocker: 4 distinct transform entry points are still in use
-- measured `distinct_transform_entry_points`: {"cli_json.run_config_transform": 5, "core.pipeline.transform_umat": 1, "semantic.transform_pipeline.transform_umat": 1, "transform.source_transform.transform_umat_to_oti_from_config": 12}
+- measured `distinct_transform_entry_points`: {"cli_json.run_config_transform": 4, "core.pipeline.transform_umat": 1, "semantic.transform_pipeline.transform_umat": 1, "transform.source_transform.transform_umat_to_oti_from_config": 8}
 
 ## Release metadata
 
@@ -178,7 +178,7 @@ every required part of it.
 | `META-VERSION` | One version across pyproject, CITATION.cff, codemeta.json and .zenodo.json | UMAT_source_transformation | evidence generation | -- | -- | -- | `implemented` | `verified` |
 
 **`META-VERSION`**
-- measured `versions`: {".zenodo.json": "1.1.0", "CITATION.cff": "1.1.0", "codemeta.json": "1.1.0", "pyproject.toml": "1.1.0", "src/umat_oti/__init__.py": "1.1.0"}
+- measured `versions`: {"CITATION.cff": "1.1.0", "codemeta.json": "1.1.0", "pyproject.toml": "1.1.0", "src/umat_oti/__init__.py": "1.1.0"}
 
 ## Residual Assembler
 

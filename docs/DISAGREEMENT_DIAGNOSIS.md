@@ -1,15 +1,25 @@
 # What the offline gate's disagreeing rows are, and what they are not
 
+This note diagnoses the rows on which the offline stress-parity gate found the
+original and the transformed UMAT disagreeing. It is for anyone reading the
+gate's results, or tempted to explain its disagreements away. It is a
+historical record of the gate's results as they stood on 2026-09-04. The corpus
+has since been re-run at a newer transform generation (see the census in
+[paper_results/corpus/CORPUS_VERIFICATION.md](../paper_results/corpus/CORPUS_VERIFICATION.md)),
+so the counts below describe the store of that date, not the current one.
+
+## The measurement
+
 The offline stress-parity gate builds an original UMAT and its transform as
 two standalone drivers, runs both from one declared starting state, and
-compares the stress. At the time of writing, of 251 stored transforms it
-decides 155: **123 agree** and **32 disagree**, at a relative tolerance of
-1e-10. The worst difference among agreeing rows is 1.958e-11.
+compares the stress. On 2026-09-04, of 251 stored transforms it
+decided 155: **123 agreed** and **32 disagreed**, at a relative tolerance of
+1e-10. The worst difference among agreeing rows was 1.958e-11.
 
-This note records what has been established about those 32, and — at least
-as usefully — which explanations have been tested and refused. Every claim
-here names the measurement behind it. Where a measurement could not be
-trusted, that is said instead of a conclusion.
+This note records what has been established about those 32 and, just as
+usefully, which explanations have been tested and refuted. Every claim here
+names the measurement behind it. Where a measurement could not be trusted, the
+note says so instead of drawing a conclusion.
 
 ## The 32 split into two populations, not one
 
@@ -20,7 +30,7 @@ Dumping the stress arrays component by component separates them cleanly:
 | structural | 1 | a flipped sign, and a shear component where the original returns exactly zero |
 | smooth | 31 | identical signs, identical zero pattern, differences spread from 1.5e-09 to 7.4e-03 |
 
-They are almost entirely one family of sources (Jeff97 growth and shell
+They are almost entirely one family of sources (the Jeff97 growth and shell
 models). A single population of 32 would suggest one cause; two populations
 of 31 and 1 do not.
 

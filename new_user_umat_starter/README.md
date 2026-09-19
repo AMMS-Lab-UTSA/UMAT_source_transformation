@@ -1,146 +1,175 @@
-# New User UMAT Starter
+# Starter kit: transforming your own UMAT
 
-This folder is a self-contained starter pack for running the current UMAT-OTI workflow on a new UMAT.
+This folder is for users who want to run UMAT-OTI on a UMAT of their own. It
+explains the shortest route, how to write a JSON contract when you need one,
+and which helper script to use at each step.
 
-The reusable JSON templates and worked examples live at the repository root in
-`templates/` and `examples/`. This starter folder holds the docs and helper
-scripts that go with them.
+The reusable JSON templates and worked examples live at the repository root, in
+`templates/`, `examples/` and `benchmarks/`. This folder holds the documents and
+helper scripts that go with them.
 
-## What Is In This Folder
+## What is in this folder
 
-- `README.md`: quickest path for a new user.
-- `JSON_REFERENCE.md`: field-by-field explanation of the compact JSON contract.
-- `TROUBLESHOOTING.md`: common failure modes and what to check next.
-- `scripts/scan_source.py`: inspect a raw UMAT source before writing JSON.
-- `scripts/show_source_lines.py`: print source with line numbers so you can choose `replace` ranges.
-- `scripts/check_config.py`: load-check a compact JSON contract and optionally write the expanded config.
-- `scripts/run_from_json.py`: run the single-config transform path without using the batch driver.
+- `README.md`: this page, the quickest path for a new user.
+- `JSON_REFERENCE.md`: a field-by-field explanation of the compact JSON
+  contract.
+- `TROUBLESHOOTING.md`: common failures and what to check next.
+- `scripts/scan_source.py`: inspect a raw UMAT source before writing a
+  contract.
+- `scripts/show_source_lines.py`: print the source with line numbers, so you can
+  choose `replace` ranges.
+- `scripts/check_config.py`: load-check a compact JSON contract and optionally
+  write the expanded configuration.
+- `scripts/run_from_json.py`: run the transform alone on one contract, without
+  the full service.
 
-## Minimal Workflow
+Run every command below from the repository root, with the package installed
+(`pip install -e .`) and Python 3.10 or newer.
 
-Run the commands below from the repository root.
+## The shortest route: no contract at all
 
-Use `/usr/bin/python3.12` on ARC or any machine where the default `python` is older than 3.10.
+For the standard consistent tangent (`DDSDDE = dSTRESS/dDSTRAN`), you do not
+need to write a contract. Give the source and the number of stress components:
+
+```bash
+umat-oti jacobian path/to/YOUR_UMAT.for --ntens 6 --out umat_oti_workspace/my_umat --compile
+```
+
+The transformer finds the existing tangent block itself and writes the
+transformed UMAT, a drop-in `*_oti_combined.f90`, and the contract it used
+(`jacobian_contract.json`), which you can edit and re-run. The GUI's
+Constitutive Jacobian screen does the same thing (see
+[docs/GUI.md](../docs/GUI.md)).
+
+Write a contract by hand when you need to control what is replaced or promoted,
+or when your UMAT calls helper routines defined in other files.
+
+## Writing a contract
 
 1. Inspect the UMAT source.
 
-```bash
-/usr/bin/python3.12 new_user_umat_starter/scripts/scan_source.py /absolute/path/to/YOUR_UMAT.for
-/usr/bin/python3.12 new_user_umat_starter/scripts/show_source_lines.py /absolute/path/to/YOUR_UMAT.for --start 1 --end 220
-```
+   ```bash
+   python new_user_umat_starter/scripts/scan_source.py path/to/YOUR_UMAT.for
+   python new_user_umat_starter/scripts/show_source_lines.py path/to/YOUR_UMAT.for --start 1 --end 220
+   ```
 
 2. Copy the minimal template and edit it.
 
+   ```bash
+   cp templates/new_umat_minimal_template.json json_files/my_new_umat.json
+   ```
+
+3. Fill in the required fields: `name`, `source`, `jacobian.seed`,
+   `jacobian.output`, `jacobian.target`, `promote`, `replace`, `ntens` and
+   `order`. `constant` and `real` are optional overrides; see
+   [JSON_REFERENCE.md](JSON_REFERENCE.md).
+
+4. Load-check the contract.
+
+   ```bash
+   python new_user_umat_starter/scripts/check_config.py --config json_files/my_new_umat.json
+   ```
+
+5. Optionally write the expanded internal configuration for inspection.
+
+   ```bash
+   python new_user_umat_starter/scripts/check_config.py \
+     --config json_files/my_new_umat.json \
+     --write-expanded umat_oti_workspace/my_new_umat.expanded.json
+   ```
+
+6. Transform it.
+
+   ```bash
+   umat-oti-config --config json_files/my_new_umat.json --out umat_oti_workspace/my_new_umat
+   ```
+
+   `umat-oti-config` runs the full transformation service: the same one the GUI
+   and the batch driver use. It also resolves `dependency_roots`, writes the
+   combined drop-in source and records every derivative request.
+
+   Two lighter alternatives exist:
+
+   ```bash
+   python scripts/transform_from_json.py json_files/my_new_umat.json --out umat_oti_workspace/my_new_umat
+   python new_user_umat_starter/scripts/run_from_json.py \
+     --config json_files/my_new_umat.json \
+     --out umat_oti_workspace/my_new_umat
+   ```
+
+   `scripts/transform_from_json.py` forwards to `umat-oti-config`.
+   `run_from_json.py` calls the transform directly and prints a compact
+   summary (anchor status, blockers, warnings, semantic checks). It does
+   **not** resolve `dependency_roots`, so use `umat-oti-config` for a UMAT whose
+   helper routines live in other files.
+
+7. To use the GUI instead, start it and load the same file on tab
+   **1. Load Config**:
+
+   ```bash
+   streamlit run scripts/app.py
+   ```
+
+   A contract uploaded through the browser has no location on disk, so its
+   relative `source` path is resolved against the working directory and the
+   repository root only. Load it from `json_files/` or `user_jsons/` instead,
+   or use an absolute `source` path on the machine running the app.
+
+### Running several contracts without arguments
+
+`scripts/run_json_pipeline.py` transforms every contract under
+`JSON_INPUT_PATH` (a file or a directory; `examples/` by default) into
+`OUTPUT_DIRECTORY`. Edit those two names at the top of the script, then run:
+
 ```bash
-cp templates/new_umat_minimal_template.json json_files/my_new_umat.json
+python scripts/run_json_pipeline.py
 ```
 
-3. Fill in at least these fields.
+The script only reads contracts you wrote; it never generates one. Paired
+validation in Abaqus is off by default (`RUN_VALIDATION = False`). Switch it on
+only on a machine with Abaqus configured; it then compares the transformed UMAT
+with the original.
 
-```text
-name
-source
-jacobian.seed
-jacobian.output
-jacobian.target
-promote
-constant
-real
-replace
-ntens
-order
-```
+## Which file to start from
 
-4. Load-check the JSON contract.
+- `templates/new_umat_minimal_template.json`: a standard tangent-only UMAT.
+- `templates/new_umat_constitutive_template.json`: only when you also need the
+  advanced `constitutive_jacobians` or `helper_surfaces` sections.
+- `examples/elastic_minimal.json`: the smallest real reference.
+- `examples/hin_reference.json`: a larger real reference.
+- `benchmarks/*.json`: the 19 benchmark contracts. All 19 transform with
+  `umat-oti-config` (checked on 2026-09-18); `benchmarks/UMAT_PCO.json` shows
+  how `dependency_roots` names a folder of helper routines.
 
-```bash
-/usr/bin/python3.12 new_user_umat_starter/scripts/check_config.py --config json_files/my_new_umat.json
-```
-
-5. Optionally write the expanded internal config for inspection.
-
-```bash
-/usr/bin/python3.12 new_user_umat_starter/scripts/check_config.py \
-  --config json_files/my_new_umat.json \
-  --write-expanded umat_oti_workspace/my_new_umat.expanded.json
-```
-
-6. Attempt the transform on that one config.
-
-```bash
-/usr/bin/python3.12 new_user_umat_starter/scripts/run_from_json.py \
-  --config json_files/my_new_umat.json \
-  --out umat_oti_workspace/my_new_umat
-```
-
-If you want the shortest command from the bundle root, use:
-
-```bash
-/usr/bin/python3.12 scripts/transform_from_json.py json_files/my_new_umat.json --out umat_oti_workspace/my_new_umat
-```
-
-If you do not want command-line arguments at all, edit `JSON_INPUT_PATH` and
-`OUTPUT_DIRECTORY` at the top of `scripts/run_json_pipeline.py`, then run:
-
-```bash
-/usr/bin/python3.12 scripts/run_json_pipeline.py
-```
-
-That script only consumes user-authored JSON files. It does not generate JSON
-for the user. By default it also runs the validation/compare stage after
-transformation so the transformed UMAT is checked against the original UMAT.
-
-If you install the bundle with `python3 -m pip install -e .`, the same path is available as:
-
-```bash
-umat-oti-config --config json_files/my_new_umat.json --out umat_oti_workspace/my_new_umat
-```
-
-7. If you prefer the GUI, run Streamlit and load the same JSON file.
-
-```bash
-streamlit run scripts/app.py
-```
-
-If you upload JSON through the browser, use an absolute `source` path on the local machine running the app. Relative paths are safest when the JSON is loaded directly from disk on that same machine.
-
-## Which File To Start From
-
-- Start from `templates/new_umat_minimal_template.json` for a standard tangent-only UMAT.
-- Start from `templates/new_umat_constitutive_template.json` only if you also need advanced `constitutive_jacobians` or `helper_surfaces` sections.
-- Use `examples/elastic_minimal.json` as the smallest real reference.
-- Use `examples/hin_reference.json` as a larger real reference.
-## What Each Script Is For
+## What each script is for
 
 `scan_source.py`
 
-- Prints detected UMAT routines, candidate regions, and a compact source summary.
+- Prints the detected UMAT routines, candidate regions and a compact source
+  summary.
 
 `show_source_lines.py`
 
-- Prints a source range with 1-based line numbers.
-- Use it to identify the old DDSDDE block for the `replace` list.
+- Prints a source range with 1-based line numbers (`--start`, `--end`).
+- Use it to find the old DDSDDE block for the `replace` list.
 
 `check_config.py`
 
 - Confirms the compact JSON can be loaded.
 - Resolves the source path.
-- Applies completed anchors when possible.
-- Prints anchor completion status and key transform settings.
+- Applies completed anchors where possible.
+- Prints the anchor completion status and the key transform settings.
 
 `run_from_json.py`
 
-- Runs the same single-config transform path used by the current batch tooling.
-- Writes the generated source and transform report into the chosen output directory.
+- Runs the transform on one contract and writes the generated source and the
+  transform report into the chosen output directory (by default
+  `umat_oti_workspace/new_user_runs/<contract-name>`).
+- Exits 0 on success, 1 on failure, and 2 when the contract still needs
+  completion (`needs_json_completion`).
 
-## Known Limits
+## Next
 
-- The compact JSON layer is working and the completed config set has been rewritten to this simple format.
-- The standalone bundle successfully transforms the current 19 completed benchmark configs.
-- A transform warning about minimal local pyoti templates is expected in the standalone bundle and is not itself a failure.
-
-## First Files To Read
-
-- `new_user_umat_starter/JSON_REFERENCE.md`
-- `new_user_umat_starter/TROUBLESHOOTING.md`
-- `examples/elastic_minimal.json`
+- [JSON_REFERENCE.md](JSON_REFERENCE.md), for every contract field.
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md), when a step fails.
+- `examples/elastic_minimal.json`, the smallest working contract.

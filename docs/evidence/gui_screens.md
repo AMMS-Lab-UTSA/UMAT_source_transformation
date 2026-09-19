@@ -148,7 +148,7 @@ fixed.
 - Objects: no directory of the developer's appears in OTI_UMAT.obj,
   REAL_UMAT.obj or Mapping.json. Two builds in different directories are
   byte-identical, for both the gfortran objects and the `abaqus make` object.
-- REAL_UMAT in Abaqus: see docs/GUI.md, "REAL_UMAT in Abaqus". The "buffer
+- REAL_UMAT in Abaqus: see docs/GUI.md, "Running `REAL_UMAT.obj` in Abaqus". The "buffer
   overflow detected" abort does not come from gfortran. It also happens with
   the `abaqus make` object and without LD_LIBRARY_PATH. Its stack ends in the
   Intel runtime bundled with Abaqus (`fname_from_piped_fd`), which formats the
