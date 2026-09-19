@@ -71,7 +71,8 @@ method: [CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md).
   its `abaqus_validation` stage is not yet routed through the pipeline and
   reports `unsupported`. Read `run_manifest.json`, or run the stages you need
   with `--only` ([CLI_GUIDE.md](CLI_GUIDE.md#umat-oti-pipeline)).
-- **Platforms.** Linux with gfortran is tested. Windows is not; use WSL 2.
+- **Platforms.** Linux with gfortran is tested. Windows and macOS are not;
+  on Windows, use WSL 2.
   Compiled objects are specific to the platform and compiler.
 
 ## 3. Installation
