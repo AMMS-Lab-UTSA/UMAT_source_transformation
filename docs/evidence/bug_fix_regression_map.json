@@ -73,8 +73,10 @@
    "commit": "2a4dd95",
    "selected_by": "manual",
    "bug": "Run from an installed package, the developer screens' default workspace resolved inside the Python environment's lib directory (four levels above the module), and the uniaxial check path failed on a missing parameter_sensitivity/loading_paths.json instead of saying the file is not installed.",
-   "tests": [],
-   "no_test_reason": "No test runs the screens from an installed package; the clean-install gate renders the installed GUI, but that is not a suite test and does not select the uniaxial path."
+   "tests": [
+    "tests/gui/test_an_installed_package_writes_under_the_working_directory.py::test_the_default_workspace_is_under_the_working_directory",
+    "tests/gui/test_an_installed_package_writes_under_the_working_directory.py::test_the_uniaxial_check_path_says_its_file_is_not_installed"
+   ]
   },
   {
    "commit": "f11806f",
@@ -87,27 +89,32 @@
   {
    "commit": "09d661b",
    "bug": "The parameter-sensitivity sweep ran plain 'make'; GNU make predefines FC=f77, so the generated Makefile's 'FC ?= gfortran' never applied and the OTI driver build failed wherever f77 is absent.",
-   "tests": [],
-   "no_test_reason": "The sweep returns 0 whatever a model's build did, and the tests that run it (tests/test_reproduce_profiles.py) check only where it writes; no test asserts that the OTI driver built on a machine without f77."
+   "tests": [
+    "tests/test_the_oti_build_uses_gfortran_not_makes_builtin_f77.py::test_the_sweep_builds_its_oti_driver_with_gfortran_whatever_fc_make_would_use",
+    "tests/test_the_oti_build_uses_gfortran_not_makes_builtin_f77.py::test_every_generated_makefile_replaces_makes_builtin_f77_with_gfortran"
+   ]
   },
   {
    "commit": "5b97c2f",
-   "bug": "The transformed UMAT_HIN passed hypercomplex values where its lifted helpers expect integers and reals where they expect hypercomplex values (INTEGER variables were promoted and the lifted bodies' IMPLICIT types were not read); gfortran 10 refused it and the stress was 63 % off the original's.",
+   "bug": "The transformed UMAT_HIN passed hypercomplex values where its lifted helpers expect integers and reals where they expect hypercomplex values (INTEGER variables were promoted and the lifted bodies' IMPLICIT types were not read); gfortran 10 refused it and the stress was 63 % off the original's. Its generated Makefiles kept GNU make's built-in FC=f77, because 'FC ?= gfortran' never applies; they now replace that default and keep a caller's FC.",
    "tests": [
     "tests/test_lifted_helper_arguments_match_their_dummies.py::test_the_reader_types_dummies_by_implicit_rules_and_declarations",
     "tests/test_lifted_helper_arguments_match_their_dummies.py::test_both_directions_of_a_mismatch_are_reported",
     "tests/test_lifted_helper_arguments_match_their_dummies.py::test_hin_calls_match_and_its_stress_equals_the_original",
-    "tests/test_a_data_constant_in_the_promote_list_stays_real.py::test_the_hin_benchmark_transforms_from_its_committed_contract"
+    "tests/test_a_data_constant_in_the_promote_list_stays_real.py::test_the_hin_benchmark_transforms_from_its_committed_contract",
+    "tests/test_the_oti_build_uses_gfortran_not_makes_builtin_f77.py::test_every_generated_makefile_replaces_makes_builtin_f77_with_gfortran"
    ]
   },
   {
    "commit": "c43e0e7",
-   "bug": "The contract packaging tests imported tomllib, which Python 3.10 lacks, and the wheel test skipped on every 3.12 run because setuptools was not declared; a docstring quoting a Windows path raised an invalid-escape SyntaxWarning.",
+   "bug": "The contract packaging tests imported tomllib, which Python 3.10 lacks, and the wheel test skipped on every 3.12 run because setuptools was not declared; a docstring quoting a Windows path raised an invalid-escape SyntaxWarning; and the clean-clone acceptance run piped pytest through tail, so a failure printed the end of one assertion message without naming the failing test.",
    "tests": [
     "tests/test_contract_packaging.py::test_pyproject_declares_the_contract_data",
-    "tests/test_contract_packaging.py::test_a_built_wheel_carries_every_schema_the_contract_validates_with"
-   ],
-   "untested_parts": "The raw-string docstring in src/umat_oti/abaqus/data_files.py (SyntaxWarning) and the failure summary of scripts/clean_clone_acceptance.sh have no test."
+    "tests/test_contract_packaging.py::test_a_built_wheel_carries_every_schema_the_contract_validates_with",
+    "tests/test_every_module_compiles_without_a_warning.py::test_every_module_compiles_with_warnings_as_errors",
+    "tests/test_the_acceptance_run_names_the_test_that_failed.py::test_a_failing_suite_stops_the_run_and_names_the_failing_test",
+    "tests/test_the_acceptance_run_names_the_test_that_failed.py::test_a_passing_suite_lets_the_run_go_on"
+   ]
   },
   {
    "commit": "69f1144",
