@@ -1,370 +1,328 @@
-# UMAT-OTI: Current Usage
+# UMAT-OTI usage report
 
-Updated 2026-09-18 for `main` (the final integration of both repositories),
-Linux, Python 3.11.7, gfortran 9.4.0, ifort 2023.2.1 and Abaqus 2021.HF5. The
-transform generation is `da1f183708c19072`; the whole corpus was re-run at it
-([evidence/final_refreeze.md](evidence/final_refreeze.md)). The result of the
-clean-install gate for the published `main` commits is in
-[Residual_Assembler docs/evidence/final_clean_clone.md](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/evidence/final_clean_clone.md).
+This page shows what UMAT-OTI does, how to install and use it, what it has
+been checked against, and where its limits are. Every command below runs from
+the repository root as written. The numbers were measured on 2026-09-18 on
+Linux (Ubuntu 20.04) with Python 3.11.7 and gfortran 9.4.0, unless a section
+says that a number comes from a linked record.
 
-## Supported Scope
+UMAT-OTI rewrites the Fortran source of an Abaqus user material (UMAT) so that
+its derivatives are computed exactly with order-truncated imaginary (OTI)
+numbers, instead of being derived by hand or approximated by finite
+differences. From one real-valued UMAT it produces:
 
-The compiled provider builds for 20 of the 21 bundled parameter-sensitivity
-models (m2_elastic3d's contract uses another schema and is refused). Its
-verifier judges every DSIGMA_DP, DSTATEV_DP and DDSDDE entry against centred
-finite differences of the separately compiled ORIGINAL on the contract's own
-strain path: J2 (elastic, plastic and unloading increments) and the FCC crystal
-with the slide-15 constants both verify with no disagreeing entry. The
-additive entry point `UMAT_OTI_EVAL_TOTAL`
-([PROVIDER_EVAL_TOTAL.md](PROVIDER_EVAL_TOTAL.md)) carries total derivatives
-through any UMAT's state, which is what the Residual Assembler's history engine
-uses to replay the full-size presentation cantilevers. The advanced example
-extracts and verifies a local constitutive Jacobian in bundled m5_cpflow.
-Small strain only; finite-strain and higher-order providers are refused.
+- the consistent tangent `DDSDDE = dSTRESS/dDSTRAN`, as a drop-in UMAT;
+- the Jacobian of the model's own local Newton iteration;
+- higher-order stress derivatives;
+- parameter and state sensitivities `DSIGMA_DP = dSTRESS/dPROPS` and
+  `DSTATEV_DP = dSTATEV/dPROPS` along a loading history, packaged as a
+  compiled **material provider** (`OTI_UMAT.obj` + `Mapping.json`, with the
+  original routine as `REAL_UMAT.obj`).
 
-The offline suite (`python -m pytest -q`, with gfortran, OTILib and the
-companion checkout present) is recorded with the clean-clone run linked above.
-Skips name their missing prerequisite (Abaqus-only data, optional corpora) and
-are never counted as passes. The corpus census was re-run at this generation.
-The 20-model sensitivity table and the 18 slide-8 benchmarks were reproduced on
-2026-09-18 on the branches merged here, before the last transformer fix
-(`f11806f`; the sources it generates for all 19 benchmark contracts and all 20
-providers are byte-identical before and after it); the commands in
-[VERIFICATION_RECORD.md](VERIFICATION_RECORD.md) rerun them.
+The companion program
+[Residual_Assembler](https://github.com/AMMS-Lab-UTSA/Residual_Assembler)
+consumes that provider together with a finished Abaqus analysis and returns
+parameter sensitivities of the finite-element solution.
 
-## Installation And Environment
+## 1. Supported scope
 
-Python >=3.10 with ctypes, ssl and venv is required. Runtime dependencies:
-NumPy>=1.26, pandas>=2, Streamlit>=1.30, SymPy>=1.12. Select `test` for pytest,
-`paper` for publication/plotting, `screenshots` for browser automation (which
-also needs an installed browser). Compiled examples require gfortran and make.
-Linux/gfortran is verified here; other operating systems/compilers are not
-established by this audit. Abaqus/ifort are not needed for the five examples.
+| Capability | Entry point | Scope |
+| --- | --- | --- |
+| Consistent tangent `DDSDDE` | `umat-oti jacobian`, `umat-oti config`, GUI tab **Constitutive Jacobian** | NTENS 3, 4 or 6; first and higher order; the tangent block is found automatically, or named in a JSON contract |
+| Compiled parameter-sensitivity provider | `umat-oti-provider build`, `python -m umat_oti.provider.collaborator`, GUI tab **Parameter Sensitivities** | 3D (NTENS 6), small strain, first-order `STRESS` with respect to `PROPS`; path-dependent state carried through the history; builds for 20 of the 21 bundled models |
+| Per-entry verification of a provider | `python -m umat_oti.validation.parameter_sensitivity_provider` | every entry of `DSIGMA_DP`, `DSTATEV_DP` and `DDSDDE` judged against finite differences of the original |
+| Internal (local Newton) Jacobian | `examples/verify_internal_jacobian.py`, `tools/run_internal_jacobian_round.py` | scalar Newton updates `X = X +/- A/B`, found by scanning the source |
+| Paired Abaqus validation | GUI tabs **3. Validate** to **5. Report**, `umat-oti-batch --validate` | needs a licensed Abaqus |
+| Reproduction profiles | `python -m umat_oti.reproduce` | `smoke`, `offline`, `paper`, `corpus`, `abaqus` |
 
-From a fresh clone:
+The provider also exports the entry point `UMAT_OTI_EVAL_TOTAL`, which carries
+total derivatives through any UMAT's state. Residual_Assembler's history
+engine uses it ([PROVIDER_EVAL_TOTAL.md](PROVIDER_EVAL_TOTAL.md)). The provider
+ABI is specified in [PROVIDER.md](PROVIDER.md).
 
-```sh
+Beyond the bundled models, 391 UMATs acquired from public repositories were
+re-transformed and run in Abaqus at the current transform generation (see
+section 9): 240 transform, and 43 of the 260 adequately specified genuine UMATs
+clear all six acceptance gates. Every other source carries a named reason.
+Census: [paper_results/corpus/CORPUS_VERIFICATION.md](../paper_results/corpus/CORPUS_VERIFICATION.md);
+method: [CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md).
+
+## 2. Known limits
+
+- **Kinematics.** The provider accepts small-strain contracts only. A
+  deformation-gradient contract is refused by name: `provider build failed:
+  provider supports only small_strain, not deformation-gradient kinematics`.
+- **Provider shape.** Only 3D (NTENS 6), first-order `STRESS` with respect to
+  `PROPS`. Its EVAL entry point has no `KINC`, coordinates, rotations or
+  predefined fields; it passes neutral values for them (see
+  [PROVIDER.md](PROVIDER.md)).
+- **Refused constructs.** Some constructs are refused with a named diagnostic,
+  for example LAPACK calls on the stress path or helper routines whose source
+  is not available. The corpus census lists every refusal and its reason.
+- **The check path matters.** A derivative can only be verified on a loading
+  path that exercises it. A column that is zero along the chosen path is
+  reported *unresolved*, never as verified.
+- **One verifier edge case.** At the FCC model's shipped constants on the
+  tension-with-shear path, one round-off-sized entry (about `1e-15`) is judged
+  *disagrees*, and the verification fails. With the constants of
+  [Example 4](../examples/04_fcc_crystal_plasticity_provider/README.md) every
+  entry passes. The example's README gives the details.
+- **Pipeline exit code.** A full `umat-oti-pipeline` run exits with 1 because
+  its `abaqus_validation` stage is not yet routed through the pipeline and
+  reports `unsupported`. Read `run_manifest.json`, or run the stages you need
+  with `--only` ([CLI_GUIDE.md](CLI_GUIDE.md#umat-oti-pipeline)).
+- **Platforms.** Linux with gfortran is tested. Windows is not; use WSL 2.
+  Compiled objects are specific to the platform and compiler.
+
+## 3. Installation
+
+Requirements: Linux, Python 3.10 or newer, `gfortran` and `make`. Abaqus and
+the Intel Fortran compiler are optional; they are needed only for the Abaqus
+paths.
+
+```bash
 git clone https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git
-UMAT="$PWD/UMAT_source_transformation"
-BASE_PYTHON=python3.11          # any healthy Python >= 3.10 with venv, ctypes, ssl
-ENV=$(mktemp -d /tmp/umat-env-XXXXXX)
-"$BASE_PYTHON" -m venv "$ENV"
-"$ENV/bin/python" -m pip install "$UMAT[test,paper]"
-"$ENV/bin/python" -m pip check
-"$ENV/bin/umat-oti-provider" --help
+cd UMAT_source_transformation
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e ".[test]"
+python -m umat_oti.reproduce --profile smoke
 ```
 
-For connected consumption also install the companion Residual_Assembler
-package with `gui,yaml,test` extras. Do not use its historical `bridge` pin for
-this pair. The joint clean-install gate (below) installs both from their
-wheels; its result for the published `main` commits is in
-[Residual_Assembler docs/evidence/final_clean_clone.md](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/evidence/final_clean_clone.md). Checkout examples and source discovery
-are not all installed wheel resources.
+In a new virtual environment, `pip install -e ".[test]"` took 23.9 s and
+`python -m pip check` reported no broken requirements. The smoke check
+transforms one J2 UMAT, compiles it and the original separately, and compares
+their derivatives. It exited 0 in 6.6 s with `import_package` and
+`material_point_smoke` both `succeeded`.
 
-For work in the source trees, set the imports explicitly:
+A missing tool is reported by name and never counts as a pass. For example,
+without gfortran the smoke step reports `blocked_by_external_dependency` with
+the reason `gfortran is not on PATH`. Never install the unrelated PyPI package
+`pyoti`.
 
-```sh
-WORKSPACE="$HOME/softwarex_work"        # where the two clones and the venv live
-UMAT="$WORKSPACE/UMAT_source_transformation"
-RA="$WORKSPACE/Residual_Assembler"
-PY="$WORKSPACE/.venv/bin/python"
-BASE_PYTHON="$HOME/anaconda3/bin/python3.11"
-export PATH="$WORKSPACE/.venv/bin:$PATH"
-export PYTHONPATH="$RA:$UMAT/src:$HOME/otilib/build_py311"
-export UMAT_OTI_REPO="$UMAT"
-export PYOTI_PATH="$HOME/otilib/build_py311"
-export OTILIB_ROOT="$HOME/otilib/build_py311"
-export RUN_OTILIB_TESTS=1
-cd "$UMAT"
-"$PY" -c 'import umat_oti; from umat_oti.store import transform_fingerprint; print(umat_oti.__file__); print(transform_fingerprint())'
+The full guide, including the companion Residual_Assembler, the optional
+Abaqus setup and troubleshooting, is [INSTALL.md](INSTALL.md).
+
+## 4. Command-line entry points
+
+| Command | Use it to | Measured example |
+| --- | --- | --- |
+| `umat-oti jacobian SOURCE --ntens N --out DIR [--compile]` | get `DDSDDE` from four fields, without a contract | J2 UMAT: 21/21 structural checks, compiled, exit 0, 2.2 s |
+| `umat-oti config CONTRACT --out DIR [--compile]` or `umat-oti-config --config CONTRACT` | transform from a JSON contract | `examples/elastic_minimal.json`: exit 0, 1.8 s |
+| `umat-oti-pipeline --config CONTRACT --work-dir DIR --compile` | run the 16-stage pipeline with a run manifest and resume | stage subset: exit 0; a cached rerun took 0.4 s |
+| `umat-oti-batch --config-dir DIR --batch-dir DIR` | transform every contract in a folder | the 7 contracts in `examples/`: all `ready_with_json_contract`, 4.2 s |
+| `umat-oti-provider build CONTRACT --out DIR [--regular-object REAL_UMAT.obj]` | build the compiled provider | J2: exit 0, 6.1 s |
+| `python -m umat_oti.provider.collaborator CONTRACT --out DIR` | build, verify and package the four hand-off files | J2: `verified`, exit 0, 17.1 s |
+| `python -m umat_oti.reproduce --profile NAME` | run a reproduction profile | `smoke`: exit 0, 6.0 s |
+| `umat-oti transform SOURCE --out DIR` | the original whole-routine transform, kept for compatibility | |
+
+Every console command also runs as a module, for example
+`python -m umat_oti.cli jacobian ...`. [CLI_GUIDE.md](CLI_GUIDE.md) gives every
+option, one worked invocation per command with its real output, the files each
+command writes, and a table of exit codes.
+
+## 5. Worked examples
+
+Six complete examples live in [examples/](../examples/README.md). Each one has
+a README with the mathematics, the exact commands, the GUI steps, the expected
+output and its independent check. None needs Abaqus.
+
+| # | Example | Headline result (measured 2026-09-18) | Run time |
+| --- | --- | --- | --- |
+| 1 | [Elastic tangent](../examples/01_elastic_tangent/README.md) | OTI `DDSDDE` equals the analytic isotropic stiffness exactly (difference 0) for two materials; stress identical to the original | 6 s |
+| 2 | [J2 plasticity tangent](../examples/02_j2_plasticity_tangent/README.md) | Over elastic, plastic and unloading increments, centred finite differences of the original converge on the OTI tangent (100x smaller error per decade of step), best 2.3e-11; the source's own tangent agrees to 2.4e-16 | 8 s |
+| 3 | [J2 parameter sensitivities](../examples/03_j2_parameter_sensitivities/README.md) | Provider `verified`: 628 entries agree, 240 consistent with zero, 0 unresolved, 0 disagree; object byte-reproducible; a separate check with `REAL_UMAT.obj` alone agrees to 2.3e-10 | 25 s |
+| 4 | [FCC crystal-plasticity provider](../examples/04_fcc_crystal_plasticity_provider/README.md) | Ten parameters, twelve state variables, tension with shear: `verified`, 4,556 agree, 1,572 zero, 112 unresolved, 0 disagree | 40 s |
+| 5 | [Internal Newton Jacobian](../examples/05_internal_newton_jacobian/README.md) | Bundled flow model: OTI vs finite differences 3.9e-12. Viscoplastic damage UMAT: OTI vs finite differences 2.7e-13, while the source's hand-coded Jacobian is 2.6e-2 away from the derivative of its own residual | 10 s |
+| 6 | [Twenty-model sweep](../examples/06_parameter_sensitivity_sweep/README.md) | 20 of 20 models transform and match the original stress; 19 verified; 83 of 84 parameter directions; 14,539 of 14,540 comparison rows agree (the other is a 1.4e-10 entry reported as unresolved) | 1.5 min |
+
+Each example was run twice on 2026-09-18: once in this checkout, and once in
+a new virtual environment where every command block of its README ran as
+written. All exited 0 and printed the numbers above.
+
+## 6. The GUI
+
+```bash
+streamlit run scripts/app.py
 ```
 
-OTILib's Python build is needed for RA's direct/finite examples, not this
-provider's generated Fortran OTI. Never install the unrelated PyPI `pyoti`.
-The shared editable console scripts may point to original checkouts; use the
-module spellings below. Installed wheels use their normal console commands.
+Streamlit prints a local URL (by default `http://localhost:8501`). The
+application has nine tabs:
 
-## CLI Reference
+- **Start here** runs a one-click demo: the elastic contract is transformed
+  and compiled, with 21/21 structural checks.
+- **Constitutive Jacobian** turns any UMAT into one that returns the exact
+  `DDSDDE`, from four fields and one click. It writes byte-identical files to
+  `umat-oti jacobian`.
+- **Parameter Sensitivities** builds and verifies the provider from a
+  parameter table, and offers the four hand-off files for download. It runs
+  the same commands as `python -m umat_oti.provider.collaborator`.
+- **1. Load Config** to **5. Report** form the contract-driven console. Tabs 3
+  to 5 run the paired validation and need Abaqus.
+- **6. Corpus** browses the results of a corpus round.
 
-[Actual help captures](evidence/usage_help.json) preserve stdout, stderr,
-argv, cwd and return code. Help confirms flags, not scientific success.
+Driving the two main screens headlessly gave the same results as the
+command line. For the FCC provider the screen showed "Build succeeded and
+verified" after 33 s. `python -m pytest -q tests/gui/test_developer_screens.py`
+reported `17 passed in 121.21s`.
 
-| Installed command | Recovery module / behavior |
-| --- | --- |
-| `umat-oti` | `umat_oti.cli`; subcommands transform, config and `jacobian SOURCE --ntens N --out DIR [--compile]` (the Constitutive Jacobian screen's command) |
-| `umat-oti-config --config JSON --out DIR --compile` | `umat_oti.cli_json`; compact contract, optional compilation |
-| `umat-oti-pipeline --config JSON --work-dir DIR --compile` | `umat_oti.pipeline.cli`; staged graph and run manifest |
-| `umat-oti-batch --config-dir DIR --batch-dir DIR` | `umat_oti.cli_batch`; batch transformation |
-| `umat-oti-provider build CONTRACT --out DIR [--regular-object REAL_UMAT.obj] [--abaqus-toolchain]` | `umat_oti.provider`; relocatable ORIGINAL+OTI object, completed mapping, verification entries; optionally the ORIGINAL alone as `REAL_UMAT.obj`, built with `abaqus make` |
-| `python -m umat_oti.reproduce --profile smoke --out-dir DIR` | Reproduction profiles: smoke, offline, paper, corpus, abaqus |
+The walkthrough, with screenshots, is [GUI_GUIDE.md](GUI_GUIDE.md); the
+field-by-field reference is [GUI.md](GUI.md).
 
-For example, invoke compact configuration as:
+## 7. Connected workflow with Residual_Assembler
 
-```sh
-"$PY" -m umat_oti.cli_json --help
-"$PY" -m umat_oti.pipeline.cli --list-stages
-"$PY" -m umat_oti.provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out /tmp/new-j2-provider
+The material developer builds and verifies the provider and shares only
+compiled files. The collaborator uses them with a finished Abaqus analysis and
+never sees the Fortran source.
+
+Install Residual_Assembler next to this repository, in the same environment
+([INSTALL.md](INSTALL.md#7-install-the-companion-residual_assembler-optional)).
+The commands below assume that layout (`../Residual_Assembler`).
+
+**Step 1: the developer packages the provider** (Example 3; exit 0, 17.2 s):
+
+```bash
+python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json \
+    --out umat_oti_workspace/connected/package --j2-branches
 ```
 
-Choose a fresh output directory. The provider's build is also exercised by each
-compiled example below. For compact transformation supply a supported completed
-compact JSON contract; it is not the provider's completed ABI mapping.
-Pipeline resume reuses unchanged input/artifact stages; `--no-resume` requests
-a cold run; `--only STAGE ...` selects stages while dependencies still gate them.
-All-not-requested can exit zero; external blocking exits 3. See each stage in
-`run_manifest.json`, not just the process code. Pipeline help and stage listing
-ran here; arbitrary compact contracts/resume scenarios are not newly exercised.
+The folder `collaborator/` then holds `OTI_UMAT.obj`, `Mapping.json`,
+`REAL_UMAT.obj` and `transform_report.txt`. The collaborator needs the first
+two. `REAL_UMAT.obj` is the original routine for the regular analysis; Abaqus
+on Linux accepts it only under the extension `.o`.
 
-Batch `--validate` invokes Abaqus and was **not run**. `--reuse-validation-results`
-does not refresh old evidence. Do not run corpus/abaqus profiles as part of this
-offline guide. Reproduce exits 0 even for explicitly external-blocked steps,
-1 for an unexpected failed step, 2 if it cannot start; inspect its five outputs:
-run_manifest.json, environment.json, claim_matrix.json, artifact_checksums.sha256,
-reproduction_summary.md. Help capture is not profile completion.
+**Step 2: the collaborator requests sensitivities of a finished analysis.**
+This needs the collaborator's own converged analysis (`Analysis.inp` and
+`Analysis.odb`) and a licensed Abaqus, whose Python reads the ODB. It was
+**not run** for this report.
 
-The joint wheel-gate forwarding help requires its companion path even with help:
-
-```sh
-"$PY" scripts/clean_install_gate.py --ra-repo "$RA" --help
+```bash
+resasm request --model <analysis>.inp --odb <analysis>.odb \
+    --material umat_oti_workspace/connected/package/collaborator/OTI_UMAT.obj \
+    --request <sensitivity_request>.json --out <results>
 ```
 
-The raw capture retains the initial exit-2 missing-argument diagnostic and the
-corrected exit-0 invocation. To run the gate supply a healthy standalone Python,
-the genuine matching ODB, optionally `--branch main` and `--cantilever DIR`,
-and a fresh external work directory; Residual_Assembler `docs/USAGE_REPORT.md`
-describes each check. Both trees must be clean.
+- `Mapping.json` is found automatically beside the object. Its SHA-256 of the
+  object, parameter order and layouts are checked.
+- The public outputs are `sensitivity_results.json`, `sensitivity_tables.csv`
+  and `run_report.txt`. Full fields stay under `private/`.
+- The request format, the supported models and the refused features (pressure
+  and body loads, contact, amplitudes, several steps, initial state, finite
+  strain) are specified in Residual_Assembler's
+  [REQUEST_INTERFACE.md](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/REQUEST_INTERFACE.md).
 
-## Five Reproduced Examples
+**Step 2 without Abaqus: replay a committed export.** Residual_Assembler ships
+a J2 beam analysis (96 C3D8 elements, 10 increments) whose ODB is already
+exported to `fields.npz`. `resasm history` replays it with the provider from
+step 1:
 
-All outputs below use a new `OUT` directory. Full commands, compiler outputs,
-input/object identities, FD ladders, comparison counts and numerical reports
-are embedded in [raw example evidence](evidence/usage_examples.json).
-The verifier compiles actual ORIGINAL and transformed routines; no core mocks,
-new skips or weakened tolerances are used.
-
-```sh
-OUT=$(mktemp -d /tmp/umat-examples-XXXXXX)
+```bash
+resasm history --model ../Residual_Assembler/examples/replay_history/j2_beam/Analysis.inp \
+    --fields ../Residual_Assembler/examples/replay_history/j2_beam/fields.npz \
+    --material umat_oti_workspace/connected/package/collaborator/OTI_UMAT.obj \
+    --request ../Residual_Assembler/examples/replay_history/j2_beam/sensitivity_request.json \
+    --out umat_oti_workspace/connected/beam
 ```
 
-### 1. Elastic Tangent
+Measured (exit 0, 1.1 s):
 
-```sh
-"$PY" -m umat_oti.validation.parameter_sensitivity_provider \
-	parameter_sensitivity/models/m1_elastic/contract_v2.json --elastic --out "$OUT/elastic"
+```text
+history replay: 10 increments, 768 integration points, 4 parameters; yes: max|R_free| = 1.288e-03 N at increment 10 (limit 1.609e-01 N there)
 ```
 
-Uses the bundled contract's constants and source without hand-entered replacements.
-The `--elastic` option selects the stateless convention and removes the J2
-branch-sequence requirement, not derivative checking. Fresh EVAL/MARCH tangent
-and parameter FD checks against ORIGINAL passed the report's `2e-6` scaled
-tolerance. Do not use this switch to disguise absent plastic history in J2.
+- The replayed stress, state and reactions reproduce the recorded ODB at every
+  integration point and increment, within 0.5 % of their single-precision
+  limits.
+- At the last increment the tip reaction is `-191.726` N. Its weighted
+  sensitivities `p dRF2/dp` are `-35.31` (E), `-0.37` (nu), `-154.73` (SIGY0)
+  and `-1.69` (H) N.
 
-### 2. Nonlinear J2 Tangent
+Adding `--reequilibrate --verify fd` (with a new `--out`) first brings every
+increment to double-precision equilibrium, then checks the derivatives against
+whole-model central finite differences of the original UMAT. That run exited 0
+in 11.7 s. `run_report.txt` says:
 
-```sh
-"$PY" -m umat_oti.validation.parameter_sensitivity_provider \
-	parameter_sensitivity/models/m3_j2/contract_v2.json --out "$OUT/j2"
+```text
+Tangent verified: yes: max relative error 1.88e-10 vs central FD of the ORIGINAL UMAT at 36 points (FD plateau spread 1.96e-10)
+Derivative verified: yes: whole-model central FD of the ORIGINAL UMAT re-equilibrated in Python; worst nonzero-derivative error 1.46e-07 (plateau spread 3.05e-07); ...
 ```
 
-E=210000, nu=0.3, SIGY0=250, H=2000, one physical state slot. Seven increments:
-elastic, elastic, plastic, plastic, elastic, plastic, elastic. The separately
-compiled original-source FD reference checks 756 EVAL and 756 MARCH tangent
-components over three step sizes, with a plateau check and `2e-6` scaled limit.
-The 49 EVAL primal and 6 final MARCH primal comparisons also passed.
+A second check needs no finite differences. J2 plasticity with linear
+hardening scales linearly with `(E, SIGY0, H)`, so
+`E dQ/dE + SIGY0 dQ/dSIGY0 + H dQ/dH = Q` for a reaction `Q`. For the
+re-equilibrated tip reaction this holds to a relative 4.3e-15.
 
-### 3. Parameter Sensitivities
+The full-size cantilevers, the GUI of Residual_Assembler and the history
+engine are documented in its repository:
+[examples/replay_history](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/tree/main/examples/replay_history),
+[examples/cantilevers](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/examples/cantilevers/README.md),
+[docs/REPLAY_HISTORY.md](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/REPLAY_HISTORY.md).
 
-```sh
-"$PY" -m umat_oti.validation.parameter_sensitivity_provider \
-	parameter_sensitivity/models/m3_j2/contract_v2.json --out "$OUT/parameters"
+## 8. How results are verified
+
+Nothing is reported as verified without an independent reference:
+
+- **Finite differences of the original.** The untransformed UMAT is compiled
+  separately and differenced over a ladder of steps. The reference is taken
+  where the ladder is flattest, with an explicit uncertainty.
+- **Four verdicts per entry.** Every derivative entry gets one of *agrees*,
+  *consistent with zero*, *reference unresolved* or *disagrees*.
+  *Unresolved* never counts as agreement, and one *disagrees* fails the
+  verification ([PROVIDER.md](PROVIDER.md)).
+- **Primal parity first.** The transformed build must reproduce the original
+  stress and state to round-off before any derivative is compared.
+- **Analytic references** where they exist: the isotropic stiffness
+  (Example 1), homogeneity identities (section 7).
+- **Abaqus.** The paired validation runs the original and the transformed
+  UMAT in the same job and compares stress, state and tangent.
+
+The claim-by-claim record, with the command, the reference and the measured
+value of each result, is [VERIFICATION_RECORD.md](VERIFICATION_RECORD.md).
+That record also covers the Abaqus comparison of the 18 benchmark UMATs.
+
+## 9. Transform generation
+
+Stored transforms and fixtures are evidence about the transform code that
+produced them, and only about that code. The code is identified by a
+fingerprint:
+
+```bash
+python -c "from umat_oti.store import transform_fingerprint; print(transform_fingerprint())"
 ```
 
-This deliberately reruns the same complete J2 verification with parameter
-results as the focus, not a third material model. E,nu,SIGY0,H are simultaneous
-first-order directions. The report records 588 EVAL parameter comparisons
-(stress and state) and 504 MARCH stress comparisons; all three FD steps and
-plateau checks pass the unchanged `2e-6` limit. Active derivatives are nonzero.
+It prints `16c9f305df378089`, the value recorded in
+`src/umat_oti/contract/schemas/transform_generation.json` and read by both
+repositories. At this generation:
 
-### 4. State Sensitivities
+- all 391 acquired corpus sources were re-transformed;
+- all 240 transformed entries were run in Abaqus 2021.HF5;
+- the corpus registry was rebuilt;
+- the two current Residual_Assembler fixtures were regenerated and verified.
 
-```sh
-"$PY" -m umat_oti.validation.parameter_sensitivity_provider \
-	parameter_sensitivity/models/m3_j2/contract_v2.json --out "$OUT/state"
-```
+The procedure, the commands and the census are in
+[evidence/final_refreeze.md](evidence/final_refreeze.md). The older collection
+under `umat/` keeps its earlier generation and is read only as history.
 
-Same full verifier, separate invocation/output, focused on equivalent-plastic-
-strain derivatives and carried incoming stress/state derivatives. ORIGINAL
-history FD and primal state checks pass; resetting derivative carry changes
-the result by about 2720.126, so the check detects lost history. Physical SDV1
-is not overloaded with derivative storage. This is dSTATEV/dPROPS, not a claim
-to arbitrary partial derivatives with respect to every initial-state variable.
+## 10. Clean-install gate
 
-Examples 1-4 write verification.json, a completed provider mapping, a compiled
-object, original/transformed/support/build files. `passed=true` means the
-specified independent verifier passed; source/object hashes establish identity,
-not correctness by themselves. Compilation, branch mismatch, nonfinite results
-or unresolved verification produce diagnostics/nonzero failure. The supported
-[provider contract](PROVIDER.md) gives exact ABI and derivative layouts.
+Residual_Assembler's clean-install gate clones both repositories, builds and
+installs their wheels in a new environment, and runs the connected workflow
+from the installed packages. This includes `resasm request` on a genuine ODB
+and the full-size J2 cantilever. Its record for the published `main` branches
+(Residual_Assembler `3504a02`, UMAT-OTI `1352114`) reports:
 
-### 5. Internal Constitutive Jacobian
+- all 22 gate commands exited 0;
+- UMAT-OTI's offline test suite: 3370 passed, 158 skipped, 0 failed.
 
-```sh
-"$PY" examples/verify_internal_jacobian.py --out "$OUT/internal"
-```
+See
+[final_clean_clone.md](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/evidence/final_clean_clone.md).
+That record predates the commits after `1352114`, including the last
+transform change (`5b97c2f`, which set the fingerprint above). The examples
+and numbers in this report were measured on the current code.
 
-This new thin wrapper calls the existing verifier on bundled m5_cpflow with its
-existing regression inputs: 20 increments of DSTRAN11=1e-4 and properties
-[200000,0.3,1500,25,0.4,1.6,0.1,60000]. It seeds the local Newton iterate,
-extracts the residual Jacobian and compares it to independently compiled
-untransformed-source FD, retaining the step ladder. Recording changes primal
-stress by exactly zero. Measured relative Jacobian error `3.8755690795e-12`
-is below `1e-8`; the hand-coded Jacobian is audited, not used as the independent
-reference. verification.json preserves all named stages and tolerances.
-An existing output directory is refused; failed verification exits 2.
-This is a local material solve, not full FCC crystal-plasticity FE verification.
+## 11. Status and evidence
 
-One command repeats all ten cross-repository examples and numerical assertions:
-
-```sh
-"$PY" "$RA/scripts/audit_recovery_usage.py" --umat "$UMAT" --phase examples
-```
-
-## GUI Use And Limits
-
-```sh
-"$PY" -m streamlit run scripts/app.py --server.address=127.0.0.1 --server.port=8502
-"$PY" -m streamlit run src/umat_oti/app/unified_app.py --server.address=127.0.0.1 --server.port=8503
-"$PY" -m streamlit run src/umat_oti/app/workbench_app.py --server.address=127.0.0.1 --server.port=8504
-```
-
-Launch only the desired GUI, using a free port, and open its printed URL. The
-primary GUI handles transformation/evidence; the unified and workbench apps
-are retained secondary interfaces. All three rendered without exceptions in
-[current GUI evidence](evidence/usage_gui.json); the primary server also reached
-HTTP readiness and was stopped by owned PID. No audit URL is still live.
-Installed GUI: locate `umat_oti.app.streamlit_app` using importlib.util and pass
-its installed path to Streamlit, as in the wheel installation evidence.
-
-The primary GUI's **Constitutive Jacobian** tab (upload a UMAT, set NTENS,
-Transform) and **Parameter Sensitivities** tab (parameter table, DSIGMA_DP /
-DSTATEV_DP ticks, Build) call the same service functions as `umat-oti jacobian`
-and `umat-oti-provider build` and write byte-identical files; browser tests
-(`pytest -m gui`, 5 passed on 2026-09-18) click through both
-([GUI.md](GUI.md)). The internal-Jacobian probe and the corpus tools remain
-CLI-only; RA's GUI consumes the generated object and mapping.
-
-## Connected Collaborator Workflow
-
-The developer builds m3_j2 with `umat-oti-provider build` and shares only the
-object and completed generated mapping, alongside the converged analysis files.
-The input transformation contract is not the completed mapping. Keep the latter
-unchanged as the object-stem JSON or alias `Mapping.json` beside `OTI_UMAT.obj`.
-The RA collaborator invokes:
-
-```sh
-"$PY" -m residual_core.ui.cli request --model Analysis.inp --odb Analysis.odb \
-	--material OTI_UMAT.obj --request sensitivity_request.json --out new_results
-```
-
-Mapping discovery is automatic. Conflicting sidecars require `--mapping PATH`;
-full object hash, source fingerprint, ABI/dimensions, parameter order, PROPS
-indices, OTI directions and derivative/Voigt layout must match. No manual map
-construction, private material source, transformation or production rerun is
-needed by the collaborator. A compatible gfortran linker/runtime and licensed
-Abaqus odbAccess are needed; `--abaqus PATH` overrides the extractor executable.
-Only trusted compiled binaries should be loaded. The source-read denial proof
-is a Python audit check, not a security sandbox for native processes.
-
-Exactly three public root outputs:
-
-| Output | Contents |
-| --- | --- |
-| `sensitivity_results.json` | Requested scalar values/derivatives, resolved scope and metadata |
-| `sensitivity_tables.csv` | Output/increment/parameter rows; 16 rows for the bundled four-output request |
-| `run_report.txt` | Execution checks, tolerances, verification status and limits |
-
-Full fields, K/R/derivatives, generated replay record, exporter logs and link
-products remain under `private/`. The ordinary result says `verified=false`:
-execution/equilibrium checks are not an independent derivative certificate.
-`--validate` explicitly requests ORIGINAL whole-history FD and may fail the
-strict double-precision gate on float32 ODB inputs. The audit's separate
-uniaxial-J2 analytic proof passed with the original `2e-5` relative / `1e-8`
-zero-reference absolute thresholds. [Raw proof](evidence/usage_presentation.json)
-records the copied input hashes, exact filenames and public scalar results.
-
-Request example, with exactly outputs/parameters/domain/increments at top level:
-
-```json
-{"outputs":[{"name":"loaded_U1","field":"U","component":1,"reduction":"mean"}],"parameters":["E","SIGY0","H"],"domain":{"nodes":[2,3,6,7]},"increments":"LAST"}
-```
-
-U/RF use nodes; S/SDV use elements and all eight IPs. Component is one-based or
-ALL; stress order is 11,22,33,12,13,23; SDV1 is equivalent plastic strain.
-Parameters are a unique subset of E,nu,SIGY0,H. ALL/LAST/list selects output
-increments only after replaying the full preceding history. Reductions are
-component (one location), unweighted sum/mean, Euclidean L2 and signed max.
-Zero L2 norm and tied maxima fail. Mean is not volume-weighted; L2 is not
-von Mises. Unknown names, ids or unsupported requests fail explicitly.
-
-Supported physics is only one static NLGEOM=NO, homogeneous pinned J2 C3D8/B-bar
-step, one untransformed instance, virgin state, zero fixed BCs and ramped nodal
-loads. ODB must include every increment plus frame zero and matching U/RF/CF/S/
-SDV1, mesh and history. Scaled free residual must be <1e-5; stress/RF use
-2e-5 relative plus field-scaled absolute tolerance; state uses 2e-5 relative and
-1e-8 absolute. Missing frames are not interpolated. Nonzero BCs, multistep,
-pressure/contact/body loads, amplitudes, multiple materials/instances, initial
-state, finite strain and generic FCC/full-size models are not supported here.
-
-Repeat consumption without a new solve:
-
-```sh
-"$PY" "$RA/scripts/audit_recovery_usage.py" --umat "$UMAT" --phase presentation
-```
-
-The runner copies five existing genuine collaborator artifacts into new scratch
-space, invokes the existing source-denied `consume` path and checks all three
-outputs. It never calls `prepare`. The genuine ODB is an external prerequisite,
-not a packaged fixture. Prior real-browser download proof is a local artifact:
-The browser report and desktop image were stored in the RA run's ignored
-`.pytest_cache/presentation_browser_cli_final` directory. They are unavailable
-in a clean clone; no image was duplicated. Complete companion details:
-[presentation interface](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/REQUEST_INTERFACE.md).
-
-## Requirement Coverage
-
-### Review Follow-Up: Historical Service Tests
-
-The two original HEAD PASS11 integration tests were restored separately from
-the retained, explicitly named synthetic unit tests. Their historical assertions
-are unchanged: 237 records, 55 at stage verified, 42 holding all six gates and
-13 exceptions with `primal_agreed` not holding. These describe the historical
-PASS11 file, **not current-generation corpus capability**. No tolerances,
-service verdicts, generation fingerprints or fixture contents changed.
-
-Review run on 2026-09-18: **18 passed, six skipped, zero failures** in the service
-test file. All six skips, including the two restored tests, are because the
-external PASS11 file is genuinely absent. Existing `UMAT_OTI_CORPUS_RUN` override
-and absent-file handling remain in use; a present invalid file fails rather
-than being skipped. The two synthetic passes are not corpus evidence.
-Retained result: [focused JUnit](evidence/review_fixes_focused.xml). From the
-workspace root with the recovery import environment above:
-
-```sh
-.venv/bin/pytest -q -ra imq-umat-recovery/tests/test_the_services_are_the_one_place_a_verdict_is_decided.py --junitxml=imq-umat-recovery/docs/evidence/review_fixes_focused.xml
-.venv/bin/pytest -q imq-umat-recovery/tests/test_repository_standards.py::test_documented_commands_and_links_resolve --junitxml=imq-umat-recovery/docs/evidence/review_fixes_docs.xml
-```
-
-The second command runs the existing documentation auditor through its test
-wrapper. No full suite, fresh corpus run or licensed analysis was requested.
-Companion RA review checks: 60 passes for presentation and thin-CLI guards;
-injected error tests establish disclosure handling only, not numerical proof.
-
-The [274-row ledger](COMPLETION_LEDGER.md) and [structured requirement index](evidence/usage_requirements.json)
-separate 104 bounded implemented rows, 159 partial rows and 11 unestablished
-release-gate rows. **Zero rows have clean-install PASS;
-all 274 remain open under the master completion rule.** Top priorities: clean
-final-branch pair reproduction; all-example GUI equivalence; generic provider
-support and current corpus verification; full-size/FCC and general stateful
-finite-strain integration; higher-order full FE. Historical evidence, successful
-compilation, a resolved reference path, an available derivative and an
-independently verified derivative are different claims.
+Requirement-level status is tracked in
+[COMPLETION_LEDGER.md](COMPLETION_LEDGER.md). Run records are in
+[evidence/](evidence/).
