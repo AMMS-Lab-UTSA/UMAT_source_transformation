@@ -1822,6 +1822,24 @@ def _roles_with_stress_path_promotions(
     # correctly declined it, and the emitted file called F_OTI -- a name
     # nothing declares.
     intrinsic_calls = _call_names_that_are_not_variables(source_text)
+    # An INTEGER carries no derivative, whether the source declares it or the
+    # first letter types it (the source's own IMPLICIT statements decide, as in
+    # the classifier). Being on the stress path -- a flag in a branch condition
+    # such as ISTEP in "IF (ICYCLE.EQ.1.AND.ISTEP.EQ.1)" -- promoted it anyway:
+    # UMAT_HIN's transformed build declared ISTEP_OTI and passed it to a lifted
+    # helper whose dummy is INTEGER, which reads the first four bytes of the
+    # double 1.0 as the flag and sees 0. The classifier declines these; this
+    # promotion runs after it and overrides it, so declining here as well is
+    # what keeps them out.
+    integer_letters = implicit_integer_letters(source_text) if source_text else frozenset()
+    integer_names = {
+        name for name, row in role_items.items()
+        if str(row.get("detected_type") or row.get("detected type") or "").strip().lower().startswith("integer")
+        or _is_implicitly_integer(name, str(row.get("detected_type") or row.get("detected type") or ""),
+                                  row, integer_letters)}
+    for name in sorted(integer_names & updated["promote"]):
+        updated["promote"].discard(name)
+        updated["constant"].add(name)
     for name in path_names:
         if (
             name in {"DDSDDE"}
@@ -1830,6 +1848,7 @@ def _roles_with_stress_path_promotions(
             or name in assumed_size
             or name in data_constants
             or name in subscripts
+            or name in integer_names
             or name in INTRINSIC_TOKEN_NAMES
             or name in intrinsic_calls
             or (known_variables and name not in known_variables)
@@ -2064,6 +2083,7 @@ def _first_finite_path_assignment_line(
 # One definition, in core.roles, so the classifier and this check cannot drift
 # apart about what counts as a call rather than a variable.
 from umat_oti.core.roles import (  # noqa: E402
+    _is_implicitly_integer, implicit_integer_letters,
     INTRINSIC_CALL_NAMES as _INTRINSIC_CALLS,
     call_names_that_are_not_variables as _call_names_that_are_not_variables,
     data_initialised_names, defined_function_names as _defined_function_names,
@@ -6368,6 +6388,16 @@ def oti_typed_dummies_of_lifted_helpers(
     anything noticing. This reads the artifact, so there is nothing to drift
     from.
 
+    Both ways the artifact states a type count: an explicit declaration, and
+    the body's IMPLICIT statements. The lifter writes ``implicit
+    type(ONUMM4N1) (a-h,o-z)`` and ``implicit integer (i-n)`` into every
+    routine, and a dummy it never declares explicitly takes its type from
+    those. Reading only ``type(...) ::`` declarations missed every such dummy:
+    UMAT_HIN's caller passed the REAL variables RSTE and TMPTIM to KCONSTITU
+    and KSTRESSES, whose bodies type them hypercomplex through IMPLICIT, and
+    both the rewrite and the check that exists to catch exactly that saw
+    nothing.
+
     The value is positional: entry ``i`` is the dummy's name when the lifted
     body typed it OTI, and None when it did not. Positions and not names,
     because the caller's actual argument at that position is what has to
@@ -6377,12 +6407,36 @@ def oti_typed_dummies_of_lifted_helpers(
     current = ""
     arguments: list[str] = []
     oti_names: set[str] = set()
+    other_names: set[str] = set()
+    implicit_oti: set[str] = set()
+    implicit_other: set[str] = set()
     pending_header = ""
 
+    def letters(spec: str) -> set[str]:
+        found: set[str] = set()
+        for group in spec.split(","):
+            bounds = [b.strip().upper() for b in group.split("-") if b.strip()]
+            if not bounds:
+                continue
+            first, last = bounds[0][0], bounds[-1][0]
+            found |= {chr(c) for c in range(ord(first), ord(last) + 1)}
+        return found
+
     def close() -> None:
-        if current:
-            result[current] = [name if name.upper() in oti_names else None
-                               for name in arguments]
+        if not current:
+            return
+        typed: list[str | None] = []
+        for name in arguments:
+            upper = name.upper()
+            if upper in oti_names:
+                typed.append(name)
+            elif upper in other_names:
+                typed.append(None)
+            elif upper[:1] in implicit_oti and upper[:1] not in implicit_other:
+                typed.append(name)
+            else:
+                typed.append(None)
+        result[current] = typed
 
     for raw in lifted_helper_source.splitlines():
         line = raw.strip()
@@ -6401,15 +6455,43 @@ def oti_typed_dummies_of_lifted_helpers(
             current = header.group(1).upper()
             arguments = [item.strip() for item in split_top_level(header.group(2))
                          if item.strip()]
-            oti_names = set()
+            oti_names, other_names = set(), set()
+            implicit_oti, implicit_other = set(), set()
+            continue
+        if not current:
+            continue
+        implicit = re.match(r"^\s*implicit\s+(.+)$", joined, flags=re.IGNORECASE)
+        if implicit:
+            body = implicit.group(1)
+            if body.strip().lower() == "none":
+                implicit_oti, implicit_other = set(), set()
+                continue
+            for spec in re.finditer(r"(type\s*\(\s*\w+\s*\)|[a-z][a-z0-9*\s]*?)\s*\(([a-z\s,\-]+)\)",
+                                    body, flags=re.IGNORECASE):
+                covered = letters(spec.group(2))
+                if spec.group(1).strip().lower().startswith("type"):
+                    implicit_oti |= covered
+                    implicit_other -= covered
+                else:
+                    implicit_other |= covered
+                    implicit_oti -= covered
             continue
         declaration = re.match(r"^\s*type\s*\(\s*\w+\s*\)\s*::\s*(.+)$",
                                joined, flags=re.IGNORECASE)
-        if declaration and current:
+        if declaration:
             for item in split_top_level(declaration.group(1)):
                 name = _helper_argument_base_name(item)
                 if name:
                     oti_names.add(name)
+            continue
+        other = re.match(r"^\s*(?:integer|logical|character|real|double\s+precision|complex)\b"
+                         r"(?:\s*\*\s*\w+|\s*\([^)]*\))?\s*(?:,[^:]*)?(?:::)?\s*(.+)$",
+                         joined, flags=re.IGNORECASE)
+        if other and not re.match(r"^\s*\w[\w\s*()]*\bfunction\b", joined, flags=re.IGNORECASE):
+            for item in split_top_level(other.group(1)):
+                name = _helper_argument_base_name(item)
+                if name:
+                    other_names.add(name)
     close()
     return result
 
@@ -6482,6 +6564,52 @@ def real_arguments_into_oti_helper_dummies(
                 continue
             seen.add(key)
             found.append((callee, name, str(dummy).upper()))
+    return found
+
+
+def oti_arguments_into_non_oti_helper_dummies(
+    transformed_source: str,
+    form: str,
+    lifted_helper_source: str,
+    type_name: str,
+) -> list[tuple[str, str, int]]:
+    """CALLs that hand a hypercomplex shadow to a lifted helper's non-OTI dummy.
+
+    The third direction of the same implicit-interface hazard. The lifter
+    keeps INTEGER, LOGICAL and CHARACTER dummies as they are, so a shadow
+    passed there is reinterpreted: UMAT_HIN's caller promoted the integer flag
+    ISTEP and passed ISTEP_OTI to KCONSTITU, whose ISTEP stays INTEGER; the
+    callee read the first four bytes of the double 1.0 -- zero -- as the flag.
+
+    Returns (callee, argument, position) triples, position one-based.
+    """
+    dummies = oti_typed_dummies_of_lifted_helpers(lifted_helper_source)
+    if not dummies:
+        return []
+    shadow_names = _names_declared_with_type(transformed_source, type_name, form)
+    found: list[tuple[str, str, int]] = []
+    seen: set[tuple[str, str]] = set()
+    for line in logical_lines_from_text(transformed_source, form):
+        match = re.match(r"^\s*(?:\d+\s+)?CALL\s+([A-Za-z_]\w*)\s*\((.*)\)\s*$",
+                         line.text, flags=re.IGNORECASE)
+        if not match:
+            continue
+        callee = match.group(1).upper()
+        expected = dummies.get(callee)
+        if not expected:
+            continue
+        actuals = list(split_top_level(match.group(2)))
+        for index, dummy in enumerate(expected):
+            if dummy is not None or index >= len(actuals):
+                continue
+            name = _helper_argument_base_name(actuals[index])
+            if not name or name not in shadow_names:
+                continue
+            key = (callee, name)
+            if key in seen:
+                continue
+            seen.add(key)
+            found.append((callee, name, index + 1))
     return found
 
 
@@ -6630,8 +6758,20 @@ def _semantic_checks(
             "compile and the callee then reads one REAL as a whole "
             "hypercomplex element -- the stress is computed from "
             "reinterpreted memory with nothing to show for it.")
+    # And the third direction: a shadow handed to a dummy the lifted body
+    # keeps INTEGER, LOGICAL or CHARACTER. Folded into the check above because
+    # it is the same failure -- a hypercomplex value where the callee does not
+    # read one -- and the report's list of checks stays the one readers know.
+    kept_type_leak = oti_arguments_into_non_oti_helper_dummies(
+        transformed_source, form, lifted_helper_source, type_name)
+    for callee, argument, position in kept_type_leak[:6]:
+        warnings.append(
+            f"{argument} is passed to {callee} at position {position}, a dummy "
+            "the lifted body keeps INTEGER, LOGICAL or CHARACTER. Fortran's "
+            "implicit interface makes that compile and the callee then reads "
+            "part of a hypercomplex element as that type.")
     semantic_checks = {
-        "no_oti_argument_reaches_an_untransformed_call": not leaked,
+        "no_oti_argument_reaches_an_untransformed_call": not leaked and not kept_type_leak,
         "no_real_argument_reaches_an_oti_helper_dummy": not reversed_leak,
         "dstran_initialization_before_seed": bool(seed_init_line and seed_lines and seed_init_line < min(seed_lines)),
         # The ordering is asked of every stress expression, not only of the

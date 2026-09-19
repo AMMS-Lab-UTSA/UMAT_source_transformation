@@ -932,7 +932,11 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
 
 
 def _emit_makefile(module_name: str) -> str:
-    return f"""FC      ?= gfortran
+    return f"""# GNU make predefines FC=f77, so "FC ?= gfortran" would never apply;
+# replace only that built-in default and keep an FC the caller sets.
+ifeq ($(origin FC),default)
+FC = gfortran
+endif
 FCFLAGS ?= -O1 -std=legacy -ffree-line-length-none -fno-align-commons
 
 .PHONY: all clean
