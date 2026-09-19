@@ -1,14 +1,23 @@
-# Verified materials
+# Verified materials (historical collection)
 
-**Historical collection, retired from current capability claims (2026-09-18).**
-The 44 retained material contracts record generation `94a92c01814f107a`, not
-current code `da1f183708c19072`. Every original result, history, source identity,
-generation and numerical observation is preserved. The claims below describe
-those historical runs only; they are not current regression baselines. The
-current census of the whole corpus is pass14 at `da1f183708c19072`
-([paper_results/corpus](../paper_results/corpus/CORPUS_VERIFICATION.md),
-[re-freeze evidence](../docs/evidence/final_refreeze.md)); see also
-[the inventory and bounded J2 evidence](../docs/evidence/recovery_evidence_refresh.md).
+This directory holds the evidence records of third-party UMATs that passed
+Abaqus verification at an earlier transform generation. Read it to understand
+what those records establish, how the sources behind them are obtained, and
+how materials are promoted and regression-tested.
+
+**Retired from current capability claims (2026-09-18).** Each of the 44
+retained material contracts records the transform generation it was verified
+under (`transform_fingerprint` in its `contract.json` and in `registry.json`),
+which is older than the current code's generation (recorded in
+`src/umat_oti/contract/schemas/transform_generation.json`). Every original
+result, history, source identity, generation and numerical observation is
+preserved. The claims below describe those historical runs only; they are not
+current regression baselines. For the current state of the whole corpus, re-run
+on 2026-09-18 at the current generation, see the census in
+[paper_results/corpus/CORPUS_VERIFICATION.md](../paper_results/corpus/CORPUS_VERIFICATION.md)
+and the method in [docs/CORPUS_VERIFICATION.md](../docs/CORPUS_VERIFICATION.md).
+
+## What verification meant for these materials
 
 Every material in this collection passed **Abaqus verification**. That means,
 for each one:
@@ -60,8 +69,8 @@ umat/
 
 `<material-id>` is `<owner>-<repo>--<file-stem>--<digest>`. The digest is over
 the full source path, because one repository can ship the same file name in
-twenty example directories — Jeff97 ships `BodyForce-Growth-2Stages.for` in
-nineteen — and a name collision would overwrite one material's evidence with
+many example directories (Jeff97 ships `BodyForce-Growth-2Stages.for` in
+nineteen), and a name collision would overwrite one material's evidence with
 another's.
 
 ## The sources are not here

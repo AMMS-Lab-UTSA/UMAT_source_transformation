@@ -1,162 +1,114 @@
-# Troubleshooting
+# Troubleshooting a new contract
 
-## Config says the source could not be resolved
+This page lists the common failures when transforming your own UMAT, what each
+one means, and what to do. It follows the steps of [README.md](README.md); the
+contract fields are described in [JSON_REFERENCE.md](JSON_REFERENCE.md).
 
-- Use an absolute `source` path.
-- If you want a relative path, keep the JSON file on disk and run `check_config.py --config path/to/file.json` so the loader can resolve relative to that file.
-- Browser uploads are safest with absolute `source` paths.
+## The source could not be resolved
 
-## Config says required fields are missing
+**Symptom.** The loader says it could not resolve the UMAT source path.
 
-The compact contract requires all of these:
+**Fix.**
 
-- `name`
-- `source`
-- `jacobian.seed`
-- `jacobian.output`
-- `jacobian.target`
-- `promote`
-- `constant`
-- `real`
-- `replace`
-- `ntens`
-- `order`
+- A relative `source` is looked up relative to the JSON file, then the current
+  working directory, then the repository root. Make it relative to the JSON
+  file, not to the directory your shell happens to be in.
+- Run `scripts/check_config.py --config path/to/file.json` again after fixing
+  the path.
+- For a contract uploaded through the browser, see
+  [A relative path works in one place but not another](#a-relative-path-works-in-one-place-but-not-another).
 
-## Config says a variable has multiple roles
+## Required fields are missing
 
-- A variable cannot appear in more than one of `promote`, `constant`, or `real`.
-- Remove the overlap and run `check_config.py` again.
+**Symptom.** The loader says the compact configuration must define the
+explicit user contract fields, and names them.
 
-## Anchor status says `needs_json_completion`
+**Fix.** Start from `templates/new_umat_minimal_template.json` and fill in every
+required field: `name`, `source`, `jacobian.seed`, `jacobian.output`,
+`jacobian.target`, `promote`, `replace`, `ntens` and `order`. `constant` and
+`real` are optional.
 
-- The JSON loaded, but the transform still needs more explicit completion data.
-- Start by checking the `replace` line ranges.
-- Make sure the old DDSDDE block is fully covered and only that block is covered.
+## A variable has multiple roles
+
+**Symptom.** The loader reports that a variable has multiple roles.
+
+**Fix.** A variable may appear in only one of `promote`, `constant` and `real`.
+Remove the duplicate and run `scripts/check_config.py` again.
+
+## The anchor status is `needs_json_completion`
+
+**Symptom.** `scripts/check_config.py` reports an anchor status of
+`needs_json_completion`, or `scripts/run_from_json.py` exits with code 2.
+
+**Meaning.** The contract loaded, but it does not yet identify enough of the
+transform surface for the pipeline to proceed.
+
+**Fix.**
+
+- Re-check the `replace` line ranges: they must cover the whole old DDSDDE block
+  and nothing else.
+- If the file contains several routines, set `umat` explicitly.
+- Compare with `examples/elastic_minimal.json` and the contracts in
+  `benchmarks/`.
 
 ## I do not know what to put in `replace`
 
-- Run `show_source_lines.py` on the source file.
+- Run `scripts/show_source_lines.py` on the source file.
 - Find the old DDSDDE assignment block.
-- Add inclusive 1-based line ranges like `"83-87"`.
+- Add inclusive 1-based line ranges such as `"83-87"`.
+- Or let the tool find the block: `umat-oti jacobian path/to/YOUR_UMAT.for
+  --ntens 6 --out DIR` writes the contract it inferred to
+  `DIR/jacobian_contract.json`.
 
 ## No UMAT routine was detected
 
-- Make sure the source file actually contains the entry routine you want.
-- If the entry routine is not named `UMAT`, set the optional top-level `umat` field explicitly.
+- Make sure the source file contains the entry routine you want.
+- If the entry routine is not named `UMAT`, set the optional top-level `umat`
+  field.
 
-## `run_from_json.py` says the transform was not successful
+## The transform reports warnings, blockers or failed semantic checks
 
-- Inspect the `warnings`, `blockers`, `report_path`, and `semantic_checks` in the printed JSON summary.
-- The compact JSON may still be correct. The current transform pipeline has known semantic-check failures on benchmark UMATs.
-- Compare your case against `examples/elastic_minimal.json` and `examples/hin_reference.json`.
+**Symptom.** The transform finishes with warnings or blockers, or with
+`transform_success: false`.
 
-## The GUI loads the JSON but the transform still fails
+**Meaning.** This does not automatically mean the contract is wrong. The
+transformer checks its own output (for example, that no OTI value is passed to
+a routine that was not transformed) and refuses rather than write a UMAT that
+would compute the wrong derivative.
 
-- That is consistent with the current repository state.
-- The JSON/config layer is working more reliably than the transform backend right now.
+**Fix.**
 
-## I need advanced constitutive Jacobians
+- Read the transform report whose path is printed (`report_path`). Each
+  blocker and failed semantic check names the variable, routine or line
+  involved.
+- If a warning says a helper routine was "neither lifted, inlined, nor
+  transformed", the UMAT calls a routine defined in another file. Declare the
+  folder that holds it in `dependency_roots` and run `umat-oti-config`, which
+  resolves it (`run_from_json.py` does not).
+- Compare with a working contract in `examples/` or `benchmarks/`.
+- If the contract loads cleanly but the transform still refuses, the
+  limitation may be in the transformer rather than in the contract. Please
+  report it, with the contract and the source (see
+  [CONTRIBUTING.md](../CONTRIBUTING.md)).
 
-- Start from `templates/new_umat_constitutive_template.json`.
-- Keep the main tangent contract working first.
-- Add `constitutive_jacobians` and `helper_surfaces` only after the base contract is stable.# Troubleshooting
+## A relative path works in one place but not another
 
-## `source` Could Not Be Resolved
+**Symptom.** A relative `source` works from the helper scripts but not when the
+same JSON is uploaded through the browser.
 
-Symptom:
+**Meaning.** An uploaded file has no location on disk, so its relative `source`
+is looked up only against the working directory of the app and the repository
+root.
 
-- The loader says it could not resolve the UMAT source path.
+**Fix.** Put the contract in `json_files/` or `user_jsons/` and pick it from
+the list on tab **1. Load Config**, or use an absolute `source` path on the
+machine running the app.
 
-Fix:
+## I need more than the minimal contract
 
-- Use an absolute path in `source`.
-- If you use a relative path, make sure it is relative to the JSON file location,
-  not just your current shell directory.
-- Run `scripts/check_config.py` again after fixing the path.
+If the main `DDSDDE = dSTRESS/dDSTRAN` contract is not enough:
 
-## Missing Explicit User Contract Fields
-
-Symptom:
-
-- The loader says the compact configuration must define fields such as
-  `name`, `source`, `jacobian.target`, `replace`, `ntens`, or `order`.
-
-Fix:
-
-- Start from `templates/new_umat_minimal_template.json`.
-- Fill every required field before using the GUI or runner.
-
-## Variable In Multiple Roles
-
-Symptom:
-
-- The loader reports that a variable has multiple roles.
-
-Fix:
-
-- Remove duplicates across `promote`, `constant`, and `real`.
-- Each variable should be listed in only one of those role lists.
-
-## `needs_json_completion`
-
-Symptom:
-
-- `scripts/check_config.py` reports an anchor status of `needs_json_completion`.
-
-Meaning:
-
-- The source loaded, but the contract still does not identify enough of the
-  transform surface for the current pipeline to proceed cleanly.
-
-Fix:
-
-- Recheck the `replace` line ranges.
-- If your file contains multiple routines, set `umat` explicitly.
-- Compare against `examples/elastic_minimal.json` and the completed configs
-  under `benchmarks/`.
-
-## Transform Returned Warnings Or Failed Semantic Checks
-
-Symptom:
-
-- `scripts/run_from_json.py` finishes with warnings, blockers, or
-  `transform_success: false`.
-
-Meaning:
-
-- This does not automatically mean your JSON is wrong.
-- Some UMATs in the current prototype still fail downstream semantic checks even
-  with valid compact JSON contracts.
-
-Fix:
-
-- Read the transform report path printed by `scripts/run_from_json.py`.
-- Compare against working examples.
-- If the config loads cleanly but the transform still fails, the limitation may
-  be in the transform pipeline rather than the JSON.
-
-## Relative Path Works In One Place But Not Another
-
-Symptom:
-
-- A relative `source` works from the helper scripts but not when uploading the
-  same JSON through the browser.
-
-Meaning:
-
-- Browser-uploaded JSON may not preserve a meaningful on-disk origin path.
-
-Fix:
-
-- Prefer absolute `source` paths when loading JSON from the browser.
-- Relative paths are safest for server-side JSON files already stored in the repo.
-
-## I Need More Than The Minimal Contract
-
-If the main `DDSDDE = d STRESS / d DSTRAN` contract is not enough:
-
-- start from `templates/new_umat_constitutive_template.json`,
-- add `constitutive_jacobians` only where needed,
+- start from `templates/new_umat_constitutive_template.json`;
+- keep the main tangent contract working first;
+- add `constitutive_jacobians` only where needed;
 - add `helper_surfaces` only when helper-call data must be declared explicitly.
-
-Keep the first pass minimal whenever possible.

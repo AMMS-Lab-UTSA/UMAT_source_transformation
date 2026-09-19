@@ -1,9 +1,25 @@
 # Verifying a corpus of other people's UMATs
 
-This is the loop that turns a directory of downloaded Fortran into a set of
-materials with evidence behind them, and a set of named reasons for the rest.
+This document describes the method used to verify third-party UMATs: the loop
+that turns a directory of downloaded Fortran into a set of materials with
+evidence behind them, and a named reason for every other source. Read it to
+understand what "verified" means for the corpus, or before running the corpus
+tools yourself.
 
-Nothing in it is verified because it downloaded, because it contains the word
+## Current result
+
+The whole corpus of 391 acquired sources was re-run on 2026-09-18 at the
+current transform generation. Of the 260 adequately specified genuine UMATs
+among them, 43 clear all six evidence gates the census records
+(`abaqus_job_completed`, `all_requested_outputs_present`,
+`complete_history_finite`, `primal_agreed`, `derivatives_verified` and
+`mechanically_informative`). The full census, with both denominators and the
+reason for every source that did not verify, is
+[paper_results/corpus/CORPUS_VERIFICATION.md](../paper_results/corpus/CORPUS_VERIFICATION.md).
+
+## What "verified" means
+
+Nothing is verified because it downloaded, because it contains the word
 UMAT, because it parses, because it transforms, because the generated Fortran
 compiles, because Abaqus started, or because a report was produced. A material
 is verified when six things have happened, in this order, and every one of them
@@ -115,12 +131,12 @@ compile as published, measured by compiling the UNMODIFIED file with Abaqus's
 own compile line. `external_dependency_unavailable`: a module or an include it
 needs was never published beside it.
 
-Everything else is unfinished and OURS, named as precisely as the evidence
-allows -- `transform_refused`, `unsupported_formulation`,
+Everything else is unfinished work on this project's side, named as precisely
+as the evidence allows -- `transform_refused`, `unsupported_formulation`,
 `support_build_failed`, `original_job_failed`, `transformed_job_failed`,
 `primal_disagreed`, `derivative_truncated`, `tangent_not_verified` -- because
 the cluster a failure belongs to is what decides which fix is worth making,
-and because calling any of them terminal would be relabelling our own
+and because calling any of them terminal would be relabelling this project's own
 limitation as somebody else's.
 
 The registry counts them separately for that reason. A completion figure that
@@ -141,7 +157,8 @@ A Fortran `PAUSE` waits on terminal input, so Abaqus sits on it until the job's
 timeout and the licence is spent on nothing. It is a rung of its own.
 
 A user subroutine that writes to standard output aborts Abaqus/Standard
-2021.HF5 on this installation, in the element loop, with no diagnostic.
+2021.HF5 on the development workstation's installation, in the element loop,
+with no diagnostic.
 Measured on two decks identical but for one `print*` line: the one without it
 completes and the one with it aborts, three runs out of three. 179 of the
 corpus's 391 sources contain such a statement. The copy that is compiled has

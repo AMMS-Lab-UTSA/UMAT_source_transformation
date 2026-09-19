@@ -48,7 +48,7 @@ def workspace_root() -> Path:
     """Where the screens write. ``UMAT_OTI_GUI_WORKSPACE`` overrides the default.
 
     In a source checkout the default is the checkout's git-ignored
-    ``umat_oti_workspace/presentation``; in an installed package, which has no
+    ``umat_oti_workspace/gui``; in an installed package, which has no
     checkout, it is the same directory under the working directory.
     """
     configured = os.environ.get("UMAT_OTI_GUI_WORKSPACE")
@@ -56,7 +56,7 @@ def workspace_root() -> Path:
         return Path(configured).expanduser().resolve()
     checkout = Path(__file__).resolve().parents[3]
     base = checkout if (checkout / "pyproject.toml").is_file() else Path.cwd()
-    return base / "umat_oti_workspace" / "presentation"
+    return base / "umat_oti_workspace" / "gui"
 
 
 def _fresh_dir(kind: str, stem: str) -> Path:
@@ -100,7 +100,7 @@ def _download(path: Path | None, label: str, key: str, file_name: str | None = N
 
 
 # ---------------------------------------------------------------------------
-# Constitutive Jacobian (slides 16 and 40)
+# Constitutive Jacobian
 # ---------------------------------------------------------------------------
 
 def render_jacobian_screen() -> None:
@@ -224,7 +224,7 @@ def _render_jacobian_result(run: dict[str, Any] | None) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Parameter Sensitivities (slides 17 and 41)
+# Parameter Sensitivities
 # ---------------------------------------------------------------------------
 
 PARAMETER_COLUMNS = ("parameter", "PROPS index", "value")
