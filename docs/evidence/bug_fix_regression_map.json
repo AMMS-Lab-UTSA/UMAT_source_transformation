@@ -1,0 +1,214 @@
+{
+ "_about": [
+  "Bug fixes since the baseline commit and the regression tests that exercise each, checked by",
+  "tools/audit_integrity.py --check t11 (tests/test_audit_integrity.py).",
+  "A regression test is a test added or changed in the fix commit, or named in its message.",
+  "untested_parts names a part of a fix that no test exercises."
+ ],
+ "baseline": "3f340b72ec4d9d1f474fdb2e0f6bda1c41bfaa76",
+ "rule": {
+  "message_pattern": "\\b(fix|fixes|fixed|fixing|bugs?|defects?|wrong|refus\\w*|regression|incorrect|broke|broken|crash\\w*|silent\\w*|stale|failed|fails|exit(?:ed|s)? [0-9])\\b",
+  "selects": "every commit since the baseline whose subject or body (trailers removed) matches message_pattern, case-insensitive, and every commit that adds an entry under a '### Fixed' heading of CHANGELOG.md",
+  "definition": "A bug fix corrects behaviour of shipped code, scripts, tests or CI that was wrong before the commit, including messages the code prints. Documentation-only corrections, new features, evidence re-freezes and new tests of behaviour that was already right are not bug fixes.",
+  "review": "Every selected commit is either a fix mapped to regression tests (test node ids that must exist) or an exclusion with a reason. A fix the rule misses is added by hand with selected_by: manual. A fix with no test stays listed, with no_test_reason, and is reported as open."
+ },
+ "fixes": [
+  {
+   "commit": "d946693",
+   "selected_by": "manual",
+   "bug": "The wheel-content test skipped when the wheel failed to build, so a broken build passed as a skip.",
+   "tests": [
+    "tests/test_packaging.py::test_built_wheel_contains_the_runtime_support_files"
+   ]
+  },
+  {
+   "commit": "a406f55",
+   "bug": "The Constitutive Jacobian screen's preview said '(none found)' for a routine that assigns DDSDDE once before the stress update reads it (the FCC crystal routine); it now says which block is replaced, which assignment is kept and where the extraction goes.",
+   "tests": [
+    "tests/gui/test_developer_screens.py::test_four_fields_and_one_click_give_what_the_command_line_gives",
+    "tests/gui/test_developer_screens.py::test_the_fcc_tangent_is_the_limit_of_the_finite_differences",
+    "tests/gui/test_developer_screens.py::test_a_routine_that_is_not_a_umat_is_refused_with_the_services_reasons"
+   ]
+  },
+  {
+   "commit": "7c4975c",
+   "bug": "A labelled IF on a promoted variable lost its statement label (the GOTO target vanished and the file did not compile in Abaqus), and the inputs of DDSDDE writes that feed the predictor stress were dropped, so the transformed stress differed from the original's by a hydrostatic offset.",
+   "tests": [
+    "tests/test_benchmark_transforms_keep_labels_and_predictor_inputs.py::test_a_labelled_promoted_branch_keeps_its_label_and_compiles",
+    "tests/test_benchmark_transforms_keep_labels_and_predictor_inputs.py::test_predictor_inputs_stay_live_and_the_primal_matches_the_original",
+    "tests/test_benchmark_transforms_keep_labels_and_predictor_inputs.py::test_a_labelled_branch_on_a_promoted_real_keeps_its_label"
+   ]
+  },
+  {
+   "commit": "b124e39",
+   "bug": "A DATA-initialised, never-assigned name that the contract listed under promote stayed promoted and the DATA blocker then refused the file, so UMAT_HIN could not be transformed from its own benchmark contract.",
+   "tests": [
+    "tests/test_a_data_constant_in_the_promote_list_stays_real.py::test_a_promoted_data_constant_is_kept_real_and_the_transform_succeeds",
+    "tests/test_a_data_constant_in_the_promote_list_stays_real.py::test_the_kept_constant_still_reaches_the_stress",
+    "tests/test_a_data_constant_in_the_promote_list_stays_real.py::test_an_assigned_data_variable_in_the_promote_list_is_still_refused",
+    "tests/test_a_data_constant_in_the_promote_list_stays_real.py::test_the_hin_benchmark_transforms_from_its_committed_contract"
+   ]
+  },
+  {
+   "commit": "24143f8",
+   "bug": "UMAT_PCO's committed benchmark contract failed the transform because its helper routines live in sibling files the contract could not name; a compact contract may now declare dependency_roots.",
+   "tests": [
+    "tests/test_a_contract_resolves_its_helper_closure.py::test_declared_roots_resolve_the_helper_entry_file_first",
+    "tests/test_a_contract_resolves_its_helper_closure.py::test_a_root_that_lacks_the_helper_is_an_error_not_a_guess",
+    "tests/test_a_contract_resolves_its_helper_closure.py::test_the_pco_benchmark_transforms_and_compiles_from_its_committed_contract"
+   ]
+  },
+  {
+   "commit": "d430f63",
+   "bug": "The provider verifier drove every model along the fixed J2 check path (the ten-parameter FCC provider went non-finite there), and the provider objects and Mapping.json carried the developer's build directory. The code and tests are in the preceding work-in-progress commits 55a870e, 421173d and 98a2f28, which this commit validates.",
+   "tests": [
+    "tests/test_provider_check_path_and_verdicts.py::test_without_a_check_path_the_j2_path_is_used",
+    "tests/test_provider_check_path_and_verdicts.py::test_the_ten_parameter_fcc_verifies_on_a_path_that_yields",
+    "tests/test_provider_check_path_and_verdicts.py::test_a_wrong_derivative_is_caught",
+    "tests/test_provider_regular_object.py::test_no_directory_of_the_developer_ships_inside_the_objects",
+    "tests/test_provider_regular_object.py::test_a_rebuild_reproduces_both_objects_byte_for_byte"
+   ]
+  },
+  {
+   "commit": "2a4dd95",
+   "selected_by": "manual",
+   "bug": "Run from an installed package, the developer screens' default workspace resolved inside the Python environment's lib directory (four levels above the module), and the uniaxial check path failed on a missing parameter_sensitivity/loading_paths.json instead of saying the file is not installed.",
+   "tests": [],
+   "no_test_reason": "No test runs the screens from an installed package; the clean-install gate renders the installed GUI, but that is not a suite test and does not select the uniaxial path."
+  },
+  {
+   "commit": "f11806f",
+   "bug": "An assignment to a kept-real variable whose right-hand side reads a promoted value was rewritten from its first physical line only ('EMOD = REAL(A + B *)'), leaving the continuation line dangling.",
+   "tests": [
+    "tests/test_continued_assignment_from_promoted_value.py::test_the_continued_statement_is_rewritten_whole_and_compiles",
+    "tests/test_continued_assignment_from_promoted_value.py::test_the_transformed_stress_matches_the_original_across_the_threshold"
+   ]
+  },
+  {
+   "commit": "09d661b",
+   "bug": "The parameter-sensitivity sweep ran plain 'make'; GNU make predefines FC=f77, so the generated Makefile's 'FC ?= gfortran' never applied and the OTI driver build failed wherever f77 is absent.",
+   "tests": [],
+   "no_test_reason": "The sweep returns 0 whatever a model's build did, and the tests that run it (tests/test_reproduce_profiles.py) check only where it writes; no test asserts that the OTI driver built on a machine without f77."
+  },
+  {
+   "commit": "5b97c2f",
+   "bug": "The transformed UMAT_HIN passed hypercomplex values where its lifted helpers expect integers and reals where they expect hypercomplex values (INTEGER variables were promoted and the lifted bodies' IMPLICIT types were not read); gfortran 10 refused it and the stress was 63 % off the original's.",
+   "tests": [
+    "tests/test_lifted_helper_arguments_match_their_dummies.py::test_the_reader_types_dummies_by_implicit_rules_and_declarations",
+    "tests/test_lifted_helper_arguments_match_their_dummies.py::test_both_directions_of_a_mismatch_are_reported",
+    "tests/test_lifted_helper_arguments_match_their_dummies.py::test_hin_calls_match_and_its_stress_equals_the_original",
+    "tests/test_a_data_constant_in_the_promote_list_stays_real.py::test_the_hin_benchmark_transforms_from_its_committed_contract"
+   ]
+  },
+  {
+   "commit": "c43e0e7",
+   "bug": "The contract packaging tests imported tomllib, which Python 3.10 lacks, and the wheel test skipped on every 3.12 run because setuptools was not declared; a docstring quoting a Windows path raised an invalid-escape SyntaxWarning.",
+   "tests": [
+    "tests/test_contract_packaging.py::test_pyproject_declares_the_contract_data",
+    "tests/test_contract_packaging.py::test_a_built_wheel_carries_every_schema_the_contract_validates_with"
+   ],
+   "untested_parts": "The raw-string docstring in src/umat_oti/abaqus/data_files.py (SyntaxWarning) and the failure summary of scripts/clean_clone_acceptance.sh have no test."
+  },
+  {
+   "commit": "69f1144",
+   "bug": "codemeta.json claimed Linux, Windows and macOS and pyproject.toml 'OS Independent', while only Linux is tested.",
+   "tests": [
+    "tests/test_operating_system_claims_match_what_is_tested.py::test_codemeta_claims_the_tested_systems_and_no_others",
+    "tests/test_operating_system_claims_match_what_is_tested.py::test_the_package_classifiers_claim_the_tested_systems_and_no_others",
+    "tests/test_operating_system_claims_match_what_is_tested.py::test_ci_tests_on_linux_only",
+    "tests/test_operating_system_claims_match_what_is_tested.py::test_the_documentation_names_linux_as_tested_and_the_others_as_not",
+    "tests/test_operating_system_claims_match_what_is_tested.py::test_the_citation_and_archive_metadata_claim_no_platform"
+   ]
+  },
+  {
+   "commit": "38cce3a",
+   "bug": "An Abaqus job whose compile line could not find ifort was classified as 'the console kept no compiler diagnostic', which blames the UMAT; and streamlit run src/umat_oti/app/unified_app.py opened an empty page because the module never called main().",
+   "tests": [
+    "tests/test_a_missing_compiler_or_oti_runtime_is_named.py::test_a_job_whose_shell_cannot_find_ifort_says_so_rather_than_blaming_the_source",
+    "tests/test_a_missing_compiler_or_oti_runtime_is_named.py::test_the_validation_runner_names_ifort_when_the_compile_line_cannot_find_it",
+    "tests/test_a_missing_compiler_or_oti_runtime_is_named.py::test_abaqus_itself_with_ifort_off_path_is_reported_by_name",
+    "tests/test_every_secondary_gui_is_documented_and_launches.py::test_each_documented_command_starts_its_interface",
+    "tests/test_every_secondary_gui_is_documented_and_launches.py::test_the_plain_language_view_takes_the_folders_the_guide_documents"
+   ]
+  },
+  {
+   "commit": "1996782",
+   "bug": "A local-Jacobian request did not promote the variable it replaces: with DF=ONE the extraction went to an undeclared DF_OTI, the Newton update divided by an unassigned DF, and the transform reported success with stresses 4.6 % off.",
+   "tests": [
+    "tests/test_a_contract_local_jacobian_request_is_extracted.py::test_the_contract_request_replaces_a_wrong_hand_coded_jacobian",
+    "tests/test_a_contract_local_jacobian_request_is_extracted.py::test_the_replaced_jacobian_need_not_be_listed_in_promote",
+    "tests/test_a_local_jacobian_request_that_cannot_reach_its_variable_is_refused.py::test_the_replaced_variable_is_promoted_without_being_listed",
+    "tests/test_a_local_jacobian_request_that_cannot_reach_its_variable_is_refused.py::test_a_request_with_more_than_one_seed_direction_is_refused_by_name",
+    "tests/test_a_local_jacobian_request_that_cannot_reach_its_variable_is_refused.py::test_a_replaced_variable_the_routine_does_not_have_is_refused_by_name",
+    "tests/test_a_local_jacobian_request_is_recorded_as_written.py::test_the_current_key_does_not_warn_and_is_recorded_as_written",
+    "tests/test_a_local_jacobian_request_is_recorded_as_written.py::test_the_manifest_counts_the_directions_the_build_used"
+   ]
+  },
+  {
+   "commit": "5ffdf68",
+   "bug": "The legacy validation runner recognised only bash's 'ifort: command not found' (dash prints 'ifort: not found'), and reproduce.py reported '(clean)' when git could not read the tree at all.",
+   "tests": [
+    "tests/test_a_missing_compiler_or_oti_runtime_is_named.py::test_the_validation_runner_names_ifort_in_dash_wording_too",
+    "tests/test_reproduce_profiles.py::test_a_tree_git_cannot_read_is_not_reported_clean",
+    "tests/test_reproduce_profiles.py::test_a_checkout_git_can_read_is_still_reported_clean_or_dirty"
+   ]
+  }
+ ],
+ "excluded": [
+  {
+   "commit": "2f9319d",
+   "reason": "Feature: the two developer screens and --regular-object. 'fixed' is the verifier's fixed J2 check path and 'failed' the suite's failure count (the check-path defect is mapped under d430f63)."
+  },
+  {
+   "commit": "063b287",
+   "reason": "Documentation (the verification record); the defects it mentions are fixed and mapped in other commits."
+  },
+  {
+   "commit": "abbb30d",
+   "reason": "Documentation of the HIN and PCO fixes, which are mapped under b124e39 and 24143f8."
+  },
+  {
+   "commit": "9884dd4",
+   "reason": "Documentation; it records the defect fixed in f11806f."
+  },
+  {
+   "commit": "0ea76c6",
+   "reason": "Evidence re-freeze (corpus pass14, generation and lock). Its two test edits follow the re-frozen registry and are reviewed in docs/evidence/integrity_review.json."
+  },
+  {
+   "commit": "4abbae8",
+   "reason": "Documentation of what f11806f did to two corpus sources."
+  },
+  {
+   "commit": "bbcb7c7",
+   "reason": "Documentation; its one code change renames the GUI's default output folder to umat_oti_workspace/gui. 'fix' names the sixth transformer fix, mapped under 5b97c2f."
+  },
+  {
+   "commit": "661f3af",
+   "reason": "Evidence re-freeze (corpus pass15, generation and lock); 'refused' describes the census."
+  },
+  {
+   "commit": "fbb8dff",
+   "reason": "The refusal census in two tests follows the pass15 evidence (reviewed in docs/evidence/integrity_review.json); no code change."
+  },
+  {
+   "commit": "4361a35",
+   "reason": "New tests of behaviour that was already right (local-Jacobian contracts, replace ranges, pipeline, batch, examples); no code change."
+  },
+  {
+   "commit": "faa0360",
+   "reason": "Evidence re-freeze (corpus pass16, generation and lock) after 1996782 and 5ffdf68 moved the fingerprint; 'refused' describes the census, and no source changed its terminal state."
+  }
+ ],
+ "changelog_fixed": {
+  "The software metadata claimed platforms that are not tested. `codemeta.json` lis": {
+   "commit": "69f1144"
+  },
+  "`streamlit run src/umat_oti/app/unified_app.py`, the command the GUI guide gives": {
+   "commit": "38cce3a"
+  },
+  "An Abaqus job whose compile line could not find ifort was reported as \"the conso": {
+   "commit": "38cce3a"
+  }
+ }
+}

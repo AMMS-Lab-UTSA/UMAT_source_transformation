@@ -41,6 +41,9 @@ jobs:
         python: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v6
+        with:
+          # the integrity audit compares HEAD with the pre-work baseline commit
+          fetch-depth: 0
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
