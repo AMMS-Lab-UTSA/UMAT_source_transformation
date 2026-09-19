@@ -214,7 +214,7 @@ def _pieces_of(text: str, opened: Opened) -> list:
 
 def redirect(text: str, directory: Path, *, staged: Sequence[str] = (),
              form: str = "") -> tuple:
-    """Point every literal OPEN name at ``directory``.
+    r"""Point every literal OPEN name at ``directory``.
 
     Abaqus/Standard does not run in the job directory. It runs in a scratch
     directory of its own making -- ``/tmp/<user>_<job>_<pid>`` -- so a routine

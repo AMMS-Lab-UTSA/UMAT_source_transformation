@@ -14,6 +14,7 @@ exposed exactly this.
 """
 from __future__ import annotations
 
+import importlib.util
 import subprocess
 import sys
 import zipfile
@@ -23,6 +24,14 @@ import pytest
 
 from umat_oti.contract.schema import (GENERATION_FILE, LOCK_NAME, SCHEMA_FILES,
                                       SHARED_FILES)
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    # tomllib joined the standard library in 3.11. pyproject.toml supports
+    # 3.10, and its `test` extra declares tomli (the same parser, under its
+    # original name) for exactly the interpreters that lack it.
+    import tomli as tomllib
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -55,8 +64,6 @@ def umat_oti_root() -> Path:
 def test_pyproject_declares_the_contract_data():
     """The declaration, checked without building anything, so a missing one is
     a fast failure rather than a slow one."""
-    import tomllib
-
     config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
     declared = config["tool"]["setuptools"]["package-data"]
     assert "umat_oti.contract" in declared, (
@@ -78,12 +85,20 @@ def test_every_shared_file_is_either_packaged_or_python():
 
 @pytest.mark.slow
 def test_a_built_wheel_carries_every_schema_the_contract_validates_with(tmp_path):
+    """Built without isolation so it needs no network, which makes the build
+    backend a dependency of the running interpreter. Python 3.12 no longer
+    ships setuptools in a new environment, so it is declared in the `test`
+    extra; before that this test skipped on every 3.12 run."""
+    if importlib.util.find_spec("setuptools") is None:
+        pytest.skip("setuptools, the build backend pyproject.toml names, is not "
+                    "installed; it is in the `test` extra")
     proc = subprocess.run(
         [sys.executable, "-m", "pip", "wheel", "--no-deps",
          "--no-build-isolation", "-w", str(tmp_path), str(REPO_ROOT)],
         capture_output=True, text=True)
-    if proc.returncode != 0:
-        pytest.skip(f"could not build a wheel here: {proc.stderr[-400:]}")
+    assert proc.returncode == 0, (
+        "the wheel did not build, so the packaging was not verified:\n"
+        + proc.stdout[-2000:] + proc.stderr[-2000:])
     wheels = list(tmp_path.glob("umat_oti-*.whl")) + \
         list(tmp_path.glob("umat-oti-*.whl"))
     assert wheels, f"no wheel was produced: {proc.stdout[-400:]}"
