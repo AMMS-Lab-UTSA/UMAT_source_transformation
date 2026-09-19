@@ -23,10 +23,11 @@ consumes that provider together with a converged Abaqus analysis
 sensitivities of the finite-element solution by the residual method. The two
 are separate programs connected by a versioned contract.
 
-**New here?** Read [docs/USAGE_REPORT.md](docs/USAGE_REPORT.md) (installation,
-every command with its real output, the GUIs, examples, troubleshooting), then
-[docs/VERIFICATION_RECORD.md](docs/VERIFICATION_RECORD.md) for what has been
-verified, and how.
+**New here?** Install with [docs/INSTALL.md](docs/INSTALL.md) (about five
+minutes), then work through the six [worked examples](examples/README.md). The
+[command-line guide](docs/CLI_GUIDE.md) and the [GUI guide](docs/GUI_GUIDE.md)
+cover every entry point, with real output. What has been verified, and how, is
+in [docs/VERIFICATION_RECORD.md](docs/VERIFICATION_RECORD.md).
 
 ## Install
 
@@ -90,9 +91,25 @@ Jacobian** (upload a UMAT, set NTENS, Transform), **Parameter Sensitivities**
 `OTI_UMAT.obj`, `Mapping.json`, `transform_report.txt`), then Load Config,
 Transform, Validate (Abaqus), Constitutive Jacobians, Report and Corpus. Every
 button calls the same service function as the CLI and produces byte-identical
-files ([docs/GUI.md](docs/GUI.md)).
+files ([docs/GUI_GUIDE.md](docs/GUI_GUIDE.md)).
 
-## Examples and verified results
+## Worked examples
+
+Six complete examples, each with the mathematics in brief, the exact commands,
+the equivalent GUI clicks, the measured output and how that output is checked
+independently. None needs Abaqus; all run from the repository root in seconds
+to a minute and a half ([examples/README.md](examples/README.md)).
+
+| # | Example | What it shows |
+| --- | --- | --- |
+| 1 | [Elastic tangent](examples/01_elastic_tangent/README.md) | `DDSDDE` of a linear elastic UMAT equals the analytic isotropic stiffness exactly |
+| 2 | [J2 plasticity tangent](examples/02_j2_plasticity_tangent/README.md) | The consistent tangent over elastic, plastic and unloading increments, against a step-size sweep of finite differences |
+| 3 | [J2 parameter sensitivities](examples/03_j2_parameter_sensitivities/README.md) | `DSIGMA_DP` and `DSTATEV_DP` over a history, built into a compiled provider and verified entry by entry |
+| 4 | [FCC crystal-plasticity provider](examples/04_fcc_crystal_plasticity_provider/README.md) | The same for 12 slip systems, ten parameters and twelve state variables |
+| 5 | [Internal Newton Jacobian](examples/05_internal_newton_jacobian/README.md) | The Jacobian of a UMAT's own local Newton solve, against finite differences and the hand-coded one |
+| 6 | [Twenty-model sensitivity sweep](examples/06_parameter_sensitivity_sweep/README.md) | Parameter sensitivities of all twenty bundled models, from transform to verification |
+
+## Verified results
 
 Every number below is measured by the command named, against an independent
 reference: centred finite differences of the separately compiled original with
@@ -102,10 +119,10 @@ what did **not** reproduce, is [docs/VERIFICATION_RECORD.md](docs/VERIFICATION_R
 | Example | Measured | Command |
 | --- | --- | --- |
 | DDSDDE of 18 benchmark UMATs (elastic, plastic, viscoplastic, damage, Cosserat) compared with the original in Abaqus | 17 of 18 agree from their committed contracts (12 exactly, 5 within tolerance); UMAT_NKH_1.02 agrees once PROPS(1) = 0, because with PROPS(1) ≠ 0 the source reads a variable it never sets | `python verification/run_all.py --abaqus` (in Residual_Assembler) |
-| Parameter sensitivities DSIGMA_DP of 20 material models against finite differences | 20 of 20 models, 84 of 84 parameter directions below 1e-5; worst 1.56e-7 | `python tools/run_parameter_sensitivity_sweep.py` |
+| Parameter sensitivities DSIGMA_DP of 20 material models against finite differences | all 20 transform, compile and reproduce the original's stress; 19 verified in every direction; 83 of 84 parameter directions and 14,539 of 14,540 comparison rows agree (worst relative error 8.2e-7). The one remaining FCC direction is unresolved by the reference, not a disagreement | `python tools/run_parameter_sensitivity_sweep.py --work-dir <dir> --results-dir <dir>` ([Example 6](examples/06_parameter_sensitivity_sweep/README.md)) |
 | Internal (local Newton) Jacobians of the ICP UMATs | OTI agrees with finite differences in all 21 (UMAT, Jacobian) pairs; 6 of the hand-coded Jacobians in those sources drop a damage factor | `python verification/run_all.py` (in Residual_Assembler) |
 | J2 consistent tangent against finite differences of the original | 3e-11 (scaled) over elastic, plastic and unloading increments | `umat-oti jacobian` + `tests/gui/test_developer_screens.py` |
-| Provider verification, J2 and FCC crystal plasticity | every DSIGMA_DP, DSTATEV_DP and DDSDDE entry agrees with finite differences of the original or is consistent with zero; none disagrees | `umat-oti-provider build parameter_sensitivity/models/m6_fcc/contract_v2.json --out <dir>` |
+| Provider verification, entry by entry, J2 and FCC crystal plasticity | J2: 628 entries agree, 240 consistent with zero, none unresolved, none disagrees. FCC (tension with shear): 4,556 agree, 1,572 consistent with zero, 112 the reference cannot resolve, none disagrees | `python -m umat_oti.provider.collaborator <contract> --out <dir>` ([Examples 3](examples/03_j2_parameter_sensitivities/README.md) and [4](examples/04_fcc_crystal_plasticity_provider/README.md)) |
 
 Corpus of 391 UMATs acquired from public repositories, re-transformed and run
 in Abaqus at the current transform (2026-09-18): 240 transform, and 43
@@ -131,10 +148,14 @@ A skipped test names the missing prerequisite; a skip is not a pass.
 
 | Document | What it covers |
 | --- | --- |
-| [docs/USAGE_REPORT.md](docs/USAGE_REPORT.md) | Installation, every CLI and GUI entry point, examples, troubleshooting |
+| [docs/INSTALL.md](docs/INSTALL.md) | Installation from a clean machine, the checks that prove it works, troubleshooting |
+| [examples/README.md](examples/README.md) | Six worked examples |
+| [docs/CLI_GUIDE.md](docs/CLI_GUIDE.md) | Every command, its options, real output and exit codes |
+| [docs/GUI_GUIDE.md](docs/GUI_GUIDE.md) | A step-by-step walkthrough of every GUI screen |
+| [docs/USAGE_REPORT.md](docs/USAGE_REPORT.md) | The current state of the program in one place: scope, commands, results |
 | [docs/VERIFICATION_RECORD.md](docs/VERIFICATION_RECORD.md) | Every verified result, how it is reproduced, the reference and the measured value |
 | [docs/PROVIDER.md](docs/PROVIDER.md) | The compiled OTI provider and its ABI |
-| [docs/GUI.md](docs/GUI.md) | Each GUI screen, with screenshots |
+| [docs/GUI.md](docs/GUI.md) | The GUI's design and each screen, with screenshots |
 | [docs/CORPUS_VERIFICATION.md](docs/CORPUS_VERIFICATION.md) | The public-UMAT corpus and its acceptance gates |
 | [docs/SOFTWAREX_REPRODUCTION.md](docs/SOFTWAREX_REPRODUCTION.md) | Reproducing the paper's tables and figures |
 | [new_user_umat_starter/](new_user_umat_starter/README.md) | Writing a contract for your own UMAT |

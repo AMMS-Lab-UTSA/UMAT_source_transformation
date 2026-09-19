@@ -14,6 +14,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args(argv)
+    # the build runs in its own directory, so a relative --out must be made
+    # absolute here or the include path handed to the compiler points nowhere
+    args.out = args.out.resolve()
     if args.out.exists():
         parser.error("--out must be a new directory; existing evidence is preserved")
     args.out.mkdir(parents=True)
