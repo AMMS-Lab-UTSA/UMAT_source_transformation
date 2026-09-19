@@ -24,8 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   predictor stiffness stay live, a DATA constant listed under promote stays
   real, a compact contract can name its helper sources, and a continued
   assignment to a real variable from a promoted value is rewritten whole.
-- **Corpus pass14** at `da1f183708c19072`: 43 of 260 adequately specified
-  genuine UMATs clear every acceptance gate (`docs/evidence/final_refreeze.md`).
+- **Corpus pass15** at `16c9f305df378089`: 43 of 260 adequately specified
+  genuine UMATs clear every acceptance gate, as at pass14; four sources that
+  passed a real array to a hypercomplex helper dummy are now refused by name
+  (`docs/evidence/final_refreeze.md`).
 - `THIRD_PARTY_NOTICES.md` credits the MIT upstream of the ICP UMATs and
   records that the ICP subfolders are book companion code with no stated
   licence.

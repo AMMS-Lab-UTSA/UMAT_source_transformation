@@ -7,21 +7,21 @@ Every acquired source has a record here, and each one is named by its path insid
 | input | file |
 | --- | --- |
 | acquisition inventory (the denominator) | `paper_results/discovery/discovery_triage.csv` |
-| transform report | `softwarex_work/corpus_run/transform_all_pass14.json` |
-| Abaqus verification results | `pass14/results/store_verification.jsonl` |
+| transform report | `softwarex_work/corpus_run/transform_all_pass15.json` |
+| Abaqus verification results | `pass15/results/store_verification.jsonl` |
 | offline compile evidence | `paper_results/corpus/transform_refusal_audit.json` |
 | acquisition cache | `softwarex_work/discovery_cache` |
 
-The transform store this registry describes is at fingerprint `da1f183708c19072`. A verification row carries the fingerprint of the store it ran against; a row from before the store was rebuilt is evidence about a transformed file that no longer exists, and none of those is read as a verdict about the entry that is in the store now.
+The transform store this registry describes is at fingerprint `16c9f305df378089`. A verification row carries the fingerprint of the store it ran against; a row from before the store was rebuilt is evidence about a transformed file that no longer exists, and none of those is read as a verdict about the entry that is in the store now.
 
 ## How to regenerate every number in this report
 
 ```
 UMAT_OTI_DISCOVERY_CACHE=<the acquisition cache> \
 python tools/build_corpus_registry.py \
-    --transform <run>/transform_all_pass14.json \
-    --abaqus <run>/pass14/results/store_verification.jsonl \
-    --store-fingerprint da1f183708c19072 \
+    --transform <run>/transform_all_pass15.json \
+    --abaqus <run>/pass15/results/store_verification.jsonl \
+    --store-fingerprint 16c9f305df378089 \
     --audit-refusals
 ```
 
@@ -87,8 +87,8 @@ EXTERNAL means the answer lies in what somebody published and no further enginee
 
 | terminal state | external or internal | what it means | of D1 | of D2 |
 | --- | --- | --- | ---: | ---: |
-| `transform_refused` | **INTERNAL** | the transform could not convert it -- our work | 102 | 98 |
-| `primal_disagreed` | **INTERNAL** | the two builds compute different stress -- ours | 62 | 59 |
+| `transform_refused` | **INTERNAL** | the transform could not convert it -- our work | 106 | 102 |
+| `primal_disagreed` | **INTERNAL** | the two builds compute different stress -- ours | 59 | 56 |
 | `not_a_umat` | **EXTERNAL** | the file's Abaqus entry point is something else | 45 | 0 |
 | `fully_verified` | VERIFIED | both builds ran, agreed over the whole history, and the tangent matched a converged difference | 44 | 43 |
 | `missing_material_data` | **EXTERNAL** | nobody published what this material is made of | 41 | 0 |
@@ -98,7 +98,7 @@ EXTERNAL means the answer lies in what somebody published and no further enginee
 | `tangent_not_verified` | **INTERNAL** | the difference could not pin the tangent down -- ours | 13 | 13 |
 | `original_job_failed` | **INTERNAL** | the original did not run -- ours until proven otherwise | 8 | 8 |
 | `transformed_job_failed` | **INTERNAL** | the converted build did not run -- ours | 7 | 7 |
-| `unsupported_formulation` | **INTERNAL** | no element here drives that formulation -- ours | 6 | 6 |
+| `unsupported_formulation` | **INTERNAL** | no element here drives that formulation -- ours | 5 | 5 |
 | `experiment_not_informative` | **INTERNAL** | both builds agreed, over an experiment in which the material did not do what it is for -- ours | 4 | 4 |
 | `arguments_diverged_before_the_routine` | **INTERNAL** | the two builds were handed different arguments part way through, computed from their own earlier answers; where they parted is not yet located | 3 | 2 |
 | `support_build_failed` | **INTERNAL** | the transform's own modules did not compile -- ours | 2 | 2 |
@@ -114,13 +114,13 @@ Each of these is a limitation of this pipeline, not of the corpus. Largest first
 
 | cluster | sources in D1 | of which in D2 |
 | --- | ---: | ---: |
-| `transform_refused` | 102 | 98 |
-| `primal_disagreed` | 62 | 59 |
+| `transform_refused` | 106 | 102 |
+| `primal_disagreed` | 59 | 56 |
 | `primal_mismatch_explained` | 19 | 16 |
 | `tangent_not_verified` | 13 | 13 |
 | `original_job_failed` | 8 | 8 |
 | `transformed_job_failed` | 7 | 7 |
-| `unsupported_formulation` | 6 | 6 |
+| `unsupported_formulation` | 5 | 5 |
 | `experiment_not_informative` | 4 | 4 |
 | `arguments_diverged_before_the_routine` | 3 | 2 |
 | `support_build_failed` | 2 | 2 |
@@ -129,11 +129,11 @@ Each of these is a limitation of this pipeline, not of the corpus. Largest first
 
 ## What the transformer refused, and what those files are
 
-147 sources were refused by the transformer. A REFUSAL IS A FACT ABOUT THE TRANSFORMER and never about the file. Each of these was then classified by parsing the file itself -- its Abaqus entry point read out of the source text, its lines matched against every other acquired source, an offline `ifort -syntax-only` pass over the author's own text, the companion resolution, and a search of the whole file for an assignment to STRESS or DDSDDE. The classification below rests on that evidence and never on the refusal.
+151 sources were refused by the transformer. A REFUSAL IS A FACT ABOUT THE TRANSFORMER and never about the file. Each of these was then classified by parsing the file itself -- its Abaqus entry point read out of the source text, its lines matched against every other acquired source, an offline `ifort -syntax-only` pass over the author's own text, the companion resolution, and a search of the whole file for an assignment to STRESS or DDSDDE. The classification below rests on that evidence and never on the refusal.
 
 | what the file is | external or internal | sources |
 | --- | --- | ---: |
-| `genuine_umat` | **INTERNAL** | 98 |
+| `genuine_umat` | **INTERNAL** | 102 |
 | `missing_external_dependency` | **EXTERNAL** | 16 |
 | `helper_or_module_only` | **EXTERNAL** | 13 |
 | `incomplete_or_corrupt_source` | **EXTERNAL** | 11 |
@@ -151,14 +151,14 @@ The results file is append-only and this pass resumed onto the file an earlier p
 
 | | count |
 | --- | ---: |
-| rows in `pass14/results/store_verification.jsonl` | 244 |
-| of those, at the current store fingerprint `da1f183708c19072` | 244 |
+| rows in `pass15/results/store_verification.jsonl` | 240 |
+| of those, at the current store fingerprint `16c9f305df378089` | 240 |
 | of those, at a superseded store fingerprint | 0 |
-| distinct sources named in the file | 244 |
-| distinct row keys in the file | 244 |
-| **sources this registry counts** | **244** |
+| distinct sources named in the file | 240 |
+| distinct row keys in the file | 240 |
+| **sources this registry counts** | **240** |
 
-The row key cannot collapse the duplicates: it is derived from the STORE ENTRY, so the same source under two fingerprints has two keys and every row key in the file is distinct. The source digest cannot collapse them either, in the other direction: the 244 current rows carry only 235 distinct source digests, because several acquired files are byte-identical to another acquired file and both transformed. **The identity is the path inside the acquisition cache**, and the digest is what corroborates that a row is about the file this registry read.
+The row key cannot collapse the duplicates: it is derived from the STORE ENTRY, so the same source under two fingerprints has two keys and every row key in the file is distinct. The source digest cannot collapse them either, in the other direction: the 240 current rows carry only 231 distinct source digests, because several acquired files are byte-identical to another acquired file and both transformed. **The identity is the path inside the acquisition cache**, and the digest is what corroborates that a row is about the file this registry read.
 
 0 of the superseded rows are for sources that were re-run at the current fingerprint, so the current row is used and the old one is set aside. The remaining 0 are for sources that are no longer in the store at all, because the re-transform refused them; whatever rung they reached under the old store, it is evidence about generated Fortran that no longer exists:
 
@@ -175,18 +175,18 @@ The results file carries the word `verified` on 44 rows. 0 of those rows hold a 
 
 A gate can read true, read false, be present and hold nothing, or not be there at all. **The last two both mean not established**, and they are counted separately because they have different causes: a key holding null is a question the run asked and could not answer, and a key that is not there is a question that batch's schema never asked. A census that counts one and drops the other comes out short of its own denominator and still reads perfectly well.
 
-Denominator: 147 entries whose verification row at the current store fingerprint carries an evidence block. Every row below sums to it.
+Denominator: 144 entries whose verification row at the current store fingerprint carries an evidence block. Every row below sums to it.
 
 | gate | true | false | null | key absent | not established | sums to |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `abaqus_job_completed` | 147 | 0 | 0 | 0 | 0 | 147 |
-| `all_requested_outputs_present` | 147 | 0 | 0 | 0 | 0 | 147 |
-| `complete_history_finite` | 141 | 6 | 0 | 0 | 0 | 147 |
-| `derivatives_verified` | 62 | 85 | 0 | 0 | 0 | 147 |
-| `primal_agreed` | 63 | 84 | 0 | 0 | 0 | 147 |
-| `mechanically_informative` | 131 | 10 | 6 | 0 | 6 | 147 |
+| `abaqus_job_completed` | 144 | 0 | 0 | 0 | 0 | 144 |
+| `all_requested_outputs_present` | 144 | 0 | 0 | 0 | 0 | 144 |
+| `complete_history_finite` | 138 | 6 | 0 | 0 | 0 | 144 |
+| `derivatives_verified` | 62 | 82 | 0 | 0 | 0 | 144 |
+| `primal_agreed` | 63 | 81 | 0 | 0 | 0 | 144 |
+| `mechanically_informative` | 128 | 10 | 6 | 0 | 6 | 144 |
 
-The same census over a different denominator gives a different answer, and that is the whole reason the denominator has to be stated. Over 147 rows in the results file carrying an evidence block, at any store fingerprint, `mechanically_informative` reads true on 131, false on 10, null on 6 and is absent on 0 -- so 6 are not established. Over the 147 entries in the store now it is absent on 0 and null on 6, so 6 are not established. **Both are right and neither means anything without the denominator beside it.** No row in this file is missing the key: every row was written by one batch against one store, so the two censuses coincide. A key that is ABSENT and a key that is PRESENT AND NULL are still counted apart, because they are different answers -- a question that was never asked and a question that was asked and not answered -- and a census that pooled them would stop adding up the moment a resumed pass put both kinds of row in one file again.
+The same census over a different denominator gives a different answer, and that is the whole reason the denominator has to be stated. Over 144 rows in the results file carrying an evidence block, at any store fingerprint, `mechanically_informative` reads true on 128, false on 10, null on 6 and is absent on 0 -- so 6 are not established. Over the 144 entries in the store now it is absent on 0 and null on 6, so 6 are not established. **Both are right and neither means anything without the denominator beside it.** No row in this file is missing the key: every row was written by one batch against one store, so the two censuses coincide. A key that is ABSENT and a key that is PRESENT AND NULL are still counted apart, because they are different answers -- a question that was never asked and a question that was asked and not answered -- and a census that pooled them would stop adding up the moment a resumed pass put both kinds of row in one file again.
 
 ## Every source that is not verified, and why
 
@@ -338,9 +338,9 @@ One row per source, with the NAMED reason and the evidence behind it. "The trans
 | `RafalMichalczyk__PavementDesign/Subroutines/umat_ms_plast.for` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: RafalMichalczyk__PavementDesign publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in RafalMichalczyk__PavementDesign, and every .md, .rst and .txt in it for a table naming this source; classification: SUBROUTINE um |
 | `ReachOptimum__mlpcp-interp-dic/abaqus/UMMDp_FLC.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(i,j)=delast(i,j); DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(i,j)=0.0; DDSDDE assignment is not covered by an old tangent replacement region: ddsdde(i,j)=delast(i,j); DDSDDE assignment is; cla |
 | `RickAlb__UMAT-DFD-Lebedev/all_subroutines/UMAT_DFD_LEB.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call FULLSTRESSVEC at lines [385], rewriting ['CAUCHYINI', 'CAUCHYINI3D'], but helper lifting is not yet safe here: Helper lifting requires source definitions for ['FULLSTRESSVEC', 'PRINTSTRESS', 'STDB_A; cla |
-| `RitioL__PolyFatigueCrackSim/CPFEM-val/subroutines_revised.for` | `primal_disagreed` | INTERNAL | yes | terminal state `primal_disagreed` (internal; this project has to move next); recorded reason: worst stress difference 1.869e+00, worst state difference 1.991e+00, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bi |
-| `RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for` | `primal_disagreed` | INTERNAL | yes | terminal state `primal_disagreed` (internal; this project has to move next); recorded reason: worst stress difference 1.876e+00, worst state difference 1.986e+00, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bi |
-| `RitioL__PolyFatigueCrackSim/workplace/subroutines3_revised.for` | `primal_disagreed` | INTERNAL | yes | terminal state `primal_disagreed` (internal; this project has to move next); recorded reason: worst stress difference 1.869e+00, worst state difference 1.991e+00, against a tolerance of 1e-10; and this model's own sensitivity to round-off could not be measured against it: every way this harness has of computing the same mathematics differently (intrinsics, reassociation) reproduced the original bi |
+| `RitioL__PolyFatigueCrackSim/CPFEM-val/subroutines_revised.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: DDCMP is passed to LUDCMP_OTI, whose dummy argument D the lifted body declares as the OTI type. The lifted helpers are external subprograms, so Fortran's implicit interface makes that compile and the callee then reads one REAL as a whole hypercomplex element -- the stress is computed from reinterpre; cla |
+| `RitioL__PolyFatigueCrackSim/workplace/huang_umat_97.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: DDCMP is passed to LUDCMP_OTI, whose dummy argument D the lifted body declares as the OTI type. The lifted helpers are external subprograms, so Fortran's implicit interface makes that compile and the callee then reads one REAL as a whole hypercomplex element -- the stress is computed from reinterpre; cla |
+| `RitioL__PolyFatigueCrackSim/workplace/subroutines3_revised.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: DDCMP is passed to LUDCMP_OTI, whose dummy argument D the lifted body declares as the OTI type. The lifted helpers are external subprograms, so Fortran's implicit interface makes that compile and the callee then reads one REAL as a whole hypercomplex element -- the stress is computed from reinterpre; cla |
 | `Shi2oon__DIC2ABAQUS/OXFORD-UMAT/Example - Polycrytal with PROPS/OXFORD-UMAT.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: IP_COUNT appears as IP_COUNT(...) on the stress path but is not declared anywhere in this source, which USEs INITIALIZATIONS, USERINPUTS, GLOBALVARIABLES, STRAINGRADIENTS, BACKSTRESS, MESHPROP, USEROUTPUTS, CPSOLVER without defining it. The transformer cannot read that module, so it cannot tell whet; cla |
 | `Shi2oon__DIC2ABAQUS/OXFORD-UMAT/Example - Residual deformation/OXFORD-UMAT.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: IP_COUNT appears as IP_COUNT(...) on the stress path but is not declared anywhere in this source, which USEs USERINPUTS, GLOBALVARIABLES, INITIALIZATIONS, CPSOLVER without defining it. The transformer cannot read that module, so it cannot tell whether IP_COUNT is an array to promote or a call into i; cla |
 | `Shi2oon__DIC2ABAQUS/OXFORD-UMAT/OXFORD-UMAT v2.26/OXFORD-UMAT.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: IP_COUNT appears as IP_COUNT(...) on the stress path but is not declared anywhere in this source, which USEs INITIALIZATIONS, USERINPUTS, GLOBALVARIABLES, STRAINGRADIENTS, BACKSTRESS, MESHPROP, USEROUTPUTS, CPSOLVER without defining it. The transformer cannot read that module, so it cannot tell whet; cla |
@@ -397,7 +397,7 @@ One row per source, with the NAMED reason and the evidence behind it. "The trans
 | `glu46__3D_anisotropic_viscoelastic_model/TIRockCreep_GENERAL.for` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: glu46__3D_anisotropic_viscoelastic_model publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in glu46__3D_anisotropic_viscoelastic_model, and every .md, .rst and .txt in it for a table naming this source; classificat |
 | `hamza-djeloud__thesis_project/plate_with_notch.for` | `experiment_not_informative` | INTERNAL | yes | terminal state `experiment_not_informative` (internal; this project has to move next); recorded reason: agreed at all 4 states where a difference could be taken (increments 1, 2, 3, 5); 4 smooth states on a material that never activates, which is the whole of it; worst of them: agreed to 6.721e-15 at the best step and within 1e-06 at 8 of 8 step sizes, 1e-08 to 0.1: 7 decades of perturbation size, |
 | `harshaa765__Bilinear-CZM-UMAT/Bilinear_CZM_UMAT.for` | `unsupported_formulation` | INTERNAL | yes | terminal state `unsupported_formulation` (internal; this project has to move next); recorded reason: the stored transform was built for NTENS=2 and this material is called with NTENS=3 on COH3D8. The seed directions would not correspond to the element's components, so the tangent it extracts would be the wrong derivatives in the right shape. Re-transform this source at NTENS=3; classification: SUB |
-| `harshaa765__UMATFile/UMAT.for` | `unsupported_formulation` | INTERNAL | yes | terminal state `unsupported_formulation` (internal; this project has to move next); recorded reason: no material constants; classification: SUBROUTINE UMAT at line 1 takes 37 arguments and is called by nothing else in this file; the offline compile did not settle whether the published text builds, so the refusal stays this project's |
+| `harshaa765__UMATFile/UMAT.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: DDCMP is passed to LUDCMP_OTI, whose dummy argument D the lifted body declares as the OTI type. The lifted helpers are external subprograms, so Fortran's implicit interface makes that compile and the callee then reads one REAL as a whole hypercomplex element -- the stress is computed from reinterpre; cla |
 | `hwu12sluedu__MaterialAI-Workbench/examples/UMAT/ml_umat.f` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call CALCEQSTRAIN at lines [250], rewriting ['DEPQL', 'DEPS'], but helper lifting is not yet safe here: Helper lifting for CALCKERNELFUNCTION reached external or undefined callee INDEX. Add lifting suppo; cla |
 | `hwu12sluedu__MaterialAI-Workbench/material_ai_workbench/resources/umat/ml_umat.f` | `transform_refused` | INTERNAL | no | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call CALCEQSTRAIN at lines [250], rewriting ['DEPQL', 'DEPS'], but helper lifting is not yet safe here: Helper lifting for CALCKERNELFUNCTION reached external or undefined callee INDEX. Add lifting suppo; cla |
 | `ibf-RWTH__GA-Calibration/subroutine/Umat_CP.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Unsupported intrinsic SUM is used with promoted variables on stress path line 499.; classification: SUBROUTINE umat at line 162 takes 37 arguments and is called by nothing else in this file; ifort -syntax-only accepted the published text as fixed form |
@@ -501,7 +501,7 @@ One row per source, with the NAMED reason and the evidence behind it. "The trans
 | `samanseifi__Tahoe/development/src/elements/solid/materials/ABAQUS_BCJ/bcj_iso.f` | `incomplete_or_corrupt_source` | EXTERNAL | no | terminal state `incomplete_or_corrupt_source` (external; somebody else has to move next); recorded reason: Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call CALCRIT at lines [282, 283], rewriting ['ALPHAELAS', 'CRITER', 'HI', 'HK', 'PHI', 'PRELAS', 'STRESSELAS', 'YIELD'], but helper lifting is not yet safe here: Helper lifting for RECOV reached e |
 | `sas229__geomat/src/umat/src/umat.f90` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: UMAT delegates its whole body to UMAT_CPP_INTERFACE, which this source does not define: the stress update and the tangent are in another file, so there is nothing here to transform.; classification: SUBROUTINE umat at line 3 takes 37 arguments and is called by nothing else in this file; ifort -syntax-onl |
 | `sas229__geomat/tests/umat_integration.f90` | `not_a_umat` | EXTERNAL | no | terminal state `not_a_umat` (external; somebody else has to move next); recorded reason: ValueError: This source declares UMAT in an INTERFACE block at lines 7-11 and defines no program unit of its own. An interface body is a signature, not a body: the UMAT it names is compiled from another file, and there is nothing here to transform. Point the transform at the file that defines UMAT.; classifica |
-| `sd104400__OPA_Modeling/FE Modeling/UMAT_DPIsodwAniDM.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: Semantic check failed: no_ddsdde_read_after_disabled_assignment.; classification: SUBROUTINE UMAT at line 2 takes 37 arguments and is called by nothing else in this file; ifort -syntax-only accepted the published text as fixed form |
+| `sd104400__OPA_Modeling/FE Modeling/UMAT_DPIsodwAniDM.for` | `transform_refused` | INTERNAL | yes | terminal state `transform_refused` (internal; this project has to move next); recorded reason: HALF is passed to MAT1_MAT2_OTI, whose dummy argument FACT the lifted body declares as the OTI type. The lifted helpers are external subprograms, so Fortran's implicit interface makes that compile and the callee then reads one REAL as a whole hypercomplex element -- the stress is computed from reint; cla |
 | `seekzzh__mat-model-lab/assets/templates/abaqus_umat.f` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: seekzzh__mat-model-lab publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in seekzzh__mat-model-lab, and every .md, .rst and .txt in it for a table naming this source; classification: SUBROUTINE UMAT at line 1 takes |
 | `shayansss__bioumat/SUBROUTINES.FOR` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: shayansss__bioumat publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in shayansss__bioumat, and every .md, .rst and .txt in it for a table naming this source; classification: SUBROUTINE UMAT at line 122 takes 37 ar |
 | `shayansss__hml/NONLIPLS.for` | `missing_material_data` | EXTERNAL | no | terminal state `missing_material_data` (external; somebody else has to move next); recorded reason: shayansss__hml publishes no deck with a *USER MATERIAL block, so there is nothing here that says what this routine is made of. Searched 0 .inp file(s) in shayansss__hml, and every .md, .rst and .txt in it for a table naming this source; classification: SUBROUTINE UMAT at line 198 takes 37 arguments  |
