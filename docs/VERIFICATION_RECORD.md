@@ -87,8 +87,23 @@ the earlier UMAT_HIN result is superseded by the re-run.
   (thermal strain, line 111) without setting it.
 * The hand-coded internal Jacobians ANP1P and BNP1P (UMAT_NKH_1.02) and GDIA(3,3)
   (UMAT_VPDCO, UMAT_VPDCL_R) drop a factor (1 − D); with damage active they differ
-  from centred FD by 1.9e-4 and 6.7e-5, and FJAC, which uses them, by 2.6e-3 in
-  VPDCO/VPDCL_R. The OTI values agree with FD in every case.
+  from centred FD by 1.9e-4 and 6.7e-5, equal to the damage D at the probed state.
+  With the factor restored in a copy of the source they agree with OTI to 2e-16,
+  and with D held at 0 they agree as coded.
+* The hand-coded FJAC of UMAT_VPDCO and UMAT_VPDCL_R differs from centred FD by
+  2.6e-3 for a different reason: it is not the derivative of the residual the
+  Newton loop evaluates. FJAC differentiates FGAM with the yield stress taken at
+  the current iterate (EQPLAS1 formed with the current FBAR, which gives the
+  factor TETA2 and the term (2/3)·EHARDI·(1 − D)·FBAR); the loop updates the
+  yield stress after each Newton step from the previous iterate's FBAR. Restoring
+  (1 − D) in GDIA(3,3) leaves FJAC bit-identical (that entry belongs to the
+  hydrostatic direction, which the deviatoric projector removes before FJAC), and
+  with D held at 0 FJAC still differs by 2.6e-3. Writing FJAC as the derivative of
+  the residual the loop evaluates, or evaluating the yield stress at the current
+  iterate before FGAM, makes FJAC agree with OTI to 2e-16. With the sample
+  material of [Example 5](../examples/05_internal_newton_jacobian/README.md)
+  the difference is 2.6e-2, and the same two corrections remove it. In all six
+  cases the OTI value agrees with FD.
 * Licence of the ICP family: `UMATs/UMATs/ICP/*.for` are, after line-ending
   normalisation, byte-identical to `UMATS/*.for` of
   `https://github.com/jgomezc1/ABAQUS-US` (MIT, "Copyright (c) 2015 Juan Gomez",
