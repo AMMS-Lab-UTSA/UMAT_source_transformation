@@ -330,6 +330,13 @@ streamlit run src/umat_oti/app/workbench_app.py   # a four-step guided wizard fo
 streamlit run src/umat_oti/app/unified_app.py     # a plain-language view without Abaqus vocabulary
 ```
 
+The plain-language view shows a corpus round, read from the same place as the
+**Corpus** tab: `UMAT_OTI_CORPUS_RESULTS` and `UMAT_OTI_CORPUS_WORK` when they
+are set, otherwise `corpus_run/results` and `corpus_run/work` beside the
+checkout. To show another round, pass the two folders after `--`:
+`streamlit run src/umat_oti/app/unified_app.py -- --results-dir <results> --work-dir <work>`.
+Without a round it still opens, with empty lists.
+
 ## 8. Troubleshooting
 
 | Problem | Fix |
