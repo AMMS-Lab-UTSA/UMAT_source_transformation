@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from umat_oti.core.config import build_project_config
+from umat_oti.core.derivative_request import LOCAL_JACOBIAN_KEY_WRITTEN_AS
 from umat_oti.core.findings_log import build_findings_log
 from umat_oti.core.output_layout import migrate_transform_output_dir
 from umat_oti.core.pipeline_status import evaluate_pipeline_status
@@ -410,6 +411,9 @@ def _expand_compact_project_config(config: dict[str, Any], *, origin_path: str |
     extra_contracts = _expand_compact_extra_jacobian_contracts(normalized.get("extra_jacobian_contracts"))
     if extra_contracts:
         full_config["extra_jacobian_contracts"] = extra_contracts
+        full_config[LOCAL_JACOBIAN_KEY_WRITTEN_AS] = (
+            "extra_jacobian_contracts" if "extra_jacobian_contracts" in config
+            else "constitutive_jacobians")
     helper_surfaces = _expand_compact_helper_output_surfaces(normalized.get("helper_output_surfaces"))
     if helper_surfaces:
         full_config["helper_output_surfaces"] = helper_surfaces

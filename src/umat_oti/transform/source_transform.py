@@ -671,7 +671,7 @@ def _readiness_blockers(
     blockers.extend(_stress_path_io_blockers(config, analysis, regions["stress"]))
     if has_completed_anchors:
         blockers.extend(_completed_json_helper_call_blockers(analysis, regions["stress"], roles, helper_lift_issue))
-    blockers.extend(_local_newton_blockers(config, roles))
+    blockers.extend(_local_newton_blockers(config, roles, source_text, parsed, selected_umat))
     blockers.extend(_unsupported_intrinsic_blockers(source_text, roles, regions["stress"]))
     blockers.extend(_uncovered_ddsdde_blockers(
         analysis, regions["old_tangent"], regions["stress"], regions["shared_setup"],
@@ -897,8 +897,51 @@ def _selected_routine_span_from_analysis(
     return None
 
 
-def _local_newton_blockers(config: dict[str, Any], roles: dict[str, set[str]]) -> list[str]:
-    return []
+def _local_newton_blockers(
+    config: dict[str, Any],
+    roles: dict[str, set[str]],
+    source_text: str = "",
+    parsed: ParsedFortranSource | None = None,
+    selected_umat: str = "",
+) -> list[str]:
+    """Refuse a local-Jacobian request whose replaced variable would not get the value.
+
+    A request that names ``replace_variable`` has its hand-coded lines switched
+    off and the extracted Jacobian written into ``<replaced>_OTI``, which the
+    Newton update then reads. That is only right when the extraction is
+    actually emitted and ``<replaced>_OTI`` is actually declared. Otherwise
+    the update reads a variable nothing assigns, and the file still compiles.
+    """
+    blockers: list[str] = []
+    lines = source_text.splitlines()
+    span = (_selected_routine_span(parsed, selected_umat) if parsed is not None else None) or (1, len(lines))
+    for contract in _parse_extra_jacobian_contracts(config):
+        replaced = str(contract.get("replace_variable") or "").upper()
+        if not replaced:
+            continue
+        request = f"Local-Jacobian request {contract.get('id')!r} replaces {replaced}"
+        directions = int(contract.get("seed_directions") or 1)
+        extract_after = int(contract.get("extract_after_line") or 0)
+        if directions != 1 or not contract.get("output_variable") or not 0 < extract_after <= len(lines):
+            blockers.append(
+                f"{request}, but no extracted value would be written into it. The "
+                f"extracted Jacobian goes into the replaced variable only for a request "
+                f"with one seed direction, a residual and an extract_after line inside "
+                f"the source; this one has {directions} seed direction(s), residual "
+                f"{contract.get('output_variable') or '(none)'} and extract_after "
+                f"{extract_after or '(none)'}. The Newton update would read a "
+                f"{replaced} that nothing assigns.")
+        elif replaced not in roles["promote"]:
+            blockers.append(
+                f"{request}, but {replaced} cannot be promoted, so {replaced}_OTI, "
+                f"which receives the extracted Jacobian, would not be declared.")
+        elif not _names_present_in_span(lines, span, {replaced}, set()):
+            blockers.append(
+                f"{request}, but {replaced} does not occur in "
+                f"{(selected_umat or 'UMAT').upper()}. The extracted Jacobian would "
+                f"go into an undeclared {replaced}_OTI that the Newton update never "
+                f"reads, while the lines it replaces are switched off.")
+    return blockers
 
 
 #: Intrinsics with no counterpart over the OTI type. SIGN was on this list and
@@ -1674,15 +1717,28 @@ def _roles_with_finite_strain_promotions(config: dict[str, Any], roles: dict[str
 
 
 def _roles_with_extra_jacobian_promotions(config: dict[str, Any], roles: dict[str, set[str]]) -> dict[str, set[str]]:
+    """Promote what a local-Jacobian request reads and writes.
+
+    That is the seed, the residual, and the variable the request replaces. The
+    extraction is written into ``<replaced>_OTI`` and the Newton update has to
+    read that same shadow. A hand-coded Jacobian that depends on nothing
+    seeded, ``DF=ONE`` say, is never promoted by the classifier. Left out
+    here, the extraction went into an undeclared, implicitly REAL ``DF_OTI``,
+    the hand-coded line was switched off, and the update divided by a ``DF``
+    nothing assigned, while the transform and the compile both succeeded.
+    """
     updated = {key: set(value) for key, value in roles.items()}
     for contract in _parse_extra_jacobian_contracts(config):
         names: set[str] = set()
         seed = str(contract.get("seed_variable") or "").upper()
         out = str(contract.get("output_variable") or "").upper()
+        replaced = str(contract.get("replace_variable") or "").upper()
         if seed:
             names.add(seed)
         if out:
             names.add(out)
+        if replaced:
+            names.add(replaced)
         for ext in contract.get("additional_extractions") or []:
             from_var = str(ext.get("from_output_variable") or "").upper()
             if from_var:

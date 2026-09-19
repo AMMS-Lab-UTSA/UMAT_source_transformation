@@ -56,6 +56,14 @@ _KNOWN_KINDS = frozenset({
 })
 
 
+#: An expanded configuration keeps a compact contract's local-Jacobian requests
+#: under the transformer's key, ``extra_jacobian_contracts``, whichever name the
+#: contract used. The config loader records that name in this field, so a
+#: contract written with the current name, ``constitutive_jacobians``, is neither
+#: warned about nor labelled as the legacy alias.
+LOCAL_JACOBIAN_KEY_WRITTEN_AS = "extra_jacobian_contracts_written_as"
+
+
 class DerivativeRequestError(ValueError):
     """Raised when a derivative request cannot be interpreted."""
 
@@ -165,7 +173,11 @@ def load_project_derivative_requests(
         entries = config.get(source_key)
         if not isinstance(entries, list) or not entries:
             continue
-        if source_key == "extra_jacobian_contracts" and emit_deprecations:
+        written_as = source_key
+        if (source_key == "extra_jacobian_contracts"
+                and config.get(LOCAL_JACOBIAN_KEY_WRITTEN_AS) == "constitutive_jacobians"):
+            written_as = "constitutive_jacobians"
+        if written_as == "extra_jacobian_contracts" and emit_deprecations:
             warnings.warn(
                 "'extra_jacobian_contracts' is a legacy alias for "
                 "'constitutive_jacobians'; both still load, but new contracts "
@@ -179,10 +191,10 @@ def load_project_derivative_requests(
             requests.append(
                 _local_jacobian_from_entry(
                     entry,
-                    default_id=f"{source_key}_{index}",
+                    default_id=f"{written_as}_{index}",
                     parameter_map=parameter_map,
                     state_map=state_map,
-                    source_contract=source_key,
+                    source_contract=written_as,
                 )
             )
 
@@ -401,7 +413,12 @@ def _local_jacobian_from_entry(
         response = _upper_str(output.get("variable"))
     else:
         response = _upper_str(output)
-    replace_variable = _upper_str(entry.get("replace_variable"))
+    # A compact entry names the replaced variable at the top level; an
+    # expanded one, which is what the transformation service normalizes, keeps
+    # it under ``internal_use``, where the transformer reads it.
+    internal_use = entry.get("internal_use")
+    replace_variable = _upper_str(entry.get("replace_variable")) or (
+        _upper_str(internal_use.get("replace_variable")) if isinstance(internal_use, dict) else "")
     # In the legacy contract the "target" (where the derivative array lives)
     # is the routine-local variable being replaced; when that is empty we fall
     # back to the response variable itself.
@@ -603,6 +620,7 @@ __all__ = [
     "KIND_MATERIAL_TANGENT",
     "KIND_PARAMETER_SENSITIVITY",
     "KIND_STATE_SENSITIVITY",
+    "LOCAL_JACOBIAN_KEY_WRITTEN_AS",
     "UNIFIED_SCHEMA_VERSION",
     "load_project_derivative_requests",
     "load_unified_contract",
