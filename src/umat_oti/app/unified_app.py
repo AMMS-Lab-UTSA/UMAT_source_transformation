@@ -603,10 +603,40 @@ def _draw_reports(view, st, state) -> None:
     st.caption(regression["why some are excluded"])
 
 
-def main() -> None:                                # pragma: no cover
-    import argparse
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--results-dir", type=Path, required=True)
-    parser.add_argument("--work-dir", type=Path, required=True)
-    args = parser.parse_args()
+def corpus_directories() -> tuple[Path, Path]:
+    """Where the corpus round this view reads was written: results, then work.
+
+    The same place the main interface's Corpus tab reads, so the two show the
+    same round without being told: ``UMAT_OTI_CORPUS_RESULTS`` and
+    ``UMAT_OTI_CORPUS_WORK`` when set, otherwise ``corpus_run/`` beside the
+    checkout.
+    """
+    import os                                      # noqa: PLC0415
+
+    from umat_oti.app.resources import repository_root  # noqa: PLC0415
+
+    beside = (repository_root() or Path.cwd()).parent / "corpus_run"
+    return (Path(os.environ.get("UMAT_OTI_CORPUS_RESULTS") or beside / "results"),
+            Path(os.environ.get("UMAT_OTI_CORPUS_WORK") or beside / "work"))
+
+
+def main(argv: Optional[list[str]] = None) -> None:
+    """``streamlit run src/umat_oti/app/unified_app.py [-- --results-dir D --work-dir D]``.
+
+    Both directories default to :func:`corpus_directories`. Before they did,
+    both were required and nothing called this function, so the command the
+    GUI guide gives opened an empty page.
+    """
+    import argparse                                # noqa: PLC0415
+    results_dir, work_dir = corpus_directories()
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--results-dir", type=Path, default=results_dir,
+                        help=f"a corpus round's results (default: {results_dir})")
+    parser.add_argument("--work-dir", type=Path, default=work_dir,
+                        help=f"that round's work directory (default: {work_dir})")
+    args = parser.parse_args(argv)
     render(args.results_dir, args.work_dir)
+
+
+if __name__ == "__main__":                         # `streamlit run <this file>`
+    main()

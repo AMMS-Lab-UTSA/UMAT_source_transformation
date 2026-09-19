@@ -38,6 +38,25 @@ _COMPILER_DIAGNOSTIC = re.compile(
     r"compilation aborted)\b.*$",
     re.IGNORECASE | re.MULTILINE)
 
+#: What a shell prints when the command it was asked to run does not exist.
+#: Abaqus runs its ``compile_fortran`` line through ``/bin/sh``, so an ifort
+#: that is not on PATH reaches the console in that shell's words: dash, the
+#: ``/bin/sh`` of Debian and Ubuntu, says ``sh: 1: ifort: not found`` and bash
+#: says ``sh: ifort: command not found``. Measured with Abaqus 2021.HF5 and the
+#: Intel directories taken off PATH: the console holds the dash line and
+#: ``Abaqus Error: Problem during compilation``, and no compiler diagnostic,
+#: because no compiler ran. Like the pattern above, it only names what the
+#: console said; it decides nothing.
+_ABSENT_COMMAND = re.compile(
+    r"(?P<command>[A-Za-z_][\w.+-]*):\s*(?:command\s+)?not\s+found\s*$",
+    re.IGNORECASE | re.MULTILINE)
+
+
+def _absent_commands(console: str) -> list[str]:
+    """Commands the console says a shell could not find, in order, once each."""
+    return list(dict.fromkeys(match.group("command")
+                              for match in _ABSENT_COMMAND.finditer(console)))
+
 #: The wrap-up abort seen on this installation, which is not a model failure.
 _WRAPUP_SIGNATURES = (
     "buffer overflow detected",
@@ -167,9 +186,21 @@ def classify_job(
     checks["input_processor_reached"] = bool(dat or msg)
     if not dat and not msg:
         diagnostics = _COMPILER_DIAGNOSTIC.findall(console)
-        detail = ("; ".join(line.strip() for line in diagnostics[:3])
-                  if diagnostics else
-                  "the console kept no compiler diagnostic")
+        absent = _absent_commands(console)
+        if absent:
+            # No compiler ran, so there is no diagnostic to quote -- and saying
+            # "the console kept no compiler diagnostic" sent the reader looking
+            # for a fault in the source when the fault is the environment.
+            detail = (
+                f"{', '.join(absent)}: not found on PATH by the shell Abaqus "
+                f"builds the user subroutine through, so the build step that "
+                f"needs it never ran. Make it available in the environment "
+                f"that launches Abaqus (for Intel Fortran, source oneAPI's "
+                f"setvars.sh or load the site's compiler module) and run again")
+        elif diagnostics:
+            detail = "; ".join(line.strip() for line in diagnostics[:3])
+        else:
+            detail = "the console kept no compiler diagnostic"
         reasons.append(
             f"{job}.dat was not written, so Abaqus never reached its input "
             f"processor: the user-subroutine build failed before the analysis "
