@@ -206,13 +206,18 @@ def test_the_oti_backend_refusal_says_no_runtime_was_found_and_what_to_do(tmp_pa
         "Assembler repo) or rerun with backend='centered_fd'.")
 
 
-def test_the_oti_backend_refusal_with_a_runtime_present_still_refuses_to_guess():
+def test_the_oti_backend_refusal_with_a_runtime_present_still_refuses_to_guess(monkeypatch):
     """With OTILib's Python build importable, the backend still produces no
     number, and says why: no compiled UMAT harness is wired in."""
+    # PYOTI_PATH names the OTILib build directory, as the installation guide
+    # of the connected workflow documents; sys.path is restored afterwards.
+    if os.environ.get("PYOTI_PATH"):
+        monkeypatch.syspath_prepend(os.environ["PYOTI_PATH"])
     try:
         import pyoti.sparse  # noqa: F401
     except ImportError:
-        pytest.skip("OTILib's Python build (pyoti) is not importable here")
+        pytest.skip("OTILib's Python build (pyoti) is not importable here; "
+                    "set PYOTI_PATH to its build directory")
     from umat_oti.validation.j2_reference import J2Parameters, build_softwarex_j2_path
     from umat_oti.validation.parameter_sensitivity import (
         OtilibUnavailable, compute_j2_parameter_sensitivities)

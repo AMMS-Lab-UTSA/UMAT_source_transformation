@@ -26,8 +26,12 @@ work started from:
          instruction. The run's steps and the documentation passages they
          rest on are data in ``docs/evidence/clean_clone_commands.json``; the
          check confirms each quoted passage is still in the named document
-         and, where the scripts are present, that the list is what the
-         clean-install gate and the examples phase really run.
+         and, where the scripts are present, that the list is what the run
+         script (Residual_Assembler ``scripts/reproduce_from_clean_clones.sh``),
+         the clean-install gate and the examples phase really run. A step
+         the run needs only as a harness (recording commits, checking the
+         clones were left unmodified) is marked ``harness`` with its reason,
+         and may only run read-only queries.
 
 The script is identical in UMAT_source_transformation and Residual_Assembler
 and works out which of the two it runs in. It needs the full git history (a
@@ -46,6 +50,7 @@ import ast
 import hashlib
 import json
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -1364,6 +1369,8 @@ def audit_t11(base: Revision, head: Revision) -> dict:
 
 GATE_SCRIPT = "scripts/clean_install_gate.py"
 EXAMPLES_SCRIPT = "scripts/audit_recovery_usage.py"
+RUN_SCRIPT = "scripts/reproduce_from_clean_clones.sh"
+STATUSES = ("documented", "partial", "undocumented", "harness")
 
 
 def gate_calls(source: str) -> List[str]:
@@ -1424,13 +1431,73 @@ def example_calls(source: str) -> List[str]:
     return found
 
 
-def run_script_steps(text: str) -> Tuple[List[str], List[str]]:
-    """The ``step NAME`` lines and the environment variables of the run script."""
-    steps = re.findall(r"(?m)^step (\S+) ", text)
-    block = re.search(r"(?s)ENVV=\((.*?)\)", text)
-    variables = re.findall(r"\b([A-Z][A-Z0-9_]+)=", block.group(1)) if block else []
-    variables += ["-u " + name for name in re.findall(r"-u\s+([A-Z][A-Z0-9_]+)", block.group(1))] if block else []
-    return steps, variables
+def run_script_steps(text: str) -> dict:
+    """What the run script does, by kind.
+
+    ``steps``: the ``step NAME CWD COMMAND...`` lines (the user steps);
+    ``variables``: the names it exports, ``-u NAME`` for what it unsets,
+    ``NAME`` for an assignment written into a step's command, and
+    ``activate`` for sourcing a virtual environment's ``bin/activate``;
+    ``harness``: the harness-only lines, ``record FILE`` (a query whose output
+    is saved) and ``exec env`` (starting the script again in a changed
+    environment), each mapped to its command.
+    """
+    steps, variables, harness = [], [], {}
+    for line in text.replace("\\\n", " ").splitlines():
+        code = line.strip()
+        if code.startswith("#"):
+            continue
+        match = re.match(r"step (\S+) (.*)", code)
+        if match:
+            steps.append(match.group(1))
+            variables += re.findall(r"(?:^|\s)([A-Z][A-Z0-9_]*)=", match.group(2))
+            continue
+        if re.match(r"export\s", code):
+            variables += [word.split("=", 1)[0] for word in code.split()[1:]
+                          if re.match(r"[A-Z][A-Z0-9_]*(=|$)", word)]
+        elif re.match(r"unset\s", code):
+            variables += ["-u " + word for word in code.split()[1:]]
+        elif re.match(r"\.\s+\S*bin/activate", code):
+            variables.append("activate")
+        elif code.startswith("record "):
+            words = shlex.split(re.split(r"\s(?:\|\||&&)\s", code)[0])
+            harness["record " + words[1]] = words[2:]
+        elif re.match(r"exec env\b", code):
+            harness["exec env"] = [code]
+    return dict(steps=steps, variables=variables, harness=harness)
+
+
+def read_only_query(item: str, command: List[str]) -> bool:
+    """A harness line may only read: git rev-parse or status of a checkout, grep a file,
+    or start this same script again in a changed environment."""
+    if item == "exec env":
+        return command[0].endswith('bash "$0" "$@"')
+    if command[:2] == ["git", "-C"] and len(command) >= 4:
+        return command[3:] in (["rev-parse", "HEAD"], ["status", "--porcelain"],
+                               ["status", "--porcelain", "--untracked-files=all"])
+    return command[:1] == ["grep"]
+
+
+def check_run_script(steps: List[dict], parsed: dict) -> List[str]:
+    """Harness steps run only read-only queries, and no user step is filed as harness."""
+    problems = []
+    harness = parsed["harness"]
+    for item, command in harness.items():
+        if not read_only_query(item, command):
+            problems.append(f"the run script's harness line {item!r} runs {' '.join(command)!r}, "
+                            "which is not a read-only query")
+    for step in steps:
+        listed = step.get("run_steps", [])
+        if step["status"] == "harness":
+            users = [name for name in listed if name not in harness]
+            if users:
+                problems.append(f"{step['id']}: a harness step lists {users}, which the run script "
+                                "runs as user steps or variables")
+        else:
+            filed = [name for name in listed if name in harness]
+            if filed:
+                problems.append(f"{step['id']}: lists the harness-only {filed} as a user step")
+    return problems
 
 
 def audit_ci3(label: str, companion: Optional[Path], run_script: Optional[Path] = None) -> dict:
@@ -1440,7 +1507,7 @@ def audit_ci3(label: str, companion: Optional[Path], run_script: Optional[Path] 
     if companion is not None:
         roots["RA" if label == "UMAT" else "UMAT"] = companion.resolve()
     allowed_docs = list(data["documents"])
-    problems, stale, open_steps, rows = [], [], [], []
+    problems, stale, open_steps, rows, harness_steps = [], [], [], [], []
     for step in data["steps"]:
         row = dict(id=step["id"], source=step["source"], command=step["command"], status=step["status"],
                    fix_in=step.get("fix_in"), checked={})
@@ -1476,8 +1543,13 @@ def audit_ci3(label: str, companion: Optional[Path], run_script: Optional[Path] 
                 problems.append(f"{step['id']}: documented for {repo} without a quote from its documents")
             row["checked"][repo] = "quotes found" if results and all(results) else \
                 "no quote" if not results else "a quote is missing"
-        if step["status"] not in ("documented", "partial", "undocumented"):
-            problems.append(f"{step['id']}: status must be documented, partial or undocumented")
+        if step["status"] not in STATUSES:
+            problems.append(f"{step['id']}: status must be one of {', '.join(STATUSES)}")
+        if step["status"] == "harness":
+            if step.get("source") != "run" or not step.get("run_steps") or not step.get("reason", "").strip():
+                problems.append(f"{step['id']}: a harness step is a step of the run script (source run, "
+                                "run_steps) with the reason a user does not need it")
+            harness_steps.append(f"{step['id']}: {step.get('reason', '')}")
         if step["status"] in ("undocumented", "partial"):
             if step.get("fix_in") not in ("docs", "run"):
                 problems.append(f"{step['id']}: fix_in must be docs or run")
@@ -1508,14 +1580,22 @@ def audit_ci3(label: str, companion: Optional[Path], run_script: Optional[Path] 
         actual = extract((root / script).read_text(encoding="utf-8"))
         compare(kind, actual, key)
         coverage[key] = f"{len(actual)} calls compared with {script}"
+    if run_script is None:
+        for root in roots.values():
+            if (root / RUN_SCRIPT).is_file():
+                run_script = root / RUN_SCRIPT
+                break
     if run_script is not None:
-        steps, variables = run_script_steps(run_script.read_text(encoding="utf-8"))
-        compare("the run script", steps + variables, "run_steps")
-        coverage["run_steps"] = f"{len(steps)} steps and {len(variables)} variables compared with {run_script.name}"
+        parsed = run_script_steps(run_script.read_text(encoding="utf-8"))
+        problems.extend(check_run_script(data["steps"], parsed))
+        compare("the run script", parsed["steps"] + parsed["variables"] + list(parsed["harness"]), "run_steps")
+        shown = RUN_SCRIPT if run_script.resolve().as_posix().endswith(RUN_SCRIPT) else run_script.name
+        coverage["run_steps"] = (f"{len(parsed['steps'])} steps, {len(parsed['variables'])} variables and "
+                                 f"{len(parsed['harness'])} harness lines compared with {shown}")
     else:
-        coverage["run_steps"] = "not checked: pass --run-script with the clean-clone script"
+        coverage["run_steps"] = f"not checked here: {RUN_SCRIPT} is in Residual_Assembler (pass --companion)"
     return dict(check="ci3", repository=label, documents=allowed_docs, coverage=coverage, steps=rows,
-                unexplained=[], stale=stale, problems=problems, violations=open_steps)
+                unexplained=[], stale=stale, problems=problems, violations=open_steps, harness=harness_steps)
 
 
 # --------------------------------------------------------------------------
@@ -1525,8 +1605,8 @@ def summarise(report: dict) -> str:
              f"{len(report['problems'])} problems, {len(report['violations'])} open"]
     if "counts" in report:
         lines.append("  findings per category: " + ", ".join(f"{k}={v}" for k, v in report["counts"].items()))
-    for field in ("unexplained", "stale", "problems", "violations"):
-        for item in report[field][:50]:
+    for field in ("unexplained", "stale", "problems", "violations", "harness"):
+        for item in report.get(field, [])[:50]:
             lines.append(f"  {field}: {item}")
     return "\n".join(lines)
 
@@ -1540,7 +1620,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--companion", type=Path, default=None,
                         help="the other repository's checkout, to check its documents too (ci3)")
     parser.add_argument("--run-script", type=Path, default=None,
-                        help="the clean-clone run script, to check the step list against it (ci3)")
+                        help=f"the clean-clone run script to check the step list against (ci3; default "
+                             f"{RUN_SCRIPT} of Residual_Assembler, here or in --companion)")
     args = parser.parse_args(argv)
 
     name = repository_name()

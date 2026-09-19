@@ -142,6 +142,45 @@ Each example was run twice on 2026-09-18: once in this checkout, and once in
 a new virtual environment where every command block of its README ran as
 written. All exited 0 and printed the numbers above.
 
+The commands, from the repository root, as the READMEs give them (outputs go
+under the git-ignored `umat_oti_workspace/`; any other folder works too):
+
+```bash
+# Example 1: DDSDDE of the elastic UMAT, then the comparison with the analytic stiffness
+umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for \
+    --ntens 6 --out umat_oti_workspace/examples/01_elastic --compile
+python examples/01_elastic_tangent/run.py --jacobian-dir umat_oti_workspace/examples/01_elastic
+# Example 2: the J2 tangent, then the step-size sweep of finite differences
+umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for \
+    --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile
+python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2
+# Example 3: the J2 provider, its verified hand-off package, and the package reader
+umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json \
+    --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj
+python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json \
+    --out umat_oti_workspace/examples/03_j2/package --j2-branches
+python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package
+# Example 4: the same for the FCC crystal
+umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json \
+    --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj
+python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json \
+    --out umat_oti_workspace/examples/04_fcc/package
+python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package
+# Example 5: Part A, the bundled flow model (--out absolute), then Part B, the damage UMAT
+python examples/verify_internal_jacobian.py --out "$PWD/umat_oti_workspace/examples/05_cpflow"
+python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco
+# Example 6: the twenty-model sweep (both folders absolute)
+python tools/run_parameter_sensitivity_sweep.py \
+    --work-dir "$PWD/umat_oti_workspace/examples/06_sweep/work" \
+    --results-dir "$PWD/umat_oti_workspace/examples/06_sweep/results"
+```
+
+The `run.py` of Examples 1 to 4 and Part B of Example 5 end with
+`RESULT: PASS` and exit 1 on a failure. Residual_Assembler runs all six, with
+its own examples that need no Abaqus, in one command that checks each result
+and records it (`scripts/audit_recovery_usage.py --phase examples`, in its
+[INSTALL.md, section 6, item 7](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/INSTALL.md#6-verify-the-installation)).
+
 ## 6. The GUI
 
 ```bash
@@ -321,6 +360,13 @@ See
 That record predates the commits after `1352114`, including the last
 transform change (`5b97c2f`, which set the fingerprint above). The examples
 and numbers in this report were measured on the current code.
+
+Residual_Assembler's
+[reproduction script](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/scripts/reproduce_from_clean_clones.sh)
+runs that gate from fresh clones of both published `main` branches, then, in
+the environment the gate made, this repository's offline test suite,
+Residual_Assembler's, and the examples check above (its
+[INSTALL.md, section 7](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/INSTALL.md#7-the-clean-install-gate)).
 
 ## 11. Status and evidence
 

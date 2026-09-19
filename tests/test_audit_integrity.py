@@ -14,8 +14,10 @@ tests that exist, excluded with a reason, or listed as a fix without a test.
 
 ``ci3`` checks that every step of the clean-clone run in
 docs/evidence/clean_clone_commands.json still rests on the quoted instruction,
-and, in Residual_Assembler, that the list matches what the clean-install gate
-and the examples phase really run.
+and, in Residual_Assembler, that the list matches what the run script
+(scripts/reproduce_from_clean_clones.sh), the clean-install gate and the
+examples phase really run. A step the run needs only as a harness may only run
+read-only queries and must say why a user does not need it.
 
 What fails here is a finding nobody reviewed, a review entry that matches
 nothing any more, or a quoted passage that is not where it is said to be. A
@@ -78,9 +80,41 @@ def test_ci3_every_clean_clone_step_rests_on_a_quoted_instruction(tmp_path):
     assert checked and all(row["checked"][here] == "quotes found"
                            for row in checked if row["status"] == "documented")
     if here == "RA":
-        # the step list is the gate's and the examples phase's real command list
+        # the step list is the run script's, the gate's and the examples phase's real command list
         assert report["coverage"]["gate_calls"].endswith("compared with scripts/clean_install_gate.py")
         assert report["coverage"]["example_calls"].endswith("compared with scripts/audit_recovery_usage.py")
+        assert report["coverage"]["run_steps"].endswith("compared with scripts/reproduce_from_clean_clones.sh")
+    harness = [row for row in report["steps"] if row["status"] == "harness"]
+    assert harness and all(row["source"] == "run" for row in harness)
+
+
+def test_a_harness_line_may_only_read_and_no_user_step_is_filed_as_harness():
+    sys.path.insert(0, str(REPO_ROOT / "tools"))
+    import audit_integrity as audit
+
+    parsed = audit.run_script_steps("\n".join([
+        'exec env -u PYTHONPATH REPRODUCE_CLEAN_SHELL=1 bash "$0" "$@"',
+        '# step commented out "$RA" python -m pytest',
+        'step suite "$RA" python -m pytest -q \\',
+        '    --junitxml="$C/suite.xml"',
+        'record head.txt git -C "$RA" rev-parse HEAD',
+        'record fixed.txt python -m pip install something',
+        '. "$C/env/bin/activate"',
+        'export RUN_OTILIB_TESTS=1 OTILIB_ROOT',
+    ]))
+    assert parsed["steps"] == ["suite"]
+    assert parsed["variables"] == ["activate", "RUN_OTILIB_TESTS", "OTILIB_ROOT"]
+    assert sorted(parsed["harness"]) == ["exec env", "record fixed.txt", "record head.txt"]
+    steps = [dict(id="bookkeeping", status="harness", run_steps=["record head.txt", "suite"]),
+             dict(id="suite", status="documented", run_steps=["suite", "record fixed.txt"])]
+    assert audit.check_run_script(steps, parsed) == [
+        "the run script's harness line 'record fixed.txt' runs 'python -m pip install something', "
+        "which is not a read-only query",
+        "bookkeeping: a harness step lists ['suite'], which the run script runs as user steps or variables",
+        "suite: lists the harness-only ['record fixed.txt'] as a user step",
+    ]
+    # re-running anything but the script itself is not a harness line either
+    assert not audit.read_only_query("exec env", ['exec env -i bash other_script.sh'])
 
 
 # -- the scanner itself, on a repository made for it --------------------------
