@@ -1,0 +1,490 @@
+{
+ "_about": [
+  "Reviewed findings of tools/audit_integrity.py --check t12: how the tests, the verification code,",
+  "the examples and the support metadata changed between the baseline commit and the audited commit.",
+  "Each finding id is the audit's; verdict is justified or violation. evidence, quote and moved_to",
+  "are checked by the audit: text must be in the named file of the audited commit, in the baseline",
+  "commit's file (BASE:path) or in a commit message (a hash). A loosened, changed or removed",
+  "tolerance, and a removed tolerance check, needs the quoted reasoning. pre_work_failures lists the",
+  "tests that failed or errored in the recorded pre-work run; each must still exist, or its rename",
+  "must be recorded. tests/test_audit_integrity.py fails on an unreviewed finding or a stale entry."
+ ],
+ "repository": "UMAT",
+ "baseline": "3f340b72ec4d9d1f474fdb2e0f6bda1c41bfaa76",
+ "pre_work_record": "BASELINE_FAILURES.md and baseline_*.json of the workspace, recorded before the work at an earlier commit; not part of this repository.",
+ "pre_work_failures": {
+  "tests/test_the_crystal_plasticity_trio_lost_one_state_slot.py": {
+   "status": "present"
+  }
+ },
+ "findings": {
+  "skip:scripts/clean_clone_acceptance.sh:ci-line:0021c096": {
+   "verdict": "justified",
+   "reason": "A comment explaining the next line; it selects nothing."
+  },
+  "skip:scripts/clean_clone_acceptance.sh:ci-line:2eb06c7f": {
+   "verdict": "justified",
+   "reason": "Step 7 (compile representative Fortran) keeps the offline exclusions of step 6, so a machine with Abaqus does not start the one test marked both fortran and abaqus; step 6 already runs every offline test, and deselection is reported by pytest.",
+   "evidence": [
+    {
+     "in": "c43e0e7",
+     "text": "The Fortran step uses the same offline marker filter as the suite"
+    }
+   ]
+  },
+  "skip:scripts/clean_clone_acceptance.sh:ci-line:30e0fa2c": {
+   "verdict": "justified",
+   "reason": "The `|| true` covers only printing the failure summary (head may close the pipe early); run_pytest then exits with pytest's own status.",
+   "evidence": [
+    {
+     "in": "scripts/clean_clone_acceptance.sh",
+     "text": "exit \"$status\""
+    }
+   ]
+  },
+  "skip:scripts/clean_clone_acceptance.sh:ci-line:7889de4c": {
+   "verdict": "justified",
+   "reason": "Leaves SKIPPED lines out of the failure summary printed to the console; the whole log is kept and the exit status is pytest's.",
+   "evidence": [
+    {
+     "in": "scripts/clean_clone_acceptance.sh",
+     "text": "exit \"$status\""
+    }
+   ]
+  },
+  "skip:scripts/clean_clone_acceptance.sh:ci-line:8b28f863": {
+   "verdict": "justified",
+   "reason": "The same offline marker filter the baseline script's step 6 used, moved into run_pytest's arguments.",
+   "evidence": [
+    {
+     "in": "BASE:scripts/clean_clone_acceptance.sh",
+     "text": "-m \"not abaqus and not arc and not network\""
+    }
+   ]
+  },
+  "skip:tests/gui/conftest.py:pytest_collection_modifyitems:hook:pytest_deselected:2c724976": {
+   "verdict": "justified",
+   "reason": "New tests/gui/conftest.py: deselects only tests marked gui (browser tests needing Playwright and Chromium) unless -m names gui; no test that existed at the baseline carries the gui marker (the audit's 'existing test now marked' check finds none), and pytest reports deselections.",
+   "evidence": [
+    {
+     "in": "tests/gui/conftest.py",
+     "text": "item.get_closest_marker(\"gui\")"
+    }
+   ]
+  },
+  "skip:tests/gui/test_developer_screens_browser.py:<module>:call:importorskip:003ece3f": {
+   "verdict": "justified",
+   "reason": "New browser test (gui-marked, deselected by default); the skip names Playwright, which the test extra does not install, the same reason the baseline's workbench browser test gives.",
+   "evidence": [
+    {
+     "in": "BASE:tests/test_workbench_browser.py",
+     "text": "reason=\"playwright is not installed\""
+    }
+   ]
+  },
+  "skip:tests/test_a_contract_local_jacobian_request_is_extracted.py:<module>:mark.skipif:0f59825e": {
+   "verdict": "justified",
+   "reason": "New test; skips only without gfortran, which it needs to compile the transformed UMAT. CI installs gfortran, so it runs there.",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
+  },
+  "skip:tests/test_a_missing_compiler_or_oti_runtime_is_named.py:_validation_run_whose_compile_line_cannot_find_ifort:call:skip:2a37f0bc": {
+   "verdict": "justified",
+   "reason": "New test helper; skips only when the shell whose wording it tests (bash or dash) is absent, because the compile line is run through that shell."
+  },
+  "skip:tests/test_a_missing_compiler_or_oti_runtime_is_named.py:test_abaqus_itself_with_ifort_off_path_is_reported_by_name:call:skip:8ace160e": {
+   "verdict": "justified",
+   "reason": "New test marked abaqus (deselected by the offline suite); the skip names a missing licensed Abaqus.",
+   "evidence": [
+    {
+     "in": "tests/test_a_missing_compiler_or_oti_runtime_is_named.py",
+     "text": "@pytest.mark.abaqus def test_abaqus_itself_with_ifort_off_path_is_reported_by_name"
+    }
+   ]
+  },
+  "skip:tests/test_a_missing_compiler_or_oti_runtime_is_named.py:test_the_oti_backend_refusal_with_a_runtime_present_still_refuses_to_guess:call:skip:0af14457": {
+   "verdict": "justified",
+   "reason": "New test; skips when OTILib's Python build is not importable (an external GPL build, not on PyPI). Its counterpart without the runtime, test_the_oti_backend_refusal_says_no_runtime_was_found_and_what_to_do, runs everywhere. UMAT has no RUN_OTILIB_TESTS switch, so this skip stays a skip even in the clean-clone run if OTILib is not importable."
+  },
+  "skip:tests/test_contract_packaging.py:test_a_built_wheel_carries_every_schema_the_contract_validates_with:call:skip:0257ad28": {
+   "verdict": "justified",
+   "reason": "Stricter than the baseline: the baseline skipped on any wheel-build failure; now a build failure is an assertion, and the only skip left is for a missing setuptools, which the test extra declares.",
+   "evidence": [
+    {
+     "in": "BASE:tests/test_contract_packaging.py",
+     "text": "pytest.skip(f\"could not build a wheel here"
+    },
+    {
+     "in": "pyproject.toml",
+     "text": "\"setuptools>=68\","
+    }
+   ]
+  },
+  "skip:tests/test_every_secondary_gui_is_documented_and_launches.py:<module>:call:importorskip:04056c1f": {
+   "verdict": "justified",
+   "reason": "streamlit is a runtime dependency of umat-oti, so this skip cannot trigger in a documented install.",
+   "evidence": [
+    {
+     "in": "pyproject.toml",
+     "text": "\"streamlit>=1.30\","
+    }
+   ]
+  },
+  "skip:tests/test_provider_regular_object.py:test_the_abaqus_toolchain_builds_the_regular_object_with_abaqus_make:call:skip:136ad400": {
+   "verdict": "justified",
+   "reason": "New test marked abaqus (deselected by the offline suite); the skip names a missing licensed Abaqus.",
+   "evidence": [
+    {
+     "in": "tests/test_provider_regular_object.py",
+     "text": "@pytest.mark.abaqus def test_the_abaqus_toolchain_builds_the_regular_object_with_abaqus_make"
+    }
+   ]
+  },
+  "skip:tests/test_reproduce_profiles.py:<module>:mark.skipif:f5b33f39": {
+   "verdict": "justified",
+   "reason": "New test of how a git-readable tree is reported; skips only without git, which it drives."
+  },
+  "skip:tests/test_the_pipeline_command_runs_a_real_contract.py:<module>:mark.skipif:d5869b5e": {
+   "verdict": "justified",
+   "reason": "New test; skips only without gfortran, which it needs to compile the transformed UMAT. CI installs gfortran, so it runs there.",
+   "evidence": [
+    {
+     "in": ".github/workflows/ci.yml",
+     "text": "sudo apt-get install -y gfortran"
+    }
+   ]
+  },
+  "removed_check:src/umat_oti/validation/parameter_sensitivity_provider.py:verify_provider:07317493": {
+   "verdict": "justified",
+   "reason": "The column-scaled maximum-error plateau checks against FD_TOLERANCE were replaced by a verdict per entry against centred differences of the ORIGINAL over a step ladder: every entry of DSIGMA_DP, DSTATEV_DP and DDSDDE agrees, is consistent with zero, is unresolved, or disagrees; any disagreement raises, and every array needs an agreeing column. The same 868 J2 entries are judged (the old counts 588+504+756+756 were those entries at three steps each), and tests/test_provider_recovery.py now requires verdict 'verified' with every column agreeing. Stricter for small entries (relative to the entry, not to the column maximum); looser in one respect, stated here: an entry whose reference uncertainty is wider than the tolerance is reported unresolved, never agreement, and the report is then passed with verdict verified_with_unresolved_columns instead of failing.",
+   "quote": "otherwise the value lies within the reference's own uncertainty but that uncertainty is wider than the tolerance: **reference unresolved**. The reference cannot say whether the value is right. It is never counted as agreement.",
+   "quote_source": "src/umat_oti/validation/parameter_sensitivity_provider.py",
+   "evidence": [
+    {
+     "in": "d430f63",
+     "text": "agrees, consistent with zero, reference unresolved (never a pass), disagrees"
+    },
+    {
+     "in": "src/umat_oti/validation/parameter_sensitivity_provider.py",
+     "text": "raise AssertionError(\"an array has no column the reference resolves: \""
+    }
+   ]
+  },
+  "removed_check:src/umat_oti/validation/parameter_sensitivity_provider.py:verify_provider:39aa5434": {
+   "verdict": "justified",
+   "reason": "The column-scaled maximum-error plateau checks against FD_TOLERANCE were replaced by a verdict per entry against centred differences of the ORIGINAL over a step ladder: every entry of DSIGMA_DP, DSTATEV_DP and DDSDDE agrees, is consistent with zero, is unresolved, or disagrees; any disagreement raises, and every array needs an agreeing column. The same 868 J2 entries are judged (the old counts 588+504+756+756 were those entries at three steps each), and tests/test_provider_recovery.py now requires verdict 'verified' with every column agreeing. Stricter for small entries (relative to the entry, not to the column maximum); looser in one respect, stated here: an entry whose reference uncertainty is wider than the tolerance is reported unresolved, never agreement, and the report is then passed with verdict verified_with_unresolved_columns instead of failing.",
+   "quote": "otherwise the value lies within the reference's own uncertainty but that uncertainty is wider than the tolerance: **reference unresolved**. The reference cannot say whether the value is right. It is never counted as agreement.",
+   "quote_source": "src/umat_oti/validation/parameter_sensitivity_provider.py",
+   "evidence": [
+    {
+     "in": "d430f63",
+     "text": "agrees, consistent with zero, reference unresolved (never a pass), disagrees"
+    },
+    {
+     "in": "src/umat_oti/validation/parameter_sensitivity_provider.py",
+     "text": "raise AssertionError(\"an array has no column the reference resolves: \""
+    }
+   ]
+  },
+  "removed_check:src/umat_oti/validation/parameter_sensitivity_provider.py:verify_provider:7b1446b2": {
+   "verdict": "justified",
+   "reason": "The column-scaled maximum-error plateau checks against FD_TOLERANCE were replaced by a verdict per entry against centred differences of the ORIGINAL over a step ladder: every entry of DSIGMA_DP, DSTATEV_DP and DDSDDE agrees, is consistent with zero, is unresolved, or disagrees; any disagreement raises, and every array needs an agreeing column. The same 868 J2 entries are judged (the old counts 588+504+756+756 were those entries at three steps each), and tests/test_provider_recovery.py now requires verdict 'verified' with every column agreeing. Stricter for small entries (relative to the entry, not to the column maximum); looser in one respect, stated here: an entry whose reference uncertainty is wider than the tolerance is reported unresolved, never agreement, and the report is then passed with verdict verified_with_unresolved_columns instead of failing.",
+   "quote": "otherwise the value lies within the reference's own uncertainty but that uncertainty is wider than the tolerance: **reference unresolved**. The reference cannot say whether the value is right. It is never counted as agreement.",
+   "quote_source": "src/umat_oti/validation/parameter_sensitivity_provider.py",
+   "evidence": [
+    {
+     "in": "d430f63",
+     "text": "agrees, consistent with zero, reference unresolved (never a pass), disagrees"
+    },
+    {
+     "in": "src/umat_oti/validation/parameter_sensitivity_provider.py",
+     "text": "raise AssertionError(\"an array has no column the reference resolves: \""
+    }
+   ]
+  },
+  "removed_check:src/umat_oti/validation/parameter_sensitivity_provider.py:verify_provider:bcab0d03": {
+   "verdict": "justified",
+   "reason": "The column-scaled maximum-error plateau checks against FD_TOLERANCE were replaced by a verdict per entry against centred differences of the ORIGINAL over a step ladder: every entry of DSIGMA_DP, DSTATEV_DP and DDSDDE agrees, is consistent with zero, is unresolved, or disagrees; any disagreement raises, and every array needs an agreeing column. The same 868 J2 entries are judged (the old counts 588+504+756+756 were those entries at three steps each), and tests/test_provider_recovery.py now requires verdict 'verified' with every column agreeing. Stricter for small entries (relative to the entry, not to the column maximum); looser in one respect, stated here: an entry whose reference uncertainty is wider than the tolerance is reported unresolved, never agreement, and the report is then passed with verdict verified_with_unresolved_columns instead of failing.",
+   "quote": "otherwise the value lies within the reference's own uncertainty but that uncertainty is wider than the tolerance: **reference unresolved**. The reference cannot say whether the value is right. It is never counted as agreement.",
+   "quote_source": "src/umat_oti/validation/parameter_sensitivity_provider.py",
+   "evidence": [
+    {
+     "in": "d430f63",
+     "text": "agrees, consistent with zero, reference unresolved (never a pass), disagrees"
+    },
+    {
+     "in": "src/umat_oti/validation/parameter_sensitivity_provider.py",
+     "text": "raise AssertionError(\"an array has no column the reference resolves: \""
+    }
+   ]
+  },
+  "removed_check:tests/test_a_refusal_is_not_a_verdict_on_the_file.py:test_a_compile_that_settles_nothing_leaves_the_work_ours:b4e2623f": {
+   "verdict": "justified",
+   "reason": "Census pin updated with the re-frozen evidence: two refused sources now have an offline audit, so nine (not eleven) refusals remain unsure. The partition rule is unchanged.",
+   "quote": "the two jpsferreira umat_general.for copies now have an audit (ifort accepts them), so the count is nine and their refusal is ours with confidence.",
+   "quote_source": "0ea76c6"
+  },
+  "removed_check:tests/test_a_refusal_is_not_a_verdict_on_the_file.py:test_a_refused_umat_that_builds_stays_this_project_s_problem:44d1de29": {
+   "verdict": "justified",
+   "reason": "Census pin updated with the pass15 evidence: four more genuine UMATs are now refused by name (147 to 151 refusals, 98 to 102 genuine). The partition rule is unchanged.",
+   "quote": "Pass15 refuses 151 sources (147 at pass14): the four additions are genuine UMATs that pass a real work array to a lifted helper whose IMPLICIT statement types the dummy hypercomplex, which the transform now refuses by name.",
+   "quote_source": "fbb8dff"
+  },
+  "removed_check:tests/test_a_refusal_is_not_a_verdict_on_the_file.py:test_the_refusal_classes_partition_every_refusal:74c128fe": {
+   "verdict": "justified",
+   "reason": "Census pin updated with the pass15 evidence: four more genuine UMATs are now refused by name (147 to 151 refusals, 98 to 102 genuine). The partition rule is unchanged.",
+   "quote": "Pass15 refuses 151 sources (147 at pass14): the four additions are genuine UMATs that pass a real work array to a lifted helper whose IMPLICIT statement types the dummy hypercomplex, which the transform now refuses by name.",
+   "quote_source": "fbb8dff"
+  },
+  "removed_check:tests/test_a_refusal_is_not_a_verdict_on_the_file.py:test_the_refusal_classes_partition_every_refusal:83ee8f7f": {
+   "verdict": "justified",
+   "reason": "Census pin updated with the pass15 evidence: four more genuine UMATs are now refused by name (147 to 151 refusals, 98 to 102 genuine). The partition rule is unchanged.",
+   "quote": "Pass15 refuses 151 sources (147 at pass14): the four additions are genuine UMATs that pass a real work array to a lifted helper whose IMPLICIT statement types the dummy hypercomplex, which the transform now refuses by name.",
+   "quote_source": "fbb8dff"
+  },
+  "removed_check:tests/test_provider_recovery.py:test_provider_j2_original_fd_and_carryover:f94c21e3": {
+   "verdict": "justified",
+   "reason": "The comparison counts follow the per-entry verifier: 628 entries agree and 240 are zero to within the reference, the same 868 entries the old counts took at three steps each; the test now also requires verdict 'verified', no unresolved column and every column agreeing.",
+   "evidence": [
+    {
+     "in": "tests/test_provider_recovery.py",
+     "text": "\"verified_entries\": 628"
+    },
+    {
+     "in": "tests/test_provider_recovery.py",
+     "text": "assert all(column[\"verdict\"] == \"agrees\" for column in report[\"columns\"])"
+    }
+   ]
+  },
+  "removed_check:tests/test_the_two_denominators_stay_apart.py:test_retained_refresh_preserves_observations_and_retires_currency:a7d4ff32": {
+   "verdict": "justified",
+   "reason": "The committed registry became current at the re-freeze, so the test labels a copy with pass12's real generation to keep exercising refresh_retained; it also checks that a current store is refused.",
+   "quote": "it now labels it with pass12's real generation before exercising refresh_retained, with every assertion unchanged.",
+   "quote_source": "0ea76c6",
+   "evidence": [
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "pytest.raises(ValueError, match=\"historical store generation\")"
+    }
+   ]
+  },
+  "warning_filter:tests/test_a_contract_resolves_its_helper_closure.py:test_the_pco_benchmark_transforms_and_compiles_from_its_committed_contract:call:simplefilter:6e78a05f": {
+   "verdict": "justified",
+   "reason": "Inside `with warnings.catch_warnings():` around one transform call; ignores only DeprecationWarning, which umat_oti.core.derivative_request issues to nudge contracts that use the legacy local-Jacobian key. Errors still raise, and the test asserts on the transform's result.",
+   "evidence": [
+    {
+     "in": "src/umat_oti/core/derivative_request.py",
+     "text": "is a legacy alias for"
+    },
+    {
+     "in": "tests/test_a_contract_resolves_its_helper_closure.py",
+     "text": "with warnings.catch_warnings():"
+    }
+   ]
+  },
+  "warning_filter:tests/test_a_data_constant_in_the_promote_list_stays_real.py:_transform:call:simplefilter:7f25af07": {
+   "verdict": "justified",
+   "reason": "Inside `with warnings.catch_warnings():` around one transform call; ignores only DeprecationWarning, which umat_oti.core.derivative_request issues to nudge contracts that use the legacy local-Jacobian key. Errors still raise, and the test asserts on the transform's result.",
+   "evidence": [
+    {
+     "in": "src/umat_oti/core/derivative_request.py",
+     "text": "is a legacy alias for"
+    },
+    {
+     "in": "tests/test_a_data_constant_in_the_promote_list_stays_real.py",
+     "text": "with warnings.catch_warnings():"
+    }
+   ]
+  },
+  "warning_filter:tests/test_a_data_constant_in_the_promote_list_stays_real.py:test_the_hin_benchmark_transforms_from_its_committed_contract:call:simplefilter:757889a1": {
+   "verdict": "justified",
+   "reason": "Inside `with warnings.catch_warnings():` around one transform call; ignores only DeprecationWarning, which umat_oti.core.derivative_request issues to nudge contracts that use the legacy local-Jacobian key. Errors still raise, and the test asserts on the transform's result.",
+   "evidence": [
+    {
+     "in": "src/umat_oti/core/derivative_request.py",
+     "text": "is a legacy alias for"
+    },
+    {
+     "in": "tests/test_a_data_constant_in_the_promote_list_stays_real.py",
+     "text": "with warnings.catch_warnings():"
+    }
+   ]
+  },
+  "warning_filter:tests/test_a_local_jacobian_request_is_recorded_as_written.py:_transform:call:simplefilter:2926771c": {
+   "verdict": "justified",
+   "reason": "Records every warning (record=True) so the test can assert which DeprecationWarnings the transform raised; it hides nothing.",
+   "evidence": [
+    {
+     "in": "tests/test_a_local_jacobian_request_is_recorded_as_written.py",
+     "text": "with warnings.catch_warnings(record=True) as caught:"
+    }
+   ]
+  },
+  "warning_filter:tests/test_benchmark_transforms_keep_labels_and_predictor_inputs.py:_transform:call:simplefilter:7f25af07": {
+   "verdict": "justified",
+   "reason": "Inside `with warnings.catch_warnings():` around one transform call; ignores only DeprecationWarning, which umat_oti.core.derivative_request issues to nudge contracts that use the legacy local-Jacobian key. Errors still raise, and the test asserts on the transform's result.",
+   "evidence": [
+    {
+     "in": "src/umat_oti/core/derivative_request.py",
+     "text": "is a legacy alias for"
+    },
+    {
+     "in": "tests/test_benchmark_transforms_keep_labels_and_predictor_inputs.py",
+     "text": "with warnings.catch_warnings():"
+    }
+   ]
+  },
+  "warning_filter:tests/test_benchmark_transforms_keep_labels_and_predictor_inputs.py:test_a_labelled_branch_on_a_promoted_real_keeps_its_label:call:simplefilter:8137d354": {
+   "verdict": "justified",
+   "reason": "Inside `with warnings.catch_warnings():` around one transform call; ignores only DeprecationWarning, which umat_oti.core.derivative_request issues to nudge contracts that use the legacy local-Jacobian key. Errors still raise, and the test asserts on the transform's result.",
+   "evidence": [
+    {
+     "in": "src/umat_oti/core/derivative_request.py",
+     "text": "is a legacy alias for"
+    },
+    {
+     "in": "tests/test_benchmark_transforms_keep_labels_and_predictor_inputs.py",
+     "text": "with warnings.catch_warnings():"
+    }
+   ]
+  },
+  "warning_filter:tests/test_continued_assignment_from_promoted_value.py:_transformed:call:simplefilter:fedf21de": {
+   "verdict": "justified",
+   "reason": "Inside `with warnings.catch_warnings():` around one transform call; ignores only DeprecationWarning, which umat_oti.core.derivative_request issues to nudge contracts that use the legacy local-Jacobian key. Errors still raise, and the test asserts on the transform's result.",
+   "evidence": [
+    {
+     "in": "src/umat_oti/core/derivative_request.py",
+     "text": "is a legacy alias for"
+    },
+    {
+     "in": "tests/test_continued_assignment_from_promoted_value.py",
+     "text": "with warnings.catch_warnings():"
+    }
+   ]
+  },
+  "warning_filter:tests/test_lifted_helper_arguments_match_their_dummies.py:test_hin_calls_match_and_its_stress_equals_the_original:call:simplefilter:58903e2f": {
+   "verdict": "justified",
+   "reason": "Inside `with warnings.catch_warnings():` around one transform call; ignores only DeprecationWarning, which umat_oti.core.derivative_request issues to nudge contracts that use the legacy local-Jacobian key. Errors still raise, and the test asserts on the transform's result.",
+   "evidence": [
+    {
+     "in": "src/umat_oti/core/derivative_request.py",
+     "text": "is a legacy alias for"
+    },
+    {
+     "in": "tests/test_lifted_helper_arguments_match_their_dummies.py",
+     "text": "with warnings.catch_warnings():"
+    }
+   ]
+  },
+  "broad_except:src/umat_oti/app/presentation_screens.py:render_jacobian_screen:except Exception:4372cc98": {
+   "verdict": "justified",
+   "reason": "GUI preview: the error is shown with st.error and the Transform button stays disabled while it stands; nothing is hidden.",
+   "evidence": [
+    {
+     "in": "src/umat_oti/app/presentation_screens.py",
+     "text": "if problem: st.error(problem)"
+    },
+    {
+     "in": "src/umat_oti/app/presentation_screens.py",
+     "text": "disabled=source is None or problem is not None"
+    }
+   ]
+  },
+  "metadata:codemeta.json:operatingSystem[1]": {
+   "verdict": "justified",
+   "reason": "The platform claim was narrowed to what is tested (Linux); Windows and macOS were claimed but never tested. A test keeps metadata, CI and documentation in agreement.",
+   "quote": "codemeta.json listed Linux, Windows and macOS and pyproject.toml declared",
+   "quote_source": "69f1144",
+   "evidence": [
+    {
+     "in": "tests/test_operating_system_claims_match_what_is_tested.py",
+     "text": "def test_codemeta_claims_the_tested_systems_and_no_others"
+    }
+   ]
+  },
+  "metadata:codemeta.json:operatingSystem[2]": {
+   "verdict": "justified",
+   "reason": "The platform claim was narrowed to what is tested (Linux); Windows and macOS were claimed but never tested. A test keeps metadata, CI and documentation in agreement.",
+   "quote": "codemeta.json listed Linux, Windows and macOS and pyproject.toml declared",
+   "quote_source": "69f1144",
+   "evidence": [
+    {
+     "in": "tests/test_operating_system_claims_match_what_is_tested.py",
+     "text": "def test_codemeta_claims_the_tested_systems_and_no_others"
+    }
+   ]
+  },
+  "metadata:pyproject.toml:classifier:+Operating System :: POSIX :: Linux": {
+   "verdict": "justified",
+   "reason": "The platform claim was narrowed to what is tested (Linux); Windows and macOS were claimed but never tested. A test keeps metadata, CI and documentation in agreement.",
+   "quote": "codemeta.json listed Linux, Windows and macOS and pyproject.toml declared",
+   "quote_source": "69f1144",
+   "evidence": [
+    {
+     "in": "tests/test_operating_system_claims_match_what_is_tested.py",
+     "text": "def test_codemeta_claims_the_tested_systems_and_no_others"
+    }
+   ]
+  },
+  "metadata:pyproject.toml:classifier:-Operating System :: OS Independent": {
+   "verdict": "justified",
+   "reason": "The platform claim was narrowed to what is tested (Linux); Windows and macOS were claimed but never tested. A test keeps metadata, CI and documentation in agreement.",
+   "quote": "codemeta.json listed Linux, Windows and macOS and pyproject.toml declared",
+   "quote_source": "69f1144",
+   "evidence": [
+    {
+     "in": "tests/test_operating_system_claims_match_what_is_tested.py",
+     "text": "def test_codemeta_claims_the_tested_systems_and_no_others"
+    }
+   ]
+  },
+  "mock:tests/test_every_secondary_gui_is_documented_and_launches.py:test_each_documented_command_starts_its_interface:monkeypatch.setattr:da9f45ea": {
+   "verdict": "justified",
+   "reason": "Sets sys.argv to the documented command line so the GUI module's main() parses it; no numerical function is replaced."
+  },
+  "mock:tests/test_every_secondary_gui_is_documented_and_launches.py:test_the_plain_language_view_takes_the_folders_the_guide_documents:monkeypatch.setattr:2e0534d4": {
+   "verdict": "justified",
+   "reason": "Sets sys.argv to the documented command line so the GUI module's main() parses it; no numerical function is replaced."
+  },
+  "mock:tests/test_provider_check_path_and_verdicts.py:test_a_wrong_derivative_is_caught:monkeypatch.setattr:51d61f69": {
+   "verdict": "justified",
+   "reason": "Fault injection: wraps the real compiled provider's evaluate and perturbs its DSIGMA_DP to show that the verifier reports a disagreement; the real provider still computes and nothing is made to pass.",
+   "evidence": [
+    {
+     "in": "tests/test_provider_check_path_and_verdicts.py",
+     "text": "original = verifier.ProviderLibrary.evaluate"
+    },
+    {
+     "in": "tests/test_provider_check_path_and_verdicts.py",
+     "text": "with pytest.raises(AssertionError, match=\"disagree\")"
+    }
+   ]
+  },
+  "mock:tests/test_reproduce_profiles.py:_git_reads_only:monkeypatch.setattr:23f1f8d7": {
+   "verdict": "justified",
+   "reason": "Points the environment capture at a temporary tree to test how a readable or unreadable git tree is reported; not numerical."
+  },
+  "reference_data:paper_results/corpus/corpus_registry.csv": {
+   "verdict": "justified",
+   "reason": "Corpus evidence re-frozen by re-running every acquired source in Abaqus 2021.HF5 after transformer fixes moved the fingerprint (pass14 in 0ea76c6, pass15 in 661f3af). The registry records those Abaqus runs of the ORIGINAL against the OTI build; it is not an expected value produced by the code under test. The acceptance count is unchanged.",
+   "quote": "43 of the 260 adequately specified genuine UMATs accepted, the same 43 as pass14",
+   "quote_source": "661f3af"
+  },
+  "reference_data:paper_results/corpus/corpus_registry.json": {
+   "verdict": "justified",
+   "reason": "Corpus evidence re-frozen by re-running every acquired source in Abaqus 2021.HF5 after transformer fixes moved the fingerprint (pass14 in 0ea76c6, pass15 in 661f3af). The registry records those Abaqus runs of the ORIGINAL against the OTI build; it is not an expected value produced by the code under test. The acceptance count is unchanged.",
+   "quote": "43 of the 260 adequately specified genuine UMATs accepted, the same 43 as pass14",
+   "quote_source": "661f3af"
+  },
+  "reference_data:paper_results/corpus/transform_refusal_audit.json": {
+   "verdict": "justified",
+   "reason": "Corpus evidence re-frozen by re-running every acquired source in Abaqus 2021.HF5 after transformer fixes moved the fingerprint (pass14 in 0ea76c6, pass15 in 661f3af). The registry records those Abaqus runs of the ORIGINAL against the OTI build; it is not an expected value produced by the code under test. The acceptance count is unchanged.",
+   "quote": "43 of the 260 adequately specified genuine UMATs accepted, the same 43 as pass14",
+   "quote_source": "661f3af"
+  }
+ }
+}

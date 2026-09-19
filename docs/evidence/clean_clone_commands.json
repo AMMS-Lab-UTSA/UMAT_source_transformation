@@ -1,0 +1,1832 @@
+{
+ "_about": [
+  "The clean-clone run, step by step, and the instruction in the documents each step rests on; checked by",
+  "tools/audit_integrity.py --check ci3 (tests/test_audit_integrity.py). Identical in both repositories.",
+  "The run is a shell script kept outside the repositories: it clones both main branches, runs",
+  "Residual_Assembler's scripts/clean_install_gate.py, installs the paper extra, runs both offline suites",
+  "with the listed environment, and runs scripts/audit_recovery_usage.py --phase examples.",
+  "source: input (what the run is given), run (the script's steps and variables), gate (a command the gate",
+  "records in report.json), examples (a named command of the examples phase).",
+  "evidence: a quote that must stand on one line of the named document; elsewhere: a quote from another",
+  "file, for information. gate_calls and example_calls are the argv lists as written in the two scripts",
+  "(Residual_Assembler checks them against the scripts); run_steps are the run script's step names and",
+  "variables (checked with --run-script). A partial or undocumented step says what differs (gap), where the",
+  "fix belongs (fix_in) and the exact text or change that would fix it (missing); would_document is a",
+  "pattern that, once a document matches it, marks the entry stale.",
+  "Placeholders: $C new work folder, $RA and $UMAT the clones, $PY the base Python, $V the gate's venv",
+  "Python, $OTILIB the OTILib build, $ODB and $CANT the Abaqus inputs, $W an examples work folder."
+ ],
+ "documents": [
+  "docs/INSTALL.md",
+  "README.md",
+  "docs/USAGE_REPORT.md"
+ ],
+ "documented_but_not_run": [
+  {
+   "repo": "RA",
+   "instruction": "./scripts/init_permissive_sources.sh (RA docs/INSTALL.md section 5)",
+   "effect": "the RA suite runs without the permissive test sources; the tests that read them skip"
+  },
+  {
+   "repo": "RA",
+   "instruction": "RA docs/INSTALL.md section 6 items 1-2 (help, provider build, resasm history on the committed beam)",
+   "effect": "covered only indirectly by the replay-history tests"
+  },
+  {
+   "repo": "UMAT",
+   "instruction": "UMAT docs/INSTALL.md sections 5-6 (smoke profile, help, import path, Example 1)",
+   "effect": "not run as commands"
+  }
+ ],
+ "reporting_flags": "-p no:cacheprovider and --junitxml change only what pytest writes, not what it runs.",
+ "steps": [
+  {
+   "id": "prereq_python",
+   "source": "input",
+   "command": "a standalone Python 3.11 with venv, ctypes and ssl ($PY)",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "Python 3.10 or newer, with `venv`, `ctypes` and `ssl`"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "2. The given Python is 3.10 or newer with `ctypes`, `ssl` and `venv`;"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "| Python 3.10 or newer, with `venv` | everything | 3.11.7 |"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "Requirements: Linux, Python 3.10 or newer, `gfortran` and `make`. Abaqus and"
+    }
+   ]
+  },
+  {
+   "id": "prereq_gfortran",
+   "source": "input",
+   "command": "gfortran on PATH (the gate runs gfortran --version)",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "gfortran --version"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "sudo apt install python3 python3-venv python3-pip gfortran git make"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "`gfortran` | building material providers (`umat-oti-provider build`) and linking them at run time"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "`gfortran` and the Abaqus launcher are on `PATH`."
+    }
+   ],
+   "gate_calls": [
+    "[\"gfortran\", \"--version\"]"
+   ]
+  },
+  {
+   "id": "prereq_abaqus",
+   "source": "input",
+   "command": "the abaqus launcher on PATH (the gate refuses without it)",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "`gfortran` and the Abaqus launcher are on `PATH`."
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "[--branch main] [--abaqus abaqus] [--cantilever /path/to/cantilever/work]"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "Abaqus (tested: 2021.HF5) | only to run analyses and to read `.odb` files (`abaqus python`)"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "Python (`abaqus` on `PATH`, or `--abaqus`). Measured: the build took 5.5 s;"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "UMAT-OTI looks for the command `abaqus` on `PATH`. To use another name, set"
+    }
+   ]
+  },
+  {
+   "id": "prereq_otilib",
+   "source": "input",
+   "command": "an external OTILib build directory ($OTILIB) for Python 3.11",
+   "repos": [
+    "RA"
+   ],
+   "status": "partial",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "python -m pip install cmake==3.31.10 Cython==3.3.0"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "git clone https://github.com/mauriaristi/otilib.git \"$HOME/otilib\""
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "git -C \"$HOME/otilib\" checkout --detach a4b7a05ca275e8d441b0b717b7b272e96728ffcc"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "cmake --build \"$HOME/otilib/build\" --target oticython --parallel 2"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "It must be built for the same Python version as your virtual"
+    },
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "bash scripts/setup_otilib.sh"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "docs/OTILIB_VENV.md",
+     "quote": "git clone https://github.com/mauriaristi/otilib.git \"$WORK/source\""
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/OTILIB_VENV.md",
+     "quote": "git -C \"$WORK/source\" checkout --detach a4b7a05ca275e8d441b0b717b7b272e96728ffcc"
+    }
+   ],
+   "gap": "RA docs/INSTALL.md section 4 builds OTILib from a fresh GitHub clone pinned at a4b7a05ca275 with pip's cmake 3.31.10 and Cython 3.3.0; the run uses a build made earlier from another clone of OTILib (a Bitbucket remote at a local commit whose history does not contain a4b7a05ca275) with the system cmake 3.16.3, so the OTILib the suites and examples use is not the documented one.",
+   "fix_in": "run",
+   "missing": "Build $OTILIB exactly as RA docs/INSTALL.md section 4 says (pip install cmake==3.31.10 Cython==3.3.0; git clone https://github.com/mauriaristi/otilib.git; git checkout --detach a4b7a05ca275e8d441b0b717b7b272e96728ffcc; cmake configure and build the oticython and gendata targets). If that commit does not build for Python 3.11 with numpy 2, pin the commit that does in RA docs/INSTALL.md section 4 instead."
+  },
+  {
+   "id": "input_odb",
+   "source": "input",
+   "command": "--odb $ODB: the Abaqus result of examples/presentation_request/Analysis.inp",
+   "repos": [
+    "RA"
+   ],
+   "status": "partial",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "--odb /path/to/Analysis.odb --work /path/to/new/folder"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "give (`--odb`, the Abaqus result of `examples/presentation_request/Analysis.inp`),"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "The ODB is not shipped. It is the Abaqus result of"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "`examples/presentation_request/Analysis.inp`, and reading it needs Abaqus"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "examples/presentation_request/WALKTHROUGH.md",
+     "quote": "abaqus job=Analysis input=Analysis.inp"
+    },
+    {
+     "repo": "RA",
+     "doc": "examples/presentation_request/WALKTHROUGH.md",
+     "quote": "user=\"$UMAT/parameter_sensitivity/models/m3_j2/umat.for\" cpus=1 interactive"
+    }
+   ],
+   "gap": "The documents say what the ODB must be (the Abaqus result of examples/presentation_request/Analysis.inp) but not how to make it; the abaqus command is only in the Example 3 walkthrough.",
+   "fix_in": "docs",
+   "missing": "RA docs/INSTALL.md, section 7, after the command block: \"`--odb` is the Abaqus result of `examples/presentation_request/Analysis.inp` with the ORIGINAL J2 UMAT; make it once, in a copy of that folder, with `abaqus job=Analysis input=Analysis.inp user=../UMAT_source_transformation/parameter_sensitivity/models/m3_j2/umat.for cpus=1 interactive` (Example 3).\"",
+   "would_document": [
+    {
+     "repo": "RA",
+     "doc": "*",
+     "pattern": "abaqus job=Analysis input=Analysis\\.inp"
+    }
+   ]
+  },
+  {
+   "id": "input_cantilever",
+   "source": "input",
+   "command": "--cantilever $CANT holding j2/cantilever_j2_nominal.inp and .odb",
+   "repos": [
+    "RA"
+   ],
+   "status": "partial",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "[--branch main] [--abaqus abaqus] [--cantilever /path/to/cantilever/work]"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "8. With `--cantilever` (a folder holding `j2/cantilever_j2_nominal.inp` and"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "- with `--cantilever`, the full-size J2 cantilever with the homogeneity"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "examples/cantilevers/README.md",
+     "quote": "mkdir -p j2 && python $EX/gen_cantilever.py j2 --out j2/cantilever_j2_nominal.inp"
+    },
+    {
+     "repo": "RA",
+     "doc": "examples/cantilevers/README.md",
+     "quote": "cd j2 && abaqus job=cantilever_j2_nominal input=cantilever_j2_nominal.inp"
+    },
+    {
+     "repo": "RA",
+     "doc": "examples/cantilevers/README.md",
+     "quote": "user=$UMAT/parameter_sensitivity/models/m3_j2/umat.for double=both interactive && cd .."
+    },
+    {
+     "repo": "RA",
+     "doc": "examples/cantilevers/WALKTHROUGH.md",
+     "quote": "python examples/cantilevers/gen_cantilever.py j2  --out \"$C/j2/cantilever_j2_nominal.inp\""
+    },
+    {
+     "repo": "RA",
+     "doc": "examples/cantilevers/README.md",
+     "quote": "(`scripts/clean_install_gate.py --cantilever`) checks it on the J2 cantilever"
+    }
+   ],
+   "gap": "The run's cantilever folder holds the J2 deck and ODB under the file names an earlier version of the gate read (j2/<prefix>_j2_nominal.inp/.odb), while the gate at HEAD and RA docs/INSTALL.md section 7 require j2/cantilever_j2_nominal.inp and .odb; re-run unchanged, the gate stops with 'cantilever input missing'. The commands that make the folder are only in examples/cantilevers/README.md and its walkthrough.",
+   "fix_in": "run",
+   "missing": "Give the gate a folder in the documented layout: `python Residual_Assembler/examples/cantilevers/gen_cantilever.py j2 --out $CANT/j2/cantilever_j2_nominal.inp`, then in $CANT/j2 `abaqus job=cantilever_j2_nominal input=cantilever_j2_nominal.inp user=$UMAT/parameter_sensitivity/models/m3_j2/umat.for double=both interactive`. Optionally add to RA docs/INSTALL.md section 7 item 8: \"make the folder with steps 1 and 2 of Example 5\"."
+  },
+  {
+   "id": "clone_ra",
+   "source": "run",
+   "command": "git clone --branch main https://github.com/AMMS-Lab-UTSA/Residual_Assembler.git $RA",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "git clone https://github.com/AMMS-Lab-UTSA/Residual_Assembler.git"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "Clone both repositories into the same parent folder, side by side. Several"
+    },
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "git clone https://github.com/AMMS-Lab-UTSA/Residual_Assembler.git"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "git clone https://github.com/AMMS-Lab-UTSA/Residual_Assembler.git"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "git clone https://github.com/AMMS-Lab-UTSA/Residual_Assembler.git"
+    }
+   ],
+   "run_steps": [
+    "clone_ra"
+   ]
+  },
+  {
+   "id": "clone_umat",
+   "source": "run",
+   "command": "git clone --branch main https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git $UMAT",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "git clone https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "Clone both repositories into the same parent folder, side by side. Several"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "git clone https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "README.md",
+     "quote": "git clone https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "git clone https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "Install Residual_Assembler next to this repository, in the same environment"
+    }
+   ],
+   "run_steps": [
+    "clone_umat"
+   ]
+  },
+  {
+   "id": "gate",
+   "source": "run",
+   "command": "$PY $RA/scripts/clean_install_gate.py --umat-repo $UMAT --branch main --python $PY --odb $ODB --cantilever $CANT --work $C/gate",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "`scripts/clean_install_gate.py` is the acceptance test of an installation. It"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "python Residual_Assembler/scripts/clean_install_gate.py"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "--umat-repo UMAT_source_transformation --python python3.11"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "--odb /path/to/Analysis.odb --work /path/to/new/folder"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "[--branch main] [--abaqus abaqus] [--cantilever /path/to/cantilever/work]"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "`scripts/clean_install_gate.py` is the acceptance test of an installation"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "Residual_Assembler's clean-install gate clones both repositories, builds and"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "docs/evidence/final_clean_clone.md",
+     "quote": "python Residual_Assembler/scripts/clean_install_gate.py"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/evidence/final_clean_clone.md",
+     "quote": "--umat-repo UMAT_source_transformation --branch main"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/evidence/final_clean_clone.md",
+     "quote": "--python python3.11 --odb <presentation ODB> --cantilever <cantilever runs>"
+    }
+   ],
+   "run_steps": [
+    "gate"
+   ]
+  },
+  {
+   "id": "paper_extra",
+   "source": "run",
+   "command": "$V -m pip install \"$UMAT[paper]\"",
+   "repos": [
+    "UMAT"
+   ],
+   "status": "partial",
+   "evidence": [
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "- Other extras: `[paper]` (plots and documents for the publication"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "artefacts) and `[screenshots]` (browser tests of the GUI; also run"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "UMAT",
+     "doc": "docs/SOFTWAREX_REPRODUCTION.md",
+     "quote": "pip install -e \".[test,paper]\""
+    }
+   ],
+   "gap": "None of the documents installs the paper extra (UMAT's install recipe is `pip install -e \".[test]\"`; [paper] is only listed as optional, for the publication artefacts). The step also builds umat_oti from the clone directory and replaces the wheel the gate installed and checked, so both suites run on a package the gate did not digest, and it enables the python-docx tests that the documented [test] install skips.",
+   "fix_in": "run",
+   "missing": "Drop the step, so the suites run on the gate's wheels with the documented extras. If the publication tests should run, install only the extra's dependencies (`$V -m pip install \"umat_oti[paper]\"`, which the installed wheel already satisfies) and add to UMAT docs/INSTALL.md section 6: \"The publication tests need the paper extra: `python -m pip install -e \".[test,paper]\"`; without it they are skipped.\"",
+   "run_steps": [
+    "paper_extra"
+   ]
+  },
+  {
+   "id": "env_pythonpath",
+   "source": "run",
+   "command": "PYTHONPATH=$OTILIB for the suites and the examples",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "undocumented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "or pass `--imports environment` when you work through `PYTHONPATH`",
+     "kind": "mention_only"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "An older installation or a `PYTHONPATH` entry shadows it. Run `unset PYTHONPATH`",
+     "kind": "contrary"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "docs/OTILIB_VENV.md",
+     "quote": "external build to its import search path; no project-source `PYTHONPATH` is"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/OTILIB_VENV.md",
+     "quote": "required. Keep `PYOTI_PATH` and `OTILIB_ROOT` set to this build directory in"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/OTILIB_VENV.md",
+     "quote": "unset PYTHONPATH PYTHONHOME PYOTI_PATH OTILIB_ROOT"
+    }
+   ],
+   "gap": "No document tells a user to put the OTILib build on PYTHONPATH: RA documents PYOTI_PATH and OTILIB_ROOT (the adapter adds the build to sys.path itself) and UMAT's troubleshooting table says `unset PYTHONPATH`. Its effects in the run: one UMAT test that imports pyoti runs instead of skipping, and the examples need --imports environment.",
+   "fix_in": "run",
+   "missing": "Remove PYTHONPATH from the run's environment (keep PYOTI_PATH and OTILIB_ROOT) and run the examples with the default --imports installed. If the UMAT pyoti test should run, add to UMAT docs/INSTALL.md section 6: \"To run the one test that needs OTILib's Python build, put the build on PYTHONPATH: `PYTHONPATH=/path/to/otilib/build python -m pytest -q`.\"",
+   "run_steps": [
+    "PYTHONPATH"
+   ]
+  },
+  {
+   "id": "env_pyoti_path",
+   "source": "run",
+   "command": "PYOTI_PATH=$OTILIB",
+   "repos": [
+    "RA"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "export PYOTI_PATH=\"$HOME/otilib/build\""
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "**Tell Residual_Assembler where the build is.** Point both variables to the"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "**build directory** (not the source folder), in every shell where you use the"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "with the OTILib variables of section 4; otherwise they are skipped by name."
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "examples/README.md",
+     "quote": "4. Examples 1 and 7 use OTILib. Point `PYOTI_PATH` and `OTILIB_ROOT` to its"
+    }
+   ],
+   "run_steps": [
+    "PYOTI_PATH"
+   ]
+  },
+  {
+   "id": "env_otilib_root",
+   "source": "run",
+   "command": "OTILIB_ROOT=$OTILIB",
+   "repos": [
+    "RA"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "export OTILIB_ROOT=\"$HOME/otilib/build\""
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "**Tell Residual_Assembler where the build is.** Point both variables to the"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "with the OTILib variables of section 4; otherwise they are skipped by name."
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "Set `PYOTI_PATH` and `OTILIB_ROOT` to the OTILib **build** directory"
+    }
+   ],
+   "run_steps": [
+    "OTILIB_ROOT"
+   ]
+  },
+  {
+   "id": "env_umat_oti_repo",
+   "source": "run",
+   "command": "UMAT_OTI_REPO=$UMAT for the RA suite and the examples",
+   "repos": [
+    "RA"
+   ],
+   "status": "undocumented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "UMAT-OTI checkout beside this one; its result from clean clones of both",
+     "kind": "mention_only"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "docs/CONNECTED_WORKFLOW.md",
+     "quote": "--provider-repo \"$UMAT_OTI_REPO\""
+    }
+   ],
+   "gap": "UMAT_OTI_REPO is in none of the documents. The documented editable, side-by-side install does not need it, but the run installs wheels, and then the history-replay and verification-record tests look for the UMAT models inside site-packages unless it is set.",
+   "fix_in": "docs",
+   "missing": "RA docs/INSTALL.md, section 6, item 6, after the pytest command: \"If the packages are installed from wheels rather than with `-e` (as the clean-install gate installs them), first run `export UMAT_OTI_REPO=\"$PWD/../UMAT_source_transformation\"`: the history-replay and verification-record tests read the UMAT models from that checkout.\"",
+   "would_document": [
+    {
+     "repo": "RA",
+     "doc": "*",
+     "pattern": "UMAT_OTI_REPO"
+    }
+   ],
+   "run_steps": [
+    "UMAT_OTI_REPO"
+   ]
+  },
+  {
+   "id": "env_run_otilib_tests",
+   "source": "run",
+   "command": "RUN_OTILIB_TESTS=1 for both suites and the examples",
+   "repos": [
+    "RA"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "Tests that need OTILib run for real only when `RUN_OTILIB_TESTS=1` is set"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "with the OTILib variables of section 4; otherwise they are skipped by name."
+    },
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "the OTILib suite passing in WSL (11 passed, `RUN_OTILIB_TESTS=1`, so a skip would"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "CONTRIBUTING.md",
+     "quote": "skips into failures; CI does exactly that. Likewise, set `RUN_OTILIB_TESTS=1`"
+    },
+    {
+     "repo": "RA",
+     "doc": "CONTRIBUTING.md",
+     "quote": "when OTILib is meant to be present, so that its tests fail rather than skip if"
+    }
+   ],
+   "run_steps": [
+    "RUN_OTILIB_TESTS"
+   ]
+  },
+  {
+   "id": "env_isolation",
+   "source": "run",
+   "command": "PYTHONNOUSERSITE=1 and PYTHONHOME unset for the suites and the examples",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "undocumented",
+   "evidence": [],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "docs/OTILIB_VENV.md",
+     "quote": "export PYTHONNOUSERSITE=1"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/OTILIB_VENV.md",
+     "quote": "unset PYTHONPATH PYTHONHOME PYOTI_PATH OTILIB_ROOT"
+    }
+   ],
+   "gap": "Neither variable is in the documents. Inside the gate's virtual environment the user site is already disabled, so they change nothing for a documented setup; they are the harness's hygiene.",
+   "fix_in": "run",
+   "missing": "No change to the documents: drop them from the run, or label them in the run record as harness isolation that a user does not need.",
+   "run_steps": [
+    "PYTHONNOUSERSITE",
+    "-u PYTHONHOME"
+   ]
+  },
+  {
+   "id": "suite_ra",
+   "source": "run",
+   "command": "cd $RA && $V -m pytest -q -p no:cacheprovider -m \"not abaqus and not arc and not network\" --junitxml=$C/ra_suite.xml",
+   "repos": [
+    "RA"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "python -m pytest -q -m \"not abaqus and not arc and not network\""
+    },
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "`pytest -q -m \"not abaqus and not arc and not network\"`, with OTILib and the"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "Run these from the `Residual_Assembler` folder with the environment active."
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "CONTRIBUTING.md",
+     "quote": "REQUIRE_EXTERNAL_TEST_SOURCES=1 python -m pytest -q -m \"not abaqus and not arc and not network\""
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/evidence/final_clean_clone.md",
+     "quote": "Residual_Assembler `pytest -q -m \"not abaqus and not arc and not network\"`"
+    }
+   ],
+   "run_steps": [
+    "suite_ra"
+   ]
+  },
+  {
+   "id": "suite_umat",
+   "source": "run",
+   "command": "cd $UMAT && $V -m pytest -q -p no:cacheprovider --junitxml=$C/umat_suite.xml",
+   "repos": [
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "python -m pytest -q                                        # the offline test suite"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "README.md",
+     "quote": "python -m pytest -q                    # offline suite: no Abaqus, no network"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "README.md",
+     "quote": "A skipped test names the missing prerequisite; a skip is not a pass."
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "UMAT",
+     "doc": "CONTRIBUTING.md",
+     "quote": "python -m pytest -q               # all but the whole-corpus Abaqus pass and browser tests"
+    }
+   ],
+   "run_steps": [
+    "suite_umat"
+   ]
+  },
+  {
+   "id": "examples_driver",
+   "source": "run",
+   "command": "cd $RA && $V scripts/audit_recovery_usage.py --umat $UMAT --phase examples --imports environment --evidence-dir $C/usage --work $C/examples",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "undocumented",
+   "evidence": [],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "docs/evidence/final_clean_clone.md",
+     "quote": "the five examples of each repository (`scripts/audit_recovery_usage.py --phase examples`)"
+    }
+   ],
+   "gap": "scripts/audit_recovery_usage.py is in none of the documents. It runs its own selection of examples, which is not the documented set (RA's examples/README.md has eight, UMAT's six), sets UMAT_OTI_REPO and RUN_OTILIB_TESTS=1 for its children, and runs resasm as python -m residual_core.ui.cli.",
+   "fix_in": "run",
+   "missing": "Run the documented example commands instead, from each repository root: RA examples/README.md Examples 1, 2, 4, 6, 7 and 8, and UMAT Examples 1 to 6 as their READMEs give them. If the driver is kept, it should run exactly those commands, and RA docs/INSTALL.md section 7 should name it.",
+   "run_steps": [
+    "examples"
+   ]
+  },
+  {
+   "id": "post_run_tree_check",
+   "source": "run",
+   "command": "git rev-parse HEAD and git status --porcelain of both clones",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "undocumented",
+   "evidence": [],
+   "gap": "Bookkeeping that records the commits and proves the run left both clones unmodified; not a user instruction.",
+   "fix_in": "run",
+   "missing": "No change to the documents; label it in the run record as harness bookkeeping."
+  },
+  {
+   "id": "gate_repo_checks",
+   "source": "gate",
+   "command": "git branch --show-current, git status --porcelain and git rev-parse HEAD in each clone",
+   "repos": [
+    "RA"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "1. Both repositories are git checkouts with no uncommitted or untracked files"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "(so the result describes a commit), on the named branch if `--branch` is"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "given; it records whether each commit is the published head of that branch."
+    }
+   ],
+   "gate_calls": [
+    "[\"git\", \"-C\", root, \"branch\", \"--show-current\"]",
+    "[\"git\", \"-C\", root, \"status\", \"--porcelain\", \"--untracked-files=all\"]",
+    "[\"git\", \"-C\", root, \"rev-parse\", \"HEAD\"]"
+   ]
+  },
+  {
+   "id": "gate_python_probe",
+   "source": "gate",
+   "command": "$PY -I -c \"import ctypes, ssl, venv, sys ...\"",
+   "repos": [
+    "RA"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "2. The given Python is 3.10 or newer with `ctypes`, `ssl` and `venv`;"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "`gfortran` and the Abaqus launcher are on `PATH`."
+    }
+   ],
+   "gate_calls": [
+    "[args.python, \"-I\", \"-c\", \"import ctypes, ssl, venv, sys; assert sys.version_info >= (3, 10); print(sys.version)\"]"
+   ]
+  },
+  {
+   "id": "gate_venv",
+   "source": "gate",
+   "command": "$PY -I -m venv $C/gate/env; $V -I -m pip install --upgrade pip",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "3. It creates a new virtual environment with a scratch `HOME` and no inherited"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "Python path, builds a wheel of each repository, installs both with their"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "python -m pip install --upgrade pip"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "python3 -m venv .venv"
+    }
+   ],
+   "gate_calls": [
+    "[args.python, \"-I\", \"-m\", \"venv\", gate.work / \"env\"]",
+    "[python, \"-I\", \"-m\", \"pip\", \"install\", \"--upgrade\", \"pip\"]"
+   ]
+  },
+  {
+   "id": "gate_wheels",
+   "source": "gate",
+   "command": "$V -I -m pip wheel --no-deps --wheel-dir wheels <each clone>",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "Python path, builds a wheel of each repository, installs both with their"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "([INSTALL.md](INSTALL.md#7-the-clean-install-gate)). It builds wheels of both"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "repositories from clean trees and installs them into a new environment. From"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "installs their wheels in a new environment, and runs the connected workflow"
+    }
+   ],
+   "gate_calls": [
+    "[python, \"-I\", \"-m\", \"pip\", \"wheel\", \"--no-deps\", \"--wheel-dir\", wheels, root]"
+   ]
+  },
+  {
+   "id": "gate_install",
+   "source": "gate",
+   "command": "$V -I -m pip install residual_assembler-*.whl[gui,test,yaml] umat_oti-*.whl[test]",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "pip install -e \"./Residual_Assembler[gui,yaml,test]\" -e \"./UMAT_source_transformation[test]\""
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "Python path, builds a wheel of each repository, installs both with their"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "extras and runs `pip check`."
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "`scripts/clean_install_gate.py` is the acceptance test of an installation. It"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "pip install -e \"./Residual_Assembler[gui,yaml,test]\" -e \"./UMAT_source_transformation[test]\""
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "python -m pip install -e \"./Residual_Assembler[gui,yaml,test]\""
+    },
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "pip install -e \"./Residual_Assembler[gui,yaml,test]\" \"./UMAT_source_transformation[test]\""
+    }
+   ],
+   "gate_calls": [
+    "[python, \"-I\", \"-m\", \"pip\", \"install\", *requirements]"
+   ]
+  },
+  {
+   "id": "gate_pip_check",
+   "source": "gate",
+   "command": "$V -I -m pip check",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "extras and runs `pip check`."
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "a first download takes longer). `python -m pip check` reported"
+    }
+   ],
+   "gate_calls": [
+    "[python, \"-I\", \"-m\", \"pip\", \"check\"]"
+   ]
+  },
+  {
+   "id": "gate_installed_probe",
+   "source": "gate",
+   "command": "$V -I -c INSTALLED_PROBE <clones>; $V -I -m pip list --format=json",
+   "repos": [
+    "RA"
+   ],
+   "status": "partial",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "3. It creates a new virtual environment with a scratch `HOME` and no inherited"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "`report.json` (every command, exit code, log path, the wheel digests, the"
+    }
+   ],
+   "gap": "The documents say the gate installs into a new environment with no inherited Python path and records the versions, but not that it checks every module is imported from that environment's site-packages, that no distribution is editable and that the package data files are present.",
+   "fix_in": "docs",
+   "missing": "RA docs/INSTALL.md, section 7, item 3, append: \"It then checks that `residual_core`, `resasm_user` and `umat_oti` are imported from the new environment's site-packages, that no installed distribution is editable, and that the packaged data files are present.\"",
+   "would_document": [
+    {
+     "repo": "RA",
+     "doc": "*",
+     "pattern": "no installed distribution is editable"
+    }
+   ],
+   "gate_calls": [
+    "[python, \"-I\", \"-c\", INSTALLED_PROBE, *repositories]",
+    "[python, \"-I\", \"-m\", \"pip\", \"list\", \"--format=json\"]"
+   ]
+  },
+  {
+   "id": "gate_provider_build",
+   "source": "gate",
+   "command": "env/bin/umat-oti-provider build public_model/contract_v2.json --out provider",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "4. With the installed `umat-oti-provider`, it builds the J2 provider from a"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "copy of the public contract and UMAT."
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "umat-oti-provider build ../UMAT_source_transformation/parameter_sensitivity/models/m3_j2/contract_v2.json"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "umat-oti-provider build ../UMAT_source_transformation/parameter_sensitivity/models/m3_j2/contract_v2.json"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "README.md",
+     "quote": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json"
+    }
+   ],
+   "gate_calls": [
+    "[gate.work / \"env/bin/umat-oti-provider\", \"build\", developer / \"contract_v2.json\", \"--out\", gate.work / \"provider\"]"
+   ]
+  },
+  {
+   "id": "gate_request",
+   "source": "gate",
+   "command": "env/bin/resasm request --model Analysis.inp --odb Analysis.odb --material OTI_UMAT.obj --request sensitivity_request.json --out results --abaqus abaqus (in collaborator/, and again in cantilever/ with --cantilever)",
+   "repos": [
+    "RA"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "resasm request --model Analysis.inp --odb Analysis.odb"
+    },
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "--material OTI_UMAT.obj --request sensitivity_request.json --out results"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "5. With the installed `resasm`, it runs the four-file request of"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "give (`--odb`, the Abaqus result of `examples/presentation_request/Analysis.inp`),"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "uniaxial closed form (relative error below 2e-5, `|dU1/dnu|` below 1e-8)."
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "Pass `--abaqus /path/to/abaqus`"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "resasm request --model examples/presentation_request/Analysis.inp --odb /path/to/Analysis.odb"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "examples/README.md",
+     "quote": "`resasm request --model Analysis.inp --odb Analysis.odb --material OTI_UMAT.obj --request sensitivity_request.json"
+    }
+   ],
+   "gate_calls": [
+    "[gate.work / \"env/bin/resasm\", \"request\", \"--model\", \"Analysis.inp\", \"--odb\", \"Analysis.odb\", \"--material\", \"OTI_UMAT.obj\", \"--request\", \"sensitivity_request.js"
+   ]
+  },
+  {
+   "id": "gate_source_denied",
+   "source": "gate",
+   "command": "$V -I -c SOURCE_DENIED_PROBE env/bin/resasm request ... --out source_denied_results",
+   "repos": [
+    "RA"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "6. It repeats the request with every read of a Fortran source denied and"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "requires identical public files: the material source is not needed."
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "- the same request with every read of a Fortran source denied;"
+    }
+   ],
+   "gate_calls": [
+    "[python, \"-I\", \"-c\", SOURCE_DENIED_PROBE, gate.work / \"env/bin/resasm\", \"request\", \"--model\", \"Analysis.inp\", \"--odb\", \"Analysis.odb\", \"--material\", \"OTI_UMAT.o"
+   ]
+  },
+  {
+   "id": "gate_gui",
+   "source": "gate",
+   "command": "$V -I -c GUI_PROBE (AppTest render); $V -I -m streamlit run <installed app> --server.headless=true",
+   "repos": [
+    "RA"
+   ],
+   "status": "partial",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "7. It starts both GUIs and waits until each answers over HTTP."
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "- both GUIs up to HTTP readiness;"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "streamlit run scripts/app.py"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "streamlit run scripts/app.py"
+    }
+   ],
+   "gap": "The documents describe only the HTTP readiness check; the gate also renders both installed apps headlessly with Streamlit's AppTest and requires no exception and a title or header.",
+   "fix_in": "docs",
+   "missing": "RA docs/INSTALL.md, section 7, item 7, replace with: \"7. It renders both installed GUIs headlessly (Streamlit AppTest: no exception, a title or header present), then starts each with `python -m streamlit run` and waits until it answers over HTTP (`/_stcore/health`).\"",
+   "would_document": [
+    {
+     "repo": "RA",
+     "doc": "*",
+     "pattern": "AppTest"
+    }
+   ],
+   "gate_calls": [
+    "[python, \"-I\", \"-c\", GUI_PROBE]",
+    "[str(python), \"-I\", \"-m\", \"streamlit\", \"run\", module[\"path\"], \"--server.address=127.0.0.1\", f\"--server.port={port}\", \"--server.headless=true\", \"--browser.gather"
+   ]
+  },
+  {
+   "id": "gate_cantilever_request",
+   "source": "gate",
+   "command": "env/bin/resasm request ... in cantilever/ (same argv as gate_request)",
+   "repos": [
+    "RA"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "8. With `--cantilever` (a folder holding `j2/cantilever_j2_nominal.inp` and"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "`.odb`, see [Example 5](../examples/cantilevers/WALKTHROUGH.md)), it runs"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "the request on the full-size J2 cantilever, re-equilibrates it, and"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "- with `--cantilever`, the full-size J2 cantilever with the homogeneity"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "| `resasm request` from the ODB (includes the export) | 22 to 27 s | 24 to 25 s |"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "examples/cantilevers/README.md",
+     "quote": "resasm request --model j2/cantilever_j2_nominal.inp --odb j2/cantilever_j2_nominal.odb"
+    },
+    {
+     "repo": "RA",
+     "doc": "examples/cantilevers/WALKTHROUGH.md",
+     "quote": "resasm request --model \"$C/j2/cantilever_j2_nominal.inp\" --odb \"$C/j2/cantilever_j2_nominal.odb\""
+    }
+   ]
+  },
+  {
+   "id": "gate_cantilever_history",
+   "source": "gate",
+   "command": "env/bin/resasm history --model Analysis.inp --fields results/private/fields.npz --material OTI_UMAT.obj --request sensitivity_request.json --out reequilibrated --reequilibrate",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "the request on the full-size J2 cantilever, re-equilibrates it, and"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "requires the homogeneity identity at every increment to 1e-10."
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "`resasm history --reequilibrate` from the export"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "- with `--cantilever`, the full-size J2 cantilever with the homogeneity"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "Adding `--reequilibrate --verify fd` (with a new `--out`) first brings every"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "examples/cantilevers/WALKTHROUGH.md",
+     "quote": "resasm history --model \"$C/j2/cantilever_j2_nominal.inp\" --fields \"$C/j2_results/private/fields.npz\""
+    },
+    {
+     "repo": "RA",
+     "doc": "examples/cantilevers/WALKTHROUGH.md",
+     "quote": "--request examples/cantilevers/j2_request.json --out \"$C/j2_polished\" --reequilibrate"
+    }
+   ],
+   "gate_calls": [
+    "[gate.work / \"env/bin/resasm\", \"history\", \"--model\", \"Analysis.inp\", \"--fields\", \"results/private/fields.npz\", \"--material\", \"OTI_UMAT.obj\", \"--request\", \"sensi"
+   ]
+  },
+  {
+   "id": "ex_environment",
+   "source": "examples",
+   "command": "$V -c \"from residual_core.algebra.otilib_adapter import OtiContext; ... import pyoti.sparse; ... transform_fingerprint()\"",
+   "repos": [
+    "RA",
+    "UMAT"
+   ],
+   "status": "partial",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "python -c \"from residual_core.algebra.otilib_adapter import otilib_status; print(otilib_status())\""
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "python -c \"from umat_oti.store import transform_fingerprint; print(transform_fingerprint())\""
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "python -c \"from umat_oti.store import transform_fingerprint; print(transform_fingerprint())\""
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "docs/OTILIB_VENV.md",
+     "quote": "from residual_core.algebra.otilib_adapter import otilib_status; status=otilib_status(); print(status)"
+    }
+   ],
+   "gap": "A harness probe; the documents give the equivalent checks as otilib_status() (RA docs/INSTALL.md section 4) and transform_fingerprint() (both usage reports).",
+   "fix_in": "run",
+   "missing": "Run the documented checks instead: `python -c \"from residual_core.algebra.otilib_adapter import otilib_status; print(otilib_status())\"` and `python -c \"from umat_oti.store import transform_fingerprint; print(transform_fingerprint())\"`.",
+   "example_calls": [
+    "\"environment\" <- [python, \"-c\", \"from residual_core.algebra.otilib_adapter import OtiContext; OtiContext(1,1); \" \"import sys,residual_core,umat_oti,pyoti.sparse"
+   ]
+  },
+  {
+   "id": "ex_compiler",
+   "source": "examples",
+   "command": "gfortran --version",
+   "repos": [
+    "UMAT"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "gfortran --version"
+    }
+   ],
+   "example_calls": [
+    "\"compiler\" <- [\"gfortran\", \"--version\"]"
+   ]
+  },
+  {
+   "id": "ex_RX1",
+   "source": "examples",
+   "command": "resasm init --template python --out R-X1; resasm check R-X1/resasm.yml; resasm run R-X1/resasm.yml; resasm report R-X1/resasm_output (as python -m residual_core.ui.cli)",
+   "repos": [
+    "RA"
+   ],
+   "status": "documented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "resasm init --template python --out my_case"
+    },
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "resasm check resasm.yml"
+    },
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "resasm run   resasm.yml"
+    },
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "resasm report resasm_output/"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "resasm init --template python --out \"$WORK/spring\""
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "resasm check \"$WORK/spring/resasm.yml\""
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "**4. OTILib, if you installed it.**"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "examples/user_config_minimal/WALKTHROUGH.md",
+     "quote": "resasm init --template python --out \"$WORK/spring\""
+    },
+    {
+     "repo": "RA",
+     "doc": "examples/user_config_minimal/WALKTHROUGH.md",
+     "quote": "resasm report \"$WORK/spring/resasm_output\""
+    }
+   ],
+   "example_calls": [
+    "label + \" init\" <- cli + [\"init\", \"--template\", template_name, \"--out\", destination]",
+    "label + \" check\" <- cli + [\"check\", destination / \"resasm.yml\"]",
+    "label <- cli + [\"run\", destination / \"resasm.yml\"]",
+    "label + \" report\" <- cli + [\"report\", destination / \"resasm_output\"]"
+   ]
+  },
+  {
+   "id": "ex_RX2",
+   "source": "examples",
+   "command": "the same four commands with --template blackbox-order2 (R-X2)",
+   "repos": [
+    "RA"
+   ],
+   "status": "partial",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "resasm init --template blackbox-order2 --out my_case"
+    },
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "`--template` is one of `python`, `blackbox`, `blackbox-order2`, `cpp`, `fortran`."
+    },
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "`check` and `run` accept **either** dialect of `resasm.yml`: a recipe that names a"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "templates/user_blackbox_order2_residual/WALKTHROUGH.md",
+     "quote": "resasm init   --template blackbox-order2 --out \"$WORK/bb2\""
+    },
+    {
+     "repo": "RA",
+     "doc": "templates/user_blackbox_order2_residual/WALKTHROUGH.md",
+     "quote": "resasm check  \"$WORK/bb2/resasm.yml\""
+    },
+    {
+     "repo": "RA",
+     "doc": "templates/user_blackbox_order2_residual/WALKTHROUGH.md",
+     "quote": "resasm run    \"$WORK/bb2/resasm.yml\""
+    },
+    {
+     "repo": "RA",
+     "doc": "templates/user_blackbox_order2_residual/WALKTHROUGH.md",
+     "quote": "resasm report \"$WORK/bb2/resasm.yml\""
+    },
+    {
+     "repo": "RA",
+     "doc": "examples/README.md",
+     "quote": "`resasm init --template blackbox-order2 --out \"$WORK/bb2\" && resasm run \"$WORK/bb2/resasm.yml\"`"
+    }
+   ],
+   "gap": "The documents show only `resasm init --template blackbox-order2 --out my_case`; its check, run and report are implied, and the example it belongs to (Example 8) is missing from them: RA's README, INSTALL and usage report say seven examples while examples/README.md lists eight.",
+   "fix_in": "docs",
+   "missing": "RA README.md 'Worked examples' table and RA docs/USAGE_REPORT.md section 5 table: add the row \"| 8 | [Second derivatives from your own solver](templates/user_blackbox_order2_residual/WALKTHROUGH.md) | a black-box executable returns Taylor coefficients up to order 2; first and second derivatives against the closed form | No |\", add to USAGE_REPORT section 5 `resasm init --template blackbox-order2 --out \"$WORK/bb2\"`, `resasm check \"$WORK/bb2/resasm.yml\"`, `resasm run \"$WORK/bb2/resasm.yml\"` and `resasm report \"$WORK/bb2/resasm_output\"`, and say eight instead of seven.",
+   "would_document": [
+    {
+     "repo": "RA",
+     "doc": "*",
+     "pattern": "eight worked examples|\\|\\s*8\\s*\\|"
+    }
+   ]
+  },
+  {
+   "id": "ex_RX3",
+   "source": "examples",
+   "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields .../fields.json --out stress.npy",
+   "repos": [
+    "RA"
+   ],
+   "status": "partial",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "resasm assemble <model.inp> --mode stress-driven --fields fields.json --out R.npy"
+    },
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "[Stress-driven C3D8 assembly](residual_core/examples/minimal_c3d8_stress_driven/WALKTHROUGH.md)",
+     "kind": "mention_only"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "examples/README.md",
+     "quote": "`resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven"
+    },
+    {
+     "repo": "RA",
+     "doc": "residual_core/examples/minimal_c3d8_stress_driven/WALKTHROUGH.md",
+     "quote": "resasm assemble     \"$M/model.json\" --mode stress-driven --fields \"$M/fields.json\" --out \"$WORK/R_cube.npy\""
+    }
+   ],
+   "gap": "The documents give only the generic `resasm assemble <model.inp> --mode stress-driven --fields fields.json --out R.npy`; the Example 2 command on the shipped model is only in examples/README.md and the walkthrough.",
+   "fix_in": "docs",
+   "missing": "RA docs/USAGE_REPORT.md, section 5, after the table: \"Example 2 in one command: `resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out \"$WORK/R_cube.npy\"`.\"",
+   "would_document": [
+    {
+     "repo": "RA",
+     "doc": "*",
+     "pattern": "minimal_c3d8_stress_driven/model\\.json"
+    }
+   ],
+   "example_calls": [
+    "\"R-X3\" <- cli + [\"assemble\", model / \"model.json\", \"--mode\", \"stress-driven\", \"--fields\", model / \"fields.json\", \"--out\", work / \"stress.npy\"]"
+   ]
+  },
+  {
+   "id": "ex_RX4",
+   "source": "examples",
+   "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo $UMAT --imports environment --out R-X4",
+   "repos": [
+    "RA"
+   ],
+   "status": "partial",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out \"$WORK/pipeline\""
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out \"$WORK/pipeline\""
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/INSTALL.md",
+     "quote": "or pass `--imports environment` when you work through `PYTHONPATH`"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "examples/bounded_j2_c3d8/WALKTHROUGH.md",
+     "quote": "in an isolated Python. If you work from source checkouts through `PYTHONPATH`"
+    },
+    {
+     "repo": "RA",
+     "doc": "examples/bounded_j2_c3d8/WALKTHROUGH.md",
+     "quote": "instead of an installation, add `--imports environment`."
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/CONNECTED_WORKFLOW.md",
+     "quote": "--provider-repo \"$UMAT_OTI_REPO\""
+    }
+   ],
+   "gap": "The documented command is `python scripts/reproduce_connected_pipeline.py --skip-abaqus --out DIR`; the run adds --provider-repo (not in the documents; its default is the same clone) and --imports environment, which the documents reserve for working from source checkouts through PYTHONPATH.",
+   "fix_in": "run",
+   "missing": "Run the documented form from the RA root: `python scripts/reproduce_connected_pipeline.py --skip-abaqus --out \"$C/examples/R-X4\"` (default --imports installed).",
+   "example_calls": [
+    "\"R-X4\" <- [python, \"scripts/reproduce_connected_pipeline.py\", \"--skip-abaqus\", \"--provider-repo\", umat, \"--imports\", args.imports, \"--out\", work / \"R-X4\"]"
+   ]
+  },
+  {
+   "id": "ex_RX5",
+   "source": "examples",
+   "command": "python examples/finite_strain_c3d8/benchmark.py --out R-X5; resasm --config R-X5/config.json assemble R-X5/model.json --mode material-replay --tangent; resasm --config R-X5/config.json sensitivity R-X5/model.json --params R-X5/params.json --out R-X5/sensitivity",
+   "repos": [
+    "RA"
+   ],
+   "status": "undocumented",
+   "evidence": [
+    {
+     "repo": "RA",
+     "doc": "README.md",
+     "quote": "[Finite-strain neo-Hookean C3D8](examples/finite_strain_c3d8/WALKTHROUGH.md)",
+     "kind": "mention_only"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "[Finite-strain neo-Hookean C3D8](../examples/finite_strain_c3d8/WALKTHROUGH.md)",
+     "kind": "mention_only"
+    },
+    {
+     "repo": "RA",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "`resasm assemble --mode material-replay`, `resasm sensitivity`",
+     "kind": "mention_only"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "RA",
+     "doc": "examples/finite_strain_c3d8/WALKTHROUGH.md",
+     "quote": "python examples/finite_strain_c3d8/benchmark.py --out \"$WORK/finite\""
+    },
+    {
+     "repo": "RA",
+     "doc": "examples/finite_strain_c3d8/WALKTHROUGH.md",
+     "quote": "resasm --config \"$F/config.json\" assemble    \"$F/model.json\" --mode material-replay --tangent"
+    },
+    {
+     "repo": "RA",
+     "doc": "examples/finite_strain_c3d8/WALKTHROUGH.md",
+     "quote": "resasm --config \"$F/config.json\" sensitivity \"$F/model.json\" --params \"$F/params.json\" --out \"$F/sens\""
+    },
+    {
+     "repo": "RA",
+     "doc": "examples/README.md",
+     "quote": "`python examples/finite_strain_c3d8/benchmark.py --out \"$WORK/finite\"`"
+    }
+   ],
+   "gap": "No command of Example 7 is in the documents: benchmark.py is never named there, and the two resasm --config commands are only in the example's walkthrough (the documents link it and name the subcommands).",
+   "fix_in": "docs",
+   "missing": "RA docs/USAGE_REPORT.md, section 5, after the table: \"Example 7 (needs OTILib): `python examples/finite_strain_c3d8/benchmark.py --out \"$WORK/finite\"`, then `resasm --config \"$WORK/finite/config.json\" assemble \"$WORK/finite/model.json\" --mode material-replay --tangent` and `resasm --config \"$WORK/finite/config.json\" sensitivity \"$WORK/finite/model.json\" --params \"$WORK/finite/params.json\" --out \"$WORK/finite/sens\"`.\"",
+   "would_document": [
+    {
+     "repo": "RA",
+     "doc": "*",
+     "pattern": "finite_strain_c3d8/benchmark\\.py"
+    }
+   ],
+   "example_calls": [
+    "\"R-X5\" <- [python, \"examples/finite_strain_c3d8/benchmark.py\", \"--out\", work / \"R-X5\"]",
+    "\"R-X5 public assembly\" <- cli + [\"--config\", work / \"R-X5/config.json\", \"assemble\", work / \"R-X5/model.json\", \"--mode\", \"material-replay\", \"--tangent\"]",
+    "\"R-X5 public sensitivity\" <- cli + [\"--config\", work / \"R-X5/config.json\", \"sensitivity\", work / \"R-X5/model.json\", \"--params\", work / \"R-X5/params.json\", \"--ou"
+   ]
+  },
+  {
+   "id": "ex_UX1",
+   "source": "examples",
+   "command": "cd $UMAT && python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m1_elastic/contract_v2.json --out U-X1 --elastic",
+   "repos": [
+    "UMAT"
+   ],
+   "status": "partial",
+   "evidence": [
+    {
+     "repo": "UMAT",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "`python -m umat_oti.validation.parameter_sensitivity_provider`",
+     "kind": "mention_only"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/INSTALL.md",
+     "quote": "python examples/01_elastic_tangent/run.py --jacobian-dir umat_oti_workspace/examples/01_elastic"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "UMAT",
+     "doc": "docs/CLI_GUIDE.md",
+     "quote": "usage: parameter_sensitivity_provider.py [-h] --out OUT [--elastic] contract"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/CLI_GUIDE.md",
+     "quote": "`--elastic` | do not require the J2 branch sequence (use it for every non-J2 material)"
+    }
+   ],
+   "gap": "The documents name the verifier module only without arguments, and U-X1 is not UMAT's documented Example 1 (`umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for --ntens 6 --out ... --compile`, then `python examples/01_elastic_tangent/run.py --jacobian-dir ...`), which the run never executes.",
+   "fix_in": "run",
+   "missing": "Replace U-X1 with the documented Example 1 (cwd UMAT): `umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for --ntens 6 --out $W/01_elastic --compile`, then `python examples/01_elastic_tangent/run.py --jacobian-dir $W/01_elastic`.",
+   "example_calls": [
+    "label <- command"
+   ]
+  },
+  {
+   "id": "ex_UX2_4",
+   "source": "examples",
+   "command": "the m3_j2 verifier (same command as U-X1 on m3_j2 without --elastic), three times as U-X2, U-X3 and U-X4",
+   "repos": [
+    "UMAT"
+   ],
+   "status": "partial",
+   "evidence": [
+    {
+     "repo": "UMAT",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "`python -m umat_oti.validation.parameter_sensitivity_provider`",
+     "kind": "mention_only"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "README.md",
+     "quote": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "UMAT",
+     "doc": "docs/CLI_GUIDE.md",
+     "quote": "python -m umat_oti.validation.parameter_sensitivity_provider"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/CLI_GUIDE.md",
+     "quote": "parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/cli/j2_verify"
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/PROVIDER.md",
+     "quote": "python -m umat_oti.validation.parameter_sensitivity_provider"
+    }
+   ],
+   "gap": "The documents name the verifier only without arguments. The run executes the same m3_j2 verification three times, while UMAT's documented Examples 2 to 4 are the J2 tangent, the J2 provider package and the FCC provider, and Example 6 (the twenty-model sweep) is not run.",
+   "fix_in": "run",
+   "missing": "Replace U-X2 to U-X4 with the command blocks of UMAT examples/02_j2_plasticity_tangent, examples/03_j2_parameter_sensitivities and examples/04_fcc_crystal_plasticity_provider (their READMEs), and add Example 6 (`python tools/run_parameter_sensitivity_sweep.py --work-dir $W/06/work --results-dir $W/06/results`)."
+  },
+  {
+   "id": "ex_UX5",
+   "source": "examples",
+   "command": "cd $UMAT && python examples/verify_internal_jacobian.py --out U-X5",
+   "repos": [
+    "UMAT"
+   ],
+   "status": "partial",
+   "evidence": [
+    {
+     "repo": "UMAT",
+     "doc": "docs/USAGE_REPORT.md",
+     "quote": "`examples/verify_internal_jacobian.py`, `tools/run_internal_jacobian_round.py`",
+     "kind": "mention_only"
+    }
+   ],
+   "elsewhere": [
+    {
+     "repo": "UMAT",
+     "doc": "examples/05_internal_newton_jacobian/README.md",
+     "quote": "python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\""
+    },
+    {
+     "repo": "UMAT",
+     "doc": "docs/CLI_GUIDE.md",
+     "quote": "the internal-Jacobian check of the bundled flow model; give `--out` as an absolute path"
+    }
+   ],
+   "gap": "The documents name examples/verify_internal_jacobian.py without its required --out; the command is in the Example 5 README. The run executes only its Part A; Part B (examples/05_internal_newton_jacobian/run.py) is not run.",
+   "fix_in": "docs",
+   "missing": "UMAT docs/USAGE_REPORT.md, section 5, after the table: \"Example 5 runs as `python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\"` (Part A) and `python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco` (Part B).\" The run should add Part B.",
+   "would_document": [
+    {
+     "repo": "UMAT",
+     "doc": "*",
+     "pattern": "verify_internal_jacobian\\.py --out"
+    }
+   ],
+   "example_calls": [
+    "\"U-X5\" <- [python, \"examples/verify_internal_jacobian.py\", \"--out\", work / \"U-X5\"]"
+   ]
+  }
+ ]
+}
