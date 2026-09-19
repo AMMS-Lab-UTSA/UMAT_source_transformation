@@ -14304,7 +14304,7 @@
    "id": "T-11",
    "requirement": "Every bug fixed during this work has a regression test",
    "repository": "both",
-   "class": "c",
+   "class": "a",
    "tests": [
     {
      "repo": "UMAT",
@@ -14321,6 +14321,74 @@
     {
      "repo": "RA",
      "node": "tests/test_audit_integrity.py::test_t11_every_fix_since_the_baseline_names_existing_regression_tests"
+    },
+    {
+     "repo": "UMAT",
+     "node": "tests/test_the_oti_build_uses_gfortran_not_makes_builtin_f77.py::test_the_sweep_builds_its_oti_driver_with_gfortran_whatever_fc_make_would_use"
+    },
+    {
+     "repo": "UMAT",
+     "node": "tests/test_the_oti_build_uses_gfortran_not_makes_builtin_f77.py::test_every_generated_makefile_replaces_makes_builtin_f77_with_gfortran"
+    },
+    {
+     "repo": "UMAT",
+     "node": "tests/gui/test_an_installed_package_writes_under_the_working_directory.py::test_the_default_workspace_is_under_the_working_directory"
+    },
+    {
+     "repo": "UMAT",
+     "node": "tests/gui/test_an_installed_package_writes_under_the_working_directory.py::test_the_uniaxial_check_path_says_its_file_is_not_installed"
+    },
+    {
+     "repo": "UMAT",
+     "node": "tests/test_every_module_compiles_without_a_warning.py::test_every_module_compiles_with_warnings_as_errors"
+    },
+    {
+     "repo": "UMAT",
+     "node": "tests/test_the_acceptance_run_names_the_test_that_failed.py::test_a_failing_suite_stops_the_run_and_names_the_failing_test"
+    },
+    {
+     "repo": "UMAT",
+     "node": "tests/test_the_acceptance_run_names_the_test_that_failed.py::test_a_passing_suite_lets_the_run_go_on"
+    },
+    {
+     "repo": "RA",
+     "node": "tests/integration/test_the_clean_install_gate_takes_its_branch.py::test_the_named_branch_is_accepted"
+    },
+    {
+     "repo": "RA",
+     "node": "tests/integration/test_the_clean_install_gate_takes_its_branch.py::test_without_a_branch_a_checkout_on_main_is_accepted"
+    },
+    {
+     "repo": "RA",
+     "node": "tests/integration/test_the_clean_install_gate_takes_its_branch.py::test_a_checkout_on_another_branch_is_refused"
+    },
+    {
+     "repo": "RA",
+     "node": "tests/framework/test_the_odb_exporter_names_a_file_that_exists.py::test_the_error_under_an_ordinary_python_names_the_exporter"
+    },
+    {
+     "repo": "RA",
+     "node": "tests/framework/test_the_odb_exporter_names_a_file_that_exists.py::test_every_command_in_the_usage_text_runs_the_exporter"
+    },
+    {
+     "repo": "RA",
+     "node": "tests/replay_history/test_the_cantilever_reference_records_its_method.py::test_the_note_is_the_method_and_the_differences_are_exact"
+    },
+    {
+     "repo": "RA",
+     "node": "tests/replay_history/test_the_history_engine_stops_where_it_cannot_go_on.py::test_a_umat_that_returns_non_finite_stresses_is_refused_by_name"
+    },
+    {
+     "repo": "RA",
+     "node": "tests/replay_history/test_the_history_engine_stops_where_it_cannot_go_on.py::test_newton_stops_when_no_step_lowers_the_residual"
+    },
+    {
+     "repo": "RA",
+     "node": "tests/contract/test_an_installed_copy_of_the_checkout_runs_its_code.py::test_a_byte_identical_installed_copy_runs_the_checkouts_code"
+    },
+    {
+     "repo": "RA",
+     "node": "tests/contract/test_an_installed_copy_of_the_checkout_runs_its_code.py::test_an_installed_copy_of_another_version_is_refused"
     }
    ],
    "gate": [
@@ -14329,7 +14397,7 @@
    ],
    "examples": [],
    "blocked_by": null,
-   "missing": "regression tests for the five fixes the audit reports without one: UMAT 09d661b (the parameter-sensitivity sweep's make without FC) and 2a4dd95 (the developer screens run from an installed package); RA 5e49cc9 (the clean-install gate's --branch), 4d34c74 (the ODB exporter's usage text) and 718ac7c (the cantilever FD reference's note)",
+   "missing": null,
    "implementation": [
     {
      "repo": "UMAT",
@@ -14390,7 +14458,7 @@
      "command": "python -m pytest -q tests/test_audit_integrity.py::test_t11_every_fix_since_the_baseline_names_existing_regression_tests"
     }
    ],
-   "why": "tools/audit_integrity.py --check t11 selects every commit since the baseline (UMAT 3f340b7, RA 0789984) whose message matches a stated rule, or that adds a CHANGELOG Fixed entry, and tests/test_audit_integrity.py fails unless each is mapped to regression-test node ids that exist or excluded with a reason (docs/evidence/bug_fix_regression_map.json); fixes the rule misses are added by hand. 35 fixes are mapped (UMAT 15, RA 20) and 22 selected commits excluded. Five fixes have no regression test and are reported open (UMAT 09d661b, 2a4dd95; RA 5e49cc9, 4d34c74, 718ac7c), and five mapped fixes leave a part untested (UMAT c43e0e7; RA a7271cd, 15a5240, e03ef60, and 924ee8c, whose tests run only where the private corpus store exists), so the row is not demonstrated."
+   "why": "tools/audit_integrity.py --check t11 maps every correction selected since the pre-work baseline (UMAT 15, RA 20; the other selected commits are excluded with a reason each) to regression tests that exist and run in the suites, including tests added for the five that had none (UMAT 09d661b, 2a4dd95; RA 5e49cc9, 4d34c74, 718ac7c), and reports 0 open in both repositories; the only untested part is RA e03ef60's CI workflow change, which CI itself exercises."
   },
   {
    "id": "T-12",
