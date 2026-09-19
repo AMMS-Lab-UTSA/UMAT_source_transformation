@@ -198,6 +198,14 @@
   {
    "commit": "faa0360",
    "reason": "Evidence re-freeze (corpus pass16, generation and lock) after 1996782 and 5ffdf68 moved the fingerprint; 'refused' describes the census, and no source changed its terminal state."
+  },
+  {
+   "commit": "2b45974",
+   "reason": "Tooling (completion-ledger mapping and its update script); 'refuses' describes the script rejecting an incomplete run directory, not a corrected behaviour."
+  },
+  {
+   "commit": "6db975d",
+   "reason": "Tooling (the integrity audits themselves); 'exit 2' and 'stale' describe what the audit reports, not a corrected behaviour."
   }
  ],
  "changelog_fixed": {
