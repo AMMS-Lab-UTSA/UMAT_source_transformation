@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import shutil
 import shlex
 import subprocess
@@ -260,11 +261,17 @@ def _abaqus_python_command(abaqus_command: str, abaqus_modules: str, run_prefix:
     return ["bash", "-lc", inner]
 
 
+#: A shell that cannot find ifort says so in its own words: bash prints
+#: ``ifort: command not found`` and dash, the ``/bin/sh`` of Debian and Ubuntu,
+#: prints ``ifort: not found``. ``umat_oti.abaqus.job_status`` reads both.
+_IFORT_NOT_FOUND = re.compile(r"\bifort:\s*(?:command\s+)?not\s+found\b")
+
+
 def _runner_message(stderr: str) -> str:
     lowered = stderr.lower()
     if "time limit specification required" in lowered or "the time was empty" in lowered:
         return "Slurm rejected the Abaqus launch because the srun prefix has no time limit. Add --time=00-00:30:00 or rebuild validation scripts with the current defaults."
-    if "ifort: command not found" in lowered:
+    if _IFORT_NOT_FOUND.search(lowered):
         return "Abaqus started but could not find ifort. Load the Intel compiler module with Abaqus, for example: abaqus/2024 intel/oneapi/2024.2.0.634."
     if "problem during compilation" in lowered:
         return "Abaqus reached user-subroutine compilation, but compilation failed. See the stdout/stderr excerpts for the compiler error."
