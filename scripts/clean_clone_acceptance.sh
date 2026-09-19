@@ -106,13 +106,40 @@ step "5. run the $PROFILE reproduction profile"
 ( cd "$CLONE" && "$VENV_PY" -m umat_oti.reproduce --profile "$PROFILE" \
     --out-dir "$WORK/reproduce" )
 
+# The whole pytest log is kept. A pass prints its last lines; a failure prints
+# the failure summary and stops the run. Piping pytest straight into `tail`
+# stopped the run correctly but printed five lines of one assertion message,
+# which did not even name the test that had failed.
+run_pytest() {
+  local log="$1"; shift
+  local status=0
+  ( cd "$CLONE" && "$VENV_PY" -m pytest -q "$@" ) >"$log" 2>&1 || status=$?
+  if [[ "$status" -eq 0 ]]; then
+    tail -n 3 "$log" | sed 's/^/    /'
+    return 0
+  fi
+  echo "    FAILED: pytest exited with status $status. Failure summary:" >&2
+  if grep -q 'short test summary info' "$log"; then
+    # `|| true`: head closing the pipe early must not replace pytest's status.
+    { sed -n '/short test summary info/,$p' "$log" | grep -v '^SKIPPED' \
+        | head -n 200 | sed 's/^/    /' >&2; } || true
+  else
+    tail -n 60 "$log" | sed 's/^/    /' >&2
+  fi
+  exit "$status"
+}
+
 step "6. run the offline test suite"
-( cd "$CLONE" && "$VENV_PY" -m pytest -q \
-    -m "not abaqus and not arc and not network" ) | tail -5
+run_pytest "$WORK/pytest_offline.log" \
+    -m "not abaqus and not arc and not network"
 
 step "7. compile representative Fortran"
+# Same exclusions as step 6: on a machine that has Abaqus, `-m fortran` alone
+# would also start the one test that is marked both fortran and abaqus, and
+# this acceptance is an offline one.
 if command -v gfortran >/dev/null 2>&1; then
-  ( cd "$CLONE" && "$VENV_PY" -m pytest -q -m fortran ) | tail -3
+  run_pytest "$WORK/pytest_fortran.log" \
+      -m "fortran and not abaqus and not arc and not network"
 else
   echo "    blocked_by_external_dependency: gfortran is not on PATH"
 fi

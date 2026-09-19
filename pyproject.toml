@@ -48,7 +48,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=7", "wheel", "mpmath>=1.3", "matplotlib>=3.8"]
+# setuptools: the contract packaging test builds a wheel without isolation (so
+# offline), and Python 3.12 no longer puts setuptools in a new environment.
+# tomli: tomllib is standard only from Python 3.11.
+test = [
+	"pytest>=7",
+	"wheel",
+	"mpmath>=1.3",
+	"matplotlib>=3.8",
+	"setuptools>=68",
+	"tomli>=2; python_version < '3.11'",
+]
 # Everything the publication artefacts need and the library itself does not.
 # Kept optional so a user who only wants to transform a UMAT does not install a
 # plotting stack, and so a reproduction that lacks them reports which artefact
