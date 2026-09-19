@@ -106,10 +106,6 @@
     }
    ]
   },
-  "skip:tests/test_a_missing_compiler_or_oti_runtime_is_named.py:test_the_oti_backend_refusal_with_a_runtime_present_still_refuses_to_guess:call:skip:0af14457": {
-   "verdict": "justified",
-   "reason": "New test; skips when OTILib's Python build is not importable (an external GPL build, not on PyPI). Its counterpart without the runtime, test_the_oti_backend_refusal_says_no_runtime_was_found_and_what_to_do, runs everywhere. UMAT has no RUN_OTILIB_TESTS switch, so this skip stays a skip even in the clean-clone run if OTILib is not importable."
-  },
   "skip:tests/test_contract_packaging.py:test_a_built_wheel_carries_every_schema_the_contract_validates_with:call:skip:0257ad28": {
    "verdict": "justified",
    "reason": "Stricter than the baseline: the baseline skipped on any wheel-build failure; now a build failure is an assertion, and the only skip left is for a missing setuptools, which the test extra declares.",
@@ -485,6 +481,10 @@
    "reason": "Corpus evidence re-frozen by re-running every acquired source in Abaqus 2021.HF5 after transformer fixes moved the fingerprint (pass14 in 0ea76c6, pass15 in 661f3af). The registry records those Abaqus runs of the ORIGINAL against the OTI build; it is not an expected value produced by the code under test. The acceptance count is unchanged.",
    "quote": "43 of the 260 adequately specified genuine UMATs accepted, the same 43 as pass14",
    "quote_source": "661f3af"
+  },
+  "skip:tests/test_a_missing_compiler_or_oti_runtime_is_named.py:test_the_oti_backend_refusal_with_a_runtime_present_still_refuses_to_guess:call:skip:75bc14be": {
+   "verdict": "justified",
+   "reason": "New test; skips when OTILib's Python build is not importable (an external GPL build, not on PyPI). Its counterpart without the runtime, test_the_oti_backend_refusal_says_no_runtime_was_found_and_what_to_do, runs everywhere. UMAT has no RUN_OTILIB_TESTS switch, so this skip stays a skip even in the clean-clone run if OTILib is not importable."
   }
  }
 }
