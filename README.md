@@ -108,7 +108,7 @@ what did **not** reproduce, is [docs/VERIFICATION_RECORD.md](docs/VERIFICATION_R
 | Provider verification, J2 and FCC crystal plasticity | every DSIGMA_DP, DSTATEV_DP and DDSDDE entry agrees with finite differences of the original or is consistent with zero; none disagrees | `umat-oti-provider build parameter_sensitivity/models/m6_fcc/contract_v2.json --out <dir>` |
 
 Corpus of 391 UMATs acquired from public repositories, re-transformed and run
-in Abaqus at the current transform (2026-09-18): 244 transform, and 43
+in Abaqus at the current transform (2026-09-18): 240 transform, and 43
 of the 260 adequately specified genuine UMATs clear all six acceptance gates
 (Abaqus job, outputs, finite history, primal agreement, verified derivatives,
 informative experiment). Every other source carries a named reason, and the 217
