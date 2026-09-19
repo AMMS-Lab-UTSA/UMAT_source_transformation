@@ -7,21 +7,21 @@ Every acquired source has a record here, and each one is named by its path insid
 | input | file |
 | --- | --- |
 | acquisition inventory (the denominator) | `paper_results/discovery/discovery_triage.csv` |
-| transform report | `softwarex_work/corpus_run/transform_all_pass15.json` |
-| Abaqus verification results | `pass15/results/store_verification.jsonl` |
+| transform report | `softwarex_work/corpus_run/transform_all_pass16.json` |
+| Abaqus verification results | `pass16/results/store_verification.jsonl` |
 | offline compile evidence | `paper_results/corpus/transform_refusal_audit.json` |
 | acquisition cache | `softwarex_work/discovery_cache` |
 
-The transform store this registry describes is at fingerprint `16c9f305df378089`. A verification row carries the fingerprint of the store it ran against; a row from before the store was rebuilt is evidence about a transformed file that no longer exists, and none of those is read as a verdict about the entry that is in the store now.
+The transform store this registry describes is at fingerprint `dbe9f928191e1d43`. A verification row carries the fingerprint of the store it ran against; a row from before the store was rebuilt is evidence about a transformed file that no longer exists, and none of those is read as a verdict about the entry that is in the store now.
 
 ## How to regenerate every number in this report
 
 ```
 UMAT_OTI_DISCOVERY_CACHE=<the acquisition cache> \
 python tools/build_corpus_registry.py \
-    --transform <run>/transform_all_pass15.json \
-    --abaqus <run>/pass15/results/store_verification.jsonl \
-    --store-fingerprint 16c9f305df378089 \
+    --transform <run>/transform_all_pass16.json \
+    --abaqus <run>/pass16/results/store_verification.jsonl \
+    --store-fingerprint dbe9f928191e1d43 \
     --audit-refusals
 ```
 
@@ -151,8 +151,8 @@ The results file is append-only and this pass resumed onto the file an earlier p
 
 | | count |
 | --- | ---: |
-| rows in `pass15/results/store_verification.jsonl` | 240 |
-| of those, at the current store fingerprint `16c9f305df378089` | 240 |
+| rows in `pass16/results/store_verification.jsonl` | 240 |
+| of those, at the current store fingerprint `dbe9f928191e1d43` | 240 |
 | of those, at a superseded store fingerprint | 0 |
 | distinct sources named in the file | 240 |
 | distinct row keys in the file | 240 |

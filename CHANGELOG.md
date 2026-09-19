@@ -29,10 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   received the extraction in an undeclared variable while the Newton update
   read the now-unassigned original, and the transform reported success; a
   request that cannot reach its variable is now refused by name.
-- **Corpus pass15** at `16c9f305df378089`: 43 of 260 adequately specified
-  genuine UMATs clear every acceptance gate, as at pass14; four sources that
-  passed a real array to a hypercomplex helper dummy are now refused by name
-  (`docs/evidence/final_refreeze.md`).
+- **Corpus pass16** at `dbe9f928191e1d43`: 43 of 260 adequately specified
+  genuine UMATs clear every acceptance gate, as at pass14 and pass15; since
+  pass15, four sources that pass a real array to a hypercomplex helper dummy
+  are refused by name (`docs/evidence/final_refreeze.md`).
 - `THIRD_PARTY_NOTICES.md` credits the MIT upstream of the ICP UMATs and
   records that the ICP subfolders are book companion code with no stated
   licence.

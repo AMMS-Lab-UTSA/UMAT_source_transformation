@@ -1,6 +1,6 @@
 {
  "schema": "umat-oti/transform-refusal-audit/1",
- "generated": "2026-09-19T01:53:37+00:00",
+ "generated": "2026-09-19T08:17:15+00:00",
  "what_this_is": "for each source the transformer refused: whether the author's own text is accepted by ifort -syntax-only, what it USEs or INCLUDEs that was never published beside it, and which companion units the repository does publish. No Abaqus process was started. A refusal is not evidence for any of these; this file is.",
  "sources": {
   "AlexSTA1993__numerical_geolab/numerical_geolab_materials/UMATERIALS/CAUCHY3D-DP/hyplast_Cauchy3D-DP.for": {

@@ -1,4 +1,4 @@
-# Re-freeze at transform fingerprint 16c9f305df378089 (2026-09-18)
+# Re-freeze at transform fingerprint dbe9f928191e1d43 (2026-09-19)
 
 The final integration branch changed transform code, so every stored
 transform and every frozen artefact was evidence about code that no longer
@@ -8,27 +8,34 @@ existed. The changes were:
 - fixes to labelled statements, predictor inputs, DATA constants and helper closure;
 - the per-entry provider verifier;
 - the continued-assignment fix;
-- keeping integers out of the promotion and reading the lifted helpers' IMPLICIT types.
+- keeping integers out of the promotion and reading the lifted helpers' IMPLICIT types;
+- promoting the variable a local-Jacobian request replaces.
 
 This records how the evidence was made current again, following the procedure in
 `src/umat_oti/contract/schemas/transform_generation.json` (`how_to_update`).
 The same file sits in both repositories.
 
-The re-freeze was done twice on the same day. Pass14, at `da1f183708c19072`,
-followed the continued-assignment fix. Pass15, at `16c9f305df378089`, followed
-the fix for lifted-helper arguments (commit `5b97c2f`). The numbers below are
-pass15's. Where pass14 differs, the difference is stated.
+The re-freeze was done three times:
+
+| pass | fingerprint | date | followed |
+| --- | --- | --- | --- |
+| pass14 | `da1f183708c19072` | 2026-09-18 | the continued-assignment fix |
+| pass15 | `16c9f305df378089` | 2026-09-18 | the fix for lifted-helper arguments (`5b97c2f`) |
+| pass16 | `dbe9f928191e1d43` | 2026-09-19 | the fix for local-Jacobian requests (`1996782`) |
+
+The numbers below are pass16's. Where an earlier pass differs, the difference
+is stated.
 
 ## What was run
 
 | step | command (from the UMAT repository root) | result |
 | --- | --- | --- |
-| 1. re-transform all 391 acquired sources | `python tools/transform_all.py --all --jobs 8 --json <run>/transform_all_pass15.json` | 240 transformed, 151 refused; 214 compile cleanly (pass14: 244, 147, 218; the four differences are explained below) |
-| 2. run every transformed entry in Abaqus 2021.HF5 | `python tools/verify_store_in_abaqus.py --work-dir <run>/pass15/work --results-dir <run>/pass15/results --jobs 6 --mode inventory --timeout 1800` | 240 of 240 entries attempted at fingerprint `16c9f305df378089` (19:09 to 19:55); 44 reach the verified stage |
-| 3. rebuild the registry | `python tools/build_corpus_registry.py --transform <run>/transform_all_pass15.json --abaqus <run>/pass15/results/store_verification.jsonl --store-fingerprint 16c9f305df378089 --audit-refusals` | `paper_results/corpus/` rewritten. The refused set changed, so the offline `ifort -syntax-only` audit of every refused source was redone |
-| 4. report against pass14 | `python tools/pass_report.py --registry paper_results/corpus/corpus_registry.json --previous <pass14 registry> --families <run>/material_families.json --label pass15` | 43 of 260 accepted, as in pass14; none gained, none lost |
-| 5. generation and lock | fingerprint written to `transform_generation.json`, `umat_oti.contract.schema.write_lock()`, both copied byte for byte to Residual_Assembler `schemas/` | combined lock digest `036e7797d203d3adf2b1f492d41dc65a1d320197016e6d95cbabfa3b8415d789` |
-| 6. Residual Assembler fixtures | Residual_Assembler [scripts/regenerate_recovery_fixture.py](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/scripts/regenerate_recovery_fixture.py) for `isotropic-elasticity--f7eb90376a` and `j2_props--2feae9f158` (loading from the retained pass12 manifests, deck byte-identical) | four Abaqus jobs; both verified (tangent agreement 1.1e-14 and 8.3e-11 over a step-size plateau). Every number is identical to pass14; only the generation time and the fingerprint (`16c9f305df378089`) differ. `residual_core.core.fixture_residual_check`: elasticity 1 held / 2 not established, J2 32 held / 3 not established, the same pattern as before |
+| 1. re-transform all 391 acquired sources | `python tools/transform_all.py --all --jobs 8 --json <run>/transform_all_pass16.json` | 240 transformed, 151 refused; 214 compile cleanly, as at pass15 (pass14: 244, 147, 218; the four differences are explained below) |
+| 2. run every transformed entry in Abaqus 2021.HF5 | `python tools/verify_store_in_abaqus.py --work-dir <run>/pass16/work --results-dir <run>/pass16/results --jobs 6 --mode inventory --timeout 1800` | 240 of 240 entries attempted at fingerprint `dbe9f928191e1d43` (02:31 to 03:16); 44 reach the verified stage |
+| 3. rebuild the registry | `python tools/build_corpus_registry.py --transform <run>/transform_all_pass16.json --abaqus <run>/pass16/results/store_verification.jsonl --store-fingerprint dbe9f928191e1d43 --audit-refusals` | `paper_results/corpus/` rewritten, with the offline `ifort -syntax-only` audit of every refused source redone |
+| 4. report against pass15 | `python tools/pass_report.py --registry paper_results/corpus/corpus_registry.json --previous <pass15 registry> --families <run>/material_families.json --label pass16` | 43 of 260 accepted, as in pass15 and pass14; no source changed its terminal state |
+| 5. generation and lock | fingerprint written to `transform_generation.json`, `umat_oti.contract.schema.write_lock()`, both copied byte for byte to Residual_Assembler `schemas/` | combined lock digest `e59a274028f0e579c5e1f25b9362f920ac24cebd5229bd30794b75dc790ae749` |
+| 6. Residual Assembler fixtures | Residual_Assembler [scripts/regenerate_recovery_fixture.py](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/scripts/regenerate_recovery_fixture.py) for `isotropic-elasticity--f7eb90376a` and `j2_props--2feae9f158` (loading from the retained pass12 manifests, deck byte-identical) | four Abaqus jobs; both verified (tangent agreement 1.1e-14 and 8.3e-11 over a step-size plateau). Every number is identical to pass15 and pass14; only the generation time and the fingerprint (`dbe9f928191e1d43`) differ. `residual_core.core.fixture_residual_check`: elasticity 1 held / 2 not established, J2 32 held / 3 not established, the same pattern as before |
 
 `<run>` is the corpus working directory outside the repositories
 (`softwarex_work/corpus_run`; 12 GB per pass, not committed). The
@@ -81,9 +88,16 @@ Accepted by family:
 | viscoelasticity | 0 of 22 |
 | geomaterials | 0 of 12 |
 
-## What changed between pass14 and pass15
+## What changed between the passes
 
-Exactly four sources changed terminal state. All four are crystal-plasticity
+Between pass15 and pass16 no corpus source changed its terminal state, its
+transform or its compile. The fix behind pass16 concerns local-Jacobian
+requests, which no corpus entry, benchmark contract or parameter-sensitivity
+provider carries: the transformed sources of all 19 benchmark contracts and
+the generated sources of all 20 providers (384 files) are byte-identical
+before and after it.
+
+Between pass14 and pass15, exactly four sources changed terminal state. All four are crystal-plasticity
 UMATs that share one LU-decomposition helper, and none was ever accepted.
 
 - **Pass14:** three stopped at primal agreement (`primal_disagreed`) and one at
@@ -129,10 +143,10 @@ are not regenerated here.
 - The tests keep refusing them as regression baselines.
 - They are read only as history.
 
-Re-promoting the collection from pass15 would make them current:
+Re-promoting the collection from pass16 would make them current:
 
 ```sh
-tools/promote_verified_umats.py --results <run>/pass15/results/store_verification.jsonl --work-dir <run>/pass15/work
+tools/promote_verified_umats.py --results <run>/pass16/results/store_verification.jsonl --work-dir <run>/pass16/work
 ```
 
 That rewrites the collection, and it was not done in this step.

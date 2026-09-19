@@ -129,10 +129,11 @@ def test_the_refusal_classes_partition_every_refusal():
 
     The rule is the partition, not the totals: the totals move every time the
     transformer improves, and they should. They are asserted beside it as the
-    measurement of the day (151 refusals at fingerprint 16c9f305df378089: the
-    147 of the previous generation plus four sources that pass a real array to
-    a lifted helper whose IMPLICIT statement types the dummy hypercomplex, now
-    refused by name) so a silent drift is still visible, but a refusal landing in no
+    measurement of the day (151 refusals at fingerprints 16c9f305df378089 and
+    dbe9f928191e1d43: the 147 of the generation before plus four sources that
+    pass a real array to a lifted helper whose IMPLICIT statement types the
+    dummy hypercomplex, now refused by name) so a silent drift is still
+    visible, but a refusal landing in no
     class or in two would fail this whichever way the counts go.
     """
     rows = refusals()

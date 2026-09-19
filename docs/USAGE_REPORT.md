@@ -292,7 +292,7 @@ fingerprint:
 python -c "from umat_oti.store import transform_fingerprint; print(transform_fingerprint())"
 ```
 
-It prints `16c9f305df378089`, the value recorded in
+It prints `dbe9f928191e1d43`, the value recorded in
 `src/umat_oti/contract/schemas/transform_generation.json` and read by both
 repositories. At this generation:
 
