@@ -109,13 +109,13 @@ def test_the_same_refusal_text_classifies_two_files_differently():
 
 
 def test_a_refused_umat_that_builds_stays_this_project_s_problem():
-    """102 of the 154 are whole UMATs whose published text ifort accepts,
+    """102 of the 151 are whole UMATs whose published text ifort accepts,
     whose companions are all in the repository, and which do compute a stress
     or a tangent somewhere in the file. They stay ``transform_refused`` and
     ``internal``: there is nothing wrong with those files, and the work is
     ours."""
     ours = [r for r in refusals() if r["refusal_class"] == GENUINE_UMAT]
-    assert len(ours) == 98, len(ours)
+    assert len(ours) == 102, len(ours)
     for record in ours:
         assert record["terminal_state"] == "transform_refused"
         assert record["kind"] == "internal"
@@ -129,8 +129,10 @@ def test_the_refusal_classes_partition_every_refusal():
 
     The rule is the partition, not the totals: the totals move every time the
     transformer improves, and they should. They are asserted beside it as the
-    measurement of the day (147 refusals at fingerprint 94a92c01814f107a, down
-    from 154) so a silent drift is still visible, but a refusal landing in no
+    measurement of the day (151 refusals at fingerprint 16c9f305df378089: the
+    147 of the previous generation plus four sources that pass a real array to
+    a lifted helper whose IMPLICIT statement types the dummy hypercomplex, now
+    refused by name) so a silent drift is still visible, but a refusal landing in no
     class or in two would fail this whichever way the counts go.
     """
     rows = refusals()
@@ -141,7 +143,7 @@ def test_the_refusal_classes_partition_every_refusal():
             record["refusal_class"], 0) + 1
     assert sum(counts.values()) == len(rows), (counts, len(rows))
     assert counts == {
-        GENUINE_UMAT: 98,
+        GENUINE_UMAT: 102,
         MISSING_EXTERNAL_DEPENDENCY: 16,
         HELPER_OR_MODULE_ONLY: 13,
         INCOMPLETE_OR_CORRUPT: 11,
@@ -149,11 +151,11 @@ def test_the_refusal_classes_partition_every_refusal():
         OTHER_ABAQUS_ROUTINE: 2,
         PUBLISHED_STUB: 2,
     }, counts
-    assert sum(counts.values()) == 147
+    assert sum(counts.values()) == 151
 
 
 def test_every_refused_source_quotes_the_line_it_was_classified_from():
-    """A classification nobody can check is an assertion. All 154 carry the
+    """A classification nobody can check is an assertion. All 151 carry the
     line of the author's own file that decided it, and that line really is in
     that file at the line number recorded beside it."""
     for record in refusals():
