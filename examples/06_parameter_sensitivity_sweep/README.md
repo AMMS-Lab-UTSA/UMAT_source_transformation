@@ -165,6 +165,14 @@ parameter perturbed. Before any derivative is compared, the transformed and
 the original builds must return the same stress and state (primal parity).
 The funnel keeps every model in the denominator with the stage it reached.
 
+A row agrees when the OTI value is within the reference's own resolution
+(its centred-difference noise floor) or within a relative tolerance of `1e-6`
+of the reference; a row the reference cannot resolve is reported as
+*unresolved*, never as agreement. A disagreeing row is re-judged once against
+a reference taken at the step where the reference is best converged, with the
+same `1e-6` tolerance; if it then differs by more than both the tolerance and
+that reference's uncertainty, it stays a failure.
+
 ## Run time
 
 Measured on 2026-09-18: 91.5 s for all twenty models.
