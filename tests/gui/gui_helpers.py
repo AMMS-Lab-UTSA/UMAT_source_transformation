@@ -68,11 +68,10 @@ def streamlit_server(app: Path, *, env: dict[str, str], log: Path):
 def settle(page, timeout: int = 60000) -> None:
     """Wait until Streamlit has finished the rerun a click or an edit started."""
     page.wait_for_timeout(400)
-    status = page.locator('[data-testid="stStatusWidget"]')
-    try:
-        status.wait_for(state="hidden", timeout=timeout)
-    except Exception:  # noqa: BLE001 - absent is idle
-        pass
+    # "hidden" also holds for an absent widget, so this returns at once when
+    # Streamlit is idle; a timeout means the rerun never finished, and the
+    # test must fail rather than read a page that is still changing.
+    page.locator('[data-testid="stStatusWidget"]').wait_for(state="hidden", timeout=timeout)
     page.wait_for_timeout(300)
 
 
