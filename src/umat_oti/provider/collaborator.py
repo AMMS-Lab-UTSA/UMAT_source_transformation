@@ -1,4 +1,4 @@
-"""The developer's hand-off: the four files the IMQCAM presentation names.
+"""The developer's hand-off: the four files a collaborator receives.
 
 Slide 11 has the material developer share, and keep the source private:
 

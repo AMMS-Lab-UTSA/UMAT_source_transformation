@@ -452,7 +452,11 @@ def _makefile_source(module_name: str) -> str:
     The compile order matters because ``otim4n1`` USEs ``master_parameters``
     and ``real_utils``, and ``j2_umat_oti_mod`` USEs ``otim4n1``.
     """
-    return f"""FC      ?= gfortran
+    return f"""# GNU make predefines FC=f77, so "FC ?= gfortran" would never apply;
+# replace only that built-in default and keep an FC the caller sets.
+ifeq ($(origin FC),default)
+FC = gfortran
+endif
 FCFLAGS ?= -O2 -std=f2008 -ffree-line-length-none
 LDFLAGS ?=
 

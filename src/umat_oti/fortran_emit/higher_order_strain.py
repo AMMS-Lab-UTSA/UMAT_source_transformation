@@ -380,7 +380,11 @@ END PROGRAM higher_order_driver
 
 
 def _makefile_source(module_name: str) -> str:
-    return f"""FC      ?= gfortran
+    return f"""# GNU make predefines FC=f77, so "FC ?= gfortran" would never apply;
+# replace only that built-in default and keep an FC the caller sets.
+ifeq ($(origin FC),default)
+FC = gfortran
+endif
 FCFLAGS ?= -O1 -std=f2008 -ffree-line-length-none
 
 .PHONY: all clean

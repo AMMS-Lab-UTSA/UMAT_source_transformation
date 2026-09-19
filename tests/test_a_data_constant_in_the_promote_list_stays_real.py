@@ -143,3 +143,9 @@ def test_the_hin_benchmark_transforms_from_its_committed_contract(tmp_path):
     compiled = subprocess.run(["gfortran", "-fsyntax-only", "-ffree-line-length-none", "-I", ".",
                                combined.name], cwd=tmp_path / "t", capture_output=True, text=True)
     assert compiled.returncode == 0, compiled.stderr[-2000:]
+    # gfortran 10 and later refuse an argument whose type differs from the
+    # dummy's; gfortran 9 only warns, so the warning is asserted absent too.
+    # HIN's transformed build once passed the integer flag ISTEP as a
+    # hypercomplex shadow and the reals RSTE and TMPTIM to hypercomplex
+    # dummies (see tests/test_lifted_helper_arguments_match_their_dummies.py).
+    assert "Type mismatch" not in compiled.stderr, compiled.stderr[-2000:]

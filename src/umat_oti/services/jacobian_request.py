@@ -1,7 +1,6 @@
 """The constitutive Jacobian from four fields and one click.
 
-The IMQCAM presentation (slides 16 and 40) shows the whole request a material
-developer has to make: load the UMAT, say how many stress components it has,
+This is the whole request a material developer has to make: load the UMAT, say how many stress components it has,
 and name what to differentiate -- ``STRESS`` with respect to ``DSTRAN``, written
 into ``DDSDDE``. Nothing else is typed. In particular the lines that assign the
 old tangent are *not* given: the compact contract built here leaves
