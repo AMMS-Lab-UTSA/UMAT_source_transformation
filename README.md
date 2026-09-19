@@ -167,7 +167,7 @@ A skipped test names the missing prerequisite; a skip is not a pass.
 - Some constructs are refused with a named diagnostic (for example LAPACK
   calls on the stress path, some helper routines without source); the corpus
   census lists every refusal and its reason.
-- Windows is not tested; use Linux or WSL.
+- Only Linux is tested. Windows and macOS are not; on Windows, use WSL 2.
 
 ## Citing, contributing, license
 

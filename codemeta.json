@@ -11,9 +11,7 @@
   ],
   "runtimePlatform": "Python 3.10+",
   "operatingSystem": [
-    "Linux",
-    "Windows",
-    "macOS"
+    "Linux"
   ],
   "softwareRequirements": [
     "numpy>=1.26",

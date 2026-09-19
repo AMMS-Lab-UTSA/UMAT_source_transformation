@@ -70,6 +70,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sources keep their refusal until that case is handled deliberately.
 
 ### Fixed
+- The software metadata claimed platforms that are not tested. `codemeta.json`
+  listed Linux, Windows and macOS, and `pyproject.toml` declared `Operating
+  System :: OS Independent`, while the test suite and every CI job run on Linux
+  only and the README and installation guide say Windows and macOS are not
+  tested. Both now claim Linux (`Operating System :: POSIX :: Linux`); on
+  Windows, use WSL 2. The Windows CI job listed under 1.0.0 is no longer part
+  of the workflow.
+- `streamlit run src/umat_oti/app/unified_app.py`, the command the GUI guide
+  gives for the plain-language view, opened an empty page: the module never
+  called its own `main`, which required two folder arguments besides. It now
+  starts, reading the corpus round the Corpus tab reads, and takes
+  `-- --results-dir <results> --work-dir <work>` to show another.
+- An Abaqus job whose compile line could not find ifort was reported as "the
+  console kept no compiler diagnostic", which points at the UMAT. The console
+  said `sh: 1: ifort: not found`; the reason now names the absent compiler and
+  says to make it available in the environment that launches Abaqus.
 - The Abaqus probe calls an argument what the routine calls it. The UMAT
   interface is positional, and position 23 is the state-variable count: the
   manual spells it `NSTATV` and **125 of the 251 sources in the store spell it
