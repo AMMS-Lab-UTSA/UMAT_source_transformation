@@ -530,6 +530,11 @@ def main(argv: list[str] | None = None) -> int:
               "location, which a partial run must not overwrite: a --model "
               "subset writes elsewhere unless this is given explicitly."))
     args = parser.parse_args(argv)
+    # every model is built and run in its own subdirectory, so relative paths
+    # are made absolute before anything changes directory
+    args.work_dir = args.work_dir.resolve()
+    if args.results_dir is not None:
+        args.results_dir = args.results_dir.resolve()
 
     if args.list:
         for model in REQUIRED:
