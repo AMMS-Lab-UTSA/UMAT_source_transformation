@@ -1073,6 +1073,7 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X5 part A",
     "UMAT:U-X5"
    ],
    "blocked_by": null,
@@ -1098,7 +1099,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python examples/verify_internal_jacobian.py --out ../U-X5"
+     "command": "python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\" && python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco"
     }
    ],
    "why": "The tests assert the hand-coded internal Jacobian (FJAC) of each ICP return map is identified from the Newton update and labelled as a claim to check, and U-X5 discovers the m5_cpflow local solve and verifies the extracted internal Jacobian against finite differences and the hand-coded value to 1e-8."
@@ -1366,6 +1367,8 @@
     "provider_build"
    ],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3"
    ],
    "blocked_by": null,
@@ -1403,7 +1406,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package"
     }
    ],
    "why": "The compact JSON contract (examples/elastic_minimal.json) transforms end to end without blockers and normalises to a DDSDDE request, every compact v2 contract adapts to an accepted canonical request set, and the installed provider build and U-X3 turn the compact v2 J2 contract into a verified provider."
@@ -1618,8 +1621,12 @@
     "provider_build"
    ],
    "examples": [
-    "UMAT:U-X1",
-    "UMAT:U-X3"
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
+    "UMAT:U-X3",
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
+    "UMAT:U-X4"
    ],
    "blocked_by": null,
    "missing": null,
@@ -1652,14 +1659,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m1_elastic/contract_v2.json --out ../U-X1 --elastic"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package"
     }
    ],
-   "why": "The tests assert a DSIGMA_DP request normalises with its parameter map and seeds PROPS, a unified contract generates and runs a parameter-sensitivity driver, and the compact v2 J2 contract builds a provider whose every DSIGMA_DP column agrees with finite differences of the original (as U-X1/U-X3 also verify)."
+   "why": "The tests assert a DSIGMA_DP request normalises with its parameter map and seeds PROPS, a unified contract generates and runs a parameter-sensitivity driver, and the compact v2 J2 contract builds a provider whose every DSIGMA_DP column agrees with finite differences of the original (as Examples 3 and 4 also verify for the J2 and the ten-parameter FCC contracts)."
   },
   {
    "id": "U-C6",
@@ -1686,7 +1689,12 @@
    ],
    "gate": [],
    "examples": [
-    "UMAT:U-X3"
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
+    "UMAT:U-X3",
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
+    "UMAT:U-X4"
    ],
    "blocked_by": null,
    "missing": null,
@@ -1715,10 +1723,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package"
     }
    ],
-   "why": "The tests assert a DSTATEV_DP request normalises with its state map, v2 history.state names are carried as state variables, a unified contract produces DSTATEV_DP output, and the J2 provider's DSTATEV_DP columns agree with finite differences of the original (U-X3 verifies the state derivative columns too)."
+   "why": "The tests assert a DSTATEV_DP request normalises with its state map, v2 history.state names are carried as state variables, a unified contract produces DSTATEV_DP output, and the J2 provider's DSTATEV_DP columns agree with finite differences of the original (U-X3 verifies the state derivative columns too). Example 4 verifies the DSTATEV_DP output of the twelve-state FCC contract as well."
   },
   {
    "id": "U-C7",
@@ -2098,6 +2106,9 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X1 jacobian",
+    "UMAT:U-X1",
+    "UMAT:U-X2 jacobian",
     "UMAT:U-X2"
    ],
    "blocked_by": null,
@@ -2123,10 +2134,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for --ntens 6 --out umat_oti_workspace/examples/01_elastic --compile && python examples/01_elastic_tangent/run.py --jacobian-dir umat_oti_workspace/examples/01_elastic && umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile && python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2"
     }
    ],
-   "why": "The provider test asserts that every DDSDDE column dDSTRAN(1..6), from EVAL and MARCH, agrees with centred differences of the separately compiled original UMAT and that the object carries 10 OTI directions (4 PROPS plus 6 DSTRAN), and the source-transform test asserts the emitted UMAT seeds DSTRAN_OTI through OTI_E6."
+   "why": "The provider test asserts that every DDSDDE column dDSTRAN(1..6), from EVAL and MARCH, agrees with centred differences of the separately compiled original UMAT and that the object carries 10 OTI directions (4 PROPS plus 6 DSTRAN), and the source-transform test asserts the emitted UMAT seeds DSTRAN_OTI through OTI_E6. Examples 1 and 2 seed all six DSTRAN directions through umat-oti jacobian and check the full 6x6 DDSDDE against the analytic stiffness and against centred differences of the original."
   },
   {
    "id": "U-D2",
@@ -2153,6 +2164,9 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X1 jacobian",
+    "UMAT:U-X1",
+    "UMAT:U-X2 jacobian",
     "UMAT:U-X2"
    ],
    "blocked_by": null,
@@ -2186,10 +2200,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for --ntens 6 --out umat_oti_workspace/examples/01_elastic --compile && python examples/01_elastic_tangent/run.py --jacobian-dir umat_oti_workspace/examples/01_elastic && umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile && python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2"
     }
    ],
-   "why": "Each test compiles the transformed build and the untransformed original separately and asserts equal stress (and state) along the path: the J2 provider to rtol 1e-12 over 7 elastic, plastic and unloading increments (49 primal comparisons), the drop-in transformed UMATs to 1e-12 across a modulus threshold and a DATA-constant path, and the RA march of the provider against the original's march."
+   "why": "Each test compiles the transformed build and the untransformed original separately and asserts equal stress (and state) along the path: the J2 provider to rtol 1e-12 over 7 elastic, plastic and unloading increments (49 primal comparisons), the drop-in transformed UMATs to 1e-12 across a modulus threshold and a DATA-constant path, and the RA march of the provider against the original's march. Examples 1 and 2 require the transformed UMAT's stress to equal the original's."
   },
   {
    "id": "U-D3",
@@ -2334,6 +2348,9 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X1 jacobian",
+    "UMAT:U-X1",
+    "UMAT:U-X2 jacobian",
     "UMAT:U-X2"
    ],
    "blocked_by": null,
@@ -2355,10 +2372,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for --ntens 6 --out umat_oti_workspace/examples/01_elastic --compile && python examples/01_elastic_tangent/run.py --jacobian-dir umat_oti_workspace/examples/01_elastic && umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile && python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2"
     }
    ],
-   "why": "The emitted UMAT writes DDSDDE(OTI_I,OTI_J)=GETIM(STRESS_OTI(OTI_I),OTI_J), and the compiled builds return that DDSDDE equal to the closed-form isotropic stiffness (linear case), to a centred difference of the original under Abaqus's finite-strain convention (neo-Hookean, 1e-9) and, for the J2 provider, to finite differences of the original, with every DDSDDE column (EVAL and MARCH) agreeing and no entry disagreeing."
+   "why": "The emitted UMAT writes DDSDDE(OTI_I,OTI_J)=GETIM(STRESS_OTI(OTI_I),OTI_J), and the compiled builds return that DDSDDE equal to the closed-form isotropic stiffness (linear case), to a centred difference of the original under Abaqus's finite-strain convention (neo-Hookean, 1e-9) and, for the J2 provider, to finite differences of the original, with every DDSDDE column (EVAL and MARCH) agreeing and no entry disagreeing. Example 1 (umat-oti jacobian on the m1_elastic UMAT, then run.py) requires the OTI tangent to equal the analytic isotropic stiffness to 1e-12 and the stress to equal the original's. Example 2 (umat-oti jacobian on the m3_j2 UMAT, then run.py) requires the stress to equal the original's to round-off and the OTI tangent to agree with best-step centred differences of the original to 1e-8 at each of seven elastic, plastic, unloading and reverse-plastic increments."
   },
   {
    "id": "U-D6",
@@ -2442,7 +2459,9 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X1 jacobian",
     "UMAT:U-X1",
+    "UMAT:U-X2 jacobian",
     "UMAT:U-X2"
    ],
    "blocked_by": null,
@@ -2468,14 +2487,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m1_elastic/contract_v2.json --out ../U-X1 --elastic"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for --ntens 6 --out umat_oti_workspace/examples/01_elastic --compile && python examples/01_elastic_tangent/run.py --jacobian-dir umat_oti_workspace/examples/01_elastic && umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile && python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2"
     }
    ],
-   "why": "The provider verifier asserts stress and state against the separately compiled original (the test pins 49 EVAL and 6 MARCH primal comparisons), the parity gates are shown to fail on a differing or NaN stress and pass on agreement, and the converted finite-strain UMAT's stress equals the original's to rel 1e-12."
+   "why": "The provider verifier asserts stress and state against the separately compiled original (the test pins 49 EVAL and 6 MARCH primal comparisons), the parity gates are shown to fail on a differing or NaN stress and pass on agreement, and the converted finite-strain UMAT's stress equals the original's to rel 1e-12. Examples 1 and 2 require the transformed stress to equal the original's (linear elastic and J2 paths)."
   },
   {
    "id": "U-D8",
@@ -2506,7 +2521,9 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X1 jacobian",
     "UMAT:U-X1",
+    "UMAT:U-X2 jacobian",
     "UMAT:U-X2"
    ],
    "blocked_by": null,
@@ -2536,14 +2553,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m1_elastic/contract_v2.json --out ../U-X1 --elastic"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for --ntens 6 --out umat_oti_workspace/examples/01_elastic --compile && python examples/01_elastic_tangent/run.py --jacobian-dir umat_oti_workspace/examples/01_elastic && umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile && python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2"
     }
    ],
-   "why": "DDSDDE from EVAL and MARCH is adjudicated entry by entry against centred-difference ladders of the separately compiled original (every J2 column agrees and the elastic verification passes with no disagreeing entry), the converted finite-strain tangent against an independent difference of the original under Abaqus's convention (1e-9) and the elastic tangent against the closed form, and the adjudicator is shown to reject a 1e-6 error."
+   "why": "DDSDDE from EVAL and MARCH is adjudicated entry by entry against centred-difference ladders of the separately compiled original (every J2 column agrees and the elastic verification passes with no disagreeing entry), the converted finite-strain tangent against an independent difference of the original under Abaqus's convention (1e-9) and the elastic tangent against the closed form, and the adjudicator is shown to reject a 1e-6 error. Example 1 (umat-oti jacobian on the m1_elastic UMAT, then run.py) requires the OTI tangent to equal the analytic isotropic stiffness to 1e-12 and the stress to equal the original's. Example 2 (umat-oti jacobian on the m3_j2 UMAT, then run.py) requires the stress to equal the original's to round-off and the OTI tangent to agree with best-step centred differences of the original to 1e-8 at each of seven elastic, plastic, unloading and reverse-plastic increments."
   },
   {
    "id": "U-D9",
@@ -2570,7 +2583,9 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X1 jacobian",
     "UMAT:U-X1",
+    "UMAT:U-X2 jacobian",
     "UMAT:U-X2"
    ],
    "blocked_by": null,
@@ -2596,14 +2611,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m1_elastic/contract_v2.json --out ../U-X1 --elastic"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for --ntens 6 --out umat_oti_workspace/examples/01_elastic --compile && python examples/01_elastic_tangent/run.py --jacobian-dir umat_oti_workspace/examples/01_elastic && umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile && python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2"
     }
    ],
-   "why": "The same pipelines pass on linear isotropic elasticity (provider m1_elastic verified against finite differences; transformed elastic UMAT equal to the closed-form stiffness) and on nonlinear materials (J2 path asserted elastic, plastic, unloading and reverse plastic with every tangent column agreeing; compressible neo-Hookean tangent within 1e-9)."
+   "why": "The same pipelines pass on linear isotropic elasticity (provider m1_elastic verified against finite differences; transformed elastic UMAT equal to the closed-form stiffness) and on nonlinear materials (J2 path asserted elastic, plastic, unloading and reverse plastic with every tangent column agreeing; compressible neo-Hookean tangent within 1e-9). Example 1 (linear elasticity) and Example 2 (J2 plasticity) pass the same tangent and parity checks."
   },
   {
    "id": "U-E1",
@@ -2626,6 +2637,7 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X5 part A",
     "UMAT:U-X5"
    ],
    "blocked_by": null,
@@ -2659,7 +2671,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python examples/verify_internal_jacobian.py --out ../U-X5"
+     "command": "python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\" && python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco"
     }
    ],
    "why": "The seeding injection replaces the Newton update by GAM=PROPS(seed slot) on the target increment only, and the m5_cpflow funnel (test and example) reaches jacobian_verified, which requires probe_took_effect (the recorded iterate equals the seeded value after at least two residual evaluations) and an OTI build seeded on that PROPS slot."
@@ -2685,6 +2697,7 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X5 part A",
     "UMAT:U-X5"
    ],
    "blocked_by": null,
@@ -2714,7 +2727,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python examples/verify_internal_jacobian.py --out ../U-X5"
+     "command": "python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\" && python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco"
     }
    ],
    "why": "The observing injection leaves GAM=GAM-FGAM/FJAC intact and records the residual before the update, and on m5_cpflow the instrumented build's stress and state are identical to the untransformed build (max_stress_drift == 0.0, asserted by the test and by the U-X5 pass criterion) with the funnel's primal-parity stage passed."
@@ -2740,6 +2753,7 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X5 part A",
     "UMAT:U-X5"
    ],
    "blocked_by": null,
@@ -2769,7 +2783,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python examples/verify_internal_jacobian.py --out ../U-X5"
+     "command": "python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\" && python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco"
     }
    ],
    "why": "The local Newton triple is discovered syntactically and, on m5_cpflow, the OTI coefficient dF/dg at the converged iterate is extracted (jacobian_extracted then jacobian_verified) and reported in verification.json."
@@ -2795,6 +2809,7 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X5 part A",
     "UMAT:U-X5"
    ],
    "blocked_by": null,
@@ -2824,7 +2839,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python examples/verify_internal_jacobian.py --out ../U-X5"
+     "command": "python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\" && python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco"
     }
    ],
    "why": "The discovery output names iteration_variable, residual_variable and hand_coded_jacobian_variable (GAM_PAR, FGAM, FJAC on nine sources) and never labels the hand-coded value a reference, and the verification record names its values extracted.oti, extracted.finite_difference and hand_coded_audit, which the m5_cpflow test reads by those names."
@@ -2846,6 +2861,7 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X5 part A",
     "UMAT:U-X5"
    ],
    "blocked_by": null,
@@ -2879,7 +2895,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python examples/verify_internal_jacobian.py --out ../U-X5"
+     "command": "python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\" && python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco"
     }
    ],
    "why": "The extracted m5_cpflow internal Jacobian agrees with centred differences of the independently compiled untransformed build to relative error < 1e-8 (jacobian_verified), and the hand-coded Jacobian is audited against the same reference."
@@ -2909,6 +2925,8 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3"
    ],
    "blocked_by": null,
@@ -2942,7 +2960,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package"
     }
    ],
    "why": "DSIGMA_DP from the transformed builds is checked against finite differences of the separately compiled original (every J2 column agrees, the elastic verification passes, and the RA march is within 2e-6 for all four PROPS) and against the analytic elastic dsigma11/dE to 1e-8."
@@ -2964,6 +2982,8 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3"
    ],
    "blocked_by": null,
@@ -2993,7 +3013,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package"
     }
    ],
    "why": "The built contract names each DSIGMA_DP column by parameter with its PROPS index and OTI direction (reordered sparse H, E map to directions 1, 2), and every comparison row carries its parameter name, props_index and direction."
@@ -3023,6 +3043,8 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3"
    ],
    "blocked_by": null,
@@ -3056,7 +3078,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package"
     }
    ],
    "why": "One OTI evaluation carries all four J2 parameter directions (E, nu, SIGY0, H) plus six strain directions (10 march directions asserted) and every DSIGMA_DP column agrees with finite differences, and the generic transform builds a five-parameter viscoplastic UMAT with helpers in one run."
@@ -3082,6 +3104,8 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3"
    ],
    "blocked_by": null,
@@ -3115,7 +3139,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package"
     }
    ],
    "why": "Sensitivities are compared at every increment of multi-increment paths: the 7-increment J2 check path and the RA 6-increment march against finite differences of the original, and 20 increments of the generic J2 transform against the reference emitter to 1e-10."
@@ -3137,6 +3161,8 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3"
    ],
    "blocked_by": null,
@@ -3166,7 +3192,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package"
     }
    ],
    "why": "The J2 check asserts the branch sequence elastic, elastic, plastic, plastic, elastic, plastic, elastic and that every DSIGMA_DP column agrees with finite differences across it, and the viscoplastic transform matches the analytic elastic-branch dsigma11/dE and reaches plastic flow."
@@ -3184,6 +3210,8 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3"
    ],
    "blocked_by": null,
@@ -3205,7 +3233,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package"
     }
    ],
    "why": "Every DSIGMA_DP column (E, nu, SIGY0, H) must reach the verdict agrees, which needs at least one entry that the finite-difference reference resolves above its own uncertainty (so a nonzero value), and the verifier raises if any array has no agreeing column."
@@ -3227,6 +3255,11 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
+    "UMAT:U-X3",
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
     "UMAT:U-X4"
    ],
    "blocked_by": null,
@@ -3260,10 +3293,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X4"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package"
     }
    ],
-   "why": "DSTATEV_DP (dEQPLAS/dPROPS) from EVAL is adjudicated against finite differences of the separately compiled original with every column agreeing, and the RA march asserts dstatev_dp for all four PROPS within 2e-6 of finite differences."
+   "why": "DSTATEV_DP (dEQPLAS/dPROPS) from EVAL is adjudicated against finite differences of the separately compiled original with every column agreeing, and the RA march asserts dstatev_dp for all four PROPS within 2e-6 of finite differences. Examples 3 and 4 verify every DSTATEV_DP entry of the J2 and the FCC providers against centred differences of the original."
   },
   {
    "id": "U-G2",
@@ -3282,6 +3315,11 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
+    "UMAT:U-X3",
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
     "UMAT:U-X4"
    ],
    "blocked_by": null,
@@ -3315,10 +3353,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X4"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package"
     }
    ],
-   "why": "The DSTATEV_DP comparison runs at each of the 7 J2 increments (and at each of the 6 RA march increments) across elastic and plastic branches with no disagreeing entry."
+   "why": "The DSTATEV_DP comparison runs at each of the 7 J2 increments (and at each of the 6 RA march increments) across elastic and plastic branches with no disagreeing entry. Examples 3 and 4 compare DSTATEV_DP at every increment of their paths."
   },
   {
    "id": "U-G3",
@@ -3341,6 +3379,11 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
+    "UMAT:U-X3",
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
     "UMAT:U-X4"
    ],
    "blocked_by": null,
@@ -3370,10 +3413,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X4"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package"
     }
    ],
-   "why": "With incoming DSIGMA_DP/DSTATEV_DP carried the J2 derivatives match whole-path finite differences, while dropping the carry changes the stress derivatives by more than 1 (carry_reset_stress_derivative_difference > 1), the RA chain that carries stress and state derivatives increment to increment matches whole-path finite differences to 2e-6, and repeated evaluations are bit-identical (no hidden state)."
+   "why": "With incoming DSIGMA_DP/DSTATEV_DP carried the J2 derivatives match whole-path finite differences, while dropping the carry changes the stress derivatives by more than 1 (carry_reset_stress_derivative_difference > 1), the RA chain that carries stress and state derivatives increment to increment matches whole-path finite differences to 2e-6, and repeated evaluations are bit-identical (no hidden state). Examples 3 and 4 check whole-path DSTATEV_DP, which carries the state derivatives from increment to increment."
   },
   {
    "id": "U-G4",
@@ -3396,6 +3439,11 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
+    "UMAT:U-X3",
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
     "UMAT:U-X4"
    ],
    "blocked_by": null,
@@ -3425,7 +3473,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X4"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package"
     }
    ],
    "why": "The provider starts STATEV and its incoming derivative buffers at zero (EVAL caller and MARCH), and from that start every DSTATEV_DP and DSIGMA_DP column, first increment included, agrees with finite differences of the original started from the same state with no entry disagreeing, repeated runs are bit-identical, and the reference driver is started from the same declared (SDVINI) initial state as the OTI tangent driver."
@@ -3447,6 +3495,11 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
+    "UMAT:U-X3",
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
     "UMAT:U-X4"
    ],
    "blocked_by": null,
@@ -3484,10 +3537,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X4"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package"
     }
    ],
-   "why": "The reference is the separately compiled original UMAT differenced over a step ladder, independent of the OTI build: every DSTATEV_DP column agrees in the UMAT verifier and the RA march asserts dstatev_dp within 2e-6 of it."
+   "why": "The reference is the separately compiled original UMAT differenced over a step ladder, independent of the OTI build: every DSTATEV_DP column agrees in the UMAT verifier and the RA march asserts dstatev_dp within 2e-6 of it. Examples 3 and 4 use the same independent reference for the J2 and FCC providers."
   },
   {
    "id": "U-H1",
@@ -4168,7 +4221,10 @@
    ],
    "gate": [],
    "examples": [
-    "UMAT:U-X2",
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
+    "UMAT:U-X3",
+    "UMAT:U-X5 part A",
     "UMAT:U-X5"
    ],
    "blocked_by": null,
@@ -4194,14 +4250,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python examples/verify_internal_jacobian.py --out ../U-X5"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\" && python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco"
     }
    ],
-   "why": "verification.json is written with passed/verdict/comparisons for a passing J2 provider and with passed=false and the error for a failing one; the example steps require verification.json passed."
+   "why": "verification.json is written with passed/verdict/comparisons for a passing J2 provider and with passed=false and the error for a failing one; Example 3's package and Example 5 Part A write verification.json and require passed."
   },
   {
    "id": "U-I10",
@@ -4220,7 +4272,11 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3",
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
     "UMAT:U-X4"
    ],
    "blocked_by": null,
@@ -4254,11 +4310,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X4"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package"
     }
    ],
    "why": "The J2 provider's DSIGMA_DP and DSTATEV_DP columns (EVAL and MARCH) all agree with centred FD of the original (628 verified entries, none disagreeing); umat-oti-config on a legacy UMAT writes the parameter-sensitivity driver whose run produces DSIGMA_DP_OTI.csv and DSTATEV_DP_OTI.csv."
@@ -4900,6 +4952,7 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X1 jacobian",
     "UMAT:U-X1"
    ],
    "blocked_by": null,
@@ -4929,10 +4982,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m1_elastic/contract_v2.json --out ../U-X1 --elastic"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for --ntens 6 --out umat_oti_workspace/examples/01_elastic --compile && python examples/01_elastic_tangent/run.py --jacobian-dir umat_oti_workspace/examples/01_elastic"
     }
    ],
-   "why": "The example step builds the elastic provider and requires verification.json passed (DDSDDE and DSIGMA_DP against centred FD of the separately compiled original); the tests repeat the CLI build and check the drop-in's DDSDDE against FD of the original."
+   "why": "Example 1 (umat-oti jacobian on the m1_elastic UMAT, then run.py) requires the OTI tangent to equal the analytic isotropic stiffness to 1e-12 and the stress to equal the original's. The tests build the elastic provider and check the drop-in's DDSDDE against finite differences of the original."
   },
   {
    "id": "U-X2",
@@ -4951,6 +5004,7 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X2 jacobian",
     "UMAT:U-X2"
    ],
    "blocked_by": null,
@@ -4980,10 +5034,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile && python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2"
     }
    ],
-   "why": "The J2 verifier requires the elastic/plastic/unloading branch sequence, primal parity to round-off, and every DDSDDE column (EVAL and MARCH) agreeing with centred FD of the original; the example step asserts passed."
+   "why": "Example 2 (umat-oti jacobian on the m3_j2 UMAT, then run.py) requires the stress to equal the original's to round-off and the OTI tangent to agree with best-step centred differences of the original to 1e-8 at each of seven elastic, plastic, unloading and reverse-plastic increments. The tests check the J2 provider's DDSDDE against finite differences of the original and that the downloaded drop-in returns the original's tangent."
   },
   {
    "id": "U-X3",
@@ -5002,6 +5056,8 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3"
    ],
    "blocked_by": null,
@@ -5035,10 +5091,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package"
     }
    ],
-   "why": "Every DSIGMA_DP column for E, nu, SIGY0, H agrees with centred FD of the original over seven increments with carry-over, and reordered sparse parameter lists map to the right PROPS slots; the example step asserts passed."
+   "why": "Example 3 builds the J2 provider from its contract, verifies every DSIGMA_DP, DSTATEV_DP and DDSDDE entry against centred differences of the separately compiled original on a path crossing elastic, plastic and unloading increments (verification.json passed), and reads the package with REAL_UMAT.obj alone. The tests check every DSIGMA_DP column and the mapping of reordered sparse parameter lists to PROPS slots."
   },
   {
    "id": "U-X4",
@@ -5057,6 +5113,8 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
     "UMAT:U-X4"
    ],
    "blocked_by": null,
@@ -5086,10 +5144,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X4"
+     "command": "umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package"
     }
    ],
-   "why": "DSTATEV_DP columns of the J2 provider agree with FD of the original's state variable (all columns agree), and for the ten-parameter FCC provider every parameter's DSTATEV_DP column agrees; the example step asserts passed."
+   "why": "Example 4 does the same for the ten-parameter, twelve-state FCC crystal-plasticity provider: every DSIGMA_DP, DSTATEV_DP and DDSDDE entry is verified against centred differences of the original. The tests check the J2 provider's DSTATEV_DP columns and build and verify the ten-parameter FCC provider from the GUI's build screen."
   },
   {
    "id": "U-X5",
@@ -5108,6 +5166,7 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X5 part A",
     "UMAT:U-X5"
    ],
    "blocked_by": null,
@@ -5137,10 +5196,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python examples/verify_internal_jacobian.py --out ../U-X5"
+     "command": "python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\" && python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco"
     }
    ],
-   "why": "The local-Newton Jacobian of m5_cpflow extracted by OTI agrees with centred FD of the untransformed build to 1e-8, the recording leaves stress bit-identical, and the hand-coded Jacobian is audited against the same reference; the example step asserts verification.json passed."
+   "why": "Example 5 extracts the local Newton Jacobian of the m5_cpflow UMAT (Part A, verification.json passed) and of the VPDCO damage UMAT (Part B) and checks each against centred differences of the untransformed UMAT and against the hand-coded Jacobian. The tests repeat the m5_cpflow extraction and the example's command line."
   },
   {
    "id": "U-X6",
@@ -5171,11 +5230,19 @@
    ],
    "gate": [],
    "examples": [
+    "UMAT:U-X1 jacobian",
     "UMAT:U-X1",
+    "UMAT:U-X2 jacobian",
     "UMAT:U-X2",
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3",
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
     "UMAT:U-X4",
-    "UMAT:U-X5"
+    "UMAT:U-X5 part A",
+    "UMAT:U-X5",
+    "UMAT:Example 6"
    ],
    "blocked_by": null,
    "missing": null,
@@ -5220,26 +5287,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m1_elastic/contract_v2.json --out ../U-X1 --elastic"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X4"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python examples/verify_internal_jacobian.py --out ../U-X5"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for --ntens 6 --out umat_oti_workspace/examples/01_elastic --compile && python examples/01_elastic_tangent/run.py --jacobian-dir umat_oti_workspace/examples/01_elastic && umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile && python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2 && umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package && python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\" && python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco && python tools/run_parameter_sensitivity_sweep.py --work-dir \"$PWD/umat_oti_workspace/examples/06_sweep/work\" --results-dir \"$PWD/umat_oti_workspace/examples/06_sweep/results\""
     }
    ],
-   "why": "Each of the six examples/0N_*/README.md documents inputs, command, measured expected output, an independent check with its tolerance, a machine-readable output, a failure table and the GUI equivalent (or says there is none); the examples phase produces their verification reports."
+   "why": "Each of the six examples/0N_*/README.md documents inputs, command, measured expected output, an independent check with its tolerance, a machine-readable output, a failure table and the GUI equivalent (or says there is none); the examples phase runs every example's documented command block and requires its RESULT: PASS or verification.json passed."
   },
   {
    "id": "R-A1",
@@ -5417,10 +5468,10 @@
     },
     {
      "repo": "RA",
-     "command": "python -c \"import residual_core, umat_oti, pyoti.sparse\""
+     "command": "python -c \"from residual_core.algebra.otilib_adapter import otilib_status; print(otilib_status())\""
     }
    ],
-   "why": "With RUN_OTILIB_TESTS=1 these tests fail rather than skip unless the adapter locates a genuine OTILib build, and then check OTI arithmetic coefficients and order-2 sensitivities; RA:environment constructs OtiContext and imports pyoti.sparse from the installed venv with PYTHONPATH removed."
+   "why": "With RUN_OTILIB_TESTS=1 these tests fail rather than skip unless the adapter locates a genuine OTILib build, and then check OTI arithmetic coefficients and order-2 sensitivities; RA:environment runs the documented otilib_status() check in the installed environment, with PYOTI_PATH and OTILIB_ROOT set and no PYTHONPATH, and requires 'available': True."
   },
   {
    "id": "R-A5",
@@ -5478,7 +5529,9 @@
    ],
    "examples": [
     "RA:R-X1 init",
-    "RA:R-X1 check"
+    "RA:R-X1 check",
+    "RA:R-X1",
+    "RA:R-X1 report"
    ],
    "blocked_by": null,
    "missing": null,
@@ -5499,11 +5552,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm init --template python --out ../R-X1"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm check ../R-X1/resasm.yml"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output"
     }
    ],
    "why": "The gate runs the installed resasm console script (request on a real ODB) to completion with its outputs checked, and the examples phase starts the CLI module for init and check."
@@ -5609,7 +5658,10 @@
    ],
    "gate": [],
    "examples": [
+    "RA:R-X1 init",
+    "RA:R-X1 check",
     "RA:R-X1",
+    "RA:R-X1 report",
     "RA:R-X4"
    ],
    "blocked_by": null,
@@ -5639,11 +5691,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm run ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "RA:R-X1 runs the shipped python template and checks orders 1 and 2 against the analytic cubic solution to 1e-8, RA:R-X4 runs the documented connected-pipeline smoke run to passed, and the test runs the documented first `resasm history` example and asserts 'Status: executed successfully' with 10 increments and 768 integration points."
@@ -5750,7 +5798,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../stress.npy"
+     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../resasm_work/R_cube.npy"
     }
    ],
    "why": "Neutral JSON models are loaded with nodes, types, tags, sections, BC/load metadata and field refs preserved, a saved model reassembles to identical residual/tangent and via `resasm assemble`, `resasm inspect model.json` returns 0, and RA:R-X3 assembles from a neutral model.json."
@@ -6531,7 +6579,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "With the Abaqus node order and natural coordinates the deck connectivity reproduces Abaqus's recorded STRAN, a distorted real-Abaqus C3D8 reproduces Abaqus IP stresses and nodal equilibrium, and an uneven 8-element brick integrates to its face tractions."
@@ -6898,7 +6946,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../stress.npy"
+     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../resasm_work/R_cube.npy"
     }
    ],
    "why": "Integral of B^T sigma matches independent surface/divergence targets for constant and linear stress, balances the applied loads for Abaqus's own IP stresses, and RA:R-X3 gives the analytic norm 100/sqrt(2) and max 25."
@@ -7039,7 +7087,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../stress.npy"
+     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../resasm_work/R_cube.npy"
     }
    ],
    "why": "The assembled global residual equals a hand scatter of the element residuals on a mesh with shared nodes, a constant stress assembles to the boundary tractions with interior nodes cancelling, and `resasm verify`/R-X3 report the analytic 100/sqrt(2) norm."
@@ -7308,7 +7356,9 @@
    ],
    "gate": [],
    "examples": [
-    "RA:R-X5"
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -7333,7 +7383,7 @@
     },
     {
      "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "The formulation's F = I + du/dX (reference shape-function gradients) gives element forces equal to those from an independently computed F and neo-Hookean Cauchy stress, the force/tangent rotate as F -> QF with zero force under rigid motion, and the two-element benchmark matches an independent total-Lagrangian first-Piola quadrature of P(F) to 1e-12."
@@ -7412,7 +7462,9 @@
    ],
    "gate": [],
    "examples": [
-    "RA:R-X5"
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -7441,7 +7493,7 @@
     },
     {
      "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "A material declaring a PK2 stress measure is refused, the element force equals the current-configuration integral of an independently computed neo-Hookean Cauchy stress, and the two-element spatial Cauchy force equals the reference-volume first-Piola force to 1e-12."
@@ -7471,7 +7523,9 @@
    ],
    "gate": [],
    "examples": [
-    "RA:R-X5"
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -7496,7 +7550,7 @@
     },
     {
      "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "The Kirchhoff-Jaumann/J DDSDDE is converted to the spatial modulus exactly (1e-14 against the closed form) and the resulting element tangent matches a centred FD of the residual with recomputed stress (<2e-8 over three steps), while a material declaring plain DDSDDE or returning no tangent is refused."
@@ -7522,7 +7576,9 @@
    ],
    "gate": [],
    "examples": [
-    "RA:R-X5"
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -7551,7 +7607,7 @@
     },
     {
      "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "Integration over the current volume (det of the current Jacobian) with J = det F in the stress reproduces the reference-volume first-Piola force to 1e-12 and a full FD of the tangent (which includes the volume change), and non-positive reference, current or previous Jacobians are refused."
@@ -7609,7 +7665,9 @@
    ],
    "gate": [],
    "examples": [
-    "RA:R-X5"
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -7634,7 +7692,7 @@
     },
     {
      "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "For the supported isotropic total response, a superposed rotation Q maps the element force to Q f and the tangent to Q K Q^T with zero force under rigid rotation plus translation, the Jaumann spin terms of the tangent are verified by residual FD, and the benchmark with a 0.7 rad superposed rotation matches the independent first-Piola reference."
@@ -7660,7 +7718,9 @@
    ],
    "gate": [],
    "examples": [
-    "RA:R-X5"
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -7681,7 +7741,7 @@
     },
     {
      "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "The material term B^T c B plus the Cauchy initial-stress (geometric) term together match a centred FD of the finite-strain residual to <2e-8, at zero stress the tangent equals the linear material stiffness, and the symmetric geometric term is asserted to differ from the fixed-stress force Jacobian."
@@ -7708,7 +7768,8 @@
    "gate": [],
    "examples": [
     "RA:R-X5",
-    "RA:R-X5 public assembly"
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -7737,11 +7798,7 @@
     },
     {
      "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm --config ../R-X5/config.json assemble ../R-X5/model.json --mode material-replay --tangent"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "The public material-replay assembly (API, neutral-file round trip, CLI and GUI) reproduces the element residual and tangent, and on the two-element benchmark the assembled global tangent matches a DOF-by-DOF FD of the assembled residual (<2e-8) with a converged free residual below 1e-11."
@@ -7861,7 +7918,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../stress.npy"
+     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../resasm_work/R_cube.npy"
     }
    ],
    "why": "The shipped one-C3D8 stress-driven example assembles through the API, CLI and GUI (24 DOF), `resasm verify` reports the analytic free-residual norm 7.071068e+01, and the R-X3 step checks norm 100/sqrt(2) and max 25 to 1e-10."
@@ -8167,7 +8224,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../stress.npy"
+     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../resasm_work/R_cube.npy"
     }
    ],
    "why": "Assembled internal forces match analytic targets (R-X3 cube, uniform and linearly varying stress on 8 elements) and Abaqus references: the committed Abaqus 2021 C3D8 export's IP stresses reproduce the applied loads (1e-5), the committed beam ODB reactions are reproduced (1e-5), and the gate requests check reactions against real ODBs."
@@ -8229,7 +8286,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "Replaying a recorded cyclic J2 history increment by increment reproduces the solved displacements and du/dp, a mismatch is reported at the increment where it occurs, the committed ODB example replays all 10 increments, and the gate replays 4 and 40 recorded increments."
@@ -8284,7 +8341,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "The strain rebuilt from the deck's displacements at every integration point equals the strain Abaqus recorded (1e-9) with the reading chosen by NLGEOM, and B-bar strains from the committed Abaqus displacements give the Abaqus IP stresses to 1e-4."
@@ -8347,7 +8404,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "Carrying stress, state and their derivatives from one increment into the next reproduces central FD of the ORIGINAL UMAT over the whole path, the batched provider with incoming history equals the single-point call bit for bit on both return-map branches, and a perturbed recorded state is detected."
@@ -8405,7 +8462,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "The compiled provider object built from the UMAT repository is linked and called for every point and increment (OTI, fast and ORIGINAL entry points agree), the object hash is bound to its contract, and the gate builds the provider with the installed console script and replays through it."
@@ -8552,7 +8609,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "The globally assembled stiffness is the derivative of the globally assembled residual (history engine and Assembler on 8 elements, FD plateau), and Newton on the assembled residual/tangent equilibrates every increment to 1e-11."
@@ -8736,8 +8793,13 @@
    ],
    "gate": [],
    "examples": [
+    "RA:R-X1 init",
+    "RA:R-X1 check",
     "RA:R-X1",
-    "RA:R-X5"
+    "RA:R-X1 report",
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -8766,11 +8828,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm run ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "Material and section parameters seeded as genuine OTILib numbers (one basis each, orders 1 and 2) give residual and solution derivatives equal to FD or closed forms, and seeding leaves the model's real constants unchanged."
@@ -8792,7 +8850,9 @@
    ],
    "gate": [],
    "examples": [
-    "RA:R-X5"
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -8821,7 +8881,7 @@
     },
     {
      "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "The neo-Hookean material evaluated with OTI mu/lambda gives residual derivatives and tangent derivatives equal to central FD, and the compiled OTI provider's stress/state derivatives equal FD of the ORIGINAL UMAT over a cyclic path (2e-6)."
@@ -8880,7 +8940,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "State-variable derivatives carried through each increment's update (including incoming history seeds and a state that reads total strain) match FD of the ORIGINAL UMAT at every increment, including whole-model SDV derivatives."
@@ -9000,7 +9060,9 @@
    ],
    "gate": [],
    "examples": [
-    "RA:R-X5"
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -9029,7 +9091,7 @@
     },
     {
      "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "Scattering a real element and an OTI element into one global vector keeps every derivative coefficient, an OTI-assembled two-element bar chain gives sensitivities equal to FD re-solves, and the OTI-assembled finite-strain C3D8 global residual gives R^(1) equal to FD of the residual."
@@ -9055,7 +9117,9 @@
    ],
    "gate": [],
    "examples": [
-    "RA:R-X5"
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -9080,7 +9144,7 @@
     },
     {
      "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "With prescribed (including nonzero) displacements, the OTI sensitivities are zero on prescribed rows and the free-DOF solutions match FD re-solves of the constrained nonlinear problems."
@@ -9110,7 +9174,10 @@
    ],
    "gate": [],
    "examples": [
-    "RA:R-X1"
+    "RA:R-X1 init",
+    "RA:R-X1 check",
+    "RA:R-X1",
+    "RA:R-X1 report"
    ],
    "blocked_by": null,
    "missing": null,
@@ -9135,7 +9202,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm run ../R-X1/resasm.yml"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output"
     }
    ],
    "why": "OTI coefficients are extracted per direction and converted to derivatives with the product of factorials (k^2 coefficient 1/9 becomes 2/9), matching FD of the closed-form solution for every order-2 direction."
@@ -9165,6 +9232,8 @@
    ],
    "gate": [],
    "examples": [
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
     "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
@@ -9194,7 +9263,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm --config ../R-X5/config.json sensitivity ../R-X5/model.json --params ../R-X5/params.json --out ../R-X5/sensitivity"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "R^(p) generated from OTI residuals matches FD of the residual, the right-hand side is stored as -R^(p) in coefficient and derivative form, and T_ff U_f = -R_f holds after the solve."
@@ -9226,7 +9295,12 @@
     "presentation_request"
    ],
    "examples": [
+    "RA:R-X1 init",
+    "RA:R-X1 check",
+    "RA:R-X1",
     "RA:R-X1 report",
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
     "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
@@ -9260,11 +9334,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm report ../R-X1/resasm_output"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm --config ../R-X5/config.json sensitivity ../R-X5/model.json --params ../R-X5/params.json --out ../R-X5/sensitivity"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "Public reports quote recovered derivatives with their factors (not raw coefficients), the request outputs report derivatives equal to the analytic J2 values, packages serialize R and RHS arrays, and the gate checks reported derivatives against analytic values."
@@ -9367,7 +9437,9 @@
    ],
    "gate": [],
    "examples": [
-    "RA:R-X5"
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -9400,7 +9472,7 @@
     },
     {
      "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "The same eval_element, neo-Hookean evaluate and c3d8_kernel functions run with real inputs (FD references, Newton) and with OTI inputs (sensitivity), and the OTI results equal FD of the real ones; the bar-chain formulation is likewise shared between the real solve and the OTI RHS."
@@ -9434,8 +9506,14 @@
    ],
    "gate": [],
    "examples": [
+    "RA:R-X1 init",
+    "RA:R-X1 check",
     "RA:R-X1",
-    "RA:R-X2"
+    "RA:R-X1 report",
+    "RA:R-X2 init",
+    "RA:R-X2 check",
+    "RA:R-X2",
+    "RA:R-X2 report"
    ],
    "blocked_by": null,
    "missing": null,
@@ -9468,11 +9546,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm run ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm run ../R-X2/resasm.yml"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && resasm init --template blackbox-order2 --out ../resasm_work/bb2 && resasm check ../resasm_work/bb2/resasm.yml && resasm run ../resasm_work/bb2/resasm.yml && resasm report ../resasm_work/bb2/resasm.yml"
     }
    ],
    "why": "The tests assert rhs^(p) = -R^(p) and T_ff U_f + R_f ~ 0 on the free DOFs, that the OTI-assembled U^(1) of a nonlinear two-element chain matches re-solved finite differences, that du/dp from K du/dp = -dR/dp on a yielded two-element C3D8 J2 model matches whole-model re-solves over a step plateau with the documented sign, and that order-1 and order-2 U^(p) equal the closed-form derivatives; the R-X1/R-X2 steps check the solved sensitivities against the analytic cubic solution to 1e-8."
@@ -9549,7 +9623,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "Two element stiffnesses solved from one OTI package against re-solve finite differences, k and f seeded together (including the mixed k*f direction) against differences of the exact solution, all ten FCC parameters from one compiled OTI provider run against whole-model finite differences, and four J2 parameters from the compiled OTI driver assembled into dR/dp against full-residual finite differences; the gate request and R-X4 return E, nu, SIGY0 and H from one run and check them analytically / against finite differences."
@@ -9583,8 +9657,14 @@
    ],
    "gate": [],
    "examples": [
+    "RA:R-X1 init",
+    "RA:R-X1 check",
     "RA:R-X1",
-    "RA:R-X2"
+    "RA:R-X1 report",
+    "RA:R-X2 init",
+    "RA:R-X2 check",
+    "RA:R-X2",
+    "RA:R-X2 report"
    ],
    "blocked_by": null,
    "missing": null,
@@ -9621,11 +9701,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm run ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm run ../R-X2/resasm.yml"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && resasm init --template blackbox-order2 --out ../resasm_work/bb2 && resasm check ../resasm_work/bb2/resasm.yml && resasm run ../resasm_work/bb2/resasm.yml && resasm report ../resasm_work/bb2/resasm.yml"
     }
    ],
    "why": "Order-2 solution derivatives are checked against closed forms on the Python (OTILib), black-box and formulation paths, the C3D8 kernel is shown to carry mixed third-order OTI coefficients exactly, and the finite-strain path (advertised first-order only) refuses max_order=2; R-X1 and R-X2 check orders 1 and 2 analytically."
@@ -9798,7 +9874,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "Solution sensitivities du/dp are compared with whole-model re-solves of the ORIGINAL model (two-element J2, one-element cyclic J2 history, 12x4x2 J2 beam into plasticity, nonlinear bar chain) and with closed-form order-1/2 values; R-X4 re-checks the cyclic J2 du/dp against whole-path and re-equilibrated FD to 2e-6."
@@ -9828,8 +9904,14 @@
    ],
    "gate": [],
    "examples": [
+    "RA:R-X1 init",
+    "RA:R-X1 check",
     "RA:R-X1",
-    "RA:R-X2"
+    "RA:R-X1 report",
+    "RA:R-X2 init",
+    "RA:R-X2 check",
+    "RA:R-X2",
+    "RA:R-X2 report"
    ],
    "blocked_by": null,
    "missing": null,
@@ -9854,11 +9936,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm run ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm run ../R-X2/resasm.yml"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && resasm init --template blackbox-order2 --out ../resasm_work/bb2 && resasm check ../resasm_work/bb2/resasm.yml && resasm run ../resasm_work/bb2/resasm.yml && resasm report ../resasm_work/bb2/resasm.yml"
     }
    ],
    "why": "Asserts direction counts C(p+m-1,p), the exponents, labels and recovery factors of the order-2 (and order-3) direction maps, and that direction_map_order2.json is exported with {(2,0):2,(1,1):1,(0,2):2}; R-X1/R-X2 index the solved columns through the exported direction maps before the analytic check."
@@ -9949,8 +10027,14 @@
    ],
    "gate": [],
    "examples": [
+    "RA:R-X1 init",
+    "RA:R-X1 check",
     "RA:R-X1",
-    "RA:R-X2"
+    "RA:R-X1 report",
+    "RA:R-X2 init",
+    "RA:R-X2 check",
+    "RA:R-X2",
+    "RA:R-X2 report"
    ],
    "blocked_by": null,
    "missing": null,
@@ -9971,11 +10055,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm run ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm run ../R-X2/resasm.yml"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && resasm init --template blackbox-order2 --out ../resasm_work/bb2 && resasm check ../resasm_work/bb2/resasm.yml && resasm run ../resasm_work/bb2/resasm.yml && resasm report ../resasm_work/bb2/resasm.yml"
     }
    ],
    "why": "Recovered derivatives = prod(kappa_i!) * coefficient are asserted (d2u/dk2 = 2/9 vs coefficient 1/9; 5/9 vs 5/18), checked against finite differences of the exact solution, and the public sensitivity_norms.csv quotes the recovered value with its factor; R-X1/R-X2 compare U_derivatives to the analytic second derivatives to 1e-8."
@@ -10114,7 +10194,8 @@
    "gate": [],
    "examples": [
     "RA:R-X5",
-    "RA:R-X5 public assembly"
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -10143,11 +10224,7 @@
     },
     {
      "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm --config ../R-X5/config.json assemble ../R-X5/model.json --mode material-replay --tangent"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "A Python material (CompressibleNeoHookean, Material ABC) drives C3D8 finite-strain assembly through ResidualProblem 'material-replay', the neutral file and the CLI; force and tangent match independent references and FD, OTILib parameter seeds pass through the Python material, and incompatible material declarations are refused; R-X5 runs the same Python material through the public commands."
@@ -10285,7 +10362,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "The OTI-enabled compiled provider's DSIGMA_DP/DSTATEV_DP along a cyclic path match central FD of the ORIGINAL UMAT (<2e-6), its strain seeds are directional derivatives of the original, the compiled OTI J2 driver feeds dR/dp matching full-residual FD, and a contract lacking the OTI total entry point is refused; the gate builds it from the installed console script and R-X4 compiles and verifies it end to end."
@@ -10871,7 +10948,9 @@
    "gate": [],
    "examples": [
     "RA:R-X3",
-    "RA:R-X5 public assembly"
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -10896,11 +10975,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../stress.npy"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm --config ../R-X5/config.json assemble ../R-X5/model.json --mode material-replay --tangent"
+     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../resasm_work/R_cube.npy && python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "`resasm assemble` is run stress-driven on the minimal C3D8 (ndof=24; example R-X3 checks the saved residual norm 100/sqrt(2) and max 25) and material-replay with --tangent on finite-strain models (exit 0), and an incompatible material exits 2 with a kinematic_input diagnostic."
@@ -10967,6 +11042,8 @@
    ],
    "gate": [],
    "examples": [
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
     "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
@@ -10992,7 +11069,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm --config ../R-X5/config.json sensitivity ../R-X5/model.json --params ../R-X5/params.json --out ../R-X5/sensitivity"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "After the finite-strain benchmark verifies residual, tangent and OTI solution against FD, `resasm --config config.json sensitivity model.json --params params.json` (with OTILib) must exit 0, which the command returns only when the package is runnable, the tangent is available and R^(1) is generated and solved; the example step repeats it with --out. The printed derivative values are not compared numerically."
@@ -11011,7 +11088,13 @@
    "gate": [],
    "examples": [
     "RA:R-X1 init",
-    "RA:R-X2 init"
+    "RA:R-X1 check",
+    "RA:R-X1",
+    "RA:R-X1 report",
+    "RA:R-X2 init",
+    "RA:R-X2 check",
+    "RA:R-X2",
+    "RA:R-X2 report"
    ],
    "blocked_by": null,
    "missing": null,
@@ -11044,11 +11127,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm init --template python --out ../R-X1"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm init --template blackbox-order2 --out ../R-X2"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && resasm init --template blackbox-order2 --out ../resasm_work/bb2 && resasm check ../resasm_work/bb2/resasm.yml && resasm run ../resasm_work/bb2/resasm.yml && resasm report ../resasm_work/bb2/resasm.yml"
     }
    ],
    "why": "`resasm init --template T --out DIR` exits 0 for all five templates from installed data-files and copies resasm.yml and solution.npy byte-identically; the examples initialise the python and blackbox-order2 jobs that the later steps run."
@@ -11107,8 +11186,14 @@
    ],
    "gate": [],
    "examples": [
+    "RA:R-X1 init",
     "RA:R-X1 check",
-    "RA:R-X2 check"
+    "RA:R-X1",
+    "RA:R-X1 report",
+    "RA:R-X2 init",
+    "RA:R-X2 check",
+    "RA:R-X2",
+    "RA:R-X2 report"
    ],
    "blocked_by": null,
    "missing": null,
@@ -11129,11 +11214,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm check ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm check ../R-X2/resasm.yml"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && resasm init --template blackbox-order2 --out ../resasm_work/bb2 && resasm check ../resasm_work/bb2/resasm.yml && resasm run ../resasm_work/bb2/resasm.yml && resasm report ../resasm_work/bb2/resasm.yml"
     }
    ],
    "why": "The examples run `resasm check resasm.yml` on the python and blackbox-order2 template jobs and require exit 0 (ready); check_config, the function behind the subcommand, is asserted to report ok and 'sensitivity solve completed' for a Python-residual job with OTILib."
@@ -11151,8 +11232,14 @@
    ],
    "gate": [],
    "examples": [
+    "RA:R-X1 init",
+    "RA:R-X1 check",
     "RA:R-X1",
-    "RA:R-X2"
+    "RA:R-X1 report",
+    "RA:R-X2 init",
+    "RA:R-X2 check",
+    "RA:R-X2",
+    "RA:R-X2 report"
    ],
    "blocked_by": null,
    "missing": null,
@@ -11181,11 +11268,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm run ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm run ../R-X2/resasm.yml"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && resasm init --template blackbox-order2 --out ../resasm_work/bb2 && resasm check ../resasm_work/bb2/resasm.yml && resasm run ../resasm_work/bb2/resasm.yml && resasm report ../resasm_work/bb2/resasm.yml"
     }
    ],
    "why": "`resasm run resasm.yml` on the python and black-box order-2 templates is checked against the analytic cubic solution to 1e-8 at orders 1 and 2; run_from_config (behind the subcommand) gives du/dk=-1/3, du/df=1/24 for a black-box job and writes the public/private split."
@@ -11203,7 +11286,13 @@
    ],
    "gate": [],
    "examples": [
+    "RA:R-X1 init",
+    "RA:R-X1 check",
+    "RA:R-X1",
     "RA:R-X1 report",
+    "RA:R-X2 init",
+    "RA:R-X2 check",
+    "RA:R-X2",
     "RA:R-X2 report"
    ],
    "blocked_by": null,
@@ -11225,11 +11314,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm report ../R-X1/resasm_output"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm report ../R-X2/resasm_output"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && resasm init --template blackbox-order2 --out ../resasm_work/bb2 && resasm check ../resasm_work/bb2/resasm.yml && resasm run ../resasm_work/bb2/resasm.yml && resasm report ../resasm_work/bb2/resasm.yml"
     }
    ],
    "why": "`python -m residual_core.ui.cli report DIR` exits 2 naming the missing/invalid validation_summary.json or metadata.json without a traceback or a report header; the examples run `resasm report` successfully on the completed R-X1/R-X2 outputs."
@@ -12028,19 +12113,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm init --template python --out ../R-X1"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm check ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm run ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm report ../R-X1/resasm_output"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output"
     }
    ],
    "why": "The examples phase runs resasm init/check/run/report on the shipped python template (R = k u^3 - f) and checks every order-1 and order-2 solution derivative against the analytic cubic solution to 1e-8; the tests check the same Python-residual path (orders 1 and 2 vs closed form) and that the installed template is discoverable."
@@ -12110,19 +12183,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm init --template blackbox-order2 --out ../R-X2"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm check ../R-X2/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm run ../R-X2/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm report ../R-X2/resasm_output"
+     "command": "resasm init --template blackbox-order2 --out ../resasm_work/bb2 && resasm check ../resasm_work/bb2/resasm.yml && resasm run ../resasm_work/bb2/resasm.yml && resasm report ../resasm_work/bb2/resasm.yml"
     }
    ],
    "why": "The examples phase runs resasm init/check/run/report on the blackbox-order2 template (R = k^2 u^3 - f) and checks orders 1 and 2 against the analytic solution to 1e-8; the tests run the shipped template to order 2, compare the recovered derivatives to closed form and prove a derivative-returning provider is caught."
@@ -12173,7 +12234,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../stress.npy"
+     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../resasm_work/R_cube.npy"
     }
    ],
    "why": "The R-X3 step assembles the one-C3D8 stress-driven example from its supplied S11=100 field and checks ||R|| = 100/sqrt(2) and max|R| = 25 to 1e-10; the tests assemble the same example through the public facade (24 DOF, nonzero traction) and through the GUI's CLI path."
@@ -12236,7 +12297,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "The R-X4 step transforms and compiles the J2 provider, solves/replays one C3D8 with 8 IPs over 7 cyclic J2 increments, and verifies first-order du/dp against whole-path and re-equilibrated FD of the ORIGINAL model to 2e-6 plus the committed Abaqus fixture; the tests run the same reproducer (installed imports, nonzero exit on failure), the whole-model FD comparison and the 12-row verification including state."
@@ -12308,15 +12369,7 @@
     },
     {
      "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm --config ../R-X5/config.json assemble ../R-X5/model.json --mode material-replay --tangent"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm --config ../R-X5/config.json sensitivity ../R-X5/model.json --params ../R-X5/params.json --out ../R-X5/sensitivity"
+     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "R-X5 runs the two-element finite-strain C3D8 benchmark (residual vs independent first-Piola quadrature, nodal tangent FD, OTI solution sensitivities vs nonlinear re-solves) and its public assembly/sensitivity commands; the gate replays the full J2 cantilever (40 increments, 12,288 IPs, 7,497 DOF) and re-equilibrated outputs obey the homogeneity identity to 1e-10; the tests run the benchmark, check the identity on the multi-element Abaqus J2 beam and pin the cantilever decks."
@@ -12415,6 +12468,7 @@
    ],
    "examples": [
     "RA:R-X4",
+    "UMAT:U-X2 jacobian",
     "UMAT:U-X2"
    ],
    "blocked_by": null,
@@ -12448,11 +12502,11 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile && python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2"
     }
    ],
    "why": "The workflow starts from the unmodified m3_j2 J2 radial-return UMAT with linear hardening: the gate transforms it and replays a real Abaqus ODB of it, and the tests assert its path crosses elastic and plastic branches (plastic state > 0, elastic/plastic branch list) while every derivative matches central differences of that original routine."
@@ -12480,6 +12534,7 @@
     "provider_build"
    ],
    "examples": [
+    "UMAT:U-X2 jacobian",
     "UMAT:U-X2"
    ],
    "blocked_by": null,
@@ -12505,10 +12560,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile && python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2"
     }
    ],
-   "why": "The installed umat-oti-provider transforms the public J2 UMAT from its contract in the gate, and the tests assert the generic transformer's DSIGMA_DP for the J2 source is bit-identical to the hand-lifted reference with no J2-specific symbols, and that the transformed provider verifies against the original."
+   "why": "The installed umat-oti-provider transforms the public J2 UMAT from its contract in the gate, and the tests assert the generic transformer's DSIGMA_DP for the J2 source is bit-identical to the hand-lifted reference with no J2-specific symbols, and that the transformed provider verifies against the original. Example 2 transforms the J2 UMAT with umat-oti jacobian and checks the drop-in against the original."
   },
   {
    "id": "X-3",
@@ -12537,9 +12592,15 @@
     "provider_build"
    ],
    "examples": [
+    "UMAT:U-X2 jacobian",
     "UMAT:U-X2",
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3",
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
     "UMAT:U-X4",
+    "UMAT:U-X5 part A",
     "UMAT:U-X5"
    ],
    "blocked_by": null,
@@ -12577,22 +12638,10 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X4"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python examples/verify_internal_jacobian.py --out ../U-X5"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile && python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2 && umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package && python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\" && python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco"
     }
    ],
-   "why": "DDSDDE, dSTATEV/dDSTRAN, DSIGMA_DP and DSTATEV_DP from the compiled provider (J2 and FCC) agree with a two-step plateau of central differences of the ORIGINAL UMAT, the J2 provider verifier finds 628 determined entries agreeing and none disagreeing, and the examples write verification.json for the tangent, parameter, state and internal-Jacobian columns."
+   "why": "DDSDDE, dSTATEV/dDSTRAN, DSIGMA_DP and DSTATEV_DP from the compiled provider (J2 and FCC) agree with a two-step plateau of central differences of the ORIGINAL UMAT, the J2 provider verifier finds 628 determined entries agreeing and none disagreeing, and Examples 2 to 5 check the tangent, parameter, state and internal-Jacobian derivatives against centred differences of the original."
   },
   {
    "id": "X-4",
@@ -12650,7 +12699,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "The gate compiles OTI_UMAT.obj and its Mapping.json with the installed console script and gfortran, and the tests assert the object exports the UMAT/OTI eval/march symbols with the recorded SHA-256, rebuilds byte for byte, embeds no developer directory, and that a failed build exits non-zero without publishing."
@@ -12884,7 +12933,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "The compiled provider replays the recorded increments of real ODBs in the gate and of the genuine presentation export in the tests (stress/state reproduced within float32 tolerance, equilibrium < 1e-5), a replay of an equilibrated record reproduces the solve to 1e-10, and perturbed stress, displacement, state or properties raise a replay mismatch."
@@ -12912,7 +12961,9 @@
    "examples": [
     "RA:R-X3",
     "RA:R-X4",
-    "RA:R-X5 public assembly"
+    "RA:R-X5",
+    "RA:R-X5 public assembly",
+    "RA:R-X5 public sensitivity"
    ],
    "blocked_by": null,
    "missing": null,
@@ -12941,15 +12992,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../stress.npy"
-    },
-    {
-     "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm --config ../R-X5/config.json assemble ../R-X5/model.json --mode material-replay --tangent"
+     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../resasm_work/R_cube.npy && python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline && python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     }
    ],
    "why": "The global stiffness assembled from the provider's DDSDDE equals central differences of the global residual assembled from the ORIGINAL UMAT (1e-5), the connected solve drives the assembled residual below 1e-11, and the examples assemble the stress-driven C3D8 residual (norm 100/sqrt(2)) and the finite-strain residual with tangent."
@@ -12981,7 +13024,12 @@
     "presentation_request"
    ],
    "examples": [
-    "UMAT:U-X3"
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
+    "UMAT:U-X3",
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
+    "UMAT:U-X4"
    ],
    "blocked_by": null,
    "missing": null,
@@ -13018,7 +13066,7 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package"
     }
    ],
    "why": "All four J2 parameters (E, nu, SIGY0, H) and all ten FCC parameters are seeded in one evaluation, each column is checked against central differences of the ORIGINAL UMAT, and the gate asserts dU/dE, dU/dSIGY0, dU/dH against analytic values and dU/dnu ~ 0 on a real ODB."
@@ -13073,7 +13121,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "dR/dp assembled at fixed displacement from DSIGMA_DP (including the compiled OTI J2 driver's) converges onto a plateau of central differences of the assembled residual across a two-element mesh and a C3D8 element, and in the history engine the reaction sensitivity (dR/dp + K du/dp) matches whole-model FD of the ORIGINAL UMAT."
@@ -13130,7 +13178,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "Total-history du/dp from K du/dp = -dR/dp matches central differences of the re-equilibrated ORIGINAL model over a step ladder with a plateau (2e-6 on the cyclic J2 C3D8, 1e-6 on the plastic beam), differs from the fixed-path local solve, and the gate checks dU/dp on a real ODB against the analytic uniaxial values to 2e-5."
@@ -13185,7 +13233,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "Every node and integration point sensitivity field (U, RF, S, SDV, von Mises) at every increment and for every parameter is compared with whole-model central differences of the ORIGINAL UMAT for J2 and FCC, and the full-mesh integration-point sensitivities returned by the request match the analytic uniaxial references."
@@ -13247,7 +13295,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "The gate requires the three public outputs (results JSON, tables CSV, run report) from a real ODB and byte-identical outputs with material sources unreadable, and the tests assert exactly the public files plus private/, a report stating what ran, and that failure details reach only private/error_report.txt from the API, CLI and GUI."
@@ -13309,7 +13357,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "Sensitivities are compared with whole-model FD of the ORIGINAL UMAT (2e-6), with central differences of perturbed Abaqus reruns (within the step-plateau spread), with archived Abaqus elastic-export FD, with analytic uniaxial J2 values on a real ODB (gate, 2e-5), and with the exact homogeneity identity on the re-equilibrated cantilever (gate, 1e-10)."
@@ -13541,7 +13589,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "scripts/reproduce_connected_pipeline.py in one command records both commits, source digests, Python, compiler, environment and dependency versions, builds the provider (transform + compile), loads the model, solves/assembles, computes and verifies sensitivities, writes fd_table.csv, j2_history.png and manifest.json, and the test asserts 40-character commits, installed imports, the plot and table, and exit code 2 with passed=false on failure."
@@ -13898,8 +13946,14 @@
     "presentation_request"
    ],
    "examples": [
+    "RA:R-X1 init",
+    "RA:R-X1 check",
     "RA:R-X1",
+    "RA:R-X1 report",
+    "RA:R-X2 init",
+    "RA:R-X2 check",
     "RA:R-X2",
+    "RA:R-X2 report",
     "RA:R-X3"
    ],
    "blocked_by": null,
@@ -13933,15 +13987,7 @@
     },
     {
      "repo": "RA",
-     "command": "resasm run ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm run ../R-X2/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../stress.npy"
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && resasm init --template blackbox-order2 --out ../resasm_work/bb2 && resasm check ../resasm_work/bb2/resasm.yml && resasm run ../resasm_work/bb2/resasm.yml && resasm report ../resasm_work/bb2/resasm.yml && resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../resasm_work/R_cube.npy"
     }
    ],
    "why": "Results are compared with closed forms: uniaxial J2 displacement and parameter derivatives (gate on a real ODB, 2e-5), the analytic cubic solution to 1e-8 at orders 1 and 2 (R-X1, R-X2), the stress-driven residual norm 100/sqrt(2) (R-X3), exact elastic scaling laws, and elastic-branch dsigma/dE."
@@ -13976,6 +14022,8 @@
    "gate": [],
    "examples": [
     "RA:R-X4",
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3"
    ],
    "blocked_by": null,
@@ -14009,11 +14057,11 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
+     "command": "umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package"
     }
    ],
    "why": "Derivatives are checked against central differences over step ladders (1e-3 down to 1e-5 or 1e-6) that must show a plateau (spread and error bounds), and a single agreeing step among disagreeing neighbours is refused as verification."
@@ -14075,7 +14123,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "Where Abaqus results are available they are compared: replays of real ODBs must reproduce the recorded stresses and reactions, sensitivities must fall within the plateau spread of perturbed Abaqus reruns (160 checks), and the archived Abaqus elastic export's FD must match; live-Abaqus comparisons (abaqus marker) are outside the clean run."
@@ -14141,7 +14189,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "RA tests build the provider from the UMAT checkout (UMAT_OTI_REPO) with umat_oti and consume it in RA replay, assembly and sensitivity against FD of the ORIGINAL UMAT, and check the shared contract files are byte-identical across the two repositories; the gate does the same from installed wheels."
@@ -14172,6 +14220,8 @@
    "gate": [],
    "examples": [
     "RA:environment",
+    "UMAT:fingerprint",
+    "UMAT:compiler",
     "RA:R-X1 init",
     "RA:R-X1 check",
     "RA:R-X1",
@@ -14181,16 +14231,25 @@
     "RA:R-X2",
     "RA:R-X2 report",
     "RA:R-X3",
+    "RA:Example 4 provider",
+    "RA:Example 4",
     "RA:R-X4",
     "RA:R-X5",
     "RA:R-X5 public assembly",
     "RA:R-X5 public sensitivity",
-    "UMAT:compiler",
+    "UMAT:U-X1 jacobian",
     "UMAT:U-X1",
+    "UMAT:U-X2 jacobian",
     "UMAT:U-X2",
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3",
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
     "UMAT:U-X4",
-    "UMAT:U-X5"
+    "UMAT:U-X5 part A",
+    "UMAT:U-X5",
+    "UMAT:Example 6"
    ],
    "blocked_by": null,
    "missing": null,
@@ -14219,86 +14278,22 @@
     },
     {
      "repo": "RA",
-     "command": "python -c \"import residual_core, umat_oti, pyoti.sparse\""
-    },
-    {
-     "repo": "RA",
-     "command": "resasm init --template python --out ../R-X1"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm check ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm run ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm report ../R-X1/resasm_output"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm init --template blackbox-order2 --out ../R-X2"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm check ../R-X2/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm run ../R-X2/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm report ../R-X2/resasm_output"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../stress.npy"
-    },
-    {
-     "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
-    },
-    {
-     "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm --config ../R-X5/config.json assemble ../R-X5/model.json --mode material-replay --tangent"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm --config ../R-X5/config.json sensitivity ../R-X5/model.json --params ../R-X5/params.json --out ../R-X5/sensitivity"
+     "command": "python -c \"from residual_core.algebra.otilib_adapter import otilib_status; print(otilib_status())\""
     },
     {
      "repo": "UMAT",
-     "command": "gfortran --version"
+     "command": "python -c \"from umat_oti.store import transform_fingerprint; print(transform_fingerprint())\" && gfortran --version"
+    },
+    {
+     "repo": "RA",
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && resasm init --template blackbox-order2 --out ../resasm_work/bb2 && resasm check ../resasm_work/bb2/resasm.yml && resasm run ../resasm_work/bb2/resasm.yml && resasm report ../resasm_work/bb2/resasm.yml && resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../resasm_work/R_cube.npy && umat-oti-provider build ../UMAT_source_transformation/parameter_sensitivity/models/m3_j2/contract_v2.json --out ../resasm_work/provider_j2 && resasm history --model examples/replay_history/j2_beam/Analysis.inp --fields examples/replay_history/j2_beam/fields.npz --material ../resasm_work/provider_j2/umat_m3_j2_oti.obj --request examples/replay_history/j2_beam/sensitivity_request.json --out ../resasm_work/beam && python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline && python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m1_elastic/contract_v2.json --out ../U-X1 --elastic"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X4"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python examples/verify_internal_jacobian.py --out ../U-X5"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for --ntens 6 --out umat_oti_workspace/examples/01_elastic --compile && python examples/01_elastic_tangent/run.py --jacobian-dir umat_oti_workspace/examples/01_elastic && umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile && python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2 && umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package && python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\" && python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco && python tools/run_parameter_sensitivity_sweep.py --work-dir \"$PWD/umat_oti_workspace/examples/06_sweep/work\" --results-dir \"$PWD/umat_oti_workspace/examples/06_sweep/results\""
     }
    ],
-   "why": "The examples phase runs all ten required examples and asserts each verification record passed, and suite tests re-run the connected-pipeline reproducer, the committed replay example and the internal-Jacobian example and check their reports."
+   "why": "The examples phase runs all ten required examples, RA example 4 and UMAT example 6, each by its documented command, after the documented otilib_status() and fingerprint checks, and requires each check to pass; suite tests re-run the connected-pipeline reproducer, the committed replay example and the internal-Jacobian example and check their reports."
   },
   {
    "id": "T-11",
@@ -14464,7 +14459,7 @@
    "id": "T-12",
    "requirement": "No deleted failing tests, weakened tolerances, failures turned to warnings, broad exception hiding, skips to reach green, removed hard examples, metadata claiming support, mocked core math in integration tests, or self-comparison replacing independent validation",
    "repository": "both",
-   "class": "c",
+   "class": "a",
    "tests": [
     {
      "repo": "UMAT",
@@ -14509,7 +14504,7 @@
    ],
    "examples": [],
    "blocked_by": null,
-   "missing": "a fix for the one open violation: tests/gui/gui_helpers.py settle() (both repositories) swallows every exception from the wait for Streamlit's status widget with `except Exception: pass`, which hides a timeout in the gui-marked browser tests",
+   "missing": null,
    "implementation": [
     {
      "repo": "UMAT",
@@ -14570,7 +14565,7 @@
      "command": "python -m pytest -q tests/test_audit_integrity.py::test_t12_every_change_since_the_baseline_is_reviewed tests/test_audit_integrity.py::test_the_scanner_finds_each_kind_of_change"
     }
    ],
-   "why": "tools/audit_integrity.py --check t12 compares HEAD with the baseline commit (UMAT 3f340b7, RA 0789984) for deleted or renamed tests, new skips, xfails, importorskips and deselections (including CI and script filters and markers added to existing tests), changed numeric tolerances and removed assertions or tolerance checks, new warning filters, broad exception handlers, mocks and monkeypatches in tests, new warnings.warn calls, deleted examples, changed support metadata and changed reference data. tests/test_audit_integrity.py fails on any finding not reviewed in docs/evidence/integrity_review.json or any stale entry, and checks every quoted justification where it is said to be. UMAT has 47 findings and RA 40; no test was deleted and no tolerance loosened; the provider verifier's per-entry verdict replaced four plateau checks with a quoted reasoning, and it is looser in one stated respect (an unresolved entry is reported, not failed). One violation is open in both repositories: the broad except in tests/gui/gui_helpers.py settle(). Replacing independent validation with self-comparison is checked only through reference-data and removed-check findings."
+   "why": "tools/audit_integrity.py --check t12 compares HEAD with the baseline commit (UMAT 3f340b7, RA 0789984) for deleted or renamed tests, new skips, xfails, importorskips and deselections (including CI and script filters and markers added to existing tests), changed numeric tolerances and removed assertions or tolerance checks, new warning filters, broad exception handlers, mocks and monkeypatches in tests, new warnings.warn calls, deleted examples, changed support metadata and changed reference data. tests/test_audit_integrity.py fails on any finding not reviewed in docs/evidence/integrity_review.json or any stale entry, and checks every quoted justification where it is said to be. At UMAT 5dcdd8d and RA bf3600c the audit has 46 and 40 findings, all reviewed; no test was deleted and no tolerance loosened; the provider verifier's per-entry verdict replaced four plateau checks with a quoted reasoning, and it is looser in one stated respect (an unresolved entry is reported, not failed). The one violation found, the broad except in tests/gui/gui_helpers.py settle(), is fixed in both repositories (a timeout now fails the test), and --check t12 reports 0 open in both. Replacing independent validation with self-comparison is checked only through reference-data and removed-check findings."
   },
   {
    "id": "CI-1",
@@ -14664,7 +14659,7 @@
    "id": "CI-3",
    "requirement": "Only documented instructions followed",
    "repository": "both",
-   "class": "c",
+   "class": "a",
    "tests": [
     {
      "repo": "UMAT",
@@ -14677,6 +14672,14 @@
     {
      "repo": "RA",
      "node": "tests/test_audit_integrity.py::test_ci3_every_clean_clone_step_rests_on_a_quoted_instruction"
+    },
+    {
+     "repo": "UMAT",
+     "node": "tests/test_audit_integrity.py::test_a_harness_line_may_only_read_and_no_user_step_is_filed_as_harness"
+    },
+    {
+     "repo": "RA",
+     "node": "tests/test_audit_integrity.py::test_a_harness_line_may_only_read_and_no_user_step_is_filed_as_harness"
     }
    ],
    "gate": [
@@ -14685,8 +14688,16 @@
    ],
    "examples": [],
    "blocked_by": null,
-   "missing": "the 19 steps docs/evidence/clean_clone_commands.json lists as partial or undocumented: in the documents, how to make the ODB, UMAT_OTI_REPO for wheel installs, what the gate's installed probe and GUI render check, and the commands of RA examples 2, 7 and 8 and UMAT example 5; in the run, the cantilever folder's file names (the gate at HEAD stops on them), the OTILib build, the paper extra that replaces the gate's wheel, PYTHONPATH and the isolation variables, and the examples driver and its U-X/R-X4 commands that are not the documented examples",
+   "missing": null,
    "implementation": [
+    {
+     "repo": "RA",
+     "path": "scripts/audit_recovery_usage.py"
+    },
+    {
+     "repo": "RA",
+     "path": "scripts/reproduce_from_clean_clones.sh"
+    },
     {
      "repo": "RA",
      "path": "scripts/clean_install_gate.py"
@@ -14738,12 +14749,12 @@
    ],
    "reproduce": [
     {
-     "repo": "UMAT",
-     "command": "python tools/audit_documentation_commands.py --json"
+     "repo": "RA",
+     "command": "bash scripts/reproduce_from_clean_clones.sh --python python3.11 --odb /path/to/Analysis.odb --cantilever /path/to/cantilever/work ../ci3-run"
     },
     {
      "repo": "RA",
-     "command": "python scripts/clean_install_gate.py --umat-repo ../UMAT_source_transformation --python python3.11 --branch main --odb /path/to/Analysis.odb --work ../gate-run"
+     "command": "python tools/audit_integrity.py --check ci3"
     },
     {
      "repo": "UMAT",
@@ -14751,22 +14762,18 @@
     },
     {
      "repo": "UMAT",
-     "command": "python -m pytest -q tests/test_audit_integrity.py::test_ci3_every_clean_clone_step_rests_on_a_quoted_instruction"
+     "command": "python -m pytest -q tests/test_repository_standards.py::test_documented_commands_and_links_resolve tests/test_audit_integrity.py::test_ci3_every_clean_clone_step_rests_on_a_quoted_instruction tests/test_audit_integrity.py::test_a_harness_line_may_only_read_and_no_user_step_is_filed_as_harness"
     },
     {
      "repo": "RA",
-     "command": "python tools/audit_integrity.py --check ci3"
+     "command": "python -m pytest -q tests/test_audit_integrity.py::test_ci3_every_clean_clone_step_rests_on_a_quoted_instruction tests/test_audit_integrity.py::test_a_harness_line_may_only_read_and_no_user_step_is_filed_as_harness"
     },
     {
      "repo": "RA",
-     "command": "python -m pytest -q tests/test_audit_integrity.py::test_ci3_every_clean_clone_step_rests_on_a_quoted_instruction"
-    },
-    {
-     "repo": "RA",
-     "command": "python tools/audit_integrity.py --check ci3 --companion ../UMAT_source_transformation"
+     "command": "python scripts/clean_install_gate.py --umat-repo ../UMAT_source_transformation --python python3 --branch main --odb /path/to/Analysis.odb --work ../gate-run"
     }
    ],
-   "why": "docs/evidence/clean_clone_commands.json lists every step of the clean-clone run (its script steps and variables, the gate's recorded commands, the examples phase and the run's inputs) with the quoted instruction it rests on; tools/audit_integrity.py --check ci3 checks every quote is still on a line of docs/INSTALL.md, README.md or docs/USAGE_REPORT.md, and in Residual_Assembler that the list matches the argv lists scripts/clean_install_gate.py and scripts/audit_recovery_usage.py really run (--run-script checks the run script too). 24 of 43 steps are documented; 19 are partial or undocumented, each with the fix and where it belongs, so the row is not demonstrated."
+   "why": "docs/evidence/clean_clone_commands.json (identical in both repositories) lists the run's 45 steps: each of the 42 user steps is tied to a quoted instruction of docs/INSTALL.md, README.md or docs/USAGE_REPORT.md, and the other 3 are harness-only, read-only lines (a clean shell, the OTILib pin check, the post-run tree check) with the reason a user does not need them. tools/audit_integrity.py --check ci3 reports 0 open in both repositories: every quote is still in its document and, in Residual_Assembler, the list is what scripts/reproduce_from_clean_clones.sh, the gate and the examples phase really run. The audit runs as a test in both suites, and the gate follows the documented install (clean main clones, wheels with their extras)."
   },
   {
    "id": "CI-4",
@@ -14777,6 +14784,8 @@
    "gate": [],
    "examples": [
     "RA:environment",
+    "UMAT:fingerprint",
+    "UMAT:compiler",
     "RA:R-X1 init",
     "RA:R-X1 check",
     "RA:R-X1",
@@ -14786,16 +14795,25 @@
     "RA:R-X2",
     "RA:R-X2 report",
     "RA:R-X3",
+    "RA:Example 4 provider",
+    "RA:Example 4",
     "RA:R-X4",
     "RA:R-X5",
     "RA:R-X5 public assembly",
     "RA:R-X5 public sensitivity",
-    "UMAT:compiler",
+    "UMAT:U-X1 jacobian",
     "UMAT:U-X1",
+    "UMAT:U-X2 jacobian",
     "UMAT:U-X2",
+    "UMAT:U-X3 build",
+    "UMAT:U-X3 package",
     "UMAT:U-X3",
+    "UMAT:U-X4 build",
+    "UMAT:U-X4 package",
     "UMAT:U-X4",
-    "UMAT:U-X5"
+    "UMAT:U-X5 part A",
+    "UMAT:U-X5",
+    "UMAT:Example 6"
    ],
    "blocked_by": null,
    "missing": null,
@@ -14824,86 +14842,22 @@
    "reproduce": [
     {
      "repo": "RA",
-     "command": "python -c \"import residual_core, umat_oti, pyoti.sparse\""
-    },
-    {
-     "repo": "RA",
-     "command": "resasm init --template python --out ../R-X1"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm check ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm run ../R-X1/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm report ../R-X1/resasm_output"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm init --template blackbox-order2 --out ../R-X2"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm check ../R-X2/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm run ../R-X2/resasm.yml"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm report ../R-X2/resasm_output"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../stress.npy"
-    },
-    {
-     "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
-    },
-    {
-     "repo": "RA",
-     "command": "python examples/finite_strain_c3d8/benchmark.py --out ../R-X5"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm --config ../R-X5/config.json assemble ../R-X5/model.json --mode material-replay --tangent"
-    },
-    {
-     "repo": "RA",
-     "command": "resasm --config ../R-X5/config.json sensitivity ../R-X5/model.json --params ../R-X5/params.json --out ../R-X5/sensitivity"
+     "command": "python -c \"from residual_core.algebra.otilib_adapter import otilib_status; print(otilib_status())\""
     },
     {
      "repo": "UMAT",
-     "command": "gfortran --version"
+     "command": "python -c \"from umat_oti.store import transform_fingerprint; print(transform_fingerprint())\" && gfortran --version"
+    },
+    {
+     "repo": "RA",
+     "command": "resasm init --template python --out ../resasm_work/spring && resasm check ../resasm_work/spring/resasm.yml && resasm run ../resasm_work/spring/resasm.yml && resasm report ../resasm_work/spring/resasm_output && resasm init --template blackbox-order2 --out ../resasm_work/bb2 && resasm check ../resasm_work/bb2/resasm.yml && resasm run ../resasm_work/bb2/resasm.yml && resasm report ../resasm_work/bb2/resasm.yml && resasm assemble residual_core/examples/minimal_c3d8_stress_driven/model.json --mode stress-driven --fields residual_core/examples/minimal_c3d8_stress_driven/fields.json --out ../resasm_work/R_cube.npy && umat-oti-provider build ../UMAT_source_transformation/parameter_sensitivity/models/m3_j2/contract_v2.json --out ../resasm_work/provider_j2 && resasm history --model examples/replay_history/j2_beam/Analysis.inp --fields examples/replay_history/j2_beam/fields.npz --material ../resasm_work/provider_j2/umat_m3_j2_oti.obj --request examples/replay_history/j2_beam/sensitivity_request.json --out ../resasm_work/beam && python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline && python examples/finite_strain_c3d8/benchmark.py --out ../resasm_work/finite && resasm --config ../resasm_work/finite/config.json assemble ../resasm_work/finite/model.json --mode material-replay --tangent && resasm --config ../resasm_work/finite/config.json sensitivity ../resasm_work/finite/model.json --params ../resasm_work/finite/params.json --out ../resasm_work/finite/sens"
     },
     {
      "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m1_elastic/contract_v2.json --out ../U-X1 --elastic"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X2"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X3"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python -m umat_oti.validation.parameter_sensitivity_provider parameter_sensitivity/models/m3_j2/contract_v2.json --out ../U-X4"
-    },
-    {
-     "repo": "UMAT",
-     "command": "python examples/verify_internal_jacobian.py --out ../U-X5"
+     "command": "umat-oti jacobian parameter_sensitivity/models/m1_elastic/umat.for --ntens 6 --out umat_oti_workspace/examples/01_elastic --compile && python examples/01_elastic_tangent/run.py --jacobian-dir umat_oti_workspace/examples/01_elastic && umat-oti jacobian parameter_sensitivity/models/m3_j2/umat.for --ntens 6 --out umat_oti_workspace/examples/02_j2 --compile && python examples/02_j2_plasticity_tangent/run.py --jacobian-dir umat_oti_workspace/examples/02_j2 && umat-oti-provider build parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator parameter_sensitivity/models/m3_j2/contract_v2.json --out umat_oti_workspace/examples/03_j2/package --j2-branches && python examples/03_j2_parameter_sensitivities/run.py --package umat_oti_workspace/examples/03_j2/package && umat-oti-provider build examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/build --regular-object REAL_UMAT.obj && python -m umat_oti.provider.collaborator examples/04_fcc_crystal_plasticity_provider/contract_tension_shear.json --out umat_oti_workspace/examples/04_fcc/package && python examples/04_fcc_crystal_plasticity_provider/run.py --package umat_oti_workspace/examples/04_fcc/package && python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\" && python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco && python tools/run_parameter_sensitivity_sweep.py --work-dir \"$PWD/umat_oti_workspace/examples/06_sweep/work\" --results-dir \"$PWD/umat_oti_workspace/examples/06_sweep/results\""
     }
    ],
-   "why": "The examples phase runs every required example (R-X1 to R-X5 and U-X1 to U-X5) from the clean clones and asserts each one's analytic, FD or verification.json check passed."
+   "why": "The examples phase runs every required example (R-X1 to R-X5 and U-X1 to U-X5, plus RA example 4 and UMAT example 6) from the clean clones by the commands their walkthroughs and READMEs give, and requires each one's analytic, finite-difference or verification check to pass."
   },
   {
    "id": "CI-5",
@@ -15048,7 +15002,7 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     }
    ],
    "why": "The provider built by the installed UMAT package is consumed by the installed RA package on real ODBs (presentation model and J2 cantilever) with analytic and homogeneity checks, and the connected-pipeline example repeats the cross-repository chain against FD of the ORIGINAL model."
@@ -15211,6 +15165,7 @@
    ],
    "examples": [
     "RA:R-X4",
+    "UMAT:U-X5 part A",
     "UMAT:U-X5"
    ],
    "blocked_by": null,
@@ -15256,11 +15211,11 @@
     },
     {
      "repo": "RA",
-     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --provider-repo ../UMAT_source_transformation --out ../R-X4"
+     "command": "python scripts/reproduce_connected_pipeline.py --skip-abaqus --out ../resasm_work/pipeline"
     },
     {
      "repo": "UMAT",
-     "command": "python examples/verify_internal_jacobian.py --out ../U-X5"
+     "command": "python examples/verify_internal_jacobian.py --out \"$PWD/umat_oti_workspace/examples/05_cpflow\" && python examples/05_internal_newton_jacobian/run.py --out umat_oti_workspace/examples/05_vpdco"
     }
    ],
    "why": "The clean run has no corpus cache, pass records or discovery cache and its gate works in a new directory with a scratch cache home, so every result it reports is recomputed (tests that need those records skip instead), and the tests assert cache keys follow content and that a stale output or existing evidence directory is refused rather than reused."

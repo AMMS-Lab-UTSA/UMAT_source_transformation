@@ -349,17 +349,20 @@ under `umat/` keeps its earlier generation and is read only as history.
 Residual_Assembler's clean-install gate clones both repositories, builds and
 installs their wheels in a new environment, and runs the connected workflow
 from the installed packages. This includes `resasm request` on a genuine ODB
-and the full-size J2 cantilever. Its record for the published `main` branches
-(Residual_Assembler `3504a02`, UMAT-OTI `1352114`) reports:
+and the full-size J2 cantilever. Its record for the published `main` branches,
+run on 2026-09-19 from fresh clones (Residual_Assembler `bf3600c`, UMAT-OTI
+`5dcdd8d`), reports every step exiting 0:
 
 - all 22 gate commands exited 0;
-- UMAT-OTI's offline test suite: 3370 passed, 158 skipped, 0 failed.
+- UMAT-OTI's test suite: 3399 passed, 160 skipped, 0 failed;
+- Residual_Assembler's offline suite: 647 passed, 20 skipped, 0 failed;
+- the examples check: 31 of 31 commands passed.
 
 See
 [final_clean_clone.md](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/docs/evidence/final_clean_clone.md).
-That record predates the commits after `1352114`, including the last
-transform change (`5b97c2f`, which set the fingerprint above). The examples
-and numbers in this report were measured on the current code.
+The completion ledger ([COMPLETION_LEDGER.md](COMPLETION_LEDGER.md)) was set
+from that run alone: 265 of its 274 rows are reproduced from a clean
+installation.
 
 Residual_Assembler's
 [reproduction script](https://github.com/AMMS-Lab-UTSA/Residual_Assembler/blob/main/scripts/reproduce_from_clean_clones.sh)
