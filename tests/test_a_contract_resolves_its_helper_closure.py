@@ -87,6 +87,24 @@ def test_a_root_that_lacks_the_helper_is_an_error_not_a_guess(tmp_path):
         _payload_with_resolved_closure(path, tmp_path / "out")
 
 
+def test_packed_eigensolver_is_a_library_dependency_not_missing_source(tmp_path):
+    from umat_oti.transform.dependency_resolution import resolve_closure
+
+    source = tmp_path / "umat.f90"
+    source.write_text("""subroutine umat()
+call eigen_helper()
+call unavailable_helper()
+end subroutine umat
+subroutine eigen_helper()
+call dspevd()
+end subroutine eigen_helper
+""", encoding="utf-8")
+    graph = resolve_closure(source)
+    assert graph.library_calls == {"DSPEVD": "lapack"}
+    assert [item.symbol for item in graph.missing] == ["UNAVAILABLE_HELPER"]
+    assert graph.as_dict()["required_libraries"] == ["lapack"]
+
+
 def test_jacobian_can_discover_transitive_helpers_without_a_manual_contract(tmp_path):
     from umat_oti.services.jacobian_request import jacobian_contract
 
@@ -113,6 +131,107 @@ def test_jacobian_dependency_discovery_is_opt_in(tmp_path):
 
     contract = jacobian_contract(tmp_path / "umat.for", ntens=6)
     assert "dependency_roots" not in contract
+
+
+def test_all_command_requires_material_settings(tmp_path, capsys):
+    from umat_oti.cli import main
+
+    settings = tmp_path / "material.json"
+    settings.write_text("{}", encoding="utf-8")
+    source = tmp_path / "umat.for"
+    source.write_text(ENTRY, encoding="utf-8")
+    code = main(["all", str(source), "--material-config", str(settings),
+                 "--out", str(tmp_path / "out")])
+    assert code != 0
+    summary = json.loads(capsys.readouterr().out)
+    assert summary["failed_stage"] == "material_settings"
+    assert "kinematics" in summary["error"]
+    assert not list((tmp_path / "out").rglob("*.f90"))
+
+
+@pytest.mark.fortran
+@pytest.mark.parametrize("model", ["m1_elastic", "m3_j2"])
+def test_all_command_builds_and_verifies_tangent_and_sensitivities(tmp_path, capsys, model):
+    from umat_oti.cli import main
+    from umat_oti.validation.parameter_sensitivity_provider import J2_PATH
+
+    if not shutil.which("gfortran"):
+        pytest.skip("gfortran is required")
+    original = REPO / "parameter_sensitivity" / "models" / model
+    contract = json.loads((original / "contract_v2.json").read_text())
+    model_dir = tmp_path / "input"
+    model_dir.mkdir()
+    source = model_dir / "umat.for"
+    shutil.copy2(original / contract["source"]["main_file"], source)
+    if model == "m1_elastic":
+        source.write_text(source.read_text().replace(
+            "      E = PROPS(1)", "      CALL GET_MODULUS(PROPS,NPROPS,E)"))
+        (model_dir / "helper.for").write_text("""      SUBROUTINE GET_MODULUS(PROPS,NPROPS,E)
+      IMPLICIT NONE
+      INTEGER NPROPS
+      REAL*8 PROPS(NPROPS), E
+      E = PROPS(1)
+      END
+""")
+    settings = tmp_path / "material.json"
+    settings.write_text(json.dumps({
+        "kinematics": "small_strain", "nstatev": contract["dimensions"]["nstatev"],
+        "props_values": contract["validation"]["props_values"],
+        "check_path": {"increments": J2_PATH.tolist()},
+    }))
+    output = tmp_path / "out"
+    assert main(["all", str(source), "--material-config", str(settings),
+                 "--out", str(output)]) == 0
+    summary = json.loads(capsys.readouterr().out)
+    assert summary["stages"]["jacobian"]["compilation"]["status"] == "compiled"
+    sensitivity = summary["stages"]["sensitivities"]
+    assert sensitivity["verification"]["passed"]
+    assert sensitivity["tie"]["identical_outputs"]
+    assert {"REAL_UMAT.obj", "OTI_UMAT.obj", "Mapping.json", "transform_report.txt"} == set(
+        sensitivity["shared"])
+    assert (output / "parameters.json").is_file()
+    assert (output / "workflow_summary.json").is_file()
+    if model == "m1_elastic":
+        assert summary["stages"]["dependencies"]["closure"]["multi_file"]
+
+
+def test_all_command_stops_at_missing_dependencies(tmp_path, capsys):
+    from umat_oti.cli import main
+
+    path = _contract(tmp_path, None)
+    (tmp_path / "helpers" / "library.for").unlink()
+    settings = tmp_path / "material.json"
+    settings.write_text(json.dumps({
+        "kinematics": "small_strain", "nstatev": 0, "props_values": [1.0],
+        "check_path": {"dstran_per_increment": [0.001, 0, 0, 0, 0, 0], "n_increments": 1},
+    }))
+    output = tmp_path / "out"
+    assert main(["all", str(path.parent / "entry" / "umat_entry.for"),
+                 "--material-config", str(settings), "--out", str(output)]) != 0
+    summary = json.loads(capsys.readouterr().out)
+    assert summary["failed_stage"] == "dependencies"
+    assert "KSCALE" in summary["error"]
+    assert not (output / "jacobian").exists()
+    assert not (output / "sensitivities").exists()
+
+
+def test_parameter_selection_preserves_indices_and_rejects_dynamic_guessing(tmp_path):
+    from umat_oti.services.complete_workflow import _parameters
+
+    source = tmp_path / "umat.f90"
+    source.write_text("""subroutine umat(props, nprops)
+integer :: nprops, slot
+real(8) :: props(nprops), modulus, flag
+modulus = props(1)
+flag = props(slot)
+end subroutine umat
+""")
+    settings = {"props_values": [210000.0, 1.0]}
+    with pytest.raises(ValueError, match="Dynamic PROPS"):
+        _parameters(source, settings)
+    settings["parameters"] = [{"name": "E", "props_index": 1}]
+    parameters = _parameters(source, settings)
+    assert [(item.name, item.props_index, item.value) for item in parameters] == [("E", 1, 210000.0)]
 
 
 def test_discovery_uses_the_selected_nonstandard_entry(tmp_path):
