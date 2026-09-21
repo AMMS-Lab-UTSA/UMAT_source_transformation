@@ -80,6 +80,20 @@ def test_collision_detection_ignores_comments_and_substrings():
     assert _colliding_direction_names(body, 3) == ("E3",)
 
 
+@pytest.mark.parametrize("declaration, expected", [
+    ("      REAL STRESS_MIN, STRESS_MAX", []),
+    ("      REAL STRESS_MIN, STRESS_MAX ! min and max stresses", []),
+    ("      INTEGER, PARAMETER :: LIMIT = MAX(2, 3)", []),
+    ("      REAL VALUES(MIN(2, 3))", []),
+    ("      REAL*8 MAX(3), MIN(3)", ["MAX", "MIN"]),
+    ("      REAL(KIND=8) :: MAX(3), MIN(3)", ["MAX", "MIN"]),
+])
+def test_generic_collisions_only_count_declared_entities(declaration, expected):
+    from umat_oti.transform.source_transform import _locals_colliding_with_the_oti_modules
+
+    assert _locals_colliding_with_the_oti_modules(declaration) == expected
+
+
 def test_wrapper_renames_only_the_colliding_constants():
     header = _wrap_lifted_in_module("      E1=1.0_DP\n", module_name="otim2n1", n_param=2)
     assert "USE otim2n1, OTI_E1 => E1" in header

@@ -52,7 +52,9 @@ CONTRACT_NAME = "jacobian_contract.json"
 def jacobian_contract(source: Path | str, *, ntens: int,
                       seed: str = DEFAULT_SEED, response: str = DEFAULT_RESPONSE,
                       target: str = DEFAULT_TARGET, order: int = 1,
-                      name: str | None = None) -> dict[str, Any]:
+                      name: str | None = None,
+                      discover_dependencies: bool = False,
+                      dependency_roots: tuple[Path | str, ...] | list[Path | str] = ()) -> dict[str, Any]:
     """The compact contract the four fields stand for.
 
     ``replace`` is present and empty on purpose: it is the contract's way of
@@ -72,7 +74,7 @@ def jacobian_contract(source: Path | str, *, ntens: int,
             raise ValueError(f"{label} must be one of {choices}, not {value!r}")
     if int(order) < 1:
         raise ValueError("order must be at least 1")
-    return {
+    contract = {
         "name": name or source.stem,
         "description": "Constitutive Jacobian requested from four fields "
                        "(source, NTENS, seed/response/target); tangent block "
@@ -85,6 +87,11 @@ def jacobian_contract(source: Path | str, *, ntens: int,
         "promote": [response.upper()],
         "replace": [],
     }
+    roots = ([source.parent] if discover_dependencies else []) + [
+        Path(root).expanduser().resolve() for root in dependency_roots]
+    if roots:
+        contract["dependency_roots"] = list(dict.fromkeys(str(root) for root in roots))
+    return contract
 
 
 @dataclass
@@ -131,12 +138,16 @@ def run_jacobian_transform(source: Path | str, out_dir: Path | str, *, ntens: in
                            seed: str = DEFAULT_SEED, response: str = DEFAULT_RESPONSE,
                            target: str = DEFAULT_TARGET, order: int = 1,
                            name: str | None = None,
-                           compile_generated: bool = False) -> JacobianRun:
+                           compile_generated: bool = False,
+                           discover_dependencies: bool = False,
+                           dependency_roots: tuple[Path | str, ...] | list[Path | str] = ()) -> JacobianRun:
     """Write the four-field contract beside the output and transform with it."""
     out_dir = Path(out_dir).expanduser().resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     contract = jacobian_contract(source, ntens=ntens, seed=seed, response=response,
-                                 target=target, order=order, name=name)
+                                 target=target, order=order, name=name,
+                                 discover_dependencies=discover_dependencies,
+                                 dependency_roots=dependency_roots)
     contract_path = out_dir / CONTRACT_NAME
     contract_path.write_text(json.dumps(contract, indent=2) + "\n", encoding="utf-8")
     summary, code = run_transformation(

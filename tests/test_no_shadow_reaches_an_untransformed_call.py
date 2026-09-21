@@ -103,6 +103,45 @@ def test_every_leak_is_reported_once_per_callee_and_argument():
     assert sorted(found) == [("EXT", "A_OTI"), ("EXT", "B_OTI")]
 
 
+@pytest.mark.parametrize("define_helper", [False, True])
+def test_missing_helper_stops_the_pipeline_before_code_generation(tmp_path, define_helper):
+    from umat_oti.services.jacobian_request import run_jacobian_transform
+
+    source = tmp_path / "missing_helper.f90"
+    text = """subroutine umat(stress, dstran, ddsdde, ntens)
+implicit none
+integer :: ntens, component
+real(8) :: stress(ntens), dstran(ntens), ddsdde(ntens,ntens)
+do component = 1, ntens
+  stress(component) = stress(component) + dstran(component)
+    call material_update(stress, dstran, ntens)
+end do
+ddsdde = 0.0d0
+end subroutine umat
+"""
+    if define_helper:
+        text += """subroutine material_update(stress, dstran, ntens)
+implicit none
+integer :: ntens
+real(8) :: stress(ntens), dstran(ntens)
+call missing_dependency(stress, dstran, ntens)
+end subroutine material_update
+"""
+    source.write_text(text, encoding="utf-8")
+    output = tmp_path / "out"
+    run = run_jacobian_transform(source, output, ntens=6, compile_generated=True)
+
+    assert not run.succeeded
+    missing = "MISSING_DEPENDENCY" if define_helper else "MATERIAL_UPDATE"
+    assert any(missing in message for message in run.report["blockers"])
+    assert run.report["generated_files"] == []
+    assert not list(output.glob("*.f90"))
+    assert not (output / "compile_hint.sh").exists()
+    assert run.transformed_source is None
+    assert run.drop_in_source is None
+    assert not any("pass-through used" in message for message in run.report["warnings"])
+
+
 class TestTheAbaqusUtilityExemption:
     """Only the routines that report, and only because a message is bounded."""
 

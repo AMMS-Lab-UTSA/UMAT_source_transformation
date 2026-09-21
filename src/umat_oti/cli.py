@@ -36,6 +36,12 @@ def build_parser() -> argparse.ArgumentParser:
     jacobian.add_argument("--order", type=int, default=1, help="Derivative order (default 1).")
     jacobian.add_argument("--out", type=Path, required=True, help="Output directory for generated files.")
     jacobian.add_argument("--compile", action="store_true", help="Compile the generated Fortran units with gfortran.")
+    jacobian.add_argument(
+        "--discover-dependencies", action="store_true",
+        help="Search the source directory recursively for helper routines and lift their dependencies.")
+    jacobian.add_argument(
+        "--dependency-root", type=Path, action="append", default=[], metavar="PATH",
+        help="Additional helper source directory or file to search (repeatable).")
     return parser
 
 
@@ -76,7 +82,9 @@ def main(argv: list[str] | None = None) -> int:
             run = run_jacobian_transform(
                 args.source, args.out, ntens=args.ntens, seed=args.seed,
                 response=args.response, target=args.target, order=args.order,
-                compile_generated=args.compile)
+                compile_generated=args.compile,
+                discover_dependencies=args.discover_dependencies,
+                dependency_roots=args.dependency_root)
         except (ValueError, OSError) as error:
             print(f"jacobian request refused: {error}")
             return 2

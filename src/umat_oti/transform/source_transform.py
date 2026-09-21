@@ -20,7 +20,7 @@ from umat_oti.fortran.literals import (
 )
 from umat_oti.fortran.normalize import detect_source_form, strip_inline_comment
 from umat_oti.fortran.parser import (
-    logical_lines_from_text, parse_entity, parse_subroutines, split_top_level,
+    logical_lines_from_text, parse_declaration_line, parse_entity, parse_subroutines, split_top_level,
 )
 from umat_oti.fortran.regions import (
     INTRINSIC_TOKEN_NAMES, _is_executable_line, _routine_effect_table)
@@ -198,10 +198,7 @@ def transform_umat_to_oti_from_config(
     blockers.extend(tangent_context.blockers)
     warnings: list[str] = []
     if helper_lift_issue:
-        for message in _completed_json_helper_call_blockers(
-            _dict(config.get("analysis")), regions["stress"], roles, helper_lift_issue
-        ):
-            warnings.append(f"Helper subroutine pass-through used despite lifting limitation: {message}")
+        blockers.append(f"Helper lifting failed: {helper_lift_issue}")
     report_base = _report_base(
         config=config,
         selected_umat=selected_umat,
@@ -570,24 +567,23 @@ OTI_MODULE_GENERICS = frozenset({"MIN", "MAX", "SIGN", "NINT", "INT", "MATMUL"})
 #: two keep the refusal and the rest are renamed on import.
 GENERICS_THE_TRANSFORM_CALLS_ITSELF = frozenset({"MIN", "MAX"})
 
-_DECLARATION = re.compile(
-    r"^\s*(?:REAL|INTEGER|DOUBLE\s+PRECISION|LOGICAL|DIMENSION)"
-    r"(?:\s*\*\s*\d+)?\s*(?:::)?\s*(.+)$", re.IGNORECASE)
-
-
 def _locals_colliding_with_the_oti_modules(source_text: str) -> list[str]:
     """Author-declared names that the OTI modules also export."""
     found: set[str] = set()
     for line in source_text.splitlines():
         if line[:1] in "Cc*!":
             continue
-        declaration = _DECLARATION.match(line)
-        if not declaration:
+        text = strip_inline_comment(line)
+        declaration = parse_declaration_line(text)
+        if declaration is not None:
+            entities = declaration.entities
+        elif dimension := re.match(r"^\s*DIMENSION\b\s*(?:::)?\s*(.+)$", text, re.IGNORECASE):
+            entities = tuple(parse_entity(item) for item in split_top_level(dimension.group(1)))
+        else:
             continue
-        for name in re.findall(r"(?<![A-Za-z0-9_])([A-Za-z_]\w*)\s*(?:\([^)]*\))?",
-                               declaration.group(1)):
-            if name.upper() in OTI_MODULE_GENERICS:
-                found.add(name.upper())
+        for entity in entities:
+            if entity.name.upper() in OTI_MODULE_GENERICS:
+                found.add(entity.name.upper())
     return sorted(found)
 
 
