@@ -14,6 +14,7 @@ commands: [examples/README.md](../examples/README.md).
 
 | Command | Module form | Use it to |
 | --- | --- | --- |
+| [`umat-oti all`](#umat-oti-all) | `python -m umat_oti.cli all` | discover dependencies, compile the tangent, build and verify stress/state parameter sensitivities |
 | [`umat-oti jacobian`](#umat-oti-jacobian) | `python -m umat_oti.cli jacobian` | get the consistent tangent `DDSDDE` of a UMAT from four fields, without writing a contract. **Start here.** |
 | [`umat-oti config`](#umat-oti-config) | `python -m umat_oti.cli config` | transform a UMAT from a JSON contract (full control) |
 | [`umat-oti-config`](#umat-oti-config-1) | `python -m umat_oti.cli_json` | the same, as a stand-alone command |
@@ -51,6 +52,88 @@ record (`transform_report.txt`, `run_manifest.json`, `verification.json`,
 `reproduction_summary.md`) that says what was checked and how.
 
 ---
+
+## `umat-oti all`
+
+Run dependency discovery, candidate parameter naming, tangent transformation and
+compilation, then build and independently verify the sensitivity provider:
+
+```bash
+umat-oti all parameter_sensitivity/models/m3_j2/umat.for \
+    --material-config examples/03_j2_parameter_sensitivities/material_workflow.json \
+    --out out/j2_complete
+```
+
+Both discovery and compilation are automatic; neither `--discover-dependencies`
+nor `--compile` is needed. Add repeatable `--dependency-root PATH` options for
+helper directories outside the source directory. Search boundaries and Fortran
+limitations are the same as for `jacobian` discovery below.
+
+The material-settings JSON is explicit physical input, not a transformation
+contract. This smaller example describes a two-property elastic model only:
+
+```json
+{
+  "kinematics": "small_strain",
+  "ntens": 6,
+  "nstatev": 0,
+  "props_values": [210000.0, 0.3],
+  "check_path": {
+    "dstran_per_increment": [0.0001, 0, 0, 0.0001, 0, 0],
+    "n_increments": 4
+  }
+}
+```
+
+Use your model's actual values and state size, not these example values.
+`props_values` supplies every slot in PROPS order, including slots not selected
+for differentiation. `check_path` can instead contain `increments`, an explicit
+list of six-component strain increments. The existing provider verifier uses
+engineering shear, unit time increments, temperature 293.15, zero temperature
+increments and zero initial stress/state. This command does not configure
+other time, thermal or initial-state histories; unknown settings are refused.
+
+Direct assignments such as `E = PROPS(1)` supply candidate parameter names.
+Otherwise names are `PROPS_1`, `PROPS_2`, etc. By default all supplied slots are
+differentiated. Source analysis cannot establish which slots are continuous
+material parameters rather than integer flags or switches. To choose a subset
+or override inferred names, add a `parameters` array to the settings:
+
+```json
+"parameters": [
+  {"name": "E", "props_index": 1},
+  {"name": "nu", "props_index": 2}
+]
+```
+
+Dynamic PROPS indexing requires this explicit selection. Property values,
+NSTATV, loading histories, and physical kinematics are never inferred or filled
+with guessed defaults. Review the generated `parameters.json` before relying on
+results, especially if the model uses discrete flags.
+
+Outputs are placed under a **new or empty** output directory:
+
+- `discovery/dependency_report.json`: resolved routines and external dependencies.
+- `parameters.json`: chosen names, indices and values.
+- `jacobian/`: the transformed tangent source, compiler artifacts and reports.
+- `sensitivities/collaborator/`: `REAL_UMAT.obj`, `OTI_UMAT.obj`, `Mapping.json`,
+  and `transform_report.txt`.
+- `sensitivities/verification/`: finite-difference comparisons of stress/state
+  parameter sensitivities and tangent against the original model.
+- `workflow_summary.json`: stage results and the first failed stage, if any.
+
+Exit code 0 means all requested stages passed; 1 means a stage failed; 2 means
+an invalid CLI invocation or a nonempty output directory. Later stages are not
+run after an earlier failure. A sensitivity failure may leave a successful
+tangent build, but the overall result remains failed.
+
+This combines the existing engines; it does not broaden their mathematical
+support. The provider requires entry name `UMAT`, NTENS=6, small-strain
+kinematics and first-order parameter derivatives. Higher-order derivatives,
+arbitrary included/module state, contained helpers and differentiation through
+binary LAPACK calls are not supplied by this command. Internal Newton-Jacobian
+requests are not generated automatically. A successful bounded verification
+is evidence only for the declared values and history, not all loading regimes.
 
 ## `umat-oti jacobian`
 

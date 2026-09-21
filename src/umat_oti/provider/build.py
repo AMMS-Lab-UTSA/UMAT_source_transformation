@@ -187,7 +187,7 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
     _run(original_command, build_dir)
     objects.append(original_object.name)
     bundled_object = build_dir / object_name
-    _run([executable, "-r", *objects, "-o", object_name], build_dir)
+    _run([executable, "-nostdlib", "-r", *objects, "-o", object_name], build_dir)
     _run([executable, "-shared", "-Wl,--no-undefined", str(bundled_object),
           "-o", str(build_dir / "provider_link_check.so")], build_dir)
     metadata = {

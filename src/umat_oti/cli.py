@@ -15,6 +15,14 @@ from umat_oti.validation.material_point import load_material_point_config
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="umat-oti")
     subparsers = parser.add_subparsers(dest="command", required=True)
+    complete = subparsers.add_parser(
+        "all", help="Discover dependencies, compile the tangent, and build and verify parameter sensitivities.")
+    complete.add_argument("source", type=Path)
+    complete.add_argument("--material-config", type=Path, required=True,
+                          help="JSON with kinematics, props_values, nstatev and check_path.")
+    complete.add_argument("--out", type=Path, required=True, help="New or empty output directory.")
+    complete.add_argument("--dependency-root", type=Path, action="append", default=[],
+                          help="Additional helper source directory or file (repeatable).")
     transform = subparsers.add_parser("transform", help="Generate an OTIS-enabled UMAT.")
     transform.add_argument("source", type=Path, help="Path to the source UMAT.")
     transform.add_argument("--out", type=Path, required=True, help="Output directory for generated files.")
@@ -48,6 +56,13 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.command == "all":
+        from umat_oti.services.complete_workflow import run_complete_workflow
+
+        summary = run_complete_workflow(args.source, args.material_config, args.out,
+                                        dependency_roots=args.dependency_root)
+        print(json.dumps(summary, indent=2, default=str))
+        return int(summary["exit_code"])
     if args.command == "transform":
         material_point = None
         if args.config is not None:

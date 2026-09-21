@@ -56,6 +56,23 @@ A missing `gfortran` or Abaqus is reported by name as
 
 ## The three things you can do
 
+For dependency discovery, parameter naming, a compiled tangent and verified
+stress/state parameter sensitivities in one command:
+
+```bash
+umat-oti all parameter_sensitivity/models/m3_j2/umat.for \
+  --material-config examples/03_j2_parameter_sensitivities/material_workflow.json \
+  --out out/j2_complete
+```
+
+Use a new output directory. The example settings are for the bundled J2 model,
+not for an arbitrary UMAT. For your model, supply its property values, state
+size, small-strain declaration and strain-increment history. Parameter names
+are inferred from direct `NAME = PROPS(index)` assignments; by default every
+supplied property slot is differentiated. An explicit `parameters` list selects
+continuous parameters and excludes flags. See
+[the combined workflow](docs/CLI_GUIDE.md#umat-oti-all) for settings and limits.
+
 ### 1. Constitutive Jacobian (DDSDDE) from four fields
 
 ```bash

@@ -88,6 +88,7 @@ EXTERNAL_LIBRARY_ROUTINES: dict[str, str] = {
     # LAPACK
     "DGETRF": "lapack", "DGETRI": "lapack", "DGETRS": "lapack",
     "DGESV": "lapack", "DGEEV": "lapack", "DSYEV": "lapack",
+    "DSPEVD": "lapack",
     "DPOTRF": "lapack", "DGELS": "lapack", "DGESVD": "lapack",
     # BLAS
     "DGEMM": "blas", "DGEMV": "blas", "DAXPY": "blas", "DDOT": "blas",
