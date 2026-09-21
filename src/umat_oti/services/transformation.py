@@ -24,7 +24,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from umat_oti.core.config_loader import load_project_config_json
+from umat_oti.core.config_loader import (
+    _compact_selected_umat, _compact_source_payload, load_project_config_json,
+)
 from umat_oti.core.derivative_request import (
     KIND_PARAMETER_SENSITIVITY,
     KIND_STATE_SENSITIVITY,
@@ -35,6 +37,7 @@ from umat_oti.core.transformation_anchors import (
     anchor_completion_status, merge_completed_anchors_into_config,
 )
 from umat_oti.reports.manifest import build_manifest, write_manifest
+from umat_oti.fortran.scanner import analyze_fortran_source
 from umat_oti.transform.parameter_sensitivity_transform import (
     GenericPSContract,
     NonDifferentiableParameterPathError,
@@ -371,15 +374,32 @@ def _payload_with_resolved_closure(config_path: Path, out_dir: Path) -> tuple[by
     source_text = source_value if isinstance(source_value, str) else str((source_value or {}).get("file", ""))
     entry_path = (config_path.parent / source_text).resolve()
     root_paths = [(config_path.parent / str(root)).resolve() for root in roots]
-    graph = resolve_closure(entry_path, entry="UMAT", roots=root_paths)
+    for root in root_paths:
+        if not root.exists():
+            raise ValueError(f"Dependency search root does not exist: {root}")
+    entry_name = _compact_selected_umat(
+        _compact_source_payload(raw), analyze_fortran_source(entry_path))
+    excluded = (str(out_dir.resolve()) + "/", "/.git/", "/.venv/", "/__pycache__/",
+                "/out/", "/build/", "/umat_oti_workspace/")
+    graph = resolve_closure(entry_path, entry=entry_name, roots=root_paths, exclude=excluded)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    dependency_report = out_dir / "dependency_report.json"
+    dependency_report.write_text(json.dumps(graph.as_dict(), indent=2) + "\n", encoding="utf-8")
     if graph.missing or graph.conflicts:
         raise ValueError(
             "dependency_roots do not resolve the closure of " + entry_path.name + ": missing "
             + ", ".join(m.symbol for m in graph.missing) + "; ambiguous "
-            + ", ".join(d.symbol for d in graph.conflicts))
+            + ", ".join(d.symbol for d in graph.conflicts)
+            + f"; see {dependency_report}")
     record: dict[str, Any] = {
         "entry": str(entry_path), "roots": [str(r) for r in root_paths],
+        "entry_routine": graph.entry,
+        "report": str(dependency_report),
         "multi_file": graph.is_multi_file,
+        "abaqus_runtime_calls": list(graph.runtime_calls),
+        "external_library_calls": graph.library_calls,
+        "includes": list(graph.includes),
+        "excluded_path_fragments": list(excluded),
         "external_definitions": [
             {"routine": d.name, "file": d.path.name, "lines": [d.start_line, d.end_line]}
             for d in graph.external_definitions],

@@ -44,6 +44,13 @@ python -m pip install -e ".[test]"
 python -m umat_oti.reproduce --profile smoke      # transform, compile, verify one J2 model (~10 s)
 ```
 
+Check `python3 --version` before creating the environment. On systems where
+`python3` is older than 3.10, use an installed newer interpreter, for example
+`python3.12 -m venv .venv`. If `.venv` already uses an older Python, create a
+new environment under a different name and activate that one before installing.
+In each new terminal, activate your environment again (`. .venv/bin/activate`)
+and check `umat-oti --help`.
+
 A missing `gfortran` or Abaqus is reported by name as
 `blocked_by_external_dependency`; it never reads as a pass.
 
@@ -54,6 +61,26 @@ A missing `gfortran` or Abaqus is reported by name as
 ```bash
 umat-oti jacobian path/to/umat.for --ntens 6 --out out/j2 --compile
 ```
+
+Replace `path/to/umat.for` with an existing source path. `--out` names an
+output **directory**, not an `.f90` file. Run `umat-oti` directly, without a
+`python` prefix; the equivalent module command is
+`python -m umat_oti.cli jacobian path/to/umat.for --ntens 6 --out out/j2 --compile`.
+
+To discover helper sources automatically beneath the UMAT's directory:
+
+```bash
+umat-oti jacobian path/to/umat.for --ntens 6 --out out/j2 \
+  --discover-dependencies --compile
+```
+
+Add `--dependency-root /path/to/helpers` for other source directories or files
+(repeatable). Discovery follows transitive routine dependencies, then uses the
+existing OTI lifter on the derivative path. It writes `dependency_report.json`
+and refuses missing or ambiguous definitions. This is not automatic support for
+every Fortran construct: contained routines, module state, and external compiled
+libraries can still require additional lifting support. See the
+[command-line guide](docs/CLI_GUIDE.md#umat-oti-jacobian) for search scope and limits.
 
 `--seed DSTRAN --response STRESS --target DDSDDE` are the defaults. The
 transformer finds the existing tangent block itself, promotes the variables

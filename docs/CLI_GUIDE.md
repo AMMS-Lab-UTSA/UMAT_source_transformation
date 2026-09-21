@@ -65,6 +65,7 @@ command behind the GUI's **Constitutive Jacobian** tab.
 usage: umat-oti jacobian [-h] --ntens NTENS [--seed SEED]
                          [--response RESPONSE] [--target TARGET]
                          [--order ORDER] --out OUT [--compile]
+                         [--discover-dependencies] [--dependency-root PATH]
                          source
 ```
 
@@ -78,6 +79,41 @@ usage: umat-oti jacobian [-h] --ntens NTENS [--seed SEED]
 | `--order` | derivative order (default `1`) |
 | `--out DIR` | output directory. Required |
 | `--compile` | also compile every generated file with gfortran |
+| `--discover-dependencies` | recursively search beneath the source directory for helper definitions |
+| `--dependency-root PATH` | search an additional source directory or file; repeatable; relative to the current working directory |
+
+**Automatic helper discovery.** No hand-written contract is needed:
+
+```bash
+umat-oti jacobian materials/umat.for --ntens 6 --out out/material \
+  --discover-dependencies --dependency-root shared_helpers --compile
+```
+
+Discovery is opt-in. The source directory is searched only with
+`--discover-dependencies`; explicit roots also work without that flag. The
+search stays within those roots and the entry file, not the entire machine.
+The current output directory and paths containing `.git`, `.venv`,
+`__pycache__`, `out`, `build`, or `umat_oti_workspace` directory components are
+excluded. Keep input sources outside those directories and use a dedicated
+material source tree to avoid unrelated alternative implementations.
+
+The resolver follows subroutine calls and recognized function references,
+collects the required source definitions, and passes the combined source to
+the existing OTI transformation. Helpers on the derivative path are lifted;
+unrelated code is not indiscriminately overloaded. Missing or conflicting
+definitions stop discovery. `dependency_report.json` records the call graph,
+selected definitions, missing symbols, conflicts, and recognized runtime or
+library dependencies, including when resolution fails. The generated contract
+records the search roots for repeat runs.
+
+Discovery is not a complete Fortran build system. It does not implement
+preprocessing, arbitrary module/host association, or OTI versions of binary
+libraries such as LAPACK. Contained helpers can still be missed by the
+transform parser. Nonstandard entry names are discovered, but some such
+transforms have a known variable-scope limitation. Finding a source definition
+does not guarantee that the lifter supports its contents. Compilation and
+numerical derivative verification remain necessary; do not use artifacts
+from a failed run, including files left by an earlier run in the same folder.
 
 **Example.**
 
