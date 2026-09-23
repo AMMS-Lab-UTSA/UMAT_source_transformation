@@ -9,7 +9,28 @@ from umat_oti.oti.backend import OtiBackend
 
 @dataclass(frozen=True)
 class StaticFirstOrderBackend(OtiBackend):
-    """Small deterministic first-order OTIS-like backend for the MVP."""
+    """Small deterministic first-order OTIS-like backend for the MVP.
+
+    This is the DEFAULT backend (see services.transformation), so the
+    arithmetic below is what most transforms actually run on -- the generated
+    otim95n1 module is the other path, and the two must agree about the awkward
+    points or a source behaves differently depending on which it was built
+    with.
+
+    Every derivative expression that can go non-finite while its value stays
+    perfectly well defined carries the same guard the generated module uses:
+    compute the partial, drop it when it is not finite. SQRT at zero
+    (``a%e/(2*0)``), a power with a base of zero and an exponent below one
+    (``0**(b-1)``), and LOG at zero all produce Inf, and Inf times a zero
+    perturbation is NaN. The NaN does not stay in the derivative -- it reaches
+    the primal through the norms and comparisons built on it -- so a Newton
+    solve stops converging on a value that was never in doubt. One
+    viscoplastic UMAT does this on its first plastic increment three ways.
+
+    The plain divisions are deliberately NOT guarded: there the value is
+    infinite too, exactly as it is in the untransformed source, and matching
+    the original is the point.
+    """
 
     direction_count: int = 6
 
@@ -322,6 +343,7 @@ class StaticFirstOrderBackend(OtiBackend):
                   c%e = 0.0d0
                 else
                   c%e = real(b, 8) * (a%r ** (b - 1)) * a%e
+                  if (.not. (abs(c%e) < huge(1.0d0))) c%e = 0.0d0
                 end if
               end function pow_oi
 
@@ -331,6 +353,7 @@ class StaticFirstOrderBackend(OtiBackend):
                 type(otis_t) :: c
                 c%r = a%r ** b
                 c%e = b * (a%r ** (b - 1.0d0)) * a%e
+                if (.not. (abs(c%e) < huge(1.0d0))) c%e = 0.0d0
               end function pow_or
 
               elemental function sqrt_o(a) result(c)
@@ -338,6 +361,7 @@ class StaticFirstOrderBackend(OtiBackend):
                 type(otis_t) :: c
                 c%r = sqrt(a%r)
                 c%e = a%e / (2.0d0 * c%r)
+                if (.not. (abs(c%e) < huge(1.0d0))) c%e = 0.0d0
               end function sqrt_o
 
               elemental function exp_o(a) result(c)
@@ -352,6 +376,7 @@ class StaticFirstOrderBackend(OtiBackend):
                 type(otis_t) :: c
                 c%r = log(a%r)
                 c%e = a%e / a%r
+                if (.not. (abs(c%e) < huge(1.0d0))) c%e = 0.0d0
               end function log_o
 
               elemental function sin_o(a) result(c)

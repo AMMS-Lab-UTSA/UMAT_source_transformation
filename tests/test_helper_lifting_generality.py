@@ -26,6 +26,91 @@ from umat_oti.transform.parameter_sensitivity_transform import (
 )
 
 
+def test_lifting_preserves_specification_types_and_basis_collisions(tmp_path):
+    import shutil
+    import subprocess
+    from umat_oti.oti.module_generator import generate_otilib_module
+
+    source = tmp_path / "specs.f90"
+    imported = tmp_path / "input_flags.f90"
+    imported.write_text("module input_flags\nlogical :: read_fields=.true.\nend module input_flags\n")
+    (tmp_path / "positions.inc").write_text("integer, parameter :: position=2\n")
+    source.write_text("""subroutine specs(value)
+use iso_fortran_env, only: int32
+use input_flags, only: should_read => read_fields
+implicit none
+include 'positions.inc'
+real(8) :: value, Ee(2)
+logical, parameter :: printErrors = .false.
+logical :: enabled(2)
+character(len=1), parameter :: UPLO = 'U'
+integer(int32), allocatable :: IWORK(:)
+allocate(IWORK(2))
+IWORK=1
+Ee=value
+value=Ee(position)
+enabled=.true.
+if (should_read) should_read=.false.
+if (any(enabled) .and. dot_product(Ee,Ee)>0.d0) value=Ee(1)
+if (.not.printErrors .and. UPLO == 'U') value=Ee(1)+IWORK(1)
+deallocate(IWORK)
+end subroutine specs
+""")
+    lifted = lift_helper_set_source(parse_fortran_file(source), ["SPECS"],
+                                    module_name="otim14n1", type_name="ONUMM14N1").source
+    assert "logical, parameter :: printErrors = .false." in lifted
+    assert "character(len=1), parameter :: UPLO = 'U'" in lifted
+    assert "integer(int32), allocatable :: IWORK(:)" in lifted
+    assert "OTI_EE => EE" in lifted
+    assert "if (should_read) should_read=.false." in lifted
+    assert lifted.index("use iso_fortran_env") < lifted.index("implicit type")
+    if shutil.which("gfortran") is None:
+        pytest.skip("gfortran required for compiled declaration check")
+    module = generate_otilib_module(output_dir=tmp_path, ntens=14)
+    intrinsics = tmp_path / "oti_intrinsics.f90"
+    intrinsics.write_text(_emit_intrinsic_extensions(module.module_name, module.type_name))
+    helper = tmp_path / "helper.f90"
+    helper.write_text(lifted)
+    built = subprocess.run(["gfortran", "-c", "-ffree-line-length-none",
+                            str(module.master_parameters_path), str(module.real_utils_path),
+                            str(module.module_path), str(intrinsics), str(imported), str(helper)],
+                           cwd=tmp_path, capture_output=True, text=True)
+    assert built.returncode == 0, built.stderr
+    driver = tmp_path / "intrinsics_check.f90"
+    driver.write_text("""program intrinsics_check
+use otim14n1
+use oti_intrinsics
+implicit none
+type(ONUMM14N1) :: values(2), result_values(2), power_value
+real(DP) :: signs(2)
+values(1)=-2.0_DP+E1
+values(2)=3.0_DP+E1
+result_values=abs(values)
+if (any(abs(real(result_values)-[2.0_DP,3.0_DP])>1.e-12_DP)) stop 1
+if (abs(getim(result_values(1),1)+1.0_DP)>1.e-12_DP) stop 2
+if (abs(getim(result_values(2),1)-1.0_DP)>1.e-12_DP) stop 3
+signs=sign(1.0_DP,values)
+if (any(signs/=[-1.0_DP,1.0_DP])) stop 4
+result_values=sign(values,-1.0_DP)
+if (abs(getim(result_values(2),1)+1.0_DP)>1.e-12_DP) stop 5
+result_values=sign(values,values)
+if (abs(getim(result_values(1),1)-1.0_DP)>1.e-12_DP) stop 6
+power_value=0.5**values(2)
+if (abs(real(power_value)-0.125_DP)>1.e-12_DP) stop 7
+if (abs(getim(power_value,1)-0.125_DP*log(0.5_DP))>1.e-12_DP) stop 8
+if (tiny(values(1))/=tiny(1.0_DP)) stop 9
+end program intrinsics_check
+""")
+    executable = tmp_path / "intrinsics_check"
+    linked = subprocess.run(["gfortran", "-ffree-line-length-none", str(driver),
+                             "master_parameters.o", "real_utils.o", f"{module.module_name}.o",
+                             "oti_intrinsics.o", "-o", str(executable)],
+                            cwd=tmp_path, capture_output=True, text=True)
+    assert linked.returncode == 0, linked.stderr
+    checked = subprocess.run([str(executable)], cwd=tmp_path, capture_output=True, text=True)
+    assert checked.returncode == 0, checked.stderr
+
+
 # --------------------------------------------------------------------------
 # statement labels are not numeric literals
 # --------------------------------------------------------------------------
@@ -37,7 +122,9 @@ def test_statement_labels_are_not_promoted_to_real_literals(statement: str):
 
 @pytest.mark.parametrize(
     "statement,expected",
-    [("X = 1", "X = 1.0D0"), ("X = Y*2", "X = Y*2.0D0"), ("X = 3 + Y", "X = 3.0D0 + Y")],
+    [("X = 1", "X = 1.0D0"), ("X = Y*2", "X = Y*2.0D0"), ("X = 3 + Y", "X = 3.0D0 + Y"),
+     ("X = Y(1:2*3)", "X = Y(1:2*3)"),
+     ("X = reshape(Y,(/3,3/))", "X = reshape(Y,(/3,3/))")],
 )
 def test_bare_integers_in_expressions_are_still_promoted(statement: str, expected: str):
     assert _normalize_numeric_literals(statement, {"X", "Y"}) == expected
@@ -237,3 +324,39 @@ def test_a_helper_that_calls_back_into_the_selected_routine_is_refused():
                                  parse_subroutines(lines))
     with pytest.raises(HelperLiftingError, match="calls back into UMAT"):
         helper_lift_closure(parsed, ["KHELPER"], selected_umat="UMAT")
+
+
+FIRST_ORDER_POW_OR = """  FUNCTION ONUMM6N1_POW_OR(X,E) RESULT(RES)
+    DER0 = X%R**E
+    IF ((E-0)/=0.0d0) THEN
+      DER1 = E*X%R**(E - 1)
+    END IF
+    RES = FEVAL(X,DER0,DER1)
+"""
+
+
+def test_a_real_exponent_power_survives_a_zero_base():
+    """SQRT is written X**0.5_DP, so it goes through POW_OR.
+
+    Its first partial at a zero base is 0.5*0**(-0.5) -- Inf -- and FEVAL
+    multiplies that by the argument's perturbation. Where the perturbation is
+    zero the product is Inf*0 = NaN, and the NaN reaches the primal through
+    the norms built on it: one UMAT's stress Newton stopped converging on the
+    first plastic increment because an equivalent-strain routine takes the square
+    root of a plastic strain that is still exactly zero.
+    """
+    from umat_oti.oti.module_generator import _guard_pow_or_at_zero_base
+
+    guarded = _guard_pow_or_at_zero_base(FIRST_ORDER_POW_OR)
+    assert "IF (.NOT. (ABS(DER1) < HUGE(1.0_DP))) DER1 = 0.0_DP" in guarded
+    # The value is untouched, and the partial is still computed the same way;
+    # only a non-finite result is dropped.
+    assert "DER0 = X%R**E" in guarded
+    assert "DER1 = E*X%R**(E - 1)" in guarded
+
+
+def test_a_power_that_is_already_guarded_is_not_guarded_twice():
+    from umat_oti.oti.module_generator import _guard_pow_or_at_zero_base
+
+    once = _guard_pow_or_at_zero_base(FIRST_ORDER_POW_OR)
+    assert _guard_pow_or_at_zero_base(once) == once

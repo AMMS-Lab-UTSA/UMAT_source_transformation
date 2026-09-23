@@ -235,6 +235,121 @@ def data_initialised_names(source_text: str | None) -> frozenset[str]:
     return frozenset(names)
 
 
+_PARAMETER_ATTRIBUTE = re.compile(
+    r"^\s*(?:REAL|DOUBLE\s+PRECISION|INTEGER|LOGICAL|CHARACTER)"
+    r"(?:\s*\*\s*\d+|\s*\([^)]*\))?\s*,\s*PARAMETER\s*::\s*(?P<entities>.+)$",
+    re.IGNORECASE)
+_PARAMETER_STATEMENT = re.compile(r"^\s*PARAMETER\s*\((?P<entities>.*)\)\s*$",
+                                  re.IGNORECASE)
+
+
+_INCLUDE_LINE = re.compile(r"""^\s*INCLUDE\s*['"]([^'"]+)['"]""", re.IGNORECASE)
+
+
+def source_text_with_includes(source_text: str, base_dir=None, _depth: int = 0) -> str:
+    """``source_text`` with its INCLUDE files appended, for name scanning only.
+
+    Every guard in this module works by scanning the source for a declaration
+    -- a COMMON membership, a DATA initialiser, a PARAMETER constant -- and a
+    declaration inside an INCLUDE is invisible to all of them. The transform
+    keeps INCLUDE statements as the author wrote them and lets the compiler
+    expand them, so the text the classifier reads genuinely does not contain
+    them.
+
+    One anisotropic viscoplastic UMAT keeps two scaling constants in an
+    include. Neither the PARAMETER guard nor anything else saw them, both were
+    promoted, and their shadows were divided by while still zero.
+
+    Appended rather than substituted in place: nothing here cares where a
+    declaration sits, only that it exists, and appending cannot disturb the
+    line numbering anything else may have recorded. Two levels deep is
+    enough for every source seen; a missing or unreadable include is skipped,
+    because a scan that cannot see a name is exactly where this started.
+    """
+    if not source_text or base_dir is None or _depth > 1:
+        return source_text or ""
+    from pathlib import Path as _Path
+
+    base = _Path(base_dir)
+    extra: list[str] = []
+    for line in source_text.splitlines():
+        stripped = strip_inline_comment(line).strip()
+        if stripped[:1] in ("c", "C", "*", "!"):
+            continue
+        match = _INCLUDE_LINE.match(stripped)
+        if not match:
+            continue
+        candidate = base / match.group(1)
+        if not candidate.is_file():
+            candidate = base / _Path(match.group(1)).name
+        if not candidate.is_file():
+            continue
+        try:
+            text = candidate.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        extra.append(source_text_with_includes(text, candidate.parent, _depth + 1))
+    if not extra:
+        return source_text
+    return source_text + "\n" + "\n".join(extra)
+
+
+def parameter_constant_names(source_text: str | None) -> frozenset[str]:
+    """Names given their value by a PARAMETER declaration.
+
+    The same defect :func:`data_initialised_names` exists to stop, by the other
+    spelling a Fortran constant has. A PARAMETER cannot be assigned -- it is a
+    named constant, and writing to one is not Fortran -- so the shadow the
+    promoter declares for it is zeroed by the initialiser and never given the
+    value. Everything downstream then reads the constant as zero.
+
+One anisotropic viscoplastic UMAT scales a stress measure by two such
+    constants:
+
+        real(8), parameter :: SCALE_A = <value>
+        real(8), parameter :: SCALE_B = <value>
+        ...
+        scaled = raw/(SCALE_A/(SCALE_B**0.25d0))
+
+    Promoted, SCALE_A_OTI is declared, set to 0.0D0, and divided by. The file
+    compiles, every semantic check passes, and the first increment that
+    reaches the expression divides by zero -- which arrives as a NaN in the
+    stress Newton, so the solve stops converging on a value that was never in
+    doubt and the increment is cut back forever.
+
+    A constant carries no derivative, so keeping it real loses nothing: real
+    times hypercomplex is an overload the generated module has.
+    """
+    if not source_text:
+        return frozenset()
+    names: set[str] = set()
+    for line in source_text.splitlines():
+        stripped = strip_inline_comment(line).strip()
+        if not stripped or stripped[:1] in ("c", "C", "*", "!"):
+            continue
+        match = _PARAMETER_ATTRIBUTE.match(stripped) or _PARAMETER_STATEMENT.match(stripped)
+        if not match:
+            continue
+        depth = 0
+        current: list[str] = []
+        for character in match.group("entities"):
+            if character in "(":
+                depth += 1
+            elif character in ")":
+                depth = max(0, depth - 1)
+            if character == "," and depth == 0:
+                current, entity = [], "".join(current)
+                head = re.match(r"\s*([A-Za-z_]\w*)", entity)
+                if head:
+                    names.add(head.group(1).upper())
+                continue
+            current.append(character)
+        head = re.match(r"\s*([A-Za-z_]\w*)", "".join(current))
+        if head:
+            names.add(head.group(1).upper())
+    return frozenset(names)
+
+
 def implicit_integer_letters(source_text: str) -> frozenset[str]:
     """Which first letters make an undeclared name an INTEGER.
 
@@ -561,6 +676,7 @@ def _suggest_variable_roles(analysis: dict[str, Any],
     common_names = common_block_names(source_text)
     module_names = module_variable_names(source_text)
     data_names = data_initialised_names(source_text)
+    parameter_names = parameter_constant_names(source_text)
     helper_local_names = _pure_helper_local_variables(analysis)
     helper_output_names = _pure_helper_output_variables(analysis)
     plasticity = analysis.get("plasticity_indicators", {}) or {}
@@ -604,6 +720,16 @@ def _suggest_variable_roles(analysis: dict[str, Any],
                    else "a function this source defines")
                 + ". Promoting it renames the call itself, and the renamed "
                   "name is declared nowhere."
+            )
+        elif role in ("Promote", "Seed", "Unknown") and name in parameter_names:
+            role = "Keep real"
+            notes = (
+                f"{name} is a named constant declared PARAMETER. A PARAMETER "
+                "cannot be assigned, so the shadow a promotion declares for it "
+                "is zeroed by the initialiser and the value never arrives -- "
+                "everything downstream then reads the constant as zero. It "
+                "carries no derivative in any case, and real times "
+                "hypercomplex is an overload the module has."
             )
         elif (role in ("Promote", "Seed", "Unknown") and name in data_names
                 and "write" not in set(variable.get("detected_usage") or [])

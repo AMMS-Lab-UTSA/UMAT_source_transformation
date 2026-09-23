@@ -93,8 +93,40 @@ class TestWhatIsAlreadySafe:
             "      CALL MYSTERY_OTI(A_OTI)\n", set())
 
 
-def test_a_lifted_helper_named_directly_is_safe():
-    assert _names("      CALL KHELPER(A_OTI)\n", {"KHELPER"}) == set()
+def test_a_lifted_helper_reached_through_its_lifted_name_is_safe():
+    """Lifting emits the rewritten body as KHELPER_OTI, so that is the call
+    that reaches hypercomplex dummies."""
+    assert _names("      CALL KHELPER_OTI(A_OTI)\n", {"KHELPER"}) == set()
+
+
+def test_a_lifted_helper_named_without_the_suffix_is_a_leak():
+    """This test used to assert the opposite, and the assumption it encoded is
+    what let one such transform through.
+
+    Lifting never reuses the original name -- ``_lift_helper_routine`` emits
+    ``<name>_oti`` -- and it leaves the author's ``<name>`` in the file with
+    its REAL dummies. So a call that still says KHELPER reaches the
+    untransformed one, and being in the lifted set says only that a
+    hypercomplex body exists somewhere, not that this call goes to it.
+
+    Measured: a transformed viscoplastic UMAT called INNER_UPDATE across
+    eight continuation lines, passing PROPS_OTI and STATEV_OTI into a
+    routine declaring them REAL. Every semantic check passed, Abaqus ran it,
+    and the material frame came out as reinterpreted memory.
+    """
+    assert _names("      CALL KHELPER(A_OTI)\n", {"KHELPER"}) == {"KHELPER"}
+
+
+def test_a_routine_transformed_in_place_keeps_its_own_name():
+    """The paired case. A routine rewritten where it stands carries the OTI
+    type under its original name, so a bare call to it is right."""
+    source = ("      SUBROUTINE UMAT(STRESS)\n"
+              "      CALL INPLACE(A_OTI)\n"
+              "      END\n"
+              "      SUBROUTINE INPLACE(S)\n"
+              "      TYPE(ONUMM6N1) :: S(6)\n"
+              "      END\n")
+    assert _names(source, set()) == set()
 
 
 def test_every_leak_is_reported_once_per_callee_and_argument():
