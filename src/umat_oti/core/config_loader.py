@@ -12,7 +12,11 @@ from umat_oti.core.findings_log import build_findings_log
 from umat_oti.core.output_layout import migrate_transform_output_dir
 from umat_oti.core.pipeline_status import evaluate_pipeline_status
 from umat_oti.core.project import file_metadata, sanitize_project_name
-from umat_oti.core.roles import suggest_routine_roles, suggest_variable_roles
+from umat_oti.core.roles import (
+    source_text_with_includes,
+    suggest_routine_roles,
+    suggest_variable_roles,
+)
 from umat_oti.core.transformation_settings import DEFAULT_GENERATED_NTENS, build_transformation_settings
 from umat_oti.core.transformation_review import build_transformation_review
 from umat_oti.fortran.interface_detection import OPTIONAL_GUI_MAPPINGS, REQUIRED_GUI_MAPPINGS
@@ -353,6 +357,9 @@ def _expand_compact_project_config(config: dict[str, Any], *, origin_path: str |
     source_text = source_path.read_text(encoding="utf-8", errors="replace")
     analysis = analyze_fortran_source(source_path)
     selected_umat = _compact_selected_umat(source, analysis)
+    aliases = _dict_or_empty(normalized.get("transformation_settings")).get("gradient_aliases")
+    if aliases is not None:
+        analysis = analyze_fortran_source(source_path, gradient_aliases=aliases, selected_umat=selected_umat)
     selected_arguments = _selected_umat_arguments(analysis, selected_umat)
     mappings = _compact_mappings(normalized, selected_arguments)
     # The source text goes in so the classifier can apply Fortran's implicit
@@ -360,7 +367,14 @@ def _expand_compact_project_config(config: dict[str, Any], *, origin_path: str |
     # fire at all -- which is how the Huang crystal-plasticity source had its
     # Miller-index and LU-pivot arrays promoted to the differentiated type and
     # passed to routines that declare the same arguments INTEGER.
-    variable_roles = suggest_variable_roles(analysis, source_text)
+    # Includes are expanded for the classifier only. Every guard in roles.py
+    # works by finding a declaration, and the transform leaves INCLUDE
+    # statements for the compiler to expand -- so a COMMON membership, DATA
+    # initialiser or PARAMETER constant written in an include was invisible to
+    # all of them. One viscoplastic UMAT keeps two scaling constants there;
+    # both were promoted and their shadows divided by while still zero.
+    variable_roles = suggest_variable_roles(
+        analysis, source_text_with_includes(source_text, source_path.parent))
     _apply_compact_variable_roles(variable_roles, _compact_variables_payload(normalized))
     region_classifications = _compact_region_classifications(
         analysis=analysis,

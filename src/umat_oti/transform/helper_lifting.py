@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 import re
 from typing import Any, Iterable, Sequence
 
 from umat_oti.core.model import ParsedFortranSource, ParsedSubroutine
+from umat_oti.core.roles import common_block_names
 from umat_oti.fortran.literals import (
     mask_character_literals,
     mask_real_literals,
@@ -72,9 +74,10 @@ _CHARACTER_RE = re.compile(r"^\s*CHARACTER(?:\s*\*\s*\d+|\s*\([^)]*\))?\s*(?:::)
 _LOGICAL_RE = re.compile(r"^\s*LOGICAL(?:\s*\*\s*\d+|\s*\([^)]*\))?\s*(?:::)?\s*(.*)$", re.IGNORECASE)
 _DATA_RE = re.compile(r"^\s*DATA\s+(.*)$", re.IGNORECASE)
 _EXTERNAL_RE = re.compile(r"^\s*EXTERNAL\s*(?:::)?\s*(.*)$", re.IGNORECASE)
+_COMMON_RE = re.compile(r"^\s*COMMON\b(.*)$", re.IGNORECASE)
 _TOKEN_RE = re.compile(r"\b([A-Z_][A-Z0-9_]*)\b", re.IGNORECASE)
 _LHS_ASSIGN_RE = re.compile(r"^\s*([A-Z_][A-Z0-9_]*)\s*(?:\([^=]*\))?\s*=", re.IGNORECASE)
-_IF_RE = re.compile(r"^(\s*(?:\d+\s+)?(?:ELSE\s+)?IF\s*)\(", re.IGNORECASE)
+_IF_RE = re.compile(r"^(\s*(?:\d+\s+)?(?:ELSE\s*)?IF\s*)\(", re.IGNORECASE)
 #: Statements whose integers are statement labels, not values. Promoting a bare
 #: integer to a real literal is right for ``X = 1`` and wrong for ``GO TO 1000``,
 #: which became ``GO TO 1000.0D0`` and stopped the build with "Syntax error in
@@ -122,6 +125,8 @@ _KEYWORDS = {
     "END",
     "EQ",
     "ENDIF",
+    "EQV",
+    "NEQV",
     # .TRUE. and .FALSE. are logical LITERALS, and the dotted form makes them
     # look like the dotted operators above. Without them here the tokeniser
     # read `FALSE` as an identifier, found it undeclared and not implicitly
@@ -147,11 +152,14 @@ _KEYWORDS = {
 _INTRINSIC_NAMES = {
     "ABS",
     "ACOS",
+    "ALL",
+    "ANY",
     "ASIN",
     "ATAN",
     "ATAN2",
     "COS",
     "COSH",
+    "DOT_PRODUCT",
     "EXP",
     "LOG",
     "LOG10",
@@ -248,6 +256,175 @@ def helper_lift_closure(
     return tuple(ordered)
 
 
+
+_LIFTED_HEADER_RE = re.compile(
+    r"^\s*(?:subroutine|function)\s+([A-Za-z_]\w*)\s*\((.*)$", re.IGNORECASE)
+_LIFTED_END_RE = re.compile(r"^\s*end\s+(?:subroutine|function)\b", re.IGNORECASE)
+_LIFTED_CALL_RE = re.compile(r"^(\s*call\s+)([A-Za-z_]\w*)\s*\((.*)$", re.IGNORECASE)
+
+
+def _stitched_free_form(lines: list[str], start: int) -> tuple[str, int]:
+    """The logical statement beginning at ``start``, and the line after it."""
+    text = lines[start].rstrip()
+    index = start
+    while text.endswith("&"):
+        index += 1
+        if index >= len(lines):
+            break
+        text = text[:-1].rstrip() + " " + lines[index].strip()
+    return text, index + 1
+
+
+def _emitted_routine_spans(lines: list[str]) -> list[tuple[int, int, str, list[str]]]:
+    """(first line, last line, name, dummy names) for each emitted routine."""
+    spans: list[tuple[int, int, str, list[str]]] = []
+    index = 0
+    while index < len(lines):
+        header = _LIFTED_HEADER_RE.match(lines[index])
+        if not header:
+            index += 1
+            continue
+        statement, after = _stitched_free_form(lines, index)
+        match = _LIFTED_HEADER_RE.match(statement)
+        name = match.group(1).upper()
+        inside = match.group(2)
+        close = _matching_paren_index("(" + inside, 0)
+        arguments = [a.strip().upper() for a in
+                     split_top_level(inside[:close - 1] if close > 0 else inside)
+                     if a.strip()]
+        end = after
+        while end < len(lines) and not _LIFTED_END_RE.match(lines[end]):
+            end += 1
+        spans.append((index, min(end, len(lines) - 1), name, arguments))
+        index = end + 1
+    return spans
+
+
+def _declared_types_in_span(lines: list[str], first: int, last: int,
+                            type_name: str) -> tuple[set[str], set[str]]:
+    """Names the span declares as the OTI type, and names it declares REAL."""
+    oti: set[str] = set()
+    real_constants: set[str] = set()
+    pattern_oti = re.compile(rf"^\s*type\s*\(\s*{re.escape(type_name)}\s*\)\s*(?:,[^:]*)?::\s*(.+)$",
+                             re.IGNORECASE)
+    pattern_real = re.compile(r"^\s*real\s*\([^)]*\)\s*,\s*parameter\s*::\s*(.+)$",
+                              re.IGNORECASE)
+    for index in range(first, last + 1):
+        statement, _ = _stitched_free_form(lines, index)
+        found = pattern_oti.match(statement)
+        if found:
+            oti.update(_declared_names(found.group(1)))
+            continue
+        found = pattern_real.match(statement)
+        if found:
+            real_constants.update(_declared_names(found.group(1)))
+    return oti, real_constants
+
+
+def reconcile_helper_argument_types(body: str, type_name: str) -> str:
+    """Make every lifted helper's call to another agree about argument types.
+
+    Each routine is lifted on its own, so the two ends of a call between them
+    are decided independently and can disagree. A PARAMETER stays REAL where
+    it is declared -- real times hypercomplex is an overload the module has --
+    but the callee that receives it has no declaration of its own and takes
+    the body's ``implicit type(OTI) (a-h,o-z)``. One viscoplastic UMAT's
+    helpers do this twice: a ``real(8), parameter`` tolerance is passed to a
+    dummy the callee declares as the hypercomplex type, and the
+    callee reads 96 doubles where 1 was written. gfortran says only
+    "-Wargument-mismatch" and the program aborts inside free().
+
+    A constant carries no derivative, so promoting a copy of it is exact. The
+    copy is what gets passed; the constant keeps its own type for the
+    arithmetic around it.
+
+    Only constants are fixed this way. A REAL *variable* reaching an OTI dummy
+    may be one the callee writes back through, and a promoted copy would
+    silently drop that write, so it is raised instead of patched.
+    """
+    lines = body.splitlines()
+    spans = _emitted_routine_spans(lines)
+    if not spans:
+        return body
+    oti_dummies: dict[str, list[bool]] = {}
+    for first, last, name, arguments in spans:
+        declared_oti, _ = _declared_types_in_span(lines, first, last, type_name)
+        oti_dummies[name] = [
+            (argument in declared_oti) or
+            (argument not in declared_oti and not _is_implicit_integer_name(argument))
+            for argument in arguments
+        ]
+    edits: dict[int, str] = {}
+    promotions: dict[int, set[str]] = {}
+    for first, last, name, _arguments in spans:
+        _declared_oti, constants = _declared_types_in_span(lines, first, last, type_name)
+        if not constants:
+            continue
+        index = first
+        while index <= last:
+            call = _LIFTED_CALL_RE.match(lines[index])
+            if not call:
+                index += 1
+                continue
+            statement, after = _stitched_free_form(lines, index)
+            call = _LIFTED_CALL_RE.match(statement)
+            callee = call.group(2).upper()
+            expected = oti_dummies.get(callee)
+            if not expected:
+                index = after
+                continue
+            close = _matching_paren_index("(" + call.group(3), 0)
+            inner = call.group(3)[:close - 1] if close > 0 else call.group(3)
+            actuals = [a.strip() for a in split_top_level(inner)]
+            changed = False
+            for position, actual in enumerate(actuals):
+                if position >= len(expected) or not expected[position]:
+                    continue
+                if actual.upper() not in constants:
+                    continue
+                actuals[position] = f"OTI_CONST_{actual.upper()}"
+                promotions.setdefault(first, set()).add(actual.upper())
+                changed = True
+            if changed:
+                for line_number in range(index, after):
+                    edits[line_number] = ""
+                # The copy is set immediately before the call, which is always
+                # in the executable part -- a declaration cannot initialise a
+                # derived type from a REAL constant, and an assignment placed
+                # among the declarations is not Fortran.
+                indent = call.group(1)[:len(call.group(1)) - len(call.group(1).lstrip())]
+                setters = "\n".join(
+                    f"{indent}OTI_CONST_{actual.upper()} = {actual}"
+                    for actual in sorted(promotions.get(first, set())))
+                edits[index] = (setters + "\n" if setters else "") + \
+                    f"{call.group(1)}{call.group(2)}({', '.join(actuals)})"
+            index = after
+    if not promotions:
+        return body
+    output: list[str] = []
+    for number, line in enumerate(lines):
+        if number in edits:
+            if edits[number]:
+                output.append(edits[number])
+            continue
+        output.append(line)
+    # The copy is declared and set once, right after the routine's IMPLICIT
+    # lines, so it is in scope and has its value before any call can use it.
+    result: list[str] = []
+    current_span = None
+    pending: set[str] = set()
+    for number, line in enumerate(output):
+        if number in promotions:
+            current_span = number
+            pending = set(promotions[number])
+        result.append(line)
+        if pending and re.match(r"^\s*implicit\s+integer", line, re.IGNORECASE):
+            for constant in sorted(pending):
+                result.append(f"    type({type_name}) :: OTI_CONST_{constant}")
+            pending = set()
+    return "\n".join(result) + ("\n" if body.endswith("\n") else "")
+
+
 def lift_helper_set_source(
     parsed: ParsedFortranSource,
     helper_names: Iterable[str],
@@ -273,12 +450,14 @@ def lift_helper_set_source(
             lifted_set,
             module_name,
             type_name,
+            source_path=parsed.path,
             lifted_function_names=lifted_functions,
             helper_output_copies=(helper_output_copies or {}).get(name, []),
             helper_output_surfaces=(helper_output_surfaces or {}).get(name, []),
         )
         for name in ordered
     )
+    body = reconcile_helper_argument_types(body, type_name)
     return LiftedHelperSet(helper_names=ordered, source=body + ("\n" if body else ""))
 
 
@@ -413,9 +592,49 @@ def direction_renames(module_name: str, statements: Sequence[str]) -> str:
         # as one renames a direction constant nothing collides with.
         used.update(name.upper() for name in
                     _LIFT_IDENTIFIER_RE.findall(without_real_literals(statement)))
-    collisions = [f"E{index}" for index in range(1, count + 1)
-                  if f"E{index}" in used]
+    from umat_oti.oti.oti_directions import member_name
+
+    collisions = [member_name([index]) for index in range(1, count + 1)
+                  if member_name([index]) in used]
     return "".join(f", OTI_{name} => {name}" for name in collisions)
+
+
+#: The generic names ``oti_intrinsics`` exports. Each is an ordinary Fortran
+#: intrinsic, so a UMAT is free to use the same spelling for a variable of its
+#: own -- UMAT_HIN's LU decomposition reads a variable called TINY.
+_OTI_INTRINSIC_EXPORTS = (
+    "MIN", "MAX", "SIGN", "NINT", "INT", "LOG10", "MATMUL", "TINY",
+)
+
+
+def intrinsic_renames(statements: Sequence[str]) -> str:
+    """USE-clause renames for ``oti_intrinsics`` names the routine uses as data.
+
+    The same problem :func:`direction_renames` solves for the direction
+    constants, one module along. ``oti_intrinsics`` exports generics named
+    after Fortran intrinsics, and importing it unqualified into a routine that
+    has a variable of the same name makes every mention of that name refer to
+    the module's generic: gfortran answers "Cannot assign to a named constant"
+    and points at the statement rather than at the name.
+
+    Only a name used as *data* is renamed. A name followed by "(" is a call --
+    ``max(a,b)`` is the overload this module exists to provide -- and renaming
+    that would take away the very thing the routine needs.
+
+    Returns "" when nothing collides, so untouched sources keep byte-identical
+    output.
+    """
+    collisions: set[str] = set()
+    for statement in statements:
+        # Character literals first: a WRITE of " - max increment:" is not a
+        # mention of a variable called MAX, and renaming on it took away the
+        # MAX overload from a routine whose every use of it was a call.
+        text, _ = mask_character_literals(statement)
+        text = without_real_literals(text)
+        for name in _OTI_INTRINSIC_EXPORTS:
+            if re.search(rf"\b{name}\b(?!\s*\()", text, re.IGNORECASE):
+                collisions.add(name)
+    return "".join(f", OTI_{name} => {name}" for name in sorted(collisions))
 
 
 def _kclear_inline_lines(statement: str) -> list[str] | None:
@@ -449,8 +668,11 @@ def _lift_helper_routine(
     helper_output_copies: list[dict[str, Any]],
     helper_output_surfaces: list[dict[str, Any]],
     lifted_function_names: set[str] | None = None,
+    source_path: Path | None = None,
 ) -> str:
     raw_lines = _routine_source_lines(source_lines, routine)
+    if source_path is not None:
+        raw_lines = _expand_helper_includes(raw_lines, form, source_path)
     if not raw_lines:
         raise HelperLiftingError(f"Routine {routine.name} is empty.")
     stitched_lines = _continuation_stitch(raw_lines, form)
@@ -492,8 +714,13 @@ def _lift_helper_routine(
     character_names: set[str] = set()
     logical_names: set[str] = set()
     parameter_names: set[str] = set()
+    imported_names: set[str] = set()
+    parameter_definitions: dict[str, str] = {}
+    common_declared_names: set[str] = set()
+    common_statements: list[str] = []
     declaration_oti_names: set[str] = set()
     prelude: list[str] = []
+    use_lines: list[str] = []
     body: list[str] = []
     data_assignments: list[str] = []
     # The Fortran 77 way to write a named constant is two statements --
@@ -508,6 +735,18 @@ def _lift_helper_routine(
     # what it is. The declaration is above it in every source seen, but reading
     # the whole routine first does not depend on that being true.
     declared_extents = _declared_literal_extents(stitched_lines[1:-1], form)
+    # Read ahead for COMMON as well. A COMMON block is a storage layout agreed
+    # between routines, and the main transform already keeps every name in one
+    # real for that reason (see core.roles.common_block_names). Lifting a
+    # helper that shares the same block used to retype its half of it, so the
+    # UMAT declared a shared block as real(8) while the lifted helper
+    # declared it type(ONUMM95N1) -- two routines disagreeing about the same
+    # storage. gfortran stops earlier than that, because a derived type in
+    # COMMON needs SEQUENCE or BIND(C); one such model raised that on 126
+    # declarations. Keeping the names real here makes the lifted routine agree
+    # with the UMAT, which is what sharing a block requires.
+    common_names = common_block_names("\n".join(
+        _statement_text(raw, form) for raw in stitched_lines[1:-1]))
 
     interface_depth = 0
     for raw in stitched_lines[1:-1]:
@@ -535,11 +774,75 @@ def _lift_helper_routine(
             continue
         if re.match(r"^\s*IMPLICIT\s+", stripped, re.IGNORECASE):
             continue
+        if re.match(r"^USE\b", stripped, re.IGNORECASE):
+            use_lines.append(f"    {stripped}")
+            only = re.search(r"\bONLY\s*:\s*(.*)$", stripped, re.IGNORECASE)
+            if only:
+                imported_names.update(
+                    entry.split("=>", 1)[0].strip().upper()
+                    for entry in split_top_level(only.group(1)))
+            continue
+        declaration = parse_declaration_line(stripped)
+        if declaration is not None and declaration.attributes and (
+            declaration.has_parameter_attribute or declaration.kind in {"integer", "logical", "character"}
+        ):
+            if declaration.has_parameter_attribute:
+                # A routine may both declare a constant itself and INCLUDE a
+                # file that declares the same one. One viscoplastic UMAT
+                # declares a reference constant inline and then includes a
+                # file saying exactly the same thing; expanding the include
+                # declares it twice and gfortran stops on "Symbol
+                # the name already has a basic type". Repeating a
+                # definition verbatim says nothing new, so the repeat is
+                # dropped. Two DIFFERENT values for one name is a genuine
+                # contradiction and is refused rather than silently resolved.
+                kept = []
+                for entity in declaration.entities:
+                    definition = entity.render()
+                    previous = parameter_definitions.get(entity.upper_name)
+                    if previous is None:
+                        parameter_definitions[entity.upper_name] = definition
+                        kept.append(entity)
+                    elif _same_constant(previous, definition):
+                        continue
+                    else:
+                        raise HelperLiftingError(
+                            f"{routine.name} declares the constant "
+                            f"{entity.upper_name} twice with different values, "
+                            f"{previous!r} and then {definition!r}. Which one "
+                            f"the routine means is not something this "
+                            f"transform can decide.")
+                parameter_names.update(
+                    entity.upper_name for entity in declaration.entities)
+                if not kept:
+                    continue
+                if len(kept) != len(declaration.entities):
+                    attributes = "".join(f", {attribute}" for attribute in declaration.attributes)
+                    entities = ", ".join(entity.render() for entity in kept)
+                    prelude.append(f"    {declaration.raw_type}{attributes} :: {entities}")
+                    continue
+                prelude.append(f"    {stripped}")
+                continue
+            prelude.append(f"    {stripped}")
+            names = {entity.upper_name for entity in declaration.entities}
+            if declaration.kind == "integer":
+                integer_names.update(names)
+            elif declaration.kind == "logical":
+                logical_names.update(names)
+            elif declaration.kind == "character":
+                character_names.update(names)
+            continue
         retyped = _retyped_attributed_declaration(stripped, type_name)
         if retyped is not None:
+            entities = retyped.split("::", 1)[1]
+            if _only_names(entities, common_names):
+                # An attributed declaration of shared storage keeps its own
+                # type; the attributes are already written on the statement.
+                prelude.append(f"    {stripped}")
+                common_declared_names.update(_declared_names(entities))
+                continue
             prelude.append(f"    {retyped}")
-            declaration_oti_names.update(
-                _declared_names(retyped.split("::", 1)[1]))
+            declaration_oti_names.update(_declared_names(entities))
             continue
         stripped = _flattened_attributed_declaration(stripped)
         parameter_match = _PARAMETER_RE.match(stripped)
@@ -553,6 +856,13 @@ def _lift_helper_routine(
             payload = _without_names(dimension_match.group(1), named_constants)
             if not payload:
                 continue
+            shared = _only_names(payload, common_names)
+            if shared:
+                prelude.append(f"    real(8) :: {shared}")
+                common_declared_names.update(_declared_names(shared))
+                payload = _without_names(payload, common_names)
+                if not payload:
+                    continue
             lines, oti_names, ints = _rewrite_dimension_line(
                 payload, type_name, declaration_oti_names | integer_names)
             prelude.extend(lines)
@@ -572,6 +882,14 @@ def _lift_helper_routine(
             payload = _without_names(real_match.group(1), named_constants)
             if not payload:
                 continue
+            shared = _only_names(payload, common_names)
+            if shared:
+                # Shared storage keeps the type the block was laid out with.
+                prelude.append(f"    real(8) :: {shared}")
+                common_declared_names.update(_declared_names(shared))
+                payload = _without_names(payload, common_names)
+                if not payload:
+                    continue
             prelude.append(f"    type({type_name}) :: {payload}")
             declaration_oti_names.update(_declared_names(payload))
             continue
@@ -589,6 +907,13 @@ def _lift_helper_routine(
         if data_match:
             data_assignments.extend(f"    {assignment}" for assignment in
                                     _data_to_assignments(data_match.group(1), declared_extents))
+            continue
+        common_match = _COMMON_RE.match(stripped)
+        if common_match:
+            # COMMON is a specification statement. It was falling through to
+            # the executable body, where gfortran reads it after the first
+            # assignment and rejects it as misplaced.
+            common_statements.append(f"    {stripped}")
             continue
         external_match = _EXTERNAL_RE.match(stripped)
         if external_match:
@@ -613,7 +938,47 @@ def _lift_helper_routine(
         prelude.append(f"    type({type_name}) :: {caller_variable}{suffix}")
         declaration_oti_names.add(caller_variable)
 
-    declared_non_oti = integer_names | character_names | logical_names | parameter_names
+    # A COMMON member the source never declared would be typed by this
+    # routine's own "implicit type(OTI) (a-h,o-z)" rule, which puts it back in
+    # the block as a derived type. Its extent is the one the COMMON statement
+    # gives it.
+    for statement in common_statements:
+        for entity in _common_entities(statement.strip()):
+            name = entity.split("(", 1)[0].strip().upper()
+            if (not name or name in common_declared_names
+                    or name in integer_names or name in character_names
+                    or name in logical_names or name in parameter_names
+                    or name in imported_names):
+                continue
+            if name in declaration_oti_names:
+                declaration_oti_names.discard(name)
+            prelude.append(f"    real(8) :: {entity}")
+            common_declared_names.add(name)
+
+    # A name the source uses only to index an array is a position, not a
+    # value. The source's own implicit rule gave it REAL; the lifted body's
+    # "implicit type(OTI) (a-h,o-z)" would give it the differentiated type,
+    # which cannot be a subscript. Declaring it the way the source had it
+    # reproduces what the source does.
+    subscript_names = _subscript_only_names(
+        [_split_label_and_statement(raw, form)[1] for raw in body],
+        _routine_array_names(stitched_lines, form)
+        | declaration_oti_names | common_declared_names)
+    index_names: set[str] = set()
+    for name in sorted(subscript_names):
+        if (name in declaration_oti_names or name in integer_names
+                or name in character_names or name in logical_names
+                or name in parameter_names or name in imported_names
+                or name in common_declared_names
+                or name in {arg.upper() for arg in args}
+                or _is_implicit_integer_name(name)):
+            continue
+        prelude.append(f"    real(8) :: {name.lower()}")
+        index_names.add(name)
+
+    declared_non_oti = (integer_names | character_names | logical_names
+                        | parameter_names | imported_names | common_declared_names
+                        | index_names)
     # The Abaqus UMAT interface fixes CMNAME as a character string, and a source
     # is entitled to leave it undeclared and never use it -- UMAT4COMSOL's
     # neo-Hookean model does exactly that. Under "implicit type(oti) (a-h,o-z)"
@@ -671,7 +1036,11 @@ def _lift_helper_routine(
 
     _renames = direction_renames(
         module_name,
-        body_statements + list(args))
+        body_statements + prelude + list(args))
+    # Only the executable body decides this: a name the routine DECLARES is
+    # already a local and needs no rename, and the argument list is spelled by
+    # the caller.
+    _intrinsic_renames = intrinsic_renames(body_statements)
     signature = f"{original_name.lower()}_oti({', '.join(arg.lower() for arg in args)})"
     unit = "function" if function_match else "subroutine"
     if function_match:
@@ -681,11 +1050,13 @@ def _lift_helper_routine(
     lines = [
         header,
         f"    use {module_name}, OTI_HELPER_DP => DP{_renames}",
-        "    use oti_intrinsics",
+        f"    use oti_intrinsics{_intrinsic_renames}",
+        *use_lines,
         f"    implicit type({type_name}) (a-h,o-z)",
         "    implicit integer (i-n)",
     ]
     lines.extend(prelude)
+    lines.extend(common_statements)
     if function_match and result_name not in declaration_oti_names and result_name not in declared_non_oti:
         # The result variable's type comes from the header's type-spec when it
         # has one and from the implicit rule otherwise. It is stated explicitly
@@ -720,6 +1091,27 @@ def _lift_helper_routine(
         lines.append(f"    {label_prefix}{rewritten}")
     lines.append(f"end {unit} {original_name.lower()}_oti")
     return "\n".join(lines)
+
+
+def _expand_helper_includes(
+    lines: list[str], form: str, source_path: Path, stack: tuple[Path, ...] = (),
+) -> list[str]:
+    expanded: list[str] = []
+    for raw in lines:
+        match = re.match(r"^\s*INCLUDE\s+['\"]([^'\"]+)['\"]", _statement_text(raw, form), re.IGNORECASE)
+        if not match:
+            expanded.append(raw)
+            continue
+        target = (source_path.parent / match.group(1)).resolve()
+        if target.name.lower() == "aba_param.inc":
+            continue
+        if target in stack:
+            raise HelperLiftingError(f"Cyclic helper INCLUDE: {target}")
+        if not target.is_file():
+            raise HelperLiftingError(f"Missing helper INCLUDE {match.group(1)!r} relative to {source_path}")
+        expanded.extend(_expand_helper_includes(
+            target.read_text(encoding="utf-8").splitlines(), form, target, (*stack, target)))
+    return expanded
 
 
 #: The intrinsics the OTI algebra has no form of, in the lifted body's own
@@ -977,6 +1369,83 @@ def _without_names(payload: str, names: set[str]) -> str:
     return ", ".join(kept)
 
 
+_BARE_IDENTIFIER = re.compile(r"^[A-Za-z_]\w*$")
+
+
+def _subscript_only_names(statements: Sequence[str], array_names: set[str]) -> set[str]:
+    """Names that appear in this routine only as a bare array subscript.
+
+    A subscript is a position in an array, so it carries no derivative, and the
+    differentiated type cannot be one: gfortran says "Array index must be of
+    INTEGER type, found DERIVED". One UMAT indexes its state array with a name
+    that is declared nowhere -- the source's own implicit rule makes
+    it REAL, which Fortran accepts as a subscript, while the lifted body's
+    ``implicit type(OTI) (a-h,o-z)`` makes it hypercomplex, which it does not.
+    Keeping the name real reproduces what the source does.
+
+    Only a subscript written as a bare name counts. ``A(INT(x))`` says nothing
+    about ``x``, whose value may well be differentiated, and ``sqrt(x)`` is a
+    call rather than a subscript -- which is why the array names are required
+    and a name used anywhere else in the routine is left alone.
+    """
+    subscripts: set[str] = set()
+    used_elsewhere: set[str] = set()
+    for statement in statements:
+        masked = statement
+        for match in re.finditer(r"\b([A-Za-z_]\w*)\s*\(", statement):
+            if match.group(1).upper() not in array_names:
+                continue
+            close = _matching_paren_index(statement, match.end() - 1)
+            if close < 0:
+                continue
+            inside = statement[match.end():close]
+            for entry in split_top_level(inside):
+                for piece in entry.split(":"):
+                    piece = piece.strip()
+                    if _BARE_IDENTIFIER.match(piece):
+                        subscripts.add(piece.upper())
+            masked = masked.replace(statement[match.start():close + 1], " ")
+        used_elsewhere.update(
+            name.upper() for name in re.findall(r"\b[A-Za-z_]\w*\b", masked))
+    return {name for name in subscripts if name not in used_elsewhere}
+
+
+def _same_constant(first: str, second: str) -> bool:
+    """Whether two PARAMETER entity texts define the same constant.
+
+    Compared without blanks and without case, so that "REF=2.5d0" and
+    "REF = 2.5D0" are recognised as the one definition they are.
+    """
+    return ("".join(first.split()).upper() == "".join(second.split()).upper())
+
+
+def _common_entities(statement: str) -> list[str]:
+    """The entity specifications a COMMON statement lists, block names removed.
+
+    ``COMMON /BLK/ A(3,4), B /OTHER/ C`` yields ``["A(3,4)", "B", "C"]``. The
+    dimensions come back with the name because an undeclared COMMON member has
+    to be declared with the extent the block gives it.
+    """
+    body = re.sub(r"/[^/]*/", ",", _COMMON_RE.match(statement).group(1))
+    return [entry.strip() for entry in split_top_level(body) if entry.strip()]
+
+
+def _only_names(payload: str, names: set[str]) -> str:
+    """``payload`` reduced to the declared entities whose name is in ``names``.
+
+    The complement of :func:`_without_names`. One declaration may name both a
+    COMMON member and a local -- ``real(8) :: fld_dia(maxNElements), scratch``
+    -- and the two halves are emitted with different types, so the entity list
+    has to be split rather than classified as a whole.
+    """
+    kept = [
+        entry.strip() for entry in split_top_level(payload)
+        if entry.strip()
+        and entry.strip().split("(", 1)[0].split("=", 1)[0].strip().upper() in names
+    ]
+    return ", ".join(kept)
+
+
 def _rewrite_parameter_line(payload: str) -> tuple[list[str], set[str]]:
     lines: list[str] = []
     names: set[str] = set()
@@ -987,7 +1456,11 @@ def _rewrite_parameter_line(payload: str) -> tuple[list[str], set[str]]:
         name = name.strip()
         value = value.strip()
         names.add(name.upper())
-        if re.fullmatch(r"[+-]?\d+", value):
+        if re.fullmatch(r"\.(?:TRUE|FALSE)\.", value, re.IGNORECASE):
+            lines.append(f"    logical, parameter :: {name} = {value}")
+        elif value.startswith(("'", '"')):
+            lines.append(f"    character(len=*), parameter :: {name} = {value}")
+        elif re.fullmatch(r"[+-]?\d+", value):
             lines.append(f"    integer, parameter :: {name} = {value}")
         else:
             lines.append(f"    real(8), parameter :: {name} = {_normalize_real_literal(value)}")
@@ -1402,6 +1875,7 @@ def _wrap_condition_with_real_tokens(line: str, oti_names: set[str]) -> str:
     match = _IF_RE.match(line)
     if not match:
         return line
+    line, character_literals = mask_character_literals(line)
     condition_start = match.end()
     depth = 1
     condition_end = -1
@@ -1415,10 +1889,11 @@ def _wrap_condition_with_real_tokens(line: str, oti_names: set[str]) -> str:
                 condition_end = index
                 break
     if condition_end < 0:
-        return line
+        return unmask_character_literals(line, character_literals)
     condition = line[condition_start:condition_end]
     wrapped = _real_wrapped_tokens(condition, oti_names)
-    return f"{match.group(1)}({wrapped}){line[condition_end + 1:]}"
+    result = f"{match.group(1)}({wrapped}){line[condition_end + 1:]}"
+    return unmask_character_literals(result, character_literals)
 
 
 def _real_wrapped_tokens(condition: str, oti_names: set[str]) -> str:
@@ -1480,8 +1955,6 @@ def _normalize_numeric_literals(line: str, oti_names: set[str]) -> str:
     # From here on only *bare integers* are promoted. Mask the complete real
     # literals first so their exponent digits are not mistaken for one.
     normalized, literals = mask_real_literals(normalized)
-    normalized = re.sub(r"(?<![A-Za-z0-9_.)])(\d+)(?![A-Za-z0-9_.])(?=\s*[*\/])", r"\1.0D0", normalized)
-    normalized = re.sub(r"([*\/])\s*(\d+)(?![A-Za-z0-9_.])", r"\1\2.0D0", normalized)
     normalized = _promote_bare_integers_for_oti(normalized)
     return unmask_real_literals(normalized, literals)
 

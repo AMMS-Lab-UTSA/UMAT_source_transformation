@@ -167,6 +167,9 @@ def _run_fmod_writer(
                 raise OtilibGenerationError("could not load fmod_writer.py")
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
+            from umat_oti.oti.oti_directions import basis_token
+
+            module.valid_chars = [basis_token(base) for base in range(max(36, ntens + 1))]
             writer = module.writer(nbases=ntens, order=order, coeff_type="REAL(DP)")
             cwd_before = Path.cwd()
             try:
@@ -340,14 +343,72 @@ def _guard_pow_at_zero_base(source: str) -> str:
         "\\g<indent>  DER1_0 = X%R**Y%R*Y%R/X%R\n"
         "\\g<indent>  DER1_1 = X%R**Y%R*LOG(X%R)\n"
         "\\g<indent>END IF\n"
+        "\\g<indent>IF (.NOT. (ABS(DER1_0) < HUGE(1.0_DP))) DER1_0 = 0.0_DP\n"
+        "\\g<indent>IF (.NOT. (ABS(DER1_1) < HUGE(1.0_DP))) DER1_1 = 0.0_DP\n"
     )
     return _POW_OO_FIRST_ORDER_RE.sub(replacement, source, count=1)
+
+
+_POW_OR_FIRST_ORDER_RE = re.compile(
+    r"(?P<indent>[ \t]*)DER0 = X%R\*\*E\n"
+    r"(?P<open>[ \t]*IF \(\(E-0\)/=0\.0d0\) THEN\n)"
+    r"[ \t]*DER1 = E\*X%R\*\*\(E - 1\)\n"
+    # Not already guarded: the lines above survive the rewrite, so without
+    # this the pattern matches its own output and stacks a second copy.
+    r"(?![ \t]*IF \(\.NOT\.)"
+)
+
+
+def _guard_pow_or_at_zero_base(source: str) -> str:
+    """The same guard as :func:`_guard_pow_at_zero_base`, for a REAL exponent.
+
+    ``POW_OR`` is what ``SQRT`` calls -- the generator writes SQRT(X) as
+    ``X**0.5_DP`` -- and its first partial is ``E*X%R**(E-1)``. At a zero base
+    with E below one that is ``0.5*0**(-0.5)``, which is Inf, and FEVAL then
+    multiplies it by the argument's perturbation. Where the perturbation is
+    zero the product is Inf*0 = NaN, and a NaN does not stay in the
+    derivative: it reaches the primal through the norms and comparisons built
+    on it, so the Newton solve stops converging on a value that was never in
+    A viscoplastic UMAT hits this on the first plastic increment of any path
+    starting from zero plastic strain: an equivalent-strain routine takes the
+    square root of a measure that is still exactly zero.
+
+    The value is untouched: 0**E is 0 and stays 0. Only the first partial is
+    set to zero at a zero base, which says that a quantity that is identically
+    zero going in is identically zero coming out. Where the base is genuinely
+    nonzero nothing changes, so every differentiable point keeps the answer it
+    had.
+
+    The guard is written on finiteness rather than on the base alone, because
+    the same poisoning arrives by more than one route: ``0**(-1)`` makes the
+    partial infinite, ``LOG(0)`` makes it minus infinity, and either one times
+    a zero perturbation is NaN. One viscoplastic UMAT reaches all of them:
+    SQRT of a plastic strain still exactly zero, and a kinematic-hardening
+    term of the form ``(x/a)**b`` whose base the line above clamps to zero.
+
+    This *is* a regularisation at points where the true derivative is
+    unbounded: d(sqrt(x))/dx at x=0 is infinite, and the model is being
+    evaluated at a kink. What it buys is that the primal survives the kink
+    exactly as the original UMAT does in real arithmetic -- where 0**(-1) is
+    an IEEE infinity that flows through 1/(1+Inf) to a clean zero -- instead
+    of a NaN that reaches the primal through the norms built on it and stops
+    a Newton solve converging on a value that was never in doubt. The
+    derivative reported at such a point is not the infinite one.
+    """
+    replacement = (
+        "\\g<indent>DER0 = X%R**E\n"
+        "\\g<open>"
+        "\\g<indent>    DER1 = E*X%R**(E - 1)\n"
+        "\\g<indent>    IF (.NOT. (ABS(DER1) < HUGE(1.0_DP))) DER1 = 0.0_DP\n"
+    )
+    return _POW_OR_FIRST_ORDER_RE.sub(replacement, source, count=1)
 
 
 def _post_fix_module(source: str, ntens: int, order: int = 1) -> str:
     source = _BACK_KW_RE.sub("", source)
     source = _rewrite_rank_of_array_in_decls(source)
     source = _guard_pow_at_zero_base(source)
+    source = _guard_pow_or_at_zero_base(source)
     source = _MASTER_PARAMETERS_USE_RE.sub(lambda match: f"{match.group(1)}USE master_parameters, ONLY: DP", source, count=1)
     source = _REAL_UTILS_USE_RE.sub(lambda match: f"{match.group(1)}USE real_utils, ONLY: {_REAL_UTILS_ONLY}", source, count=1)
     interface_block, body = _extra_overloads(ntens, order)
@@ -382,7 +443,7 @@ def _extra_overloads(ntens: int, order: int = 1) -> tuple[str, str]:
         "  END INTERFACE OPERATOR(+)\n"
     )
     body = f"""
-  FUNCTION {type_name}_ABS(A) RESULT(RES)
+    ELEMENTAL FUNCTION {type_name}_ABS(A) RESULT(RES)
       IMPLICIT NONE
       TYPE({type_name}), INTENT(IN) :: A
       TYPE({type_name}) :: RES

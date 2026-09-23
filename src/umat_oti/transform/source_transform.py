@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from umat_oti.core.model import ParsedFortranSource
+from umat_oti.core.derivative_request import load_project_derivative_requests
 from umat_oti.core.transformation_anchors import anchor_completion_status
 from umat_oti.fortran.callgraph import build_call_graph, undefined_delegate_call
 from umat_oti.fortran.literals import (
@@ -25,7 +26,7 @@ from umat_oti.fortran.parser import (
 from umat_oti.fortran.regions import (
     INTRINSIC_TOKEN_NAMES, _is_executable_line, _routine_effect_table)
 from umat_oti.oti.module_generator import OtilibGenerationError, generate_otilib_module
-from umat_oti.transform.abaqus_utility_definitions import available_definitions, definition_text
+from umat_oti.transform.abaqus_utility_definitions import supply_reachable_definitions
 from umat_oti.transform.helper_lifting import HelperLiftingError, helper_lift_closure, lift_helper_set_source, wrap_free_form
 # The intrinsic extension module is generated in one place and used by
 # both transform paths; no cycle, that module imports nothing from here.
@@ -95,6 +96,7 @@ class TransformRewrite:
     ddsdde_output_method: str = "GETIM(STRESS_OTI(i), j)"
     tangent_helper_regions_skipped: list[dict[str, Any]] = field(default_factory=list)
     tangent_output_regions_replaced: list[dict[str, Any]] = field(default_factory=list)
+    include_duplicate_notes: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -126,6 +128,26 @@ def transform_umat_to_oti_from_config(
     roles = _roles_with_stress_path_promotions(config, roles, source_text)
     roles = _roles_with_finite_strain_promotions(config, roles)
     roles = _roles_with_extra_jacobian_promotions(config, roles)
+    parameter_slots = _directions_required(ntens, config)["parameter_slots"]
+    if parameter_slots:
+        parameter_names = {"PROPS", mappings.get("stress", "STRESS"), mappings.get("statev", "STATEV")}
+        real_names = _names_declared_real(config)
+        variables = _dict(config.get("analysis")).get("detected_variables", [])
+        while True:
+            dependent_names = {
+                str(row.get("variable_name", "")).upper() for row in variables
+                if parameter_names & _upper_set(row.get("assigned_from", []))
+                and str(row.get("variable_name", "")).upper() in real_names
+                and selected_umat.upper() in _upper_set(row.get("routines", []))
+            }
+            if dependent_names <= parameter_names:
+                break
+            parameter_names.update(dependent_names)
+        parameter_names.discard(mappings.get("ddsdde", "DDSDDE"))
+        for name in parameter_names - roles["seed"]:
+            roles["promote"].add(name)
+            roles["constant"].discard(name)
+            roles["keep_real"].discard(name)
     parsed = _parse_source(source_text, source_file)
     umat_span = _selected_routine_span(parsed, selected_umat)
     # The floor is the first executable line, not the routine's first line.
@@ -175,12 +197,8 @@ def transform_umat_to_oti_from_config(
     # available is still refused.
     supplied = ()
     if helper_roots:
-        defined_here = {routine.upper_name for routine in parsed.subroutines}
-        supplied = available_definitions(
-            name for name in helper_roots if str(name).upper() not in defined_here)
-        if supplied:
-            source_text = source_text.rstrip("\n") + "\n" + definition_text(supplied)
-            parsed = _parse_source(source_text, source_file)
+        parsed, supplied = supply_reachable_definitions(parsed, helper_roots)
+        source_text = parsed.text
     if helper_roots:
         try:
             helper_lift_names = helper_lift_closure(parsed, helper_roots, selected_umat=selected_umat)
@@ -196,7 +214,24 @@ def transform_umat_to_oti_from_config(
                     helper_lift_issue = ""
     blockers = _readiness_blockers(config, roles, regions, mappings, ntens, selected_umat, source_text, helper_lift_issue="", parsed=parsed)
     blockers.extend(tangent_context.blockers)
+    if parameter_slots and order != 1:
+        blockers.append("Combined tangent/parameter directions currently require order=1.")
+    if parameter_slots:
+        arguments = _argument_variables(config, selected_umat)
+        required = {"PROPS", mappings.get("stress", "STRESS"), mappings.get("statev", "STATEV")}
+        if not required <= arguments:
+            blockers.append("Combined parameter extraction requires PROPS, STRESS and STATEV arguments in the selected routine.")
     warnings: list[str] = []
+    if {"DGETRF", "DGETRS"}.intersection(supplied):
+        warnings.append("DGETRF/DGETRS use built-in unblocked OTI LU routines with primal pivot selection; "
+                        "callers must check INFO and only solve with nonsingular factors.")
+        if order != 1:
+            blockers.append("The built-in DGETRF/DGETRS implementations are currently verified for order=1 only.")
+    if "DSPEVD" in supplied:
+        warnings.append("DSPEVD uses the built-in OTI Jacobi implementation; callers must check INFO. "
+                        "A repeated eigenvalue cluster is returned averaged: an individual eigenvalue of a repeated pair is not differentiable, while the cluster's trace is, so symmetric functions of the principal values differentiate exactly and differences within a cluster come out zero.")
+        if order != 1:
+            blockers.append("The built-in DSPEVD implementation is currently verified for order=1 only.")
     if helper_lift_issue:
         blockers.append(f"Helper lifting failed: {helper_lift_issue}")
     report_base = _report_base(
@@ -284,9 +319,23 @@ def transform_umat_to_oti_from_config(
         config=config,
     )
     transformed_source = rewrite.source
+    warnings.extend(rewrite.include_duplicate_notes)
     transformed_name = _transformed_filename(source_file)
     transformed_path = output_dir / transformed_name
     transformed_path.write_text(transformed_source, encoding="utf-8")
+    if parameter_slots:
+        sensitivity_interface = {
+            "entry_routine": selected_umat + "_WITH_SENSITIVITIES",
+            "additional_arguments": ["OTI_DSIGMA_DP", "OTI_DSTATEV_DP"],
+            "argument_intent": "inout",
+            "shapes": ["(stress extent, parameter_directions)", "(state extent, parameter_directions)"],
+            "initialization": "Supply derivatives of incoming stress/state; zero only for parameter-independent initial data.",
+            "history": "Retain returned parameter sensitivities between increments; strain directions are reset on each call.",
+            "directions": directions_required,
+            "status": "candidate_requires_transform_and_compile_checks",
+        }
+        (output_dir / "combined_sensitivity_interface.json").write_text(
+            json.dumps(sensitivity_interface, indent=2) + "\n", encoding="utf-8")
 
     if lifted_helper_text:
         helper_source_path = output_dir / "umat_oti_helpers.f90"
@@ -304,7 +353,8 @@ def transform_umat_to_oti_from_config(
         encoding="utf-8")
 
     compile_order = output_dir / "compile_order.txt"
-    compile_units = ["master_parameters.f90", "real_utils.f90",
+    module_sources = list(_dict(config.get("transformation_settings")).get("module_sources", []))
+    compile_units = [*module_sources, "master_parameters.f90", "real_utils.f90",
                      f"{module_result.module_name}.f90", "oti_intrinsics.f90"]
     if helper_source_path is not None:
         compile_units.append(helper_source_path.name)
@@ -315,12 +365,25 @@ def transform_umat_to_oti_from_config(
     compile_lines = [
         "#!/usr/bin/env bash",
         "set -euo pipefail",
+        'cd -- "$(dirname -- "${BASH_SOURCE[0]}")"',
         "OBJDIR=${OBJDIR:-.}",
+        'mkdir -p -- "$OBJDIR"',
         'gfortran -c -ffree-form -ffree-line-length-none master_parameters.f90 -J"$OBJDIR" -o "$OBJDIR/master_parameters.o"',
         'gfortran -c -ffree-form -ffree-line-length-none -I"$OBJDIR" real_utils.f90 -J"$OBJDIR" -o "$OBJDIR/real_utils.o"',
         f'gfortran -c -ffree-form -ffree-line-length-none -I"$OBJDIR" {module_result.module_name}.f90 -J"$OBJDIR" -o "$OBJDIR/{module_result.module_name}.o"',
         'gfortran -c -ffree-form -ffree-line-length-none -I"$OBJDIR" oti_intrinsics.f90 -J"$OBJDIR" -o "$OBJDIR/oti_intrinsics.o"',
     ]
+    import shlex
+
+    module_commands = []
+    for index, module_source in enumerate(module_sources):
+        form_flags = ("-ffixed-form -ffixed-line-length-none"
+                      if Path(module_source).suffix.lower() in {".f", ".for", ".f77"}
+                      else "-ffree-form -ffree-line-length-none")
+        module_commands.append(
+            f'gfortran -c {form_flags} -I. -I"$OBJDIR" {shlex.quote(module_source)} '
+            f'-J"$OBJDIR" -o "$OBJDIR/external_module_{index}.o"')
+    compile_lines[6:6] = module_commands
     if helper_source_path is not None:
         compile_lines.append('gfortran -c -ffree-form -ffree-line-length-none -I"$OBJDIR" umat_oti_helpers.f90 -J"$OBJDIR" -o "$OBJDIR/umat_oti_helpers.o"')
     # The form the transform actually emitted, not a fixed assumption and not
@@ -342,7 +405,7 @@ def transform_umat_to_oti_from_config(
                         if parsed.form == "fixed"
                         else "-ffree-form -ffree-line-length-none")
     compile_lines.append(
-        f'gfortran -c {transformed_form} -I"$OBJDIR" {transformed_name} -J"$OBJDIR" -o "$OBJDIR/transformed_umat.o"'
+        f'gfortran -c {transformed_form} -I. -I"$OBJDIR" "{transformed_name}" -J"$OBJDIR" -o "$OBJDIR/transformed_umat.o"'
     )
     compile_hint.write_text("\n".join(compile_lines) + "\n", encoding="utf-8")
     compile_hint.chmod(0o755)
@@ -374,6 +437,8 @@ def transform_umat_to_oti_from_config(
     if higher_order_directions is not None:
         generated_files.append(higher_order_directions)
     generated_files.append(transformed_path)
+    if parameter_slots:
+        generated_files.append(output_dir / "combined_sensitivity_interface.json")
     report = {
         **report_base,
         "success": not sanity_warnings,
@@ -526,6 +591,8 @@ def _mapping(config: dict[str, Any]) -> dict[str, str]:
     result = {str(key).lower(): str(value).upper() for key, value in raw.items() if key != "optional_variables" and value}
     optional = _dict(raw.get("optional_variables"))
     result.update({str(key).lower(): str(value).upper() for key, value in optional.items() if value})
+    aliases = _dict(_dict(_dict(config.get("analysis")).get("finite_strain")).get("gradient_aliases"))
+    result.update({key.lower(): value.upper() for key, value in aliases.items()})
     return result
 
 
@@ -642,7 +709,7 @@ def _readiness_blockers(
     seed_variables = sorted(roles["seed"])
     if len(seed_variables) != 1:
         blockers.append("Exactly one seed variable is required for this milestone.")
-    elif seed_variables[0] == "DFGRD1":
+    elif seed_variables[0] == mappings.get("dfgrd1", "DFGRD1"):
         # The deformation gradient is a seed the emitter knows how to inject
         # into -- _finite_dfgrd1_seed_lines maps the six strain directions
         # into DFGRD1 -- but only under the finite-strain setting that turns
@@ -1701,7 +1768,7 @@ def _roles_with_finite_strain_promotions(config: dict[str, Any], roles: dict[str
     summary = _dict(analysis.get("region_summary"))
     candidates = _upper_set(summary.get("stress_path_variables", [])) | _upper_set(summary.get("upstream_to_stress", []))
     for name in candidates | _finite_kinematic_names_from_analysis(analysis):
-        if name in _finite_kinematic_name_set() or name in {"STRESS", "STATEV"}:
+        if name in _finite_kinematic_name_set(analysis) or name in {"STRESS", "STATEV"}:
             updated["promote"].add(name)
             updated["constant"].discard(name)
             updated["keep_real"].discard(name)
@@ -2331,6 +2398,95 @@ def _data_initialised_shadow_blockers(
     ]
 
 
+_ROUTINE_HEADER = re.compile(
+    r"^\s*(?:\d+\s+)?(?:(?:RECURSIVE|PURE|IMPURE|ELEMENTAL|MODULE)\s+)*"
+    r"(?:(?:REAL|INTEGER|LOGICAL|COMPLEX|DOUBLE\s+PRECISION|CHARACTER)"
+    r"(?:\s*\([^)]*\)|\s*\*\s*\d+)?\s+)?"
+    r"(?:SUBROUTINE|FUNCTION)\s+[A-Za-z_]\w*", re.IGNORECASE)
+_ROUTINE_END = re.compile(r"^\s*(?:\d+\s+)?END\s*(?:SUBROUTINE|FUNCTION)?\s*\w*\s*$",
+                          re.IGNORECASE)
+_INCLUDE_LINE = re.compile(r"""^\s*INCLUDE\s*['"]([^'"]+)['"]""", re.IGNORECASE)
+
+
+def _include_constants(path: Path) -> dict[str, str]:
+    """The constants an INCLUDE file defines, as name -> definition text."""
+    try:
+        text = path.read_text(errors="replace")
+    except OSError:
+        return {}
+    constants: dict[str, str] = {}
+    for line in text.splitlines():
+        stripped = strip_inline_comment(line).strip()
+        if not stripped:
+            continue
+        declaration = parse_declaration_line(stripped)
+        if declaration is None or not declaration.has_parameter_attribute:
+            continue
+        for entity in declaration.entities:
+            constants.setdefault(entity.upper_name, "".join(entity.render().split()).upper())
+    return constants
+
+
+def _drop_constants_an_include_repeats(source_text: str, base_dir: Path) -> tuple[str, list[str]]:
+    """Inline constant declarations that one of the routine's INCLUDEs repeats.
+
+    A routine may declare a constant itself and INCLUDE a file that declares
+    the same one. One viscoplastic UMAT declares a reference constant inline
+    in a routine that also includes a file declaring the same constant with
+    the same value; the compiler sees the name declared twice and stops with
+    "Symbol already has basic type of REAL". The
+    untransformed source fails on this too, so it is not something the
+    transform introduced -- but the transform is what has to emit a source
+    that builds, and a definition repeated verbatim says nothing the first one
+    did not. The inline copy is commented out rather than deleted, because the
+    include is shared with routines that have no declaration of their own.
+
+    Only an identical definition is dropped. Two different values for one name
+    are left exactly as the source has them, for the compiler to report.
+    """
+    lines = source_text.splitlines()
+    notes: list[str] = []
+    scope_start = 0
+    while scope_start < len(lines):
+        if not _ROUTINE_HEADER.match(strip_inline_comment(lines[scope_start]).strip()):
+            scope_start += 1
+            continue
+        scope_end = scope_start + 1
+        while scope_end < len(lines) and not _ROUTINE_END.match(
+                strip_inline_comment(lines[scope_end]).strip()):
+            if _ROUTINE_HEADER.match(strip_inline_comment(lines[scope_end]).strip()):
+                break
+            scope_end += 1
+        included: dict[str, str] = {}
+        for index in range(scope_start, min(scope_end + 1, len(lines))):
+            match = _INCLUDE_LINE.match(strip_inline_comment(lines[index]).strip())
+            if match:
+                included.update(_include_constants(base_dir / match.group(1)))
+        if included:
+            for index in range(scope_start, min(scope_end + 1, len(lines))):
+                stripped = strip_inline_comment(lines[index]).strip()
+                declaration = parse_declaration_line(stripped)
+                if declaration is None or not declaration.has_parameter_attribute:
+                    continue
+                if not declaration.entities:
+                    continue
+                if not all(
+                    included.get(entity.upper_name)
+                    == "".join(entity.render().split()).upper()
+                    for entity in declaration.entities
+                ):
+                    continue
+                names = ", ".join(entity.upper_name for entity in declaration.entities)
+                lines[index] = ("! UMAT-OTI: " + lines[index].strip()
+                                + "   ! repeated verbatim by an INCLUDE in this routine")
+                notes.append(
+                    f"{names} was declared both here and by an INCLUDE in the "
+                    f"same routine, with the same value; the inline copy is "
+                    f"commented out so the source compiles.")
+        scope_start = max(scope_end, scope_start + 1)
+    return "\n".join(lines) + ("\n" if source_text.endswith("\n") else ""), notes
+
+
 def _transform_source_text(
     *,
     source_text: str,
@@ -2367,6 +2523,14 @@ def _transform_source_text(
     extraction_insert_after_line = _post_tangent_insertion_line(lines, extraction_region)
     real_output_insert_after_line = tangent_context.real_output_insert_after_line or extraction_insert_after_line
     ddsdde_insert_after_line = tangent_context.ddsdde_insert_after_line or extraction_insert_after_line
+    final_stress_line = max(region["end_line"] for region in regions["stress"])
+    common_exit_label = None
+    if any(_is_return_line(lines[number - 1]) for number in range(selected_routine_span[0], final_stress_line)):
+        labels = {int(match.group(1)) for line in lines[selected_routine_span[0] - 1:selected_routine_span[1]]
+                  if (match := re.match(r"^\s*(\d+)\s", line))}
+        common_exit_label = next(label for label in range(99999, 90000, -1) if label not in labels)
+        real_output_insert_after_line = None
+        ddsdde_insert_after_line = None
     seed_dfgrd1_enabled = _validation_uses_finite_geometry(config)
     # Only a source whose seeded kinematic input is the deformation gradient
     # gets the Kirchhoff term; see _ddsdde_extraction_lines. A DSTRAN-driven
@@ -2375,6 +2539,8 @@ def _transform_source_text(
         direct_component_count_expression(argument_variables, ntens)
         if _dfgrd1_carries_the_seed(roles, mappings, seed_dfgrd1_enabled) else "")
     seed_insert_before_line = _seed_insert_before_line(config) or declaration_insert_before
+    if _directions_required(ntens, config)["parameter_slots"]:
+        seed_insert_before_line = declaration_insert_before
     if seed_insert_before_line and seed_insert_before_line < declaration_insert_before:
         seed_insert_before_line = declaration_insert_before
     seed_insert_before_line = _safe_seed_insert_before_line(lines, seed_insert_before_line or first_stress_start, declaration_insert_before)
@@ -2399,6 +2565,13 @@ def _transform_source_text(
     # a dummy argument of the UEL. The routine's own declaration is the one
     # that governs its own declarations.
     variable_shapes = _shapes_declared_in_selected_routine(parsed, selected_umat, variable_shapes)
+    parameter_slots = _directions_required(ntens, config)["parameter_slots"]
+    parameter_shapes = {}
+    if parameter_slots:
+        parameter_shapes = {
+            "OTI_DSIGMA_DP": f"{_bound(variable_shapes, mappings.get('stress', 'STRESS'), 'NTENS')},{len(parameter_slots)}",
+            "OTI_DSTATEV_DP": f"{_bound(variable_shapes, mappings.get('statev', 'STATEV'), 'NSTATV')},{len(parameter_slots)}",
+        }
     shadow_variable_names = _shadow_variable_names_for_selected_routine(lines, selected_routine_span, roles, argument_variables)
     # Lifted-helper argument surfaces are shadowed in the lifted module, not
     # here, so only the ones this routine actually mentions belong in its
@@ -2536,6 +2709,9 @@ def _transform_source_text(
     )
     ddsdde_output_method = "REAL(explicit DDSDDE output formula)" if preserved_ddsdde_output_lines else "GETIM(STRESS_OTI(i), j)"
     ddsdde_uses_getim = not preserved_ddsdde_output_lines
+    tangent_output_lines = (preserved_ddsdde_output_lines or _ddsdde_extraction_lines(
+        form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns))
+    tangent_output_lines += _parameter_extraction_lines(form, mappings, variable_shapes, parameter_slots)
     extra_jacobian_after_line_inserts, extra_jacobian_replace_lines = _extra_jacobian_splice_maps(
         config=config,
         ntens=ntens,
@@ -2569,6 +2745,7 @@ def _transform_source_text(
                     synthetic_real_variables={
                         **_synthetic_real_surface_variables(config),
                         **_synthetic_real_jacobian_targets(config),
+                        **parameter_shapes,
                     },
                     order=oti_order,
                     external_functions=_external_procedure_names(source_text),
@@ -2593,6 +2770,7 @@ def _transform_source_text(
                     external_functions=_external_procedure_names(source_text),
                     allocated_shadow_names=set(mirrored_allocations),
                     persisting_variables=persisting_variables,
+                    parameter_slots=parameter_slots,
                 )
             )
             initialization_inserted = True
@@ -2642,7 +2820,7 @@ def _transform_source_text(
                 if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                     output.extend(pure_seed_tangent_bridge_lines)
                     pure_seed_tangent_bridge_inserted = True
-                output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns))
+                output.extend(tangent_output_lines)
                 tangent_extraction_inserted = True
                 extraction_insertion_region_id = str(extraction_region.get("region_id", "")) if extraction_region else "before RETURN"
             continue
@@ -2667,7 +2845,7 @@ def _transform_source_text(
                 if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                     output.extend(pure_seed_tangent_bridge_lines)
                     pure_seed_tangent_bridge_inserted = True
-                output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns))
+                output.extend(tangent_output_lines)
                 tangent_extraction_inserted = True
                 extraction_insertion_region_id = str(extraction_region.get("region_id", "")) if extraction_region else "before RETURN"
             continue
@@ -2840,7 +3018,7 @@ def _transform_source_text(
             if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                 output.extend(pure_seed_tangent_bridge_lines)
                 pure_seed_tangent_bridge_inserted = True
-            output.extend(preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns))
+            output.extend(tangent_output_lines)
             tangent_extraction_inserted = True
             extraction_insertion_region_id = str(extraction_region.get("region_id", "")) if extraction_region else "before RETURN"
         # "Before RETURN" means before the selected routine's RETURN. A file
@@ -2851,7 +3029,16 @@ def _transform_source_text(
         # neither STRESS_OTI nor DDSDDE in scope, and the material routine ran
         # to its own RETURN with no extraction at all. Both flags were then
         # set, so nothing downstream reported a gap.
-        if (_is_return_line(line) and not real_extraction_inserted
+        at_extraction_exit = (_is_return_line(line) if common_exit_label is None
+                              else line_number == selected_routine_span[1])
+        if common_exit_label and _line_in_span(line_number, selected_routine_span):
+            if _is_return_line(line):
+                output[-1] = _restore_statement_label(_stmt(form, f"GO TO {common_exit_label}"), line, form)
+            elif line_number == selected_routine_span[1]:
+                label_line = (f"{common_exit_label:5d} CONTINUE" if form == "fixed"
+                              else f"{common_exit_label} CONTINUE")
+                output.insert(len(output) - 1, label_line)
+        if (at_extraction_exit and not real_extraction_inserted
                 and _line_in_span(line_number, selected_routine_span)):
             output.insert(len(output) - 1, _comment_line(form, "OTIS real extraction inserted before RETURN"))
             if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
@@ -2859,13 +3046,13 @@ def _transform_source_text(
                 pure_seed_tangent_bridge_inserted = True
             output[len(output) - 1:len(output) - 1] = _real_extraction_lines(form, mappings, roles, ntens, variable_shapes)
             real_extraction_inserted = True
-        if (_is_return_line(line) and not tangent_extraction_inserted
+        if (at_extraction_exit and not tangent_extraction_inserted
                 and _line_in_span(line_number, selected_routine_span)):
             output.insert(len(output) - 1, _comment_line(form, "OTIS derivative extraction inserted before RETURN"))
             if ddsdde_uses_getim and pure_seed_tangent_bridge_lines and not pure_seed_tangent_bridge_inserted:
                 output[len(output) - 1:len(output) - 1] = pure_seed_tangent_bridge_lines
                 pure_seed_tangent_bridge_inserted = True
-            output[len(output) - 1:len(output) - 1] = preserved_ddsdde_output_lines or _ddsdde_extraction_lines(form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns)
+            output[len(output) - 1:len(output) - 1] = tangent_output_lines
             tangent_extraction_inserted = True
             extraction_insertion_region_id = "before RETURN"
         if line_number >= selected_routine_span[1]:
@@ -2885,6 +3072,7 @@ def _transform_source_text(
             argument_variables,
             lifted_helper_argument_shadows,
             seed_dfgrd1=seed_dfgrd1_enabled,
+            parameter_slots=parameter_slots,
         )
     _apply_extra_jacobian_splices(
         output=output,
@@ -2898,6 +3086,10 @@ def _transform_source_text(
         output, {name.upper() for name in shadow_variable_names},
         variable_shapes, form)
     transformed_source = "\n".join(output) + "\n"
+    transformed_source, include_duplicate_notes = _drop_constants_an_include_repeats(
+        transformed_source, parsed.path.parent)
+    if parameter_slots:
+        transformed_source = _append_parameter_companion(transformed_source, selected_umat, form)
     if form == "fixed":
         transformed_source = _wrap_fixed_form_source(transformed_source)
     semantic_checks, _ = _semantic_checks(
@@ -2920,6 +3112,7 @@ def _transform_source_text(
         ddsdde_output_method=ddsdde_output_method,
         tangent_helper_regions_skipped=tangent_context.helper_regions,
         tangent_output_regions_replaced=tangent_context.output_regions,
+        include_duplicate_notes=include_duplicate_notes,
     )
 
 
@@ -3332,6 +3525,7 @@ def _initialization_lines(
     external_functions: set[str] | None = None,
     allocated_shadow_names: set[str] | None = None,
     persisting_variables: set[str] | None = None,
+    parameter_slots: list[dict[str, Any]] | None = None,
 ) -> list[str]:
     # A name the source declares EXTERNAL is a procedure. Its shadow is the
     # lifted procedure, and "F_OTI = 0.0D0" assigns to a function name --
@@ -3395,7 +3589,7 @@ def _initialization_lines(
             continue
         lines.extend(_copy_real_shadow_lines(form, name, variable_shapes.get(name, "")))
     if _dfgrd1_carries_the_seed(roles, mappings, seed_dfgrd1):
-        lines.extend(_finite_dfgrd1_seed_lines(form, ntens))
+        lines.extend(_finite_dfgrd1_seed_lines(form, ntens, mappings.get("dfgrd1", "DFGRD1")))
     # Both conditions, matching the copy-in above. The directions used to be
     # injected into DSTRAN_OTI unconditionally, which wrote that name into
     # finite-strain model routines whose argument list has no DSTRAN at all;
@@ -3406,7 +3600,50 @@ def _initialization_lines(
     if dstran in roles["seed"] and dstran_in_scope:
         for direction in range(1, ntens + 1):
             lines.append(_stmt(form, f"{dstran}_OTI({direction}) = {dstran}_OTI({direction}) + {_seed_basis_name(direction)}"))
+    if parameter_slots:
+        lines.extend([_stmt(form, "OTI_DSIGMA_DP = 0.0D0"), _stmt(form, "OTI_DSTATEV_DP = 0.0D0")])
+        for column, slot in enumerate(parameter_slots, 1):
+            basis = _seed_basis_name(slot["direction"])
+            index = slot["props_index"]
+            lines.append(_stmt(form, f"PROPS_OTI({index}) = PROPS_OTI({index}) + {basis}"))
+            for variable, buffer, bound in ((stress, "OTI_DSIGMA_DP", "NTENS"), (statev, "OTI_DSTATEV_DP", "NSTATV")):
+                lines.extend([
+                    _stmt(form, f"DO OTI_I = 1, {_bound(variable_shapes, variable, bound)}"),
+                    _stmt(form, f"{variable}_OTI(OTI_I) = {variable}_OTI(OTI_I) + {basis}*{buffer}(OTI_I,{column})"),
+                    _stmt(form, "END DO"),
+                ])
     return lines
+
+
+def _parameter_extraction_lines(form, mappings, variable_shapes, slots):
+    lines = []
+    for column, slot in enumerate(slots, 1):
+        for key, default, buffer, bound in (("stress", "STRESS", "OTI_DSIGMA_DP", "NTENS"),
+                                            ("statev", "STATEV", "OTI_DSTATEV_DP", "NSTATV")):
+            variable = mappings.get(key, default)
+            lines.extend([
+                _stmt(form, f"DO OTI_I = 1, {_bound(variable_shapes, variable, bound)}"),
+                _stmt(form, f"{buffer}(OTI_I,{column}) = GETIM({variable}_OTI(OTI_I),{slot['direction']})"),
+                _stmt(form, "END DO"),
+            ])
+    return lines
+
+
+def _append_parameter_companion(source, selected_umat, form):
+    parsed = _parse_source(source, "combined.for" if form == "fixed" else "combined.f90")
+    start, end = _selected_routine_span(parsed, selected_umat)
+    header_end = _selected_header_end(parsed, selected_umat)
+    header = next(line.text for line in parsed.logical_lines if line.line_numbers[0] == start)
+    companion = selected_umat + "_WITH_SENSITIVITIES"
+    header = re.sub(r"\b" + re.escape(selected_umat) + r"\b", companion, header, count=1, flags=re.IGNORECASE)
+    closing = header.rfind(")")
+    header = header[:closing] + ", OTI_DSIGMA_DP, OTI_DSTATEV_DP" + header[closing:]
+    lines = source.splitlines()
+    body = lines[header_end:end]
+    body = [line for line in body if line.strip().upper() not in {
+        "OTI_DSIGMA_DP = 0.0D0", "OTI_DSTATEV_DP = 0.0D0"}]
+    body[-1] = _stmt(form, f"END SUBROUTINE {companion}")
+    return source + "\n" + _stmt(form, header.strip()) + "\n" + "\n".join(body) + "\n"
 
 
 def _dfgrd1_carries_the_seed(
@@ -3423,9 +3660,10 @@ def _dfgrd1_carries_the_seed(
     """
     if not seed_dfgrd1_enabled:
         return False
-    if "DFGRD1" in roles["seed"]:
+    gradient = mappings.get("dfgrd1", "DFGRD1")
+    if gradient in roles["seed"]:
         return True
-    return "DFGRD1" in roles["promote"] and mappings.get("dstran", "DSTRAN") in roles["seed"]
+    return gradient in roles["promote"] and mappings.get("dstran", "DSTRAN") in roles["seed"]
 
 
 #: The off-diagonal pairs an engineering shear direction stands for, in
@@ -3468,7 +3706,7 @@ def _finite_strain_seed_terms(ntens: int) -> list[tuple[int, int, float, int]]:
     return terms
 
 
-def _finite_dfgrd1_seed_lines(form: str, ntens: int) -> list[str]:
+def _finite_dfgrd1_seed_lines(form: str, ntens: int, gradient: str = "DFGRD1") -> list[str]:
     """The seed injections for a deformation-gradient-driven tangent.
 
     The perturbation is ``dF = eps . F``, not ``dF = eps``. The velocity
@@ -3493,6 +3731,8 @@ def _finite_dfgrd1_seed_lines(form: str, ntens: int) -> list[str]:
     push-forward.
     """
     lines = [_comment_line(form, "OTIS finite-strain seed: dF = eps . F for each DSTRAN direction")]
+    if gradient.upper() != "DFGRD1":
+        lines.append(_comment_line(form, f"OTIS gradient argument: {gradient}"))
     # Written out over the three columns rather than looped, because a fixed-form
     # statement has 66 columns to say this in and
     # "DFGRD1_OTI(1,OTI_HI) = DFGRD1_OTI(1,OTI_HI) + 0.5D0*OTI_E4*DFGRD1(2,OTI_HI)"
@@ -3505,8 +3745,8 @@ def _finite_dfgrd1_seed_lines(form: str, ntens: int) -> list[str]:
         for index in (1, 2, 3):
             lines.append(_stmt(
                 form,
-                f"DFGRD1_OTI({row},{index}) = DFGRD1_OTI({row},{index})"
-                f" + {weight}{_seed_basis_name(direction)}*DFGRD1({column},{index})"))
+                f"{gradient}_OTI({row},{index}) = {gradient}_OTI({row},{index})"
+                f" + {weight}{_seed_basis_name(direction)}*{gradient}({column},{index})"))
     return lines
 
 
@@ -3539,7 +3779,7 @@ _DFGRD1_PUSHFORWARD_SEED_LINE = re.compile(
 )
 
 
-def parse_finite_dfgrd1_seed_line(line: str) -> tuple[int, int, float, int] | None:
+def parse_finite_dfgrd1_seed_line(line: str, gradient: str = "DFGRD1") -> tuple[int, int, float, int] | None:
     """``(row, column, coefficient, direction)`` for one emitted DFGRD1 seed line.
 
     ``None`` for any other line. The accumulated entry has to be the same one
@@ -3553,7 +3793,12 @@ def parse_finite_dfgrd1_seed_line(line: str) -> tuple[int, int, float, int] | No
     the verdict "not gradient-driven" -- and that is the field the corpus
     classifies tangents by.
     """
-    match = _DFGRD1_PUSHFORWARD_SEED_LINE.search(line)
+    pushforward_pattern = _DFGRD1_PUSHFORWARD_SEED_LINE
+    additive_pattern = _DFGRD1_SEED_LINE
+    if gradient.upper() != "DFGRD1":
+        pushforward_pattern = re.compile(pushforward_pattern.pattern.replace("DFGRD1", re.escape(gradient)), re.IGNORECASE)
+        additive_pattern = re.compile(additive_pattern.pattern.replace("DFGRD1", re.escape(gradient)), re.IGNORECASE)
+    match = pushforward_pattern.search(line)
     if match:
         row, index, read_row, read_index = (match.group(i) for i in (1, 2, 3, 4))
         column, factor_index = match.group(7), match.group(8)
@@ -3562,7 +3807,7 @@ def parse_finite_dfgrd1_seed_line(line: str) -> tuple[int, int, float, int] | No
         if index.upper() != factor_index.upper():
             return None
         return int(row), int(column), 0.5 if match.group(5) else 1.0, int(match.group(6))
-    match = _DFGRD1_SEED_LINE.search(line)
+    match = additive_pattern.search(line)
     if not match:
         return None
     row, column, read_row, read_column = (int(match.group(i)) for i in (1, 2, 3, 4))
@@ -3620,7 +3865,11 @@ def seeded_kinematics(transformed_source: str, dstran: str = "DSTRAN") -> Seeded
     """Read back the seed injections a transformed source carries."""
     strain: dict[int, int] = {}
     gradient: dict[int, list[tuple[int, int, float]]] = {}
+    gradient_name = "DFGRD1"
     for line in transformed_source.splitlines():
+        marker = re.match(r"^\s*[!Cc*]\s*OTIS gradient argument:\s*([A-Za-z]\w*)\s*$", line)
+        if marker:
+            gradient_name = marker.group(1)
         if _is_commented(line):
             continue
         strain_seed = parse_dstran_seed_line(line, dstran)
@@ -3628,7 +3877,7 @@ def seeded_kinematics(transformed_source: str, dstran: str = "DSTRAN") -> Seeded
             component, direction = strain_seed
             strain[component] = direction
             continue
-        gradient_seed = parse_finite_dfgrd1_seed_line(line)
+        gradient_seed = parse_finite_dfgrd1_seed_line(line, gradient_name)
         if gradient_seed is not None:
             row, column, coefficient, direction = gradient_seed
             # The push-forward form writes the same strain entry once per
@@ -4182,7 +4431,30 @@ def _rewrite_lifted_helper_call(
         return line
     match = re.match(r"^(\s*CALL\s+)([A-Z_][A-Z0-9_]*)(\s*\((.*)\)\s*)$", line, flags=re.IGNORECASE)
     if not match:
-        return line
+        # A CALL whose argument list runs on to a continuation line never
+        # matched the pattern above, so its callee was never renamed and the
+        # OTI actuals went to the untransformed routine. One viscoplastic
+        # UMAT writes exactly that: a CALL whose argument list opens with a
+        # shadow and continues on the next line,
+        # over eight lines. gfortran and ifort both accept it -- an external
+        # routine has no explicit interface to check against -- so the first
+        # sign of trouble is a derived type read as a real at run time.
+        opener = re.match(r"^(\s*CALL\s+)([A-Z_][A-Z0-9_]*)(\s*\(.*)$",
+                          line, flags=re.IGNORECASE)
+        if not opener:
+            return line
+        callee = opener.group(2).upper()
+        if callee not in lifted_helper_names:
+            return line
+        if helper_output_surfaces.get(callee):
+            # The surfaced outputs are appended at the closing parenthesis,
+            # which is on a line this function cannot see. Renaming without
+            # them would call the lifted routine with too few arguments.
+            raise ValueError(
+                f"{callee} is called across continuation lines and also "
+                f"surfaces helper outputs. Appending those arguments needs "
+                f"the closing parenthesis, which is on another line.")
+        return f"{opener.group(1)}{callee}_OTI{opener.group(3)}"
     callee = match.group(2).upper()
     appended_surfaces = helper_output_surfaces.get(callee, [])
     if callee not in lifted_helper_names and not appended_surfaces:
@@ -5868,11 +6140,68 @@ def _as_written_in_double(text: str) -> str:
 _FORMAT_STATEMENT_RE = re.compile(r"^\s*(?:\d+\s+)?FORMAT\s*\(", re.IGNORECASE)
 
 
+#: The array-valued intrinsics the OTI module overloads. Only these take a
+#: whole array constructor as an operand, so only these can be handed an
+#: INTEGER one that has no matching specific procedure.
+_OTI_ARRAY_INTRINSICS = re.compile(r"\b(MATMUL|DOT_PRODUCT)\s*\(", re.IGNORECASE)
+_INTEGER_ARRAY_CONSTRUCTOR = re.compile(
+    r"\(/\s*(\d+(?:\s*,\s*\d+)*)\s*/\)|\[\s*(\d+(?:\s*,\s*\d+)*)\s*\]")
+
+
+def _real_array_constructors_for_oti_intrinsics(line: str) -> str:
+    """Integer array constructors handed to MATMUL or DOT_PRODUCT over OTI.
+
+    The OTI module overloads both for (OTI, real) and (real, OTI), but not for
+    a default INTEGER operand, and an array constructor written ``(/1,0,0/)``
+    is one. One UMAT contracts an anisotropy matrix along each global axis
+    with ``matmul(I_TextureTensor,(/1,0,0/))``; once the tensor is a shadow,
+    gfortran reports "Generic function 'matmul' is not consistent with a
+    specific intrinsic interface", which names neither the argument nor the
+    reason. Writing the elements as doubles selects the overload that exists
+    and changes no value.
+
+    Only constructors whose elements are all bare integers, and only inside a
+    call that has an OTI operand. An integer constructor anywhere else may be
+    an index vector, which has to stay an integer.
+    """
+    if "_OTI" not in line.upper():
+        return line
+    result = line
+    searched_from = 0
+    while True:
+        match = _OTI_ARRAY_INTRINSICS.search(result, searched_from)
+        if not match:
+            return result
+        close = _matching_paren_index(result, match.end() - 1)
+        if close < 0:
+            # The argument list runs on to a continuation line, as the
+            # a "dot_product((/1,0,0/), &" opener does. What is on this
+            # line is still this call's arguments, and the statement carries
+            # an OTI value -- the check at the top of this function -- so the
+            # overload being selected is the hypercomplex one.
+            close = len(result)
+            arguments = result[match.end():]
+        else:
+            arguments = result[match.end():close]
+            if "_OTI" not in arguments.upper():
+                searched_from = match.end()
+                continue
+        rewritten = _INTEGER_ARRAY_CONSTRUCTOR.sub(
+            lambda found: found.group(0).replace(
+                found.group(1) or found.group(2),
+                ", ".join(f"{value.strip()}.0D0" for value in
+                          (found.group(1) or found.group(2)).split(","))),
+            arguments)
+        result = result[:match.end()] + rewritten + result[close:]
+        searched_from = match.end() + len(rewritten)
+
+
 def _normalize_numeric_literals_in_oti_expression(line: str, type_name: str = "") -> str:
     if "_OTI" not in line.upper():
         return line
     if _FORMAT_STATEMENT_RE.match(line):
         return line
+    line = _real_array_constructors_for_oti_intrinsics(line)
     normalized = re.sub(
         r"(?<![A-Za-z0-9_])((?:\d+\.\d*)|(?:\d+\.))(?![A-Za-z0-9_.dDeE])",
         lambda match: (match.group(1) if match.group(1).upper().endswith("D0")
@@ -6414,7 +6743,14 @@ def oti_arguments_into_untransformed_calls(
         if (callee.endswith("_OTI") and (bare in lifted_names or bare in defined
                                          or bare in INLINEABLE_HELPERS)):
             continue
-        if callee in lifted_names or callee in defined or callee in INLINEABLE_HELPERS:
+        # Being in `lifted_names` is NOT on its own safe. Lifting emits the
+        # rewritten body as NAME_OTI and leaves the original NAME in the file
+        # with its REAL dummies, so a call that still says NAME reaches the
+        # untransformed one. That is the case the branch above admits, and
+        # only with the _OTI suffix. One UMAT's eight-line call, whose
+        # argument list opens with a shadow, was never renamed, and
+        # this check passed it because the name was in the lifted set.
+        if callee in defined or callee in INLINEABLE_HELPERS:
             continue
         if callee in ABAQUS_UTILITY_ROUTINES:
             continue
@@ -6729,7 +7065,7 @@ def _semantic_checks(
     for needle, message in checks.items():
         if needle.upper() not in upper_source:
             warnings.append(message)
-    active_lines = _active_lines_with_numbers(transformed_source)
+    active_lines = _active_lines_with_numbers(transformed_source, form=form)
     selected_active_lines = _active_lines_in_selected_subroutine(active_lines, _selected_umat(config) if config else "UMAT")
     dstran = mappings.get("dstran", "DSTRAN")
     stress = mappings.get("stress", "STRESS")
@@ -6751,9 +7087,10 @@ def _semantic_checks(
     # DSTRAN_OTI found no consumers at all there -- which turned "nothing
     # consumes the seed", the condition these checks exist to catch, into the
     # verdict for a source that was seeding correctly all along.
+    gradient = mappings.get("dfgrd1", "DFGRD1")
     dfgrd1_seed_lines = [number for number, line in selected_active_lines
-                         if _is_finite_dfgrd1_seed_line(line)]
-    seed_names = {dstran} | ({"DFGRD1"} if dfgrd1_seed_lines else set())
+                         if _is_finite_dfgrd1_seed_line(line, gradient)]
+    seed_names = {dstran} | ({gradient} if dfgrd1_seed_lines else set())
     seed_lines = sorted(set(dstran_seed_lines) | set(dfgrd1_seed_lines))
     # The same correction, applied to the initialisation these checks pair
     # with the seed. A material routine reached through an Abaqus wrapper has
@@ -6863,8 +7200,8 @@ def _semantic_checks(
         "integer_literals_normalized_in_oti_expressions": _integer_literals_normalized_in_oti_expressions(transformed_source, form),
         "no_identifier_split_by_insignificant_blanks": _no_identifier_split_by_blanks(
             transformed_source, form),
-        "promoted_dfgrd_variables_initialized_before_use": _promoted_dfgrd_variables_initialized_before_use(selected_active_lines, roles),
-        "finite_strain_path_uses_oti_versions": _finite_strain_path_uses_oti_versions(selected_active_lines, roles),
+        "promoted_dfgrd_variables_initialized_before_use": _promoted_dfgrd_variables_initialized_before_use(selected_active_lines, roles, mappings),
+        "finite_strain_path_uses_oti_versions": _finite_strain_path_uses_oti_versions(selected_active_lines, roles, mappings),
     }
     validation_settings = _dict(config.get("validation_settings"))
     compare_outputs_raw = validation_settings.get("compare_outputs")
@@ -6922,8 +7259,9 @@ def _last_ddsdde_output_line(lines: list[tuple[int, str]], *, stress: str, ddsdd
     return last_match
 
 
-def _active_lines_with_numbers(source: str) -> list[tuple[int, str]]:
-    return [(index, line) for index, line in enumerate(source.splitlines(), start=1) if not _is_commented(line)]
+def _active_lines_with_numbers(source: str, *, form: str = "fixed") -> list[tuple[int, str]]:
+    return [(index, line) for index, line in enumerate(source.splitlines(), start=1)
+            if not (_is_commented(line) if form == "fixed" else line.lstrip().startswith("!"))]
 
 
 #: ``INTERFACE`` / ``END INTERFACE``, in the spellings a UMAT's declaration
@@ -7027,8 +7365,8 @@ def _is_dstran_seed_line(line: str, dstran: str) -> bool:
     return parse_dstran_seed_line(line, dstran) is not None
 
 
-def _is_finite_dfgrd1_seed_line(line: str) -> bool:
-    return parse_finite_dfgrd1_seed_line(line) is not None
+def _is_finite_dfgrd1_seed_line(line: str, gradient: str = "DFGRD1") -> bool:
+    return parse_finite_dfgrd1_seed_line(line, gradient) is not None
 
 
 def _is_do_line(line: str) -> bool:
@@ -7079,7 +7417,7 @@ def _stress_expression_lines(active_lines: list[tuple[int, str]], roles: dict[st
             continue
         if _is_dstran_initialization_line(line, dstran) or _is_dstran_seed_line(line, dstran):
             continue
-        if _is_finite_dfgrd1_seed_line(line):
+        if _is_finite_dfgrd1_seed_line(line, mappings.get("dfgrd1", "DFGRD1")):
             continue
         if _is_any_shadow_initialization_line(line) or _is_any_shadow_default_line(line):
             continue
@@ -7838,12 +8176,13 @@ def _integer_literals_normalized_in_oti_expressions(source: str, form: str = "fi
     return True
 
 
-def _promoted_dfgrd_variables_initialized_before_use(active_lines: list[tuple[int, str]], roles: dict[str, set[str]]) -> bool:
+def _promoted_dfgrd_variables_initialized_before_use(active_lines: list[tuple[int, str]], roles: dict[str, set[str]], mappings: dict[str, str] | None = None) -> bool:
     # Seeded counts as carried. A deformation gradient that is the seed rather
     # than a promotion has exactly the same shadow to establish before its
     # first use, and reading only "promote" skipped the check on the sources
     # where it is the only kinematic input there is.
-    for name in sorted({"DFGRD0", "DFGRD1"} & (roles["seed"] | roles["promote"])):
+    mappings = mappings or {}
+    for name in sorted({mappings.get("dfgrd0", "DFGRD0"), mappings.get("dfgrd1", "DFGRD1")} & (roles["seed"] | roles["promote"])):
         init_line = _first_line_matching(active_lines, lambda line, variable=name: _is_shadow_initialization_line(line, variable))
         use_line = _first_line_matching(
             active_lines,
@@ -7852,20 +8191,22 @@ def _promoted_dfgrd_variables_initialized_before_use(active_lines: list[tuple[in
             and not _is_shadow_default_line(line, variable)
             and not _is_shadow_initialization_line(line, variable),
         )
-        if not init_line or not use_line or init_line >= use_line:
+        if not init_line or (use_line and init_line >= use_line):
             return False
     return True
 
 
-def _finite_strain_path_uses_oti_versions(active_lines: list[tuple[int, str]], roles: dict[str, set[str]]) -> bool:
-    promoted_kinematics = _finite_kinematic_name_set() & (roles["seed"] | roles["promote"])
+def _finite_strain_path_uses_oti_versions(active_lines: list[tuple[int, str]], roles: dict[str, set[str]], mappings: dict[str, str] | None = None) -> bool:
+    mappings = mappings or {}
+    kinematics = _finite_kinematic_name_set() | {mappings.get("dfgrd0", "DFGRD0"), mappings.get("dfgrd1", "DFGRD1")}
+    promoted_kinematics = kinematics & (roles["seed"] | roles["promote"])
     if not promoted_kinematics:
         return True
     for _, line in active_lines:
         if not _line_is_transform_executable(line):
             continue
         for name in promoted_kinematics:
-            if _is_allowed_real_shadow_source(line, name):
+            if _is_allowed_real_shadow_source(line, name, mappings.get("dfgrd1", "DFGRD1")):
                 continue
             if re.search(rf"\b{re.escape(name)}\s*\(", line, flags=re.IGNORECASE):
                 return False
@@ -7884,7 +8225,7 @@ def _line_is_transform_executable(line: str) -> bool:
     return "=" in stripped or bool(re.match(r"^CALL\b", stripped, flags=re.IGNORECASE))
 
 
-def _is_allowed_real_shadow_source(line: str, name: str) -> bool:
+def _is_allowed_real_shadow_source(line: str, name: str, gradient: str = "DFGRD1") -> bool:
     """Whether a line may name the REAL array without losing a derivative.
 
     Two shapes may. Copying the argument into its shadow is the one this
@@ -7898,7 +8239,7 @@ def _is_allowed_real_shadow_source(line: str, name: str) -> bool:
     if re.search(rf"\b{re.escape(name)}_OTI\s*\([^)]*\)\s*=\s*{re.escape(name)}\s*\([^)]*\)",
                  line, flags=re.IGNORECASE):
         return True
-    return name.upper() == "DFGRD1" and _is_finite_dfgrd1_seed_line(line)
+    return name.upper() == gradient.upper() and _is_finite_dfgrd1_seed_line(line, gradient)
 
 
 def _active_region_lines(source: str, start_line: int, end_line: int) -> list[str]:
@@ -8335,10 +8676,23 @@ def _directions_required(ntens: int, config: dict[str, Any]) -> dict[str, Any]:
         end = cursor + directions
         slot_assignments.append({"id": item["id"], "seed_variable": item["seed_variable"], "directions": directions, "slot_start": start, "slot_end": end})
         cursor = end
+    parameter_slots = []
+    seen_indices = set()
+    for request in load_project_derivative_requests(config, emit_deprecations=False):
+        if request.kind not in {"parameter_sensitivity", "state_sensitivity"}:
+            continue
+        for name, props_index in request.parameter_map:
+            if props_index in seen_indices:
+                continue
+            seen_indices.add(props_index)
+            cursor += 1
+            parameter_slots.append({"name": name, "props_index": props_index, "direction": cursor})
     return {
         "ddsdde_directions": int(ntens or 0),
         "extra_directions": extra_total,
-        "total_directions": total,
+        "parameter_directions": len(parameter_slots),
+        "parameter_slots": parameter_slots,
+        "total_directions": total + len(parameter_slots),
         "slot_assignments": slot_assignments,
     }
 
@@ -8375,6 +8729,7 @@ def _report_base(
         "branch_conditions": analysis.get("branch_conditions", []),
         "finite_strain": analysis.get("finite_strain", {}),
         "finite_strain_mode": _finite_strain_mode_report(config, roles),
+        "gradient_aliases": _dict(analysis.get("finite_strain")).get("gradient_aliases"),
         "helper_policy": _helper_policy_report(config),
         "transformation_anchors": _dict(config.get("transformation_anchors")),
         "anchor_completion": anchor_completion_status(config) if config.get("transformation_anchors") else {"status": "legacy_inferred_regions", "completion_issues": []},
@@ -8425,6 +8780,8 @@ def _finite_strain_mode_report(config: dict[str, Any], roles: dict[str, set[str]
     enabled = _finite_strain_enabled(config)
     categories: dict[str, list[str]] = {}
     for category, names in FINITE_KINEMATIC_CATEGORIES.items():
+        if category == "deformation_gradient_variables":
+            names = names | {value for key, value in _mapping(config).items() if key in {"dfgrd0", "dfgrd1"}}
         selected = sorted(names & roles["promote"])
         if selected:
             categories[category] = selected
@@ -8437,17 +8794,19 @@ def _finite_strain_mode_report(config: dict[str, Any], roles: dict[str, set[str]
     }
 
 
-def _finite_kinematic_name_set() -> set[str]:
+def _finite_kinematic_name_set(analysis: dict[str, Any] | None = None) -> set[str]:
     result: set[str] = set()
     for names in FINITE_KINEMATIC_CATEGORIES.values():
         result.update(names)
+    result.update(_dict(_dict(_dict(analysis).get("finite_strain")).get("gradient_aliases")).values())
     return result
 
 
 def _finite_kinematic_names_from_analysis(analysis: dict[str, Any]) -> set[str]:
     summary = _dict(analysis.get("region_summary"))
     names = _upper_set(summary.get("upstream_to_stress", [])) | _upper_set(summary.get("stress_path_variables", []))
-    return names & _finite_kinematic_name_set()
+    aliases = set(_dict(_dict(analysis.get("finite_strain")).get("gradient_aliases")).values())
+    return (names | aliases) & _finite_kinematic_name_set(analysis)
 
 
 def _finite_strain_use_lines(analysis: dict[str, Any]) -> list[int]:
@@ -8571,7 +8930,9 @@ def _transformed_filename(source_file: str) -> str:
 
 def _module_use_line(form: str, module_name: str, ntens: int,
                      shadowed_generics: Sequence[str] = ()) -> str:
-    renamed_seeds = ", ".join(f"{_seed_basis_name(direction)} => E{direction}" for direction in range(1, max(ntens, 0) + 1))
+    from umat_oti.oti.oti_directions import member_name
+
+    renamed_seeds = ", ".join(f"{_seed_basis_name(direction)} => {member_name([direction])}" for direction in range(1, max(ntens, 0) + 1))
     suffix = f", {renamed_seeds}" if renamed_seeds else ""
     # A generic the modules export under a name this source uses for a variable
     # of its own comes in under another name instead. Both modules export the
