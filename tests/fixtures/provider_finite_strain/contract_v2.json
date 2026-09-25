@@ -1,0 +1,15 @@
+{
+  "schema": "resasm_umat_transform_v2",
+  "source": {"main_file": "umat.for"},
+  "kinematics": "finite_strain",
+  "dimensions": {"ntens": 6, "nprops": 3, "nstatev": 1},
+  "parameters": [
+    {"name": "mu", "props_index": 1},
+    {"name": "lam", "props_index": 2},
+    {"name": "hard", "props_index": 3}
+  ],
+  "derivative": {"of": "STRESS", "wrt": "PROPS", "order": 1},
+  "history": {"path_dependent": true, "state": ["KAPPA"]},
+  "output": {"object": "umat_neo_hookean_oti.obj", "contract": "umat_neo_hookean_oti.json"},
+  "validation": {"props_values": [80000.0, 120000.0, 0.4]}
+}

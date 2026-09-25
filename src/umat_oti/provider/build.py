@@ -18,11 +18,32 @@ from umat_oti.transform.parameter_sensitivity_transform import (
 )
 from umat_oti.validation.parameter_sensitivity_validation import ABA_PARAM
 
-from .emit import CARRY_SIGNATURE, EVAL_SIGNATURE, MARCH_SIGNATURE, TOTAL_SIGNATURE, emit_wrappers
+from .emit import (
+    CARRY_SIGNATURE,
+    EVAL_SIGNATURE,
+    FINITE_SIGNATURE,
+    MARCH_SIGNATURE,
+    TOTAL_SIGNATURE,
+    emit_wrappers,
+)
 
 
 class ProviderBuildError(ValueError):
     """A contract or compiler failure prevents publishing a provider."""
+
+
+#: Kinematics a contract may declare, and the entry point each one publishes.
+#: Both are always compiled into the object -- the value says which one the
+#: caller is expected to drive, and therefore which one the completed contract
+#: advertises. A finite-strain UMAT reads its kinematics from the deformation
+#: gradient, so driving it through UMAT_OTI_EVAL_TOTAL, which passes the
+#: identity, returns zero stress for every increment: a run that looks
+#: converged and means nothing. UMAT_OTI_EVAL_TOTAL_F takes the caller's
+#: DFGRD0/DFGRD1/DROT and their parameter derivatives instead.
+_KINEMATICS = {
+    "small_strain": "UMAT_OTI_EVAL_TOTAL",
+    "finite_strain": "UMAT_OTI_EVAL_TOTAL_F",
+}
 
 
 def _run(arguments: list[str], directory: Path) -> str:
@@ -85,8 +106,10 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
     raw = json.loads(contract_path.read_text(encoding="utf-8"))
     if raw.get("schema") != "resasm_umat_transform_v2":
         raise ProviderBuildError("expected schema resasm_umat_transform_v2")
-    if raw.get("kinematics") != "small_strain":
-        raise ProviderBuildError("provider supports only small_strain, not deformation-gradient kinematics")
+    kinematics = raw.get("kinematics", "small_strain")
+    if kinematics not in _KINEMATICS:
+        raise ProviderBuildError(
+            f"kinematics must be one of {', '.join(sorted(_KINEMATICS))}, not {kinematics!r}")
     dimensions = raw.get("dimensions", {})
     for name in ("ntens", "nprops", "nstatev"):
         if type(dimensions.get(name)) is not int or dimensions[name] < 0:
@@ -192,12 +215,18 @@ def build_provider(contract_path: Path | str, output_dir: Path | str, *,
           "-o", str(build_dir / "provider_link_check.so")], build_dir)
     metadata = {
         "schema": "resasm_umat_oti_contract_v1", "model_id": Path(object_name).stem,
-        "kinematics": "small_strain", "dimensions": {**dimensions, "nparam": len(parameters)},
+        "kinematics": kinematics, "dimensions": {**dimensions, "nparam": len(parameters)},
+        # The entry point a caller of THIS contract is meant to drive. Both are
+        # in the object; a finite-strain UMAT driven through the small-strain
+        # one sees F = I and returns zero stress for every increment.
+        "drive": _KINEMATICS[kinematics].lower() + "_",
         "symbols": {"regular_umat": "umat", "oti_internal": "umat_oti_internal",
                     "oti_eval": "umat_oti_eval_", "oti_eval_signature":
                     EVAL_SIGNATURE + (CARRY_SIGNATURE if path_dependent else []),
                     "oti_eval_total": "umat_oti_eval_total_",
-                    "oti_eval_total_signature": TOTAL_SIGNATURE},
+                    "oti_eval_total_signature": TOTAL_SIGNATURE,
+                    "oti_eval_total_finite": "umat_oti_eval_total_f_",
+                    "oti_eval_total_finite_signature": FINITE_SIGNATURE},
         "replay": {"mode": "path_marching" if path_dependent else "stateless",
                    "carry": ["DSIGMA_DP", "DSTATEV_DP"] if path_dependent else []},
         "march": {"symbol": "umat_oti_march_", "directions": len(parameters) + ntens,

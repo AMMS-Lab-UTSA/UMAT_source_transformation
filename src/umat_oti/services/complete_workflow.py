@@ -5,6 +5,9 @@ from __future__ import annotations
 import json
 import math
 import re
+import subprocess
+import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Sequence
 
@@ -14,6 +17,42 @@ from umat_oti.provider.collaborator import Parameter, package, provider_contract
 from umat_oti.services.jacobian_request import jacobian_contract, run_jacobian_transform
 from umat_oti.services.transformation import _payload_with_resolved_closure
 from umat_oti.validation.parameter_sensitivity_provider import check_path
+from umat_oti.validation.job_builder import DEFAULT_ABAQUS_MODULES, DEFAULT_ABAQUS_RUN_PREFIX
+
+
+@dataclass(frozen=True)
+class CompleteAbaqusOptions:
+    input_deck: Path | None = None
+    experiment: Path | None = None
+    smoke: bool = False
+    command: str = "abaqus"
+    modules: str = DEFAULT_ABAQUS_MODULES
+    run_prefix: str = DEFAULT_ABAQUS_RUN_PREFIX
+
+
+def _complete_abaqus_stage(tangent, source: Path, material_config: Path,
+                           options: CompleteAbaqusOptions) -> dict[str, Any]:
+    from umat_oti.services.abaqus_trial import run_abaqus_trial
+
+    deck = options.input_deck
+    output = tangent.contract_path.parent.resolve()
+    if deck is None and not options.smoke:
+        settings = (["--settings", str(options.experiment.resolve())] if options.experiment is not None
+                    else ["--material-config", str(material_config.resolve())])
+        generated = subprocess.run(
+            [sys.executable, "-m", "umat_oti.abaqus.trial_deck", *settings,
+             "--source", str(source), "--ntens", "6", "--out", str(output)],
+            capture_output=True, text=True, check=False)
+        if generated.returncode:
+            return {"status": "blocked", "verified": False,
+                    "error": "Abaqus deck generation failed: " + (generated.stderr or generated.stdout).strip()}
+        deck = output / "abaqus_trial.inp"
+    result = run_abaqus_trial(tangent, deck, smoke=options.smoke,
+                              abaqus_command=options.command, abaqus_modules=options.modules,
+                              run_prefix=options.run_prefix)
+    result["scope"] = "Jacobian UMAT build only" if options.smoke else "Jacobian UMAT solver execution"
+    result["parameter_sensitivities"] = "verified separately by the standalone finite-difference provider"
+    return result
 
 
 def _material_settings(path: Path) -> dict[str, Any]:
@@ -86,18 +125,48 @@ def _parameters(source: Path, settings: dict[str, Any]) -> list[Parameter]:
     return parameters
 
 
-def run_complete_workflow(source: Path, material_config: Path, out_dir: Path, *,
-                          dependency_roots: Sequence[Path] = ()) -> dict[str, Any]:
+def run_complete_workflow(source: Path, material_config: Path | None, out_dir: Path, *,
+                          dependency_roots: Sequence[Path] = (),
+                          material_discovery_root: Path | None = None,
+                          abaqus_options: CompleteAbaqusOptions | None = None) -> dict[str, Any]:
     source, out_dir = source.expanduser().resolve(), out_dir.expanduser().resolve()
     if out_dir.exists() and any(out_dir.iterdir()):
         return {"exit_code": 2, "failed_stage": "output", "error":
                 "Use a new or empty output directory so stale artifacts cannot appear successful"}
     out_dir.mkdir(parents=True, exist_ok=True)
     summary: dict[str, Any] = {"exit_code": 1, "stages": {}, "out_dir": str(out_dir)}
+    if abaqus_options is not None:
+        summary["stages"]["abaqus"] = {"status": "not_run", "verified": False,
+                                          "reason": "Requires successful Jacobian and sensitivity stages"}
     stage = "material_settings"
     try:
-        settings = _material_settings(material_config.expanduser().resolve())
-        summary["stages"][stage] = {"status": "succeeded"}
+        if abaqus_options is not None:
+            if abaqus_options.smoke and (abaqus_options.input_deck is not None or abaqus_options.experiment is not None):
+                raise ValueError("Abaqus smoke mode cannot be combined with an input deck or experiment")
+            for path in (abaqus_options.input_deck, abaqus_options.experiment):
+                if path is not None and not path.is_file():
+                    raise ValueError(f"Abaqus input/settings file not found: {path}")
+        automatic = material_config is None
+        if automatic:
+            discovery_root = (material_discovery_root or source.parent).expanduser().resolve()
+            experiment = (abaqus_options.experiment if abaqus_options is not None else None)
+            experiment = experiment or source.with_suffix(".abaqus.json")
+            generator_options = ["--settings", str(experiment.resolve())] if experiment.is_file() else []
+            generated = subprocess.run(
+                [sys.executable, "-m", "umat_oti.abaqus.trial_deck", "--discover-workflow",
+                 "--source", str(source), "--ntens", "6", "--out", str(out_dir),
+                 "--discovery-root", str(discovery_root), *generator_options],
+                capture_output=True, text=True, check=False)
+            summary["stages"][stage] = {"status": "blocked", "automatic": True,
+                                        "discovery_report": str(out_dir / "abaqus_discovery.json")}
+            if generated.returncode:
+                raise ValueError("Automatic material configuration failed: "
+                                 + (generated.stderr or generated.stdout).strip())
+            material_config = out_dir / "material_workflow.json"
+        material_config = material_config.expanduser().resolve()
+        settings = _material_settings(material_config)
+        summary["stages"][stage] = {"status": "succeeded", "automatic": automatic,
+                                    "config": str(material_config)}
         stage = "dependencies"
         discovery = out_dir / "discovery"
         discovery.mkdir()
@@ -137,6 +206,13 @@ def run_complete_workflow(source: Path, material_config: Path, out_dir: Path, *,
         summary["stages"][stage] = result
         if result["exit_code"]:
             raise ValueError("Sensitivity build or verification failed; see sensitivities/package.json")
+        if abaqus_options is not None:
+            stage = "abaqus"
+            trial = _complete_abaqus_stage(tangent, source, material_config, abaqus_options)
+            summary["stages"][stage] = trial
+            expected = "built" if abaqus_options.smoke else "completed"
+            if trial["status"] != expected:
+                raise ValueError(trial.get("error") or "Abaqus stage failed; see its trial report and logs")
         summary["exit_code"] = 0
     except (ValueError, OSError, RuntimeError) as error:
         summary.update(failed_stage=stage, error=str(error))

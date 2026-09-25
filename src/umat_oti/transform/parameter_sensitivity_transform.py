@@ -51,6 +51,7 @@ from umat_oti.fortran.literals import without_real_literals
 from umat_oti.fortran.normalize import detect_source_form
 from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines
 from umat_oti.oti.module_generator import generate_otilib_module
+from umat_oti.transform.abaqus_utility_definitions import supply_reachable_definitions
 from umat_oti.transform.helper_lifting import (
     HelperLiftingError,
     _routine_callees,
@@ -146,6 +147,7 @@ def transform_umat_for_parameter_sensitivity(
         output_dir=output_dir, ntens=n_param + extra_directions, order=1
     )
     parsed = _parse_umat_source(contract.umat_source_path)
+    parsed, _ = supply_reachable_definitions(parsed, ["UMAT"])
     umat_and_helpers = _closure_including_umat(parsed)
 
     try:
@@ -385,7 +387,8 @@ def _wrap_lifted_in_module(body: str, *, module_name: str, n_param: int = 0) -> 
 
 
 def _emit_driver(
-    contract: GenericPSContract, module_name: str, type_name: str
+    contract: GenericPSContract, module_name: str, type_name: str,
+    *, combined_entry: str | None = None,
 ) -> str:
     n_param = len(contract.parameters)
     ntens = contract.ntens
@@ -402,9 +405,8 @@ def _emit_driver(
         # EA, not E10 -- so ask the same helper the module generator uses.
         # Writing f"E{k}" silently worked up to nine parameters and then emitted
         # a symbol that does not exist.
-        seed_lines.append(
-            f"  PROPS({props_index}) = {value:.17e}_DP + {member_name([k])}"
-        )
+        seed = "" if combined_entry else f" + {member_name([k])}"
+        seed_lines.append(f"  PROPS({props_index}) = {value:.17e}_DP{seed}")
         seen_indices.add(props_index)
     for j, val in enumerate(contract.static_props, start=1):
         if j in seen_indices:
@@ -422,8 +424,9 @@ def _emit_driver(
     header_sigma_row = ",".join(param_names)
     header_state_row = ",".join(param_names)
 
-    stress_write_terms = ", ".join(f"STRESS({i + 1})%R" for i in range(ntens))
-    statev_write_terms = ", ".join(f"STATEV({i + 1})%R" for i in range(nstatv))
+    primal_suffix = "" if combined_entry else "%R"
+    stress_write_terms = ", ".join(f"STRESS({i + 1}){primal_suffix}" for i in range(ntens))
+    statev_write_terms = ", ".join(f"STATEV({i + 1}){primal_suffix}" for i in range(nstatv))
 
     sigma_getim_terms = ", ".join(
         f"GETIM(STRESS(I), {k})" for k in range(1, n_param + 1)
@@ -431,6 +434,9 @@ def _emit_driver(
     statev_getim_terms = ", ".join(
         f"GETIM(STATEV(I), {k})" for k in range(1, n_param + 1)
     )
+    if combined_entry:
+        sigma_getim_terms = ", ".join(f"OTI_DSIGMA_DP(I,{column})" for column in range(1, n_param + 1))
+        statev_getim_terms = ", ".join(f"OTI_DSTATEV_DP(I,{column})" for column in range(1, n_param + 1))
 
     n_fields_primal = ntens + nstatv
     stress_fmt = f'(I0,",oti",{n_fields_primal}(",",ES24.15E3))'
@@ -453,8 +459,9 @@ def _emit_driver(
     lines.append("!===============================================================")
     lines.append("PROGRAM ps_driver")
     lines.append("  USE master_parameters, ONLY: DP")
-    lines.append(f"  USE {module_name}")
-    lines.append("  USE umat_oti_lifted_mod")
+    if not combined_entry:
+        lines.append(f"  USE {module_name}")
+        lines.append("  USE umat_oti_lifted_mod")
     lines.append("  IMPLICIT NONE")
     lines.append("")
     lines.append(f"  INTEGER, PARAMETER :: N_INC     = {contract.n_increments}")
@@ -464,16 +471,26 @@ def _emit_driver(
     lines.append(f"  INTEGER, PARAMETER :: NDI_      = {contract.ndi}")
     lines.append(f"  INTEGER, PARAMETER :: NSHR_     = {contract.nshr}")
     lines.append("")
-    lines.append(f"  TYPE({type_name}) :: STRESS(NTENS_), STATEV(NSTATV_), PROPS(NPROPS_)")
-    lines.append(f"  TYPE({type_name}) :: DSTRAN(NTENS_), STRAN(NTENS_)")
-    lines.append(f"  TYPE({type_name}) :: DDSDDE(NTENS_,NTENS_)")
-    lines.append(f"  TYPE({type_name}) :: SSE, SPD, SCD, RPL")
-    lines.append(f"  TYPE({type_name}) :: DDSDDT(NTENS_), DRPLDE(NTENS_), DRPLDT")
-    lines.append(f"  TYPE({type_name}) :: PNEWDT, CELENT")
-    lines.append(f"  TYPE({type_name}) :: DFGRD0(3,3), DFGRD1(3,3)")
-    lines.append(f"  TYPE({type_name}) :: TIME(2), DTIME, TEMP, DTEMP, PREDEF(1), DPRED(1)")
-    lines.append(f"  TYPE({type_name}) :: DFGRDINC(3,3)")
-    lines.append(f"  TYPE({type_name}) :: COORDS(3), DROT(3,3)")
+    data_type = "REAL(DP)" if combined_entry else f"TYPE({type_name})"
+    lines.append(f"  {data_type} :: STRESS(NTENS_), STATEV(NSTATV_), PROPS(NPROPS_)")
+    lines.append(f"  {data_type} :: DSTRAN(NTENS_), STRAN(NTENS_)")
+    lines.append(f"  {data_type} :: DDSDDE(NTENS_,NTENS_)")
+    lines.append(f"  {data_type} :: SSE, SPD, SCD, RPL")
+    lines.append(f"  {data_type} :: DDSDDT(NTENS_), DRPLDE(NTENS_), DRPLDT")
+    lines.append(f"  {data_type} :: PNEWDT, CELENT")
+    lines.append(f"  {data_type} :: DFGRD0(3,3), DFGRD1(3,3)")
+    lines.append(f"  {data_type} :: TIME(2), DTIME, TEMP, DTEMP, PREDEF(1), DPRED(1)")
+    lines.append(f"  {data_type} :: DFGRDINC(3,3)")
+    lines.append(f"  {data_type} :: COORDS(3), DROT(3,3)")
+    if combined_entry:
+        lines.append(f"  REAL(DP) :: OTI_DSIGMA_DP(NTENS_,{n_param}), OTI_DSTATEV_DP(NSTATV_,{n_param})")
+        # The companion entry now also returns dSTATEV/dDSTRAN. The driver does
+        # not use it, but the actual argument list has to match the dummy one:
+        # a short call here is an out-of-bounds write inside the callee, which
+        # shows up as a segmentation fault and not as a compiler complaint.
+        lines.append("  REAL(DP) :: OTI_DSTATEV_DDSTRAN(NSTATV_,NTENS_)")
+        lines.append(f"  REAL(DP) :: OTI_DFGRD0_DP(3,3,{n_param}), OTI_DFGRD1_DP(3,3,{n_param})")
+        lines.append("  INTEGER :: U_TANGENT")
     lines.append("  CHARACTER(len=80) :: CMNAME")
     lines.append("  INTEGER :: NOEL, NPT, LAYER, KSPT, KSTEP, KINC")
     lines.append("  INTEGER :: I, K, INC")
@@ -483,6 +500,13 @@ def _emit_driver(
     lines.extend(seed_lines)
     lines.append("")
     lines.append("  ! -- Initialise state -----------------------------------------")
+    if combined_entry:
+        lines.append("  OTI_DSIGMA_DP = 0.0_DP; OTI_DSTATEV_DP = 0.0_DP")
+        lines.append("  OTI_DSTATEV_DDSTRAN = 0.0_DP")
+        # A single material point has no structure around it to move, so its
+        # geometry does not respond to a parameter: zero is the right seed
+        # here, not a placeholder for one.
+        lines.append("  OTI_DFGRD0_DP = 0.0_DP; OTI_DFGRD1_DP = 0.0_DP")
     lines.append("  DO I = 1, NTENS_")
     lines.append("     STRESS(I) = 0.0_DP")
     lines.append("     STRAN(I)  = 0.0_DP")
@@ -517,6 +541,10 @@ def _emit_driver(
     lines.append(f'  WRITE(U_SIGMA, \'(A)\') "{header_sigma}"')
     lines.append('  OPEN(NEWUNIT=U_STATE, FILE="DSTATEV_DP_OTI.csv", STATUS="REPLACE", ACTION="WRITE")')
     lines.append(f'  WRITE(U_STATE, \'(A)\') "{header_state}"')
+    if combined_entry:
+        lines.append('  OPEN(NEWUNIT=U_TANGENT, FILE="DDSDDE_OTI.csv", STATUS="REPLACE", ACTION="WRITE")')
+        lines.append('  WRITE(U_TANGENT, \'(A)\') "increment,stress_component,method,' +
+                     ",".join(f"strain_{column}" for column in range(1, ntens + 1)) + '"')
     lines.append("")
     lines.append("  ! -- Loading loop ---------------------------------------------")
     increment = contract.deformation_gradient_increment
@@ -541,13 +569,16 @@ def _emit_driver(
         lines.append("     DFGRD1 = DFGRD1 + DFGRDINC")
     lines.append(dstran_lines)
     lines.append("")
-    lines.append("     CALL umat_oti(STRESS, STATEV, DDSDDE, SSE, SPD, SCD, &")
+    entry = combined_entry or "umat_oti"
+    lines.append(f"     CALL {entry}(STRESS, STATEV, DDSDDE, SSE, SPD, SCD, &")
     lines.append("                   RPL, DDSDDT, DRPLDE, DRPLDT, &")
     lines.append("                   STRAN, DSTRAN, TIME, DTIME, TEMP, DTEMP, &")
     lines.append("                   PREDEF, DPRED, CMNAME, &")
     lines.append("                   NDI_, NSHR_, NTENS_, NSTATV_, PROPS, NPROPS_, &")
     lines.append("                   COORDS, DROT, PNEWDT, CELENT, DFGRD0, DFGRD1, &")
-    lines.append("                   NOEL, NPT, LAYER, KSPT, KSTEP, KINC)")
+    extra_arguments = (", OTI_DSIGMA_DP, OTI_DSTATEV_DP, OTI_DSTATEV_DDSTRAN"
+                       ", OTI_DFGRD0_DP, OTI_DFGRD1_DP" if combined_entry else "")
+    lines.append(f"                   NOEL, NPT, LAYER, KSPT, KSTEP, KINC{extra_arguments})")
     lines.append("")
     lines.append(f"     WRITE(U_PRIMAL, '{stress_fmt}') INC, {stress_write_terms}, {statev_write_terms}")
     lines.append("     DO I = 1, NTENS_")
@@ -556,6 +587,11 @@ def _emit_driver(
     lines.append("     DO I = 1, NSTATV_")
     lines.append(f"        WRITE(U_STATE, '{statev_fmt}') INC, I, {statev_getim_terms}")
     lines.append("     END DO")
+    if combined_entry:
+        tangent_terms = ", ".join(f"DDSDDE(I,{column})" for column in range(1, ntens + 1))
+        lines.append("     DO I = 1, NTENS_")
+        lines.append(f"        WRITE(U_TANGENT, '(I0,\",\",I0,\",oti\",{ntens}(\",\",ES24.15E3))') INC, I, {tangent_terms}")
+        lines.append("     END DO")
     lines.append("")
     lines.append("     DO I = 1, NTENS_")
     lines.append("        STRAN(I) = STRAN(I) + DSTRAN(I)")
@@ -569,6 +605,8 @@ def _emit_driver(
     lines.append("  END DO")
     lines.append("")
     lines.append("  CLOSE(U_PRIMAL); CLOSE(U_SIGMA); CLOSE(U_STATE)")
+    if combined_entry:
+        lines.append("  CLOSE(U_TANGENT)")
     lines.append("END PROGRAM ps_driver")
     return "\n".join(lines) + "\n"
 
@@ -663,6 +701,13 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "  PRIVATE",
         "  PUBLIC :: MIN, MAX, SIGN, NINT, INT, LOG10, ASSIGNMENT(=), MATMUL",
         "  PUBLIC :: OPERATOR(+), OPERATOR(-), OPERATOR(*), OPERATOR(/)",
+        "  PUBLIC :: OPERATOR(**), TINY",
+        "  INTERFACE OPERATOR(**)",
+        "    MODULE PROCEDURE oti_pow_so",
+        "  END INTERFACE",
+        "  INTERFACE TINY",
+        "    MODULE PROCEDURE oti_tiny",
+        "  END INTERFACE",
         # MATMUL with a vector operand. The generated algebra defines MATMUL
         # for two rank-2 arguments in all three mixed forms, and nothing else,
         # so STRESS = MATMUL(DDSDDE, STRAN + DSTRAN) -- rank 2 times rank 1,
@@ -871,7 +916,7 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
     # SIGN(a, b) is |a| with the sign of b; b contributes no derivative because
     # only its sign is used.
     lines += [
-        "  FUNCTION oti_sign_oo(A, B) RESULT(RES)",
+        "  ELEMENTAL FUNCTION oti_sign_oo(A, B) RESULT(RES)",
         "    IMPLICIT NONE",
         f"    TYPE({type_name}), INTENT(IN) :: A, B",
         f"    TYPE({type_name}) :: RES",
@@ -881,7 +926,7 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "      RES = ABS(A)",
         "    END IF",
         "  END FUNCTION oti_sign_oo",
-        "  FUNCTION oti_sign_or(A, B) RESULT(RES)",
+        "  ELEMENTAL FUNCTION oti_sign_or(A, B) RESULT(RES)",
         "    IMPLICIT NONE",
         f"    TYPE({type_name}), INTENT(IN) :: A",
         "    REAL(DP), INTENT(IN) :: B",
@@ -896,7 +941,7 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         # sign is piecewise constant, so the result is a real number with no
         # derivative to carry -- SIGN(1.D0, FSLIP(J)) is the usual way a flow
         # rule asks which way a slip system is going.
-        "  FUNCTION oti_sign_ro(A, B) RESULT(RES)",
+        "  ELEMENTAL FUNCTION oti_sign_ro(A, B) RESULT(RES)",
         "    IMPLICIT NONE",
         "    REAL(DP), INTENT(IN) :: A",
         f"    TYPE({type_name}), INTENT(IN) :: B",
@@ -925,6 +970,17 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "    INTEGER :: RES",
         "    RES = INT(A%R)",
         "  END FUNCTION oti_int",
+        "  ELEMENTAL FUNCTION oti_pow_so(BASE, EXPONENT) RESULT(RES)",
+        "    REAL, INTENT(IN) :: BASE",
+        f"    TYPE({type_name}), INTENT(IN) :: EXPONENT",
+        f"    TYPE({type_name}) :: RES",
+        "    RES = REAL(BASE, DP)**EXPONENT",
+        "  END FUNCTION oti_pow_so",
+        "  ELEMENTAL FUNCTION oti_tiny(VALUE) RESULT(RES)",
+        f"    TYPE({type_name}), INTENT(IN) :: VALUE",
+        "    REAL(DP) :: RES",
+        "    RES = TINY(VALUE%R)",
+        "  END FUNCTION oti_tiny",
         "END MODULE oti_intrinsics",
         "",
     ]

@@ -152,13 +152,34 @@ DSPEVD_DEFINITION = """
         END DO
         VECS(COL,COL) = 1.0D0
       END DO
+!     ROOT is hypot(GAP, 2*OFFVAL), formed without squaring either term.
+!     SQRT(GAP*GAP + 4*OFFVAL*OFFVAL) underflows: OFFVAL*OFFVAL is exactly
+!     zero below about 1.5D-154, so ROOT came back as ABS(GAP) -- and as zero
+!     when GAP had converged to zero as well, which is the ordinary end state
+!     for a repeated eigenvalue. TANGENT then divided 2*OFFVAL by zero. The
+!     guard below passes, because OFFVAL is not zero; it simply cannot survive
+!     being squared. Measured: a 3x3 with two eigenvalues 4.5D-13 apart
+!     reaches GAP = 0 with OFFVAL = -2.9D-184 and returns NaN.
+!
+!     Scaling by the larger term keeps the ratio inside range, so the small
+!     one underflows harmlessly inside a sum that is already one. Note what
+!     this must NOT do: skip the rotation when OFFVAL looks negligible. Under
+!     a hypercomplex type an off-diagonal whose real part is zero can still
+!     carry the whole derivative, and dropping it returns eigenvector
+!     sensitivities of zero for every diagonal matrix.
       DO SWEEP = 1,50
         DO LEFT = 1,N-1
           DO RIGHT = LEFT+1,N
             GAP = AMAT(RIGHT,RIGHT)-AMAT(LEFT,LEFT)
             OFFVAL = AMAT(LEFT,RIGHT)
             IF (GAP.NE.0.0D0 .OR. OFFVAL.NE.0.0D0) THEN
-              ROOT = SQRT(GAP*GAP+4.0D0*OFFVAL*OFFVAL)
+              BIGGEST = ABS(GAP)
+              TEMP = ABS(OFFVAL+OFFVAL)
+              IF (BIGGEST.GE.TEMP) THEN
+                ROOT = BIGGEST*SQRT(1.0D0+(TEMP/BIGGEST)*(TEMP/BIGGEST))
+              ELSE
+                ROOT = TEMP*SQRT(1.0D0+(BIGGEST/TEMP)*(BIGGEST/TEMP))
+              END IF
               IF (GAP.LT.0.0D0) ROOT = -ROOT
               TANGENT = (2.0D0*OFFVAL)/(GAP+ROOT)
               COSINE = 1.0D0/SQRT(1.0D0+TANGENT*TANGENT)
@@ -185,6 +206,9 @@ DSPEVD_DEFINITION = """
           END DO
         END DO
       END DO
+!     Written as .NOT.(RESIDUAL.LE.tol) rather than RESIDUAL.GT.tol: every
+!     comparison against NaN is false, so the .GT. form reported INFO = 0 --
+!     success -- on a matrix whose eigenvalues had all become NaN.
       RESIDUAL = 0.0D0
       DO COL = 1,N
         W(COL) = AMAT(COL,COL)
@@ -194,7 +218,7 @@ DSPEVD_DEFINITION = """
           END IF
         END DO
       END DO
-      IF (RESIDUAL.GT.1.0D-13) THEN
+      IF (.NOT.(RESIDUAL.LE.1.0D-13)) THEN
         INFO = 1
         RETURN
       END IF

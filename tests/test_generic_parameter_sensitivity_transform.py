@@ -326,6 +326,8 @@ def test_canonical_cli_generates_and_runs_parameter_sensitivity_for_legacy_umat(
     assert summary["artifacts"]["abaqus_umat"]["drop_in_abaqus_user_subroutine"] is True
     parameter_artifact = summary["artifacts"]["parameter_sensitivity_driver"]
     assert parameter_artifact["abi"] == "oti_material_point_driver"
+    assert parameter_artifact["evaluation"] == "combined_tangent_and_parameters"
+    assert summary["artifacts"]["combined_sensitivities"]["directions"]["total_directions"] == 11
     assert parameter_artifact["drop_in_abaqus_user_subroutine"] is False
     assert set(parameter_artifact["outputs"]) == {"DSIGMA_DP", "DSTATEV_DP"}
 
@@ -347,6 +349,7 @@ def test_canonical_cli_generates_and_runs_parameter_sensitivity_for_legacy_umat(
     assert run.returncode == 0, run.stderr
     assert (Path(parameter_artifact["root"]) / "DSIGMA_DP_OTI.csv").is_file()
     assert (Path(parameter_artifact["root"]) / "DSTATEV_DP_OTI.csv").is_file()
+    assert (Path(parameter_artifact["root"]) / "DDSDDE_OTI.csv").is_file()
 
     batch_dir = tmp_path / "batch"
     batch = subprocess.run(

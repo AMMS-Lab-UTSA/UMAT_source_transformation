@@ -286,7 +286,8 @@ def _build(directory: Path, sources, name):
 @pytest.mark.fortran
 @pytest.mark.regression
 @needs_gfortran
-def test_the_converted_finite_strain_tangent_lands_on_the_abaqus_jacobian(tmp_path):
+@pytest.mark.parametrize("gradient_aliases", [False, True])
+def test_the_converted_finite_strain_tangent_lands_on_the_abaqus_jacobian(tmp_path, gradient_aliases):
     """The converted DDSDDE reaches 1e-9 of a centred difference of the original.
 
     The reference is built from the ORIGINAL compiled UMAT, differenced with
@@ -318,11 +319,30 @@ def test_the_converted_finite_strain_tangent_lands_on_the_abaqus_jacobian(tmp_pa
     work = tmp_path / "work"
     work.mkdir()
     staged = work / "neo.f"
-    staged.write_text(NEO_HOOKEAN, encoding="utf-8")
+    source_text = NEO_HOOKEAN
+    if gradient_aliases:
+        source_text = source_text.replace("DFGRD0", "F_t").replace("DFGRD1", "F_tau")
+        source_text = source_text.replace("      C10 = PROPS(1)",
+                                          "      IF (PROPS(1).LT.0.0D0) THEN\n      RETURN\n      END IF\n      C10 = PROPS(1)")
+    staged.write_text(source_text, encoding="utf-8")
     for name in ("ABA_PARAM.INC", "aba_param.inc"):
         (work / name).write_text(ABA_PARAM, encoding="utf-8")
-    config, finite = _build_contract("neo", "auto", "STRESS", "DDSDDE", 6, 1, staged)
-    assert finite, "this source is driven by the deformation gradient"
+    if gradient_aliases:
+        config = {
+            "schema_version": "1.1", "source": str(staged), "entry_routine": "UMAT", "ntens": 6,
+            "transformation_settings": {
+                "seed_dfgrd1": True, "gradient_aliases": {"DFGRD0": "F_t", "DFGRD1": "F_tau"},
+            },
+            "parameters": [{"name": "C10", "props_index": 1}, {"name": "D1", "props_index": 2}],
+            "promote": ["DFGRD0"],
+            "derivatives": [
+                {"target": "DDSDDE", "seed": "DSTRAN", "response": "STRESS", "order": 1},
+                {"target": "DSIGMA_DP", "seed": "PROPS", "response": "STRESS", "order": 1},
+            ],
+        }
+    else:
+        config, finite = _build_contract("neo", "auto", "STRESS", "DDSDDE", 6, 1, staged)
+        assert finite, "this source is driven by the deformation gradient"
     (work / "contract.json").write_text(json.dumps(config), encoding="utf-8")
     out = tmp_path / "out"
     out.mkdir()
@@ -332,6 +352,18 @@ def test_the_converted_finite_strain_tangent_lands_on_the_abaqus_jacobian(tmp_pa
                                    TransformationOptions(compile_generated=True))
     assert report.get("transform_success"), report.get("warnings")
     assert (report.get("compilation") or {}).get("status") == "compiled", report.get("compilation")
+    assert staged.read_text(encoding="utf-8") == source_text
+    if gradient_aliases:
+        assert report["gradient_aliases"]["mapping"] == {"DFGRD0": "F_T", "DFGRD1": "F_TAU"}
+        assert not list(out.glob("*_kinematics*"))
+        transformed = Path(report["transformed_source"]).read_text().upper()
+        assert "F_TAU_OTI(1,1) = F_TAU_OTI(1,1) + OTI_E1*F_TAU(1,1)" in transformed
+        assert "DFGRD1_OTI" not in transformed
+        assert "DFGRD0_OTI" not in transformed
+        assert "F_T,F_TAU" in transformed.replace(" ", "")
+        drive = seeded_kinematics(Path(report["transformed_source"]).read_text())
+        assert drive.drives_deformation_gradient
+        assert drive.dfgrd1[4] == ((1, 2, 0.5), (2, 1, 0.5))
 
     (out / "drv.f").write_text(DRIVER, encoding="utf-8")
     objects = ["master_parameters.o", "real_utils.o"]
@@ -344,6 +376,10 @@ def test_the_converted_finite_strain_tangent_lands_on_the_abaqus_jacobian(tmp_pa
     props = [0.5, 0.02]
     gradient = [[1.08, 0.03, 0.02], [0.01, 0.96, 0.015], [0.02, 0.005, 1.02]]
     sigma_converted, tangent = _run(converted_exe, props, gradient)
+    if gradient_aliases:
+        early_stress, early_tangent = _run(converted_exe, [-0.5, 0.02], gradient)
+        assert early_stress == [0.0] * 6
+        assert early_tangent == [[0.0] * 6 for _ in range(6)]
     sigma_reference, _ = _run(reference_exe, props, gradient)
     # The value was never the defect; only the derivative was.
     assert sigma_converted == pytest.approx(sigma_reference, rel=1e-12, abs=1e-14)

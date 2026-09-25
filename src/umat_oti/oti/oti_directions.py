@@ -85,7 +85,12 @@ def flat_index(nbases: int, order: int, idx: int) -> int:
 
 def member_name(multiset: Sequence[int]) -> str:
     """Fortran member name for a direction, e.g. (1, 2) -> 'E12'."""
-    return "E" + "".join(VALID_CHARS[b] for b in multiset)
+    return "E" + "".join(basis_token(base) for base in multiset)
+
+
+def basis_token(base: int) -> str:
+    """Preserve upstream names and delimit larger basis indices uniquely."""
+    return VALID_CHARS[base] if base < len(VALID_CHARS) else f"_{base}_"
 
 
 def deriv_factor(multiset: Sequence[int]) -> int:

@@ -40,6 +40,58 @@ def test_equal_diagonal_nonzero_offdiagonal(eigensolver):
     np.testing.assert_allclose(values, [[1.5, 0., -1.], [2.5, 0., 1.]], atol=2e-12)
 
 
+def test_an_offdiagonal_too_small_to_square_does_not_become_a_nan(eigensolver):
+    """This matrix returned NaN, and reported INFO = 0 doing it.
+
+    Not constructed by hand -- found by scoring the routine against LAPACK
+    over 600 symmetric matrices, and kept verbatim because the failure needs
+    the sweeps to land on an exact state. They drive the two close diagonals
+    to precisely equal, so GAP becomes zero, leaving an off-diagonal around
+    1D-184. Squaring that underflows: OFFVAL*OFFVAL is exactly zero below
+    about 1.5D-154, so SQRT(GAP*GAP + 4*OFFVAL*OFFVAL) returned zero and
+    TANGENT divided 2*OFFVAL by it.
+
+    The NaN escaped the convergence test as well, because every comparison
+    against NaN is false: RESIDUAL .GT. tol was false, so the routine
+    returned success. Both halves are checked -- finite, and right.
+
+    Not an exotic state for a solid: it is a momentarily isotropic stress,
+    which for uniaxial loading is every increment.
+    """
+    matrix = np.array([
+        [-1.18554211097012649e+03, -1.04170182032070464e+01, 6.34020653095463089e+01],
+        [-1.04170182032070464e+01, -1.19249445973601451e+03, -4.56816667416518811e+01],
+        [6.34020653095463089e+01, -4.56816667416518811e+01, -9.21963429293859008e+02]])
+    expected = np.linalg.eigvalsh(matrix)               # gap 4.5e-13 on 1200
+    seeds = [np.zeros((3, 3)), np.zeros((3, 3))]
+    info, output = run_solver(eigensolver, matrix, seeds)
+    assert info == 0, "reported INFO = %d" % info
+    values = output[2:2 + 3 * 3].reshape(3, 3)[:, 0]
+    assert np.all(np.isfinite(values)), "returned %s" % values
+    np.testing.assert_allclose(sorted(values), sorted(expected), atol=1e-9)
+
+
+def test_a_diagonal_matrix_still_has_eigenvector_derivatives(eigensolver):
+    """The off-diagonal carries the whole sensitivity when the real part is 0.
+
+    Guarding the underflow above by skipping rotations with a negligible
+    OFFVAL passes every eigenvalue check and silently returns eigenvector
+    derivatives of zero: for a diagonal matrix the real off-diagonal IS zero,
+    and the perturbation the derivative is taken along lives entirely in the
+    imaginary part. Scaling the root instead of dropping the term is what
+    keeps this nonzero.
+    """
+    matrix = np.diag([3.0, 5.0])
+    seeds = [np.array([[0.0, 1.0], [1.0, 0.0]]), np.zeros((2, 2))]
+    info, output = run_solver(eigensolver, matrix, seeds)
+    assert info == 0
+    vectors = output[2 + 2 * 3:].reshape(2, 2, 3)
+    # dV/ds for a symmetric off-diagonal seed on diag(3, 5): the rotation
+    # rate is 1/(5-3), so the sensitivity is +/- 0.5 on the off-diagonal.
+    np.testing.assert_allclose(np.abs(vectors[:, :, 1]),
+                               [[0.0, 0.5], [0.5, 0.0]], atol=1e-9)
+
+
 def test_parameter_sensitivity_path_supplies_dspevd(tmp_path):
     from umat_oti.transform.parameter_sensitivity_transform import (
         GenericPSContract, compile_generic_ps, run_generic_ps, transform_umat_for_parameter_sensitivity,

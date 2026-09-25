@@ -398,8 +398,21 @@ def _guard_pow_or_at_zero_base(source: str) -> str:
     replacement = (
         "\\g<indent>DER0 = X%R**E\n"
         "\\g<open>"
-        "\\g<indent>    DER1 = E*X%R**(E - 1)\n"
-        "\\g<indent>    IF (.NOT. (ABS(DER1) < HUGE(1.0_DP))) DER1 = 0.0_DP\n"
+        # Decided from the BASE, before the exponentiation, not from its
+        # result afterwards. A negative exponent on a denormal-range base
+        # overflows -- x**(-2) at x = 2D-184 is 2.5D367 -- and under
+        # -ffpe-trap=overflow the trap fires inside the exponentiation, so a
+        # test on DER1 never runs. Division routes through here (a/b is
+        # a*b**(-1)), which makes any division by a denormal an abort rather
+        # than the dropped coefficient this guard intends.
+        "\\g<indent>    IF (X%R == 0.0_DP) THEN\n"
+        "\\g<indent>        DER1 = 0.0_DP\n"
+        "\\g<indent>    ELSE IF ((E - 1.0_DP)*LOG(ABS(X%R)) > LOG(HUGE(1.0_DP))) THEN\n"
+        "\\g<indent>        DER1 = 0.0_DP\n"
+        "\\g<indent>    ELSE\n"
+        "\\g<indent>        DER1 = E*X%R**(E - 1)\n"
+        "\\g<indent>        IF (.NOT. (ABS(DER1) < HUGE(1.0_DP))) DER1 = 0.0_DP\n"
+        "\\g<indent>    END IF\n"
     )
     return _POW_OR_FIRST_ORDER_RE.sub(replacement, source, count=1)
 

@@ -91,7 +91,11 @@ def test_provider_cli_build_elastic_and_independent_fd(tmp_path):
 
 @pytest.mark.parametrize(("field", "value", "message"), [
     ("schema", "other", "resasm_umat_transform_v2"),
-    ("kinematics", "finite_strain", "small_strain"),
+    # finite_strain is BUILT now (UMAT_OTI_EVAL_TOTAL_F), so what is refused is
+    # a value the build has no entry point for -- refusing to guess a seed is
+    # the point, and guessing DSTRAN for a gradient-driven UMAT would silently
+    # differentiate the wrong quantity.
+    ("kinematics", "large_strain", "kinematics must be one of"),
     ("dimensions", {"ntens": 3, "nprops": 4, "nstatev": 1}, "NTENS=6"),
     ("dimensions", {"ntens": 6, "nprops": 4, "nstatev": -1}, "nonnegative integer"),
     ("parameters", [{"name": "E", "props_index": 5}], "PROPS index"),
