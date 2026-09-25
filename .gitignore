@@ -61,3 +61,14 @@ reproduce/
 
 # Ephemeral agent worktrees created by the Workflow tool.
 .claude/worktrees/
+
+# Local working copies of models supplied under restriction, and the transform
+# outputs built from them. These carry a model's source and parameter layout,
+# which is not ours to publish; the durable record of what the transform does
+# belongs in tests/fixtures/ with a model we wrote.
+UMAT_Files/
+UMAT_Files_staged/
+out/
+
+# Local virtualenv
+.venv/

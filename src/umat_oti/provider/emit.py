@@ -1,6 +1,10 @@
 """Legacy replay ABI wrappers around the generic, fully lifted UMAT."""
 
 from umat_oti.oti.oti_directions import member_name
+from umat_oti.transform.source_transform import (
+    _finite_strain_seed_terms,
+    voigt_layout,
+)
 from umat_oti.transform.parameter_sensitivity_transform import GenericPSLayout
 
 
@@ -38,6 +42,27 @@ TOTAL_SIGNATURE = EVAL_SIGNATURE + CARRY_SIGNATURE + [
     "STRAN_DP_IN(NTENS,NPARAM)", "DSTRAN_DP_IN(NTENS,NPARAM)",
     "DSTATEV_DDSTRAN(NSTATV,NTENS)", "COORDS(3)", "CELENT", "NOEL", "NPT",
     "KSTEP", "KINC", "PNEWDT",
+]
+
+# Finite-strain total-derivative entry point. Same directions and the same
+# output block as UMAT_OTI_EVAL_TOTAL -- parameters 1..NPARAM, tangent
+# NPARAM+1..NPARAM+NTENS -- so a caller reads the results back identically.
+# What it adds is the kinematics: the caller supplies the real DFGRD0/DFGRD1
+# and DROT rather than getting the identity, and supplies their parameter
+# derivatives (DFGRD0_DP/DFGRD1_DP) so the parameter directions stay total
+# through a history where the geometry itself moves with the parameters.
+#
+# A UMAT that takes its kinematics from the deformation gradient -- every
+# large-deformation UMAT does -- sees F = I through UMAT_OTI_EVAL_TOTAL and
+# returns zero stress for every increment, which looks like a converged run
+# with trivial output rather than like a failure. That is the whole reason
+# this entry point exists.
+FINITE_ARGUMENTS = (
+    TOTAL_ARGUMENTS + ",DFGRD0,DFGRD1,DROT,DFGRD0_DP,DFGRD1_DP"
+)
+FINITE_SIGNATURE = TOTAL_SIGNATURE + [
+    "DFGRD0(3,3)", "DFGRD1(3,3)", "DROT(3,3)",
+    "DFGRD0_DP(3,3,NPARAM)", "DFGRD1_DP(3,3,NPARAM)",
 ]
 
 
@@ -78,6 +103,9 @@ def emit_wrappers(layout: GenericPSLayout, *, ntens: int, nprops: int,
     zero_carry = "" if path_dependent else "  DSIGMA_DP_IN=0.0_8;DSTATEV_DP_IN=0.0_8\n"
     total = _emit_total(layout, parameters=parameters, ntens=ntens, guard=guard,
                         declarations=declarations, carry_declarations=carry_declarations)
+    total += _emit_total_finite(layout, parameters=parameters, ntens=ntens, guard=guard,
+                                declarations=declarations,
+                                carry_declarations=carry_declarations)
     return f"""SUBROUTINE UMAT_OTI_INTERNAL({EVAL_ARGUMENTS}{CARRY_ARGUMENTS},INCREMENT)
   USE {layout.module_name}, ONLY: {layout.type_name}, ASSIGNMENT(=), GETIM
   USE umat_oti_lifted_mod, ONLY: umat_oti
@@ -225,4 +253,116 @@ SUBROUTINE UMAT_OTI_EVAL_TOTAL({TOTAL_ARGUMENTS})
     END DO
   END DO
 END SUBROUTINE UMAT_OTI_EVAL_TOTAL
+"""
+
+
+def _emit_total_finite(layout: GenericPSLayout, *,
+                       parameters: tuple[tuple[str, int], ...],
+                       ntens: int, guard: str, declarations: str,
+                       carry_declarations: str) -> str:
+    """UMAT_OTI_EVAL_TOTAL_F: the deformation-gradient-driven twin of _emit_total.
+
+    The tangent directions are seeded on DFGRD1 as ``dF = eps . F``, not as
+    ``dF = eps``: the velocity gradient a perturbation of the deformation
+    gradient produces is ``l = dF . F^-1``, so asking for ``l = eps`` -- which
+    is what the strain increment Abaqus differentiates against means -- asks
+    for ``dF = eps . F``. The right-hand side reads the REAL ``DFGRD1`` dummy,
+    never the shadow being written in the same loop, which would otherwise
+    fold the perturbation into its own push-forward. The map comes from
+    :func:`_finite_strain_seed_terms`, the same one the in-place transform
+    emits, so the two cannot drift apart.
+
+    The same direction also carries the matching unit DSTRAN seed. One
+    direction then means one strain increment in *every* representation the
+    UMAT might read, so a UMAT that consumes DFGRD1 and DSTRAN both gets a
+    consistent total derivative instead of half of one.
+
+    DDSDDE gets the Kirchhoff term on its direct columns --
+    ``C_ijkl = d sigma_ij / d eps_kl + sigma_ij delta_kl`` -- because that,
+    not ``d sigma / d eps``, is the matrix Abaqus's nlgeom stiffness is built
+    from and therefore the one a consumer's K has to be scored against.
+    """
+    nparam = len(parameters)
+    direct_count, _ = voigt_layout(ntens)
+    seeds = []
+    for direction, (_, slot) in enumerate(parameters, 1):
+        member = member_name([direction])
+        seeds.extend([
+            f"  PROPS_OTI({slot})%{member}=1.0_8",
+            f"  STRESS_OTI%{member}=DSIGMA_DP_IN(:,{direction})",
+            f"  STATEV_OTI%{member}=DSTATEV_DP_IN(:,{direction})",
+            f"  STRAN_OTI%{member}=STRAN_DP_IN(:,{direction})",
+            f"  DSTRAN_OTI%{member}=DSTRAN_DP_IN(:,{direction})",
+            f"  DFGRD0_OTI%{member}=DFGRD0_DP(:,:,{direction})",
+            f"  DFGRD1_OTI%{member}=DFGRD1_DP(:,:,{direction})",
+        ])
+    seeds.append("  ! finite-strain tangent seed: dF = eps . F, one direction per Voigt component")
+    for row, column, coefficient, direction in _finite_strain_seed_terms(ntens):
+        member = member_name([nparam + direction])
+        weight = "" if coefficient == 1.0 else "0.5_8*"
+        seeds.append(
+            f"  DFGRD1_OTI({row},:)%{member}=DFGRD1_OTI({row},:)%{member}"
+            f"+{weight}DFGRD1({column},:)")
+    for component in range(1, ntens + 1):
+        seeds.append(
+            f"  DSTRAN_OTI({component})%{member_name([nparam + component])}=1.0_8")
+    seed_text = "\n".join(seeds)
+    kirchhoff = (
+        f"""  DO AXIS=1,{direct_count}
+    DO COMPONENT=1,NTENS
+      DDSDDE(COMPONENT,AXIS)=DDSDDE(COMPONENT,AXIS)+STRESS(COMPONENT)
+    END DO
+  END DO
+""" if direct_count else "")
+    return f"""
+SUBROUTINE UMAT_OTI_EVAL_TOTAL_F({FINITE_ARGUMENTS})
+  USE {layout.module_name}, ONLY: {layout.type_name}, ASSIGNMENT(=), GETIM
+  USE umat_oti_lifted_mod, ONLY: umat_oti
+  IMPLICIT NONE
+{declarations}{carry_declarations}
+  REAL(8), INTENT(IN) :: STRAN_DP_IN(NTENS,NPARAM),DSTRAN_DP_IN(NTENS,NPARAM),COORDS(3),CELENT
+  REAL(8), INTENT(IN) :: DFGRD0(3,3),DFGRD1(3,3),DROT(3,3)
+  REAL(8), INTENT(IN) :: DFGRD0_DP(3,3,NPARAM),DFGRD1_DP(3,3,NPARAM)
+  REAL(8), INTENT(OUT) :: DSTATEV_DDSTRAN(NSTATV,NTENS),PNEWDT
+  INTEGER, INTENT(IN) :: NOEL,NPT,KSTEP,KINC
+  INTEGER :: COMPONENT,PARAMETER_INDEX,AXIS
+  TYPE({layout.type_name}) :: STRESS_OTI(NTENS),STATEV_OTI(NSTATV),PROPS_OTI(NPROPS)
+  TYPE({layout.type_name}) :: STRAN_OTI(NTENS),DSTRAN_OTI(NTENS),DDSDDE_OTI(NTENS,NTENS)
+  TYPE({layout.type_name}) :: SSE,SPD,SCD,RPL,DDSDDT(NTENS),DRPLDE(NTENS),DRPLDT
+  TYPE({layout.type_name}) :: TIME_OTI(2),DTIME_OTI,TEMP_OTI,DTEMP_OTI,PREDEF(1),DPRED(1)
+  TYPE({layout.type_name}) :: COORDS_OTI(3),DROT_OTI(3,3),DFGRD0_OTI(3,3),DFGRD1_OTI(3,3)
+  TYPE({layout.type_name}) :: PNEWDT_OTI,CELENT_OTI
+  CHARACTER(80) :: CMNAME
+{guard}
+  STRESS_OTI=STRESS;STATEV_OTI=STATEV;PROPS_OTI=PROPS
+  STRAN_OTI=STRAN;DSTRAN_OTI=DSTRAN;DDSDDE_OTI=0.0_8
+  TIME_OTI=TIME;DTIME_OTI=DTIME;TEMP_OTI=TEMP;DTEMP_OTI=DTEMP
+  SSE=0.0_8;SPD=0.0_8;SCD=0.0_8;RPL=0.0_8;DDSDDT=0.0_8;DRPLDE=0.0_8;DRPLDT=0.0_8
+  PREDEF=0.0_8;DPRED=0.0_8;COORDS_OTI=COORDS
+  DROT_OTI=DROT;DFGRD0_OTI=DFGRD0;DFGRD1_OTI=DFGRD1
+  PNEWDT_OTI=1.0_8;CELENT_OTI=CELENT;CMNAME='MATERIAL_OTI'
+{seed_text}
+  CALL umat_oti(STRESS_OTI,STATEV_OTI,DDSDDE_OTI,SSE,SPD,SCD,RPL,DDSDDT,DRPLDE,DRPLDT, &
+    STRAN_OTI,DSTRAN_OTI,TIME_OTI,DTIME_OTI,TEMP_OTI,DTEMP_OTI,PREDEF,DPRED,CMNAME, &
+    {direct_count},NTENS-{direct_count},NTENS,NSTATV,PROPS_OTI,NPROPS,COORDS_OTI,DROT_OTI, &
+    PNEWDT_OTI,CELENT_OTI,DFGRD0_OTI,DFGRD1_OTI,NOEL,NPT,1,1,KSTEP,KINC)
+  PNEWDT=PNEWDT_OTI%R
+  STRESS=STRESS_OTI%R;STATEV=STATEV_OTI%R
+  DO PARAMETER_INDEX=1,NPARAM
+    DO COMPONENT=1,NTENS
+      DSIGMA_DP(COMPONENT,PARAMETER_INDEX)=GETIM(STRESS_OTI(COMPONENT),PARAMETER_INDEX)
+    END DO
+    DO COMPONENT=1,NSTATV
+      DSTATEV_DP(COMPONENT,PARAMETER_INDEX)=GETIM(STATEV_OTI(COMPONENT),PARAMETER_INDEX)
+    END DO
+  END DO
+  DO AXIS=1,NTENS
+    DO COMPONENT=1,NTENS
+      DDSDDE(COMPONENT,AXIS)=GETIM(STRESS_OTI(COMPONENT),NPARAM+AXIS)
+    END DO
+    DO COMPONENT=1,NSTATV
+      DSTATEV_DDSTRAN(COMPONENT,AXIS)=GETIM(STATEV_OTI(COMPONENT),NPARAM+AXIS)
+    END DO
+  END DO
+{kirchhoff}END SUBROUTINE UMAT_OTI_EVAL_TOTAL_F
 """

@@ -584,13 +584,13 @@ def resolve_closure(entry_path: Path, *, entry: str = "UMAT",
         for symbol in callees:
             if symbol in graph.resolved or symbol in visited:
                 continue
+            candidates = index.get(symbol)
             if symbol in ABAQUS_RUNTIME_ROUTINES:
                 runtime.add(symbol)
                 continue
-            if symbol in EXTERNAL_LIBRARY_ROUTINES:
+            if symbol in EXTERNAL_LIBRARY_ROUTINES and not candidates:
                 libraries[symbol] = EXTERNAL_LIBRARY_ROUTINES[symbol]
                 continue
-            candidates = index.get(symbol)
             if not candidates:
                 missing.setdefault(symbol, set()).add(current)
                 continue

@@ -326,11 +326,34 @@ def transform_umat_to_oti_from_config(
     if parameter_slots:
         sensitivity_interface = {
             "entry_routine": selected_umat + "_WITH_SENSITIVITIES",
-            "additional_arguments": ["OTI_DSIGMA_DP", "OTI_DSTATEV_DP"],
-            "argument_intent": "inout",
-            "shapes": ["(stress extent, parameter_directions)", "(state extent, parameter_directions)"],
+            "additional_arguments": ["OTI_DSIGMA_DP", "OTI_DSTATEV_DP",
+                                     "OTI_DSTATEV_DDSTRAN",
+                                     "OTI_DFGRD0_DP", "OTI_DFGRD1_DP"],
+            "argument_intent": "inout for the two parameter arrays, out for "
+                               "OTI_DSTATEV_DDSTRAN, in for the two gradient "
+                               "derivative seeds",
+            "shapes": ["(stress extent, parameter_directions)",
+                       "(state extent, parameter_directions)",
+                       "(state extent, stress extent)",
+                       "(3, 3, parameter_directions)",
+                       "(3, 3, parameter_directions)"],
+            "gradient_seeds": "OTI_DFGRD0_DP and OTI_DFGRD1_DP carry "
+                              "dF/dp at the start and end of the increment. "
+                              "For a gradient-driven UMAT they are the only "
+                              "channel the kinematics have, so a replay that "
+                              "leaves them zero differentiates along a frozen "
+                              "geometry. Pass zeros to hold the kinematics "
+                              "fixed, which is what a single material point "
+                              "in isolation wants.",
             "initialization": "Supply derivatives of incoming stress/state; zero only for parameter-independent initial data.",
             "history": "Retain returned parameter sensitivities between increments; strain directions are reset on each call.",
+            "state_tangent": "OTI_DSTATEV_DDSTRAN is dSTATEV/dDSTRAN from the "
+                             "same directions that give DDSDDE. A consumer "
+                             "replaying a history must add "
+                             "OTI_DSTATEV_DDSTRAN . (B du/dp) to OTI_DSTATEV_DP "
+                             "after it solves each increment, before carrying "
+                             "the state derivative forward; otherwise the "
+                             "carry is taken along a frozen strain path.",
             "directions": directions_required,
             "status": "candidate_requires_transform_and_compile_checks",
         }
@@ -2571,6 +2594,24 @@ def _transform_source_text(
         parameter_shapes = {
             "OTI_DSIGMA_DP": f"{_bound(variable_shapes, mappings.get('stress', 'STRESS'), 'NTENS')},{len(parameter_slots)}",
             "OTI_DSTATEV_DP": f"{_bound(variable_shapes, mappings.get('statev', 'STATEV'), 'NSTATV')},{len(parameter_slots)}",
+            # The state half of the consistent tangent, from the SAME strain
+            # directions that give DDSDDE. A consumer replaying a history
+            # increment by increment needs it: after it solves for the
+            # kinematic response du/dp of an increment it has to correct
+            # dSTATEV/dp by dSTATEV/dDSTRAN . (B du/dp) before carrying the
+            # state derivative into the next increment. Without it the carry
+            # is the derivative along a FROZEN strain path, and the error
+            # compounds over the increments rather than staying local to one.
+            "OTI_DSTATEV_DDSTRAN": f"{_bound(variable_shapes, mappings.get('statev', 'STATEV'), 'NSTATV')},{_bound(variable_shapes, mappings.get('stress', 'STRESS'), 'NTENS')}",
+            # Inputs, not outputs: the parameter derivative of the deformation
+            # gradient at each end of the increment. Declared for every
+            # transform rather than only for gradient-driven ones, so that the
+            # companion has ONE signature -- a small-strain consumer passes
+            # zeros and never thinks about them again, and a consumer cannot
+            # be handed an argument list that depends on a property of the
+            # source it did not inspect.
+            "OTI_DFGRD0_DP": f"3,3,{len(parameter_slots)}",
+            "OTI_DFGRD1_DP": f"3,3,{len(parameter_slots)}",
         }
     shadow_variable_names = _shadow_variable_names_for_selected_routine(lines, selected_routine_span, roles, argument_variables)
     # Lifted-helper argument surfaces are shadowed in the lifted module, not
@@ -2712,6 +2753,8 @@ def _transform_source_text(
     tangent_output_lines = (preserved_ddsdde_output_lines or _ddsdde_extraction_lines(
         form, mappings, ntens, oti_order, oti_directions, kirchhoff_direct_columns))
     tangent_output_lines += _parameter_extraction_lines(form, mappings, variable_shapes, parameter_slots)
+    tangent_output_lines += _state_tangent_extraction_lines(
+        form, mappings, variable_shapes, ntens, parameter_slots)
     extra_jacobian_after_line_inserts, extra_jacobian_replace_lines = _extra_jacobian_splice_maps(
         config=config,
         ntens=ntens,
@@ -3601,7 +3644,9 @@ def _initialization_lines(
         for direction in range(1, ntens + 1):
             lines.append(_stmt(form, f"{dstran}_OTI({direction}) = {dstran}_OTI({direction}) + {_seed_basis_name(direction)}"))
     if parameter_slots:
-        lines.extend([_stmt(form, "OTI_DSIGMA_DP = 0.0D0"), _stmt(form, "OTI_DSTATEV_DP = 0.0D0")])
+        lines.extend([_stmt(form, "OTI_DSIGMA_DP = 0.0D0"),
+                      _stmt(form, "OTI_DSTATEV_DP = 0.0D0"),
+                      _stmt(form, "OTI_DSTATEV_DDSTRAN = 0.0D0")])
         for column, slot in enumerate(parameter_slots, 1):
             basis = _seed_basis_name(slot["direction"])
             index = slot["props_index"]
@@ -3612,7 +3657,55 @@ def _initialization_lines(
                     _stmt(form, f"{variable}_OTI(OTI_I) = {variable}_OTI(OTI_I) + {basis}*{buffer}(OTI_I,{column})"),
                     _stmt(form, "END DO"),
                 ])
+            # The deformation gradient at the ends of the increment also moves
+            # with the parameter once the structure around this point has
+            # responded to it, and for a gradient-driven UMAT that is the ONLY
+            # channel the kinematics have. Seeding the incoming stress and
+            # state but not these leaves the parameter direction carrying a
+            # derivative taken along a frozen geometry -- right at one
+            # integration point in isolation, wrong in an assembled model,
+            # and wrong by a first-order amount rather than a small one.
+            for buffer, key, default in (("OTI_DFGRD0_DP", "dfgrd0", "DFGRD0"),
+                                         ("OTI_DFGRD1_DP", "dfgrd1", "DFGRD1")):
+                gradient = mappings.get(key, default)
+                if gradient not in shadow_variables:
+                    continue
+                lines.extend([
+                    _stmt(form, "DO OTI_I = 1, 3"),
+                    _stmt(form, "   DO OTI_J = 1, 3"),
+                    _stmt(form, f"      {gradient}_OTI(OTI_I,OTI_J) = "
+                                f"{gradient}_OTI(OTI_I,OTI_J) + "
+                                f"{basis}*{buffer}(OTI_I,OTI_J,{column})"),
+                    _stmt(form, "   END DO"),
+                    _stmt(form, "END DO"),
+                ])
     return lines
+
+
+def _state_tangent_extraction_lines(form, mappings, variable_shapes, ntens, slots):
+    """dSTATEV/dDSTRAN, off the same directions that give DDSDDE.
+
+    Directions 1..NTENS carry the strain-increment seed. The tangent reads the
+    stress out of them; the state is seeded and updated alongside it and its
+    imaginary parts along those same directions are dSTATEV/dDSTRAN, already
+    computed and, until now, discarded at the routine boundary.
+
+    Emitted only when the routine publishes parameter sensitivities at all,
+    because that is when the companion argument exists to receive it.
+    """
+    if not slots:
+        return []
+    statev = mappings.get("statev", "STATEV")
+    stress = mappings.get("stress", "STRESS")
+    return [
+        _comment_line(form, "OTIS state tangent: dSTATEV(i)/dDSTRAN(j)"),
+        _stmt(form, f"DO OTI_J = 1, {_bound(variable_shapes, stress, 'NTENS')}"),
+        _stmt(form, f"   DO OTI_I = 1, {_bound(variable_shapes, statev, 'NSTATV')}"),
+        _stmt(form, f"      OTI_DSTATEV_DDSTRAN(OTI_I,OTI_J) = "
+                    f"GETIM({statev}_OTI(OTI_I),OTI_J)"),
+        _stmt(form, "   END DO"),
+        _stmt(form, "END DO"),
+    ]
 
 
 def _parameter_extraction_lines(form, mappings, variable_shapes, slots):
@@ -3637,11 +3730,15 @@ def _append_parameter_companion(source, selected_umat, form):
     companion = selected_umat + "_WITH_SENSITIVITIES"
     header = re.sub(r"\b" + re.escape(selected_umat) + r"\b", companion, header, count=1, flags=re.IGNORECASE)
     closing = header.rfind(")")
-    header = header[:closing] + ", OTI_DSIGMA_DP, OTI_DSTATEV_DP" + header[closing:]
+    header = (header[:closing]
+              + ", OTI_DSIGMA_DP, OTI_DSTATEV_DP, OTI_DSTATEV_DDSTRAN"
+              + ", OTI_DFGRD0_DP, OTI_DFGRD1_DP"
+              + header[closing:])
     lines = source.splitlines()
     body = lines[header_end:end]
     body = [line for line in body if line.strip().upper() not in {
-        "OTI_DSIGMA_DP = 0.0D0", "OTI_DSTATEV_DP = 0.0D0"}]
+        "OTI_DSIGMA_DP = 0.0D0", "OTI_DSTATEV_DP = 0.0D0",
+        "OTI_DSTATEV_DDSTRAN = 0.0D0"}]
     body[-1] = _stmt(form, f"END SUBROUTINE {companion}")
     return source + "\n" + _stmt(form, header.strip()) + "\n" + "\n".join(body) + "\n"
 

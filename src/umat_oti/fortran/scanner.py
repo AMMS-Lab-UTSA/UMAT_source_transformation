@@ -9,7 +9,7 @@ from umat_oti.fortran.interface_detection import umat_like_routines
 from umat_oti.fortran.normalize import detect_source_form
 from umat_oti.fortran.parser import (
     interface_declared_procedure_sites, logical_lines_from_text,
-    parse_subroutines, split_top_level,
+    parse_subroutines, split_top_level, parse_entity,
 )
 from umat_oti.fortran.regions import _is_executable_line, detect_candidate_regions
 from umat_oti.fortran.variables import ASSIGNMENT_RE, TOKEN_RE, collect_variables
@@ -33,7 +33,8 @@ PLASTICITY_PATTERNS = {
 CONVERGENCE_PATTERN = re.compile(r"\b(ABS|DABS|NORM|TOLER|TOL|RES\w*|FGAM|FJAC|ITER\w*|MAXITER|CONVERG\w*)\b", flags=re.IGNORECASE)
 
 
-def analyze_fortran_source(path: Path) -> dict[str, Any]:
+def analyze_fortran_source(path: Path, *, gradient_aliases: dict[str, str] | None = None,
+                           selected_umat: str = "UMAT") -> dict[str, Any]:
     warnings: list[str] = []
     try:
         text = path.read_text(encoding="utf-8")
@@ -58,6 +59,9 @@ def analyze_fortran_source(path: Path) -> dict[str, Any]:
     unsupported = scan_unsupported_features(parsed.logical_lines, call_sites, parsed.text, form)
     external_calls = _external_calls(parsed, call_sites)
     detected_regions = detect_candidate_regions(parsed)
+    finite_lines = parsed.logical_lines
+    if gradient_aliases is not None:
+        gradient_aliases, finite_lines = _validate_gradient_aliases(parsed, selected_umat, gradient_aliases)
     if not parsed.subroutines:
         warnings.append("No subroutines were detected. The source may be malformed or use unsupported syntax.")
     if not any(routine.upper_name == "UMAT" for routine in parsed.subroutines):
@@ -75,7 +79,7 @@ def analyze_fortran_source(path: Path) -> dict[str, Any]:
         "detected_variables": [record.to_json() for record in collect_variables(parsed).values()],
         "file_io": _scan_file_io(parsed.logical_lines),
         "interface_declared_procedures": interface_declared_procedure_sites(parsed.logical_lines),
-        "finite_strain": _finite_strain_analysis(parsed.logical_lines, detected_regions["regions"]),
+        "finite_strain": _finite_strain_analysis(finite_lines, detected_regions["regions"], gradient_aliases),
         "form": parsed.form,
         "has_subroutine_umat": any(routine.upper_name == "UMAT" for routine in parsed.subroutines),
         "markers": source_markers(parsed),
@@ -273,13 +277,44 @@ def _plasticity_indicators(logical_lines: tuple[FortranLogicalLine, ...]) -> dic
     }
 
 
-def _finite_strain_analysis(logical_lines: tuple[FortranLogicalLine, ...], regions: list[dict[str, object]]) -> dict[str, object]:
-    dfgrd0_uses = _uses_of("DFGRD0", logical_lines)
-    dfgrd1_uses = _uses_of("DFGRD1", logical_lines)
+def _validate_gradient_aliases(parsed: ParsedFortranSource, selected: str, aliases: Any):
+    if not isinstance(aliases, dict) or set(aliases) != {"DFGRD0", "DFGRD1"}:
+        raise ValueError("gradient_aliases must map DFGRD0 and DFGRD1 to the old and new gradient argument names.")
+    mapping = {name: str(alias).upper() for name, alias in aliases.items()}
+    if len(set(mapping.values())) != 2 or any(not re.fullmatch(r"[A-Z][A-Z0-9_]*", alias) for alias in mapping.values()):
+        raise ValueError("Gradient aliases must be distinct Fortran identifiers.")
+    routine = next((item for item in parsed.subroutines if item.name.upper() == selected.upper()), None)
+    if routine is None or not set(mapping.values()) <= {name.upper() for name in routine.args}:
+        raise ValueError(f"Gradient aliases must name arguments of {selected}.")
+    for alias in mapping.values():
+        dimensions = [entity.dimensions for declaration in routine.declarations for entity in declaration.entities
+                      if entity.name.upper() == alias and entity.dimensions]
+        for logical in routine.lines:
+            dimension = re.match(r"^DIMENSION\s+(?:::)?\s*(.*)$", logical.text, re.IGNORECASE)
+            if dimension:
+                entities = [parse_entity(part) for part in split_top_level(dimension.group(1))]
+                dimensions.extend(entity.dimensions for entity in entities if entity and entity.name.upper() == alias)
+        for declaration in routine.declarations:
+            if any(entity.name.upper() == alias for entity in declaration.entities):
+                for attribute in declaration.attributes:
+                    dimension = re.fullmatch(r"DIMENSION\s*\((.*)\)", attribute.strip(), re.IGNORECASE)
+                    if dimension:
+                        dimensions.append(tuple(split_top_level(dimension.group(1))))
+        if not any(tuple(bound.strip() for bound in shape) == ("3", "3") for shape in dimensions):
+            raise ValueError(f"Gradient argument {alias} must be explicitly dimensioned (3,3).")
+    return mapping, routine.lines
+
+
+def _finite_strain_analysis(logical_lines: tuple[FortranLogicalLine, ...], regions: list[dict[str, object]],
+                            gradient_aliases: dict[str, str] | None = None) -> dict[str, object]:
+    mapping = gradient_aliases or {"DFGRD0": "DFGRD0", "DFGRD1": "DFGRD1"}
+    dfgrd0_uses = _uses_of(mapping["DFGRD0"], logical_lines)
+    dfgrd1_uses = _uses_of(mapping["DFGRD1"], logical_lines)
     executable_uses = dfgrd0_uses + dfgrd1_uses
     stress_regions = [_normalized_region(row) for row in regions if str(row.get("region type", "")) == "stress"]
     dfgrd_driven = bool(executable_uses and stress_regions)
     return {
+        **({"gradient_aliases": mapping} if gradient_aliases is not None else {}),
         "dfgrd0_executable_uses": dfgrd0_uses,
         "dfgrd1_executable_uses": dfgrd1_uses,
         "dfgrd_driven_stress_update": dfgrd_driven,

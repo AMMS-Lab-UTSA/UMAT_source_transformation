@@ -41,6 +41,7 @@ from umat_oti.fortran.scanner import analyze_fortran_source
 from umat_oti.transform.parameter_sensitivity_transform import (
     GenericPSContract,
     NonDifferentiableParameterPathError,
+    _emit_driver,
     transform_umat_for_parameter_sensitivity,
     validate_parameter_paths,
 )
@@ -116,7 +117,37 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
     if not source_path.is_file():
         return {"config": str(config_path), "error": f"Source file not found: {source_path}", "status_category": "source_not_found"}, 1
 
+    from umat_oti.transform.dependency_bundle import bundle_sources
+    if not closure:
+        try:
+            staged, bundle_manifest = bundle_sources([source_path, *_declared_module_sources(config_path)], out_dir)
+            source_path = staged[source_path.resolve()]
+            source["selected_umat_file"] = str(source_path)
+        except (OSError, ValueError) as exc:
+            return {"config": str(config_path), "error": str(exc), "status_category": "dependency_bundle_failed"}, 1
+    else:
+        bundle_manifest = Path(closure["bundle_manifest"])
+
+    bundle_record = json.loads(bundle_manifest.read_text(encoding="utf-8"))
+    module_sources = _declared_module_sources(config_path)
+    bundled_modules = {Path(item["original"]): item["bundled"] for item in bundle_record["files"]}
+    config.setdefault("transformation_settings", {})["module_sources"] = [
+        bundled_modules[path] for path in module_sources]
+    bundle_files = [bundle_manifest, *[out_dir / item["bundled"] for item in bundle_record["files"]]]
     source_text = source_path.read_text(encoding="utf-8", errors="replace")
+    aliases = (config.get("analysis", {}).get("finite_strain", {}).get("gradient_aliases"))
+    alias_record = None
+    if aliases is not None:
+        alias_record = {
+            "mapping": aliases,
+            "entry_routine": str(source.get("selected_umat_name") or source.get("detected_umat_name") or "UMAT"),
+            "source": str(source_path),
+            "source_sha256": hashlib.sha256(source_text.encode()).hexdigest(),
+            "scope": "Native argument mappings; source identifiers are preserved without preprocessing renames.",
+        }
+        alias_manifest = out_dir / "gradient_aliases.json"
+        alias_manifest.write_text(json.dumps(alias_record, indent=2) + "\n", encoding="utf-8")
+        bundle_files.append(alias_manifest)
     config = merge_completed_anchors_into_config(config, source_text)
     derivative_requests = load_project_derivative_requests(config)
     request_errors = validate_derivative_requests(derivative_requests)
@@ -149,6 +180,8 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
         "ntens": ntens,
         "order": settings.get("order"),
         "derivative_requests": [request.to_dict() for request in derivative_requests],
+        "dependency_bundle": str(bundle_manifest),
+        "gradient_aliases": alias_record,
     }
     if closure:
         summary["dependency_closure"] = closure
@@ -160,7 +193,13 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
     result = transform_umat_to_oti_from_config(source_text, config, out_dir, ntens)
     combined = _write_combined_source(out_dir, result.transformed_source_path) if result.success else None
     parameter_artifact: dict[str, Any] | None = None
-    if result.success and parameter_requests:
+    combined_interface_path = out_dir / "combined_sensitivity_interface.json"
+    combined_interface = (json.loads(combined_interface_path.read_text(encoding="utf-8"))
+                          if parameter_requests and result.transformed_source_path and combined_interface_path.is_file() else None)
+    driver_config = config.get("material_point_driver") or {}
+    numeric_driver = bool(driver_config.get("dstran_per_increment")) and all(
+        entry.get("value") is not None for entry in config.get("parameters", []))
+    if result.success and parameter_requests and numeric_driver:
         try:
             parameter_artifact = _generate_parameter_sensitivity_artifact(
                 config=config,
@@ -168,6 +207,7 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
                 requests=parameter_requests,
                 out_dir=out_dir / "parameter_sensitivity",
                 ntens=ntens,
+                combined_interface=combined_interface,
             )
         except NonDifferentiableParameterPathError as exc:
             summary.update(
@@ -211,7 +251,7 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
             # The directions the OTI module was built with: NTENS strain
             # directions plus one per local-Jacobian seed direction.
             direction_count=int((result.report.get("directions_required") or {}).get("total_directions") or ntens),
-            generated_files=[*result.generated_files, *([combined] if combined else [])],
+            generated_files=[*result.generated_files, *([combined] if combined else []), *bundle_files],
             ntens_source=str(settings.get("ntens_source", "")),
             ntens_confidence=str(settings.get("ntens_confidence", "")),
             ntens_warning=str(settings.get("ntens_warning", "")),
@@ -239,6 +279,7 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
                     "source": str(combined or result.transformed_source_path or ""),
                 },
                 "parameter_sensitivity_driver": parameter_artifact,
+                "combined_sensitivities": combined_interface,
             },
             "semantic_checks": result.report.get("semantic_checks", {}),
             "status_category": _classify_outcome(result),
@@ -292,6 +333,7 @@ def _generate_parameter_sensitivity_artifact(
     requests: list[Any],
     out_dir: Path,
     ntens: int,
+    combined_interface: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     parameters: list[tuple[str, int]] = []
     for request in requests:
@@ -300,6 +342,9 @@ def _generate_parameter_sensitivity_artifact(
                 parameters.append(item)
     if not parameters:
         raise ValueError("DSIGMA_DP/DSTATEV_DP requires a non-empty parameters mapping")
+    if combined_interface:
+        parameters = [(slot["name"], slot["props_index"])
+                      for slot in combined_interface["directions"]["parameter_slots"]]
     parameter_entries = {
         str(entry.get("name", "")).upper(): entry
         for entry in config.get("parameters", [])
@@ -316,7 +361,7 @@ def _generate_parameter_sensitivity_artifact(
     dstran = tuple(float(value) for value in driver.get("dstran_per_increment", []))
     if len(dstran) != ntens:
         raise ValueError(f"material_point_driver.dstran_per_increment must contain ntens={ntens} values")
-    static_props = tuple(float(value) for value in driver.get("static_props", []))
+    static_props = tuple(float(value) for value in (driver.get("static_props") or []))
     contract = GenericPSContract(
         name=str(config.get("case_name") or config.get("project", {}).get("name") or source_path.stem),
         umat_source_path=source_path,
@@ -330,7 +375,43 @@ def _generate_parameter_sensitivity_artifact(
         dstran_per_increment=dstran,
         n_increments=int(driver.get("n_increments") or 1),
         static_props=static_props,
+        deformation_gradient_increment=tuple(float(value) for value in (driver.get("deformation_gradient_increment") or [])),
     )
+    if combined_interface:
+        source_info = config.get("source", {})
+        selected = str(source_info.get("selected_umat_name") or source_info.get("detected_umat_name") or "UMAT")
+        expected = "STRESS STATEV DDSDDE SSE SPD SCD RPL DDSDDT DRPLDE DRPLDT STRAN DSTRAN TIME DTIME TEMP DTEMP PREDEF DPRED CMNAME NDI NSHR NTENS NSTATV PROPS NPROPS COORDS DROT PNEWDT CELENT DFGRD0 DFGRD1 NOEL NPT LAYER KSPT KSTEP KINC".split()
+        from umat_oti.fortran.parser import parse_subroutines, logical_lines_from_text
+        from umat_oti.fortran.normalize import detect_source_form
+
+        text = source_path.read_text(encoding="utf-8")
+        parsed_routines = parse_subroutines(logical_lines_from_text(text, detect_source_form(source_path, text)))
+        routine = next((routine for routine in parsed_routines if routine.name.upper() == selected.upper()), None)
+        if routine is None or [name.upper() for name in routine.args] != expected:
+            return {"status": "not_generated", "reason": "Material-point driver requires the standard UMAT argument order; call the combined entry with the source's own arguments."}
+        from umat_oti.corpus.cli import _write_aba_param_stub
+
+        _write_aba_param_stub(out_dir.parent)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        driver_path = out_dir / "ps_driver.f90"
+        driver_path.write_text(_emit_driver(contract, "", "", combined_entry=combined_interface["entry_routine"]), encoding="utf-8")
+        makefile = out_dir / "Makefile"
+        makefile.write_text(
+            "FC = gfortran\n.PHONY: all\nall:\n"
+            "\tcd .. && ./compile_hint.sh\n"
+            "\t$(FC) -ffree-line-length-none -I.. ps_driver.f90 ../*.o -o ps_driver\n",
+            encoding="utf-8")
+        artifact = {
+            "abi": "oti_material_point_driver", "evaluation": "combined_tangent_and_parameters",
+            "drop_in_abaqus_user_subroutine": False, "root": str(out_dir),
+            "driver": str(driver_path), "makefile": str(makefile),
+            "interface": combined_interface, "parameters": [{"name": name, "props_index": index} for name, index in parameters],
+            "outputs": [request.target for request in requests], "tangent_output": "DDSDDE_OTI.csv",
+        }
+        manifest = out_dir / "artifact_manifest.json"
+        manifest.write_text(json.dumps(artifact, indent=2) + "\n", encoding="utf-8")
+        artifact["manifest"] = str(manifest)
+        return artifact
     layout = transform_umat_for_parameter_sensitivity(contract=contract, output_dir=out_dir)
     artifact = {
         "abi": "oti_material_point_driver",
@@ -391,10 +472,27 @@ def _payload_with_resolved_closure(config_path: Path, out_dir: Path) -> tuple[by
             + ", ".join(m.symbol for m in graph.missing) + "; ambiguous "
             + ", ".join(d.symbol for d in graph.conflicts)
             + f"; see {dependency_report}")
+    from dataclasses import replace
+    from umat_oti.transform.dependency_bundle import bundle_sources
+    from umat_oti.transform.dependency_resolution import index_sources
+
+    staged, bundle_manifest = bundle_sources(
+        [entry_path, *dict.fromkeys(definition.path for definition in graph.external_definitions),
+         *_declared_module_sources(config_path)],
+        out_dir, roots=root_paths, runtime_calls=graph.runtime_calls, library_calls=graph.library_calls)
+    staged_index = index_sources(staged.values())
+    staged_definitions = {}
+    for name, definition in graph.resolved.items():
+        matches = [item for item in staged_index.get(name) if item.path == staged[definition.path.resolve()]]
+        if len(matches) != 1:
+            raise ValueError(f"Cannot identify unique bundled definition for {name}")
+        staged_definitions[name] = matches[0]
+    bundled_graph = replace(graph, entry_path=staged[entry_path], resolved=staged_definitions)
     record: dict[str, Any] = {
         "entry": str(entry_path), "roots": [str(r) for r in root_paths],
         "entry_routine": graph.entry,
         "report": str(dependency_report),
+        "bundle_manifest": str(bundle_manifest),
         "multi_file": graph.is_multi_file,
         "abaqus_runtime_calls": list(graph.runtime_calls),
         "external_library_calls": graph.library_calls,
@@ -404,17 +502,27 @@ def _payload_with_resolved_closure(config_path: Path, out_dir: Path) -> tuple[by
             {"routine": d.name, "file": d.path.name, "lines": [d.start_line, d.end_line]}
             for d in graph.external_definitions],
     }
-    if not graph.is_multi_file:
-        return raw_bytes, record
     out_dir.mkdir(parents=True, exist_ok=True)
     resolved = out_dir / f"{entry_path.stem}_resolved{entry_path.suffix}"
-    resolved.write_text(combined_source(graph), encoding="utf-8")
+    resolved.write_text(combined_source(bundled_graph), encoding="utf-8")
     record["resolved_source"] = str(resolved)
     if isinstance(source_value, dict):
         raw["source"] = {**source_value, "file": str(resolved)}
     else:
         raw["source"] = str(resolved)
     return json.dumps(raw).encode("utf-8"), record
+
+
+def _declared_module_sources(config_path: Path) -> list[Path]:
+    raw = json.loads(config_path.read_text(encoding="utf-8"))
+    entries = raw.get("module_sources", [])
+    if not isinstance(entries, list) or any(not isinstance(entry, str) for entry in entries):
+        raise ValueError("module_sources must be a list of source paths in dependency order")
+    paths = list(dict.fromkeys((config_path.parent / entry).resolve() for entry in entries))
+    for path in paths:
+        if not path.is_file():
+            raise ValueError(f"Module source does not exist: {path}")
+    return paths
 
 
 def _write_combined_source(out_dir: Path, transformed_source: Any) -> Path | None:

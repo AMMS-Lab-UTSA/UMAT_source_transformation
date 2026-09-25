@@ -1,4 +1,8 @@
-"""Reference Fortran for the Abaqus utilities the solver provides, not the author.
+"""Fortran definitions for missing runtime utilities and numerical helpers.
+
+DSPEVD is supplied as an independent cyclic-Jacobi implementation of the packed
+symmetric interface, not a copy of LAPACK's divide-and-conquer routine. It
+reports repeated/unresolved eigenvalues through INFO; callers must check it.
 
 A UMAT may call ROTSIG to carry a state tensor through a rigid rotation. Abaqus
 links that routine in; the file the author published does not define it. The
@@ -23,6 +27,9 @@ to be doing something interesting. Those sources keep their refusal until the
 degenerate case is handled deliberately.
 """
 from __future__ import annotations
+
+from umat_oti.transform.spectral_definitions import DSPEVD_DEFINITION
+from umat_oti.transform.lu_definitions import DGETRF_DEFINITION, DGETRS_DEFINITION
 
 #: ``CALL ROTSIG(S, R, OUTPUT, LSTR, NDI, NSHR)``
 #:
@@ -94,6 +101,9 @@ C     Back to Voigt, undoing the storage convention applied above.
 #: Keyed on the name the CALL uses, upper case.
 UTILITY_DEFINITIONS: dict[str, str] = {
     "ROTSIG": ROTSIG_DEFINITION,
+    "DSPEVD": DSPEVD_DEFINITION,
+  "DGETRF": DGETRF_DEFINITION,
+  "DGETRS": DGETRS_DEFINITION,
 }
 
 
@@ -110,3 +120,33 @@ def definition_text(names) -> str:
     without changing a source that needed no help.
     """
     return "".join(UTILITY_DEFINITIONS[name] for name in available_definitions(names))
+
+
+def supply_reachable_definitions(parsed, roots):
+    """Append missing built-ins reached from roots, preserving supplied sources."""
+    from umat_oti.core.model import ParsedFortranSource
+    from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines
+    from umat_oti.transform.helper_lifting import _routine_callees, function_names, routines_by_name
+
+    routines = routines_by_name(parsed)
+    functions = function_names(parsed)
+    source_lines = parsed.text.splitlines()
+    pending = [str(name).upper() for name in roots]
+    visited, supplied = set(), set()
+    while pending:
+        name = pending.pop()
+        if name in visited:
+            continue
+        visited.add(name)
+        if name in routines:
+            pending.extend(_routine_callees(routines[name], parsed.form, source_lines, function_names=functions))
+        elif name in UTILITY_DEFINITIONS:
+            supplied.add(name)
+    if not supplied:
+        return parsed, ()
+    addition = definition_text(supplied)
+    if parsed.form == "free":
+        addition = "\n".join(line.text for line in logical_lines_from_text(addition, "fixed")) + "\n"
+    text = parsed.text.rstrip("\n") + "\n" + addition
+    lines = logical_lines_from_text(text, parsed.form)
+    return ParsedFortranSource(parsed.path, parsed.form, text, lines, parse_subroutines(lines)), tuple(sorted(supplied))

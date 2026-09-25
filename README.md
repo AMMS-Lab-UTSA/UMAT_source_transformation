@@ -199,6 +199,7 @@ A skipped test names the missing prerequisite; a skip is not a pass.
 | [docs/USAGE_REPORT.md](docs/USAGE_REPORT.md) | The current state of the program in one place: scope, commands, results |
 | [docs/VERIFICATION_RECORD.md](docs/VERIFICATION_RECORD.md) | Every verified result, how it is reproduced, the reference and the measured value |
 | [docs/PROVIDER.md](docs/PROVIDER.md) | The compiled OTI provider and its ABI |
+| [docs/LAPACK_OTI_PORT.md](docs/LAPACK_OTI_PORT.md) | Experimental whole-library LAPACK/BLAS port audit, numerical evidence, and remaining blockers |
 | [docs/GUI.md](docs/GUI.md) | The GUI's design and each screen, with screenshots |
 | [docs/CORPUS_VERIFICATION.md](docs/CORPUS_VERIFICATION.md) | The public-UMAT corpus and its acceptance gates |
 | [docs/SOFTWAREX_REPRODUCTION.md](docs/SOFTWAREX_REPRODUCTION.md) | Reproducing the paper's tables and figures |

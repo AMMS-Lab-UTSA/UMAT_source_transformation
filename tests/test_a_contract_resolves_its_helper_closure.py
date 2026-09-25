@@ -105,6 +105,27 @@ end subroutine eigen_helper
     assert graph.as_dict()["required_libraries"] == ["lapack"]
 
 
+@pytest.mark.parametrize("symbol", ["DSPEVD", "DGETRF", "DGETRS", "DGEMM"])
+def test_library_source_takes_precedence_and_resolves_its_dependencies(tmp_path, symbol):
+    from umat_oti.transform.dependency_resolution import resolve_closure
+
+    source = tmp_path / "umat.f90"
+    source.write_text(f"subroutine umat()\ncall {symbol}()\nend subroutine umat\n")
+    helpers = tmp_path / "helpers"
+    helpers.mkdir()
+    (helpers / "library.f90").write_text(
+        f"subroutine {symbol}()\ncall inner_kernel()\nend subroutine {symbol}\n"
+        "subroutine inner_kernel()\nend subroutine inner_kernel\n")
+    graph = resolve_closure(source, roots=[helpers])
+    assert set(graph.resolved) == {"UMAT", symbol, "INNER_KERNEL"}
+    assert not graph.library_calls
+    assert not graph.missing
+    (helpers / "conflict.f90").write_text(
+        f"subroutine {symbol}()\ncall other_kernel()\nend subroutine {symbol}\n")
+    graph = resolve_closure(source, roots=[helpers])
+    assert [item.symbol for item in graph.conflicts] == [symbol]
+
+
 def test_jacobian_can_discover_transitive_helpers_without_a_manual_contract(tmp_path):
     from umat_oti.services.jacobian_request import jacobian_contract
 
@@ -150,8 +171,13 @@ def test_all_command_requires_material_settings(tmp_path, capsys):
 
 
 @pytest.mark.fortran
-@pytest.mark.parametrize("model", ["m1_elastic", "m3_j2"])
-def test_all_command_builds_and_verifies_tangent_and_sensitivities(tmp_path, capsys, model):
+@pytest.mark.parametrize("model,automatic", [("m1_elastic", False), ("m3_j2", False),
+                                            ("m1_elastic", True)])
+@pytest.mark.parametrize("with_abaqus", [False, True])
+def test_all_command_builds_and_verifies_tangent_and_sensitivities(tmp_path, capsys, model, with_abaqus, automatic):
+    import shlex
+    import sys
+
     from umat_oti.cli import main
     from umat_oti.validation.parameter_sensitivity_provider import J2_PATH
 
@@ -179,9 +205,30 @@ def test_all_command_builds_and_verifies_tangent_and_sensitivities(tmp_path, cap
         "props_values": contract["validation"]["props_values"],
         "check_path": {"increments": J2_PATH.tolist()},
     }))
+    material_args = ["--material-config", str(settings)]
+    if automatic:
+        from umat_oti.abaqus.trial_deck import generate_workflow_deck
+
+        deck, _ = generate_workflow_deck(settings, source=source, ntens=6)
+        source.with_suffix(".inp").write_text(deck)
+        settings.unlink()
+        material_args = []
     output = tmp_path / "out"
-    assert main(["all", str(source), "--material-config", str(settings),
-                 "--out", str(output)]) == 0
+    abaqus_args = []
+    if with_abaqus:
+        launcher = tmp_path / "fake abaqus.py"
+        launcher.write_text("""import sys
+from pathlib import Path
+options = dict(argument.split('=', 1) for argument in sys.argv[1:] if '=' in argument)
+assert Path(options['input']).is_file()
+assert Path(options['user']).is_file()
+assert (Path.cwd().parent / 'sensitivities' / 'collaborator' / 'OTI_UMAT.obj').is_file()
+Path(options['job'] + '.dat').write_text('THE ANALYSIS HAS BEEN COMPLETED\\n')
+""")
+        abaqus_args = ["--abaqus", "--abaqus-command", shlex.join([sys.executable, str(launcher)]),
+                       "--abaqus-modules", "", "--abaqus-run-prefix", ""]
+    assert main(["all", str(source), *material_args,
+                 "--out", str(output), *abaqus_args]) == 0
     summary = json.loads(capsys.readouterr().out)
     assert summary["stages"]["jacobian"]["compilation"]["status"] == "compiled"
     sensitivity = summary["stages"]["sensitivities"]
@@ -191,6 +238,18 @@ def test_all_command_builds_and_verifies_tangent_and_sensitivities(tmp_path, cap
         sensitivity["shared"])
     assert (output / "parameters.json").is_file()
     assert (output / "workflow_summary.json").is_file()
+    assert summary["stages"]["material_settings"]["automatic"] is automatic
+    if automatic:
+        discovered = json.loads((output / "material_workflow.json").read_text())
+        assert discovered["props_values"] == contract["validation"]["props_values"]
+        assert (output / "abaqus_discovery.json").is_file()
+    if with_abaqus:
+        assert summary["stages"]["abaqus"]["status"] == "completed"
+        assert summary["stages"]["abaqus"]["verified"] is False
+        assert (output / "jacobian" / "abaqus_trial.inp").is_file()
+        assert (output / "jacobian" / "abaqus_trial.json").is_file()
+    else:
+        assert "abaqus" not in summary["stages"]
     if model == "m1_elastic":
         assert summary["stages"]["dependencies"]["closure"]["multi_file"]
 

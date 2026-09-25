@@ -151,3 +151,20 @@ Runtime dependencies (installed via pip, not bundled) and their licenses:
 Development/test dependencies:
 
 - `pytest` — MIT
+
+---
+
+## 4. Reference LAPACK / BLAS (optional public porting input)
+
+The experimental OTI library audit uses Reference LAPACK `v3.12.1`, commit
+`6ec7f2bc4ecf4c4a93496aa2fa519575bc0e39ca`, from
+https://github.com/Reference-LAPACK/lapack. Its upstream license is BSD-3-Clause.
+The public source checkout is obtained separately, not bundled as package data.
+
+Each audit output retains the upstream license as `LAPACK_LICENSE.txt` and
+selected original source files, including their notices, under
+`reference_sources/`. Keep these notices with derived source and binary
+redistributions and satisfy the upstream license's attribution requirements.
+The generated OTI support also depends on the GPL-licensed components in section 1.
+
+See [the port status](docs/LAPACK_OTI_PORT.md) for scope and verification limits.
