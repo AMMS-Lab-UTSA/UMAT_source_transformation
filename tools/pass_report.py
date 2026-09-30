@@ -14,12 +14,13 @@ mismatch is not accepted and is counted with the internal blockers.
 Usage::
 
     python tools/pass_report.py --registry NEW.json --previous OLD.json \
-        --families corpus_run/material_families.json \
+        --families corpus_run/material_families_checked_E.json \
         --label pass13 --json out.json --markdown out.md
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from collections import Counter
@@ -72,7 +73,8 @@ def sensitivity_rows(rows: list[dict]) -> int:
 def report(new: dict[str, dict], old: dict[str, dict] | None,
            families: dict[str, str], regression_rows: list[dict] | None = None,
            verification_rows: list[dict] | None = None,
-           families_basis: str = "not supplied") -> dict:
+           families_basis: str = "not supplied",
+           families_reviewed: set[str] | None = None) -> dict:
     d2 = {sid: row for sid, row in new.items() if row.get("adequately_specified") is True}
     excluded = {sid: row for sid, row in new.items() if row.get("adequately_specified") is not True}
     now = {sid for sid, row in d2.items() if accepted(row)}
@@ -86,10 +88,17 @@ def report(new: dict[str, dict], old: dict[str, dict] | None,
     kind_d2 = Counter(row.get("kind") for sid, row in d2.items() if sid not in now)
     partition = Counter(row.get("kind") for row in new.values())
 
+    # A family denominator is only as good as the labels behind it. Count how
+    # many of each family's labels a human decided from code evidence, so a
+    # denominator can never be quoted without the coverage that produced it.
+    reviewed = families_reviewed if families_reviewed is not None else set()
     family_rows: dict[str, Counter] = {}
     for sid, row in d2.items():
         fam = families.get(sid, "not classified")
-        family_rows.setdefault(fam, Counter())["accepted" if sid in now else "not_accepted"] += 1
+        counts = family_rows.setdefault(fam, Counter())
+        counts["accepted" if sid in now else "not_accepted"] += 1
+        if sid in reviewed:
+            counts["label_reviewed"] += 1
 
     excluded_kinds = Counter(row.get("adequacy_kind") or "none" for row in excluded.values())
     excluded_terminal = Counter(row["terminal_state"] for row in excluded.values())
@@ -182,8 +191,10 @@ def markdown(label: str, r: dict) -> str:
                      + ", ".join(r["excluded_without_an_external_or_duplicate_basis"]))
     lines += ["", f"## Families within the 260 ({r['families_basis']})", ""]
     for fam, c in r["families_d2"].items():
-        lines.append(f"- {fam}: {c.get('accepted', 0)} accepted of "
-                     f"{c.get('accepted', 0) + c.get('not_accepted', 0)}")
+        total = c.get("accepted", 0) + c.get("not_accepted", 0)
+        seen = c.get("label_reviewed", 0)
+        coverage = "" if seen == total else f" ({seen} of {total} labels reviewed)"
+        lines.append(f"- {fam}: {c.get('accepted', 0)} accepted of {total}{coverage}")
     return "\n".join(lines) + "\n"
 
 
@@ -202,17 +213,26 @@ def main() -> int:
     parser.add_argument("--markdown", type=Path)
     args = parser.parse_args()
     families = {}
+    reviewed: set[str] = set()
     basis = "not supplied"
     if args.families:
-        data = json.loads(args.families.read_text())
+        raw = args.families.read_bytes()
+        data = json.loads(raw)
         families = {row["source_id"]: row["family"] for row in data["rows"]}
-        basis = f"{args.families.name}: {data.get('what_this_is', 'no description')}"
+        # Two classifications of this corpus exist and they give different
+        # denominators. The digest and the reviewed count say which one a
+        # number came from, so no family figure is quotable without its basis.
+        reviewed = {row["source_id"] for row in data["rows"]
+                    if row.get("review") == "checked"}
+        basis = (f"{args.families.name} sha256:{hashlib.sha256(raw).hexdigest()[:16]}"
+                 f", {len(data['rows'])} rows, {len(reviewed)} decided from code"
+                 f" evidence: {data.get('what_this_is', 'no description')}")
     def jsonl(path):
         return [json.loads(line) for line in path.read_text().splitlines()
                 if line.strip()] if path else None
     r = report(_records(args.registry),
                _records(args.previous) if args.previous else None, families,
-               jsonl(args.regression), jsonl(args.verification), basis)
+               jsonl(args.regression), jsonl(args.verification), basis, reviewed)
     text = markdown(args.label, r)
     if args.json_path:
         args.json_path.write_text(json.dumps(r, indent=2) + "\n")
