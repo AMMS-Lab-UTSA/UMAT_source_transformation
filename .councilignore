@@ -1,0 +1,31 @@
+# What a model -- local or hosted -- may read in this repository.
+#
+#   <glob> <open|internal|restricted> [owner=<name>] [reason=<text>]
+#
+# Enforced by `council_local.policy` in The-council; see
+# docs/LOCAL_COUNCIL.md. Unmatched paths default to "internal". Later lines
+# win, so a broad restriction can be narrowed by a grant below it.
+#
+# "restricted" means NO model may read it. A collaborator's no-AI condition
+# restricts analysis, not egress: running the weights locally does not satisfy
+# it.
+
+# --- third-party corpus sources: analysable here, not redistributable ---
+# Licences vary across the 391 acquired sources and several are unstated.
+corpus/ internal reason=third-party sources; licence varies by repository
+paper_results/corpus/ internal reason=derived from third-party sources
+umat/ internal reason=verified third-party contracts; see THIRD_PARTY_NOTICES.md
+
+# --- collaborator and sponsor material ---
+**/jhu/** restricted owner=jhu reason=no AI-use grant on file
+**/nasa/** restricted owner=nasa reason=no AI-use grant on file
+**/*.pptx restricted reason=decks may carry sponsor or collaborator content
+**/.env restricted reason=credentials
+
+# --- this project's own work ---
+src/ open
+tests/ open
+tools/ open
+docs/ open
+examples/ open
+scripts/ open
