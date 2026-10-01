@@ -6327,11 +6327,33 @@ def _normalize_numeric_literals_in_oti_expression(line: str, type_name: str = ""
                 if _term_is_hypercomplex(normalized, match.start(digits))
                 else match.group(0))
 
-    normalized = re.sub(r"(?<![A-Za-z0-9_.)])(\d+)(?![A-Za-z0-9_.])(?=\s*[*\/])",
+    normalized = re.sub(_BARE_INTEGER_BEFORE_OPERATOR,
                         lambda m: _promote(m, 1), normalized)
-    normalized = re.sub(r"([*\/])\s*(\d+)(?![A-Za-z0-9_.])",
-                        lambda m: _promote(m, 2), normalized)
+    normalized = re.sub(_BARE_INTEGER_AFTER_OPERATOR,
+                        lambda m: _promote(m, 1), normalized)
     return unmask_real_literals(normalized, literals)
+
+
+#: A bare integer standing as a factor or a divisor of a hypercomplex term,
+#: written twice because the integer can sit on either side of the operator.
+#:
+#: The second one excludes the exponent of ``**``. ``[*/]`` matches the second
+#: asterisk of a power operator as readily as a multiplication sign, so
+#: ``Y_OTI**2`` was rewritten to ``Y_OTI**2.0D0`` and ``Y_OTI*A**2`` -- A the
+#: author's own REAL, not promoted and not necessarily positive -- to
+#: ``Y_OTI*A**2.0D0``. Nothing needed it: the generated algebra declares
+#: OPERATOR(**) for (OTI, INTEGER(4)) and (OTI, INTEGER(8)) beside the real
+#: form, so an integer exponent already resolves and carries the same
+#: derivative. What the rewrite did was turn an exact repeated multiplication
+#: into the real power, which Fortran defines only for a non-negative base.
+#: An integer BEFORE the operator is left promoted: ``2**X_OTI`` resolves
+#: either way, through specifics that forward to the same body, so nothing is
+#: gained by changing emitted output that is already correct.
+#:
+#: Group 1 is the digits in both, so the emitter and the post-check below can
+#: read the same position out of either match.
+_BARE_INTEGER_BEFORE_OPERATOR = r"(?<![A-Za-z0-9_.)])(\d+)(?![A-Za-z0-9_.])(?=\s*[*\/])"
+_BARE_INTEGER_AFTER_OPERATOR = r"(?<!\*)[*\/]\s*(\d+)(?![A-Za-z0-9_.])"
 
 
 #: The transform gives every hypercomplex name the _OTI suffix -- a shadow, or
@@ -7292,6 +7314,13 @@ def _semantic_checks(
         # failed the second in silence, returning a stress of exactly zero.
         "no_ddsdde_read_after_disabled_assignment": _no_ddsdde_read_after_disabled_assignment(
             transformed_source, form, ddsdde),
+        # The state array is the material's memory. A shadow of it that is
+        # declared and used but never filled from STATEV nor emptied back into
+        # it makes a routine that computes its whole response from zero and
+        # updates nothing -- and does it silently, because the file compiles
+        # and returns numbers of the right shape.
+        "state_shadow_carries_the_state": _state_shadow_is_connected_to_the_state_array(
+            transformed_source, form, mappings.get("statev", "STATEV")),
         "no_extraction_in_tangent_helper_region": extraction_insertion_region_id not in helper_region_ids,
         "fixed_form_line_lengths_ok": _fixed_form_line_lengths_ok(transformed_source, form),
         "integer_literals_normalized_in_oti_expressions": _integer_literals_normalized_in_oti_expressions(transformed_source, form),
@@ -7788,6 +7817,49 @@ def _is_shadow_initialization_line(line: str, name: str) -> bool:
     return bool(indexed or scalar)
 
 
+def _is_real_extraction_line(line: str, name: str) -> bool:
+    """``NAME(i) = REAL(NAME_OTI(i))`` -- the shadow emptied back into Abaqus's array."""
+    return bool(re.search(
+        rf"(?<![A-Za-z0-9_]){re.escape(name)}\s*\([^)]*\)\s*=\s*REAL\s*\(\s*{re.escape(name)}_OTI\b",
+        line, flags=re.IGNORECASE))
+
+
+def _state_shadow_is_connected_to_the_state_array(
+        transformed_source: str, form: str, statev: str) -> bool:
+    """Is the state shadow both filled from, and emptied back into, the array?
+
+    A UMAT's state array is its memory: Abaqus hands it the values the last
+    increment left and reads back the ones this one produced. A shadow of it
+    that is declared, zeroed and then used is neither of those things, and the
+    routine runs perfectly well on it -- it compiles, it returns a stress, it
+    returns a tangent, and every one of them is computed from a state of zero.
+
+    ``awhelanUCD/.../HETVAL_nonLocalLemaitre/HETVAL_lemaitreDamageNonLocal.f``
+    is the entry that showed it: 140 of 140 recorded increments carry
+    ``STATEV_t`` identically zero, through a file that passed every check
+    there was. The emitter gates the copy-in and the write-back on the same
+    condition and excludes the state array from the generic copy path either
+    way, so when that condition does not hold the shadow is left disconnected
+    at both ends rather than at one.
+
+    Vacuously true when no state shadow was declared: a routine that does not
+    shadow the state array cannot have disconnected one. Both halves are
+    required because they fail independently -- an unseeded shadow computes
+    from zero, an unwritten one never updates the material -- and either alone
+    is enough to make the emitted file not a state-carrying UMAT.
+    """
+    if not re.search(rf"(?<![A-Za-z0-9_]){re.escape(statev)}_OTI\b",
+                     transformed_source, flags=re.IGNORECASE):
+        return True
+    filled = emptied = False
+    for _, statement in _logical_statements_with_numbers(transformed_source, form):
+        if _is_shadow_initialization_line(statement, statev):
+            filled = True
+        if _is_real_extraction_line(statement, statev):
+            emptied = True
+    return filled and emptied
+
+
 def _is_shadow_default_line(line: str, name: str) -> bool:
     return bool(
         re.search(
@@ -8264,8 +8336,7 @@ def _integer_literals_normalized_in_oti_expressions(source: str, form: str = "fi
         if "_OTI" not in statement.upper():
             continue
         scanned = _REAL_LITERAL_RE.sub(lambda match: " " * len(match.group(0)), statement)
-        for pattern in (r"(?<![A-Za-z0-9_.)])\d+(?![A-Za-z0-9_.])\s*[*\/]",
-                        r"[*\/]\s*(\d+)(?![A-Za-z0-9_.])"):
+        for pattern in (_BARE_INTEGER_BEFORE_OPERATOR, _BARE_INTEGER_AFTER_OPERATOR):
             for match in re.finditer(pattern, scanned):
                 digits = match.start(1) if match.groups() else match.start()
                 if _term_is_hypercomplex(scanned, digits):
