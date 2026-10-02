@@ -1014,6 +1014,18 @@
   "reference_data:paper_results/discovery/discovered_sources.csv": {
    "verdict": "justified",
    "reason": "Corrects frodal/SCMM-hypo's licence from AGPL-3.0 (misread by the old whole-text classifier) to GPL-3.0-or-later, as its cached LICENSE.md states (commit 0568194); no other row changed."
+  },
+  "skip:tests/test_transform_a_continued_call_carries_the_seed.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Module-level skip only when gfortran is absent (each test compiles the original and the transform); CI installs gfortran."
+  },
+  "skip:tests/test_transform_an_interface_block_belongs_to_the_specification_part.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Module-level skip only when gfortran is absent (each test compiles the original and the transform); CI installs gfortran."
+  },
+  "skip:tests/test_transform_an_internal_procedure_is_lifted_with_its_host.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Module-level skip only when gfortran is absent (each test compiles the original and the transform); CI installs gfortran."
   }
  }
 }

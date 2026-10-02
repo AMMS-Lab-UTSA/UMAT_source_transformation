@@ -247,6 +247,15 @@
     "tests/test_corpus_features_driver_point.py::test_position_dependent_toy_verifies_at_the_recorded_point",
     "tests/test_corpus_features_runner_paths.py::test_out_and_work_are_resolved_before_use"
    ]
+  },
+  {
+   "commit": "e5abc6f",
+   "bug": "A lifted helper read the host's PARAMETER TWO as an uninitialised local (wrong stress in UVCmultiaxial/UVCuniaxial_IS); a seed on a continued CALL line was not seen; a call omitting an OPTIONAL argument of a lifted helper compiled and read the stack.",
+   "tests": [
+    "tests/test_transform_an_internal_procedure_is_lifted_with_its_host.py",
+    "tests/test_transform_a_continued_call_carries_the_seed.py",
+    "tests/test_transform_an_interface_block_belongs_to_the_specification_part.py"
+   ]
   }
  ],
  "excluded": [
