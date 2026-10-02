@@ -53,6 +53,12 @@ def main(argv=None) -> int:
     ap.add_argument("--families-second-pass", help="second-pass classification "
                     "carried per row but not used for family figures "
                     "(default corpus_run/material_families_checked_v2.json)")
+    ap.add_argument("--families-reporting", help="D-11 reporting classification "
+                    "(default ../corpus_campaign/batches/B3/scout/"
+                    "families_reviewed_B3.json; rows it lacks fall back to --families)")
+    ap.add_argument("--earlier-registry-rev", default="f0f0731",
+                    help="git revision whose registry eligible set the summary "
+                         "compares against ('' to skip)")
     ap.add_argument("--current-pass", default="pass16")
     ap.add_argument("--later-pass", default="pass17")
     ap.add_argument("--out-dir", default=str(REPO / "paper_results/corpus/manifest"))
@@ -60,14 +66,23 @@ def main(argv=None) -> int:
                     "default ../corpus_campaign)")
     ap.add_argument("--ra-repo", help="Residual Assembler checkout (evidence root "
                     "`ra`; default ../final-ra)")
+    ap.add_argument("--primal-ddsdde-cells", help="D-18: routine-level cells of the "
+                    "primal+ddsdde run; primal_stress_state and ddsdde come only from "
+                    "here (requires --feature-cells)")
+    ap.add_argument("--feature-cells", help="D-18: routine-level cells of the "
+                    "full-feature run; every feature except primal_stress_state and "
+                    "ddsdde comes from here (requires --primal-ddsdde-cells)")
     ap.add_argument("--merge", action="append", default=[],
                     help="feature-results JSONL to merge (repeatable)")
     ap.add_argument("--merge-ra", action="append", default=[],
                     help="Residual Assembler records (ra-corpus-residual/1) to fold "
                          "and merge into the provider-build block (repeatable)")
     args = ap.parse_args(argv)
+    if bool(args.primal_ddsdde_cells) != bool(args.feature_cells):
+        ap.error("--primal-ddsdde-cells and --feature-cells go together (decision D-18)")
 
     corpus_run = _root(args.corpus_run, "UMAT_OTI_CORPUS_RUN", ws / "corpus_run")
+    campaign = _root(args.campaign, "UMAT_OTI_CAMPAIGN", ws / "corpus_campaign")
     inp = ManifestInputs(
         repo=REPO,
         discovery_cache=_root(args.discovery_cache, "UMAT_OTI_DISCOVERY_CACHE",
@@ -80,11 +95,15 @@ def main(argv=None) -> int:
                                   corpus_run / "material_families_checked_v2.json"),
         current_pass=args.current_pass,
         later_pass=args.later_pass or None,
-        campaign=_root(args.campaign, "UMAT_OTI_CAMPAIGN", ws / "corpus_campaign"),
+        families_reporting=Path(args.families_reporting or campaign / "batches/B3/scout"
+                                / "families_reviewed_B3.json"),
+        earlier_registry_rev=args.earlier_registry_rev or None,
+        campaign=campaign,
         ra_repo=_root(args.ra_repo, "UMAT_OTI_RA_REPO", ws / "final-ra"),
     )
     for label, p in (("discovery cache", inp.discovery_cache),
-                     ("corpus_run", inp.corpus_run), ("families", inp.families)):
+                     ("corpus_run", inp.corpus_run), ("families", inp.families),
+                     ("reporting families (D-11)", inp.families_reporting)):
         if not p.exists():
             print(f"error: {label} not found at {p}", file=sys.stderr)
             return 2
@@ -97,6 +116,12 @@ def main(argv=None) -> int:
             print(f"  rejected line {r['line']} {r['source_id']} {r['feature']}: "
                   f"{'; '.join(r['problems'])}")
 
+    if args.primal_ddsdde_cells:
+        from umat_oti.corpus_features.manifest import merge_d18
+        d18 = merge_d18(manifest, args.primal_ddsdde_cells, args.feature_cells)
+        show(args.primal_ddsdde_cells, d18["primal_ddsdde_run"])
+        show(args.feature_cells, d18["full_feature_run"])
+        print(f"D-18 guard withheld {len(d18['guarded'])} verified primal/ddsdde cell(s)")
     for path in args.merge:
         show(path, merge_feature_results(manifest, path))
     for path in args.merge_ra:

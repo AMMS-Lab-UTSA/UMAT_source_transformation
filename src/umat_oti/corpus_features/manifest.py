@@ -66,6 +66,12 @@ from typing import Any
 __all__ = [
     "BUILDS",
     "DEFAULT_ROOTS",
+    "FAMILY_CLASSIFICATION",
+    "REPORTING_FAMILIES",
+    "denominators_note",
+    "merge_d18",
+    "primal_gate_verdict",
+    "reported_family",
     "FEATURES",
     "REFERENCE_TYPES",
     "SCHEMA_ID",
@@ -90,7 +96,7 @@ SCHEMA_ID = "umat-oti/corpus-manifest/1"
 
 STATUSES: tuple[str, ...] = (
     "verified", "failed", "blocked", "unsupported", "not_applicable",
-    "not_attempted", "conflict", "inconclusive",
+    "not_attempted", "conflict", "inconclusive", "undefined_in_original",
 )
 
 #: Statuses that decide a claim one way or the other.
@@ -204,13 +210,19 @@ FEATURE_DEFINITIONS: dict[str, dict[str, str]] = {
         "quantity": "STRESS and STATEV history of the OTI build",
         "wrt": "n/a (primal)", "held_fixed": "deck, PROPS, loading path",
         "scope": "history", "reference": "original",
-        "rule": "verified iff gates abaqus_job_completed, complete_history_finite, "
-                "primal_agreed and mechanically_informative are all true; failed "
-                "only when the values disagree (primal_agreed false, original "
-                "finite, not explained by the original's own reassociation "
-                "sensitivity); agreement on a non-informative run, a non-finite "
-                "original, or a difference within the original's own "
-                "reassociation spread is inconclusive"},
+        "rule": "decided by the Abaqus primal gate (D-15, tolerance rule "
+                "routine_primal_gate/1): verified iff the comparison(s) named in "
+                "decided_by measured paired calls with ratio <= 1 and gates "
+                "abaqus_job_completed, complete_history_finite, primal_agreed and "
+                "mechanically_informative are all true; max_error is the ratio of "
+                "the deciding comparison; failed only when a deciding comparison "
+                "measured a ratio > 1; a process failure (control job incomplete, "
+                "no paired calls, no init build) is inconclusive, or not_attempted "
+                "when nothing was measured, with process_failure naming it; an "
+                "original undefined on the history (D-12) is undefined_in_original; "
+                "the FE history comparison is informational only "
+                "(measured.fe_comparison_informational). Records from before the "
+                "gate keep abaqus_primal_history_floor/1"},
     "ddsdde": {
         "quantity": "DDSDDE = d STRESS_{n+1} / d (strain-increment driver)",
         "wrt": "the increment driver (DSTRAN, or the deformation gradient for "
@@ -659,6 +671,12 @@ class ManifestInputs:
     corpus_run: Path
     families: Path
     families_second_pass: Path | None = None
+    #: D-11 reporting classification: Scout's B3 code-evidence review (column
+    #: S1). Rows it did not check fall back to ``families`` (E).
+    families_reporting: Path | None = None
+    #: Registry revision whose eligible set the summary compares against
+    #: (``summary.denominators_note``); None skips the comparison.
+    earlier_registry_rev: str | None = "f0f0731"
     registry: str = "paper_results/corpus/corpus_registry.json"
     triage: str = "paper_results/discovery/discovery_triage.json"
     discovered: str = "paper_results/discovery/discovered_sources.csv"
@@ -718,26 +736,48 @@ DEFAULT_ROOTS: dict[str, str] = {
 WORKSPACE_TOKEN = "$UMAT_OTI_WORKSPACE"
 
 
+def _workspace() -> str:
+    """``$UMAT_OTI_WORKSPACE`` when set, else the directory this checkout sits in."""
+    import os
+    ws = os.environ.get("UMAT_OTI_WORKSPACE") or str(_WS_DEFAULT)
+    return ws.rstrip("/") or "/"
+
+
+def _workspace_pattern(workspace: str) -> "re.Pattern[str]":
+    # Only a whole path component sequence: not preceded by a path character
+    # and followed by "/" or by anything that cannot continue a file name
+    # (so ``<ws>2`` or ``<ws>_old`` is left alone).
+    return re.compile(r"(?<![\w.~-])" + re.escape(workspace) + r"(?![\w.~-])")
+
+
 def portable_roots(roots: Mapping[str, str]) -> dict[str, str]:
     """Roots as written into a published manifest (workspace-relative)."""
-    workspace = str(_WS_DEFAULT)
-    out = {}
-    for name, value in roots.items():
-        text = str(value)
-        if text == workspace or text.startswith(workspace + "/"):
-            text = WORKSPACE_TOKEN + text[len(workspace):]
-        out[name] = text
-    return out
+    pat = _workspace_pattern(_workspace())
+    return {name: pat.sub(WORKSPACE_TOKEN, str(value), count=1)
+            if pat.match(str(value)) else str(value)
+            for name, value in roots.items()}
+
+
+#: Roots that always name the checkout doing the reading, whatever a manifest
+#: recorded: a clone under another name resolves ``repo:``/``umat:`` locators
+#: against itself.
+_CHECKOUT_ROOTS = ("repo", "umat")
 
 
 def expand_roots(roots: Mapping[str, str]) -> dict[str, str]:
     """Inverse of :func:`portable_roots`, against ``$UMAT_OTI_WORKSPACE`` if set,
-    else the workspace this checkout sits in."""
-    import os
-    workspace = os.environ.get("UMAT_OTI_WORKSPACE") or str(_WS_DEFAULT)
-    return {name: (workspace + str(value)[len(WORKSPACE_TOKEN):]
-                   if str(value).startswith(WORKSPACE_TOKEN) else str(value))
-            for name, value in roots.items()}
+    else the workspace this checkout sits in. ``repo`` and ``umat`` resolve to
+    the current checkout."""
+    workspace = _workspace()
+    out = {}
+    for name, value in roots.items():
+        text = str(value)
+        if name in _CHECKOUT_ROOTS:
+            text = str(_REPO_DEFAULT)
+        elif text == WORKSPACE_TOKEN or text.startswith(WORKSPACE_TOKEN + "/"):
+            text = workspace + text[len(WORKSPACE_TOKEN):]
+        out[name] = text
+    return out
 
 
 _LOCATOR = re.compile(r"^([a-z][a-z0-9_]*):(?!//)([^#]+)(?:#(.*))?$")
@@ -855,6 +895,115 @@ def _mode_of(element: str) -> str:
 # ---------------------------------------------------------------------------
 
 
+#: E's family names in the reporting vocabulary (Scout B3 rules, finalize.py MAP).
+E_TO_REPORTING: dict[str, str] = {
+    "growth / morphoelasticity": "growth", "plasticity": "rate_independent_plasticity",
+    "damage / phase field": "damage_phase_field", "crystal plasticity": "crystal_plasticity",
+    "elasticity": "linear_elastic", "viscoelasticity / rate dependent": "viscoelastic",
+    "concrete / geomaterials": "concrete_geomaterial", "hyperelasticity": "hyperelasticity",
+    "other / unclassified": "other", "not a UMAT": "not_a_umat",
+}
+
+#: The slide families of the D-11 denominators (hyperelasticity is in "other").
+REPORTING_FAMILIES: tuple[str, ...] = (
+    "growth", "rate_independent_plasticity", "damage_phase_field", "crystal_plasticity",
+    "linear_elastic", "viscoelastic", "concrete_geomaterial", "other_incl_hyperelasticity",
+)
+
+FAMILY_CLASSIFICATION = (
+    "D-11 S1: Scout's B3 code-evidence family review "
+    "(corpus_campaign/batches/B3/scout/families_reviewed_B3.json), with the "
+    "identity-growth scaffolds (Jeff97, growth tensor fixed to the identity) "
+    "counted as growth; rows B3 did not check take E "
+    "(corpus_run/material_families_checked_E.json) mapped to the same names")
+
+
+def _slide_family(f: str) -> str:
+    return "other_incl_hyperelasticity" if f in ("other", "hyperelasticity") else f
+
+
+def reported_family(source_id: str, b3: Mapping | None, e: Mapping | None) -> dict:
+    """The D-11 reporting family of one row (S1), with how it was decided."""
+    if b3:
+        fam = b3.get("family", "")
+        identity_growth = (source_id.startswith("Jeff97")
+                           and b3.get("disagreement_kind") == "definitional"
+                           and fam != "growth")
+        if identity_growth:
+            fam = "growth"
+        return {"family": fam, "reporting_family": _slide_family(fam),
+                "source": "B3_identity_growth_as_growth" if identity_growth
+                else "B3_code_evidence",
+                "identity_growth_scaffold": identity_growth,
+                "b3_family": b3.get("family", ""),
+                "b3_confidence": b3.get("confidence", "")}
+    if e:
+        fam = E_TO_REPORTING.get(e.get("family", ""), e.get("family", ""))
+        return {"family": fam, "reporting_family": _slide_family(fam),
+                "source": "E_fallback", "identity_growth_scaffold": False,
+                "b3_family": "", "b3_confidence": ""}
+    return {"family": "", "reporting_family": "", "source": "missing",
+            "identity_growth_scaffold": False, "b3_family": "", "b3_confidence": ""}
+
+
+def _earlier_registry(inp: ManifestInputs) -> tuple[dict | None, str]:
+    """The registry at ``inp.earlier_registry_rev`` (git), or (None, why not)."""
+    if not inp.earlier_registry_rev:
+        return None, "no earlier registry revision given"
+    import subprocess
+    try:
+        r = subprocess.run(["git", "-C", str(inp.repo), "show",
+                            f"{inp.earlier_registry_rev}:{inp.registry}"],
+                           capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError) as exc:
+        return None, f"git unavailable: {exc}"
+    if r.returncode != 0:
+        return None, (r.stderr or "git show failed").strip()[:300]
+    return json.loads(r.stdout), ""
+
+
+def denominators_note(rows: Sequence[Mapping], inp: ManifestInputs,
+                      registry: Mapping) -> dict:
+    """Eligible as computed at the current pass, and the rows that were
+    eligible under the earlier registry and are not now."""
+    acquired = [r for r in rows if r["row_kind"] == "acquired"]
+    eligible = {r["source_id"] for r in acquired
+                if r["pipeline"]["eligible"]["status"] == "verified"}
+    cur = {r["source_id"]: r for r in registry["records"]}
+    byid = {r["source_id"]: r for r in acquired}
+    out = {"eligible_now": len(eligible),
+           "eligible_now_means": f"adequately specified genuine UMATs in the registry "
+                                 f"as built for {inp.current_pass}",
+           "earlier_registry": f"repo:{inp.registry}@{inp.earlier_registry_rev}"
+           if inp.earlier_registry_rev else None}
+    old, why = _earlier_registry(inp)
+    if old is None:
+        out.update(eligible_earlier=None, dropped=None, added=None,
+                   unavailable=why)
+        return out
+    old_el = {r["source_id"] for r in old["records"] if r.get("adequately_specified")}
+    dropped = []
+    for sid in sorted(old_el - eligible):
+        row = byid.get(sid) or {}
+        fam = (row.get("model") or {}).get("family") or {}
+        dropped.append({"source_id": sid,
+                        "terminal_state": (cur.get(sid) or {}).get("terminal_state",
+                                                                   "not in registry"),
+                        "reporting_family": fam.get("reporting_family", ""),
+                        "family_source": fam.get("source", "")})
+    out.update(
+        eligible_earlier=len(old_el),
+        dropped_count=len(dropped),
+        dropped_by_reporting_family=dict(Counter(d["reporting_family"] for d in dropped)),
+        dropped_by_terminal_state=dict(Counter(d["terminal_state"] for d in dropped)),
+        dropped=dropped,
+        added=sorted(eligible - old_el),
+        why=("the D-11 family denominators were stated against the earlier "
+             "registry's eligible set; every figure in this manifest uses the "
+             "eligible set computed now"))
+    return out
+
+
 def build_manifest(inp: ManifestInputs) -> dict:
     """Assemble the manifest from the inputs. Offline; reads only local files."""
     repo = inp.repo
@@ -864,6 +1013,10 @@ def build_manifest(inp: ManifestInputs) -> dict:
               json.loads((repo / inp.triage).read_text(encoding="utf-8"))["rows"]}
     fam_doc = json.loads(inp.families.read_text(encoding="utf-8"))
     families = {r["source_id"]: r for r in fam_doc["rows"]}
+    b3 = {}
+    if inp.families_reporting and Path(inp.families_reporting).is_file():
+        b3 = {r["source_id"]: r for r in json.loads(
+            Path(inp.families_reporting).read_text(encoding="utf-8"))["rows"]}
     second = {}
     if inp.families_second_pass and inp.families_second_pass.is_file():
         second = {r["source_id"]: r for r in json.loads(
@@ -902,6 +1055,7 @@ def build_manifest(inp: ManifestInputs) -> dict:
     rows: list[dict] = []
     for rec in records:
         rows.append(_acquired_row(rec, inp, triage.get(rec["source_id"]),
+                                  b3.get(rec["source_id"]),
                                   families.get(rec["source_id"]),
                                   second.get(rec["source_id"]),
                                   lic_source, passrows.get(rec.get("key") or ""),
@@ -915,6 +1069,7 @@ def build_manifest(inp: ManifestInputs) -> dict:
                         ("discovered", repo / inp.discovered),
                         ("families", inp.families),
                         ("families_second_pass", inp.families_second_pass),
+                        ("families_reporting", inp.families_reporting),
                         ("current_pass", inp.corpus_run / inp.current_pass / "results"
                          / "store_verification.jsonl"),
                         ("later_pass", inp.corpus_run / (inp.later_pass or "") / "results"
@@ -941,23 +1096,31 @@ def build_manifest(inp: ManifestInputs) -> dict:
         "tolerances": {"ddsdde_relative": tangent_tol,
                        "ddsdde_source": f"repo:{inp.verifier}:TANGENT_TOLERANCE"},
         "family_classification": {
-            "used": str(inp.families),
-            "why": "the campaign brief (2026-10-01) names "
-                   "material_families_checked_E.json as the reviewed "
-                   "classification; the second pass (Vera, 2026-09-30) is carried "
-                   "per row as `second_pass` and is not used for family figures "
-                   "until the lead adopts it",
+            "used": FAMILY_CLASSIFICATION,
+            "reported_column": "model.family.family (fine) and "
+                               "model.family.reporting_family (the eight D-11 "
+                               "families; CSV family / family_reported)",
+            "reporting_file": str(inp.families_reporting or ""),
+            "fallback_file": str(inp.families),
+            "secondary": "model.family.E: Agent E's classification "
+                         "(material_families_checked_E.json), shown for comparison "
+                         "and never used for family figures (CSV family_E)",
+            "why": "decision D-11 (2026-10-01): family figures are reported against "
+                   "Scout's B3 code-evidence classification, column S1; the second "
+                   "pass (Vera, 2026-09-30) is carried per row under E as "
+                   "`second_pass`",
             "second_pass": str(inp.families_second_pass or ""),
             "keyword_file_not_used": "corpus_run/material_families.json"},
         "discovery_census": disc_census,
         "rows": rows,
     }
     manifest["summary"] = summarise(manifest)
+    manifest["summary"]["denominators_note"] = denominators_note(rows, inp, registry)
     manifest["data_quality"] = _data_quality(manifest, registry)
     return manifest
 
 
-def _acquired_row(rec, inp, tri, fam, fam2, lic_source, p, later, pass_file,
+def _acquired_row(rec, inp, tri, b3, fam, fam2, lic_source, p, later, pass_file,
                   tangent_tol, ps_ids, ij_ids, content_identity) -> dict:
     sid = rec["source_id"]
     cache_path = inp.discovery_cache / rec["cache_path"]
@@ -1197,32 +1360,41 @@ def _acquired_row(rec, inp, tri, fam, fam2, lic_source, p, later, pass_file,
         },
     }
 
-    # ---- family
+    # ---- family: reported = D-11 S1; E kept as a labelled secondary
     if fam:
-        family = {
+        e_block = {
             "family": fam.get("family", ""),
             "review": "agent_reviewed_code_evidence" if fam.get("review") == "checked"
             else "keyword_only",
-            "human_reviewed": False,
             "reviewed_by": "Agent E" if fam.get("review") == "checked" else "",
             "basis": fam.get("basis", ""),
             "keyword_family": fam.get("keyword_family", ""),
             "source_file": "families:" + inp.families.name,
         }
     else:
-        family = {"family": "", "review": "missing", "human_reviewed": False,
-                  "reviewed_by": "", "basis": "", "keyword_family": "",
-                  "source_file": "families:" + inp.families.name}
+        e_block = {"family": "", "review": "missing", "reviewed_by": "", "basis": "",
+                   "keyword_family": "", "source_file": "families:" + inp.families.name}
         dq.append("no_family_row")
+    e_block["label"] = "secondary (Agent E); not used for family figures"
+    rep = reported_family(rec["source_id"], b3, fam)
+    if b3:
+        review, reviewed_by = "agent_reviewed_code_evidence", "Scout (B3)"
+        basis = "; ".join(x for x in (b3.get("rule", ""), b3.get("notes", "")) if x)
+    else:
+        review, reviewed_by, basis = e_block["review"], e_block["reviewed_by"], \
+            e_block["basis"]
+    family = {**rep, "classification": "D-11 S1", "review": review,
+              "human_reviewed": False, "reviewed_by": reviewed_by,
+              "basis": basis[:1500], "E": e_block}
     if fam2:
-        family["second_pass"] = {
+        e_block["second_pass"] = {
             "family": fam2.get("family", ""), "reviewed_by": fam2.get("reviewed_by", ""),
-            "agrees": fam2.get("family", "") == family["family"],
-            "basis": fam2.get("basis", "") if fam2.get("family") != family["family"] else "",
+            "agrees": fam2.get("family", "") == e_block["family"],
+            "basis": fam2.get("basis", "") if fam2.get("family") != e_block["family"] else "",
             "file": "families:" + (inp.families_second_pass.name
                                    if inp.families_second_pass else "")}
     else:
-        family["second_pass"] = None
+        e_block["second_pass"] = None
 
     # ---- pipeline
     key = rec.get("key") or ""
@@ -1358,9 +1530,15 @@ def _acquired_row(rec, inp, tri, fam, fam2, lic_source, p, later, pass_file,
             stages["primal_agreed"] = _cell("verified", "gate primal_agreed=true",
                                             ev_pass)
         elif ev.get("primal_agreed") is False:
+            # failed only on a measured disagreement; a process failure or an
+            # undefined original is labelled as such (primal_gate_verdict)
+            v = primal_gate_verdict(pr, ev, inp.current_pass)
+            st = v["status"] if v["status"] != "verified" else "inconclusive"
             stages["primal_agreed"] = _cell(
-                "failed", f"gate primal_agreed=false ({ts}): "
-                + (pr.get("reason") or "")[:1500], ev_pass)
+                st, f"gate primal_agreed=false ({ts}): "
+                + (v.get("reason") or pr.get("reason") or "")[:1500], ev_pass,
+                **({"process_failure": v["process_failure"]}
+                   if v.get("process_failure") else {}))
         else:
             stages["primal_agreed"] = _cell("not_attempted",
                                             "gate primal_agreed not established", ev_pass)
@@ -1498,74 +1676,155 @@ def _not_attempted_feature(reason: str, evidence: str = "") -> dict:
             "reference": None, "max_error": None, "tolerance": None, "history": []}
 
 
-def _features(rec, pr, ev, stages, ev_pass, tangent_tol, ident, ps_ids, ij_ids,
-              inp) -> dict:
-    out: dict[str, dict] = {}
-    na = not rec.get("is_umat")
+#: Gate comparisons (``primal_gate.decided_by`` parts) and the pass-record key
+#: holding each one's measurement.
+_GATE_COMPARISONS = {"routine_level": "routine_primal",
+                     "jacobian_matched": "jacobian_matched_primal"}
 
-    def na_cell():
-        return {"status": "not_applicable", "reason": "not a UMAT",
-                "evidence": stages["eligible"]["evidence"], "reference": None,
-                "max_error": None, "tolerance": None, "history": []}
 
-    # primal -- failed only where the values disagree
+def _comparison_ratio(comp: Mapping, tol: float | None) -> float | None:
+    """max(worst stress / its per-call bound, worst state relative / rtol);
+    infinite when a non-finite mismatch was recorded."""
+    if comp.get("non_finite_mismatches"):
+        return math.inf
+    parts = [comp.get("worst_stress_over_bound")]
+    if comp.get("worst_state_relative") is not None and tol:
+        parts.append(comp["worst_state_relative"] / tol)
+    parts = [float(v) for v in parts
+             if isinstance(v, (int, float)) and not isinstance(v, bool)
+             and math.isfinite(v)]
+    return max(parts) if parts else None
+
+
+def _gate_comparison(pr: Mapping, name: str) -> dict:
+    """What one gate comparison measured, and whether it measured anything.
+
+    ``usable`` is true only for a comparison over at least one paired call of
+    a job that completed; a comparison over zero calls ("not the same calls")
+    or of an incomplete job measured nothing.
+    """
+    block = pr.get(_GATE_COMPARISONS[name]) or {}
+    comp = block.get("comparison") or {}
+    tol = comp.get("tolerance")
+    usable = bool(comp) and (comp.get("calls") or 0) > 0 \
+        and block.get("completed") is not False
+    ratio = _comparison_ratio(comp, tol) if usable else None
+    return {"ran": block.get("ran"), "completed": block.get("completed"),
+            "agrees": block.get("agrees"), "usable": usable and ratio is not None,
+            "ratio": _json_num(ratio),
+            "calls": comp.get("calls"),
+            "worst_stress_over_bound": _json_num(comp.get("worst_stress_over_bound")),
+            "worst_state_relative": _json_num(comp.get("worst_state_relative")),
+            "non_finite_mismatches": comp.get("non_finite_mismatches"),
+            "tolerance": tol,
+            "bound_over_max_sigma": _json_num(comp.get("bound_over_max_sigma")),
+            "reason": (comp.get("reason") or block.get("reason") or "")[:600]}
+
+
+def _undefined_outputs(u: Mapping) -> list[str]:
+    und = (u or {}).get("undefined") or {}
+    out = []
+    for arr in ("STRESS", "DDSDDE", "STATEV"):
+        out += [f"{arr}({i})" for i in und.get(arr) or []]
+    return out
+
+
+def _fe_informational(pr: Mapping, ptol: float | None) -> dict | None:
+    primal = pr.get("primal") or {}
+    if not primal:
+        return None
+    return {"what": "the FE-level history comparison of the pass; informational "
+                    "since D-15 (two FE solves steered by different Jacobians), "
+                    "never the verdict's measure",
+            "agrees": primal.get("agrees"),
+            "worst_stress_relative": _json_num(primal.get("worst_stress_relative")),
+            "worst_state_relative": _json_num(primal.get("worst_state_relative")),
+            "non_finite_original": primal.get("non_finite_original"),
+            "non_finite_transformed": primal.get("non_finite_transformed"),
+            "primal_tolerance_relative": ptol}
+
+
+def primal_gate_verdict(pr: Mapping, ev: Mapping, pass_name: str = "") -> dict:
+    """The ``primal_stress_state`` cell of one pass record (without evidence/build).
+
+    Since D-15 the verdict is the Abaqus primal gate (``pr["primal_gate"]``):
+    the routine-level replay and, where it agreed, the Jacobian-matched FE
+    control. ``max_error`` is the ratio of the comparison that DECIDED
+    (``decided_by``), ``measured`` carries the gate's numbers, and the FE
+    comparison appears only under ``measured.fe_comparison_informational``.
+
+    * ``failed`` only when a deciding comparison measured paired calls and its
+      ratio exceeds 1;
+    * a process failure (Jacobian-matched job incomplete, no paired calls, no
+      init build, replay that does not reproduce the solver) is
+      ``inconclusive`` when some comparison was measured and ``not_attempted``
+      when none was;
+    * a record stopped by the D-12 init-build check is
+      ``undefined_in_original`` (a source defect, never compared);
+    * a gate that ran without the comparison it names is ``inconclusive``,
+      never decided by the FE rule.
+
+    Records that predate the gate (no ``primal_gate``, ``routine_primal`` or
+    ``undefined_in_original``) keep the FE rule ``abaqus_primal_history_floor/1``.
+    """
     primal = pr.get("primal") or {}
     manifest_block = ((pr.get("experiment") or {}).get("manifest")
                       or pr.get("manifest") or {})
     ptol = manifest_block.get("primal_tolerance", 1e-10)
-    worst = [v for v in (primal.get("worst_stress_relative"),
-                         primal.get("worst_state_relative")) if v is not None]
-    worst_v = max(worst) if worst else None
-    ratio = (worst_v / ptol) if (worst_v is not None and ptol and
-                                 math.isfinite(worst_v)) else None
-    rule = "abaqus_primal_history_floor/1"
-    # Since D-15 the primal gate is decided at the routine (replay of every
-    # converged call) and the FE comparison in pr["primal"] is informational
-    # only: its numbers move with the transformed tangent and are not the
-    # verdict's measure. Where the gate ran, the cell carries the gate's ratio.
-    comparison = ((pr.get("routine_primal") or {}).get("comparison") or {})
-    if pr.get("primal_gate") and comparison:
-        tol = comparison.get("tolerance") or ptol
-        parts = [comparison.get("worst_stress_over_bound")]
-        if comparison.get("worst_state_relative") is not None and tol:
-            parts.append(comparison["worst_state_relative"] / tol)
-        parts = [v for v in parts if v is not None and math.isfinite(v)]
-        ratio = max(parts) if parts else None
-        rule, ptol = "routine_primal_gate/1", tol
-    build = {"kind": "store",
-             "fingerprint": rec.get("verification_fingerprint") or "",
-             "sha256": "", "basis": "transform-store OTI source compiled by Abaqus "
-                                    f"in {inp.current_pass}"}
-    pcell = {"reference": "original",
-             "max_error": ratio if ev else None,
-             "tolerance": 1.0 if ev else None,
-             "tolerance_rule_id": rule if ev else None,
-             "rtol": ptol if ev else None,
-             "measured": {"worst_stress_relative": _json_num(
-                              primal.get("worst_stress_relative")),
-                          "worst_state_relative": _json_num(
-                              primal.get("worst_state_relative")),
-                          "non_finite_original": primal.get("non_finite_original"),
-                          "non_finite_transformed": primal.get("non_finite_transformed"),
-                          "primal_tolerance_relative": ptol} if ev else None,
-             "quantity": FEATURE_DEFINITIONS["primal_stress_state"]["quantity"],
-             "scope": "history", "build": build if ev else None, "history": []}
-    if ev:
-        gates = {k: ev.get(k) for k in ("abaqus_job_completed", "complete_history_finite",
-                                        "primal_agreed", "mechanically_informative")}
+    pg = pr.get("primal_gate")
+    u = pr.get("undefined_in_original") or {}
+    base = {"reference": "original", "tolerance": 1.0,
+            "quantity": FEATURE_DEFINITIONS["primal_stress_state"]["quantity"],
+            "scope": "history", "history": []}
+    gates = {k: ev.get(k) for k in ("abaqus_job_completed", "complete_history_finite",
+                                    "primal_agreed", "mechanically_informative")}
+    fe = _fe_informational(pr, ptol)
+    undefined = _undefined_outputs(u)
+
+    # ---- D-12: the original is undefined on this history; nothing compared
+    if not pg and u.get("established") and undefined:
+        und = u.get("undefined") or {}
+        return {**base, "status": "undefined_in_original",
+                "reason": ("a source defect in the ORIGINAL, never compared -- "
+                           + (pr.get("reason") or "undefined_in_original (D-12): "
+                              + (u.get("reason") or "")))[:1500],
+                "max_error": None, "tolerance": None, "tolerance_rule_id": None,
+                "rtol": None, "decided_by": "undefined_in_original_check",
+                "undefined_outputs": undefined,
+                "stress_and_ddsdde_fully_defined": not (und.get("STRESS")
+                                                        or und.get("DDSDDE")),
+                "measured": {"decided_by": "undefined_in_original_check",
+                             "init_variants": u.get("init_variants"),
+                             "pair": u.get("pair"),
+                             "fe_comparison_informational": fe}}
+
+    # ---- pre-gate records: the FE history rule
+    if not pg and not pr.get("routine_primal") and not u:
+        worst = [v for v in (primal.get("worst_stress_relative"),
+                             primal.get("worst_state_relative")) if v is not None]
+        worst_v = max(worst) if worst else None
+        ratio = (worst_v / ptol) if (worst_v is not None and ptol and
+                                     math.isfinite(worst_v)) else None
+        cell = {**base, "max_error": ratio,
+                "tolerance_rule_id": "abaqus_primal_history_floor/1", "rtol": ptol,
+                "decided_by": "fe_history",
+                "measured": {"decided_by": "fe_history",
+                             "worst_stress_relative": _json_num(
+                                 primal.get("worst_stress_relative")),
+                             "worst_state_relative": _json_num(
+                                 primal.get("worst_state_relative")),
+                             "non_finite_original": primal.get("non_finite_original"),
+                             "non_finite_transformed": primal.get("non_finite_transformed"),
+                             "primal_tolerance_relative": ptol}}
         if all(v is True for v in gates.values()):
-            out["primal_stress_state"] = {"status": "verified",
-                                          "reason": "all primal gates true",
-                                          "evidence": ev_pass, **pcell}
-        elif gates["primal_agreed"] is True:
+            return {**cell, "status": "verified", "reason": "all primal gates true"}
+        if gates["primal_agreed"] is True:
             bad = ", ".join(f"{k}={v}" for k, v in gates.items() if v is not True)
-            out["primal_stress_state"] = {
-                "status": "inconclusive",
-                "reason": f"the builds agree but the run does not establish it: {bad} "
-                          "(agreement on a run that is not mechanically informative "
-                          "is not a verification)",
-                "evidence": ev_pass, **pcell}
-        elif gates["primal_agreed"] is False:
+            return {**cell, "status": "inconclusive",
+                    "reason": f"the builds agree but the run does not establish it: "
+                              f"{bad} (agreement on a run that is not mechanically "
+                              "informative is not a verification)"}
+        if gates["primal_agreed"] is False:
             if primal.get("non_finite_original"):
                 st, why = "inconclusive", ("the ORIGINAL build is non-finite on this "
                                            "deck, so the comparison carries no claim")
@@ -1576,17 +1835,115 @@ def _features(rec, pr, ev, stages, ev_pass, tangent_tol, ident, ps_ids, ij_ids,
                     "discriminate")
             else:
                 st, why = "failed", "the values disagree"
-            out["primal_stress_state"] = {
-                "status": st,
-                "reason": f"{why}: " + (pr.get("reason") or primal.get("reason")
-                                        or "gate primal_agreed=false")[:1500],
-                "evidence": ev_pass, **pcell, "values_disagree": st == "failed"}
-        else:
-            out["primal_stress_state"] = {
-                "status": "not_attempted",
-                "reason": "gate primal_agreed not established "
-                          f"({inp.current_pass} stage {pr.get('stage')})",
-                "evidence": ev_pass, **pcell}
+            return {**cell, "status": st, "values_disagree": st == "failed",
+                    "reason": f"{why}: " + (pr.get("reason") or primal.get("reason")
+                                            or "gate primal_agreed=false")[:1500]}
+        return {**cell, "status": "not_attempted",
+                "reason": f"gate primal_agreed not established ({pass_name} stage "
+                          f"{pr.get('stage')})"}
+
+    # ---- the D-15 gate
+    pg = pg or {}
+    decided_by = pg.get("decided_by") or ""
+    comps = {n: _gate_comparison(pr, n) for n in _GATE_COMPARISONS}
+
+    def r_of(n: str) -> float:
+        x = comps[n]["ratio"]
+        return math.inf if _is_inf(x) else float(x)
+    tol = next((c["tolerance"] for c in comps.values() if c["tolerance"]), ptol)
+    deciding = [n for n in decided_by.split("+") if n in comps]
+    measured = {"decided_by": decided_by or None,
+                **comps,
+                "init_variants_established": pg.get("init_variants_established"),
+                "stiffness_ulps": _json_num(pg.get("stiffness_ulps")),
+                "bound_over_max_sigma": _json_num(pg.get("bound_over_max_sigma")),
+                "undefined_outputs_excluded": pg.get("undefined_outputs_excluded") or [],
+                "primal_tolerance_relative": tol,
+                "fe_comparison_informational": fe}
+    cell = {**base, "tolerance_rule_id": "routine_primal_gate/1", "rtol": tol,
+            "decided_by": decided_by or None, "measured": measured}
+    if pg.get("undefined_outputs_excluded"):
+        cell["undefined_outputs"] = list(pg["undefined_outputs_excluded"])
+    reason = (pr.get("reason") or "")[:1500]
+    measured_any = any(c["usable"] for c in comps.values())
+
+    def process(why: str, kind: str) -> dict:
+        st = "inconclusive" if measured_any else "not_attempted"
+        return {**cell, "status": st, "max_error": None, "process_failure": kind,
+                "reason": f"{why}: {reason or 'no further detail recorded'}"[:1500]}
+
+    if pg.get("agrees") is True:
+        missing = [n for n in deciding if not comps[n]["usable"]] or \
+            ([] if deciding else ["(decided_by names no comparison)"])
+        if missing:
+            return process("the primal gate agreed but its comparison "
+                           f"{', '.join(missing)} is missing or measured no paired "
+                           "calls, so the agreement is not established",
+                           "gate_comparison_missing")
+        ratio = max(r_of(n) for n in deciding)
+        cell = {**cell, "max_error": _json_num(ratio)}
+        if ratio > 1:
+            return {**cell, "status": "inconclusive",
+                    "reason": f"the gate reports agreement but {decided_by} measured "
+                              f"a ratio of {ratio:.3g} > 1; not counted"}
+        if all(v is True for v in gates.values()):
+            return {**cell, "status": "verified",
+                    "reason": f"primal gate agreed ({decided_by}); all primal gates true"}
+        bad = ", ".join(f"{k}={v}" for k, v in gates.items() if v is not True)
+        return {**cell, "status": "inconclusive",
+                "reason": f"the builds agree but the run does not establish it: {bad} "
+                          "(agreement on a run that is not mechanically informative "
+                          "is not a verification)"}
+
+    # the gate did not agree: failed only on a measured disagreement
+    over = [n for n in deciding if comps[n]["usable"] and r_of(n) > 1]
+    if over:
+        ratio = max(r_of(n) for n in over)
+        return {**cell, "status": "failed", "max_error": _json_num(ratio),
+                "values_disagree": True, "decided_by": "+".join(over),
+                "reason": f"the values disagree ({'+'.join(over)} ratio "
+                          f"{ratio:.3g} > 1): {reason}"[:1500]}
+    jm, rl = comps["jacobian_matched"], comps["routine_level"]
+    if decided_by == "undefined_in_original_check" or \
+            pg.get("init_variants_established") is False:
+        return process("the D-12 init-build check could not be completed (no init "
+                       "build set, or an init build stopped)", "no_init_build")
+    if "jacobian_matched" in deciding and jm["completed"] is False:
+        return process("the Jacobian-matched control job did not complete",
+                       "jacobian_matched_job_incomplete")
+    if "jacobian_matched" in deciding and jm["ran"] is False:
+        return process("the Jacobian-matched control did not run",
+                       "jacobian_matched_not_run")
+    if any(n in deciding and not comps[n]["usable"] for n in comps):
+        bad = [n for n in deciding if not comps[n]["usable"]]
+        return process(f"{', '.join(bad)} measured no paired calls (the runs did "
+                       "not walk the same calls)", "replay_mismatch")
+    if not deciding:
+        return process("the primal gate disagreed without naming a comparison it "
+                       "measured", "gate_comparison_missing")
+    return process(f"the gate disagreed but {decided_by} measured a ratio within "
+                   "the bound", "gate_inconsistent")
+
+
+def _features(rec, pr, ev, stages, ev_pass, tangent_tol, ident, ps_ids, ij_ids,
+              inp) -> dict:
+    out: dict[str, dict] = {}
+    na = not rec.get("is_umat")
+
+    def na_cell():
+        return {"status": "not_applicable", "reason": "not a UMAT",
+                "evidence": stages["eligible"]["evidence"], "reference": None,
+                "max_error": None, "tolerance": None, "history": []}
+
+    # primal -- failed only where the deciding comparison measured a
+    # disagreement; see :func:`primal_gate_verdict`
+    build = {"kind": "store",
+             "fingerprint": rec.get("verification_fingerprint") or "",
+             "sha256": "", "basis": "transform-store OTI source compiled by Abaqus "
+                                    f"in {inp.current_pass}"}
+    if ev:
+        out["primal_stress_state"] = {**primal_gate_verdict(pr, ev, inp.current_pass),
+                                      "evidence": ev_pass, "build": build}
     elif na:
         out["primal_stress_state"] = na_cell()
     else:
@@ -1823,12 +2180,29 @@ def summarise(manifest: Mapping) -> dict:
         "D1_copyleft": dict(Counter(r["license"]["copyleft"] or "none"
                                     for r in acquired)),
     }
-    fam = Counter(r["model"]["family"]["family"] for r in acquired)
-    fam_e = Counter(r["model"]["family"]["family"] for r in eligible)
-    fam_rev = Counter(r["model"]["family"]["review"] for r in acquired)
-    out["families"] = {"D1": dict(fam), "D2": dict(fam_e), "review_D1": dict(fam_rev),
-                       "human_reviewed_D1": sum(1 for r in acquired if
-                                                r["model"]["family"]["human_reviewed"])}
+    def fam_of(r, key="reporting_family"):
+        return r["model"]["family"].get(key) or r["model"]["family"].get("family", "")
+
+    def e_of(r):
+        return (r["model"]["family"].get("E") or {}).get("family", "")
+    out["families"] = {
+        "classification": FAMILY_CLASSIFICATION,
+        "D1": dict(Counter(fam_of(r) for r in acquired)),
+        "D2": dict(Counter(fam_of(r) for r in eligible)),
+        "D2_fine": dict(Counter(fam_of(r, "family") for r in eligible)),
+        "D2_by_source": dict(Counter(r["model"]["family"].get("source", "")
+                                     for r in eligible)),
+        "D2_identity_growth_scaffolds": sum(
+            1 for r in eligible if r["model"]["family"].get("identity_growth_scaffold")),
+        "review_D1": dict(Counter(r["model"]["family"]["review"] for r in acquired)),
+        "human_reviewed_D1": sum(1 for r in acquired
+                                 if r["model"]["family"]["human_reviewed"]),
+        "E_secondary": {"what": "Agent E's classification "
+                                "(material_families_checked_E.json); shown for "
+                                "comparison, never the reported family",
+                        "D1": dict(Counter(e_of(r) for r in acquired)),
+                        "D2": dict(Counter(e_of(r) for r in eligible))},
+    }
     out["definitions"] = {
         "verified": "the stage's own evidence says it passed; transformed, compiled "
                     "or executed never imply verified downstream",
@@ -1838,9 +2212,16 @@ def summarise(manifest: Mapping) -> dict:
         "conflict": "independent evidence says both verified and failed; both are "
                     "listed in the cell and neither is counted",
         "inconclusive": "evidence that neither establishes nor refutes the claim",
+        "undefined_in_original": "the ORIGINAL's output differs between init builds "
+                                 "(D-12): a source defect, never compared, counted "
+                                 "neither verified nor failed",
         "features": "summary.features counts the Abaqus-pipeline (store) build "
                     "only; lifted/provider cells are in features_other_builds",
     }
+    # eligibility does not change on a merge: keep the note build_manifest wrote
+    note = (manifest.get("summary") or {}).get("denominators_note")
+    if note is not None:
+        out["denominators_note"] = note
     return out
 
 
@@ -2027,7 +2408,7 @@ def validate_cell(feature: str, cell: Mapping, *,
 # ---- merging ---------------------------------------------------------------
 
 #: Among cells that decide nothing, the more informative one stays.
-_RANK = {"inconclusive": 5, "unsupported": 4, "blocked": 3, "not_applicable": 2,
+_RANK = {"undefined_in_original": 6, "inconclusive": 5, "unsupported": 4, "blocked": 3, "not_applicable": 2,
          "not_attempted": 1}
 
 
@@ -2221,6 +2602,7 @@ def merge_feature_results(manifest: dict,
         cell = {k: v for k, v in rec.items() if k not in ("source_id", "feature")}
         for k in ("reference", "max_error", "tolerance"):
             cell.setdefault(k, None)
+        _blank_undecided_digests(cell)
         cell["evidence"] = to_locator(cell.get("evidence") or "", roots)
         if isinstance(cell.get("evidence_all"), list):
             cell["evidence_all"] = [to_locator(e, roots) for e in cell["evidence_all"]]
@@ -2255,6 +2637,107 @@ def merge_feature_results(manifest: dict,
         {**report, "unmatched": sorted({str(u) for u in unmatched})})
     manifest["summary"] = summarise(manifest)
     return report
+
+
+def _blank_undecided_digests(cell: dict) -> None:
+    """A cell that decides nothing may name its build without digests (cells
+    written before the harness recorded them carry ``null``): those become
+    ``""``. A verified / failed / inconclusive cell is left as it is, so
+    :func:`validate_cell` still rejects it without a digest."""
+    b = cell.get("build")
+    if isinstance(b, Mapping) and cell.get("status") not in (
+            "verified", "failed", "inconclusive"):
+        cell["build"] = {**b, **{k: "" for k in ("fingerprint", "sha256")
+                                 if k in b and b[k] is None}}
+
+
+#: Decision D-18: which harness run decides each feature. The routine-level
+#: driver runs every perturbation of a path in one process, so an original that
+#: STOPs under one perturbation ends every column queued after it; whether
+#: DDSDDE can be judged must not depend on which other features were requested.
+D18_PRIMAL_RUN_FEATURES: tuple[str, ...] = ("primal_stress_state", "ddsdde")
+
+
+def _d18_guard(rec: Mapping, full_by_key: Mapping, trips: set[str]) -> dict:
+    """A primal/ddsdde record from the primal+ddsdde run, withheld (made
+    inconclusive) when the full-feature run shows a failure or a hidden-state
+    trip for it."""
+    if rec.get("status") != "verified":
+        return dict(rec)
+    sid, feat = rec.get("source_id"), rec.get("feature")
+    kind = build_kind(rec) or "store"
+    other = full_by_key.get((sid, feat, kind))
+    why = ""
+    if other is not None and other.get("status") in ("failed", "conflict"):
+        why = (f"the full-feature run reports {other.get('status')} for this cell: "
+               + (other.get("reason") or "")[:400])
+    elif other is not None and other.get("hidden_state_trips"):
+        why = "the full-feature run tripped the hidden-state gate on this cell"
+    elif sid in trips:
+        why = "the full-feature run tripped the hidden-state gate on this source"
+    if not why:
+        return dict(rec)
+    keep = {k: rec[k] for k in ("source_id", "feature", "evidence", "reference",
+                                "quantity", "wrt", "held_fixed", "scope", "build",
+                                "producer") if k in rec}
+    return {**keep, "status": "inconclusive", "max_error": None, "tolerance": None,
+            "reason": f"D-18 guard: verified in the primal+ddsdde run, but {why}",
+            "d18_guard": True,
+            # not ``withheld_verified``: the primal gate restores that one
+            "d18_withheld_verified": {k: v for k, v in rec.items()
+                                  if k not in ("source_id", "feature", "history")}}
+
+
+def merge_d18(manifest: dict, primal_ddsdde_run: str | Path | Iterable[Mapping],
+              full_run: str | Path | Iterable[Mapping], *,
+              roots: Mapping[str, str] | None = None) -> dict:
+    """Merge the two routine-level harness runs by decision D-18.
+
+    ``primal_stress_state`` and ``ddsdde`` come from the primal+ddsdde run
+    (its own hidden-state gate); every other feature (parameter and state
+    sensitivities, internal Jacobian) from the full-feature run, whose
+    primal/ddsdde records are not merged. Guard: a primal/ddsdde record that
+    is verified in the primal+ddsdde run is merged as ``inconclusive`` when the
+    full-feature run shows ``failed`` (or ``conflict``) or a hidden-state trip
+    for it. Independent of argument order. Returns both merge reports.
+    """
+    roots_m = {**DEFAULT_ROOTS, **expand_roots(manifest.get("roots") or {}),
+               **(roots or {})}
+
+    def load(x):
+        if isinstance(x, (str, Path)):
+            return _load_jsonl(Path(x)), to_locator(str(Path(x).resolve()), roots_m)
+        return list(x), ""
+    prim, prim_label = load(primal_ddsdde_run)
+    full, full_label = load(full_run)
+    full_by_key = {(r.get("source_id"), r.get("feature"), build_kind(r) or "store"): r
+                   for r in full}
+    trips = {r.get("source_id") for r in full if r.get("hidden_state_trips")}
+    prim_in = [_d18_guard(r, full_by_key, trips) for r in prim
+               if r.get("feature") in D18_PRIMAL_RUN_FEATURES]
+    full_in = [r for r in full if r.get("feature") not in D18_PRIMAL_RUN_FEATURES]
+    rep_p = merge_feature_results(manifest, prim_in, label=prim_label or "primal+ddsdde run",
+                                  roots=roots)
+    rep_f = merge_feature_results(manifest, full_in, label=full_label or "full-feature run",
+                                  roots=roots)
+    guarded = [{"source_id": r["source_id"], "feature": r["feature"],
+                "reason": r["reason"]} for r in prim_in if r.get("d18_guard")]
+    manifest["feature_sources"] = {
+        "decision": "D-18",
+        "primal_ddsdde_run": prim_label,
+        "full_feature_run": full_label,
+        "features": {f: ("primal_ddsdde_run" if f in D18_PRIMAL_RUN_FEATURES
+                         else "full_feature_run") for f in FEATURES
+                     if f not in ("residual_sens", "global_sens", "cli_driver")},
+        "ignored_from_primal_ddsdde_run": sum(
+            1 for r in prim if r.get("feature") not in D18_PRIMAL_RUN_FEATURES),
+        "ignored_from_full_feature_run": len(full) - len(full_in),
+        "guard": "a primal/ddsdde cell verified in the primal+ddsdde run is merged as "
+                 "inconclusive when the full-feature run shows failed/conflict or a "
+                 "hidden-state trip for it",
+        "guarded": guarded,
+    }
+    return {"primal_ddsdde_run": rep_p, "full_feature_run": rep_f, "guarded": guarded}
 
 
 # ---- Residual Assembler records (Noether, schema ra-corpus-residual/1) ------
@@ -2527,10 +3010,18 @@ def manifest_schema() -> dict:
             "model": {"type": ["object", "null"],
                       "properties": {"family": {
                           "type": "object",
-                          "required": ["family", "review", "human_reviewed", "basis"],
-                          "properties": {"review": {"enum": [
-                              "agent_reviewed_code_evidence", "keyword_only",
-                              "missing"]}}}}},
+                          "required": ["family", "reporting_family", "classification",
+                                       "source", "review", "human_reviewed", "basis",
+                                       "E"],
+                          "properties": {
+                              "review": {"enum": [
+                                  "agent_reviewed_code_evidence", "keyword_only",
+                                  "missing"]},
+                              "classification": {"const": "D-11 S1"},
+                              "reporting_family": {"enum": [
+                                  *REPORTING_FAMILIES, "not_a_umat", ""]},
+                              "E": {"type": "object",
+                                    "required": ["family", "label"]}}}}},
             "interface": {"type": ["object", "null"]},
             "pipeline": {"type": "object", "required": list(STAGES),
                          "properties": {s: stage_cell for s in STAGES},
@@ -2581,8 +3072,14 @@ def flat_rows(manifest: Mapping) -> list[dict]:
             "redistribution": r["license"]["redistribution"],
             "attribution_required": r["license"]["attribution_required"],
             "copyleft": r["license"]["copyleft"],
-            "family": fam.get("family", ""), "family_review": fam.get("review", ""),
-            "family_second_pass": (fam.get("second_pass") or {}).get("family", ""),
+            "family": fam.get("family", ""),
+            "family_reported": fam.get("reporting_family", ""),
+            "family_classification": fam.get("classification", ""),
+            "family_source": fam.get("source", ""),
+            "family_review": fam.get("review", ""),
+            "family_E": (fam.get("E") or {}).get("family", ""),
+            "family_second_pass": ((fam.get("E") or {}).get("second_pass") or {})
+            .get("family", ""),
             "entry_routine": (m.get("entry_point") or {}).get("routine", ""),
             "external_routines": ";".join(e["name"] for e in
                                           m.get("external_routines") or []),
@@ -2620,16 +3117,24 @@ def _body(manifest: Mapping) -> dict:
 
 def _portable(value):
     """Every workspace path in a published manifest written relative to
-    $UMAT_OTI_WORKSPACE: a published artefact carries no machine path."""
-    workspace = str(_WS_DEFAULT)
+    $UMAT_OTI_WORKSPACE: a published artefact carries no machine path.
+
+    The workspace is ``$UMAT_OTI_WORKSPACE`` when set, else this checkout's
+    parent; it is replaced only as a whole path (followed by ``/`` or by a
+    character that cannot continue a file name), never as a prefix of a
+    longer directory name."""
+    return _portable_with(value, _workspace_pattern(_workspace()))
+
+
+def _portable_with(value, pat):
     if isinstance(value, str):
-        # Anywhere in the string: build commands quoted in a reason carry
-        # paths in the middle of the text too.
-        return value.replace(workspace, WORKSPACE_TOKEN)
+        # Anywhere in the string (build commands quoted in a reason carry
+        # paths mid-text), but only at path boundaries.
+        return pat.sub(WORKSPACE_TOKEN, value)
     if isinstance(value, Mapping):
-        return {k: _portable(v) for k, v in value.items()}
+        return {k: _portable_with(v, pat) for k, v in value.items()}
     if isinstance(value, list):
-        return [_portable(v) for v in value]
+        return [_portable_with(v, pat) for v in value]
     return value
 
 
