@@ -6,7 +6,7 @@ about somebody else's repository, each needs its own evidence, and reading a
 refusal as any of them moves work out of this project's column and into the
 corpus's -- the one direction the error must never go.
 
-So every one of the 151 refused sources was classified by parsing the file:
+So every one of the 112 refused sources was classified by parsing the file:
 its Abaqus entry point read from the source text, its lines matched against
 every other acquired source, and an offline ifort ``-syntax-only`` pass over
 the author's own text with Abaqus's real ``aba_param.inc`` on the include path
@@ -15,11 +15,11 @@ process was started and no licence token was drawn.
 
 The measured split, from ``paper_results/corpus/corpus_registry.json``:
 
-    genuine_umat                  100   ours: a whole UMAT we could not convert
+    genuine_umat                   63   ours: a whole UMAT we could not convert
     missing_external_dependency    16   a USE or INCLUDE nobody published
     helper_or_module_only          14   no Abaqus entry point at all
     incomplete_or_corrupt_source   11   ifort rejects the published text
-    duplicate_of_another_source     6   line-for-line a copy of another source
+    duplicate_of_another_source     4   line-for-line a copy of another source
     other_abaqus_routine            2   the entry point is a UEL
     published_stub_...              2   the UMAT body computes nothing at all
 """
@@ -109,13 +109,13 @@ def test_the_same_refusal_text_classifies_two_files_differently():
 
 
 def test_a_refused_umat_that_builds_stays_this_project_s_problem():
-    """102 of the 151 are whole UMATs whose published text ifort accepts,
+    """63 of the 112 are whole UMATs whose published text ifort accepts,
     whose companions are all in the repository, and which do compute a stress
     or a tangent somewhere in the file. They stay ``transform_refused`` and
     ``internal``: there is nothing wrong with those files, and the work is
     ours."""
     ours = [r for r in refusals() if r["refusal_class"] == GENUINE_UMAT]
-    assert len(ours) == 102, len(ours)
+    assert len(ours) == 63, len(ours)
     for record in ours:
         assert record["terminal_state"] == "transform_refused"
         assert record["kind"] == "internal"
@@ -129,11 +129,15 @@ def test_the_refusal_classes_partition_every_refusal():
 
     The rule is the partition, not the totals: the totals move every time the
     transformer improves, and they should. They are asserted beside it as the
-    measurement of the day (151 refusals at fingerprints 16c9f305df378089 and
-    dbe9f928191e1d43: the 147 of the generation before plus four sources that
-    pass a real array to a lifted helper whose IMPLICIT statement types the
-    dummy hypercomplex, now refused by name) so a silent drift is still
-    visible, but a refusal landing in no
+    measurement of the day (112 refusals at corpus pass19/pass20, fingerprints
+    52e0a8c4289fce43 and ab32cce7bec15c93, down from 151 at pass16: 40 genuine
+    UMATs and one duplicate of one now transform -- SUM and NORM2 over the
+    type, continued CALLs, contained procedures and interfaces -- and go on to
+    a later stage; two that used to transform are now refused by the
+    state_shadow_carries_the_state check, one a genuine UMAT, one
+    rhdodds__warp3d/src/user_routines_umat.f, already not_a_umat, which now
+    carries helper_or_module_only beside that verdict) so a silent drift is
+    still visible, but a refusal landing in no
     class or in two would fail this whichever way the counts go.
     """
     rows = refusals()
@@ -144,19 +148,19 @@ def test_the_refusal_classes_partition_every_refusal():
             record["refusal_class"], 0) + 1
     assert sum(counts.values()) == len(rows), (counts, len(rows))
     assert counts == {
-        GENUINE_UMAT: 102,
+        GENUINE_UMAT: 63,
         MISSING_EXTERNAL_DEPENDENCY: 16,
-        HELPER_OR_MODULE_ONLY: 13,
+        HELPER_OR_MODULE_ONLY: 14,
         INCOMPLETE_OR_CORRUPT: 11,
-        DUPLICATE_SOURCE: 5,
+        DUPLICATE_SOURCE: 4,
         OTHER_ABAQUS_ROUTINE: 2,
         PUBLISHED_STUB: 2,
     }, counts
-    assert sum(counts.values()) == 151
+    assert sum(counts.values()) == 112
 
 
 def test_every_refused_source_quotes_the_line_it_was_classified_from():
-    """A classification nobody can check is an assertion. All 151 carry the
+    """A classification nobody can check is an assertion. All 112 carry the
     line of the author's own file that decided it, and that line really is in
     that file at the line number recorded beside it."""
     for record in refusals():
@@ -287,7 +291,7 @@ def test_a_second_copy_of_a_uel_is_still_not_a_umat():
     count of UMATs."""
     duplicates = [r for r in refusals()
                   if r["refusal_class"] == DUPLICATE_SOURCE]
-    assert len(duplicates) == 5, len(duplicates)
+    assert len(duplicates) == 4, len(duplicates)
     for record in duplicates:
         assert record["duplicate_of"], record["source_id"]
         assert record["duplicate_of"] != record["source_id"]
