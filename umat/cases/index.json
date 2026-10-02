@@ -1,0 +1,607 @@
+{
+ "schema": "umat-oti/regression-case/1/index",
+ "cases": [
+  {
+   "case_id": "alexanderjfdr-hyperelastic_phase_field--neohookean-umat--10759f1f",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 15,
+   "judged_states": 398
+  },
+  {
+   "case_id": "bristolcompositesinstitute-abaci--umat--b8fa3835",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 12,
+   "judged_states": 311
+  },
+  {
+   "case_id": "caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 110
+  },
+  {
+   "case_id": "irfancn-abaqus-umat-elastic--umat-elastic--7e9bb4c2",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 13,
+   "judged_states": 240
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--085498eb",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--0a899e15",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 120
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--19741281",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 212
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--3dd037c1",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 120
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--41a797ba",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 212
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--4b9899ad",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--58571541",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--8e54a7bc",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 120
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--8f497bc7",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 120
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--940317e4",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 211
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--9c29a16c",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 120
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--adf9f7e1",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--c5781158",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 211
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--d70f4ec3",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--e80db777",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 120
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--f9c371e5",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 213
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-gravityfirst--fdf03c02",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 120
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--ae2b7023",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--d61ccfe0",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--05282f9c",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 12,
+   "judged_states": 250
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--080267b4",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 12,
+   "judged_states": 250
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--0d8c4188",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--5755d72d",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--5d120e49",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--5defc2a4",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--70df7624",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--82c3ab5f",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--8e9f6e6a",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 12,
+   "judged_states": 250
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--af0f3f65",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 12,
+   "judged_states": 250
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--bf5e3f13",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--dc0aebea",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200
+  },
+  {
+   "case_id": "keisuke58-pde-fem-biofilm--umat-biofilm-visco-phase2--42eacbd5",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 13,
+   "judged_states": 270
+  },
+  {
+   "case_id": "mholla-growth--umat-area-stretch--cbfc24ef",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 140
+  },
+  {
+   "case_id": "mholla-growth--umat-iso-stretch--890619c1",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 6,
+   "judged_states": 119
+  },
+  {
+   "case_id": "sina-taghizadeh-umat_hyperelastic--compresibleneohookean--d78e6119",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 13,
+   "judged_states": 240
+  },
+  {
+   "case_id": "umat-oti-curated--m3-j2",
+   "tiers": {
+    "ci": true,
+    "offline": true
+   },
+   "redistribution": "permitted",
+   "kind": "curated",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 260
+  },
+  {
+   "case_id": "umat-oti-curated--sweep-j2-kinematic",
+   "tiers": {
+    "ci": true,
+    "offline": true
+   },
+   "redistribution": "permitted",
+   "kind": "curated",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 260
+  },
+  {
+   "case_id": "umat-oti-curated--sweep-maxwell-ve",
+   "tiers": {
+    "ci": true,
+    "offline": true
+   },
+   "redistribution": "permitted",
+   "kind": "curated",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 11,
+   "judged_states": 304
+  },
+  {
+   "case_id": "umat-oti-curated--sweep-real-pco",
+   "tiers": {
+    "ci": true,
+    "offline": true
+   },
+   "redistribution": "permitted",
+   "kind": "curated",
+   "transform_fingerprint": "aaf3a9366218cd5f",
+   "harness_fingerprint": "cf9dc354b785672a",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 260
+  }
+ ]
+}

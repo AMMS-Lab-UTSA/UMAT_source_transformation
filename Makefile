@@ -10,7 +10,8 @@ PROFILE_ARGS ?=
         reproduce-abaqus batch batch-transform batch-offline batch-abaqus \
         batch-status batch-record clean-clone clean \
         umat-promote umat-materialize umat-regress umat-status \
-        corpus-report corpus-registry corpus-fixtures
+        corpus-report corpus-registry corpus-fixtures \
+        case-ci case-offline
 
 help:
 	@echo "setup              install the package and its test extras"
@@ -32,6 +33,8 @@ help:
 	@echo "umat-promote       copy a batch's verified rows into umat/ (deliberate)"
 	@echo "umat-materialize   fetch the sources behind umat/ onto this machine"
 	@echo "umat-regress       re-run every promoted material; non-zero if any fails"
+	@echo "case-ci            regression cases, CI tier: regenerate + replay, gfortran (minutes)"
+	@echo "case-offline       every regression case incl. non-redistributable ones (this machine)"
 	@echo ""
 	@echo "batch-status       what the transform store holds, and how much is stale"
 	@echo "batch-transform    transform every discovered source into the store"
@@ -169,3 +172,20 @@ corpus-fixtures:
 	@test -n "$(WORK)" || { echo "WORK=<run>/work is required"; exit 2; }
 	$(PYTHON) tools/export_residual_fixture.py \
 	    --results "$(RESULTS)" --work-dir "$(WORK)" --out "$(FIXTURE_OUT)" $(BATCH_ARGS)
+
+# Regression cases (umat/cases/, docs/REGRESSION_CASES.md). Both tiers run R
+# (re-transform with the current code, compile in the job layout, rerun the
+# frozen paths) and P (rebuild the preserved transformed units) and compare
+# numbers against the frozen ORIGINAL/FD references. Non-zero on a tolerance
+# breach, coverage shrink, drift, or a mutant canary that is not rejected.
+# A missing gfortran is a failure, not a skip.
+CASE_JOBS ?= 4
+CASE_REPORT ?=
+
+case-ci:
+	PYTHONHASHSEED=0 $(PYTHON) tools/corpus_cases.py check --tier ci --jobs $(CASE_JOBS) \
+	    $(if $(CASE_REPORT),--report "$(CASE_REPORT)",)
+
+case-offline:
+	PYTHONHASHSEED=0 $(PYTHON) tools/corpus_cases.py check --tier offline --jobs $(CASE_JOBS) \
+	    $(if $(CASE_REPORT),--report "$(CASE_REPORT)",)

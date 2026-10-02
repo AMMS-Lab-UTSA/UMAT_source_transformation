@@ -1,0 +1,646 @@
+{
+ "schema": "umat-oti/regression-case/1",
+ "case_id": "caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037",
+ "status": "verified",
+ "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
+ "source": {
+  "kind": "corpus",
+  "registry_key": "c7bf17b21519e33da0b7bbb1",
+  "source_id": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/ISOTROPIC-ELASTICITY.for",
+  "repository": "CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine",
+  "commit": "fe69305788fbb37185a0be38aed5ea00000aaab4",
+  "path": "ISOTROPIC-ELASTICITY.for",
+  "cache_path": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/ISOTROPIC-ELASTICITY.for",
+  "url": "https://github.com/CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/blob/fe69305788fbb37185a0be38aed5ea00000aaab4/ISOTROPIC-ELASTICITY.for",
+  "raw_url": "https://raw.githubusercontent.com/CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/fe69305788fbb37185a0be38aed5ea00000aaab4/ISOTROPIC-ELASTICITY.for",
+  "sha256": "27cda337a45be53431149436fbad42bd19da0bb5ec2a68f6370c17b608326a86",
+  "bytes": 2632,
+  "licence": {
+   "spdx": "MIT",
+   "scope": "repository",
+   "licence_file": null,
+   "basis": "LICENSE (SPDX MIT via the GitHub licence API)",
+   "redistribution": "unknown",
+   "redistribution_basis": "licence file absent from the acquisition cache (the cache holds a partial tree, so this does not mean the repository has none); MIT is known only from repository metadata (LICENSE (SPDX MIT via the GitHub licence API)); not confirmed"
+  },
+  "in_case": null,
+  "fetch": "python tools/corpus_cases.py fetch caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
+ },
+ "fingerprints": {
+  "transform_fingerprint": "aaf3a9366218cd5f",
+  "harness_fingerprint": "cf9dc354b785672a",
+  "contract_transform_generation": "dbe9f928191e1d43"
+ },
+ "transform": {
+  "settings": {
+   "recipe": "tools/transform_all.transform_one (seed auto, STRESS/DDSDDE, job-layout gfortran compile)",
+   "ntens": 6,
+   "PYTHONHASHSEED": "0"
+  },
+  "from": "transform_store:b91d6a2630531c8f971270d4",
+  "files": [
+   {
+    "path": "ISOTROPIC-ELASTICITY_oti.for",
+    "sha256": "be5f6ce2b5bad2014bc78f306ed38d7c18dd46386c4ea3592391ce9ebd9e4abb",
+    "bytes": 4216
+   },
+   {
+    "path": "compile_order.txt",
+    "sha256": "ca422754a406a25572f4c96b6b106a86ec05a339d8dcb22ebcbdd36b9ea28c1d",
+    "bytes": 97
+   },
+   {
+    "path": "dependencies/ISOTROPIC-ELASTICITY.for",
+    "sha256": "51052855ebb90320e5690c59637524e3b709f7550cb2144b030d9253b1312c33",
+    "bytes": 2555
+   },
+   {
+    "path": "master_parameters.f90",
+    "sha256": "2baddb13f26a7b01e40692a31866bbbd84db97139e52016ca73058bfd4911781",
+    "bytes": 2552
+   },
+   {
+    "path": "oti_intrinsics.f90",
+    "sha256": "38606c9c1fca85a9e5df4a32b86b77facae0e2cca3c57db0e1e1193de78dca5c",
+    "bytes": 14283
+   },
+   {
+    "path": "otim6n1.f90",
+    "sha256": "4ba635b11181241b426f50758413d9b87c480728f7706c310ee030abe866714f",
+    "bytes": 109682
+   },
+   {
+    "path": "real_utils.f90",
+    "sha256": "20ad619211d89d527f2b7368f16e415a8253e12eca1649164d842a74a34bb93b",
+    "bytes": 26834
+   }
+  ],
+  "compiled_source_sha256": "f83f20dddd703db30a418b4cf7a7b00a9a723ad6812bdd6e0b4e2d578f5f8317"
+ },
+ "experiment": {
+  "ntens": 6,
+  "ndi": 3,
+  "nshr": 3,
+  "nstatv": 1,
+  "props": [
+   210000.0,
+   0.3
+  ],
+  "initial_statev": "first data rows of each config (after SDVINI if any)",
+  "family": "elasticity",
+  "kinematics": "small",
+  "material_provenance": {
+   "registry": "<umat>/paper_results/corpus/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass16/results/store_verification.jsonl key=c7bf17b21519e33da0b7bbb1",
+   "material_provenance": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/UMATmodel.inp: UMATmodel.inp *MATERIAL Steel: 2 constants, *DEPVAR 0 -- a section in UMATmodel.inp attaches Steel to C3D8; the deck sits in the source's own directory",
+   "initial_state_from_user_subroutine": false,
+   "terminal_state": "fully_verified"
+  },
+  "paths": [
+   {
+    "name": "elastic_uniaxial",
+    "regime": "elastic",
+    "kinematics": "small",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "elasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
+     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/elastic_uniaxial.cfg",
+    "config_sha256": "e795db225a2e0b3f5830e7893bb756095826f1c61281250b9d3013bc2ed2ea87",
+    "n_increments": 20,
+    "judged_states": 20,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "elastic_shear",
+    "regime": "elastic",
+    "kinematics": "small",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "elasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
+     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/elastic_shear.cfg",
+    "config_sha256": "854b3fcd52e67f0e53c34623b56fd35ed06a384bcfbb090e6a5e63fae99fa2cb",
+    "n_increments": 20,
+    "judged_states": 20,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "isotropy_reference",
+    "regime": "elastic",
+    "kinematics": "small",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "elasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
+     "isotropy": "family 'elasticity' is isotropic by default and no anisotropy marker was found in the file path or code",
+     "rotation": "35 deg about (1.0, 2.0, 3.0) (layout-preserving for NTENS=6)",
+     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/isotropy_reference.cfg",
+    "config_sha256": "901b2c0e5549160f6181a30db67e7eacbf622f09f7174fce25d21352e5d200e3",
+    "n_increments": 10,
+    "judged_states": 10,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "isotropy_rotated",
+    "regime": "elastic",
+    "kinematics": "small",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "elasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
+     "isotropy": "family 'elasticity' is isotropic by default and no anisotropy marker was found in the file path or code",
+     "rotation": "35 deg about (1.0, 2.0, 3.0) (layout-preserving for NTENS=6)",
+     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/isotropy_rotated.cfg",
+    "config_sha256": "3adae7155ec37c065399fc56b4dd4f9c38de931237a0da5ca36d1ea0335835e2",
+    "n_increments": 10,
+    "judged_states": 10,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "relaxation",
+    "regime": "relaxation",
+    "kinematics": "small",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "elasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
+     "rate": "registry time_dependent=True (the Abaqus run saw the clock matter)",
+     "hold": "ramp 1.3, hold 11.7",
+     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/relaxation.cfg",
+    "config_sha256": "cf2aa680ad9521861cc89b39822c41126db7ecba995e1619042c2d241dd4374b",
+    "n_increments": 30,
+    "judged_states": 30,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "30/30 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "rate_slow",
+    "regime": "relaxation",
+    "kinematics": "small",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "elasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
+     "rate": "registry time_dependent=True (the Abaqus run saw the clock matter)",
+     "ramp_time": "13",
+     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/rate_slow.cfg",
+    "config_sha256": "338626c8aa5ec935fc0e21602091fd9c9de53d8e168e396bf082894fe9fa013e",
+    "n_increments": 10,
+    "judged_states": 10,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "rate_fast",
+    "regime": "relaxation",
+    "kinematics": "small",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "elasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
+     "rate": "registry time_dependent=True (the Abaqus run saw the clock matter)",
+     "ramp_time": "0.13",
+     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 0.13",
+     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/rate_fast.cfg",
+    "config_sha256": "b83d644baa7f2899bf49c2d8eaa9f5004855835fdaf582ed7ab3ac62114cc0b7",
+    "n_increments": 10,
+    "judged_states": 10,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   }
+  ],
+  "paths_not_frozen": {}
+ },
+ "references": [
+  {
+   "id": "primal_original",
+   "kind": "primal",
+   "producer": "ORIGINAL routine, harness real driver, gfortran zero-init build",
+   "independent_of_oti": true,
+   "compact": "reference.json.gz#paths[].original"
+  },
+  {
+   "id": "tangent_fd_original",
+   "kind": "derivative",
+   "quantity": "DDSDDE returned by the store OTI build",
+   "wrt": "DSTRAN_j (engineering shear) or, for a gradient-driven source, the strain direction j pushed forward as dF = eps_j . F (Kirchhoff term added)",
+   "held_fixed": "incoming STRESS_n, STATEV_n, STRAN_n, PROPS, TIME, DFGRD0 (and DFGRD1 for a DSTRAN-driven source)",
+   "scope": "local: one increment from the recorded incoming state",
+   "reference": "central FD of the ORIGINAL routine's STRESS_{n+1}, restored state",
+   "independent_of_oti": true,
+   "compact": "reference.json.gz#paths[].judged"
+  }
+ ],
+ "reference": {
+  "file": "reference.json.gz",
+  "sha256": "834acff57e7d75b76d70662f2990ba9f8c89683bc95377c627b4300c9be77caa"
+ },
+ "tolerance_rule_id": "case-rule/1-df2f107a3c04",
+ "error_summary": {
+  "elastic_uniaxial": {
+   "primal": 0.0,
+   "tangent": 3.277708362871797e-07
+  },
+  "elastic_shear": {
+   "primal": 0.0,
+   "tangent": 3.0064724112366753e-07
+  },
+  "isotropy_reference": {
+   "primal": 0.0,
+   "tangent": 3.8501432252089846e-07
+  },
+  "isotropy_rotated": {
+   "primal": 0.0,
+   "tangent": 4.497924753908835e-07
+  },
+  "relaxation": {
+   "primal": 0.0,
+   "tangent": 4.6166677670947176e-07
+  },
+  "rate_slow": {
+   "primal": 0.0,
+   "tangent": 4.6166677670947176e-07
+  },
+  "rate_fast": {
+   "primal": 0.0,
+   "tangent": 4.6166677670947176e-07
+  }
+ },
+ "toolchain": {
+  "python": "3.11.7",
+  "numpy": "2.4.6",
+  "gfortran": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
+  "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
+ },
+ "harness": {
+  "run_id": "20261002T111317",
+  "seconds": 6.1,
+  "features": [
+   "primal_stress_state",
+   "ddsdde"
+  ],
+  "cells": {
+   "primal_stress_state": "verified",
+   "ddsdde": "verified"
+  },
+  "records": "corpus_assets tree: harness/corpus_features.jsonl"
+ },
+ "assets": {
+  "tree_sha256": "7947c91782cdcb1ef76eecdab6ea075a74973e87d90d9e441371fcd25772e683",
+  "location": "corpus_assets",
+  "files": 31,
+  "bytes": 594567
+ },
+ "tiers": {
+  "ci": false,
+  "offline": true
+ },
+ "reproduce": {
+  "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037",
+  "fetch": "python tools/corpus_cases.py fetch caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037",
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key c7bf17b21519e33da0b7bbb1 --tier offline"
+ },
+ "undefined_in_original": [],
+ "limitations": [
+  "routine-level evidence (driver), not Abaqus",
+  "loading paths are this pipeline's probes, not the author's example",
+  "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
+ ],
+ "date": "2026-10-02T11:13:23",
+ "freeze_check": {
+  "ok": true,
+  "modes": {
+   "regenerate": {
+    "seconds": 4.3,
+    "source_from": "discovery_cache",
+    "compiled_in_job_layout": true,
+    "paths": {
+     "elastic_uniaxial": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 3.277708362871797e-07,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "elastic_shear": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 3.0064724112366753e-07,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "isotropy_reference": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 3.8501432252089846e-07,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "isotropy_rotated": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 4.497924753908835e-07,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "relaxation": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 4.6166677670947176e-07,
+      "coverage": "30/30",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "rate_slow": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 4.6166677670947176e-07,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "rate_fast": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 4.6166677670947176e-07,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     }
+    }
+   },
+   "replay": {
+    "seconds": 1.3,
+    "units_from": "corpus_assets",
+    "paths": {
+     "elastic_uniaxial": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 3.277708362871797e-07,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "elastic_shear": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 3.0064724112366753e-07,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "isotropy_reference": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 3.8501432252089846e-07,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "isotropy_rotated": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 4.497924753908835e-07,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "relaxation": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 4.6166677670947176e-07,
+      "coverage": "30/30",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "rate_slow": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 4.6166677670947176e-07,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "rate_fast": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 4.6166677670947176e-07,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     }
+    }
+   }
+  },
+  "canaries": [
+   {
+    "canary": "tangent: DDSDDE column x (1+0.0001)",
+    "rejected": true
+   },
+   {
+    "canary": "tangent: smallest resolved nonzero entry dropped",
+    "rejected": true
+   },
+   {
+    "canary": "primal: STRESS x (1+1e-06)",
+    "rejected": true
+   }
+  ],
+  "failures": []
+ }
+}
