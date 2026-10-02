@@ -182,7 +182,7 @@ def cas_put(path: Path, root: Path = None) -> str:
     target = cas_object(sha, root)
     if not target.is_file():
         target.parent.mkdir(parents=True, exist_ok=True)
-        tmp = target.with_name(target.name + ".partial")
+        tmp = target.with_name(f"{target.name}.{os.getpid()}.partial")   # parallel freezes
         tmp.write_bytes(data)
         os.replace(tmp, target)
         target.chmod(0o444)
@@ -422,7 +422,13 @@ def compare_tangent(ddsdde: dict, states: list) -> dict:
                 breaches.append({"inc": inc, "entry": f"DDSDDE({i},{j})", "value": None,
                                  "reference": d, "tolerance": tau, "why": "non-finite"})
                 continue
-            err = abs(value) if code == "zero_pass" else abs(value - d)
+            if code == "zero_pass":
+                # a structural zero: the value under test must be within tau of zero AND the
+                # stored FD reference must itself still be a zero within tau -- a frozen D_e
+                # moved off zero is a reference breach, never silently ignored
+                err = max(abs(value), abs(d))
+            else:
+                err = abs(value - d)
             r = err / tau if tau > 0 else (0.0 if err == 0 else float("inf"))
             ratio = max(ratio, r)
             if err > tau:
@@ -707,6 +713,72 @@ def load_cases(tier: Optional[str] = None, only: tuple = ()) -> list:
     return out
 
 
+def case_digest(case_dir: Path) -> dict:
+    """The anchor of a case OUTSIDE its directory (index.json): the sha256 of
+    case.json and of the reference file as committed. case.json in turn pins the
+    configs, the preserved transformed files and the source by sha256, so a
+    change to anything a check relies on shows up as a diff of index.json."""
+    case_json = case_dir / "case.json"
+    try:
+        ref_file = json.loads(case_json.read_text())["reference"]["file"]
+    except (OSError, ValueError, KeyError):
+        ref_file = "reference.json.gz"
+    ref = case_dir / ref_file
+    return {"case_json_sha256": sha256_file(case_json),
+            "reference_sha256": sha256_file(ref) if ref.is_file() else None}
+
+
+def index_row(case_dir: Path) -> Optional[dict]:
+    """The case's row of the index.json beside it (None when not indexed)."""
+    try:
+        rows = json.loads((case_dir.parent / "index.json").read_text())["cases"]
+    except (OSError, ValueError, KeyError):
+        return None
+    return next((r for r in rows if r.get("case_id") == case_dir.name), None)
+
+
+def consistency_failures(case_dir: Path, case: dict, ref: dict, row) -> list:
+    """Cross-checks that do not trust any single file: the reference against
+    case.json's experiment (paths, judged-state counts and increments), and
+    both against the index row (digests, path and judged-state totals)."""
+    out = []
+    exp = {p["name"]: p for p in case["experiment"]["paths"]}
+    refp = {p.get("name"): p for p in ref.get("paths", [])}
+    for name in sorted(set(exp) - set(refp)):
+        out.append({"kind": "reference_incomplete", "path": name,
+                    "detail": "path frozen in case.json is missing from the reference"})
+    for name in sorted(set(refp) - set(exp)):
+        out.append({"kind": "reference_incomplete", "path": name,
+                    "detail": "reference path not declared in case.json experiment.paths"})
+    for name in sorted(set(exp) & set(refp)):
+        incs = [s["inc"] for s in refp[name].get("judged", [])]
+        want = exp[name].get("judged_increments")
+        if len(incs) != exp[name]["judged_states"] or (want is not None and incs != want):
+            out.append({"kind": "coverage_shrank", "path": name,
+                        "detail": f"reference holds {len(incs)} judged states, case.json declares "
+                                  f"{exp[name]['judged_states']} (increments differ: "
+                                  f"{sorted(set(want or []) ^ set(incs))[:10]})"})
+        if not all(s.get("entries") for s in refp[name].get("judged", [])):
+            out.append({"kind": "coverage_shrank", "path": name,
+                        "detail": "a judged state holds no entries"})
+    if row is None:
+        out.append({"kind": "not_indexed",
+                    "detail": f"{case_dir.name} has no row in {case_dir.parent / 'index.json'}"})
+        return out
+    digest = case_digest(case_dir)
+    for key, now in digest.items():
+        if (row.get("digest") or {}).get(key) != now:
+            out.append({"kind": "case_corrupted",
+                        "detail": f"{key} {str(now)[:12]} differs from index.json "
+                                  f"{str((row.get('digest') or {}).get(key))[:12]}"})
+    n_paths, n_judged = len(refp), sum(len(p.get("judged", [])) for p in refp.values())
+    if row.get("paths") != n_paths or row.get("judged_states") != n_judged:
+        out.append({"kind": "coverage_shrank",
+                    "detail": f"index.json lists {row.get('paths')} paths / {row.get('judged_states')} "
+                              f"judged states; the reference holds {n_paths} / {n_judged}"})
+    return out
+
+
 def write_index() -> None:
     rows = []
     for case_json in sorted(CASES.glob("*/case.json")):
@@ -721,7 +793,8 @@ def write_index() -> None:
                      "harness_fingerprint": c["fingerprints"]["harness_fingerprint"],
                      "rule_id": c["tolerance_rule_id"],
                      "paths": len(c["experiment"]["paths"]),
-                     "judged_states": sum(p["judged_states"] for p in c["experiment"]["paths"])})
+                     "judged_states": sum(p["judged_states"] for p in c["experiment"]["paths"]),
+                     "digest": case_digest(case_json.parent)})
     tmp = CASES / f".index.json.{os.getpid()}"
     write_json(tmp, {"schema": SCHEMA + "/index", "cases": rows})
     os.replace(tmp, CASES / "index.json")
@@ -768,8 +841,11 @@ def preserved_units(case_dir: Path, case: dict, work: Path) -> tuple:
 # check
 # ---------------------------------------------------------------------------
 
+_FROM_INDEX = object()
+
+
 def check_case(case_dir: Path, case: dict, modes: tuple, work: Path, *,
-               current_rule: str, with_original: bool = True) -> dict:
+               current_rule: str, with_original: bool = True, row=_FROM_INDEX) -> dict:
     started = time.time()
     result = {"case_id": case["case_id"], "modes": {}, "failures": [], "canaries": []}
     if case["tolerance_rule_id"] != current_rule:
@@ -780,6 +856,8 @@ def check_case(case_dir: Path, case: dict, modes: tuple, work: Path, *,
         result["failures"].append({"kind": "case_corrupted",
                                    "detail": "reference sha256 differs from case.json"})
     ref = read_gz_json(case_dir / case["reference"]["file"])
+    result["failures"] += consistency_failures(
+        case_dir, case, ref, index_row(case_dir) if row is _FROM_INDEX else row)
     frozen_errors = {p["name"]: p["frozen_error"] for p in ref["paths"]}
     configs = {p["name"]: (case_dir / p["config"]).read_text() for p in case["experiment"]["paths"]}
     for p in case["experiment"]["paths"]:
@@ -832,7 +910,9 @@ def check_case(case_dir: Path, case: dict, modes: tuple, work: Path, *,
         for name, text in configs.items():
             run = _run_driver(build, work / f"{mode}_run" / name, text,
                               ntens=case["experiment"]["ntens"], nstatv=case["experiment"]["nstatv"])
-            path_ref = next(p for p in ref["paths"] if p["name"] == name)
+            path_ref = next((p for p in ref["paths"] if p["name"] == name), None)
+            if path_ref is None:        # named by consistency_failures (reference_incomplete)
+                continue
             if run is None:
                 result["failures"].append({"kind": "run", "mode": mode, "path": name,
                                            "detail": "driver did not run"})
@@ -927,10 +1007,24 @@ def cmd_check(args) -> int:
         print(f"report -> {args.report}")
     if not args.keep and not args.work:
         shutil.rmtree(root, ignore_errors=True)
-    print(f"{len(results) - len(failed)}/{len(results)} cases pass; tier canaries "
-          f"{'all rejected' if not tier_failures else 'NOT ALL REJECTED'}; "
-          f"{report['seconds']}s")
-    return 0 if report["ok"] else 1
+    line, ok = tier_summary(results, tier_canaries, report["seconds"])
+    print(line)
+    return 0 if (report["ok"] and ok) else 1
+
+
+def tier_summary(results: list, tier_canaries: list, seconds) -> tuple:
+    """(the closing line, ok). Every canary -- per case and per tier -- that was
+    NOT rejected is named and fails the tier; "all rejected" is printed only
+    when that is true."""
+    failed = [r for r in results if not r.get("ok")]
+    slipped = [f"{r['case_id']}: {c['canary']}" for r in results
+               for c in r.get("canaries", []) if not c.get("rejected")]
+    slipped += [f"tier: {c['canary']}" for c in tier_canaries if not c.get("rejected")]
+    head = f"{len(results) - len(failed)}/{len(results)} cases pass; "
+    if slipped:
+        return (head + f"{len(slipped)} canaries NOT REJECTED (tier FAILS): "
+                + "; ".join(slipped[:20]) + f"; {seconds}s", False)
+    return head + f"canaries all rejected; {seconds}s", not failed
 
 
 # ---------------------------------------------------------------------------
@@ -966,6 +1060,13 @@ def cmd_freeze(args) -> int:
     fp = fingerprints()
     rule = rule_id()
     run_id = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+    pointed = {}
+    if getattr(args, "verification_records", None) is not None:
+        H.PASS16 = Path(args.verification_records).resolve()
+        pointed["verification_records"] = str(H.PASS16)
+    if getattr(args, "registry", None) is not None:
+        H.REGISTRY = Path(args.registry).resolve()
+        pointed["registry"] = str(H.REGISTRY)
     if args.key:
         entry = H.resolve_entry(args.key)
         registry = {r["key"]: r for r in json.loads(H.REGISTRY.read_text())["records"]}[args.key]
@@ -980,7 +1081,8 @@ def cmd_freeze(args) -> int:
                     "raw_url": (f"https://raw.githubusercontent.com/{registry.get('repository')}/"
                                 f"{registry.get('commit')}/"
                                 + "/".join(registry["cache_path"].split("/")[1:]))
-                    if registry.get("repository") and registry.get("commit") else None}
+                    if registry.get("repository") and registry.get("commit") else None,
+                    "resolved_with": pointed or None}
         case_id = args.id or material_id(source_id)
     else:
         model = Path(args.model).resolve()
@@ -1193,7 +1295,9 @@ def cmd_freeze(args) -> int:
             "check": f"PYTHONHASHSEED=0 python tools/corpus_cases.py check --only {case_id}",
             "fetch": f"python tools/corpus_cases.py fetch {case_id}",
             "freeze": " ".join(["PYTHONHASHSEED=0 python tools/corpus_cases.py freeze"]
-                               + ([f"--key {args.key}"] if args.key else
+                               + ([f"--key {args.key}"]
+                                  + [f"--{k.replace('_', '-')} {v}" for k, v in pointed.items()]
+                                  if args.key else
                                   [f"--model {Path(args.model).as_posix()} --family '{args.family}'"
                                    + (f" --activation {args.activation}" if args.activation else "")])
                                + [f"--tier {args.tier}"])},
@@ -1209,7 +1313,9 @@ def cmd_freeze(args) -> int:
     write_json(case_dir / "case.json", scrub(case))
     # self-check: the case must pass its own check, R and P, now
     result = check_case(case_dir, case, ("regenerate", "replay"), work_root / "self_check",
-                        current_rule=rule)
+                        current_rule=rule,
+                        row={"digest": case_digest(case_dir), "paths": len(ref_paths),
+                             "judged_states": sum(len(p["judged"]) for p in ref_paths)})
     case["freeze_check"] = {"ok": result["ok"], "modes": result.get("modes"),
                             "canaries": [{"canary": c["canary"], "rejected": c["rejected"]}
                                          for c in result["canaries"]],
@@ -1218,7 +1324,8 @@ def cmd_freeze(args) -> int:
     if not result["ok"]:
         print(f"refused: the frozen case does not pass its own check: "
               f"{json.dumps(result['failures'][:3], default=str)[:800]}")
-        shutil.rmtree(case_dir)
+        shutil.move(str(case_dir), str(work_root / "refused_case"))   # evidence, not the repo
+        print(f"refused case kept at {work_root / 'refused_case'}")
         write_index()
         return 3
     write_index()
@@ -1263,6 +1370,12 @@ def main(argv=None) -> int:
                    help="(--model) inelastic activation amplitude for the loading paths")
     f.add_argument("--tier", choices=("ci", "offline"), default="offline")
     f.add_argument("--id", default="")
+    f.add_argument("--verification-records", type=Path, default=None,
+                   help="(--key) store_verification.jsonl whose rows supply the key's experiment "
+                        "(as tools/run_corpus_features.py --verification-records)")
+    f.add_argument("--registry", type=Path, default=None,
+                   help="(--key) corpus registry that maps keys to sources (default: the committed "
+                        "paper_results/corpus/corpus_registry.json)")
     c = sub.add_parser("check", help="R (regenerate) and/or P (replay) every case of a tier")
     c.add_argument("--tier", choices=("ci", "offline"), default="ci")
     c.add_argument("--regenerate", action="store_true")

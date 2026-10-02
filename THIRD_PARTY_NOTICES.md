@@ -77,7 +77,10 @@ The following files in this repository are adaptations of those UMATs and are
 therefore also covered by the MIT notice below:
 `parameter_sensitivity/models/sweep_real_ECL_TEMP/umat.for`,
 `parameter_sensitivity/models/sweep_real_PCO/umat.for` and
-`parameter_sensitivity/models/sweep_eco/umat.for`.
+`parameter_sensitivity/models/sweep_eco/umat.for`. The regression case
+`umat/cases/umat-oti-curated--sweep-real-pco/` carries a byte-identical copy of
+`sweep_real_PCO/umat.for` (`source/umat.for`) and the transform's output from it
+(`transformed/`); both are covered by the same MIT notice.
 
 MIT is GPL-compatible; the files are distributed as part of the GPL-3.0-only
 whole with their MIT notice kept:

@@ -2,20 +2,6 @@
  "schema": "umat-oti/regression-case/1/index",
  "cases": [
   {
-   "case_id": "alexanderjfdr-hyperelastic_phase_field--neohookean-umat--10759f1f",
-   "tiers": {
-    "ci": false,
-    "offline": true
-   },
-   "redistribution": "unknown",
-   "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
-   "rule_id": "case-rule/1-df2f107a3c04",
-   "paths": 15,
-   "judged_states": 398
-  },
-  {
    "case_id": "bristolcompositesinstitute-abaci--umat--b8fa3835",
    "tiers": {
     "ci": false,
@@ -23,11 +9,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 12,
-   "judged_states": 311
+   "judged_states": 311,
+   "digest": {
+    "case_json_sha256": "c66f47156f2e6ee28f0ed0fd6fa47aec4612bbd300b85eaa57d317db7192b6fe",
+    "reference_sha256": "a2937f46146d011f7596b2e733686604b0bba5f4e8cbe652b81736b827f330f3"
+   }
   },
   {
    "case_id": "caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037",
@@ -37,11 +27,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 7,
-   "judged_states": 110
+   "judged_states": 110,
+   "digest": {
+    "case_json_sha256": "9f3e34edf7ab1198a59f4ea6cbdca4659c2b664c10c466edf7a2ec77a65d8601",
+    "reference_sha256": "834acff57e7d75b76d70662f2990ba9f8c89683bc95377c627b4300c9be77caa"
+   }
   },
   {
    "case_id": "irfancn-abaqus-umat-elastic--umat-elastic--7e9bb4c2",
@@ -51,11 +45,447 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 13,
-   "judged_states": 240
+   "judged_states": 240,
+   "digest": {
+    "case_json_sha256": "49714bbb787e01f2f1032ea8d7810f503e4f631993b878f8a0ddfad741e7bd07",
+    "reference_sha256": "e6bfaf97f64bf7f4ad78e7992bc254e52121594263fc143134901b026a18c39e"
+   }
+  },
+  {
+   "case_id": "irfancn-abaqus-umat-viscoelastic--umat-viscoelastic--c6ae96a7",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 18,
+   "judged_states": 441,
+   "digest": {
+    "case_json_sha256": "ca92517d4be94b77bad8ec66151589e9e52581b883156ceb777e7a15bdcd5d84",
+    "reference_sha256": "ef78380f302ee9597b3ab5a84c8e4779766621d7a316331b362bcc53094dc607"
+   }
+  },
+  {
+   "case_id": "jeff97-general-shape-control-of-shell--from-2d-to-2d-axe--1e7ffc3b",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 220,
+   "digest": {
+    "case_json_sha256": "9182a79b2e2ab9fe82d48ffa3291c60313aca2db1bb8ced5d6802cfb04796542",
+    "reference_sha256": "d0158e663ff952a180c73ea3e6135f247bf45dfbc9add7694201ce9b37436c66"
+   }
+  },
+  {
+   "case_id": "jeff97-general-shape-control-of-shell--from-2d-to-2d-disk--cdcd23b7",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 199,
+   "digest": {
+    "case_json_sha256": "1e83c5361889e89538b387a8ff27fa7f259cffbffa219a75ad7fc9386307d6c8",
+    "reference_sha256": "2abedb0f8de3f11a48d366c5a9a1b124ba4dc10c01cf21bef24a73a841ee47ee"
+   }
+  },
+  {
+   "case_id": "jeff97-general-shape-control-of-shell--from-2d-to-2d-scallop--4bcdb9ec",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 220,
+   "digest": {
+    "case_json_sha256": "ffbf5b7f5e1c6cefb5b49cc1d0c945a1cd6d5f02af31218e47d041e54270f0f1",
+    "reference_sha256": "cd36b9cceaa1c226df5de5cc96c1c06a47dc78c8593f2ccebaea8f97216d89ed"
+   }
+  },
+  {
+   "case_id": "jeff97-general-shape-control-of-shell--from-2d-to-3d-dupincyclide--05508812",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 216,
+   "digest": {
+    "case_json_sha256": "e80bc37f7b5e26ffa211ea35e5287bcb3fb0f166f85059b098a1db8522fae890",
+    "reference_sha256": "48e5b8aad8c421b295a64601f06e840374879830c7ce9d79b848499bdd91048e"
+   }
+  },
+  {
+   "case_id": "jeff97-general-shape-control-of-shell--from-2d-to-3d-genhel--e62cfb16",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 218,
+   "digest": {
+    "case_json_sha256": "9abfc2c4fef463957ed7d090cbc6398a9c9fbd8929b2e7389872f5b27a7a113e",
+    "reference_sha256": "e05c1a074a65e4787f22ae7ba18d09481aeca4e211cc2b8e1cdf2aad415cfab0"
+   }
+  },
+  {
+   "case_id": "jeff97-general-shape-control-of-shell--from-2d-to-3d-saddle--74668bca",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 220,
+   "digest": {
+    "case_json_sha256": "90a686d711987fb2d57d8daba069c099df12e88371b59c1f2df1c33a28e01b15",
+    "reference_sha256": "73764c49f84db0e9dc910195305f5fab23885743289ff2e5fd141d8427c63105"
+   }
+  },
+  {
+   "case_id": "jeff97-general-shape-control-of-shell--from-3d-to-3d-petal--6d99fe26",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 220,
+   "digest": {
+    "case_json_sha256": "36ff21a2e80b6edf951c43eff5ec268d522087a87b561d972c94e72936478419",
+    "reference_sha256": "894d904b1a9ecd4250c3faf5badd2478e77d624495ef7dac267918e47dad0467"
+   }
+  },
+  {
+   "case_id": "jeff97-general-shape-control-of-shell--from-3d-to-3d-seashell--1fafa8f0",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 220,
+   "digest": {
+    "case_json_sha256": "64671c1b755d9bd28f28bef24dbaaeb5888dc3c1b92c771db93a0d365027b0db",
+    "reference_sha256": "16aedf7233ffc8543171fb46a8e445e703e30b2efd4d6e6798c307cb2c3d2799"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-circular-plate--growth-case1--0494fe9f",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 214,
+   "digest": {
+    "case_json_sha256": "74f5ee03b3151d5602b5b04c30622244325dd28c701679312f466e8aee20821a",
+    "reference_sha256": "cb023fa25b17615af63cbc89bc2efae875a91d1a048cebe1e9c0bc0d0637e3f1"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-circular-plate--growth-case1--7c052969",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 215,
+   "digest": {
+    "case_json_sha256": "495608ca755b14fa8ca65fad78e81d9fba8e11ed5fdc9093fa04f187a1287bc4",
+    "reference_sha256": "dfc4ea5dcfed138eaba9f623f2b7d12de3bd3b81d5bcb8d3deb7501bebc13dda"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-circular-plate--growth-case1--7fb271be",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 216,
+   "digest": {
+    "case_json_sha256": "e9d147d10daee62e9adf21f2c27d823e9bdf52c7ceca9fc7678a0b324b53545b",
+    "reference_sha256": "8d4fb96bec0b6f4b7d20cf8b56d78771d5dea0a0ca3d8b76f099b56d205ecd00"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-circular-plate--growth-case2--82beae5c",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 217,
+   "digest": {
+    "case_json_sha256": "0ef122b77a0c667f8f4c273fc56a2720ec8befb54bc695cb5036f133f9188907",
+    "reference_sha256": "ee3bea8d1dbe66afddd3dc1a9e1a1fc968d9df47747099089c5a43fdb70ce932"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-circular-plate--growth-case2--a437e18a",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 219,
+   "digest": {
+    "case_json_sha256": "831c14a6bd34de27ed3daa41145457ad15c1f8d6cd9d29d2d303463b8a669382",
+    "reference_sha256": "5c43c865e1b4a0cee4fb814fb5e952740e4a84454cdf2f6608b16e6d1294a0f7"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-circular-plate--growth-case2--ba2d68a2",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "927f7f7802b574a8cf3f355a26b33514bd97b90d3fdcb98e8b6b04c47c22b3cb",
+    "reference_sha256": "f00c00002e78f4f1d4651dbfecfc9abd75baeda20988194ac1b57be326292e98"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-circular-plate--growth-case3--7aa757ea",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 214,
+   "digest": {
+    "case_json_sha256": "e833c707235bb2425db97b21e0a0c78171f194b2219d9375b818132cb21ebde7",
+    "reference_sha256": "109fe5fd124afd05eec94bfd2f59438e8493fb675737d5adb08754a1e7c9d535"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-circular-plate--growth-case3--e4dc417d",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 199,
+   "digest": {
+    "case_json_sha256": "2beb8db18dff595a452d6176576a3ea8a37e5f0803abe0116c5efd274048db61",
+    "reference_sha256": "ed24adfc473bf5c61e7bc3753338d2e96b3506da3b54b13c1805fccb3e3b820e"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-circular-plate--growth-case4--1aad5a23",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "bbf7a114b084970e7d214dfb4f1c809bdac513d48d380a25a51db4270e6ffb3b",
+    "reference_sha256": "fd8c5b0c71e5b6795e3ef4a4a4a3a880aa6299c46405cb4ac256c7f5906145f2"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-circular-plate--growth-case5--17dcf52e",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 214,
+   "digest": {
+    "case_json_sha256": "48dbf305c75eed75f27793347c48aedecce78c46749cbb9ec83ce7be77429eae",
+    "reference_sha256": "e436d46049d765e473b0b4155c245c5c7a8daa5d3b6075edfc9c6683684e7d7d"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-circular-plate--growth-case6--e810e17a",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 219,
+   "digest": {
+    "case_json_sha256": "4e5232a25fbb4532e9747fb7c3024f80aa88abd81721885319a13a0f8d8a01c4",
+    "reference_sha256": "c21e864efd2b16e13910fda2a33241b80e566f36ec6a9b2ee9f0dd5ddf953e7a"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-circular-plate--l1-is-1-l2-is-12--06ce402d",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 220,
+   "digest": {
+    "case_json_sha256": "97a37a75a0faed30c8939e4b2596b6a7caf0c97dd7c6ab04c6832e0a4fa97103",
+    "reference_sha256": "44f19bef015b9a054ae75264a5799b025313243b0b283c7e053f252f67f049d0"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-shell--cereusforbesiispiralis--6640bdc2",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 214,
+   "digest": {
+    "case_json_sha256": "b6a99f5ef43e924e43d1ab11f1f16b948b196b5e5fb08fdf28ea34a32dfda079",
+    "reference_sha256": "9056aa2a573128a2b47def52de9988fcb9c134e23d3d0c1bd20004168b7d9738"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-shell--morningglory--78ee0dbc",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "07478aa36a6bf64be42958a4f6c06803d675633bc0970d5c55b16bac7bc08388",
+    "reference_sha256": "449ba41679a48e6cc3aa94255a933c7e30bfd44c61093f6a1b43ef06fdfeb6b8"
+   }
+  },
+  {
+   "case_id": "jeff97-growth-of-shell--sweetmelon--10668851",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 220,
+   "digest": {
+    "case_json_sha256": "0461fc6ce2724f2b9b1f61579be8821edad4fda26c125e7885ed9bdae32f9d71",
+    "reference_sha256": "ac0ed7d19de430c4925f3416846abcbd5f7bb197ffab20660e0327eaeb96baaa"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--085498eb",
@@ -65,11 +495,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "702952c91c726d6ab6527f001db8088ec0bf0669c5646c865c3b2a225eebfeb1",
+    "reference_sha256": "29e62797893fc6b3340c90e5d349127974abc6f66b00805962082dc6b97ccf17"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--0a899e15",
@@ -79,11 +513,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 7,
-   "judged_states": 120
+   "judged_states": 120,
+   "digest": {
+    "case_json_sha256": "e0ae15a74024246df6b3bfe48f26ef15c7b6c35145e9b0e09a189e001d537e04",
+    "reference_sha256": "776b1bc138241b1c6442ae6e566122c4073d290dcb0643c3fc743e19c46d00a0"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--19741281",
@@ -93,11 +531,51 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 10,
-   "judged_states": 212
+   "judged_states": 219,
+   "digest": {
+    "case_json_sha256": "337311216f865648995a450d8558e85dd70da1d2bf93f7f688bc5f0fb7f74a3d",
+    "reference_sha256": "38bb7293aa3a9de0c2c70e04f2c5cdfc09f2af328835988d679381ae8df168be"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--2028d554",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "8197cc9ade33343c3fe71df88eeb121d611749491fc13e10b99c43205644b8b5",
+    "reference_sha256": "00f5e00ce6ab6312b45961b8eff97e7a694d09aa563a8b5ab58215c68044a0d4"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--382c124d",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 210,
+   "digest": {
+    "case_json_sha256": "fa5a17b10a58861116aad378d8c55c20fc566c362e412d784f4bb2b25706fe0d",
+    "reference_sha256": "23a622330eea008ab0764f1c2b1f9308253c3eb79aa49904dd9f478c65c9a1b9"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--3dd037c1",
@@ -107,11 +585,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 7,
-   "judged_states": 120
+   "judged_states": 120,
+   "digest": {
+    "case_json_sha256": "d0e6579e1252d0c7ea2ad24256750110fb883c0c913bbf6fd7dd15d54f782b20",
+    "reference_sha256": "7e53979b37c6c40f6924c18bc394a01f0909172d3761167832dd0fab1354d9fd"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--41a797ba",
@@ -121,11 +603,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 10,
-   "judged_states": 212
+   "judged_states": 219,
+   "digest": {
+    "case_json_sha256": "26d95703b8d08aa0d32f7a2562a16804100fda68f9314970bd448fa0cf8804db",
+    "reference_sha256": "38bb7293aa3a9de0c2c70e04f2c5cdfc09f2af328835988d679381ae8df168be"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--4b9899ad",
@@ -135,11 +621,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "a930bb50c646ac9bfc7c8ae106f2b8a501bf804edce5a998542d8c09b5d9efba",
+    "reference_sha256": "702fca437116e6a7396494aa604aa871ab4cad94fa5d8bbb33b21925dc010926"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--58571541",
@@ -149,11 +639,51 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "77f1ab41b83bedf115535a9db2a71d92ca01d734b2871f04d97ed60674fde9aa",
+    "reference_sha256": "db4ff48113825b248bfb4354b6fa4ba088b4082bb3a23ffa5d9ba6229b3cdb2f"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--7a9469c4",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 120,
+   "digest": {
+    "case_json_sha256": "fabe6f996f5f792bf9d8a45eb3d518390052f1e00b6425cfa2a8edc377356e22",
+    "reference_sha256": "42ba451b45d49c744f8dc2d457ca87d5c6d9dd17ae455a0a6760bc31f8f35ddf"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--83824a24",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 120,
+   "digest": {
+    "case_json_sha256": "333fce9f175a4ed4a845a705c9be0ecd2df30224eae44e249ae31abd2b05fbc9",
+    "reference_sha256": "28c70ce10375a5eb5eba35d3fee8822ba8cfb6c7e2d620d37b2f2d10017cefd8"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--8e54a7bc",
@@ -163,11 +693,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
-   "paths": 7,
-   "judged_states": 120
+   "paths": 8,
+   "judged_states": 133,
+   "digest": {
+    "case_json_sha256": "2a17a52ab74c00d6c43e97dcf4f6d26f0357d527938276c0d8a51e51daf588d7",
+    "reference_sha256": "3ca0c16e8e54f12d30ae3a192021d0f1ec3c3969632d546cab02937377860867"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--8f497bc7",
@@ -177,11 +711,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
-   "paths": 7,
-   "judged_states": 120
+   "paths": 8,
+   "judged_states": 139,
+   "digest": {
+    "case_json_sha256": "9452cabce21232f25292ec5678a3dae43fffbaf7721ce8d80fc7d90a8d7f92eb",
+    "reference_sha256": "acb8cfd1465986a190f9a934021ab8e5fbeb390a308046d8f69a7cdf69868e1f"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--940317e4",
@@ -191,11 +729,33 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 10,
-   "judged_states": 211
+   "judged_states": 216,
+   "digest": {
+    "case_json_sha256": "2b9d2a118f1d3eb138eaafc995bde9eeb82adcfa341cd76b99ba611896fde96a",
+    "reference_sha256": "3d288ed72267ed30b7aab61573ce431f209e99e5968cb91c8eed4e0b3fe0b18e"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--9a8233f1",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "849a786d1d32e702997a6268c437bb5701a85906cf6d24a53f0857c9c45af439",
+    "reference_sha256": "059af93eee0ca06e3cc09799c7988c78abce8a5a1ff0350a384a5cee02c9968a"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--9c29a16c",
@@ -205,11 +765,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 7,
-   "judged_states": 120
+   "judged_states": 120,
+   "digest": {
+    "case_json_sha256": "9ede86f34c29e096e5df47f29c164afd9925b63b93ad0cd56881141f48cb0d55",
+    "reference_sha256": "f21ff62c30b81e31b8ff8ed0f35dd2160c2716cb9ecfa880aa127261cea204a0"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--adf9f7e1",
@@ -219,11 +783,33 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "d212adb4dd752f4affc468d3f3a90018955e50cbfe18c6e68cf2dc0877d89c01",
+    "reference_sha256": "875299f5d6ef419158d302f695c5c4b2a8db8c134af1d5c89746a66b913366f1"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--b7e14fbe",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "93390ba9734f2ee11e42026e5620f573f28c927a37c92932ecf22664b30229a8",
+    "reference_sha256": "e283803477ec6e81e7b68dadca9028dba6b3327ce5f220ca0defcd51a2c6980d"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--c5781158",
@@ -233,11 +819,33 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 10,
-   "judged_states": 211
+   "judged_states": 216,
+   "digest": {
+    "case_json_sha256": "9fe3b49405c64dea76cb4775a76f0f3c0fab2568f0e8d920a227be9d8014a227",
+    "reference_sha256": "3d288ed72267ed30b7aab61573ce431f209e99e5968cb91c8eed4e0b3fe0b18e"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--cb7a656a",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "c04ff114d839ff792d607d7fd18092b4d969aafa37f6f7850cdbbf5411fffc0e",
+    "reference_sha256": "ffc178a0a6c9c7bacbf61a06c85af29897bc3cf6ad54093ecfa84017d77a3bc9"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--d70f4ec3",
@@ -247,11 +855,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "5e610346744dce8bfd2ea8b6f6a3f39b1859a233d16dafe883afb39b89dacbc4",
+    "reference_sha256": "70a61b87d2556516969f80f34d6af7f9034428a9cf3eace1e8d209eeaf9a3f76"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--e80db777",
@@ -261,11 +873,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 7,
-   "judged_states": 120
+   "judged_states": 120,
+   "digest": {
+    "case_json_sha256": "323b97c752756047d814b15942b619ddd8ecbc918e6557b90a86f55992335793",
+    "reference_sha256": "f40e589d27a707f535806db785f3cbd19fc7ced6436149b98a8697706c7f9e4d"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--f9c371e5",
@@ -275,11 +891,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
-   "paths": 10,
-   "judged_states": 213
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "18e537acd8aa355101b05cc45ff48dd454d75ac39efc5c2ddb5c2eff19adf9e8",
+    "reference_sha256": "50ec1604ee260dccdf3f98eced70ef3234c660c4e563e5d2340ff860e13b8760"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-gravityfirst--fdf03c02",
@@ -289,11 +909,177 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 7,
-   "judged_states": 120
+   "judged_states": 120,
+   "digest": {
+    "case_json_sha256": "7e8755a29cf51512cb0c717b46d17e2c69a1e9e3a84d637575066686c08f366f",
+    "reference_sha256": "116fa793e5fd78ec2f81fc71c760c02279a3edb59696c06647fd9a41a7d0f3f3"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-simultaneous--c9e9e055",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 120,
+   "digest": {
+    "case_json_sha256": "28a2df9e70775f4c774b5fe18bdf0d48b42b3ff47501f3e9aa76a1eabb6ec08c",
+    "reference_sha256": "fa12c8a18c4f8c35a68b1621735cd4f1ca1f3c31d609207af77fbcf7ec0be6d9"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--172b43f9",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "242c99181bb92f95c655fa976ab6456844bfbd50508d46db6ede25d3af25de53",
+    "reference_sha256": "faf296d7db7d81ab4cbf6e71b06075c92df153682ff5ed548098e596a8b24bb9"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--2baebbe8",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "fa31eb6c758d61f0c22f8c75496932f25fc4a2b9363fe85a3e0334a13f00e078",
+    "reference_sha256": "b5302c14cfea9c1143d187c67e0523a35a5911a55204717e33a4caa2924d6756"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--32df7d71",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "fb075c323062c7507a498297d90116187605c1ed24b91f2e5bd7e0e08026ed4e",
+    "reference_sha256": "81b3faeca2d10015efe2199b1a674f8ece89cf09b97964a56796c83b5b35a36b"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--4711f8fc",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "0188726a8555c7fc2bcff923ff2350eb9f4b4c4262f4d557288e222402bd903f",
+    "reference_sha256": "c348df527cc8651b7711f7c1e43e6b936765742a7132a2d5b7967aa106c43e55"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--473589a5",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "642563655f9799a02833a21899fb09d09b54165aa5a386e2ec69a877f1262444",
+    "reference_sha256": "aaf21e5178d98e3f59714c1c34649ed613f01f88b7c090e607d332a187a09eec"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--53b3211f",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "0d9fba3cb8c4707686df74c96c0d4787af94b4b90801801a2d669b3a73b1d625",
+    "reference_sha256": "aaf21e5178d98e3f59714c1c34649ed613f01f88b7c090e607d332a187a09eec"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--6934cbfc",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "98ffc017f979f2edb18c7699673ec7e5886bd9e4cad3457136dfb9e13d685309",
+    "reference_sha256": "148e56c2be45bd93873a33f0627d9576435deba274a2033039256a7fa63f5e92"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--88d6fa35",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "f9690932d87ff923cbd0d40cb8b1862dd4b20bf5defd24f06c74c19d68fcaa7a",
+    "reference_sha256": "5eec75728b6cda8809ee589bc76b65726a5ef3fa64098f359a5134023f786658"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--ae2b7023",
@@ -303,11 +1089,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "ee9a155e65a370d3748433c0a3d78bfb7e3fc8b777774f58140c3e2438d1ab0f",
+    "reference_sha256": "c433085db4001ee743ab9f7eb5e4da2bf8fa41f3f3c9d8dc9b365fb732610593"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--d61ccfe0",
@@ -317,11 +1107,33 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "02fcab30151bb1f60f66b762c06a39ffcbf97ca9054f3a911fcb0b5bb65baa2a",
+    "reference_sha256": "df3c0980a3a7334a72466140a29f1b69efe73fbeb776fd7c14abb5c374bd6285"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--ead57b5c",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "f76f1355ef744420aedc82383b784d9feba561c1a5977b0161e29a7b65325970",
+    "reference_sha256": "130264ec85dd5d01b106a6cb790f964889f5237695698339bef345317e173726"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--05282f9c",
@@ -331,11 +1143,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 12,
-   "judged_states": 250
+   "judged_states": 250,
+   "digest": {
+    "case_json_sha256": "fb2e93e2b791a166e8cdb69dd252781da9af1d9d3c83737afa87ae1658669dd0",
+    "reference_sha256": "207a0f88c0c782b8b7733e98c8138731ad9f2a6833c9548fa7f2c9d1f7d03370"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--080267b4",
@@ -345,11 +1161,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 12,
-   "judged_states": 250
+   "judged_states": 250,
+   "digest": {
+    "case_json_sha256": "5548993a7f94b951b1c0c55b547c3ef4e97628732aee8b7caf3f047ac5ff3f92",
+    "reference_sha256": "031b35ecd4b3ea56aa6a69b549addd7b6b50241baee746ead80bfed457f3e14d"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--0d8c4188",
@@ -359,11 +1179,105 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "424a2ebcafb564ad356757e339f8aa91a2d0aa5ec2374e33311d10a6f56949b8",
+    "reference_sha256": "c433085db4001ee743ab9f7eb5e4da2bf8fa41f3f3c9d8dc9b365fb732610593"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--10bb19c0",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "f40d4d40f9e40655b5b4e1862fbd199f39e1c9ada76229fa571437e58837dcd0",
+    "reference_sha256": "66dec4a4bdc2801a08ad7217e4c8bed06fc8043543cc609107d8c95a1eb59dd6"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--21006342",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "7ceaffd4b9446980e260903c3b0a2800c73fff2a2fe1400f1131eac207315c15",
+    "reference_sha256": "550b5fe42c4c418d79743be9d0d60574024ac9c0c186d7b88ae7a117b5a54d27"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--25bd9a49",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "7ec54a23b86d4b4666278daa1952957ec4acdb77dccfa29a9c6d2f1fc14904ac",
+    "reference_sha256": "1524abc6cbfd6e650cfa26b0bb5aa95b2dd62cacfd369a429d8e489b5bb3b7cc"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--2e3ea178",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "69c38026e4606c6dc315637896a8e4f7155d692c455a0a0d3f4976195556e811",
+    "reference_sha256": "ef7325aa5b050403b86aee71d1bd91f4de0737c92229ec3194151216e3af6efb"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--3e1f1c43",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "d93e3a19f0ef9eaa3e4ca02b84b5bc54188ccd90d89fcb56ad1ee641c72470ed",
+    "reference_sha256": "3d128ede0689720fb4b0e6fc6aaf133a0238c3f67935abd25a1c39a759feabb8"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--5755d72d",
@@ -373,11 +1287,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "38d8aa86108ca6c42da676d87674927bf0a4d6146f20195e7f03a752bc864396",
+    "reference_sha256": "e8ade61b0d7e731871ef4cbdfcd686ede725b3aad7d81a21ca656f282b4e8330"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--5d120e49",
@@ -387,11 +1305,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "58b691ca937a536c13bee58b168ce3a0d4fe5f9cdfb6dc183192e1a1fe59a810",
+    "reference_sha256": "df3c0980a3a7334a72466140a29f1b69efe73fbeb776fd7c14abb5c374bd6285"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--5defc2a4",
@@ -401,11 +1323,33 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "576d8bb9df05e18879fe829d8d027e39ce0a4258e23248b318c9661637fb57b1",
+    "reference_sha256": "5705d5bda040a2d163abc69366092c0ef258175c4a9b3b4890712634d64686ee"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--7088b08d",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "128d8d1b44c47d53daab5ae925fbf1ac41991d0efafe5ca7035746f384835286",
+    "reference_sha256": "1234831ca1b652798042d9b1214b1e283e893ebc8be15a3a735af10fcdd2c9bc"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--70df7624",
@@ -415,11 +1359,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "1ce19b31d52e679d6e5c8d762b4d8a907ccb7ce021b926eecafcb771cf94d5f7",
+    "reference_sha256": "f58d75919770af4fe11c7ea269d535af75ba7f5f2603d984b5fc69dd4dc72303"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--82c3ab5f",
@@ -429,11 +1377,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "56758f0749a2da0966fe72a179336fcaec970991e2b54eca87e4403b9a985e63",
+    "reference_sha256": "a0de50c083cd76b6a84dabace1e7a5365741e9bd4fc0b91bcb403c4301114f60"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--8e9f6e6a",
@@ -443,11 +1395,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 12,
-   "judged_states": 250
+   "judged_states": 250,
+   "digest": {
+    "case_json_sha256": "dfde9454ab243412cd3d5a5a97944e12dad4f9d92d37f2b1a1e1a9376e7ce500",
+    "reference_sha256": "8d2a7ede412b75fcafb42355b751588eb4e207d4affb1ace6faa1b687eb03fb9"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--af0f3f65",
@@ -457,11 +1413,33 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 12,
-   "judged_states": 250
+   "judged_states": 250,
+   "digest": {
+    "case_json_sha256": "58f5da55fbb8152dd0521cb33fa11d8b3ac138f3209d0652e5544482c73badb3",
+    "reference_sha256": "2c0fda0a0effd37644038c6cc33bea233c2c2c58f2d92977e35a4f6332b33f32"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--b5a6af52",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "cd6bebc8974b279b9f25fdf5c77ef4390d793f17c6f2c2f1dd383864824914b3",
+    "reference_sha256": "6d0178cdeb66f4111e5b93e2b1e17c7489f47fabd64770663a76f9fbfe659b87"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--bf5e3f13",
@@ -471,11 +1449,33 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "bd61b7b03dc075fca864b12f6f616f0e4a0bb6b9927a8a419e99f7ffb9d69849",
+    "reference_sha256": "f8c8137a4bce2ddb89b61f1db4c70095e94a41252824beda1848df220fe7afd9"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--d66a2899",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "39451ea3631cc923afd54fb0973fe586160ad6964def666d34f2836e50a2b427",
+    "reference_sha256": "ff3bafba6189ea7f990d0b8881422a3e685500239074c57eb821fc9e4677b656"
+   }
   },
   {
    "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--dc0aebea",
@@ -485,11 +1485,303 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 200
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "d1838ac1f3e901f1438b7553d42d5c8f9229af2e7b1c8fd2cbd2e45a0eb337a9",
+    "reference_sha256": "4cda2f8057f5945837beb9b01a5d4921feccbe2ce6d397e191953a7740b8c081"
+   }
+  },
+  {
+   "case_id": "jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--fb6cae8e",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "04bfb1292963d90c44a5188c880c46eefc712a99e8bfd69dee0733bc66e14173",
+    "reference_sha256": "8847196cf2b4a8bfe5b6ce15110d059812997e09b09f45c68a7e4a6e6c1e51c5"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-catenoid--7de5d0c1",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 218,
+   "digest": {
+    "case_json_sha256": "a078b76ddd7c475db0163c5ea977358bfc0d1b5f9e12737a0662b591383523f7",
+    "reference_sha256": "cca0637b4ac0963cd0d88f4cd514d981087da1177964dc34aa3af38c73bb153e"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-ex--7a11e0f8",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "82e5f7ddfcbde51e59410e117819706c8fa6f631236f42efc96046a76e071695",
+    "reference_sha256": "57a48c0eb2adbe8b0d92e6136363da670884b8d1408f859bfea0741af6d85c02"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-ex--e9cce10c",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 220,
+   "digest": {
+    "case_json_sha256": "6f7e98d1295f1ffa2a28944fd95875df2bfb3c471e2fca88c8f4946f0febbf90",
+    "reference_sha256": "aa1b4e8af9ad021616dea914b9c90c2d88d7a3217fb73098ad0ed6f219b92a21"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-frac--638eea11",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 193,
+   "digest": {
+    "case_json_sha256": "c695a47aaf849d159f5f8035526ecb8cda8fbd4e71f762441ce52d368df029e3",
+    "reference_sha256": "39aa8cdde3439a65c87c65972600d28c0e63daf4cbcf6ac14eb3a1da7bdbe1be"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-frac--9f285f97",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 180,
+   "digest": {
+    "case_json_sha256": "ea821089ae06da181381ad3752a7dd9896420e3dce7210d08f3b7837f55d4951",
+    "reference_sha256": "a1b732b2112de825de45693532d9af7f39a82273d3c7af09d5389ac4a0365321"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur1--680b53be",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 160,
+   "digest": {
+    "case_json_sha256": "cc5c5136f7d967fcb5bac194625078aa515ea926a8ef6fd63a9ccde053f7affc",
+    "reference_sha256": "23cf018fc11bc051b3a84ccd4d7d35ffd51ee18b93e96d3f76d6d76c87a2bbe5"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur1--8ee88624",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 160,
+   "digest": {
+    "case_json_sha256": "ef68ceecf6fbc32741c136da66d8ba15c64a7eb5a7bdf09d8938dc7b9d8dd8ca",
+    "reference_sha256": "4dcea8edd0a21981a933f5c26cc6f62a619eae05172a6abf1ebfc6b893bedf0a"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur2--0c0e73de",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "8ebc737bfdfaf35244e51dd0aabab56d060d97475c31d04a4dbb636e58c24784",
+    "reference_sha256": "9af2bd5f0c143261bd90e4f33f625a5eef3d19e8ee5fa44ce6b00e95dc0a8f57"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur2--e1ef1d25",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 210,
+   "digest": {
+    "case_json_sha256": "12b22b6d19a1f7857fac8f16178487ad961c8525e841b97a04f9aeeae0fe5676",
+    "reference_sha256": "a9c69eb72b31cb2b3d4a0496adc19236c96c1775451b689aad4b1baef6fc2435"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur3--162e8ca2",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 216,
+   "digest": {
+    "case_json_sha256": "74de8f44bdb3fc7369202337ae7965a1591bb200cd5793c5bba1571061565617",
+    "reference_sha256": "cc57ca2708a06102737d1270857b7288cfc3328d5680c60276bc8f333c73f743"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur3--bbe506c0",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "6338c096a00124be08f363bfc446d8a2cb13738cf0c16ddfbd682970dac419cf",
+    "reference_sha256": "9167cadcd3242f02f5050432345c8971eb8780b9e955b13e11df0b2d4846b2cf"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-sphere--0780b4d3",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 219,
+   "digest": {
+    "case_json_sha256": "ab404712018c19b4c502515b1bb49451dffe7b75a3033708b8ae2c1eb6c8b782",
+    "reference_sha256": "abf025f32ea1bf51ef8078cc0f6415ac22a7d251f5df2ac8e8eba7b7dadeefa2"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-z2--92248f91",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 10,
+   "judged_states": 211,
+   "digest": {
+    "case_json_sha256": "6cddcafee0c99e52f3c0d7f716eca8de512112f1d559e17fe6793479e84ad988",
+    "reference_sha256": "d5eb8914447cd76b20f9ac4b2508953ab714a35aa8387198a1e87836e6977a7f"
+   }
+  },
+  {
+   "case_id": "jeff97-realization-of-planar-and-surface-conformal-mappings--growth-z2--9fdec5f9",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 9,
+   "judged_states": 200,
+   "digest": {
+    "case_json_sha256": "1927a4b9146596d9c998c29333e809ccbe2e894b1f9748060261f6a6ca13e929",
+    "reference_sha256": "be431986fed4d81f4a5753227c857e81d65c29eddb6705e9d2184dcccbf185e8"
+   }
+  },
+  {
+   "case_id": "keisuke58-pde-fem-biofilm--umat-biofilm-visco-2ch--9fd1c3c3",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 13,
+   "judged_states": 270,
+   "digest": {
+    "case_json_sha256": "a2a2bc86ba8e04c059fbe38ccc096b7671a5406f069a4a5389b2cc65df67140d",
+    "reference_sha256": "f1ec6b478350fde8a5c69129e79dde73c1534affb173750057ecf821457cde39"
+   }
   },
   {
    "case_id": "keisuke58-pde-fem-biofilm--umat-biofilm-visco-phase2--42eacbd5",
@@ -499,11 +1791,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 13,
-   "judged_states": 270
+   "judged_states": 270,
+   "digest": {
+    "case_json_sha256": "fc5ffa527ed3a203108d0e47c520aba9a5c60d5e011195cf19cbb0172c555c97",
+    "reference_sha256": "8b620e2d6ad4a0323edc29baf7fb3b2bacd33e111ad73d05f79bdaf94e70375c"
+   }
   },
   {
    "case_id": "mholla-growth--umat-area-stretch--cbfc24ef",
@@ -513,11 +1809,33 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 7,
-   "judged_states": 140
+   "judged_states": 140,
+   "digest": {
+    "case_json_sha256": "20aba9f316b0a8fa289fe5503f9fa33fce8a51245125db3b73e445f0bf91ac17",
+    "reference_sha256": "a7cb2e5d1497a4bfb827c78219de4637016848605acafb6960ff7ab4d8bd6ee3"
+   }
+  },
+  {
+   "case_id": "mholla-growth--umat-fiber-stretch--ede3c6b6",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 140,
+   "digest": {
+    "case_json_sha256": "4d9fc6c521113f0a3f52b709b99b6923d27cfe2232822af3106b6785188adf43",
+    "reference_sha256": "265c4c92a9cd3caf6ef027f5a34286b8737a78dca4460b8ecdf79b1efb426b24"
+   }
   },
   {
    "case_id": "mholla-growth--umat-iso-stretch--890619c1",
@@ -527,11 +1845,69 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 6,
-   "judged_states": 119
+   "judged_states": 119,
+   "digest": {
+    "case_json_sha256": "ef692a92d81b23d7a991d81cf8f59edc1cd9a1fbb57c838bcfc52ec03eaa0e53",
+    "reference_sha256": "6f712b49eabd37e56706340985cd11c06545f96a5649cb7aab92fe807808f49b"
+   }
+  },
+  {
+   "case_id": "ritiol-polyfatiguecracksim--huang-umat-97--013d8a21",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 12,
+   "judged_states": 370,
+   "digest": {
+    "case_json_sha256": "8c340cdba61d42b32996964cdd1478c09e8aa7c747488d9155b47779827c16c2",
+    "reference_sha256": "ab4082cf9c0bfc8ced52e012d203919130aaf0c58c129267aa0cbffd230a4694"
+   }
+  },
+  {
+   "case_id": "ritiol-polyfatiguecracksim--subroutines-revised--3150a919",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 12,
+   "judged_states": 370,
+   "digest": {
+    "case_json_sha256": "b01dc573a93cf27f92c353f3be1221cb21d839fbe0901fc9481c10e47cb5e852",
+    "reference_sha256": "702be8439ad072075cc6dc59d2d4d9a6204c6077a56c8f7a2fa2a6d88bd635d6"
+   }
+  },
+  {
+   "case_id": "ritiol-polyfatiguecracksim--subroutines3-revised--603ef702",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 12,
+   "judged_states": 370,
+   "digest": {
+    "case_json_sha256": "1dc9b0d152ef5dd435ff2886d5e025d06929d50f0c9f3763b36b6ad0189485c8",
+    "reference_sha256": "702be8439ad072075cc6dc59d2d4d9a6204c6077a56c8f7a2fa2a6d88bd635d6"
+   }
   },
   {
    "case_id": "sina-taghizadeh-umat_hyperelastic--compresibleneohookean--d78e6119",
@@ -541,11 +1917,15 @@
    },
    "redistribution": "unknown",
    "kind": "corpus",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 13,
-   "judged_states": 240
+   "judged_states": 240,
+   "digest": {
+    "case_json_sha256": "dfb47b643078ab1fb17b83ef8c0eb76e39e445f1b927f798d6c98f450c9c0c15",
+    "reference_sha256": "881554c773de0d3acac355896d181621d3f49f0589aaedb73fe82e80d2a33172"
+   }
   },
   {
    "case_id": "umat-oti-curated--m3-j2",
@@ -555,11 +1935,15 @@
    },
    "redistribution": "permitted",
    "kind": "curated",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 260
+   "judged_states": 260,
+   "digest": {
+    "case_json_sha256": "d2a1055820d24df71920165b57f0d13f2f14c3a899dadc5d5cac4118f1195d35",
+    "reference_sha256": "522eaf45c8247a3d9d7b4a46d5254090d368b13baf0ac90abe7677aefa2b34ba"
+   }
   },
   {
    "case_id": "umat-oti-curated--sweep-j2-kinematic",
@@ -569,11 +1953,15 @@
    },
    "redistribution": "permitted",
    "kind": "curated",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 260
+   "judged_states": 260,
+   "digest": {
+    "case_json_sha256": "8ea2336879a1ba091c2ddc2e699bf9136e475711f5bbeed7556f3cb620f2ba8d",
+    "reference_sha256": "f2666304d16329a24e39627abe29dc57a46f8db9ba4bd3617df9d90db10d83da"
+   }
   },
   {
    "case_id": "umat-oti-curated--sweep-maxwell-ve",
@@ -583,11 +1971,15 @@
    },
    "redistribution": "permitted",
    "kind": "curated",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 11,
-   "judged_states": 304
+   "judged_states": 304,
+   "digest": {
+    "case_json_sha256": "bc54b6e34722cebf13814c6b9165ee763a7e9a168cef261c4c61610ddbdc6978",
+    "reference_sha256": "f33d14d276390799a786f7b1339fcb1ddb059e455fc34a4532596098a6fc9c9c"
+   }
   },
   {
    "case_id": "umat-oti-curated--sweep-real-pco",
@@ -597,11 +1989,51 @@
    },
    "redistribution": "permitted",
    "kind": "curated",
-   "transform_fingerprint": "aaf3a9366218cd5f",
-   "harness_fingerprint": "cf9dc354b785672a",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
    "rule_id": "case-rule/1-df2f107a3c04",
    "paths": 9,
-   "judged_states": 260
+   "judged_states": 260,
+   "digest": {
+    "case_json_sha256": "a95a3df60992da7ea7eb5a95b29a4ff71b3eff2535934fa0f38539b1e2214088",
+    "reference_sha256": "66dff312d53e13e04411344863372440d1da7875d6ec4443ea7bc0f8972472d7"
+   }
+  },
+  {
+   "case_id": "worlthen-20220314-abqus-simulation--enhanced-curing--271dba92",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 140,
+   "digest": {
+    "case_json_sha256": "9813d6c55583ded48ce079ade7d5a39c4b7e46b8941d25e890ac259e10be5a05",
+    "reference_sha256": "6c6091cb6aed194138b01f919103dc73e45d6b73ebd405913d8430ca676951ac"
+   }
+  },
+  {
+   "case_id": "worlthen-20220314-abqus-simulation--simplified-curing--4c3790d6",
+   "tiers": {
+    "ci": false,
+    "offline": true
+   },
+   "redistribution": "unknown",
+   "kind": "corpus",
+   "transform_fingerprint": "52e0a8c4289fce43",
+   "harness_fingerprint": "10909a549e28f9d7",
+   "rule_id": "case-rule/1-df2f107a3c04",
+   "paths": 7,
+   "judged_states": 140,
+   "digest": {
+    "case_json_sha256": "7f9a3d0b6c00a6a89b03e585d5e28b8590179b3860eb355f924b28e0ad7c8ab4",
+    "reference_sha256": "43af81cd1124a0b28a7ae626945232a2db38cb06ba21b3a1e1d7069e1f03f832"
+   }
   }
  ]
 }

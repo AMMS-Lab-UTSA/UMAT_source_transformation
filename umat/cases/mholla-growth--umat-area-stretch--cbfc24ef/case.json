@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "ab1e97bc5a8101203a562d5e",
+  "registry_key": "09f8f777239454d78fea13a3",
   "source_id": "mholla__growth/umats/umat_area_stretch.f",
   "repository": "mholla/growth",
   "commit": "e82fb8b3e29bd6ee5106d454d54814779fd18768",
@@ -13,6 +13,10 @@
   "cache_path": "mholla__growth/umats/umat_area_stretch.f",
   "url": "https://github.com/mholla/growth/blob/e82fb8b3e29bd6ee5106d454d54814779fd18768/umats/umat_area_stretch.f",
   "raw_url": "https://raw.githubusercontent.com/mholla/growth/e82fb8b3e29bd6ee5106d454d54814779fd18768/umats/umat_area_stretch.f",
+  "resolved_with": {
+   "verification_records": "<workspace>/corpus_run/pass19/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json"
+  },
   "sha256": "869907d36a7efc5b7594c2fd35eb9c8e802ef839ac8749a6665e772fd23240e8",
   "bytes": 10220,
   "licence": {
@@ -27,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch mholla-growth--umat-area-stretch--cbfc24ef  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "aaf3a9366218cd5f",
-  "harness_fingerprint": "cf9dc354b785672a",
+  "transform_fingerprint": "52e0a8c4289fce43",
+  "harness_fingerprint": "10909a549e28f9d7",
   "contract_transform_generation": "dbe9f928191e1d43"
  },
  "transform": {
@@ -37,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:92b2a8fa78b672e75ba318cc",
+  "from": "transform_store:09f8f777239454d78fea13a3",
   "files": [
    {
     "path": "compile_order.txt",
@@ -97,8 +101,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<umat>/paper_results/corpus/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass16/results/store_verification.jsonl key=ab1e97bc5a8101203a562d5e",
+   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass19/results/store_verification.jsonl key=09f8f777239454d78fea13a3",
    "material_provenance": "mholla__growth/input_files/cube_1_C3D8_stretch_xy.inp: cube_1_C3D8_stretch_xy.inp *MATERIAL MAT: 9 constants, *DEPVAR 6 -- mholla__growth's README states that cube_1_C3D8_stretch_xy.inp runs with umat_area_stretch.f; cube_1_C3D8_stretch_xy.inp declares exactly one element, so it is the author's own ",
    "initial_state_from_user_subroutine": true,
    "terminal_state": "fully_verified"
@@ -120,7 +124,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/elastic_uniaxial.cfg",
-    "config_sha256": "7013f2b02183f290751a2f3e17727686085f5971dddec75d8ad3d00c68112da5",
+    "config_sha256": "04a318786aac63f1a17505f66691c5aca543032bac8c39db1bd0a82d0dcea105",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -170,7 +174,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/relaxation.cfg",
-    "config_sha256": "3af47f5ab315999c6d792179de4c5f756ebe59fdce37a4b552ffd9bb1b6bb20f",
+    "config_sha256": "8311eb3df77bf055ccae6238221bd501de4d08b06143f198152e4ffc0586a748",
     "n_increments": 30,
     "judged_states": 30,
     "judged_increments": [
@@ -230,7 +234,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_slow.cfg",
-    "config_sha256": "559d77aa93a7a9cf1d230e756d5cfa648535fd9b72cb9b4d9e92aef8978a2881",
+    "config_sha256": "0acacf3fd4a42e0acca4a6c749fe9dee4b74811cbe36dd06f9719b2557730a98",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -270,7 +274,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_fast.cfg",
-    "config_sha256": "b69eb2f005fdc3c19f043409c2280ed45f86fb1abbb79433383948d4bd5bef70",
+    "config_sha256": "5b06aafce540129f759f1116e8f57d2bad89b7eb04d25bf34dd9c00a1b7ad222",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -309,7 +313,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/growth_free.cfg",
-    "config_sha256": "df91560684b02b8f3bfbe7dd6361440132b1b64693d6481a5a057bd82295385a",
+    "config_sha256": "a53e08154d5b42945e6610632c57e4699936c92b0264ffe843b08bbe5fe59960",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -358,7 +362,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/growth_held_stretch.cfg",
-    "config_sha256": "531a0a321df6342ba796309b0f007bfeda924a0c551e1992131ebad66d91169f",
+    "config_sha256": "388a24633c880a12659588fe971b65e58c967537beff3f3eaaa83f46173c09c0",
     "n_increments": 30,
     "judged_states": 30,
     "judged_increments": [
@@ -416,7 +420,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/finite_uniaxial_stretch.cfg",
-    "config_sha256": "58404e5151b735bc286a4b771a003c4f8cb99c34e0b610a001d4ba5aab337d66",
+    "config_sha256": "62b0cc7d648fac264d99da9117ab634ad00cc86e9d54bab7418d6c340c22cb62",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -538,8 +542,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T111253",
-  "seconds": 14.6,
+  "run_id": "20261002T150948",
+  "seconds": 15.2,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -551,10 +555,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "baf1b6f8a06361c9d795e205a5b7b3b165d4252867d19927229dc00a27847041",
+  "tree_sha256": "37dd3582f6bc598bef943011c794d0a8ba48ae0b03a38b09327f0643e8d1428c",
   "location": "corpus_assets",
   "files": 31,
-  "bytes": 816526
+  "bytes": 828590
  },
  "tiers": {
   "ci": false,
@@ -563,7 +567,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only mholla-growth--umat-area-stretch--cbfc24ef",
   "fetch": "python tools/corpus_cases.py fetch mholla-growth--umat-area-stretch--cbfc24ef",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key ab1e97bc5a8101203a562d5e --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 09f8f777239454d78fea13a3 --verification-records <workspace>/corpus_run/pass19/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass19_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -571,12 +575,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T11:13:08",
+ "date": "2026-10-02T15:10:04",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.7,
+    "seconds": 5.0,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -632,7 +636,7 @@
     }
    },
    "replay": {
-    "seconds": 1.5,
+    "seconds": 1.7,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

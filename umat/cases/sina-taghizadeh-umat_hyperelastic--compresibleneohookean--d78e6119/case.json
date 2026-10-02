@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "5e7b9b8f2c2f7ad60635d1ec",
+  "registry_key": "c7ddf414186d5eeceea175e6",
   "source_id": "Sina-Taghizadeh__UMAT_Hyperelastic/CompresibleNeoHookean.for",
   "repository": "Sina-Taghizadeh/UMAT_Hyperelastic",
   "commit": "e3ade702c9b6d95ec5654e93d8d85ad87566382e",
@@ -13,6 +13,10 @@
   "cache_path": "Sina-Taghizadeh__UMAT_Hyperelastic/CompresibleNeoHookean.for",
   "url": "https://github.com/Sina-Taghizadeh/UMAT_Hyperelastic/blob/e3ade702c9b6d95ec5654e93d8d85ad87566382e/CompresibleNeoHookean.for",
   "raw_url": "https://raw.githubusercontent.com/Sina-Taghizadeh/UMAT_Hyperelastic/e3ade702c9b6d95ec5654e93d8d85ad87566382e/CompresibleNeoHookean.for",
+  "resolved_with": {
+   "verification_records": "<workspace>/corpus_run/pass19/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json"
+  },
   "sha256": "bc8d9e5ede5dc5e0b57591bbab0d05d994a786fd0fa4540e6c396d953be408b1",
   "bytes": 3177,
   "licence": {
@@ -27,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch sina-taghizadeh-umat_hyperelastic--compresibleneohookean--d78e6119  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "aaf3a9366218cd5f",
-  "harness_fingerprint": "cf9dc354b785672a",
+  "transform_fingerprint": "52e0a8c4289fce43",
+  "harness_fingerprint": "10909a549e28f9d7",
   "contract_transform_generation": "dbe9f928191e1d43"
  },
  "transform": {
@@ -37,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:c466e91e75e66f091af2e97d",
+  "from": "transform_store:c7ddf414186d5eeceea175e6",
   "files": [
    {
     "path": "CompresibleNeoHookean_oti.for",
@@ -90,8 +94,8 @@
   "family": "hyperelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<umat>/paper_results/corpus/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass16/results/store_verification.jsonl key=5e7b9b8f2c2f7ad60635d1ec",
+   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass19/results/store_verification.jsonl key=c7ddf414186d5eeceea175e6",
    "material_provenance": "Sina-Taghizadeh__UMAT_Hyperelastic/NeoHookeanSimpleShearUMAT.inp: NeoHookeanSimpleShearUMAT.inp *MATERIAL MyMaterial: 2 constants, *DEPVAR 0 -- NeoHookeanSimpleShearUMAT.inp declares exactly one element, so it is the author's own single-element test of this material; a section in NeoHookeanSimpleShe",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -113,7 +117,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/elastic_uniaxial.cfg",
-    "config_sha256": "a7b8cd5edb296888219a16f809c4da2545c04ac1ab6ce77820ac789ac1aa76fe",
+    "config_sha256": "df8971142892e903253fbbcb17029504f2819ce63d8cbdbf03e5a3af88ae64b4",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -161,7 +165,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/elastic_shear.cfg",
-    "config_sha256": "53d3141f4d99fa18a97346300ccca363658c9e82ea8f9a792e194d14bd68dcd0",
+    "config_sha256": "63cac2c8de2f6cd01bd9ea7724a49e68377d08df91b79314dbe8bd67b40c6647",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -211,7 +215,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/isotropy_reference.cfg",
-    "config_sha256": "bcfeb9b6db1891f1df315429b78531400dd62d5d5306dd7fcb6b731e182caf1b",
+    "config_sha256": "5925bc860b33827e09e6e04a35ef7da988f41b4a65258b74492811f019f30317",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -251,7 +255,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/isotropy_rotated.cfg",
-    "config_sha256": "4ad16231368f686ec85fe92c878f19674d5e1be99d932950a7c0917a7c903faf",
+    "config_sha256": "0732b4a61703e37cf6e9522e763f25661687c3432b9920a2409586cdaf911a91",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -291,7 +295,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/relaxation.cfg",
-    "config_sha256": "34df3d1d2a95f7f5325469416c0d40312488bac5ab2dbd1ac48d246d58e31ff1",
+    "config_sha256": "ac91a284bfe78e8675732cf59cf15fb36d8260488afeb8d9e37f1e1778ad7523",
     "n_increments": 30,
     "judged_states": 30,
     "judged_increments": [
@@ -351,7 +355,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_slow.cfg",
-    "config_sha256": "2bb27fba808a65c33197ec2603305c0069f6e89a7c221c2a3e00ec3f897ed56e",
+    "config_sha256": "2de5b23bb556255a2cfc6fc678c59be5f9b8e0fa73f1aeebe15f91d22e51d7d4",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -391,7 +395,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_fast.cfg",
-    "config_sha256": "1263f5855a9816c627e71790dd1cff3b4207c7c1af92cf2a27e5bf349920ebb5",
+    "config_sha256": "b1575d6f5fcaaebc517501f2e5bebc3e76aaf0abe811ddd6a3e46dd77a03f6f1",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -429,7 +433,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/finite_simple_shear.cfg",
-    "config_sha256": "e7bb8fd543a2632fa2615d10e07e83db00c354233e9d9732e21759540e30e5ad",
+    "config_sha256": "6a79ffc9c8f80e11093c67640b2937ffaa0eef7d53cf413b525d5b1359c7aaf7",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -467,7 +471,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/finite_uniaxial_stretch.cfg",
-    "config_sha256": "240ed1f83213063e0490170faf4a5ff38318f7d9a5c0e880769e25176c271e77",
+    "config_sha256": "a9df417cce73c21798e6e2b59232f27fc0837e62a3d6d7add3a45f01ead3a9ce",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -516,7 +520,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/objectivity_reference.cfg",
-    "config_sha256": "36d296c06a694115e59a193f3cd56c98b347a9cf599b3adec72d9416d5574b77",
+    "config_sha256": "a89008c6019570b7a66087f6d8ae429c62e20ce8232712ed7e303093deb3810f",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -555,7 +559,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/objectivity_rotated.cfg",
-    "config_sha256": "12e2930435fd083de00ead34baf428d9421aebbaae5ff6ac4362df663d86ea66",
+    "config_sha256": "9b76739e9736f26c41a32136d7500f4603a48ee1cfbf973a6eac199e5a46009d",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -594,7 +598,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/objectivity_reference_fine.cfg",
-    "config_sha256": "6e639376031ccfd735c7b95d3758206613a92d8bb95ca16a6305df0493e689a9",
+    "config_sha256": "0a5ae78bd8d600e8c8d6c7407271a175fa672aaae1c7adcbd580627203ba2787",
     "n_increments": 40,
     "judged_states": 40,
     "judged_increments": [
@@ -663,7 +667,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/objectivity_rotated_fine.cfg",
-    "config_sha256": "e504ee48e7272dadf882f31cc8fef7a15ae4228f0defcb1d41e09846e1afa48b",
+    "config_sha256": "df0496ce6c028b07fa720a323fb77a4311a4bff95aaa22231fd7cf2dc6d45110",
     "n_increments": 40,
     "judged_states": 40,
     "judged_increments": [
@@ -804,8 +808,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T111211",
-  "seconds": 9.7,
+  "run_id": "20261002T150930",
+  "seconds": 10.7,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -817,10 +821,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "036462dee7990b34a0350d96db56cf55edb7ba16c7b6fc01329dd2d17bd9f232",
+  "tree_sha256": "a3d2f3e96d4ab04828b7a2796abbf8fd021d6239a5ef585306398503c2e47886",
   "location": "corpus_assets",
   "files": 43,
-  "bytes": 904702
+  "bytes": 917079
  },
  "tiers": {
   "ci": false,
@@ -829,7 +833,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only sina-taghizadeh-umat_hyperelastic--compresibleneohookean--d78e6119",
   "fetch": "python tools/corpus_cases.py fetch sina-taghizadeh-umat_hyperelastic--compresibleneohookean--d78e6119",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 5e7b9b8f2c2f7ad60635d1ec --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key c7ddf414186d5eeceea175e6 --verification-records <workspace>/corpus_run/pass19/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass19_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -837,12 +841,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T11:12:21",
+ "date": "2026-10-02T15:09:41",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.3,
+    "seconds": 4.9,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {

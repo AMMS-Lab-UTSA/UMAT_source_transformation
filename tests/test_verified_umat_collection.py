@@ -234,7 +234,8 @@ def test_no_third_party_source_is_committed_here():
     """A public repository without an explicit licence grant is not
     permission to redistribute it. Identity and a digest are committed; the
     bytes are fetched."""
-    fortran = {".f", ".for", ".f90", ".f95", ".inc"}
+    fortran = {".f", ".for", ".f77", ".f90", ".f95", ".f03", ".f08", ".fpp", ".ftn", ".inc",
+               ".c", ".cc", ".cpp", ".h"}          # suffix is lower-cased: .F/.F90 included
     committed = [p for p in COLLECTION.rglob("*")
                  if p.is_file() and p.suffix.lower() in fortran
                  and "materialized" not in p.parts
@@ -242,22 +243,84 @@ def test_no_third_party_source_is_committed_here():
     assert not committed, f"Fortran sources committed under umat/: {committed}"
 
 
+CASE_CANARY = ("_canaries", "hidden_state_toy.f")
+CORPUS_MANIFEST = REPO / "paper_results/corpus/manifest/corpus_manifest.json"
+NOTICES = REPO / "THIRD_PARTY_NOTICES.md"
+
+
+def _notices_section(tag):
+    """The text of one THIRD_PARTY_NOTICES.md subsection (e.g. '2a')."""
+    text = NOTICES.read_text(encoding="utf-8")
+    m = re.search(rf"^### {re.escape(tag)}\.(.*?)(?=^### |^## |\Z)", text, re.S | re.M)
+    return m.group(1) if m else ""
+
+
+def _manifest_redistribution(source_id):
+    """The corpus manifest's licence decision for a source (D-2: 'permitted'
+    needs a licence FILE), independent of what a case.json says about itself."""
+    for row in json.loads(CORPUS_MANIFEST.read_text(encoding="utf-8"))["rows"]:
+        if row.get("source_id") == source_id:
+            lic = row.get("license") or {}
+            return lic.get("redistribution") == "permitted" and bool(lic.get("licence_file"))
+    return False
+
+
 def _a_permitted_case_file(path):
     """Regression cases (umat/cases/, decision D-7) may carry source, but only
-    under the same rule as everything else: a case whose recorded
-    redistribution status is ``permitted`` (decision D-2), or the project's own
-    canary toy. Anything else under umat/cases/ is caught like any other file."""
+    under the same rule as everything else (decision D-2). The licence decision
+    is NOT taken from the case's own case.json: a corpus case's source must be
+    'permitted' (with a licence file) in the corpus manifest; a curated case's
+    source must be a file of this repository with the same bytes, and when that
+    file is a third-party adaptation (THIRD_PARTY_NOTICES.md section 2a) the
+    case directory must be named there too. The only other exemption is the
+    project's own hidden-state toy canary, by exact path."""
     cases = COLLECTION / "cases"
     if cases not in path.parents:
         return False
-    case_dir = cases / path.relative_to(cases).parts[0]
-    if case_dir.name == "_canaries":
-        return True
+    parts = path.relative_to(cases).parts
+    if parts[0] == CASE_CANARY[0]:
+        return parts == CASE_CANARY
+    case_dir = cases / parts[0]
     try:
         case = json.loads((case_dir / "case.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return False
-    return case.get("source", {}).get("licence", {}).get("redistribution") == "permitted"
+    source = case.get("source", {})
+    if source.get("licence", {}).get("redistribution") != "permitted":
+        return False
+    if source.get("kind") == "corpus":
+        return _manifest_redistribution(source.get("source_id"))
+    if source.get("kind") == "curated":
+        import hashlib
+        original = REPO / (source.get("path") or "")
+        if not original.is_file() or not source.get("sha256") or \
+                hashlib.sha256(original.read_bytes()).hexdigest() != source["sha256"]:
+            return False
+        section = _notices_section("2a")
+        if source["path"] in section:                 # third-party (MIT) adaptation
+            return f"umat/cases/{case_dir.name}/" in section
+        return True                                   # the authors' own work (section 2c)
+    return False
+
+
+def test_the_case_licence_guard_does_not_trust_case_json(tmp_path, monkeypatch):
+    """A case.json that claims 'permitted' for a source the manifest does not
+    permit, an unknown file under _canaries, and a .F77/.c file are all caught."""
+    cases = COLLECTION / "cases"
+    corpus = next((d for d in sorted(cases.iterdir()) if (d / "case.json").is_file()
+                   and json.loads((d / "case.json").read_text())["source"]["kind"] == "corpus"
+                   and not _manifest_redistribution(
+                       json.loads((d / "case.json").read_text())["source"]["source_id"])), None)
+    assert not _a_permitted_case_file(cases / "_canaries" / "another_toy.f")
+    assert _a_permitted_case_file(cases / "_canaries" / "hidden_state_toy.f")
+    if corpus is not None:
+        fake = tmp_path / "umat" / "cases" / corpus.name
+        fake.mkdir(parents=True)
+        case = json.loads((corpus / "case.json").read_text())
+        case["source"]["licence"]["redistribution"] = "permitted"     # the lie
+        (fake / "case.json").write_text(json.dumps(case))
+        monkeypatch.setattr(sys.modules[__name__], "COLLECTION", tmp_path / "umat")
+        assert not _a_permitted_case_file(fake / "source" / "x.f77")
 
 
 def test_every_material_records_the_digest_of_what_was_verified():

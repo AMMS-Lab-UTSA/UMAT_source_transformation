@@ -9,15 +9,19 @@ historical `umat/<id>/` directories are untouched (decision D-7). Design:
 
 ## Listing the cases
 
-`umat/cases/index.json` lists every case (43 at this commit: 4 curated CI
-cases, 39 corpus cases in the offline tier). One line per case:
+`umat/cases/index.json` lists every case (113 at this commit: 4 curated CI
+cases, and 109 corpus cases in the offline tier -- one for every source in the
+routine-level D-8 count at pass19, all frozen at transform `52e0a8c4289fce43`,
+harness `10909a549e28f9d7`; the superseded pass18 cases are kept in
+`$UMAT_CASE_ASSETS/history/`, not here). `make case-offline` checks all 113 in
+about 70 s with 12 jobs (measured 2026-10-02). One line per case:
 
 ```bash
 python -c "import json; [print(c['case_id'], c['redistribution'], 'ci' if c['tiers']['ci'] else 'offline') for c in json.load(open('umat/cases/index.json'))['cases']]"
 ```
 
 ```text
-alexanderjfdr-hyperelastic_phase_field--neohookean-umat--10759f1f unknown offline
+bristolcompositesinstitute-abaci--umat--b8fa3835 unknown offline
 ...
 irfancn-abaqus-umat-elastic--umat-elastic--7e9bb4c2 unknown offline
 ...
@@ -27,6 +31,15 @@ umat-oti-curated--m3-j2 permitted ci
 A case id is `<repository>--<file>--<8 hex of the source key>`; `--only`
 needs the whole id. `python tools/corpus_cases.py index` rebuilds the index
 from the case directories (silent; no change when it is current).
+
+Each index row also carries `digest`: the sha256 of the case's `case.json` and
+of its `reference.json.gz`. This is the case's anchor **outside** its own
+directory: `check` fails (`case_corrupted`) when either file no longer matches
+it, so editing a reference and "fixing" the sha256 inside `case.json` is still
+caught, and any accepted change to a case shows up as a diff of `index.json`.
+`case.json` in turn pins the driver configs, the preserved transformed files and
+the source by sha256. Rebuilding the index is therefore a re-baseline, to be
+done only by `freeze` or through a recorded decision.
 
 ## What a case holds
 
@@ -72,11 +85,15 @@ tier accepts only `permitted` cases; `freeze --tier ci` refuses the others.
 
 ## Freezing a case
 
-    PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key <registry/store key> --tier offline
+    PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key <registry/store key> --tier offline \
+        --verification-records $UMAT_OTI_WORKSPACE/corpus_run/pass19/results/store_verification.jsonl \
+        --registry $UMAT_OTI_WORKSPACE/corpus_campaign/pass19_registry/corpus_registry.json
     PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --model parameter_sensitivity/models/m3_j2 \
         --family plasticity --activation 1.2e-3 --tier ci
 
-`freeze` takes the transform store's entry for the current transform
+`--verification-records` and `--registry` point the key resolution at a
+verification pass (as `tools/run_corpus_features.py` takes them); without them
+the harness defaults apply. `freeze` takes the transform store's entry for the current transform
 fingerprint (read only), or regenerates the transform privately when there is
 none (or when it was built for a different NTENS than the experiment drives).
 It runs the harness (features `primal_stress_state`, `ddsdde`), and refuses
@@ -85,6 +102,26 @@ ORIGINAL (D-12.3; undefined STATEV slots are recorded and never compared), and
 the new case passes its own check (R and P, all canaries rejected). A case is
 current only at the fingerprints it records (D-6): after a transform or harness
 change, re-run `check`, and re-freeze only through a recorded decision.
+
+**Harness fingerprint.** The 113 cases at this commit record the harness
+fingerprint they were frozen with, `10909a549e28f9d7`, taken at commit `b4eecc6`
+(the routine-level code of the pass19 run). Any later change to
+`src/umat_oti/abaqus/` or `src/umat_oti/corpus_features/` changes the live
+fingerprint, and the cases then no longer match it. Under D-6 that means: the
+cases remain the frozen evidence of the pass19 count at `10909a549e28f9d7`;
+`check` still runs them against the changed code (it compares numbers, not
+fingerprints), and a pass shows the change did not move any frozen result. It
+does not turn them into evidence at the new fingerprint -- that needs a re-freeze
+through a recorded decision. The Abaqus rows are unaffected (D-17: nothing on
+the Abaqus verification path imports `corpus_features`).
+
+**Limit: the index is an anchor, not a lock.** Someone who edits a reference,
+edits `case.json` to agree (counts, judged increments, sha256) and then re-runs
+`python tools/corpus_cases.py index` gets a case that passes `check`. The edit is
+visible only as a diff of `umat/cases/index.json` (its `digest`, `paths` and
+`judged_states` change). Reviewing every `index.json` diff -- and accepting one
+only with a `freeze` run or a recorded decision behind it -- is therefore part of
+the integrity story; `check` alone does not prove a case was not re-baselined.
 
 ## Checking
 
@@ -95,11 +132,14 @@ change, re-run `check`, and re-freeze only through a recorded decision.
 `make case-ci` needs only this repository and `gfortran`. It ends with
 
 ```text
-4/4 cases pass; tier canaries all rejected; <seconds>s
+4/4 cases pass; canaries all rejected; <seconds>s
 ```
 
 after one `PASS <case_id> (...)` line per case, each followed by three
-`canary rejected: ...` lines. The exit code is 0 only if every case passes.
+`canary rejected: ...` lines. The exit code is 0 only if every case passes and
+every canary is rejected; a canary that is not rejected (per case or the tier's
+hidden-state toy) is named in the closing line (`N canaries NOT REJECTED (tier
+FAILS): ...`), never summarised as "all rejected".
 
 A worked offline check (a corpus case whose source is not redistributable, so
 it is rebuilt from `discovery_cache/`). Measured 2026-10-02, 3 s:
@@ -115,7 +155,7 @@ PASS irfancn-abaqus-umat-elastic--umat-elastic--7e9bb4c2 (2.4s; replay: 1.7s)
      canary rejected: tangent: smallest resolved nonzero entry dropped
      canary rejected: primal: STRESS x (1+1e-06)
 tier canary rejected: hidden-state toy (SAVE counter) {...}
-1/1 cases pass; tier canaries all rejected; 2.8s
+1/1 cases pass; canaries all rejected; 2.8s
 ```
 
 Without `--replay` (or with `--regenerate`) the check also re-transforms the
@@ -136,13 +176,15 @@ Generated Fortran is never compared as text; only numbers decide.
 
 | failure | meaning |
 |---|---|
-| `tolerance` | a DDSDDE entry outside its frozen `tau_e`, or STRESS/STATEV outside the primal rule (row-scaled, rtol 1e-10) |
-| `coverage_shrank` | a frozen judged state is no longer judged: output missing/non-finite, primal disagreement at or before it, a hidden-state difference at or before it, or the ORIGINAL no longer reproducing its history |
+| `tolerance` | a DDSDDE entry outside its frozen `tau_e`, or STRESS/STATEV outside the primal rule (row-scaled, rtol 1e-10). A structural-zero (`zero_pass`) entry needs both `|DDSDDE_e| <= tau_e` and its stored `|D_e| <= tau_e`, so a frozen zero moved off zero is a breach |
+| `reference_incomplete` | a path declared in `case.json` is missing from the reference, or the reference holds a path `case.json` does not declare |
+| `not_indexed` | the case has no row in the `index.json` beside it |
+| `coverage_shrank` | a frozen judged state is no longer judged: output missing/non-finite, primal disagreement at or before it, a hidden-state difference at or before it, or the ORIGINAL no longer reproducing its history; or the reference holds fewer judged states (or other increments) than `case.json` declares, or fewer paths / judged states than `index.json` lists |
 | `drift` | error/tolerance above 10 x max(frozen error/tolerance, 1e-3), even inside tolerance; needs a recorded re-baseline decision |
 | `hidden_state` | the unperturbed call replayed with restored state is not bit-identical |
 | `rule_changed` | the global tolerance rule (`case-rule/1-<hash>`, from `RULE` in the tool and the harness rule) differs from the one the case was frozen under |
 | `canary_passed` | a mutant was not rejected: per case, a DDSDDE column x (1+1e-4), the smallest resolved entry dropped, STRESS x (1+1e-6); per tier, the SAVE-counter toy `umat/cases/_canaries/hidden_state_toy.f` (its control must pass) |
-| `transform`, `build`, `run`, `source_unavailable`, `assets`, `case_corrupted` | the check could not produce numbers, or a case file changed |
+| `transform`, `build`, `run`, `source_unavailable`, `assets`, `case_corrupted` | the check could not produce numbers, or a case file changed (against `case.json`, or `case.json`/the reference against the `index.json` digest) |
 
 A missing gfortran is a failure, never a skip. `--report <file>` writes the
 full JSON result; `tools/corpus_cases.py verify-assets` re-hashes every asset
@@ -153,4 +195,11 @@ a case lists.
 `tests/test_corpus_cases_comparators.py` (every failure kind on synthetic data)
 and `tests/test_corpus_cases_tier.py` (case files, licence rule, index; with
 gfortran: one CI case passes, the same case with a moved reference fails, the
-hidden-state toy is rejected).
+hidden-state toy is rejected), and `tests/test_corpus_cases_injections.py`
+(tampering: a reference value moved by 2 tau, for a `pass` and a `zero_pass`
+entry; judged states or a path dropped with the sha256 refreshed; a corrupted
+transformed file with its sha256 refreshed; a reference moved past the drift
+floor but inside tolerance -- each must fail). The licence guard in
+`tests/test_verified_umat_collection.py` takes the redistribution decision from
+the corpus manifest (corpus cases) or from the repository file and
+`THIRD_PARTY_NOTICES.md` section 2a (curated cases), not from `case.json`.

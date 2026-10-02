@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "7da6b177e9c1b3a4f232e2ec",
+  "registry_key": "62ac92b7b25b2018c103d5e4",
   "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th01/PureGrowth.for",
   "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
   "commit": "17bf545d89abeef313a6bb7f7736c18d3b12eb43",
@@ -13,6 +13,10 @@
   "cache_path": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th01/PureGrowth.for",
   "url": "https://github.com/Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/blob/17bf545d89abeef313a6bb7f7736c18d3b12eb43/Examples-In-Section-3/Flat/Th01/PureGrowth.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/17bf545d89abeef313a6bb7f7736c18d3b12eb43/Examples-In-Section-3/Flat/Th01/PureGrowth.for",
+  "resolved_with": {
+   "verification_records": "<workspace>/corpus_run/pass19/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json"
+  },
   "sha256": "4cea0702a6151771f58c45cee174c7ac4ae3192884cc505da240f323a77c982f",
   "bytes": 18497,
   "licence": {
@@ -27,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--8e9f6e6a  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "aaf3a9366218cd5f",
-  "harness_fingerprint": "cf9dc354b785672a",
+  "transform_fingerprint": "52e0a8c4289fce43",
+  "harness_fingerprint": "10909a549e28f9d7",
   "contract_transform_generation": "dbe9f928191e1d43"
  },
  "transform": {
@@ -37,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:9e6aba175444d47a5e1ffd49",
+  "from": "transform_store:62ac92b7b25b2018c103d5e4",
   "files": [
    {
     "path": "PureGrowth_oti.for",
@@ -94,8 +98,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<umat>/paper_results/corpus/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass16/results/store_verification.jsonl key=7da6b177e9c1b3a4f232e2ec",
+   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass19/results/store_verification.jsonl key=62ac92b7b25b2018c103d5e4",
    "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/Flat/Th01/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck's name 'Beam-PureGrowth.inp' cont",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -116,7 +120,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/elastic_uniaxial.cfg",
-    "config_sha256": "3c751465240ce02f39215906177e4bf698d438358cf8210aa1cd93b288c93fb3",
+    "config_sha256": "4ca2cbe1e03a2d4f31d878ecb91d633ec4cfe95421c7d048c7bab58c0453567b",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -165,7 +169,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/relaxation.cfg",
-    "config_sha256": "48a1b28003d4fec51d2390821825167ed40be8252f90886fd0b2acb9289f6b97",
+    "config_sha256": "d0ee1abc33630f655c8a9f883eb5fc45fb42ace9a10d878b8e9184f2fb99a241",
     "n_increments": 30,
     "judged_states": 30,
     "judged_increments": [
@@ -224,7 +228,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_slow.cfg",
-    "config_sha256": "e7a9793426c80493354afee9fbd79a10a5ea9ced8d9e6334622b0fba66baa4eb",
+    "config_sha256": "3d8396cbf557ff058b38de03191bb70a466c707ef8539e18d0d960c09b7e4e31",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -263,7 +267,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_fast.cfg",
-    "config_sha256": "ef0d25e56ee3cabca4a8494a26c990e49149d9d4d650344678287041242d48c6",
+    "config_sha256": "f5600e014ffe7a1c0673e8b201b0d1fe94b91988944f5f0f8f687b1d6291db6f",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -301,7 +305,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/growth_free.cfg",
-    "config_sha256": "25d660af5652799f23347fd6f53dbc784b971cbe5d12cd544515a81d93d831a6",
+    "config_sha256": "299f510f408e63c9b9b502e8d969b35c546e53456dcc9788d8df51879b0415e8",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -349,7 +353,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/growth_held_stretch.cfg",
-    "config_sha256": "e235c09b5e49b56f0bda16280928885aa8b6f13c59374810560e74d8093e38a0",
+    "config_sha256": "2099ff975790768ef6a47cbb9a8277affeb851ec73444c6e73d4e14cd3871ecc",
     "n_increments": 30,
     "judged_states": 30,
     "judged_increments": [
@@ -406,7 +410,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/finite_simple_shear.cfg",
-    "config_sha256": "c56c4531842b4f417dc9d672e64499505156339b7886cd08d9a3fd2170f26ac4",
+    "config_sha256": "089fffae92bb411a9128426cb9e038f51af952285d92bfbb8d12acc5775a14b2",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -443,7 +447,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/finite_uniaxial_stretch.cfg",
-    "config_sha256": "76f715b38450d3b1303c3253707f538691ace76c6f277d86d7fcbfa9e141cc0a",
+    "config_sha256": "e37509c5b64f0e2b7ddafc2c3e23395269f2b46277eb6eda2e16fb8c4902b4d3",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -491,7 +495,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/objectivity_reference.cfg",
-    "config_sha256": "0318aeaba4b2bda1aac581b0e71454e2e5a4bbea90145a95c94aff721b7dae8a",
+    "config_sha256": "7cab49a7c4ad7fd6505cec0449c03be289f2d00be55c163936665d6089c92679",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -529,7 +533,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/objectivity_rotated.cfg",
-    "config_sha256": "73e403f8cddc10d5597674783aa64c951778ce27cab888c2d49d41b814ee27bc",
+    "config_sha256": "d5f5c191e4cea2b8d2c0a68164b356421fb6c3bc95c749039c491041624fea90",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -567,7 +571,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/objectivity_reference_fine.cfg",
-    "config_sha256": "c1004774a05f52659299a89cd85da130a7015be46bf3223dfc171a86b02e5524",
+    "config_sha256": "b0b2dbdf0db548492b5c9d1ba1a4b10705d5fb424e60ae875300c1bae5e770fb",
     "n_increments": 40,
     "judged_states": 40,
     "judged_increments": [
@@ -635,7 +639,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/objectivity_rotated_fine.cfg",
-    "config_sha256": "ad81a457304076d774cf57c3dfecf14004a9e401a4f5b6e3e190e8ad96fe16af",
+    "config_sha256": "2a99bb801eea974c3aa0b0b9bdefcdb0831db3267d24cc0c65410c591ced1256",
     "n_increments": 40,
     "judged_states": 40,
     "judged_increments": [
@@ -717,7 +721,7 @@
  ],
  "reference": {
   "file": "reference.json.gz",
-  "sha256": "0afe84f1b7a079fde2c7a7adfef2f008c91b957d281fe1992280d0d8525e542d"
+  "sha256": "8d2a7ede412b75fcafb42355b751588eb4e207d4affb1ace6faa1b687eb03fb9"
  },
  "tolerance_rule_id": "case-rule/1-df2f107a3c04",
  "error_summary": {
@@ -777,8 +781,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T111241",
-  "seconds": 18.3,
+  "run_id": "20261002T150709",
+  "seconds": 20.0,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -790,10 +794,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "08f01649b7a9c791c41e0abc99c246da2ad4fdbde509df775eaa7b4a1875f45e",
+  "tree_sha256": "29ec9b2f29a3d65b9026726a391ac9e4fcae1fb08ae297c3313fb813748a2ba2",
   "location": "corpus_assets",
   "files": 42,
-  "bytes": 1159172
+  "bytes": 1197804
  },
  "tiers": {
   "ci": false,
@@ -802,7 +806,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--8e9f6e6a",
   "fetch": "python tools/corpus_cases.py fetch jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--8e9f6e6a",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 7da6b177e9c1b3a4f232e2ec --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 62ac92b7b25b2018c103d5e4 --verification-records <workspace>/corpus_run/pass19/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass19_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [
   "STATEV(7)"
@@ -813,12 +817,12 @@
   "undefined_in_original (D-12, a SOURCE defect): ['STATEV(7)']; those slots are never compared",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T11:13:00",
+ "date": "2026-10-02T15:07:29",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.2,
+    "seconds": 5.1,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -909,7 +913,7 @@
     }
    },
    "replay": {
-    "seconds": 1.7,
+    "seconds": 1.5,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
