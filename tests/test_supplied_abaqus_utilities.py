@@ -77,5 +77,22 @@ def test_the_transform_supplies_it_before_the_lifter_looks():
     """The regression that made this necessary: eleven corpus sources were
     refused with 'Helper lifting requires source definitions for ROTSIG'."""
     from umat_oti.transform import source_transform
+    from umat_oti.transform.abaqus_utility_definitions import \
+        supply_reachable_definitions
 
-    assert "available_definitions" in source_transform.__dict__
+    # Since 5dacb13 the transform supplies only what is reachable from the
+    # lifted roots, through supply_reachable_definitions, rather than calling
+    # available_definitions itself. What matters is that a UMAT calling ROTSIG
+    # comes out of that step with the body the lifter will look for.
+    assert source_transform.supply_reachable_definitions is \
+        supply_reachable_definitions
+    umat = (
+        "      SUBROUTINE UMAT(STRESS, DROT, NDI, NSHR)\n"
+        "      DIMENSION STRESS(NDI+NSHR), DROT(3,3)\n"
+        "      CALL ROTSIG(STRESS, DROT, STRESS, 1, NDI, NSHR)\n"
+        "      RETURN\n"
+        "      END\n")
+    parsed = source_transform._parse_source(umat, "umat.f")
+    supplied_parse, supplied = supply_reachable_definitions(parsed, ["UMAT"])
+    assert supplied == ("ROTSIG",)
+    assert "ROTSIG" in {routine.upper_name for routine in supplied_parse.subroutines}

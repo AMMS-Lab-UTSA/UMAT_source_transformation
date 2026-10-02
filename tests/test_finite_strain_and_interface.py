@@ -107,10 +107,19 @@ def test_intrinsic_module_supplies_unary_plus():
     names = {name.strip()
              for line in text.splitlines() if line.strip().startswith("PUBLIC ::")
              for name in line.split("::", 1)[1].split(",")}
-    assert names <= {"MIN", "MAX", "SIGN", "NINT", "INT", "ABS", "SQRT",
-                     "LOG10", "MATMUL", "TRANSPOSE", "DOT_PRODUCT",
-                     "ASSIGNMENT(=)", "OPERATOR(+)", "OPERATOR(-)",
-                     "OPERATOR(*)", "OPERATOR(/)"}, f"unexpected export: {names}"
+    # The transform's own helpers (OTI_VALUE, OTI_R4, faeec2b) carry the OTI_
+    # prefix the transform reserves, and the intrinsic generics only this
+    # module declares are renamed on the USE line where a source declares the
+    # same name (source_transform.OTI_INTRINSICS_ONLY_GENERICS).
+    from umat_oti.transform.source_transform import OTI_INTRINSICS_ONLY_GENERICS  # noqa: PLC0415
+    intrinsic = {"MIN", "MAX", "SIGN", "NINT", "INT", "ABS", "SQRT",
+                 "LOG10", "MATMUL", "TRANSPOSE", "DOT_PRODUCT",
+                 "ASSIGNMENT(=)", "OPERATOR(+)", "OPERATOR(-)",
+                 "OPERATOR(*)", "OPERATOR(/)", "OPERATOR(**)"}
+    unexpected = {name for name in names
+                  if name not in intrinsic | OTI_INTRINSICS_ONLY_GENERICS
+                  and not name.startswith("OTI_")}
+    assert not unexpected, f"unexpected export: {unexpected}"
     assert {"MIN", "MAX", "SIGN", "OPERATOR(+)", "MATMUL"} <= names
 
 
