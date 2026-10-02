@@ -1074,6 +1074,76 @@
   "skip:tests/test_transform_what_the_lifter_cannot_express_is_refused_by_name.py:<module>:mark.skipif:8d891947": {
    "verdict": "justified",
    "reason": "Module-level skip only when gfortran is absent (each test compiles the original and the transform); CI installs gfortran."
+  },
+  "removed_check:tests/test_a_refusal_is_not_a_verdict_on_the_file.py:test_a_second_copy_of_a_uel_is_still_not_a_umat:aafb5db7": {
+   "verdict": "justified",
+   "reason": "The duplicate count assertion moves from 5 to 4 with the registry rebuilt at pass19/pass20: tmfrln__paraqus example_abaqus_extrusion_umat.f, a copy of a genuine UMAT, now transforms and is no longer a refusal. The UEL9_VPDCL duplicate checks, the point of the test, are unchanged.",
+   "evidence": [
+    {
+     "in": "3c26b56",
+     "text": "112 refusals, down from 151 at pass16, and the tests still asserted the pass16"
+    }
+   ]
+  },
+  "removed_check:tests/test_finite_strain_and_interface.py:test_intrinsic_module_supplies_unary_plus:27813811": {
+   "verdict": "justified",
+   "reason": "The closed export list is replaced by the rule it stood for, asserted directly: only intrinsic names and operators, the generics renamed on a colliding USE line (OTI_INTRINSICS_ONLY_GENERICS) and the reserved OTI_ prefix may leave the module. 57eaeff and faeec2b added OPERATOR(**), TINY, SUM, NORM2, OTI_VALUE and OTI_R4 on purpose.",
+   "evidence": [
+    {
+     "in": "1fa8e99",
+     "text": "own OTI_VALUE and OTI_R4. The rule the list stood for -- nothing like a"
+    }
+   ]
+  },
+  "removed_check:tests/test_supplied_abaqus_utilities.py:test_the_transform_supplies_it_before_the_lifter_looks:a205a6b9": {
+   "verdict": "justified",
+   "reason": "The check that source_transform imports available_definitions is replaced by a behavioural one: supply_reachable_definitions (which 5dacb13 put in its place) run on a UMAT calling ROTSIG must return the ROTSIG body for the lifter.",
+   "evidence": [
+    {
+     "in": "1fa8e99",
+     "text": "supply_reachable_definitions (only what the lifted roots reach is supplied)."
+    }
+   ]
+  },
+  "removed_check:tests/test_the_four_sources_that_disagreed_with_the_transformer.py:test_a_whole_array_stress_update_is_a_stress_update:705d3990": {
+   "verdict": "justified",
+   "reason": "MohrCoulombAbaqus.for is no longer refused: from corpus pass19 it transforms and compiles and stops at missing_material_data (external). The registry assertions now state that (is_umat, UMAT interface, no refusal class, transformed and compiled, missing_material_data, external); the parse-level assertions that it writes STRESS and DDSDDE whole-array are unchanged.",
+   "evidence": [
+    {
+     "in": "3c26b56",
+     "text": "missing_material_data (no *USER MATERIAL deck published), which is external."
+    }
+   ]
+  },
+  "removed_check:tests/test_the_four_sources_that_disagreed_with_the_transformer.py:test_a_whole_array_stress_update_is_a_stress_update:b9a062d9": {
+   "verdict": "justified",
+   "reason": "MohrCoulombAbaqus.for is no longer refused: from corpus pass19 it transforms and compiles and stops at missing_material_data (external). The registry assertions now state that (is_umat, UMAT interface, no refusal class, transformed and compiled, missing_material_data, external); the parse-level assertions that it writes STRESS and DDSDDE whole-array are unchanged.",
+   "evidence": [
+    {
+     "in": "3c26b56",
+     "text": "missing_material_data (no *USER MATERIAL deck published), which is external."
+    }
+   ]
+  },
+  "removed_check:tests/test_the_four_sources_that_disagreed_with_the_transformer.py:test_a_whole_array_stress_update_is_a_stress_update:ef4324d8": {
+   "verdict": "justified",
+   "reason": "MohrCoulombAbaqus.for is no longer refused: from corpus pass19 it transforms and compiles and stops at missing_material_data (external). The registry assertions now state that (is_umat, UMAT interface, no refusal class, transformed and compiled, missing_material_data, external); the parse-level assertions that it writes STRESS and DDSDDE whole-array are unchanged.",
+   "evidence": [
+    {
+     "in": "3c26b56",
+     "text": "missing_material_data (no *USER MATERIAL deck published), which is external."
+    }
+   ]
+  },
+  "removed_check:tests/test_the_four_sources_that_disagreed_with_the_transformer.py:test_a_whole_array_stress_update_is_a_stress_update:f9f4834c": {
+   "verdict": "justified",
+   "reason": "MohrCoulombAbaqus.for is no longer refused: from corpus pass19 it transforms and compiles and stops at missing_material_data (external). The registry assertions now state that (is_umat, UMAT interface, no refusal class, transformed and compiled, missing_material_data, external); the parse-level assertions that it writes STRESS and DDSDDE whole-array are unchanged.",
+   "evidence": [
+    {
+     "in": "3c26b56",
+     "text": "missing_material_data (no *USER MATERIAL deck published), which is external."
+    }
+   ]
   }
  }
 }
