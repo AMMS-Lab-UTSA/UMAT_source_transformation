@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "98d37a644c8a601ff432e88d",
+  "registry_key": "8d918d2e2b93e5d200e58bd9",
   "source_id": "Jeff97__General-shape-control-of-shell/Abaqus_Files/3Dto3D/From-3D-to-3D-SeaShell.for",
   "repository": "Jeff97/General-shape-control-of-shell",
   "commit": "95cf95d2191c8b125fa96e898c2cf4d411fa0a7c",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/General-shape-control-of-shell/blob/95cf95d2191c8b125fa96e898c2cf4d411fa0a7c/Abaqus_Files/3Dto3D/From-3D-to-3D-SeaShell.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/General-shape-control-of-shell/95cf95d2191c8b125fa96e898c2cf4d411fa0a7c/Abaqus_Files/3Dto3D/From-3D-to-3D-SeaShell.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass19/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass20/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json"
   },
   "sha256": "ef866872e39f768affa3eef8f2737cc006d3d96bd861e7a0e89a9f9323cb864f",
   "bytes": 21646,
@@ -31,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-general-shape-control-of-shell--from-3d-to-3d-seashell--1fafa8f0  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "52e0a8c4289fce43",
-  "harness_fingerprint": "10909a549e28f9d7",
+  "transform_fingerprint": "ab32cce7bec15c93",
+  "harness_fingerprint": "d6f92d4704bee702",
   "contract_transform_generation": "dbe9f928191e1d43"
  },
  "transform": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:98d37a644c8a601ff432e88d",
+  "from": "transform_store:8d918d2e2b93e5d200e58bd9",
   "files": [
    {
     "path": "From-3D-to-3D-SeaShell_oti.for",
@@ -94,8 +94,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass19/results/store_verification.jsonl key=98d37a644c8a601ff432e88d",
+   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass20/results/store_verification.jsonl key=8d918d2e2b93e5d200e58bd9",
    "material_provenance": "Jeff97__General-shape-control-of-shell/Abaqus_Files/3Dto3D/From-3D-to-3D-SeaShell.inp: From-3D-to-3D-SeaShell.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 9 -- a section in From-3D-to-3D-SeaShell.inp attaches NeoHookean to C3D20H; the deck's name 'From-3D-to-3D-SeaShell.inp' contains the whole of ",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "tangent_not_verified"
@@ -684,8 +684,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T150546",
-  "seconds": 21.8,
+  "run_id": "20261002T174929",
+  "seconds": 22.8,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -697,10 +697,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "c7597ed37d522aada1cea2fec3f5a255c685139c7d9a89acdbf94a3e17db4f88",
+  "tree_sha256": "8613a0b0317ca996aa6ad6b97ebcb6e784c61f1a2de6fe9d8137b97bf9ec7ed4",
   "location": "corpus_assets",
   "files": 37,
-  "bytes": 1262403
+  "bytes": 1266738
  },
  "tiers": {
   "ci": false,
@@ -709,7 +709,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-general-shape-control-of-shell--from-3d-to-3d-seashell--1fafa8f0",
   "fetch": "python tools/corpus_cases.py fetch jeff97-general-shape-control-of-shell--from-3d-to-3d-seashell--1fafa8f0",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 98d37a644c8a601ff432e88d --verification-records <workspace>/corpus_run/pass19/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass19_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 8d918d2e2b93e5d200e58bd9 --verification-records <workspace>/corpus_run/pass20/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass20_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -717,12 +717,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T15:06:08",
+ "date": "2026-10-02T17:49:52",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 6.9,
+    "seconds": 7.7,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -799,7 +799,7 @@
     }
    },
    "replay": {
-    "seconds": 2.1,
+    "seconds": 2.5,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

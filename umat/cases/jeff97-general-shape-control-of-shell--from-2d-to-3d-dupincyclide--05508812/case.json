@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "38df9a468be71a4914f1bcaf",
+  "registry_key": "937ee6dd18324c0e4a1c3bcf",
   "source_id": "Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto3D/From-2D-to-3D-DupinCyclide.for",
   "repository": "Jeff97/General-shape-control-of-shell",
   "commit": "95cf95d2191c8b125fa96e898c2cf4d411fa0a7c",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/General-shape-control-of-shell/blob/95cf95d2191c8b125fa96e898c2cf4d411fa0a7c/Abaqus_Files/2Dto3D/From-2D-to-3D-DupinCyclide.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/General-shape-control-of-shell/95cf95d2191c8b125fa96e898c2cf4d411fa0a7c/Abaqus_Files/2Dto3D/From-2D-to-3D-DupinCyclide.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass19/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass20/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json"
   },
   "sha256": "22d4d644efa2a3ffbde786f1997da7e852b51ad622986322358806f8e03503ad",
   "bytes": 32379,
@@ -31,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-general-shape-control-of-shell--from-2d-to-3d-dupincyclide--05508812  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "52e0a8c4289fce43",
-  "harness_fingerprint": "10909a549e28f9d7",
+  "transform_fingerprint": "ab32cce7bec15c93",
+  "harness_fingerprint": "d6f92d4704bee702",
   "contract_transform_generation": "dbe9f928191e1d43"
  },
  "transform": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:38df9a468be71a4914f1bcaf",
+  "from": "transform_store:937ee6dd18324c0e4a1c3bcf",
   "files": [
    {
     "path": "From-2D-to-3D-DupinCyclide_oti.for",
@@ -94,8 +94,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass19/results/store_verification.jsonl key=38df9a468be71a4914f1bcaf",
+   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass20/results/store_verification.jsonl key=937ee6dd18324c0e4a1c3bcf",
    "material_provenance": "Jeff97__General-shape-control-of-shell/Abaqus_Files/2Dto3D/From-2D-to-3D-DupinCyclide.inp: From-2D-to-3D-DupinCyclide.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 9 -- a section in From-2D-to-3D-DupinCyclide.inp attaches NeoHookean to C3D20H; the deck's name 'From-2D-to-3D-DupinCyclide.inp' contai",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "tangent_not_verified"
@@ -680,8 +680,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T150546",
-  "seconds": 31.6,
+  "run_id": "20261002T174901",
+  "seconds": 32.4,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -693,10 +693,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "f1bfee3a0e34b402b579a9fa6da8874af85f3657dc960601019ab91b554b5bc0",
+  "tree_sha256": "712e8bbe00db58df55552b3d33dcdb9e33068d06e0fb83378039cfb0e07dd7db",
   "location": "corpus_assets",
   "files": 37,
-  "bytes": 1326017
+  "bytes": 1329903
  },
  "tiers": {
   "ci": false,
@@ -705,7 +705,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-general-shape-control-of-shell--from-2d-to-3d-dupincyclide--05508812",
   "fetch": "python tools/corpus_cases.py fetch jeff97-general-shape-control-of-shell--from-2d-to-3d-dupincyclide--05508812",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 38df9a468be71a4914f1bcaf --verification-records <workspace>/corpus_run/pass19/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass19_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 937ee6dd18324c0e4a1c3bcf --verification-records <workspace>/corpus_run/pass20/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass20_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [
   "STATEV(9)"
@@ -716,12 +716,12 @@
   "undefined_in_original (D-12, a SOURCE defect): ['STATEV(9)']; those slots are never compared",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T15:06:18",
+ "date": "2026-10-02T17:49:34",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 11.9,
+    "seconds": 11.8,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -798,7 +798,7 @@
     }
    },
    "replay": {
-    "seconds": 3.9,
+    "seconds": 4.3,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
