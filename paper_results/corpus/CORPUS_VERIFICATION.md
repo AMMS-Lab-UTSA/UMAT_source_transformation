@@ -7,21 +7,21 @@ Every acquired source has a record here, and each one is named by its path insid
 | input | file |
 | --- | --- |
 | acquisition inventory (the denominator) | `paper_results/discovery/discovery_triage.csv` |
-| transform report | `corpus_run/pass19/transform_all_pass19.json` |
-| Abaqus verification results | `pass19/results/store_verification.jsonl` |
+| transform report | `softwarex_work/corpus_run/transform_all_pass20.json` |
+| Abaqus verification results | `pass20/results/store_verification.jsonl` |
 | offline compile evidence | `paper_results/corpus/transform_refusal_audit.json` |
 | acquisition cache | `softwarex_work/discovery_cache` |
 
-The transform store this registry describes is at fingerprint `52e0a8c4289fce43`. A verification row carries the fingerprint of the store it ran against; a row from before the store was rebuilt is evidence about a transformed file that no longer exists, and none of those is read as a verdict about the entry that is in the store now.
+The transform store this registry describes is at fingerprint `ab32cce7bec15c93`. A verification row carries the fingerprint of the store it ran against; a row from before the store was rebuilt is evidence about a transformed file that no longer exists, and none of those is read as a verdict about the entry that is in the store now.
 
 ## How to regenerate every number in this report
 
 ```
 UMAT_OTI_DISCOVERY_CACHE=<the acquisition cache> \
 python tools/build_corpus_registry.py \
-    --transform <run>/transform_all_pass19.json \
-    --abaqus <run>/pass19/results/store_verification.jsonl \
-    --store-fingerprint 52e0a8c4289fce43 \
+    --transform <run>/transform_all_pass20.json \
+    --abaqus <run>/pass20/results/store_verification.jsonl \
+    --store-fingerprint ab32cce7bec15c93 \
     --audit-refusals
 ```
 
@@ -148,8 +148,8 @@ The results file is append-only and this pass resumed onto the file an earlier p
 
 | | count |
 | --- | ---: |
-| rows in `pass19/results/store_verification.jsonl` | 279 |
-| of those, at the current store fingerprint `52e0a8c4289fce43` | 279 |
+| rows in `pass20/results/store_verification.jsonl` | 279 |
+| of those, at the current store fingerprint `ab32cce7bec15c93` | 279 |
 | of those, at a superseded store fingerprint | 0 |
 | distinct sources named in the file | 279 |
 | distinct row keys in the file | 279 |

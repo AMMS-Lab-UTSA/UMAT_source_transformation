@@ -9,8 +9,9 @@ tools yourself.
 ## Current result
 
 The whole corpus of 391 acquired sources was re-transformed and re-verified on
-2026-10-02 (pass19: commit 76bfc2d, transform fingerprint `52e0a8c4289fce43`,
-harness fingerprint `183285a4729715a6`). 279 sources transform and compile in
+2026-10-02 (pass20: commit 4123acc, transform fingerprint `ab32cce7bec15c93`,
+harness fingerprint `d6f92d4704bee702`; every source has the same terminal state
+as at pass19). 279 sources transform and compile in
 the job layout; 238 are adequately specified genuine UMATs (the eligible
 denominator, D2). Two counts are reported, never pooled:
 
