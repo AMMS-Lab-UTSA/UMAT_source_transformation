@@ -118,11 +118,14 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
         return {"config": str(config_path), "error": f"Source file not found: {source_path}", "status_category": "source_not_found"}, 1
 
     from umat_oti.transform.dependency_bundle import bundle_sources
+    # The transform reads the staged copy beside its bundled modules; every
+    # report still names the file the author gave (consumers key on it).
+    transform_source_path = source_path
     if not closure:
         try:
             staged, bundle_manifest = bundle_sources([source_path, *_declared_module_sources(config_path)], out_dir)
-            source_path = staged[source_path.resolve()]
-            source["selected_umat_file"] = str(source_path)
+            transform_source_path = staged[source_path.resolve()]
+            source["selected_umat_file"] = str(transform_source_path)
         except (OSError, ValueError) as exc:
             return {"config": str(config_path), "error": str(exc), "status_category": "dependency_bundle_failed"}, 1
     else:
@@ -134,7 +137,7 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
     config.setdefault("transformation_settings", {})["module_sources"] = [
         bundled_modules[path] for path in module_sources]
     bundle_files = [bundle_manifest, *[out_dir / item["bundled"] for item in bundle_record["files"]]]
-    source_text = source_path.read_text(encoding="utf-8", errors="replace")
+    source_text = transform_source_path.read_text(encoding="utf-8", errors="replace")
     aliases = (config.get("analysis", {}).get("finite_strain", {}).get("gradient_aliases"))
     alias_record = None
     if aliases is not None:
@@ -203,7 +206,7 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
         try:
             parameter_artifact = _generate_parameter_sensitivity_artifact(
                 config=config,
-                source_path=source_path,
+                source_path=transform_source_path,
                 requests=parameter_requests,
                 out_dir=out_dir / "parameter_sensitivity",
                 ntens=ntens,
