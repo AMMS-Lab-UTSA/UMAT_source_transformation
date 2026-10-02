@@ -321,6 +321,14 @@
     "tests/test_transform_a_bang_in_a_string_does_not_end_a_continued_call.py",
     "tests/test_transform_what_the_lifter_cannot_express_is_refused_by_name.py"
    ]
+  },
+  {
+   "commit": "b44ed12",
+   "bug": "The transform summary (and gradient-alias record and derivative manifest) named the staged bundle copy as 'source' instead of the author's file, so the regression service's rows, keyed on it, stopped matching the contracts that asked for them (since 57eaeff).",
+   "tests": [
+    "tests/test_the_transform_summary_names_the_authors_source.py",
+    "tests/test_the_batch_command_runs_real_contracts.py"
+   ]
   }
  ],
  "excluded": [
