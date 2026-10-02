@@ -42,7 +42,7 @@ def registry() -> dict:
 
 
 def test_the_manifest_validates_against_its_schema(manifest):
-    jsonschema = pytest.importorskip("jsonschema")
+    import jsonschema  # declared in the [test] extra: the schema check must run in CI
     published = json.loads((OUT / "corpus_manifest.schema.json").read_text())
     assert published == manifest_schema(), "schema file is stale: rebuild"
     jsonschema.Draft202012Validator(published).validate(manifest)

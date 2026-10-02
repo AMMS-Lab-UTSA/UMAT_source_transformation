@@ -55,6 +55,7 @@ test = [
 	"pytest>=7",
 	"wheel",
 	"mpmath>=1.3",
+	"jsonschema>=4",
 	"matplotlib>=3.8",
 	"setuptools>=68",
 	"tomli>=2; python_version < '3.11'",

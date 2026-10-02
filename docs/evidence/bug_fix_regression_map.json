@@ -159,6 +159,86 @@
     "tests/test_reproduce_profiles.py::test_a_tree_git_cannot_read_is_not_reported_clean",
     "tests/test_reproduce_profiles.py::test_a_checkout_git_can_read_is_still_reported_clean_or_dirty"
    ]
+  },
+  {
+   "commit": "5dacb13",
+   "bug": "Lifting and derivative defects of a gradient-driven transform silently gave wrong numbers or a file that would not build: a COMMON member retyped in a lifted helper, a repeated INCLUDE constant, a continued CALL left pointing at the untransformed routine, an integer array constructor handed to MATMUL, infinite partials turning into NaN, and a repeated eigenvalue cluster refused instead of averaged.",
+   "tests": [
+    "tests/test_shared_storage_survives_lifting.py::test_a_common_member_keeps_the_type_the_block_was_laid_out_with",
+    "tests/test_shared_storage_survives_lifting.py::test_a_constant_declared_twice_over_is_declared_once",
+    "tests/test_a_continued_call_reaches_the_lifted_body.py::test_a_continued_call_is_pointed_at_the_lifted_body",
+    "tests/test_an_array_constructor_reaches_the_oti_overload.py::test_an_integer_constructor_over_an_oti_operand_is_widened",
+    "tests/test_both_oti_backends_survive_a_kink.py::test_the_static_backend_guards_every_unbounded_partial",
+    "tests/test_dspevd_oti.py::test_a_repeated_cluster_is_averaged_rather_than_refused[matrix0]"
+   ]
+  },
+  {
+   "commit": "57eaeff",
+   "bug": "The only provider entry point set DFGRD0 = DFGRD1 = I, so a UMAT that reads its kinematics from the deformation gradient returned zero stress for every increment without any failure; DSPEVD also returned NaN with INFO = 0 for a tiny off-diagonal (OFFVAL*OFFVAL underflow) and for a diagonal matrix lost its eigenvector derivatives.",
+   "tests": [
+    "tests/test_the_gradient_never_reached_the_material.py::test_the_small_strain_entry_point_sees_no_deformation_at_all",
+    "tests/test_the_gradient_never_reached_the_material.py::test_the_stress_matches_the_original_umat_under_the_same_gradient",
+    "tests/test_dspevd_oti.py::test_an_offdiagonal_too_small_to_square_does_not_become_a_nan",
+    "tests/test_dspevd_oti.py::test_a_diagonal_matrix_still_has_eigenvector_derivatives"
+   ]
+  },
+  {
+   "commit": "f8d4e5a",
+   "bug": "The family denominators published since pass14 came from the keyword classification nobody had reviewed while the report named only the file, so an unreviewed denominator could be quoted as a reviewed one; the report now digests the file and prints the reviewed coverage beside each count.",
+   "tests": [
+    "tests/test_a_family_denominator_carries_its_own_basis.py::test_an_unreviewed_denominator_says_so_where_it_is_printed",
+    "tests/test_a_family_denominator_carries_its_own_basis.py::test_two_classifications_of_one_corpus_are_told_apart_by_the_basis"
+   ]
+  },
+  {
+   "commit": "f6f6359",
+   "bug": "A state shadow that was declared, zeroed, read and written but never copied in nor out compiled and returned a stress computed from an all-zero state (140 of 140 increments of one corpus source); and every integer exponent of a promoted expression was emitted as a real power (Y_OTI**2 became Y_OTI**2.0D0), which Fortran defines only for a non-negative base.",
+   "tests": [
+    "tests/test_a_state_shadow_must_carry_the_state.py::test_a_state_shadow_that_is_never_filled_fails",
+    "tests/test_a_state_shadow_must_carry_the_state.py::test_a_state_shadow_that_is_never_emptied_fails",
+    "tests/test_an_integer_exponent_is_not_a_factor.py::test_an_integer_exponent_of_a_shadow_keeps_its_integer_kind",
+    "tests/test_an_integer_exponent_is_not_a_factor.py::test_an_integer_exponent_of_the_authors_own_real_is_left_alone"
+   ]
+  },
+  {
+   "commit": "faeec2b",
+   "bug": "The dependency bundler copied a stub ABA_PARAM.INC into dependencies/ and pointed the include there, a path an Abaqus job directory does not have (140 of 234 pass17 rows stopped at the compile); implicitly typed PROPS copies lost their derivative, binary32 variables were rounded or widened, STRESS/DDSDDE extraction was skipped on branch paths, a zero-base power lost its zero primal, and a build that stopped working was not said.",
+   "tests": [
+    "tests/test_transform_runtime_header_is_never_bundled.py::test_every_spelling_of_the_header_is_the_runtime_header[ABA_PARAM.INC]",
+    "tests/test_a_job_directory_carries_the_includes_it_compiles.py::test_the_emitted_entry_source_compiles_in_a_staged_job_directory",
+    "tests/test_transform_extraction_runs_on_every_path.py::test_the_extraction_is_never_left_inside_a_branch",
+    "tests/test_transform_extraction_runs_on_every_path.py::test_both_branches_return_the_originals_stress_and_its_tangent",
+    "tests/test_transform_zero_base_power_keeps_a_zero_primal.py::test_a_zero_base_power_has_the_real_power_as_its_real_part",
+    "tests/test_a_build_that_stopped_working_cannot_go_unsaid.py::test_a_transformed_row_that_did_not_build_states_why"
+   ]
+  },
+  {
+   "commit": "10574e5",
+   "bug": "The NTENS rule treated a DO loop bounded at 3 as plane stress without a shear at index 3, so the Lemaitre UMAT had been verified on a layout that put a shear in the sigma_33 slot.",
+   "tests": [
+    "tests/test_formulation_ntens_shear_index.py::test_lemaitre_three_is_the_direct_block_not_plane_stress",
+    "tests/test_formulation_ntens_shear_index.py::test_a_bare_bound_of_three_with_no_witness_is_undecided",
+    "tests/test_formulation_ntens_shear_index.py::test_lemaitre_on_a_plane_stress_element_is_unsupported_not_run"
+   ]
+  },
+  {
+   "commit": "1ffc540",
+   "bug": "The licence classifier read the body of a licence, so every GNU text was misread (the GPL-3.0 text names Affero in section 13; GPL-2.0 and LGPL-2.1 read as LGPL-3.0), registry bytes was the decoded length instead of the file size and companion lists were truncated.",
+   "tests": [
+    "tests/test_licence_classifier_reads_title_and_notice.py::test_the_gpl3_body_naming_affero_does_not_make_it_agpl",
+    "tests/test_licence_classifier_reads_title_and_notice.py::test_an_agpl_text_is_agpl_although_its_body_names_the_gpl",
+    "tests/test_registry_fields_bytes_and_companions.py::test_bytes_is_the_file_size_not_the_decoded_length",
+    "tests/test_registry_fields_bytes_and_companions.py::test_companion_files_are_not_truncated"
+   ]
+  },
+  {
+   "commit": "f7a8194",
+   "bug": "The RA /2 adapter copied RA's prose reference into the enumerated reference field and wrote a non-schema rule id, so the published manifest failed its own schema; the packaging test's wheel build also needed the network.",
+   "tests": [
+    "tests/test_corpus_manifest_artifact.py::test_the_manifest_validates_against_its_schema",
+    "tests/test_corpus_manifest_ra_v2.py::test_two_verified_problems_make_a_verified_cell_with_the_worst_numbers",
+    "tests/test_packaging.py::test_built_wheel_contains_the_runtime_support_files"
+   ]
   }
  ],
  "excluded": [
@@ -221,6 +301,10 @@
   {
    "commit": "a2163c5",
    "reason": "Ledger and evidence of the clean-clone run; 'failed' appears in the count of suite results ('none failed'), not as a corrected behaviour."
+  },
+  {
+   "commit": "f0f0731",
+   "reason": "Merge; the fixes are mapped on their own commits (f6f6359 is mapped above)."
   }
  ],
  "changelog_fixed": {

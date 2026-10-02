@@ -485,6 +485,523 @@
   "skip:tests/test_a_missing_compiler_or_oti_runtime_is_named.py:test_the_oti_backend_refusal_with_a_runtime_present_still_refuses_to_guess:call:skip:75bc14be": {
    "verdict": "justified",
    "reason": "New test; skips when OTILib's Python build is not importable (an external GPL build, not on PyPI). Its counterpart without the runtime, test_the_oti_backend_refusal_says_no_runtime_was_found_and_what_to_do, runs everywhere. UMAT has no RUN_OTILIB_TESTS switch, so this skip stays a skip even in the clean-clone run if OTILib is not importable."
+  },
+  "deleted_test:tests/test_a_gate_that_reads_false_beside_a_verdict_says_why.py::test_a_control_that_ran_and_did_not_explain_it_says_false_not_nothing": {
+   "verdict": "justified",
+   "reason": "Retired with the gate it described: it asserted the text of the previous gate in tools/verify_store_in_abaqus.py. The invariant (a control that ran and did not explain the difference sets the flag false, never leaves it empty) is tested in the named replacement.",
+   "moved_to": "tests/test_primal_gate_explanation_never_rewrites_it.py::test_the_explanation_flag_starts_unmeasured_and_is_set_false_when_refuted"
+  },
+  "deleted_test:tests/test_a_gate_that_reads_false_beside_a_verdict_says_why.py::test_an_explanation_never_rewrites_the_primal_gate": {
+   "verdict": "justified",
+   "reason": "Retired because it grepped the previous gate's source text; the invariant that an explanation never rewrites the primal gate is tested in the named replacement.",
+   "moved_to": "tests/test_primal_gate_explanation_never_rewrites_it.py::test_nothing_ever_sets_the_gate_true_by_hand"
+  },
+  "deleted_test:tests/test_a_gate_that_reads_false_beside_a_verdict_says_why.py::test_it_is_set_true_only_where_a_control_actually_explained_it": {
+   "verdict": "justified",
+   "reason": "Retired because it grepped the previous gate's source text; the explanation flag is true only when both halves of the precision control hold, tested in the named replacement.",
+   "moved_to": "tests/test_primal_gate_explanation_never_rewrites_it.py::test_an_explanation_needs_both_halves_of_the_precision_control"
+  },
+  "deleted_test:tests/test_a_gate_that_reads_false_beside_a_verdict_says_why.py::test_the_flag_is_written_beside_the_six_and_starts_unmeasured": {
+   "verdict": "justified",
+   "reason": "Retired because it asserted where the previous gate wrote the flag in the source; that the flag starts unmeasured is tested in the named replacement.",
+   "moved_to": "tests/test_primal_gate_explanation_never_rewrites_it.py::test_the_explanation_flag_starts_unmeasured_and_is_set_false_when_refuted"
+  },
+  "deleted_test:tests/test_a_gate_that_reads_false_beside_a_verdict_says_why.py::test_the_raw_comparison_flag_is_never_rewritten": {
+   "verdict": "justified",
+   "reason": "Retired because it grepped the previous gate's source; that the raw comparison flag is written only from the routine-level comparisons is tested in the named replacement.",
+   "moved_to": "tests/test_primal_gate_explanation_never_rewrites_it.py::test_the_gate_is_written_only_from_the_two_comparisons_that_see_the_routine"
+  },
+  "deleted_test:tests/test_an_unmeasured_zero_is_not_a_measurement.py::test_the_unmeasured_case_says_so_rather_than_claiming_zero": {
+   "verdict": "justified",
+   "reason": "Retired because it asserted the text of the previous gate's reason string; that an unmeasured control reports it measured nothing is still tested by the surviving test of the same file, and the routine-level gate (4d91f0c) no longer uses that sensitivity reason.",
+   "moved_to": "tests/test_an_unmeasured_zero_is_not_a_measurement.py::test_a_bit_identical_rebuild_reports_that_it_measured_nothing"
+  },
+  "deleted_test:tests/test_an_unmeasured_zero_is_not_a_measurement.py::test_the_verdict_will_not_rest_on_an_unmeasured_zero": {
+   "verdict": "justified",
+   "reason": "Retired because it counted occurrences of association.get(\"measured\") in the previous gate's source; the gate is now decided by the routine-level replay and the Jacobian-matched control, whose measured negative control is tested in the named replacement.",
+   "moved_to": "tests/test_primal_gate_routine_level.py::test_the_negative_control_agrees_with_almost_nothing_to_spare"
+  },
+  "deleted_test:tests/test_no_shadow_reaches_an_untransformed_call.py::test_a_lifted_helper_named_directly_is_safe": {
+   "verdict": "justified",
+   "reason": "The test pinned an assumption that was wrong (a call to the bare name of a lifted helper reaches the untransformed REAL routine, since lifting emits NAME_OTI). It was replaced by the corrected pair test_a_lifted_helper_reached_through_its_lifted_name_is_safe and the named leak test, both in 5dacb13.",
+   "moved_to": "tests/test_no_shadow_reaches_an_untransformed_call.py::test_a_lifted_helper_named_without_the_suffix_is_a_leak"
+  },
+  "deleted_test:tests/test_supplied_abaqus_utilities.py::test_an_eigenproblem_is_deliberately_not_supplied": {
+   "verdict": "justified",
+   "reason": "Restated, not removed: SPRIND/SPRINC are now supplied on the DSPEVD body that treats a repeated eigenvalue cluster, and the restated test pins that they are supplied and rest on DSPEVD; the numerical behaviour is tested in tests/test_transform_supplied_abaqus_utilities_differentiate.py.",
+   "moved_to": "tests/test_supplied_abaqus_utilities.py::test_an_eigenproblem_is_supplied_only_on_the_body_that_handles_coincidence"
+  },
+  "skip:tests/test_a_common_member_keeps_the_type_the_source_gave_it.py:transformed:call:skip:67b06aba": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_a_contract_resolves_its_helper_closure.py:test_all_command_builds_and_verifies_tangent_and_sensitivities:call:skip:23fd28c9": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_a_contract_resolves_its_helper_closure.py:test_cli_discovers_lifts_and_compiles_helpers:call:skip:f2cd857e": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_a_job_directory_carries_the_includes_it_compiles.py:test_the_emitted_entry_source_compiles_in_a_staged_job_directory:call:skip:0270021a": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_an_implicitly_typed_parameter_copy_carries_its_derivative.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_combined_parameter_directions.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_complex_oti_cardano.py:<module>:mark.skipif:0a70e71a": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_complex_oti_module.py:<module>:call:importorskip:69beeeb0": {
+   "verdict": "justified",
+   "reason": "mpmath is declared in the [test] extra that CI installs, so the module runs in CI; the importorskip only protects a bare environment without the test extra."
+  },
+  "skip:tests/test_complex_oti_module.py:<module>:mark.skipif:0a70e71a": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_complex_oti_transform.py:<module>:mark.skipif:0a70e71a": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_complex_oti_transform.py:<module>:mark.skipif:836fb5d3": {
+   "verdict": "violation",
+   "reason": "The skip condition greps the transform's source for 'complex_support' and 'retype_lifted_complex' (a patch having been applied), not for a missing external resource. The patch is applied in faeec2b so the condition is false today and the test runs, but it would hide the end-to-end complex-step check silently if those names were renamed. It should be removed."
+  },
+  "skip:tests/test_corpus_features_hidden_state.py:results:call:skip:fef9bf4f": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_corpus_features_hidden_state.py:test_a_seed_map_that_disagrees_with_the_kinematics_fails_ddsdde:call:skip:8b8f11aa": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_corpus_features_integration.py:tiny:call:skip:4612a12a": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_corpus_features_quad.py:test_the_quad_reference_reproduces_closed_form_elasticity:call:skip:455b18d7": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_corpus_features_third_init.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_corpus_features_third_init.py:<module>:mark.skipif:6824f295#2": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_corpus_features_third_init.py:harness_results:call:skip:511904bc": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_corpus_features_zero_scale.py:injected:call:skip:2dacdca9": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_corpus_manifest_artifact.py:test_the_manifest_validates_against_its_schema:call:importorskip:434f98d1": {
+   "verdict": "violation",
+   "reason": "jsonschema is not in the [test] extra of pyproject.toml, which CI installs, so on a clean CI install test_the_manifest_validates_against_its_schema is skipped and the published manifest is never validated against its schema (the defect f7a8194 fixed). The dependency should be declared and the skip removed."
+  },
+  "skip:tests/test_corpus_manifest_vera_probes.py:<module>:mark.skipif:52b3511f": {
+   "verdict": "justified",
+   "reason": "The test reads the real B1 campaign evidence in /home/ammslab3/softwarex_work/corpus_campaign, which lives outside the repository; the toy-fixture probes of the same module run everywhere and these two run wherever the campaign tree exists."
+  },
+  "skip:tests/test_corpus_manifest_vera_probes.py:<module>:mark.skipif:9542a127": {
+   "verdict": "justified",
+   "reason": "The test reads the real B1 campaign evidence in /home/ammslab3/softwarex_work/corpus_campaign, which lives outside the repository; the toy-fixture probes of the same module run everywhere and these two run wherever the campaign tree exists."
+  },
+  "skip:tests/test_corpus_mechanics_domain.py:test_the_full_corpus_file:call:skip:73f1fac1": {
+   "verdict": "justified",
+   "reason": "Needs an external file (the corpus acquisition cache or the system licence texts under /usr/share/common-licenses); the test runs wherever it exists."
+  },
+  "skip:tests/test_corpus_mechanics_driver.py:<module>:mark.skipif:8e482629": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_dependency_bundle.py:test_declared_module_is_bundled_and_compiled_before_helpers:call:skip:175d51e2": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_dependency_bundle.py:test_recursive_includes_compile_after_relocation:call:skip:184e1465": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_dependency_bundle.py:test_transformation_bundle_builds_after_inputs_removed:call:skip:dffd05bc": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_dspevd_oti.py:eigensolver:call:skip:cb1c5869": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_dspevd_oti.py:test_parameter_sensitivity_path_supplies_dspevd:call:skip:2e44eaed": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_dspevd_oti.py:test_transitive_dspevd_is_supplied_to_jacobian_pipeline:call:skip:385d3c94": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_formulation_ntens_shear_index.py:test_full_corpus_files:call:skip:cb8ae362": {
+   "verdict": "justified",
+   "reason": "Needs an external file (the corpus acquisition cache or the system licence texts under /usr/share/common-licenses); the test runs wherever it exists."
+  },
+  "skip:tests/test_formulation_ntens_shear_index.py:test_full_lemaitre_with_its_own_deck:call:skip:c4b7a297": {
+   "verdict": "justified",
+   "reason": "Needs an external file (the corpus acquisition cache or the system licence texts under /usr/share/common-licenses); the test runs wherever it exists."
+  },
+  "skip:tests/test_helper_lifting_generality.py:test_lifting_preserves_specification_types_and_basis_collisions:call:skip:18c54a16": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_lapack_port.py:compiled_kernels:call:skip:b397d153": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_lapack_port.py:reference_tree:call:skip:918abe2c": {
+   "verdict": "justified",
+   "reason": "Needs the public LAPACK v3.12.1 checkout (UMAT_OTI_LAPACK_SOURCE), an external reference tree; the test runs wherever it is present."
+  },
+  "skip:tests/test_lapack_port.py:test_lapack_intrinsic_declarations_no_longer_block_compilation:call:skip:93cb443d": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_licence_classifier_reads_title_and_notice.py:test_the_cached_licence_files:call:skip:be4aabdc": {
+   "verdict": "justified",
+   "reason": "Needs an external file (the corpus acquisition cache or the system licence texts under /usr/share/common-licenses); the test runs wherever it exists."
+  },
+  "skip:tests/test_licence_classifier_reads_title_and_notice.py:test_the_canonical_texts_shipped_with_the_system:call:skip:c4594152": {
+   "verdict": "justified",
+   "reason": "Needs an external file (the corpus acquisition cache or the system licence texts under /usr/share/common-licenses); the test runs wherever it exists."
+  },
+  "skip:tests/test_lu_oti.py:lu_solver:call:skip:b2ef0bfd": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_lu_oti.py:test_jacobian_workflow_supplies_and_executes_lu:call:skip:ff8e4138": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_lu_oti.py:test_parameter_sensitivity_workflow_supplies_lu:call:skip:dbd88c32": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_primal_gate_b2c_bound.py:<module>:mark.skipif:733a1c00": {
+   "verdict": "justified",
+   "reason": "Needs the Intel compiler and/or the pass16 recordings or discovery cache of the corpus workspace, none of which is in the repository; the test runs wherever they exist (this workstation) and the gate logic is also pinned by tests/test_primal_gate_routine_level.py and tests/test_primal_gate_explanation_never_rewrites_it.py without them."
+  },
+  "skip:tests/test_primal_gate_jacobian_matched.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_primal_gate_sdvini.py:<module>:mark.skipif:9f3c2f2d": {
+   "verdict": "justified",
+   "reason": "Needs the Intel compiler and/or the pass16 recordings or discovery cache of the corpus workspace, none of which is in the repository; the test runs wherever they exist (this workstation) and the gate logic is also pinned by tests/test_primal_gate_routine_level.py and tests/test_primal_gate_explanation_never_rewrites_it.py without them."
+  },
+  "skip:tests/test_primal_gate_undefined_in_original.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_primal_gate_verify_one.py:<module>:mark.skipif:b112682b": {
+   "verdict": "justified",
+   "reason": "Needs the Intel compiler and/or the pass16 recordings or discovery cache of the corpus workspace, none of which is in the repository; the test runs wherever they exist (this workstation) and the gate logic is also pinned by tests/test_primal_gate_routine_level.py and tests/test_primal_gate_explanation_never_rewrites_it.py without them."
+  },
+  "skip:tests/test_shared_storage_survives_lifting.py:test_a_lifted_helper_and_its_caller_agree_about_the_block:call:skip:2ef379da": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_the_compile_flag_is_measured_where_the_job_builds.py:test_a_unit_that_only_builds_in_the_output_directory_is_not_recorded_compiled:call:skip:4c0f1f30": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_the_compile_flag_is_measured_where_the_job_builds.py:test_an_include_the_transform_staged_is_carried_into_the_job_layout:call:skip:1053cbbd": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_the_compile_flag_is_measured_where_the_job_builds.py:test_the_header_is_reached_by_include_path_not_by_sitting_beside_the_source:call:skip:6c321d10": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_the_compile_flag_is_measured_where_the_job_builds.py:test_the_stored_flag_says_which_layout_it_was_measured_in:call:skip:4335b235": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_data_constant_handed_to_a_helper_keeps_its_value.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_log_feeding_only_the_energy_is_not_a_lost_derivative.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_log_feeding_only_the_energy_is_not_a_lost_derivative.py:<module>:mark.skipif:8d891947#2": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_value_set_before_the_seed_block_reaches_its_shadow.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_value_set_before_the_seed_block_reaches_its_shadow.py:<module>:mark.skipif:b332328c": {
+   "verdict": "justified",
+   "reason": "Needs the corpus source czmHealing.f from the discovery cache, an external file not in the repository; the test runs wherever the cache exists."
+  },
+  "skip:tests/test_transform_all_finds_published_companions.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_binary32_arithmetic_stays_binary32.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_binary32_arithmetic_stays_binary32.py:<module>:mark.skipif:8d891947#2": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_corpus_compile_classes.py:_gfortran:call:skip:339e786c": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_extraction_runs_on_every_path.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_lifted_helpers_keep_fortran_semantics.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_parameter_copy_into_an_integer_has_no_derivative.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_provider_lift_keeps_the_original_primal.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_provider_lift_keeps_the_original_primal.py:<module>:mark.skipif:b9201f35": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_runtime_header_is_never_bundled.py:test_a_relative_work_directory_still_builds:call:skip:e880935e": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_runtime_header_is_never_bundled.py:test_the_stored_entry_compiles_in_a_bare_job_directory:call:skip:aab7204c": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_stress_lines_are_not_bridged_into_tangent_skips.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_stress_lines_are_not_bridged_into_tangent_skips.py:<module>:mark.skipif:8d891947#2": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_supplied_abaqus_utilities_differentiate.py:builds:call:skip:8ec6a285": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_zero_base_power_keeps_a_zero_primal.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "removed_check:tests/test_a_disagreement_is_a_hypothesis_until_it_is_reproduced.py:test_a_signature_never_changes_a_verdict:079ad73f": {
+   "verdict": "justified",
+   "reason": "The check on the previous gate's wording (the old block of the file containing no 'agrees' or 'tolerance') is replaced in the same test by a stricter structural one: the signature is written exactly once from review_entry, no if/elif reads it, and get('primal_signature') appears nowhere. The primal gate it used to sit beside is now decided by tests/test_primal_gate_*.py."
+  },
+  "removed_check:tests/test_declared_shapes_are_read.py:test_a_complex_variable_on_the_stress_path_is_refused_by_name:bf2e657e": {
+   "verdict": "justified",
+   "reason": "The refusal message now names the construct and the line (faeec2b: 'Refusals name the construct, the line and what to do'); the removed assertion on the old message text is replaced in the same test by a stricter one that checks the construct, the line number or the dimension.",
+   "evidence": [
+    {
+     "in": "faeec2b",
+     "text": "Refusals name the construct, the line and what to do."
+    }
+   ]
+  },
+  "removed_check:tests/test_derivatives_lost_in_the_emitted_fortran.py:test_sign_is_not_refused_by_a_transform_whose_modules_define_it:c343a3e9": {
+   "verdict": "justified",
+   "reason": "The refusal message now names the construct and the line (faeec2b: 'Refusals name the construct, the line and what to do'); the removed assertion on the old message text is replaced in the same test by a stricter one that checks the construct, the line number or the dimension.",
+   "evidence": [
+    {
+     "in": "faeec2b",
+     "text": "Refusals name the construct, the line and what to do."
+    }
+   ]
+  },
+  "broad_except:src/umat_oti/corpus_features/harness.py:_build_lifted:except Exception:73b7034c": {
+   "verdict": "justified",
+   "reason": "A failed lift becomes a Build with reason 'lift: <exception>', which the harness reports as no build for that entry (a not-verified outcome), not a pass."
+  },
+  "broad_except:src/umat_oti/corpus_features/harness.py:_lifted_identity:except Exception:5fd0fb28": {
+   "verdict": "justified",
+   "reason": "The exception text is written into the run's fingerprint/record as 'unavailable: <error>' so the missing identity is visible in the evidence rather than hidden; it affects provenance only, not any verdict."
+  },
+  "broad_except:src/umat_oti/corpus_features/harness.py:build_all:except Exception:7b2a244f": {
+   "verdict": "justified",
+   "reason": "The exception text is written into the run's fingerprint/record as 'unavailable: <error>' so the missing identity is visible in the evidence rather than hidden; it affects provenance only, not any verdict."
+  },
+  "broad_except:src/umat_oti/corpus_features/harness.py:run_entry:except Exception:1437fd6f": {
+   "verdict": "justified",
+   "reason": "The failure of the mechanics checks is written to mechanics_checks.json as an error record with the exception type and message, so the run shows that they did not run."
+  },
+  "broad_except:src/umat_oti/corpus_features/loading_paths.py:search_activation_amplitude.run:except Exception:f0f77a2f": {
+   "verdict": "justified",
+   "reason": "The loading-path provider is optional: when it is missing or raises, the internal minimal paths are used and the exception type and text are appended to each path's provenance, so the fallback is visible in the evidence."
+  },
+  "broad_except:src/umat_oti/corpus_features/manifest.py:_resolve_companions:except Exception:0d12ee82": {
+   "verdict": "justified",
+   "reason": "A failed companion resolution returns None and the caller records the data-quality flag companion_resolution_failed_used_registry_list and falls back to the registry list."
+  },
+  "broad_except:src/umat_oti/corpus_features/mechanics_checks.py:_evaluate_index:except Exception:55105d9a": {
+   "verdict": "justified",
+   "reason": "An index expression that does not evaluate is reported as not identified (None), the check's own undecided outcome, and never as pass."
+  },
+  "broad_except:src/umat_oti/corpus_features/paths.py:paths_for:except Exception:48d4a64c": {
+   "verdict": "justified",
+   "reason": "The loading-path provider is optional: when it is missing or raises, the internal minimal paths are used and the exception type and text are appended to each path's provenance, so the fallback is visible in the evidence."
+  },
+  "broad_except:src/umat_oti/corpus_features/paths.py:paths_for:except Exception:48d4a64c#2": {
+   "verdict": "justified",
+   "reason": "The loading-path provider is optional: when it is missing or raises, the internal minimal paths are used and the exception type and text are appended to each path's provenance, so the fallback is visible in the evidence."
+  },
+  "broad_except:src/umat_oti/corpus_features/paths.py:paths_for:except Exception:48d4a64c#3": {
+   "verdict": "justified",
+   "reason": "Only guards setting a provenance label on a path object that may be frozen; the path itself is used unchanged and the next statement already falls back to the generic label."
+  },
+  "broad_except:src/umat_oti/oti/lapack_port.py:port_reference:except Exception:de007490": {
+   "verdict": "justified",
+   "reason": "A per-routine emission failure is recorded in the port report as status emission_failed with the exception type and message, and the report's counts include it; nothing is dropped."
+  },
+  "broad_except:tools/run_corpus_features.py:main:except Exception:2358721f": {
+   "verdict": "justified",
+   "reason": "The exception text is written into the run's fingerprint/record as 'unavailable: <error>' so the missing identity is visible in the evidence rather than hidden; it affects provenance only, not any verdict."
+  },
+  "mock:tests/test_a_result_line_names_its_own_entry.py:test_a_slow_entrys_result_is_printed_under_its_own_name:monkeypatch.setattr:1315e021": {
+   "verdict": "justified",
+   "reason": "Stubs verify_one and the record append to test only that a slow entry's result line is printed under its own name; no numerical result is involved."
+  },
+  "mock:tests/test_a_result_line_names_its_own_entry.py:test_a_slow_entrys_result_is_printed_under_its_own_name:monkeypatch.setattr:2b8af5a5": {
+   "verdict": "justified",
+   "reason": "Stubs verify_one and the record append to test only that a slow entry's result line is printed under its own name; no numerical result is involved."
+  },
+  "mock:tests/test_abaqus_trial.py:test_all_cli_forwards_abaqus_options:monkeypatch.setattr:3fde2167": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_all_cli_material_configuration_is_optional:monkeypatch.setattr:d8fe6ba8": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_auto_discovery_fills_unknowns_and_preserves_loading:monkeypatch.setattr:7e7212e1": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_auto_discovery_records_refusal_without_inventing_properties:monkeypatch.setattr:ae1454ed": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_build_smoke_needs_no_material_settings:monkeypatch.setattr:bcfd3006": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_cli_existing_deck_overrides_experiment:monkeypatch.setattr:1a55dc6d": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_cli_existing_deck_overrides_experiment:monkeypatch.setattr:801bac52": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_cli_generates_deck_by_default:monkeypatch.setattr:846e7a2e": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_cli_generates_deck_by_default:monkeypatch.setattr:cd71a549": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_cli_smoke_bypasses_incomplete_sidecar:monkeypatch.setattr:c78cf61d": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_cli_smoke_bypasses_incomplete_sidecar:monkeypatch.setattr:d867ab83": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_cli_trial_preserves_transform_failure:monkeypatch.setattr:4ac74534": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_cli_trial_preserves_transform_failure:monkeypatch.setattr:60786c4f": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_complete_stage_reuses_explicit_deck_or_smoke:monkeypatch.setattr:2e094e3f": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_complete_workflow_sequences_and_gates_abaqus:monkeypatch.setattr:026b9fcc": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_complete_workflow_sequences_and_gates_abaqus:monkeypatch.setattr:0573f523": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_complete_workflow_sequences_and_gates_abaqus:monkeypatch.setattr:ab944011": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_complete_workflow_sequences_and_gates_abaqus:monkeypatch.setattr:bedd1688": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_complete_workflow_sequences_and_gates_abaqus:monkeypatch.setattr:eab13976": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_generated_candidate_can_be_tried_after_semantic_failure:monkeypatch.setattr:066858dc": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_generated_candidate_can_be_tried_after_semantic_failure:monkeypatch.setattr:fdcd34c5": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_abaqus_trial.py:test_trial_executes_without_claiming_verification:monkeypatch.setattr:d7ed9e15": {
+   "verdict": "justified",
+   "reason": "Orchestration test of option forwarding and gating: it stubs the Abaqus run, subprocess or a stage function so the CLI/workflow wiring can be checked without Abaqus; no numerical function is replaced and the test makes no verification claim. The real Abaqus run is covered by the abaqus-marked tests."
+  },
+  "mock:tests/test_lapack_port.py:test_reference_provenance_is_enforced:monkeypatch.setattr:2b33c4a9": {
+   "verdict": "justified",
+   "reason": "Replaces only the git subprocess inside lapack_port to feed a wrong commit or a dirty status to the provenance check; the test asserts the check refuses, and the numerical ports are not patched."
+  },
+  "mock:tests/test_primal_gate_verify_one.py:test_minsur1_is_decided_by_the_routine_and_the_jacobian_matched_control:monkeypatch.setattr:5e89984c": {
+   "verdict": "justified",
+   "reason": "Replays recorded pass16 runs instead of re-running ifort and stubs the tangent verifier, to test which build decides the primal verdict; the recordings are real outputs and the stub is labelled 'tangent not run in this test'."
+  },
+  "mock:tests/test_primal_gate_verify_one.py:test_minsur1_is_decided_by_the_routine_and_the_jacobian_matched_control:monkeypatch.setattr:fcbf548f": {
+   "verdict": "justified",
+   "reason": "Replays recorded pass16 runs instead of re-running ifort and stubs the tangent verifier, to test which build decides the primal verdict; the recordings are real outputs and the stub is labelled 'tangent not run in this test'."
+  },
+  "mock:tests/test_transform_all_finds_published_companions.py:test_a_callee_in_a_sibling_file_is_resolved_and_recorded:monkeypatch.setattr:4c43f5f0": {
+   "verdict": "justified",
+   "reason": "Points DEFAULT_CACHE at a temporary directory holding the sibling file under test; no function is replaced."
+  },
+  "mock:tests/test_transform_all_finds_published_companions.py:test_a_callee_nobody_publishes_keeps_its_refusal:monkeypatch.setattr:df004d73": {
+   "verdict": "justified",
+   "reason": "Points DEFAULT_CACHE at a temporary directory holding the sibling file under test; no function is replaced."
   }
  }
 }
