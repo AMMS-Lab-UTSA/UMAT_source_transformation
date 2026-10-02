@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Sequence
 
-from umat_oti.core.model import ParsedFortranSource
+from umat_oti.core.model import ParsedFortranSource, ParsedSubroutine
 from umat_oti.core.derivative_request import load_project_derivative_requests
 from umat_oti.core.transformation_anchors import anchor_completion_status
 from umat_oti.fortran.callgraph import build_call_graph, undefined_delegate_call
@@ -7131,10 +7131,37 @@ def _first_executable_line(parsed: ParsedFortranSource, selected_umat: str) -> i
     for routine in parsed.subroutines:
         if routine.upper_name != selected_umat.upper():
             continue
+        # An INTERFACE block belongs to the specification part, and its bodies
+        # are whole subprogram headers. The first statement of one read as
+        # executable, so the shadow declarations were written INSIDE the
+        # block ("Unexpected data declaration statement in INTERFACE";
+        # MohrCoulombAbaqus.for, whose "interface" is indented by a TAB).
+        inside = _interface_block_line_numbers(routine)
         for line in routine.lines[1:]:
+            if line.line_numbers and line.line_numbers[0] in inside:
+                continue
             if _is_executable_line(line.text):
                 return line.line_numbers[0]
     return None
+
+
+def _interface_block_line_numbers(routine: ParsedSubroutine) -> set[int]:
+    """Physical lines of ``routine`` from INTERFACE to END INTERFACE, inclusive.
+
+    What an interface body declares is the dummy of another subprogram, not a
+    variable of this routine: its ``D(nsigma,nsigma)`` is not this routine's
+    ``D(NTENS,NTENS)``, and its header is not this routine's first statement.
+    """
+    inside: set[int] = set()
+    depth = 0
+    for line in routine.lines[1:]:
+        if _INTERFACE_OPEN_LINE_RE.match(line.text):
+            depth += 1
+        if depth:
+            inside.update(line.line_numbers)
+        if _INTERFACE_CLOSE_LINE_RE.match(line.text):
+            depth = max(depth - 1, 0)
+    return inside
 
 
 def _names_present_in_span(
@@ -7150,11 +7177,21 @@ def _names_present_in_span(
     and those resolve to nothing here.
     """
     start_line, end_line = selected_routine_span
-    selected_text = "\n".join(
-        line
-        for line in source_lines[max(start_line - 1, 0) : min(end_line, len(source_lines))]
-        if not _is_commented(line)
-    )
+    # Interface bodies name the dummies of OTHER subprograms (an explicit
+    # interface's ``Sigma(nsigma)``); a shadow declared for one of those in
+    # this routine has a bound that means nothing here.
+    kept: list[str] = []
+    depth = 0
+    for line in source_lines[max(start_line - 1, 0) : min(end_line, len(source_lines))]:
+        if _is_commented(line):
+            continue
+        if _INTERFACE_OPEN_LINE_RE.match(line):
+            depth += 1
+        if not depth:
+            kept.append(line)
+        if _INTERFACE_CLOSE_LINE_RE.match(line):
+            depth = max(depth - 1, 0)
+    selected_text = "\n".join(kept)
     result: set[str] = set()
     for name in names:
         if name in argument_variables or re.search(
@@ -7188,12 +7225,17 @@ def _shapes_declared_in_selected_routine(
         #: its arrays in a DIMENSION statement rather than on the type
         #: declaration declares them just as much.
         declared_here: set[str] = set()
+        interface_lines = _interface_block_line_numbers(routine)
         for declaration in routine.declarations:
+            if interface_lines.intersection(declaration.line_numbers):
+                continue
             for entity in declaration.entities:
                 if entity.dimensions:
                     updated[entity.upper_name] = ", ".join(entity.dimensions)
                     declared_here.add(entity.upper_name)
         for line in routine.lines:
+            if interface_lines.intersection(line.line_numbers):
+                continue
             match = re.match(r"^\s*dimension\s+(.+)$", line.text, flags=re.IGNORECASE)
             if not match:
                 continue
@@ -8052,7 +8094,8 @@ def _semantic_checks(
         warnings.append(
             f"transformed file injects no derivative direction: neither "
             f"{dstran}_OTI nor DFGRD1_OTI is seeded")
-    seed_consuming_lines = _seed_consuming_stress_lines(stress_expression_lines, seed_names)
+    seed_consuming_lines = _seed_consuming_stress_lines(
+        _with_continuations(stress_expression_lines, selected_active_lines, form), seed_names)
     real_stress_extraction_line = _first_line_matching(selected_active_lines, lambda line: _is_real_stress_extraction_line(line, stress))
     helper_region_ids = {str(region.get("region_id", "")) for region in tangent_context.helper_regions}
     # A shadow handed to a routine that was never rewritten is not a
@@ -8431,6 +8474,58 @@ def _last_line_matching(lines: list[tuple[int, str]], predicate) -> int:
 
 def _is_dstran_initialization_line(line: str, dstran: str) -> bool:
     return bool(re.search(rf"\b{re.escape(dstran)}_OTI\s*\(\s*OTI_I\s*\)\s*=\s*{re.escape(dstran)}\s*\(\s*OTI_I\s*\)", line, flags=re.IGNORECASE))
+
+
+def _is_continuation_of_previous(previous: str, line: str, form: str) -> bool:
+    """Whether ``line`` continues the statement ``previous`` began.
+
+    Free form marks the continuation on the line being continued (a trailing
+    ``&`` outside any comment); fixed form marks it on the continuing line, in
+    column 6. Both are read the way the compiler reads them.
+    """
+    if form == "fixed":
+        return (len(line) > 5 and not line.startswith("\t")
+                and line[:5].strip() == "" and line[5] not in " 0")
+    code = previous.split("!", 1)[0].rstrip()
+    return code.endswith("&")
+
+
+def _with_continuations(
+    expression_lines: list[tuple[int, str]],
+    active_lines: list[tuple[int, str]],
+    form: str,
+) -> list[tuple[int, str]]:
+    """Each stress expression with the continuation lines of its statement.
+
+    The stress expressions are found line by line, and a continuation line of
+    a CALL carries no ``=`` and no ``CALL``, so it was never one of them. A
+    delegating UMAT that hands the seeded strain to its material routine on
+    the second line of the call -- ``CALL UMAT_MODEL_OTI(DDSDDE_OTI, ...`` /
+    ``1 DSTRAN_OTI, ...`` -- then read as a stress path that never consumes
+    the seed, and a correct transform was refused for a zero tangent it would
+    not have produced. The statement is what consumes the seed, so the
+    statement is what is searched.
+    """
+    following = {number: index for index, (number, _) in enumerate(active_lines)}
+    joined: list[tuple[int, str]] = []
+    for number, line in expression_lines:
+        index = following.get(number)
+        text = line
+        if index is not None:
+            previous = line
+            for _, candidate in active_lines[index + 1:]:
+                if not _is_continuation_of_previous(previous, candidate, form):
+                    break
+                # The continuation's own mark is not part of the statement:
+                # column 6 of a fixed-form line ("     1DSTRAN_OTI") would
+                # otherwise glue itself to the first name, and a leading "&"
+                # of a free-form one likewise.
+                body = (candidate[6:] if form == "fixed"
+                        else candidate.lstrip().lstrip("&"))
+                text += "\n" + body
+                previous = candidate
+        joined.append((number, text))
+    return joined
 
 
 def _seed_consuming_stress_lines(
