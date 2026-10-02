@@ -1042,6 +1042,38 @@
   "mock:tests/test_verified_umat_collection.py:test_the_case_licence_guard_does_not_trust_case_json:monkeypatch.setattr:b3349ac5": {
    "verdict": "justified",
    "reason": "The test forges a case.json claiming 'permitted' to prove the guard ignores it; the patch replaces the manifest lookup with a fixture, not any numerical function."
+  },
+  "skip:tests/test_transform_a_bang_in_a_string_does_not_end_a_continued_call.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Module-level skip only when gfortran is absent (each test compiles the original and the transform); CI installs gfortran."
+  },
+  "skip:tests/test_transform_a_binary32_named_constant_keeps_its_binary32_value.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Module-level skip only when gfortran is absent (each test compiles the original and the transform); CI installs gfortran."
+  },
+  "skip:tests/test_transform_a_host_constant_is_carried_by_name.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Module-level skip only when gfortran is absent (each test compiles the original and the transform); CI installs gfortran."
+  },
+  "skip:tests/test_transform_a_host_constant_is_carried_by_name.py:<module>:mark.skipif:8d891947#2": {
+   "verdict": "justified",
+   "reason": "Module-level skip only when gfortran is absent (each test compiles the original and the transform); CI installs gfortran."
+  },
+  "skip:tests/test_transform_a_named_constant_has_its_declared_type.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Module-level skip only when gfortran is absent (each test compiles the original and the transform); CI installs gfortran."
+  },
+  "skip:tests/test_transform_an_integer_quotient_stays_integer.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Module-level skip only when gfortran is absent (each test compiles the original and the transform); CI installs gfortran."
+  },
+  "skip:tests/test_transform_an_internal_procedure_has_its_hosts_implicit_types.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Module-level skip only when gfortran is absent (each test compiles the original and the transform); CI installs gfortran."
+  },
+  "skip:tests/test_transform_what_the_lifter_cannot_express_is_refused_by_name.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Module-level skip only when gfortran is absent (each test compiles the original and the transform); CI installs gfortran."
   }
  }
 }
