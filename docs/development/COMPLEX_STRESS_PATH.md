@@ -1,5 +1,7 @@
 # DOUBLE COMPLEX on the stress path: not supported, and the reason
 
+> **Superseded (2026-10-02).** COMPLEX on the stress path is now transformed: `umat_oti.oti.complex_oti` carries complex values over OTI and `umat_oti.transform.complex_support` plans the transform and refuses, by name, what it cannot carry (single/unknown-kind complex, IMPLICIT COMPLEX, complex in COMMON/EQUIVALENCE, MATMUL on complex, branches on an imaginary part in self-complex-stepping code). The analysis below records why it was refused before.
+
 This development record explains why the transform refuses UMATs that carry
 `DOUBLE COMPLEX` values on the stress path, and how that refusal must be
 counted. It is for anyone working on the transform or on the corpus

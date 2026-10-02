@@ -30,6 +30,13 @@ from typing import Optional, Sequence
 #: command lines rather than replace them.
 JOB_ENVIRONMENT = "abaqus_v6.env"
 
+#: Where the transform stages a source's own include files and helper sources,
+#: relative to its output directory. Every INCLUDE it resolves is rewritten to
+#: ``dependencies/<name>`` -- an OUTPUT-RELATIVE path, not a path to where the
+#: author kept the file -- so the directory is part of the artefact and not a
+#: by-product of it. ``umat_oti.transform.dependency_bundle`` writes it.
+DEPENDENCY_DIRECTORY = "dependencies"
+
 _SETTING = re.compile(r"^(compile_fortran|link_sl)='(.*)'$", re.MULTILINE)
 
 
@@ -43,10 +50,16 @@ class SupportBuild:
     ok: bool = False
     reason: str = ""
     log: str = ""
+    #: The transform output the units came from. Kept so that installing the
+    #: support into a job directory can also bring the transform's
+    #: ``dependencies/`` tree, which the entry source's rewritten INCLUDEs
+    #: name relative to wherever it is compiled.
+    transform_dir: Optional[Path] = None
 
     def as_dict(self) -> dict:
         return {"objects": [str(o) for o in self.objects],
                 "include_dir": str(self.include_dir) if self.include_dir else None,
+                "transform_dir": str(self.transform_dir) if self.transform_dir else None,
                 "compiler": self.compiler, "ok": self.ok, "reason": self.reason}
 
 
@@ -112,14 +125,84 @@ def compile_order(transform_dir: Path,
     return tuple(units)
 
 
+def stage_dependencies(transform_dir: Optional[Path],
+                       job_dir: Path) -> Optional[Path]:
+    """Copy a transform's ``dependencies/`` tree into the directory a job builds in.
+
+    The transform rewrites every INCLUDE it resolved to the output-relative
+    path ``dependencies/<name>`` and writes the files there. A Fortran
+    compiler opens a relative INCLUDE from the directory of the file that
+    carries it, so the rewritten reference resolves wherever the emitted
+    source still sits beside that directory -- and stops resolving the moment
+    a COPY of the source is compiled somewhere else. An Abaqus job is exactly
+    that copy: ``abaqus job=... user=...`` compiles the user subroutine in the
+    job's own directory. Without this the build dies at
+
+        transformed_user.f(15): error #5102:
+            Cannot open include file 'dependencies/<name>'
+
+    before Abaqus reaches its input processor. (At fingerprint
+    650a66ab55825346 the name was ABA_PARAM.INC itself, which the bundler
+    should never have staged; it no longer does -- the solver's header is
+    reached on the solver's include path -- but an author's own include is
+    staged and still needs this.)
+
+    Files are overwritten rather than skipped, because a job directory is
+    reused between rungs of the ladder and a stale copy would be compiled
+    without anything saying so. Returns the staged directory, or None when
+    the transform has none or already is the job directory.
+    """
+    if transform_dir is None:
+        return None
+    source = Path(transform_dir) / DEPENDENCY_DIRECTORY
+    if not source.is_dir():
+        return None
+    destination = Path(job_dir) / DEPENDENCY_DIRECTORY
+    if source.resolve() == destination.resolve():
+        return destination
+    destination.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source, destination, dirs_exist_ok=True)
+    return destination
+
+
+def _transform_dir_of(units: Sequence[Path]) -> Optional[Path]:
+    """Which transform output a set of support units came from.
+
+    Read off the units rather than passed in, so that callers that already
+    build the support from ``compile_order(directory)`` need no change to
+    gain the staging. A unit sits either directly in the output directory or
+    one level down in ``dependencies/`` (a declared module source is staged
+    there and named in the compile order), and the output directory is the
+    one carrying ``compile_order.txt``. Nothing above that is considered:
+    walking further up would pick a parent that happens to hold an unrelated
+    compile order.
+    """
+    for unit in units:
+        parent = Path(unit).parent
+        for candidate in (parent, parent.parent):
+            if (candidate / "compile_order.txt").is_file():
+                return candidate
+    return None
+
+
 def build_support(
     units: Sequence[Path], work_dir: Path, *, abaqus: str = "abaqus",
-    timeout: int = 1800,
+    timeout: int = 1800, transform_dir: Optional[Path] = None,
 ) -> SupportBuild:
-    """Compile each unit with Abaqus's own compile line, in the order given."""
+    """Compile each unit with Abaqus's own compile line, in the order given.
+
+    ``transform_dir`` names the output the units came from; it is inferred
+    from them when not given. It is recorded on the build so that installing
+    that build into a job directory also stages the transform's
+    ``dependencies/`` tree -- see :func:`stage_dependencies`. It is set before
+    any early return, so a build that could not run still says where its
+    units came from.
+    """
     work_dir = Path(work_dir)
     work_dir.mkdir(parents=True, exist_ok=True)
-    build = SupportBuild(include_dir=work_dir)
+    resolved_dir = (Path(transform_dir) if transform_dir is not None
+                    else _transform_dir_of(units))
+    build = SupportBuild(include_dir=work_dir, transform_dir=resolved_dir)
 
     if not units:
         build.reason = "no support units were named, so none were built"
@@ -255,7 +338,8 @@ _DIAGNOSTIC = re.compile(r"^(.*?)\((\d+)\):\s*(error|catastrophic error)[^\n]*",
 def compile_one(source: Path, work_dir: Path, *, abaqus: str = "abaqus",
                 extra_sources: Sequence[Path] = (), timeout: int = 900,
                 form: str = "",
-                include_dirs: Sequence[Path] = ()) -> CompileCheck:
+                include_dirs: Sequence[Path] = (),
+                subject: str = "the unmodified source") -> CompileCheck:
     """Compile one source with Abaqus's own compile line, and say what happened.
 
     This is what separates "the author published a file that does not compile"
@@ -268,6 +352,11 @@ def compile_one(source: Path, work_dir: Path, *, abaqus: str = "abaqus",
     The source is compiled UNMODIFIED. Nothing this pipeline adds -- not the
     probe, not a widened declaration -- is present, so a failure here cannot be
     ours. That is the whole reason the check exists separately from the job.
+
+    ``subject`` is what the reason calls the file. The same check is reused on
+    the CONVERTED source, and there "the unmodified source does not compile"
+    blamed the author for a defect the transform introduced; a caller
+    compiling anything but the published text passes its own description.
     """
     work_dir = Path(work_dir)
     work_dir.mkdir(parents=True, exist_ok=True)
@@ -340,7 +429,7 @@ def compile_one(source: Path, work_dir: Path, *, abaqus: str = "abaqus",
             f"about the file itself")
     elif check.defects:
         check.reason = (
-            f"the unmodified source does not compile with Abaqus's own compile "
+            f"{subject} does not compile with Abaqus's own compile "
             f"line: {check.defects[0][:200]}")
     else:
         check.reason = (f"the compile failed (exit {done.returncode}) with no "
@@ -449,11 +538,22 @@ def association_environment(job_dir: Path,
 
 
 def install_support(build: SupportBuild, job_dir: Path) -> Optional[Path]:
-    """Write the environment file into the directory the job will run in."""
+    """Put into the job's directory everything the job needs and cannot find.
+
+    Two things, and they fail at different moments. The environment file makes
+    the link find the support objects; without it the library links against
+    nothing and every OTI symbol is undefined. The ``dependencies/`` tree makes
+    the COMPILE find the includes the transform rewrote to output-relative
+    paths; without it the compile of the user subroutine aborts before the
+    link is reached, and before Abaqus reads the deck. Both belong here
+    because both are properties of the directory the job runs in, and because
+    every caller that prepares such a directory already calls this.
+    """
     if not build.ok:
         return None
     job_dir = Path(job_dir)
     job_dir.mkdir(parents=True, exist_ok=True)
+    stage_dependencies(build.transform_dir, job_dir)
     path = job_dir / JOB_ENVIRONMENT
     path.write_text(link_environment(build), encoding="utf-8")
     return path
