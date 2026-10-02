@@ -1026,6 +1026,22 @@
   "skip:tests/test_transform_an_internal_procedure_is_lifted_with_its_host.py:<module>:mark.skipif:8d891947": {
    "verdict": "justified",
    "reason": "Module-level skip only when gfortran is absent (each test compiles the original and the transform); CI installs gfortran."
+  },
+  "skip:tests/test_corpus_cases_injections.py:test_a_reference_moved_by_two_tau_fails_the_replay:call:skip:392f0bb6": {
+   "verdict": "justified",
+   "reason": "Parametrised over entry kinds; skips only when the fixed CI case has no entry of that kind (a property of the case, not of the check); the kinds the case does have are all injected."
+  },
+  "skip:tests/test_corpus_features_termination.py:records:call:skip:4f3cb3ff": {
+   "verdict": "justified",
+   "reason": "Skips only when gfortran is absent (the toy UMAT must be compiled); CI installs gfortran."
+  },
+  "skip:tests/test_corpus_manifest_primal_gate.py:test_portable_uses_the_environment_workspace_not_the_checkout:call:skip:8614e6d5": {
+   "verdict": "justified",
+   "reason": "Skips only in the degenerate layout where the checkout itself lies under the temporary workspace the test creates, where the two cannot be told apart."
+  },
+  "mock:tests/test_verified_umat_collection.py:test_the_case_licence_guard_does_not_trust_case_json:monkeypatch.setattr:b3349ac5": {
+   "verdict": "justified",
+   "reason": "The test forges a case.json claiming 'permitted' to prove the guard ignores it; the patch replaces the manifest lookup with a fixture, not any numerical function."
   }
  }
 }
