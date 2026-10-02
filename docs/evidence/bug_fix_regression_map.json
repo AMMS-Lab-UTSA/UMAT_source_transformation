@@ -322,6 +322,10 @@
   {
    "commit": "f0f0731",
    "reason": "Merge; the fixes are mapped on their own commits (f6f6359 is mapped above)."
+  },
+  {
+   "commit": "7b13556",
+   "reason": "Documentation only; 'regression' names the regression-case tiers being documented and 'stale' the two out-of-date CLI_GUIDE references it rewords."
   }
  ],
  "changelog_fixed": {
