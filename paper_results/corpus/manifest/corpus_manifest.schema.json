@@ -117,9 +117,13 @@
         "type": "object",
         "required": [
          "family",
+         "reporting_family",
+         "classification",
+         "source",
          "review",
          "human_reviewed",
-         "basis"
+         "basis",
+         "E"
         ],
         "properties": {
          "review": {
@@ -127,6 +131,30 @@
            "agent_reviewed_code_evidence",
            "keyword_only",
            "missing"
+          ]
+         },
+         "classification": {
+          "const": "D-11 S1"
+         },
+         "reporting_family": {
+          "enum": [
+           "growth",
+           "rate_independent_plasticity",
+           "damage_phase_field",
+           "crystal_plasticity",
+           "linear_elastic",
+           "viscoelastic",
+           "concrete_geomaterial",
+           "other_incl_hyperelasticity",
+           "not_a_umat",
+           ""
+          ]
+         },
+         "E": {
+          "type": "object",
+          "required": [
+           "family",
+           "label"
           ]
          }
         }
@@ -169,7 +197,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -200,7 +229,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -231,7 +261,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -262,7 +293,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -293,7 +325,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -324,7 +357,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -355,7 +389,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -386,7 +421,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -438,7 +474,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -578,7 +615,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -718,7 +756,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -858,7 +897,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -998,7 +1038,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -1138,7 +1179,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -1278,7 +1320,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -1418,7 +1461,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -1558,7 +1602,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -1698,7 +1743,8 @@
            "not_applicable",
            "not_attempted",
            "conflict",
-           "inconclusive"
+           "inconclusive",
+           "undefined_in_original"
           ]
          },
          "reason": {
@@ -1852,7 +1898,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -1992,7 +2039,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -2132,7 +2180,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -2272,7 +2321,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -2412,7 +2462,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -2552,7 +2603,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -2692,7 +2744,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -2832,7 +2885,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -2972,7 +3026,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -3112,7 +3167,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -3258,7 +3314,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -3398,7 +3455,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -3538,7 +3596,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -3678,7 +3737,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -3818,7 +3878,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -3958,7 +4019,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -4098,7 +4160,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -4238,7 +4301,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -4378,7 +4442,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -4518,7 +4583,8 @@
              "not_applicable",
              "not_attempted",
              "conflict",
-             "inconclusive"
+             "inconclusive",
+             "undefined_in_original"
             ]
            },
            "reason": {
@@ -4681,7 +4747,8 @@
     "not_applicable",
     "not_attempted",
     "conflict",
-    "inconclusive"
+    "inconclusive",
+    "undefined_in_original"
    ]
   }
  }

@@ -31,15 +31,49 @@ is in [CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md#what-verified-means).
 The build needs the workspace layout described in
 [CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md#workspace-layout-the-corpus-tools-assume)
 (the repository beside `discovery_cache/`, `transform_store/`, `corpus_run/`,
-`corpus_campaign/`, `final-ra/`). The published files merge the Residual
-Assembler records of batch **B2** (the header's `merges[0].label` is
-`campaign:batches/B2/noether/records.jsonl`):
+`corpus_campaign/`, `final-ra/`). The published files are built from pass19
+with no later pass, the two routine-level harness runs merged by decision
+D-18, and the Residual Assembler records of batch **B2**. This exact command
+reproduces them:
 
 ```bash
 PYTHONPATH=src python tools/build_corpus_manifest.py \
-    --merge-ra ../corpus_campaign/batches/B2/noether/records.jsonl   # ~14 s, offline
-PYTHONPATH=src python -m pytest -q tests/test_corpus_manifest_*.py    # 119 passed, ~2 s
+    --current-pass pass19 --later-pass "" \
+    --primal-ddsdde-cells ../corpus_campaign/pass19_harness/run/manifest_cells.jsonl \
+    --feature-cells ../corpus_campaign/pass19_harness_full/combined_cells.jsonl \
+    --merge-ra ../corpus_campaign/batches/B2/noether/records.jsonl   # ~15 s, offline
+PYTHONPATH=src python -m pytest -q tests/test_corpus_manifest_*.py    # 144 passed, ~2 s
+# UMAT_OTI_MANIFEST_DIR=<dir> points the artifact tests at a scratch build
 ```
+
+**D-18, which run decides each feature.** The routine-level driver runs every
+perturbation of a path in one process, so an original that STOPs under one
+perturbation ends every column queued after it (RitioL: `PROPS(57)+h`).
+Whether DDSDDE can be judged must not depend on which other features were
+requested in the same run. The builder therefore takes the two runs as
+separate inputs, `merge_d18`, and does not rely on the order of `--merge`
+flags:
+
+- `primal_stress_state` and `ddsdde` come only from `--primal-ddsdde-cells`
+  (the primal+ddsdde run, with its own hidden-state gate). The full run's
+  records for these two features are not merged.
+- Every other feature (parameter and state sensitivities, internal Jacobian)
+  comes only from `--feature-cells` (the full-feature run, including rerun3c).
+- Guard: a primal or ddsdde cell that is verified in the primal+ddsdde run is
+  merged as `inconclusive` (`d18_guard`, with the claim kept in
+  `d18_withheld_verified`) when the full-feature run reports `failed` or
+  `conflict` for that cell, or a hidden-state trip for that cell or source.
+  The header's `feature_sources` records both inputs, the feature-to-run map
+  and every guarded cell. At pass19 the guard withholds none. The three
+  RitioL ddsdde cells are verified from the primal+ddsdde run; in the full
+  run they are `not_attempted` because the original terminated under
+  perturbation. Merging the full run alone would give 106 instead of 109.
+
+On merge, a cell that decides nothing (not verified, failed or
+inconclusive) and whose `build` has a `null` fingerprint or sha256 gets
+`""`. Twelve `unsupported` lifted cells of the full run were written before
+the harness recorded digests. A deciding cell without a digest is still
+rejected.
 
 Without the layout the build stops at once, for example
 `error: discovery cache not found at <checkout parent>/discovery_cache`.
@@ -74,15 +108,24 @@ Roots and their overrides:
 | `campaign` | `../corpus_campaign` (batch evidence) | `--campaign`, `UMAT_OTI_CAMPAIGN` |
 | `ra` | `../final-ra` (Residual Assembler) | `--ra-repo`, `UMAT_OTI_RA_REPO` |
 | `umat` (= `repo`) | this checkout | — |
-| families | `corpus_run/material_families_checked_E.json` | `--families` |
+| reported families (D-11) | `../corpus_campaign/batches/B3/scout/families_reviewed_B3.json` | `--families-reporting` |
+| fallback / secondary families | `corpus_run/material_families_checked_E.json` | `--families` |
+| earlier registry for `summary.denominators_note` | git revision `f0f0731` | `--earlier-registry-rev` (`''` skips) |
 | output | `paper_results/corpus/manifest/` | `--out-dir` |
 
 `..` is the checkout's parent directory, not the current directory.
 
-The manifest's `family` column comes from `--families` (default: the Agent E
-classification). The per-family figures reported against the 206 target use
-the B3 code-reviewed classification instead (D-11, see
-[CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md#per-family-figures-d-11)).
+The manifest's family column and `summary.families` use the D-11 reporting
+classification, named in `family_classification.used` and
+`summary.families.classification`: Scout's B3 code-evidence review, column S1
+(the 11 Jeff97 identity-growth scaffolds count as growth), with Agent E's family
+(mapped to the same names) for rows B3 did not check
+([CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md#per-family-figures-d-11)).
+Agent E's own family is kept per row under `model.family.E` (CSV `family_E`),
+labelled secondary. `summary.denominators_note` states the eligible count at
+the current pass and lists every row eligible under the earlier registry
+(`f0f0731`, the set the D-11 denominators of 260 were stated on) that is not
+eligible now, with its current `terminal_state`.
 
 `--current-pass` (default `pass16`, the frozen pass the registry was built from)
 supplies the stage statuses. `--later-pass` (default `pass17`) is only compared
@@ -97,11 +140,16 @@ Every cell has an `evidence` string of the form `<root>:<relative path>[#selecto
 | root | what it is |
 |---|---|
 | `campaign` | `$UMAT_OTI_WORKSPACE/corpus_campaign` (batch reports, harness output) |
-| `umat` / `repo` | `$UMAT_OTI_WORKSPACE/final-umat` (`repo` is kept for B1 locators) |
+| `umat` / `repo` | this checkout: `expand_roots` always resolves them to the checkout doing the reading, whatever the header says (`repo` is kept for B1 locators) |
 | `ra` | `$UMAT_OTI_WORKSPACE/final-ra` |
 | `corpus_run` | `$UMAT_OTI_WORKSPACE/corpus_run` (passes; also `families`) |
 | `discovery_cache` | `$UMAT_OTI_WORKSPACE/discovery_cache` |
 | `transform_store` | `$UMAT_OTI_WORKSPACE/transform_store` |
+
+A published manifest carries no machine path: every occurrence of the workspace
+(`$UMAT_OTI_WORKSPACE` when set, else the checkout's parent) is written as
+`$UMAT_OTI_WORKSPACE`, but only as a whole path, followed by `/` or by a
+character that cannot continue a file name (`<ws>2/...` is left alone).
 
 For example, `corpus_run:pass16/results/store_verification.jsonl#key=<key>` is the
 line with that `key`. `resolve_locator(locator, roots)` returns the file, or the reason
@@ -127,7 +175,7 @@ path. Every locator in the published manifest resolves; a test checks this.
   - `umat_oti.corpus.acquire.classify_license_text` classifies the licence file. A GNU licence is identified by the notice at the top of the file, which also decides whether "any later version" is allowed, or else by its own title line. It is never identified by searching the body for a phrase. The GPL-3.0 body names the Affero licence in its section 13, and the LGPL-3.0 body names "version 3 of the GNU General Public License". Because of this, the old whole-text search read every GPL-3.0 file as AGPL-3.0 and every LGPL-3.0 file as GPL-3.0.
   - The licence is repository-scoped. Per-file headers are not read.
 - **model**
-  - `family`: the family from the reviewed classification (see below), with `review` = `agent_reviewed_code_evidence` (the row was checked by Agent E from code evidence) or `keyword_only` (the row still carries the keyword marker). `human_reviewed` is false for every row, because neither family file records a human review. `second_pass` carries the 2026-09-30 second pass (Vera) for comparison.
+  - `family`: the D-11 reporting family. `family.family` is the fine name (B3 vocabulary), `reporting_family` one of the eight D-11 families (hyperelasticity counts in `other_incl_hyperelasticity`), `classification` is `D-11 S1`, `source` is `B3_code_evidence`, `B3_identity_growth_as_growth` or `E_fallback`. `review` = `agent_reviewed_code_evidence` (B3, or an E row Agent E checked) or `keyword_only`. `human_reviewed` is false for every row. `E` carries Agent E's family (secondary, never used for figures) and, under it, `second_pass` (Vera, 2026-09-30).
   - `entry_point`.
   - `required_files`:
     - `companions`: the full closure from `umat_oti.abaqus.companions.resolve`. In the frozen registry this string is cut at 500 characters (2 rows). The registry builder no longer truncates it, nor `missing_companions` (which was cut at 300).
@@ -190,14 +238,14 @@ A stage with no evidence of its own inherits `blocked`, `not_applicable` or `uns
 
 Features:
 
-- **primal_stress_state**: the outcome follows the pass16 gates.
-  - `verified`: the gates `abaqus_job_completed`, `complete_history_finite`, `primal_agreed` and `mechanically_informative` are all true.
-  - `failed`: only when the values disagree. That means `primal_agreed` is false, the original is finite, and the difference is not explained by the original's own reassociation spread. The cell carries `values_disagree: true`.
-  - `inconclusive`: three cases.
-    - The builds agree on a run that is not mechanically informative.
-    - The original is non-finite.
-    - The difference lies within the original's own reassociation spread.
-  - The rule is `abaqus_primal_history_floor/1` with `rtol` 1e-10. `max_error` is the worst relative difference divided by `rtol`. The raw values are under `measured`.
+- **primal_stress_state**: since D-15 the outcome is the Abaqus primal gate (`primal_gate` in the pass record), rule `routine_primal_gate/1`, `rtol` 1e-10. The ratio of one comparison is max(worst stress / its per-call bound, worst state relative / `rtol`).
+  - `decided_by` names the comparison(s) that decided (`routine_level`, `jacobian_matched`, or both). `max_error` is the ratio of that comparison (the larger one when both decided). `measured.routine_level` and `measured.jacobian_matched` carry each comparison's numbers; the FE history comparison appears only as `measured.fe_comparison_informational`.
+  - `verified`: every deciding comparison measured paired calls with ratio ≤ 1, and the gates `abaqus_job_completed`, `complete_history_finite`, `primal_agreed` and `mechanically_informative` are all true.
+  - `failed`: only when a deciding comparison measured paired calls and its ratio is > 1 (`values_disagree: true`).
+  - A process failure is never `failed`. `process_failure` names it (`jacobian_matched_job_incomplete`, `replay_mismatch` for zero paired calls, `no_init_build`, `gate_comparison_missing`). The cell is `inconclusive` when some comparison was measured and `not_attempted` when none was. A gate that agreed without the comparison it names is `inconclusive`; there is no fallback to the FE rule.
+  - `undefined_in_original` (its own status, D-12): the ORIGINAL's outputs differ between init builds. The cell names them in `undefined_outputs` and is never compared.
+  - Records from before the gate keep `abaqus_primal_history_floor/1` (worst FE relative difference / `rtol`).
+  - The `primal_agreed` stage uses the same labels when the gate is false.
 - **ddsdde** is `verified` only from merged evidence that complies with D-4 and was measured on the store build, and only while that row's `primal_stress_state` is `verified`.
   - The pass16 gate `derivatives_verified` uses the legacy plateau, taken from the OTI-vs-FD error, which D-4 rejects. It is shown in `ddsdde_legacy_gate` and in `summary.ddsdde_legacy_gate`, and it is never counted.
   - Until such evidence is merged, the cell is `not_attempted` and its reason names the legacy result.

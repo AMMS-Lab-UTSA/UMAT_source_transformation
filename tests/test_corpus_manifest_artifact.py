@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -28,7 +29,9 @@ from umat_oti.corpus_features.manifest import (
 )
 
 REPO = Path(__file__).resolve().parents[1]
-OUT = REPO / "paper_results" / "corpus" / "manifest"
+#: ``UMAT_OTI_MANIFEST_DIR`` checks a scratch build instead of the published one.
+OUT = Path(os.environ.get("UMAT_OTI_MANIFEST_DIR")
+           or REPO / "paper_results" / "corpus" / "manifest")
 
 
 @pytest.fixture(scope="module")
@@ -238,13 +241,32 @@ def test_redistribution_is_permitted_only_with_a_licence_file(manifest):
 
 
 def test_family_figures_come_from_the_reviewed_classification(manifest):
-    used = manifest["family_classification"]["used"]
-    assert used.endswith("material_families_checked_E.json")
+    from umat_oti.corpus_features.manifest import FAMILY_CLASSIFICATION
+    fc = manifest["family_classification"]
+    assert fc["used"] == FAMILY_CLASSIFICATION and "D-11 S1" in fc["used"]
+    assert fc["reporting_file"].endswith("families_reviewed_B3.json")
+    assert fc["fallback_file"].endswith("material_families_checked_E.json")
+    assert manifest["summary"]["families"]["classification"] == FAMILY_CLASSIFICATION
     for row in manifest["rows"]:
         if row["row_kind"] == "acquired":
             fam = row["model"]["family"]
+            assert fam["classification"] == "D-11 S1"
             assert fam["review"] in ("agent_reviewed_code_evidence", "keyword_only")
             assert fam["human_reviewed"] is False
+            assert fam["E"]["label"].startswith("secondary")
+            if fam["identity_growth_scaffold"]:
+                assert fam["family"] == "growth" and fam["b3_family"] != "growth"
+
+
+def test_the_summary_states_its_eligible_set_and_the_rows_dropped_from_the_earlier(
+        manifest):
+    note = manifest["summary"]["denominators_note"]
+    assert note["eligible_now"] == manifest["summary"]["denominators"]["D2_eligible"]["count"]
+    if note.get("dropped") is not None:
+        assert note["dropped_count"] == len(note["dropped"])
+        assert note["eligible_earlier"] - note["dropped_count"] + len(note["added"]) \
+            == note["eligible_now"]
+        assert all(d["terminal_state"] for d in note["dropped"])
 
 
 def test_the_csv_view_has_one_line_per_row(manifest):
@@ -252,3 +274,18 @@ def test_the_csv_view_has_one_line_per_row(manifest):
         lines = list(csv.DictReader(fh))
     assert len(lines) == len(manifest["rows"])
     assert [x["source_id"] for x in lines] == [r["source_id"] for r in manifest["rows"]]
+
+
+def test_d18_ddsdde_count_and_the_ritiol_cells_come_from_the_primal_ddsdde_run(manifest):
+    src = manifest.get("feature_sources") or {}
+    assert src.get("decision") == "D-18"
+    assert src["primal_ddsdde_run"] == "campaign:pass19_harness/run/manifest_cells.jsonl"
+    assert src["full_feature_run"] == "campaign:pass19_harness_full/combined_cells.jsonl"
+    d2 = manifest["summary"]["features"]["D2_eligible"]["ddsdde"]
+    assert d2["verified"] == 109
+    ritiol = [r for r in manifest["rows"] if r["source_id"].startswith("RitioL__")
+              and r["features"]["ddsdde"]["status"] == "verified"]
+    assert len(ritiol) == 3
+    for r in ritiol:
+        assert r["features"]["ddsdde"]["evidence"].startswith(
+            "campaign:pass19_harness/run/"), r["source_id"]
