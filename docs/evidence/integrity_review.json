@@ -1107,7 +1107,7 @@
   },
   "removed_check:tests/test_the_four_sources_that_disagreed_with_the_transformer.py:test_a_whole_array_stress_update_is_a_stress_update:705d3990": {
    "verdict": "justified",
-   "reason": "MohrCoulombAbaqus.for is no longer refused: from corpus pass19 it transforms and compiles and stops at missing_material_data (external). The registry assertions now state that (is_umat, UMAT interface, no refusal class, transformed and compiled, missing_material_data, external); the parse-level assertions that it writes STRESS and DDSDDE whole-array are unchanged.",
+   "reason": "MohrCoulombAbaqus.for is no longer refused: from corpus pass19 it transforms and compiles and stops at missing_material_data (external). The removed adequately_specified-is-True check flipped and is restated as its opposite: at pass16 the refusal preceded the deck search, so the record was adequately specified; past the transform the deck search finds no *USER MATERIAL block, so it is now adequately_specified False with adequacy_kind external and has left the eligible denominator. The other registry assertions state the new stage (no refusal class, transformed and compiled, missing_material_data, external); the parse-level assertions that it writes STRESS and DDSDDE whole-array are unchanged.",
    "evidence": [
     {
      "in": "3c26b56",
@@ -1117,7 +1117,7 @@
   },
   "removed_check:tests/test_the_four_sources_that_disagreed_with_the_transformer.py:test_a_whole_array_stress_update_is_a_stress_update:b9a062d9": {
    "verdict": "justified",
-   "reason": "MohrCoulombAbaqus.for is no longer refused: from corpus pass19 it transforms and compiles and stops at missing_material_data (external). The registry assertions now state that (is_umat, UMAT interface, no refusal class, transformed and compiled, missing_material_data, external); the parse-level assertions that it writes STRESS and DDSDDE whole-array are unchanged.",
+   "reason": "MohrCoulombAbaqus.for is no longer refused: from corpus pass19 it transforms and compiles and stops at missing_material_data (external). The removed adequately_specified-is-True check flipped and is restated as its opposite: at pass16 the refusal preceded the deck search, so the record was adequately specified; past the transform the deck search finds no *USER MATERIAL block, so it is now adequately_specified False with adequacy_kind external and has left the eligible denominator. The other registry assertions state the new stage (no refusal class, transformed and compiled, missing_material_data, external); the parse-level assertions that it writes STRESS and DDSDDE whole-array are unchanged.",
    "evidence": [
     {
      "in": "3c26b56",
@@ -1127,7 +1127,7 @@
   },
   "removed_check:tests/test_the_four_sources_that_disagreed_with_the_transformer.py:test_a_whole_array_stress_update_is_a_stress_update:ef4324d8": {
    "verdict": "justified",
-   "reason": "MohrCoulombAbaqus.for is no longer refused: from corpus pass19 it transforms and compiles and stops at missing_material_data (external). The registry assertions now state that (is_umat, UMAT interface, no refusal class, transformed and compiled, missing_material_data, external); the parse-level assertions that it writes STRESS and DDSDDE whole-array are unchanged.",
+   "reason": "MohrCoulombAbaqus.for is no longer refused: from corpus pass19 it transforms and compiles and stops at missing_material_data (external). The removed adequately_specified-is-True check flipped and is restated as its opposite: at pass16 the refusal preceded the deck search, so the record was adequately specified; past the transform the deck search finds no *USER MATERIAL block, so it is now adequately_specified False with adequacy_kind external and has left the eligible denominator. The other registry assertions state the new stage (no refusal class, transformed and compiled, missing_material_data, external); the parse-level assertions that it writes STRESS and DDSDDE whole-array are unchanged.",
    "evidence": [
     {
      "in": "3c26b56",
@@ -1137,7 +1137,7 @@
   },
   "removed_check:tests/test_the_four_sources_that_disagreed_with_the_transformer.py:test_a_whole_array_stress_update_is_a_stress_update:f9f4834c": {
    "verdict": "justified",
-   "reason": "MohrCoulombAbaqus.for is no longer refused: from corpus pass19 it transforms and compiles and stops at missing_material_data (external). The registry assertions now state that (is_umat, UMAT interface, no refusal class, transformed and compiled, missing_material_data, external); the parse-level assertions that it writes STRESS and DDSDDE whole-array are unchanged.",
+   "reason": "MohrCoulombAbaqus.for is no longer refused: from corpus pass19 it transforms and compiles and stops at missing_material_data (external). The removed adequately_specified-is-True check flipped and is restated as its opposite: at pass16 the refusal preceded the deck search, so the record was adequately specified; past the transform the deck search finds no *USER MATERIAL block, so it is now adequately_specified False with adequacy_kind external and has left the eligible denominator. The other registry assertions state the new stage (no refusal class, transformed and compiled, missing_material_data, external); the parse-level assertions that it writes STRESS and DDSDDE whole-array are unchanged.",
    "evidence": [
     {
      "in": "3c26b56",

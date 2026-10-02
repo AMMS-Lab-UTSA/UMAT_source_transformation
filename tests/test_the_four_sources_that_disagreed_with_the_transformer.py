@@ -121,6 +121,12 @@ def test_a_whole_array_stress_update_is_a_stress_update():
     assert held["transformed"] is True and held["compiled"] is True
     assert held["terminal_state"] == "missing_material_data"
     assert held["kind"] == "external"
+    # This flipped. At pass16 the record was adequately_specified True, because
+    # the refusal came before the deck search; past the transform, the deck
+    # search finds no *USER MATERIAL block, so it is no longer adequately
+    # specified, for an external reason, and has left the eligible count.
+    assert held["adequately_specified"] is False
+    assert held["adequacy_kind"] == "external"
 
 
 def test_a_rule_that_only_saw_subscripts_would_call_that_file_empty():
