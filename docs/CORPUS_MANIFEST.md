@@ -31,16 +31,16 @@ is in [CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md#what-verified-means).
 The build needs the workspace layout described in
 [CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md#workspace-layout-the-corpus-tools-assume)
 (the repository beside `discovery_cache/`, `transform_store/`, `corpus_run/`,
-`corpus_campaign/`, `final-ra/`). The published files are built from pass19
+`corpus_campaign/`, `final-ra/`). The published files are built from pass20
 with no later pass, the two routine-level harness runs merged by decision
 D-18, and the Residual Assembler records of batch **B2**. This exact command
 reproduces them:
 
 ```bash
 PYTHONPATH=src python tools/build_corpus_manifest.py \
-    --current-pass pass19 --later-pass "" \
-    --primal-ddsdde-cells ../corpus_campaign/pass19_harness/run/manifest_cells.jsonl \
-    --feature-cells ../corpus_campaign/pass19_harness_full/combined_cells.jsonl \
+    --current-pass pass20 --later-pass "" \
+    --primal-ddsdde-cells ../corpus_campaign/pass20_harness/run/manifest_cells.jsonl \
+    --feature-cells ../corpus_campaign/pass20_harness_full/combined_cells.jsonl \
     --merge-ra ../corpus_campaign/batches/B2/noether/records.jsonl   # ~15 s, offline
 PYTHONPATH=src python -m pytest -q tests/test_corpus_manifest_*.py    # 144 passed, ~2 s
 # UMAT_OTI_MANIFEST_DIR=<dir> points the artifact tests at a scratch build
@@ -58,13 +58,15 @@ flags:
   (the primal+ddsdde run, with its own hidden-state gate). The full run's
   records for these two features are not merged.
 - Every other feature (parameter and state sensitivities, internal Jacobian)
-  comes only from `--feature-cells` (the full-feature run, including rerun3c).
+  comes only from `--feature-cells` (the full-feature run; at pass19 it needed a rerun of three RitioL keys,
+  rerun3c; at pass20 the run completed every key itself and `combined_cells.jsonl`
+  is that run's `manifest_cells.jsonl`).
 - Guard: a primal or ddsdde cell that is verified in the primal+ddsdde run is
   merged as `inconclusive` (`d18_guard`, with the claim kept in
   `d18_withheld_verified`) when the full-feature run reports `failed` or
   `conflict` for that cell, or a hidden-state trip for that cell or source.
   The header's `feature_sources` records both inputs, the feature-to-run map
-  and every guarded cell. At pass19 the guard withholds none. The three
+  and every guarded cell. At pass20 (as at pass19) the guard withholds none. The three
   RitioL ddsdde cells are verified from the primal+ddsdde run; in the full
   run they are `not_attempted` because the original terminated under
   perturbation. Merging the full run alone would give 106 instead of 109.
