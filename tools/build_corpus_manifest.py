@@ -28,9 +28,10 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 
-from umat_oti.corpus_features.manifest import (
+from umat_oti.corpus_features.manifest import (  # noqa: E402
     ManifestInputs,
     build_manifest,
+    expand_roots,
     merge_feature_results,
     ra_records_to_cells,
     write_outputs,
@@ -99,12 +100,12 @@ def main(argv=None) -> int:
     for path in args.merge:
         show(path, merge_feature_results(manifest, path))
     for path in args.merge_ra:
-        cells, ra_report = ra_records_to_cells(path, roots=manifest["roots"])
+        cells, ra_report = ra_records_to_cells(path, roots=expand_roots(manifest["roots"]))
         print(f"RA records {path}: {json.dumps({k: v for k, v in ra_report.items() if k != 'mismatches'})}")
         for what, n in ra_report["mismatches"].items():
             print(f"  contract mismatch x{n}: {what}")
         from umat_oti.corpus_features.manifest import to_locator
-        label = to_locator(str(Path(path).resolve()), manifest["roots"])
+        label = to_locator(str(Path(path).resolve()), expand_roots(manifest["roots"]))
         report = merge_feature_results(manifest, cells, producer="noether/B1",
                                        label=label)
         manifest["merges"][-1]["ra_adapter"] = ra_report

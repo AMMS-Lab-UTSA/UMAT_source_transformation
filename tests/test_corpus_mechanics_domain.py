@@ -11,10 +11,9 @@ asked the original an undefined question.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import numpy as np
 import pytest
+from _workspace import WORKSPACE  # noqa: E402
 
 from umat_oti.corpus_features.loading_paths import (
     OUTSIDE_MODEL_DOMAIN,
@@ -183,7 +182,7 @@ def test_assigning_a_dummy_argument_on_a_range_is_not_undefined():
     assert piecewise_chains(text) == []
 
 
-_CACHE = Path("/home/ammslab3/softwarex_work/discovery_cache")
+_CACHE = (WORKSPACE / "discovery_cache")
 _SOURCE = _CACHE / (
     "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/"
     "Examples-In-Section-3/ArcDown/Th001/BodyForce-Growth-2Stages.for"

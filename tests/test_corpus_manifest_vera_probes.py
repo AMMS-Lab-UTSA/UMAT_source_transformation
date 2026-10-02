@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import itertools
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -26,7 +27,8 @@ from umat_oti.corpus_features.manifest import (
 
 pytestmark = pytest.mark.unit
 
-CAMPAIGN = Path("/home/ammslab3/softwarex_work/corpus_campaign")
+CAMPAIGN = Path(os.environ.get("UMAT_OTI_WORKSPACE")
+                or Path(__file__).resolve().parents[2]) / "corpus_campaign"
 
 
 @pytest.fixture

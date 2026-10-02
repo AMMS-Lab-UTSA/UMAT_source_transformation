@@ -605,11 +605,11 @@
   },
   "skip:tests/test_corpus_manifest_vera_probes.py:<module>:mark.skipif:52b3511f": {
    "verdict": "justified",
-   "reason": "The test reads the real B1 campaign evidence in /home/ammslab3/softwarex_work/corpus_campaign, which lives outside the repository; the toy-fixture probes of the same module run everywhere and these two run wherever the campaign tree exists."
+   "reason": "The test reads the real B1 campaign evidence in the workspace ($UMAT_OTI_WORKSPACE)/corpus_campaign, which lives outside the repository; the toy-fixture probes of the same module run everywhere and these two run wherever the campaign tree exists."
   },
   "skip:tests/test_corpus_manifest_vera_probes.py:<module>:mark.skipif:9542a127": {
    "verdict": "justified",
-   "reason": "The test reads the real B1 campaign evidence in /home/ammslab3/softwarex_work/corpus_campaign, which lives outside the repository; the toy-fixture probes of the same module run everywhere and these two run wherever the campaign tree exists."
+   "reason": "The test reads the real B1 campaign evidence in the workspace ($UMAT_OTI_WORKSPACE)/corpus_campaign, which lives outside the repository; the toy-fixture probes of the same module run everywhere and these two run wherever the campaign tree exists."
   },
   "skip:tests/test_corpus_mechanics_domain.py:test_the_full_corpus_file:call:skip:73f1fac1": {
    "verdict": "justified",

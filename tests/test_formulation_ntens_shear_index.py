@@ -23,6 +23,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from _workspace import WORKSPACE  # noqa: E402
+
 from umat_oti.abaqus.formulation import from_source, settle
 
 #: awhelanUCD__Lemaitre-damage-UMAT-Public/nonLocalLemaitre/
@@ -183,7 +185,7 @@ def test_a_lone_one_element_assignment_is_not_an_index_map():
     assert from_source(text, "x.f").ntens == 0
 
 
-_CACHE = Path("/home/ammslab3/softwarex_work/discovery_cache")
+_CACHE = (WORKSPACE / "discovery_cache")
 _LEMAITRE = "awhelanUCD__Lemaitre-damage-UMAT-Public"
 _CAE = "CAEAssistant-Group__UMAT-Abaqus-Tsai-Hill-Orthotropic-Composite-Subroutine"
 _FULL = [

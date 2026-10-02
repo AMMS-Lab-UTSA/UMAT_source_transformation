@@ -21,6 +21,7 @@ from umat_oti.corpus_features.manifest import (
     SCHEMA_ID,
     STAGES,
     STATUSES,
+    expand_roots,
     manifest_schema,
     resolve_locator,
     validate_cell,
@@ -99,7 +100,7 @@ def test_every_evidence_locator_resolves_to_a_file(manifest):
     for row in manifest["rows"]:
         for name, cell in _all_cells(row):
             if cell.get("evidence"):
-                path, why = resolve_locator(cell["evidence"], manifest["roots"])
+                path, why = resolve_locator(cell["evidence"], expand_roots(manifest["roots"]))
                 if path is None:
                     unresolved.append((row["source_id"], name, why))
     assert unresolved == [], unresolved[:5]
@@ -111,8 +112,8 @@ def test_every_feature_cell_passes_the_merge_validator(manifest):
             (f, c) for block in row["features_other_builds"].values()
             for f, c in block.items()]
         for feat, cell in cells:
-            assert validate_cell(feat, cell, roots=manifest["roots"]) == [], \
-                (row["source_id"], feat, validate_cell(feat, cell, roots=manifest["roots"]))
+            assert validate_cell(feat, cell, roots=expand_roots(manifest["roots"])) == [], \
+                (row["source_id"], feat, validate_cell(feat, cell, roots=expand_roots(manifest["roots"])))
 
 
 def test_the_legacy_ddsdde_gate_is_shown_and_never_counted(manifest, registry):
