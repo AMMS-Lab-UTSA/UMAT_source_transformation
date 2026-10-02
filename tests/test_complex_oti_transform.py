@@ -6,7 +6,7 @@ EXP and LOG; the author's own DDSDDE by the complex step) and checks the
 transformed build's DDSDDE against the original's own complex-step tangent and
 against central finite differences of the original's STRESS. It needs the
 hook in source_transform/helper_lifting (corpus_campaign B2 ada_c
-complex_hook.patch) and is skipped until that is applied.
+complex_hook.patch); the hook is part of the transform, so it always runs.
 """
 from __future__ import annotations
 
@@ -237,7 +237,6 @@ end program drive
 """
 
 
-@pytest.mark.skipif(not _hook_applied(), reason="complex_hook.patch not applied to the transform")
 @pytest.mark.skipif(shutil.which("gfortran") is None, reason="gfortran not on PATH")
 def test_a_complex_step_umat_transforms_and_its_tangent_matches_fd(tmp_path):
     from umat_oti.app.engine import _build_contract
@@ -304,3 +303,8 @@ def test_a_complex_step_umat_transforms_and_its_tangent_matches_fd(tmp_path):
             columns.append((run(original, dstran + e)[0] - run(original, dstran - e)[0]) / (2 * h))
         np.testing.assert_allclose(columns[1], columns[2], rtol=1e-6, atol=1e-8)
         np.testing.assert_allclose(tangent_oti[:, j], columns[1], rtol=1e-7, atol=1e-8)
+
+
+def test_the_complex_hook_is_wired_into_the_transform():
+    """A rename must fail here, not silently skip the end-to-end check above."""
+    assert _hook_applied()
