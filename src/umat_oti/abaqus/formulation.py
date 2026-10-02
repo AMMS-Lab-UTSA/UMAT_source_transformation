@@ -530,14 +530,109 @@ _NTENS_OF_FAMILY = {"plane stress": 3, "plane strain": 4,
 _FAMILY_OF_NTENS = {3: "plane stress", 4: "plane strain",
                     6: "three-dimensional continuum"}
 
+# ---------------------------------------------------------------------------
+# whether index 3 is a SHEAR or the third DIRECT component
+# ---------------------------------------------------------------------------
+# A loop ``do i=1,3`` over DDSDDE(i,i) fills three components. In plane stress
+# they are s11, s22, s12; in every other continuum formulation they are s11,
+# s22, s33 -- the direct block -- and the shear starts at index 4. The bound
+# alone cannot tell the two apart, and reading it as plane stress ran
+# ``awhelanUCD__Lemaitre-damage-UMAT-Public/nonLocalLemaitre/
+# lemaitreDamageNonLocal.f`` (whose author's deck says CAX4T) with tau12 in
+# the slot the routine computes as s33. What separates them is what the
+# routine does with index 3 and with index 4.
+
+#: Index 3 is a shear: the 1-3 / 2-3 coupling of the tangent is written as an
+#: explicit zero. In the direct block of a 3D/axisymmetric/plane-strain
+#: tangent those entries are lambda (or C13, C23), not zero.
+_ZERO_COUPLING_TO_3 = re.compile(
+    r"\bDDSDDE\s*\(\s*(?:[12]\s*,\s*3|3\s*,\s*[12])\s*\)\s*=\s*"
+    r"[+-]?0*\.?0*(?:[DE][+-]?0+)?\s*$", re.IGNORECASE)
+
+#: Index 3 is a shear: a three-vector's third entry is taken from a
+#: six-vector's fourth (Voigt 12) or from a matrix's (1,2) entry.
+#: ``abuganza``'s plane-stress tissue UMAT: ``sigma2D(3) = sigma(4)``.
+_SHEAR_INTO_3 = re.compile(
+    r"^\s*[A-Za-z_]\w*\s*\(\s*3\s*\)\s*=\s*[A-Za-z_]\w*\s*\(\s*"
+    r"(?:4|1\s*,\s*2|2\s*,\s*1)\s*\)\s*$", re.IGNORECASE)
+
+#: Index 3 is a shear: an index map sends Voigt slot 3 to the pair (1,2):
+#: ``Itoi2D(3) = 1`` / ``Itoj2D(3) = 2``.
+_MAP_3_TO = re.compile(r"^\s*([A-Za-z_]\w*)\s*\(\s*3\s*\)\s*=\s*([12])\s*$",
+                       re.IGNORECASE)
+
+#: Index 3 is a shear: DDSDDE(3,3) is a lone shear modulus.
+_SHEAR_MODULUS_33 = re.compile(
+    r"\bDDSDDE\s*\(\s*3\s*,\s*3\s*\)\s*=\s*(?:E?G|MU|G12|GXY|D66|C66|Q66)\s*$",
+    re.IGNORECASE)
+
+#: NDI=2 logic: the routine tests for (or guards on) the plane-stress layout.
+_PLANE_STRESS_TEST = re.compile(
+    r"\b(?:NDI\s*(?:\.EQ\.|==|\.NE\.|/=)\s*2|NSHR\s*(?:\.EQ\.|==|\.NE\.|/=)\s*1"
+    r"|NTENS\s*(?:\.EQ\.|==|\.NE\.|/=)\s*3)\b", re.IGNORECASE)
+
+#: The shear starts at index 4 (NDI=3): ``do i=4,ntens`` or ``x(4:ntens)``.
+#: With NTENS=3 such a loop never runs, so the routine has no shear at all.
+_SHEAR_FROM_4 = re.compile(
+    r"\bDO\s+(?:\d+\s*,?\s*)?[A-Za-z_]\w*\s*=\s*4\s*,\s*NTENS\b"
+    r"|\(\s*4\s*:\s*NTENS\s*\)", re.IGNORECASE)
+
+
+def _index_three_is_shear(lines: list) -> list:
+    """Every line that says index 3 of the tensor is a shear, quoted."""
+    found: list = []
+    maps: dict = {}
+    for line in lines:
+        text = line.strip()
+        if _ZERO_COUPLING_TO_3.search(text):
+            found.append(f"the 1-3/2-3 tangent coupling is an explicit zero "
+                         f"({text[:60]}), which it is for a shear and not for "
+                         f"a direct s33")
+        elif _SHEAR_INTO_3.match(text):
+            found.append(f"slot 3 is filled from a shear entry ({text[:60]})")
+        elif _SHEAR_MODULUS_33.search(text):
+            found.append(f"DDSDDE(3,3) is a lone shear modulus ({text[:60]})")
+        else:
+            mapped = _MAP_3_TO.match(text)
+            if mapped:
+                maps[mapped.group(1).upper()] = (mapped.group(2), text)
+    # An index map counts only as a PAIR of arrays whose names differ in one
+    # letter, i against j (Itoi2D / Itoj2D), sending slot 3 to 1 and to 2: a
+    # lone ``n(3) = 1`` is any array.
+    for name, (value, text) in maps.items():
+        if value != "2":
+            continue
+        partners = [k for k, (v, _t) in maps.items() if v == "1"
+                    and len(k) == len(name)
+                    and [{a, b} for a, b in zip(k, name) if a != b]
+                    == [{"I", "J"}]]
+        if partners:
+            found.append(f"an index map sends slot 3 to the pair (1,2) "
+                         f"({maps[partners[0]][1][:40]}; {text[:40]})")
+            break
+    plane = _PLANE_STRESS_TEST.findall("\n".join(lines))
+    if plane:
+        found.append(f"the routine tests its own layout for plane stress "
+                     f"({plane[0].strip()})")
+    return found
+
 
 @dataclass(frozen=True)
 class SourceFormulation:
-    """What the routine's own text says about the tensor it is called with."""
+    """What the routine's own text says about the tensor it is called with.
+
+    ``min_ntens`` is a lower bound the source sets without settling the size:
+    a routine whose shear starts at index 4 cannot be handed fewer than four
+    components, whether it is a plane-strain, axisymmetric or 3D routine.
+    ``undecided`` names the evidence that was read and found ambiguous, so the
+    caller can say that the DECK decided and on what.
+    """
 
     ntens: int = 0
     family: str = ""
     evidence: tuple = ()
+    min_ntens: int = 0
+    undecided: str = ""
 
     @property
     def known(self) -> bool:
@@ -551,7 +646,8 @@ class SourceFormulation:
 
     def as_dict(self) -> dict:
         return {"ntens": self.ntens, "family": self.family,
-                "evidence": list(self.evidence)}
+                "evidence": list(self.evidence),
+                "min_ntens": self.min_ntens, "undecided": self.undecided}
 
 
 def _code_lines(text: str):
@@ -588,6 +684,17 @@ def from_source(text: str, name: str = "") -> SourceFormulation:
     Three ``RitioL__PolyFatigueCrackSim`` crystal-plasticity UMATs branch on
     it and run happily at six; taking the test as the answer would have moved
     them off the element they verified on. It bounds and does not decide.
+
+    A loop bounded at THREE is the one case where the bound is not the
+    answer by itself. Three components are plane stress (s11, s22, s12) only
+    if index 3 is a shear; in every other formulation the first three are the
+    direct block and the shear starts at 4. So a bound of 3 counts as NTENS=3
+    only with a witness that index 3 is a shear -- an explicit zero 1-3/2-3
+    tangent coupling, a shear entry copied into slot 3, an index map sending
+    slot 3 to (1,2), a lone shear modulus in DDSDDE(3,3), or NDI=2/NSHR=1/
+    NTENS=3 logic. Without one the source is recorded as UNDECIDED, and a
+    shear loop starting at index 4 (``do i=4,ntens``) additionally sets a
+    lower bound of four. ``lemaitreDamageNonLocal.f`` is the measured case.
 
     Where nothing decides, the answer is no answer, and the deck gets to speak.
     """
@@ -653,8 +760,42 @@ def from_source(text: str, name: str = "") -> SourceFormulation:
             f"any loop bound, so the loop fills a block and not the whole")
 
     lower = max([by_subscript] + tested)
+    shear_from_4 = _SHEAR_FROM_4.findall(joined)
+    if shear_from_4:
+        lower = max(lower, 4)
     ntens = 0
-    if by_loop and by_loop >= lower:
+    min_ntens = 0
+    undecided = ""
+    if by_loop == 3 and by_loop >= lower:
+        # Three components are plane stress only if index 3 is a shear.
+        shear_at_3 = _index_three_is_shear(lines)
+        if shear_at_3:
+            ntens = 3
+            evidence.append("a DO loop bounded at 3 fills the whole of STRESS "
+                            "or DDSDDE, and index 3 is a shear: "
+                            + "; ".join(shear_at_3[:2]))
+        else:
+            undecided = ("a DO loop bounded at 3 fills STRESS or DDSDDE, and "
+                         "nothing in the source says index 3 is a shear "
+                         "(no zero 1-3 coupling, no shear mapped into slot 3, "
+                         "no NDI=2/NSHR=1/NTENS=3 logic), so the three may be "
+                         "the direct block s11, s22, s33 of a larger tensor")
+            evidence.append(undecided)
+    elif by_loop == 3 and shear_from_4:
+        # Lemaitre: ``do i=1,3`` over the direct block, then ``do i=4,ntens``
+        # over the shear. Four or six components; which, the deck says.
+        min_ntens = 4
+        undecided = (f"a DO loop bounded at 3 fills the direct block, and the "
+                     f"shear starts at index 4 ({shear_from_4[0].strip()}), "
+                     f"so the routine is NDI=3: plane strain, axisymmetric or "
+                     f"3D, and not plane stress. Which of the three is not "
+                     f"settled by the source")
+        evidence.append(undecided)
+    elif shear_from_4 and not by_loop and by_subscript < 5:
+        min_ntens = 4
+    if ntens:
+        pass                    # settled above: plane stress, shear at 3
+    elif by_loop and by_loop >= lower and by_loop != 3:
         ntens = by_loop
         evidence.append(f"a DO loop bounded at {by_loop} fills the whole of "
                         f"STRESS or DDSDDE, and no larger subscript or size "
@@ -669,22 +810,28 @@ def from_source(text: str, name: str = "") -> SourceFormulation:
                         f"it contradicts {named}")
     if not ntens:
         why = []
-        if by_loop:
+        if by_loop and not undecided:
             why.append(f"a DO loop bounded at {by_loop}")
         if by_subscript:
             why.append(f"a literal subscript {by_subscript}")
         if tested:
             why.append("size tests against "
                        + ", ".join(str(v) for v in sorted(set(tested))))
+        if shear_from_4 and not undecided:
+            why.append(f"shear written from index 4 "
+                       f"({shear_from_4[0].strip()})")
         return SourceFormulation(
-            evidence=tuple(f"{part} -- a bound, not an answer" for part in why))
+            evidence=tuple(([undecided] if undecided else [])
+                           + [f"{part} -- a bound, not an answer"
+                              for part in why]),
+            min_ntens=min_ntens, undecided=undecided)
     family = _FAMILY_OF_NTENS.get(ntens, "")
     # Four components is plane strain OR axisymmetric, and the file's own name
     # is the only thing that separates them.
     if ntens == 4 and named == "axisymmetric":
         family = "axisymmetric"
     return SourceFormulation(ntens=ntens, family=family,
-                             evidence=tuple(evidence))
+                             evidence=tuple(evidence), min_ntens=min_ntens)
 
 
 @dataclass(frozen=True)
@@ -717,8 +864,11 @@ def settle(source_text: str, source_name: str, deck_text: str = "",
 
     Two independent witnesses. The source says what tensor it fills; the deck
     says what element the author ran the material on. Where they agree the
-    answer is as good as it gets. Where they disagree the SOURCE decides --
-    it is what will execute, and the deck was paired to it by counting
+    answer is as good as it gets. Where the source was read and is
+    AMBIGUOUS (see :func:`from_source`), the deck decides and the record says
+    so. Where a source needs more components than the deck's element hands it
+    the answer is ``unsupported``, not a run. Where they disagree and the
+    source is decisive the SOURCE decides -- it is what will execute, and the deck was paired to it by counting
     constants, which can pair a plane-strain routine with its plane-stress
     sibling's deck. That is exactly what happened to
     ``UMAT_Tissue_2d_plane_strain.f``, whose constants came from a CPS8R deck.
@@ -755,6 +905,29 @@ def settle(source_text: str, source_name: str, deck_text: str = "",
                                                 "cohesive law too"
                                                 if from_the_source.family
                                                 == "cohesive" else "")))
+
+    # A source that cannot represent the deck's layout. Lemaitre's shear loop
+    # starts at index 4; on a plane-stress element (NTENS=3) it never runs and
+    # DDSDDE(3,3) -- the slot Abaqus reads as G12 -- holds lambda+2G. That is
+    # not a verification this harness may run and call the author's.
+    if (from_the_source.min_ntens and from_the_deck.known
+            and geometry_for(from_the_deck.element).ntens
+            < from_the_source.min_ntens):
+        deck_ntens = geometry_for(from_the_deck.element).ntens
+        return Settled(
+            Formulation(
+                author_elements=kinds, family=from_the_deck.family,
+                provenance=provenance,
+                reason=(f"unsupported: the deck runs this material on "
+                        f"{', '.join(kinds)} ({from_the_deck.family}, "
+                        f"NTENS={deck_ntens}), and the source cannot represent "
+                        f"that layout: {from_the_source.undecided or '; '.join(from_the_source.evidence[:2]) or 'its shear starts at index 4'}. "
+                        f"Driving it there would put a shear in the slot the "
+                        f"routine computes as a direct stress")),
+            from_the_source, kinds,
+            agreement=(f"the source needs at least "
+                       f"{from_the_source.min_ntens} components and the deck "
+                       f"hands {deck_ntens}; neither is overridden"))
 
     if from_the_source.known and from_the_deck.known:
         if from_the_source.family == from_the_deck.family:
@@ -817,6 +990,23 @@ def settle(source_text: str, source_name: str, deck_text: str = "",
                                      if not kinds else
                                      f"; the deck says {from_the_deck.family}")))
     if from_the_deck.known or kinds:
+        if from_the_source.undecided and from_the_deck.known:
+            # The source was read and found ambiguous; the author's element
+            # settles it, and the record says so with both halves of the
+            # evidence (awhelanUCD Lemaitre: ``do i=1,3`` + ``do i=4,ntens``
+            # and a CAX4T deck -> CAX4, NTENS=4).
+            decided = Formulation(
+                author_elements=from_the_deck.author_elements,
+                family=from_the_deck.family, element=from_the_deck.element,
+                provenance=from_the_deck.provenance,
+                reason=(f"{from_the_deck.reason}. The source alone does not "
+                        f"settle the tensor: {from_the_source.undecided}; the "
+                        f"author's deck decides"))
+            return Settled(decided, from_the_source, kinds,
+                           agreement=(f"the source is ambiguous about its "
+                                      f"tensor and the deck says "
+                                      f"{from_the_deck.family}; the deck "
+                                      f"decides"))
         return Settled(from_the_deck, from_the_source, kinds,
                        agreement="only the deck says which element is used")
     return Settled(
@@ -825,7 +1015,10 @@ def settle(source_text: str, source_name: str, deck_text: str = "",
                     reason=("neither the source nor the deck says which tensor "
                             "this UMAT is called with, so it is ASSUMED to be a "
                             "three-dimensional continuum, which is what 6 of "
-                            "every 7 sources in this corpus are")),
+                            "every 7 sources in this corpus are"
+                            + (f" (the source was read and is ambiguous: "
+                               f"{from_the_source.undecided})"
+                               if from_the_source.undecided else ""))),
         from_the_source, kinds,
         agreement="neither says; three-dimensional continuum is assumed")
 
