@@ -7,6 +7,27 @@ checked against it by numbers. Cases live in `umat/cases/<case_id>/`; the
 historical `umat/<id>/` directories are untouched (decision D-7). Design:
 `corpus_campaign/design/REGRESSION_ARCHITECTURE.md` (outside this repository).
 
+## Listing the cases
+
+`umat/cases/index.json` lists every case (43 at this commit: 4 curated CI
+cases, 39 corpus cases in the offline tier). One line per case:
+
+```bash
+python -c "import json; [print(c['case_id'], c['redistribution'], 'ci' if c['tiers']['ci'] else 'offline') for c in json.load(open('umat/cases/index.json'))['cases']]"
+```
+
+```text
+alexanderjfdr-hyperelastic_phase_field--neohookean-umat--10759f1f unknown offline
+...
+irfancn-abaqus-umat-elastic--umat-elastic--7e9bb4c2 unknown offline
+...
+umat-oti-curated--m3-j2 permitted ci
+```
+
+A case id is `<repository>--<file>--<8 hex of the source key>`; `--only`
+needs the whole id. `python tools/corpus_cases.py index` rebuilds the index
+from the case directories (silent; no change when it is current).
+
 ## What a case holds
 
 | file | content |
@@ -19,8 +40,10 @@ historical `umat/<id>/` directories are untouched (decision D-7). Design:
 
 Everything else (harness records, histories, the whole transform output,
 non-redistributable sources) goes to the content-addressed asset store
-`corpus_assets/` beside the checkout's workspace (`$UMAT_CASE_ASSETS`, default
-`~/softwarex_work/corpus_assets`; `objects/sha256/aa/bb/<sha>`,
+`$UMAT_CASE_ASSETS` (default `$UMAT_OTI_WORKSPACE/corpus_assets`, and
+`$UMAT_OTI_WORKSPACE` defaults to `~/softwarex_work`, not to the checkout's
+parent; see the
+[workspace layout](CORPUS_VERIFICATION.md#workspace-layout-the-corpus-tools-assume); `objects/sha256/aa/bb/<sha>`,
 `trees/<tree>.json`, `log.jsonl`); `case.json` names the tree. The store is on
 one disk with no off-machine copy yet (D-3).
 
@@ -35,8 +58,16 @@ sha256 and the pinned URL; get the source with
 
     python tools/corpus_cases.py fetch <case_id>
 
-(discovery cache by sha256, then `corpus_assets`, then, with `--allow-network`,
-the raw file **at the pinned commit**; any digest mismatch is refused). The CI
+It looks in `$UMAT_OTI_WORKSPACE/discovery_cache` (by sha256), then in
+`$UMAT_CASE_ASSETS`, then, with `--allow-network`, downloads the raw file
+**at the pinned commit**; any digest mismatch is refused. It prints where the
+source is, for example
+
+```text
+irfancn-abaqus-umat-elastic--umat-elastic--7e9bb4c2: $UMAT_OTI_WORKSPACE/discovery_cache/irfancn__Abaqus-UMAT-elastic/umat_elastic.for (discovery_cache)
+```
+
+so outside the workspace it needs `--allow-network` (or the two variables set). The CI
 tier accepts only `permitted` cases; `freeze --tier ci` refuses the others.
 
 ## Freezing a case
@@ -57,9 +88,38 @@ change, re-run `check`, and re-freeze only through a recorded decision.
 
 ## Checking
 
-    make case-ci          # CI tier: permitted cases, R + P, gfortran
-    make case-offline     # every case on this machine (needs discovery_cache / corpus_assets)
+    make case-ci          # CI tier: the 4 permitted cases, R + P, gfortran (~10 s)
+    make case-offline     # every case on this machine (needs the workspace layout)
     PYTHONHASHSEED=0 python tools/corpus_cases.py check --tier offline --replay --only <case_id>
+
+`make case-ci` needs only this repository and `gfortran`. It ends with
+
+```text
+4/4 cases pass; tier canaries all rejected; <seconds>s
+```
+
+after one `PASS <case_id> (...)` line per case, each followed by three
+`canary rejected: ...` lines. The exit code is 0 only if every case passes.
+
+A worked offline check (a corpus case whose source is not redistributable, so
+it is rebuilt from `discovery_cache/`). Measured 2026-10-02, 3 s:
+
+```bash
+PYTHONHASHSEED=0 python tools/corpus_cases.py check --tier offline --replay \
+    --only irfancn-abaqus-umat-elastic--umat-elastic--7e9bb4c2
+```
+
+```text
+PASS irfancn-abaqus-umat-elastic--umat-elastic--7e9bb4c2 (2.4s; replay: 1.7s)
+     canary rejected: tangent: DDSDDE column x (1+0.0001)
+     canary rejected: tangent: smallest resolved nonzero entry dropped
+     canary rejected: primal: STRESS x (1+1e-06)
+tier canary rejected: hidden-state toy (SAVE counter) {...}
+1/1 cases pass; tier canaries all rejected; 2.8s
+```
+
+Without `--replay` (or with `--regenerate`) the check also re-transforms the
+original (R): about 7 s per corpus case (measured 2026-10-02).
 
 * **R** (`--regenerate`): transform the ORIGINAL with the *current* code
   (`transform_one` in `tools/transform_all.py`, including its job-layout gfortran

@@ -74,7 +74,7 @@
     {
      "repo": "UMAT",
      "doc": "docs/INSTALL.md",
-     "quote": "| Python 3.10 or newer, with `venv` | everything | 3.11.7 |"
+     "quote": "| Python 3.10 or newer (`requires-python >=3.10`), with `venv` | everything | 3.11.7 |"
     },
     {
      "repo": "UMAT",
@@ -769,7 +769,7 @@
     {
      "repo": "UMAT",
      "doc": "docs/INSTALL.md",
-     "quote": "python -m pytest -q                                        # the offline test suite"
+     "quote": "make test                                                  # the full offline suite, about 22 min"
     },
     {
      "repo": "UMAT",

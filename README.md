@@ -52,7 +52,8 @@ In each new terminal, activate your environment again (`. .venv/bin/activate`)
 and check `umat-oti --help`.
 
 A missing `gfortran` or Abaqus is reported by name as
-`blocked_by_external_dependency`; it never reads as a pass.
+`blocked_by_external_dependency`; it never reads as a pass. Full steps, checks
+and troubleshooting: [docs/INSTALL.md](docs/INSTALL.md).
 
 ## The three things you can do
 
@@ -202,6 +203,8 @@ A skipped test names the missing prerequisite; a skip is not a pass.
 | [docs/LAPACK_OTI_PORT.md](docs/LAPACK_OTI_PORT.md) | Experimental whole-library LAPACK/BLAS port audit, numerical evidence, and remaining blockers |
 | [docs/GUI.md](docs/GUI.md) | The GUI's design and each screen, with screenshots |
 | [docs/CORPUS_VERIFICATION.md](docs/CORPUS_VERIFICATION.md) | The public-UMAT corpus and its acceptance gates |
+| [docs/REGRESSION_CASES.md](docs/REGRESSION_CASES.md) | Frozen regression cases and `make case-ci` |
+| [docs/CORPUS_MANIFEST.md](docs/CORPUS_MANIFEST.md) | The machine-readable corpus manifest and how it is rebuilt |
 | [docs/SOFTWAREX_REPRODUCTION.md](docs/SOFTWAREX_REPRODUCTION.md) | Reproducing the paper's tables and figures |
 | [new_user_umat_starter/](new_user_umat_starter/README.md) | Writing a contract for your own UMAT |
 

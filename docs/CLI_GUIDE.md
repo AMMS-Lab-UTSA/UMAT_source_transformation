@@ -520,8 +520,8 @@ renames. The selected routine must declare both mapped arguments as `(3,3)`
 arrays. The emitted interface retains their names; the new-gradient shadow
 receives `dF = deps * F_tau`, while the old gradient stays unseeded. The
 tangent extraction includes the finite-strain stress correction. The mapping
-does not supply missing modules, change state layouts, or make a nonstandard
-entry a drop-in Abaqus UMAT.
+does not supply missing modules or change state layouts, and a nonstandard
+entry does not become a drop-in Abaqus UMAT.
 
 A first-order contract requesting `DDSDDE`, `DSIGMA_DP`, and/or `DSTATEV_DP`
 allocates all directions before code generation: `NTENS` strain directions,
@@ -547,7 +547,7 @@ automatically retain or expose these extra arrays.
 
 Numerical property values and driver settings are not needed for source-only
 generation. With numerical parameter values and material-point driver settings,
-the optional `parameter_sensitivity/ps_driver.f90` calls the combined entry
+the optional generated driver `ps_driver.f90` (written into the output's parameter_sensitivity folder) calls the combined entry
 and writes `DDSDDE_OTI.csv`, `DSIGMA_DP_OTI.csv`, and `DSTATEV_DP_OTI.csv`.
 The supplied driver requires the standard UMAT argument order; a nonstandard
 entry needs its own caller. Source generation still requires valid source
