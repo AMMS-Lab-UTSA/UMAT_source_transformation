@@ -105,6 +105,9 @@ PUBLISHED_OWNERS: dict = {
     "external_dependency_unavailable": "EXTERNAL",
     "published_stub_no_constitutive_content": "EXTERNAL",
     "waits_for_input": "EXTERNAL",
+    # The published routine reads a value it never sets and its stress or
+    # tangent depends on it (decision D-12). A property of the file.
+    "undefined_in_original": "EXTERNAL",
     "arguments_diverged_before_the_routine": "INTERNAL",
     "transform_refused": "INTERNAL",
     "experiment_not_generated": "INTERNAL",

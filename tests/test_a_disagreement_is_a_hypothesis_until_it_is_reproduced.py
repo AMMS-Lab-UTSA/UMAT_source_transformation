@@ -356,9 +356,18 @@ def test_a_signature_never_changes_a_verdict():
     import pathlib
     text = pathlib.Path(__file__).resolve().parents[1].joinpath(
         "tools", "verify_store_in_abaqus.py").read_text()
-    block = text[text.index('record["primal_signature"]'):]
-    block = block[:block.index('seen["primal_agrees"]')]
-    assert "agrees" not in block and "tolerance" not in block
+    # The signature is written once, from review_entry, and nothing reads it
+    # back: no condition, no gate and no tolerance consults it. (The primal
+    # gate that follows it in the file is decided by the routine-level replay
+    # and the Jacobian-matched control; see tests/test_primal_gate_*.py.)
+    writes = [line for line in text.splitlines()
+              if 'record["primal_signature"]' in line]
+    assert len(writes) == 1 and "review_entry" in writes[0] + text[
+        text.index(writes[0]):text.index(writes[0]) + 200], writes
+    reads = [line for line in text.splitlines()
+             if "primal_signature" in line and line.strip().startswith(("if ", "elif "))]
+    assert not reads, reads
+    assert 'get("primal_signature")' not in text
 
 
 # ---------------------------------------------------------------------------

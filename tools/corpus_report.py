@@ -127,6 +127,10 @@ FROM_ABAQUS_STAGE: dict[str, str] = {
     # plain disagreement -- the explanation says where to look, not how far the
     # case got, and it is not agreement.
     "primal_mismatch_explained": "abaqus_transformed_passed",
+    # The unmodified source does not determine its own stress or tangent
+    # (an uninitialised value reaches it). A property of the published file,
+    # like a source that does not compile: blocked, with the variable named.
+    "undefined_in_original": BLOCKED,
 }
 
 

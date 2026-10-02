@@ -47,6 +47,14 @@ EXTERNAL: tuple[str, ...] = (
     #: the near miss and is worse than nothing: it is glossed "does not
     #: compile", and a template compiles perfectly well.
     "published_stub_no_constitutive_content",
+    #: The ORIGINAL reads a value it never defined, and STRESS or DDSDDE
+    #: depends on it on the experiment's path: compiled with zero-initialised
+    #: and with signalling-NaN-initialised locals, the published routine
+    #: returns different stress or tangent (decision D-12). Nothing can be
+    #: verified against an answer the source itself does not determine. An
+    #: undefined value confined to a write-only STATEV slot does NOT land here:
+    #: that slot is excluded and named, and the rest is judged.
+    "undefined_in_original",
 )
 
 #: Unfinished, and ours. Named as precisely as the evidence allows, because
@@ -128,6 +136,7 @@ FROM_STAGE: dict[str, str] = {
     "derivative_truncated": "derivative_truncated",
     "tangent_not_verified": "tangent_not_verified",
     "harness_error": "harness_error",
+    "undefined_in_original": "undefined_in_original",
 }
 
 
@@ -154,7 +163,10 @@ MEANING: dict[str, str] = {
         "no stress, no tangent, and calls nothing",
     "primal_mismatch_explained":
         "the two builds compute different stress and a control measured why -- "
-        "which says where to look, and is not agreement",
+        "which says where to look, and is not agreement",    "undefined_in_original":
+        "the published routine reads a value it never sets, and its stress or "
+        "tangent changes with how memory happens to be initialised -- there is "
+        "no single answer to verify against",
 }
 
 

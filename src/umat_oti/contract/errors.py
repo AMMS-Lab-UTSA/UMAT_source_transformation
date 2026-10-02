@@ -76,6 +76,9 @@ CODES: dict = {
     "external.waits_for_input":
         "the source blocks on terminal input, so a job holds a licence until "
         "its timeout",
+    "external.undefined_in_original":
+        "the published routine reads a value it never sets, and its stress or "
+        "tangent changes with how memory is initialised (decision D-12)",
     "internal.arguments_diverged_before_the_routine":
         "the paired call was isolated and its INPUTS already differed before "
         "the routine was entered. The solver computed those inputs from each "
@@ -150,6 +153,8 @@ class ContractError:
                 else "external.published_stub"
                 if state.state == "published_stub_no_constitutive_content"
                 else "external.waits_for_input" if state.state == "waits_for_input"
+                else "external.undefined_in_original"
+                if state.state == "undefined_in_original"
                 else "internal.arguments_diverged_before_the_routine"
                 if state.state == "arguments_diverged_before_the_routine"
                 else "internal.disagreement_not_in_any_recorded_call"

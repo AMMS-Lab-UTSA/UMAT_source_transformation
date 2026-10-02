@@ -1180,3 +1180,475 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
     if not sweep.ok and not sweep.reason:
         sweep.reason = "no step size produced a complete set of columns"
     return sweep
+
+
+# ---------------------------------------------------------------------------
+# Routine-level replay of a WHOLE recorded history (primal gate, part a)
+# ---------------------------------------------------------------------------
+#
+# Why this exists. Comparing the Abaqus histories of the original and the
+# transformed build is not a comparison of the two routines: the transformed
+# build returns a different DDSDDE (the OTI tangent instead of the author's),
+# and the converged FE solution depends on it -- through the Newton path at
+# default tolerances, and, on hybrid elements, even at a tight tolerance.
+# Measured on From-2D-to-2D-Axe.for (C3D8H, corpus_campaign/batches/B2/curie_g,
+# jobs cc_cug_02/03/06/08): with residuals driven to 2e-13 the two builds still
+# differed by 3.2e-6; scaling the author's DDSDDE by 1+1e-6 moved the answer by
+# 1.2e-12; giving the author's DDSDDE the transformed one's structure (the
+# -2/3 sigma' coupling term) reproduced the transformed Abaqus run to 1.6e-12.
+# Meanwhile every converged call, replayed offline with the SAME arguments in
+# both builds, agreed to 2 stiffness ulps.
+#
+# So the routine is compared where only the routine can differ: each converged
+# call the original's solver made is replayed, in record order and in one
+# process, in both builds, from the arguments the probe recorded.
+
+#: Where the history driver reads its calls and writes what each returned.
+HISTORY_STATES = "otis_history_states.txt"
+HISTORY_OUT = "otis_history_out.txt"
+
+#: The D-12 uninitialised-variable init builds. THE single definition:
+#: umat_oti.corpus_features.harness imports these (tested), so the
+#: routine-level gate of corpus_features and this Abaqus path mean the same
+#: thing by "undefined_in_original". An output that differs between ANY two of
+#: the builds is undefined_in_original.
+#:
+#: Why three (Vera B2 item 2): zero vs snan alone misses an uninitialised value
+#: used through a NaN guard (``IF (X.NE.X) X=0`` maps snan back to 0), a comparison
+#: (``IF (X.GT.0.5)`` is false for 0 and for NaN alike) and every INTEGER
+#: (0 and -77777 are both <= 0). The third build sets reals to +inf, integers
+#: to +77777 and logicals to the opposite of the zero build, which separates
+#: all three (measured on Vera's toys b2/b4b/b4c; the clean toy is unchanged).
+FINIT_SNAN = ("-finit-real=snan", "-finit-integer=-77777", "-finit-logical=true")
+FINIT_ZERO = ("-finit-real=zero", "-finit-integer=0", "-finit-logical=false")
+FINIT_HUGE = ("-finit-real=inf", "-finit-integer=77777", "-finit-logical=true")
+#: (label, flags) of every init build; the first is the reference build.
+FINIT_BUILDS = (("zero", FINIT_ZERO), ("snan", FINIT_SNAN), ("inf", FINIT_HUGE))
+
+#: gfortran flags for the init-variant builds. -O0 so the compiler cannot
+#: fold an uninitialised read away; -cpp/-D because Abaqus compiles with -fpp.
+GFORTRAN_HISTORY_FLAGS = ("-O0", "-std=legacy", "-w", "-fno-range-check",
+                          "-ffixed-line-length-132", "-ffree-line-length-none",
+                          "-cpp", "-DABQ_LNX86_64", "-DABQ_FORTRAN")
+
+#: Slots allocated past NSTATV and filled with a sentinel, so a routine that
+#: writes beyond its own *DEPVAR is seen doing it instead of corrupting the
+#: heap silently.
+STATEV_GUARD = 64
+_SENTINEL = "-7.77D77"
+
+_HISTORY_DRIVER = """PROGRAM otis_history
+! Replays every recorded UMAT call of one history, in order, in one process.
+! Each call gets exactly the arguments the probe recorded for it; nothing is
+! perturbed and nothing is initialised that the solver did not initialise.
+  IMPLICIT NONE
+  INTEGER :: NTENS,NSTATV,NPROPS,NDI,NSHR,I,J,U,V,NCALL,IC,NOOB
+  REAL(8) :: DTIME,TEMP,DTEMP,PNEWDT,CELENT,SSE,SPD,SCD,RPL,DRPLDT
+  REAL(8), ALLOCATABLE :: STRESS(:),STATEV(:),DDSDDE(:,:),STRAN(:),DSTRAN(:)
+  REAL(8), ALLOCATABLE :: PROPS(:),DDSDDT(:),DRPLDE(:)
+  REAL(8) :: TIME(2),PREDEF(1),DPRED(1),COORDS(3),DROT(3,3)
+  REAL(8) :: DFGRD0(3,3),DFGRD1(3,3)
+  INTEGER :: NOEL,NPT,LAYER,KSPT,KSTEP,KINC
+  CHARACTER(80) :: CMNAME
+  OPEN(NEWUNIT=U,FILE='%(states)s',STATUS='OLD',ACTION='READ')
+  OPEN(NEWUNIT=V,FILE='%(out)s',STATUS='REPLACE',ACTION='WRITE')
+  READ(U,*) NCALL
+  DO IC=1,NCALL
+  READ(U,*) NTENS,NSTATV,NPROPS,NDI,NSHR
+  ALLOCATE(STRESS(NTENS),STATEV(MAX(NSTATV,1)+%(guard)d),DDSDDE(NTENS,NTENS))
+  ALLOCATE(STRAN(NTENS),DSTRAN(NTENS),PROPS(MAX(NPROPS,1)))
+  ALLOCATE(DDSDDT(NTENS),DRPLDE(NTENS))
+  STATEV = %(sentinel)s
+  READ(U,*) DTIME,TIME(1),TIME(2),TEMP,DTEMP,CELENT
+  READ(U,*) NOEL,NPT,KSTEP,KINC
+  READ(U,*) (STRESS(I),I=1,NTENS)
+  READ(U,*) (STATEV(I),I=1,MAX(NSTATV,1))
+  READ(U,*) (STRAN(I),I=1,NTENS)
+  READ(U,*) (DSTRAN(I),I=1,NTENS)
+  READ(U,*) (PROPS(I),I=1,MAX(NPROPS,1))
+  READ(U,*) ((DFGRD0(I,J),J=1,3),I=1,3)
+  READ(U,*) ((DFGRD1(I,J),J=1,3),I=1,3)
+  READ(U,*) ((DROT(I,J),J=1,3),I=1,3)
+  READ(U,*) (COORDS(I),I=1,3)
+  DDSDDE=0.0_8; SSE=0.0_8; SPD=0.0_8; SCD=0.0_8; RPL=0.0_8
+  DDSDDT=0.0_8; DRPLDE=0.0_8; DRPLDT=0.0_8; PREDEF=0.0_8; DPRED=0.0_8
+  PNEWDT=1.0_8; LAYER=1; KSPT=1; CMNAME='%(name)s'
+  CALL UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,RPL,DDSDDT,DRPLDE,DRPLDT, &
+    STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,CMNAME,NDI,NSHR, &
+    NTENS,NSTATV,PROPS,NPROPS,COORDS,DROT,PNEWDT,CELENT,DFGRD0,DFGRD1, &
+    NOEL,NPT,LAYER,KSPT,KSTEP,KINC)
+  NOOB = COUNT(STATEV(MAX(NSTATV,1)+1:) .NE. %(sentinel)s)
+  WRITE(V,'(A,I0,1X,I0,1X,I0,1X,I0)') 'CALL ',IC,NTENS,MAX(NSTATV,1),NOOB
+  WRITE(V,'(ES26.17E3)') (STRESS(I),I=1,NTENS)
+  WRITE(V,'(ES26.17E3)') (STATEV(I),I=1,MAX(NSTATV,1))
+  WRITE(V,'(ES26.17E3)') ((DDSDDE(I,J),J=1,NTENS),I=1,NTENS)
+  FLUSH(V)
+  DEALLOCATE(STRESS,STATEV,DDSDDE,STRAN,DSTRAN,PROPS,DDSDDT,DRPLDE)
+  END DO
+  CLOSE(U); CLOSE(V)
+END PROGRAM otis_history
+"""
+
+
+@dataclass
+class HistoryBuild:
+    """One compiled history replay, or the reason there is none."""
+
+    label: str = ""
+    program: Optional[Path] = None
+    compiler: str = ""
+    flags: tuple = ()
+    ok: bool = False
+    reason: str = ""
+    log: str = ""
+
+    def as_dict(self) -> dict:
+        return {"label": self.label, "compiler": self.compiler,
+                "flags": list(self.flags), "ok": self.ok,
+                "reason": self.reason, "log": self.log[-1500:]}
+
+
+@dataclass
+class HistoryReplay:
+    """What each replayed call returned, in record order."""
+
+    label: str = ""
+    ok: bool = False
+    reason: str = ""
+    #: One dict per call: STRESS, STATEV, DDSDDE (flat, row-major as the probe
+    #: writes it) and how many guard slots past NSTATV the call wrote.
+    calls: list = field(default_factory=list)
+    returncode: Optional[int] = None
+    tail: str = ""
+
+    @property
+    def writes_beyond_nstatv(self) -> int:
+        return max((c.get("guard_writes", 0) for c in self.calls), default=0)
+
+    def as_dict(self) -> dict:
+        return {"label": self.label, "ok": self.ok, "reason": self.reason,
+                "calls": len(self.calls), "returncode": self.returncode,
+                "writes_beyond_nstatv": self.writes_beyond_nstatv,
+                "tail": self.tail[-800:]}
+
+
+def write_history_states(entries: Sequence[dict], path: Path) -> None:
+    """Every ENTRY record, in the format :func:`write_state` writes one."""
+    import tempfile
+    parts = [str(len(entries))]
+    with tempfile.TemporaryDirectory() as scratch:
+        one = Path(scratch) / "one.txt"
+        for entry in entries:
+            write_state(entry, one)
+            parts.append(one.read_text(encoding="utf-8").rstrip("\n"))
+    Path(path).write_text("\n".join(parts) + "\n", encoding="utf-8")
+
+
+def build_history_replay(source: Path, work_dir: Path, *, label: str,
+                         compiler: str = "ifort", flags: Sequence[str] = (),
+                         objects: Sequence[Path] = (),
+                         module_dirs: Sequence[Path] = (),
+                         include_dirs: Sequence[Path] = (),
+                         name: str = "REPLAY",
+                         timeout: int = 900) -> HistoryBuild:
+    """Compile the history driver against one UMAT source.
+
+    ``source`` should be the file the Abaqus job itself compiled (its
+    ``<job>_probed`` copy): console writes already silenced, data-file paths
+    already staged. Its probe calls write to ``$OTIS_PROBE_FILE``, which the
+    runner points at /dev/null.
+    """
+    from umat_oti.abaqus import single_call
+
+    built = HistoryBuild(label=label, compiler=compiler, flags=tuple(flags))
+    work_dir = Path(work_dir)
+    work_dir.mkdir(parents=True, exist_ok=True)
+    if shutil.which(compiler) is None:
+        built.reason = f"{compiler} is not on PATH"
+        return built
+    text = _text_of(Path(source))
+    if not text:
+        built.reason = f"{source} could not be read"
+        return built
+    form = detect_source_form(Path(source), text)
+    cleaned, removed = without_the_authors_program(text, form)
+    unit = Path(source)
+    if removed:
+        unit = work_dir / f"noprogram_{Path(source).name}"
+        unit.write_text(cleaned, encoding="utf-8")
+    stubs = single_call.driver_source(name, text).split(
+        "END PROGRAM otis_single_call", 1)[1]
+    driver = work_dir / "otis_history.f90"
+    driver.write_text(_HISTORY_DRIVER % {
+        "states": HISTORY_STATES, "out": HISTORY_OUT,
+        "name": name.upper()[:60], "guard": STATEV_GUARD,
+        "sentinel": _SENTINEL} + stubs, encoding="utf-8")
+    single_call.install_headers(work_dir)
+    includes = ([f"-I{work_dir}"] + [f"-I{Path(d)}" for d in include_dirs]
+                + [f"-I{Path(d)}" for d in module_dirs])
+    program = work_dir / "otis_history"
+    if compiler == "gfortran":
+        # The unit and the driver are compiled apart: the init flags belong to
+        # the author's code, and the free-form driver must not inherit the
+        # fixed-form line length.
+        steps = [[compiler, *flags, *includes, "-c", str(unit), "-o",
+                  str(work_dir / "unit.o")],
+                 [compiler, "-O0", *includes, "-c", str(driver), "-o",
+                  str(work_dir / "driver.o")],
+                 [compiler, str(work_dir / "unit.o"), *map(str, objects),
+                  str(work_dir / "driver.o"), "-o", str(program)]]
+    else:
+        steps = [[compiler, *flags, *includes, str(unit), *map(str, objects),
+                  str(driver), "-o", str(program)]]
+    log = ""
+    for command in steps:
+        try:
+            done = subprocess.run(command, cwd=str(work_dir), capture_output=True,
+                                  text=True, timeout=timeout)
+        except (OSError, subprocess.SubprocessError) as error:
+            built.reason = f"{type(error).__name__}: {error}"
+            return built
+        log += done.stdout + done.stderr
+        if done.returncode != 0:
+            built.reason = (f"the history driver did not build against "
+                            f"{Path(source).name} ({label}, exit {done.returncode})")
+            built.log = log
+            return built
+    built.program, built.ok, built.log = program, program.is_file(), log
+    if not built.ok:
+        built.reason = "the link produced no program"
+    return built
+
+
+def parse_history_output(path: Path) -> list[dict]:
+    """The calls a history replay wrote, NaN and Inf read as such."""
+    calls: list[dict] = []
+    try:
+        lines = Path(path).read_text(errors="replace").splitlines()
+    except OSError:
+        return calls
+    index = 0
+    while index < len(lines):
+        head = lines[index].split()
+        if not head or head[0] != "CALL":
+            index += 1
+            continue
+        ntens, nstatv, guard = int(head[2]), int(head[3]), int(head[4])
+        need = ntens + nstatv + ntens * ntens
+        values = lines[index + 1:index + 1 + need]
+        if len(values) < need:
+            break                          # a call that died mid-write
+        numbers = [float(v.replace("D", "E")) for v in values]
+        calls.append({"STRESS": numbers[:ntens],
+                      "STATEV": numbers[ntens:ntens + nstatv],
+                      "DDSDDE": numbers[ntens + nstatv:need],
+                      "guard_writes": guard})
+        index += 1 + need
+    return calls
+
+
+def run_history_replay(build: HistoryBuild, entries: Sequence[dict],
+                       work_dir: Path, timeout: int = 900) -> HistoryReplay:
+    """Run every recorded call through one build."""
+    import os
+    outcome = HistoryReplay(label=build.label)
+    if not build.ok or build.program is None:
+        outcome.reason = build.reason or "no program"
+        return outcome
+    work_dir = Path(work_dir)
+    write_history_states(entries, work_dir / HISTORY_STATES)
+    out = work_dir / HISTORY_OUT
+    if out.exists():
+        out.unlink()
+    env = dict(os.environ, OTIS_PROBE_FILE=os.devnull,
+               FOR_DISABLE_STACK_TRACE="1")
+    try:
+        done = subprocess.run([str(build.program)], cwd=str(work_dir),
+                              capture_output=True, text=True, timeout=timeout,
+                              stdin=subprocess.DEVNULL, env=env)
+    except (OSError, subprocess.SubprocessError) as error:
+        outcome.reason = f"{type(error).__name__}: {error}"
+        return outcome
+    outcome.returncode = done.returncode
+    outcome.tail = (done.stdout + done.stderr)[-2000:]
+    outcome.calls = parse_history_output(out)
+    outcome.ok = done.returncode == 0 and len(outcome.calls) == len(entries)
+    if not outcome.ok:
+        outcome.reason = (f"{build.label}: {len(outcome.calls)} of "
+                          f"{len(entries)} calls replayed (exit "
+                          f"{done.returncode}): {outcome.tail[-300:].strip()}")
+    return outcome
+
+
+def _bits_differ(a: float, b: float) -> bool:
+    return not (a == b or (a != a and b != b))
+
+
+def undefined_outputs(zero: Sequence[dict], snan: Sequence[dict],
+                      ntens: int, *, into: Optional[dict] = None,
+                      variant: str = "snan") -> dict:
+    """D-12: outputs of the ORIGINAL that differ between zero- and snan-init.
+
+    Returns ``{"STRESS": [...], "STATEV": [...], "DDSDDE": [...],
+    "details": [...]}`` with one-based component numbers. Those outputs are
+    ``undefined_in_original`` -- a SOURCE defect, never compared, never
+    verified. Every other output was bit-identical across the two builds over
+    the whole history, which is the evidence it does not depend on the
+    undefined value. ``into`` accumulates over several init builds (every
+    build of :data:`FINIT_BUILDS` against the zero build); ``snan_init`` in a
+    detail is then the value of the build named by ``init_variant``.
+    """
+    found: dict = into if into is not None else {"STRESS": [], "STATEV": [], "DDSDDE": [],
+                                                 "details": []}
+    for index, (a, b) in enumerate(zip(zero, snan)):
+        for name in ("STRESS", "STATEV", "DDSDDE"):
+            for k, (x, y) in enumerate(zip(a.get(name) or (), b.get(name) or ()),
+                                       start=1):
+                if _bits_differ(x, y) and k not in found[name]:
+                    found[name].append(k)
+                    label = (f"DDSDDE({(k - 1) // ntens + 1},{(k - 1) % ntens + 1})"
+                             if name == "DDSDDE" else f"{name}({k})")
+                    found["details"].append({
+                        "output": label, "first_call": index,
+                        "zero_init": x if x == x else "nan",
+                        "snan_init": y if y == y else "nan",
+                        "init_variant": variant})
+    for name in ("STRESS", "STATEV", "DDSDDE"):
+        found[name].sort()
+    return found
+
+
+# ---------------------------------------------------------------------------
+# The Jacobian-matched control build (primal gate, part b)
+# ---------------------------------------------------------------------------
+
+_JM_FIXED = """
+      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,
+     1 RPL,DDSDDT,DRPLDE,DRPLDT,
+     2 STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,CMNAME,
+     3 NDI,NSHR,NTENS,NSTATV,PROPS,NPROPS,COORDS,DROT,PNEWDT,
+     4 CELENT,DFGRD0,DFGRD1,NOEL,NPT,LAYER,KSPT,KSTEP,KINC)
+C     OTIS JACOBIAN-MATCHED CONTROL. STRESS, STATEV, energies and PNEWDT
+C     come from the ORIGINAL routine (UMATO). DDSDDE comes from the
+C     TRANSFORMED routine (UMATT), called first on private copies of every
+C     argument it may write, so it cannot touch what UMATO is handed. The
+C     solver is steered exactly as in the transformed run; nothing the
+C     original computes is replaced except the Jacobian.
+      INCLUDE 'ABA_PARAM.INC'
+      CHARACTER*80 CMNAME
+      DIMENSION STRESS(NTENS),STATEV(NSTATV),
+     1 DDSDDE(NTENS,NTENS),DDSDDT(NTENS),DRPLDE(NTENS),
+     2 STRAN(NTENS),DSTRAN(NTENS),TIME(2),PREDEF(1),DPRED(1),
+     3 PROPS(NPROPS),COORDS(3),DROT(3,3),DFGRD0(3,3),DFGRD1(3,3)
+      DIMENSION OTSJ_S(NTENS),OTSJ_V(NSTATV),OTSJ_D(NTENS,NTENS),
+     1 OTSJ_DT(NTENS),OTSJ_DR(NTENS),OTSJ_ST(NTENS),OTSJ_DS(NTENS),
+     2 OTSJ_F0(3,3),OTSJ_F1(3,3),OTSJ_P(NPROPS),OTSJ_C(3),OTSJ_R(3,3),
+     3 OTSJ_TM(2)
+      OTSJ_S = STRESS
+      OTSJ_V = STATEV
+      OTSJ_D = 0.D0
+      OTSJ_DT = DDSDDT
+      OTSJ_DR = DRPLDE
+      OTSJ_ST = STRAN
+      OTSJ_DS = DSTRAN
+      OTSJ_F0 = DFGRD0
+      OTSJ_F1 = DFGRD1
+      OTSJ_P = PROPS
+      OTSJ_C = COORDS
+      OTSJ_R = DROT
+      OTSJ_TM = TIME
+      OTSJSE = SSE
+      OTSJSP = SPD
+      OTSJSC = SCD
+      OTSJRP = RPL
+      OTSJRT = DRPLDT
+      OTSJPN = PNEWDT
+      OTSJCE = CELENT
+      OTSJDT = DTIME
+      OTSJTP = TEMP
+      OTSJDP = DTEMP
+      CALL UMATT(OTSJ_S,OTSJ_V,OTSJ_D,OTSJSE,OTSJSP,OTSJSC,OTSJRP,
+     1 OTSJ_DT,OTSJ_DR,OTSJRT,OTSJ_ST,OTSJ_DS,OTSJ_TM,OTSJDT,OTSJTP,
+     2 OTSJDP,PREDEF,DPRED,CMNAME,NDI,NSHR,NTENS,NSTATV,OTSJ_P,NPROPS,
+     3 OTSJ_C,OTSJ_R,OTSJPN,OTSJCE,OTSJ_F0,OTSJ_F1,NOEL,NPT,LAYER,KSPT,
+     4 KSTEP,KINC)
+      CALL UMATO(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,RPL,DDSDDT,DRPLDE,
+     1 DRPLDT,STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,CMNAME,
+     2 NDI,NSHR,NTENS,NSTATV,PROPS,NPROPS,COORDS,DROT,PNEWDT,CELENT,
+     3 DFGRD0,DFGRD1,NOEL,NPT,LAYER,KSPT,KSTEP,KINC)
+      DDSDDE = OTSJ_D
+      RETURN
+      END
+"""
+
+
+def _free_form(fixed: str) -> str:
+    """The wrapper above in free form: comments with '!' and '&' continuation."""
+    out: list[str] = []
+    for line in fixed.splitlines():
+        if line and line[0] in "Cc":
+            out.append("!" + line[1:])
+        elif len(line) > 5 and line[5] not in " " and line[:5].strip() == "":
+            out[-1] = out[-1] + " &"
+            out.append("      " + line[6:])
+        else:
+            out.append(line)
+    return "\n".join(out) + "\n"
+
+
+_UNIT_HEADER = re.compile(
+    r"(?im)^([ \t]*(?:\d+[ \t]+)?(?:(?:RECURSIVE|PURE|ELEMENTAL)[ \t]+)*"
+    r"(?:(?:DOUBLE[ \t]+PRECISION|REAL|INTEGER|LOGICAL|COMPLEX|CHARACTER)"
+    r"(?:[ \t]*\*[ \t]*\d+|[ \t]*\([^)\n]*\))?[ \t]+)?"
+    r"(?:SUBROUTINE|FUNCTION)[ \t]+)(\w+)")
+
+
+def _defined_units(text: str) -> set:
+    names = set()
+    for line in text.splitlines():
+        if line[:1] in "cC*!" or line.lstrip().startswith("!"):
+            continue
+        match = _UNIT_HEADER.match(line)
+        if match:
+            names.add(match.group(2).upper())
+    return names
+
+
+def jacobian_matched_source(original_text: str, transformed_text: str,
+                            form: str = "fixed") -> tuple[str, dict]:
+    """One source Abaqus can compile: the original as UMATO, the transformed
+    as UMATT, and a UMAT that takes STRESS/STATEV from the first and DDSDDE
+    from the second.
+
+    Every other unit the transformed file defines that the original also
+    defines (helpers, DLOAD, SDVINI, ...) is renamed with a ``_T`` suffix in
+    the transformed copy, so each routine keeps calling its own helpers. The
+    ORIGINAL's units keep their names: SDVINI and every other Abaqus entry
+    point the deck calls is the author's. COMMON blocks are left shared, which
+    is what they are in a single Abaqus link of either build.
+
+    Both inputs must be un-instrumented; ``run_one`` instruments the result
+    at its (single) UMAT, so the probe records what the solver actually got.
+    """
+    free = str(form).lower().startswith("free")
+    renamed = {}
+    original = original_text
+    transformed = transformed_text
+    for side, new in (("o", "UMATO"), ("t", "UMATT")):
+        text = original if side == "o" else transformed
+        text, count = re.subn(
+            r"(?im)^([ \t]*(?:\d+[ \t]+)?SUBROUTINE[ \t]+)UMAT\b", r"\1" + new,
+            text, count=1)
+        text = re.sub(r"(?i)(END[ \t]*SUBROUTINE[ \t]+)UMAT\b", r"\1" + new, text)
+        renamed[new] = count
+        if side == "o":
+            original = text
+        else:
+            transformed = text
+    shared = (_defined_units(original) & _defined_units(transformed)) - {"UMATO", "UMATT"}
+    for name in sorted(shared):
+        transformed = re.sub(rf"(?i)\b{re.escape(name)}\b", name + "_T", transformed)
+    wrapper = _free_form(_JM_FIXED) if free else _JM_FIXED
+    note = {"renamed_in_transformed": sorted(f"{n}->{n}_T" for n in shared),
+            "entry_renamed": renamed, "form": "free" if free else "fixed"}
+    return original.rstrip("\n") + "\n\n" + transformed.rstrip("\n") + "\n" + wrapper, note

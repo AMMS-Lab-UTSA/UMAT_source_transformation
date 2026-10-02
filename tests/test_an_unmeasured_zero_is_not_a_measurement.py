@@ -24,7 +24,6 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "tools"))
 
-import verify_store_in_abaqus as verify  # noqa: E402
 
 
 def test_a_bit_identical_rebuild_reports_that_it_measured_nothing():
@@ -34,23 +33,8 @@ def test_a_bit_identical_rebuild_reports_that_it_measured_nothing():
     assert "is unmeasured" in source
 
 
-def test_the_verdict_will_not_rest_on_an_unmeasured_zero():
-    source = (pathlib.Path(__file__).resolve().parents[1]
-              / "tools" / "verify_store_in_abaqus.py").read_text()
-    # Both the crediting branch and the blaming branch have to ask.
-    credit = source[source.index("own = association.get("):]
-    credit = credit[:credit.index("record[\"primal\"][\"own_sensitivity_unmeasured\"]")]
-    assert credit.count('association.get("measured")') == 2, (
-        "a control that measured nothing must neither credit the transform "
-        "nor convict it")
 
 
-def test_the_unmeasured_case_says_so_rather_than_claiming_zero():
-    source = (pathlib.Path(__file__).resolve().parents[1]
-              / "tools" / "verify_store_in_abaqus.py").read_text()
-    assert "own sensitivity to " in source
-    assert "round-off could not be measured against it" in source
-    assert "own_sensitivity_unmeasured" in source
 
 
 def test_a_control_that_moved_is_still_a_measurement():
@@ -76,3 +60,9 @@ def test_the_ladder_is_named_in_the_reason():
     source = (pathlib.Path(__file__).resolve().parents[1]
               / "tools" / "verify_store_in_abaqus.py").read_text()
     assert "name for name, _ in ARITHMETIC_LADDER" in source
+
+# Retired 2026-10-01 (corpus campaign B2c): test_the_verdict_will_not_rest_on_an_unmeasured_zero, test_the_unmeasured_case_says_so_rather_than_claiming_zero asserted on the source TEXT
+# of the pre-B2c primal gate (the FE comparison as the gate, and the
+# association control, which no longer runs). The invariants they protected are
+# now tested behaviourally in tests/test_primal_gate_explanation_never_rewrites_it.py
+# and tests/test_primal_gate_routine_level.py.
