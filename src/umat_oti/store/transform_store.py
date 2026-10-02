@@ -76,7 +76,9 @@ FINGERPRINTED = ("*.py", "*.f90", "*.f", "*.for", "*.inc")
 #: computes the fingerprint and cannot be an input to it; ``contract`` is the
 #: versioned data contract with Residual_Assembler -- it describes what a
 #: finished transform is published AS, never how one is produced, and nothing
-#: on the transform side imports it.
+#: on the transform side imports it. ``corpus_features`` is the routine-level
+#: corpus verification harness (loading paths, mechanics checks, derivative
+#: references, the corpus manifest); like ``abaqus`` it only reads transforms.
 #: ``tests/test_the_fingerprint_covers_the_transform.py`` enforces both halves:
 #: every exemption is dropped the moment a transform module imports one.
 #:
@@ -85,35 +87,25 @@ FINGERPRINTED = ("*.py", "*.f90", "*.f", "*.for", "*.inc")
 #: transforms stale and demanded they be rebuilt before any of them could be
 #: re-verified -- so the cost of looking harder at the evidence was paid in
 #: re-deriving the evidence, which is precisely backwards.
-NOT_TRANSFORM_CODE = ("abaqus", "app", "assist", "contract",
+NOT_TRANSFORM_CODE = ("abaqus", "app", "assist", "contract", "corpus_features",
                       "publication", "store")
 
 
-def transform_fingerprint(package_root: Optional[Path] = None) -> str:
-    """A digest of the transform code itself.
+def _package_digest(root: Path, include) -> str:
+    """Digest of the fingerprinted files under ``root`` that ``include`` accepts.
 
-    Every file under the package whose suffix is in :data:`FINGERPRINTED`
-    contributes, name and contents both, in one order sorted by path relative
-    to the root -- not grouped by suffix, or the digest would depend on the
-    order the globs happened to run in. Files under
-    :data:`NOT_TRANSFORM_CODE` are excluded; see there for why that is safe.
-
-    Otherwise deliberately broad: it will call an entry stale for a change that
-    could not have affected it, and the cost of that is a rebuild, while the
-    cost of the opposite mistake is a batch reporting agreement it never
-    rechecked.
+    Name and contents both, in one order sorted by path relative to the root --
+    not grouped by suffix, or the digest would depend on the order the globs
+    happened to run in.
     """
-    root = Path(package_root) if package_root is not None else \
-        Path(__file__).resolve().parents[1]
     seen: dict[str, Path] = {}
     for pattern in FINGERPRINTED:
         for path in root.rglob(pattern):
             if "__pycache__" in path.parts or not path.is_file():
                 continue
             relative = path.relative_to(root)
-            if relative.parts and relative.parts[0] in NOT_TRANSFORM_CODE:
-                continue
-            seen[str(relative)] = path
+            if include(relative.parts):
+                seen[str(relative)] = path
     digest = hashlib.sha256()
     for relative in sorted(seen):
         digest.update(relative.encode("utf-8"))
@@ -124,6 +116,51 @@ def transform_fingerprint(package_root: Optional[Path] = None) -> str:
             digest.update(b"<unreadable>")
         digest.update(b"\0")
     return digest.hexdigest()[:16]
+
+
+def _package_root(package_root: Optional[Path]) -> Path:
+    return (Path(package_root) if package_root is not None
+            else Path(__file__).resolve().parents[1])
+
+
+def transform_fingerprint(package_root: Optional[Path] = None) -> str:
+    """A digest of the transform code itself.
+
+    Every file under the package whose suffix is in :data:`FINGERPRINTED`
+    contributes. Files under :data:`NOT_TRANSFORM_CODE` are excluded; see
+    there for why that is safe.
+
+    Otherwise deliberately broad: it will call an entry stale for a change that
+    could not have affected it, and the cost of that is a rebuild, while the
+    cost of the opposite mistake is a batch reporting agreement it never
+    rechecked.
+    """
+    return _package_digest(
+        _package_root(package_root),
+        lambda parts: not (parts and parts[0] in NOT_TRANSFORM_CODE))
+
+
+#: The verification harness: everything that decides HOW a stored transform is
+#: judged -- the deck, the NTENS a source is run at, the loading, the
+#: comparison, the finite-difference reference. It is outside the transform
+#: fingerprint on purpose (a better comparison must not force a rebuild), and
+#: that is exactly why it needs a fingerprint of its own: without one, a change
+#: to how a source is run left every earlier verdict looking current. The NTENS
+#: inference changed the element ten rows are run on, one of them recorded
+#: fully verified on a layout that put a shear in the sigma_33 slot, and nothing
+#: marked that verdict stale.
+HARNESS_CODE = ("abaqus", "corpus_features")
+
+
+def harness_fingerprint(package_root: Optional[Path] = None) -> str:
+    """A digest of the verification harness (:data:`HARNESS_CODE`).
+
+    A verification row records it beside the transform fingerprint; a row is
+    current only when BOTH match what is checked out now.
+    """
+    return _package_digest(
+        _package_root(package_root),
+        lambda parts: bool(parts) and parts[0] in HARNESS_CODE)
 
 
 #: What the transform writes to say which units to build, and in what order.
