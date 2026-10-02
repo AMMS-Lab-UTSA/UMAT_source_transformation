@@ -329,6 +329,14 @@
     "tests/test_the_transform_summary_names_the_authors_source.py",
     "tests/test_the_batch_command_runs_real_contracts.py"
    ]
+  },
+  {
+   "commit": "bf8e169",
+   "bug": "The registry builder copied the batch row's compiled flag onto refused sources (9 read transformed False, compiled True), and gave not_a_umat sources the transform's refusal text as their reason, as though the refusal decided the verdict.",
+   "tests": [
+    "tests/test_registry_fields_stage_and_reason.py::test_nothing_is_compiled_that_was_not_transformed",
+    "tests/test_registry_fields_stage_and_reason.py::test_a_file_that_is_not_a_umat_is_not_given_a_refusal_as_its_reason"
+   ]
   }
  ],
  "excluded": [
@@ -407,6 +415,10 @@
   {
    "commit": "3c26b56",
    "reason": "Test census update to the pass19/pass20 registry; 'refusal' names the classes being counted, not a corrected behaviour."
+  },
+  {
+   "commit": "bd1a71b",
+   "reason": "Adds a test only; 'fails' and 'exit 1' describe the mutation that proves the new test catches a removed supply step, not a corrected behaviour."
   }
  ],
  "changelog_fixed": {
