@@ -36,7 +36,8 @@ from __future__ import annotations
 from collections import Counter, OrderedDict
 from typing import Iterable, Mapping
 
-from umat_oti.corpus_features.harness import MIN_STATE_COVERAGE, MIN_VERIFIED_PATHS
+from umat_oti.corpus_features.harness import (MIN_STATE_COVERAGE, MIN_VERIFIED_PATHS,
+                                              apply_gate_notes)
 
 #: Features the manifest knows. Records for other features (the state
 #: sensitivities wrt incoming STATEV) stay in the per-path JSONL only.
@@ -49,11 +50,16 @@ _ORDER = ("inconclusive", "unsupported", "blocked", "not_applicable", "not_attem
 
 def _coverage(record: Mapping) -> tuple:
     cov = record.get("coverage") or {}
-    return int(cov.get("n_states") or 0), int(cov.get("n_states_judged") or 0)
+    judged = int(cov.get("n_states_judged") or 0)
+    if record.get("status_before_gate_notes"):
+        judged = 0        # the path's hidden-state gate was not applied: nothing judged counts
+    return int(cov.get("n_states") or 0), judged
 
 
 def fold(records: Iterable[Mapping], *, evidence: str, producer: str = "gauss/B2") -> list:
     groups: "OrderedDict[tuple, list]" = OrderedDict()
+    # a "not applied" hidden-state gate note never folds into a verified cell
+    records = apply_gate_notes([dict(r) for r in records])
     for record in records:
         if record.get("feature") in MANIFEST_FEATURES:
             groups.setdefault((record["source_id"], record["feature"]), []).append(record)
@@ -70,7 +76,7 @@ def fold(records: Iterable[Mapping], *, evidence: str, producer: str = "gauss/B2
                 "scope": first.get("derivative_kind") if first.get("derivative_kind")
                 in ("local", "total") else None,
                 "build": {"kind": first.get("build"),
-                          "fingerprint": first.get("transformer_fingerprint"),
+                          "fingerprint": first.get("transformer_fingerprint") or "",
                           "sha256": first.get("compiled_source_sha256"),
                           "transformer": (first.get("build_identity") or {}).get("transformer")}}
         # D-12: undefined behaviour of the ORIGINAL, disclosed on every cell
