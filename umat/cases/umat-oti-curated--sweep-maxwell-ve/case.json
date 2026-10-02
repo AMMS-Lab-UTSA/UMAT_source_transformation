@@ -24,8 +24,8 @@
   "fetch": null
  },
  "fingerprints": {
-  "transform_fingerprint": "aaf3a9366218cd5f",
-  "harness_fingerprint": "cf9dc354b785672a",
+  "transform_fingerprint": "52e0a8c4289fce43",
+  "harness_fingerprint": "10909a549e28f9d7",
   "contract_transform_generation": "dbe9f928191e1d43"
  },
  "transform": {
@@ -109,7 +109,7 @@
      "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
     },
     "config": "inputs/elastic_uniaxial.cfg",
-    "config_sha256": "ea814e17f24e016f99e10657a12edc425331ac7dabede7dc2a49e23c7719582a",
+    "config_sha256": "22aa74a4fd53e5c991e7bad80cc34980330568877891fd2b55719ee06ae35dff",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -156,7 +156,7 @@
      "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
     },
     "config": "inputs/elastic_shear.cfg",
-    "config_sha256": "a40d7794e2e69dfbdec5dad349845c3585074b1cb8d78badc62939676c392a1d",
+    "config_sha256": "353c777a6b907f5d9030cee93421253a6851c82dca5cd33e850406402fadcb58",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -205,7 +205,7 @@
      "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
     },
     "config": "inputs/isotropy_reference.cfg",
-    "config_sha256": "82a2e0159e33bb5c0fb295ffcf0ec36c8d54d18f384de3f97b429bb8d3daff14",
+    "config_sha256": "dcc24a9cf09233e659fce2315058dfd5dd9528aeca1f93bbe6e0855a16087850",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -244,7 +244,7 @@
      "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
     },
     "config": "inputs/isotropy_rotated.cfg",
-    "config_sha256": "56ae93b3aa893e1dd7431d519880c1af62773b377978bd0a32dd1303c95b3c1e",
+    "config_sha256": "7beef4f90bece33815bab6edb445c232195e03bd21a8983ccd8f3c932315c862",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -281,7 +281,7 @@
      "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
     },
     "config": "inputs/plastic_ladder.cfg",
-    "config_sha256": "b8d49cfc33c9a95d309b202e077f5fc408adf47aeb5e2253ad42dc57fb8a2a21",
+    "config_sha256": "3ec2e7a0ff80def4f3655bc9d170d864db0ace8fed4902eb9e73f937eaf21381",
     "n_increments": 13,
     "judged_states": 13,
     "judged_increments": [
@@ -323,7 +323,7 @@
      "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
     },
     "config": "inputs/unload_reload.cfg",
-    "config_sha256": "db873b2c2e34c1cca9de45c460b203c2484cd746cb6592c54e158f98336c9506",
+    "config_sha256": "1839440c528ffcbf1b9448c6db96af22538e8cf54581ca0eac567e040f4a5ff9",
     "n_increments": 41,
     "judged_states": 41,
     "judged_increments": [
@@ -391,7 +391,7 @@
      "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
     },
     "config": "inputs/cyclic.cfg",
-    "config_sha256": "2a9b0488de8c8850442899b4918626cef222b3171ceb322bce8ea03ab9b31908",
+    "config_sha256": "ec7dab19626fd6bf1f2b1b0e618e41a0c2296ff01234e57219d52c77a50024fe",
     "n_increments": 50,
     "judged_states": 50,
     "judged_increments": [
@@ -469,7 +469,7 @@
      "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
     },
     "config": "inputs/reverse_yield.cfg",
-    "config_sha256": "5a92c08271ce2ef55c0b172927e163ef680eeb95c518d0485f1a772e3ef5bb37",
+    "config_sha256": "accec3a694f94f9626ba57860af4a9a19f6bf117b349910a5e704567d5d2225b",
     "n_increments": 90,
     "judged_states": 90,
     "judged_increments": [
@@ -588,7 +588,7 @@
      "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
     },
     "config": "inputs/relaxation.cfg",
-    "config_sha256": "18214a919759706bf3be9c1119df8c2d822cf3186ef5792c833d746546cda336",
+    "config_sha256": "ee4b34963ee14db0ae47c5874c9716dff349ecefe0e3f0ea5cb0b0a4b7b818ba",
     "n_increments": 30,
     "judged_states": 30,
     "judged_increments": [
@@ -647,7 +647,7 @@
      "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
     },
     "config": "inputs/rate_slow.cfg",
-    "config_sha256": "8b0e652bb4cfd0e9a06e2988fcf3ffa0b6b038f4e5c769b578e8468bb4a03eb0",
+    "config_sha256": "22b34e773eb0e4bb0efe3c9894f4f7d2b59496e16d1ad219f73c27f843adfce6",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -686,7 +686,7 @@
      "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
     },
     "config": "inputs/rate_fast.cfg",
-    "config_sha256": "211b58de5b36ceb97e8d8bae13b3489817004feb39118ecad860a51eddd41023",
+    "config_sha256": "304be10039a678a5fca251e216a8514a31f77391c1c55bb1345fb30d12f9cccd",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -789,8 +789,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T111222",
-  "seconds": 12.8,
+  "run_id": "20261002T150900",
+  "seconds": 13.2,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -802,10 +802,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "6da8bf66cc431f27b43d33974a443747fcb67877586cc8f21569309d5cadc96a",
+  "tree_sha256": "b73a33af761648e7b8dc82c17b78363a5c5e3b8f97e9acab4bb5c3a5afa44ccc",
   "location": "corpus_assets",
   "files": 39,
-  "bytes": 923697
+  "bytes": 928581
  },
  "tiers": {
   "ci": true,
@@ -821,12 +821,12 @@
   "routine-level evidence (driver), not Abaqus",
   "loading paths are this pipeline's probes, not the author's example"
  ],
- "date": "2026-10-02T11:12:38",
+ "date": "2026-10-02T15:09:16",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 3.6,
+    "seconds": 3.3,
     "source_from": "case",
     "compiled_in_job_layout": true,
     "paths": {
@@ -910,7 +910,7 @@
     }
    },
    "replay": {
-    "seconds": 1.6,
+    "seconds": 1.4,
     "units_from": "case",
     "paths": {
      "elastic_uniaxial": {

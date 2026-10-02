@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "2d8dca490b7851443b510257",
+  "registry_key": "fb2e167988b9e76898504d8e",
   "source_id": "BristolCompositesInstitute__abaci/test/data/umat.f",
   "repository": "BristolCompositesInstitute/abaci",
   "commit": "ddd99abcf5db1ad8981659cfef68b28f2d360e42",
@@ -13,6 +13,10 @@
   "cache_path": "BristolCompositesInstitute__abaci/test/data/umat.f",
   "url": "https://github.com/BristolCompositesInstitute/abaci/blob/ddd99abcf5db1ad8981659cfef68b28f2d360e42/test/data/umat.f",
   "raw_url": "https://raw.githubusercontent.com/BristolCompositesInstitute/abaci/ddd99abcf5db1ad8981659cfef68b28f2d360e42/test/data/umat.f",
+  "resolved_with": {
+   "verification_records": "<workspace>/corpus_run/pass19/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json"
+  },
   "sha256": "fde9e0e60814d4bcc1dd6e08bedefa6dad90ce367160e293c8648d3ab915f2d4",
   "bytes": 13629,
   "licence": {
@@ -27,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch bristolcompositesinstitute-abaci--umat--b8fa3835  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "aaf3a9366218cd5f",
-  "harness_fingerprint": "cf9dc354b785672a",
+  "transform_fingerprint": "52e0a8c4289fce43",
+  "harness_fingerprint": "10909a549e28f9d7",
   "contract_transform_generation": "dbe9f928191e1d43"
  },
  "transform": {
@@ -37,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:0f51ef6b9bd4ed8c38a6962b",
+  "from": "transform_store:fb2e167988b9e76898504d8e",
   "files": [
    {
     "path": "compile_order.txt",
@@ -90,8 +94,8 @@
   "family": "damage / phase field",
   "kinematics": "small",
   "material_provenance": {
-   "registry": "<umat>/paper_results/corpus/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass16/results/store_verification.jsonl key=2d8dca490b7851443b510257",
+   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass19/results/store_verification.jsonl key=fb2e167988b9e76898504d8e",
    "material_provenance": "BristolCompositesInstitute__abaci/example/jobs/test-job.inp: test-job.inp *MATERIAL umat_elastic: 2 constants, *DEPVAR 1 -- test-job.inp declares exactly one element, so it is the author's own single-element test of this material; a section in test-job.inp attaches umat_elastic to CPE4R; the materia",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -113,7 +117,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/elastic_uniaxial.cfg",
-    "config_sha256": "777b8446d39d07cb1ccf2a19b00b425577888ad30632ee8efee4729b07291d4d",
+    "config_sha256": "4a14804576414ee8fc1917ad92c17bb33de3799abcf42b8796b7f3d1277cdad6",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -161,7 +165,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/elastic_shear.cfg",
-    "config_sha256": "732c53ebaef7c1c2aff796ccef8ecedfffbba5ccfe4897663c24d1d46492ce22",
+    "config_sha256": "ff00b105c14ea086dd989e5741dd7ecea062e3b4bb40717175c8d2f891f37156",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -211,7 +215,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/isotropy_reference.cfg",
-    "config_sha256": "240765e39fcbb14151db78e5d2c6fe70f79aae2a19564fda8b8890e3daad8441",
+    "config_sha256": "59f7be74408f12588d8438bf8870d1be436977c79a36abd98a8b1f40f47535df",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -251,7 +255,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/isotropy_rotated.cfg",
-    "config_sha256": "e77eaac517d1f495f776014325fe23f6fd334c7486fbaf40dc843d3e9cad5472",
+    "config_sha256": "e436afcd240853d15cb474eb9cb21411694a0d4ac3a35d2de337bdf0afd1550d",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -289,7 +293,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/plastic_uniaxial.cfg",
-    "config_sha256": "99b179674eb0a625d327c70ad3cfd2c0cf8c0a785fc9a4d4cffa50e58f499271",
+    "config_sha256": "44dfa1fd2247d5a701b46d791c18749896b688c34225dbf7a244b68542676ded",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -327,7 +331,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/plastic_compression.cfg",
-    "config_sha256": "4cb0b524d2eddff8b397ef37dca0a438b3ff750bb26f946455f4b588b6ea5855",
+    "config_sha256": "2aa117a6c4c58e09bd7c3aa1b38874d8f772040b56268a4a852e5a55f386a446",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -367,7 +371,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/unload_reload.cfg",
-    "config_sha256": "93e4be0aa3b004a60a5a86ba675095350fd2515c7d59852d3808b4164aff549c",
+    "config_sha256": "844ce24f1def426e7c6b8df4dfe02ef979abaab0c64fb10df8a99e4320ae4a2a",
     "n_increments": 41,
     "judged_states": 41,
     "judged_increments": [
@@ -436,7 +440,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/cyclic.cfg",
-    "config_sha256": "129cbef5a5794f5a2e56538696337d246750c72f87d230e5649dc6cd33db1ed8",
+    "config_sha256": "ddf5c87b9483ddae79fd4a370ac185d00eced0e2b877226cc0686ad209a828d2",
     "n_increments": 50,
     "judged_states": 50,
     "judged_increments": [
@@ -515,7 +519,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/reverse_yield.cfg",
-    "config_sha256": "7d61f9c06a42c69467f0211f3f1cecb2f8abf865fd0cfac6b8e90870820020a5",
+    "config_sha256": "4fd2c826c1f22fe5ab5fc9707c3c9b0481a40d7ba600a2783e78b09ff0041cc9",
     "n_increments": 90,
     "judged_states": 90,
     "judged_increments": [
@@ -635,7 +639,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/relaxation.cfg",
-    "config_sha256": "94137e017ee7be58595f970b2c9d166b3d41a7889dc4ed02f95e278d5dd0cb8b",
+    "config_sha256": "87e9bc1ff8fc2eb233721bbae105489081c57e070c5427cfd24aec03718f71e7",
     "n_increments": 30,
     "judged_states": 30,
     "judged_increments": [
@@ -695,7 +699,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_slow.cfg",
-    "config_sha256": "99b179674eb0a625d327c70ad3cfd2c0cf8c0a785fc9a4d4cffa50e58f499271",
+    "config_sha256": "44dfa1fd2247d5a701b46d791c18749896b688c34225dbf7a244b68542676ded",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -735,7 +739,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_fast.cfg",
-    "config_sha256": "f91fbc301bf34d3bf50586f7ddaaa03950762fe824479dde4e7ab2b1ee756a0e",
+    "config_sha256": "84e40f4fb5a1025bcc19a67e2c55a7d1cbeffcd94b94136c8a68c371455c3609",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -842,8 +846,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T111145",
-  "seconds": 9.6,
+  "run_id": "20261002T150516",
+  "seconds": 11.7,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -855,10 +859,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "805ac9de340909f245a0858c2ed55093b585857ddb0c29d1b59988413bd51c95",
+  "tree_sha256": "c0210cb979d609529ffbec352a90d05dba24a074f7c9b90aaa9fe42f85740f91",
   "location": "corpus_assets",
   "files": 41,
-  "bytes": 939589
+  "bytes": 951014
  },
  "tiers": {
   "ci": false,
@@ -867,7 +871,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only bristolcompositesinstitute-abaci--umat--b8fa3835",
   "fetch": "python tools/corpus_cases.py fetch bristolcompositesinstitute-abaci--umat--b8fa3835",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 2d8dca490b7851443b510257 --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key fb2e167988b9e76898504d8e --verification-records <workspace>/corpus_run/pass19/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass19_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -875,12 +879,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T11:11:54",
+ "date": "2026-10-02T15:05:28",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.1,
+    "seconds": 5.0,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -971,7 +975,7 @@
     }
    },
    "replay": {
-    "seconds": 1.4,
+    "seconds": 1.8,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

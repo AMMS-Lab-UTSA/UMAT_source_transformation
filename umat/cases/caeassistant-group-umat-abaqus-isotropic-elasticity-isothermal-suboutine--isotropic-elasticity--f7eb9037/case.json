@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "c7bf17b21519e33da0b7bbb1",
+  "registry_key": "bbfb30d088564dbdfc240215",
   "source_id": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/ISOTROPIC-ELASTICITY.for",
   "repository": "CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine",
   "commit": "fe69305788fbb37185a0be38aed5ea00000aaab4",
@@ -13,6 +13,10 @@
   "cache_path": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/ISOTROPIC-ELASTICITY.for",
   "url": "https://github.com/CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/blob/fe69305788fbb37185a0be38aed5ea00000aaab4/ISOTROPIC-ELASTICITY.for",
   "raw_url": "https://raw.githubusercontent.com/CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/fe69305788fbb37185a0be38aed5ea00000aaab4/ISOTROPIC-ELASTICITY.for",
+  "resolved_with": {
+   "verification_records": "<workspace>/corpus_run/pass19/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json"
+  },
   "sha256": "27cda337a45be53431149436fbad42bd19da0bb5ec2a68f6370c17b608326a86",
   "bytes": 2632,
   "licence": {
@@ -27,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "aaf3a9366218cd5f",
-  "harness_fingerprint": "cf9dc354b785672a",
+  "transform_fingerprint": "52e0a8c4289fce43",
+  "harness_fingerprint": "10909a549e28f9d7",
   "contract_transform_generation": "dbe9f928191e1d43"
  },
  "transform": {
@@ -37,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:b91d6a2630531c8f971270d4",
+  "from": "transform_store:bbfb30d088564dbdfc240215",
   "files": [
    {
     "path": "ISOTROPIC-ELASTICITY_oti.for",
@@ -90,8 +94,8 @@
   "family": "elasticity",
   "kinematics": "small",
   "material_provenance": {
-   "registry": "<umat>/paper_results/corpus/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass16/results/store_verification.jsonl key=c7bf17b21519e33da0b7bbb1",
+   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass19/results/store_verification.jsonl key=bbfb30d088564dbdfc240215",
    "material_provenance": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/UMATmodel.inp: UMATmodel.inp *MATERIAL Steel: 2 constants, *DEPVAR 0 -- a section in UMATmodel.inp attaches Steel to C3D8; the deck sits in the source's own directory",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -113,7 +117,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/elastic_uniaxial.cfg",
-    "config_sha256": "e795db225a2e0b3f5830e7893bb756095826f1c61281250b9d3013bc2ed2ea87",
+    "config_sha256": "6607402e294529f5903d81732746809376c99ad04985ab02ddc63fbfab2f7381",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -161,7 +165,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/elastic_shear.cfg",
-    "config_sha256": "854b3fcd52e67f0e53c34623b56fd35ed06a384bcfbb090e6a5e63fae99fa2cb",
+    "config_sha256": "63eb668232399495d0fe146e9887e36a4995d634d173571d413d4270ab9297db",
     "n_increments": 20,
     "judged_states": 20,
     "judged_increments": [
@@ -211,7 +215,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/isotropy_reference.cfg",
-    "config_sha256": "901b2c0e5549160f6181a30db67e7eacbf622f09f7174fce25d21352e5d200e3",
+    "config_sha256": "c08cdc67770fc2a6bdc50e6b90f94e4e590a18f7970cbbcf21ecdf2e9e2beb64",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -251,7 +255,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/isotropy_rotated.cfg",
-    "config_sha256": "3adae7155ec37c065399fc56b4dd4f9c38de931237a0da5ca36d1ea0335835e2",
+    "config_sha256": "c46a1d26b2e6530c90fffc4aa00e4833fc1352d267af06741d3b32e5443dd65d",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -291,7 +295,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/relaxation.cfg",
-    "config_sha256": "cf2aa680ad9521861cc89b39822c41126db7ecba995e1619042c2d241dd4374b",
+    "config_sha256": "bd93116b712b5ec139a191c9d22a96da81a7ca2e74212576b566aa16702d9fba",
     "n_increments": 30,
     "judged_states": 30,
     "judged_increments": [
@@ -351,7 +355,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_slow.cfg",
-    "config_sha256": "338626c8aa5ec935fc0e21602091fd9c9de53d8e168e396bf082894fe9fa013e",
+    "config_sha256": "f29284b632fbc5310c0feec423ea45c2b69016cfb021be03a88e461644752f9a",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -391,7 +395,7 @@
      "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_fast.cfg",
-    "config_sha256": "b83d644baa7f2899bf49c2d8eaa9f5004855835fdaf582ed7ab3ac62114cc0b7",
+    "config_sha256": "25b3d37159e8e16a4bd586ef899ca90c4f339fa856960226a7d01fdc00ae0559",
     "n_increments": 10,
     "judged_states": 10,
     "judged_increments": [
@@ -478,8 +482,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T111317",
-  "seconds": 6.1,
+  "run_id": "20261002T150546",
+  "seconds": 6.0,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -491,10 +495,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "7947c91782cdcb1ef76eecdab6ea075a74973e87d90d9e441371fcd25772e683",
+  "tree_sha256": "101fec395cc4ccb626613888f2e26ea255a384657bfeff7fd88071999997a41d",
   "location": "corpus_assets",
   "files": 31,
-  "bytes": 594567
+  "bytes": 601231
  },
  "tiers": {
   "ci": false,
@@ -503,7 +507,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037",
   "fetch": "python tools/corpus_cases.py fetch caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key c7bf17b21519e33da0b7bbb1 --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key bbfb30d088564dbdfc240215 --verification-records <workspace>/corpus_run/pass19/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass19_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -511,12 +515,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T11:13:23",
+ "date": "2026-10-02T15:05:52",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.3,
+    "seconds": 3.8,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
