@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "50d935a5087a00366d2ba9c5",
+  "registry_key": "f7be16bc83b077673672669c",
   "source_id": "Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-12.for",
   "repository": "Jeff97/growth-of-circular-plate",
   "commit": "67e7e9afb06dd156f3ea4ad70ea2030b9e8048cc",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/growth-of-circular-plate/blob/67e7e9afb06dd156f3ea4ad70ea2030b9e8048cc/Wrinkle/l1-is-1--l2-is-12.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/growth-of-circular-plate/67e7e9afb06dd156f3ea4ad70ea2030b9e8048cc/Wrinkle/l1-is-1--l2-is-12.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass19/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass20/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json"
   },
   "sha256": "30b5d4d98cd7c657173a67b003eb3d19cbc1adaf8753f13138c2d1cedeb7a2fa",
   "bytes": 6803,
@@ -31,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-growth-of-circular-plate--l1-is-1-l2-is-12--06ce402d  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "52e0a8c4289fce43",
-  "harness_fingerprint": "10909a549e28f9d7",
+  "transform_fingerprint": "ab32cce7bec15c93",
+  "harness_fingerprint": "d6f92d4704bee702",
   "contract_transform_generation": "dbe9f928191e1d43"
  },
  "transform": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:50d935a5087a00366d2ba9c5",
+  "from": "transform_store:f7be16bc83b077673672669c",
   "files": [
    {
     "path": "compile_order.txt",
@@ -94,8 +94,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass19/results/store_verification.jsonl key=50d935a5087a00366d2ba9c5",
+   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass20/results/store_verification.jsonl key=f7be16bc83b077673672669c",
    "material_provenance": "Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-12-H0001.inp: l1-is-1--l2-is-12-H0001.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 10 -- a section in l1-is-1--l2-is-12-H0001.inp attaches NeoHookean to C3D6H, C3D8H; the deck's name 'l1-is-1--l2-is-12-H0001.inp' contains the whole of the sou",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "tangent_not_verified"
@@ -684,8 +684,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T150922",
-  "seconds": 17.5,
+  "run_id": "20261002T175536",
+  "seconds": 19.8,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -697,10 +697,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "8603067cc2a5f903707f00a1cb2fd82558f5021194dbad5555dab5e9445e7630",
+  "tree_sha256": "7c7889d6cf7ac46f1e0ba55c81692d6f36173f84f7c0f6df39e8a3f91726cc45",
   "location": "corpus_assets",
   "files": 37,
-  "bytes": 1031550
+  "bytes": 1036642
  },
  "tiers": {
   "ci": false,
@@ -709,7 +709,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-growth-of-circular-plate--l1-is-1-l2-is-12--06ce402d",
   "fetch": "python tools/corpus_cases.py fetch jeff97-growth-of-circular-plate--l1-is-1-l2-is-12--06ce402d",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 50d935a5087a00366d2ba9c5 --verification-records <workspace>/corpus_run/pass19/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass19_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key f7be16bc83b077673672669c --verification-records <workspace>/corpus_run/pass20/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass20_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -717,12 +717,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T15:09:40",
+ "date": "2026-10-02T17:55:56",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.6,
+    "seconds": 5.0,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -799,7 +799,7 @@
     }
    },
    "replay": {
-    "seconds": 1.6,
+    "seconds": 1.8,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

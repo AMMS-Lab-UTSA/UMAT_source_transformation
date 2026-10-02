@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "c7ddf414186d5eeceea175e6",
+  "registry_key": "c77a2a087d6ea068733cdf3a",
   "source_id": "Sina-Taghizadeh__UMAT_Hyperelastic/CompresibleNeoHookean.for",
   "repository": "Sina-Taghizadeh/UMAT_Hyperelastic",
   "commit": "e3ade702c9b6d95ec5654e93d8d85ad87566382e",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Sina-Taghizadeh/UMAT_Hyperelastic/blob/e3ade702c9b6d95ec5654e93d8d85ad87566382e/CompresibleNeoHookean.for",
   "raw_url": "https://raw.githubusercontent.com/Sina-Taghizadeh/UMAT_Hyperelastic/e3ade702c9b6d95ec5654e93d8d85ad87566382e/CompresibleNeoHookean.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass19/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass20/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json"
   },
   "sha256": "bc8d9e5ede5dc5e0b57591bbab0d05d994a786fd0fa4540e6c396d953be408b1",
   "bytes": 3177,
@@ -31,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch sina-taghizadeh-umat_hyperelastic--compresibleneohookean--d78e6119  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "52e0a8c4289fce43",
-  "harness_fingerprint": "10909a549e28f9d7",
+  "transform_fingerprint": "ab32cce7bec15c93",
+  "harness_fingerprint": "d6f92d4704bee702",
   "contract_transform_generation": "dbe9f928191e1d43"
  },
  "transform": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:c7ddf414186d5eeceea175e6",
+  "from": "transform_store:c77a2a087d6ea068733cdf3a",
   "files": [
    {
     "path": "CompresibleNeoHookean_oti.for",
@@ -94,8 +94,8 @@
   "family": "hyperelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass19/results/store_verification.jsonl key=c7ddf414186d5eeceea175e6",
+   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass20/results/store_verification.jsonl key=c77a2a087d6ea068733cdf3a",
    "material_provenance": "Sina-Taghizadeh__UMAT_Hyperelastic/NeoHookeanSimpleShearUMAT.inp: NeoHookeanSimpleShearUMAT.inp *MATERIAL MyMaterial: 2 constants, *DEPVAR 0 -- NeoHookeanSimpleShearUMAT.inp declares exactly one element, so it is the author's own single-element test of this material; a section in NeoHookeanSimpleShe",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -808,8 +808,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T150930",
-  "seconds": 10.7,
+  "run_id": "20261002T175606",
+  "seconds": 12.2,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -821,10 +821,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "a3d2f3e96d4ab04828b7a2796abbf8fd021d6239a5ef585306398503c2e47886",
+  "tree_sha256": "0df75bd1977f9545849d14133590f881ffebe0f2e76ac48875e92664eea3aebc",
   "location": "corpus_assets",
   "files": 43,
-  "bytes": 917079
+  "bytes": 922086
  },
  "tiers": {
   "ci": false,
@@ -833,7 +833,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only sina-taghizadeh-umat_hyperelastic--compresibleneohookean--d78e6119",
   "fetch": "python tools/corpus_cases.py fetch sina-taghizadeh-umat_hyperelastic--compresibleneohookean--d78e6119",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key c7ddf414186d5eeceea175e6 --verification-records <workspace>/corpus_run/pass19/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass19_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key c77a2a087d6ea068733cdf3a --verification-records <workspace>/corpus_run/pass20/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass20_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -841,12 +841,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T15:09:41",
+ "date": "2026-10-02T17:56:19",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.9,
+    "seconds": 5.0,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -944,7 +944,7 @@
     }
    },
    "replay": {
-    "seconds": 1.5,
+    "seconds": 1.8,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

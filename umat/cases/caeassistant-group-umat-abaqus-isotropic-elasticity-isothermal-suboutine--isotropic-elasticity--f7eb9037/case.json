@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "bbfb30d088564dbdfc240215",
+  "registry_key": "730f410056e6784d80a2d282",
   "source_id": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/ISOTROPIC-ELASTICITY.for",
   "repository": "CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine",
   "commit": "fe69305788fbb37185a0be38aed5ea00000aaab4",
@@ -14,8 +14,8 @@
   "url": "https://github.com/CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/blob/fe69305788fbb37185a0be38aed5ea00000aaab4/ISOTROPIC-ELASTICITY.for",
   "raw_url": "https://raw.githubusercontent.com/CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/fe69305788fbb37185a0be38aed5ea00000aaab4/ISOTROPIC-ELASTICITY.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass19/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass20/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json"
   },
   "sha256": "27cda337a45be53431149436fbad42bd19da0bb5ec2a68f6370c17b608326a86",
   "bytes": 2632,
@@ -31,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "52e0a8c4289fce43",
-  "harness_fingerprint": "10909a549e28f9d7",
+  "transform_fingerprint": "ab32cce7bec15c93",
+  "harness_fingerprint": "d6f92d4704bee702",
   "contract_transform_generation": "dbe9f928191e1d43"
  },
  "transform": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:bbfb30d088564dbdfc240215",
+  "from": "transform_store:730f410056e6784d80a2d282",
   "files": [
    {
     "path": "ISOTROPIC-ELASTICITY_oti.for",
@@ -94,8 +94,8 @@
   "family": "elasticity",
   "kinematics": "small",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass19/results/store_verification.jsonl key=bbfb30d088564dbdfc240215",
+   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass20/results/store_verification.jsonl key=730f410056e6784d80a2d282",
    "material_provenance": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/UMATmodel.inp: UMATmodel.inp *MATERIAL Steel: 2 constants, *DEPVAR 0 -- a section in UMATmodel.inp attaches Steel to C3D8; the deck sits in the source's own directory",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -482,8 +482,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T150546",
-  "seconds": 6.0,
+  "run_id": "20261002T174901",
+  "seconds": 7.0,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -495,10 +495,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "101fec395cc4ccb626613888f2e26ea255a384657bfeff7fd88071999997a41d",
+  "tree_sha256": "df9e7318e43b7f90f99b5612b62b19dc134e16adfa353131699d249ee87f47e5",
   "location": "corpus_assets",
   "files": 31,
-  "bytes": 601231
+  "bytes": 603520
  },
  "tiers": {
   "ci": false,
@@ -507,7 +507,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037",
   "fetch": "python tools/corpus_cases.py fetch caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key bbfb30d088564dbdfc240215 --verification-records <workspace>/corpus_run/pass19/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass19_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 730f410056e6784d80a2d282 --verification-records <workspace>/corpus_run/pass20/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass20_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -515,12 +515,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T15:05:52",
+ "date": "2026-10-02T17:49:08",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 3.8,
+    "seconds": 4.5,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -576,7 +576,7 @@
     }
    },
    "replay": {
-    "seconds": 1.3,
+    "seconds": 1.4,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

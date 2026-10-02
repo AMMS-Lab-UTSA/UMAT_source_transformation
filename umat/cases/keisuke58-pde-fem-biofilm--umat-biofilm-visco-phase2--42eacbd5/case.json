@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "6bf7b21fa7bc814bb97b0338",
+  "registry_key": "ab7784a35cdd66c825e37c73",
   "source_id": "keisuke58__pde-fem-biofilm/umat_biofilm_visco_phase2.f",
   "repository": "keisuke58/pde-fem-biofilm",
   "commit": "034d92847e8a58d39d5f56d3d4bcb5b22299603c",
@@ -14,8 +14,8 @@
   "url": "https://github.com/keisuke58/pde-fem-biofilm/blob/034d92847e8a58d39d5f56d3d4bcb5b22299603c/umat_biofilm_visco_phase2.f",
   "raw_url": "https://raw.githubusercontent.com/keisuke58/pde-fem-biofilm/034d92847e8a58d39d5f56d3d4bcb5b22299603c/umat_biofilm_visco_phase2.f",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass19/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass20/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json"
   },
   "sha256": "6322a9f88f5de7b3a8ae36ac796f00939e3453a17cb27aa353f63a8b1692ee0f",
   "bytes": 15115,
@@ -31,8 +31,8 @@
   "fetch": "python tools/corpus_cases.py fetch keisuke58-pde-fem-biofilm--umat-biofilm-visco-phase2--42eacbd5  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "52e0a8c4289fce43",
-  "harness_fingerprint": "10909a549e28f9d7",
+  "transform_fingerprint": "ab32cce7bec15c93",
+  "harness_fingerprint": "d6f92d4704bee702",
   "contract_transform_generation": "dbe9f928191e1d43"
  },
  "transform": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:6bf7b21fa7bc814bb97b0338",
+  "from": "transform_store:ab7784a35cdd66c825e37c73",
   "files": [
    {
     "path": "compile_order.txt",
@@ -102,8 +102,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass19_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass19/results/store_verification.jsonl key=6bf7b21fa7bc814bb97b0338",
+   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass20/results/store_verification.jsonl key=ab7784a35cdd66c825e37c73",
    "material_provenance": "keisuke58__pde-fem-biofilm/umat_tangent_test/xcheck_eigenstrain/visco_nh.inp: visco_nh.inp *MATERIAL BV: 5 constants, *DEPVAR 9 -- visco_nh.inp declares exactly one element, so it is the author's own single-element test of this material; a section in visco_nh.inp attaches BV to C3D8; the two names s",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -844,8 +844,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T150947",
-  "seconds": 18.8,
+  "run_id": "20261002T175644",
+  "seconds": 20.5,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -857,10 +857,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "5602454aef5fa88a44e3060329d07a53c35d383229b1e7c65b93e1ce2f44f683",
+  "tree_sha256": "d47cf2d0618ba1009181887ca5adb92123e3d7bc36a43b75b5955b555d5aff0a",
   "location": "corpus_assets",
   "files": 44,
-  "bytes": 1179744
+  "bytes": 1184504
  },
  "tiers": {
   "ci": false,
@@ -869,7 +869,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only keisuke58-pde-fem-biofilm--umat-biofilm-visco-phase2--42eacbd5",
   "fetch": "python tools/corpus_cases.py fetch keisuke58-pde-fem-biofilm--umat-biofilm-visco-phase2--42eacbd5",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 6bf7b21fa7bc814bb97b0338 --verification-records <workspace>/corpus_run/pass19/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass19_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key ab7784a35cdd66c825e37c73 --verification-records <workspace>/corpus_run/pass20/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass20_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -877,12 +877,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T15:10:06",
+ "date": "2026-10-02T17:57:05",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.9,
+    "seconds": 6.0,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -980,7 +980,7 @@
     }
    },
    "replay": {
-    "seconds": 2.2,
+    "seconds": 2.1,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
