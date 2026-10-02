@@ -355,10 +355,14 @@ def test_a_shape_written_on_the_declaration_is_enough_to_transform(tmp_path):
 
 
 def test_a_complex_variable_on_the_stress_path_is_refused_by_name(tmp_path):
+    # Complex arithmetic over OTI is supported since the corpus campaign's
+    # complex track (umat_oti.oti.complex_oti); what this source still does
+    # that the complex OTI type cannot is MATMUL on a complex value, and the
+    # refusal names exactly that, with its line.
     summary = _transform(tmp_path, _COMPLEX_STEP, "cstep")
     assert summary.get("transform_success") is not True
     blockers = summary.get("blockers") or []
-    assert any("COMPLEX" in text and "no complex shadow" in text
+    assert any("complex" in text.lower() and "MATMUL" in text and "line" in text
                for text in blockers), blockers
     assert not any("no confirmed shape" in text for text in blockers), blockers
 

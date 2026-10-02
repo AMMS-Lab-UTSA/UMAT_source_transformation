@@ -248,11 +248,16 @@ def test_sign_is_not_refused_by_a_transform_whose_modules_define_it():
     (1) must have a numeric type" on ALPHA_OTI = SUM(ALPHA_K_OTI(:)).
     """
     roles = {"seed": {"DSTRAN"}, "promote": {"ALPHA_K", "X"}}
-    regions = [{"start_line": 1, "end_line": 3}]
-    source = "      REAL*8 X\n      X = SIGN(1.0D0, X)\n      ALPHA = SUM(ALPHA_K(:))\n"
+    regions = [{"start_line": 1, "end_line": 4}]
+    source = ("      REAL*8 X\n      X = SIGN(1.0D0, X)\n"
+              "      ALPHA = SUM(ALPHA_K(:))\n      BETA = SUM(ALPHA_K, DIM=1)\n")
     blockers = _unsupported_intrinsic_blockers(source, roles, regions)
     assert not any("SIGN" in text for text in blockers), blockers
-    assert any("SUM" in text for text in blockers), blockers
+    # SUM(array) now has an OTI form in oti_intrinsics (batch B1, ada); only
+    # the DIM=/MASK= forms are still refused, by name and line.
+    assert [text for text in blockers if "SUM" in text and "line 3" in text] == [], blockers
+    assert any("SUM" in text and "DIM" in text and "line 4" in text
+               for text in blockers), blockers
 
 
 @pytest.mark.unit

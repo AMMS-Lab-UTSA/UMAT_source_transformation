@@ -164,8 +164,9 @@ def transform_umat_for_parameter_sensitivity(
 
     lifted_path = output_dir / "umat_oti_lifted.f90"
     lifted_path.write_text(
-        _wrap_lifted_in_module(lifted.source, module_name=module_result.module_name,
-                               n_param=n_param + extra_directions),
+        _source_defined_modules_used(parsed, umat_and_helpers)
+        + _wrap_lifted_in_module(lifted.source, module_name=module_result.module_name,
+                                 n_param=n_param + extra_directions),
         encoding="utf-8",
     )
 
@@ -179,7 +180,11 @@ def transform_umat_for_parameter_sensitivity(
         _emit_intrinsic_extensions(module_result.module_name,
                                    module_result.type_name), encoding="utf-8")
 
-    stubs = _required_utility_stubs(source_text)
+    # Read off the text the lifter was given, not the published one: a
+    # utility supplied above (ROTSIG for Lemaitre, Gauss B1 F1) is defined
+    # there, and asking the unsupplied text refused exactly what had just
+    # been made available.
+    stubs = _required_utility_stubs(parsed.text)
     (output_dir / "abaqus_stubs.f90").write_text(
         "".join(_STUBBABLE_UTILITIES[name] for name in stubs), encoding="utf-8")
 
@@ -358,6 +363,28 @@ def _colliding_direction_names(body: str, n_param: int) -> tuple[str, ...]:
     return tuple(name for name in oti_direction_names(n_param) if name in used)
 
 
+def _source_defined_modules_used(parsed: ParsedFortranSource,
+                                 routine_names: tuple[str, ...]) -> str:
+    """The source's own modules that the lifted routines USE, as free-form text.
+
+    See :mod:`umat_oti.transform.source_modules` (Gauss, B1 F4: ``use NumKind``).
+    """
+    from umat_oti.transform.source_modules import module_text, modules_used_by, source_modules
+
+    modules = source_modules(parsed.logical_lines)
+    if not modules:
+        return ""
+    routines = routines_by_name(parsed)
+    wanted = modules_used_by((routines[name].lines for name in routine_names if name in routines),
+                             modules)
+    if not wanted:
+        return ""
+    text = ["!===============================================================",
+            "! Modules the source defines for itself, carried over unchanged.",
+            "!==============================================================="]
+    return "\n".join(text) + "\n" + "".join(module_text(modules[name]) for name in wanted) + "\n"
+
+
 def _wrap_lifted_in_module(body: str, *, module_name: str, n_param: int = 0) -> str:
     collisions = _colliding_direction_names(body, n_param) if n_param else ()
     if collisions:
@@ -384,6 +411,35 @@ def _wrap_lifted_in_module(body: str, *, module_name: str, n_param: int = 0) -> 
     )
     footer = "\nEND MODULE umat_oti_lifted_mod\n"
     return header + body + footer
+
+
+def umat_kstep_extent(source_path: Path) -> str:
+    """The declared extent of the UMAT's 36th dummy (KSTEP / JSTEP), "" if scalar.
+
+    Read from the routine's own declarations; an unreadable source or a
+    routine with fewer than 36 dummies is treated as the classic scalar.
+    """
+    try:
+        parsed = _parse_umat_source(Path(source_path))
+    except OSError:
+        return ""
+    routine = next((r for r in parsed.subroutines if r.upper_name == "UMAT"), None)
+    if routine is None:
+        routine = next((r for r in parsed.subroutines if len(r.args) == 37), None)
+    if routine is None or len(routine.args) < 36:
+        return ""
+    name = routine.args[35].upper()
+    for declaration in routine.declarations:
+        for entity in declaration.entities:
+            if entity.upper_name == name and entity.dimensions:
+                return ",".join(entity.dimensions)
+    pattern = re.compile(rf"^\s*DIMENSION\b.*?(?<![\w%]){re.escape(name)}\s*\(([^)]*)\)",
+                         re.IGNORECASE)
+    for line in routine.lines:
+        match = pattern.match(line.text)
+        if match:
+            return match.group(1).strip()
+    return ""
 
 
 def _emit_driver(
@@ -492,7 +548,14 @@ def _emit_driver(
         lines.append(f"  REAL(DP) :: OTI_DFGRD0_DP(3,3,{n_param}), OTI_DFGRD1_DP(3,3,{n_param})")
         lines.append("  INTEGER :: U_TANGENT")
     lines.append("  CHARACTER(len=80) :: CMNAME")
-    lines.append("  INTEGER :: NOEL, NPT, LAYER, KSPT, KSTEP, KINC")
+    # The 36th argument is KSTEP in the classic interface and JSTEP(4) in the
+    # newer one (step number, procedure, NLGEOM flag, perturbation flag). A
+    # scalar actual against JSTEP(4) is a rank mismatch the module's explicit
+    # interface rejects (Gauss, B1 F2: CAEAssistant), so the driver passes
+    # the shape the routine declares, with the step number in element 1.
+    kstep_extent = umat_kstep_extent(contract.umat_source_path)
+    kstep_declaration = f"KSTEP({kstep_extent})" if kstep_extent else "KSTEP"
+    lines.append(f"  INTEGER :: NOEL, NPT, LAYER, KSPT, {kstep_declaration}, KINC")
     lines.append("  INTEGER :: I, K, INC")
     lines.append("  INTEGER :: U_PRIMAL, U_SIGMA, U_STATE")
     lines.append("")
@@ -532,7 +595,8 @@ def _emit_driver(
     lines.append("  DFGRDINC = 0.0_DP")
     lines.append("  PNEWDT = 1.0_DP; CELENT = 1.0_DP")
     lines.append('  CMNAME = "MATERIAL_OTI"')
-    lines.append("  NOEL = 1; NPT = 1; LAYER = 1; KSPT = 1; KSTEP = 1; KINC = 1")
+    lines.append("  NOEL = 1; NPT = 1; LAYER = 1; KSPT = 1; KINC = 1")
+    lines.append("  KSTEP = 0; KSTEP(1) = 1" if kstep_extent else "  KSTEP = 1")
     lines.append("")
     lines.append("  ! -- CSV headers ----------------------------------------------")
     lines.append('  OPEN(NEWUNIT=U_PRIMAL, FILE="primal_stress_state_OTI.csv", STATUS="REPLACE", ACTION="WRITE")')
@@ -701,9 +765,12 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "  PRIVATE",
         "  PUBLIC :: MIN, MAX, SIGN, NINT, INT, LOG10, ASSIGNMENT(=), MATMUL",
         "  PUBLIC :: OPERATOR(+), OPERATOR(-), OPERATOR(*), OPERATOR(/)",
-        "  PUBLIC :: OPERATOR(**), TINY",
+        "  PUBLIC :: OPERATOR(**), TINY, SUM, NORM2, OTI_VALUE, OTI_R4",
         "  INTERFACE OPERATOR(**)",
         "    MODULE PROCEDURE oti_pow_so",
+        "  END INTERFACE",
+        "  INTERFACE OTI_R4",
+        "    MODULE PROCEDURE oti_r4_o, oti_r4_d, oti_r4_s",
         "  END INTERFACE",
         "  INTERFACE TINY",
         "    MODULE PROCEDURE oti_tiny",
@@ -722,6 +789,12 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "  INTERFACE MATMUL",
         "    MODULE PROCEDURE oti_matmul_oo_mv, oti_matmul_ro_mv, oti_matmul_or_mv",
         "    MODULE PROCEDURE oti_matmul_oo_vm, oti_matmul_ro_vm, oti_matmul_or_vm",
+        # An INTEGER selection matrix against a differentiated one. Fortran's
+        # own MATMUL converts an integer operand; the derived type takes that
+        # away, so baw-de/poroMechanicalFoam's MATMUL(ASMALL, EXT) with EXT an
+        # INTEGER 0/1 extension matrix matched no specific. An integer
+        # carries no derivative, so the product is the one the source meant.
+        "    MODULE PROCEDURE oti_matmul_oi_mm, oti_matmul_io_mm",
         "  END INTERFACE MATMUL",
         "  INTERFACE MIN",
         "    MODULE PROCEDURE oti_min_or, oti_min_ro",
@@ -754,6 +827,34 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "  INTERFACE LOG10",
         "    MODULE PROCEDURE oti_log10",
         "  END INTERFACE LOG10",
+        # SUM and NORM2 of a differentiated array, whole-array form only (no
+        # DIM, no MASK; the transform still refuses those by name). A sum is
+        # linear, so its derivative is the sum of the derivatives, exactly;
+        # NORM2 is SQRT of the sum of squares and carries the chain rule
+        # through SQRT, with the same non-differentiable point at the zero
+        # vector the real NORM2 has. Fourteen corpus sources were refused for
+        # SUM on a run-time extent and three failed to compile on NORM2.
+        # Adding the generics extends the intrinsic: a call on REAL arrays
+        # still resolves to the intrinsic. A source with its own variable of
+        # either name gets the import renamed away (see intrinsic_collisions),
+        # which is what kept SUM out of this module until now.
+        "  INTERFACE SUM",
+        "    MODULE PROCEDURE oti_sum_r1, oti_sum_r2",
+        "  END INTERFACE SUM",
+        # The value of anything numeric as the OTI type, elementally. An array
+        # constructor must have one type, and (/ 1.0D0, -PR, 0.0D0 /) with PR
+        # differentiated has two: gfortran stops at "Element in REAL(8) array
+        # constructor is TYPE(...)". The transform wraps every element of such
+        # a constructor in OTI_VALUE, which is the identity on a hypercomplex
+        # element and the source's own real-to-OTI assignment on a real or
+        # integer one, so no value changes and a constant carries a zero
+        # derivative, as it does.
+        "  INTERFACE OTI_VALUE",
+        "    MODULE PROCEDURE oti_value_o, oti_value_d, oti_value_s, oti_value_i",
+        "  END INTERFACE OTI_VALUE",
+        "  INTERFACE NORM2",
+        "    MODULE PROCEDURE oti_norm2_r1, oti_norm2_r2",
+        "  END INTERFACE NORM2",
         # Unary plus. The generated module defines the binary operators but not
         # this one, so an expression like COFACTOR(2,2) = +(A(1,1)*A(3,3)-...)
         # -- ordinary in cofactor and adjugate code, and legal Fortran -- fails
@@ -976,6 +1077,114 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         f"    TYPE({type_name}) :: RES",
         "    RES = REAL(BASE, DP)**EXPONENT",
         "  END FUNCTION oti_pow_so",
+        # OTI_R4: the source's binary32 rounding of one operation, applied to
+        # the real part only (see umat_oti.transform.binary32).
+        "  ELEMENTAL FUNCTION oti_r4_o(X) RESULT(RES)",
+        f"    TYPE({type_name}), INTENT(IN) :: X",
+        f"    TYPE({type_name}) :: RES",
+        "    RES = X",
+        "    RES%R = REAL(REAL(X%R, KIND=4), DP)",
+        "  END FUNCTION oti_r4_o",
+        "  ELEMENTAL FUNCTION oti_r4_d(X) RESULT(RES)",
+        "    REAL(DP), INTENT(IN) :: X",
+        "    REAL(DP) :: RES",
+        "    RES = REAL(REAL(X, KIND=4), DP)",
+        "  END FUNCTION oti_r4_d",
+        "  ELEMENTAL FUNCTION oti_r4_s(X) RESULT(RES)",
+        "    REAL(KIND=4), INTENT(IN) :: X",
+        "    REAL(KIND=4) :: RES",
+        "    RES = X",
+        "  END FUNCTION oti_r4_s",
+        "  ELEMENTAL FUNCTION oti_value_o(X) RESULT(RES)",
+        f"    TYPE({type_name}), INTENT(IN) :: X",
+        f"    TYPE({type_name}) :: RES",
+        "    RES = X",
+        "  END FUNCTION oti_value_o",
+        "  ELEMENTAL FUNCTION oti_value_d(X) RESULT(RES)",
+        "    REAL(DP), INTENT(IN) :: X",
+        f"    TYPE({type_name}) :: RES",
+        "    RES = X",
+        "  END FUNCTION oti_value_d",
+        "  ELEMENTAL FUNCTION oti_value_s(X) RESULT(RES)",
+        "    REAL(KIND=4), INTENT(IN) :: X",
+        f"    TYPE({type_name}) :: RES",
+        "    RES = REAL(X, DP)",
+        "  END FUNCTION oti_value_s",
+        "  ELEMENTAL FUNCTION oti_value_i(X) RESULT(RES)",
+        "    INTEGER, INTENT(IN) :: X",
+        f"    TYPE({type_name}) :: RES",
+        "    RES = REAL(X, DP)",
+        "  END FUNCTION oti_value_i",
+        "  FUNCTION oti_matmul_oi_mm(A, B) RESULT(RES)",
+        f"    TYPE({type_name}), INTENT(IN) :: A(:,:)",
+        "    INTEGER, INTENT(IN) :: B(:,:)",
+        f"    TYPE({type_name}) :: RES(SIZE(A, 1), SIZE(B, 2))",
+        "    INTEGER :: I, J, K",
+        "    RES = 0.0D0",
+        "    DO J = 1, SIZE(B, 2)",
+        "      DO K = 1, SIZE(A, 2)",
+        "        DO I = 1, SIZE(A, 1)",
+        "          RES(I, J) = RES(I, J) + A(I, K)*REAL(B(K, J), DP)",
+        "        END DO",
+        "      END DO",
+        "    END DO",
+        "  END FUNCTION oti_matmul_oi_mm",
+        "  FUNCTION oti_matmul_io_mm(A, B) RESULT(RES)",
+        "    INTEGER, INTENT(IN) :: A(:,:)",
+        f"    TYPE({type_name}), INTENT(IN) :: B(:,:)",
+        f"    TYPE({type_name}) :: RES(SIZE(A, 1), SIZE(B, 2))",
+        "    INTEGER :: I, J, K",
+        "    RES = 0.0D0",
+        "    DO J = 1, SIZE(B, 2)",
+        "      DO K = 1, SIZE(A, 2)",
+        "        DO I = 1, SIZE(A, 1)",
+        "          RES(I, J) = RES(I, J) + REAL(A(I, K), DP)*B(K, J)",
+        "        END DO",
+        "      END DO",
+        "    END DO",
+        "  END FUNCTION oti_matmul_io_mm",
+        "  FUNCTION oti_sum_r1(ARRAY) RESULT(RES)",
+        f"    TYPE({type_name}), INTENT(IN) :: ARRAY(:)",
+        f"    TYPE({type_name}) :: RES",
+        "    INTEGER :: I",
+        "    RES = 0.0D0",
+        "    DO I = 1, SIZE(ARRAY)",
+        "      RES = RES + ARRAY(I)",
+        "    END DO",
+        "  END FUNCTION oti_sum_r1",
+        "  FUNCTION oti_sum_r2(ARRAY) RESULT(RES)",
+        f"    TYPE({type_name}), INTENT(IN) :: ARRAY(:,:)",
+        f"    TYPE({type_name}) :: RES",
+        "    INTEGER :: I, J",
+        "    RES = 0.0D0",
+        "    DO J = 1, SIZE(ARRAY, 2)",
+        "      DO I = 1, SIZE(ARRAY, 1)",
+        "        RES = RES + ARRAY(I, J)",
+        "      END DO",
+        "    END DO",
+        "  END FUNCTION oti_sum_r2",
+        "  FUNCTION oti_norm2_r1(ARRAY) RESULT(RES)",
+        f"    TYPE({type_name}), INTENT(IN) :: ARRAY(:)",
+        f"    TYPE({type_name}) :: RES, ACC",
+        "    INTEGER :: I",
+        "    ACC = 0.0D0",
+        "    DO I = 1, SIZE(ARRAY)",
+        "      ACC = ACC + ARRAY(I)*ARRAY(I)",
+        "    END DO",
+        "    RES = SQRT(ACC)",
+        "  END FUNCTION oti_norm2_r1",
+        "  FUNCTION oti_norm2_r2(ARRAY) RESULT(RES)",
+        f"    TYPE({type_name}), INTENT(IN) :: ARRAY(:,:)",
+        f"    TYPE({type_name}) :: RES, ACC",
+        "    INTEGER :: I, J",
+        "    ACC = 0.0D0",
+        "    DO J = 1, SIZE(ARRAY, 2)",
+        "      DO I = 1, SIZE(ARRAY, 1)",
+        "        ACC = ACC + ARRAY(I, J)*ARRAY(I, J)",
+        "      END DO",
+        "    END DO",
+        "    RES = SQRT(ACC)",
+        "  END FUNCTION oti_norm2_r2",
         "  ELEMENTAL FUNCTION oti_tiny(VALUE) RESULT(RES)",
         f"    TYPE({type_name}), INTENT(IN) :: VALUE",
         "    REAL(DP) :: RES",

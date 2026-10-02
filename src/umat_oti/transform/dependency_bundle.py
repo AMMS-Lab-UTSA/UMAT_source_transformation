@@ -12,6 +12,34 @@ from umat_oti.fortran.normalize import detect_source_form
 
 _INCLUDE = re.compile(r"^\s*(?:INCLUDE\s*|#\s*include\s*)['\"]([^'\"]+)['\"]\s*$", re.IGNORECASE)
 
+#: The parameter header the solver supplies to every user subroutine.
+RUNTIME_HEADER = "aba_param.inc"
+
+
+def is_runtime_header(name: str) -> bool:
+    """Whether an INCLUDE names Abaqus's own parameter header, in any case."""
+    return Path(str(name)).name.lower() == RUNTIME_HEADER
+
+
+def case_insensitive_file(path: Path):
+    """The one file whose name matches ``path``'s ignoring case, or None.
+
+    Fortran compilers on case-insensitive filesystems open
+    ``INCLUDE 'PARAM_UMAT.INC'`` from a file shipped as ``param_umat.inc``,
+    and the corpus is full of sources written that way:
+    jpsferreira/UMAT-ABAQUS includes PARAM_UMAT.INC nine times and ships
+    param_umat.inc. Two candidates differing only in case are ambiguous and
+    resolve to nothing, so the include is reported missing as before.
+    """
+    path = Path(path)
+    directory = path.parent
+    if not directory.is_dir():
+        return None
+    wanted = path.name.lower()
+    matches = [item for item in directory.iterdir()
+               if item.name.lower() == wanted and item.is_file()]
+    return matches[0].resolve() if len(matches) == 1 else None
+
 
 def bundle_sources(sources, out_dir: Path, *, roots=(), runtime_calls=(), library_calls=None):
     out_dir = out_dir.resolve()
@@ -36,7 +64,20 @@ def bundle_sources(sources, out_dir: Path, *, roots=(), runtime_calls=(), librar
             if not match:
                 continue
             name = match.group(1)
+            if is_runtime_header(name):
+                # The solver's own header. It is never staged and its INCLUDE
+                # is never rewritten, even when a copy sits beside the source
+                # (the corpus driver drops a gfortran stub there, and authors
+                # ship their own): a job is handed the real one on Abaqus's
+                # include path, and a rewritten 'dependencies/ABA_PARAM.INC'
+                # stops the user-subroutine build in the job directory before
+                # the input processor runs. That is what failed 141 entries
+                # at fingerprint 650a66ab55825346.
+                runtime_includes.append({"source": str(path), "include": name})
+                continue
             local = (path.parent / name).resolve()
+            if not local.is_file():
+                local = case_insensitive_file(path.parent / name) or local
             if local.is_file():
                 target = local
             else:
@@ -54,8 +95,7 @@ def bundle_sources(sources, out_dir: Path, *, roots=(), runtime_calls=(), librar
                     raise ValueError(f"Ambiguous include {name!r} required by {path.name}")
                 target = min(candidates, key=str) if candidates else None
             if target is None:
-                record = {"source": str(path), "include": name}
-                (runtime_includes if Path(name).name.lower() == "aba_param.inc" else missing).append(record)
+                missing.append({"source": str(path), "include": name})
                 continue
             edges[path].append((line.line_numbers, name, target))
             visit(target, form)

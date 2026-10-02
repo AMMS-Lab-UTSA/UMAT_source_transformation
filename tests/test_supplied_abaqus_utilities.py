@@ -30,17 +30,23 @@ def test_a_name_with_no_definition_is_not_claimed():
     assert definition_text(["KHARDEN"]) == ""
 
 
-def test_an_eigenproblem_is_deliberately_not_supplied():
+def test_an_eigenproblem_is_supplied_only_on_the_body_that_handles_coincidence():
     """SPRIND and SPRINC return principal values and directions.
 
-    Writing the algebra out would produce a body that differentiates
-    correctly only while the eigenvalues stay distinct, and silently wrongly
-    where they coincide -- which is where an isotropic model spends much of
-    its time. A refusal is the honest answer until that case is handled.
+    They were refused while the only body available differentiated correctly
+    only for distinct eigenvalues -- silently wrongly where they coincide,
+    which is where an isotropic model spends much of its time. They are
+    supplied now because they are built on the DSPEVD body, which treats a
+    repeated cluster deliberately (the cluster mean, whose derivative exists).
+    The behaviour is pinned numerically in
+    tests/test_transform_supplied_abaqus_utilities_differentiate.py
+    (test_a_repeated_pair_keeps_the_sum_of_its_derivatives); this test pins
+    that the supply rests on that body and on nothing else.
     """
     for name in ("SPRIND", "SPRINC"):
-        assert name not in UTILITY_DEFINITIONS
-        assert available_definitions([name]) == ()
+        assert name in UTILITY_DEFINITIONS
+        assert name in available_definitions([name])
+    assert "DSPEVD" in UTILITY_DEFINITIONS["SPRIND"].upper()
 
 
 def test_the_lookup_is_case_insensitive_like_fortran():

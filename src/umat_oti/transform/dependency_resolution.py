@@ -646,8 +646,33 @@ def combined_source(graph: DependencyGraph) -> str:
     result compiles as a single translation unit with no duplicate symbols.
     """
     entry_text = graph.entry_path.read_text(encoding="utf-8", errors="replace")
-    parts = [entry_text.rstrip("\n")]
     seen_files: set[Path] = {graph.entry_path}
+    # A routine the entry file INCLUDEs is spliced in by the compiler, and is
+    # also appended below as a resolved definition -- defined twice ("Global
+    # name 'kctm' is already being used", LallyLab's umat_MA_global.for, whose
+    # file-scope INCLUDE manifest names kCTM.for and kstress_calc.for). The
+    # appended copy is the one the transform reads and lifts, so the INCLUDE
+    # of a file whose every routine is appended is commented out instead.
+    appended = {definition.name for definition in graph.external_definitions}
+    extras: list[RoutineDefinition] = []
+    entry_lines = entry_text.rstrip("\n").splitlines()
+    comment = "C" if graph.entry_path.suffix.lower() in {".for", ".f", ".f77"} else "!"
+    for index, line in enumerate(entry_lines):
+        match = _INCLUDE_RE.match(line)
+        if not match:
+            continue
+        for base in (graph.entry_path.parent, graph.entry_path.parent.parent):
+            included = base / match.group(1)
+            if included.is_file():
+                definitions = _definitions_in(included)
+                names = {definition.name for definition in definitions}
+                if names & appended:
+                    entry_lines[index] = f"{comment}     {line.strip()}  (appended below)"
+                    # Its other routines are not in the closure but are still
+                    # part of the program the INCLUDE made; they follow too.
+                    extras.extend(d for d in definitions if d.name not in appended)
+                break
+    parts = ["\n".join(entry_lines)]
     header = ("C" if graph.entry_path.suffix.lower() in {".for", ".f", ".f77"} else "!")
     for definition in sorted(graph.external_definitions,
                              key=lambda d: (str(d.path), d.start_line)):
@@ -657,6 +682,9 @@ def combined_source(graph: DependencyGraph) -> str:
             f"{header}" + "=" * 68)
         parts.append(definition.text().rstrip("\n"))
         seen_files.add(definition.path)
+    for definition in extras:
+        parts.append(f"{header} {definition.name} from the INCLUDE'd {definition.path.name}")
+        parts.append(definition.text().rstrip("\n"))
     return "\n".join(parts) + "\n"
 
 
