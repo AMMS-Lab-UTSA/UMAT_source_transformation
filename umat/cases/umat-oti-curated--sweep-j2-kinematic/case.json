@@ -1,0 +1,882 @@
+{
+ "schema": "umat-oti/regression-case/1",
+ "case_id": "umat-oti-curated--sweep-j2-kinematic",
+ "status": "verified",
+ "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
+ "source": {
+  "kind": "curated",
+  "source_id": "umat-oti/parameter_sensitivity/models/sweep_j2_kinematic/umat.for",
+  "repository": "this repository",
+  "path": "parameter_sensitivity/models/sweep_j2_kinematic/umat.for",
+  "commit": null,
+  "url": null,
+  "raw_url": null,
+  "sha256": "80bede9a4f207d861ff9444f7685773244923c8e1d9533ffe8fd3747eadaec82",
+  "bytes": 4416,
+  "licence": {
+   "spdx": "GPL-3.0-only",
+   "scope": "file",
+   "basis": "THIRD_PARTY_NOTICES.md section 2c: the UMAT-OTI authors' own implementation",
+   "redistribution": "permitted",
+   "redistribution_basis": "project-owned source, distributed under this repository's licence"
+  },
+  "in_case": "source/umat.for",
+  "fetch": null
+ },
+ "fingerprints": {
+  "transform_fingerprint": "aaf3a9366218cd5f",
+  "harness_fingerprint": "cf9dc354b785672a",
+  "contract_transform_generation": "dbe9f928191e1d43"
+ },
+ "transform": {
+  "settings": {
+   "recipe": "tools/transform_all.transform_one (seed auto, STRESS/DDSDDE, job-layout gfortran compile)",
+   "ntens": 6,
+   "PYTHONHASHSEED": "0"
+  },
+  "from": "regenerated (tools/transform_all.transform_one)",
+  "files": [
+   {
+    "path": "compile_order.txt",
+    "sha256": "ca7b5d2f6ab3d98188ee6bb04d8b676c217966b43d1513062605bd20a0894972",
+    "bytes": 81
+   },
+   {
+    "path": "dependencies/umat.for",
+    "sha256": "80bede9a4f207d861ff9444f7685773244923c8e1d9533ffe8fd3747eadaec82",
+    "bytes": 4416
+   },
+   {
+    "path": "master_parameters.f90",
+    "sha256": "2baddb13f26a7b01e40692a31866bbbd84db97139e52016ca73058bfd4911781",
+    "bytes": 2552
+   },
+   {
+    "path": "oti_intrinsics.f90",
+    "sha256": "38606c9c1fca85a9e5df4a32b86b77facae0e2cca3c57db0e1e1193de78dca5c",
+    "bytes": 14283
+   },
+   {
+    "path": "otim6n1.f90",
+    "sha256": "4ba635b11181241b426f50758413d9b87c480728f7706c310ee030abe866714f",
+    "bytes": 109682
+   },
+   {
+    "path": "real_utils.f90",
+    "sha256": "20ad619211d89d527f2b7368f16e415a8253e12eca1649164d842a74a34bb93b",
+    "bytes": 26834
+   },
+   {
+    "path": "umat_oti.for",
+    "sha256": "b539f7e10f16f823ef58a3e0ca61982a48ec71b24fc525ee8107759c390da925",
+    "bytes": 6958
+   }
+  ],
+  "compiled_source_sha256": "7c967774ba53417147869e301c12404665da6723f0960d94baba19cd7980eb74"
+ },
+ "experiment": {
+  "ntens": 6,
+  "ndi": 3,
+  "nshr": 3,
+  "nstatv": 6,
+  "props": [
+   200000.0,
+   0.3,
+   250.0,
+   2000.0
+  ],
+  "initial_statev": "first data rows of each config (after SDVINI if any)",
+  "family": "plasticity",
+  "kinematics": "small",
+  "material_provenance": {
+   "curated_model": "parameter_sensitivity/models/sweep_j2_kinematic/umat.for",
+   "props": "contract_v2.json validation.props_values",
+   "family": "set at freeze (--family)",
+   "activation_amplitude": "set at freeze (--activation); not an Abaqus amplitude search"
+  },
+  "paths": [
+   {
+    "name": "elastic_uniaxial",
+    "regime": "elastic",
+    "kinematics": "small",
+    "provenance": {
+     "period": "UNKNOWN time scale: no total_time, no declared scale, no deck period; using Abaqus's default step period 1.0",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "plasticity",
+     "yield_strain": "sigma_y/E = 250/200000 = 0.00125 (line 34: SIGY0=PROPS(3); line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2))",
+     "elastic": "0.25 x identified yield strain",
+     "inelastic": "5 x identified yield strain",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2)",
+     "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
+    },
+    "config": "inputs/elastic_uniaxial.cfg",
+    "config_sha256": "3837c065b7494aa12f6a96988a4da1e88725c50250a941424bc8b0bebe9efd4e",
+    "n_increments": 20,
+    "judged_states": 20,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "elastic_shear",
+    "regime": "elastic",
+    "kinematics": "small",
+    "provenance": {
+     "period": "UNKNOWN time scale: no total_time, no declared scale, no deck period; using Abaqus's default step period 1.0",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "plasticity",
+     "yield_strain": "sigma_y/E = 250/200000 = 0.00125 (line 34: SIGY0=PROPS(3); line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2))",
+     "elastic": "0.25 x identified yield strain",
+     "inelastic": "5 x identified yield strain",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2)",
+     "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
+    },
+    "config": "inputs/elastic_shear.cfg",
+    "config_sha256": "4d473583787fbfe1a80ec3f4696043f9867353faa9f5f7babac875fcb71bff04",
+    "n_increments": 20,
+    "judged_states": 20,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "isotropy_reference",
+    "regime": "plastic",
+    "kinematics": "small",
+    "provenance": {
+     "period": "UNKNOWN time scale: no total_time, no declared scale, no deck period; using Abaqus's default step period 1.0",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "plasticity",
+     "yield_strain": "sigma_y/E = 250/200000 = 0.00125 (line 34: SIGY0=PROPS(3); line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2))",
+     "elastic": "0.25 x identified yield strain",
+     "inelastic": "5 x identified yield strain",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2)",
+     "isotropy": "family 'plasticity' is isotropic by default and no anisotropy marker was found in the file path or code",
+     "rotation": "35 deg about (1.0, 2.0, 3.0) (layout-preserving for NTENS=6)",
+     "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
+    },
+    "config": "inputs/isotropy_reference.cfg",
+    "config_sha256": "7c07051b5bd895a3fdd86865c04c5020a3f72b126eca8c7d68d0d7a510447b85",
+    "n_increments": 10,
+    "judged_states": 10,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.13e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "isotropy_rotated",
+    "regime": "plastic",
+    "kinematics": "small",
+    "provenance": {
+     "period": "UNKNOWN time scale: no total_time, no declared scale, no deck period; using Abaqus's default step period 1.0",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "plasticity",
+     "yield_strain": "sigma_y/E = 250/200000 = 0.00125 (line 34: SIGY0=PROPS(3); line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2))",
+     "elastic": "0.25 x identified yield strain",
+     "inelastic": "5 x identified yield strain",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2)",
+     "isotropy": "family 'plasticity' is isotropic by default and no anisotropy marker was found in the file path or code",
+     "rotation": "35 deg about (1.0, 2.0, 3.0) (layout-preserving for NTENS=6)",
+     "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
+    },
+    "config": "inputs/isotropy_rotated.cfg",
+    "config_sha256": "1d5c81c62abe01094327d263f3bd0b0e4c2a371cb374ff596b3334f4290956c9",
+    "n_increments": 10,
+    "judged_states": 10,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.07e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "plastic_uniaxial",
+    "regime": "plastic",
+    "kinematics": "small",
+    "provenance": {
+     "period": "UNKNOWN time scale: no total_time, no declared scale, no deck period; using Abaqus's default step period 1.0",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "plasticity",
+     "yield_strain": "sigma_y/E = 250/200000 = 0.00125 (line 34: SIGY0=PROPS(3); line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2))",
+     "elastic": "0.25 x identified yield strain",
+     "inelastic": "5 x identified yield strain",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2)",
+     "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
+    },
+    "config": "inputs/plastic_uniaxial.cfg",
+    "config_sha256": "9a63df21ddcf7ab6f0d07df69dfe2292966ccce7ae3da32965eb6ca7aceab3f1",
+    "n_increments": 10,
+    "judged_states": 10,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "plastic_compression",
+    "regime": "plastic",
+    "kinematics": "small",
+    "provenance": {
+     "period": "UNKNOWN time scale: no total_time, no declared scale, no deck period; using Abaqus's default step period 1.0",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "plasticity",
+     "yield_strain": "sigma_y/E = 250/200000 = 0.00125 (line 34: SIGY0=PROPS(3); line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2))",
+     "elastic": "0.25 x identified yield strain",
+     "inelastic": "5 x identified yield strain",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2)",
+     "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
+    },
+    "config": "inputs/plastic_compression.cfg",
+    "config_sha256": "4d43c22be4d31109d832564a0d72b6dcadcc0c2edbc79d060adf514c86f70f33",
+    "n_increments": 10,
+    "judged_states": 10,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "unload_reload",
+    "regime": "unload_reload",
+    "kinematics": "small",
+    "provenance": {
+     "period": "UNKNOWN time scale: no total_time, no declared scale, no deck period; using Abaqus's default step period 1.0",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "plasticity",
+     "yield_strain": "sigma_y/E = 250/200000 = 0.00125 (line 34: SIGY0=PROPS(3); line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2))",
+     "elastic": "0.25 x identified yield strain",
+     "inelastic": "5 x identified yield strain",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2)",
+     "unload_depth": "0.00125 (= one yield strain: stays elastic for isotropic and kinematic hardening)",
+     "first_increment": "0.0001 (min(elastic amplitude, FIRST_AMPLITUDE))",
+     "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
+    },
+    "config": "inputs/unload_reload.cfg",
+    "config_sha256": "40d4d82d29cad96949d6063b0310deb879d9bb9187cc9bcde530113e7ceb87d0",
+    "n_increments": 41,
+    "judged_states": 40,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "40/41 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "cyclic",
+    "regime": "cyclic",
+    "kinematics": "small",
+    "provenance": {
+     "period": "UNKNOWN time scale: no total_time, no declared scale, no deck period; using Abaqus's default step period 1.0",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "plasticity",
+     "yield_strain": "sigma_y/E = 250/200000 = 0.00125 (line 34: SIGY0=PROPS(3); line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2))",
+     "elastic": "0.25 x identified yield strain",
+     "inelastic": "5 x identified yield strain",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2)",
+     "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
+    },
+    "config": "inputs/cyclic.cfg",
+    "config_sha256": "b54cb1de16482ab9e2b20f8721646efdb7871af7186afc51dfc45f6d61aee50b",
+    "n_increments": 50,
+    "judged_states": 50,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     47,
+     48,
+     49,
+     50
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "50/50 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "reverse_yield",
+    "regime": "cyclic",
+    "kinematics": "small",
+    "provenance": {
+     "period": "UNKNOWN time scale: no total_time, no declared scale, no deck period; using Abaqus's default step period 1.0",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "plasticity",
+     "yield_strain": "sigma_y/E = 250/200000 = 0.00125 (line 34: SIGY0=PROPS(3); line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2))",
+     "elastic": "0.25 x identified yield strain",
+     "inelastic": "5 x identified yield strain",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 32: EMOD=PROPS(1); line 33: ENU=PROPS(2)",
+     "reverse_resolution": "0.00015625 strain per increment (80 increments from +0.00625 to -0.00625)",
+     "model_domain": "no documented time range (no deck periods, no un-ELSEd time chain in the source)"
+    },
+    "config": "inputs/reverse_yield.cfg",
+    "config_sha256": "0888807370ef73ea3b4f2a3d3344cf8fd8e1bd24952e6694cc98b3d35b0522c8",
+    "n_increments": 90,
+    "judged_states": 90,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     47,
+     48,
+     49,
+     50,
+     51,
+     52,
+     53,
+     54,
+     55,
+     56,
+     57,
+     58,
+     59,
+     60,
+     61,
+     62,
+     63,
+     64,
+     65,
+     66,
+     67,
+     68,
+     69,
+     70,
+     71,
+     72,
+     73,
+     74,
+     75,
+     76,
+     77,
+     78,
+     79,
+     80,
+     81,
+     82,
+     83,
+     84,
+     85,
+     86,
+     87,
+     88,
+     89,
+     90
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "90/90 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   }
+  ],
+  "paths_not_frozen": {}
+ },
+ "references": [
+  {
+   "id": "primal_original",
+   "kind": "primal",
+   "producer": "ORIGINAL routine, harness real driver, gfortran zero-init build",
+   "independent_of_oti": true,
+   "compact": "reference.json.gz#paths[].original"
+  },
+  {
+   "id": "tangent_fd_original",
+   "kind": "derivative",
+   "quantity": "DDSDDE returned by the store OTI build",
+   "wrt": "DSTRAN_j (engineering shear) or, for a gradient-driven source, the strain direction j pushed forward as dF = eps_j . F (Kirchhoff term added)",
+   "held_fixed": "incoming STRESS_n, STATEV_n, STRAN_n, PROPS, TIME, DFGRD0 (and DFGRD1 for a DSTRAN-driven source)",
+   "scope": "local: one increment from the recorded incoming state",
+   "reference": "central FD of the ORIGINAL routine's STRESS_{n+1}, restored state",
+   "independent_of_oti": true,
+   "compact": "reference.json.gz#paths[].judged"
+  }
+ ],
+ "reference": {
+  "file": "reference.json.gz",
+  "sha256": "f2666304d16329a24e39627abe29dc57a46f8db9ba4bd3617df9d90db10d83da"
+ },
+ "tolerance_rule_id": "case-rule/1-df2f107a3c04",
+ "error_summary": {
+  "elastic_uniaxial": {
+   "primal": 0.0,
+   "tangent": 2.2737865049403495e-07
+  },
+  "elastic_shear": {
+   "primal": 0.0,
+   "tangent": 2.273558173380485e-07
+  },
+  "isotropy_reference": {
+   "primal": 4.2266254470671926e-06,
+   "tangent": 0.008505734283011417
+  },
+  "isotropy_rotated": {
+   "primal": 2.7429711455696145e-06,
+   "tangent": 0.006418597617919668
+  },
+  "plastic_uniaxial": {
+   "primal": 4.358208581054187e-06,
+   "tangent": 0.00024514997530421375
+  },
+  "plastic_compression": {
+   "primal": 4.358208581054187e-06,
+   "tangent": 0.00024514997530421375
+  },
+  "unload_reload": {
+   "primal": 7.0725923544306526e-06,
+   "tangent": 0.0002444079801819595
+  },
+  "cyclic": {
+   "primal": 0.0001007555575437597,
+   "tangent": 0.000512059979463011
+  },
+  "reverse_yield": {
+   "primal": 0.00021126712038471658,
+   "tangent": 0.000334098711779701
+  }
+ },
+ "toolchain": {
+  "python": "3.11.7",
+  "numpy": "2.4.6",
+  "gfortran": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
+  "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
+ },
+ "harness": {
+  "run_id": "20261002T111202",
+  "seconds": 11.0,
+  "features": [
+   "primal_stress_state",
+   "ddsdde"
+  ],
+  "cells": {
+   "primal_stress_state": "verified",
+   "ddsdde": "verified"
+  },
+  "records": "corpus_assets tree: harness/corpus_features.jsonl"
+ },
+ "assets": {
+  "tree_sha256": "4e9abda15e618bea2c1e700ed4ac01d4acce7eef6942b6839f9da42e2abff007",
+  "location": "corpus_assets",
+  "files": 35,
+  "bytes": 870349
+ },
+ "tiers": {
+  "ci": true,
+  "offline": true
+ },
+ "reproduce": {
+  "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only umat-oti-curated--sweep-j2-kinematic",
+  "fetch": "python tools/corpus_cases.py fetch umat-oti-curated--sweep-j2-kinematic",
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --model parameter_sensitivity/models/sweep_j2_kinematic --family 'plasticity' --activation 0.00125 --tier ci"
+ },
+ "undefined_in_original": [],
+ "limitations": [
+  "routine-level evidence (driver), not Abaqus",
+  "loading paths are this pipeline's probes, not the author's example"
+ ],
+ "date": "2026-10-02T11:12:16",
+ "freeze_check": {
+  "ok": true,
+  "modes": {
+   "regenerate": {
+    "seconds": 3.7,
+    "source_from": "case",
+    "compiled_in_job_layout": true,
+    "paths": {
+     "elastic_uniaxial": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 2.2737865049403495e-07,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "elastic_shear": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 2.273558173380485e-07,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "isotropy_reference": {
+      "primal_error_over_tolerance": 4.2266254470671926e-06,
+      "tangent_error_over_tolerance": 0.008505734283011417,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "isotropy_rotated": {
+      "primal_error_over_tolerance": 2.7429711455696145e-06,
+      "tangent_error_over_tolerance": 0.006418597617919668,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "plastic_uniaxial": {
+      "primal_error_over_tolerance": 4.358208581054187e-06,
+      "tangent_error_over_tolerance": 0.00024514997530421375,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "plastic_compression": {
+      "primal_error_over_tolerance": 4.358208581054187e-06,
+      "tangent_error_over_tolerance": 0.00024514997530421375,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "unload_reload": {
+      "primal_error_over_tolerance": 7.0725923544306526e-06,
+      "tangent_error_over_tolerance": 0.0002444079801819595,
+      "coverage": "40/40",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "cyclic": {
+      "primal_error_over_tolerance": 0.0001007555575437597,
+      "tangent_error_over_tolerance": 0.000512059979463011,
+      "coverage": "50/50",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "reverse_yield": {
+      "primal_error_over_tolerance": 0.00021126712038471658,
+      "tangent_error_over_tolerance": 0.000334098711779701,
+      "coverage": "90/90",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     }
+    }
+   },
+   "replay": {
+    "seconds": 1.4,
+    "units_from": "case",
+    "paths": {
+     "elastic_uniaxial": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 2.2737865049403495e-07,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "elastic_shear": {
+      "primal_error_over_tolerance": 0.0,
+      "tangent_error_over_tolerance": 2.273558173380485e-07,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "isotropy_reference": {
+      "primal_error_over_tolerance": 4.2266254470671926e-06,
+      "tangent_error_over_tolerance": 0.008505734283011417,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "isotropy_rotated": {
+      "primal_error_over_tolerance": 2.7429711455696145e-06,
+      "tangent_error_over_tolerance": 0.006418597617919668,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "plastic_uniaxial": {
+      "primal_error_over_tolerance": 4.358208581054187e-06,
+      "tangent_error_over_tolerance": 0.00024514997530421375,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "plastic_compression": {
+      "primal_error_over_tolerance": 4.358208581054187e-06,
+      "tangent_error_over_tolerance": 0.00024514997530421375,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "unload_reload": {
+      "primal_error_over_tolerance": 7.0725923544306526e-06,
+      "tangent_error_over_tolerance": 0.0002444079801819595,
+      "coverage": "40/40",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "cyclic": {
+      "primal_error_over_tolerance": 0.0001007555575437597,
+      "tangent_error_over_tolerance": 0.000512059979463011,
+      "coverage": "50/50",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "reverse_yield": {
+      "primal_error_over_tolerance": 0.00021126712038471658,
+      "tangent_error_over_tolerance": 0.000334098711779701,
+      "coverage": "90/90",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     }
+    }
+   }
+  },
+  "canaries": [
+   {
+    "canary": "tangent: DDSDDE column x (1+0.0001)",
+    "rejected": true
+   },
+   {
+    "canary": "tangent: smallest resolved nonzero entry dropped",
+    "rejected": true
+   },
+   {
+    "canary": "primal: STRESS x (1+1e-06)",
+    "rejected": true
+   }
+  ],
+  "failures": []
+ }
+}
