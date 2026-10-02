@@ -239,6 +239,14 @@
     "tests/test_corpus_manifest_ra_v2.py::test_two_verified_problems_make_a_verified_cell_with_the_worst_numbers",
     "tests/test_packaging.py::test_built_wheel_contains_the_runtime_support_files"
    ]
+  },
+  {
+   "commit": "155f020",
+   "bug": "The routine-level harness drove every source at COORDS = 0 (position-dependent originals went non-finite and read inconclusive), aborted a whole source when the original STOPped on one path, and a relative --out made every original 'not build'.",
+   "tests": [
+    "tests/test_corpus_features_driver_point.py::test_position_dependent_toy_verifies_at_the_recorded_point",
+    "tests/test_corpus_features_runner_paths.py::test_out_and_work_are_resolved_before_use"
+   ]
   }
  ],
  "excluded": [
