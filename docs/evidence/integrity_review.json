@@ -1006,6 +1006,14 @@
   "broad_except:tools/corpus_cases.py:toolchain.first_line:except Exception:18038406": {
    "verdict": "justified",
    "reason": "Recording a tool's version string for provenance; an unavailable tool is recorded as None, and no verdict depends on it."
+  },
+  "skip:tests/test_corpus_features_driver_point.py:test_position_dependent_toy_verifies_at_the_recorded_point:call:skip:328039a5": {
+   "verdict": "justified",
+   "reason": "Skips only when gfortran is absent (the toy UMAT must be compiled); CI installs gfortran."
+  },
+  "reference_data:paper_results/discovery/discovered_sources.csv": {
+   "verdict": "justified",
+   "reason": "Corrects frodal/SCMM-hypo's licence from AGPL-3.0 (misread by the old whole-text classifier) to GPL-3.0-or-later, as its cached LICENSE.md states (commit 0568194); no other row changed."
   }
  }
 }
