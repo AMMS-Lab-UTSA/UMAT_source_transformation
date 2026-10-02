@@ -256,6 +256,58 @@
     "tests/test_transform_a_continued_call_carries_the_seed.py",
     "tests/test_transform_an_interface_block_belongs_to_the_specification_part.py"
    ]
+  },
+  {
+   "commit": "f14f3f1",
+   "selected_by": "manual",
+   "bug": "The manifest's primal cell carried the FE-comparison ratio (informational since D-15) as max_error, e.g. 1.9e6 on a cell the primal gate verified.",
+   "tests": [
+    "tests/test_corpus_manifest_primal_gate.py::test_the_gate_rule_is_registered_for_primal_cells",
+    "tests/test_corpus_manifest_primal_gate.py::test_agreement_on_both_comparisons_is_verified_with_the_larger_ratio",
+    "tests/test_corpus_manifest_primal_gate.py::test_records_from_before_the_gate_keep_the_fe_rule"
+   ]
+  },
+  {
+   "commit": "d105cef",
+   "selected_by": "manual",
+   "bug": "The harness and campaign tests hard-coded this machine's workspace path, and the published manifest carried machine paths.",
+   "tests": [
+    "tests/test_corpus_manifest_primal_gate.py::test_portable_replaces_only_whole_paths",
+    "tests/test_corpus_manifest_primal_gate.py::test_roots_round_trip_and_checkout_roots_follow_the_clone",
+    "tests/test_repository_standards.py::test_repository_standards_audit_passes"
+   ]
+  },
+  {
+   "commit": "aa5f3eb",
+   "selected_by": "manual",
+   "bug": "An original that STOPped under a perturbation left unwritten records that the harness indexed, aborting the whole source; unapplied isolation probes did not block derivative verdicts explicitly.",
+   "tests": [
+    "tests/test_corpus_features_termination.py::test_nothing_is_verified_on_missing_data",
+    "tests/test_corpus_features_termination.py::test_first_missing_record_names_the_call",
+    "tests/test_corpus_features_termination.py::test_a_dstran_probe_not_applied_blocks_verification_despite_coverage"
+   ]
+  },
+  {
+   "commit": "ad83642",
+   "bug": "Primal cells labelled process failures and undefined-in-original outputs as 'failed' with a non-deciding ratio; D-18's run selection existed only as --merge order; _portable replaced inside longer names.",
+   "tests": [
+    "tests/test_corpus_manifest_primal_gate.py::test_process_failures_are_not_failures",
+    "tests/test_corpus_manifest_primal_gate.py::test_undefined_in_original_has_its_own_status_and_names_the_outputs",
+    "tests/test_corpus_manifest_primal_gate.py::test_a_jacobian_matched_disagreement_carries_the_controls_ratio",
+    "tests/test_corpus_manifest_d18.py",
+    "tests/test_corpus_manifest_primal_gate.py::test_portable_replaces_only_whole_paths"
+   ]
+  },
+  {
+   "commit": "a34c3f5",
+   "bug": "A case's reference could drop judged states or whole paths with its sha refreshed and still pass; a path missing from the reference crashed; zero_pass ignored the stored value; the tier printed 'canaries all rejected' when one was not; the licence guard trusted case.json.",
+   "tests": [
+    "tests/test_corpus_cases_injections.py::test_dropping_judged_states_with_the_sha_refreshed_is_a_coverage_failure",
+    "tests/test_corpus_cases_injections.py::test_dropping_a_path_from_the_reference_only_is_named_not_a_crash",
+    "tests/test_corpus_cases_injections.py::test_a_zero_pass_reference_moved_off_zero_is_a_tangent_breach",
+    "tests/test_corpus_cases_injections.py::test_the_tier_summary_names_a_canary_that_was_not_rejected_and_fails",
+    "tests/test_verified_umat_collection.py::test_the_case_licence_guard_does_not_trust_case_json"
+   ]
   }
  ],
  "excluded": [
