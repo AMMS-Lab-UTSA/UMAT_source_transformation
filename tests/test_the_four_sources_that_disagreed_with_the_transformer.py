@@ -88,10 +88,13 @@ def test_a_whole_array_stress_update_is_a_stress_update():
     and the registry called it a genuine UMAT. The registry is right: the file
     writes both outputs, in the whole-array form.
 
-    This is the one of the four where the answer is "the transformer has work
-    to do". It stays `genuine_umat` and `transform_refused`, which is
-    INTERNAL, because a refusal on a file that plainly computes a stress is a
-    fact about the transformer."""
+    This was the one of the four where the answer was "the transformer has
+    work to do", and the work is done: from corpus pass19 (fingerprint
+    52e0a8c4289fce43, SUM over the type) the file transforms and compiles, so
+    the registry no longer holds a refusal for it. Its classification still
+    says a genuine UMAT, and it now stops at the next stage on the corpus's
+    side -- the repository publishes no deck with a *USER MATERIAL block --
+    which is EXTERNAL and says nothing about the file being a UMAT."""
     path = cached(MOHR)
     text = path.read_text(errors="replace")
     lines = text.splitlines()
@@ -113,10 +116,11 @@ def test_a_whole_array_stress_update_is_a_stress_update():
     assert verdict.refusal_class == GENUINE_UMAT
 
     held = record(MOHR)
-    assert held["refusal_class"] == GENUINE_UMAT
-    assert held["terminal_state"] == "transform_refused"
-    assert held["kind"] == "internal"
-    assert held["adequately_specified"] is True
+    assert held["is_umat"] is True and held["entry_interface"] == "UMAT"
+    assert held["refusal_class"] == ""
+    assert held["transformed"] is True and held["compiled"] is True
+    assert held["terminal_state"] == "missing_material_data"
+    assert held["kind"] == "external"
 
 
 def test_a_rule_that_only_saw_subscripts_would_call_that_file_empty():
