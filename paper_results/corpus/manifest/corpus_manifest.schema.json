@@ -1,0 +1,4658 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "umat-oti/corpus-manifest/1",
+ "title": "UMAT corpus manifest",
+ "type": "object",
+ "required": [
+  "schema",
+  "generated",
+  "roots",
+  "inputs",
+  "statuses",
+  "rows",
+  "summary",
+  "data_quality"
+ ],
+ "properties": {
+  "schema": {
+   "const": "umat-oti/corpus-manifest/1"
+  },
+  "rows": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "row_kind",
+     "source_id",
+     "repository",
+     "url",
+     "commit",
+     "sha256",
+     "bytes",
+     "license",
+     "retrieval",
+     "model",
+     "interface",
+     "pipeline",
+     "features",
+     "features_other_builds",
+     "ddsdde_legacy_gate",
+     "data_quality"
+    ],
+    "properties": {
+     "row_kind": {
+      "enum": [
+       "acquired",
+       "discovered_not_acquired"
+      ]
+     },
+     "source_id": {
+      "type": "string",
+      "minLength": 1
+     },
+     "repository": {
+      "type": "string"
+     },
+     "url": {
+      "type": "string"
+     },
+     "commit": {
+      "type": "string"
+     },
+     "sha256": {
+      "type": "object",
+      "required": [
+       "registry",
+       "recomputed",
+       "agrees"
+      ]
+     },
+     "bytes": {
+      "type": "object",
+      "required": [
+       "on_disk",
+       "registry",
+       "agrees"
+      ]
+     },
+     "license": {
+      "type": "object",
+      "required": [
+       "spdx",
+       "spdx_metadata",
+       "licence_file",
+       "redistribution",
+       "redistribution_basis",
+       "license_class",
+       "attribution_required",
+       "copyleft"
+      ],
+      "properties": {
+       "redistribution": {
+        "enum": [
+         "permitted",
+         "not_permitted",
+         "unknown"
+        ]
+       }
+      }
+     },
+     "retrieval": {
+      "type": "object",
+      "required": [
+       "url",
+       "commit",
+       "path",
+       "sha256",
+       "instructions"
+      ]
+     },
+     "model": {
+      "type": [
+       "object",
+       "null"
+      ],
+      "properties": {
+       "family": {
+        "type": "object",
+        "required": [
+         "family",
+         "review",
+         "human_reviewed",
+         "basis"
+        ],
+        "properties": {
+         "review": {
+          "enum": [
+           "agent_reviewed_code_evidence",
+           "keyword_only",
+           "missing"
+          ]
+         }
+        }
+       }
+      }
+     },
+     "interface": {
+      "type": [
+       "object",
+       "null"
+      ]
+     },
+     "pipeline": {
+      "type": "object",
+      "required": [
+       "discovered",
+       "eligible",
+       "attempted",
+       "transformed",
+       "compiled",
+       "original_executed",
+       "oti_executed",
+       "primal_agreed"
+      ],
+      "properties": {
+       "discovered": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "layouts": {
+          "type": "object"
+         }
+        }
+       },
+       "eligible": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "layouts": {
+          "type": "object"
+         }
+        }
+       },
+       "attempted": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "layouts": {
+          "type": "object"
+         }
+        }
+       },
+       "transformed": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "layouts": {
+          "type": "object"
+         }
+        }
+       },
+       "compiled": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "layouts": {
+          "type": "object"
+         }
+        }
+       },
+       "original_executed": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "layouts": {
+          "type": "object"
+         }
+        }
+       },
+       "oti_executed": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "layouts": {
+          "type": "object"
+         }
+        }
+       },
+       "primal_agreed": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "layouts": {
+          "type": "object"
+         }
+        }
+       }
+      },
+      "additionalProperties": false
+     },
+     "features": {
+      "type": "object",
+      "required": [
+       "primal_stress_state",
+       "ddsdde",
+       "internal_jacobian",
+       "stress_param_sens_local",
+       "stress_param_sens_total",
+       "state_param_sens_local",
+       "state_param_sens_total",
+       "residual_sens",
+       "global_sens",
+       "cli_driver"
+      ],
+      "properties": {
+       "primal_stress_state": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence",
+         "reference",
+         "max_error",
+         "tolerance"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "reference": {
+          "enum": [
+           "original",
+           "analytical",
+           "fd",
+           null
+          ]
+         },
+         "max_error": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance_rule_id": {
+          "enum": [
+           "entrywise/1",
+           "primal_row_scaled/1",
+           "abaqus_primal_history_floor/1",
+           "legacy_column_norm",
+           "vector_max_norm",
+           null
+          ]
+         },
+         "build": {
+          "type": [
+           "object",
+           "null"
+          ],
+          "properties": {
+           "kind": {
+            "enum": [
+             "store",
+             "lifted",
+             "provider"
+            ]
+           },
+           "fingerprint": {
+            "type": "string"
+           },
+           "sha256": {
+            "type": "string"
+           }
+          }
+         },
+         "conflicting": {
+          "type": "array"
+         },
+         "history": {
+          "type": "array"
+         }
+        },
+        "allOf": [
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "verified"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "tolerance_rule_id",
+            "rtol"
+           ],
+           "properties": {
+            "evidence": {
+             "minLength": 1
+            },
+            "reference": {
+             "enum": [
+              "original",
+              "analytical",
+              "fd"
+             ]
+            },
+            "max_error": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "tolerance": {
+             "const": 1.0
+            }
+           }
+          }
+         },
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "conflict"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "conflicting"
+           ]
+          }
+         }
+        ]
+       },
+       "ddsdde": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence",
+         "reference",
+         "max_error",
+         "tolerance"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "reference": {
+          "enum": [
+           "original",
+           "analytical",
+           "fd",
+           null
+          ]
+         },
+         "max_error": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance_rule_id": {
+          "enum": [
+           "entrywise/1",
+           "primal_row_scaled/1",
+           "abaqus_primal_history_floor/1",
+           "legacy_column_norm",
+           "vector_max_norm",
+           null
+          ]
+         },
+         "build": {
+          "type": [
+           "object",
+           "null"
+          ],
+          "properties": {
+           "kind": {
+            "enum": [
+             "store",
+             "lifted",
+             "provider"
+            ]
+           },
+           "fingerprint": {
+            "type": "string"
+           },
+           "sha256": {
+            "type": "string"
+           }
+          }
+         },
+         "conflicting": {
+          "type": "array"
+         },
+         "history": {
+          "type": "array"
+         }
+        },
+        "allOf": [
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "verified"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "tolerance_rule_id",
+            "rtol"
+           ],
+           "properties": {
+            "evidence": {
+             "minLength": 1
+            },
+            "reference": {
+             "enum": [
+              "original",
+              "analytical",
+              "fd"
+             ]
+            },
+            "max_error": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "tolerance": {
+             "const": 1.0
+            }
+           }
+          }
+         },
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "conflict"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "conflicting"
+           ]
+          }
+         }
+        ]
+       },
+       "internal_jacobian": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence",
+         "reference",
+         "max_error",
+         "tolerance"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "reference": {
+          "enum": [
+           "original",
+           "analytical",
+           "fd",
+           null
+          ]
+         },
+         "max_error": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance_rule_id": {
+          "enum": [
+           "entrywise/1",
+           "primal_row_scaled/1",
+           "abaqus_primal_history_floor/1",
+           "legacy_column_norm",
+           "vector_max_norm",
+           null
+          ]
+         },
+         "build": {
+          "type": [
+           "object",
+           "null"
+          ],
+          "properties": {
+           "kind": {
+            "enum": [
+             "store",
+             "lifted",
+             "provider"
+            ]
+           },
+           "fingerprint": {
+            "type": "string"
+           },
+           "sha256": {
+            "type": "string"
+           }
+          }
+         },
+         "conflicting": {
+          "type": "array"
+         },
+         "history": {
+          "type": "array"
+         }
+        },
+        "allOf": [
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "verified"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "tolerance_rule_id",
+            "rtol"
+           ],
+           "properties": {
+            "evidence": {
+             "minLength": 1
+            },
+            "reference": {
+             "enum": [
+              "original",
+              "analytical",
+              "fd"
+             ]
+            },
+            "max_error": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "tolerance": {
+             "const": 1.0
+            }
+           }
+          }
+         },
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "conflict"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "conflicting"
+           ]
+          }
+         }
+        ]
+       },
+       "stress_param_sens_local": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence",
+         "reference",
+         "max_error",
+         "tolerance"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "reference": {
+          "enum": [
+           "original",
+           "analytical",
+           "fd",
+           null
+          ]
+         },
+         "max_error": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance_rule_id": {
+          "enum": [
+           "entrywise/1",
+           "primal_row_scaled/1",
+           "abaqus_primal_history_floor/1",
+           "legacy_column_norm",
+           "vector_max_norm",
+           null
+          ]
+         },
+         "build": {
+          "type": [
+           "object",
+           "null"
+          ],
+          "properties": {
+           "kind": {
+            "enum": [
+             "store",
+             "lifted",
+             "provider"
+            ]
+           },
+           "fingerprint": {
+            "type": "string"
+           },
+           "sha256": {
+            "type": "string"
+           }
+          }
+         },
+         "conflicting": {
+          "type": "array"
+         },
+         "history": {
+          "type": "array"
+         }
+        },
+        "allOf": [
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "verified"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "tolerance_rule_id",
+            "rtol"
+           ],
+           "properties": {
+            "evidence": {
+             "minLength": 1
+            },
+            "reference": {
+             "enum": [
+              "original",
+              "analytical",
+              "fd"
+             ]
+            },
+            "max_error": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "tolerance": {
+             "const": 1.0
+            }
+           }
+          }
+         },
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "conflict"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "conflicting"
+           ]
+          }
+         }
+        ]
+       },
+       "stress_param_sens_total": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence",
+         "reference",
+         "max_error",
+         "tolerance"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "reference": {
+          "enum": [
+           "original",
+           "analytical",
+           "fd",
+           null
+          ]
+         },
+         "max_error": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance_rule_id": {
+          "enum": [
+           "entrywise/1",
+           "primal_row_scaled/1",
+           "abaqus_primal_history_floor/1",
+           "legacy_column_norm",
+           "vector_max_norm",
+           null
+          ]
+         },
+         "build": {
+          "type": [
+           "object",
+           "null"
+          ],
+          "properties": {
+           "kind": {
+            "enum": [
+             "store",
+             "lifted",
+             "provider"
+            ]
+           },
+           "fingerprint": {
+            "type": "string"
+           },
+           "sha256": {
+            "type": "string"
+           }
+          }
+         },
+         "conflicting": {
+          "type": "array"
+         },
+         "history": {
+          "type": "array"
+         }
+        },
+        "allOf": [
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "verified"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "tolerance_rule_id",
+            "rtol"
+           ],
+           "properties": {
+            "evidence": {
+             "minLength": 1
+            },
+            "reference": {
+             "enum": [
+              "original",
+              "analytical",
+              "fd"
+             ]
+            },
+            "max_error": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "tolerance": {
+             "const": 1.0
+            }
+           }
+          }
+         },
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "conflict"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "conflicting"
+           ]
+          }
+         }
+        ]
+       },
+       "state_param_sens_local": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence",
+         "reference",
+         "max_error",
+         "tolerance"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "reference": {
+          "enum": [
+           "original",
+           "analytical",
+           "fd",
+           null
+          ]
+         },
+         "max_error": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance_rule_id": {
+          "enum": [
+           "entrywise/1",
+           "primal_row_scaled/1",
+           "abaqus_primal_history_floor/1",
+           "legacy_column_norm",
+           "vector_max_norm",
+           null
+          ]
+         },
+         "build": {
+          "type": [
+           "object",
+           "null"
+          ],
+          "properties": {
+           "kind": {
+            "enum": [
+             "store",
+             "lifted",
+             "provider"
+            ]
+           },
+           "fingerprint": {
+            "type": "string"
+           },
+           "sha256": {
+            "type": "string"
+           }
+          }
+         },
+         "conflicting": {
+          "type": "array"
+         },
+         "history": {
+          "type": "array"
+         }
+        },
+        "allOf": [
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "verified"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "tolerance_rule_id",
+            "rtol"
+           ],
+           "properties": {
+            "evidence": {
+             "minLength": 1
+            },
+            "reference": {
+             "enum": [
+              "original",
+              "analytical",
+              "fd"
+             ]
+            },
+            "max_error": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "tolerance": {
+             "const": 1.0
+            }
+           }
+          }
+         },
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "conflict"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "conflicting"
+           ]
+          }
+         }
+        ]
+       },
+       "state_param_sens_total": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence",
+         "reference",
+         "max_error",
+         "tolerance"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "reference": {
+          "enum": [
+           "original",
+           "analytical",
+           "fd",
+           null
+          ]
+         },
+         "max_error": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance_rule_id": {
+          "enum": [
+           "entrywise/1",
+           "primal_row_scaled/1",
+           "abaqus_primal_history_floor/1",
+           "legacy_column_norm",
+           "vector_max_norm",
+           null
+          ]
+         },
+         "build": {
+          "type": [
+           "object",
+           "null"
+          ],
+          "properties": {
+           "kind": {
+            "enum": [
+             "store",
+             "lifted",
+             "provider"
+            ]
+           },
+           "fingerprint": {
+            "type": "string"
+           },
+           "sha256": {
+            "type": "string"
+           }
+          }
+         },
+         "conflicting": {
+          "type": "array"
+         },
+         "history": {
+          "type": "array"
+         }
+        },
+        "allOf": [
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "verified"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "tolerance_rule_id",
+            "rtol"
+           ],
+           "properties": {
+            "evidence": {
+             "minLength": 1
+            },
+            "reference": {
+             "enum": [
+              "original",
+              "analytical",
+              "fd"
+             ]
+            },
+            "max_error": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "tolerance": {
+             "const": 1.0
+            }
+           }
+          }
+         },
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "conflict"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "conflicting"
+           ]
+          }
+         }
+        ]
+       },
+       "residual_sens": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence",
+         "reference",
+         "max_error",
+         "tolerance"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "reference": {
+          "enum": [
+           "original",
+           "analytical",
+           "fd",
+           null
+          ]
+         },
+         "max_error": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance_rule_id": {
+          "enum": [
+           "entrywise/1",
+           "primal_row_scaled/1",
+           "abaqus_primal_history_floor/1",
+           "legacy_column_norm",
+           "vector_max_norm",
+           null
+          ]
+         },
+         "build": {
+          "type": [
+           "object",
+           "null"
+          ],
+          "properties": {
+           "kind": {
+            "enum": [
+             "store",
+             "lifted",
+             "provider"
+            ]
+           },
+           "fingerprint": {
+            "type": "string"
+           },
+           "sha256": {
+            "type": "string"
+           }
+          }
+         },
+         "conflicting": {
+          "type": "array"
+         },
+         "history": {
+          "type": "array"
+         }
+        },
+        "allOf": [
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "verified"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "tolerance_rule_id",
+            "rtol"
+           ],
+           "properties": {
+            "evidence": {
+             "minLength": 1
+            },
+            "reference": {
+             "enum": [
+              "original",
+              "analytical",
+              "fd"
+             ]
+            },
+            "max_error": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "tolerance": {
+             "const": 1.0
+            }
+           }
+          }
+         },
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "conflict"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "conflicting"
+           ]
+          }
+         }
+        ]
+       },
+       "global_sens": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence",
+         "reference",
+         "max_error",
+         "tolerance"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "reference": {
+          "enum": [
+           "original",
+           "analytical",
+           "fd",
+           null
+          ]
+         },
+         "max_error": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance_rule_id": {
+          "enum": [
+           "entrywise/1",
+           "primal_row_scaled/1",
+           "abaqus_primal_history_floor/1",
+           "legacy_column_norm",
+           "vector_max_norm",
+           null
+          ]
+         },
+         "build": {
+          "type": [
+           "object",
+           "null"
+          ],
+          "properties": {
+           "kind": {
+            "enum": [
+             "store",
+             "lifted",
+             "provider"
+            ]
+           },
+           "fingerprint": {
+            "type": "string"
+           },
+           "sha256": {
+            "type": "string"
+           }
+          }
+         },
+         "conflicting": {
+          "type": "array"
+         },
+         "history": {
+          "type": "array"
+         }
+        },
+        "allOf": [
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "verified"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "tolerance_rule_id",
+            "rtol"
+           ],
+           "properties": {
+            "evidence": {
+             "minLength": 1
+            },
+            "reference": {
+             "enum": [
+              "original",
+              "analytical",
+              "fd"
+             ]
+            },
+            "max_error": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "tolerance": {
+             "const": 1.0
+            }
+           }
+          }
+         },
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "conflict"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "conflicting"
+           ]
+          }
+         }
+        ]
+       },
+       "cli_driver": {
+        "type": "object",
+        "required": [
+         "status",
+         "reason",
+         "evidence",
+         "reference",
+         "max_error",
+         "tolerance"
+        ],
+        "properties": {
+         "status": {
+          "enum": [
+           "verified",
+           "failed",
+           "blocked",
+           "unsupported",
+           "not_applicable",
+           "not_attempted",
+           "conflict",
+           "inconclusive"
+          ]
+         },
+         "reason": {
+          "type": "string"
+         },
+         "evidence": {
+          "type": "string"
+         },
+         "reference": {
+          "enum": [
+           "original",
+           "analytical",
+           "fd",
+           null
+          ]
+         },
+         "max_error": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "tolerance_rule_id": {
+          "enum": [
+           "entrywise/1",
+           "primal_row_scaled/1",
+           "abaqus_primal_history_floor/1",
+           "legacy_column_norm",
+           "vector_max_norm",
+           null
+          ]
+         },
+         "build": {
+          "type": [
+           "object",
+           "null"
+          ],
+          "properties": {
+           "kind": {
+            "enum": [
+             "store",
+             "lifted",
+             "provider"
+            ]
+           },
+           "fingerprint": {
+            "type": "string"
+           },
+           "sha256": {
+            "type": "string"
+           }
+          }
+         },
+         "conflicting": {
+          "type": "array"
+         },
+         "history": {
+          "type": "array"
+         }
+        },
+        "allOf": [
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "verified"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "tolerance_rule_id",
+            "rtol"
+           ],
+           "properties": {
+            "evidence": {
+             "minLength": 1
+            },
+            "reference": {
+             "enum": [
+              "original",
+              "analytical",
+              "fd"
+             ]
+            },
+            "max_error": {
+             "type": "number",
+             "minimum": 0,
+             "maximum": 1
+            },
+            "tolerance": {
+             "const": 1.0
+            }
+           }
+          }
+         },
+         {
+          "if": {
+           "properties": {
+            "status": {
+             "const": "conflict"
+            }
+           }
+          },
+          "then": {
+           "required": [
+            "conflicting"
+           ]
+          }
+         }
+        ]
+       }
+      },
+      "additionalProperties": false
+     },
+     "features_other_builds": {
+      "type": "object",
+      "required": [
+       "lifted",
+       "provider"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "lifted": {
+        "type": "object",
+        "properties": {
+         "primal_stress_state": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "ddsdde": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "internal_jacobian": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "stress_param_sens_local": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "stress_param_sens_total": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "state_param_sens_local": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "state_param_sens_total": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "residual_sens": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "global_sens": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "cli_driver": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         }
+        },
+        "additionalProperties": false
+       },
+       "provider": {
+        "type": "object",
+        "properties": {
+         "primal_stress_state": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "ddsdde": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "internal_jacobian": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "stress_param_sens_local": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "stress_param_sens_total": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "state_param_sens_local": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "state_param_sens_total": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "residual_sens": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "global_sens": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         },
+         "cli_driver": {
+          "type": "object",
+          "required": [
+           "status",
+           "reason",
+           "evidence",
+           "reference",
+           "max_error",
+           "tolerance"
+          ],
+          "properties": {
+           "status": {
+            "enum": [
+             "verified",
+             "failed",
+             "blocked",
+             "unsupported",
+             "not_applicable",
+             "not_attempted",
+             "conflict",
+             "inconclusive"
+            ]
+           },
+           "reason": {
+            "type": "string"
+           },
+           "evidence": {
+            "type": "string"
+           },
+           "reference": {
+            "enum": [
+             "original",
+             "analytical",
+             "fd",
+             null
+            ]
+           },
+           "max_error": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance": {
+            "type": [
+             "number",
+             "null"
+            ]
+           },
+           "tolerance_rule_id": {
+            "enum": [
+             "entrywise/1",
+             "primal_row_scaled/1",
+             "abaqus_primal_history_floor/1",
+             "legacy_column_norm",
+             "vector_max_norm",
+             null
+            ]
+           },
+           "build": {
+            "type": [
+             "object",
+             "null"
+            ],
+            "properties": {
+             "kind": {
+              "enum": [
+               "store",
+               "lifted",
+               "provider"
+              ]
+             },
+             "fingerprint": {
+              "type": "string"
+             },
+             "sha256": {
+              "type": "string"
+             }
+            }
+           },
+           "conflicting": {
+            "type": "array"
+           },
+           "history": {
+            "type": "array"
+           }
+          },
+          "allOf": [
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "verified"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "tolerance_rule_id",
+              "rtol"
+             ],
+             "properties": {
+              "evidence": {
+               "minLength": 1
+              },
+              "reference": {
+               "enum": [
+                "original",
+                "analytical",
+                "fd"
+               ]
+              },
+              "max_error": {
+               "type": "number",
+               "minimum": 0,
+               "maximum": 1
+              },
+              "tolerance": {
+               "const": 1.0
+              }
+             }
+            }
+           },
+           {
+            "if": {
+             "properties": {
+              "status": {
+               "const": "conflict"
+              }
+             }
+            },
+            "then": {
+             "required": [
+              "conflicting"
+             ]
+            }
+           }
+          ]
+         }
+        },
+        "additionalProperties": false
+       }
+      }
+     },
+     "ddsdde_legacy_gate": {
+      "type": "object",
+      "required": [
+       "gate",
+       "counts_as_verified",
+       "rule"
+      ],
+      "properties": {
+       "gate": {
+        "enum": [
+         "passed",
+         "failed",
+         "not_run"
+        ]
+       },
+       "counts_as_verified": {
+        "const": false
+       }
+      }
+     },
+     "data_quality": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   }
+  },
+  "statuses": {
+   "const": [
+    "verified",
+    "failed",
+    "blocked",
+    "unsupported",
+    "not_applicable",
+    "not_attempted",
+    "conflict",
+    "inconclusive"
+   ]
+  }
+ }
+}

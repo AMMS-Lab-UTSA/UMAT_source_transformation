@@ -25,6 +25,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -72,10 +73,85 @@ _LICENSE_PHRASES: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 
+#: A GNU licence's own title, standing alone on its line (markdown/emphasis
+#: stripped). The canonical texts open with exactly this line; their bodies
+#: only ever name another GNU licence inside a sentence or a numbered heading
+#: ("13. Use with the GNU Affero General Public License."), never alone.
+_GNU_TITLE = re.compile(
+    r"^gnu\s+(affero\s+|lesser\s+|library\s+)?general\s+public\s+licen[cs]e"
+    r"(?:\s*[,(]?\s*(?:version|v)\s*([0-9.]+).*)?$")
+#: A GNU licence NOTICE ("... under the terms of the GNU General Public
+#: License as published by the Free Software Foundation, either version 3 ...").
+_GNU_NOTICE = re.compile(
+    r"under the terms of the gnu (affero |lesser |library )?general public "
+    r"licen[cs]e(.{0,200})")
+_VERSION = re.compile(r"version\s+([0-9](?:\.[0-9])?)")
+
+
+def _gnu_spdx(variant: str, version: Optional[str], later: bool) -> Optional[str]:
+    variant = (variant or "").strip()
+    if variant == "affero":
+        # Only the FSF's AGPL carries "GNU" in its title, and it exists only as v3.
+        return "AGPL-3.0-or-later" if later else "AGPL-3.0"
+    if not version:
+        return None
+    major = version.split(".")[0]
+    if variant in ("lesser", "library"):
+        spdx = ("LGPL-3.0" if major == "3" else "LGPL-2.1" if version == "2.1"
+                else "LGPL-2.0" if major == "2" else None)
+    else:
+        spdx = {"3": "GPL-3.0", "2": "GPL-2.0", "1": "GPL-1.0"}.get(major)
+    if spdx and later:
+        spdx += "-or-later"
+    return spdx
+
+
 def classify_license_text(text: str) -> Optional[str]:
-    """SPDX identifier implied by a licence file's wording, or None."""
+    """SPDX identifier implied by a licence file's wording, or None.
+
+    GNU licences are decided by the NOTICE at the top of the file (the text a
+    project puts above the licence, naming the licence it applies and whether
+    "any later version" is allowed) and otherwise by the licence's own TITLE
+    line -- never by a phrase search of the whole body. The GPL-3.0 text names
+    the GNU Affero licence in its section 13 and the LGPL-3.0 text incorporates
+    "version 3 of the GNU General Public License", so a whole-text search reads
+    every GPL-3.0 file as AGPL-3.0 and every LGPL-3.0 file as GPL-3.0
+    (regression: frodal/SCMM-hypo, makkemal/NGIMASEM). Non-GNU licences fall
+    back to their distinctive phrases.
+    """
+    lines = text.splitlines()
+    title_at = None
+    title = None
+    for n, raw in enumerate(lines):
+        line = " ".join(raw.strip().strip("#*_=-`>").strip().lower().split())
+        m = _GNU_TITLE.match(line)
+        if m:
+            title_at, title = n, m
+            break
+    head = " ".join(" ".join(lines[:title_at] if title_at is not None
+                             else lines[:60]).lower().split())
+    notice = _GNU_NOTICE.search(head)
+    if notice:
+        tail = notice.group(2)
+        version = _VERSION.search(tail)
+        later = bool(re.search(r"(any later version|or later)", tail))
+        found = _gnu_spdx(notice.group(1) or "",
+                          version.group(1) if version else None, later)
+        if found:
+            return found
+    if title is not None:
+        version = title.group(2)
+        if not version:
+            nxt = " ".join(lines[title_at + 1:title_at + 4]).lower()
+            m = _VERSION.search(nxt)
+            version = m.group(1) if m else None
+        found = _gnu_spdx(title.group(1) or "", version, False)
+        if found:
+            return found
     lowered = " ".join(text.lower().split())
     for spdx, phrases in _LICENSE_PHRASES:
+        if any("general public license" in p for p in phrases):
+            continue                      # GNU family: notice/title only
         if all(phrase in lowered for phrase in phrases):
             return spdx
     return None
