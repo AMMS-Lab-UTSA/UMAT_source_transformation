@@ -329,6 +329,46 @@ def _compile_generated_sources(out_dir: Path, compiler_name: str) -> dict[str, A
     }
 
 
+def _combined_driver_makefile(compile_hint: Path) -> str:
+    """The material-point driver's Makefile, compiling the transform with $(FC).
+
+    The transform's compile_hint.sh names gfortran on every line, so a
+    Makefile that delegated to it would drop an FC the caller names. Its
+    commands are restated here as recipes run from the driver's directory,
+    with the compiler replaced by $(FC) and every path made relative to it.
+    """
+    import shlex
+
+    recipes: list[str] = []
+    objects: list[str] = []
+    for line in compile_hint.read_text(encoding="utf-8").splitlines():
+        words = shlex.split(line)
+        if not words or words[0] != "gfortran":
+            continue
+        command = ["$(FC)"]
+        previous = ""
+        for word in words[1:]:
+            word = word.replace("$OBJDIR", "..")
+            if word == "-I.":
+                word = "-I.."
+            elif not word.startswith("-") and previous != "-o" and not Path(word).is_absolute():
+                word = f"../{word}"
+            if previous == "-o":
+                objects.append(word)
+            command.append(shlex.quote(word).replace("$", "$$"))
+            previous = word
+        recipes.append("\t" + " ".join(command) + "\n")
+    removable = " ".join(shlex.quote(item).replace("$", "$$") for item in objects)
+    return ("# GNU make predefines FC=f77, so \"FC ?= gfortran\" would never apply;\n"
+            "# replace only that built-in default and keep an FC the caller sets.\n"
+            "ifeq ($(origin FC),default)\nFC = gfortran\nendif\n"
+            ".PHONY: all clean\nall:\n"
+            + "".join(recipes)
+            + "\t$(FC) -ffree-line-length-none -I.. ps_driver.f90 ../*.o -o ps_driver\n"
+            "clean:\n"
+            f"\trm -f ps_driver *.csv ../*.mod {removable}\n")
+
+
 def _generate_parameter_sensitivity_artifact(
     *,
     config: dict[str, Any],
@@ -399,11 +439,7 @@ def _generate_parameter_sensitivity_artifact(
         driver_path = out_dir / "ps_driver.f90"
         driver_path.write_text(_emit_driver(contract, "", "", combined_entry=combined_interface["entry_routine"]), encoding="utf-8")
         makefile = out_dir / "Makefile"
-        makefile.write_text(
-            "FC = gfortran\n.PHONY: all\nall:\n"
-            "\tcd .. && ./compile_hint.sh\n"
-            "\t$(FC) -ffree-line-length-none -I.. ps_driver.f90 ../*.o -o ps_driver\n",
-            encoding="utf-8")
+        makefile.write_text(_combined_driver_makefile(out_dir.parent / "compile_hint.sh"), encoding="utf-8")
         artifact = {
             "abi": "oti_material_point_driver", "evaluation": "combined_tangent_and_parameters",
             "drop_in_abaqus_user_subroutine": False, "root": str(out_dir),
