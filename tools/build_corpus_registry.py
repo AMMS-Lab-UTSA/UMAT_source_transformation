@@ -702,7 +702,26 @@ def census(rows: list, key, denominator_name: str) -> dict:
             "sums_to_the_denominator": True}
 
 
-def _fingerprint_latest(rows: list, store_fingerprint: str) -> list:
+def _row_is_current(row: dict, store_fingerprint: str,
+                    harness_fingerprint: str = "") -> bool:
+    """Whether a verification row is about the store AND the harness checked out now.
+
+    The transform fingerprint says which generated Fortran a row judged; the
+    harness fingerprint says how it was judged -- which element, NTENS,
+    loading, comparison. A row that matches the first and not the second ran
+    the right code the wrong way (or a way since corrected), so it decides
+    nothing either. A row from before harness fingerprints were recorded has
+    none, and is not current once one is required.
+    """
+    if str(row.get("fingerprint") or "") != store_fingerprint:
+        return False
+    if harness_fingerprint:
+        return str(row.get("harness_fingerprint") or "") == harness_fingerprint
+    return True
+
+
+def _fingerprint_latest(rows: list, store_fingerprint: str,
+                        harness_fingerprint: str = "") -> list:
     """One row per source: the newest one that is about the CURRENT store.
 
     An append-only results file accumulates rows across passes, and a pass
@@ -722,7 +741,7 @@ def _fingerprint_latest(rows: list, store_fingerprint: str) -> list:
         source_id = str(row.get("source") or "")
         if not source_id:
             continue
-        if str(row.get("fingerprint") or "") == store_fingerprint:
+        if _row_is_current(row, store_fingerprint, harness_fingerprint):
             current[source_id] = row
         else:
             stale[source_id] = row
@@ -1110,7 +1129,8 @@ def offline_syntax_audit(cache: Path, source_ids, *, compiler: str = "") -> dict
 def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
           cache: Optional[Path], *, compile_check: bool = False,
           inventory_ids=None, provenance: Optional[dict] = None,
-          audit: Optional[dict] = None, store_fingerprint: str = "") -> list:
+          audit: Optional[dict] = None, store_fingerprint: str = "",
+          harness_fingerprint: str = "") -> list:
     """Every acquired artefact, its terminal state, and the evidence for it.
 
     ``inventory_ids`` is the denominator and is seeded first, so a source the
@@ -1184,7 +1204,7 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
                     "cache does not hold it")
                 continue
             text = source.read_text(errors="replace")
-            record.bytes = len(text.encode())
+            record.bytes = source_bytes(source)
             record.sha256 = file_digest(source)
             record.duplicate_of = duplicates.get(record.source_id, "")
 
@@ -1210,16 +1230,15 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             record.entry_evidence = found.entry_text
 
             resolution = resolve(source, repository_files(source, cache))
-            record.companion_files = "; ".join(
-                str(Path(unit).relative_to(cache))
-                for unit in resolution.order)[:500]
+            record.companion_files = companion_files_text(resolution.order,
+                                                          cache)
             evidence = (audit or {}).get(record.source_id) or {}
             missing = evidence.get("missing_externals")
             if missing is None:
                 missing = ([f"module {n}" for n in resolution.missing_modules
                             if n.lower() not in INTRINSIC_MODULES]
                            + [f"include {n}" for n in resolution.missing_includes])
-            record.missing_companions = "; ".join(missing)[:300]
+            record.missing_companions = missing_companions_text(missing)
 
             verdict = classify_refusal(
                 found, duplicate_of=record.duplicate_of,
@@ -1251,7 +1270,8 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
     # 668e7e64c1371b47. Joining those on source_id alone would have reported
     # 67 sources as verified on evidence about different generated Fortran.
     verification_file = _relative_to_repo(abaqus_report) if abaqus_report else ""
-    for row in _fingerprint_latest(_rows(abaqus_report), store_fingerprint):
+    for row in _fingerprint_latest(_rows(abaqus_report), store_fingerprint,
+                                   harness_fingerprint):
         source_id = str(row.get("source") or "")
         if not source_id:
             continue
@@ -1260,7 +1280,7 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
         record.verification_fingerprint = str(row.get("fingerprint") or "")
         record.verification_is_current = (
             None if not store_fingerprint or not record.verification_fingerprint
-            else record.verification_fingerprint == store_fingerprint)
+            else _row_is_current(row, store_fingerprint, harness_fingerprint))
         if record.verification_is_current is False:
             # Not a verdict about the entry that is in the store now. The row
             # is kept -- its fingerprint and its stage are recorded -- but it
@@ -1271,7 +1291,10 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
                 f"a verification row for this source reached "
                 f"`{row.get('stage')}` against store fingerprint "
                 f"{record.verification_fingerprint}, and the store is now "
-                f"{store_fingerprint}; that row is evidence about generated "
+                f"{store_fingerprint}"
+                + (f" (harness {row.get('harness_fingerprint') or 'unrecorded'}, "
+                   f"required {harness_fingerprint})" if harness_fingerprint else "")
+                + "; that row is evidence about generated "
                 f"Fortran that has since been rebuilt, so it decides nothing "
                 f"here")
             record.verification_fingerprint = ""
@@ -2303,6 +2326,32 @@ def markdown(records: list, summary: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def source_bytes(source: Path) -> int:
+    """The file's size on disk, in bytes.
+
+    Not ``len(text.encode())`` of the decoded text: decoding with
+    ``errors="replace"`` and universal newlines changes the length of any file
+    with CRLF line endings or bytes that are not UTF-8 (115 registry rows
+    differed before this was fixed).
+    """
+    return Path(source).stat().st_size
+
+
+def companion_files_text(order, cache) -> str:
+    """Every unit of the resolved closure, relative to the cache, untruncated.
+
+    The registry used to cut this at 500 characters, which silently dropped
+    companions from the longest closures (CriticalSoilModels umat.f90,
+    Sanisand-High). Neither the JSON nor the CSV view truncates it.
+    """
+    return "; ".join(str(Path(unit).relative_to(cache)) for unit in order)
+
+
+def missing_companions_text(missing) -> str:
+    """Every missing module/include, untruncated (it was cut at 300 chars)."""
+    return "; ".join(missing)
+
+
 def write_registry(records: list, payload: dict, json_path: Path,
                    csv_path: Path, markdown_path: Path) -> None:
     import io
@@ -2357,6 +2406,11 @@ def main(argv: Optional[list] = None) -> int:
                              "ifort -syntax-only and write the evidence to "
                              "--refusal-audit. No Abaqus process is started "
                              "and no licence token is drawn")
+    parser.add_argument("--harness-fingerprint", default="",
+                        help="the verification-harness fingerprint "
+                             "(umat_oti.store.transform_store.harness_fingerprint) "
+                             "rows must also carry to count as current. Empty: "
+                             "not required (rows from before it was recorded)")
     parser.add_argument("--store-fingerprint", default="",
                         help="the transform-store fingerprint the registry is "
                              "being built for. A verification row carries the "
@@ -2415,7 +2469,8 @@ def main(argv: Optional[list] = None) -> int:
     records = build(args.transform, args.abaqus, args.cache_dir,
                     compile_check=args.compile_check,
                     inventory_ids=inventory_ids, provenance=provenance,
-                    audit=audit, store_fingerprint=fingerprint)
+                    audit=audit, store_fingerprint=fingerprint,
+                    harness_fingerprint=args.harness_fingerprint)
     summary = summarise(records)
     summary["verification_file_reconciliation"] = verification_reconciliation(
         args.abaqus, fingerprint)
@@ -2427,6 +2482,7 @@ def main(argv: Optional[list] = None) -> int:
         "verification_results": (_relative_to_repo(args.abaqus)
                                  if args.abaqus else ""),
         "store_fingerprint": fingerprint,
+        "harness_fingerprint": args.harness_fingerprint,
         "refusal_audit": _relative_to_repo(args.refusal_audit),
         "discovery_cache": _relative_to_repo(args.cache_dir),
     }
