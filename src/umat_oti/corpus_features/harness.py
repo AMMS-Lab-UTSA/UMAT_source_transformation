@@ -63,6 +63,9 @@ REGISTRY = Path(__file__).resolve().parents[3] / "paper_results/corpus/corpus_re
 FAMILIES = WORKSPACE / "corpus_run/material_families_checked_E.json"
 PASS16 = WORKSPACE / "corpus_run/pass16/results/store_verification.jsonl"
 STORE = WORKSPACE / "transform_store"
+#: Work directories of the Abaqus pass whose records are PASS16 (one
+#: ``<key>/original/`` per source); None = ``PASS16``'s ``../../work``.
+EXPERIMENT_WORK: Optional[Path] = None
 CACHE = WORKSPACE / "discovery_cache"
 
 SCHEMA = "umat-oti/corpus-feature/2"
@@ -201,6 +204,7 @@ class CorpusEntry:
     initial_statev: list = field(default_factory=list)
     provenance: dict = field(default_factory=dict)
     path_hints: dict = field(default_factory=dict)
+    driver_point: dict = field(default_factory=lambda: dict(_ZERO_POINT))
 
     @property
     def nprops(self) -> int:
@@ -212,6 +216,81 @@ class CorpusEntry:
                 "nshr": self.nshr, "kinematics": self.kinematics, "family": self.family,
                 "props": list(self.props), "initial_statev": list(self.initial_statev),
                 **self.path_hints}
+
+
+_ZERO_POINT = {"noel": 1, "npt": 1, "coords": [0.0, 0.0, 0.0],
+               "provenance": "default: no recorded Abaqus call of this source was found; "
+                             "COORDS = 0, NOEL = NPT = 1 (driver artefact for a "
+                             "position-dependent routine)"}
+
+
+def _probe_first_entry(probe: Path) -> Optional[dict]:
+    """The first ``ENTRY`` block of an OTIS probe file: what Abaqus handed the
+    routine at its first call (element, point, COORDS, CELENT)."""
+    lines = probe.read_text(errors="replace").splitlines()
+    for i, line in enumerate(lines):
+        parts = line.split()
+        if parts[:1] != ["ENTRY"]:
+            continue
+        noel, npt, kstep, kinc = (int(x) for x in parts[2:6])
+        for j in range(i + 1, len(lines)):
+            head = lines[j].split()
+            if head[:1] == ["ENTRY"]:
+                break
+            if head[:1] == ["COORDS"]:
+                n = int(head[1])
+                vals: list = []
+                k = j + 1
+                while len(vals) < n and k < len(lines):
+                    vals += [float(v) for v in lines[k].split()]
+                    k += 1
+                return {"noel": noel, "npt": npt, "kstep": kstep, "kinc": kinc,
+                        "coords": vals[:3], "celent": vals[3] if n > 3 else None,
+                        "line": i + 1}
+        return None
+    return None
+
+
+def experiment_driver_point(key: str, work_root: Optional[Path] = None) -> dict:
+    """One real integration point of the source's own Abaqus experiment.
+
+    Position-dependent routines (growth laws of r = |COORDS|, THICKCOORD rows
+    indexed by NOEL/NPT) are undefined at COORDS = 0. The driver therefore
+    runs at the point of the FIRST call recorded by the probe of the
+    generated original deck (``<work>/<key>/original/original_probe.txt``):
+    its NOEL, NPT and COORDS(1:3), held fixed over the driven history.
+    NOEL/NPT are an element/point of that deck, so they stay inside the
+    author's mesh. Fallback: the first row of ``original_history.json``
+    (converged-call COORDS). COORDS = 0 only when neither exists.
+    """
+    root = Path(work_root) if work_root is not None else (
+        EXPERIMENT_WORK if EXPERIMENT_WORK is not None else PASS16.parent.parent / "work")
+    original = root / key / "original"
+    probe = original / "original_probe.txt"
+    if probe.is_file():
+        first = _probe_first_entry(probe)
+        if first and len(first["coords"]) == 3 and all(np.isfinite(first["coords"])):
+            return {"noel": first["noel"], "npt": first["npt"],
+                    "coords": [float(c) for c in first["coords"]],
+                    "provenance": (f"{locator(probe)} line {first['line']}: first recorded call "
+                                   f"of the original deck (element {first['noel']}, point "
+                                   f"{first['npt']}, step {first['kstep']}, increment "
+                                   f"{first['kinc']}); COORDS held fixed over the driven "
+                                   f"history; deck CELENT {first['celent']} not used "
+                                   f"(driver CELENT = 1)")}
+    history = original / "original_history.json"
+    if history.is_file():
+        try:
+            rows = json.loads(history.read_text())
+            row = next(r for r in rows if isinstance(r, dict) and r.get("entry"))
+            coords = [float(c) for c in row["entry"]["COORDS"][:3]]
+            return {"noel": int(row["element"]), "npt": int(row["point"]), "coords": coords,
+                    "provenance": (f"{locator(history)}: first recorded row (element "
+                                   f"{row['element']}, point {row['point']}, converged-call "
+                                   f"COORDS); no probe file")}
+        except (ValueError, KeyError, StopIteration, TypeError):
+            pass
+    return dict(_ZERO_POINT, provenance=_ZERO_POINT["provenance"] + f" (looked in {original})")
 
 
 def _pass16_record(key: str) -> Optional[dict]:
@@ -267,7 +346,8 @@ def resolve_entry(key: str) -> CorpusEntry:
                     "material_provenance": manifest.get("material_provenance", "")[:300],
                     "initial_state_from_user_subroutine":
                         bool(manifest.get("initial_state_from_user_subroutine")),
-                    "terminal_state": record.get("terminal_state")})
+                    "terminal_state": record.get("terminal_state")},
+        driver_point=experiment_driver_point(key))
 
 
 # ---------------------------------------------------------------------------
@@ -523,7 +603,10 @@ def _config(entry: CorpusEntry, increments: list, statev0, call_sdvini: bool,
                         ndi=entry.ndi, nshr=entry.nshr,
                         props=list(entry.props if props is None else props),
                         statev0=list(statev0), cmname=entry.cmname, increments=increments,
-                        call_sdvini=call_sdvini)
+                        call_sdvini=call_sdvini,
+                        coords=tuple(float(c) for c in entry.driver_point["coords"]),
+                        noel=int(entry.driver_point["noel"]),
+                        npt=int(entry.driver_point["npt"]))
 
 
 def _run_real(build: dv.Build, work: Path, config: dv.RunConfig,
@@ -560,7 +643,13 @@ def _run_oti(build: dv.Build, work: Path, config: dv.RunConfig, mode: str,
 
 
 def _base_arrays(base: dict, n: int, name: str) -> np.ndarray:
-    return np.array([np.asarray(base[i][name], float) for i in range(1, n + 1)])
+    """Per-increment array; an increment the run never reached (the routine
+    stopped the program) is NaN, so it can never agree with anything."""
+    width = next((np.asarray(row[name], float).shape for row in base.values()), None)
+    if width is None:
+        raise KeyError(f"no increment of the run returned {name}")
+    return np.array([np.asarray(base[i][name], float) if i in base else np.full(width, np.nan)
+                     for i in range(1, n + 1)])
 
 
 def _increments(entry: CorpusEntry, path) -> list:
@@ -1274,6 +1363,14 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
             return [_record(entry, f, path, _simple(status, reason), common) for f in features], None, []
     statev0 = list(pristine.initial_statev[:nx]) if nx else []
     config = _config(entry, increments, statev0, False)
+    done = sum(1 for i in range(1, n_inc + 1) if i in pristine.base)
+    if done < n_inc:
+        # The ORIGINAL terminated the program (STOP / CALL XIT) inside this
+        # history: nothing to compare against past that point.
+        reason = (f"the original routine terminated the run after {done} of {n_inc} "
+                  f"increments on this path (STOP/XIT inside the routine)")
+        return [_record(entry, f, path, _simple("not_attempted", reason), common)
+                for f in features], None, []
     base_stress = _base_arrays(pristine.base, n_inc, "stress")
     base_statev = _base_arrays(pristine.base, n_inc, "statev") if nx else np.zeros((n_inc, 0))
     finite_base = bool(np.all(np.isfinite(base_stress)) and np.all(np.isfinite(base_statev)))
@@ -2013,6 +2110,7 @@ def _stamp(records: list, entry: CorpusEntry, builds: Builds, work: Path, starte
         identity = dict(builds.identity.get(which) or {"build": which,
                                                         "reason": "build not produced"})
         record["build_identity"] = identity
+        record["driver_point"] = dict(entry.driver_point)
         record["transformer_fingerprint"] = identity.get("transformer_fingerprint")
         record["compiled_source_sha256"] = identity.get("compiled_source_sha256")
         record["reference_identity"] = builds.identity.get("original")
@@ -2021,7 +2119,9 @@ def _stamp(records: list, entry: CorpusEntry, builds: Builds, work: Path, starte
                                 "ntens": entry.ntens, "ndi": entry.ndi, "nshr": entry.nshr,
                                 "ntens_override": entry.provenance.get("ntens_override"),
                                 "lifted_ok": builds.lifted.ok,
-                                "driver_point": {"NOEL": 1, "NPT": 1, "LAYER": 1, "KSPT": 1,
-                                                 "COORDS": [0.0, 0.0, 0.0]},
+                                "driver_point": {"NOEL": entry.driver_point["noel"],
+                                                 "NPT": entry.driver_point["npt"],
+                                                 "LAYER": 1, "KSPT": 1,
+                                                 "COORDS": list(entry.driver_point["coords"])},
                                 "builds_json": locator(work / "builds.json")}
     return records
