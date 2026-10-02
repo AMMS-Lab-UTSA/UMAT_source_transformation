@@ -61,11 +61,17 @@ class PrimalComparison:
     #: primal_disagreed, which reads as a statement about the transform.
     non_finite_original: int = 0
     non_finite_transformed: int = 0
+    #: The stiffness-scaled stress resolution used (0 when none was given),
+    #: and how many stress components sat below it.
+    stress_resolution: float = 0.0
+    stress_below_resolution: int = 0
     agrees: bool = False
     reason: str = ""
 
     def as_dict(self) -> dict:
         return {
+            "stress_resolution": self.stress_resolution,
+            "stress_below_resolution": self.stress_below_resolution,
             "increments": self.increments,
             "indistinguishable_components": self.indistinguishable_components,
             "records_original": self.records_original,
@@ -82,6 +88,273 @@ class PrimalComparison:
             "agrees": self.agrees,
             "reason": self.reason,
         }
+
+
+#: Machine epsilon of the arithmetic every build here computes in.
+EPS = 2.220446049250313e-16
+
+#: The routine-level resolution bound, in "stiffness ulps": a stress returned by
+#: a UMAT is computed through terms of magnitude |DDSDDE| x (a strain-like
+#: measure of order one) -- for the near-incompressible growth laws literally
+#: K*(J-1), which cancels -- so two correct evaluations of it differing in
+#: operation order differ by a few eps*max|DDSDDE|, however small the stress.
+#: MEASURED on the 77 eligible growth rows of pass16 (curie_g B2, replay of
+#: every converged call, identical arguments): once the transform's precision
+#: changes are applied to the original, transformed-vs-original stress
+#: differences are <= 10 ulpK on every row whose constructs were fully
+#: reproduced (max 9.7, Growth-Frac); rows still carrying an un-reproduced
+#: single-precision construct sit at 7e5..2.5e9 ulpK. 64 leaves a factor six
+#: above the measured maximum and five decades below the first real
+#: difference. It is a statement of resolution, not a loosening: it never
+#: exceeds what the arithmetic can distinguish.
+STIFFNESS_ULPS = 64.0
+
+#: B2c (Vera B2 item 4): the 64 above is now a CAP, not the bound. Each row
+#: gets its own floor, MEASURED on the ORIGINAL: the original replayed on its
+#: recorded calls with every real input (STRESS0, STATEV0, STRAN, DSTRAN,
+#: DFGRD0, DFGRD1) moved by NOISE_INPUT_ULPS ulps (random sign, fixed seeds,
+#: NOISE_DRAWS draws). A reordered but correct evaluation is (backward
+#: stability) the exact evaluation at inputs a few ulps away, so how far the
+#: original's own stress moves under such inputs, in stiffness ulps, is the
+#: rounding a correct transform may show on this row. The row bound is
+#: ``clip(NOISE_FACTOR * measured, NOISE_MIN_ULPS, STIFFNESS_ULPS)`` ulpK.
+#: It is NOT calibrated on transformed-vs-original differences.
+NOISE_INPUT_ULPS = 1.0
+NOISE_DRAWS = 3
+NOISE_FACTOR = 4.0
+#: floor of the floor: a row whose stress does not move at all under the
+#: input perturbation still carries the reordering of its own last operations
+NOISE_MIN_ULPS = 2.0
+
+
+def call_stiffness(record: dict) -> float:
+    """max |DDSDDE| of one call record (0 if none finite)."""
+    best = 0.0
+    for value in (record.get("DDSDDE") or ()):
+        if isinstance(value, (int, float)) and math.isfinite(value):
+            best = max(best, abs(value))
+    return best
+
+
+def perturb_entries(entries: Sequence[dict], seed: int,
+                    ulps: float = NOISE_INPUT_ULPS) -> list:
+    """Copies of recorded ENTRY dicts with every real input moved by ``ulps``
+    ulps (relative, random sign). PROPS, TIME, integers untouched."""
+    import random
+    rng = random.Random(seed)
+    out = []
+    for entry in entries:
+        e = dict(entry)
+        for key in ("STRESS0", "STATEV0", "STRAN", "DSTRAN", "DFGRD0", "DFGRD1"):
+            values = entry.get(key)
+            if not values:
+                continue
+            e[key] = [v * (1.0 + rng.choice((-1.0, 1.0)) * ulps * EPS)
+                      if isinstance(v, float) and math.isfinite(v) else v for v in values]
+        out.append(e)
+    return out
+
+
+def measured_noise_ulps(reference: Sequence[dict], perturbed: Sequence[Sequence[dict]],
+                        excluded: Optional[dict] = None) -> dict:
+    """Per-row rounding floor of the ORIGINAL, in stiffness ulps (see
+    NOISE_INPUT_ULPS): max over calls and draws of |dSTRESS| / (eps K_call),
+    K_call = max|DDSDDE| of the original at that call. Returns the
+    measurement and the row bound it implies."""
+    skip = set((excluded or {}).get("STRESS") or ())
+    worst = 0.0
+    usable = 0
+    for draw in perturbed:
+        if len(draw) != len(reference):
+            continue
+        usable += 1
+        for a, b in zip(reference, draw):
+            unit = EPS * call_stiffness(a)
+            if not unit:
+                continue
+            for k, (x, y) in enumerate(zip(a.get("STRESS") or (), b.get("STRESS") or ()),
+                                       start=1):
+                if k in skip or not (math.isfinite(x) and math.isfinite(y)):
+                    continue
+                worst = max(worst, abs(x - y) / unit)
+    if not usable:
+        return {"measured": None, "ulps": STIFFNESS_ULPS, "draws": 0,
+                "rule": "no perturbed replay: the cap applies"}
+    bound = min(STIFFNESS_ULPS, max(NOISE_MIN_ULPS, NOISE_FACTOR * worst))
+    return {"measured": worst, "ulps": bound, "draws": usable,
+            "rule": (f"clip({NOISE_FACTOR:g} x measured, {NOISE_MIN_ULPS:g}, "
+                     f"{STIFFNESS_ULPS:g}) ulpK; measured = max |dSTRESS|/(eps max|DDSDDE|_call) "
+                     f"of the ORIGINAL under {NOISE_INPUT_ULPS:g}-ulp input perturbations")}
+
+
+def stiffness_scale(*histories: Sequence[dict]) -> float:
+    """max |DDSDDE| over every finite entry of the given records (0 if none)."""
+    largest = 0.0
+    for history in histories:
+        for record in history or ():
+            for value in (record.get("DDSDDE") or ()):
+                if isinstance(value, (int, float)) and math.isfinite(value):
+                    largest = max(largest, abs(value))
+    return largest
+
+
+@dataclass
+class RoutineComparison:
+    """Two builds of one routine, called with the SAME arguments, call by call.
+
+    STRESS at call i is held to ``tolerance * max|STRESS| + ulps * eps * K_i``
+    with ``K_i`` = the SMALLER of the two builds' max|DDSDDE| at that call
+    (and of ``stiffness`` when given): the build under test cannot widen its
+    own bound by inflating its tangent (Vera B2 item 4: DDSDDE x 1e6 at one
+    call let a 1e-6 stress error pass);
+    each STATEV slot to ``tolerance * max|slot|`` (its own scale over the
+    history, so a slot holding coordinates is not judged against one holding
+    a modulus). Outputs named in ``excluded`` (D-12 ``undefined_in_original``)
+    are never compared. Any non-finite mismatch fails.
+    """
+
+    calls: int = 0
+    stiffness: float = 0.0
+    tolerance: float = 1e-10
+    ulps: float = STIFFNESS_ULPS
+    stress_bound: float = 0.0
+    worst_stress_absolute: float = 0.0
+    worst_stress_ulpk: float = 0.0
+    worst_stress_over_bound: float = 0.0
+    #: largest per-call bound over max|STRESS| of the history: the relative
+    #: stress error this row's gate cannot see (published per row)
+    bound_over_max_sigma: float = 0.0
+    worst_stress_at: tuple = ()
+    worst_state_relative: float = 0.0
+    worst_state_at: tuple = ()
+    non_finite_mismatches: int = 0
+    excluded: dict = field(default_factory=dict)
+    agrees: bool = False
+    reason: str = ""
+
+    def as_dict(self) -> dict:
+        return {"calls": self.calls, "stiffness": self.stiffness,
+                "tolerance": self.tolerance, "ulps": self.ulps,
+                "stress_bound": self.stress_bound,
+                "worst_stress_absolute": self.worst_stress_absolute,
+                "worst_stress_ulpk": self.worst_stress_ulpk,
+                "worst_stress_over_bound": self.worst_stress_over_bound,
+                "bound_over_max_sigma": self.bound_over_max_sigma,
+                "worst_stress_at": list(self.worst_stress_at),
+                "worst_state_relative": self.worst_state_relative,
+                "worst_state_at": list(self.worst_state_at),
+                "non_finite_mismatches": self.non_finite_mismatches,
+                "excluded": self.excluded, "agrees": self.agrees,
+                "reason": self.reason}
+
+
+def compare_calls(reference: Sequence[dict], other: Sequence[dict], *,
+                  stiffness: float, tolerance: float = 1e-10,
+                  ulps: float = STIFFNESS_ULPS,
+                  excluded: Optional[dict] = None) -> RoutineComparison:
+    """Routine-level primal comparison of two replays of the same calls."""
+    result = RoutineComparison(stiffness=float(stiffness or 0.0),
+                               tolerance=tolerance, ulps=ulps,
+                               excluded=dict(excluded or {}))
+    skip_stress = set((excluded or {}).get("STRESS") or ())
+    skip_state = set((excluded or {}).get("STATEV") or ())
+    if not reference or len(reference) != len(other):
+        result.reason = (f"{len(reference)} reference calls against "
+                         f"{len(other)}: not the same calls")
+        return result
+    result.calls = len(reference)
+
+    def finite_max(name: str, k: Optional[int] = None) -> float:
+        best = 0.0
+        for record in list(reference) + list(other):
+            values = record.get(name) or ()
+            chosen = values if k is None else values[k:k + 1]
+            for v in chosen:
+                if math.isfinite(v):
+                    best = max(best, abs(v))
+        return best
+
+    stress_scale = finite_max("STRESS")
+
+    def unit_of(a: dict, b: dict) -> float:
+        ks = [k for k in (call_stiffness(a), call_stiffness(b)) if k > 0]
+        if result.stiffness:
+            ks.append(result.stiffness)
+        k = min(ks) if ks else 0.0
+        return EPS * k if k else EPS * stress_scale
+
+    nstatv = len(reference[0].get("STATEV") or ())
+    slot_scale = [finite_max("STATEV", k) for k in range(nstatv)]
+    for index, (a, b) in enumerate(zip(reference, other)):
+        unit = unit_of(a, b)
+        bound = tolerance * stress_scale + ulps * unit
+        result.stress_bound = max(result.stress_bound, bound)
+        for k, (x, y) in enumerate(zip(a.get("STRESS") or (), b.get("STRESS") or ()),
+                                   start=1):
+            if k in skip_stress:
+                continue
+            if not (math.isfinite(x) and math.isfinite(y)):
+                if _differs(x, y):
+                    result.non_finite_mismatches += 1
+                    result.worst_stress_at = (index, k, x, y)
+                continue
+            d = abs(x - y)
+            if unit:
+                result.worst_stress_ulpk = max(result.worst_stress_ulpk, d / unit)
+            ratio = d / bound if bound else (0.0 if not d else math.inf)
+            if ratio > result.worst_stress_over_bound:
+                result.worst_stress_over_bound = ratio
+            if d > result.worst_stress_absolute:
+                result.worst_stress_absolute = d
+                result.worst_stress_at = (index, k, x, y)
+        for k, (x, y) in enumerate(zip(a.get("STATEV") or (), b.get("STATEV") or ()),
+                                   start=1):
+            if k in skip_state:
+                continue
+            if not (math.isfinite(x) and math.isfinite(y)):
+                if _differs(x, y):
+                    result.non_finite_mismatches += 1
+                    result.worst_state_at = (index, k, x, y)
+                continue
+            scale = slot_scale[k - 1] if k - 1 < len(slot_scale) else 0.0
+            if not scale or x == y:
+                continue
+            r = abs(x - y) / scale
+            if r > result.worst_state_relative:
+                result.worst_state_relative = r
+                result.worst_state_at = (index, k, x, y)
+    result.bound_over_max_sigma = (result.stress_bound / stress_scale if stress_scale
+                                   else math.inf)
+    stress_ok = result.worst_stress_over_bound <= 1.0
+    result.agrees = (not result.non_finite_mismatches and stress_ok
+                     and result.worst_state_relative <= tolerance)
+    if not result.agrees:
+        parts = []
+        if result.non_finite_mismatches:
+            parts.append(f"{result.non_finite_mismatches} outputs finite in one "
+                         f"build and not in the other (first at call/component "
+                         f"{list(result.worst_stress_at or result.worst_state_at)[:2]})")
+        if not stress_ok:
+            parts.append(f"stress differs by up to {result.worst_stress_over_bound:.3g} x its "
+                         f"per-call bound ({result.worst_stress_ulpk:.3g} stiffness ulps, "
+                         f"bound {ulps:g} ulpK + {tolerance:.0e} relative; largest "
+                         f"difference {result.worst_stress_absolute:.3e})")
+        if result.worst_state_relative > tolerance:
+            parts.append(f"STATEV({result.worst_state_at[1]}) differs by "
+                         f"{result.worst_state_relative:.3e} of its own scale "
+                         f"against {tolerance:.0e}")
+        result.reason = "; ".join(parts)
+    else:
+        result.reason = (f"{result.calls} paired calls: stress "
+                         f"within {result.worst_stress_ulpk:.3g} stiffness ulps "
+                         f"(bound {ulps:g} + {tolerance:.0e} relative; bound/max|STRESS| "
+                         f"{result.bound_over_max_sigma:.2e}), state "
+                         f"within {result.worst_state_relative:.1e}")
+    return result
+
+
+def _differs(x: float, y: float) -> bool:
+    return not (x == y or (x != x and y != y))
 
 
 #: The absolute floor, as a fraction of the largest value the field reaches
@@ -153,8 +426,19 @@ def compare_primal(
     *,
     tolerance: float = 1e-10,
     near_zero_fraction: float = 1e-8,
+    stiffness: Optional[float] = None,
+    stiffness_ulps: float = None,
 ) -> PrimalComparison:
     """Stress and state histories, compared where a comparison means something.
+
+    ``stiffness`` (max |DDSDDE| over the run, see :func:`stiffness_scale`)
+    adds the resolution bound of :data:`STIFFNESS_ULPS`: a stress difference
+    no larger than ``STIFFNESS_ULPS * eps * stiffness`` is indistinguishable,
+    and a stress component no larger than that bound is below the resolution
+    of the arithmetic it was computed in and is not scored. This is what makes
+    a history whose stress is zero up to rounding (free growth: mholla
+    *_morph, |sigma| ~ 1e-15 on moduli ~ 1) read as "no resolvable stress"
+    instead of "the builds differ by 100%".
 
     A component that is a vanishing fraction of the response holds each build's
     rounding and nothing else; two such values differ by 100% without that
@@ -193,6 +477,10 @@ def compare_primal(
 
     paired = list(zip(original, transformed))
     result.increments = len(paired)
+    ulps = STIFFNESS_ULPS if stiffness_ulps is None else float(stiffness_ulps)
+    stress_resolution = (ulps * EPS * float(stiffness)
+                         if stiffness and math.isfinite(stiffness) else 0.0)
+    result.stress_resolution = stress_resolution
 
     # One scale per field, over every increment of both builds: what a
     # "vanishing fraction of the response" means is a property of the run, not
@@ -241,6 +529,11 @@ def compare_primal(
                 scale = max(abs(x), abs(y))
                 if not scale:
                     continue
+                if field_name == "STRESS" and stress_resolution and \
+                        scale <= stress_resolution:
+                    result.unresolved_components += 1
+                    result.stress_below_resolution += 1
+                    continue
                 if response and scale <= near_zero_fraction * response:
                     result.unresolved_components += 1
                     continue
@@ -270,6 +563,8 @@ def compare_primal(
                 # never to relax the standard the caller asked for.
                 difference = abs(x - y)
                 floor = min(ABSOLUTE_FLOOR_FRACTION, tolerance) * response
+                if field_name == "STRESS":
+                    floor = max(floor, stress_resolution)
                 if response and difference <= floor:
                     result.indistinguishable_components += 1
                     continue

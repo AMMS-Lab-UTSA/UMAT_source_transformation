@@ -83,7 +83,7 @@ from run_abaqus_verification import run_one                             # noqa: 
 from run_discovered_verification import _cache_relative_source          # noqa: E402
 from run_discovery_triage import without_machine_paths                  # noqa: E402
 from umat_oti.abaqus.compare import (align_by_time, compare_primal,   # noqa: E402
-                                     compare_tangent)
+                                     compare_tangent, stiffness_scale)
 from umat_oti.abaqus.deck import generate_deck                          # noqa: E402
 from umat_oti.abaqus.activation import detect_activation                # noqa: E402
 from umat_oti.abaqus.state_regime import (                              # noqa: E402
@@ -110,11 +110,15 @@ from umat_oti.abaqus.rate_search import (                               # noqa: 
 from umat_oti.abaqus.job_status import blocking_statements
 from umat_oti.abaqus.probe import CORRUPT, converged_only, parse_probe           # noqa: E402
 from umat_oti.abaqus.replay import (                                    # noqa: E402
-    STATE_FILE, build_replay, difference_tangent, write_state)
+    STATE_FILE, build_replay, defines_sdvini, difference_tangent, write_state)
 from umat_oti.abaqus.truncation import analyse as analyse_truncation    # noqa: E402
 from umat_oti.abaqus.support import (                                   # noqa: E402
     build_support, compile_order, install_support)
 from umat_oti.store import TransformStore                               # noqa: E402
+from umat_oti.store.transform_store import harness_fingerprint      # noqa: E402
+
+#: Computed once per process, so every row of a run carries the same value.
+_HARNESS_FINGERPRINT = harness_fingerprint()
 
 # ---------------------------------------------------------------------------
 # the ladder
@@ -724,6 +728,37 @@ def _portable(value, cache_root: Path):
     return value
 
 
+def honour_author_sdvini(manifest: VerificationManifest,
+                         source: Path) -> VerificationManifest:
+    """Ask for the author's SDVINI when nothing else states the starting state.
+
+    A source that defines SDVINI says what its state starts at; a deck that
+    states no *INITIAL CONDITIONS leaves STATEV at zero, which is exactly the
+    point an SDVINI exists to avoid. Measured on Worlthen simplified/enhanced
+    _curing.for: SDVINI seeds the cure degree at 1e-15 (the repository's own
+    abaqus/original/Job-1.inp asks for it with TYPE=SOLUTION,USER); the paired
+    simplified_job.inp does not, so the generated deck started both builds at
+    cure = 0, where (cure/max_cure)**m has no derivative and the transformed
+    build returned NaN. A deck that states values, or asks for USER itself, is
+    left exactly as it is.
+    """
+    if manifest is None or manifest.initial_state_from_user_subroutine \
+            or any(manifest.initial_statev):
+        return manifest
+    try:
+        text = Path(source).read_text(errors="replace")
+    except OSError:
+        return manifest
+    if not defines_sdvini(text):
+        return manifest
+    return replace(
+        manifest, initial_state_from_user_subroutine=True,
+        initial_statev_provenance=(
+            "the source defines SDVINI and the paired deck states no starting "
+            "state, so the generated deck asks for the author's SDVINI "
+            "(*INITIAL CONDITIONS, TYPE=SOLUTION, USER)"))
+
+
 def _from_experiment(plan: "ManifestPlan", answer, source_id: str,
                      cache_root: Path, *, inferred_nstatv: int,
                      fd_steps: Sequence[float],
@@ -739,6 +774,7 @@ def _from_experiment(plan: "ManifestPlan", answer, source_id: str,
     manifest = answer.manifest
     if fd_steps:
         manifest = replace(manifest, fd_steps=tuple(fd_steps))
+    manifest = honour_author_sdvini(manifest, Path(cache_root) / source_id)
 
     pairing = answer.pairing
     material = getattr(pairing, "material", None) if pairing is not None else None
@@ -998,6 +1034,23 @@ def build_manifest(
 
     declared_state = initial_solution_state(deck_text)
     state_from_sdvini = initial_state_is_computed(deck_text)
+    # The author's own SDVINI, honoured when the paired deck states no
+    # starting state of its own. A source that ships SDVINI says what its
+    # state starts at; a deck that omits *INITIAL CONDITIONS leaves STATEV at
+    # zero, which is the point the SDVINI exists to avoid. Measured on
+    # Worlthen simplified/enhanced_curing.for: SDVINI seeds the cure degree at
+    # 1e-15 (the repository's other deck, abaqus/original/Job-1.inp, asks for
+    # it with *INITIAL CONDITIONS,TYPE=SOLUTION,USER); the paired
+    # simplified_job.inp does not, so the generated deck started both builds
+    # at cure = 0, where (cure/max_cure)**m has no derivative.
+    sdvini_honoured = False
+    if not state_from_sdvini and not any(declared_state):
+        try:
+            source_text = (Path(cache_root) / source_id).read_text(errors="replace")
+        except OSError:
+            source_text = ""
+        if defines_sdvini(source_text):
+            state_from_sdvini = sdvini_honoured = True
     # The transform's own bound on STATEV, from the subscripts the source uses.
     # Reported as an inference everywhere: it is not the author's *DEPVAR and
     # must never read as one.
@@ -1047,6 +1100,10 @@ def build_manifest(
         initial_statev=declared_state,
         initial_state_from_user_subroutine=state_from_sdvini,
         initial_statev_provenance=(
+            (f"the source defines SDVINI and {Path(proposed).name} states no "
+             f"starting state, so the generated deck asks for the author's "
+             f"SDVINI (*INITIAL CONDITIONS, TYPE=SOLUTION, USER)")
+            if sdvini_honoured else
             f"{Path(proposed).name} *INITIAL CONDITIONS, TYPE=SOLUTION, USER: "
             f"the source's own SDVINI computes the starting state"
             if state_from_sdvini else
@@ -2945,6 +3002,364 @@ def run_precision_control(manifest: VerificationManifest, original: Path,
 
 
 # ---------------------------------------------------------------------------
+# the primal gate (B2c): routine level, then a Jacobian-matched Abaqus control
+# ---------------------------------------------------------------------------
+#
+# The FE histories of the two builds are NOT a comparison of the two routines:
+# the transformed build returns the OTI tangent instead of the author's
+# DDSDDE, and the converged FE answer depends on the Jacobian -- through the
+# Newton path at default tolerance, and on hybrid elements even at a tight one.
+# Measured (corpus_campaign/batches/B2/curie_g, cc_cug_01..17): From-2D-to-2D-
+# Axe.for, C3D8H, residual 2e-13 in both runs, still 3.2e-6 apart; the
+# original with only its DDSDDE given the transformed one's structure
+# reproduces the TRANSFORMED run to 1.6e-12. MinSur1 5.3e-7 -> 3.2e-12,
+# CASE4 0.40 -> 5.7e-14 once the solver is steered by the same Jacobian.
+#
+# So the gate is decided by two comparisons that can only see the routine:
+#   (a) routine level -- every converged call of the original's history
+#       replayed in both builds from the recorded arguments;
+#   (b) Jacobian matched -- an Abaqus run of the ORIGINAL's STRESS/STATEV with
+#       the TRANSFORMED build's DDSDDE, against the transformed run.
+# The FE comparison of the two plain runs is kept, labelled informational.
+
+#: Off the ladder: an output the gate must judge (STRESS or DDSDDE) is
+#: undefined behaviour in the ORIGINAL (D-12). A source defect, reported with
+#: the outputs and the init builds that disagree; never verified.
+UNDEFINED_IN_ORIGINAL = "undefined_in_original"
+
+#: How far an offline replay of the ORIGINAL may sit from what the solver
+#: recorded and still be a replay of it (block-relative). Measured: 0.0 on all
+#: 83 growth rows of pass16. Anything above means hidden state (a SAVE, a
+#: COMMON block, a file) that the recorded arguments do not carry.
+REPLAY_REPRODUCES = 1e-12
+
+
+def _probed_source(job_dir: Path, job: str) -> Optional[Path]:
+    for suffix in (".for", ".f90", ".f"):
+        candidate = Path(job_dir) / f"{job}_probed{suffix}"
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _include_dirs(*job_dirs: Path) -> list:
+    found = []
+    for job_dir in job_dirs:
+        for candidate in (Path(job_dir), Path(job_dir) / "include_any_case",
+                          Path(job_dir) / "dependencies"):
+            if candidate.is_dir():
+                found.append(candidate)
+    return found
+
+
+def _reproduces(recorded: Sequence[dict], replayed: Sequence[dict]) -> tuple:
+    """Does the offline ORIGINAL replay return what the solver recorded?"""
+    worst = 0.0
+    for name in ("STRESS", "STATEV"):
+        scale = max((abs(v) for r in recorded for v in (r.get(name) or ())
+                     if math.isfinite(v)), default=0.0) or 1.0
+        for a, b in zip(recorded, replayed):
+            for x, y in zip(a.get(name) or (), b.get(name) or ()):
+                if not (math.isfinite(x) and math.isfinite(y)):
+                    if (x == x) != (y == y) or (math.isfinite(x) != math.isfinite(y)):
+                        return False, math.inf
+                    continue
+                worst = max(worst, abs(x - y) / scale)
+    return worst <= REPLAY_REPRODUCES, worst
+
+
+def init_variant_check(original_probed: Path, entries: Sequence[dict],
+                       work_dir: Path, *, ntens: int, include_dirs=(),
+                       timeout: int = 900) -> dict:
+    """D-12 in the Abaqus path: which outputs of the ORIGINAL are undefined.
+
+    The same probed source the solver compiled, built once per init build of
+    ``umat_oti.abaqus.replay.FINIT_BUILDS`` (zero / snan / +inf-77777-flipped
+    logicals: the set corpus_features uses, one shared definition) with
+    gfortran, and the zero build run twice (a difference there is hidden
+    state, never "undefined"). An output differing between the zero build and
+    ANY other build is undefined_in_original. Where gfortran cannot compile the
+    author's file, ifort with -init=zero / -init=huge / -init=minus_huge stands
+    in and says so: ifort's -init=snan traps on the first read (measured on 10
+    Jeff97 rows), which would report every such source as unbuildable rather
+    than as defective.
+    """
+    from umat_oti.abaqus.replay import (
+        FINIT_BUILDS, GFORTRAN_HISTORY_FLAGS, build_history_replay,
+        run_history_replay, undefined_outputs)
+    from umat_oti.abaqus.single_call import ABAQUS_IFORT_FLAGS
+
+    outcome: dict[str, Any] = {"ran": False, "pair": ""}
+    gnu = tuple(GFORTRAN_HISTORY_FLAGS)
+    ifx = tuple(ABAQUS_IFORT_FLAGS)
+    sets = (("gfortran -finit " + " / ".join(n for n, _ in FINIT_BUILDS), "gfortran",
+             tuple((n, gnu + f) for n, f in FINIT_BUILDS)),
+            ("ifort -init=zero / -init=huge / -init=minus_huge (gfortran could not build "
+             "the source)", "ifort",
+             (("zero", ifx + ("-init=zero,arrays",)), ("huge", ifx + ("-init=huge,arrays",)),
+              ("minus_huge", ifx + ("-init=minus_huge,arrays",)))))
+    failures = []
+    for label, compiler, variants in sets:
+        built = []
+        for name, flags in variants:
+            b = build_history_replay(original_probed, Path(work_dir) / f"{compiler}_{name}",
+                                     label=f"{name}_init", compiler=compiler,
+                                     flags=flags, include_dirs=include_dirs, timeout=timeout)
+            built.append((name, b))
+            if not b.ok:
+                break
+        if not all(b.ok for _, b in built) or len(built) < len(variants):
+            bad = next(b for _, b in built if not b.ok)
+            failures.append(f"{label}: {bad.reason}")
+            continue
+        (zname, zero), others = built[0], built[1:]
+        first = run_history_replay(zero, entries, Path(work_dir) / f"{compiler}_{zname}", timeout)
+        again = run_history_replay(zero, entries, Path(work_dir) / f"{compiler}_{zname}", timeout)
+        outcome.update(ran=True, pair=label, zero=first.as_dict(),
+                       init_variants=[n for n, _ in variants])
+        if not (first.ok and again.ok):
+            outcome["reason"] = f"the zero-init build did not replay: {first.reason or again.reason}"
+            outcome["established"] = False
+            return outcome
+        repeat = undefined_outputs(first.calls, again.calls, ntens)
+        if any(repeat[k] for k in ("STRESS", "STATEV", "DDSDDE")):
+            outcome.update(established=False, hidden_state=repeat,
+                           reason="the zero-init build is not deterministic: "
+                                  "hidden state, not an uninitialised variable")
+            return outcome
+        undefined: dict = {"STRESS": [], "STATEV": [], "DDSDDE": [], "details": []}
+        for name, build in others:
+            other = run_history_replay(build, entries, Path(work_dir) / f"{compiler}_{name}",
+                                       timeout)
+            outcome[name] = other.as_dict()
+            if name in ("snan", "huge"):
+                outcome["poison"] = other.as_dict()
+            if not other.ok:
+                # A poisoned value that crashes the run (an SNaN trapped, a huge
+                # value overflowing) is itself a use of the undefined value; which
+                # outputs it reaches is then not known, so nothing is established.
+                outcome.update(established=False,
+                               reason=f"the {name}-init build stopped: {other.reason}")
+                return outcome
+            undefined_outputs(first.calls, other.calls, ntens, into=undefined, variant=name)
+        for key in ("STRESS", "STATEV", "DDSDDE"):
+            undefined[key].sort()
+        outcome.update(established=True, undefined=undefined,
+                       reason=("every output bit-identical across all init builds"
+                               if not undefined["details"] else
+                               f"{len(undefined['details'])} output(s) differ between "
+                               f"the init builds: undefined_in_original"))
+        return outcome
+    outcome.update(established=False,
+                   reason="no init build set could be built: " + "; ".join(failures))
+    return outcome
+
+
+def routine_level_primal(original_dir: Path, transformed_dir: Path,
+                         original_history: Sequence[dict],
+                         transformed_history: Sequence[dict], work_dir: Path, *,
+                         ntens: int, tolerance: float, timeout: int = 900,
+                         reference_source: Optional[Path] = None,
+                         objects: Sequence[Path] = (),
+                         undefined: Optional[dict] = None) -> dict:
+    """Primal gate part (a): every converged call, both builds, same arguments.
+
+    ``reference_source`` replaces the original's probed file (the precision
+    control passes its widened copy); the reproduction check is then skipped
+    for it, because a widened file is not supposed to reproduce the record.
+    """
+    from umat_oti.abaqus.compare import (NOISE_DRAWS, compare_calls, measured_noise_ulps,
+                                         perturb_entries, stiffness_scale)
+    from umat_oti.abaqus.replay import build_history_replay, run_history_replay
+    from umat_oti.abaqus.single_call import ABAQUS_IFORT_FLAGS
+
+    outcome: dict[str, Any] = {"ran": False, "agrees": False}
+    original_probed = reference_source or _probed_source(original_dir, "original")
+    transformed_probed = _probed_source(transformed_dir, "transformed")
+    if original_probed is None or transformed_probed is None:
+        outcome["reason"] = "the probed sources the jobs compiled are not on disk"
+        return outcome
+    with_entry = [r for r in original_history if r.get("entry")]
+    if len(with_entry) != len(original_history) or not with_entry:
+        outcome["reason"] = (f"{len(original_history) - len(with_entry)} converged "
+                             f"records carry no ENTRY: the calls cannot be replayed")
+        return outcome
+    entries = [r["entry"] for r in with_entry]
+    includes = _include_dirs(original_dir, transformed_dir)
+    objects = list(objects) or sorted(Path(transformed_dir).glob("*.o"))
+    work_dir = Path(work_dir)
+    reference = build_history_replay(original_probed, work_dir / "reference",
+                                     label="original", flags=ABAQUS_IFORT_FLAGS,
+                                     include_dirs=includes, timeout=timeout)
+    converted = build_history_replay(transformed_probed, work_dir / "transformed",
+                                     label="transformed", flags=ABAQUS_IFORT_FLAGS,
+                                     objects=objects, module_dirs=[transformed_dir],
+                                     include_dirs=includes, timeout=timeout)
+    outcome["builds"] = [reference.as_dict(), converted.as_dict()]
+    if not (reference.ok and converted.ok):
+        outcome["reason"] = reference.reason or converted.reason
+        return outcome
+    left = run_history_replay(reference, entries, work_dir / "reference", timeout)
+    right = run_history_replay(converted, entries, work_dir / "transformed", timeout)
+    outcome["replays"] = [left.as_dict(), right.as_dict()]
+    outcome["ran"] = True
+    if not left.ok:
+        outcome["reason"] = f"the original did not replay: {left.reason}"
+        return outcome
+    if reference_source is None:
+        reproduced, gap = _reproduces(with_entry, left.calls)
+        outcome["reproduces_the_solver"] = {"reproduced": reproduced, "worst": gap}
+        if not reproduced:
+            outcome["reason"] = (
+                f"the offline replay of the ORIGINAL differs from what the solver "
+                f"recorded by {gap:.3e}: the recorded arguments do not determine "
+                f"the call (hidden state), so a routine-level comparison here "
+                f"would compare something the solver never ran")
+            return outcome
+    if not right.ok and not right.calls:
+        outcome["reason"] = f"the transformed build did not replay: {right.reason}"
+        return outcome
+    # B2c (Vera B2 item 4): the stiffness of the bound comes from the
+    # ORIGINAL (its history maximum caps it) and, per call, from the smaller of
+    # the two builds' max|DDSDDE| -- never from the build under test alone.
+    stiffness = stiffness_scale(original_history) or stiffness_scale(left.calls)
+    excluded = {k: v for k, v in (undefined or {}).items() if k in ("STRESS", "STATEV")}
+    # per-row rounding floor, measured on the ORIGINAL (compare.NOISE_*)
+    draws = []
+    for seed in range(1, NOISE_DRAWS + 1):
+        (work_dir / f"noise_{seed}").mkdir(parents=True, exist_ok=True)
+        noisy = run_history_replay(reference, perturb_entries(entries, seed),
+                                   work_dir / f"noise_{seed}", timeout)
+        if noisy.ok:
+            draws.append(noisy.calls)
+    floor = measured_noise_ulps(left.calls, draws, excluded=excluded)
+    outcome["noise_floor"] = floor
+    comparison = compare_calls(left.calls, right.calls, stiffness=stiffness,
+                               tolerance=tolerance, ulps=floor["ulps"],
+                               excluded=excluded)
+    outcome["comparison"] = comparison.as_dict()
+    outcome["bound_over_max_sigma"] = comparison.bound_over_max_sigma
+    outcome["agrees"] = bool(comparison.agrees and right.ok)
+    outcome["reason"] = comparison.reason if right.ok else right.reason
+    outcome["calls"] = len(entries)
+    return outcome
+
+
+def jacobian_matched_primal(manifest: VerificationManifest, original_text: str,
+                            transformed_text: str, transformed_history: Sequence[dict],
+                            work_dir: Path, *, form: str, timeout: int,
+                            tolerance: float, support=None,
+                            data_roots: Sequence[Path] = (),
+                            undefined: Optional[dict] = None,
+                            job: str = "jacobian_matched",
+                            reference_stiffness: float = 0.0,
+                            ulps: Optional[float] = None) -> dict:
+    """Primal gate part (b): the ORIGINAL's response with the TRANSFORMED Jacobian.
+
+    One Abaqus job. Its UMAT returns the author's STRESS/STATEV and the OTI
+    DDSDDE, so it walks the solver exactly as the transformed run does; what
+    remains between the two histories is what the two routines return.
+    """
+    from umat_oti.abaqus.compare import compare_calls, stiffness_scale
+    from umat_oti.abaqus.replay import jacobian_matched_source
+
+    outcome: dict[str, Any] = {"ran": False, "agrees": False}
+    text, note = jacobian_matched_source(original_text, transformed_text, form)
+    outcome["construction"] = note
+    if not all(note["entry_renamed"].values()):
+        outcome["reason"] = "the UMAT entry of one build could not be renamed"
+        return outcome
+    work_dir = Path(work_dir)
+    work_dir.mkdir(parents=True, exist_ok=True)
+    source = work_dir / (f"{job}_source.f90" if str(form).startswith("free")
+                         else f"{job}_source.for")
+    source.write_text(text, encoding="utf-8")
+    if support is not None:
+        install_support(support, work_dir)
+    report = run_one(manifest=manifest, timeout=timeout, source=source,
+                     job=job, work_dir=work_dir, support_dir=None,
+                     form=form, data_roots=data_roots)
+    evidence = job_evidence(report)
+    outcome.update(ran=True, completed=evidence.completed,
+                   warnings=list(evidence.warnings))
+    if not evidence.completed:
+        outcome["reason"] = ("the Jacobian-matched job did not complete: "
+                             + ("; ".join(evidence.reasons) or "no reason recorded"))
+        return outcome
+    history = history_of(work_dir, job)
+    left, right, alignment = align_by_time(list(history), list(transformed_history))
+    if alignment:
+        outcome["alignment"] = alignment
+    if len(left) != len(transformed_history):
+        outcome["reason"] = (f"the Jacobian-matched run and the transformed run "
+                             f"share {len(left)} of {len(transformed_history)} "
+                             f"records: the solver did not walk the same increments")
+        return outcome
+    # stiffness capped by the ORIGINAL's history maximum (reference_stiffness)
+    # and per call the smaller build; the row's measured floor (ulps) from the
+    # routine-level part. Both runs here carry the OTI DDSDDE, so without the
+    # cap the build under test would set its own bound.
+    from umat_oti.abaqus.compare import STIFFNESS_ULPS
+    comparison = compare_calls(left, right,
+                               stiffness=reference_stiffness,
+                               tolerance=tolerance,
+                               ulps=STIFFNESS_ULPS if ulps is None else ulps,
+                               excluded={k: v for k, v in (undefined or {}).items()
+                                         if k in ("STRESS", "STATEV")})
+    outcome["comparison"] = comparison.as_dict()
+    outcome["bound_over_max_sigma"] = comparison.bound_over_max_sigma
+    outcome["agrees"] = comparison.agrees
+    outcome["reason"] = comparison.reason
+    return outcome
+
+
+def routine_precision_control(original_dir: Path, transformed_dir: Path,
+                              transformed_text: str, original_history, transformed_history,
+                              work_dir: Path, *, ntens: int, tolerance: float,
+                              timeout: int, undefined=None) -> dict:
+    """The declared-precision control, at routine level (B2c).
+
+    The same widening run_precision_control applies, applied to the probed
+    source the solver compiled, and judged by the routine-level comparison.
+    The Abaqus version of this control was defeated by the Jacobian effect:
+    Growth-EX.for "still differs by 4.9e-4" in Abaqus while the same widening
+    agrees to 3e-13 call by call.
+    """
+    from umat_oti.abaqus.precision import survey, widen
+
+    outcome: dict[str, Any] = {"ran": False, "agrees": False}
+    probed = _probed_source(original_dir, "original")
+    if probed is None:
+        outcome["reason"] = "no probed original on disk"
+        return outcome
+    text = probed.read_text(errors="replace")
+    finding = survey(text, transformed_text)
+    outcome["finding"] = finding.as_dict()
+    if not finding.explains_a_difference:
+        outcome["reason"] = finding.reason
+        return outcome
+    widened, changes = widen(text, finding)
+    Path(work_dir).mkdir(parents=True, exist_ok=True)
+    control = Path(work_dir) / f"widened{probed.suffix}"
+    control.write_text(widened, encoding="utf-8")
+    outcome.update(changes=list(changes), widened=list(finding.widened),
+                   source=str(control))
+    routine = routine_level_primal(original_dir, transformed_dir, original_history,
+                                   transformed_history, Path(work_dir) / "routine",
+                                   ntens=ntens, tolerance=tolerance, timeout=timeout,
+                                   reference_source=control, undefined=undefined)
+    outcome.update(ran=routine.get("ran", False), routine=routine,
+                   agrees=bool(routine.get("agrees")))
+    outcome["reason"] = (
+        f"the original with {', '.join(finding.widened)} widened to REAL*8 agrees "
+        f"with the converted build call by call: {routine.get('reason')}"
+        if outcome["agrees"] else
+        f"widening {', '.join(finding.widened)} does not account for the "
+        f"routine-level difference: {routine.get('reason')}")
+    return outcome
+
+
+# ---------------------------------------------------------------------------
 # what the compiler says about the author's own file
 # ---------------------------------------------------------------------------
 
@@ -3052,9 +3467,12 @@ def diagnose_transformed(stored, work_dir: Path, *, form: str = "",
 
     outcome: dict[str, Any] = {}
     entry = Path(stored.entry_source)
+    # The converted source, so the reason says so: "the unmodified source
+    # does not compile" here blamed the author for the transform's defect.
     check = compile_one(entry, Path(work_dir) / "compile", form=form,
                         timeout=timeout,
-                        include_dirs=[Path(stored.directory)])
+                        include_dirs=[Path(stored.directory)],
+                        subject="the converted source")
     compiled = check.as_dict()
     for name in ("reason", "log"):
         compiled[name] = str(compiled.get(name, "")).replace(
@@ -3589,6 +4007,11 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         "source": stored.source_id,          # path within the cache, not a basename
         "source_sha256": stored.source_sha256,
         "fingerprint": stored.fingerprint,
+        # How it was judged, beside what was judged: the harness (decks,
+        # element/NTENS, loading, comparison) is outside the transform
+        # fingerprint, so without this a change to how a source is run left
+        # every earlier verdict looking current.
+        "harness_fingerprint": _HARNESS_FINGERPRINT,
         "repository": (proposal or {}).get("repository", ""),
         "stage": "", "reason": "", "warnings": [],
     }
@@ -3921,44 +4344,56 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     # two builds of the same model do not always walk the same increments, and
     # zipping them compares increment 3 of one with increment 3 of the other
     # at different times. See align_by_time.
+    # The finite windows BEFORE pairing by time: the routine-level gate
+    # replays every converged call of the original, whether or not the
+    # transformed run happened to visit the same increment times.
+    window_original = list(compared_original)
+    window_transformed = list(compared_transformed)
     compared_original, compared_transformed, alignment = align_by_time(
         compared_original, compared_transformed)
     if alignment:
         record["primal_alignment"] = alignment
+    # The FE comparison of the two plain runs. INFORMATIONAL since B2c: the
+    # transformed run is steered by a different Jacobian, so its FE answer
+    # differs from the original's for reasons that are not the routine (see
+    # the primal-gate banner above routine_level_primal). Kept, labelled, and
+    # given the stiffness-scaled resolution so a stress-free history reads as
+    # "below resolution" rather than as a 100% disagreement.
+    stiffness = (stiffness_scale(compared_original)
+                 or stiffness_scale(compared_transformed))
     primal = compare_primal(compared_original, compared_transformed,
                             tolerance=manifest.primal_tolerance,
-                            near_zero_fraction=manifest.near_zero_fraction)
+                            near_zero_fraction=manifest.near_zero_fraction,
+                            stiffness=stiffness)
     record["primal"] = primal.as_dict()
-    # "primal_disagreed" is a stage, not a diagnosis. Thirty-seven entries
-    # reached it at magnitudes spanning nine orders, and one name over that
-    # range says nothing about which share a cause. The signature is read off
-    # the numbers and the source so the cluster can be worked as clusters.
+    record["primal"]["informational_only"] = True
+    # Provisional, for the early returns below (non-finite prefix) only; the
+    # gate overwrites it.
+    seen["primal_agrees"] = primal.agrees
+    record["primal"]["why_informational"] = (
+        "two FE solves steered by different Jacobians (the author's DDSDDE and "
+        "the OTI one) converge to different answers even when the routines "
+        "agree call by call; the gate is decided by primal_gate")
+    if primal.stress_below_resolution and not primal.resolved_components:
+        record["primal"]["stress_channel"] = "below_stiffness_resolution"
     if not primal.agrees:
-        # Ask the recorded calls what the histories are disagreeing about,
-        # before anything calls it a disagreement between two routines.
+        # What the FE histories disagree about, for the record only: the gate
+        # below no longer routes on it.
         try:
             left_calls, right_calls = call_isolation.read_pair(work)
-            isolation = call_isolation.isolate_first_divergence(
-                left_calls, right_calls)
-            record["call_isolation"] = isolation.as_dict()
-            seen["call_isolation"] = isolation.verdict
+            record["call_isolation"] = call_isolation.isolate_first_divergence(
+                left_calls, right_calls).as_dict()
         except (OSError, ValueError) as error:
             record["call_isolation"] = {
-                "verdict": "",
-                "reason": (f"the probe records could not be read, so what the "
-                           f"histories disagree about was not established: "
-                           f"{type(error).__name__}: {error}")}
+                "verdict": "", "reason": f"{type(error).__name__}: {error}"}
         try:
-            # review_entry, not classify: the summary numbers raise the
-            # hypotheses and the recorded CALLS decide which survive. Without
-            # this the record keeps every hypothesis open and the
-            # confirmations and refutations live only in a branch's tests.
+            # Hypotheses about the FE difference, read off the numbers and the
+            # recorded calls; informational like the comparison they explain.
             record["primal_signature"] = primal_signature.review_entry(
                 primal.as_dict(), work,
                 Path(original).read_text(errors="replace")).as_dict()
         except OSError:                            # pragma: no cover
             pass
-    seen["primal_agrees"] = primal.agrees
     # Abaqus printing THE ANALYSIS HAS COMPLETED SUCCESSFULLY is a statement
     # about the solver, not about the constitutive routine it called: a job
     # completes while its UMAT returns values that are not numbers. Measured
@@ -3977,7 +4412,10 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             for side in ("original", "transformed")),
         # Nothing anywhere in either history is a NaN or an infinity.
         "complete_history_finite": bool(grouping.get("both_finite_throughout")),
-        "primal_agreed": bool(primal.agrees),
+        # Decided below by the primal gate (routine level + Jacobian-matched
+        # control), never by the FE comparison of the two plain runs.
+        "primal_agreed": False,
+        "primal_decided_by": "",
         # The RAW comparison above never moves. Where it is false and the
         # entry still climbs, it is because a CONTROL was run and measured
         # something: that the author declared a variable at single precision,
@@ -4062,82 +4500,125 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
             f"which is what a safe loading is rebuilt from -- it is not a "
             f"history a verification may be frozen on",
             stage=NO_EXPERIMENT)
-    # A disagreement is not yet a verdict. The author's own declared precision
-    # is the one explanation that can be tested rather than argued about, so
-    # it is tested: see run_precision_control.
+    # ------------------------------------------------------------------
+    # The primal gate. D-12 first (which outputs of the ORIGINAL are defined
+    # at all), then (a) routine level, then (b) the Jacobian-matched control.
+    # ------------------------------------------------------------------
     reference_source = Path(original)
     precision_note = ""
-    if not primal.agrees:
-        control = run_precision_control(
-            manifest, original, Path(stored.entry_source), compared_transformed,
-            work / "precision_control", timeout=timeout, form=source_form,
-            data_roots=data_roots,
-            increments_compared=(stopped_at if stopped_at >= 0 else None))
-        if control:
+    gate_dir = work / "primal_gate"
+    original_dir = Path(original_call["work_dir"])
+    transformed_dir = Path(transformed_call["work_dir"])
+    original_probed = _probed_source(original_dir, "original")
+    if original_probed is None:
+        init_check = {"ran": False, "established": False,
+                      "reason": "the probed original the job compiled is not on disk"}
+    else:
+        init_check = init_variant_check(
+            original_probed,
+            [r["entry"] for r in window_original if r.get("entry")],
+            gate_dir / "init_variants", ntens=manifest.ntens,
+            include_dirs=_include_dirs(original_dir), timeout=timeout)
+    undefined = init_check.get("undefined") or {}
+    record["undefined_in_original"] = init_check
+    record["undefined_outputs"] = [d["output"] for d in undefined.get("details", [])]
+    if undefined.get("STRESS") or undefined.get("DDSDDE"):
+        return settle(
+            f"undefined_in_original (D-12): "
+            f"{', '.join(record['undefined_outputs'][:6])} differ between the "
+            f"original built with {init_check.get('pair')}. STRESS or DDSDDE is "
+            f"undefined behaviour in the ORIGINAL on this history -- a source "
+            f"defect; nothing here can be verified against it",
+            stage=UNDEFINED_IN_ORIGINAL)
+    routine = routine_level_primal(
+        original_dir, transformed_dir, window_original, window_transformed,
+        gate_dir / "routine", ntens=manifest.ntens,
+        tolerance=manifest.primal_tolerance, timeout=timeout,
+        objects=(support_built.objects if support_built is not None else ()),
+        undefined=undefined)
+    record["routine_primal"] = routine
+    jacobian = {"ran": False, "agrees": False,
+                "reason": "not run: the routine-level comparison did not agree"}
+    if routine.get("agrees") and init_check.get("established"):
+        jacobian = jacobian_matched_primal(
+            manifest, Path(original).read_text(errors="replace"),
+            Path(stored.entry_source).read_text(errors="replace"),
+            window_transformed, work / "jacobian_matched", form=source_form,
+            timeout=timeout, tolerance=manifest.primal_tolerance,
+            support=support_built, data_roots=data_roots, undefined=undefined,
+            reference_stiffness=stiffness_scale(window_original),
+            ulps=(routine.get("noise_floor") or {}).get("ulps"))
+    record["jacobian_matched_primal"] = jacobian
+    gate = bool(init_check.get("established") and routine.get("agrees")
+                and jacobian.get("agrees"))
+    decided_by = ("routine_level+jacobian_matched" if gate else
+                  "undefined_in_original_check" if not init_check.get("established")
+                  else "routine_level" if not routine.get("agrees")
+                  else "jacobian_matched")
+    record["primal_gate"] = {
+        "agrees": gate,
+        "decided_by": decided_by,
+        "init_variants_established": bool(init_check.get("established")),
+        "undefined_outputs_excluded": record["undefined_outputs"],
+        "routine_level_agrees": bool(routine.get("agrees")),
+        "jacobian_matched_agrees": bool(jacobian.get("agrees")),
+        "fe_comparison_agrees_informational": bool(primal.agrees),
+        "bound": ("|dSTRESS_i| <= tol*max|STRESS| + U*eps*K_i, K_i = min(max|DDSDDE_i| of "
+                  "both builds, max|DDSDDE| of the ORIGINAL's history), U = the row's floor "
+                  "measured on the original (routine_primal.noise_floor, cap 64); "
+                  "|dSTATEV_k| <= tol*max|STATEV_k|; tol = primal_tolerance"),
+        "stiffness_ulps": (routine.get("noise_floor") or {}).get("ulps"),
+        "bound_over_max_sigma": routine.get("bound_over_max_sigma"),
+    }
+    seen["primal_agrees"] = gate
+    record["evidence"]["primal_agreed"] = gate
+    record["evidence"]["primal_decided_by"] = decided_by
+    if not gate:
+        failing = (init_check.get("reason") if not init_check.get("established")
+                   else routine.get("reason") if not routine.get("agrees")
+                   else jacobian.get("reason"))
+        control = {}
+        if routine.get("ran") and not routine.get("agrees"):
+            control = routine_precision_control(
+                original_dir, transformed_dir,
+                Path(stored.entry_source).read_text(errors="replace"),
+                window_original, window_transformed, gate_dir / "precision",
+                ntens=manifest.ntens, tolerance=manifest.primal_tolerance,
+                timeout=timeout, undefined=undefined)
             record["precision_control"] = control
+        record["evidence"]["primal_difference_explained_by_a_measured_control"] = False
         if control.get("agrees"):
-            # The GATE IS NOT REWRITTEN. The two builds did not agree, and a
-            # control that explains why does not turn a disagreement into
-            # agreement. seen["primal_explained"] carries the explanation to
-            # the ladder, which routes it to its own internal rung.
-            seen["primal_explained"] = True
-            precision_note = control["reason"]
-            record["primal"]["explained_by_declared_precision"] = True
-            record["evidence"][
-                "primal_difference_explained_by_a_measured_control"] = True
-            record["primal"]["control"] = control["comparison"]
-            reference_source = Path(control["source"])
-        else:
-            # The other explanation that can be measured rather than argued
-            # about: how far this model moves when its own arithmetic is
-            # reordered. A local Newton solve converges to a different iterate
-            # and an ill-conditioned expression loses different digits, and
-            # neither is a statement about the transform.
-            association = run_association_control(
-                manifest, original, compared_original,
-                work / "association_control", timeout=timeout, form=source_form,
-                data_roots=data_roots,
-                increments_compared=(stopped_at if stopped_at >= 0 else None))
-            record["association_control"] = association
-            record["evidence"][
-                "primal_difference_explained_by_a_measured_control"] = False
-            own = association.get("worst_stress_relative")
-            mine = primal.worst_stress_relative
-            if (association.get("ran") and association.get("measured")
-                    and own is not None and mine is not None
-                    and mine <= own):
+            # Part (b) of the same control: the WIDENED original, steered by
+            # the transformed Jacobian, against the transformed run.
+            from umat_oti.abaqus.precision import survey, widen
+            raw = Path(original).read_text(errors="replace")
+            widened_raw, _ = widen(raw, survey(
+                raw, Path(stored.entry_source).read_text(errors="replace")))
+            control_dir = gate_dir / "precision"
+            control_dir.mkdir(parents=True, exist_ok=True)
+            widened_source = control_dir / f"widened_original{Path(original).suffix or '.f'}"
+            widened_source.write_text(widened_raw, encoding="utf-8")
+            control["jacobian_matched"] = jacobian_matched_primal(
+                manifest, widened_raw,
+                Path(stored.entry_source).read_text(errors="replace"),
+                window_transformed, work / "jacobian_matched_widened",
+                form=source_form, timeout=timeout,
+                tolerance=manifest.primal_tolerance, support=support_built,
+                data_roots=data_roots, undefined=undefined)
+            if control["jacobian_matched"].get("agrees"):
+                # The GATE IS NOT REWRITTEN: an explanation is not agreement.
                 seen["primal_explained"] = True
-                precision_note = (
-                    f"the two builds differ by {mine:.3e}, and this model "
-                    f"differs from ITSELF by {own:.3e} when the same source is "
-                    f"compiled so that the same mathematics is computed "
-                    f"differently ({association.get('how')}). "
-                    f"The conversion is no further from the original than the "
-                    f"original is from another equally valid ordering of its "
-                    f"own operations, so the difference is this model's "
-                    f"conditioning and not the transform's")
-                record["primal"]["explained_by_operation_order"] = True
+                precision_note = control["reason"]
+                reference_source = widened_source
+                record["primal"]["explained_by_declared_precision"] = True
                 record["evidence"][
                     "primal_difference_explained_by_a_measured_control"] = True
-                record["primal"]["own_sensitivity"] = own
             else:
-                if association.get("ran") and association.get("measured") \
-                        and own is not None:
-                    record["primal"]["own_sensitivity"] = own
-                    return settle(
-                        f"{primal.reason}; and this model differs from itself "
-                        f"by only {own:.3e} when its arithmetic is reordered, "
-                        f"so the difference is larger than its own conditioning "
-                        f"accounts for")
-                if association.get("ran"):
-                    record["primal"]["own_sensitivity_unmeasured"] = \
-                        association.get("reason")
-                    return settle(
-                        f"{primal.reason}; and this model's own sensitivity to "
-                        f"round-off could not be measured against it: "
-                        f"{association.get('reason')}")
-                return settle(primal.reason
-                              or "the two builds produced no records to compare")
+                return settle(f"{failing}; the declared-precision control agreed "
+                              f"call by call but not in Abaqus: "
+                              f"{control['jacobian_matched'].get('reason')}")
+        else:
+            return settle(failing or "the primal gate could not be applied")
 
     # The tangent is asked for inside the window the PRIMAL comparison
     # accepted, not over the whole history. Where both builds left their
@@ -4663,7 +5144,14 @@ def run_batch(entries: Sequence[Any], rows: dict[str, dict],
                 "traceback": traceback.format_exc()[-1200:],
             }, Path(work_root), Path(stored.directory).parent)
         append_record(results_path, record, lock)
-        print(f"    {record.get('stage')}  {str(record.get('reason'))[:90]}",
+        # Under --jobs the entries finish out of order, so a result line
+        # printed bare lands under whichever "[i/N] source" header happens to
+        # be last on the console. pass17's log put a thealanjason compile
+        # failure under theysy and victorlefevre headers that way. Every
+        # result line names its own entry, and is one print call so threads
+        # cannot interleave inside it.
+        print(f"[{index}/{total}] {stored.source_id[:70]} -> "
+              f"{record.get('stage')}  {str(record.get('reason'))[:90]}",
               flush=True)
         return record
 

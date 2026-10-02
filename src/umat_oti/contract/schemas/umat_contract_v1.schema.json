@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/santiagarcia/UMAT_source_transformation/schemas/umat_contract_v1.schema.json",
   "title": "UMAT/Residual-Assembler shared data contract (v1)",
-  "x-contract-version": "3.0.0",
+  "x-contract-version": "4.0.0",
   "x-breaking-change": "A MAJOR bump is required for: removing or renaming any field; narrowing any type; changing the meaning of a value; adding a required field; adding a member to terminalState.state or to the six evidence gates. Anything a reader at the previous version could MISREAD rather than fail on is breaking. 2.0.0 was exactly that: two terminal states were added, and a 1.0.0 consumer switching on the enum exhaustively fell through on both -- onto 'not_attempted', which is INTERNAL and says the run never happened, for three entries that ran.",
   "x-three-state-rule": "Every field typed [boolean, null] has THREE answers. null and an absent key are the SAME answer -- not established -- and neither is a pass. A consumer must not test these with plain truthiness.",
   "type": "object",
@@ -142,6 +142,7 @@
             "tangent_not_verified",
             "transform_refused",
             "transformed_job_failed",
+            "undefined_in_original",
             "unsupported_formulation",
             "waits_for_input"
           ]
@@ -196,6 +197,7 @@
                   "missing_material_data",
                   "not_a_umat",
                   "published_stub_no_constitutive_content",
+                  "undefined_in_original",
                   "waits_for_input"
                 ]
               }

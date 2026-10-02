@@ -1,12 +1,12 @@
 {
-  "combined": "e59a274028f0e579c5e1f25b9362f920ac24cebd5229bd30794b75dc790ae749",
-  "contract_version": "3.0.0",
+  "combined": "18510282555b3c79bc70d16015bc21bd968258e0313a63d3423fc33b6213e3eb",
+  "contract_version": "4.0.0",
   "files": {
-    "contract_error_v1.schema.json": "9500f4aa48cab831716c0f12b2290cfafcdda549e9acbe95e9e537237c5f3473",
+    "contract_error_v1.schema.json": "e3515ef5e8b635980c401dfbb2e88274d6ffef47275659ea3efd45a74c73e5b8",
     "frames.py": "1c5384a678490873ff7e8f1e4a43ca9a9bb8ced68faf3a18cc326250f551b041",
-    "residual_fixture_v1.schema.json": "0b86856ece531c9e6fee135e185f1154374d89247bafc8362eda068f0bea204e",
-    "transform_generation.json": "5e954b4c27ac2ba3e2a75b02593eea8e22f2d9573658838322b265ff5f9894c8",
+    "residual_fixture_v1.schema.json": "e4ca0e310f137a108f23a8be8dd9b3dddf491d0f8cbf9bdd8ec9f7436082664d",
+    "transform_generation.json": "cf3d9da9c8b69bc511a488eb4c71453e4bee17f24a993cae3ed9c6eeeb19b08c",
     "tristate.py": "cdc03063df5a3598ce766f10e309e075d0cc0e21b23649fcf266bd93e110e74c",
-    "umat_contract_v1.schema.json": "c6d4b21117539646d644aef9b2e502e157e156fc06f7c420a29afa4c9ef2096f"
+    "umat_contract_v1.schema.json": "b2aaa5a19cdddbed52bc9cfc6b39f85c2e0c3e9878e96419652be4992f419d79"
   }
 }

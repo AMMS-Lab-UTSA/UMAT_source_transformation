@@ -174,6 +174,15 @@ PLAIN: dict[str, dict[str, Any]] = {
         "provide": "",
         "retry": False,
     },
+    "undefined_in_original": {
+        "headline": "The published file does not decide its own answer",
+        "means": "The source reads a value it never sets, and its stress or "
+                 "stiffness changes with whatever happens to be in memory. "
+                 "There is no single answer to check a conversion against.",
+        "whose move": "the author of this UMAT",
+        "provide": "",
+        "retry": False,
+    },
     "incomplete_or_corrupt_source": {
         "headline": "The file does not build as published",
         "means": "The source will not compile the way its author published "

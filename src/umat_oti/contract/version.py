@@ -69,7 +69,16 @@ from typing import NamedTuple
 #:   The arguments that parted were computed by the solver from each build's
 #:   own earlier outputs on this project's deck; a 2.x reader would book three
 #:   of this project's primal disagreements against somebody else's file.
-CONTRACT_VERSION = "3.0.0"
+#: 4.0.0, MAJOR, for one change an older reader would MISREAD rather than fail
+#: on:
+#:
+#: * ``terminalState.state`` gained ``undefined_in_original`` (EXTERNAL). The
+#:   published routine reads a value it never sets, and its STRESS or DDSDDE
+#:   changes between zero- and signalling-NaN-initialised builds of the
+#:   UNMODIFIED source (decision D-12 of the corpus campaign). A 3.x reader has
+#:   no word for it and would fall through to an INTERNAL owner, booking a
+#:   defect in somebody's file against this project.
+CONTRACT_VERSION = "4.0.0"
 
 #: The name this repository answers to in a handshake message.
 SPEAKER = "UMAT_source_transformation"

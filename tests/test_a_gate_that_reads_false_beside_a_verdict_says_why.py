@@ -34,74 +34,8 @@ def _verifier():
     spec.loader.exec_module(module)
     return module
 
-
-def test_the_flag_is_written_beside_the_six_and_starts_unmeasured():
-    """It is built as None, so an entry that never needed a control does not
-    claim one ran."""
-    vs = _verifier()
-    source = pathlib.Path(vs.__file__).read_text()
-    block = source[source.index('"primal_agreed": bool(primal.agrees),'):]
-    block = block[:block.index("}")]
-    assert f'"{FLAG}": None,' in block
-
-
-def test_it_is_set_true_only_where_a_control_actually_explained_it():
-    """Both explanations -- a declared single-precision variable, and the
-    model's own sensitivity to reordering -- and nothing else."""
-    vs = _verifier()
-    source = pathlib.Path(vs.__file__).read_text()
-    setters = source.count(f'"{FLAG}"] = True')
-    assert setters == 2, setters
-    for neighbour in ('record["primal"]["explained_by_declared_precision"] = True',
-                      'record["primal"]["explained_by_operation_order"] = True'):
-        after = source[source.index(neighbour):]
-        assert FLAG in after[:400], neighbour
-
-
-def test_a_control_that_ran_and_did_not_explain_it_says_false_not_nothing():
-    """Not-measured and measured-and-refuted are different answers, and
-    leaving the second as None would report a control that ran as one that
-    never happened."""
-    vs = _verifier()
-    source = pathlib.Path(vs.__file__).read_text()
-    after = source[source.index('record["association_control"] = association'):]
-    assert f'"{FLAG}"] = False' in after[:400]
-
-
-def test_the_raw_comparison_flag_is_never_rewritten():
-    """The gate that says whether the two builds agreed must keep saying it.
-    An explanation is a second fact, never an edit to the first."""
-    vs = _verifier()
-    source = pathlib.Path(vs.__file__).read_text()
-    assert source.count('"primal_agreed": bool(primal.agrees),') == 1
-    assert '"primal_agreed"] = True' not in source
-    assert 'evidence"]["primal_agreed"]' not in source
-
-
-def test_an_explanation_never_rewrites_the_primal_gate():
-    """A measured explanation for a disagreement is not agreement.
-
-    The harness used to set ``seen["primal_agrees"] = True`` once a control had
-    measured why the two builds differ, and thirteen entries carrying a false
-    primal gate were counted verified, frozen into the baseline and offered to
-    the Residual Assembler. The explanation is still recorded -- it says where
-    to look -- but it routes to the internal rung primal_mismatch_explained and
-    never touches the gate.
-    """
-    vs = _verifier()
-    source = pathlib.Path(vs.__file__).read_text()
-    assert 'seen["primal_agrees"] = True' not in source
-    assert source.count('seen["primal_explained"] = True') == 2
-    guard = source[source.index("own = association.get("):]
-    guard = guard[:guard.index('seen["primal_explained"] = True')]
-    assert 'association.get("ran")' in guard
-    assert 'association.get("measured")' in guard
-    assert "mine <= own" in guard
-    assert "tolerance" not in guard
-    evidence = vs.StageEvidence(
-        material_found=True, original_completed=True, transformed_completed=True,
-        primal_agrees=False, primal_explained=True,
-        mechanically_informative=True, tangent_verified=True)
-    assert vs.classify_stage(evidence) == vs.PRIMAL_MISMATCH_EXPLAINED
-    assert vs.classify_stage(evidence) != vs.VERIFIED
-
+# Retired 2026-10-01 (corpus campaign B2c): test_the_flag_is_written_beside_the_six_and_starts_unmeasured, test_it_is_set_true_only_where_a_control_actually_explained_it, test_a_control_that_ran_and_did_not_explain_it_says_false_not_nothing, test_the_raw_comparison_flag_is_never_rewritten, test_an_explanation_never_rewrites_the_primal_gate asserted on the source TEXT
+# of the pre-B2c primal gate (the FE comparison as the gate, and the
+# association control, which no longer runs). The invariants they protected are
+# now tested behaviourally in tests/test_primal_gate_explanation_never_rewrites_it.py
+# and tests/test_primal_gate_routine_level.py.
