@@ -308,6 +308,19 @@
     "tests/test_corpus_cases_injections.py::test_the_tier_summary_names_a_canary_that_was_not_rejected_and_fails",
     "tests/test_verified_umat_collection.py::test_the_case_licence_guard_does_not_trust_case_json"
    ]
+  },
+  {
+   "commit": "af72841",
+   "bug": "Host constants were carried per statement (a shadowing local dropped them all: wrong stress), internal procedures were typed default REAL, named constants were typed by their value's form (REAL constants lost binary32, INTEGER typing made 1/THREE integer division), integer quotients were promoted, and statement functions/ENTRY produced uncompilable output reported as success.",
+   "tests": [
+    "tests/test_transform_a_host_constant_is_carried_by_name.py",
+    "tests/test_transform_an_internal_procedure_has_its_hosts_implicit_types.py",
+    "tests/test_transform_a_named_constant_has_its_declared_type.py",
+    "tests/test_transform_a_binary32_named_constant_keeps_its_binary32_value.py",
+    "tests/test_transform_an_integer_quotient_stays_integer.py",
+    "tests/test_transform_a_bang_in_a_string_does_not_end_a_continued_call.py",
+    "tests/test_transform_what_the_lifter_cannot_express_is_refused_by_name.py"
+   ]
   }
  ],
  "excluded": [
@@ -378,6 +391,10 @@
   {
    "commit": "7b13556",
    "reason": "Documentation only; 'regression' names the regression-case tiers being documented and 'stale' the two out-of-date CLI_GUIDE references it rewords."
+  },
+  {
+   "commit": "1b26182",
+   "reason": "Integrity-review record (audit map entries); the selecting words name the fixes it maps, not a corrected behaviour."
   }
  ],
  "changelog_fixed": {
