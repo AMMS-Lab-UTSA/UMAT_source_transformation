@@ -48,6 +48,14 @@ def main(argv=None) -> int:
     parser.add_argument("--out", required=True, help="output directory (durable, not /tmp)")
     parser.add_argument("--work", default="", help="work directory (default: <out>/work)")
     parser.add_argument("--rtol", type=float, default=fd.DEFAULT_RTOL)
+    parser.add_argument("--verification-records", type=Path, default=None,
+                        help="store_verification.jsonl whose rows supply each key's "
+                             "experiment manifest (default: pass16's). Needed for a "
+                             "store built at another transform fingerprint, whose keys "
+                             "only that pass knows")
+    parser.add_argument("--registry", type=Path, default=None,
+                        help="corpus registry that maps keys to sources (default: the "
+                             "committed paper_results/corpus/corpus_registry.json)")
     parser.add_argument("--supply-utilities", action="store_true",
                         help="OPT-IN workaround: append abaqus_utility_definitions (ROTSIG, ...) "
                              "to the LIFT input; recorded in build.workarounds")
@@ -58,6 +66,14 @@ def main(argv=None) -> int:
                              "its records stay not_attempted and carry "
                              "status_before_hidden_state_gate")
     args = parser.parse_args(argv)
+    # The harness reads both through module constants; overriding them here
+    # (tools/ is outside the transform and harness fingerprints) points a run at
+    # another pass without changing what the harness IS.
+    import umat_oti.corpus_features.harness as _harness
+    if args.verification_records is not None:
+        _harness.PASS16 = args.verification_records.resolve()
+    if args.registry is not None:
+        _harness.REGISTRY = args.registry.resolve()
 
     keys = list(args.key)
     if args.fully_verified:
@@ -67,9 +83,13 @@ def main(argv=None) -> int:
         keys = keys[:args.limit]
     if not keys:
         parser.error("no keys selected")
-    out = Path(args.out)
+    # Absolute, always: the drivers are compiled and run from their own work
+    # directories, and a relative --out made every original "not build" (the
+    # paths it handed gfortran were relative to the wrong directory) -- a silent
+    # all-not_attempted result that read like a property of the source.
+    out = Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=True)
-    work = Path(args.work) if args.work else out / "work"
+    work = Path(args.work).resolve() if args.work else out / "work"
     features = [f for f in args.features.split(",") if f]
     target = out / "corpus_features.jsonl"
     run_id = datetime.datetime.now().strftime("%Y%m%dT%H%M%S") + "-" + uuid.uuid4().hex[:8]

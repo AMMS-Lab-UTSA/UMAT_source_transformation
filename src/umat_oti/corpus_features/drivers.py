@@ -53,8 +53,9 @@ OTI_OUT = "cf_oti_out.txt"
 KIND = {"none": 0, "props": 1, "statev": 2, "dstran": 3, "dfgrd1": 4, "stress": 5}
 
 _COMMON_DECL = """  INTEGER :: NTENS,NSTATV,NPROPS,NDI,NSHR,NINC,CALLSDV,I,J,K,INC,U,UO,IOS
-  INTEGER :: NOEL,NPT,LAYER,KSPT,KSTEP,KINC
+  INTEGER :: NOEL,NPT,LAYER,KSPT,KSTEP,KINC,NOEL0,NPT0
   CHARACTER(80) :: CMNAME
+  CHARACTER(1024) :: CLINE
   REAL(8), ALLOCATABLE :: PROPS0(:),STATEV0(:),DSTRANH(:,:),F0H(:,:,:),F1H(:,:,:)
   REAL(8), ALLOCATABLE :: DROTH(:,:,:),DTH(:),TEMPH(:),DTEMPH(:)
   REAL(8) :: COORDS0(3)
@@ -70,7 +71,14 @@ _READ_CONFIG = """  OPEN(NEWUNIT=U,FILE='%(config)s',STATUS='OLD',ACTION='READ',
   PROPS0=0.0_8; STATEV0=0.0_8
   READ(U,*) (PROPS0(I),I=1,MAX(NPROPS,1))
   READ(U,*) (STATEV0(I),I=1,MAX(NSTATV,1))
-  READ(U,*) (COORDS0(I),I=1,3)
+  ! driver point: COORDS(1:3) [NOEL NPT]; a config without NOEL/NPT (frozen
+  ! regression cases written before the driver point existed) means 1 1.
+  READ(U,'(A)') CLINE
+  READ(CLINE,*,IOSTAT=IOS) (COORDS0(I),I=1,3),NOEL0,NPT0
+  IF (IOS .NE. 0) THEN
+    NOEL0=1; NPT0=1
+    READ(CLINE,*) (COORDS0(I),I=1,3)
+  END IF
   DO INC=1,NINC
     READ(U,*) DTH(INC),TEMPH(INC),DTEMPH(INC)
     READ(U,*) (DSTRANH(I,INC),I=1,NTENS)
@@ -212,7 +220,7 @@ CONTAINS
     DDSDDE=0.0_8; DDSDDT=0.0_8; DRPLDE=0.0_8; RPL=0.0_8; DRPLDT=0.0_8
     PREDEF=0.0_8; DPRED=0.0_8; PNEWDT=1.0_8; CELENT=1.0_8
     DTIME=DTH(INCR); TEMP=TEMPH(INCR); DTEMP=DTEMPH(INCR); COORDS=COORDS0
-    NOEL=1; NPT=1; LAYER=1; KSPT=1; KSTEPA=0; KSTEPA(1)=1; KINC=INCR
+    NOEL=NOEL0; NPT=NPT0; LAYER=1; KSPT=1; KSTEPA=0; KSTEPA(1)=1; KINC=INCR
     SELECT CASE (KND)
     CASE (1)
       PROPS(IDX)=PROPS(IDX)+H
@@ -235,7 +243,7 @@ END PROGRAM cf_real_driver
 
 %(stubs)s"""
 
-_SDVINI = "    IF (ALL(STATEV .EQ. 0.0_8)) CALL SDVINI(STATEV,COORDS0,NSTATV,3,1,1,1,1)"
+_SDVINI = "    IF (ALL(STATEV .EQ. 0.0_8)) CALL SDVINI(STATEV,COORDS0,NSTATV,3,NOEL0,NPT0,1,1)"
 
 
 def quadify(text: str) -> str:
@@ -367,7 +375,7 @@ OTI_DRIVER = """PROGRAM cf_oti_driver
     DDSDDE=0.0_8; DDSDDT=0.0_8; DRPLDE=0.0_8; RPL=0.0_8; DRPLDT=0.0_8
     PREDEF=0.0_8; DPRED=0.0_8; PNEWDT=1.0_8; CELENT=1.0_8
     DTIME=DTH(INC); TEMP=TEMPH(INC); DTEMP=DTEMPH(INC); COORDS=COORDS0
-    NOEL=1; NPT=1; LAYER=1; KSPT=1; KSTEP=1; KINC=INC
+    NOEL=NOEL0; NPT=NPT0; LAYER=1; KSPT=1; KSTEP=1; KINC=INC
     DO IS=1,NSEED
       SELECT CASE (SKIND(IS))
       CASE (1)
@@ -430,6 +438,8 @@ class RunConfig:
     increments: list           # [(dstran, f0, f1, drot, dtime, temp, dtemp)]
     coords: tuple = (0.0, 0.0, 0.0)
     call_sdvini: bool = False
+    noel: int = 1              # driver point (harness.experiment_driver_point)
+    npt: int = 1
 
     def write(self, directory: Path) -> Path:
         path = Path(directory) / CONFIG_FILE
@@ -438,7 +448,7 @@ class RunConfig:
                  (self.cmname or "MATERIAL")[:80],
                  _row(self.props if self.props else [0.0]),
                  _row(self.statev0 if self.statev0 else [0.0] * max(self.nstatv, 1)),
-                 _row(self.coords)]
+                 _row(self.coords) + f" {int(self.noel)} {int(self.npt)}"]
         for dstran, f0, f1, drot, dtime, temp, dtemp in self.increments:
             lines.append(_row([dtime, temp, dtemp]))
             lines.append(_row(dstran))
