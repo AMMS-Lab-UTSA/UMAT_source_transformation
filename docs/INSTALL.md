@@ -9,7 +9,7 @@ every number on this page was run and measured on 2026-09-18.
 | Requirement | Needed for | Tested version |
 | --- | --- | --- |
 | Linux (x86-64) | everything | Ubuntu 20.04.6 LTS |
-| Python 3.10 or newer, with `venv` | everything | 3.11.7 |
+| Python 3.10 or newer (`requires-python >=3.10`), with `venv` | everything | 3.11.7 |
 | `gfortran` | compiling and checking the generated Fortran (almost every workflow) | GNU Fortran 9.4.0 |
 | `make` | the parameter-sensitivity and internal-Jacobian checks | GNU Make 4.2.1 |
 | `git` | cloning the repository | 2.25.1 |
@@ -128,13 +128,18 @@ The last line must read
 Optional, longer checks:
 
 ```bash
+python -m pytest -q -m unit                               # quick subset: pure-Python logic, about 10 s
 python -m pytest -q tests/gui/test_developer_screens.py   # the two main GUI screens, about 2 min
-python -m pytest -q                                        # the offline test suite
+make test                                                  # the full offline suite, about 22 min
 ```
 
-On 2026-09-18 the first command reported `17 passed in 121.21s`. The full
-offline suite takes considerably longer; a skipped test names the missing
-prerequisite, and a skip is not a pass.
+On 2026-10-02 the first command reported `551 passed, 13 skipped, 4175
+deselected` in about 10 s; on 2026-09-18 the second reported
+`17 passed in 121.21s`. `make test` runs
+`python -m pytest -q -m "not abaqus and not arc and not network"`. A skipped
+test names the missing prerequisite, and a skip is not a pass. Some tests read
+the corpus workspace and are skipped, or in one case fail, outside it; see
+[CORPUS_MANIFEST.md](CORPUS_MANIFEST.md#regenerate).
 
 To start the GUI:
 
@@ -223,6 +228,10 @@ issue at <https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation/issues>
 and attach that record.
 
 ## Next steps
+
+- [CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md): how third-party UMATs are
+  verified, and the workspace the corpus tools need.
+- [REGRESSION_CASES.md](REGRESSION_CASES.md): `make case-ci` and the frozen cases.
 
 - [examples/README.md](../examples/README.md): six worked examples.
 - [CLI_GUIDE.md](CLI_GUIDE.md): every command, its options and exit codes.

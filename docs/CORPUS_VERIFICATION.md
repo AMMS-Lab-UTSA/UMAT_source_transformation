@@ -8,6 +8,51 @@ tools yourself.
 
 ## Current result
 
+The whole corpus of 391 acquired sources was re-transformed and re-verified on
+2026-10-02 (pass19: commit 76bfc2d, transform fingerprint `52e0a8c4289fce43`,
+harness fingerprint `183285a4729715a6`). 279 sources transform and compile in
+the job layout; 238 are adequately specified genuine UMATs (the eligible
+denominator, D2). Two counts are reported, never pooled:
+
+- **Abaqus, all six gates** (both builds run in Abaqus, primal gate by routine
+  replay plus the Jacobian-matched control, DDSDDE against a converged FD of the
+  original, mechanically informative): **67 of 238**.
+- **Routine level (decision D-8)**: Abaqus primal gate passed, and the routine-level
+  harness verifies primal and DDSDDE against FD of the original (FD-only plateau
+  of at least 3 steps, entrywise tolerance, quad-precision reference where double
+  cannot resolve), with STRESS and DDSDDE fully defined in the original:
+  **109 of 238**.
+
+Per material family (code-reviewed classification, decision D-11; "eligible" is the
+family's share of D2):
+
+| family | eligible | Abaqus six-gate | routine level |
+|---|---|---|---|
+| growth / morphoelastic | 133 | 61 | 99 |
+| rate-independent plasticity | 18 | 0 | 0 |
+| damage / phase field | 14 | 0 | 0 |
+| crystal plasticity | 12 | 0 | 3 |
+| linear elastic | 12 | 3 | 3 |
+| viscoelastic | 9 | 1 | 1 |
+| concrete / geomaterial | 12 | 0 | 0 |
+| other (incl. hyperelastic) | 28 | 2 | 3 |
+| **total** | **238** | **67** | **109** |
+
+The growth figures include sources whose growth tensor is fixed to the identity
+(neo-Hookean response), and 105 of the growth sources come from one author
+(Jeff97). The largest remaining blockers are missing material data (no published
+`*USER MATERIAL` deck), transform refusals in the non-growth families, and primal
+disagreements in Abaqus; the per-source reasons are in
+[paper_results/corpus/manifest/](../paper_results/corpus/manifest/) and the
+registry.
+
+Reproduce the counts: `python3 $UMAT_OTI_WORKSPACE/corpus_campaign/count_target.py
+paper_results/corpus/corpus_registry.json <harness manifest_cells.jsonl>`, or read
+`summary.features` in the manifest (DDSDDE verified, D2 = 109).
+
+The paragraph below is the 2026-09-18 census (Abaqus six-gate count only);
+it predates the routine-level count and the reviewed classification.
+
 The whole corpus of 391 acquired sources was re-run on 2026-09-18 at the
 current transform generation. Of the 260 adequately specified genuine UMATs
 among them, 43 clear all six evidence gates the census records
@@ -19,19 +64,78 @@ reason for every source that did not verify, is
 
 ## What "verified" means
 
-Nothing is verified because it downloaded, because it contains the word
-UMAT, because it parses, because it transforms, because the generated Fortran
-compiles, because Abaqus started, or because a report was produced. A material
-is verified when six things have happened, in this order, and every one of them
-left an artefact:
+Nothing is verified because it downloaded, parses, transforms, compiles, or
+because Abaqus started. A source counts as verified (decision D-8) only when
+**all** of these hold, each with an artefact behind it:
 
-1. the ORIGINAL routine ran in Abaqus;
-2. the OTI-converted routine ran in Abaqus, on the same deck;
-3. their stress and state histories agreed over the whole path;
-4. the loading activated whatever the material actually does;
-5. the OTI tangent agreed with a converged finite difference of the original
-   at several smooth states;
-6. the whole experiment was frozen so a later commit can be measured against it.
+1. it was transformed and compiled in the Abaqus job layout;
+2. **primal**: stress and state of the transformed build agree with the
+   ORIGINAL over the family's loading paths (unload/cyclic where the model has
+   them), on a mechanically informative run;
+3. **DDSDDE** (dσ_{n+1}/dΔε at fixed incoming state) agrees with finite
+   differences of the ORIGINAL, with an FD-only plateau over at least 3
+   consecutive step sizes (D-4; a 2-size plateau is only `plausible`) and an
+   entrywise tolerance, on enough smooth states;
+4. the hidden-state gate passed, including the uninitialised-variable check;
+5. the evidence is reproducible from a preserved regression case
+   ([REGRESSION_CASES.md](REGRESSION_CASES.md)).
+
+### Two counts, always side by side
+
+| count | where measured | what it is |
+|---|---|---|
+| **Abaqus six-gate** | the original and the transformed build in Abaqus, same deck (`tools/verify_store_in_abaqus.py`) | gates `abaqus_job_completed`, `all_requested_outputs_present`, `complete_history_finite`, `primal_agreed`, `derivatives_verified`, `mechanically_informative`. The stronger claim. |
+| **routine-level (D-8)** | the routine called directly by a gfortran driver, no Abaqus (`tools/run_corpus_features.py`) | points 1-5 above, cell by cell |
+
+A figure quoted from the routine-level count says so. The corpus manifest's
+DDSDDE column counts only D-4 evidence; the legacy `derivatives_verified`
+plateau (taken from the OTI-vs-FD error) is shown there and never counted
+([CORPUS_MANIFEST.md](CORPUS_MANIFEST.md)).
+
+### Primal gate (D-15)
+
+The routine-level primal check replays both builds over the same history. The
+bound is set by the ORIGINAL itself: its per-row noise floor under 1-ulp input
+perturbations, bound = clip(4 x floor, 2, 64) ulp, scaled by a stiffness capped
+by the original's history maximum. A **Jacobian-matched control** repeats the
+check with the original's stiffness and the same floor; a source that agrees at
+routine level but fails the control is counted **not verified**.
+
+### Undefined in the original (D-12)
+
+The ORIGINAL is also built with signalling-NaN, zero and +inf/flipped-logical
+initialisation. An output that differs between these builds reads an undefined
+value: it is labelled `undefined_in_original`, reported as a defect of the
+source, and never compared. The other outputs may verify only if they are
+bit-identical across the init builds over the whole history. A source counts
+towards D-8 only if STRESS and DDSDDE are fully defined on every judged state;
+undefined STATEV or energy outputs are disclosed. Loading paths stay inside the
+author's documented domain; a path outside it is `outside_model_domain` and
+gives no verdict.
+
+### Harness fingerprint (D-10)
+
+Every verification row records the harness fingerprint
+(`umat_oti.store.transform_store.harness_fingerprint()`, a digest of
+`abaqus/` and `corpus_features/`) beside the transform fingerprint. A registry
+built with `--harness-fingerprint H --store-fingerprint T` treats rows from any
+other harness or store as not current. Routine-level cells carry their own
+`run_id` and transformer fingerprint. A regression case is current only at the
+fingerprints it records (D-6).
+
+### Per-family figures (D-11)
+
+Family figures use the code-reviewed classification
+(`corpus_campaign/batches/B3/scout/families_reviewed_B3.json`, column S1), not
+keyword matching. Eligible denominators: growth 134, plasticity 29, damage 15,
+crystal plasticity 12, linear elastic 13, viscoelastic 11, concrete/geo 14,
+other 32. Every growth figure carries this footnote:
+
+> includes N growth-framework sources whose growth tensor is fixed to the
+> identity (neo-Hookean response); 105 of the growth denominator come from one
+> author (Jeff97).
+
+N is the number of those 11 identity-growth files among the verified.
 
 ## The loop
 
@@ -146,8 +250,11 @@ pipeline.
 ```bash
 python tools/build_corpus_registry.py \
     --transform <run>/transform_batch.json \
-    --abaqus <run>/results/store_verification.jsonl
+    --abaqus <run>/results/store_verification.jsonl \
+    --store-fingerprint <T> --harness-fingerprint <H>   # the values the rows recorded (D-10, D-17)
 ```
+
+Without `--json/--csv/--markdown` it overwrites the committed registry files.
 
 ## Things that stop a job that are properties of the source
 
@@ -165,6 +272,82 @@ corpus's 391 sources contain such a statement. The copy that is compiled has
 them commented out -- which cannot change what the routine computes, because a
 Fortran output statement assigns nothing unless it carries `IOSTAT=`, `ERR=`,
 `END=`, `IOMSG=` or `SIZE=`, and one that does is left alone.
+
+## Workspace layout the corpus tools assume
+
+The corpus tools read data that is not in this repository. They expect the
+checkout to sit beside it:
+
+```text
+<workspace>/                  this machine: $UMAT_OTI_WORKSPACE
+  final-umat/                 this repository (any name)
+  discovery_cache/            the downloaded sources (read only)
+  transform_store/            transformed sources, one directory per key
+  corpus_run/                 Abaqus passes (pass16/, pass18/, ...) and family files
+  corpus_campaign/            batch evidence; the `campaign` evidence root
+  corpus_assets/              content-addressed store of regression-case assets
+  final-ra/                   Residual Assembler checkout (manifest `ra` root)
+```
+
+Nothing here is needed for the install checks, the examples or
+`make case-ci`. Outside this layout, give every root explicitly:
+
+| tool | roots it reads | how to point it elsewhere |
+|---|---|---|
+| `tools/build_corpus_manifest.py` | all of the above, relative to the **checkout's parent** | `--discovery-cache` / `UMAT_OTI_DISCOVERY_CACHE`, `--transform-store` / `UMAT_OTI_TRANSFORM_STORE`, `--corpus-run` / `UMAT_OTI_CORPUS_RUN`, `--campaign` / `UMAT_OTI_CAMPAIGN`, `--ra-repo` / `UMAT_OTI_RA_REPO`, `--families`, `--families-second-pass`; output `--out-dir` (default: the committed `paper_results/corpus/manifest/`) |
+| `tools/corpus_cases.py` | `$UMAT_OTI_WORKSPACE` (default `~/softwarex_work`, **not** the checkout's parent): `discovery_cache/` under it; assets `$UMAT_CASE_ASSETS` (default `$UMAT_OTI_WORKSPACE/corpus_assets`); `freeze` also reads `~/softwarex_work/transform_store` | `UMAT_OTI_WORKSPACE`, `UMAT_CASE_ASSETS`; `check --work <dir>`. The store path has no override. |
+| `tools/run_corpus_features.py` | fixed to `$UMAT_OTI_WORKSPACE` (`umat_oti.corpus_features.harness.WORKSPACE`): `discovery_cache/`, `transform_store/`, `corpus_run/pass16/`, families | `--verification-records`, `--registry`, `--out`, `--work` only. The cache and store have no override. |
+| `tools/build_corpus_registry.py` | `--cache-dir` (default `UMAT_OTI_DISCOVERY_CACHE`, else `<checkout parent>/discovery_cache`); inventory and acquisition files in the repo | `--cache-dir`, `--inventory`, `--acquisition`, `--refusal-audit`; outputs `--json`, `--csv`, `--markdown` (defaults **overwrite** the committed `paper_results/corpus/` files) |
+| `tools/verify_store_in_abaqus.py` | `--store` (default `~/softwarex_work/transform_store`), `--cache-dir` (default `UMAT_OTI_DISCOVERY_CACHE`, else `<checkout parent>/discovery_cache`) | `--store`, `--cache-dir`, `--triage`, `--proposals`, `--work-dir` (required), `--results-dir` (default `paper_results/store_verification/` in the repo). Needs Abaqus. |
+
+A clone elsewhere on this machine, for example:
+
+```bash
+export UMAT_OTI_WORKSPACE=$UMAT_OTI_WORKSPACE
+export UMAT_OTI_DISCOVERY_CACHE=$UMAT_OTI_WORKSPACE/discovery_cache
+export UMAT_OTI_TRANSFORM_STORE=$UMAT_OTI_WORKSPACE/transform_store
+export UMAT_OTI_CORPUS_RUN=$UMAT_OTI_WORKSPACE/corpus_run
+export UMAT_OTI_CAMPAIGN=$UMAT_OTI_WORKSPACE/corpus_campaign
+export UMAT_OTI_RA_REPO=$UMAT_OTI_WORKSPACE/final-ra
+export UMAT_CASE_ASSETS=$UMAT_OTI_WORKSPACE/corpus_assets
+```
+
+Evidence locators (`campaign:...`, `corpus_run:...`) are resolved against
+these roots, so they resolve only where the roots exist.
+
+## Running the routine-level harness
+
+No Abaqus. It reads the stored transform (read only) and the original source,
+builds both with gfortran, and judges each feature:
+
+```bash
+PYTHONPATH=src python tools/run_corpus_features.py \
+    --key 6c8ad0dfb0b64a98955acbae \
+    --features primal_stress_state,ddsdde --out <dir>
+```
+
+`<key>` is a registry key (`paper_results/corpus/corpus_registry.json`,
+field `key`; a case's `case.json` shows it under `reproduce.freeze`). A
+relative `--out` is resolved against the current directory. Measured
+2026-10-02 (10.9 s):
+
+```text
+6c8ad0dfb0b64a98955acbae irfancn__Abaqus-UMAT-elastic/umat_elastic.for (10.6s): primal_stress_state: verifiedx13; ddsdde: verifiedx13
+26 records written to <dir>/corpus_features.jsonl (run 20261002T130023-43e33414, previous contents replaced)
+2 manifest cells -> <dir>/manifest_cells.jsonl; merge-contract problems: [...]
+```
+
+One record per loading path and feature. `<dir>` also holds `roots.json`,
+`run_id.json` and `work/`. The merge-contract problem above (`evidence root
+'abs'`) means `<dir>` lies outside every evidence root, so the cells cannot be
+merged into the manifest; write to a directory under `corpus_campaign/` when
+they are meant to be merged.
+
+By default the experiment for each key comes from pass16
+(`corpus_run/pass16/results/store_verification.jsonl`) and keys from the
+committed registry. For a store built for another pass, give that pass's rows
+and registry: `--verification-records <pass>/results/store_verification.jsonl
+--registry <registry.json>`.
 
 ## Reading a result
 

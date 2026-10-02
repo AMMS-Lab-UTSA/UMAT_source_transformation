@@ -9,13 +9,16 @@ says, and then where to read next.
 ```bash
 git clone https://github.com/AMMS-Lab-UTSA/UMAT_source_transformation.git
 cd UMAT_source_transformation
-python -m venv .venv && . .venv/bin/activate
-pip install -e ".[test]"
+python3 -m venv .venv && . .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e ".[test]"
 python -m umat_oti.reproduce --profile smoke
 ```
 
-You need Python 3.10 or newer and `gfortran`. You do not need Abaqus, a
-network connection or a licence.
+You need Linux, Python 3.10 or newer (tested with 3.11.7) and `gfortran`. You
+do not need Abaqus, a network connection or a licence. These are the steps of
+[`docs/INSTALL.md`](docs/INSTALL.md), which also covers system packages,
+checks, the test suite and troubleshooting.
 
 The smoke profile takes a few seconds. It transforms one UMAT (the J2 model
 `m3_j2`) and compiles it. It also compiles the *original* subroutine
@@ -64,7 +67,9 @@ of this size*. The third outcome is never counted as a pass.
 | Use the graphical interface | [`docs/GUI.md`](docs/GUI.md) |
 | Reproduce a specific table or figure | [`docs/SOFTWAREX_REPRODUCTION.md`](docs/SOFTWAREX_REPRODUCTION.md) |
 | Know what has been verified, and how | [`docs/VERIFICATION_RECORD.md`](docs/VERIFICATION_RECORD.md) and [`paper_results/generality/generality_matrix.csv`](paper_results/generality/generality_matrix.csv) |
-| See how third-party UMATs are verified | [`docs/CORPUS_VERIFICATION.md`](docs/CORPUS_VERIFICATION.md) |
+| See how third-party UMATs are verified | [`docs/CORPUS_VERIFICATION.md`](docs/CORPUS_VERIFICATION.md) (method, workspace layout, routine-level harness) |
+| Run the frozen regression cases | [`docs/REGRESSION_CASES.md`](docs/REGRESSION_CASES.md) (`make case-ci`, about 10 s) |
+| Read or rebuild the corpus manifest | [`docs/CORPUS_MANIFEST.md`](docs/CORPUS_MANIFEST.md) |
 | Contribute | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 
 ## Longer reproductions
@@ -81,6 +86,8 @@ a licensed Abaqus installation.
 
 The same runs are available as `make` targets: `make reproduce-smoke`,
 `make reproduce-offline`, `make reproduce-paper`, `make test` and `make audit`.
+`make test` (the offline test suite) takes about 22 minutes; a quick subset is
+in [`docs/INSTALL.md`](docs/INSTALL.md#6-verify-the-installation).
 
 ## If something fails
 

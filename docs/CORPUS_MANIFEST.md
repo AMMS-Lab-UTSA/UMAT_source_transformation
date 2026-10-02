@@ -7,22 +7,64 @@ acquired (`row_kind: discovered_not_acquired`, counted apart from the acquired
 rows). `corpus_manifest.csv` is a flat view with one line per row, and
 `corpus_manifest.schema.json` is its JSON Schema (draft 2020-12).
 
+## What a cell needs to count as verified
+
+A `primal_stress_state` cell is `verified` when the pass16 Abaqus gates
+`abaqus_job_completed`, `complete_history_finite`, `primal_agreed` and
+`mechanically_informative` all hold. A `ddsdde` cell is `verified` only when a merged record measured on the
+transform-store build (`build.kind: store`) shows every judged DDSDDE entry
+within its entrywise tolerance of finite differences of the ORIGINAL, with an
+FD-only plateau over at least 3 consecutive step sizes (D-4), STRESS and
+DDSDDE fully defined in the ORIGINAL (D-12), and the same row's
+`primal_stress_state` also `verified`. The DDSDDE count therefore comes only
+from merged D-4 evidence: the pass16 gate `derivatives_verified` is shown in
+`ddsdde_legacy_gate` and never counted, and lifted or provider builds are
+counted apart. At the published build no D-4 store-build evidence has been
+merged, so `summary.features.*.ddsdde.verified` is 0 (legacy gate: 62 passed
+over D1, not counted). Routine-level results (`tools/run_corpus_features.py`)
+enter only through `--merge`. The full rules are under "How statuses are
+decided" and "the merge contract" below; the corpus-level meaning of verified
+is in [CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md#what-verified-means).
+
 ## Regenerate
+
+The build needs the workspace layout described in
+[CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md#workspace-layout-the-corpus-tools-assume)
+(the repository beside `discovery_cache/`, `transform_store/`, `corpus_run/`,
+`corpus_campaign/`, `final-ra/`). The published files merge the Residual
+Assembler records of batch **B2** (the header's `merges[0].label` is
+`campaign:batches/B2/noether/records.jsonl`):
 
 ```bash
 PYTHONPATH=src python tools/build_corpus_manifest.py \
-    --merge-ra ../corpus_campaign/batches/B1/noether/records.jsonl   # ~15 s, offline
-PYTHONPATH=src python -m pytest -q tests/test_corpus_manifest_*.py
+    --merge-ra ../corpus_campaign/batches/B2/noether/records.jsonl   # ~14 s, offline
+PYTHONPATH=src python -m pytest -q tests/test_corpus_manifest_*.py    # 119 passed, ~2 s
 ```
 
-The published files were built with exactly that command. The build is
-deterministic. If the inputs are unchanged, a rebuild writes byte-identical
-files, because `generated` keeps its old value when nothing else in the
-document changed.
+Without the layout the build stops at once, for example
+`error: discovery cache not found at <checkout parent>/discovery_cache`.
+Give every root then (flags or environment variables, table below), and add
+`--out-dir <dir>` to leave the committed files alone.
 
-The build reads only local files: the registry and discovery inventory in this
-repository, and the workspace roots beside it. You can override each root with a flag or an
-environment variable:
+What is reproducible:
+
+- In place, with unchanged inputs, a rebuild is byte-identical: `generated`
+  keeps its old value when nothing else changed. The header records the
+  sha256 of every input, so a changed input (for example a later edit of
+  `paper_results/discovery/discovered_sources.csv`) changes the header.
+- From another location, the rows are identical but the header is not: it
+  records the absolute `roots` and input paths of the build.
+
+One test depends on the layout:
+`tests/test_corpus_manifest_vera_probes.py::test_noethers_b1_records_fold_without_rejection_and_stay_out_of_the_pipeline`
+reads the B1 records at the absolute path
+`$UMAT_OTI_WORKSPACE/corpus_campaign/...` and resolves them against
+roots taken from the checkout's parent. In a clone outside the workspace it
+fails (1 failed, 118 passed); it is skipped where the file is absent.
+`test_every_evidence_locator_resolves_to_a_file` resolves against the
+absolute roots in the manifest header, so it passes only on this machine.
+
+Roots and their overrides:
 
 | root | default | override |
 |---|---|---|
@@ -33,6 +75,14 @@ environment variable:
 | `ra` | `../final-ra` (Residual Assembler) | `--ra-repo`, `UMAT_OTI_RA_REPO` |
 | `umat` (= `repo`) | this checkout | — |
 | families | `corpus_run/material_families_checked_E.json` | `--families` |
+| output | `paper_results/corpus/manifest/` | `--out-dir` |
+
+`..` is the checkout's parent directory, not the current directory.
+
+The manifest's `family` column comes from `--families` (default: the Agent E
+classification). The per-family figures reported against the 206 target use
+the B3 code-reviewed classification instead (D-11, see
+[CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md#per-family-figures-d-11)).
 
 `--current-pass` (default `pass16`, the frozen pass the registry was built from)
 supplies the stage statuses. `--later-pass` (default `pass17`) is only compared
@@ -41,16 +91,17 @@ against it. Differences are reported and never override the current pass.
 ## Evidence locators
 
 Every cell has an `evidence` string of the form `<root>:<relative path>[#selector]`.
-`roots` in the header maps each root name to the absolute path used for the build:
+`roots` in the header maps each root name to the absolute path used for the build
+(on the build machine):
 
 | root | what it is |
 |---|---|
-| `campaign` | `/home/ammslab3/softwarex_work/corpus_campaign` (batch reports, harness output) |
-| `umat` / `repo` | `/home/ammslab3/softwarex_work/final-umat` (`repo` is kept for B1 locators) |
-| `ra` | `/home/ammslab3/softwarex_work/final-ra` |
-| `corpus_run` | `/home/ammslab3/softwarex_work/corpus_run` (passes; also `families`) |
-| `discovery_cache` | `/home/ammslab3/softwarex_work/discovery_cache` |
-| `transform_store` | `/home/ammslab3/softwarex_work/transform_store` |
+| `campaign` | `$UMAT_OTI_WORKSPACE/corpus_campaign` (batch reports, harness output) |
+| `umat` / `repo` | `$UMAT_OTI_WORKSPACE/final-umat` (`repo` is kept for B1 locators) |
+| `ra` | `$UMAT_OTI_WORKSPACE/final-ra` |
+| `corpus_run` | `$UMAT_OTI_WORKSPACE/corpus_run` (passes; also `families`) |
+| `discovery_cache` | `$UMAT_OTI_WORKSPACE/discovery_cache` |
+| `transform_store` | `$UMAT_OTI_WORKSPACE/transform_store` |
 
 For example, `corpus_run:pass16/results/store_verification.jsonl#key=<key>` is the
 line with that `key`. `resolve_locator(locator, roots)` returns the file, or the reason
