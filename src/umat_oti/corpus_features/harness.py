@@ -879,10 +879,86 @@ def hidden_state_pregate(entry: CorpusEntry, builds: Builds, path, work: Path) -
     return pristine, trips, "", undefined
 
 
+TERMINATED = "original terminated under perturbation (STOP/XIT)"
+
+
+def first_missing_record(run, perts: Sequence[dv.Perturbation], n_inc: int) -> Optional[dict]:
+    """The first record, in the real driver's write order, that a perturbation
+    run of the ORIGINAL did not write; None when the run is complete.
+
+    The driver runs every perturbation in ONE process, so a routine that
+    STOPs (or CALLs XIT) under a perturbed input ends the program there with
+    exit status 0: every later record -- the rest of that local block, every
+    later increment, every total re-run, the replays -- is simply absent.
+    The missing record names the call that did not return (the base call of
+    increment k, local perturbation ip with sign sg at increment k, total
+    perturbation ip with sign sg at increment k, or a replay).
+    """
+    local = [ip for ip, p in enumerate(perts, 1) if p.mode == "local"]
+    total = [ip for ip, p in enumerate(perts, 1) if p.mode == "total"]
+
+    def what(ip, sg):
+        p = perts[ip - 1]
+        return f"{p.mode} {p.kind}({p.index}) {'+' if sg > 0 else '-'}h, h={p.step:g}"
+
+    for inc in range(1, n_inc + 1):
+        if inc not in run.base:
+            return {"increment": inc, "call": f"unperturbed base call (increment {inc})"}
+        for ip in local:
+            for sg in (1, -1):
+                if (inc, ip, sg) not in run.local:
+                    return {"increment": inc, "call": what(ip, sg), "ip": ip, "sign": sg}
+        if local and inc not in run.replay:
+            return {"increment": inc, "call": f"replay of the unperturbed call (increment {inc})"}
+    for ip in total:
+        for sg in (1, -1):
+            for m in range(1, n_inc + 1):
+                if (ip, sg, m) not in run.total:
+                    return {"increment": m, "call": what(ip, sg), "ip": ip, "sign": sg}
+        if ip not in run.total_replay:
+            return {"increment": 1, "call": f"increment-1 replay after total block {ip}"}
+    if total:
+        for m in range(1, n_inc + 1):
+            if m not in run.zero_total:
+                return {"increment": m, "call": f"h=0 total re-run (increment {m})"}
+    return None
+
+
+def termination_reason(stop: Mapping, build: str = "original") -> str:
+    return (f"{TERMINATED} at increment {stop['increment']} ({build} build; first call that "
+            f"did not return: {stop['call']}; the records after it were never written)")
+
+
+def is_derivative_feature(feature: str) -> bool:
+    return feature == "ddsdde" or feature.endswith(("_sens_local", "_sens_total"))
+
+
+def apply_gate_notes(records: list) -> list:
+    """Explicit rule (Vera B5 r2, item G): a hidden-state gate check that was
+    NOT APPLIED on a path (``gates.hidden_state_gate_notes``, e.g. an isolation
+    probe whose in-process record the original never wrote) leaves that path
+    without the evidence that restored-state FD is a valid reference. Its
+    derivative records (ddsdde, sensitivities) are then not verified: a
+    ``verified`` one becomes ``not_attempted`` with the note as the reason.
+    (Before, only the constants m=(n+1)//2 and MIN_STATE_COVERAGE=0.5 made
+    such a path fall short of coverage.) A ``failed`` record stands. Idempotent."""
+    for record in records:
+        notes = (record.get("gates") or {}).get("hidden_state_gate_notes") or []
+        if notes and record.get("status") == "verified" and is_derivative_feature(
+                record.get("feature", "")):
+            record["status_before_gate_notes"] = record["status"]
+            record["reason_before_gate_notes"] = record.get("reason")
+            record["status"] = "not_attempted"
+            record["reason"] = ("hidden-state gate not applied on this path: " + notes[0]
+                                + (f" (+{len(notes) - 1} more)" if len(notes) > 1 else ""))
+    return records
+
+
 def hidden_state_gate(entry: CorpusEntry, builds: Builds, path, work: Path, pristine,
                       perturbed, config: dv.RunConfig, perts: Sequence[dv.Perturbation],
                       index: Mapping, *, tangent_kind: str = "", ladder=fd.DEFAULT_LADDER,
-                      undefined: Optional[Undefined] = None) -> list:
+                      undefined: Optional[Undefined] = None,
+                      notes: Optional[list] = None) -> list:
     """Gates on the perturbation run. Every check is bit-exact on every DEFINED
     output (``undefined`` masks the outputs that are undefined_in_original).
 
@@ -899,8 +975,16 @@ def hidden_state_gate(entry: CorpusEntry, builds: Builds, path, work: Path, pris
     """
     nt = entry.ntens
     trips = []
+    notes = [] if notes is None else notes
     mask = undefined.mask() if undefined is not None else None
-    diff = first_difference(pristine.base, perturbed.base, nt, mask=mask)
+    n_inc = len(config.increments)
+    stop = first_missing_record(perturbed, perts, n_inc)
+    # A run the ORIGINAL ended (STOP/XIT under a perturbed input) is compared
+    # on the records it wrote; what it never wrote is a termination (columns
+    # needing it are not judged), not a hidden-state difference.
+    reached = (lambda table: table) if stop is None else (
+        lambda table: {i: v for i, v in table.items() if i in perturbed.base})
+    diff = first_difference(reached(pristine.base), perturbed.base, nt, mask=mask)
     if diff:
         trips.append(f"base trajectory inside the perturbation run differs from the pristine run: {diff}")
     if perturbed.replay:
@@ -915,12 +999,13 @@ def hidden_state_gate(entry: CorpusEntry, builds: Builds, path, work: Path, pris
                          f"h={p.step:g} differs: {diff}")
             break
     if perturbed.zero_total:
-        diff = first_difference(pristine.base, perturbed.zero_total, nt, mask=mask)
+        diff = first_difference({i: pristine.base[i] for i in perturbed.zero_total}
+                                if stop is not None else pristine.base,
+                                perturbed.zero_total, nt, mask=mask)
         if diff:
             trips.append(f"h=0 total re-run after the total perturbation blocks differs: {diff}")
     # 5. process isolation
     probe_root = Path(work) / "isolation"
-    n_inc = len(config.increments)
     short = ("stress", "statev", "pnewdt")
 
     def fresh(name, cfg):
@@ -939,8 +1024,18 @@ def hidden_state_gate(entry: CorpusEntry, builds: Builds, path, work: Path, pris
         out = fresh(f"props{i}", dv.RunConfig(**{**config.__dict__, "props": props}))
         if out is None:
             continue
-        inproc = {m: dict(zip(short, perturbed.total[(ip, 1, m)])) for m in range(1, n_inc + 1)}
-        diff = first_difference(inproc, out.base, nt, short, mask=mask)
+        # Only the increments the in-process run produced: an original that
+        # STOPs part-way through a path ends its history there (that path is
+        # reported not_attempted with the reason); comparing increments it
+        # never reached raised KeyError and lost the whole source.
+        inproc = {m: dict(zip(short, perturbed.total[(ip, 1, m)]))
+                  for m in range(1, n_inc + 1) if (ip, 1, m) in perturbed.total}
+        if not inproc:
+            notes.append(f"isolation probe PROPS({i}) not applied: {termination_reason(stop)}"
+                         if stop else f"isolation probe PROPS({i}) not applied: no total record")
+            continue
+        base = {m: v for m, v in out.base.items() if m in inproc}
+        diff = first_difference(inproc, base, nt, short, mask=mask)
         if diff:
             trips.append(f"fresh process with PROPS({i})+h differs from the in-process total "
                          f"perturbation (SAVE/COMMON state carried between calls): {diff}")
@@ -953,9 +1048,14 @@ def hidden_state_gate(entry: CorpusEntry, builds: Builds, path, work: Path, pris
         incs[m - 1][0] = d
         out = fresh("dstran1", dv.RunConfig(**{**config.__dict__,
                                                "increments": [tuple(x) for x in incs]}))
-        if out is not None:
+        # A path whose original stopped before increment m has no such call
+        # (in-process); a fresh run that stopped earlier is a difference.
+        if out is not None and (m, ip, 1) not in perturbed.local:
+            notes.append(f"isolation probe DSTRAN(1) not applied: {termination_reason(stop)}"
+                         if stop else "isolation probe DSTRAN(1) not applied")
+        elif out is not None:
             diff = first_difference({m: dict(zip(short, perturbed.local[(m, ip, 1)]))},
-                                    {m: out.base[m]}, nt, short, mask=mask)
+                                    {m: out.base[m]} if m in out.base else {}, nt, short, mask=mask)
             if diff:
                 trips.append("fresh process with DSTRAN(1)+h at increment "
                              f"{m} differs from the in-process restored-state call: {diff}")
@@ -967,9 +1067,12 @@ def hidden_state_gate(entry: CorpusEntry, builds: Builds, path, work: Path, pris
         statev0 = list(config.statev0)
         statev0[l - 1] = statev0[l - 1] + perts[ip - 1].step
         out = fresh(f"statev{l}", dv.RunConfig(**{**config.__dict__, "statev0": statev0}))
-        if out is not None:
+        if out is not None and (1, ip, 1) not in perturbed.local:
+            notes.append(f"isolation probe STATEV({l}) not applied: {termination_reason(stop)}"
+                         if stop else f"isolation probe STATEV({l}) not applied")
+        elif out is not None:
             diff = first_difference({1: dict(zip(short, perturbed.local[(1, ip, 1)]))},
-                                    {1: out.base[1]}, nt, short, mask=mask)
+                                    {1: out.base[1]} if 1 in out.base else {}, nt, short, mask=mask)
             if diff:
                 trips.append(f"fresh process with incoming STATEV({l})+h differs from the "
                              f"in-process restored-state call at increment 1: {diff}")
@@ -1048,6 +1151,10 @@ def stress_irrelevant_slots(perturbed, index: Mapping, base_stress: np.ndarray, 
         for inc in range(1, n_inc + 1):
             for ip in keys:
                 for sg in (1, -1):
+                    if (inc, ip, sg) not in perturbed.local:
+                        # not reached (the original stopped): irrelevance is not shown
+                        same = False
+                        break
                     a = np.asarray(perturbed.local[(inc, ip, sg)][0], float)
                     b = np.asarray(base_stress[inc - 1], float)
                     if stress_undefined is not None:
@@ -1096,6 +1203,11 @@ TOLERANCE_RULE = (
     "else u_e or atol_e > 1e-3|D_e| -> unresolved; else pass iff |oti - D_e| <= atol_e + rtol|D_e| + 2u_e")
 
 
+class PerturbationTerminated(Exception):
+    """A column needs records that a perturbed run of the original never
+    wrote (the routine ended the program under a perturbed input)."""
+
+
 @dataclass
 class FeatureTally:
     feature: str
@@ -1123,6 +1235,19 @@ class FeatureTally:
     #: block; "bracket" on a STATEV block (mixed units: an entry whose verdict
     #: depends on the term is unresolved)
     euler: object = True
+    #: columns not judged because a perturbed run of the ORIGINAL ended
+    #: (STOP/XIT) before writing the records they need: {reason: count}
+    terminations: Counter = field(default_factory=Counter)
+
+    def terminated(self, inc: int, wrt: str, reason: str):
+        """A column at this state is not judged: a perturbed run of the
+        original (any build) terminated before writing a record it needs.
+        The state then is not judged (coverage rule); nothing is compared."""
+        state = self.states.setdefault(inc, Counter())
+        state["columns"] += 1
+        state["terminated"] += 1
+        self.per_input.setdefault(wrt, [0, 0])[1] += 1
+        self.terminations[reason] += 1
 
     def add(self, inc: int, wrt: str, column: fd.ColumnFD, oti: np.ndarray,
             output_names: Sequence[str], magnitude: np.ndarray, undefined=None,
@@ -1234,14 +1359,19 @@ class FeatureTally:
     def coverage(self) -> dict:
         n = len(self.states)
         judged = sum(1 for c in self.states.values()
-                     if c["columns"] and not c["nonsmooth"] and not c["unresolved"])
+                     if c["columns"] and not c["nonsmooth"] and not c["unresolved"]
+                     and not c["terminated"])
         return {"n_states": n, "n_states_judged": judged,
+                "n_states_terminated_under_perturbation": sum(1 for c in self.states.values()
+                                                              if c["terminated"]),
                 "n_states_with_nonsmooth_columns": sum(1 for c in self.states.values() if c["nonsmooth"]),
                 "n_states_with_unresolved_entries": sum(1 for c in self.states.values()
                                                         if c["unresolved"] and not c["nonsmooth"]),
                 "fraction": (judged / n) if n else 0.0, "minimum": MIN_STATE_COVERAGE,
                 "rule": "a state is judged when EVERY input column at it is smooth and every "
-                        "entry of every column is resolved (pass, structural-zero pass or fail)",
+                        "entry of every column is resolved (pass, structural-zero pass or fail); "
+                        "a column whose perturbed run of the original terminated (STOP/XIT) "
+                        "before writing its records is not judged",
                 "per_input_informational": {k: f"{v[0]}/{v[1]}" for k, v in self.per_input.items()}}
 
     def status(self) -> tuple:
@@ -1252,12 +1382,17 @@ class FeatureTally:
                               f"tolerance at {sum(1 for c in self.states.values() if c['failed'])} state(s)")
         if not cov["n_states"]:
             return "not_attempted", "no state was evaluated"
+        n_term = cov["n_states_terminated_under_perturbation"]
         if cov["fraction"] < MIN_STATE_COVERAGE:
-            return "not_attempted", (
-                f"insufficient coverage: {cov['n_states_judged']}/{cov['n_states']} states judged "
-                f"({cov['n_states_with_nonsmooth_columns']} with nonsmooth columns, "
-                f"{cov['n_states_with_unresolved_entries']} with FD-unresolved entries; "
-                f"entries {dict(self.entries)})")
+            why = (f"insufficient coverage: {cov['n_states_judged']}/{cov['n_states']} states judged "
+                   f"({cov['n_states_with_nonsmooth_columns']} with nonsmooth columns, "
+                   f"{cov['n_states_with_unresolved_entries']} with FD-unresolved entries, "
+                   f"{n_term} with columns whose perturbed run terminated; "
+                   f"entries {dict(self.entries)})")
+            if n_term:
+                first = min(self.terminations, key=_increment_of)
+                why = (f"{first}: {n_term}/{cov['n_states']} states not judged; " + why)
+            return "not_attempted", why
         judged_pass = sum(c["passed"] for c in self.states.values()
                           if c["columns"] and not c["nonsmooth"] and not c["unresolved"])
         compared = sum(c["passed"] + c["zero_passed"] + c["failed"] + c["unresolved"]
@@ -1268,9 +1403,13 @@ class FeatureTally:
         if not judged_pass:
             return "not_attempted", ("every judged entry is a structural zero: the derivative was "
                                      "not exercised on this path")
+        note = ""
+        if n_term:
+            note = (f"; {n_term} state(s) not judged: "
+                     f"{min(self.terminations, key=_increment_of)}")
         return "verified", (f"{cov['n_states_judged']}/{cov['n_states']} states judged, every "
                             f"resolved entry within its tolerance (largest tau/|D| = "
-                            f"{self.max_rel_tolerance:.2e})")
+                            f"{self.max_rel_tolerance:.2e}){note}")
 
     def as_dict(self) -> dict:
         status, reason = self.status()
@@ -1290,7 +1429,15 @@ class FeatureTally:
                 "entries": dict(self.entries),
                 "signature_ignored_statev": self.signature_ignored_statev,
                 "nonsmooth_examples": self.nonsmooth, "failed_examples": self.failures,
-                "unresolved_examples": self.unresolved_examples, "notes": self.notes}
+                "unresolved_examples": self.unresolved_examples, "notes": self.notes,
+                "terminated_under_perturbation": [
+                    {"reason": r, "columns": n} for r, n in
+                    sorted(self.terminations.items(), key=lambda kv: _increment_of(kv[0]))[:12]]}
+
+
+def _increment_of(reason: str) -> int:
+    m = re.search(r"at increment (\d+)", reason)
+    return int(m.group(1)) if m else 0
 
 
 def _num(x) -> Optional[float]:
@@ -1462,6 +1609,12 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
     # D-12: the snan-init build runs the SAME perturbations; every output
     # that differs anywhere (base, local, total, replays) is undefined.
     trips = []
+    # A routine that STOPs / CALLs XIT under a perturbed input ends the
+    # perturbation process there (exit 0): the records after that call are
+    # absent. Every column that needs one is not judged (FeatureTally.terminated).
+    stops = {"original": first_missing_record(perturbed, perts, n_inc)}
+    checked_runs = [("original", perturbed)]
+    path_block = ""
     for variant in ("original_snan", "original_inf"):
         vbuild = getattr(builds, variant)
         if not (vbuild.ok and builds.original is builds.original_zero):
@@ -1471,12 +1624,24 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
         if v_run is None:
             trips.append(f"{variant} perturbation run failed on path {path.name}: {message[-300:]}")
             continue
+        stops[variant] = first_missing_record(v_run, perts, n_inc)
+        checked_runs.append((variant, v_run))
+        if stops[variant] != stops["original"] and not path_block:
+            # the init value decides WHERE the routine stops: the outputs over
+            # the reached history cannot be shown bit-identical (D-12)
+            stop = stops[variant] or stops["original"]
+            name = variant if stops[variant] else "original"
+            path_block = (termination_reason(stop, name) + "; the other init build "
+                          f"{'did not stop there' if name == variant else 'stopped elsewhere or not at all'}"
+                          ": definedness (D-12) cannot be established on this path")
         for name in ("base", "replay", "total_replay", "zero_total", "local", "total"):
             undefined.collect(getattr(perturbed, name), getattr(v_run, name),
                               (f"base history ({variant})" if name == "base"
                                else f"perturbed run ({name}, {variant})"), path.name)
+    gate_notes: list = []
     trips += hidden_state_gate(entry, builds, path, work, pristine, perturbed, config, perts, index,
-                               tangent_kind=tangent_kind, ladder=ladder, undefined=undefined)
+                               tangent_kind=tangent_kind, ladder=ladder, undefined=undefined,
+                               notes=gate_notes)
     undef_vec = undefined.output_vector()
     undef_statev = frozenset(int(l) for l in np.flatnonzero(undefined.statev))
     ignore_for_stress = stress_irrelevant_slots(perturbed, index, base_stress, nx, n_inc, ladder,
@@ -1490,7 +1655,9 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
              "pnewdt_cutback_increments": [i for i in range(1, n_inc + 1)
                                            if pristine.base[i]["pnewdt"] < 1.0],
              "statev_ignored_in_stress_signature": sorted(l + 1 for l in ignore_for_stress),
-             "undefined_in_original_on_path": [d["output"] for d in undefined.details]}
+             "undefined_in_original_on_path": [d["output"] for d in undefined.details],
+             "terminated_under_perturbation": {k: v for k, v in stops.items() if v},
+             "hidden_state_gate_notes": gate_notes}
     common["gates"] = gates
     gate_reason = ""
     if not finite_base:
@@ -1527,7 +1694,32 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
 
     #: the FD reference in use: the double run, or (second pass) the quad run
     REF = {"quad": False, "run": perturbed, "eps": fd.EPS, "base_stress": base_stress,
-           "base_statev": base_statev}
+           "base_statev": base_statev, "stop": stops["original"], "name": "original"}
+
+    def _why_missing(ips, inc, total=False) -> str:
+        """'' when every record the column needs was written by every run it
+        depends on (the FD reference run and the init-variant runs that prove
+        definedness); else the termination reason."""
+        if path_block:
+            return path_block
+        runs = [(REF["name"], REF["run"], REF["stop"], REF["quad"])]
+        runs += [(n, r, stops[n], False) for n, r in checked_runs if REF["quad"] or n != "original"]
+        for name, r, stop, quad in runs:
+            if stop is None:
+                continue
+            for ip in ips:
+                if total:
+                    need = [(ip, sg, m) for sg in (1, -1) for m in range(1, inc + 1)]
+                    ok = all(k in r.total for k in need) and ip in r.total_replay and (
+                        not quad or all(k in r.total_delta for k in need))
+                else:
+                    need = [(inc, ip, 1), (inc, ip, -1)]
+                    # the whole local block of the increment, replay included
+                    ok = all(k in r.local for k in need) and inc in r.replay and (
+                        not quad or all(k in r.local_delta for k in need))
+                if not ok:
+                    return termination_reason(stop, name)
+        return ""
 
     def _column(plus_abs, minus_abs, plus_d, minus_d, inc, same, step):
         base = np.concatenate([REF["base_stress"][inc - 1], REF["base_statev"][inc - 1]])
@@ -1545,6 +1737,9 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
         run, bx = REF["run"], REF["base_statev"]
         plus, minus, plus_d, minus_d, same = [], [], [], [], []
         x_in = np.asarray(statev0 if inc == 1 else bx[inc - 2], float)
+        why = _why_missing([index[("local", kind, idx, k)] for k in range(len(ladder))], inc)
+        if why:
+            raise PerturbationTerminated(why)
         for k in range(len(ladder)):
             ip = index[("local", kind, idx, k)]
             sp, xp, pp = run.local[(inc, ip, 1)]
@@ -1566,6 +1761,10 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
     def total_column(idx, inc, ignore=frozenset()):
         run, bx = REF["run"], REF["base_statev"]
         plus, minus, plus_d, minus_d, same = [], [], [], [], []
+        why = _why_missing([index[("total", "props", idx, k)] for k in range(len(ladder))], inc,
+                           total=True)
+        if why:
+            raise PerturbationTerminated(why)
         for k in range(len(ladder)):
             ip = index[("total", "props", idx, k)]
             ok = True
@@ -1687,16 +1886,19 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
               for inc in range(1, n_inc + 1):
                   oti_matrix = store_out.base[inc]["ddsdde"]
                   for j in range(1, nt + 1):
+                      try:
+                          column = local_column("dfgrd1" if builds.gradient_driven else "dstran",
+                                                j, inc, ignore_for_stress)
+                      except PerturbationTerminated as stop:
+                          tally.terminated(inc, f"strain_{j}", str(stop))
+                          continue
                       if builds.gradient_driven:
-                          column = local_column("dfgrd1", j, inc, ignore_for_stress)
                           shift = np.zeros(nt + nx)
                           if j <= entry.ndi:
                               shift[:nt] = REF["base_stress"][inc - 1]
                           column.estimates = [e + shift for e in column.estimates]
                           column.forward = [e + shift for e in column.forward]
                           column.backward = [e + shift for e in column.backward]
-                      else:
-                          column = local_column("dstran", j, inc, ignore_for_stress)
                       S = slice(0, nt)
                       sub = _restrict(column, S)
                       # an entry is compared only when both the ORIGINAL's STRESS(i)
@@ -1798,16 +2000,25 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
         cached: dict = {}
         for inc in range(1, n_inc + 1):
             for label, idx, d in wrt_items:
-                column = cached[(inc, idx)] = column_fn(idx, inc, ignore)
+                try:
+                    column = cached[(inc, idx)] = column_fn(idx, inc, ignore)
+                except PerturbationTerminated as stop:
+                    cached[(inc, idx)] = stop
+                    continue
                 block_undefined = undef_vec[block].copy()
                 if label.startswith("STATEV_n(") and undefined.statev[idx - 1]:
                     block_undefined[:] = True
                 path_scale[label] = max(path_scale.get(label, 0.0), tally.add(
                     inc, label, _restrict(column, block), oti_of(out, inc, d), names,
                     magnitude_of(column, inc, block), undefined=block_undefined, probe=True))
+        for label, _idx, _d in wrt_items:
+            path_scale.setdefault(label, 0.0)
         for inc in range(1, n_inc + 1):
             for label, idx, d in wrt_items:
                 column = cached[(inc, idx)]
+                if isinstance(column, PerturbationTerminated):
+                    tally.terminated(inc, label, str(column))
+                    continue
                 block_undefined = undef_vec[block].copy()
                 if label.startswith("STATEV_n(") and undefined.statev[idx - 1]:
                     block_undefined[:] = True      # the INPUT itself is undefined
@@ -1906,17 +2117,23 @@ def _quad_pass(records, rejudge, REF, builds, work, config, perts, entry, pristi
         return
     note = {"status": "unavailable", "reason": builds.original_quad.reason or "not built"}
     run = None
+    qstop = None
     if builds.original_quad.ok:
         run, message = _run_real(builds.original_quad, Path(work) / "original_quad_perturbed", config,
                                  perts, entry, fresh=True)
         if run is None:
             note = {"status": "unavailable", "reason": f"quad run failed: {message[-300:]}"}
         else:
+            qstop = first_missing_record(run, perts, n_inc)
             S, X = ~undefined.stress, ~undefined.statev
             qs = _base_arrays(run.base, n_inc, "stress")
             qx = _base_arrays(run.base, n_inc, "statev") if entry.nstatv else np.zeros((n_inc, 0))
             ds = _base_arrays(pristine.base, n_inc, "stress")
             dx = _base_arrays(pristine.base, n_inc, "statev") if entry.nstatv else np.zeros((n_inc, 0))
+            # a quad run the original ended under a perturbation: its primal
+            # is compared on the increments it reached
+            reached = np.array([i in run.base for i in range(1, n_inc + 1)])
+            qs, qx, ds, dx = qs[reached], qx[reached], ds[reached], dx[reached]
             s = fd.judge_primal(qs[:, S], ds[:, S]) if S.any() else dict(_NOTHING)
             x = fd.judge_primal(qx[:, X], dx[:, X]) if X.any() else dict(_NOTHING)
             note = {"status": "used" if s["agrees"] and x["agrees"] else "refused",
@@ -1927,12 +2144,21 @@ def _quad_pass(records, rejudge, REF, builds, work, config, perts, entry, pristi
             if note["status"] == "refused":
                 note["reason"] = ("the quad build does not reproduce the double primal: the "
                                   "promotion changed the function (e.g. a kind from a named constant)")
+            elif qstop != REF.get("stop"):
+                # it would leave a DIFFERENT set of columns unjudged: the
+                # verdicts are then not comparable record for record
+                note = {"status": "refused", "reason": (
+                    (termination_reason(qstop, "quad") if qstop else "the quad run completed")
+                    + "; the double reference run "
+                    + ("stopped elsewhere" if REF.get("stop") else "completed")
+                    + ": the two references do not cover the same columns"),
+                    "build": builds.identity.get("original_quad")}
     for record in need:
         record["quad_reference"] = note
     if note["status"] != "used":
         return
     saved = dict(REF)
-    REF.update(quad=True, run=run, eps=fd.EPS_QUAD,
+    REF.update(quad=True, run=run, eps=fd.EPS_QUAD, stop=qstop, name="original_quad",
                base_stress=_base_arrays(run.base, n_inc, "stress"),
                base_statev=_base_arrays(run.base, n_inc, "statev") if entry.nstatv
                else np.zeros((n_inc, 0)))
@@ -2060,6 +2286,7 @@ def run_entry(entry: CorpusEntry, work_root: Path, *, paths=None,
                                                  ladder=ladder, rtol=rtol, features=features,
                                                  pristine=pristine,
                                                  undefined=undefined_by_path[path.name])
+            apply_gate_notes(recs)
             source_trips += [f"[{path.name}] {t}" for t in trips]
             if history is not None:
                 (work / _safe(path.name) / "history.json").write_text(json.dumps(history))
