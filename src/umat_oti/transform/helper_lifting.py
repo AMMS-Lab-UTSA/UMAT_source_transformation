@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 import re
-from typing import Any, Iterable, Sequence
+from typing import Any, Callable, Iterable, Sequence
 
 from umat_oti.core.model import ParsedFortranSource, ParsedSubroutine
 from umat_oti.core.roles import common_block_names
@@ -541,6 +541,7 @@ def lift_helper_set_source(
     lifted_functions = set(ordered) & set(function_names(parsed))
     _refuse_calls_that_need_an_explicit_interface(parsed, routines, lifted_set)
     host_constants = host_constants_for_internal_procedures(parsed)
+    hosts = internal_procedure_hosts(parsed)
     body = "\n\n".join(
         _lift_helper_routine(
             routines[name],
@@ -554,6 +555,7 @@ def lift_helper_set_source(
             helper_output_copies=(helper_output_copies or {}).get(name, []),
             helper_output_surfaces=(helper_output_surfaces or {}).get(name, []),
             host_constants=host_constants.get(name, ()),
+            typing_host=routines.get(hosts.get(name, "")),
         )
         for name in ordered
     )
@@ -980,6 +982,7 @@ def _lift_helper_routine(
     lifted_function_names: set[str] | None = None,
     source_path: Path | None = None,
     host_constants: Sequence[str] = (),
+    typing_host: ParsedSubroutine | None = None,
 ) -> str:
     raw_lines = _routine_source_lines(source_lines, routine)
     raw_lines = _without_internal_procedures(
@@ -992,16 +995,22 @@ def _lift_helper_routine(
     stitched_lines = _continuation_stitch(raw_lines, form)
     if not stitched_lines:
         raise HelperLiftingError(f"Routine {routine.name} did not produce any stitched source lines.")
+    for line in stitched_lines[1:-1]:
+        entry = re.match(r"^\s*ENTRY\s+([A-Z_]\w*)", _statement_text(line, form), re.IGNORECASE)
+        if entry:
+            # The lifted copy carried the ENTRY statement through and the
+            # alternate entry point came out defined twice (link error; Vera
+            # B5 T3 c_entry_plain).
+            raise HelperLiftingError(
+                f"{routine.name} has an ENTRY statement ({entry.group(1).upper()}). "
+                "A lifted helper is emitted as one subprogram with one entry point; "
+                "ENTRY is not supported. What to do: make "
+                f"{entry.group(1).upper()} a subroutine of its own.")
     if host_constants:
         # An internal procedure lifted on its own: its host's named constants,
         # which it saw by host association, declared in it (see
-        # host_constants_for_internal_procedures). A name it declares itself
-        # shadows the host's, so a host constant of that name is left out.
-        own = {token.upper() for line in stitched_lines[1:-1]
-               for token in re.findall(r"::\s*(.*)$", _statement_text(line, form))
-               for token in _declared_names(token)}
-        carried = [line for line in host_constants
-                   if not (_host_named_constants([line], form) & own)]
+        # host_constants_for_internal_procedures).
+        carried = _carried_host_constants(host_constants, stitched_lines, form, routine)
         stitched_lines = stitched_lines[:1] + carried + stitched_lines[1:]
     lifted_function_names = set(lifted_function_names or ())
     # Binary32 variables keep a binary32 primal: every store to one rounds
@@ -1013,7 +1022,12 @@ def _lift_helper_routine(
     # resolves them itself, and knows ABA_PARAM.INC's IMPLICIT REAL*8, which
     # the expansion above leaves out -- typing the expanded text read every
     # implicitly typed name as binary32.
-    routine_types = routine_typing("\n".join(_routine_source_lines(source_lines, routine)),
+    # An internal procedure has its host's IMPLICIT rules (ABA_PARAM.INC's
+    # IMPLICIT REAL*8 included) unless it states its own, so it is typed
+    # inside its host's text; read on its own, every implicitly typed name
+    # was default REAL and its stores were rounded to binary32 (Vera B5 a3).
+    typing_text = _routine_source_lines(source_lines, typing_host or routine)
+    routine_types = routine_typing("\n".join(typing_text),
                                    routine.name, form=form,
                                    source_dir=source_path.parent if source_path is not None else None)
     header_text = _statement_text(stitched_lines[0], form)
@@ -1206,8 +1220,9 @@ def _lift_helper_routine(
         stripped = _flattened_attributed_declaration(stripped)
         parameter_match = _PARAMETER_RE.match(stripped)
         if parameter_match:
-            parameter_lines, names = _rewrite_parameter_line(parameter_match.group(1),
-                                                             character_specs)
+            parameter_lines, names = _rewrite_parameter_line(
+                parameter_match.group(1), character_specs,
+                constant_kind=lambda name: _named_constant_kind(name, routine_types))
             prelude.extend(parameter_lines)
             parameter_names.update(names)
             continue
@@ -1514,8 +1529,25 @@ def _lift_helper_routine(
     # and every store to it is rounded too.
     widened_binary32 = frozenset(name for name in constant_real_names
                                  if routine_types.is_single_precision(name))
+    # Binary32 named constants, held as real(8) (see _rewrite_parameter_line),
+    # likewise: ``C5*C6`` of two REAL constants is a binary32 product.
+    widened_binary32 |= {match.group(1).upper() for line in prelude
+                         for match in [re.match(r"^\s*real\(8\), parameter :: (\w+) = REAL\(REAL\(",
+                                                line)] if match}
     binary32_token = BINARY32_CONTEXT.set((binary32_names | widened_binary32, "",
                                            frozenset(oti_names) | widened_binary32))
+    # Which names hold an INTEGER here, for _integer_division_literals: those
+    # declared INTEGER, INTEGER named constants, and undeclared I-N names.
+    integer_constants = {match.group(1).upper() for line in prelude
+                         for match in [re.match(r"^\s*integer\s*,\s*parameter\s*::\s*(\w+)",
+                                                line, re.IGNORECASE)] if match}
+    not_integer = (oti_names | declared_non_oti | complex_names) - integer_names - integer_constants
+
+    def integer_name(name: str) -> bool:
+        if name in integer_names or name in integer_constants:
+            return True
+        return (name not in not_integer and _is_implicit_integer_name(name)
+                and not routine_types.is_known_real(name))
     try:
         for raw in body:
             label_prefix, statement = _split_label_and_statement(raw, form)
@@ -1527,7 +1559,8 @@ def _lift_helper_routine(
                 statement, lifted_names, oti_names, function_call_names,
                 oti_shapes=helper_oti_shapes,
                 non_numeric_names=logical_names | character_names,
-                condition_exempt=complex_names)
+                condition_exempt=complex_names,
+                integer_name=integer_name)
             rewritten = wrap_oti_array_constructors(
                 rewritten,
                 lambda name: name.upper() in oti_names or name.upper().endswith("_OTI"))
@@ -1988,8 +2021,31 @@ def _only_names(payload: str, names: set[str]) -> str:
     return ", ".join(kept)
 
 
+def _named_constant_kind(name: str, typing: Any) -> str | None:
+    """"integer" or "real": the type the source gives a named constant, or None.
+
+    A named constant has the type of its declaration -- ``REAL(8) :: THREE``
+    then ``PARAMETER (THREE=3)`` -- or else of the routine's IMPLICIT rule
+    (``PARAMETER (TWO=2)`` under ABA_PARAM.INC's IMPLICIT REAL*8), never of
+    the form of its value. None when the routine cannot say (IMPLICIT NONE
+    with no declaration seen, an unreadable INCLUDE or module).
+    """
+    upper = name.upper()
+    if typing.is_single_precision(upper):
+        return "single"
+    if upper in typing.declared_real or upper in typing.declared_single:
+        return "real"
+    if upper in typing.declared_nonreal:
+        return "integer"
+    if typing.implicit_none or typing.unknown_because or not upper:
+        return None
+    return "integer" if upper[0] in typing.nonreal_letters else "real"
+
+
 def _rewrite_parameter_line(payload: str,
-                            character_specs: dict[str, str] | None = None) -> tuple[list[str], set[str]]:
+                            character_specs: dict[str, str] | None = None,
+                            constant_kind: Callable[[str], str | None] | None = None,
+                            ) -> tuple[list[str], set[str]]:
     lines: list[str] = []
     names: set[str] = set()
     for assignment in split_top_level(payload):
@@ -2005,10 +2061,28 @@ def _rewrite_parameter_line(payload: str,
             declared = (character_specs or {}).get(name.upper(), "")
             kind = declared if declared else "character(len=*)"
             lines.append(f"    {kind}, parameter :: {name} = {value}")
-        elif re.fullmatch(r"[+-]?\d+", value):
-            lines.append(f"    integer, parameter :: {name} = {value}")
         else:
-            lines.append(f"    real(8), parameter :: {name} = {_normalize_real_literal(value)}")
+            # The type is the source's (see _named_constant_kind). Typed from
+            # the value's form, ``PARAMETER (TWO=2)`` under IMPLICIT REAL*8
+            # became an INTEGER constant and ``1/TWO`` an integer division.
+            # A complex value -- a parenthesised pair -- is left to the
+            # value's form, as before.
+            kind = (None if value.startswith("(") or re.search(r"\.[A-Za-z]+\.", value)
+                    else (constant_kind or (lambda _: None))(name))
+            if kind is None:
+                kind = "integer" if re.fullmatch(r"[+-]?\d+", value) else "real"
+            if kind == "integer":
+                lines.append(f"    integer, parameter :: {name} = {value}")
+            elif kind == "single":
+                # Declared REAL / REAL(4) / REAL*4 (or so typed implicitly): the
+                # source's constant is the value rounded to binary32 -- REAL C;
+                # PARAMETER (C=1.D0/3.D0) is 0.3333333432674408, not 1/3 (Vera
+                # B5 T3: primal 4.3e-9). An OTI operator takes REAL(8), so the
+                # constant stays real(8) and holds that binary32 value exactly.
+                lines.append(f"    real(8), parameter :: {name} = "
+                             f"REAL(REAL({_normalize_real_literal(value)}, 4), 8)")
+            else:
+                lines.append(f"    real(8), parameter :: {name} = {_normalize_real_literal(value)}")
     return lines, names
 
 
@@ -2373,6 +2447,7 @@ def _rewrite_helper_executable_line(
     oti_shapes: dict[str, str] | None = None,
     non_numeric_names: set[str] | None = None,
     condition_exempt: set[str] | None = None,
+    integer_name: Callable[[str], bool] | None = None,
 ) -> str:
     rewritten = _rewrite_lifted_call(line, lifted_names)
     rewritten = _wrap_condition_with_real_tokens(rewritten, oti_names - (condition_exempt or set()))
@@ -2381,7 +2456,7 @@ def _rewrite_helper_executable_line(
     rewritten = _expand_mod_over_oti(rewritten, oti_names)
     rewritten = _real_argument_to_integer_intrinsics(rewritten, oti_names)
     rewritten = _integer_do_bounds_over_oti(rewritten, oti_names)
-    rewritten = _normalize_numeric_literals(rewritten, oti_names)
+    rewritten = _normalize_numeric_literals(rewritten, oti_names, integer_name)
     rewritten = _wrap_oti_rhs_assigned_to_a_plain_variable(
         rewritten, oti_names, non_numeric_names or set())
     # Last, so every rewrite above still sees the source's own names.
@@ -2495,7 +2570,8 @@ def _normalize_typed_intrinsics(line: str, oti_names: set[str]) -> str:
     return _TYPED_INTRINSIC_RE.sub(lambda match: _TYPED_INTRINSIC_MAP[match.group(1).upper()], line)
 
 
-def _normalize_numeric_literals(line: str, oti_names: set[str]) -> str:
+def _normalize_numeric_literals(line: str, oti_names: set[str],
+                                integer_name: Callable[[str], bool] | None = None) -> str:
     if not _contains_oti_name(line, oti_names):
         return line
     if re.match(r"^\s*STOP\b", line, re.IGNORECASE):
@@ -2541,8 +2617,155 @@ def _normalize_numeric_literals(line: str, oti_names: set[str]) -> str:
     # From here on only *bare integers* are promoted. Mask the complete real
     # literals first so their exponent digits are not mistaken for one.
     normalized, literals = mask_real_literals(normalized)
-    normalized = _promote_bare_integers_for_oti(normalized)
+    kept = _integer_division_literals(normalized, integer_name) if integer_name else set()
+    normalized = _promote_bare_integers_for_oti(normalized, kept)
     return unmask_real_literals(normalized, literals)
+
+
+_INTEGER_RESULT_INTRINSICS = frozenset({
+    "INT", "NINT", "IDINT", "IFIX", "IDNINT", "FLOOR", "CEILING", "SIZE", "LEN",
+    "LEN_TRIM", "ICHAR", "IACHAR", "INDEX"})
+#: Generic intrinsics whose result is INTEGER when every argument is.
+_INTEGER_IF_ARGUMENTS = frozenset({"MOD", "MAX", "MIN", "ABS", "IABS", "MAX0", "MIN0",
+                                   "ISIGN", "SIGN"})
+_DIVISION_TOKEN_RE = re.compile(
+    r"(?P<name>[A-Za-z_]\w*)|(?P<int>\d+)|(?P<dot>\.[A-Za-z]+\.)"
+    r"|(?P<op>\*\*|//|/=|==|<=|>=|[-+*/<>=(),])|(?P<other>\S)")
+
+
+def _integer_division_literals(line: str, integer_name: Callable[[str], bool]) -> set[int]:
+    """Positions of the bare integer literals that are operands of an INTEGER division.
+
+    ``4/DTHREE`` with DTHREE an INTEGER PARAMETER is 1 in the source; promoted
+    to ``4.0D0/DTHREE`` it was 1.333 (Vera B5 a5x: primal 1.6e-2, DDSDDE 3 %).
+    Promotion exists because an OTI operand has no operator for an INTEGER
+    one, but oti_intrinsics defines OTI-with-INTEGER operators and assignment,
+    so an integer quotient is left exactly as the source wrote it. Only a
+    division both of whose operands are integer -- literals, integer names,
+    integer intrinsic results, parenthesised integer expressions -- is kept;
+    one with a real or unknown operand is real division either way.
+    ``line`` has its real literals masked (private-use characters).
+    """
+    masked = list(line)
+    quote = ""
+    for index, char in enumerate(line):
+        if quote:
+            masked[index] = "\ue7ff"
+            if char == quote:
+                quote = ""
+        elif char in "'\"":
+            quote = char
+            masked[index] = "\ue7ff"
+    tokens = [(m.lastgroup, m.group(), m.start())
+              for m in _DIVISION_TOKEN_RE.finditer("".join(masked))]
+
+    def closing(i: int) -> int:
+        depth = 0
+        for j in range(i, len(tokens)):
+            if tokens[j][1] == "(":
+                depth += 1
+            elif tokens[j][1] == ")":
+                depth -= 1
+                if depth == 0:
+                    return j
+        return -1
+
+    def arguments(i: int, j: int) -> list[tuple[int, int]]:
+        spans, start, depth = [], i, 0
+        for k in range(i, j):
+            if tokens[k][1] == "(":
+                depth += 1
+            elif tokens[k][1] == ")":
+                depth -= 1
+            elif tokens[k][1] == "," and depth == 0:
+                spans.append((start, k))
+                start = k + 1
+        spans.append((start, j))
+        return spans
+
+    def primary(i: int) -> tuple[int, bool, list[int]]:
+        """(end, integer?, literal positions) of the primary at i, with any ** chain."""
+        if i >= len(tokens):
+            return i, False, []
+        kind, text, position = tokens[i]
+        end, integer, positions = i + 1, False, []
+        if kind == "int":
+            integer, positions = True, [position]
+        elif kind == "name":
+            if i + 1 < len(tokens) and tokens[i + 1][1] == "(":
+                close = closing(i + 1)
+                if close < 0:
+                    return len(tokens), False, []
+                end = close + 1
+                upper = text.upper()
+                if upper in _INTEGER_RESULT_INTRINSICS:
+                    integer = True
+                elif upper in _INTEGER_IF_ARGUMENTS:
+                    integer = all(expression(a, b)[0] for a, b in arguments(i + 2, close))
+                else:
+                    integer = integer_name(upper)  # an element of an INTEGER array
+            else:
+                integer = integer_name(text.upper())
+        elif text == "(":
+            close = closing(i)
+            if close < 0:
+                return len(tokens), False, []
+            end = close + 1
+            integer, positions = expression(i + 1, close)
+        if end < len(tokens) and tokens[end][1] == "**":
+            end, right, more = primary(end + 1)
+            integer = integer and right
+            positions = positions + more
+        return end, integer, positions if integer else []
+
+    def expression(i: int, j: int) -> tuple[bool, list[int]]:
+        positions: list[int] = []
+        expect_operand = True
+        while i < j:
+            text = tokens[i][1]
+            if expect_operand:
+                if text in "+-" and tokens[i][0] == "op":
+                    i += 1
+                    continue
+                i, integer, more = primary(i)
+                if not integer or i > j:
+                    return False, []
+                positions += more
+                expect_operand = False
+            else:
+                if text not in ("+", "-", "*", "/"):
+                    return False, []
+                i += 1
+                expect_operand = True
+        return not expect_operand, positions
+
+    kept: set[int] = set()
+    for k, (kind, text, _) in enumerate(tokens):
+        if text != "/" or kind != "op":
+            continue
+        # The left operand is the multiplicative term ending here: back to the
+        # nearest + - , = ( or relational at this depth.
+        start, depth = k, 0
+        while start > 0:
+            previous = tokens[start - 1][1]
+            if previous == ")":
+                depth += 1
+            elif previous == "(":
+                if depth == 0:
+                    break
+                depth -= 1
+            elif depth == 0 and previous not in ("*", "/", "**") \
+                    and tokens[start - 1][0] not in ("name", "int"):
+                break
+            start -= 1
+        left, left_positions = expression(start, k)
+        if not left:
+            continue
+        _, right, right_positions = primary(k + 1)
+        if right:
+            kept.update(left_positions)
+            kept.update(right_positions)
+    return kept
 
 
 def _contains_oti_name(line: str, oti_names: set[str]) -> bool:
@@ -2736,7 +2959,7 @@ _LABEL_BEARING_STATEMENT = re.compile(
     re.IGNORECASE)
 
 
-def _promote_bare_integers_for_oti(line: str) -> str:
+def _promote_bare_integers_for_oti(line: str, kept: set[int] | frozenset[int] = frozenset()) -> str:
     if not line.strip() or not any(char.isdigit() for char in line):
         return line
     if re.match(r"^\s*DO\b", line, re.IGNORECASE):
@@ -2787,6 +3010,11 @@ def _promote_bare_integers_for_oti(line: str) -> str:
                 index = end
                 continue
             literal = line[index:end]
+            if index in kept:
+                # An operand of an INTEGER division: see _integer_division_literals.
+                out.append(literal)
+                index = end
+                continue
             left = index - 1
             while left >= 0 and line[left] == " ":
                 left -= 1
@@ -2892,7 +3120,36 @@ def _without_internal_procedures(raw_lines: list[str], form: str, routine: Parse
             procedures.append((header.group(2).upper(), own, []))
         elif procedures and not _INTERNAL_END_RE.match(statement):
             procedures[-1][2].append(statement)
+    # The host's arrays: ``A(I)=...`` in an internal procedure is an element
+    # of one of them, not a statement function.
+    host_arrays = {entity.upper_name for declaration in routine.declarations
+                   for entity in declaration.entities if entity.dimensions}
+    for statement in host_text.splitlines():
+        dimension = re.match(r"^\s*DIMENSION\b(.*)$", statement, re.IGNORECASE)
+        if dimension:
+            host_arrays.update(entity.strip().split("(", 1)[0].strip().upper()
+                               for entity in split_top_level(dimension.group(1)) if "(" in entity)
     for name, own, body in procedures:
+        arrays: set[str] = set()
+        for statement in body:
+            declared_shape = re.match(r"^\s*(?:DIMENSION\b|[^=]*::)(.*)$", statement, re.IGNORECASE)
+            if declared_shape:
+                arrays.update(entity.strip().split("(", 1)[0].strip().upper()
+                              for entity in split_top_level(declared_shape.group(1))
+                              if "(" in entity.split("=", 1)[0])
+        for statement in body:
+            function = re.match(r"^\s*([A-Z_]\w*)\s*\(\s*(?:[A-Z_]\w*\s*(?:,\s*[A-Z_]\w*\s*)*)?\)\s*=(?!=)",
+                                statement, re.IGNORECASE)
+            if function and function.group(1).upper() not in arrays | host_arrays:
+                # Lifted, it was written as an assignment to an undeclared
+                # array and did not compile, while the transform reported
+                # success (Vera B5 T3 i_sf_dummy, i_sf_name).
+                raise HelperLiftingError(
+                    f"The internal procedure {name} of {routine.name} defines the "
+                    f"statement function {function.group(1).upper()}. A statement "
+                    "function in an internal procedure is not supported by the "
+                    "lifter. What to do: write it as an internal FUNCTION, or "
+                    "inline it.")
         if re.search(rf"\b{name}\b", host_text, flags=re.IGNORECASE) and name not in lifted:
             raise HelperLiftingError(
                 f"{routine.name} contains the internal procedure {name}, which "
@@ -2940,6 +3197,69 @@ def _host_named_constants(host_lines: list[str], form: str) -> set[str]:
         payload = text.split("::", 1)[1] if "::" in text else text[text.index("(") + 1:text.rindex(")")]
         names.update(_declared_names(payload))
     return names
+
+
+def _carried_host_constants(host_constants: Sequence[str], stitched_lines: list[str],
+                            form: str, routine: ParsedSubroutine) -> list[str]:
+    """The host's named constants an internal procedure sees, one statement each.
+
+    Carried per NAME. A name the procedure declares itself -- a dummy, its
+    result, a local -- hides the host's constant of that name and only that
+    one: dropping the whole host statement because one of its names was
+    hidden left ``TWO`` of ``PARAMETER(..., TWO=2.0D0, THREE=3.0D0, ...)``
+    undeclared in a DOTPROD6 that declared a local THREE, an uninitialised
+    local in the lifted copy (UVCmultiaxial; Vera B5: stress 4-6 %, DDSDDE
+    43 % off). A carried value that refers to a hidden name would be
+    evaluated against the procedure's own entity, not the host's constant:
+    refused.
+    """
+    hidden = {arg.upper() for arg in routine.args} | {routine.upper_name}
+    for declaration in routine.declarations:
+        hidden.update(entity.upper_name for entity in declaration.entities)
+    header = _INTERNAL_HEADER_RE.match(_statement_text(stitched_lines[0], form))
+    if header:
+        hidden.update(a.strip().upper() for a in (header.group(3) or "").split(",") if a.strip())
+        if header.group(4):
+            hidden.add(header.group(4).upper())
+    for line in stitched_lines[1:-1]:
+        text = _statement_text(line, form)
+        for payload in re.findall(r"::\s*(.*)$", text):
+            hidden.update(_declared_names(payload))
+        dimension = _DIMENSION_RE.match(text)
+        if dimension:
+            hidden.update(_declared_names(dimension.group(1)))
+        declaration = parse_declaration_line(text)
+        if declaration is not None:
+            hidden.update(entity.upper_name for entity in declaration.entities)
+    # Its own named constants hide the host's just as well.
+    hidden |= _parameter_statement_names(stitched_lines[1:-1], form)
+    carried: list[str] = []
+    for statement in host_constants:
+        text = _statement_text(statement, form)
+        payload = (text.split("::", 1)[1] if "::" in text
+                   else text[text.index("(") + 1:text.rindex(")")])
+        for entity in split_top_level(payload):
+            if "=" not in entity:
+                continue
+            name, value = (part.strip() for part in entity.split("=", 1))
+            if name.upper() in hidden:
+                continue
+            uses = {token.upper() for token in _TOKEN_RE.findall(
+                mask_real_literals(mask_character_literals(value)[0])[0])}
+            if uses & hidden:
+                raise HelperLiftingError(
+                    f"The host constant {name} = {value}, which the internal "
+                    f"procedure {routine.name} sees by host association, is "
+                    f"defined through {', '.join(sorted(uses & hidden))}, a name "
+                    f"{routine.name} declares for itself. Declared in the lifted "
+                    f"copy, the definition would read {routine.name}'s own entity "
+                    "instead of the host's constant. Not supported. What to do: "
+                    f"rename that entity in {routine.name}.")
+            if "::" in text:
+                carried.append(f"      {text.split('::', 1)[0].strip()} :: {entity.strip()}")
+            else:
+                carried.append(f"      PARAMETER ({entity.strip()})")
+    return carried
 
 
 def host_constants_for_internal_procedures(parsed: ParsedFortranSource) -> dict[str, list[str]]:

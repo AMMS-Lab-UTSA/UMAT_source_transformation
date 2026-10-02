@@ -8486,7 +8486,9 @@ def _is_continuation_of_previous(previous: str, line: str, form: str) -> bool:
     if form == "fixed":
         return (len(line) > 5 and not line.startswith("\t")
                 and line[:5].strip() == "" and line[5] not in " 0")
-    code = previous.split("!", 1)[0].rstrip()
+    # A "!" inside a character literal (``'a!b'``) does not open a comment.
+    masked, _ = mask_character_literals(previous)
+    code = masked.split("!", 1)[0].rstrip()
     return code.endswith("&")
 
 

@@ -247,9 +247,11 @@ def _units(statements: list[str]) -> dict[str, tuple[str, int, int, Optional[str
             continue
         if _END_UNIT_RE.match(statement) and stack:
             kind, name, first = stack.pop()
-            host = None
-            if kind != "MODULE":
-                host = next((n for k, n, _ in reversed(stack) if k == "MODULE"), None)
+            # The unit this one is contained in: the module of a module
+            # procedure, or the subprogram an internal procedure follows the
+            # CONTAINS of -- whose IMPLICIT rules and declarations it sees by
+            # host association just the same.
+            host = stack[-1][1] if kind != "MODULE" and stack else None
             units.setdefault(name, (kind, first, index, host))
             if kind == "MODULE":
                 module = None
@@ -386,21 +388,40 @@ def routine_typing(source_text: str, routine: str, *, source_dir: Optional[Path]
         return RoutineTyping(unknown_because=(f"routine {routine} was not found in the text",))
     _kind, first, last, host = target
     unknown: list[str] = []
-    scope: list[str] = []
-    if host and host in units:
-        _k, hfirst, hlast, _h = units[host]
+    # Every host, outermost first: an internal procedure of a module procedure
+    # sees the module and the procedure. Each scope's IMPLICIT rules apply on
+    # top of its host's, and a name a scope declares hides its host's.
+    chain: list[str] = []
+    while host and host in units and host not in chain:
+        chain.insert(0, host)
+        host = units[host][3]
+    scopes: list[list[str]] = []
+    for name in chain:
+        _k, hfirst, hlast, _h = units[name]
         expanded = _expand(_specification_part(raw, hfirst, hlast), form, directories)
-        scope.extend(expanded.lines)
+        scopes.append(expanded.lines)
         unknown.extend(expanded.unknown)
+    scope = [line for lines in scopes for line in lines]
     own = _expand(_specification_part(raw, first, last), form, directories)
     unknown.extend(own.unknown)
 
     nonreal = set(_DEFAULT_INTEGER)
     single = set(_LETTERS) - set(_DEFAULT_INTEGER)
-    implicit_none = _apply_implicit(scope, nonreal, single)
-    implicit_none = _apply_implicit(own.lines, nonreal, single) or implicit_none
+    implicit_none = False
+    for lines in scopes:
+        if _apply_implicit(lines, nonreal, single):
+            implicit_none = True
+            nonreal, single = set(), set()
+    if _apply_implicit(own.lines, nonreal, single):
+        implicit_none = True
 
-    real_names, other_names = _declared(scope)
+    real_names: set[str] = set()
+    other_names: set[str] = set()
+    for lines in [*scopes, own.lines]:
+        inner_real, inner_other = _declared(lines)
+        hidden = inner_real | inner_other | _declared_single(lines)
+        real_names = (real_names - hidden) | inner_real
+        other_names = (other_names - hidden) | inner_other
     seen_modules: set[str] = set()
     pending = [m.group(1).upper() for s in [*scope, *own.lines] for m in [_USE_RE.match(s)] if m]
     while pending:
@@ -420,10 +441,10 @@ def routine_typing(source_text: str, routine: str, *, source_dir: Optional[Path]
         real_names |= module_real
         other_names |= module_other
         pending.extend(m.group(1).upper() for s in spec.lines for m in [_USE_RE.match(s)] if m)
-    include_real, include_other = _declared(own.lines)
-    real_names |= include_real
-    other_names |= include_other
-    single_names = _declared_single([*scope, *own.lines])
+    single_names: set[str] = set()
+    for lines in [*scopes, own.lines]:
+        inner_real, inner_other = _declared(lines)
+        single_names = (single_names - inner_real - inner_other) | _declared_single(lines)
     # A typed FUNCTION header types the function's name (its result).
     header = re.match(r"^\s*(?:(?:RECURSIVE|PURE|IMPURE|ELEMENTAL)\s+)*"
                       r"(?P<type>DOUBLE\s*PRECISION|REAL(?:\s*\*\s*\d+|\s*\([^)]*\))?"
