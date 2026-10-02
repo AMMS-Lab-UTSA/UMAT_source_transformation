@@ -395,6 +395,10 @@
   {
    "commit": "1b26182",
    "reason": "Integrity-review record (audit map entries); the selecting words name the fixes it maps, not a corrected behaviour."
+  },
+  {
+   "commit": "3c26b56",
+   "reason": "Test census update to the pass19/pass20 registry; 'refusal' names the classes being counted, not a corrected behaviour."
   }
  ],
  "changelog_fixed": {
