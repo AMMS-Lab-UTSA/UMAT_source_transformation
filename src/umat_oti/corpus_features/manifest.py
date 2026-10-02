@@ -2241,10 +2241,17 @@ def _ra_v2_cell(sid: str, feat: str, rs: list, roots: Mapping[str, str],
         "schema_in": RA_SCHEMA_V2,
         "evidence": to_locator(first.get("evidence") or "", roots),
         "evidence_all": [to_locator(r.get("evidence") or "", roots) for r in rs],
-        "problems": per, "reference": first.get("reference") or "fd",
+        "problems": per,
+        # The kind is what the schema enumerates; RA's prose stays beside it.
+        "reference": next((k for k in (first.get("reference_kind"), first.get("reference"))
+                           if k in ("original", "analytical", "fd")), "fd"),
+        "reference_text": first.get("reference_text") or first.get("reference") or "",
         "fd_steps": first.get("fd_steps") or [],
+        # One rule or none: a cell resting on two rules has no single
+        # meaning, and validate_cell refuses a verified cell without a rule.
         "tolerance_rule_id": (rules.pop() if len(rules) == 1 else
-                              "mixed:" + ",".join(sorted(map(str, rules)))),
+                              next(iter({r.get("tolerance_rule_id") for r in rs} - {None}), None)
+                              if not rules else None),
         "rtol": max((r.get("rtol") or 0.0) for r in verified) if verified else first.get("rtol"),
         "plateau_basis": ("fd_only" if verified and all(
             r.get("plateau_basis") == "fd_only" for r in verified) else

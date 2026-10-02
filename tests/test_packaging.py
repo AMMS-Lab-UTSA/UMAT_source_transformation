@@ -84,8 +84,11 @@ def test_built_wheel_contains_the_runtime_support_files(tmp_path):
     real_utils.f90" on first use. Every editable install masked it; the
     cross-repository CI of the companion product is what exposed it.
     """
+    # --no-build-isolation builds with the setuptools already installed, so the
+    # check needs no network; an isolated build fetched setuptools from PyPI
+    # and failed offline for a reason that had nothing to do with packaging.
     proc = subprocess.run(
-        [sys.executable, "-m", "pip", "wheel", "--no-deps",
+        [sys.executable, "-m", "pip", "wheel", "--no-deps", "--no-build-isolation",
          "-w", str(tmp_path), str(REPO_ROOT)],
         capture_output=True, text=True)
     assert proc.returncode == 0, (

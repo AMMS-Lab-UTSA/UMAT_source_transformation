@@ -1,6 +1,6 @@
 {
  "schema": "umat-oti/corpus-manifest/1",
- "generated": "2026-10-02T15:37:25+00:00",
+ "generated": "2026-10-02T15:39:28+00:00",
  "what_this_is": "one row per acquired corpus source plus one per discovered-but-not-acquired candidate; every pipeline stage and feature cell carries a status, a reason and an evidence locator. Skipped never counts as verified.",
  "roots": {
   "campaign": "/home/ammslab3/softwarex_work/corpus_campaign",
@@ -1229,9 +1229,10 @@
        "clamped_shear_2x2x2": "unsupported",
        "clamped_tension_2x2x2": "unsupported"
       },
-      "reference": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
+      "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": null,
       "rtol": null,
       "plateau_basis": null,
       "min_plateau_observed": null,
@@ -1274,9 +1275,10 @@
        "clamped_shear_2x2x2": "unsupported",
        "clamped_tension_2x2x2": "unsupported"
       },
-      "reference": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
+      "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": null,
       "rtol": null,
       "plateau_basis": null,
       "min_plateau_observed": null,
@@ -3881,6 +3883,7 @@
        "clamped_tension_2x2x2": "verified"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -3942,6 +3945,7 @@
        "clamped_tension_2x2x2": "verified"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -6133,6 +6137,7 @@
        "clamped_tension_2x2x2": "verified"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -6194,6 +6199,7 @@
        "clamped_tension_2x2x2": "verified"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -16639,6 +16645,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -16653,7 +16660,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -16699,6 +16706,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -16713,7 +16721,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -17531,6 +17539,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -17545,7 +17554,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -17591,6 +17600,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -17605,7 +17615,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -18037,6 +18047,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -18051,7 +18062,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -18097,6 +18108,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -18111,7 +18123,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -18929,6 +18941,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -18943,7 +18956,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -18989,6 +19002,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -19003,7 +19017,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -21747,6 +21761,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -21761,7 +21776,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -21807,6 +21822,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -21821,7 +21837,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -22253,6 +22269,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -22267,7 +22284,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -22313,6 +22330,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -22327,7 +22345,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -22759,6 +22777,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -22773,7 +22792,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -22819,6 +22838,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -22833,7 +22853,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -23265,6 +23285,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -23279,7 +23300,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -23325,6 +23346,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -23339,7 +23361,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -23771,6 +23793,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -23785,7 +23808,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -23831,6 +23854,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -23845,7 +23869,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -25047,6 +25071,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -25061,7 +25086,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -25107,6 +25132,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -25121,7 +25147,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -25939,6 +25965,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -25953,7 +25980,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -25999,6 +26026,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -26013,7 +26041,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -26830,6 +26858,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -26844,7 +26873,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -26890,6 +26919,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -26904,7 +26934,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -27336,6 +27366,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -27350,7 +27381,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -27396,6 +27427,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -27410,7 +27442,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -27842,6 +27874,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -27856,7 +27889,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -27902,6 +27935,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -27916,7 +27950,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -28348,6 +28382,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -28362,7 +28397,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -28408,6 +28443,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -28422,7 +28458,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -28854,6 +28890,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -28868,7 +28905,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -28914,6 +28951,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -28928,7 +28966,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -29360,6 +29398,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -29374,7 +29413,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -29420,6 +29459,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -29434,7 +29474,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -30252,6 +30292,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -30266,7 +30307,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -30312,6 +30353,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -30326,7 +30368,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -31143,6 +31185,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -31157,7 +31200,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -31203,6 +31246,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -31217,7 +31261,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -32411,6 +32455,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -32425,7 +32470,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -32471,6 +32516,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -32485,7 +32531,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -32917,6 +32963,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -32931,7 +32978,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -32977,6 +33024,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -32991,7 +33039,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -33423,6 +33471,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -33437,7 +33486,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -33483,6 +33532,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -33497,7 +33547,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -33929,6 +33979,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -33943,7 +33994,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -33989,6 +34040,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -34003,7 +34055,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -34435,6 +34487,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -34449,7 +34502,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -34495,6 +34548,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -34509,7 +34563,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -34941,6 +34995,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -34955,7 +35010,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -35001,6 +35056,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -35015,7 +35071,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -36217,6 +36273,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -36231,7 +36288,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -36277,6 +36334,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -36291,7 +36349,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -37109,6 +37167,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -37123,7 +37182,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -37169,6 +37228,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -37183,7 +37243,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -37991,6 +38051,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -38005,7 +38066,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -38052,6 +38113,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -38066,7 +38128,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -40013,6 +40075,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -40027,7 +40090,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -40073,6 +40136,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -40087,7 +40151,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -40905,6 +40969,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -40919,7 +40984,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -40965,6 +41030,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -40979,7 +41045,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -44099,6 +44165,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -44113,7 +44180,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -44159,6 +44226,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -44173,7 +44241,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -75596,6 +75664,7 @@
        "clamped_tension_2x2x2": "verified"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -75657,6 +75726,7 @@
        "clamped_tension_2x2x2": "verified"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -79323,9 +79393,10 @@
        "clamped_shear_2x2x2": "unsupported",
        "clamped_tension_2x2x2": "unsupported"
       },
-      "reference": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
+      "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": null,
       "rtol": null,
       "plateau_basis": null,
       "min_plateau_observed": null,
@@ -79368,9 +79439,10 @@
        "clamped_shear_2x2x2": "unsupported",
        "clamped_tension_2x2x2": "unsupported"
       },
-      "reference": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
+      "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": null,
       "rtol": null,
       "plateau_basis": null,
       "min_plateau_observed": null,
@@ -81973,9 +82045,10 @@
        "clamped_shear_2x2x2": "unsupported",
        "clamped_tension_2x2x2": "unsupported"
       },
-      "reference": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
+      "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": null,
       "rtol": null,
       "plateau_basis": null,
       "min_plateau_observed": null,
@@ -82018,9 +82091,10 @@
        "clamped_shear_2x2x2": "unsupported",
        "clamped_tension_2x2x2": "unsupported"
       },
-      "reference": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
+      "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": null,
       "rtol": null,
       "plateau_basis": null,
       "min_plateau_observed": null,
@@ -86766,9 +86840,10 @@
        "clamped_shear_2x2x2": "unsupported",
        "clamped_tension_2x2x2": "unsupported"
       },
-      "reference": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
+      "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": null,
       "rtol": null,
       "plateau_basis": null,
       "min_plateau_observed": null,
@@ -86811,9 +86886,10 @@
        "clamped_shear_2x2x2": "unsupported",
        "clamped_tension_2x2x2": "unsupported"
       },
-      "reference": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
+      "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": null,
       "rtol": null,
       "plateau_basis": null,
       "min_plateau_observed": null,
@@ -98721,6 +98797,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -98735,7 +98812,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -98781,6 +98858,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -98795,7 +98873,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -113816,6 +113894,7 @@
        "clamped_tension_2x2x2": "verified"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -113877,6 +113956,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -113891,7 +113971,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -121135,6 +121215,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -121149,7 +121230,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -121195,6 +121276,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -123065,6 +123147,7 @@
        "clamped_tension_2x2x2": "verified"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -123126,6 +123209,7 @@
        "clamped_tension_2x2x2": "verified"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -126465,6 +126549,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -126479,7 +126564,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -126525,6 +126610,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -126539,7 +126625,7 @@
        1e-06,
        1e-07
       ],
-      "tolerance_rule_id": "mixed:",
+      "tolerance_rule_id": "entrywise/1",
       "rtol": 1e-06,
       "plateau_basis": "fd_only",
       "min_plateau_observed": null,
@@ -128011,6 +128097,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of R assembled from the ORIGINAL UMAT (separately compiled, no OTI) at p+/-h, incoming state restored identically (h=0 replays bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
@@ -128073,6 +128160,7 @@
        "clamped_tension_2x2x2": "unsupported"
       },
       "reference": "fd",
+      "reference_text": "centred FD of complete nonlinear re-solves of the whole load history with the ORIGINAL UMAT at p+/-h (Newton to 1e-12 relative free residual; nominal re-run bit-exact); relative steps [0.1, 0.03, 0.01, 0.003, 0.001, 0.0003, 0.0001, 3e-05, 1e-05, 3e-06, 1e-06, 1e-07]; entrywise FD-only plateau >=3 steps, tolerance atol + rtol|D_e| + 2 u_e",
       "fd_steps": [
        0.1,
        0.03,
