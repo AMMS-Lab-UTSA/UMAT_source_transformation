@@ -1,6 +1,6 @@
 {
  "schema": "umat-oti/corpus-manifest/1",
- "generated": "2026-10-02T22:48:03+00:00",
+ "generated": "2026-10-02T23:56:20+00:00",
  "what_this_is": "one row per acquired corpus source plus one per discovered-but-not-acquired candidate; every pipeline stage and feature cell carries a status, a reason and an evidence locator. Skipped never counts as verified.",
  "roots": {
   "campaign": "$UMAT_OTI_WORKSPACE/corpus_campaign",
@@ -15,7 +15,7 @@
  "inputs": {
   "registry": {
    "path": "$UMAT_OTI_WORKSPACE/final-umat/paper_results/corpus/corpus_registry.json",
-   "sha256": "e49fa615f432fd9226b3bba012d38fba43a61b54634fe7e7fff51a1e456c9586"
+   "sha256": "a1977dfcbc3da97e2644230746f80ac2238c1fe2dc4bbf44dff4c7747910e115"
   },
   "triage": {
    "path": "$UMAT_OTI_WORKSPACE/final-umat/paper_results/discovery/discovery_triage.json",
@@ -2705,28 +2705,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: TENSOR_PRODUCT_22 appears as TENSOR_PRODUCT_22(...) on the stress path but is not declared anywhere in this source, which USEs PRECISION without defining it. The transformer cannot read that module, so it cannot tell whether TENSOR_PRODUCT_22 is an array to promote or a call into it.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: TENSOR_PRODUCT_22 appears as TENSOR_PRODUCT_22(...) on the stress path but is not declared anywhere in this source, which USEs PRECISION without defining it. The transformer cannot read that module, so it cannot tell whether TENSOR_PRODUCT_22 is an array to promote or a call into it.",
      "evidence": "corpus_run:transform_all_pass20.json#source=Batmanabcdefg__ParaFEM-lite/src/programs/dev/xx15/francesc/umat_DP_primal_CPPM_def.f90"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: TENSOR_PRODUCT_22 appears as TENSOR_PRODUCT_22(...) on the stress path but is not declared anywhere in this source, which USEs PRECISION without defining it. The transformer cannot read that module, so it cannot tell whether TENSOR_PRODUCT_22 is an array to promote or a call into it.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: TENSOR_PRODUCT_22 appears as TENSOR_PRODUCT_22(...) on the stress path but is not declared anywhere in this source, which USEs PRECISION without defining it. The transformer cannot read that module, so it cannot tell whether TENSOR_PRODUCT_22 is an array to promote or a call into it.",
      "evidence": "corpus_run:transform_all_pass20.json#source=Batmanabcdefg__ParaFEM-lite/src/programs/dev/xx15/francesc/umat_DP_primal_CPPM_def.f90",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: TENSOR_PRODUCT_22 appears as TENSOR_PRODUCT_22(...) on the stress path but is not declared anywhere in this source, which USEs PRECISION without defining it. The transformer cannot read that module, so it cannot tell whether TENSOR_PRODUCT_22 is an array to promote or a call into it.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: TENSOR_PRODUCT_22 appears as TENSOR_PRODUCT_22(...) on the stress path but is not declared anywhere in this source, which USEs PRECISION without defining it. The transformer cannot read that module, so it cannot tell whether TENSOR_PRODUCT_22 is an array to promote or a call into it.",
      "evidence": "corpus_run:transform_all_pass20.json#source=Batmanabcdefg__ParaFEM-lite/src/programs/dev/xx15/francesc/umat_DP_primal_CPPM_def.f90"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: TENSOR_PRODUCT_22 appears as TENSOR_PRODUCT_22(...) on the stress path but is not declared anywhere in this source, which USEs PRECISION without defining it. The transformer cannot read that module, so it cannot tell whether TENSOR_PRODUCT_22 is an array to promote or a call into it.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: TENSOR_PRODUCT_22 appears as TENSOR_PRODUCT_22(...) on the stress path but is not declared anywhere in this source, which USEs PRECISION without defining it. The transformer cannot read that module, so it cannot tell whether TENSOR_PRODUCT_22 is an array to promote or a call into it.",
      "evidence": "corpus_run:transform_all_pass20.json#source=Batmanabcdefg__ParaFEM-lite/src/programs/dev/xx15/francesc/umat_DP_primal_CPPM_def.f90"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: TENSOR_PRODUCT_22 appears as TENSOR_PRODUCT_22(...) on the stress path but is not declared anywhere in this source, which USEs PRECISION without defining it. The transformer cannot read that module, so it cannot tell whether TENSOR_PRODUCT_22 is an array to promote or a call into it.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: TENSOR_PRODUCT_22 appears as TENSOR_PRODUCT_22(...) on the stress path but is not declared anywhere in this source, which USEs PRECISION without defining it. The transformer cannot read that module, so it cannot tell whether TENSOR_PRODUCT_22 is an array to promote or a call into it.",
      "evidence": "corpus_run:transform_all_pass20.json#source=Batmanabcdefg__ParaFEM-lite/src/programs/dev/xx15/francesc/umat_DP_primal_CPPM_def.f90"
     }
    },
@@ -3144,28 +3144,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE PLASTICITY is declared as (DEEF, JACF, JACFINC, SIGMA1C, STATEV, LNSTRAINELAS, SIGMA, DETF, STATEVAR_NUM, IEL, IGAUSS, NONCON_FLAG, UMAT) -- 13 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE PLASTICITY is declared as (DEEF, JACF, JACFINC, SIGMA1C, STATEV, LNSTRAINELAS, SIGMA, DETF, STATEVAR_NUM, IEL, IGAUSS, NONCON_FLAG, UMAT) -- 13 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so ",
      "evidence": "corpus_run:transform_all_pass20.json#source=Batmanabcdefg__ParaFEM-lite/src/programs/dev/xx15/plasticity_xx15.F90"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE PLASTICITY is declared as (DEEF, JACF, JACFINC, SIGMA1C, STATEV, LNSTRAINELAS, SIGMA, DETF, STATEVAR_NUM, IEL, IGAUSS, NONCON_FLAG, UMAT) -- 13 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE PLASTICITY is declared as (DEEF, JACF, JACFINC, SIGMA1C, STATEV, LNSTRAINELAS, SIGMA, DETF, STATEVAR_NUM, IEL, IGAUSS, NONCON_FLAG, UMAT) -- 13 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so ",
      "evidence": "corpus_run:transform_all_pass20.json#source=Batmanabcdefg__ParaFEM-lite/src/programs/dev/xx15/plasticity_xx15.F90",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE PLASTICITY is declared as (DEEF, JACF, JACFINC, SIGMA1C, STATEV, LNSTRAINELAS, SIGMA, DETF, STATEVAR_NUM, IEL, IGAUSS, NONCON_FLAG, UMAT) -- 13 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE PLASTICITY is declared as (DEEF, JACF, JACFINC, SIGMA1C, STATEV, LNSTRAINELAS, SIGMA, DETF, STATEVAR_NUM, IEL, IGAUSS, NONCON_FLAG, UMAT) -- 13 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so ",
      "evidence": "corpus_run:transform_all_pass20.json#source=Batmanabcdefg__ParaFEM-lite/src/programs/dev/xx15/plasticity_xx15.F90"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE PLASTICITY is declared as (DEEF, JACF, JACFINC, SIGMA1C, STATEV, LNSTRAINELAS, SIGMA, DETF, STATEVAR_NUM, IEL, IGAUSS, NONCON_FLAG, UMAT) -- 13 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE PLASTICITY is declared as (DEEF, JACF, JACFINC, SIGMA1C, STATEV, LNSTRAINELAS, SIGMA, DETF, STATEVAR_NUM, IEL, IGAUSS, NONCON_FLAG, UMAT) -- 13 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so ",
      "evidence": "corpus_run:transform_all_pass20.json#source=Batmanabcdefg__ParaFEM-lite/src/programs/dev/xx15/plasticity_xx15.F90"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE PLASTICITY is declared as (DEEF, JACF, JACFINC, SIGMA1C, STATEV, LNSTRAINELAS, SIGMA, DETF, STATEVAR_NUM, IEL, IGAUSS, NONCON_FLAG, UMAT) -- 13 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE PLASTICITY is declared as (DEEF, JACF, JACFINC, SIGMA1C, STATEV, LNSTRAINELAS, SIGMA, DETF, STATEVAR_NUM, IEL, IGAUSS, NONCON_FLAG, UMAT) -- 13 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so ",
      "evidence": "corpus_run:transform_all_pass20.json#source=Batmanabcdefg__ParaFEM-lite/src/programs/dev/xx15/plasticity_xx15.F90"
     }
    },
@@ -11325,28 +11325,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=ElmerCSC__elmerfem/fem/src/modules/ElasticSolve.F90"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=ElmerCSC__elmerfem/fem/src/modules/ElasticSolve.F90",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=ElmerCSC__elmerfem/fem/src/modules/ElasticSolve.F90"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=ElmerCSC__elmerfem/fem/src/modules/ElasticSolve.F90"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=ElmerCSC__elmerfem/fem/src/modules/ElasticSolve.F90"
     }
    },
@@ -11822,9 +11822,7 @@
     "primal_stress_state": "unsupported"
    },
    "later_pass": null,
-   "data_quality": [
-    "triage_compiled_differs_from_registry"
-   ]
+   "data_quality": []
   },
   {
    "row_kind": "acquired",
@@ -12795,28 +12793,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE extraction at line 901). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=HIT-FSW-314__abaqus/abaqus-umat/uel/UEL9_VPDCL.for"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE extraction at line 901). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=HIT-FSW-314__abaqus/abaqus-umat/uel/UEL9_VPDCL.for",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE extraction at line 901). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=HIT-FSW-314__abaqus/abaqus-umat/uel/UEL9_VPDCL.for"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE extraction at line 901). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=HIT-FSW-314__abaqus/abaqus-umat/uel/UEL9_VPDCL.for"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE extraction at line 901). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=HIT-FSW-314__abaqus/abaqus-umat/uel/UEL9_VPDCL.for"
     }
    },
@@ -12930,7 +12928,9 @@
     "primal_stress_state": "not_applicable"
    },
    "later_pass": null,
-   "data_quality": []
+   "data_quality": [
+    "triage_compiled_differs_from_registry"
+   ]
   },
   {
    "row_kind": "acquired",
@@ -153129,9 +153129,7 @@
     "primal_stress_state": "unsupported"
    },
    "later_pass": null,
-   "data_quality": [
-    "triage_compiled_differs_from_registry"
-   ]
+   "data_quality": []
   },
   {
    "row_kind": "acquired",
@@ -175218,28 +175216,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (SISO_ARR, C4ISO_ARR, F_ARR, E_ARR) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (SISO_ARR, C4ISO_ARR, F_ARR, E_ARR) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What ",
      "evidence": "corpus_run:transform_all_pass20.json#source=adtzlr__ttb/docs/examples/script_umat.f"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (SISO_ARR, C4ISO_ARR, F_ARR, E_ARR) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (SISO_ARR, C4ISO_ARR, F_ARR, E_ARR) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What ",
      "evidence": "corpus_run:transform_all_pass20.json#source=adtzlr__ttb/docs/examples/script_umat.f",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (SISO_ARR, C4ISO_ARR, F_ARR, E_ARR) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (SISO_ARR, C4ISO_ARR, F_ARR, E_ARR) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What ",
      "evidence": "corpus_run:transform_all_pass20.json#source=adtzlr__ttb/docs/examples/script_umat.f"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (SISO_ARR, C4ISO_ARR, F_ARR, E_ARR) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (SISO_ARR, C4ISO_ARR, F_ARR, E_ARR) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What ",
      "evidence": "corpus_run:transform_all_pass20.json#source=adtzlr__ttb/docs/examples/script_umat.f"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (SISO_ARR, C4ISO_ARR, F_ARR, E_ARR) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (SISO_ARR, C4ISO_ARR, F_ARR, E_ARR) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What ",
      "evidence": "corpus_run:transform_all_pass20.json#source=adtzlr__ttb/docs/examples/script_umat.f"
     }
    },
@@ -177543,7 +177541,6 @@
    },
    "later_pass": null,
    "data_quality": [
-    "triage_compiled_differs_from_registry",
     "triage_ntens_hint_differs_from_registry"
    ]
   },
@@ -181764,28 +181761,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=brizzer__elmerfem_piezo/fem/src/modules/ElasticSolve.F90"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=brizzer__elmerfem_piezo/fem/src/modules/ElasticSolve.F90",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=brizzer__elmerfem_piezo/fem/src/modules/ElasticSolve.F90"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=brizzer__elmerfem_piezo/fem/src/modules/ElasticSolve.F90"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=brizzer__elmerfem_piezo/fem/src/modules/ElasticSolve.F90"
     }
    },
@@ -183388,28 +183385,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=core-marine-dev__elmerfem/fem/src/modules/ElasticSolve.F90"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=core-marine-dev__elmerfem/fem/src/modules/ElasticSolve.F90",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=core-marine-dev__elmerfem/fem/src/modules/ElasticSolve.F90"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=core-marine-dev__elmerfem/fem/src/modules/ElasticSolve.F90"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE ELASTICSOLVER_INIT0 is declared as (MODEL, SOLVER, DT, TRANSIENT) -- 4 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write i",
      "evidence": "corpus_run:transform_all_pass20.json#source=core-marine-dev__elmerfem/fem/src/modules/ElasticSolve.F90"
     }
    },
@@ -199686,28 +199683,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 478, first stress expression at line 511, last stress update at line 758, STRESS extraction at line 847, DDSDDE extraction at line 856). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 478, first stress expression at line 511, last stress update at line 758, STRESS extraction at line 847, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__ABAQUS-US/UELS/UEL8_VPDCL.for"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 478, first stress expression at line 511, last stress update at line 758, STRESS extraction at line 847, DDSDDE extraction at line 856). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 478, first stress expression at line 511, last stress update at line 758, STRESS extraction at line 847, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__ABAQUS-US/UELS/UEL8_VPDCL.for",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 478, first stress expression at line 511, last stress update at line 758, STRESS extraction at line 847, DDSDDE extraction at line 856). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 478, first stress expression at line 511, last stress update at line 758, STRESS extraction at line 847, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__ABAQUS-US/UELS/UEL8_VPDCL.for"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 478, first stress expression at line 511, last stress update at line 758, STRESS extraction at line 847, DDSDDE extraction at line 856). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 478, first stress expression at line 511, last stress update at line 758, STRESS extraction at line 847, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__ABAQUS-US/UELS/UEL8_VPDCL.for"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 478, first stress expression at line 511, last stress update at line 758, STRESS extraction at line 847, DDSDDE extraction at line 856). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 478, first stress expression at line 511, last stress update at line 758, STRESS extraction at line 847, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__ABAQUS-US/UELS/UEL8_VPDCL.for"
     }
    },
@@ -199821,7 +199818,9 @@
     "primal_stress_state": "not_applicable"
    },
    "later_pass": null,
-   "data_quality": []
+   "data_quality": [
+    "triage_compiled_differs_from_registry"
+   ]
   },
   {
    "row_kind": "acquired",
@@ -204088,28 +204087,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE extraction at line 901). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__ABAQUS-US/UELS/UEL9_VPDCL.for"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE extraction at line 901). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__ABAQUS-US/UELS/UEL9_VPDCL.for",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE extraction at line 901). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__ABAQUS-US/UELS/UEL9_VPDCL.for"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE extraction at line 901). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__ABAQUS-US/UELS/UEL9_VPDCL.for"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE extraction at line 901). What to do: keep that DDSDDE assignment as a keep-real setup region, or rewrite the stress update so it does not go t",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: no_ddsdde_read_after_disabled_assignment. Meaning: the source reads DDSDDE after its own assignments to it were disabled (for example STRESS = STRESS + DDSDDE*DSTRAN), so it would read zeros (transformed file: seed at line 522, first stress expression at line 555, last stress update at line 802, STRESS extraction at line 892, DDSDDE ext",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__ABAQUS-US/UELS/UEL9_VPDCL.for"
     }
    },
@@ -204223,7 +204222,9 @@
     "primal_stress_state": "not_applicable"
    },
    "later_pass": null,
-   "data_quality": []
+   "data_quality": [
+    "triage_compiled_differs_from_registry"
+   ]
   },
   {
    "row_kind": "acquired",
@@ -204805,28 +204806,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__DRM-FEAP/matutil.for"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__DRM-FEAP/matutil.for",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__DRM-FEAP/matutil.for"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__DRM-FEAP/matutil.for"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__DRM-FEAP/matutil.for"
     }
    },
@@ -205154,28 +205155,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__WAVES/SOURCE/matutil.for"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__WAVES/SOURCE/matutil.for",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__WAVES/SOURCE/matutil.for"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__WAVES/SOURCE/matutil.for"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: missing_stress_update_region; missing_stress_update_regions -- Select the executable DSTRAN/state/input to STRESS update lines. What to do: set transformation_anchors.stress_update.regions in the contract.",
      "evidence": "corpus_run:transform_all_pass20.json#source=jgomezc1__WAVES/SOURCE/matutil.for"
     }
    },
@@ -210311,9 +210312,7 @@
     "primal_stress_state": "unsupported"
    },
    "later_pass": null,
-   "data_quality": [
-    "triage_compiled_differs_from_registry"
-   ]
+   "data_quality": []
   },
   {
    "row_kind": "acquired",
@@ -224825,9 +224824,7 @@
     "primal_stress_state": "unsupported"
    },
    "later_pass": null,
-   "data_quality": [
-    "triage_compiled_differs_from_registry"
-   ]
+   "data_quality": []
   },
   {
    "row_kind": "acquired",
@@ -230629,9 +230626,7 @@
     "primal_stress_state": "unsupported"
    },
    "later_pass": null,
-   "data_quality": [
-    "triage_compiled_differs_from_registry"
-   ]
+   "data_quality": []
   },
   {
    "row_kind": "acquired",
@@ -233336,28 +233331,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: B is declared with a deferred shape (:, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: B is declared with a deferred shape (:, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.",
      "evidence": "corpus_run:transform_all_pass20.json#source=mrkearden__abaqus_umat/PlasticSolve.F90"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: B is declared with a deferred shape (:, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: B is declared with a deferred shape (:, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.",
      "evidence": "corpus_run:transform_all_pass20.json#source=mrkearden__abaqus_umat/PlasticSolve.F90",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: B is declared with a deferred shape (:, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: B is declared with a deferred shape (:, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.",
      "evidence": "corpus_run:transform_all_pass20.json#source=mrkearden__abaqus_umat/PlasticSolve.F90"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: B is declared with a deferred shape (:, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: B is declared with a deferred shape (:, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.",
      "evidence": "corpus_run:transform_all_pass20.json#source=mrkearden__abaqus_umat/PlasticSolve.F90"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: B is declared with a deferred shape (:, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: B is declared with a deferred shape (:, :) and is read on the stress path. Its extent is fixed by an ALLOCATE at run time whose bound this routine cannot evaluate where declarations are written, so there is no bound to declare a shadow with and none to count an initialisation loop to.",
      "evidence": "corpus_run:transform_all_pass20.json#source=mrkearden__abaqus_umat/PlasticSolve.F90"
     }
    },
@@ -237036,28 +237031,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: Semantic check failed: state_shadow_carries_the_state. Meaning: STATEV_OTI is used but never loaded from STATEV nor stored back, so the routine would run from zero state and update nothing (transformed file: seed at line 264, first stress expression at line 270, last stress update at line 440, STRESS extraction at line 443, DDSDDE extraction at line 448). What to do: check that STATEV is read and written inside the selected stress regions.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: state_shadow_carries_the_state. Meaning: STATEV_OTI is used but never loaded from STATEV nor stored back, so the routine would run from zero state and update nothing (transformed file: seed at line 264, first stress expression at line 270, last stress update at line 440, STRESS extraction at line 443, DDSDDE extraction at line 448). Wha",
      "evidence": "corpus_run:transform_all_pass20.json#source=rhdodds__warp3d/src/user_routines_umat.f"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: state_shadow_carries_the_state. Meaning: STATEV_OTI is used but never loaded from STATEV nor stored back, so the routine would run from zero state and update nothing (transformed file: seed at line 264, first stress expression at line 270, last stress update at line 440, STRESS extraction at line 443, DDSDDE extraction at line 448). What to do: check that STATEV is read and written inside the selected stress regions.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: state_shadow_carries_the_state. Meaning: STATEV_OTI is used but never loaded from STATEV nor stored back, so the routine would run from zero state and update nothing (transformed file: seed at line 264, first stress expression at line 270, last stress update at line 440, STRESS extraction at line 443, DDSDDE extraction at line 448). Wha",
      "evidence": "corpus_run:transform_all_pass20.json#source=rhdodds__warp3d/src/user_routines_umat.f",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: state_shadow_carries_the_state. Meaning: STATEV_OTI is used but never loaded from STATEV nor stored back, so the routine would run from zero state and update nothing (transformed file: seed at line 264, first stress expression at line 270, last stress update at line 440, STRESS extraction at line 443, DDSDDE extraction at line 448). What to do: check that STATEV is read and written inside the selected stress regions.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: state_shadow_carries_the_state. Meaning: STATEV_OTI is used but never loaded from STATEV nor stored back, so the routine would run from zero state and update nothing (transformed file: seed at line 264, first stress expression at line 270, last stress update at line 440, STRESS extraction at line 443, DDSDDE extraction at line 448). Wha",
      "evidence": "corpus_run:transform_all_pass20.json#source=rhdodds__warp3d/src/user_routines_umat.f"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: state_shadow_carries_the_state. Meaning: STATEV_OTI is used but never loaded from STATEV nor stored back, so the routine would run from zero state and update nothing (transformed file: seed at line 264, first stress expression at line 270, last stress update at line 440, STRESS extraction at line 443, DDSDDE extraction at line 448). What to do: check that STATEV is read and written inside the selected stress regions.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: state_shadow_carries_the_state. Meaning: STATEV_OTI is used but never loaded from STATEV nor stored back, so the routine would run from zero state and update nothing (transformed file: seed at line 264, first stress expression at line 270, last stress update at line 440, STRESS extraction at line 443, DDSDDE extraction at line 448). Wha",
      "evidence": "corpus_run:transform_all_pass20.json#source=rhdodds__warp3d/src/user_routines_umat.f"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: Semantic check failed: state_shadow_carries_the_state. Meaning: STATEV_OTI is used but never loaded from STATEV nor stored back, so the routine would run from zero state and update nothing (transformed file: seed at line 264, first stress expression at line 270, last stress update at line 440, STRESS extraction at line 443, DDSDDE extraction at line 448). What to do: check that STATEV is read and written inside the selected stress regions.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: Semantic check failed: state_shadow_carries_the_state. Meaning: STATEV_OTI is used but never loaded from STATEV nor stored back, so the routine would run from zero state and update nothing (transformed file: seed at line 264, first stress expression at line 270, last stress update at line 440, STRESS extraction at line 443, DDSDDE extraction at line 448). Wha",
      "evidence": "corpus_run:transform_all_pass20.json#source=rhdodds__warp3d/src/user_routines_umat.f"
     }
    },
@@ -239672,28 +239667,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: ValueError: This source declares UMAT in an INTERFACE block at lines 7-11 and defines no program unit of its own. An interface body is a signature, not a body: the UMAT it names is compiled from another file, and there is nothing here to transform. Point the transform at the file that defines UMAT.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: ValueError: This source declares UMAT in an INTERFACE block at lines 7-11 and defines no program unit of its own. An interface body is a signature, not a body: the UMAT it names is compiled from another file, and there is nothing here to transform. Point the transform at the file that defines UMAT.",
      "evidence": "corpus_run:transform_all_pass20.json#source=sas229__geomat/tests/umat_integration.f90"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: ValueError: This source declares UMAT in an INTERFACE block at lines 7-11 and defines no program unit of its own. An interface body is a signature, not a body: the UMAT it names is compiled from another file, and there is nothing here to transform. Point the transform at the file that defines UMAT.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: ValueError: This source declares UMAT in an INTERFACE block at lines 7-11 and defines no program unit of its own. An interface body is a signature, not a body: the UMAT it names is compiled from another file, and there is nothing here to transform. Point the transform at the file that defines UMAT.",
      "evidence": "corpus_run:transform_all_pass20.json#source=sas229__geomat/tests/umat_integration.f90",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: ValueError: This source declares UMAT in an INTERFACE block at lines 7-11 and defines no program unit of its own. An interface body is a signature, not a body: the UMAT it names is compiled from another file, and there is nothing here to transform. Point the transform at the file that defines UMAT.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: ValueError: This source declares UMAT in an INTERFACE block at lines 7-11 and defines no program unit of its own. An interface body is a signature, not a body: the UMAT it names is compiled from another file, and there is nothing here to transform. Point the transform at the file that defines UMAT.",
      "evidence": "corpus_run:transform_all_pass20.json#source=sas229__geomat/tests/umat_integration.f90"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: ValueError: This source declares UMAT in an INTERFACE block at lines 7-11 and defines no program unit of its own. An interface body is a signature, not a body: the UMAT it names is compiled from another file, and there is nothing here to transform. Point the transform at the file that defines UMAT.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: ValueError: This source declares UMAT in an INTERFACE block at lines 7-11 and defines no program unit of its own. An interface body is a signature, not a body: the UMAT it names is compiled from another file, and there is nothing here to transform. Point the transform at the file that defines UMAT.",
      "evidence": "corpus_run:transform_all_pass20.json#source=sas229__geomat/tests/umat_integration.f90"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: ValueError: This source declares UMAT in an INTERFACE block at lines 7-11 and defines no program unit of its own. An interface body is a signature, not a body: the UMAT it names is compiled from another file, and there is nothing here to transform. Point the transform at the file that defines UMAT.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: ValueError: This source declares UMAT in an INTERFACE block at lines 7-11 and defines no program unit of its own. An interface body is a signature, not a body: the UMAT it names is compiled from another file, and there is nothing here to transform. Point the transform at the file that defines UMAT.",
      "evidence": "corpus_run:transform_all_pass20.json#source=sas229__geomat/tests/umat_integration.f90"
     }
    },
@@ -253774,28 +253769,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE RUN_ALL_UMAT_TESTS is declared as () -- 0 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE RUN_ALL_UMAT_TESTS is declared as () -- 0 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.s",
      "evidence": "corpus_run:transform_all_pass20.json#source=zning8251-jpg__ufc-fem-kernel/tests/TEST_PH_Mat_UMAT.f90"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE RUN_ALL_UMAT_TESTS is declared as () -- 0 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE RUN_ALL_UMAT_TESTS is declared as () -- 0 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.s",
      "evidence": "corpus_run:transform_all_pass20.json#source=zning8251-jpg__ufc-fem-kernel/tests/TEST_PH_Mat_UMAT.f90",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE RUN_ALL_UMAT_TESTS is declared as () -- 0 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE RUN_ALL_UMAT_TESTS is declared as () -- 0 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.s",
      "evidence": "corpus_run:transform_all_pass20.json#source=zning8251-jpg__ufc-fem-kernel/tests/TEST_PH_Mat_UMAT.f90"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE RUN_ALL_UMAT_TESTS is declared as () -- 0 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE RUN_ALL_UMAT_TESTS is declared as () -- 0 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.s",
      "evidence": "corpus_run:transform_all_pass20.json#source=zning8251-jpg__ufc-fem-kernel/tests/TEST_PH_Mat_UMAT.f90"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE RUN_ALL_UMAT_TESTS is declared as () -- 0 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE RUN_ALL_UMAT_TESTS is declared as () -- 0 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.s",
      "evidence": "corpus_run:transform_all_pass20.json#source=zning8251-jpg__ufc-fem-kernel/tests/TEST_PH_Mat_UMAT.f90"
     }
    },
@@ -254186,28 +254181,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE CMD_USERELEMENT is declared as (CMD, CTX, STATUS) -- 3 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE CMD_USERELEMENT is declared as (CMD, CTX, STATUS) -- 3 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do:",
      "evidence": "corpus_run:transform_all_pass20.json#source=zning8251-jpg__ufc-fem-kernel/ufc_core/L6_AP/Input/Script/AP_InpScript_User.f90"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE CMD_USERELEMENT is declared as (CMD, CTX, STATUS) -- 3 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE CMD_USERELEMENT is declared as (CMD, CTX, STATUS) -- 3 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do:",
      "evidence": "corpus_run:transform_all_pass20.json#source=zning8251-jpg__ufc-fem-kernel/ufc_core/L6_AP/Input/Script/AP_InpScript_User.f90",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE CMD_USERELEMENT is declared as (CMD, CTX, STATUS) -- 3 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE CMD_USERELEMENT is declared as (CMD, CTX, STATUS) -- 3 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do:",
      "evidence": "corpus_run:transform_all_pass20.json#source=zning8251-jpg__ufc-fem-kernel/ufc_core/L6_AP/Input/Script/AP_InpScript_User.f90"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE CMD_USERELEMENT is declared as (CMD, CTX, STATUS) -- 3 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE CMD_USERELEMENT is declared as (CMD, CTX, STATUS) -- 3 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do:",
      "evidence": "corpus_run:transform_all_pass20.json#source=zning8251-jpg__ufc-fem-kernel/ufc_core/L6_AP/Input/Script/AP_InpScript_User.f90"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE CMD_USERELEMENT is declared as (CMD, CTX, STATUS) -- 3 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE CMD_USERELEMENT is declared as (CMD, CTX, STATUS) -- 3 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do:",
      "evidence": "corpus_run:transform_all_pass20.json#source=zning8251-jpg__ufc-fem-kernel/ufc_core/L6_AP/Input/Script/AP_InpScript_User.f90"
     }
    },
@@ -254543,28 +254538,28 @@
     },
     "transformed": {
      "status": "not_applicable",
-     "reason": "not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (N, U) -- 2 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (N, U) -- 2 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_um",
      "evidence": "corpus_run:transform_all_pass20.json#source=zorkzou__UniMoVib/src/math.f90"
     },
     "compiled": {
      "status": "not_applicable",
-     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (N, U) -- 2 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (N, U) -- 2 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_um",
      "evidence": "corpus_run:transform_all_pass20.json#source=zorkzou__UniMoVib/src/math.f90",
      "layouts": {}
     },
     "original_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (N, U) -- 2 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (N, U) -- 2 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_um",
      "evidence": "corpus_run:transform_all_pass20.json#source=zorkzou__UniMoVib/src/math.f90"
     },
     "oti_executed": {
      "status": "not_applicable",
-     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (N, U) -- 2 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (N, U) -- 2 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_um",
      "evidence": "corpus_run:transform_all_pass20.json#source=zorkzou__UniMoVib/src/math.f90"
     },
     "primal_agreed": {
      "status": "not_applicable",
-     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (N, U) -- 2 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_umat_name in the contract.",
+     "reason": "upstream stage `oti_executed` is not_applicable: upstream stage `original_executed` is not_applicable: upstream stage `compiled` is not_applicable: upstream stage `transformed` is not_applicable: not_a_umat: not a UMAT by the file's own entry point (see its classification), which a transform refusal cannot decide; the transform also refused it: anchors not located: selected_routine_is_not_an_abaqus_umat -- SUBROUTINE UMAT is declared as (N, U) -- 2 arguments, where Abaqus passes a UMAT 37 -- and receives neither STRESS nor DDSDDE. That is not the argument list Abaqus calls a UMAT with, so this routine has no stress or tangent output for the transform to write into. What to do: set source.selected_um",
      "evidence": "corpus_run:transform_all_pass20.json#source=zorkzou__UniMoVib/src/math.f90"
     }
    },
@@ -260571,7 +260566,7 @@
    "licence_file_text_differs_from_registry_spdx": 1,
    "registry_compiled_false_but_abaqus_jobs_ran": 1,
    "source_indexes_props_beyond_deck_count": 5,
-   "triage_compiled_differs_from_registry": 71,
+   "triage_compiled_differs_from_registry": 68,
    "triage_kinematics_differs_from_registry": 13,
    "triage_ntens_hint_differs_from_registry": 21
   },
@@ -260580,8 +260575,8 @@
     "AlexSTA1993__numerical_geolab/numerical_geolab_materials/UMATERIALS/CAUCHY3D-DP/hyplast_Cauchy3D-DP.for",
     "AnargyrosKarakalas__UMAT_3D/UMAT_3D_Coupled_ML_IP_Original.for",
     "CLD-Rostock__Christensen_FailureIndex/Subroutine/christensen_subroutine.for",
-    "Farid-Alisafaei__Implant-Fibrotic-Capsule/CellMatrixModel_20241204.for",
-    "GuGuaTT__STEEL-3dPointClouds/AutoGen/ALLcombinedSolid_CMN.for"
+    "GuGuaTT__STEEL-3dPointClouds/AutoGen/ALLcombinedSolid_CMN.for",
+    "GuGuaTT__STEEL-3dPointClouds/AutoGen/ALLcombinedSolid_DMN.for"
    ],
    "triage_ntens_hint_differs_from_registry": [
     "BristolCompositesInstitute__abaci/example/src/umat.f",

@@ -1176,7 +1176,12 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
         outcome = str(row.get("outcome") or "")
         record.attempted = True
         record.transformed = outcome in ("transformed", "cached")
-        record.compiled = row.get("compiled")
+        # The batch row's `compiled` is about whatever Fortran the attempt
+        # emitted, and an attempt the semantic checks refused can still have
+        # emitted Fortran that compiles. The registry's `compiled` is a stage
+        # after `transformed`; a source with no accepted transform has no
+        # transformed file to have compiled.
+        record.compiled = row.get("compiled") if record.transformed else False
         if not record.transformed:
             record.reason = str(row.get("reason") or "")[:500]
     for row in payload.get("failures", []):
@@ -1366,6 +1371,17 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             continue
         if record.is_umat is False:
             record.terminal_state, record.kind = "not_a_umat", "external"
+            # The verdict was read from the file (classification_basis), so
+            # the reason must not read as though a transform refusal decided
+            # it. The refusal is kept, named as what it is.
+            if record.reason and record.attempted and not record.transformed:
+                record.reason = (
+                    "not a UMAT by the file's own entry point (see its "
+                    "classification), which a transform refusal cannot "
+                    f"decide; the transform also refused it: {record.reason}"
+                )[:500]
+            elif not record.reason:
+                record.reason = record.classification_basis[:500]
             continue
         if record.transformed or not record.attempted:
             # It converted and the batch has not reached it, or no batch
