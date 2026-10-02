@@ -571,10 +571,6 @@
    "verdict": "justified",
    "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
   },
-  "skip:tests/test_complex_oti_transform.py:<module>:mark.skipif:836fb5d3": {
-   "verdict": "violation",
-   "reason": "The skip condition greps the transform's source for 'complex_support' and 'retype_lifted_complex' (a patch having been applied), not for a missing external resource. The patch is applied in faeec2b so the condition is false today and the test runs, but it would hide the end-to-end complex-step check silently if those names were renamed. It should be removed."
-  },
   "skip:tests/test_corpus_features_hidden_state.py:results:call:skip:fef9bf4f": {
    "verdict": "justified",
    "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
@@ -606,10 +602,6 @@
   "skip:tests/test_corpus_features_zero_scale.py:injected:call:skip:2dacdca9": {
    "verdict": "justified",
    "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
-  },
-  "skip:tests/test_corpus_manifest_artifact.py:test_the_manifest_validates_against_its_schema:call:importorskip:434f98d1": {
-   "verdict": "violation",
-   "reason": "jsonschema is not in the [test] extra of pyproject.toml, which CI installs, so on a clean CI install test_the_manifest_validates_against_its_schema is skipped and the published manifest is never validated against its schema (the defect f7a8194 fixed). The dependency should be declared and the skip removed."
   },
   "skip:tests/test_corpus_manifest_vera_probes.py:<module>:mark.skipif:52b3511f": {
    "verdict": "justified",
@@ -1002,6 +994,18 @@
   "mock:tests/test_transform_all_finds_published_companions.py:test_a_callee_nobody_publishes_keeps_its_refusal:monkeypatch.setattr:df004d73": {
    "verdict": "justified",
    "reason": "Points DEFAULT_CACHE at a temporary directory holding the sibling file under test; no function is replaced."
+  },
+  "skip:Makefile:ci-line:f2a585ab": {
+   "verdict": "justified",
+   "reason": "A comment stating the opposite of a skip: a missing gfortran fails the case-ci target."
+  },
+  "broad_except:tools/corpus_cases.py:_check_one:except Exception:2cc1fa5c": {
+   "verdict": "justified",
+   "reason": "A case that crashes is reported as ok=False with kind 'crash', the exception and its traceback; the tier fails. Nothing is counted as passing."
+  },
+  "broad_except:tools/corpus_cases.py:toolchain.first_line:except Exception:18038406": {
+   "verdict": "justified",
+   "reason": "Recording a tool's version string for provenance; an unavailable tool is recorded as None, and no verdict depends on it."
   }
  }
 }
