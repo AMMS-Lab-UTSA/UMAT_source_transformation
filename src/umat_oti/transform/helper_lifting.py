@@ -181,6 +181,21 @@ _INTRINSIC_NAMES = {
     "TAN",
     "TANH",
 }
+#: Intrinsics whose result is not a real number of the argument's value --
+#: LOGICAL, INTEGER or CHARACTER inquiries about an argument's presence, extent
+#: or kind. Under ``IMPLICIT TYPE(ONUMM6N1) (A-H,O-Z)`` a bare ``PRESENT`` or
+#: ``SIZE`` reads as an implicitly hypercomplex name, and the condition wrapper
+#: wrote ``IF (REAL(present(Dinv)))``, which does not compile (MohrCoulombAbaqus).
+#: Their arguments are not values either: ``PRESENT(REAL(Dinv))`` is no more
+#: Fortran than the first, because PRESENT asks about the dummy itself.
+_INQUIRY_INTRINSICS = frozenset({
+    "PRESENT", "ALLOCATED", "ASSOCIATED", "SIZE", "SHAPE", "LBOUND", "UBOUND",
+    "KIND", "LEN", "LEN_TRIM", "STORAGE_SIZE", "IS_CONTIGUOUS", "RANK",
+    "SELECTED_REAL_KIND", "SELECTED_INT_KIND", "DIGITS", "EPSILON", "HUGE",
+    "TINY", "PRECISION", "RANGE", "RADIX", "MAXEXPONENT", "MINEXPONENT",
+})
+_INQUIRY_CALL_RE = re.compile(
+    r"\b(?:" + "|".join(sorted(_INQUIRY_INTRINSICS)) + r")\s*\(", re.IGNORECASE)
 _IMPLICIT_INTEGER_FIRST_LETTERS = frozenset("IJKLMN")
 
 
@@ -524,6 +539,8 @@ def lift_helper_set_source(
         raise HelperLiftingError(f"Helper lifting could not find parsed routines for {missing}.")
     lifted_set = set(ordered)
     lifted_functions = set(ordered) & set(function_names(parsed))
+    _refuse_calls_that_need_an_explicit_interface(parsed, routines, lifted_set)
+    host_constants = host_constants_for_internal_procedures(parsed)
     body = "\n\n".join(
         _lift_helper_routine(
             routines[name],
@@ -536,6 +553,7 @@ def lift_helper_set_source(
             lifted_function_names=lifted_functions,
             helper_output_copies=(helper_output_copies or {}).get(name, []),
             helper_output_surfaces=(helper_output_surfaces or {}).get(name, []),
+            host_constants=host_constants.get(name, ()),
         )
         for name in ordered
     )
@@ -543,7 +561,106 @@ def lift_helper_set_source(
     # DOUBLE COMPLEX declarations become the complex OTI type (oti_complex);
     # unchanged, byte for byte, for a source that declares nothing complex.
     body = retype_lifted_complex(body, type_name, source_text=parsed.text, form=parsed.form)
+    body = _nest_internal_procedures(body, internal_procedure_hosts(parsed))
     return LiftedHelperSet(helper_names=ordered, source=body + ("\n" if body else ""))
+
+
+def _refuse_calls_that_need_an_explicit_interface(
+        parsed: ParsedFortranSource, routines: dict[str, ParsedSubroutine],
+        lifted: set[str]) -> None:
+    """Refuse a call that omits an OPTIONAL argument of a lifted helper.
+
+    The lifted helpers are external subprograms called through an implicit
+    interface (an internal procedure is the exception; see
+    _nest_internal_procedures). Omitting an optional argument, or passing one by
+    keyword, needs an explicit interface; without it the callee's PRESENT() reads
+    whatever is on the stack. The source may well have provided one -- an
+    INTERFACE block for ``update`` -- but it describes the REAL routine, not
+    UPDATE_OTI, so the transformed call has none. Refused, because the result
+    compiles and then crashes or returns a wrong number.
+    """
+    hosts = internal_procedure_hosts(parsed)
+    optional = {name for name in lifted if name in routines and name not in hosts and any(
+        "optional" in (attribute.strip().lower() for attribute in declaration.attributes)
+        for declaration in routines[name].declarations)}
+    if not optional:
+        return
+    pattern = re.compile(r"\bCALL\s+(" + "|".join(sorted(optional)) + r")\s*\((.*)\)\s*$",
+                         re.IGNORECASE)
+    for line in parsed.logical_lines:
+        match = pattern.search(mask_character_literals(line.text)[0])
+        if not match:
+            continue
+        name = match.group(1).upper()
+        actuals = [item for item in split_top_level(match.group(2)) if item.strip()]
+        by_keyword = any(re.match(r"^\s*[A-Z_]\w*\s*=(?!=)", item, re.IGNORECASE) for item in actuals)
+        if len(actuals) < len(routines[name].args) or by_keyword:
+            raise HelperLiftingError(
+                f"{name} has OPTIONAL dummy arguments and is called at line "
+                f"{line.line_numbers[0]} with {len(actuals)} of its "
+                f"{len(routines[name].args)} arguments"
+                f"{' (some by keyword)' if by_keyword else ''}. That needs an "
+                f"explicit interface, and the lifted {name}_OTI is an external "
+                "subprogram with none (an INTERFACE block in the source describes "
+                f"the REAL {name}). Not supported. What to do: pass every argument "
+                f"of {name} positionally in that call.")
+
+
+def internal_procedure_hosts(parsed: ParsedFortranSource) -> dict[str, str]:
+    """Internal procedure name -> the routine that CONTAINS it."""
+    source_lines = parsed.text.splitlines()
+    units = routines_by_name(parsed)
+    hosts: dict[str, str] = {}
+    for host in parsed.subroutines:
+        raw = _routine_source_lines(source_lines, host)
+        contains_at = next((index for index, line in enumerate(raw[1:-1], start=1)
+                            if _CONTAINS_RE.match(_statement_text(line, parsed.form))), None)
+        if contains_at is None:
+            continue
+        first, last = host.lines[0].line_numbers[0], host.lines[-1].line_numbers[-1]
+        for name, unit in units.items():
+            start = unit.lines[0].line_numbers[0] if unit.lines else 0
+            if name != host.upper_name and first + contains_at < start <= last:
+                hosts[name] = host.upper_name
+    return hosts
+
+
+def _nest_internal_procedures(body: str, hosts: dict[str, str]) -> str:
+    """Put each lifted internal procedure back inside its lifted host.
+
+    The host was lifted without its CONTAINS section and each internal
+    procedure on its own (see _without_internal_procedures). As an external
+    subprogram it has only an implicit interface at the call, which is not
+    enough for an assumed-shape dummy (GuGuaTT's RESID_NPT(npt_i, geom_params)
+    with geom_params(:): "Explicit interface required"). Back after CONTAINS
+    in the host, the call has the interface it had in the source.
+    """
+    if not hosts or not body:
+        return body
+    lines = body.split("\n")
+    spans = _emitted_routine_spans(lines)
+    by_name = {name: (first, last) for first, last, name, _ in spans}
+    moved: dict[str, list[str]] = {}
+    taken: set[int] = set()
+    for internal, host in hosts.items():
+        lifted, lifted_host = f"{internal}_OTI", f"{host}_OTI"
+        if lifted not in by_name or lifted_host not in by_name:
+            continue
+        first, last = by_name[lifted]
+        moved.setdefault(lifted_host, []).extend(lines[first:last + 1])
+        taken.update(range(first, last + 1))
+    if not moved:
+        return body
+    result: list[str] = []
+    host_ends = {by_name[name][1]: name for name in moved}
+    for index, line in enumerate(lines):
+        if index in taken:
+            continue
+        if index in host_ends:
+            result.append("contains")
+            result.extend(moved[host_ends[index]])
+        result.append(line)
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(result))
 
 
 
@@ -862,8 +979,12 @@ def _lift_helper_routine(
     helper_output_surfaces: list[dict[str, Any]],
     lifted_function_names: set[str] | None = None,
     source_path: Path | None = None,
+    host_constants: Sequence[str] = (),
 ) -> str:
     raw_lines = _routine_source_lines(source_lines, routine)
+    raw_lines = _without_internal_procedures(
+        raw_lines, form, routine,
+        set(lifted_names) | set(lifted_function_names or ()))
     if source_path is not None:
         raw_lines = _expand_helper_includes(raw_lines, form, source_path)
     if not raw_lines:
@@ -871,6 +992,17 @@ def _lift_helper_routine(
     stitched_lines = _continuation_stitch(raw_lines, form)
     if not stitched_lines:
         raise HelperLiftingError(f"Routine {routine.name} did not produce any stitched source lines.")
+    if host_constants:
+        # An internal procedure lifted on its own: its host's named constants,
+        # which it saw by host association, declared in it (see
+        # host_constants_for_internal_procedures). A name it declares itself
+        # shadows the host's, so a host constant of that name is left out.
+        own = {token.upper() for line in stitched_lines[1:-1]
+               for token in re.findall(r"::\s*(.*)$", _statement_text(line, form))
+               for token in _declared_names(token)}
+        carried = [line for line in host_constants
+                   if not (_host_named_constants([line], form) & own)]
+        stitched_lines = stitched_lines[:1] + carried + stitched_lines[1:]
     lifted_function_names = set(lifted_function_names or ())
     # Binary32 variables keep a binary32 primal: every store to one rounds
     # the real part of its OTI value (Curie-G B-W, Gauss F3). The routine's
@@ -1954,6 +2086,9 @@ def _implicit_oti_names(
             name = match.group(1).upper()
             if name in _KEYWORDS or name in _INTRINSIC_NAMES or name in _TYPED_INTRINSIC_MAP:
                 continue
+            if name in _INQUIRY_INTRINSICS and re.search(
+                    rf"\b{name}\s*\(", line, flags=re.IGNORECASE):
+                continue
             if name in lifted_names or name in declared_non_oti or name in parameter_names:
                 continue
             if _is_implicit_integer_name(name):
@@ -2317,6 +2452,7 @@ def _real_wrapped_tokens(condition: str, oti_names: set[str]) -> str:
     # declare variables called D and D0 -- so mask literals before substituting
     # identifiers, or ``1.D-12`` becomes ``1.REAL(D)-12``.
     condition, literals = mask_real_literals(condition)
+    condition, inquiries = _mask_inquiry_calls(condition)
     pattern = re.compile(
         r"\b(" + "|".join(re.escape(name) for name in sorted(oti_names, key=len, reverse=True)) + r")\b(?:\([^()]*\))?",
         re.IGNORECASE,
@@ -2329,7 +2465,28 @@ def _real_wrapped_tokens(condition: str, oti_names: set[str]) -> str:
             return token
         return f"REAL({token})"
 
-    return unmask_real_literals(pattern.sub(replacement, condition), literals)
+    wrapped = pattern.sub(replacement, condition)
+    for index, call in enumerate(inquiries):
+        wrapped = wrapped.replace(f"\x00INQ{index}\x00", call)
+    return unmask_real_literals(wrapped, literals)
+
+
+def _mask_inquiry_calls(text: str) -> tuple[str, list[str]]:
+    """Each inquiry-intrinsic call, whole, replaced by a placeholder.
+
+    See _INQUIRY_INTRINSICS: neither the call's result nor its arguments are
+    real values, so the condition wrapper must not touch any of it.
+    """
+    calls: list[str] = []
+    while True:
+        match = _INQUIRY_CALL_RE.search(text)
+        if not match:
+            return text, calls
+        close = _matching_paren_index(text, match.end() - 1)
+        if close < 0:
+            return text, calls
+        calls.append(text[match.start():close + 1])
+        text = text[:match.start()] + f"\x00INQ{len(calls) - 1}\x00" + text[close + 1:]
 
 
 def _normalize_typed_intrinsics(line: str, oti_names: set[str]) -> str:
@@ -2657,6 +2814,155 @@ def _promote_bare_integers_for_oti(line: str) -> str:
         out.append(char)
         index += 1
     return "".join(out)
+
+
+_CONTAINS_RE = re.compile(r"^\s*CONTAINS\s*$", re.IGNORECASE)
+_INTERNAL_HEADER_RE = re.compile(
+    r"^\s*(?:(?:PURE|IMPURE|ELEMENTAL|RECURSIVE)\s+|(?:REAL|INTEGER|LOGICAL|COMPLEX|"
+    r"DOUBLE\s+PRECISION|CHARACTER|TYPE\s*\([^)]*\))(?:\s*\([^)]*\)|\s*\*\s*\d+)?\s+)*"
+    r"(SUBROUTINE|FUNCTION)\s+([A-Z_]\w*)\s*(?:\(([^)]*)\))?"
+    r"(?:\s*RESULT\s*\(\s*([A-Z_]\w*)\s*\))?", re.IGNORECASE)
+_INTERNAL_END_RE = re.compile(r"^\s*END\s*(?:SUBROUTINE|FUNCTION)\b", re.IGNORECASE)
+#: Words of the language (statement keywords, attributes and the intrinsics a
+#: model routine commonly calls) that are never a host entity. Only used to
+#: decide whether an internal procedure reads its host; a word missing here
+#: makes that check refuse more, never less.
+_FORTRAN_WORDS = frozenset("""
+REAL INTEGER LOGICAL CHARACTER DOUBLE PRECISION COMPLEX TYPE INTENT IN OUT INOUT
+PARAMETER DIMENSION IMPLICIT NONE USE ONLY SAVE DATA WHILE EXIT CYCLE SELECT CASE
+DEFAULT WHERE ELSEWHERE FORALL ALLOCATE DEALLOCATE ALLOCATABLE OPTIONAL PURE
+ELEMENTAL RECURSIVE RESULT FUNCTION SUBROUTINE CONTAINS STOP PRINT WRITE READ FORMAT
+OPEN CLOSE ELSEIF ENDDO ENDIF ENDSELECT ENDWHERE MATMUL TRANSPOSE SUM PRODUCT MAXVAL
+MINVAL MAXLOC MINLOC DBLE FLOAT SNGL INT NINT IFIX IDINT FLOOR CEILING DSQRT DEXP
+DLOG DLOG10 DABS DSIN DCOS DTAN DASIN DACOS DATAN DATAN2 DSINH DCOSH DTANH DMAX1
+DMIN1 AMAX1 AMIN1 MAX0 MIN0 DSIGN ISIGN IABS MERGE RESHAPE SPREAD PACK UNPACK COUNT
+CSHIFT EOSHIFT TRIM ADJUSTL ADJUSTR INDEX SCAN VERIFY CHAR ICHAR ACHAR IACHAR
+NORM2 DPROD AINT ANINT DINT DNINT CMPLX DCMPLX AIMAG CONJG
+""".split())
+
+
+def _without_internal_procedures(raw_lines: list[str], form: str, routine: ParsedSubroutine,
+                                 lifted: set[str]) -> list[str]:
+    """The host routine up to its CONTAINS, and its END.
+
+    The parser keeps internal procedures inside their host, and the lifter
+    read their specification statements as the host's: GuGuaTT's UMAT2 holds
+    ``pure function dotprod6(A, B) result(C)`` after CONTAINS, and the lifted
+    UMAT2_OTI declared A(6), B(6) and C beside its own scalar A ("Symbol 'a'
+    already has basic type"). Every internal procedure is lifted on its own as
+    an external subprogram (routines_by_name finds function subprograms
+    wherever they are written), so the host's lifted copy calls that one, and
+    the CONTAINS section is dropped from it.
+
+    That is only the same program when the internal procedure reads nothing of
+    its host but named constants (carried, see
+    host_constants_for_internal_procedures): the lifted copy is typed from its
+    own text, and a host variable it read could become an uninitialised local
+    of its own. That case is refused, as is an internal procedure the closure
+    did not lift. The lifted copies go back after CONTAINS in the lifted host
+    (_nest_internal_procedures).
+    """
+    contains_at = None
+    for index, raw in enumerate(raw_lines[1:-1], start=1):
+        if _CONTAINS_RE.match(_statement_text(raw, form)):
+            contains_at = index
+            break
+    if contains_at is None:
+        return raw_lines
+    host_names = {arg.upper() for arg in routine.args}
+    for declaration in routine.declarations:
+        host_names.update(entity.upper_name for entity in declaration.entities)
+    host_text = "\n".join(_statement_text(raw, form) for raw in raw_lines[1:contains_at])
+    # Implicitly typed locals are declared nowhere; every name the host's
+    # statements mention is a host entity unless it is Fortran's own.
+    host_names.update(
+        token.upper() for token in _TOKEN_RE.findall(
+            mask_real_literals(mask_character_literals(host_text)[0])[0])
+        if token.upper() not in _KEYWORDS | _INTRINSIC_NAMES | _INQUIRY_INTRINSICS | _FORTRAN_WORDS
+        and token.upper() not in _TYPED_INTRINSIC_MAP)
+    internal = [_statement_text(raw, form) for raw in _continuation_stitch(raw_lines[contains_at + 1:-1], form)]
+    procedures: list[tuple[str, set[str], list[str]]] = []
+    for statement in internal:
+        header = _INTERNAL_HEADER_RE.match(statement)
+        if header and not _INTERNAL_END_RE.match(statement):
+            own = {header.group(2).upper()}
+            own.update(a.strip().upper() for a in (header.group(3) or "").split(",") if a.strip())
+            if header.group(4):
+                own.add(header.group(4).upper())
+            procedures.append((header.group(2).upper(), own, []))
+        elif procedures and not _INTERNAL_END_RE.match(statement):
+            procedures[-1][2].append(statement)
+    for name, own, body in procedures:
+        if re.search(rf"\b{name}\b", host_text, flags=re.IGNORECASE) and name not in lifted:
+            raise HelperLiftingError(
+                f"{routine.name} contains the internal procedure {name}, which "
+                "it calls but which was not lifted with it. What to do: move "
+                f"{name} out of {routine.name} (after its END) so it can be "
+                "lifted as a helper of its own.")
+        declared = set(own)
+        for statement in body:
+            match = re.match(r"^\s*(?:REAL|INTEGER|LOGICAL|DOUBLE\s+PRECISION|CHARACTER|COMPLEX|TYPE\s*\()"
+                             r"[^:]*::\s*(.*)$", statement, flags=re.IGNORECASE)
+            if match:
+                declared.update(_declared_names(match.group(1)))
+        used = {token.upper() for statement in body
+                for token in _TOKEN_RE.findall(
+                    mask_real_literals(mask_character_literals(statement)[0])[0])}
+        procedure_names = {other for other, _, _ in procedures} | lifted
+        borrowed = sorted((used & host_names) - declared - procedure_names
+                          - _host_named_constants(raw_lines[1:contains_at], form))
+        if borrowed:
+            raise HelperLiftingError(
+                f"The internal procedure {name} of {routine.name} reads "
+                f"{', '.join(borrowed[:5])} from its host. The lifter types "
+                "and declares each procedure from its own text, so a host "
+                "variable read by host association could become a local of the "
+                "lifted copy, uninitialised, with nothing to show for it. Not "
+                "supported. What to do: pass them to "
+                f"{name} as arguments (host PARAMETERs are carried and need nothing).")
+    return raw_lines[:contains_at] + raw_lines[-1:]
+
+
+_PARAMETER_DECLARATION_RE = re.compile(
+    r"^\s*(?:[A-Z][\w\s*()=,]*?,\s*PARAMETER\b[^:]*::|PARAMETER\s*\()", re.IGNORECASE)
+
+
+def _host_constant_statements(host_lines: list[str], form: str) -> list[str]:
+    """The host's named-constant statements, stitched, in source order."""
+    return [statement for statement in _continuation_stitch(host_lines, form)
+            if _PARAMETER_DECLARATION_RE.match(_statement_text(statement, form))]
+
+
+def _host_named_constants(host_lines: list[str], form: str) -> set[str]:
+    names: set[str] = set()
+    for statement in _host_constant_statements(host_lines, form):
+        text = _statement_text(statement, form)
+        payload = text.split("::", 1)[1] if "::" in text else text[text.index("(") + 1:text.rindex(")")]
+        names.update(_declared_names(payload))
+    return names
+
+
+def host_constants_for_internal_procedures(parsed: ParsedFortranSource) -> dict[str, list[str]]:
+    """For each internal procedure, the named constants of its host.
+
+    An internal procedure sees its host's PARAMETERs by host association; the
+    lifted external copy does not (GuGuaTT's DOTPROD6 multiplies by the
+    host's TWO, and its lifted copy read an uninitialised local TWO). A named
+    constant cannot change, so declaring the same constant in the copy is the
+    same program. Variables of the host are a different matter and are refused
+    by _without_internal_procedures.
+    """
+    source_lines = parsed.text.splitlines()
+    hosts = {routine.upper_name: routine for routine in parsed.subroutines}
+    result: dict[str, list[str]] = {}
+    for internal, host_name in internal_procedure_hosts(parsed).items():
+        raw = _routine_source_lines(source_lines, hosts[host_name])
+        contains_at = next(index for index, line in enumerate(raw[1:-1], start=1)
+                           if _CONTAINS_RE.match(_statement_text(line, parsed.form)))
+        constants = _host_constant_statements(raw[1:contains_at], parsed.form)
+        if constants:
+            result[internal] = constants
+    return result
 
 
 def _routine_source_lines(source_lines: list[str], routine: ParsedSubroutine) -> list[str]:
