@@ -46,8 +46,11 @@ def materials(registry):
 
 
 def _directories():
+    # umat/cases/ is the regression-case collection (decision D-7: new cases go
+    # there, the historical umat/<id>/ records stay byte-identical); it is a
+    # sibling collection with its own index and tests, not a material.
     return sorted(p for p in COLLECTION.iterdir()
-                  if p.is_dir() and p.name != "materialized")
+                  if p.is_dir() and p.name not in ("materialized", "cases"))
 
 
 # ---- the registry and the directories describe the same collection -------
@@ -234,8 +237,27 @@ def test_no_third_party_source_is_committed_here():
     fortran = {".f", ".for", ".f90", ".f95", ".inc"}
     committed = [p for p in COLLECTION.rglob("*")
                  if p.is_file() and p.suffix.lower() in fortran
-                 and "materialized" not in p.parts]
+                 and "materialized" not in p.parts
+                 and not _a_permitted_case_file(p)]
     assert not committed, f"Fortran sources committed under umat/: {committed}"
+
+
+def _a_permitted_case_file(path):
+    """Regression cases (umat/cases/, decision D-7) may carry source, but only
+    under the same rule as everything else: a case whose recorded
+    redistribution status is ``permitted`` (decision D-2), or the project's own
+    canary toy. Anything else under umat/cases/ is caught like any other file."""
+    cases = COLLECTION / "cases"
+    if cases not in path.parents:
+        return False
+    case_dir = cases / path.relative_to(cases).parts[0]
+    if case_dir.name == "_canaries":
+        return True
+    try:
+        case = json.loads((case_dir / "case.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    return case.get("source", {}).get("licence", {}).get("redistribution") == "permitted"
 
 
 def test_every_material_records_the_digest_of_what_was_verified():

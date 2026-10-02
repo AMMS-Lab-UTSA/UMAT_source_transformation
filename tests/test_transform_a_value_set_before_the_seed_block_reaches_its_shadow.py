@@ -23,6 +23,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from _workspace import WORKSPACE  # noqa: E402
 
 DRIVER = """program drv
 implicit none
@@ -228,8 +229,8 @@ def test_a_value_assigned_before_the_seed_block_reaches_the_stress(tmp_path, nam
     assert_matches_the_original(original, transformed, [100.0, 0.3, 1.0], statev, increments)
 
 
-CZM = Path("/home/ammslab3/softwarex_work/discovery_cache/lucassalmon83860-bit__thesis-benchmark-cases"
-           "/Benchmarks/Fuel_pellet_quarter/czmHealing.f")
+CZM = (WORKSPACE / "discovery_cache/lucassalmon83860-bit__thesis-benchmark-cases"
+       / "Benchmarks/Fuel_pellet_quarter/czmHealing.f")
 
 
 @needs_gfortran

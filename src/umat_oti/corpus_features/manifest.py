@@ -703,6 +703,35 @@ DEFAULT_ROOTS: dict[str, str] = {
     "umat": str(_REPO_DEFAULT),
 }
 
+#: How a root under the workspace is written into a published manifest: as a
+#: path relative to ``$UMAT_OTI_WORKSPACE`` rather than this machine's home
+#: directory, so the artefact carries no machine path. Read back through
+#: :func:`expand_roots`.
+WORKSPACE_TOKEN = "$UMAT_OTI_WORKSPACE"
+
+
+def portable_roots(roots: Mapping[str, str]) -> dict[str, str]:
+    """Roots as written into a published manifest (workspace-relative)."""
+    workspace = str(_WS_DEFAULT)
+    out = {}
+    for name, value in roots.items():
+        text = str(value)
+        if text == workspace or text.startswith(workspace + "/"):
+            text = WORKSPACE_TOKEN + text[len(workspace):]
+        out[name] = text
+    return out
+
+
+def expand_roots(roots: Mapping[str, str]) -> dict[str, str]:
+    """Inverse of :func:`portable_roots`, against ``$UMAT_OTI_WORKSPACE`` if set,
+    else the workspace this checkout sits in."""
+    import os
+    workspace = os.environ.get("UMAT_OTI_WORKSPACE") or str(_WS_DEFAULT)
+    return {name: (workspace + str(value)[len(WORKSPACE_TOKEN):]
+                   if str(value).startswith(WORKSPACE_TOKEN) else str(value))
+            for name, value in roots.items()}
+
+
 _LOCATOR = re.compile(r"^([a-z][a-z0-9_]*):(?!//)([^#]+)(?:#(.*))?$")
 
 
@@ -894,7 +923,7 @@ def build_manifest(inp: ManifestInputs) -> dict:
                         "discovered-but-not-acquired candidate; every pipeline "
                         "stage and feature cell carries a status, a reason and an "
                         "evidence locator. Skipped never counts as verified.",
-        "roots": inp.roots(),
+        "roots": portable_roots(inp.roots()),
         "inputs": inputs,
         "registry_fingerprint": records[0].get("verification_fingerprint", "")
         if records else "",
@@ -2152,7 +2181,7 @@ def merge_feature_results(manifest: dict,
     (:func:`_gate_on_primal`). The summary is recomputed and the merge is
     logged in ``manifest["merges"]``.
     """
-    roots = {**DEFAULT_ROOTS, **(manifest.get("roots") or {}), **(roots or {})}
+    roots = {**DEFAULT_ROOTS, **expand_roots(manifest.get("roots") or {}), **(roots or {})}
     if isinstance(results, (str, Path)):
         label = label or to_locator(str(Path(results).resolve()), roots)
         records = _load_jsonl(Path(results))
@@ -2567,6 +2596,21 @@ def _body(manifest: Mapping) -> dict:
     return {k: v for k, v in manifest.items() if k != "generated"}
 
 
+def _portable(value):
+    """Every workspace path in a published manifest written relative to
+    $UMAT_OTI_WORKSPACE: a published artefact carries no machine path."""
+    workspace = str(_WS_DEFAULT)
+    if isinstance(value, str):
+        # Anywhere in the string: build commands quoted in a reason carry
+        # paths in the middle of the text too.
+        return value.replace(workspace, WORKSPACE_TOKEN)
+    if isinstance(value, Mapping):
+        return {k: _portable(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_portable(v) for v in value]
+    return value
+
+
 def write_outputs(manifest: Mapping, out_dir: Path) -> dict[str, Path]:
     """Write JSON, CSV and schema.
 
@@ -2584,9 +2628,9 @@ def write_outputs(manifest: Mapping, out_dir: Path) -> dict[str, Path]:
     except (OSError, ValueError):
         old = None
     if isinstance(old, dict) and "generated" in old and \
-            json.loads(json.dumps(_body(manifest))) == _body(old):
+            json.loads(json.dumps(_body(_portable(manifest)))) == _body(old):
         manifest["generated"] = old["generated"]
-    paths["json"].write_text(json.dumps(manifest, indent=1, sort_keys=False) + "\n",
+    paths["json"].write_text(json.dumps(_portable(manifest), indent=1, sort_keys=False) + "\n",
                              encoding="utf-8")
     paths["schema"].write_text(json.dumps(manifest_schema(), indent=1) + "\n",
                                encoding="utf-8")

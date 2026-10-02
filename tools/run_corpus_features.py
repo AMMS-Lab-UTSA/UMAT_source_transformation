@@ -9,7 +9,7 @@ rule are in ``umat_oti.corpus_features.harness`` and
 ``corpus_campaign/batches/B1/gauss/DESIGN.md``.
 
     PYTHONPATH=src python tools/run_corpus_features.py --key c7bf17b21519e33da0b7bbb1 \\
-        --out /home/ammslab3/softwarex_work/corpus_campaign/batches/B1/gauss/evidence
+        --out $UMAT_OTI_WORKSPACE/corpus_campaign/batches/B1/gauss/evidence
     PYTHONPATH=src python tools/run_corpus_features.py --fully-verified --limit 5 ...
 
 Each run REPLACES ``<out>/corpus_features.jsonl`` and ``manifest_cells.jsonl``

@@ -39,6 +39,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import re
 import shutil
 import statistics
@@ -58,7 +59,10 @@ from umat_oti.corpus_features.paths import kinematics_for, paths_for
 #: Curie's label for a path that leaves the author's documented domain (D-12.1).
 OUTSIDE_MODEL_DOMAIN = "outside_model_domain"
 
-WORKSPACE = Path("/home/ammslab3/softwarex_work")
+#: The directory the checkout sits in (beside discovery_cache/, transform_store/,
+#: corpus_run/ ...), or $UMAT_OTI_WORKSPACE when the checkout lives elsewhere.
+WORKSPACE = Path(os.environ.get("UMAT_OTI_WORKSPACE")
+                 or Path(__file__).resolve().parents[3].parent)
 REGISTRY = Path(__file__).resolve().parents[3] / "paper_results/corpus/corpus_registry.json"
 FAMILIES = WORKSPACE / "corpus_run/material_families_checked_E.json"
 PASS16 = WORKSPACE / "corpus_run/pass16/results/store_verification.jsonl"
@@ -120,7 +124,13 @@ MIN_VERIFIED_PATHS = 2
 #: shared with the Abaqus-side init check (umat_oti.abaqus.replay): the zero
 #: build is the reference; an output differing between ANY two builds is
 #: undefined_in_original.
-from umat_oti.abaqus.replay import FINIT_SNAN, FINIT_ZERO, FINIT_HUGE, FINIT_BUILDS  # noqa: E402
+from umat_oti.abaqus.replay import (  # noqa: E402
+    FINIT_BUILDS,
+    FINIT_HUGE,
+    FINIT_SNAN,
+    FINIT_ZERO,
+)
+
 BOUNDS = ("-fcheck=bounds",)
 
 #: FD step scale of an input whose value is 0 (PROPS) or 0 over the whole
@@ -361,7 +371,9 @@ def _ladder_steps(scale: float, ladder: Sequence[float]) -> list:
 def differentiable_props(source_text: str, nprops: int) -> tuple:
     """Split PROPS indices into (differentiable, {index: reason})."""
     from umat_oti.transform.parameter_sensitivity_transform import (
-        NonDifferentiableParameterPathError, validate_parameter_paths)
+        NonDifferentiableParameterPathError,
+        validate_parameter_paths,
+    )
     ok, refused = [], {}
     for i in range(1, nprops + 1):
         try:
@@ -478,7 +490,9 @@ def build_all(entry: CorpusEntry, work: Path, *, want_store: bool = True,
 def _build_lifted(entry: CorpusEntry, work: Path, builds: Builds, *,
                   supply_utilities: bool = False) -> tuple:
     from umat_oti.transform.parameter_sensitivity_transform import (
-        GenericPSContract, transform_umat_for_parameter_sensitivity)
+        GenericPSContract,
+        transform_umat_for_parameter_sensitivity,
+    )
     if work.exists():
         shutil.rmtree(work)
     work.mkdir(parents=True)
@@ -491,8 +505,11 @@ def _build_lifted(entry: CorpusEntry, work: Path, builds: Builds, *,
         # its _required_utility_stubs check, which reads the unsupplied text,
         # no longer refuses them. The ORIGINAL reference build is untouched.
         import re as _re
+
         from umat_oti.transform.abaqus_utility_definitions import (
-            available_definitions, definition_text)
+            available_definitions,
+            definition_text,
+        )
         text = lift_input.read_text(errors="replace")
         called = {m.upper() for m in _re.findall(r"(?im)^[^cC*!].*?\bcall\s+(\w+)", text)}
         defined = {m.upper() for m in _re.findall(r"(?im)^\s*subroutine\s+(\w+)", text)}

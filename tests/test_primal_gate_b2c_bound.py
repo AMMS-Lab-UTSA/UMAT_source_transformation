@@ -15,13 +15,19 @@ import sys
 from pathlib import Path
 
 import pytest
+from _workspace import WORKSPACE
 
-from umat_oti.abaqus.compare import (NOISE_MIN_ULPS, STIFFNESS_ULPS, compare_calls,
-                                     measured_noise_ulps, stiffness_scale)
+from umat_oti.abaqus.compare import (
+    NOISE_MIN_ULPS,
+    STIFFNESS_ULPS,
+    compare_calls,
+    measured_noise_ulps,
+    stiffness_scale,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures" / "primal_gate"
 REPO = Path(__file__).resolve().parents[1]
-PASS16 = Path("/home/ammslab3/softwarex_work/corpus_run/pass16/work")
+PASS16 = (WORKSPACE / "corpus_run/pass16/work")
 PUREGRAVITY = "2f577b2a3413db6b15714a4e"
 
 

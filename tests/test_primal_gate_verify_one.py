@@ -9,15 +9,15 @@ import sys
 from pathlib import Path
 
 import pytest
+from _workspace import WORKSPACE  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "tools"))
 
 KEY = "31e3c24fed383b14795ffc46"
-PASS16 = Path("/home/ammslab3/softwarex_work/corpus_run/pass16")
-JM = Path("/home/ammslab3/softwarex_work/corpus_campaign/batches/B2/curie_g/abaqus/"
-          "cc_cug_20_minsur1_jmgate")
-CACHE = Path("/home/ammslab3/softwarex_work/discovery_cache")
+PASS16 = (WORKSPACE / "corpus_run/pass16")
+JM = WORKSPACE / "corpus_campaign/batches/B2/curie_g/abaqus/cc_cug_20_minsur1_jmgate"
+CACHE = (WORKSPACE / "discovery_cache")
 
 needs = pytest.mark.skipif(
     not ((PASS16 / "work" / KEY).is_dir() and JM.is_dir() and CACHE.is_dir()
@@ -28,6 +28,7 @@ needs = pytest.mark.skipif(
 @needs
 def test_minsur1_is_decided_by_the_routine_and_the_jacobian_matched_control(tmp_path, monkeypatch):
     import verify_store_in_abaqus as V
+
     from umat_oti.store import TransformStore
 
     row = next(json.loads(l) for l in open(PASS16 / "results/store_verification.jsonl")

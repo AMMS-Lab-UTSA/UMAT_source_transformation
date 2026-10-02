@@ -24,8 +24,9 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from _workspace import WORKSPACE  # noqa: E402
 
-CACHE = Path("/home/ammslab3/softwarex_work/discovery_cache")
+CACHE = (WORKSPACE / "discovery_cache")
 SINA = CACHE / "Sina-Taghizadeh__UMAT_Hyperelastic/CompresibleNeoHookean.for"
 
 SYNTHETIC = """      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,
@@ -88,8 +89,11 @@ F_INC = (0.02, 0.004, 0.0, 0.001, -0.01, 0.0, 0.0, 0.0, -0.005)
 
 def _compare(tmp_path: Path, source_text: str, suffix: str, kstep_array: bool):
     from umat_oti.transform.parameter_sensitivity_transform import (
-        GenericPSContract, compile_generic_ps, run_generic_ps,
-        transform_umat_for_parameter_sensitivity)
+        GenericPSContract,
+        compile_generic_ps,
+        run_generic_ps,
+        transform_umat_for_parameter_sensitivity,
+    )
 
     source = tmp_path / ("material" + suffix)
     source.write_text(source_text)

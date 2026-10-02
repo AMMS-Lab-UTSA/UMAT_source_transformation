@@ -13,10 +13,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from _workspace import WORKSPACE  # noqa: E402
 
 from umat_oti.corpus.acquire import classify_license_text
 
-CACHE = Path("/home/ammslab3/softwarex_work/discovery_cache")
+CACHE = (WORKSPACE / "discovery_cache")
 COMMON = Path("/usr/share/common-licenses")
 
 
