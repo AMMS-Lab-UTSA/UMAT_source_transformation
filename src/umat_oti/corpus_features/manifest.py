@@ -129,6 +129,14 @@ TOLERANCE_RULES: dict[str, dict[str, Any]] = {
                       "max are unresolved (skipped), differences below min(1e-12, rtol) "
                       "x history max are indistinguishable; ratio = worst relative / "
                       "rtol"},
+    "routine_primal_gate/1": {
+        "accepted": True, "applies_to": ("primal",), "rtol_max": 1e-8,
+        "definition": "the Abaqus primal gate (verify_store_in_abaqus, decision D-15): every "
+                      "converged call of the original replayed in both builds at the recorded "
+                      "inputs; |dSTRESS_i| <= rtol*max|STRESS| + U*eps*K_i (K_i from the "
+                      "ORIGINAL's stiffness, U the row's measured noise floor, cap 64), "
+                      "|dSTATEV_k| <= rtol*max|STATEV_k|; ratio = max(worst stress / bound, "
+                      "worst state relative / rtol)"},
     "legacy_column_norm": {
         "accepted": False, "applies_to": ("derivative",), "rtol_max": 0.0,
         "definition": "tau_e = atol + rtol*max(|ref_e|, column norm) or a 1e-3 path "
@@ -1510,6 +1518,20 @@ def _features(rec, pr, ev, stages, ev_pass, tangent_tol, ident, ps_ids, ij_ids,
     worst_v = max(worst) if worst else None
     ratio = (worst_v / ptol) if (worst_v is not None and ptol and
                                  math.isfinite(worst_v)) else None
+    rule = "abaqus_primal_history_floor/1"
+    # Since D-15 the primal gate is decided at the routine (replay of every
+    # converged call) and the FE comparison in pr["primal"] is informational
+    # only: its numbers move with the transformed tangent and are not the
+    # verdict's measure. Where the gate ran, the cell carries the gate's ratio.
+    comparison = ((pr.get("routine_primal") or {}).get("comparison") or {})
+    if pr.get("primal_gate") and comparison:
+        tol = comparison.get("tolerance") or ptol
+        parts = [comparison.get("worst_stress_over_bound")]
+        if comparison.get("worst_state_relative") is not None and tol:
+            parts.append(comparison["worst_state_relative"] / tol)
+        parts = [v for v in parts if v is not None and math.isfinite(v)]
+        ratio = max(parts) if parts else None
+        rule, ptol = "routine_primal_gate/1", tol
     build = {"kind": "store",
              "fingerprint": rec.get("verification_fingerprint") or "",
              "sha256": "", "basis": "transform-store OTI source compiled by Abaqus "
@@ -1517,7 +1539,7 @@ def _features(rec, pr, ev, stages, ev_pass, tangent_tol, ident, ps_ids, ij_ids,
     pcell = {"reference": "original",
              "max_error": ratio if ev else None,
              "tolerance": 1.0 if ev else None,
-             "tolerance_rule_id": "abaqus_primal_history_floor/1" if ev else None,
+             "tolerance_rule_id": rule if ev else None,
              "rtol": ptol if ev else None,
              "measured": {"worst_stress_relative": _json_num(
                               primal.get("worst_stress_relative")),
