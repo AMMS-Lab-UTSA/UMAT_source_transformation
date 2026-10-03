@@ -377,7 +377,9 @@ def resolve_entry(key: str) -> CorpusEntry:
                    "council_set": set_id or str((council.get("sets") or [{}])[0].get("set_id")),
                    "council_sets": [str(e.get("set_id")) for e in council.get("sets") or ()],
                    **({"branch_coverage": council["branch_coverage"]}
-                      if council.get("branch_coverage") else {})}
+                      if council.get("branch_coverage") else {}),
+                   **({"domain_not_enforced": council["domain_not_enforced"]}
+                      if council.get("domain_not_enforced") else {})}
     elif verification.get("material_data_origin"):
         origins = {"material_data_origin": verification["material_data_origin"],
                    "experiment_origin": verification.get("experiment_origin", "author")}
@@ -1521,7 +1523,7 @@ def _record(entry: CorpusEntry, feature: str, path, payload: dict, extra: dict) 
     # the three tiers (D-19/D-21): set only off the author-deck tier, so the
     # author-deck records read as before
     for name in ("material_data_origin", "experiment_origin", "council_set",
-                 "council_sets", "branch_coverage"):
+                 "council_sets", "branch_coverage", "domain_not_enforced"):
         if entry.provenance.get(name):
             record[name] = entry.provenance[name]
     return record

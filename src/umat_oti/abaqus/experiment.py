@@ -1279,6 +1279,9 @@ class CouncilPlan:
     refusal: str = ""
     refusal_code: str = ""
     notes: tuple = ()
+    #: Documented-domain entries stated only in words, so not enforced: a
+    #: plan carrying any cannot count silently (Vera's G review C2).
+    domain_not_enforced: tuple = ()
     #: Which layout branch of a routine that tests its own tensor layout the
     #: experiment exercises, and which it does not (Vera, G8 condition).
     branch_coverage: Optional[dict] = None
@@ -1299,6 +1302,7 @@ class CouncilPlan:
                 "notes": list(self.notes),
                 "documented_domain": self.documented_domain,
                 "branch_coverage": self.branch_coverage,
+                "domain_not_enforced": list(self.domain_not_enforced),
                 "counts_only_if_every_set_passes": True,
                 "sets": [{"set_id": set_id, "plan": plan.as_dict()} for set_id, plan in self.sets]}
 
@@ -1316,6 +1320,10 @@ def _council_sets(row: dict) -> tuple[str, list, str]:
         if len(sets) < 2:
             return "council_chosen", sets, ("D-21 requires at least two independent "
                                             "parameter sets")
+        vectors = [tuple(sorted((i, v) for i, (v, _w) in values.items())) for _s, values in sets]
+        if len(set(vectors)) < len(vectors):
+            return "council_chosen", sets, ("two parameter sets are identical; D-21 requires "
+                                            "independent sets")
         return "council_chosen", sets, ""
     constants = row.get("constants") or ()               # a harvest row
     uncounted = [c for c in constants if c.get("confidence") not in ("exact", "interpreted")
@@ -1450,15 +1458,16 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
 
     domain = row.get("documented_domain") or {}
     finite = bool(_DFGRD.search(executable)) or bool(re.search(r"finite", statement, re.I))
+    stated_kind = "author_published" if origin != "council_chosen" else "council_choice"
     kin_origin = ("source", "DFGRD read in executable code") if _DFGRD.search(executable) else (
-        ("author_published", statement[:200]) if finite else
+        (stated_kind, statement[:200]) if finite else
         ("council_default", "small strain: no DFGRD read and nothing documents finite strain"))
     documented = _numeric(domain.get("stretch_max") if finite else domain.get("strain_max"))
     if documented is not None:
         ceiling = (documented - 1.0) if finite and documented > 1.0 else documented
-        ceiling_origin = ("author_published", str((domain.get("stretch_max" if finite
-                                                              else "strain_max") or {})
-                                                  .get("where", "")))
+        ceiling_origin = (stated_kind, str((domain.get("stretch_max" if finite
+                                                       else "strain_max") or {})
+                                           .get("where", "")))
     else:
         ceiling = COUNCIL_FINITE_CEILING if finite else COUNCIL_SMALL_STRAIN_CEILING
         ceiling_origin = ("council_default", "undocumented domain: R3 default")
@@ -1518,8 +1527,13 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                           f"(NTENS={geometry.ntens}); the other layout branch"
                           f"{'es' if len(branches) > 1 else ''} ("
                           + "; ".join(branches) + ") not exercised")}
+    prose = tuple(key for key in ("strain_max", "stretch_max", "temperature")
+                  if (domain.get(key) or {}).get("value") is not None
+                  and _numeric(domain.get(key)) is None
+                  and not (key == "temperature" and isinstance(domain[key]["value"], list)))
     return CouncilPlan(source, sets=tuple(plans), ceiling=ceiling,
                        documented_domain=row.get("documented_domain") or None,
+                       domain_not_enforced=prose,
                        ceiling_origin=ceiling_origin,
                        refusal=next((p.experiment.refusal for _i, p in plans
                                      if p.experiment.refusal), ""),
