@@ -2149,8 +2149,12 @@ def _callee_ddsdde_writes_left_live(
     original message otherwise:
 
     * its routine was lifted, and the written name is a dummy of it that the
-      lifted body declares hypercomplex -- so any actual bound to it is a
-      shadow (a REAL actual could not be passed to it);
+      lifted body declares hypercomplex. That alone does not make the
+      actual a shadow -- the lifted helpers are external subprograms and the
+      implicit interface would take a REAL actual without a word; what
+      guarantees it is the leak check (real_arguments_into_oti_helper_dummies,
+      a semantic check that refuses a REAL actual at a hypercomplex dummy)
+      together with the third condition below;
     * no live statement of the emitted UMAT, and none of the lifted helpers,
       names the ORIGINAL routine or any original routine that can call it --
       so the unlifted body, which writes a REAL dummy, is never reached;
