@@ -929,14 +929,44 @@ def piecewise_chains(source_text: str) -> list[PiecewiseChain]:
     return chains
 
 
+def _positive(values) -> list[float]:
+    return [float(v) for v in (values or ()) if float(v or 0) > 0]
+
+
+def _step_periods(entry: Mapping) -> tuple[list[float], str]:
+    """The step periods that bound the clock, and the label they are cited by.
+
+    ``experiment_periods`` are the periods of the GENERATED experiment (the
+    Abaqus probe's segments, :func:`harness.resolve_entry`); they are cited as
+    the author's deck only when ``author_deck_periods`` was recorded and is the
+    same list. ``deck_periods`` is a caller's statement that the periods ARE
+    the author's ``*STEP`` times. The numbers are used as they come either way:
+    which label applies never changes the bound (G0, D-19a rev 2).
+    """
+    if "experiment_periods" in entry:
+        periods = _positive(entry.get("experiment_periods"))
+        author = entry.get("author_deck_periods")
+        if author is not None and _positive(author) == periods:
+            return periods, "author's deck: step periods "
+        why = (
+            "the author's deck periods were not recorded"
+            if author is None
+            else "the author's deck runs "
+            + (", ".join(f"{v:g}" for v in _positive(author)) or "no timed step")
+        )
+        return periods, f"periods of the generated experiment ({why}): "
+    return _positive(entry.get("deck_periods")), "author's deck: step periods "
+
+
 def model_domain(entry: Mapping) -> dict:
     """The time range the author documented for this model, with provenance.
 
     Two witnesses, the tighter wins, and both are recorded:
 
-    * the author's paired deck: the step periods of the manifest's loading
-      (``deck_periods``, from the deck's ``*STEP`` times) sum to the total
-      time the author ran the model for;
+    * the step periods: ``deck_periods`` (the author's ``*STEP`` times) or
+      ``experiment_periods`` (the generated experiment's segments, cited as
+      the author's deck only when ``author_deck_periods`` matches them; see
+      :func:`_step_periods`) sum to a total time;
     * the source: an IF/ELSE IF chain on TIME with no ELSE defines its
       variables only up to its last bound -- past it they are undefined (or
       stale) in the ORIGINAL routine.
@@ -945,14 +975,14 @@ def model_domain(entry: Mapping) -> dict:
     enforced: whether their tested quantity is reachable from a strain path is
     not decidable by reading, and refusing on a guess would hide paths.
     """
-    periods = [float(v) for v in (entry.get("deck_periods") or ()) if float(v or 0) > 0]
+    periods, label = _step_periods(entry)
     limits: list[tuple[float, str]] = []
     if periods:
         limits.append(
             (
                 sum(periods),
                 (
-                    "author's deck: step periods "
+                    label
                     + ", ".join(f"{v:g}" for v in periods)
                     + f" (total {sum(periods):g})"
                 ),
@@ -1005,7 +1035,16 @@ def _clock(entry: Mapping) -> tuple[float, str]:
         from umat_oti.abaqus.time_scale import required_total_time
 
         req = required_total_time(
-            text, list(entry.get("props") or ()), list(entry.get("deck_periods") or ())
+            text,
+            list(entry.get("props") or ()),
+            list(
+                (
+                    entry.get("experiment_periods")
+                    if "experiment_periods" in entry
+                    else entry.get("deck_periods")
+                )
+                or ()
+            ),
         )
         if req.declared:
             return req.total_time, f"time_scale.required_total_time: {req.reason}"
@@ -1125,7 +1164,7 @@ def paths_for(entry: Mapping, *, per_leg: int = PER_LEG) -> list[LoadingPath]:
     ``family`` (reviewed classification), ``ntens``, ``kinematics``,
     ``props``, ``nstatv``, ``time_dependent``, ``activation_amplitude``,
     ``source_text`` (enables constant identification and rate/anisotropy
-    evidence), ``total_time`` / ``deck_periods``, ``temperature``,
+    evidence), ``total_time`` / ``deck_periods`` / ``experiment_periods``, ``temperature``,
     ``source_id``.
 
     A family that is not a UMAT gets no path. An NTENS that is not a

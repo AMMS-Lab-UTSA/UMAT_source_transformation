@@ -347,8 +347,15 @@ def resolve_entry(key: str) -> CorpusEntry:
         initial_statev=[float(v) for v in manifest.get("initial_statev") or []],
         path_hints={"time_dependent": record.get("time_dependent"),
                     "total_time": (verification.get("time_scale_coverage") or {}).get("total_time"),
-                    "deck_periods": [float(seg.get("period") or 0.0)
-                                     for seg in manifest.get("loading") or []],
+                    # The periods of the GENERATED experiment (the probe's
+                    # segments), not the author's *STEP times; those are
+                    # carried separately when the pass recorded them (G0).
+                    "experiment_periods": [float(seg.get("period") or 0.0)
+                                           for seg in manifest.get("loading") or []],
+                    "author_deck_periods": (
+                        [float(v) for v in verification["author_deck_periods"]]
+                        if verification.get("author_deck_periods") is not None
+                        else None),
                     "activation_amplitude": record.get("activation_amplitude"),
                     "source_text": (CACHE / record["cache_path"]).read_text(errors="replace")
                     if (CACHE / record["cache_path"]).is_file() else ""},
