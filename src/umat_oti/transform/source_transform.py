@@ -5745,8 +5745,14 @@ def _normalize_mixed_minmax_intrinsics_in_oti_expression(line: str) -> str:
         if not oti_args or len(oti_args) == len(args):
             search_from = close_paren + 1
             continue
-        anchor = oti_args[0]
-        normalized_args = [arg if _contains_oti_value_reference(arg) else f"(({arg}) + 0.0D0*({anchor}))" for arg in args]
+        # A REAL argument is given the OTI type as ``(arg) - 0.0D0*OTI_E1``:
+        # the same real part for every value including -0.0, and zero
+        # derivative parts. It was ``(arg) + 0.0D0*(anchor)``, borrowing the
+        # first hypercomplex argument: 0.0*anchor has the sign of anchor's
+        # real part, so -0.0 came out +0.0 whenever that was positive, and a
+        # non-finite derivative part of the anchor put a NaN into the REAL
+        # argument's derivative (coordinator's B8 follow-up to Vera's R1).
+        normalized_args = [arg if _contains_oti_value_reference(arg) else f"(({arg}) - 0.0D0*OTI_E1)" for arg in args]
         result = result[: open_paren + 1] + ", ".join(normalized_args) + result[close_paren:]
         search_from = close_paren + 1
 
