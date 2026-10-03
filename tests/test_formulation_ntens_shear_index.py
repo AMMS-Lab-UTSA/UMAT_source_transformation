@@ -12,10 +12,13 @@ The rule now: a bound of 3 is NTENS=3 evidence only with a witness that index
 3 is a shear (or NDI=2 logic). Otherwise the source is undecided and the
 author's deck decides, and the record says which side decided.
 
-Every excerpt below is verbatim corpus text (file and line given); the
-cache-backed test reads the full files where the acquisition cache exists.
+The inputs below are synthetic: written for this test, each reproducing only
+the structure the rule reads (the corpus file it stands for is named beside
+it). No corpus text is copied. The cache-backed tests at the end run the same
+rules on the real files, pinned by sha256, where the acquisition cache exists.
 """
 
+import hashlib
 import sys
 from pathlib import Path
 
@@ -27,82 +30,82 @@ from _workspace import WORKSPACE  # noqa: E402
 
 from umat_oti.abaqus.formulation import from_source, settle
 
-#: awhelanUCD__Lemaitre-damage-UMAT-Public/nonLocalLemaitre/
-#: lemaitreDamageNonLocal.f lines 16-17 and 56-64.
+#: Stands for lemaitreDamageNonLocal.f: an isotropic tangent written as a
+#: direct block over ``do k=1,3`` and a shear diagonal from index 4.
 LEMAITRE = """\
-      dimension stress(ntens),statev(nstatv),ddsdde(ntens,ntens),
-     1 ddsddt(ntens),drplde(ntens),stran(ntens),dstran(ntens),
-      do i=1,3
-       do j=1,3
-        ddsdde(j,i)=elam
+      dimension stress(ntens),ddsdde(ntens,ntens),statev(nstatv)
+      do k=1,3
+       do l=1,3
+        ddsdde(l,k)=alam
        end do
-       ddsdde(i,i)=2.d0*eg+elam
+       ddsdde(k,k)=alam+2.d0*gmod
       end do
-      do i=4,ntens
-       ddsdde(i,i)=eg
+      do k=4,ntens
+       ddsdde(k,k)=gmod
       end do
 """
 
-#: The author's deck beside it, reduced to what pairs the material
-#: (axiSymmetricNotchedBar.inp: *Element, type=CAX4T at line 4661 and
-#: *Solid Section ... material=Material-1 at line 9177).
+#: The shear loop of LEMAITRE, removed or replaced by the tests below.
+SHEAR_LOOP = "      do k=4,ntens\n       ddsdde(k,k)=gmod\n      end do\n"
+
+#: Stands for the author's axisymmetric deck: a CAX4T element paired to the
+#: material through a solid section.
 LEMAITRE_DECK = """\
 *Element, type=CAX4T
 1, 1, 2, 3, 4
-*Elset, elset=Set-34, generate
+*Elset, elset=BAR, generate
 1, 1, 1
-*Solid Section, elset=Set-34, material=Material-1
+*Solid Section, elset=BAR, material=Material-1
 *Material, name=Material-1
 *User Material, constants=7
 1., 2., 3., 4., 5., 6., 7.
 """
 
-#: CAEAssistant-Group__UMAT-Abaqus-Tsai-Hill-Orthotropic-Composite-Subroutine/
-#: PLANESTRESS-ORTHOTROPIC.for lines 57-70.
+#: Stands for the CAEAssistant plane-stress orthotropic UMAT: a 3x3 tangent
+#: zeroed over a loop, with the 1-3 and 2-3 couplings written as explicit zeros.
 CAE_PLANE_STRESS = """\
-      DIMENSION STRESS(NTENS),STATEV(NSTATV),
-     1 DDSDDE(NTENS,NTENS),DDSDDT(NTENS),DRPLDE(NTENS),
-      DO K1=1,3
-        DO K2=1,3
-            DDSDDE(K2,K1)=0.0
+      DIMENSION STRESS(NTENS),DDSDDE(NTENS,NTENS)
+      DO I=1,3
+        DO J=1,3
+          DDSDDE(I,J)=0.D0
         END DO
       END DO
-      DDSDDE(1,1)=D11
-      DDSDDE(1,2)=D12
-      DDSDDE(2,2)=D22
-      DDSDDE(1,3)=0.0
-      DDSDDE(2,3)=0.0
-      DDSDDE(3,3)=D66
-      DDSDDE(2,1)=D12
-      DDSDDE(3,1)=0.0
-      DDSDDE(3,2)=0.0
+      DDSDDE(1,1)=Q11
+      DDSDDE(2,2)=Q22
+      DDSDDE(1,2)=Q12
+      DDSDDE(2,1)=Q12
+      DDSDDE(1,3)=0.D0
+      DDSDDE(3,1)=0.D0
+      DDSDDE(2,3)=0.D0
+      DDSDDE(3,2)=0.D0
+      DDSDDE(3,3)=Q66
 """
 
-#: abuganza__UMAT_anisotropic_damage/UMAT_Tissue_2d_plane_stress.f
-#: lines 421-423, 470-473 and 606-607.
+#: Stands for abuganza's plane-stress tissue UMAT: a 3-vector built from a
+#: 6-vector with the shear (Voigt 4) in slot 3, an i/j index-map pair sending
+#: slot 3 to (1,2), and STRESS filled over a loop bounded at 3.
 ABUGANZA_PLANE_STRESS = """\
-      sigma2D(1) = sigma(1)
-      sigma2D(2) = sigma(2)
-      sigma2D(3) = sigma(4)
-      Itoi2D(3) = 1
-      Itoj2D(1) = 1
-      Itoj2D(2) = 2
-      Itoj2D(3) = 2
-      do II=1,3
-         STRESS(II) = sigma2D(II)
+      s3(1) = s6(1)
+      s3(2) = s6(2)
+      s3(3) = s6(4)
+      Kmapi(3) = 1
+      Kmapj(1) = 1
+      Kmapj(2) = 2
+      Kmapj(3) = 2
+      do k=1,3
+         STRESS(k) = s3(k)
       end do
 """
 
-#: toruinaba__manforge/fortran/yu_kinematic_ps.f90 lines 1433-1434 (the
-#: plane-stress guard) and the tangent copy at 1204-1205.
+#: Stands for toruinaba's plane-stress kinematic-hardening UMAT (free form):
+#: a guard that leaves unless the layout is plane stress, then a 3x3 copy.
 TORUINABA_PLANE_STRESS = """\
-    if (NTENS /= 3 .or. NDI /= 2 .or. NSHR /= 1 .or. &
-        NSTATV < 13 .or. NPROPS < 12) then
+    if (NTENS /= 3 .or. NDI /= 2) then
         return
     end if
-    do jj = 1, 3
-        do ii = 1, 3
-            ddsdde(ii,jj) = C(ii,jj)
+    do j = 1, 3
+        do i = 1, 3
+            ddsdde(i,j) = cmat(i,j)
         end do
     end do
 """
@@ -128,7 +131,7 @@ def test_lemaitre_the_authors_axisymmetric_deck_decides():
     assert "the deck decides" in settled.agreement
     # Both halves of the evidence are on the record.
     assert "CAX4T" in settled.formulation.reason
-    assert "do i=4,ntens" in settled.formulation.reason
+    assert "do k=4,ntens" in settled.formulation.reason
 
 
 def test_lemaitre_on_a_plane_stress_element_is_unsupported_not_run():
@@ -139,9 +142,8 @@ def test_lemaitre_on_a_plane_stress_element_is_unsupported_not_run():
 
 
 def test_a_bare_bound_of_three_with_no_witness_is_undecided():
-    bare = LEMAITRE.replace(
-        "      do i=4,ntens\n       ddsdde(i,i)=eg\n      end do\n", ""
-    )
+    bare = LEMAITRE.replace(SHEAR_LOOP, "")
+    assert bare != LEMAITRE
     found = from_source(bare, "umat.f")
     assert not found.known
     assert found.min_ntens == 0
@@ -152,7 +154,7 @@ def test_a_bare_bound_of_three_with_no_witness_is_undecided():
     "text, name, witness",
     [
         (CAE_PLANE_STRESS, "PLANESTRESS-ORTHOTROPIC.for", "explicit zero"),
-        (ABUGANZA_PLANE_STRESS, "UMAT_Tissue_2d.f", "sigma2D(3) = sigma(4)"),
+        (ABUGANZA_PLANE_STRESS, "UMAT_Tissue_2d.f", "s3(3) = s6(4)"),
         (TORUINABA_PLANE_STRESS, "yu_kinematic.f90", "NTENS /= 3"),
     ],
 )
@@ -168,7 +170,7 @@ def test_an_index_map_alone_is_a_witness():
         "\n".join(
             line
             for line in ABUGANZA_PLANE_STRESS.splitlines()
-            if "sigma2D(3)" not in line
+            if "s3(3)" not in line
         )
         + "\n"
     )
@@ -178,49 +180,63 @@ def test_an_index_map_alone_is_a_witness():
 
 
 def test_a_lone_one_element_assignment_is_not_an_index_map():
-    text = LEMAITRE.replace(
-        "      do i=4,ntens\n       ddsdde(i,i)=eg\n      end do\n",
-        "      n(3) = 1\n      m(3) = 2\n",
-    )
+    text = LEMAITRE.replace(SHEAR_LOOP, "      n(3) = 1\n      m(3) = 2\n")
+    assert text != LEMAITRE
     assert from_source(text, "x.f").ntens == 0
 
 
 _CACHE = (WORKSPACE / "discovery_cache")
 _LEMAITRE = "awhelanUCD__Lemaitre-damage-UMAT-Public"
 _CAE = "CAEAssistant-Group__UMAT-Abaqus-Tsai-Hill-Orthotropic-Composite-Subroutine"
+#: (cache path, sha256 of the acquired file, the NTENS the source settles).
 _FULL = [
-    (f"{_LEMAITRE}/nonLocalLemaitre/lemaitreDamageNonLocal.f", 0),
-    (f"{_LEMAITRE}/HETVAL_nonLocalLemaitre/HETVAL_lemaitreDamageNonLocal.f", 0),
-    (f"{_CAE}/PLANESTRESS-ORTHOTROPIC.for", 3),
-    ("abuganza__UMAT_anisotropic_damage/UMAT_Tissue_2d_plane_stress.f", 3),
-    ("abuganza__UMAT_anisotropic_damage/UMAT_Tissue_2d_plane_strain.f", 4),
-    ("toruinaba__manforge/fortran/yu_kinematic_ps.f90", 3),
-    ("nsundar__PFM_UMAT_ElastoPlastic/UMAT_phasefield_plasticity.f", 0),
+    (f"{_LEMAITRE}/nonLocalLemaitre/lemaitreDamageNonLocal.f",
+     "f841c77b3c7687f1ff8696a4758f9198aeb85dbd06c97d409c400baaa4f87a38", 0),
+    (f"{_LEMAITRE}/HETVAL_nonLocalLemaitre/HETVAL_lemaitreDamageNonLocal.f",
+     "05950d293364cca35118efca869e045ef1c37c2fa8193fc758b4697e7edc41ca", 0),
+    (f"{_CAE}/PLANESTRESS-ORTHOTROPIC.for",
+     "0edb02e263c139f7a018d606e866f1814fe0069cac9c488a9ed9d79865882056", 3),
+    ("abuganza__UMAT_anisotropic_damage/UMAT_Tissue_2d_plane_stress.f",
+     "16cb30f2f14c98ed86cc975fc8b9fa382743a7a7c243904756bb14a07d9db094", 3),
+    ("abuganza__UMAT_anisotropic_damage/UMAT_Tissue_2d_plane_strain.f",
+     "d4e32013f77be9e17f8eadd5669cc9b56bbdc0e4c646586bd1c0973816736ac6", 4),
+    ("toruinaba__manforge/fortran/yu_kinematic_ps.f90",
+     "fa77fb52b0580aed13ec6f6ac4dc9be7e1e9cfdc4260979d7a403f4cd3c84d8a", 3),
+    ("nsundar__PFM_UMAT_ElastoPlastic/UMAT_phasefield_plasticity.f",
+     "c8099067cf56f3e96c52667dc4bf351e183cc0f929c5eb0345521b6294b92ead", 0),
 ]
 
 
-@pytest.mark.parametrize("relative, expected", _FULL)
-def test_full_corpus_files(relative, expected):
+def _cached(relative: str, sha256: str) -> str:
+    """The acquired file's text, skipping when the cache is absent and failing
+    when it holds a different file than the one these expectations were read
+    from."""
     path = _CACHE / relative
     if not path.is_file():
         pytest.skip(f"acquisition cache not present: {relative}")
-    found = from_source(path.read_text(errors="replace"), str(path))
+    data = path.read_bytes()
+    assert hashlib.sha256(data).hexdigest() == sha256, f"cache changed: {relative}"
+    return data.decode("utf-8", "replace")
+
+
+@pytest.mark.parametrize("relative, sha256, expected", _FULL)
+def test_full_corpus_files(relative, sha256, expected):
+    found = from_source(_cached(relative, sha256), relative)
     assert found.ntens == expected, found.evidence
 
 
 def test_full_lemaitre_with_its_own_deck():
-    folder = _CACHE / "awhelanUCD__Lemaitre-damage-UMAT-Public/nonLocalLemaitre"
-    source, deck = (
-        folder / "lemaitreDamageNonLocal.f",
-        folder / "axiSymmetricNotchedBar.inp",
+    folder = f"{_LEMAITRE}/nonLocalLemaitre"
+    source = _cached(f"{folder}/lemaitreDamageNonLocal.f", _FULL[0][1])
+    deck = _cached(
+        f"{folder}/axiSymmetricNotchedBar.inp",
+        "fcd63350df8a8c7c9f76681d57095827a79521ff7e4c93eadae9bf44188ac49f",
     )
-    if not (source.is_file() and deck.is_file()):
-        pytest.skip("acquisition cache not present")
     settled = settle(
-        source.read_text(errors="replace"),
-        str(source),
-        deck.read_text(errors="replace"),
-        deck.name,
+        source,
+        "lemaitreDamageNonLocal.f",
+        deck,
+        "axiSymmetricNotchedBar.inp",
         "Material-1",
     )
     assert settled.element == "CAX4"

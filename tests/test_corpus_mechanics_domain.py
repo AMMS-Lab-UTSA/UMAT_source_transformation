@@ -11,6 +11,8 @@ asked the original an undefined question.
 
 from __future__ import annotations
 
+import hashlib
+
 import numpy as np
 import pytest
 from _workspace import WORKSPACE  # noqa: E402
@@ -26,30 +28,31 @@ from umat_oti.corpus_features.mechanics_checks import run_checks
 
 pytestmark = pytest.mark.unit
 
-#: Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/
-#: Examples-In-Section-3/ArcDown/Th001/BodyForce-Growth-2Stages.for lines
-#: 88 (UMAT header, abridged) and 214-229, verbatim.
+#: Synthetic, standing for Jeff97 .../BodyForce-Growth-2Stages.for (2.2
+#: variant): the standard UMAT interface, then a two-stage growth stretch G11
+#: defined by an IF / ELSE IF chain on TIME(2)+DTIME up to 2.2 with no ELSE
+#: (lines 11-16, the second branch continued over two lines), and G11 stored.
+#: No corpus text is copied; ``test_the_full_corpus_file`` reads the real file.
 BODYFORCE = """\
       SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,SSE,SPD,SCD,
      1 RPL,DDSDDT,DRPLDE,DRPLDT,
      2 STRAN,DSTRAN,TIME,DTIME,TEMP,DTEMP,PREDEF,DPRED,CMNAME,
      3 NDI,NSHR,NTENS,NSTATV,PROPS,NPROPS,COORDS,DROT,PNEWDT,
      4 CELENT,DFGRD0,DFGRD1,NOEL,NPT,LAYER,KSPT,KSTEP,KINC)
-        TotalT=1.0
+        STAGE1=1.0
 
-        G11St1 = (Lambda1z0St1 + Y*Lambda1z1St1)
-        G11St2 = (Lambda1z0St2 + Y*Lambda1z1St2)
+        GA = 1.0 + 0.2*PROPS(1)
+        GB = 1.0 + 0.5*PROPS(1)
 
-        IF ( (TIME(2)+DTIME) .LE. 1.0) THEN
-          G11=1.0 + (G11St1-1.0)*(TIME(2)+DTIME)/TotalT
-        ELSE IF ( (TIME(2)+DTIME) .LE. 2.2) THEN
-          G11=2.0*G11St1-G11St2
-     &        +(G11St2-G11St1)*(TIME(2)+DTIME)/TotalT
+        IF ((TIME(2)+DTIME) .LE. 1.0) THEN
+          G11 = 1.0 + (GA-1.0)*(TIME(2)+DTIME)/STAGE1
+        ELSE IF ((TIME(2)+DTIME) .LE. 2.2) THEN
+          G11 = GA
+     &        + (GB-GA)*((TIME(2)+DTIME)-STAGE1)/1.2
         END IF
-C G is growth tensor
-        ! G11 = 1.0+DtltaG11
-        G12 = 0.0
-        STATEV(8) = G11
+C       growth stretch, held in state
+        G22 = 1.0
+        STATEV(1) = G11
       RETURN
       END
 """
@@ -146,23 +149,24 @@ def test_no_documented_range_means_no_bound():
     assert "no documented time range" in dom["time_provenance"]
 
 
-#: MCM-QMUL__PhaseFieldComp/Subroutine/UELUMATPhaseField_AT2.for lines
-#: 580-592 (verbatim, a first-call initialisation inside UMAT).
+#: Synthetic, standing for MCM-QMUL__PhaseFieldComp/Subroutine/
+#: UELUMATPhaseField_AT2.for: a first-call initialisation inside UMAT, a
+#: one-branch IF on TIME(1)-DTIME < 0 holding an IF / ELSE on a flag.
 MCM_INIT = """\
       SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,TIME,DTIME,NOEL)
-       if ((time(1)-dtime).lt.0.d0) then
-        if (kflagE.ne.13) then
-         kincK=0
-         kkiter=1
-         nelem=noel
-         UserVar=0.d0
-         kflagE=13
-        else
-         CALL MutexLock(1)
-         if (noel.gt.nelem) nelem=noel
-         CALL MutexUnlock(1)
-        endif
-       endif
+      IF ((TIME(1)-DTIME) .LT. 0.D0) THEN
+        IF (INITED .NE. 7) THEN
+          NCALLS=0
+          NFIRST=1
+          NMAX=NOEL
+          WORK=0.D0
+          INITED=7
+        ELSE
+          CALL LOCKIT(1)
+          IF (NOEL .GT. NMAX) NMAX=NOEL
+          CALL UNLOCKIT(1)
+        END IF
+      END IF
       END
 """
 
@@ -183,18 +187,36 @@ def test_assigning_a_dummy_argument_on_a_range_is_not_undefined():
 
 
 _CACHE = (WORKSPACE / "discovery_cache")
-_SOURCE = _CACHE / (
+_SOURCE = (
     "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/"
     "Examples-In-Section-3/ArcDown/Th001/BodyForce-Growth-2Stages.for"
 )
+_SHA256 = "866a451e1520fe7bf0242a992f1333e755c06c54bb021efaaf6b1861d6f49627"
 
 
 def test_the_full_corpus_file():
-    if not _SOURCE.is_file():
+    path = _CACHE / _SOURCE
+    if not path.is_file():
         pytest.skip("acquisition cache not present")
-    text = _SOURCE.read_text(errors="replace")
+    data = path.read_bytes()
+    assert hashlib.sha256(data).hexdigest() == _SHA256, "cache changed"
+    text = data.decode("utf-8", "replace")
     (chain,) = [c for c in piecewise_chains(text) if c.on_time]
     assert chain.defines == ("G11",) and chain.upper == pytest.approx(2.2)
     assert (chain.first_line, chain.last_line) == (219, 224)
     for path in paths_for(_entry(source_text=text)):
         assert sum(i.dtime for i in path.increments) <= 2.2 * (1 + 1e-9)
+
+
+def test_the_full_first_call_initialisation():
+    path = _CACHE / "MCM-QMUL__PhaseFieldComp/Subroutine/UELUMATPhaseField_AT2.for"
+    if not path.is_file():
+        pytest.skip("acquisition cache not present")
+    data = path.read_bytes()
+    assert (
+        hashlib.sha256(data).hexdigest()
+        == "dc42b776c4c9d32ca5ea9b782dc04bcbf59a65f2837f6dac0906abdba368230b"
+    ), "cache changed"
+    text = data.decode("utf-8", "replace")
+    dom = model_domain(_entry(deck_periods=[], source_text=text))
+    assert dom["time_max"] is None
