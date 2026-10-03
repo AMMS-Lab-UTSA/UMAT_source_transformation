@@ -4137,7 +4137,10 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     # source, then anywhere in its own repository. Not further: supplying a
     # table from another author's repository would be inventing the data the
     # model runs on.
-    data_roots = (Path(cache_root) / Path(stored.source_id).parts[0],)
+    # The ORIGINAL source's own directory first: an INCLUDE resolves against
+    # it (the transformed and control builds sit elsewhere), then the
+    # repository root (data files, include_shim.stage_includes).
+    data_roots = (Path(original).parent, Path(cache_root) / Path(stored.source_id).parts[0])
     # A frozen experiment replaces the search outright, and only when the
     # bytes it was chosen for are the bytes on disk now.
     kept = (frozen or {}).get(stored.source_id)
@@ -4787,6 +4790,17 @@ def choose_gate_states(original_history: Sequence[dict],
     else:
         before = [pair for pair in replayable if pair[0] < turn - 1]
         after = [pair for pair in replayable if pair[0] > turn + 1]
+        # Coverage needs two states before activation. Where fewer than
+        # `each_side` are clear of it (activation at the third increment
+        # leaves one), the increment right before activation is added -- still
+        # chosen from the ORIGINAL before anything is compared (A5), and never
+        # one at or after activation (and not at all when activation is at the
+        # second record: then there is no elastic branch, A7). Whether its
+        # perturbations cross the
+        # transition is then the per-entry smoothness test's to say.
+        adjacent = [pair for pair in replayable if pair[0] == turn - 1]
+        if len(before) < each_side and adjacent and turn > 1:
+            before = sorted(before + adjacent[: each_side - len(before)])
         # A side with too few states lends its share to the other: a growth
         # law active from its first increment has no state before activation
         # (Curie item 5: >= 4 states).
@@ -4807,7 +4821,8 @@ def choose_gate_states(original_history: Sequence[dict],
                     "point": best[1], "position": position}
                    for position, _r, record, _t in chosen],
         "rule": (f"{each_side} states either side of this point's activation, one "
-                 f"increment clear of it" if turn is not None else
+                 f"increment clear of it where the history allows, the increment "
+                 f"just before it otherwise" if turn is not None else
                  f"{2 * each_side} states spread along the path (no activation at this point)"),
     }
     return chosen, selection

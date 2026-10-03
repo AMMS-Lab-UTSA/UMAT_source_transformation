@@ -91,3 +91,14 @@ def test_states_pair_on_step_as_well_as_increment(tool):
         assert trans["STRESS"] == orig["STRESS"]
     keys = [(s["step"], s["increment"]) for s in selection["states"]]
     assert len(keys) == len(set(keys)) and {k[0] for k in keys} == {1, 2}
+
+
+def test_an_early_activation_still_gives_two_states_before_it(tool):
+    """pass21: activation at the third increment left one pre-activation state
+    clear of it, and the row lost on its own coverage rule."""
+    original = _history(points=(1,), increments=12, activate={1: 3})
+    chosen, selection = tool.choose_gate_states(original, _history(points=(1,),
+                                                                   transformed=True))
+    before = [s["increment"] for s in selection["states"] if s["increment"] < 3]
+    assert before == [1, 2]
+    assert all(s["increment"] != 3 for s in selection["states"])
