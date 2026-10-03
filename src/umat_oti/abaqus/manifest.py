@@ -240,6 +240,12 @@ class VerificationManifest:
     primal_tolerance: float = 1e-10
     notes: str = ""
     status: str = "ready"
+    #: Where each value of a COUNCIL-designed manifest came from (D-19a rev 2
+    #: R2): ``(field, origin, provenance)`` with origin one of
+    #: author_published | source | council_default | council_choice. Empty for
+    #: a manifest read from an author's deck, and then not serialised, so
+    #: those manifests read exactly as before.
+    origins: tuple[tuple[str, str, str], ...] = ()
 
     def __post_init__(self) -> None:
         """Fill the tensor shape from the element, or refuse to contradict it.
@@ -279,6 +285,11 @@ class VerificationManifest:
         record["source"] = str(self.source)
         record["bundle"] = [str(path) for path in self.bundle]
         record["loading"] = [asdict(segment) for segment in self.loading]
+        if self.origins:
+            record["origins"] = {name: {"origin": origin, "provenance": why}
+                                 for name, origin, why in self.origins}
+        else:
+            record.pop("origins", None)
         return record
 
     def missing_requirements(self) -> tuple[str, ...]:
