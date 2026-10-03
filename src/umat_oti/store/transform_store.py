@@ -156,6 +156,16 @@ HARNESS_CODE = ("abaqus", "corpus_features")
 HARNESS_TOOLS = ("tools/verify_store_in_abaqus.py",)
 
 
+def harness_fingerprint_basis(package_root: Optional[Path] = None) -> str:
+    """Which digest :func:`harness_fingerprint` computed: ``package+tools``
+    (the repository's gate tool found and digested) or ``package-only`` (an
+    installed package without tools/). Recorded beside the fingerprint, so a
+    package-only digest is never mistaken for the full identity."""
+    root = _package_root(package_root)
+    found = any((root.parents[1] / name).is_file() for name in HARNESS_TOOLS)
+    return "package+tools" if found else "package-only"
+
+
 def harness_fingerprint(package_root: Optional[Path] = None) -> str:
     """A digest of the verification harness (:data:`HARNESS_CODE`).
 

@@ -117,10 +117,12 @@ from umat_oti.abaqus.truncation import analyse as analyse_truncation    # noqa: 
 from umat_oti.abaqus.support import (                                   # noqa: E402
     build_support, compile_order, install_support)
 from umat_oti.store import TransformStore                               # noqa: E402
-from umat_oti.store.transform_store import harness_fingerprint      # noqa: E402
+from umat_oti.store.transform_store import (                        # noqa: E402
+    harness_fingerprint, harness_fingerprint_basis)
 
 #: Computed once per process, so every row of a run carries the same value.
 _HARNESS_FINGERPRINT = harness_fingerprint()
+_HARNESS_BASIS = harness_fingerprint_basis()
 
 # ---------------------------------------------------------------------------
 # the ladder
@@ -4039,6 +4041,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         # fingerprint, so without this a change to how a source is run left
         # every earlier verdict looking current.
         "harness_fingerprint": _HARNESS_FINGERPRINT,
+        "harness_fingerprint_basis": _HARNESS_BASIS,
         "repository": (proposal or {}).get("repository", ""),
         "stage": "", "reason": "", "warnings": [],
     }
@@ -5065,7 +5068,11 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
     enough, coverage_reason = coverage(regimes, nonlinear=nonlinear, character=character,
                                        no_elastic_branch=no_elastic)
     outcome["coverage"] = coverage_reason
-    verified, reason = gate.row_verdict(judgements, len(chosen), coverage_ok=enough,
+    # a frozen state that was not found is a chosen state with no judgement:
+    # it stays in the denominator (A5)
+    denominator = len(chosen) + len(selection.get("not_found") or ())
+    outcome["states_chosen"] = denominator
+    verified, reason = gate.row_verdict(judgements, denominator, coverage_ok=enough,
                                         coverage_reason=coverage_reason)
     outcome["verified"] = verified
     outcome["failed"] = any(j is not None and j.failed for j in judgements)
