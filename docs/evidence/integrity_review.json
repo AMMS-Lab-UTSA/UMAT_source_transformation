@@ -1586,6 +1586,22 @@
   "removed_check:tests/test_an_uppercase_include_is_the_same_header.py:test_the_environment_file_keeps_the_shipped_flags_and_leaves_P_last:fb022ced": {
    "verdict": "justified",
    "reason": "The expected compile-flag tail changed from [-I shim] to [-I shim, -assume, norealloc_lhs] because the env now adds -assume norealloc_lhs (Abaqus 2021 does not export for_realloc_lhs; UVCplanestress failed to load). The test still asserts the shipped flags are kept and %P stays last."
+  },
+  "skip:tests/test_a_job_records_whether_it_needs_realloc_lhs.py:<module>:mark.skipif:c75f1cce": {
+   "verdict": "justified",
+   "reason": "The probe compiles with ifort and the Abaqus 2021 site environment's compile_fortran flags; it is skipped only on a machine without them. The flag-parsing test runs everywhere."
+  },
+  "skip:tests/test_binary32_judging.py:test_the_harness_applies_b32_to_a_build_in_scope:call:skip:c58bd451": {
+   "verdict": "justified",
+   "reason": "The harness integration needs gfortran to build the toy original, its double variant and the lifted build; skipped only when gfortran is not on PATH. The B32 rule itself is tested without a compiler."
+  },
+  "mock:tests/test_binary32_judging.py:test_the_harness_applies_b32_to_a_build_in_scope:monkeypatch.setattr:c7c1e0a0": {
+   "verdict": "justified",
+   "reason": "Sets the lifted build's binary32 scope (B32-0) to a map naming GMOD so the harness wiring is tested independently of whether the transform in this checkout already writes the map; the judging, the double-variant build and run, and the record are real."
+  },
+  "skip:tests/test_staged_includes_are_guarded_and_promoted.py:<module>:mark.skipif:6824f295": {
+   "verdict": "justified",
+   "reason": "Only the quad replay build test needs gfortran; it is skipped without it. The guard, sha256 and conversion tests run everywhere."
   }
  }
 }
