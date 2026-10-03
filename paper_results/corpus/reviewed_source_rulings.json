@@ -37,6 +37,26 @@
     "wedge_elast.inp:312: *ELEMENT, TYPE=CPS3, ELSET=decoy",
     "wedge_elast.inp:512-518: *Solid Section, elset=decoy, material=decoy / *Material, name=decoy / *User Material, constants=6 / 1.0e-11, 0.3"
    ]
+  },
+  {
+   "source_id": "hamza-djeloud__thesis_project/plate_with_notch.for",
+   "key": "2fa33fedb38d6a51654cfbee",
+   "sha256": "d6ba66345f9cb90fa317de9e2b802718c98e6d5a0bb00e8a20ad5eafae147916",
+   "terminal_state": "not_a_umat",
+   "reason": "not a UMAT: the visualisation UMAT for the UEL's overlay mesh (material UMATELEM, E = 1e-11); its STATEV are copies of COMMON /KUSER/ USRVAR, which only the UEL fills, at NELEMAN = NOEL - 2*N_ELEM; the constitutive model is the UEL",
+   "ruled_by": "Vera",
+   "ruling": "corpus_campaign/batches/B10/vera_pre22b/REPORT.md, Scout rulings (hamza-djeloud: not_a_umat, accepted)",
+   "rule": "visualisation_umat",
+   "evidence": [
+    "plate_with_notch.for:36: SUBROUTINE UEL(RHS,AMATRX,SVARS,ENERGY,NDOFEL,NRHS,NSVARS,",
+    "plate_with_notch.for:256: USRVAR(JELEM,I+NSTVTT,INPT)=SVARS(NSTVTO*(INPT-1)+I)",
+    "plate_with_notch.for:588: COMMON/KUSER/USRVAR(N_ELEM,NSTV,4)",
+    "plate_with_notch.for:632: NELEMAN=NOEL-TWO*N_ELEM",
+    "plate_with_notch.for:640: STATEV(I)=USRVAR(NELEMAN,I,NPT)",
+    "plate_with_notch.inp:17809: *Solid Section, elset=umatelem, material=UMATELEM",
+    "plate_with_notch.inp:17855: *Material, name=UMATELEM",
+    "plate_with_notch.inp:17858-17859: *User Material, constants=2 / 1e-11, 0.3"
+   ]
   }
  ]
 }
