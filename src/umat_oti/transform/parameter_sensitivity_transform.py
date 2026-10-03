@@ -1017,26 +1017,33 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
     # SIGN(a, b) is |a| with the sign of b; b contributes no derivative because
     # only its sign is used.
     lines += [
+        # The sign is decided as the intrinsic decides it, SIGN(1, B): B < 0
+        # missed -0.0, where gfortran's SIGN(A, -0.0) is -|A|, and a NaN with
+        # its sign bit set. The real part is the intrinsic's own value, so
+        # SIGN(-0.0, B) and NaN magnitudes come out bit for bit; the
+        # derivative parts are those of +-ABS(A), as before.
         "  ELEMENTAL FUNCTION oti_sign_oo(A, B) RESULT(RES)",
         "    IMPLICIT NONE",
         f"    TYPE({type_name}), INTENT(IN) :: A, B",
         f"    TYPE({type_name}) :: RES",
-        "    IF (B%R < 0.0_DP) THEN",
+        "    IF (SIGN(1.0_DP, B%R) < 0.0_DP) THEN",
         "      RES = -ABS(A)",
         "    ELSE",
         "      RES = ABS(A)",
         "    END IF",
+        "    RES%R = SIGN(A%R, B%R)",
         "  END FUNCTION oti_sign_oo",
         "  ELEMENTAL FUNCTION oti_sign_or(A, B) RESULT(RES)",
         "    IMPLICIT NONE",
         f"    TYPE({type_name}), INTENT(IN) :: A",
         "    REAL(DP), INTENT(IN) :: B",
         f"    TYPE({type_name}) :: RES",
-        "    IF (B < 0.0_DP) THEN",
+        "    IF (SIGN(1.0_DP, B) < 0.0_DP) THEN",
         "      RES = -ABS(A)",
         "    ELSE",
         "      RES = ABS(A)",
         "    END IF",
+        "    RES%R = SIGN(A%R, B)",
         "  END FUNCTION oti_sign_or",
         # SIGN(real, differentiated). The magnitude is a real constant and the
         # sign is piecewise constant, so the result is a real number with no
@@ -1047,11 +1054,7 @@ def _emit_intrinsic_extensions(module_name: str, type_name: str) -> str:
         "    REAL(DP), INTENT(IN) :: A",
         f"    TYPE({type_name}), INTENT(IN) :: B",
         "    REAL(DP) :: RES",
-        "    IF (B%R < 0.0_DP) THEN",
-        "      RES = -ABS(A)",
-        "    ELSE",
-        "      RES = ABS(A)",
-        "    END IF",
+        "    RES = SIGN(A, B%R)",
         "  END FUNCTION oti_sign_ro",
         "  FUNCTION oti_log10(A) RESULT(RES)",
         "    IMPLICIT NONE",
