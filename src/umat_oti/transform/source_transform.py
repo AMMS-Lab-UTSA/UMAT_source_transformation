@@ -282,7 +282,12 @@ def transform_umat_to_oti_from_config(
                     pass
                 else:
                     helper_lift_issue = ""
-    blockers = _readiness_blockers(config, roles, regions, mappings, ntens, selected_umat, source_text, helper_lift_issue="", parsed=parsed)
+    # DDSDDE writes inside a routine the UMAT calls are judged on the emitted
+    # text (see _callee_ddsdde_writes_left_live); until then they are held
+    # here, and any refusal before that point reports them as blockers.
+    deferred_ddsdde_writes: list[dict[str, Any]] = []
+    blockers = _readiness_blockers(config, roles, regions, mappings, ntens, selected_umat, source_text, helper_lift_issue="", parsed=parsed,
+                                   deferred_ddsdde_writes=deferred_ddsdde_writes)
     blockers.extend(tangent_context.blockers)
     blockers.extend(parameter_type_blockers)
     if parameter_slots and order != 1:
@@ -305,6 +310,8 @@ def transform_umat_to_oti_from_config(
             blockers.append("The built-in DSPEVD implementation is currently verified for order=1 only.")
     if helper_lift_issue:
         blockers.append(f"Helper lifting failed: {helper_lift_issue}")
+    if blockers:
+        blockers.extend(row["message"] for row in deferred_ddsdde_writes)
     report_base = _report_base(
         config=config,
         selected_umat=selected_umat,
@@ -344,6 +351,7 @@ def transform_umat_to_oti_from_config(
     shape_blockers.extend(complex_plan.blockers)
     if shape_blockers:
         blockers.extend(shape_blockers)
+        blockers.extend(row["message"] for row in deferred_ddsdde_writes)
         report = {**report_base, "success": False, "warnings": warnings, "blockers": blockers, "generated_files": []}
         report_path = _write_report(output_dir, report)
         return TransformResult(False, output_dir, report_path=report_path, blockers=blockers, warnings=warnings, report=report)
@@ -415,6 +423,10 @@ def transform_umat_to_oti_from_config(
     complex_blockers = complex_support.complex_consistency_issues(
         complex_plan, source_text, parsed.form, transformed_source, lifted_helper_text,
         module_result.type_name)
+    complex_blockers.extend(_callee_ddsdde_writes_left_live(
+        deferred_ddsdde_writes, transformed_source, parsed, selected_umat,
+        mappings.get("ddsdde", "DDSDDE"), set(helper_lift_names), lifted_helper_text,
+        oti_helper_dummies))
     if complex_blockers:
         blockers.extend(complex_blockers)
         report = {**report_base, "success": False, "warnings": warnings, "blockers": blockers, "generated_files": []}
@@ -856,6 +868,7 @@ def _readiness_blockers(
     source_text: str,
     helper_lift_issue: str = "",
     parsed: ParsedFortranSource | None = None,
+    deferred_ddsdde_writes: list[dict[str, Any]] | None = None,
 ) -> list[str]:
     blockers: list[str] = []
     for name in _locals_colliding_with_the_oti_modules(source_text):
@@ -945,7 +958,8 @@ def _readiness_blockers(
         _reachable_routine_regions(parsed, selected_umat), parsed, selected_umat,
         _as_int(_dict(_dict(config.get("transformation_anchors"))
                       .get("ddsdde_extraction")).get("insert_after_line")),
-        active_names=roles["seed"] | roles["promote"]))
+        active_names=roles["seed"] | roles["promote"],
+        deferred=deferred_ddsdde_writes))
     if not source_text.strip():
         blockers.append("Selected UMAT source text is empty.")
     if not has_completed_anchors:
@@ -1809,6 +1823,7 @@ def _uncovered_ddsdde_blockers(
     selected_umat: str = "",
     extraction_line: int = 0,
     active_names: set[str] | None = None,
+    deferred: list[dict[str, Any]] | None = None,
 ) -> list[str]:
     """DDSDDE assignments the transform would leave writing the old tangent.
 
@@ -1826,6 +1841,16 @@ def _uncovered_ddsdde_blockers(
     nothing calls -- and reporting it says nothing true about the source. One
     file lists twenty-two such assignments in a routine its UMAT does not
     call, and they were the whole of its blocker text.
+
+    ``deferred``, when given, receives instead of a blocker every assignment
+    that sits in a routine other than the selected one. Such a write lands in
+    whatever array the CALL binds to that dummy, and that is decided by the
+    rewrite, not here: when every call that can reach the routine is emitted
+    as a call to its lifted copy, the dummy is bound to DDSDDE_OTI and the
+    write never touches the array Abaqus reads. Whether that happened is
+    settled on the emitted text by :func:`_callee_ddsdde_writes_left_live`,
+    and every deferred assignment it cannot clear is refused there with the
+    message it would have had here.
     """
     blockers = []
     first_stress_start = min((region.get("start_line", 0) for region in stress_regions), default=0)
@@ -1857,7 +1882,7 @@ def _uncovered_ddsdde_blockers(
             where = f" at line {min(numeric)}" if numeric else ""
             # The assignment's own text stays LAST, after the final ": ",
             # where readers of this message have always found it.
-            blockers.append(
+            message = (
                 f"DDSDDE assignment is not covered by an old tangent replacement "
                 f"region ({where.strip() or 'line not recorded'}; it is reached "
                 f"after the stress update and would overwrite the OTI tangent. "
@@ -1865,6 +1890,16 @@ def _uncovered_ddsdde_blockers(
                 f"transformation_anchors.old_tangent as a replacement, or mark "
                 f"it keep-real setup if it only initialises DDSDDE): "
                 f"{assignment.get('text', '')}")
+            holder = (_routine_containing(parsed, min(numeric))
+                      if parsed is not None and numeric else "")
+            if (deferred is not None and holder and umat_span
+                    and holder != (selected_umat or "UMAT").upper()
+                    and not any(umat_span[0] <= n <= umat_span[1] for n in numeric)):
+                deferred.append({"holder": holder, "line_numbers": numeric,
+                                 "text": str(assignment.get("text", "")),
+                                 "message": message})
+                continue
+            blockers.append(message)
     return blockers
 
 
@@ -1973,6 +2008,123 @@ def _overwritten_through_its_call_sites(
             not (umat_span[0] <= line <= umat_span[1]) for line in ddsdde_stress_input_lines):
         return True
     return all(last_stress_end <= line for line in call_lines)
+
+
+#: A subscript the emitter writes (OTI_I, OTI_HJ, ...): a reference to the
+#: real DDSDDE carrying only such subscripts is the transform's own copy-in or
+#: extraction, never a statement of the author's.
+_GENERATED_DDSDDE_SUBSCRIPT = r"\(\s*OTI_\w+\s*(?:,\s*OTI_\w+\s*)*\)"
+
+
+def _callee_ddsdde_writes_left_live(
+    deferred: list[dict[str, Any]],
+    transformed_source: str,
+    parsed: ParsedFortranSource | None,
+    selected_umat: str,
+    ddsdde: str,
+    lifted_names: set[str],
+    lifted_helper_text: str,
+    oti_helper_dummies: dict[str, list[str | None]],
+) -> list[str]:
+    """The deferred callee DDSDDE writes the emitted code can still route into Abaqus's DDSDDE.
+
+    A routine other than the UMAT that assigns DDSDDE assigns a dummy
+    argument, and the value lands in whatever the CALL binds to it. A UMAT
+    that dispatches -- ``CALL UMAT_MAT1(STRESS, STATEV, DDSDDE, ...)`` -- or
+    that builds an elastic stiffness in a helper and reads it back into the
+    stress (``CALL STIFFNESS(B, EMOD, DDSDDE)`` then ``STRE = STRE +
+    DDSDDE*DSTRA``) has those callees on the stress path, so they are lifted,
+    and the rewrite hands the lifted copy DDSDDE_OTI. The old tangent the
+    callee builds is then a hypercomplex working value that carries its own
+    derivative into any stress that reads it, and the array Abaqus reads is
+    written by the extraction alone. Seven corpus sources were refused for
+    those writes as if they reached the output.
+
+    That is a statement about the emitted text, so it is checked there. A
+    write is cleared only when ALL of these hold, and refused with its
+    original message otherwise:
+
+    * its routine was lifted, and the written name is a dummy of it that the
+      lifted body declares hypercomplex -- so any actual bound to it is a
+      shadow (a REAL actual could not be passed to it);
+    * no live statement of the emitted UMAT, and none of the lifted helpers,
+      names the ORIGINAL routine or any original routine that can call it --
+      so the unlifted body, which writes a REAL dummy, is never reached;
+    * the emitted UMAT references the real DDSDDE only in declarations and
+      through the emitter's own OTI_-subscripted copy-in and extraction --
+      so no statement of the author's reads a real DDSDDE that the callee
+      no longer writes (the primal would then read a stale array), and none
+      passes the real array to anything.
+
+    An empty or unparsable input clears nothing.
+    """
+    if not deferred:
+        return []
+    refused = [row["message"] for row in deferred]
+    if parsed is None or not transformed_source:
+        return refused
+    umat = (selected_umat or "UMAT").upper()
+    routines = {routine.upper_name: routine for routine in parsed.subroutines}
+    callers: dict[str, set[str]] = {}
+    for name in routines:
+        for call in build_call_graph(parsed, name):
+            callers.setdefault(call.callee.upper(), set()).add(name)
+    lifted = {name.upper() for name in lifted_names}
+    lifted_dummies = {key.upper(): value for key, value in (oti_helper_dummies or {}).items()}
+
+    form = parsed.form
+    lines = transformed_source.splitlines()
+    span = _transformed_routine_span(transformed_source, form, umat)
+    umat_live: list[str] = []
+    in_body = False
+    for number in range(span[0], min(span[1], len(lines)) + 1):
+        line = lines[number - 1]
+        if re.match(r"^\s*[Cc*!]\s*OTIS seed initialization", line):
+            in_body = True
+        if _is_commented(line) if form == "fixed" else line.lstrip().startswith("!"):
+            continue
+        if in_body:
+            umat_live.append(_without_character_literals(_statement_without_inline_comment(
+                line[6:] if form == "fixed" else line)))
+    if not in_body:
+        return refused
+    helper_live = [
+        _without_character_literals(_statement_without_inline_comment(line))
+        for line in lifted_helper_text.splitlines() if not line.lstrip().startswith("!")]
+
+    real_ref = re.compile(rf"(?<![%\w]){re.escape(ddsdde)}\b(?!_OTI)(?!\s*{_GENERATED_DDSDDE_SUBSCRIPT})",
+                          flags=re.IGNORECASE)
+    if any(real_ref.search(text) for text in umat_live):
+        return refused
+
+    left: list[str] = []
+    for row in deferred:
+        holder = str(row.get("holder", "")).upper()
+        routine = routines.get(holder)
+        written = re.match(r"^\s*(?:(?:FORALL|WHERE|IF)\s*\(.*?\)\s*)?([A-Za-z_]\w*)",
+                           str(row.get("text", "")), flags=re.IGNORECASE)
+        written_name = written.group(1).upper() if written else ""
+        arguments = [argument.upper() for argument in (routine.args if routine else ())]
+        typed = lifted_dummies.get(f"{holder}_OTI") or []
+        position = arguments.index(written_name) if written_name in arguments else -1
+        if (routine is None or holder not in lifted or position < 0
+                or position >= len(typed) or typed[position] is None):
+            left.append(row["message"])
+            continue
+        reaching: set[str] = set()
+        pending = [holder]
+        while pending:
+            current = pending.pop()
+            if current in reaching:
+                continue
+            reaching.add(current)
+            pending.extend(callers.get(current, set()) - reaching)
+        reaching.discard(umat)
+        names = "|".join(re.escape(name) for name in sorted(reaching))
+        original_reference = re.compile(rf"(?<![%\w])(?:{names})\b(?!_OTI)", flags=re.IGNORECASE)
+        if any(original_reference.search(text) for text in (*umat_live, *helper_live)):
+            left.append(row["message"])
+    return left
 
 
 def _routine_containing(parsed: ParsedFortranSource, line_number: int) -> str:
