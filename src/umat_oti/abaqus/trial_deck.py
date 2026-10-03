@@ -70,6 +70,10 @@ def generate_trial_deck(settings: Path | None, *, source: Path, ntens: int,
                 or not all(_finite(value) for value in segment.strain)):
             raise ValueError("Loading strain must contain six finite engineering-strain components.")
         segments.append(segment)
+    if isinstance(raw.get("origins"), dict):
+        # the serialised form of VerificationManifest.origins
+        raw = {**raw, "origins": tuple((name, str(v.get("origin", "")), str(v.get("provenance", "")))
+                                       for name, v in raw["origins"].items())}
     data = {**raw, "name": raw.get("name", source.stem), "source": source.resolve(),
             "ntens": ntens, "nprops": len(raw["props"]), "loading": tuple(segments)}
     manifest = VerificationManifest(**data)

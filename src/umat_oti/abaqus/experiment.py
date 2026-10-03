@@ -1244,6 +1244,302 @@ def plan(source: Path, repository: Path, name: str = "",
 
 
 # ---------------------------------------------------------------------------
+# a council-designed experiment (D-19a rev 2 R2; D-21)
+# ---------------------------------------------------------------------------
+#: The pairing refusals that route to a council deck.
+COUNCIL_ROUTES = ("no_deck_in_repository", "no_deck_names_this_source")
+#: Amplitude ceilings when the domain is undocumented (R3).
+COUNCIL_SMALL_STRAIN_CEILING = 0.02
+COUNCIL_FINITE_CEILING = 0.2
+_TEMP_READ = re.compile(r"\b(TEMP|DTEMP)\b", re.IGNORECASE)
+_NOEL_READ = re.compile(r"\b(COORDS|NOEL|NPT)\b", re.IGNORECASE)
+#: A formulation stated in words, and the element it names.
+_STATED_FORMULATION = (
+    (re.compile(r"plane[\s_-]*stress", re.I), "CPS4"),
+    (re.compile(r"plane[\s_-]*strain", re.I), "CPE4"),
+    (re.compile(r"axisym", re.I), "CAX4"),
+    (re.compile(r"NTENS\s*=\s*6|three[\s-]*dimensional|\b3D\b|\b6 stress", re.I), "C3D8"),
+)
+
+
+@dataclass(frozen=True)
+class CouncilPlan:
+    """A council-designed experiment for a source with no usable author deck,
+    one manifest per parameter set (D-21: >= 2 independent sets; the source
+    counts only if every set passes)."""
+
+    source: Path
+    route: str = ""
+    material_data_origin: str = ""
+    experiment_origin: str = "council_deck"
+    row_ref: str = ""
+    sets: tuple = ()              # ((set_id, Plan), ...)
+    ceiling: float = 0.0
+    ceiling_origin: tuple = ()    # (origin, provenance)
+    refusal: str = ""
+    refusal_code: str = ""
+    notes: tuple = ()
+
+    @property
+    def found(self) -> bool:
+        return bool(self.sets) and not self.refusal and all(p.found for _i, p in self.sets)
+
+    def as_dict(self) -> dict:
+        return {"source": str(self.source), "route": self.route,
+                "material_data_origin": self.material_data_origin,
+                "experiment_origin": self.experiment_origin, "row_ref": self.row_ref,
+                "ceiling": self.ceiling, "ceiling_origin": list(self.ceiling_origin),
+                "refusal": self.refusal, "refusal_code": self.refusal_code,
+                "notes": list(self.notes),
+                "counts_only_if_every_set_passes": True,
+                "sets": [{"set_id": set_id, "plan": plan.as_dict()} for set_id, plan in self.sets]}
+
+
+def _council_sets(row: dict) -> tuple[str, list, str]:
+    """``(material_data_origin, [(set_id, {index: (value, provenance)})], why_not)``."""
+    if row.get("sets") is not None:                    # a D-21 council row
+        sets = []
+        for chosen in row["sets"]:
+            values = {int(c["index"]): (float(c["value"]),
+                                        f"{c.get('name')}: {c.get('basis', '')} "
+                                        f"({c.get('confidence', '')})")
+                      for c in chosen.get("constants") or ()}
+            sets.append((str(chosen.get("set_id")), values))
+        if len(sets) < 2:
+            return "council_chosen", sets, ("D-21 requires at least two independent "
+                                            "parameter sets")
+        return "council_chosen", sets, ""
+    constants = row.get("constants") or ()               # a harvest row
+    uncounted = [c for c in constants if c.get("confidence") not in ("exact", "interpreted")
+                 or c.get("never_count_reason")]
+    if not row.get("eligible") or uncounted or not constants:
+        return "author_published_outside_deck", [], (
+            f"harvest row {row.get('key')} is not eligible ({row.get('status')}; "
+            f"{len(uncounted)} constant(s) that never count)")
+    values = {int(c["index"]): (float(c["value"]),
+                                f"{c.get('name')}: {c.get('where', '')} "
+                                f"{c.get('line_or_page', '')} ({c.get('confidence')})")
+              for c in constants if isinstance(c.get("index"), int)}
+    return "author_published_outside_deck", [("author", values)], ""
+
+
+def _numeric(stated) -> Optional[float]:
+    try:
+        return float((stated or {}).get("value"))
+    except (TypeError, ValueError):
+        return None
+
+
+def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
+                 source_text: Optional[str] = None) -> CouncilPlan:
+    """The council-designed experiment for one source (D-19a rev 2 R2).
+
+    Only for ``no_deck_in_repository`` and ``no_deck_names_this_source``;
+    the pairing is re-run every time and an author deck that pairs now wins.
+    Reads the SOURCE (settle with no deck, classify, build with no deck
+    periods, body force or supports) and the row (a harvest row, or a D-21
+    council row with its parameter sets); never an author's deck. Every
+    manifest value carries its origin. Refusals: a source reading TEMP
+    (needs_documented_temperature, until G5), COORDS / NOEL
+    (needs_documented_geometry), a formulation neither the source nor the
+    row settles (formulation_not_documented: no silent 3D default), an NSTATV
+    nobody states (needs_nstatv), a body force, a growth law without a total
+    time, and fewer than two sets for council constants.
+    """
+    from umat_oti.abaqus import deck_pairing
+    from umat_oti.abaqus.formulation import from_source, settle
+
+    source = Path(source)
+    text = source_text if source_text is not None else source.read_text(errors="replace")
+    executable = _executable(text)
+
+    def refused(code: str, why: str, **kw) -> CouncilPlan:
+        return CouncilPlan(source, refusal=why, refusal_code=code, **kw)
+
+    pairing = deck_pairing.pair(source, Path(repository), source_text=text)
+    if pairing.found:
+        return refused("pairing_changed", "an author deck now pairs this source; the author's "
+                       "experiment wins over a council one")
+    route = pairing.refusal_kind
+    if route not in COUNCIL_ROUTES:
+        return refused("not_a_council_route", f"the pairing refusal is {route or 'unnamed'}, "
+                       "which does not route to a council experiment", route=route)
+    origin, sets, why_not = _council_sets(row)
+    ref = f"{row.get('harvest_key') or row.get('key')}:{row.get('source_id')}"
+    common = dict(route=route, material_data_origin=origin, row_ref=ref)
+    if why_not:
+        return refused("insufficient_material_data", why_not, **common)
+    if row.get("sets") is not None and row.get("experiment_origin") not in (None, "council_deck"):
+        return refused("not_a_council_deck", f"the row's experiment is "
+                       f"{row.get('experiment_origin')}, not a council deck", **common)
+    # TEMP / COORDS / NOEL reads are the ROW's reviewed static scan (Scout,
+    # with Curie's overrides): a name scan of the text also finds a local
+    # called ``temp`` and NOEL passed through to a helper. Where the two
+    # disagree the plan says so for review; where the row has no answer the
+    # source is not planned.
+    body = _strip_header(executable)
+    notes = []
+    for flag, pattern in (("reads_temp", _TEMP_READ), ("reads_coords_or_noel", _NOEL_READ)):
+        named = sorted({m.upper() for m in pattern.findall(body)})
+        if row.get(flag) is None:
+            return refused("needs_static_scan", f"the row records no {flag}", **common)
+        if bool(named) != bool(row.get(flag)):
+            notes.append(f"{flag}: the row says {row.get(flag)}, a name scan of the executable "
+                         f"text finds {', '.join(named) or 'nothing'} -- for review")
+    common["notes"] = tuple(notes)
+    if row.get("reads_temp"):
+        return refused("needs_documented_temperature", "the routine reads TEMP; a documented "
+                       "temperature is held only on thermal elements until G5", **common)
+    if row.get("reads_coords_or_noel"):
+        return refused("needs_documented_geometry", "the routine reads COORDS or NOEL/NPT; "
+                       "placing a council element where a documented geometry says is not "
+                       "implemented, and a unit cube is not that geometry", **common)
+    has_force, _why = applies_a_body_force(text)
+    if has_force:
+        return refused("body_force", "a body force is the author's load; a council experiment "
+                       "does not choose one", **common)
+
+    found = from_source(text, str(source))
+    statement = str(row.get("formulation_statement") or row.get("formulation_3d_only") or "")
+    if found.known:
+        element = settle(text, str(source)).element
+        element_origin = ("source", "; ".join(found.evidence[:2]))
+    else:
+        element = next((e for pattern, e in _STATED_FORMULATION if pattern.search(statement)), "")
+        element_origin = ("author_published" if origin != "council_chosen" else "council_choice",
+                          statement[:200])
+    if not element:
+        return refused("formulation_not_documented", "neither the source nor the row says which "
+                       "formulation the routine is written for, and a 3D default would be a "
+                       "silent choice", **common)
+
+    demand = deck_pairing.demanded(text)
+    stated_nstatv = row.get("nstatv")
+    if isinstance(stated_nstatv, dict):
+        stated_nstatv = stated_nstatv.get("value")
+    if stated_nstatv is not None:
+        nstatv, nstatv_origin = int(stated_nstatv), (
+            "author_published" if origin != "council_chosen" else "council_choice",
+            str(row.get("nstatv_basis") or "row nstatv"))
+    elif demand.statev_exact or not re.search(r"\bSTATEV\s*\(", body, re.IGNORECASE):
+        nstatv, nstatv_origin = demand.nstatv, ("source", "highest literal STATEV subscript")
+    else:
+        return refused("needs_nstatv", "the routine indexes STATEV by a variable and nothing "
+                       "states NSTATV", **common)
+
+    initial_statev, from_sdvini, initial_origin = _council_initial_state(
+        row, text, max(nstatv, 1), origin)
+
+    domain = row.get("documented_domain") or {}
+    finite = bool(_DFGRD.search(executable)) or bool(re.search(r"finite", statement, re.I))
+    kin_origin = ("source", "DFGRD read in executable code") if _DFGRD.search(executable) else (
+        ("author_published", statement[:200]) if finite else
+        ("council_default", "small strain: no DFGRD read and nothing documents finite strain"))
+    documented = _numeric(domain.get("stretch_max") if finite else domain.get("strain_max"))
+    if documented is not None:
+        ceiling = (documented - 1.0) if finite and documented > 1.0 else documented
+        ceiling_origin = ("author_published", str((domain.get("stretch_max" if finite
+                                                              else "strain_max") or {})
+                                                  .get("where", "")))
+    else:
+        ceiling = COUNCIL_FINITE_CEILING if finite else COUNCIL_SMALL_STRAIN_CEILING
+        ceiling_origin = ("council_default", "undocumented domain: R3 default")
+
+    plans = []
+    for set_id, values in sets:
+        nprops = max(values) if values else 0
+        if sorted(values) != list(range(1, nprops + 1)):
+            return refused("incomplete_set", f"set {set_id} does not give every PROPS index "
+                           f"1..{nprops}", **common)
+        props = tuple(values[i][0] for i in range(1, nprops + 1))
+        props_origin = "council_choice" if origin == "council_chosen" else "author_published"
+        base = VerificationManifest(
+            name=(name or source.stem[:34]) + f"_{set_id}"[:6],
+            source=source, element_type=element, element_label=1,
+            kinematics="finite" if finite else "small strain",
+            props=props, nprops=nprops, nstatv=max(nstatv, 1),
+            initial_statev=initial_statev,
+            initial_statev_provenance=initial_origin[1] if initial_statev else "",
+            initial_state_from_user_subroutine=from_sdvini,
+            material_provenance=(f"{origin}: row {ref}, set {set_id}: "
+                                 + "; ".join(f"PROPS({i})={values[i][0]:g} {values[i][1]}"
+                                             for i in range(1, nprops + 1)))[:2000],
+            origins=(("element_type",) + element_origin,
+                     ("kinematics",) + kin_origin,
+                     ("props", props_origin, f"row {ref}, set {set_id}"),
+                     ("nstatv",) + nstatv_origin,
+                     ("initial_statev",) + initial_origin,
+                     ("loading", "council_default", "the strain-driven search under the "
+                      f"council ceiling {ceiling:g}, or the source's own clock")))
+        family = classify(text, element=element,
+                          family_of_element="cohesive" if geometry_for(element).kind == "cohesive"
+                          else "", props=props, reads_coordinates=False, oriented=False,
+                          path=source)
+        if family.name == "growth" and not time_scale.required_total_time(
+                text, props, ()).declared:
+            return refused("growth_needs_total_time", "a growth law driven by the clock, and "
+                           "nothing documents how long the clock runs (a council total time "
+                           "under D-21a (a) is not implemented here)", **common)
+        built = build(text, base, family=family, path=source, deck_periods=(),
+                      body_force=(), held=())
+        if built.requirement is not None and not built.requirement.declared:
+            # time_scale's wording assumes an author's deck was read; none was
+            built = replace(built, requirement=replace(
+                built.requirement, reason=("this routine declares no time scale and nothing "
+                                           "documents a period for it, so there is nothing "
+                                           "here that says how long an experiment has to "
+                                           "run")))
+        plans.append((set_id, Plan(source, built, None, None)))
+    return CouncilPlan(source, sets=tuple(plans), ceiling=ceiling,
+                       ceiling_origin=ceiling_origin,
+                       refusal=next((p.experiment.refusal for _i, p in plans
+                                     if p.experiment.refusal), ""),
+                       refusal_code="" if all(p.found for _i, p in plans) else "build_refused",
+                       **common)
+
+
+def _council_initial_state(row: dict, text: str, nstatv: int, origin: str):
+    """``(initial_statev, from_sdvini, (origin, provenance))`` for a council
+    manifest. A numeric list the row states is used when it fills NSTATV (a
+    single 0 means zeros); a source that defines SDVINI is started by it; a
+    statement in words ("zeros", "code zeroes STATEV at KINC==1") starts at
+    zero, which counts only once the initial-state proof (R5) passes."""
+    from umat_oti.abaqus.replay import defines_sdvini
+
+    stated = row.get("initial_statev")
+    value = stated.get("value") if isinstance(stated, dict) else stated
+    why = (f"{stated.get('rule', '')}: {stated.get('where', '')}" if isinstance(stated, dict)
+           else str(stated or ""))[:200]
+    kind = "author_published" if origin != "council_chosen" else "council_choice"
+    if defines_sdvini(text):
+        return (), True, ("source", "the source defines SDVINI; Abaqus calls it to start "
+                          "the state" + (f" ({why})" if why else ""))
+    if isinstance(value, (list, tuple)) and value:
+        try:
+            numbers = tuple(float(v) for v in value)
+        except (TypeError, ValueError):
+            numbers = ()
+        if len(numbers) == nstatv and any(numbers):
+            return numbers, False, (kind, why or "row initial_statev")
+    return (), False, ("council_default", "zero" + (f" ({why})" if why else "")
+                       + "; harmless only if the initial-state proof (R5, "
+                         "harness.initial_state_proof) passes")
+
+
+def _strip_header(executable: str) -> str:
+    """Executable text without the SUBROUTINE statement and declarations, so a
+    dummy argument named in the interface is not read as a use of it."""
+    out = []
+    for stmt in re.split(r"\n", executable):
+        head = stmt.strip().upper()
+        if head.startswith(("SUBROUTINE", "DIMENSION", "REAL", "DOUBLE", "INTEGER",
+                            "CHARACTER", "INCLUDE", "IMPLICIT", "LOGICAL")):
+            continue
+        out.append(stmt)
+    return "\n".join(out)
+
+
+# ---------------------------------------------------------------------------
 # what would count as having run the experiment
 # ---------------------------------------------------------------------------
 #: How much a growth quantity has to move before the growth has happened. One
