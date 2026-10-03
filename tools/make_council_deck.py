@@ -60,7 +60,16 @@ def _portable(text: str, cache: Path) -> str:
     return text.replace(str(cache), CACHE_TOKEN)
 
 
-def render(row: dict, cache: Path = CACHE) -> dict:
+def _rank(row: dict) -> int:
+    """Precedence of rows for one key (Vera G review C7): an eligible
+    harvest row (the author's published constants), then a D-21 council
+    row, then an ineligible harvest row -- whatever order the files came in."""
+    if row.get("sets") is not None:
+        return 1
+    return 0 if row.get("eligible") else 2
+
+
+def render(row: dict, cache: Path = CACHE, rows_read: tuple = ()) -> dict:
     """``{relative path: text}`` of everything one row produces."""
     source = cache / row["source_id"]
     repository = cache / str(row["source_id"]).split("/")[0]
@@ -68,11 +77,13 @@ def render(row: dict, cache: Path = CACHE) -> dict:
     record = plan.as_dict()
     record.update(council_fingerprint(row))
     record["row_key"] = row_key(row)
-    files = {"council_plan.json": _portable(json.dumps(record, indent=1, sort_keys=True,
-                                                       default=str), cache) + "\n"}
+    record["rows_read"] = list(rows_read)
+    files = {"council_plan.json": (_portable(json.dumps(record, indent=1, sort_keys=True,
+                                                        default=str), cache) + "\n").encode()}
     if plan.found:
         for set_id, set_plan in plan.sets:
-            files[f"council_{set_id}.inp"] = _portable(generate_deck(set_plan.manifest), cache)
+            files[f"council_{set_id}.inp"] = _portable(generate_deck(set_plan.manifest),
+                                                       cache).encode()
     return files
 
 
@@ -87,41 +98,52 @@ def main(argv=None) -> int:
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
     by_key: dict = {}
+    rows_read = []
     for rows_file in args.rows:
-        for line in rows_file.read_text().splitlines():
+        data = rows_file.read_bytes()
+        rows_read.append(f"{rows_file.name} sha256={hashlib.sha256(data).hexdigest()}")
+        for line in data.decode("utf-8").splitlines():
             if not line.strip():
                 continue
             row = json.loads(line)
             held = by_key.get(row_key(row))
-            if held is None or (row.get("eligible") and held.get("sets") is not None):
+            if held is None or _rank(row) < _rank(held):
                 by_key[row_key(row)] = row
-    rows = list(by_key.values())
+    rows = [by_key[key] for key in sorted(by_key)]
+    rows_read = tuple(sorted(rows_read))
     if args.key:
         rows = [row for row in rows if row_key(row) in set(args.key)]
     differs = []
     for row in rows:
         key = row_key(row)
-        files = render(row, args.cache)
+        files = render(row, args.cache, rows_read)
         folder = args.out / key
         if args.check:
             on_disk = {p.name for p in folder.glob("*")} if folder.is_dir() else set()
             for name in sorted(set(files) | on_disk):
                 path = folder / name
                 if name not in files or not path.is_file() \
-                        or path.read_text() != files[name]:
+                        or path.read_bytes() != files[name]:
                     differs.append(f"{key}/{name}")
             continue
         folder.mkdir(parents=True, exist_ok=True)
         for stale in folder.glob("council_*.inp"):
             if stale.name not in files:
                 stale.unlink()
-        for name, text in files.items():
-            (folder / name).write_text(text)
+        for name, data in files.items():
+            (folder / name).write_bytes(data)
         plan = json.loads(files["council_plan.json"])
         print(f"{key} {row['source_id']}: "
               + ("ready, " + ", ".join(s["set_id"] for s in plan["sets"])
                  if not plan["refusal"] else f"{plan['refusal_code']}: {plan['refusal'][:120]}"))
+    keys = {row_key(row) for row in rows}
+    orphans = sorted(p.name for p in args.out.iterdir() if p.is_dir() and p.name not in keys) \
+        if args.out.is_dir() and not args.key else []
+    if orphans:
+        print(f"{len(orphans)} folder(s) in {args.out} belong to no row read: "
+              + ", ".join(orphans[:20]))
     if args.check:
+        differs += [f"{name}/ (orphan)" for name in orphans]
         if differs:
             print(f"{len(differs)} file(s) differ from a fresh regeneration -- those rows are "
                   "suspended (R6.1):\n  " + "\n  ".join(differs))
