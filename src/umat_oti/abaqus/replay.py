@@ -906,6 +906,11 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     # repository's stub writer already emits four casings for this reason; the
     # installation's own header deserves the same treatment, because it is the
     # header the solver actually compiled against.
+    # files the units INCLUDE from beside the author's source, staged into
+    # the build directory (on -I) so a cleaned copy compiled here finds them
+    from umat_oti.abaqus.include_shim import stage_includes
+    for original_unit, unit in zip([Path(path) for path in (*extra, source)], units):
+        stage_includes(_text_of(unit), [original_unit.parent], work_dir)
     if quad:
         for header in _HEADER_NAMES:
             (work_dir / header).write_text("      implicit real*16(a-h,o-z)\n"

@@ -24,6 +24,7 @@ only the search path the compiler is given grows.
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 from typing import Sequence
 
@@ -93,9 +94,15 @@ def environment_text(shim: Path) -> str:
         "# Added by umat_oti: let a #INCLUDE written in uppercase resolve.\n"
         "# The shipped -I directories are kept and still searched; this one\n"
         "# only offers the same headers under a second spelling.\n"
+        "# -assume norealloc_lhs: ifort 2021 otherwise emits calls to\n"
+        "# for_realloc_lhs for an allocatable assignment, which the Fortran\n"
+        "# runtime Abaqus 2021 loads does not define; the library then fails\n"
+        "# to load and the job dies before its first increment (measured on\n"
+        "# ahartloper UVCplanestress). A source with no allocatable assignment\n"
+        "# compiles to the same code either way.\n"
         "try:\n"
         "    compile_fortran = (list(compile_fortran[:-1])\n"
-        f"                       + [{quoted}]\n"
+        f"                       + [{quoted}, '-assume', 'norealloc_lhs']\n"
         "                       + list(compile_fortran[-1:]))\n"
         "except NameError:\n"
         "    pass\n"
@@ -120,3 +127,79 @@ def install(work_dir: Path, roots: Sequence[str] = ()) -> Path | None:
     joined = (existing + "\n" if existing and not existing.endswith("\n") else existing)
     where.write_text(joined + environment_text(shim), encoding="utf-8")
     return shim
+
+
+#: ``INCLUDE 'name'`` (Fortran) and ``#include "name"`` / ``<name>`` (fpp).
+_INCLUDE_STATEMENT = re.compile(
+    r"^\s*(?:\d+\s+)?INCLUDE\s+['\"]([^'\"]+)['\"]"
+    r"|^\s*#\s*include\s+[\"<]([^\">]+)[\">]",
+    re.IGNORECASE | re.MULTILINE)
+
+
+def included_names(text: str) -> list[str]:
+    """Every file a source INCLUDEs, as spelled, first occurrence first."""
+    names = []
+    for line in (text or "").splitlines():
+        stripped = line.lstrip()
+        if line[:1] in "cC*" or stripped.startswith("!"):
+            continue
+        found = _INCLUDE_STATEMENT.match(line)
+        if found:
+            name = found.group(1) or found.group(2)
+            if name not in names:
+                names.append(name)
+    return names
+
+
+def _find(name: str, directory: Path) -> tuple[Path | None, str]:
+    """``name`` resolved against ``directory``: exactly, or case-insensitively
+    when exactly one entry of its folder matches (what a case-insensitive
+    filesystem -- the author's, by the evidence -- would have opened)."""
+    candidate = Path(directory) / name
+    if candidate.is_file():
+        return candidate, "exact"
+    folder = candidate.parent
+    if not folder.is_dir():
+        return None, ""
+    matches = [entry for entry in folder.iterdir()
+               if entry.is_file() and entry.name.lower() == candidate.name.lower()]
+    if len(matches) == 1:
+        return matches[0], "case-insensitive"
+    return None, "ambiguous" if matches else ""
+
+
+def stage_includes(text: str, search: Sequence[Path], shim: Path) -> list[dict]:
+    """Make every file the source INCLUDEs resolvable from the job.
+
+    Abaqus compiles the user file in a scratch directory of its own, so an
+    INCLUDE that names a file beside the author's source (``INCLUDE
+    './UMAT_MODEL.f'``, davidmorin V_UMAT) is not found there; and on Linux
+    ``INCLUDE 'PARAM_UMAT.INC'`` does not open ``param_umat.inc``
+    (jpsferreira), which the author's filesystem did. Each name is looked up
+    in ``search`` in order (the ORIGINAL source's directory first): exactly,
+    then case-insensitively when one file matches; the file is linked into
+    ``shim`` (already on the compiler's -I path) under the name as spelled.
+    Shipped Abaqus headers already in the shim are left alone. Each lookup
+    is recorded, including the ones that found nothing."""
+    staged = []
+    for name in included_names(text):
+        spelled = Path(name)
+        target = Path(shim) / (spelled.name if str(spelled.parent) in (".", "") else spelled)
+        if target.exists() or target.is_symlink():
+            if target.is_symlink() and str(target.resolve()).startswith(tuple(
+                    str(d) for d in header_directories())):
+                continue                                   # a shipped header
+        found, how = None, ""
+        for directory in search:
+            found, how = _find(name, Path(directory))
+            if found is not None:
+                break
+        if found is None:
+            staged.append({"include": name, "found": False, "reason": how or "not found"})
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists() or target.is_symlink():
+            target.unlink()
+        target.symlink_to(found.resolve())
+        staged.append({"include": name, "found": True, "from": str(found), "match": how})
+    return staged
