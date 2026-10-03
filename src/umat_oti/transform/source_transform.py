@@ -373,8 +373,12 @@ def transform_umat_to_oti_from_config(
         # characters; stitching a source's fixed-form continuations into single
         # free-form statements produced one line of 14858. The wrap only moves
         # line breaks, so the statement text is unchanged.
-        lifted_helper_text = wrap_free_form(lifted_helpers.source)
-        oti_helper_dummies = oti_typed_dummies_of_lifted_helpers(lifted_helper_text)
+        oti_helper_dummies = oti_typed_dummies_of_lifted_helpers(wrap_free_form(lifted_helpers.source))
+        # A value actual handed from one lifted helper to another is a REAL
+        # against a hypercomplex dummy just as it is from the UMAT; given the
+        # OTI type here, on the unwrapped text whose CALLs are single lines.
+        lifted_helper_text = wrap_free_form(_value_actuals_made_hypercomplex(
+            lifted_helpers.source, "free", oti_helper_dummies, lifted=True))
 
     from umat_oti.transform.binary32 import BINARY32_CONTEXT
     _binary32_typing = _selected_routine_typing(source_text, selected_umat, source_file)
@@ -3610,6 +3614,8 @@ def _transform_source_text(
         transformed_source, parsed.path.parent)
     if parameter_slots:
         transformed_source = _append_parameter_companion(transformed_source, selected_umat, form)
+    transformed_source = _value_actuals_made_hypercomplex(
+        transformed_source, form, oti_helper_dummies or {})
     if form == "fixed":
         transformed_source = _wrap_fixed_form_source(transformed_source)
     semantic_checks, _ = _semantic_checks(
@@ -7858,6 +7864,146 @@ def oti_typed_dummies_of_lifted_helpers(
     return result
 
 
+#: An actual argument that designates a variable -- NAME or NAME(subscripts),
+#: or a component of one -- as opposed to a value computed for the call.
+_DESIGNATOR_ACTUAL = re.compile(
+    r"^\s*[A-Za-z_]\w*\s*(?:\([^()]*(?:\([^()]*\)[^()]*)*\))?"
+    r"(?:\s*%\s*[A-Za-z_]\w*\s*(?:\([^()]*(?:\([^()]*\)[^()]*)*\))?)*\s*$")
+
+
+def _value_actuals_made_hypercomplex(
+    transformed_source: str, form: str, oti_helper_dummies: dict[str, list[str | None]],
+    *, lifted: bool = False,
+) -> str:
+    """Give a literal or expression actual at a lifted helper's hypercomplex dummy the OTI type.
+
+    The lifted helpers are external subprograms compiled from another file, so
+    ``CALL EULER_INTEGRATOR_OTI(..., 1.D-3, ...)`` against
+    ``TYPE(ONUMM6N1) :: DPREC`` compiles without a word, the callee reads the
+    real part from the 8-byte temporary and the six derivative parts from
+    whatever follows it on the stack. czmHealing.f (two corpus copies) and
+    PlatypusBytes' UMAT_MohrCoulomb.f were emitted like that from the UMAT,
+    and a lifted helper passing ``1.5D0`` to another lifted helper does the
+    same inside the helper file.
+
+    A value actual -- anything that does not designate a variable -- cannot be
+    written by the callee, so it can be replaced by an equal hypercomplex value
+    without changing what the program means: ``(1.D-3) + 0.0D0*OTI_E1`` has
+    real part 1.D-3 exactly (x + 0.0 is x for every x but -0.0) and zero
+    derivative parts, and a value that was hypercomplex already keeps every
+    part. In the UMAT an expression that names a shadow is left as it is; in
+    the lifted helpers, where most names are hypercomplex through IMPLICIT,
+    every value actual is wrapped. The imaginary unit is the routine's own
+    local name for E1 (OTI_E1 in the UMAT); a helper routine that uses the
+    name E1 for something of its own is not rewritten. Only single-line CALL
+    statements are rewritten; anything left is refused by
+    ``real_arguments_into_oti_helper_dummies`` /
+    :func:`value_actuals_left_real_in_lifted_helpers`.
+    """
+    dummies = {key.upper(): value for key, value in oti_helper_dummies.items()}
+    if not dummies:
+        return transformed_source
+    call = re.compile(r"^(\s*(?:\d+\s+)?CALL\s+)([A-Za-z_]\w*)(\s*)\((.*)\)(\s*)$", re.IGNORECASE)
+    lines = transformed_source.split("\n")
+    units = _unit_imaginary_names(lines, form) if lifted else {}
+    for index, line in enumerate(lines):
+        if form == "fixed" and _is_commented(line):
+            continue
+        if form != "fixed" and line.lstrip().startswith("!"):
+            continue
+        unit = units.get(index, "") if lifted else "OTI_E1"
+        if not unit:
+            continue
+        statement = _statement_without_inline_comment(line)
+        match = call.match(statement)
+        if not match:
+            continue
+        expected = dummies.get(match.group(2).upper())
+        if not expected:
+            continue
+        actuals = list(split_top_level(match.group(4)))
+        changed = False
+        for position, dummy in enumerate(expected):
+            if dummy is None or position >= len(actuals):
+                continue
+            actual = actuals[position]
+            if not actual.strip() or _DESIGNATOR_ACTUAL.match(actual):
+                continue
+            tokens = {token.upper() for token in re.findall(
+                r"[A-Za-z_]\w*", _without_character_literals(actual))}
+            if not lifted and any(token.endswith("_OTI") or token.startswith("OTI_") for token in tokens):
+                continue
+            actuals[position] = f"({actual.strip()}) + 0.0D0*{unit}"
+            changed = True
+        if changed:
+            lines[index] = (f"{match.group(1)}{match.group(2)}{match.group(3)}"
+                            f"({', '.join(a.strip() for a in actuals)}){match.group(5)}"
+                            + line[len(statement):])
+    return "\n".join(lines)
+
+
+def _unit_imaginary_names(lines: list[str], form: str) -> dict[int, str]:
+    """Per line of a lifted-helper file, the local name of the module's E1, or "".
+
+    Read from each routine's ``USE otim...`` statement: ``X => E1`` names it X;
+    a plain USE makes it E1, unless the routine itself names something E1, in
+    which case no name is safe and the routine's lines map to "".
+    """
+    result: dict[int, str] = {}
+    starts = [i for i, line in enumerate(lines)
+              if re.match(r"^\s*(?:(?:recursive|pure|elemental)\s+)*(?:subroutine|(?:[\w(), ]*\s)?function)\s+\w+",
+                          line, re.IGNORECASE) and not re.match(r"^\s*end\b", line, re.IGNORECASE)]
+    starts.append(len(lines))
+    for begin, end in zip(starts, starts[1:]):
+        body = lines[begin:end]
+        name = ""
+        use_lines = [i for i, line in enumerate(body) if re.match(r"^\s*use\s+otim\w*", line, re.IGNORECASE)]
+        if use_lines:
+            renamed = re.search(r"(\w+)\s*=>\s*E1\b", body[use_lines[0]], re.IGNORECASE)
+            if renamed:
+                name = renamed.group(1)
+            elif not any(re.search(r"(?<![%\w])E1\b", _without_character_literals(
+                    _statement_without_inline_comment(line)), re.IGNORECASE)
+                    for i, line in enumerate(body) if i not in use_lines
+                    and not line.lstrip().startswith("!")):
+                name = "E1"
+        for offset in range(len(body)):
+            result[begin + offset] = name
+    return result
+
+
+def value_actuals_left_real_in_lifted_helpers(
+    lifted_helper_source: str, oti_helper_dummies: dict[str, list[str | None]],
+) -> list[tuple[str, str, str]]:
+    """Literal-only actuals still handed to a hypercomplex dummy inside the lifted helpers.
+
+    What :func:`_value_actuals_made_hypercomplex` could not rewrite -- a
+    routine that names E1 itself, a CALL the wrap split across lines. A
+    literal has no type but its own, so these are certain leaks; refused.
+    """
+    dummies = {key.upper(): value for key, value in oti_helper_dummies.items()}
+    found: list[tuple[str, str, str]] = []
+    for line in logical_lines_from_text(lifted_helper_source, "free"):
+        match = re.match(r"^\s*(?:\d+\s+)?CALL\s+([A-Za-z_]\w*)\s*\((.*)\)\s*$", line.text, re.IGNORECASE)
+        if not match:
+            continue
+        expected = dummies.get(match.group(1).upper()) or []
+        actuals = list(split_top_level(match.group(2)))
+        for position, dummy in enumerate(expected):
+            if dummy is None or position >= len(actuals):
+                continue
+            actual = actuals[position].strip()
+            if actual and _REAL_OR_INTEGER_LITERAL_ONLY.match(actual):
+                found.append((match.group(1).upper(), actual, str(dummy).upper()))
+    return found
+
+
+#: A signed numeric literal, or arithmetic of nothing else.
+_REAL_OR_INTEGER_LITERAL_ONLY = re.compile(
+    r"^[\s()+\-*/]*\d[\d.]*(?:[DEQdeq][+-]?\d+)?(?:_\w+)?"
+    r"(?:[\s()+\-*/]+\d[\d.]*(?:[DEQdeq][+-]?\d+)?(?:_\w+)?)*[\s()]*$")
+
+
 def _helper_argument_base_name(argument: str) -> str:
     match = re.match(r"\s*([A-Za-z_]\w*)", str(argument))
     return match.group(1).upper() if match else ""
@@ -7915,11 +8061,23 @@ def real_arguments_into_oti_helper_dummies(
                 continue
             name = _helper_argument_base_name(actuals[index])
             if not name:
-                # A literal or an expression opening with one. Its type is
-                # whatever Fortran gives it and the compiler will say so;
-                # only a name can be silently reinterpreted.
-                continue
-            if name in shadow_names or name.upper().startswith("OTI_"):
+                # A literal or an expression opening with one. It was skipped
+                # on the belief that the compiler would object; it does not.
+                # The lifted helpers are external subprograms compiled from
+                # another file, so ``CALL STIFF_OTI(2.0D0*PROPS(1), ...)``
+                # against a TYPE(ONUMM6N1) dummy compiles without a word, the
+                # real part comes out right and the six derivative parts are
+                # read from whatever follows the temporary on the stack: a
+                # correct stress beside a wrong tangent. An expression that
+                # names a shadow is itself hypercomplex (every mixed operator
+                # returns the OTI type); one that names none is not.
+                tokens = {token.upper() for token in re.findall(
+                    r"[A-Za-z_]\w*", _without_character_literals(actuals[index]))}
+                if tokens & shadow_names or any(token.startswith("OTI_") or token.endswith("_OTI")
+                                                for token in tokens):
+                    continue
+                name = actuals[index].strip()
+            elif name in shadow_names or name.upper().startswith("OTI_"):
                 continue
             key = (callee, name)
             if key in seen:
@@ -8127,6 +8285,8 @@ def _semantic_checks(
     # hypercomplex dummy exactly as well as it hides the reverse.
     reversed_leak = real_arguments_into_oti_helper_dummies(
         transformed_source, form, lifted_helper_source, type_name)
+    reversed_leak += value_actuals_left_real_in_lifted_helpers(
+        lifted_helper_source, oti_typed_dummies_of_lifted_helpers(lifted_helper_source))
     for callee, argument, dummy in reversed_leak[:6]:
         warnings.append(
             f"{argument} is passed to {callee}, whose dummy argument {dummy} "
