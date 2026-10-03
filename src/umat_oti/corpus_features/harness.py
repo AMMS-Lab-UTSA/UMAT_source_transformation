@@ -1258,7 +1258,8 @@ class FeatureTally:
 
     def add(self, inc: int, wrt: str, column: fd.ColumnFD, oti: np.ndarray,
             output_names: Sequence[str], magnitude: np.ndarray, undefined=None,
-            value_magnitude=None, derivative_scale: float = 0.0, probe: bool = False):
+            value_magnitude=None, derivative_scale: float = 0.0, probe: bool = False,
+            kinematic_input: float = 0.0, block_derivative: float = 0.0, double_zero=None):
         """Judge one column at one state (entries of the judged block only).
 
         ``derivative_scale``: the column's derivative scale over the PATH (the
@@ -1289,6 +1290,8 @@ class FeatureTally:
             column.backward = [np.asarray(e)[keep] for e in column.backward]
             oti = oti[keep]
             magnitude = np.asarray(magnitude)[keep]
+            if double_zero is not None:
+                double_zero = np.asarray(double_zero, bool)[keep]
             if value_magnitude is not None:
                 value_magnitude = np.asarray(value_magnitude)[keep]
             output_names = [n for n, k in zip(output_names, keep) if k]
@@ -1297,7 +1300,9 @@ class FeatureTally:
                 return 0.0
             ref = fd.judge_column(oti, column.estimates, column.usable, self.ladder,
                                   steps=column.steps, magnitude=magnitude, rtol=self.rtol,
-                                  eps=self.eps, euler=self.euler).reference
+                                  eps=self.eps, euler=self.euler,
+                                  kinematic_input=kinematic_input,
+                                  block_derivative=block_derivative).reference
             ref = np.abs(ref[np.isfinite(ref)])
             # entries without a plateau still have a size: the central
             # difference at the largest usable step (least round-off; a scale,
@@ -1325,7 +1330,9 @@ class FeatureTally:
         verdict = fd.judge_column(oti, column.estimates, column.usable, self.ladder,
                                   steps=column.steps, magnitude=magnitude, rtol=self.rtol,
                                   eps=self.eps, value_magnitude=value_magnitude,
-                                  euler=self.euler, derivative_scale=derivative_scale)
+                                  euler=self.euler, derivative_scale=derivative_scale,
+                                  kinematic_input=kinematic_input,
+                                  block_derivative=block_derivative, double_zero=double_zero)
         self.column_status[verdict.status] += 1
         for code in verdict.codes:
             self.entries[code] += 1
@@ -1882,6 +1889,10 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
                 "non-informative): its DDSDDE is evaluated at different incoming states than the "
                 "FD reference"), common))
         else:
+          #: per (increment, column): which entries the DOUBLE ladder found
+          #: exactly zero at every usable step (Vera B7 A3, read by the quad pass)
+          double_zero_of: dict = {}
+
           def ddsdde_payload():
               tally = FeatureTally("ddsdde", ladder, rtol, eps=REF["eps"])
               tally.signature_ignored_statev = sorted(l + 1 for l in ignore_for_stress)
@@ -1890,14 +1901,16 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
                                      "dF = eps_j . F (eps_j built from the kinematics, engineering "
                                      "shear, checked equal to the store seed map), plus sigma_ij "
                                      "delta_kl (Abaqus nlgeom Jacobian)")
+              S = slice(0, nt)
               for inc in range(1, n_inc + 1):
                   oti_matrix = store_out.base[inc]["ddsdde"]
+                  columns = {}
                   for j in range(1, nt + 1):
                       try:
                           column = local_column("dfgrd1" if builds.gradient_driven else "dstran",
                                                 j, inc, ignore_for_stress)
                       except PerturbationTerminated as stop:
-                          tally.terminated(inc, f"strain_{j}", str(stop))
+                          columns[j] = stop
                           continue
                       if builds.gradient_driven:
                           shift = np.zeros(nt + nx)
@@ -1906,14 +1919,33 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
                           column.estimates = [e + shift for e in column.estimates]
                           column.forward = [e + shift for e in column.forward]
                           column.backward = [e + shift for e in column.backward]
-                      S = slice(0, nt)
+                      columns[j] = column
+                  # Round-off model (Vera B7 A1): the largest derivative term
+                  # across the BLOCK at this state times the TOTAL kinematic
+                  # input, not the increment.
+                  block_derivative = _block_derivative(
+                      [c for c in columns.values() if not isinstance(c, Exception)], S)
+                  kinematic_input = _kinematic_input(increments, inc,
+                                                     builds.gradient_driven)
+                  for j in range(1, nt + 1):
+                      column = columns[j]
+                      if isinstance(column, PerturbationTerminated):
+                          tally.terminated(inc, f"strain_{j}", str(column))
+                          continue
                       sub = _restrict(column, S)
+                      exact = _exact_zero(sub)
+                      if not REF["quad"]:
+                          double_zero_of[(inc, j)] = exact
                       # an entry is compared only when both the ORIGINAL's STRESS(i)
                       # and its own DDSDDE(i,j) are defined (D-12)
                       tally.add(inc, f"strain_{j}", sub, oti_matrix[:, j - 1],
                                 [f"DDSDDE({i},{j})" for i in range(1, nt + 1)],
                                 magnitude_of(column, inc, S),
-                                undefined=undefined.stress | undefined.ddsdde[:, j - 1])
+                                undefined=undefined.stress | undefined.ddsdde[:, j - 1],
+                                kinematic_input=kinematic_input,
+                                block_derivative=block_derivative,
+                                double_zero=double_zero_of.get((inc, j))
+                                if REF["quad"] else None)
               payload = tally.as_dict()
               if direction_check:
                   payload["direction_check"] = {"all_match": True, "columns": len(direction_check)}
@@ -2203,6 +2235,38 @@ def _quad_pass(records, rejudge, REF, builds, work, config, perts, entry, pristi
     finally:
         REF.clear()
         REF.update(saved)
+
+
+def _block_derivative(columns, block: slice) -> float:
+    """The largest |central difference| over the block's columns at the
+    largest usable step of each (a scale, not a reference)."""
+    out = 0.0
+    for column in columns:
+        for k in column.usable[:1]:
+            values = np.abs(np.asarray(column.estimates[k], float)[block])
+            values = values[np.isfinite(values)]
+            if values.size:
+                out = max(out, float(values.max()))
+    return out
+
+
+def _kinematic_input(increments, inc: int, gradient_driven: bool) -> float:
+    """The TOTAL kinematic input at increment ``inc``: max |DFGRD1| for a
+    gradient-driven source, else max |STRAN + DSTRAN| (the driver starts STRAN
+    at 0 and adds each DSTRAN)."""
+    if gradient_driven:
+        return float(np.max(np.abs(np.asarray(increments[inc - 1][2], float))))
+    total = np.sum([np.asarray(d, float) for d, *_ in increments[:inc]], axis=0)
+    return float(np.max(np.abs(total))) if np.size(total) else 0.0
+
+
+def _exact_zero(column: fd.ColumnFD) -> np.ndarray:
+    """Per entry: the central difference is exactly zero at every usable step."""
+    if not column.usable:
+        return np.zeros(np.asarray(column.estimates[0]).size, bool)
+    stack = np.stack([np.asarray(column.estimates[k], float).reshape(-1)
+                      for k in column.usable])
+    return np.all(stack == 0.0, axis=0)
 
 
 def _restrict(column: fd.ColumnFD, block: slice) -> fd.ColumnFD:

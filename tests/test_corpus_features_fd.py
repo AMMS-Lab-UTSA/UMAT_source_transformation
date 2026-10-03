@@ -82,12 +82,19 @@ def test_branch_consistent_small_steps_still_give_a_smooth_reference():
 
 
 def test_identically_zero_column_is_resolved():
+    """Resolved by the QUAD reference only (Vera B7 A1): in double a bitwise
+    zero ladder can be quantisation, so with no derivative scale to put atol
+    under 1e-3 of, it is unresolved there."""
     f = lambda x: np.array([0.0, 5.0])   # noqa: E731
     plus, minus, base, steps = ladder_of(f, 2.0)
     column = fd.classify_and_reference(plus, minus, base, steps)
-    verdict = fd.judge_column(np.zeros(2), column.estimates, column.usable, LADDER,
-                              steps=steps, magnitude=column.magnitude)
-    assert verdict.status == "verified"
+    double = fd.judge_column(np.zeros(2), column.estimates, column.usable, LADDER,
+                             steps=steps, magnitude=column.magnitude)
+    assert double.status == "unresolved"
+    assert set(double.codes) == {fd.UNRESOLVED_ZERO_SCALE}
+    quad = fd.judge_column(np.zeros(2), column.estimates, column.usable, LADDER,
+                           steps=steps, magnitude=column.magnitude, eps=fd.EPS_QUAD)
+    assert quad.status == "verified"
 
 
 def test_primal_scale_has_a_history_floor():
