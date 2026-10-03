@@ -289,6 +289,13 @@ class ColumnVerdict:
     #: judge_binary32 only: the entries B32-3 made unresolved_binary32, as
     #: (entry, original FD, double-variant FD, oti)
     binary32_entries: list = field(default_factory=list)
+    #: the REFERENCE's own round-off atol per entry (before the value-under-
+    #: test term): the double noise envelope of the B32 scope test
+    atol_ref: Optional[np.ndarray] = None
+    #: judge_binary32 only: per entry {static_path, max_fd_diff, envelope,
+    #: in_scope} (Vera's B32 scope ruling), and the entries whose scope could
+    #: not be decided because the double variant is unavailable
+    b32_scope: list = field(default_factory=list)
 
     @property
     def resolved(self) -> int:
@@ -577,56 +584,116 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
             verdict.unresolved_reasons[code] = verdict.unresolved_reasons.get(code, 0) + 1
     verdict.min_plateau = min(plateaus) if plateaus else 0
     verdict.reference, verdict.uncertainty, verdict.tolerance, verdict.atol = ref, unc, tau, atol
+    verdict.atol_ref = np.asarray(atol_ref, float)
     return verdict
 
 
 UNRESOLVED_EULER = "unresolved_euler_window"
 _OK = (PASS, ZERO_PASS)
 
-#: Binary32 judging (Vera B10, B32-0..3): an entry that passes under the
-#: binary32 reference noise, and an entry B32-3 leaves unresolved.
+#: Binary32 judging (Vera B10, B32-1..3 with the per-entry scope ruling): an
+#: entry that passes under the binary32 reference noise, and an entry B32-3
+#: leaves unresolved.
 PASS_B32, ZERO_PASS_B32 = "pass_b32", "zero_pass_b32"
 UNRESOLVED_BINARY32 = "unresolved_binary32"
+#: an entry whose static path reaches a binary32 store but whose dynamic
+#: scope could not be decided (no double variant): judged on the double
+#: model, which is the stricter one, and labelled
+B32_SCOPE_UNPROVEN = "b32 scope unproven"
 B32_RULE = (
-    "B32 (Vera B10), for a source whose transform's binary32 map lists a store of an "
-    "OTI-carrying value: B32-1 the FD reference noise is NOISE eps_single F/h (double and "
-    "quad reference alike; the RESOLUTION gates stay), an entry passing so is pass_b32 / "
-    "zero_pass_b32; B32-2 an entry that FAILs under the double floor and is not a pass under "
-    "B32-1 stays FAIL; B32-3 a failing entry is unresolved_binary32 only when the original's "
-    "FD and the FD of the double variant of the ORIGINAL (binary32 declarations -> REAL*8, "
-    "no OTI) both resolve, differ by more than 1e-3 relative, and the value under test agrees "
-    "with the double variant within the normal tolerance; otherwise FAIL. The double variant "
-    "is a secondary reference only and never verifies the author's function.")
+    "B32 (Vera B10). SCOPE, per derivative entry (output x input x state), decided from the "
+    "original's two builds only, before any value under test is read: (1) static -- the "
+    "output depends on a binary32 store of the transform's map and that store depends on "
+    "the input; (2) dynamic -- the central FD of the ORIGINAL and the FD of its double "
+    "variant (binary32 declarations -> REAL*8, no OTI) differ at >= 1 step by more than the "
+    "entry's double noise envelope atol_ref + rtol |D|. Out of scope: the double model. "
+    "Static but no double variant: the double model, labelled 'b32 scope unproven'. IN "
+    "scope: B32-1 the reference noise is NOISE eps_single F/h (the RESOLUTION gates stay), "
+    "an entry passing so is pass_b32 / zero_pass_b32; B32-2 an entry that FAILs under the "
+    "double floor and is not a pass under B32-1 stays FAIL; B32-3 a failing entry is "
+    "unresolved_binary32 only when the original's FD and the double variant's FD both "
+    "resolve, differ by more than 1e-3 relative, and the value under test agrees with the "
+    "double variant within the normal tolerance; otherwise FAIL. The double variant is a "
+    "secondary reference only and never verifies the author's function.")
+
+
+def b32_dynamic_scope(estimates: Sequence[np.ndarray], usable: Sequence[int],
+                      variant: Optional["ColumnFD"], reference: np.ndarray,
+                      atol_ref: np.ndarray, rtol: float) -> list:
+    """Per entry: (max |FD_original - FD_variant| over the shared usable
+    steps, the double envelope atol_ref + rtol |D|), or None when the
+    variant gives no column. D is the original's plateau, or (no plateau)
+    the median of its finite estimates."""
+    n = np.asarray(estimates[0]).size if len(estimates) else 0
+    if variant is None or not variant.smooth:
+        return [None] * n
+    shared = [k for k in usable if k in set(variant.usable)
+              and k < len(estimates) and k < len(variant.estimates)]
+    out = []
+    for e in range(n):
+        pairs = [(float(np.asarray(estimates[k]).reshape(-1)[e]),
+                  float(np.asarray(variant.estimates[k]).reshape(-1)[e])) for k in shared]
+        pairs = [(a, b) for a, b in pairs if np.isfinite(a) and np.isfinite(b)]
+        if not pairs:
+            out.append(None)
+            continue
+        d = float(reference[e]) if reference is not None and np.isfinite(reference[e]) \
+            else float(np.median([a for a, _ in pairs]))
+        envelope = float(atol_ref[e]) + rtol * abs(d)
+        out.append((max(abs(a - b) for a, b in pairs), envelope))
+    return out
 
 
 def judge_binary32(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Sequence[int],
                    ladder: Sequence[float], *, variant: Optional["ColumnFD"] = None,
+                   static_path=True, scope: Optional[list] = None,
                    **kw) -> ColumnVerdict:
-    """:func:`judge_column` under B32-1..3 (:data:`B32_RULE`).
+    """:func:`judge_column` under :data:`B32_RULE`, entry by entry.
 
     ``kw`` are judge_column's, ``eps`` that of the reference in use (EPS or
-    EPS_QUAD). ``variant`` is the same column differenced on the double
-    variant of the original (None: B32-3 cannot apply, a failure stays).
+    EPS_QUAD). ``variant``: the same column differenced on the double
+    variant of the original (None: unavailable). ``static_path``: per entry
+    (or one bool) whether the output reaches a binary32 store that depends
+    on the input. ``scope``: the dynamic scope already decided on the
+    DOUBLE pass (b32_dynamic_scope's list) -- the quad pass reuses it, so the
+    scope is always decided on the original's two double builds.
     """
     oti = np.asarray(oti, float).reshape(-1)
+    n = oti.size
+    rtol = kw.get("rtol", DEFAULT_RTOL)
     normal = judge_column(oti, estimates, usable, ladder, **kw)
-    wide_kw = dict(kw, eps=EPS_SINGLE, double_zero=None)
-    wide = judge_column(oti, estimates, usable, ladder, **wide_kw)
+    static = np.broadcast_to(np.asarray(static_path, bool).reshape(-1), (n,)) \
+        if np.size(static_path) in (1, n) else np.asarray(static_path, bool)
+    if scope is None:
+        scope = b32_dynamic_scope(estimates, usable, variant, normal.reference,
+                                  normal.atol_ref if normal.atol_ref is not None
+                                  else normal.atol, rtol)
+    wide = judge_column(oti, estimates, usable, ladder, **dict(kw, eps=EPS_SINGLE,
+                                                                double_zero=None))
     var = None
     if variant is not None and variant.smooth:
         var = judge_column(oti, variant.estimates, variant.usable, ladder,
                            **dict(kw, eps=EPS, double_zero=None, steps=variant.steps))
-    n = oti.size
-    v = ColumnVerdict(compared=n)
+    v = ColumnVerdict(compared=n, atol_ref=normal.atol_ref)
     ref, unc, tol, at = (np.full(n, np.nan) for _ in range(4))
     plateaus = []
     for e in range(n):
+        dyn = scope[e] if e < len(scope) else None
+        in_scope = bool(static[e]) and dyn is not None and dyn[0] > dyn[1]
+        v.b32_scope.append({
+            "static_path": bool(static[e]),
+            "max_fd_diff": None if dyn is None else dyn[0],
+            "envelope": None if dyn is None else dyn[1],
+            "in_scope": in_scope,
+            **({"label": B32_SCOPE_UNPROVEN} if static[e] and dyn is None else {})})
         a, b = normal.codes[e], wide.codes[e]
-        source = wide
-        if b in _OK:
-            code = PASS_B32 if b == PASS else ZERO_PASS_B32
-        elif a == FAIL or b in (FAIL, OTI_NONFINITE) or a == OTI_NONFINITE:
-            code = FAIL if a != OTI_NONFINITE else OTI_NONFINITE
+        source = normal
+        if not in_scope:
+            code = a
+        elif b in _OK:
+            code, source = (PASS_B32 if b == PASS else ZERO_PASS_B32), wide
+        elif a in (FAIL, OTI_NONFINITE) or b in (FAIL, OTI_NONFINITE):
+            code = OTI_NONFINITE if OTI_NONFINITE in (a, b) else FAIL
             source = normal if a in (FAIL, OTI_NONFINITE) else wide
             # the original's plateau: the one the failing verdict resolved
             d_orig = float(source.reference[e]) if source.reference is not None else np.nan
@@ -638,7 +705,7 @@ def judge_binary32(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seq
                 code = UNRESOLVED_BINARY32
                 v.binary32_entries.append((e, d_orig, d_var, float(oti[e])))
         else:
-            code = b                                  # unresolved under the binary32 noise
+            code, source = b, wide                    # unresolved under the binary32 noise
         v.codes.append(code)
         for arr, src in ((ref, source.reference), (unc, source.uncertainty),
                          (tol, source.tolerance), (at, source.atol)):
@@ -653,11 +720,12 @@ def judge_binary32(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seq
             v.failed += 1
             v.failed_entries.append((e, float(oti[e]), d, float("nan"), ()))
             continue
-        zero_branch = code == ZERO_PASS_B32 or (np.isfinite(at[e]) and abs(d) <= at[e])
+        zero_branch = code in (ZERO_PASS, ZERO_PASS_B32) or (
+            np.isfinite(at[e]) and abs(d) <= at[e])
         err = abs(oti[e]) if zero_branch else abs(oti[e] - d)
-        if code == PASS_B32:
+        if code in (PASS, PASS_B32):
             v.passed += 1
-        elif code == ZERO_PASS_B32:
+        elif code in (ZERO_PASS, ZERO_PASS_B32):
             v.zero_passed += 1
         else:
             v.failed += 1
@@ -685,7 +753,7 @@ def _bracket(own: ColumnVerdict, wide: ColumnVerdict, oti: np.ndarray, ladder) -
     """Entry-wise agreement of the own-magnitude and Euler verdicts (see
     judge_column, ``euler="bracket"``). The own-magnitude verdict is kept where
     both agree (pass/zero_pass count as agreeing); elsewhere UNRESOLVED."""
-    v = ColumnVerdict(compared=own.compared, reference=own.reference,
+    v = ColumnVerdict(compared=own.compared, reference=own.reference, atol_ref=own.atol_ref,
                       uncertainty=own.uncertainty, atol=own.atol,
                       tolerance=own.tolerance.copy() if own.tolerance is not None else None)
     plateaus = []
