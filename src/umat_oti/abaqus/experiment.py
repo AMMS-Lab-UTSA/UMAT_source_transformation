@@ -1320,6 +1320,10 @@ class CouncilPlan:
     #: the row's documented domain, so the routine-level paths can be held
     #: inside it (loading_paths.model_domain)
     documented_domain: Optional[dict] = None
+    #: accepted static-scan overrides and the dynamic check each needs (D-21a e)
+    static_scan_overrides: tuple = ()
+    #: where the element sits in a documented geometry, with its driver point
+    placement: Optional[dict] = None
 
     @property
     def found(self) -> bool:
@@ -1335,6 +1339,8 @@ class CouncilPlan:
                 "documented_domain": self.documented_domain,
                 "branch_coverage": self.branch_coverage,
                 "domain_not_enforced": list(self.domain_not_enforced),
+                "static_scan_overrides": list(self.static_scan_overrides),
+                "placement": self.placement,
                 "counts_only_if_every_set_passes": True,
                 "sets": [{"set_id": set_id, "plan": plan.as_dict()} for set_id, plan in self.sets]}
 
@@ -1427,6 +1433,28 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
     # source is not planned.
     body = _strip_header(executable)
     notes = []
+    # D-21a (e): a static-scan false positive cleared by a machine-readable
+    # override that Vera accepted for this instance. It carries the dynamic
+    # check that has to pass on every pass (harness.static_scan_override_check).
+    overrides = []
+    row = dict(row)
+    for override in row.get("static_scan_overrides") or ():
+        accepted = str(override.get("status", "")).lower().startswith("accepted")
+        flag = override.get("flag")
+        if not accepted or flag not in ("reads_temp", "reads_coords_or_noel"):
+            continue
+        variants = override.get("variants") or (
+            [{"temp": 0.0}, {"temp": 500.0}] if flag == "reads_temp" else [])
+        if len(variants) < 2:
+            return refused("needs_static_scan", f"the accepted override of {flag} names no "
+                           f"variants for its dynamic check", route=route,
+                           material_data_origin=origin, row_ref=ref)
+        row[flag] = bool(override.get("proposed"))
+        overrides.append({"flag": flag, "value": row[flag], "variants": variants,
+                          "static_evidence": override.get("static_evidence", ""),
+                          "status": override.get("status"),
+                          "dynamic_check": "every pass: bit-identical STRESS, DDSDDE and STATEV "
+                                           "over the variants"})
     for flag, pattern in (("reads_temp", _TEMP_READ), ("reads_coords_or_noel", _NOEL_READ)):
         named = sorted({m.upper() for m in pattern.findall(body)})
         if row.get(flag) is None:
@@ -1435,13 +1463,16 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
             notes.append(f"{flag}: the row says {row.get(flag)}, a name scan of the executable "
                          f"text finds {', '.join(named) or 'nothing'} -- for review")
     common["notes"] = tuple(notes)
+    if overrides:
+        common["static_scan_overrides"] = tuple(overrides)
     if row.get("reads_temp"):
         return refused("needs_documented_temperature", "the routine reads TEMP; a documented "
                        "temperature is held only on thermal elements until G5", **common)
-    if row.get("reads_coords_or_noel"):
-        return refused("needs_documented_geometry", "the routine reads COORDS or NOEL/NPT; "
-                       "placing a council element where a documented geometry says is not "
-                       "implemented, and a unit cube is not that geometry", **common)
+    placement = row.get("placement")
+    if row.get("reads_coords_or_noel") and not placement:
+        return refused("needs_documented_geometry", "the routine reads COORDS or NOEL/NPT and "
+                       "the row gives no machine-readable placement in a documented geometry; "
+                       "a unit cube is not that geometry", **common)
     has_force, _why = applies_a_body_force(text)
     if has_force:
         return refused("body_force", "a body force is the author's load; a council experiment "
@@ -1512,6 +1543,16 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                 for set_id, values in sets for name in names]
     else:
         sets = [(set_id, values, "") for set_id, values in sets]
+    placed = None
+    if placement and row.get("reads_coords_or_noel"):
+        placed = place_in_documented_geometry(placement, element)
+        if placed is None:
+            return refused("needs_documented_geometry", "no element of the documented "
+                           "geometry clears the planes it has to avoid", **common)
+        common["placement"] = {"box": placement["box"], "avoid": placement.get("avoid"),
+                               "where": placement.get("where", ""),
+                               "origin": placement.get("origin", "council_choice"),
+                               "driver_point": placed["driver_point"], "side": placed["side"]}
     plans = []
     for set_id, values, cmname in sets:
         nprops = max(values) if values else 0
@@ -1528,6 +1569,10 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
             initial_statev=initial_statev,
             initial_statev_provenance=initial_origin[1] if initial_statev else "",
             initial_state_from_user_subroutine=from_sdvini,
+            node_coordinates=placed["nodes"] if placed else (),
+            node_provenance=(f"council placement in the documented geometry "
+                             f"({placement.get('where', '')}), clear of "
+                             f"{placement.get('avoid')}" if placed else ""),
             material_provenance=(f"{origin}: row {ref}, set {set_id}: "
                                  + "; ".join(f"PROPS({i})={values[i][0]:g} {values[i][1]}"
                                              for i in range(1, nprops + 1)))[:2000],
@@ -1609,6 +1654,48 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                                      if p.experiment.refusal), ""),
                        refusal_code="" if all(p.found for _i, p in plans) else "build_refused",
                        **common)
+
+
+#: Gauss-point offset of a linear brick, in the element's own [0, 1] coordinates.
+_GAUSS = (1.0 - 1.0 / math.sqrt(3.0)) / 2.0
+
+
+def place_in_documented_geometry(placement: dict, element: str) -> Optional[dict]:
+    """A single element inside a documented body, clear of documented planes.
+
+    ``placement``: ``{"box": [[x0, y0, z0], [x1, y1, z1]], "avoid": {"x": 0.25,
+    "z": 0.25}, "where": ..., "origin": ...}`` -- the body the author
+    documents (glu46 Cube: the 0.5 m wood cube) and the coordinates where the
+    routine's own law is singular or switches (its growth-ring centre at
+    x = z = 0.25: ``ROT = ATAN((COORDS(3)-0.25)/(COORDS(1)-0.25))``). The
+    element is a cube of side min(extent)/5 on a grid inside the box, the
+    first whose every integration point is at least half a side from every
+    avoided plane. Returns the node coordinates and the first integration
+    point (the routine-level driver point), or None when nothing fits."""
+    (x0, y0, z0), (x1, y1, z1) = placement["box"]
+    lower, extent = (x0, y0, z0), (x1 - x0, y1 - y0, z1 - z0)
+    side = min(extent) / 5.0
+    avoid = {"xyz".index(k): float(v) for k, v in (placement.get("avoid") or {}).items()}
+    geometry = geometry_for(element)
+    grid = [[lower[a] + k * side for k in range(int(round(extent[a] / side)))]
+            for a in range(3)]
+    for cx in grid[0]:
+        for cy in grid[1]:
+            for cz in grid[2]:
+                corner = (cx, cy, cz)
+                ok = True
+                for axis, plane in avoid.items():
+                    for offset in (_GAUSS, 1.0 - _GAUSS):
+                        if abs(corner[axis] + offset * side - plane) < side / 2.0:
+                            ok = False
+                if not ok:
+                    continue
+                nodes = tuple((n, corner[0] + x * side, corner[1] + y * side,
+                               corner[2] + z * side) for n, x, y, z in geometry.nodes)
+                point = [corner[a] + _GAUSS * side for a in range(3)]
+                return {"nodes": nodes, "driver_point": {"noel": 1, "npt": 1, "coords": point},
+                        "side": side}
+    return None
 
 
 def _reworded(built: "Experiment", reason: str) -> "Experiment":

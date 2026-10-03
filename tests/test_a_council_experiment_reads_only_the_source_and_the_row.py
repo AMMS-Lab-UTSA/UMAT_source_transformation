@@ -329,3 +329,37 @@ def test_a_cmname_dispatch_runs_the_stated_names_and_names_the_others(tmp_path):
     cp = _plan(tmp_path / "b", text, notes="The harness must pass CMNAME 'CORTEX'.")
     assert cp.found and [p.manifest.name for _s, p in cp.sets] == ["CORTEX", "CORTEX"]
     assert "CMNAME = 'BEAM'" in cp.branch_coverage["not_exercised"]
+
+
+def test_a_coordinate_reading_source_is_placed_in_its_documented_geometry(tmp_path):
+    """G12: glu46 Cube -- a 0.5 m cube, the law switching at x = z = 0.25."""
+    from umat_oti.abaqus.experiment import _GAUSS
+    placement = {"box": [[0, 0, 0], [0.5, 0.5, 0.5]], "avoid": {"x": 0.25, "z": 0.25},
+                 "where": "README.md (wood cube 0.5 m)", "origin": "author_published"}
+    assert not _plan(tmp_path / "a", reads_coords_or_noel=True).found
+    cp = _plan(tmp_path / "b", reads_coords_or_noel=True, placement=placement)
+    assert cp.found, cp.refusal
+    nodes = cp.sets[0][1].manifest.node_coordinates
+    xs = [n[1] for n in nodes]; zs = [n[3] for n in nodes]
+    assert min(xs) >= 0 and max(xs) <= 0.5 and min(zs) >= 0 and max(zs) <= 0.5
+    side = cp.placement["side"]
+    for axis, values in ((1, xs), (3, zs)):
+        gauss = [min(values) + g * side for g in (_GAUSS, 1 - _GAUSS)]
+        assert all(abs(g - 0.25) >= side / 2 for g in gauss)
+    assert cp.placement["driver_point"]["coords"][0] == pytest.approx(min(xs) + _GAUSS * side)
+
+
+def test_an_accepted_static_scan_override_carries_its_dynamic_check(tmp_path):
+    proposed = [{"flag": "reads_temp", "proposed": False, "static_evidence": "only declared",
+                 "status": "proposed, needs Vera per D-21a (e)"}]
+    assert _plan(tmp_path / "a", reads_temp=True,
+                 static_scan_overrides=proposed).refusal_code == "needs_documented_temperature"
+    accepted = [dict(proposed[0], status="accepted (Vera, D-21a e)")]
+    cp = _plan(tmp_path / "b", reads_temp=True, static_scan_overrides=accepted)
+    assert cp.found, cp.refusal
+    (override,) = cp.static_scan_overrides
+    assert override["flag"] == "reads_temp" and override["variants"] == [{"temp": 0.0},
+                                                                          {"temp": 500.0}]
+    coords = [dict(proposed[0], flag="reads_coords_or_noel", status="accepted")]
+    assert _plan(tmp_path / "c", reads_coords_or_noel=True,
+                 static_scan_overrides=coords).refusal_code == "needs_static_scan"
