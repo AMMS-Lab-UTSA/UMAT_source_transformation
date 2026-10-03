@@ -490,6 +490,44 @@ def published_placeholder_values(repository: Path, names: Sequence[str],
     return answer
 
 
+#: ``*INCLUDE, FILE=``: not the keyword reference's ``INPUT=``, and
+#: Abaqus/Standard 2021.HF5 splices it all the same, substituting the parent's
+#: ``*PARAMETER`` values into the included file -- measured with a datacheck
+#: (corpus_campaign/batches/B7/gauss_g1b/include_file_check/: the .pes shows
+#: ``<EMOD>`` read as the parent's 1000.0). jpsferreira__UMAT-ABAQUS's
+#: ``cube_umat.inp`` includes ``sec_ud.inp`` this way and holds the constants.
+_INCLUDE_FILE = re.compile(r"^\s*\*INCLUDE\b[^\n]*?\bFILE\s*=\s*([^\s,]+)",
+                           re.IGNORECASE)
+
+
+def _splice_file_includes(lines: list, deck: Path,
+                          depth: int = 0) -> tuple[list, list]:
+    """``lines`` with every ``*INCLUDE, FILE=`` spliced in, and the targets
+    that could not be found. ``INPUT=`` is spliced before this, by
+    :func:`umat_oti.corpus.abaqus_deck._with_includes`."""
+    from umat_oti.corpus.abaqus_deck import (_INCLUDE_DEPTH, _resolve_include,
+                                             _with_includes)
+    out: list = []
+    missing: list = []
+    for line in lines:
+        found = None if line.lstrip().startswith("**") else _INCLUDE_FILE.match(line)
+        if not found:
+            out.append(line)
+            continue
+        target = found.group(1)
+        resolved = _resolve_include(target, Path(deck))
+        if resolved is None or depth >= _INCLUDE_DEPTH:
+            missing.append(target)
+            out.append(f"** [unresolved include: {target}]")
+            continue
+        nested, nested_missing = _with_includes(resolved, depth + 1)
+        nested, deeper = _splice_file_includes(nested, resolved, depth + 1)
+        out.append(f"** [included from {target}]")
+        out.extend(nested)
+        missing.extend(nested_missing + deeper)
+    return out, missing
+
+
 def materials_in(deck: Path, text: Optional[str] = None,
                  extra_parameters: Optional[dict] = None
                  ) -> tuple[DeckMaterial, ...]:
@@ -522,8 +560,8 @@ def materials_in(deck: Path, text: Optional[str] = None,
             return ()
         if not spliced:
             return ()
-        lines = spliced
-        unresolved_includes = tuple(dict.fromkeys(missing))
+        lines, missing_file = _splice_file_includes(spliced, Path(deck))
+        unresolved_includes = tuple(dict.fromkeys(list(missing) + missing_file))
     else:
         lines = text.splitlines()
     # The table is built over the SPLICED lines, so a deck that keeps its
