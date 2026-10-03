@@ -138,9 +138,13 @@ def test_only_smooth_regimes_are_verifiable():
 
 
 # ---- coverage: what a transitional label may NOT buy ---------------------
-def _regime(kind, increment=1):
+def _regime(kind, increment=1, activated=None):
     from umat_oti.abaqus.state_regime import Regime
-    return Regime(increment=increment, regime=kind, reason="")
+    # an inelastic state is one the material had activated at (classify sets
+    # this); an unloading one says so explicitly (Vera B7 A7)
+    if activated is None:
+        activated = kind == SMOOTH_INELASTIC
+    return Regime(increment=increment, regime=kind, reason="", activated_here=activated)
 
 
 def test_a_nonlinear_material_needs_smooth_states_inside_the_activated_regime():
@@ -185,8 +189,11 @@ def test_a_path_dependent_material_needs_an_unloading_state():
     states = [_regime(SMOOTH_ELASTIC, 1), _regime(SMOOTH_ELASTIC, 2),
               _regime(SMOOTH_INELASTIC, 7), _regime(SMOOTH_INELASTIC, 9)]
     assert not coverage(states, nonlinear=True, path_dependent=True)[0]
-    assert coverage(states + [_regime(SMOOTH_UNLOADING, 12)],
+    assert coverage(states + [_regime(SMOOTH_UNLOADING, 12, activated=True)],
                     nonlinear=True, path_dependent=True)[0]
+    # reversing before anything activated is still the elastic branch (A7)
+    assert not coverage(states + [_regime(SMOOTH_UNLOADING, 12, activated=False)],
+                        nonlinear=True, path_dependent=True)[0]
 
 
 def test_a_linear_material_is_whole_on_its_elastic_branch():

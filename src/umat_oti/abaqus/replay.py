@@ -186,6 +186,88 @@ def defines_sdvini(source_text: str) -> bool:
     return False
 
 
+def quad_driver_text(text: str) -> str:
+    """The replay driver with the routine's state in REAL(16) (Vera B7 A2).
+
+    The state file is READ into REAL(8) and widened exactly: a decimal string
+    read straight into REAL(16) is a different number from the double the
+    solver held (Vera B7 gap (b)). The perturbation step is formed in
+    REAL(16) (x + h exact); the outputs are written to 35 significant digits
+    so that the difference of two runs is taken exactly
+    (:func:`run_replay` with ``exact=True``)."""
+    src = text.replace("REAL(8) :: DTIME,TEMP,DTEMP,PNEWDT,CELENT,SSE,SPD,SCD,RPL,DRPLDT,STEP",
+                       "REAL(16) :: DTIME,TEMP,DTEMP,PNEWDT,CELENT,SSE,SPD,SCD,RPL,DRPLDT\n"
+                       "  REAL(8) :: STEP,R8,R8A(9)")
+    for old in ("  REAL(8), ALLOCATABLE :: STRESS(:),STATEV(:),DDSDDE(:,:),STRAN(:),DSTRAN(:)",
+                "  REAL(8), ALLOCATABLE :: PROPS(:),DDSDDT(:),DRPLDE(:)",
+                "  REAL(8) :: TIME(2),PREDEF(1),DPRED(1),COORDS(3),DROT(3,3)",
+                "  REAL(8) :: DFGRD0(3,3),DFGRD1(3,3)",
+                "  REAL(8) :: DFPERT(3,3)"):
+        assert old in src, old
+        src = src.replace(old, old.replace("REAL(8)", "REAL(16)"))
+    reads = {
+        "  READ(U,*) DTIME,TIME(1),TIME(2),TEMP,DTEMP,CELENT":
+            "  READ(U,*) R8A(1:6)\n  DTIME=R8A(1); TIME(1)=R8A(2); TIME(2)=R8A(3)\n"
+            "  TEMP=R8A(4); DTEMP=R8A(5); CELENT=R8A(6)",
+    }
+    # Every list read goes through READ8 (REAL(8) -> REAL(16), exact).
+    for name, count in (("STRESS", "NTENS"), ("STATEV", "MAX(NSTATV,1)"), ("STRAN", "NTENS"),
+                        ("DSTRAN", "NTENS"), ("PROPS", "MAX(NPROPS,1)"),
+                        ("COORDS", "3")):
+        old = f"  READ(U,*) ({name}(I),I=1,{count})"
+        assert old in src, old
+        src = src.replace(old, f"  CALL READ8(U,{name},{count})")
+    for name in ("DFGRD0", "DFGRD1", "DROT"):
+        old = f"  READ(U,*) (({name}(I,J),J=1,3),I=1,3)"
+        assert old in src, old
+        src = src.replace(old, f"  CALL READ8M(U,{name})")
+    old = "  READ(U,*) DTIME,TIME(1),TIME(2),TEMP,DTEMP,CELENT"
+    assert old in src
+    src = src.replace(old, reads[old])
+    old = "    DSTRAN(COMPONENT) = DSTRAN(COMPONENT) + STEP"
+    assert old in src
+    src = src.replace(old, "    DSTRAN(COMPONENT) = DSTRAN(COMPONENT) + REAL(STEP,16)")
+    old = "    READ(U,*) ((DFPERT(I,J),J=1,3),I=1,3)"
+    assert old in src
+    src = src.replace(old, "    CALL READ8M(U,DFPERT)")
+    src = src.replace("DDSDDE=0.0_8; SSE=0.0_8; SPD=0.0_8; SCD=0.0_8; RPL=0.0_8",
+                      "DDSDDE=0.0_16; SSE=0.0_16; SPD=0.0_16; SCD=0.0_16; RPL=0.0_16")
+    src = src.replace("DDSDDT=0.0_8; DRPLDE=0.0_8; DRPLDT=0.0_8; PREDEF=0.0_8; DPRED=0.0_8",
+                      "DDSDDT=0.0_16; DRPLDE=0.0_16; DRPLDT=0.0_16; PREDEF=0.0_16; DPRED=0.0_16")
+    src = src.replace("PNEWDT=1.0_8;", "PNEWDT=1.0_16;")
+    src = src.replace("IF (ALL(STATEV(1:NSTATV) .EQ. 0.0_8)) THEN",
+                      "IF (ALL(STATEV(1:NSTATV) .EQ. 0.0_16)) THEN")
+    src = src.replace("WRITE(U,'(ES26.17E3)')", "WRITE(U,'(ES45.35E4)')")
+    helpers = """
+SUBROUTINE READ8(U, X, N)
+! A row of REAL(8) values, widened exactly into REAL(16).
+  INTEGER, INTENT(IN) :: U, N
+  REAL(16), INTENT(OUT) :: X(N)
+  REAL(8) :: Y(N)
+  READ(U,*) Y
+  X = REAL(Y, 16)
+END SUBROUTINE READ8
+
+SUBROUTINE READ8M(U, X)
+  INTEGER, INTENT(IN) :: U
+  REAL(16), INTENT(OUT) :: X(3,3)
+  REAL(8) :: Y(9)
+  INTEGER :: I, J
+  READ(U,*) Y
+  DO I=1,3
+    DO J=1,3
+      X(I,J) = REAL(Y((I-1)*3+J), 16)
+    END DO
+  END DO
+END SUBROUTINE READ8M
+"""
+    marker = "END PROGRAM otis_replay\n"
+    assert marker in src
+    head, stubs = src.split(marker, 1)
+    from umat_oti.corpus_features.drivers import quadify
+    return head + marker + helpers + quadify(stubs)
+
+
 def driver_source(name: str = "REPLAY", *, initialise_state: bool = False) -> str:
     """The replay program, for a source that has to be linked beside it.
 
@@ -532,8 +614,11 @@ def read_state(path: Path) -> dict:
             "NDI": ndi, "NSHR": nshr, "DFGRD1": gradient}
 
 
-def parse_replay_output(path: Path) -> tuple[list[float], list[list[float]]]:
-    """The stress and tangent one replay produced."""
+def parse_replay_output(path: Path, exact: bool = False
+                        ) -> tuple[list, list[list[float]]]:
+    """The stress and tangent one replay produced. ``exact``: the stress as
+    ``decimal.Decimal`` (a quad replay's 35 digits, so that two runs are
+    differenced exactly before rounding to double)."""
     try:
         lines = Path(path).read_text(errors="replace").splitlines()
     except OSError:
@@ -541,7 +626,11 @@ def parse_replay_output(path: Path) -> tuple[list[float], list[list[float]]]:
     if not lines or not lines[0].startswith("NTENS"):
         return [], []
     ntens = int(lines[0].split()[1])
-    stress = [float(line) for line in lines[1:1 + ntens]]
+    if exact:
+        from decimal import Decimal
+        stress = [Decimal(line.strip()) for line in lines[1:1 + ntens]]
+    else:
+        stress = [float(line) for line in lines[1:1 + ntens]]
     rest = lines[1 + ntens:]
     if not rest or rest[0].strip() != "DDSDDE":
         return stress, []
@@ -743,8 +832,16 @@ def without_the_authors_program(text: str,
 
 def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
                  name: str = "REPLAY", extra: Sequence[Path] = (),
-                 flags: Sequence[str] = (), timeout: int = 900) -> ReplayBuild:
-    """Compile the driver against one UMAT source, once for the whole sweep."""
+                 flags: Sequence[str] = (), timeout: int = 900,
+                 quad: bool = False) -> ReplayBuild:
+    """Compile the driver against one UMAT source, once for the whole sweep.
+
+    ``quad`` (Vera B7 A2): the source promoted to REAL(16)
+    (:func:`umat_oti.corpus_features.drivers.quadify`: REAL*8 / DOUBLE
+    PRECISION -> REAL*16, binary32 and every literal unchanged), the header
+    an IMPLICIT REAL*16 stub, and the quad driver (:func:`quad_driver_text`).
+    Whether that reference is adopted is decided by the caller against the
+    double build's primal and termination behaviour."""
     work_dir = Path(work_dir)
     work_dir.mkdir(parents=True, exist_ok=True)
     if shutil.which(compiler) is None:
@@ -772,6 +869,14 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
         # but "the same routine" is the claim this comparison rests on.
         text, silenced = silence_console_writes(text, form)
         without, removed = without_the_authors_program(text, form)
+        if quad:
+            from umat_oti.corpus_features.drivers import quadify
+            without = quadify(without if removed else text)
+            replacement = work_dir / f"quad_{index}_{unit.name}"
+            replacement.write_text(without, encoding="utf-8")
+            cleaned.append(replacement)
+            removed_programs.extend(f"{unit.name}:PROGRAM {name}" for name in removed)
+            continue
         if not removed and not silenced:
             cleaned.append(unit)
             continue
@@ -786,10 +891,10 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
         removed_programs.extend(f"{unit.name}:PROGRAM {name}" for name in removed)
     units = cleaned
     driver = work_dir / "otis_replay.f90"
-    driver.write_text(
-        driver_source(name, initialise_state=any(
-            defines_sdvini(_text_of(unit)) for unit in units)),
-        encoding="utf-8")
+    driver_text = driver_source(name, initialise_state=any(
+        defines_sdvini(_text_of(unit)) for unit in units))
+    driver.write_text(quad_driver_text(driver_text) if quad else driver_text,
+                      encoding="utf-8")
     program = work_dir / "otis_replay"
 
     # The header is installed into the build directory under every casing a
@@ -801,7 +906,13 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     # repository's stub writer already emits four casings for this reason; the
     # installation's own header deserves the same treatment, because it is the
     # header the solver actually compiled against.
-    used = _install_header(work_dir)
+    if quad:
+        for header in _HEADER_NAMES:
+            (work_dir / header).write_text("      implicit real*16(a-h,o-z)\n"
+                                           "      parameter (nprecd=2)\n", encoding="utf-8")
+        used = "stub: IMPLICIT REAL*16 (quad reference)"
+    else:
+        used = _install_header(work_dir)
     includes = [f"-I{work_dir}"]
 
     # Order is load-bearing, not cosmetic. A compiler processes these in the
@@ -838,7 +949,7 @@ GRADIENT_FILE = "otis_gradient.txt"
 def run_replay(build: ReplayBuild, work_dir: Path, component: int,
                step: float, timeout: int = 900,
                gradient: Optional[Sequence[float]] = None,
-               ) -> tuple[list[float], str]:
+               exact: bool = False) -> tuple[list, str]:
     """One perturbed call. Returns the stress it produced, and any complaint.
 
     ``gradient`` is nine numbers added to DFGRD1, for a source whose kinematic
@@ -867,7 +978,7 @@ def run_replay(build: ReplayBuild, work_dir: Path, component: int,
                               timeout=timeout, stdin=subprocess.DEVNULL)
     except (OSError, subprocess.SubprocessError) as error:
         return [], f"{type(error).__name__}: {error}"
-    stress, _ = parse_replay_output(out)
+    stress, _ = parse_replay_output(out, exact=exact)
     if not stress:
         return [], (done.stdout + done.stderr)[-2000:] or "the replay wrote no stress"
     return stress, ""
@@ -1006,6 +1117,7 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
                        components: Sequence[int] = (),
                        transformed_source: Optional[Path] = None,
                        near_zero_fraction: float = 1e-8,
+                       exact: bool = False,
                        ) -> DifferenceSweep:
     """The tangent by centred differences, one column per strain component.
 
@@ -1082,11 +1194,11 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
               if base_gradient is not None
               else "d STRESS / d (additive DFGRD1 seed) -- uncorrected"))
 
-    unperturbed, complaint = run_replay(build, work_dir, 0, 0.0)
+    unperturbed, complaint = run_replay(build, work_dir, 0, 0.0, exact=exact)
     if not unperturbed:
         sweep.reason = f"the unperturbed replay produced no stress: {complaint}"
         return sweep
-    sweep.unperturbed = unperturbed
+    sweep.unperturbed = [float(v) for v in unperturbed]
     # The author's own tangent at the same state, from the same run.
     _stress, sweep.original_tangent = parse_replay_output(
         Path(work_dir) / "otis_replay_out.txt")
@@ -1115,12 +1227,12 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
                     columns = []
                     break
                 plus, first = run_replay(build, work_dir, 0, 0.0,
-                                         gradient=forward)
+                                         gradient=forward, exact=exact)
                 minus, second = run_replay(build, work_dir, 0, 0.0,
-                                           gradient=backward)
+                                           gradient=backward, exact=exact)
             else:
-                plus, first = run_replay(build, work_dir, component, step)
-                minus, second = run_replay(build, work_dir, component, -step)
+                plus, first = run_replay(build, work_dir, component, step, exact=exact)
+                minus, second = run_replay(build, work_dir, component, -step, exact=exact)
             if not plus or not minus:
                 sweep.failures.append(
                     f"step {relative:g}, component {component}: "
@@ -1141,13 +1253,15 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
             # step; where a branch changes between them they do not, whatever
             # the step. Recording both lets the caller say "this state sits on
             # a transition" instead of "the transform's tangent is wrong".
-            centred = [(a - b) / (2.0 * step) for a, b in zip(plus, minus)]
+            # Differences taken before rounding: exact for a quad replay's
+            # Decimal outputs, the same float arithmetic as before otherwise.
+            centred = [float(a - b) / (2.0 * step) for a, b in zip(plus, minus)]
             columns.append(centred)
             if unperturbed:
                 one_sided.append((
                     component,
-                    [(a - u) / step for a, u in zip(plus, unperturbed)],
-                    [(u - b) / step for u, b in zip(unperturbed, minus)]))
+                    [float(a - u) / step for a, u in zip(plus, unperturbed)],
+                    [float(u - b) / step for u, b in zip(unperturbed, minus)]))
         if not columns:
             continue
         # columns[j][i] is d STRESS(i) / d DSTRAN(j); the tangent is its
@@ -1156,16 +1270,16 @@ def difference_tangent(build: ReplayBuild, work_dir: Path, ntens: int,
                for i in range(ntens)]
         sweep.seed_map_matrices[relative] = raw
         sweep.matrices[relative] = _as_the_solver_defines_it(
-            raw, unperturbed, ndi, correct=base_gradient is not None)
+            raw, sweep.unperturbed, ndi, correct=base_gradient is not None)
         if len(one_sided) == len(columns):
             sweep.forward[relative] = _as_the_solver_defines_it(
                 [[one_sided[j][1][i] for j in range(len(one_sided))]
                  for i in range(ntens)],
-                unperturbed, ndi, correct=base_gradient is not None)
+                sweep.unperturbed, ndi, correct=base_gradient is not None)
             sweep.backward[relative] = _as_the_solver_defines_it(
                 [[one_sided[j][2][i] for j in range(len(one_sided))]
                  for i in range(ntens)],
-                unperturbed, ndi, correct=base_gradient is not None)
+                sweep.unperturbed, ndi, correct=base_gradient is not None)
 
         # How far the two one-sided slopes are from each other, measured
         # against the centred slope they average to. A kink between the two
