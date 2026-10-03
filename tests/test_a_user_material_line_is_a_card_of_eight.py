@@ -81,14 +81,15 @@ def test_a_line_holding_a_placeholder_stays_unusable(tmp_path):
     assert block.values == (0.3,)
 
 
-@pytest.mark.parametrize("line", [
+@pytest.mark.parametrize("line, count", [
     # williammora1984 GTN test_ht_vol.inp: 12 numbers on one line and a
     # "0.1. 0.3" typo
-    " 210.0e3, 0.33, 200.0, 50.0, 100.0, 1.5, 1.0, 1.5, 0.004, 0.1. 0.3, 0.2025, 0.1",
-    " 1., 2., 3., 4., 5., 6., 7., 8., 9.",          # more than eight numbers
-    " 1., 2., 3.x",                                 # a token Abaqus cannot read
+    (" 210.0e3, 0.33, 200.0, 50.0, 100.0, 1.5, 1.0, 1.5, 0.004, 0.1. 0.3, 0.2025, 0.1", 11),
+    (" 1., 2., 3., 4., 5., 6., 7., 8., 9.", 9),     # more than eight numbers
+    (" 1., 2., 3.x\n 4., 5.", 4),                     # a token Abaqus cannot read
 ])
-def test_a_garbled_block_is_not_zero_filled(tmp_path, line):
+def test_a_garbled_block_is_not_zero_filled(tmp_path, line, count):
     block = _block(tmp_path, f"*User Material, constants=13\n{line}\n")
     assert not block.usable
-    assert len(block.values) < 13          # read as written, no zeros invented
+    # read as written: the numbers that parse, packed, no zeros invented
+    assert len(block.values) == count and 0.0 not in block.values
