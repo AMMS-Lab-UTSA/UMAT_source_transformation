@@ -54,8 +54,13 @@ GLOSS = {
     "primal_disagreed": "the two builds compute different stress -- ours",
     "derivative_truncated": "the converted source drops a derivative on the "
                             "way to the stress -- ours",
-    "tangent_not_verified": "the difference could not pin the tangent down "
-                            "-- ours",
+    # Two different answers share this stage (the terminal contract keeps the
+    # name): a measured disagreement (tangent.failed) and a difference that
+    # settled nothing. The state's gloss names both; an entry's own gloss
+    # (:func:`gloss_for`) names the one that happened.
+    "tangent_not_verified": "the tangent was not verified: either a converged "
+                            "difference disagreed with it, or the difference "
+                            "settled nothing -- ours",
     "not_attempted": "this run did not reach it",
     "harness_error": "the run broke, not the model",
     #: A file with the 37-argument UMAT header that assigns neither STRESS nor
@@ -82,6 +87,26 @@ GLOSS = {
 
 # Anything the page does not word itself takes the state's own meaning.
 GLOSS = {**terminal_states.MEANING, **GLOSS}
+
+#: The two answers inside ``tangent_not_verified``, for one entry.
+TANGENT_GLOSS = {
+    "failed": "a converged difference of the original disagreed with the "
+              "converted tangent -- ours",
+    "unresolved": "the difference could not pin the tangent down -- ours",
+}
+
+
+def gloss_for(state: str, tangent=None, verdict: str = "") -> str:
+    """One entry's gloss. For ``tangent_not_verified`` it says which of the
+    two answers this entry got, from the row's ``tangent`` block (or a
+    ``tangent_verdict`` already derived), and never says "could not pin the
+    tangent down" over a row whose gate measured a disagreement."""
+    if state == "tangent_not_verified":
+        from umat_oti.corpus_features.manifest import tangent_verdict
+        verdict = verdict or tangent_verdict(tangent)
+        if verdict in TANGENT_GLOSS:
+            return TANGENT_GLOSS[verdict]
+    return GLOSS.get(state, "")
 
 
 def render(results_dir: Path, work_dir: Path, *, st=None) -> None:
@@ -129,7 +154,8 @@ def _entry_panel(entry, work_dir: Path, st) -> None:
     st.markdown(f"### {entry.source_id}")
     _verdict_panel(entry, st)
     st.write({"terminal state": entry.terminal_state, "kind": entry.kind,
-              "stage the batch reached": entry.stage})
+              "stage the batch reached": entry.stage,
+              "what it means": gloss_for(entry.terminal_state, entry.tangent)})
     st.info(entry.reason or "no reason recorded")
 
     # The six gates first, because every other panel on this page is one of

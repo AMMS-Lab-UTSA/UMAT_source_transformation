@@ -235,6 +235,7 @@ ALL_INTERNAL = tuple(INTERNAL) + tuple(
 #: interface cannot drift into describing the same state two different ways,
 #: and because a table of state names is not a human-readable report.
 from umat_oti.app.corpus_tab import GLOSS as _SHARED_GLOSS  # noqa: E402
+from umat_oti.corpus_features.manifest import tangent_verdict  # noqa: E402
 
 #: Glosses for the states the shared page does not carry one for. A state
 #: printed with an empty "what it means" column is a name, and a table of
@@ -370,6 +371,12 @@ class Record:
     tangent_states_agreeing: Optional[int] = None
     worst_tangent_relative: Optional[float] = None
     tangent_plateau: str = ""
+    #: The pass's tangent gate, as one word: ``verified``, ``failed`` (the
+    #: D-4 gate measured a disagreement: ``tangent.failed``) or
+    #: ``unresolved`` (neither); empty where no tangent comparison ran. The
+    #: stage keeps its name ``tangent_not_verified`` for both of the last two
+    #: (the terminal contract depends on it); this field tells them apart.
+    tangent_verdict: str = ""
     missing_companions: str = ""
     compile_defect: str = ""
     key: str = ""
@@ -1408,6 +1415,7 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
         record.primal_increments = primal.get("increments")
         record.precision_control = (row.get("precision_control") or {}).get("agrees")
         tangent = row.get("tangent") or {}
+        record.tangent_verdict = tangent_verdict(row.get("tangent"))
         record.tangent_states_checked = tangent.get("states_checked")
         record.tangent_states_agreeing = tangent.get("states_agreeing")
         record.response_character = str(tangent.get("response_character") or "")
@@ -1984,7 +1992,10 @@ def council_counted(record: Record, set_cells, *,
     if not record.redistribution:
         why.append(("D-2", "no redistribution decision recorded"))
     planned = [s for s in record.council_sets.split(";") if s]
-    if record.material_data_origin == COUNCIL_CHOSEN and len(planned) < 2:
+    if not planned:
+        why.append(("no_council_sets", "the row names no parameter set, so "
+                    "'every set passed' cannot be checked"))
+    elif record.material_data_origin == COUNCIL_CHOSEN and len(planned) < 2:
         why.append(("D-21.3_sets", "fewer than two parameter sets"))
     cells = [c for c in set_cells or ()
              if c.get("source_id") == record.source_id
