@@ -3329,11 +3329,18 @@ def _strip_fixed_form_comment(line: str) -> str:
 
 
 def _expand_fixed_form_tabs(raw: str) -> str:
-    if not raw or raw[0] != "\t":
-        return raw
-    if len(raw) >= 2 and raw[1].isdigit() and raw[1] != "0":
-        return "     " + raw[1:]
-    return "      " + raw[1:]
+    """A tab anywhere in the label field puts the statement in column 7.
+
+    This read only a tab in column 1. SinglePointSimulator's MODIFIED_JC.f
+    writes `` <TAB>  if (noel.eq.1) then`` -- a blank, then the tab -- which
+    ifort and gfortran read as a statement, and the lifter read as a
+    continuation (column 6 held an 'f'), stitching it onto the previous line
+    as ``temp = tempsv (noel.eq.1) then``. The parser's rule is the one both
+    compilers follow, so it is used here.
+    """
+    from umat_oti.fortran.parser import expand_fixed_form_tabs
+
+    return expand_fixed_form_tabs(raw)
 
 
 #: The widest source line the emitted free-form Fortran may contain.
