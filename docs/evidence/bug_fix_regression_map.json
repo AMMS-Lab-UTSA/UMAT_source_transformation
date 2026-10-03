@@ -555,6 +555,10 @@
   {
    "commit": "7193fd7",
    "reason": "Feature (G3, D-19a rev 2 R2): plan_council; 'refusal'/'silent' describe the refusals it adds and the 3D default it declines, not a corrected behaviour. Tested by tests/test_a_council_experiment_reads_only_the_source_and_the_row.py."
+  },
+  {
+   "commit": "f6b3e9d",
+   "reason": "Review record only: adds the integrity-review entry for the gfortran skipif of tests/test_transform_oti_sign_matches_the_intrinsic.py; 'fix' appears in 'fix-map entry', it corrects no behaviour."
   }
  ],
  "changelog_fixed": {
