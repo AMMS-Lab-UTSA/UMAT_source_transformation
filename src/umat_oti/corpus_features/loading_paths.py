@@ -1022,7 +1022,51 @@ def model_domain(entry: Mapping) -> dict:
         value, why = min(limits, key=lambda item: item[0])
         domain["time_max"] = value
         domain["time_provenance"] = why
+    # The kinematic and thermal domain the author DOCUMENTED (a harvest row's
+    # ``documented_domain``, D-19a rev 2 R3): each witness is the stated
+    # value with where it was stated. Absent, nothing is enforced.
+    documented = entry.get("documented_domain") or {}
+    for key in ("strain_max", "stretch_max", "temperature"):
+        stated = documented.get(key)
+        if not stated or stated.get("value") is None:
+            continue
+        value = stated["value"]
+        where = f"{stated.get('where', '')}: {stated.get('quote', '')}".strip(": ")
+        if key == "temperature":
+            low, high = (
+                (float(value[0]), float(value[1]))
+                if isinstance(value, (list, tuple))
+                else (float(value), float(value))
+            )
+            domain["temperature"] = (low, high)
+            text = f"{low:g}" if low == high else f"{low:g}..{high:g}"
+        else:
+            domain[key] = float(value)
+            text = f"{float(value):g}"
+        domain[f"{key}_provenance"] = where
+        domain["witnesses"].append(f"{key} {text}: {where}")
     return domain
+
+
+def _peaks(path: LoadingPath) -> tuple[float, float, float, float]:
+    """Peak |strain component|, peak stretch, lowest and highest TEMP+DTEMP
+    over the path. A finite path's stretch is max(lambda_max, 1/lambda_min)
+    of DFGRD1 and its strain max |lambda - 1|; a small-strain path's strain
+    is its total Voigt strain and its stretch 1 + that."""
+    strain = stretch = 0.0
+    temps = []
+    if all(inc.dfgrd1 is not None for inc in path.increments) and path.increments:
+        for inc in path.increments:
+            lam = np.linalg.svd(np.asarray(inc.dfgrd1, float), compute_uv=False)
+            stretch = max(stretch, float(lam.max()), 1.0 / max(float(lam.min()), 1e-300))
+            strain = max(strain, float(np.max(np.abs(lam - 1.0))))
+    else:
+        for total in total_strain(path):
+            strain = max(strain, float(np.max(np.abs(total))) if total.size else 0.0)
+        stretch = 1.0 + strain
+    for inc in path.increments:
+        temps.extend([float(inc.temp), float(inc.temp) + float(inc.dtemp)])
+    return strain, stretch, min(temps, default=0.0), max(temps, default=0.0)
 
 
 def _clock(entry: Mapping) -> tuple[float, str]:
@@ -1688,6 +1732,27 @@ def paths_for(entry: Mapping, *, per_leg: int = PER_LEG) -> list[LoadingPath]:
     return _within_domain(paths, domain)
 
 
+def _beyond_documented(path: LoadingPath, domain: Mapping) -> str:
+    """Why ``path`` leaves the documented strain, stretch or temperature
+    domain, or ``""``."""
+    if not any(k in domain for k in ("strain_max", "stretch_max", "temperature")):
+        return ""
+    strain, stretch, t_low, t_high = _peaks(path)
+    tol = 1.0 + 1e-9
+    if "strain_max" in domain and strain > domain["strain_max"] * tol:
+        return (f"peak |strain| {strain:g} > {domain['strain_max']:g} documented "
+                f"({domain.get('strain_max_provenance', '')})")
+    if "stretch_max" in domain and stretch > domain["stretch_max"] * tol:
+        return (f"peak stretch {stretch:g} > {domain['stretch_max']:g} documented "
+                f"({domain.get('stretch_max_provenance', '')})")
+    if "temperature" in domain:
+        low, high = domain["temperature"]
+        if t_low < low - 1e-9 * max(1.0, abs(low)) or t_high > high + 1e-9 * max(1.0, abs(high)):
+            return (f"TEMP {t_low:g}..{t_high:g} outside {low:g}..{high:g} documented "
+                    f"({domain.get('temperature_provenance', '')})")
+    return ""
+
+
 def _within_domain(paths: list[LoadingPath], domain: Mapping) -> list[LoadingPath]:
     """Record the documented domain on every path; relabel the ones that leave it.
 
@@ -1700,10 +1765,15 @@ def _within_domain(paths: list[LoadingPath], domain: Mapping) -> list[LoadingPat
 
     t_max = domain.get("time_max")
     outside: dict[str, float] = {}
+    beyond: dict[str, str] = {}
     for path in paths:
         end = sum(inc.dtime for inc in path.increments)
         if t_max is not None and end > t_max * (1.0 + 1e-9):
             outside[path.name] = end
+        why = _beyond_documented(path, domain)
+        if why:
+            beyond[path.name] = why
+            outside.setdefault(path.name, end)
     for path in paths:
         if path.twin and path.twin in outside and path.name not in outside:
             outside[path.name] = sum(inc.dtime for inc in path.increments)
@@ -1727,11 +1797,16 @@ def _within_domain(paths: list[LoadingPath], domain: Mapping) -> list[LoadingPat
             )
         if path.name in outside:
             prov["intended_purpose"] = path.purpose
-            prov["outside_model_domain"] = (
-                f"ends at total time {end:g} > {t_max:g} documented "
-                f"({domain.get('time_provenance')})"
-                + ("" if end > t_max * (1.0 + 1e-9) else "; its twin leaves it")
-            )
+            if path.name in beyond:
+                prov["outside_model_domain"] = beyond[path.name]
+            elif t_max is not None:
+                prov["outside_model_domain"] = (
+                    f"ends at total time {end:g} > {t_max:g} documented "
+                    f"({domain.get('time_provenance')})"
+                    + ("" if end > t_max * (1.0 + 1e-9) else "; its twin leaves it")
+                )
+            else:
+                prov["outside_model_domain"] = "its twin leaves the documented domain"
             out.append(replace(path, purpose=OUTSIDE_MODEL_DOMAIN, provenance=prov))
         else:
             out.append(replace(path, provenance=prov))

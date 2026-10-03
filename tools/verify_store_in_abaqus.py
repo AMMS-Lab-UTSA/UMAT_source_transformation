@@ -90,7 +90,7 @@ from umat_oti.abaqus.state_regime import (                              # noqa: 
     SMOOTH_INELASTIC, classify as classify_regime, coverage,
     response_character)
 from umat_oti.abaqus.amplitude_search import (                          # noqa: E402
-    ACTIVATED, CEILING, LEFT_ITS_DOMAIN, LINEAR_TO_THE_CEILING,
+    ACTIVATED, CEILING, LEFT_ITS_DOMAIN, LINEAR_TO_THE_CEILING, capped,
     enough_to_drive, first_non_finite, search_amplitude)
 from umat_oti.corpus.entry_routines import classify as classify_entry   # noqa: E402
 from umat_oti.fortran.normalize import detect_source_form              # noqa: E402
@@ -1635,7 +1635,8 @@ def discover_loading(manifest: VerificationManifest, original: Path,
                      increments: int = 10, form: str = "",
                      data_roots: Sequence[Path] = (),
                      deck: Optional[Path] = None,
-                     enabled: bool = True) -> tuple[VerificationManifest, dict]:
+                     enabled: bool = True,
+                     ceiling: float = CEILING) -> tuple[VerificationManifest, dict]:
     """Raise the amplitude on the ORIGINAL until the material does something.
 
     The fixed probe is a guess about somebody else's material. Driven at a
@@ -1719,8 +1720,11 @@ def discover_loading(manifest: VerificationManifest, original: Path,
     found = search_amplitude(
         run_at, run_fine=lambda amplitude: run_at(amplitude, steps=increments),
         declared=(manifest.loading[0].strain[0] if manifest.loading else 0.0),
-        reversal_at=2 * coarse)
+        reversal_at=2 * coarse, ceiling=ceiling)
     record = found.as_dict()
+    if capped(ceiling) < CEILING:
+        # a council experiment's documented (or default) domain (D-19a R3)
+        record["ceiling"] = capped(ceiling)
     record["ran"] = True
     record["jobs"] = len(found.attempts)
 
@@ -1808,12 +1812,12 @@ def discover_loading(manifest: VerificationManifest, original: Path,
             # exactly the regime the ceiling exists to keep a model out of.
             # The ladder's own docstring says it is "bounded so the model is
             # not walked somewhere its author never wrote"; it was not.
-            wanted = min(amplitude * factor, CEILING)
+            wanted = capped(amplitude * factor, ceiling)
             if wanted <= amplitude:
                 tried.append({"factor": factor, "amplitude": wanted,
                               "ran": False,
                               "reason": (f"a factor of {factor:g} would pass "
-                                         f"the ceiling of {CEILING:g}, and "
+                                         f"the ceiling of {capped(ceiling):g}, and "
                                          f"the amplitude is already there")})
                 continue
             ran, _records, why = run_at(wanted, steps=increments)
