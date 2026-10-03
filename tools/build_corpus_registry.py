@@ -1808,7 +1808,7 @@ def _redistribution(record: Record, cache: Optional[Path]) -> str:
     try:
         from umat_oti.corpus_features.manifest import (_licence_file,
                                                        redistribution_policy)
-    except Exception:                              # noqa: BLE001 - advisory
+    except ImportError:
         return ""
     licence = (_licence_file(Path(cache), record.source_id.split("/", 1)[0])
                if cache and Path(cache).is_dir() else None)
