@@ -435,6 +435,13 @@
    "tests": [
     "tests/test_transform_a_supplied_utility_ahead_of_the_stress_update_is_lifted.py"
    ]
+  },
+  {
+   "commit": "6f59cf2",
+   "bug": "A REAL argument of a mixed MIN/MAX was given the OTI type as (arg) + 0.0D0*(anchor), which turned -0.0 into +0.0 when the anchor's real part was positive (primal differs from the original).",
+   "tests": [
+    "tests/test_transform_a_real_argument_of_a_mixed_min_keeps_a_signed_zero.py"
+   ]
   }
  ],
  "excluded": [

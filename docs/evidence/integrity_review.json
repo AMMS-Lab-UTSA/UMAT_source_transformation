@@ -1248,6 +1248,10 @@
   "skip:tests/test_a_zero_initial_state_is_proven_harmless_or_refused.py:<module>:mark.skipif:0a70e71a": {
    "verdict": "justified",
    "reason": "Genuine missing external resource: the test compiles and runs Fortran toys, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_real_argument_of_a_mixed_min_keeps_a_signed_zero.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
   }
  }
 }
