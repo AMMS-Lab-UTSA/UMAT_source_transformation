@@ -130,7 +130,12 @@ def test_only_a_blind_selection_by_vera_is_run_and_under_five_is_falsification_o
 
 def test_a_source_that_is_not_verified_with_its_author_deck_is_not_run(env):
     with pytest.raises(ho.SelectionError, match="not a verified"):
-        ho.prepare(KEYS[1:], env / "out")
+        ho.author_side(KEYS[5])
+    # D-22 R-H1: the pick leaves the selection, recorded, and the rest are planned
+    prepared = ho.prepare(KEYS[1:], env / "out")
+    assert prepared["kept"] == KEYS[1:5]
+    assert [(x["key"], x["rule"]) for x in prepared["left"]] == [(KEYS[5], "R-H1")]
+    assert not (prepared["plans"] / KEYS[5]).exists()
 
 
 def test_the_hold_out_rows_and_plans(env):
@@ -265,8 +270,8 @@ def _reads_source(env):
 
 def test_an_unreviewed_name_scan_hit_leaves_the_run_incomplete(env):
     _reads_source(env)
-    with pytest.raises(ho.SelectionError, match="needs a reviewed static scan for reads_temp, "
-                                                "reads_coords_or_noel"):
+    with pytest.raises(ho.SelectionError, match="needs a Vera-accepted reviewed static scan "
+                                                "for reads_temp, reads_coords_or_noel"):
         ho.prepare(KEYS[:5], env / "out")
 
 
@@ -274,7 +279,8 @@ def test_the_reviewed_scan_decides_reads_as_for_a_council_row(env):
     _reads_source(env)
     review = env / "reviewed.jsonl"
     rows = [{"source_id": f"o{n}__r/src/umat.f", "reads_temp": False,
-             "reads_coords_or_noel": False, "coords_note": "NOEL only in a WRITE"}
+             "reads_coords_or_noel": False, "coords_note": "NOEL only in a WRITE",
+             "vera_accepted": True}
             for n in range(5)]
     review.write_text("".join(json.dumps(r) + "\n" for r in rows))
     prepared = ho.prepare(KEYS[:5], env / "out", reviewed_scans=[review])
@@ -299,7 +305,8 @@ def test_an_accepted_override_reaches_the_hold_out_plan(env):
              "reads_coords_or_noel": False,
              "static_scan_overrides": [{"flag": "reads_temp", "proposed": False,
                                         "status": "accepted by Vera (D-21a e)",
-                                        "static_evidence": "TEMP only in a WRITE"}]}
+                                        "static_evidence": "TEMP only in a WRITE"}],
+             "vera_accepted": True}
             for n in range(5)]
     review.write_text("".join(json.dumps(r) + "\n" for r in rows))
     prepared = ho.prepare(KEYS[:5], env / "out", reviewed_scans=[review])
@@ -326,3 +333,157 @@ def test_under_five_sources_a_disagreement_withdraws_and_agreement_accepts_nothi
                   "--gates", str(verdicts)])
     report = json.loads((env / "r" / "holdout_report.json").read_text())
     assert rc == 3 and report["status"] == "not_withdrawn_falsification_only"
+
+
+def _review_rows(**over):
+    return [dict({"source_id": f"o{n}__r/src/umat.f", "reads_temp": False,
+                  "reads_coords_or_noel": False, "vera_accepted": True}, **over)
+            for n in range(5)]
+
+
+def test_a_reviewed_row_vera_has_not_accepted_is_never_used(env):
+    _reads_source(env)
+    review = env / "reviewed.jsonl"
+    rows = _review_rows()
+    rows[2]["vera_accepted"] = False
+    rows[2]["registry_key"] = KEYS[2]
+    review.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    with pytest.raises(ho.SelectionError) as raised:
+        ho.prepare(KEYS[:5], env / "out", reviewed_scans=[review])
+    message = str(raised.value)
+    assert f"reviewed.jsonl row {KEYS[2]} (o2__r/src/umat.f) is not accepted by Vera" in message
+    assert KEYS[0] not in message                   # the accepted rows are fine
+    # a row with no vera_accepted field is not accepted either
+    del rows[2]["vera_accepted"]
+    review.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    with pytest.raises(ho.SelectionError, match="is not accepted by Vera"):
+        ho.prepare(KEYS[:5], env / "out2", reviewed_scans=[review])
+    # even where the name scan alone would have cleared the source
+    for n in range(5):
+        (env / "cache" / f"o{n}__r/src/umat.f").write_text(SOURCE)
+    with pytest.raises(ho.SelectionError, match="is not accepted by Vera"):
+        ho.prepare(KEYS[:5], env / "out3", reviewed_scans=[review])
+
+
+def test_a_reviewed_row_is_matched_by_registry_key_or_selection_key(env):
+    _reads_source(env)
+    review = env / "reviewed.jsonl"
+    rows = _review_rows()
+    for n, row in enumerate(rows):
+        del row["source_id"]
+        # Scout's rows carry the selection's (pass20) key and the current registry key
+        row.update(key="f" * 23 + str(n), registry_key=KEYS[n])
+    review.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    prepared = ho.prepare(KEYS[:5], env / "out", reviewed_scans=[review])
+    for row in map(json.loads, prepared["rows_file"].read_text().splitlines()):
+        assert "reviewed static scan (reviewed.jsonl)" in row["notes"]
+    reviewed = ho.load_reviewed([review])
+    assert reviewed["f" * 23 + "0"] is reviewed[KEYS[0]]
+
+
+def test_a_reviewed_row_of_other_bytes_is_not_used(env):
+    _reads_source(env)
+    review = env / "reviewed.jsonl"
+    review.write_text("".join(json.dumps(r) + "\n"
+                              for r in _review_rows(source_sha256="0" * 64)))
+    with pytest.raises(ho.SelectionError, match="reviewed source_sha256 000000000000, not the "
+                                                "cached file's"):
+        ho.prepare(KEYS[:5], env / "out", reviewed_scans=[review])
+
+
+# ---------------------------------------------------------------------------
+# D-22: R-H1, R-H2 and the G12 placement in the author's mesh
+# ---------------------------------------------------------------------------
+def _verdicts(env, keys):
+    path = env / "verdicts.jsonl"
+    lines = [{"key": k, "side": side, "set_id": "author" if side == "council" else "",
+              "verdict": "verified"} for k in keys for side in ("author", "council")]
+    path.write_text("".join(json.dumps(l) + "\n" for l in lines))
+    return path
+
+
+def test_r_h1_a_pick_that_left_is_reported_and_a_small_pool_is_not_redrawn(env):
+    keys = KEYS[2:6]                                   # KEYS[5] is not fully_verified
+    rc = ho.main(["--template", "strain-driven", "--selection",
+                  str(selection(env / "v.json", keys=keys, n_available=4)),
+                  "--out", str(env / "r"), "--gates", str(_verdicts(env, keys))])
+    report = json.loads((env / "r" / "holdout_report.json").read_text())
+    assert rc == 3 and report["mode"] == ho.FALSIFICATION_ONLY
+    assert [s["key"] for s in report["sources"]] == KEYS[2:5]
+    assert report["left"][0]["key"] == KEYS[5] and report["left"][0]["rule"] == "R-H1"
+
+
+def test_r_h1_a_stratified_pool_below_five_waits_for_veras_replacement(env):
+    keys = KEYS[1:6]
+    rc = ho.main(["--template", "strain-driven", "--selection",
+                  str(selection(env / "v.json", keys=keys, n_available=43)),
+                  "--out", str(env / "r"), "--gates", str(_verdicts(env, keys))])
+    assert rc == 2 and not (env / "r" / "holdout_report.json").exists()
+
+
+def test_r_h2_a_plan_the_template_refuses_is_not_a_template_test(env):
+    _reads_source(env)
+    review = env / "reviewed.jsonl"
+    rows = _review_rows()
+    rows[1]["reads_temp"] = True                       # accepted: a genuine TEMP read
+    review.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    prepared = ho.prepare(KEYS[:5], env / "out", reviewed_scans=[review])
+    assert prepared["kept"] == [KEYS[0]] + KEYS[2:5]
+    (left,) = prepared["left"]
+    assert left["key"] == KEYS[1] and left["rule"] == "R-H2"
+    assert "not a template test" in left["why"] and "needs_documented_temperature" in left["why"]
+    # judged on the kept picks only: no disagreement, nothing withdrawn
+    report = ho.judge("strain-driven", prepared["kept"], prepared["plans"], _gate(),
+                      ho.FALSIFICATION_ONLY)
+    assert report["status"] == "not_withdrawn_falsification_only"
+
+
+MESH = """*HEADING
+author mesh
+*NODE
+1, 0.0, 0.0, 0.0
+2, 1.0, 0.0, 0.0
+3, 1.0, 0.05, 0.0
+4, 0.0, 0.05, 0.0
+5, 0.0, 0.0, 0.001
+6, 1.0, 0.0, 0.001
+7, 1.0, 0.05, 0.001
+8, 0.0, 0.05, 0.001
+*ELEMENT, TYPE=C3D8, ELSET=E
+1, 1, 2, 3, 4, 5, 6, 7, 8
+*SOLID SECTION, ELSET=E, MATERIAL=MAT
+*MATERIAL, NAME=MAT
+*USER MATERIAL, CONSTANTS=2
+1000.0, 0.2
+*DEPVAR
+1
+"""
+
+
+def test_a_coords_reading_pick_is_placed_in_the_authors_mesh_off_every_zero_plane(env):
+    _reads_source(env)
+    review = env / "reviewed.jsonl"
+    review.write_text("".join(json.dumps(r) + "\n"
+                              for r in _review_rows(reads_coords_or_noel=True)))
+    pass_file = ho.CURRENT_RECORDS
+    lines = [json.loads(l) for l in pass_file.read_text().splitlines()]
+    for n, line in enumerate(lines):
+        (env / "cache" / f"o{n}__r" / "run.inp").write_text(MESH)
+        line["deck"] = f"o{n}__r/run.inp"
+    pass_file.write_text("".join(json.dumps(l) + "\n" for l in lines))
+    prepared = ho.prepare(KEYS[:5], env / "out", reviewed_scans=[review])
+    assert prepared["kept"] == KEYS[:5] and not prepared["left"]
+    row = json.loads(prepared["rows_file"].read_text().splitlines()[0])
+    assert row["placement"]["origin"] == "author_published"
+    assert row["placement"]["box"] == [[0.0, 0.0, 0.0], [1.0, 0.05, 0.001]]
+    assert row["placement"]["avoid"] == {"x": 0.0, "y": 0.0, "z": 0.0}
+    plan = json.loads((prepared["plans"] / KEYS[0] / "council_plan.json").read_text())
+    assert not plan["refusal"], plan["refusal"]
+    assert plan["placement"]["driver_point"]["noel"] == 1
+    assert plan["placement"]["driver_point"]["npt"] == 1
+    assert ho.placement_problems(plan) == []
+    nodes = plan["sets"][0]["plan"]["experiment"]["manifest"]["node_coordinates"]
+    assert nodes and all(float(c) != 0.0 for node in nodes for c in node[1:])
+    # the D-22 condition check itself rejects a zero coordinate
+    plan["sets"][0]["plan"]["experiment"]["manifest"]["node_coordinates"][0][1] = 0.0
+    assert "zero coordinate" in ho.placement_problems(plan)[0]
