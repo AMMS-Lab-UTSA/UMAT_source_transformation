@@ -661,6 +661,10 @@
   {
    "commit": "734231a",
    "reason": "Integrity-record commit: maps 4cc93e4 and justifies a test change; 'regression' names the regression tests it records, not a corrected behaviour."
+  },
+  {
+   "commit": "3a1dd15",
+   "reason": "Lead's audit-record commit: adds an exclusion entry for 734231a; its message names the map, not a corrected behaviour."
   }
  ],
  "changelog_fixed": {
