@@ -643,6 +643,10 @@
   {
    "commit": "eb8e101",
    "reason": "Adds the hold-out runner (A-2); selecting words name its exit codes and refusal outcomes, not a corrected behaviour."
+  },
+  {
+   "commit": "734231a",
+   "reason": "Integrity-record commit: maps 4cc93e4 and justifies a test change; 'regression' names the regression tests it records, not a corrected behaviour."
   }
  ],
  "changelog_fixed": {
