@@ -88,10 +88,15 @@ def test_structural_zero_still_passes_when_resolved_against_the_column():
 
 
 def test_an_exactly_zero_column_passes_as_structural_zero():
+    """...against the QUAD reference; in double a bitwise-zero ladder with no
+    derivative scale is unresolved (Vera B7 A1: it can be quantisation)."""
     est = [np.zeros(2) for _ in L]
     v = fd.judge_column(np.zeros(2), est, list(range(len(L))), L, steps=list(L),
-                        magnitude=np.array([1.0, 1.0]))
+                        magnitude=np.array([1.0, 1.0]), eps=fd.EPS_QUAD)
     assert v.codes == [fd.ZERO_PASS, fd.ZERO_PASS]
+    d = fd.judge_column(np.zeros(2), est, list(range(len(L))), L, steps=list(L),
+                        magnitude=np.array([1.0, 1.0]))
+    assert d.codes == [fd.UNRESOLVED_ZERO_SCALE, fd.UNRESOLVED_ZERO_SCALE]
 
 
 @pytest.fixture(scope="module")

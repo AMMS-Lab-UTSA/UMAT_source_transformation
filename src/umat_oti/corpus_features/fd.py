@@ -353,7 +353,10 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
                  value_eps: float = EPS,
                  value_magnitude: Optional[np.ndarray] = None,
                  euler=True,
-                 derivative_scale: float = 0.0) -> ColumnVerdict:
+                 derivative_scale: float = 0.0,
+                 kinematic_input: float = 0.0,
+                 block_derivative: float = 0.0,
+                 double_zero=None) -> ColumnVerdict:
     """Compare one column of derivatives against the FD ladder, entry by entry.
 
     The rule (B2; Vera B1/B, C):
@@ -394,6 +397,18 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
     on the Euler one) is UNRESOLVED (``unresolved_euler_window``) -- never
     passed, never failed on a round-off model the two disagree about. ``eps`` is the unit round-off of the arithmetic the reference was
     evaluated in (EPS, or EPS_QUAD for the quad-precision reference build);
+    ``kinematic_input`` / ``block_derivative`` (Vera B7 A1): the Euler term is
+    ``max(column_max, block_derivative) * max(|x|, kinematic_input)`` -- the
+    largest derivative term across the BLOCK times the TOTAL kinematic input
+    (``|STRAN + DSTRAN|`` or ``|DFGRD1|``), not the increment: a stress built
+    as K (J - 1) from a total measure carries the round-off of the total, and
+    with the increment (2.7e-8 on PureGravity) quantised entries read as
+    resolved and failed. An entry whose central differences are exactly zero
+    at every usable step is a structural zero only if ``atol < 1e-3 S``; the
+    exact-zero exemption applies to the QUAD reference only (in double a
+    zero can be quantisation). ``double_zero`` (quad pass, per entry: the
+    double ladder was exactly zero too): a zero in both precisions against a
+    nonzero value under test FAILS (Vera B7 A3);
     ``value_eps`` that of the value under test (double: EPS).
     ``steps`` are the absolute steps (default: the relative ladder) and
     ``magnitude`` the output magnitude at the state per entry (default: the
@@ -403,7 +418,8 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
     if euler == "bracket":
         kw = dict(steps=steps, magnitude=magnitude, rtol=rtol, atol_floor=atol_floor, eps=eps,
                   value_eps=value_eps, value_magnitude=value_magnitude,
-                  derivative_scale=derivative_scale)
+                  derivative_scale=derivative_scale, kinematic_input=kinematic_input,
+                  block_derivative=block_derivative, double_zero=double_zero)
         own = judge_column(oti, estimates, usable, ladder, euler=False, **kw)
         wide = judge_column(oti, estimates, usable, ladder, euler=True, **kw)
         return _bracket(own, wide, np.asarray(oti, float).reshape(-1), ladder)
@@ -427,7 +443,8 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
     # difference of such terms (sigma_22 ~ 1e-15 from terms ~ 4 in the
     # independence check) has their round-off, not its own.
     if euler:
-        mag = np.maximum(mag, column_max * input_scale)
+        mag = np.maximum(mag, max(column_max, abs(float(block_derivative)))
+                         * max(input_scale, abs(float(kinematic_input))))
     noise = np.array([roundoff(mag, h, eps) for h in steps])      # (steps, n)
     # atol is the larger of the REFERENCE's round-off scale and the round-off
     # of the VALUE UNDER TEST (computed in double: its derivative terms are
@@ -477,13 +494,16 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
                 verdict.codes.append(UNRESOLVED_ZERO)
                 continue
             exact_zero = all(series[k] == 0.0 for k in usable)
-            if not (exact_zero or atol[e] < RESOLUTION * scale):
+            quad = eps < EPS
+            both_zero = bool(quad and exact_zero and double_zero is not None
+                             and bool(np.asarray(double_zero, bool).reshape(-1)[e]))
+            if not ((exact_zero and quad) or atol[e] < RESOLUTION * scale):
                 verdict.unresolved += 1
                 verdict.codes.append(UNRESOLVED_ZERO_SCALE)
                 continue
             t = atol[e] + 2.0 * u
             err = abs(oti[e])
-            ok = err <= t
+            ok = err == 0.0 if both_zero else err <= t
             verdict.zero_passed += ok
             code = ZERO_PASS if ok else FAIL
         else:
