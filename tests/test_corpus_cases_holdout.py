@@ -149,18 +149,27 @@ def test_the_hold_out_rows_and_plans(env):
     assert prepared["regenerates"], prepared["printed"]
     rows = [json.loads(l) for l in prepared["rows_file"].read_text().splitlines()]
     assert [r["key"] for r in rows] == KEYS[:5]
-    rederive = importlib.util.spec_from_file_location(
-        "rederive_harvest_t", WORKSPACE_REAL / "corpus_campaign/material_data/rederive_harvest.py")
-    module = importlib.util.module_from_spec(rederive)
-    rederive.loader.exec_module(module)
-    import jsonschema
-    validator = jsonschema.Draft202012Validator(json.loads(
-        (WORKSPACE_REAL / "corpus_campaign/material_data/harvest_row.schema.json").read_text()))
+    # The harvest re-derivation and its schema live in the campaign workspace,
+    # not in this repository: checked where they exist, and the test says so
+    # (a skip at the end) where they do not, after every other assertion ran.
+    harvest = WORKSPACE_REAL / "corpus_campaign/material_data"
+    module = validator = None
+    if (harvest / "rederive_harvest.py").is_file() and \
+            (harvest / "harvest_row.schema.json").is_file():
+        rederive = importlib.util.spec_from_file_location(
+            "rederive_harvest_t", harvest / "rederive_harvest.py")
+        module = importlib.util.module_from_spec(rederive)
+        rederive.loader.exec_module(module)
+        import jsonschema
+        validator = jsonschema.Draft202012Validator(json.loads(
+            (harvest / "harvest_row.schema.json").read_text()))
     for n, row in enumerate(rows):
         assert row["material_data_origin"] == "holdout_from_author_deck"
         assert [c["value"] for c in row["constants"]] == [1000.0 + n, 0.2]
-        problems, eligible = module.check_row(row, validator)
-        assert eligible and problems and all("material_data_origin" in p for p in problems)
+        if module is not None:
+            problems, eligible = module.check_row(row, validator)
+            assert eligible and problems and all("material_data_origin" in p
+                                                 for p in problems)
         plan = json.loads((prepared["plans"] / row["key"] / "council_plan.json").read_text())
         # ... in the deckless copy it cannot, so the source takes the council route
         assert plan["route"] == "no_deck_in_repository" and not plan["refusal"], plan["refusal"]
@@ -168,6 +177,10 @@ def test_the_hold_out_rows_and_plans(env):
         assert manifest["props"] == [1000.0 + n, 0.2]
     assert not list((env / "out" / "cache").rglob("*.inp"))
     assert not any((env / "live_plans").iterdir())
+    if module is None:
+        pytest.skip("rows and plans checked; the harvest re-derivation check needs "
+                    "corpus_campaign/material_data/{rederive_harvest.py,harvest_row.schema.json} "
+                    "(the campaign workspace), which is not on this machine")
 
 
 def _gate(flip: str = ""):
