@@ -122,3 +122,15 @@ def test_a_pairing_has_no_refusal_kind(tmp_path):
 def test_the_kinds_are_the_four_routes():
     assert set(REFUSAL_KINDS) == {NO_DECK_IN_REPOSITORY, NO_DECK_NAMES_THIS_SOURCE,
                                   AUTHOR_BLOCK_REJECTED, AUTHOR_DECK_UNRESOLVED}
+
+
+def test_the_authors_rejected_block_is_named_first_with_its_depvar(tmp_path):
+    """mholla iso_Mandel: the README's deck declares *DEPVAR 3 and the routine
+    writes STATEV(5); it was the seventh rejection and the reason quoted six."""
+    decks = {f"other/a{i}.inp": TOO_FEW_CONSTANTS for i in range(7)}
+    decks["decks/z_own.inp"] = TOO_FEW_STATEV
+    decks["README.md"] = "- z_own.inp = umat.f\n"
+    found = _kind(tmp_path, decks)
+    assert found.refusal_kind == AUTHOR_BLOCK_REJECTED
+    assert ("the author's own block: z_own.inp:MAT: the routine subscripts "
+            "STATEV(4) and this block declares only *DEPVAR 2") in found.refusal
