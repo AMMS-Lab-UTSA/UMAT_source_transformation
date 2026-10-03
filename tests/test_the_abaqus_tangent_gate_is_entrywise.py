@@ -16,7 +16,10 @@ SCALE = 1e-3
 C = np.array([[200.0, 80.0, 0.0], [80.0, 200.0, 0.0], [0.0, 0.0, 60.0]])
 
 
-def sweep_of(stress, x0=np.array([1e-3, 0.0, 0.0])):
+X0 = np.array([1e-3, 0.0, 0.0])
+
+
+def sweep_of(stress, x0=X0):
     """A DifferenceSweep of ``stress(x)`` at ``x0`` (exact arithmetic aside)."""
     n = len(x0)
     base = stress(x0)

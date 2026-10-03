@@ -74,6 +74,8 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, Optional, Sequence
 
+import numpy as np
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT / "tools"))
@@ -4677,7 +4679,8 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         manifest, reference_source, compared_transformed, work / "replay",
         transformed=Path(stored.entry_source),
         form=source_form,
-        tolerance=tangent_tolerance, timeout=timeout)
+        tolerance=tangent_tolerance, timeout=timeout,
+        original_history=compared_original)
     if stopped_at >= 0:
         tangent["states_taken_from"] = (
             f"the {stopped_at} increments in which both builds produced "
@@ -4691,195 +4694,330 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
                             (precision_note, tangent.get("reason", "")) if part))
 
 
+#: States the D-4 gate chooses per row (Curie item 5): two either side of
+#: the activation of one integration point, or four spread along the path.
+GATE_STATES_EACH_SIDE = 2
+
+
+def _point_of(record: dict) -> tuple:
+    return (record.get("element"), record.get("point"))
+
+
+def choose_gate_states(original_history: Sequence[dict],
+                       transformed_history: Sequence[dict],
+                       each_side: int = GATE_STATES_EACH_SIDE) -> tuple[list, dict]:
+    """The states the tangent is judged at, chosen from the ORIGINAL (A5).
+
+    Activation is found on ONE integration point's own records (Curie item
+    5; the flattened list of eight points of a C3D8 put "activation" at the
+    record where the first point moved, whatever the others did), and the
+    states are taken either side of it on that point, clear of it by one
+    increment -- or spread along the path when nothing activates. Each chosen
+    original record is matched to the transformed record of the same
+    (increment, element, point), which carries the DDSDDE under test and the
+    ENTRY state the replay starts from. The choice is made before anything
+    is compared and is recorded whole; a state with no transformed match
+    stays in the denominator.
+
+    Returns ``([(position_in_point_records, point_records, original_record,
+    transformed_record_or_None), ...], selection)``.
+    """
+    groups: dict = {}
+    for record in original_history:
+        groups.setdefault(_point_of(record), []).append(record)
+    transformed = {(r.get("increment"),) + _point_of(r): r for r in transformed_history
+                   if r.get("DDSDDE") and r.get("entry")}
+    best = None
+    for point in sorted(groups, key=lambda key: tuple(str(k) for k in key)):
+        records = groups[point]
+        matched = sum(1 for r in records
+                      if (r.get("increment"),) + point in transformed)
+        if matched >= 2 * each_side:
+            best = point
+            break
+        if best is None or matched > sum(1 for r in groups[best]
+                                         if (r.get("increment"),) + best in transformed):
+            best = point
+    if best is None:
+        return [], {"selected_from": "original", "reason": "no original records"}
+    records = groups[best]
+    replayable = [(position, record) for position, record in enumerate(records)
+                  if (record.get("increment"),) + best in transformed]
+    turn = first_activated(records)
+
+    def spread(pairs, count):
+        if len(pairs) <= count:
+            return list(pairs)
+        return [pairs[round(k * (len(pairs) - 1) / max(count - 1, 1))]
+                for k in range(count)]
+    if turn is None:
+        picked = spread(replayable, 2 * each_side)
+    else:
+        before = [pair for pair in replayable if pair[0] < turn - 1]
+        after = [pair for pair in replayable if pair[0] > turn + 1]
+        # A side with too few states lends its share to the other: a growth
+        # law active from its first increment has no state before activation
+        # (Curie item 5: >= 4 states).
+        take_before = min(each_side, len(before))
+        take_after = min(len(after), 2 * each_side - take_before)
+        take_before = min(len(before), 2 * each_side - take_after)
+        picked = sorted(spread(before, take_before) + spread(after, take_after),
+                        key=lambda pair: pair[0])
+    chosen = [(position, records, record,
+               transformed.get((record.get("increment"),) + best))
+              for position, record in picked]
+    selection = {
+        "selected_from": "original", "point": {"element": best[0], "point": best[1]},
+        "activation_increment": (records[turn].get("increment") if turn is not None else None),
+        "states": [{"increment": record.get("increment"), "element": best[0],
+                    "point": best[1], "position": position}
+                   for position, _r, record, _t in chosen],
+        "rule": (f"{each_side} states either side of this point's activation, one "
+                 f"increment clear of it" if turn is not None else
+                 f"{2 * each_side} states spread along the path (no activation at this point)"),
+    }
+    return chosen, selection
+
+
+def _kinematic_input(entry: dict, gradient_driven: bool) -> float:
+    if gradient_driven:
+        values = [abs(float(v)) for v in (entry.get("DFGRD1") or ()) if math.isfinite(float(v))]
+        return max(values, default=1.0)
+    total = [float(a) + float(b) for a, b in zip(entry.get("STRAN") or (), entry.get("DSTRAN") or ())]
+    return max((abs(v) for v in total if math.isfinite(v)), default=0.0)
+
+
+#: The D-15 bound on a quad replay's primal against the double one, in units
+#: of eps x the stress scale: clip(4 x the double build's own 1-ulp floor, 2, 64).
+QUAD_FLOOR_RANGE = (2.0, 64.0)
+
+
+def _one_ulp_floor(build, work_dir: Path, ntens: int, base: Sequence[float],
+                   entry: dict, gradient_driven: bool, stiffness: float) -> float:
+    """How far the double replay's stress moves when the kinematic input the
+    routine reads moves by ONE ulp, in eps x max|stress| (the D-15 per-row
+    floor): each DFGRD1 component by one ulp of itself for a source driven
+    through the deformation gradient, else each DSTRAN component by one ulp
+    of the total strain STRAN + DSTRAN it is added to. In units of eps x K,
+    K the stiffness scale (D-15's ulpK): a stress formed as a cancelled
+    difference of stiffness-sized terms carries their round-off."""
+    from umat_oti.abaqus.replay import run_replay
+    scale = stiffness or max((abs(v) for v in base), default=0.0) or 1.0
+    eps = float(np.finfo(float).eps)
+    worst = 0.0
+    if gradient_driven:
+        gradient = [float(v) for v in (entry.get("DFGRD1") or [1, 0, 0, 0, 1, 0, 0, 0, 1])]
+        for k in range(9):
+            delta = [0.0] * 9
+            delta[k] = math.ulp(gradient[k]) if gradient[k] else math.ulp(1.0)
+            moved, _ = run_replay(build, work_dir, 0, 0.0, gradient=delta)
+            if moved:
+                worst = max(worst, max(abs(a - b) for a, b in zip(moved, base)) / (eps * scale))
+        return worst
+    stran = [float(v) for v in (entry.get("STRAN") or [0.0] * ntens)]
+    dstran = [float(v) for v in (entry.get("DSTRAN") or [0.0] * ntens)]
+    for component in range(1, ntens + 1):
+        total = abs(stran[component - 1] + dstran[component - 1]) if component <= len(stran) \
+            else 0.0
+        step = math.ulp(total) if total else math.ulp(1.0) * 1e-3
+        moved, _ = run_replay(build, work_dir, component, step)
+        if moved:
+            worst = max(worst, max(abs(a - b) for a, b in zip(moved, base)) / (eps * scale))
+    return worst
+
+
+def _judge_state_at(manifest: VerificationManifest, original: Path, record: dict,
+                    work_dir: Path, *, form: str, timeout: int,
+                    transformed: Optional[Path], increment) -> dict:
+    """One chosen state under the D-4 gate: replay, sweep, judge, quad."""
+    from umat_oti.abaqus import tangent_gate as gate
+    from umat_oti.abaqus.replay import run_replay
+    from umat_oti.corpus_features import fd as FD
+
+    outcome: dict[str, Any] = {"increment": increment, "judgement": None}
+    oti = oti_tangent(record, manifest.ntens)
+    if not oti:
+        outcome["reason"] = "the probe recorded no full DDSDDE at this state"
+        return outcome
+    work_dir = Path(work_dir)
+    work_dir.mkdir(parents=True, exist_ok=True)
+    write_state(record["entry"], work_dir / STATE_FILE)
+    build = build_replay(Path(original), work_dir, name=manifest.name,
+                         flags=replay_flags(form, work_dir), timeout=timeout)
+    outcome["replay_header"] = build.header
+    if not build.ok:
+        outcome["reason"] = build.reason or "the replay driver did not build"
+        return outcome
+    # Curie item 4: the step scale never falls below the 1e-6 floor.
+    scale = FD.step_scale(perturbation_scale(record["entry"]), floor=1e-6)
+    outcome["perturbation_scale"] = scale
+    ladder = tuple(manifest.fd_steps)
+    sweep = difference_tangent(build, work_dir, manifest.ntens, ladder, scale=scale,
+                               transformed_source=transformed,
+                               near_zero_fraction=manifest.near_zero_fraction)
+    outcome["driven_through"] = sweep.driven_through
+    outcome["failures"] = list(sweep.failures)
+    if not sweep.ok:
+        outcome["reason"] = sweep.reason or "the difference produced no tangent"
+        return outcome
+    # The replay restores the state: the unperturbed call, run again after
+    # the sweep, returns the same bits (Curie item 2).
+    again, _ = run_replay(build, work_dir, 0, 0.0)
+    outcome["state_restored"] = bool(again) and list(again) == list(sweep.unperturbed)
+    if not outcome["state_restored"]:
+        outcome["reason"] = ("the unperturbed replay does not return the same stress after "
+                             "the sweep: the routine keeps state between calls, so the "
+                             "differences are not taken at one state")
+        return outcome
+    gradient_driven = sweep.driven_through == "deformation gradient"
+    kinematic = _kinematic_input(record["entry"], gradient_driven)
+    base = np.abs(np.asarray(sweep.unperturbed, float))
+    largest = max(ladder) * scale
+    first = np.abs(np.asarray(sweep.matrices[max(sweep.matrices)], float))
+    magnitude = base + first.max(axis=1) * largest
+    oti = np.asarray(oti, float)
+    judged = gate.judge_state(oti, sweep, ladder, scale, kinematic_input=kinematic,
+                              stress_magnitude=magnitude, increment=increment)
+    outcome["double"] = judged.as_dict()
+    if sweep.original_tangent:
+        against = compare_tangent(oti.tolist(), {0.0: sweep.original_tangent},
+                                  near_zero_fraction=manifest.near_zero_fraction)
+        outcome["against_the_authors_tangent"] = against.as_dict()   # diagnostic only
+    if judged.unresolved_entries() and not judged.failed:
+        quad_dir = work_dir / "quad"
+        quad_dir.mkdir(parents=True, exist_ok=True)
+        write_state(record["entry"], quad_dir / STATE_FILE)
+        qbuild = build_replay(Path(original), quad_dir, name=manifest.name,
+                              flags=replay_flags(form, quad_dir), timeout=timeout, quad=True)
+        note: dict[str, Any] = {"status": "unavailable", "reason": qbuild.reason}
+        if qbuild.ok:
+            qsweep = difference_tangent(qbuild, quad_dir, manifest.ntens, ladder, scale=scale,
+                                        transformed_source=transformed,
+                                        near_zero_fraction=manifest.near_zero_fraction,
+                                        exact=True)
+            stiffness = float(np.max(np.abs(np.asarray(sweep.original_tangent, float)))) \
+                if sweep.original_tangent else float(first.max())
+            floor = _one_ulp_floor(build, work_dir, manifest.ntens, sweep.unperturbed,
+                                   record["entry"], gradient_driven, stiffness)
+            bound = min(max(4.0 * floor, QUAD_FLOOR_RANGE[0]), QUAD_FLOOR_RANGE[1])
+            eps = float(np.finfo(float).eps)
+            stress_scale = stiffness or float(base.max()) or 1.0
+            gap = (max(abs(a - b) for a, b in zip(qsweep.unperturbed, sweep.unperturbed))
+                   / (eps * stress_scale)) if qsweep.unperturbed else math.inf
+            same_steps = sorted(qsweep.matrices) == sorted(sweep.matrices)
+            note = {"double_one_ulp_floor": floor, "bound": bound, "primal_gap": gap,
+                    "units": "eps x K, K = max |DDSDDE of the original| (D-15 ulpK)",
+                    "same_terminations": same_steps}
+            if qsweep.ok and same_steps and gap <= bound:
+                note["status"] = "used"
+                quad = gate.judge_state(
+                    oti, qsweep, ladder, scale, kinematic_input=kinematic,
+                    stress_magnitude=magnitude, eps=FD.EPS_QUAD, increment=increment,
+                    double_zero=gate.exact_zero(sweep, ladder, manifest.ntens))
+                outcome["quad"] = quad.as_dict()
+                judged = gate.merge_quad(judged, quad)
+            else:
+                note["status"] = "refused"
+                note["reason"] = ("the quad replay does not reproduce the double primal within "
+                                  f"the D-15 floor ({gap:.3g} > {bound:.3g} eps x K)"
+                                  if gap > bound else
+                                  "the quad replay did not complete the same steps")
+        outcome["quad_reference"] = note
+    outcome["judgement"] = judged
+    outcome["judged"] = judged.judged
+    outcome["reason"] = judged.reason
+    return outcome
+
+
 def verify_tangent(manifest: VerificationManifest, original: Path,
                    transformed_history: Sequence[dict], work_dir: Path, *,
                    form: str = "fixed", tolerance: float = TANGENT_TOLERANCE,
                    timeout: int = 900, states: int = 3,
-                   transformed: Optional[Path] = None) -> dict:
-    """The OTI tangent against a difference of the original, over the ladder.
+                   transformed: Optional[Path] = None,
+                   original_history: Optional[Sequence[dict]] = None) -> dict:
+    """The OTI tangent against centred differences of the ORIGINAL, under D-4.
 
-    The value under test is DDSDDE out of the transformed build's own converged
-    probe record. The reference is the ORIGINAL source, compiled on its own by
-    gfortran and replayed from the state that record began in, with one
-    component of DSTRAN moved. The two sides therefore share no code path at
-    all -- not the compiler, not the driver, not the solver -- which is the
-    only arrangement in which an error in the transform cannot cancel itself
-    out of its own check.
+    The value under test is DDSDDE out of the transformed build's own probe
+    record; the reference is the ORIGINAL source compiled on its own and
+    replayed from the state that record began in. States are chosen from the
+    ORIGINAL history, on one integration point (A5, Curie item 5); each is
+    judged entry by entry (:mod:`umat_oti.abaqus.tangent_gate`), with a quad
+    reference for what double leaves unresolved (A2, A3). The row is verified
+    iff no entry fails anywhere, >= 2 states are judged and judged >= 50% of
+    the chosen ones, and coverage holds on the judged states (A4, A7). The
+    author's own tangent and one-sided branch differences are diagnostics,
+    never a verdict. ``tolerance`` and ``states`` are kept for the caller's
+    signature; the entrywise rule has no global tolerance.
     """
-    outcome: dict[str, Any] = {"verified": False, "reason": ""}
-    # States either side of where the material activates, and none sitting on
-    # it. Bracketing a transition is not verifying across it: evaluating AT
-    # the transition makes every centred difference a chord across a corner.
-    chosen = choose_states_around_activation(list(transformed_history),
-                                             each_side=max(2, int(states) - 1))
-    if not chosen:
-        outcome["reason"] = ("no converged record carries both a DDSDDE and "
-                             "the ENTRY state its increment began from, so "
-                             "the increment cannot be replayed")
-        return outcome
+    from umat_oti.abaqus import tangent_gate as gate
+    from umat_oti.abaqus.state_regime import (SMOOTH_ELASTIC, SMOOTH_INELASTIC,
+                                              SMOOTH_UNLOADING, TRANSITION_NEARBY,
+                                              Regime, activated_by, unloading_at)
 
-    # Every chosen state is checked and every one has to agree. The per-state
-    # results are kept whole: a tangent that is right in the elastic regime
-    # and wrong in the plastic one is a specific, reportable finding, and
-    # collapsing the states into one verdict would lose exactly that.
-    at_states: list[dict] = []
-    history = list(transformed_history)
-    for order, (position, record) in enumerate(chosen):
-        single = _verify_tangent_at(
-            manifest, original, record, position,
-            Path(work_dir) / f"state{order}", form=form, tolerance=tolerance,
-            timeout=timeout, transformed=transformed)
-        # What KIND of point this was, decided from the history up to it and
-        # from how the one-sided differences behave across the step sweep.
-        # A chord across a kink is not a derivative, and a state that sits on
-        # one carries no weight in either direction.
-        regime = classify_regime(history, position, single.get("smoothness") or {})
+    outcome: dict[str, Any] = {"verified": False, "reason": "", "gate": "D-4 entrywise/1"}
+    if transformed is not None:
+        check = gate.direction_check(Path(transformed).read_text(errors="replace"),
+                                     manifest.ntens, manifest.ndi, manifest.nshr)
+        outcome["direction_check"] = check
+        if check.get("applies") and not check.get("all_match"):
+            outcome["reason"] = (f"the transform seeded column(s) {check['mismatched']} in a "
+                                 f"direction other than the Abaqus strain direction built from "
+                                 f"the kinematics: the store's DDSDDE columns are derivatives "
+                                 f"in other directions")
+            outcome["failed"] = True
+            return outcome
+    history = list(original_history if original_history is not None else transformed_history)
+    chosen, selection = choose_gate_states(history, list(transformed_history))
+    outcome["state_selection"] = selection
+    outcome["chosen_states"] = selection.get("states", [])
+    if not chosen:
+        outcome["reason"] = ("no state of the original history has a transformed record "
+                             "carrying both a DDSDDE and the ENTRY state it began from")
+        return outcome
+    judgements: list = []
+    regimes: list = []
+    at_states: list = []
+    for order, (position, records, original_record, record) in enumerate(chosen):
+        increment = original_record.get("increment")
+        if record is None:
+            at_states.append({"increment": increment, "reason":
+                              "no transformed record at this (increment, element, point)"})
+            judgements.append(None)
+            continue
+        single = _judge_state_at(manifest, original, record, Path(work_dir) / f"state{order}",
+                                 form=form, timeout=timeout, transformed=transformed,
+                                 increment=increment)
+        judgement = single.pop("judgement", None)
+        judgements.append(judgement)
+        activated = activated_by(records, position)
+        reversing = unloading_at(records, position)
+        smooth = judgement is not None and judgement.smooth
+        kind = (TRANSITION_NEARBY if not smooth else SMOOTH_UNLOADING if reversing
+                else SMOOTH_INELASTIC if activated else SMOOTH_ELASTIC)
+        regime = Regime(increment=int(increment or position + 1), regime=kind,
+                        reason=("judged on one integration point's history "
+                                f"{selection['point']}"),
+                        activated_here=activated, unloading=reversing)
         single["regime"] = regime.as_dict()
+        if judgement is not None and judgement.judged:
+            regimes.append(regime)
         at_states.append(single)
     outcome["states"] = at_states
     outcome["states_checked"] = len(at_states)
-    # The increments a regression must return to. Chosen here by looking at
-    # what the material did; frozen so that a later run measures the tangent
-    # at the same places rather than at whatever it would choose next time.
-    outcome["chosen_states"] = [
-        {"increment": state.get("increment"),
-         "record_index": state.get("record_index")} for state in at_states]
-    agreed = [s for s in at_states if s.get("verified")]
-    outcome["states_agreeing"] = len(agreed)
-    # A state whose sweep produced nothing measurable did not DISAGREE -- the
-    # reference was never obtained there, so nothing was compared. Counting it
-    # as a failure reports "the tangent is wrong at increment 10" when what
-    # happened is "no difference could be taken at increment 10", which are
-    # different findings and belong in different columns. Measured on the last
-    # batch: of 106 state-level failures, 89 were of this kind.
-    measured = [s for s in at_states
-                if (s.get("comparison") or {}).get("best_relative") is not None]
-    unmeasured = [s for s in at_states if s not in measured]
-    outcome["states_measured"] = len(measured)
-    outcome["states_unmeasured"] = len(unmeasured)
-    if unmeasured:
-        outcome["unmeasured_reasons"] = sorted({
-            str(s.get("reason") or "")[:120] for s in unmeasured})
-
-    # The reported comparison is the WORST state, not the best: a summary that
-    # quotes the closest agreement among several describes the state that
-    # flattered the transform most.
-    def _best_relative(state):
-        value = ((state.get("comparison") or {}).get("best_relative"))
-        return float("inf") if value is None else float(value)
-    worst = max(at_states, key=_best_relative)
-    outcome["increment"] = worst.get("increment")
-    outcome["record_index"] = worst.get("record_index")
-    for key in ("comparison", "driven_through", "failures",
-                "perturbation_scale", "replay_header", "log"):
-        if key in worst:
-            outcome[key] = worst[key]
-    outcome["fd_steps"] = list(manifest.fd_steps)
-
-    # Every state where a difference COULD be taken has to agree, and at
-    # least two states have to have been measurable. Two rather than one
-    # keeps this stronger than the single-state rule it replaced; requiring
-    # all three to be measurable would fail a material for a state its
-    # reference could not reach, which is a fact about the harness.
-    # Only a SMOOTH state can carry a verified derivative. A transitional one
-    # is not a failure and not evidence: it is a state at which a centred
-    # difference was the wrong reference.
-    smooth = [s for s in measured if (s.get("regime") or {}).get("verifiable")]
-    # A state at a corner is not smooth, and it is not evidence-free either:
-    # where the OTI tangent converges onto the ONE-SIDED difference along the
-    # branch the increment took, that is the consistent tangent Abaqus asks
-    # for at that point, measured. Counted separately, never pooled with a
-    # centred result, and reported as what it is.
-    on_a_branch = [s for s in measured
-                   if not (s.get("regime") or {}).get("verifiable")
-                   and (s.get("branch") or {}).get("verified")]
-    transitional = [s for s in measured
-                    if not (s.get("regime") or {}).get("verifiable")
-                    and s not in on_a_branch]
-    outcome["states_smooth"] = len(smooth)
-    outcome["states_on_a_branch"] = len(on_a_branch)
-    outcome["states_transitional"] = len(transitional)
-
-    # Does this material activate at all? Read from the ORIGINAL history the
-    # loading was discovered on, not assumed.
-    nonlinear = any((s.get("regime") or {}).get("activated_here") for s in at_states)
+    outcome["states_judged"] = sum(1 for j in judgements if j is not None and j.judged)
+    nonlinear = first_activated(chosen[0][1]) is not None
     outcome["nonlinear"] = nonlinear
-    # What this material's response IS, from whether the stress returns when
-    # the strain does -- not from whether a state variable moved. A STATEV can
-    # hold a stretch, a time, an orientation or a copied input; measured on
-    # From-2D-to-2D-Axe.for, STATEV(9) rises to 1.0589 under load and falls
-    # back to 1.0058 the moment the strain is removed. Reading its movement as
-    # "the material has yielded" would call a reversible response
-    # irreversible, and then ask less of it than it should.
     character, character_reason = response_character(history)
     outcome["response_character"] = character
     outcome["character_reason"] = character_reason
-    # A branch-verified corner carries the regime it sits in for coverage: it
-    # is a measured derivative inside the activated regime, which is exactly
-    # the evidence coverage exists to require.
-    counted = smooth + on_a_branch
-    enough, coverage_reason = coverage(
-        [_regime_of(s) for s in counted], nonlinear=nonlinear,
-        character=character)
-    if on_a_branch:
-        coverage_reason += (
-            f"; {len(on_a_branch)} of those states sit at a corner and were "
-            f"verified against the one-sided difference along the branch the "
-            f"increment took, which is what a consistent tangent is there")
+    enough, coverage_reason = coverage(regimes, nonlinear=nonlinear, character=character)
     outcome["coverage"] = coverage_reason
-
-    disagreeing = [s for s in counted if not s.get("verified")]
-    if counted and not disagreeing and enough:
-        outcome["verified"] = True
-        smooth = counted
-        scope = (f"agreed at all {len(counted)} states where a difference "
-                 f"could be taken (increments "
-                 f"{', '.join(str(s.get('increment')) for s in counted)}); "
-                 f"{coverage_reason}")
-        if unmeasured:
-            scope += (f"; {len(unmeasured)} further state(s) produced no "
-                      f"measurable difference and establish nothing either way")
-        outcome["reason"] = f"{scope}; worst of them: {worst.get('reason', '')}"
-        return outcome
-    if disagreeing:
-        outcome["reason"] = (
-            f"agreed at {len(counted) - len(disagreeing)} of {len(counted)} "
-            f"states along the loading path where a difference could be taken; "
-            f"increment {disagreeing[0].get('increment')} did not: "
-            f"{disagreeing[0].get('reason', '')}")
-        return outcome
-    if counted and not enough:
-        # Every smooth state agreed, and there were not enough of them in the
-        # right places. Not a pass: for a material that activates, agreement
-        # on the elastic branch is agreement about the part every build gets
-        # right.
-        outcome["reason"] = (
-            f"every state where a difference could be taken agreed, but "
-            f"{coverage_reason}")
-        return outcome
-    if transitional and not counted:
-        # Every state WAS measured; every one of them sat on a transition, so
-        # a centred difference was the wrong reference at all of them. That is
-        # neither a verified tangent nor a failed one, and reporting it as
-        # "no measurable difference" said the opposite of what happened.
-        worst_gap = max(
-            (min((s.get("regime") or {}).get("smoothness", {}).values(),
-                 default=float("inf")) for s in transitional),
-            default=float("inf"))
-        outcome["reason"] = (
-            f"all {len(transitional)} states produced a difference and all of "
-            f"them sat on a constitutive transition, where the forward and "
-            f"backward perturbations do not land on the same branch (smallest "
-            f"one-sided gap {worst_gap:.3g}). A centred difference is not a "
-            f"derivative there, so this is neither a verified tangent nor a "
-            f"failed one -- the loading needs states away from the transition")
-        return outcome
-    outcome["reason"] = (
-        f"only {len(measured)} of {len(at_states)} states produced a "
-        f"measurable difference, and {MINIMUM_MEASURED_STATES} are required. "
-        f"Nothing here says the tangent is wrong; it says the reference could "
-        f"not be obtained: "
-        + "; ".join(outcome.get("unmeasured_reasons") or ["no reason recorded"])[:200])
+    verified, reason = gate.row_verdict(judgements, len(chosen), coverage_ok=enough,
+                                        coverage_reason=coverage_reason)
+    outcome["verified"] = verified
+    outcome["failed"] = any(j is not None and j.failed for j in judgements)
+    outcome["reason"] = reason
+    outcome["fd_steps"] = list(manifest.fd_steps)
     return outcome
 
 

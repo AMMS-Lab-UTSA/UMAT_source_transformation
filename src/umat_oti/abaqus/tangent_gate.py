@@ -29,8 +29,8 @@ row, with the same entrywise rule the routine-level harness uses
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Optional, Sequence
 
 import numpy as np
 
@@ -43,6 +43,9 @@ MIN_JUDGED_STATES = 2
 #: An entry's one-sided gap counts as a kink only above this fraction of its
 #: centred value (A6), and above its own round-off bound.
 ENTRY_GAP = 1e-3
+#: An entry's one-sided gap is a kink only if, over the ladder, it does not
+#: fall below this fraction of its value at the largest step.
+SHRINK_FLOOR = 0.1
 #: Round-off of a ONE-sided difference: 2 evaluations x 2 roundings x 2
 #: margin x 2 (one-sided, no averaging) = 16 eps F / h.
 ONE_SIDED_NOISE = 16.0
@@ -50,7 +53,7 @@ ONE_SIDED_NOISE = 16.0
 _OK = (fd.PASS, fd.ZERO_PASS)
 
 
-def _matrix(by_step: dict, relative: float, ntens: int) -> Optional[np.ndarray]:
+def _matrix(by_step: dict, relative: float, ntens: int) -> np.ndarray | None:
     value = by_step.get(relative)
     if value is None:
         return None
@@ -61,7 +64,7 @@ def _matrix(by_step: dict, relative: float, ntens: int) -> Optional[np.ndarray]:
 class StateJudgement:
     """One replayed state, judged entry by entry."""
 
-    increment: Optional[int] = None
+    increment: int | None = None
     ntens: int = 0
     codes: Counter = field(default_factory=Counter)
     #: (row, column) 1-based -> code
@@ -109,20 +112,31 @@ def entry_smoothness(forward: Sequence[np.ndarray], backward: Sequence[np.ndarra
     if not forward:
         return np.zeros(np.asarray(magnitude).size, bool)
     kink = None
+    gaps = []
     for f, b, c, h in zip(forward, backward, centred, steps):
         f, b, c = (np.asarray(x, float).reshape(-1) for x in (f, b, c))
         gap = np.abs(f - b)
+        gaps.append(gap)
         noise = ONE_SIDED_NOISE * eps * np.asarray(magnitude, float) / max(abs(h), 1e-300)
         here = (gap > noise) & (gap > ENTRY_GAP * np.abs(c))
         kink = here if kink is None else (kink & here)
-    return kink
+    # ... and the gap does not fall with the step. A smooth entry's one-sided
+    # gap is the curvature times h: over the ladder it falls by the ladder's
+    # ratio. A kink's is the jump between two branch slopes and stays. (An
+    # entry whose centred value is ~0 by symmetry -- an even function of the
+    # input -- has a curvature gap above 1e-3 |0| at every step; measured on
+    # the Jeff97 growth sources against the quad reference.)
+    order = np.argsort([abs(h) for h in steps])
+    smallest, largest = gaps[order[0]], gaps[order[-1]]
+    stays = smallest > SHRINK_FLOOR * largest
+    return kink & stays
 
 
 def judge_state(oti, sweep, ladder: Sequence[float], scale: float, *,
                 kinematic_input: float = 0.0, stress_magnitude=None,
-                eps: float = fd.EPS, increment: Optional[int] = None,
-                double_zero: Optional[np.ndarray] = None,
-                undefined: Optional[np.ndarray] = None) -> StateJudgement:
+                eps: float = fd.EPS, increment: int | None = None,
+                double_zero: np.ndarray | None = None,
+                undefined: np.ndarray | None = None) -> StateJudgement:
     """Judge one state: ``oti`` (ntens x ntens) against ``sweep`` (a
     :class:`replay.DifferenceSweep`: ``matrices``/``forward``/``backward``
     keyed by relative step).
@@ -157,9 +171,13 @@ def judge_state(oti, sweep, ladder: Sequence[float], scale: float, *,
         if not keep.any():
             continue
         if all(forward[r] is not None and backward[r] is not None for r in rel):
+            # the same round-off magnitude the judgement uses (A1): an entry
+            # that is a cancelled difference of block-sized terms carries
+            # their round-off, and its one-sided gap is that noise, not a kink
+            euler = np.maximum(magnitude, block * max(scale, abs(float(kinematic_input))))
             kink = entry_smoothness([forward[r][:, j] for r in rel],
                                     [backward[r][:, j] for r in rel],
-                                    estimates, steps, magnitude, eps)
+                                    estimates, steps, euler, eps)
             kink = kink & keep
             if kink.any():
                 out.nonsmooth_columns.append(j + 1)
@@ -194,7 +212,7 @@ def exact_zero(sweep, ladder: Sequence[float], ntens: int) -> np.ndarray:
     return np.all(np.stack(stack) == 0.0, axis=0)
 
 
-def merge_quad(double: StateJudgement, quad: Optional[StateJudgement]) -> StateJudgement:
+def merge_quad(double: StateJudgement, quad: StateJudgement | None) -> StateJudgement:
     """A3: a failure in either precision stands; the quad reference only
     resolves entries the double one left unresolved; never pick-best."""
     if quad is None:
@@ -218,7 +236,7 @@ def merge_quad(double: StateJudgement, quad: Optional[StateJudgement]) -> StateJ
     return merged
 
 
-def row_verdict(states: Sequence[Optional[StateJudgement]], chosen: int, *,
+def row_verdict(states: Sequence[StateJudgement | None], chosen: int, *,
                 coverage_ok: bool, coverage_reason: str) -> tuple[bool, str]:
     """The row (A4): verified iff no failure at any state, >= 2 judged
     states, judged >= 50% of the CHOSEN states, and coverage on the judged
@@ -243,3 +261,45 @@ def row_verdict(states: Sequence[Optional[StateJudgement]], chosen: int, *,
         return False, f"every judged state agrees, but {coverage_reason}"
     return True, (f"{len(judged)} of {chosen} chosen states judged and every entry agrees "
                   f"(entrywise, FD-only plateau >= {fd.MIN_PLATEAU}); {coverage_reason}")
+
+
+def canonical_strain_direction(j: int, ndi: int, nshr: int) -> np.ndarray:
+    """Abaqus strain direction of Voigt column ``j`` (1-based), from the
+    kinematics alone: ``eps_aa = 1`` for a direct component, ``eps_ab =
+    eps_ba = 1/2`` for an ENGINEERING shear. Built without reading the
+    store's seed map (Vera B1/A: the FD direction must not come from the code
+    path under test). The routine-level harness uses this same function."""
+    from umat_oti.corpus_features.paths import VOIGT_3D, voigt_components
+    a, b = VOIGT_3D[voigt_components(ndi, nshr)[j - 1]]
+    eps = np.zeros((3, 3))
+    if a == b:
+        eps[a, a] = 1.0
+    else:
+        eps[a, b] = eps[b, a] = 0.5
+    return eps
+
+
+def direction_check(transformed_text: str, ntens: int, ndi: int, nshr: int) -> dict:
+    """Vera B7 A8: for a source driven through the deformation gradient, the
+    direction the transform seeded for each DDSDDE column must be the Abaqus
+    strain direction of that column, built from the kinematics alone. A
+    mismatch means the store's columns are derivatives in other directions,
+    and the row fails whatever the differences say."""
+    from umat_oti.transform.source_transform import seeded_kinematics
+    from umat_oti.validation.finite_strain_tangent import strain_direction
+
+    drive = seeded_kinematics(transformed_text)
+    if not drive.drives_deformation_gradient:
+        return {"applies": False, "reason": "driven through the strain increment"}
+    columns = {}
+    for j in range(1, ntens + 1):
+        terms = drive.dfgrd1.get(j, ())
+        seeded = np.asarray(strain_direction(terms, 1.0), float) if terms else None
+        independent = canonical_strain_direction(j, ndi, nshr)
+        columns[j] = {"independent": independent.tolist(),
+                      "seed_map": None if seeded is None else seeded.tolist(),
+                      "match": seeded is not None and bool(np.array_equal(seeded, independent))}
+    mismatched = sorted(j for j, c in columns.items() if not c["match"])
+    return {"applies": True, "all_match": not mismatched, "mismatched": mismatched,
+            "columns": columns}
+

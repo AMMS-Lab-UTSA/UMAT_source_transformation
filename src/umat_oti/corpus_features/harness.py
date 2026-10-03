@@ -1222,23 +1222,8 @@ def stress_irrelevant_slots(perturbed, index: Mapping, base_stress: np.ndarray, 
     return frozenset(out)
 
 
-def canonical_strain_direction(j: int, ndi: int, nshr: int) -> np.ndarray:
-    """Abaqus strain direction of Voigt column ``j`` (1-based), from the kinematics alone.
-
-    Direct components: ``eps_aa = 1``. Shear components are ENGINEERING shear
-    (DDSDDE columns are per unit gamma), so ``eps_ab = eps_ba = 1/2``. Built
-    without reading the store's seed map; :func:`build_all` callers compare
-    the two (Vera B1/A: the FD direction must not come from the code path
-    under test).
-    """
-    from umat_oti.corpus_features.paths import VOIGT_3D, voigt_components
-    a, b = VOIGT_3D[voigt_components(ndi, nshr)[j - 1]]
-    eps = np.zeros((3, 3))
-    if a == b:
-        eps[a, a] = 1.0
-    else:
-        eps[a, b] = eps[b, a] = 0.5
-    return eps
+# One definition, shared with the Abaqus tangent gate (A8).
+from umat_oti.abaqus.tangent_gate import canonical_strain_direction  # noqa: E402,F401
 
 
 # ---------------------------------------------------------------------------
