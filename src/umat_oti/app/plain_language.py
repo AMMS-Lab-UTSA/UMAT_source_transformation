@@ -756,6 +756,9 @@ def plain_status(record: Any) -> PlainStatus:
         state = _state_for_broken_gate(broke)
 
     entry = PLAIN.get(state) or PLAIN["harness_error"]
+    if state == "tangent_not_verified" and _tangent_failed(raw, record):
+        # the check settled, and disagreed: never "did not settle"
+        entry = TANGENT_DISAGREED
     qualifier = "" if verified else summary["why not"]
     return PlainStatus(
         headline=entry["headline"],
@@ -775,6 +778,30 @@ def plain_status(record: Any) -> PlainStatus:
         # it is rendering.
         reason=verdict.reason or reason,
     )
+
+
+#: ``tangent_not_verified`` where the gate MEASURED a disagreement
+#: (``tangent.failed``). The stage name is shared with a check that settled
+#: nothing, and the two must not read alike.
+TANGENT_DISAGREED = {
+    "headline": "The derivatives disagree with the check",
+    "means": "The numerical check this program compares derivatives against "
+             "settled on a value, and the derivatives the converted version "
+             "returns disagree with it. This is a finding against the "
+             "conversion, not an open question.",
+    "whose move": "this program",
+    "provide": "",
+    "retry": False,
+}
+
+
+def _tangent_failed(raw: Any, record: Any) -> bool:
+    from umat_oti.corpus_features.manifest import tangent_verdict
+    raw = raw if isinstance(raw, dict) else {}
+    tangent = raw.get("tangent", getattr(record, "tangent", None))
+    verdict = (raw.get("tangent_verdict") or getattr(record, "tangent_verdict", "")
+               or tangent_verdict(tangent))
+    return verdict == "failed"
 
 
 def _state_for_broken_gate(broken) -> str:

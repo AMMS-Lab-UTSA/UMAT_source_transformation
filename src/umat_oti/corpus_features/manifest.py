@@ -39,9 +39,12 @@ it was measured on (``store`` / ``lifted`` / ``provider``) with its
 fingerprint or sha256. Lifted and provider builds are kept in a separate block
 (``features_other_builds``) and never pooled with the Abaqus-pipeline counts.
 
-The pass16 DDSDDE gate (``derivatives_verified``) uses the legacy plateau rule
-that decision D-4 rejects; it is carried per row as ``ddsdde_legacy_gate`` and
-does not make the ``ddsdde`` cell verified.
+The pass's Abaqus tangent gate is carried per row as ``ddsdde_legacy_gate``,
+with a derived ``tangent_verdict`` (verified / failed / unresolved: ``failed``
+only where the gate measured a disagreement). Before G10 it used the legacy
+plateau rule that decision D-4 rejects; from G10 it is the D-4 entrywise gate.
+Either way it does not make the ``ddsdde`` cell verified: that cell is decided
+by the merged routine-level evidence.
 
 Evidence locators are ``<root>:<relative path>[#selector]``; the roots are
 listed once in the manifest header (``roots``) so that no row depends on where
@@ -73,6 +76,8 @@ __all__ = [
     "denominators_note",
     "merge_d18",
     "origins_of",
+    "tangent_verdict",
+    "TANGENT_VERDICTS",
     "primal_gate_verdict",
     "reported_family",
     "FEATURES",
@@ -260,9 +265,10 @@ FEATURE_DEFINITIONS: dict[str, dict[str, str]] = {
                 "build (FD of the ORIGINAL routine with restored state, FD-only "
                 "plateau >= 3 steps, entrywise tolerance rule, ratio <= 1) AND "
                 "only while primal_stress_state is verified; otherwise a merged "
-                "verified is shown as inconclusive. The pass16 gate "
-                "derivatives_verified is carried as ddsdde_legacy_gate and is "
-                "never counted"},
+                "verified is shown as inconclusive. The pass's Abaqus tangent "
+                "gate is carried as ddsdde_legacy_gate with its tangent_verdict "
+                "(verified / failed / unresolved): from G10 it is the D-4 gate, "
+                "before G10 the legacy plateau rule; it is never counted here"},
     "internal_jacobian": {"quantity": "Jacobian of the routine's local Newton "
                           "residual", "scope": "local"},
     "stress_param_sens_local": {"quantity": "d STRESS_{n+1} / d PROPS",
@@ -1683,6 +1689,8 @@ def _acquired_row(rec, inp, tri, b3, fam, fam2, lic_source, p, later, pass_file,
         "registry": {"terminal_state": ts, "kind": kind,
                      "stage": rec.get("stage", ""), "key": key,
                      "verified_on_every_gate": rec.get("verified_on_every_gate"),
+                     "tangent_verdict": tangent_verdict(pr.get("tangent"))
+                     or str(rec.get("tangent_verdict") or ""),
                      "verification_fingerprint": rec.get("verification_fingerprint", "")},
         "origins": origins_of(rec),
         "pipeline": stages,
@@ -1722,6 +1730,41 @@ def _licence_file(cache: Path, repo_dir_name: str) -> dict | None:
             "sha256": _sha256(f)}
     return _LICENCE_CACHE[key]
 
+
+#: The three answers a pass's Abaqus tangent gate can give one row (Vera's
+#: final review before pass21). ``failed`` only where a judgement measured a
+#: disagreement (the D-4 gate's ``tangent.failed``); ``unresolved`` where
+#: nothing was verified and nothing was shown wrong -- including every row of
+#: the pre-D-4 gate, which had no notion of a measured failure.
+TANGENT_VERDICTS: tuple[str, ...] = ("verified", "failed", "unresolved")
+
+
+def tangent_verdict(tangent: Any) -> str:
+    """``verified`` / ``failed`` / ``unresolved`` from a pass row's ``tangent``
+    block (``tangent.verified``, ``tangent.failed``); ``""`` where the row ran
+    no tangent comparison. A measured failure wins over a verified flag."""
+    if not isinstance(tangent, Mapping):
+        return ""
+    if tangent.get("failed") is True:
+        return "failed"
+    if tangent.get("verified") is True:
+        return "verified"
+    return "unresolved"
+
+
+def is_d4_gate(tangent: Any) -> bool:
+    """Whether the block came from the D-4 entrywise gate (G10 onward), which
+    records ``failed``; the earlier gate never did."""
+    return isinstance(tangent, Mapping) and "failed" in tangent
+
+
+#: What the Abaqus tangent gate of a pass measures, from G10 on.
+D4_ABAQUS_DDSDDE_RULE = (
+    "tools/verify_store_in_abaqus.py tangent gate (G10, decision D-4): OTI DDSDDE "
+    "vs a finite difference of the ORIGINAL routine with restored state at chosen "
+    "states, FD-only plateau of >= 3 steps, entrywise tolerance; verdict verified / "
+    "failed (a judgement measured a disagreement) / unresolved. Shown per row; the "
+    "manifest's ddsdde feature cell is decided by the merged routine-level cells")
 
 #: What the pass16 DDSDDE gate measured, and why it does not count.
 LEGACY_DDSDDE_RULE = (
@@ -2021,13 +2064,16 @@ def _features(rec, pr, ev, stages, ev_pass, tangent_tol, ident, ps_ids, ij_ids,
                                       "tolerance": None, "history": []}
     # ddsdde -- the pass's gate is legacy evidence (decision D-4), never verified
     tan = pr.get("tangent")
+    verdict = tangent_verdict(tan) if tan else ""
     legacy = {"gate": "not_run", "counts_as_verified": False,
-              "rule": LEGACY_DDSDDE_RULE, "reason": "", "evidence": "",
+              "rule": D4_ABAQUS_DDSDDE_RULE if is_d4_gate(tan) else LEGACY_DDSDDE_RULE,
+              "tangent_verdict": verdict, "reason": "", "evidence": "",
               "worst_relative": None, "tolerance_relative": None, "fd_steps": [],
               "states_checked": None, "states_agreeing": None,
               "primal_stress_state": out["primal_stress_state"]["status"]}
     if ev and tan:
-        gate = "passed" if ev.get("derivatives_verified") is True else "failed"
+        # the derived verdict, never "failed" for a row nothing showed wrong
+        gate = {"verified": "passed", "failed": "failed"}.get(verdict, "unresolved")
         legacy.update(gate=gate, evidence=ev_pass,
                       reason=(tan.get("reason") or "derivatives_verified="
                               f"{ev.get('derivatives_verified')}")[:1500],
@@ -2038,10 +2084,14 @@ def _features(rec, pr, ev, stages, ev_pass, tangent_tol, ident, ps_ids, ij_ids,
                       states_agreeing=tan.get("states_agreeing"),
                       wrt=tan.get("driven_through") or "strain increment")
         out["ddsdde"] = _not_attempted_feature(
-            "no D-4-compliant DDSDDE evidence has been merged; the "
-            f"{inp.current_pass} gate derivatives_verified {gate} "
-            "(row field ddsdde_legacy_gate) uses the legacy OTI-vs-FD plateau "
-            "rule that decision D-4 rejects, so it is not counted", ev_pass)
+            (f"no routine-level DDSDDE evidence has been merged; the {inp.current_pass} "
+             f"Abaqus tangent gate (D-4, row field ddsdde_legacy_gate) reads "
+             f"{verdict}, and the cell is decided by the merged routine-level cells")
+            if is_d4_gate(tan) else
+            ("no D-4-compliant DDSDDE evidence has been merged; the "
+             f"{inp.current_pass} gate derivatives_verified {gate} "
+             "(row field ddsdde_legacy_gate) uses the legacy OTI-vs-FD plateau "
+             "rule that decision D-4 rejects, so it is not counted"), ev_pass)
     elif ev:
         legacy["reason"] = f"no tangent comparison was run (stopped at {pr.get('stage')})"
         out["ddsdde"] = _not_attempted_feature(
@@ -2198,11 +2248,13 @@ def summarise(manifest: Mapping) -> dict:
             "denominator": len(pop),
         }
     out["ddsdde_legacy_gate"] = {
-        "what": "pass gate derivatives_verified (legacy OTI-vs-FD plateau rule); "
-                "decision D-4 rejects it, so it is shown here and never counted in "
-                "features.ddsdde",
+        "what": "the pass's Abaqus tangent gate by derived tangent_verdict (passed = "
+                "verified, failed = a measured disagreement, unresolved = neither); "
+                "the D-4 gate from G10, the legacy plateau rule before it. Shown "
+                "here, never counted in features.ddsdde",
         **{name: {g: sum(1 for r in pop if (r.get("ddsdde_legacy_gate") or {})
-                         .get("gate") == g) for g in ("passed", "failed", "not_run")}
+                         .get("gate") == g)
+                     for g in ("passed", "failed", "unresolved", "not_run")}
            for name, pop in (("D1_acquired", acquired), ("D2_eligible", eligible))},
         "passed_with_primal_not_verified": {
             name: sum(1 for r in pop
@@ -3049,7 +3101,9 @@ def manifest_schema() -> dict:
                    "then": {"required": ["conflicting"]}}],
     }
     legacy = {"type": "object", "required": ["gate", "counts_as_verified", "rule"],
-              "properties": {"gate": {"enum": ["passed", "failed", "not_run"]},
+              "properties": {"gate": {"enum": ["passed", "failed", "unresolved",
+                                               "not_run"]},
+                             "tangent_verdict": {"enum": [*TANGENT_VERDICTS, ""]},
                              "counts_as_verified": {"const": False}}}
     def _enum(values) -> dict:
         return {"enum": [*values, ""]}
@@ -3226,6 +3280,7 @@ def flat_rows(manifest: Mapping) -> list[dict]:
         for f in FEATURES:
             flat[f"feature_{f}"] = r["features"][f]["status"]
         flat["ddsdde_legacy_gate"] = (r.get("ddsdde_legacy_gate") or {}).get("gate", "")
+        flat["tangent_verdict"] = (r.get("registry") or {}).get("tangent_verdict", "")
         for b in OTHER_BUILDS:
             cells = (r.get("features_other_builds") or {}).get(b) or {}
             flat[f"{b}_build_features"] = ";".join(

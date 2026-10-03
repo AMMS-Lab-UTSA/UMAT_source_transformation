@@ -4877,7 +4877,16 @@
         "enum": [
          "passed",
          "failed",
+         "unresolved",
          "not_run"
+        ]
+       },
+       "tangent_verdict": {
+        "enum": [
+         "verified",
+         "failed",
+         "unresolved",
+         ""
         ]
        },
        "counts_as_verified": {
