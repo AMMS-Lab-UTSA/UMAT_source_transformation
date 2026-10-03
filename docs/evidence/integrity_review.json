@@ -1582,6 +1582,10 @@
   "mock:tests/test_corpus_cases_holdout.py:test_the_author_side_is_the_current_pass_not_pass16:monkeypatch.setattr:86a38ab8": {
    "verdict": "justified",
    "reason": "Points the harness's PASS16 at a file with different constants to show the author side does not read it; the assertion is that the runner ignores that path."
+  },
+  "removed_check:tests/test_an_uppercase_include_is_the_same_header.py:test_the_environment_file_keeps_the_shipped_flags_and_leaves_P_last:fb022ced": {
+   "verdict": "justified",
+   "reason": "The expected compile-flag tail changed from [-I shim] to [-I shim, -assume, norealloc_lhs] because the env now adds -assume norealloc_lhs (Abaqus 2021 does not export for_realloc_lhs; UVCplanestress failed to load). The test still asserts the shipped flags are kept and %P stays last."
   }
  }
 }

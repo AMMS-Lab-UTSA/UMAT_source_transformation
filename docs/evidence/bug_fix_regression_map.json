@@ -517,6 +517,14 @@
    "tests": [
     "tests/test_registry_fields_tangent_verdict.py"
    ]
+  },
+  {
+   "commit": "4cc93e4",
+   "bug": "The D-4 zero rule failed an exact zero in both precisions against a 1e-27 OTI residue (pass21 A3 false FAIL); Vera's floor NOISE_FACTOR*eps*max(S,|block derivative|), times the increment count for total derivatives and capped at RESOLUTION*S, now bounds the zero branch, while 1e-6*S still fails.",
+   "tests": [
+    "tests/test_the_roundoff_model_uses_the_total_kinematic_input.py",
+    "tests/test_corpus_features_zero_scale.py"
+   ]
   }
  ],
  "excluded": [
