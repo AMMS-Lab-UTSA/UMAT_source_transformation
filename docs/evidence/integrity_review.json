@@ -1260,6 +1260,10 @@
   "skip:tests/test_transform_oti_sign_matches_the_intrinsic.py:<module>:mark.skipif:8d891947": {
    "verdict": "justified",
    "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "mock:tests/test_every_council_cell_carries_both_origins.py:workspace:monkeypatch.setattr:eeb6e20d": {
+   "verdict": "justified",
+   "reason": "Points the harness's module-level paths (registry, verification records, cache, store, families, experiment work dir, council plans) at a temporary fixture tree so resolve_entry reads a council plan and an author-deck record; the real resolve_entry, _record and cells.fold run and nothing numerical is replaced."
   }
  }
 }
