@@ -1148,6 +1148,30 @@
   "skip:tests/test_formulation_ntens_shear_index.py:_cached:call:skip:b47cb132": {
    "verdict": "justified",
    "reason": "Needs an external file (the corpus acquisition cache or the system licence texts under /usr/share/common-licenses); the test runs wherever it exists."
+  },
+  "mock:tests/test_experiment_periods_are_not_the_authors_deck.py:test_resolve_entry_carries_both_and_never_calls_the_probe_the_deck:monkeypatch.setattr:141d6884": {
+   "verdict": "justified",
+   "reason": "Points the harness's module-level paths (registry, verification records, cache, store, families, experiment work dir) at a temporary fixture tree so resolve_entry reads a record with and without author_deck_periods; the real resolve_entry and model_domain run and nothing numerical is replaced."
+  },
+  "mock:tests/test_experiment_periods_are_not_the_authors_deck.py:test_resolve_entry_carries_both_and_never_calls_the_probe_the_deck:monkeypatch.setattr:19509a1c": {
+   "verdict": "justified",
+   "reason": "Points the harness's module-level paths (registry, verification records, cache, store, families, experiment work dir) at a temporary fixture tree so resolve_entry reads a record with and without author_deck_periods; the real resolve_entry and model_domain run and nothing numerical is replaced."
+  },
+  "mock:tests/test_experiment_periods_are_not_the_authors_deck.py:test_resolve_entry_carries_both_and_never_calls_the_probe_the_deck:monkeypatch.setattr:386835e0": {
+   "verdict": "justified",
+   "reason": "Points the harness's module-level paths (registry, verification records, cache, store, families, experiment work dir) at a temporary fixture tree so resolve_entry reads a record with and without author_deck_periods; the real resolve_entry and model_domain run and nothing numerical is replaced."
+  },
+  "mock:tests/test_experiment_periods_are_not_the_authors_deck.py:test_resolve_entry_carries_both_and_never_calls_the_probe_the_deck:monkeypatch.setattr:8db65400": {
+   "verdict": "justified",
+   "reason": "Points the harness's module-level paths (registry, verification records, cache, store, families, experiment work dir) at a temporary fixture tree so resolve_entry reads a record with and without author_deck_periods; the real resolve_entry and model_domain run and nothing numerical is replaced."
+  },
+  "mock:tests/test_experiment_periods_are_not_the_authors_deck.py:test_resolve_entry_carries_both_and_never_calls_the_probe_the_deck:monkeypatch.setattr:8ef54c30": {
+   "verdict": "justified",
+   "reason": "Points the harness's module-level paths (registry, verification records, cache, store, families, experiment work dir) at a temporary fixture tree so resolve_entry reads a record with and without author_deck_periods; the real resolve_entry and model_domain run and nothing numerical is replaced."
+  },
+  "mock:tests/test_experiment_periods_are_not_the_authors_deck.py:test_resolve_entry_carries_both_and_never_calls_the_probe_the_deck:monkeypatch.setattr:c71100f6": {
+   "verdict": "justified",
+   "reason": "Points the harness's module-level paths (registry, verification records, cache, store, families, experiment work dir) at a temporary fixture tree so resolve_entry reads a record with and without author_deck_periods; the real resolve_entry and model_domain run and nothing numerical is replaced."
   }
  }
 }
