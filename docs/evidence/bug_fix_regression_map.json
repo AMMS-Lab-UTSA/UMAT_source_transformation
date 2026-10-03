@@ -480,6 +480,13 @@
    "tests": [
     "tests/test_a_council_experiment_reads_only_the_source_and_the_row.py"
    ]
+  },
+  {
+   "commit": "54171f3",
+   "bug": "corpus_cases freeze wrapper rejected new FeatureTally.add keywords (kinematic_input, block_derivative, double_zero) added by G4/G10, so freezing any case raised TypeError.",
+   "tests": [
+    "tests/test_corpus_cases_council.py::test_a_council_case_freezes_and_passes_its_check"
+   ]
   }
  ],
  "excluded": [
@@ -594,6 +601,10 @@
   {
    "commit": "b55b7ee",
    "reason": "Feature (S3, D-19a rev 2): manifest origin columns, enums and schema; 'refusal_kind(s)' is the enum's name and 'refuses' describes what the schema rejects, it corrects no behaviour. Tested by tests/test_corpus_manifest_origins.py and tests/test_corpus_manifest_count_target.py."
+  },
+  {
+   "commit": "eb8e101",
+   "reason": "Adds the hold-out runner (A-2); selecting words name its exit codes and refusal outcomes, not a corrected behaviour."
   }
  ],
  "changelog_fixed": {
