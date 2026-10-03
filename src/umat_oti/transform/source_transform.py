@@ -338,7 +338,8 @@ def transform_umat_to_oti_from_config(
         report_path = _write_report(output_dir, report)
         return TransformResult(False, output_dir, report_path=report_path, blockers=blockers, warnings=warnings, report=report)
 
-    variable_shapes = _variable_shapes(config, mappings, ntens)
+    variable_shapes = _with_the_routines_own_shapes(
+        _variable_shapes(config, mappings, ntens), parsed, selected_umat)
     argument_variables = _argument_variables(config, selected_umat)
     shape_blockers = _shape_blockers(source_text, roles, regions, mappings,
                                      variable_shapes, parsed, selected_umat)
@@ -2301,6 +2302,48 @@ def _variable_shapes(config: dict[str, Any], mappings: dict[str, str], ntens: in
     return shapes
 
 
+def _with_the_routines_own_shapes(
+    shapes: dict[str, str], parsed: ParsedFortranSource | None, selected_umat: str,
+) -> dict[str, str]:
+    """``shapes`` with every array the selected routine declares taking that routine's extent.
+
+    The scanner's variable table is file-wide, one row per NAME, and a name
+    declared in several routines keeps one of their declarations. The shadows
+    are declared in the selected routine, so its own declaration is the only
+    one that can size them. marioruiarruda's Hashin and Tsai-Wu UMATs declare
+
+        real(kind=8) :: eij(ntens), ..., sije(ntens), ...
+
+    and their helpers take scalar dummies of the same names
+    (``real(kind=8), intent(in) :: eii, eij, sii, sij``); the table kept the
+    scalar, and both sources were refused because "EIJ ... has no confirmed
+    shape". Only a declaration with an extent overrides, and only when it says
+    something different from the table (spacing and case aside), so a source
+    whose table was already right is emitted byte for byte as before.
+    """
+    if parsed is None:
+        return shapes
+    wanted = (selected_umat or "UMAT").upper()
+    routine = next((r for r in parsed.subroutines if r.upper_name == wanted), None)
+    if routine is None:
+        return shapes
+    result = dict(shapes)
+    for declaration in routine.declarations:
+        for entity in declaration.entities:
+            if not entity.dimensions or not entity.name.isidentifier():
+                continue
+            own = ", ".join(dimension.strip() for dimension in entity.dimensions)
+            if "*" in own or ":" in own.replace(" ", "").replace("::", ""):
+                # Assumed size or shape, or an explicit lower bound: not an
+                # extent a shadow can be declared with here; the existing
+                # rules (and their refusals) keep deciding those.
+                continue
+            current = result.get(entity.upper_name, "")
+            if re.sub(r"\s+", "", current).upper() != re.sub(r"\s+", "", own).upper():
+                result[entity.upper_name] = own
+    return result
+
+
 def _argument_variables(config: dict[str, Any], selected_umat: str) -> set[str]:
     selected = selected_umat.upper() or "UMAT"
     analysis = _dict(config.get("analysis"))
@@ -2822,6 +2865,12 @@ def _shape_blockers(
 ) -> list[str]:
     blockers: list[str] = []
     region_text = _executable_text(_selected_region_text(source_text, regions["stress"]))
+    # The NAME in ``CALL SOLVE(..., param=Fnew)`` is the callee's dummy, not a
+    # variable of this routine. KnutAM's MM2021 and Qin2018 UMATs declare an
+    # allocatable PARAM(:) they never use and pass ``param=Fnew`` by keyword;
+    # the keyword was read as a use of PARAM and both were refused for its
+    # deferred shape, which hid the reason that actually stops them.
+    region_text = re.sub(r"([(,]\s*)[A-Za-z_]\w*(\s*=)(?!=)", r"\1\2", region_text)
     mapped_arrays = {mappings.get("dstran"), mappings.get("stress"), mappings.get("statev")}
     # NAME(...) is indexing only if NAME is an array. A call to an intrinsic,
     # or to a function the source itself defines, reads identically and was
