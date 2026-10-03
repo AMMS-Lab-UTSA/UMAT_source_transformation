@@ -334,6 +334,54 @@ def _council_manifest(key: str, set_id: str) -> tuple[dict, dict]:
     return {}, council
 
 
+def _council_driver_point(council: dict) -> dict:
+    placement = council.get("placement") or {}
+    point = placement.get("driver_point")
+    if point:
+        return {"noel": int(point.get("noel", 1)), "npt": int(point.get("npt", 1)),
+                "coords": [float(c) for c in point["coords"]],
+                "provenance": (f"council plan: the first integration point of the element "
+                               f"placed in the documented geometry ({placement.get('where', '')})")}
+    return dict(_ZERO_POINT, provenance=COUNCIL_DRIVER_POINT)
+
+
+def static_scan_override_check(entry: "CorpusEntry", build, work: Path, increments: list,
+                               statev0, override: dict) -> dict:
+    """D-21a (e), re-checked on every pass: run the ORIGINAL over the same
+    history once per variant of the overridden input (TEMP, or the element's
+    COORDS) and require bit-identical STRESS, DDSDDE and STATEV."""
+    import dataclasses
+    outputs = []
+    for k, variant in enumerate(override.get("variants") or ()):
+        incs = increments
+        point = dict(entry.driver_point)
+        if "temp" in variant:
+            incs = [(d, f0, f1, r, dt, float(variant["temp"]), 0.0)
+                    for d, f0, f1, r, dt, _t, _dt in increments]
+        if "coords" in variant:
+            point["coords"] = [float(c) for c in variant["coords"]]
+        probe = dataclasses.replace(entry, driver_point=point)
+        out, message = _run_real(build, Path(work) / f"override_{override['flag']}_{k}",
+                                 _config(probe, incs, statev0, False), [], probe, fresh=True)
+        if out is None:
+            return {"flag": override["flag"], "passed": False,
+                    "reason": f"variant {variant} did not run: {message[-200:]}"}
+        outputs.append((variant, out.base))
+    first_variant, first = outputs[0]
+    for variant, base in outputs[1:]:
+        if sorted(base) != sorted(first):
+            return {"flag": override["flag"], "passed": False,
+                    "reason": f"{variant} reached different increments than {first_variant}"}
+        for inc in sorted(base):
+            for field_name in ("stress", "ddsdde", "statev"):
+                if not _same(base[inc][field_name], first[inc][field_name]):
+                    return {"flag": override["flag"], "passed": False, "reason": (
+                        f"{field_name.upper()} at increment {inc} differs between {first_variant} "
+                        f"and {variant}: the routine does read {override['flag'][6:]}")}
+    return {"flag": override["flag"], "passed": True, "variants": len(outputs),
+            "reason": "bit-identical STRESS, DDSDDE and STATEV over every variant"}
+
+
 def resolve_entry(key: str) -> CorpusEntry:
     """A registry key -> everything the harness needs, with provenance.
 
@@ -379,7 +427,11 @@ def resolve_entry(key: str) -> CorpusEntry:
                    **({"branch_coverage": council["branch_coverage"]}
                       if council.get("branch_coverage") else {}),
                    **({"domain_not_enforced": council["domain_not_enforced"]}
-                      if council.get("domain_not_enforced") else {})}
+                      if council.get("domain_not_enforced") else {}),
+                   **({"static_scan_overrides": council["static_scan_overrides"]}
+                      if council.get("static_scan_overrides") else {}),
+                   **({"placement": council["placement"]}
+                      if council.get("placement") else {})}
     elif verification.get("material_data_origin"):
         origins = {"material_data_origin": verification["material_data_origin"],
                    "experiment_origin": verification.get("experiment_origin", "author")}
@@ -418,7 +470,7 @@ def resolve_entry(key: str) -> CorpusEntry:
                     "initial_state_from_user_subroutine":
                         bool(manifest.get("initial_state_from_user_subroutine")),
                     "terminal_state": record.get("terminal_state"), **origins},
-        driver_point=(dict(_ZERO_POINT, provenance=COUNCIL_DRIVER_POINT) if council
+        driver_point=(_council_driver_point(council) if council
                       else experiment_driver_point(key)))
 
 
@@ -1523,7 +1575,8 @@ def _record(entry: CorpusEntry, feature: str, path, payload: dict, extra: dict) 
     # the three tiers (D-19/D-21): set only off the author-deck tier, so the
     # author-deck records read as before
     for name in ("material_data_origin", "experiment_origin", "council_set",
-                 "council_sets", "branch_coverage", "domain_not_enforced"):
+                 "council_sets", "branch_coverage", "domain_not_enforced",
+                 "static_scan_overrides", "placement"):
         if entry.provenance.get(name):
             record[name] = entry.provenance[name]
     return record
@@ -2453,6 +2506,21 @@ def run_entry(entry: CorpusEntry, work_root: Path, *, paths=None,
         pre[path.name] = (pristine, message)
         undefined_by_path[path.name] = undefined
         source_trips += trips
+    # D-21a (e): every accepted static-scan override is re-checked on every
+    # pass; a variant that changes anything makes the whole source a trip.
+    override_checks = []
+    if entry.provenance.get("static_scan_overrides") and paths and builds.original.ok:
+        first = paths[0]
+        increments = _increments(entry, first)
+        statev0 = (entry.initial_statev if entry.initial_statev
+                   else [0.0] * max(entry.nstatv, 1))
+        for override in entry.provenance["static_scan_overrides"]:
+            check = static_scan_override_check(entry, builds.original, work / "overrides",
+                                               increments, statev0, override)
+            override_checks.append(check)
+            if not check["passed"]:
+                source_trips.append(f"static-scan override of {check['flag']} rejected: "
+                                    f"{check['reason']}")
     runs_for_checks = {}
     if not source_trips or evaluate_despite_trips:
         for path in paths:
@@ -2493,6 +2561,9 @@ def run_entry(entry: CorpusEntry, work_root: Path, *, paths=None,
                        for p in paths for f in features] + records
         for record in records:
             record["hidden_state_trips"] = source_trips[:20]
+    if override_checks:
+        for record in records:
+            record["static_scan_override_checks"] = override_checks
     # D-12.2/3: undefined outputs are a SOURCE defect, disclosed on every record
     details = [d for u in undefined_by_path.values() for d in u.details]
     names = sorted({d["output"] for d in details})
