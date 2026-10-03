@@ -30,7 +30,7 @@ reg = importlib.util.module_from_spec(_spec)
 sys.modules.setdefault("build_corpus_registry", reg)
 _spec.loader.exec_module(reg)
 
-jsonschema = pytest.importorskip("jsonschema")
+import jsonschema  # noqa: E402 - declared in the [test] extra: the schema check must run in CI
 
 
 def _row_validator():
