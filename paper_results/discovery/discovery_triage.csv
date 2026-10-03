@@ -47,6 +47,31 @@ Error: Generic function ‘max’ at (1) is not consistent with a specific intri
       |                         1
 Error: Generic function ‘max’ at (1) is not consistent with a specific intrinsic interface
 ",1.27
+Computational-Mechanics-Materials-Lab__SinglePointSimulator/examples/MODIFIED_JC.f,examples,40937,1252,fixed,finite,6,94,ready_with_json_contract,16,data;io_write,generated_not_compiled,compile_failed,"umat_oti_helpers.f90:134:4:
+
+  134 |     temp = tempsv (noel.eq.1) then
+      |    1
+Error: Unclassifiable statement at (1)
+umat_oti_helpers.f90:136:7:
+
+  136 |     endif
+      |       1
+Error: Expecting END SUBROUTINE statement at (1)
+umat_oti_helpers.f90:227:112:
+
+  227 |     call CALC_DMG_OTI(dti",yes,no,"umat_oti_helpers.f90:134:4:
+
+  134 |     temp = tempsv (noel.eq.1) then
+      |    1
+Error: Unclassifiable statement at (1)
+umat_oti_helpers.f90:136:7:
+
+  136 |     endif
+      |       1
+Error: Expecting END SUBROUTINE statement at (1)
+umat_oti_helpers.f90:227:112:
+
+  227 |     call CALC_DMG_OTI(dti",4.62
 CriticalSoilModels__critical-soil-models/src/models/bingham/umat_bingham.f90,bingham,8598,233,free,finite,6,0,ready_with_json_contract,2,module_use,semantic_checks_failed,semantic_check,Semantic check failed: stress_path_consumes_the_seed.; Semantic check failed: stress_oti_update_before_real_stress_extraction.; Semantic check failed: stress_oti_update_before_ddsdde_extraction.; Semantic check failed: ddsdde_extraction_after_selected_stress_regions.; Semantic check failed: ddsdde_e,,,,0.19
 CriticalSoilModels__critical-soil-models/src/umat.f90,src,5285,118,free,finite,6,1,ready_with_json_contract,1,module_use,semantic_checks_failed,other,"STRESS_OTI is passed to UMAT_LINEAR, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it.; STATEV_OTI is passed to UMAT",,,,0.07
 CriticalSoilModels__incremental-driver/src/elastic.f90,src,1666,62,free,small strain,6,0,ready_with_json_contract,1,module_use,source_does_not_compile,source_does_not_compile,"as shipped: <work>/src/elastic/baseline/elastic.f90:2:7:
@@ -224,6 +249,40 @@ Error: Syntax error in expression at (1)
       |                                    1
 Error: Syntax error in expression at (1)
 ",1.58
+MechMater-project__UMAT_finitestrain_viscoelasticity_withdamage/UMAT_visco_FGJD_2026.for,MechMater-project__UMAT_finitestrain_viscoelasticity_withdamage,77497,1772,fixed,finite,6,85,ready_with_json_contract,4,io_write,generated_not_compiled,compile_failed,"umat_oti_helpers.f90:138:31:
+
+  138 |     type(ONUMM6N1) :: ZERO=0.D0, ONE=1.D0, TWO=2.D0, THREE=3.D0, FOUR=4.D0
+      |                               1
+Error: Incompatible initialization between a derived type entity and an entity with ‘REAL(8)’ type at (1)
+umat_oti_helpers.f90:139:31:
+
+  139 |    ",yes,no,"umat_oti_helpers.f90:138:31:
+
+  138 |     type(ONUMM6N1) :: ZERO=0.D0, ONE=1.D0, TWO=2.D0, THREE=3.D0, FOUR=4.D0
+      |                               1
+Error: Incompatible initialization between a derived type entity and an entity with ‘REAL(8)’ type at (1)
+umat_oti_helpers.f90:139:31:
+
+  139 |    ",4.9
+MechMater-project__UMAT_finitestrain_viscoelasticity_withdamage/UMAT_viscohybrid_FGJD_2026.for,MechMater-project__UMAT_finitestrain_viscoelasticity_withdamage,82257,1891,fixed,finite,6,104,ready_with_json_contract,5,io_write,generated_not_compiled,compile_failed,"umat_oti_helpers.f90:41:23:
+
+   41 |     type(ONUMM6N1) :: : : damping
+      |                       1
+Error: Invalid character in name at (1)
+umat_oti_helpers.f90:166:31:
+
+  166 |     type(ONUMM6N1) :: ZERO=0.D0, ONE=1.D0, TWO=2.D0, THREE=3.D0, FOUR=4.D0
+      |                               1
+Erro",yes,no,"umat_oti_helpers.f90:41:23:
+
+   41 |     type(ONUMM6N1) :: : : damping
+      |                       1
+Error: Invalid character in name at (1)
+umat_oti_helpers.f90:166:31:
+
+  166 |     type(ONUMM6N1) :: ZERO=0.D0, ONE=1.D0, TWO=2.D0, THREE=3.D0, FOUR=4.D0
+      |                               1
+Erro",5.17
 PeriDoX__PeriDoX/Publications/2022_JOSS/data/UMAT/base.f,UMAT,2030,59,fixed,small strain,6,2,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.3
 PeriHub__PeriLab.jl/src/Models/Material/UMATs/base.f,UMATs,2020,59,fixed,small strain,6,2,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.32
 PeriHub__PeriLab.jl/src/Models/Material/UMATs/usertest.f,UMATs,1452,47,fixed,finite,6,2,ready_with_json_contract,1,,semantic_checks_failed,semantic_check,Semantic check failed: ddsdde_extraction_after_selected_stress_regions.,,,,0.09
@@ -299,6 +358,21 @@ abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/Isotropic/BC1
 abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/Isotropic/BC2_60cc/Iso_60cc.f,BC2_60cc,17597,482,fixed,finite,6,24,ready_with_json_contract,6,common_block;data,transformed,none,,yes,yes,,1.57
 abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/SampleSimulation/GOH_Example.f,SampleSimulation,52924,1432,fixed,finite,6,46,ready_with_json_contract,9,common_block;data,transformed,none,,yes,yes,,2.61
 abuganza__BayesianCalibrationSkinGrowth/Revision/Abaqus SImulation/SampleSimulation/Iso_Example.f,SampleSimulation,17597,482,fixed,finite,6,24,ready_with_json_contract,6,common_block;data,transformed,none,,yes,yes,,1.54
+abuganza__NN_aniso_UMAT/UMAT/NN_UMAT_Vahid.f,UMAT,20540,578,fixed,finite,6,33,ready_with_json_contract,5,,source_does_not_compile,source_does_not_compile,"as shipped: <work>/UMAT/NN_UMAT_Vahid/baseline/NN_UMAT_Vahid.f:90:25:
+
+   90 |       integer activtypes(props(1)-1)
+      |                         1
+Error: Expression at (1) must be of INTEGER type, found REAL
+<work>",no,no,"NN_UMAT_Vahid_oti.f:95:25:
+
+   95 |       integer activtypes(props(1)-1)
+      |                         1
+Error: Expression at (1) must be of INTEGER type, found REAL
+NN_UMAT_Vahid_oti.f:95:25:
+
+   95 |       integer activtypes(props(1)-1)
+      |                         1
+Error: Expression at (1) ",2.95
 abuganza__UMAT_anisotropic_damage/UMAT_Tissue_2d_plane_strain.f,abuganza__UMAT_anisotropic_damage,25672,669,fixed,finite,6,41,ready_with_json_contract,5,,semantic_checks_failed,semantic_check,Semantic check failed: old_ddsdde_assignments_disabled.,,,,0.48
 abuganza__UMAT_anisotropic_damage/UMAT_Tissue_2d_plane_stress.f,abuganza__UMAT_anisotropic_damage,25725,662,fixed,finite,6,48,ready_with_json_contract,5,,semantic_checks_failed,semantic_check,Semantic check failed: old_ddsdde_assignments_disabled.,,,,0.46
 abuganza__UMAT_anisotropic_damage/UMAT_Tissue_3d.f,abuganza__UMAT_anisotropic_damage,25231,643,fixed,finite,6,54,ready_with_json_contract,5,,semantic_checks_failed,semantic_check,Semantic check failed: old_ddsdde_assignments_disabled.,,,,0.4
@@ -352,6 +426,23 @@ bmmbUPF__abaqusIVD/Sub_MechDisc.f,bmmbUPF__abaqusIVD,52415,1335,fixed,finite,6,8
 bmmbUPF__abaqusIVD/Sub_TransDisc.f,bmmbUPF__abaqusIVD,85384,2097,fixed,small strain,6,3,needs_json_completion,6,common_block;io_open;io_read;io_write,anchors_not_located,missing_ddsdde_extraction_point,missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions,,,,0.42
 brizzer__elmerfem_piezo/fem/src/modules/ElasticSolve.F90,modules,227283,5527,free,,,,,16,io_write;module_use;save,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.42
 calculix__ccx_fff/src/umat.f,src,2859,93,fixed,small strain,6,1,ready_with_json_contract,1,,transformed,none,,yes,yes,,1.37
+cbgeo-archives__hpc-scripts/abaqus/wellbore.f,abaqus,32006,1077,fixed,small strain,6,91,ready_with_json_contract,8,common_block,generated_not_compiled,compile_failed,"wellbore_oti.f:905:37:
+
+  905 |       S=REAL((1.0D0+VOID_OTI)/sik*pc0=3.0D0*BKS_OTI/2.0D0*(1.0D0-2.0D0*
+      |                                     1
+Error: Syntax error in argument list at (1)
+wellbore_oti.f:1178:35:
+
+ 1178 |       DEP5_OTI=DLAMDA_OTI*DFDS_OTI(5,1)
+      |                          ",yes,no,"wellbore_oti.f:905:37:
+
+  905 |       S=REAL((1.0D0+VOID_OTI)/sik*pc0=3.0D0*BKS_OTI/2.0D0*(1.0D0-2.0D0*
+      |                                     1
+Error: Syntax error in argument list at (1)
+wellbore_oti.f:1178:35:
+
+ 1178 |       DEP5_OTI=DLAMDA_OTI*DFDS_OTI(5,1)
+      |                          ",4.22
 compas-dev__compas_fea2/data/umat/umat-hooke-iso.f,umat,1793,46,fixed,small strain,6,3,ready_with_json_contract,1,,generated_not_compiled,compile_failed,"umat-hooke-iso_oti.f:70:23:
 
    70 |        SPEPS_OTI = sum(EPS_OTI(1:3))
@@ -433,6 +524,7 @@ jgomezc1__WAVES/SOURCE/matutil.for,SOURCE,4731,121,fixed,small strain,6,0,needs_
 jpsferreira__UMAT-ABAQUS/src/_umat.for,src,13352,340,fixed,finite,6,13,ready_with_json_contract,1,common_block,semantic_checks_failed,other,"UNIT2_OTI is passed to ONEM, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it.; UNIT4_OTI is passed to ONEM, which w",,,,0.26
 jpsferreira__UMAT-ABAQUS/test_in_abaqus/umat_general.for,test_in_abaqus,52824,1808,fixed,finite,6,78,ready_with_json_contract,48,common_block;io_open;io_read;io_write,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(I1,J1)=(ONE/TWO)*(PP1+PP2)",,,,0.48
 jpsferreira__UMAT-ABAQUS/umat_general.for,jpsferreira__UMAT-ABAQUS,53155,1821,fixed,finite,6,78,ready_with_json_contract,49,common_block;io_open;io_read;io_write,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(I1,J1)=(ONE/TWO)*(PP1+PP2)",,,,0.53
+keisuke58__Tmcmc202601/FEM/umat_biofilm_visco.f,FEM,13533,412,fixed,finite,6,22,ready_with_json_contract,5,,transformed,none,,yes,yes,,2.77
 keisuke58__pde-fem-biofilm/umat_biofilm_visco.f,keisuke58__pde-fem-biofilm,15292,443,fixed,finite,6,10,ready_with_json_contract,6,data,semantic_checks_failed,semantic_check,Semantic check failed: stress_oti_update_before_real_stress_extraction.; Semantic check failed: stress_oti_update_before_ddsdde_extraction.; Semantic check failed: ddsdde_extraction_after_selected_stress_regions.; Semantic check failed: ddsdde_extraction_after_final_selected_stress_update.,,,,0.18
 keisuke58__pde-fem-biofilm/umat_biofilm_visco_2ch.f,keisuke58__pde-fem-biofilm,18230,571,fixed,finite,6,12,ready_with_json_contract,8,data,generated_not_compiled,compile_failed,"umat_oti_helpers.f90:63:119:
 
@@ -444,6 +536,18 @@ Error: Expe",yes,no,"umat_oti_helpers.f90:63:119:
       |                                                                                                                       1
 Error: Expe",1.53
 keisuke58__pde-fem-biofilm/umat_biofilm_visco_phase2.f,keisuke58__pde-fem-biofilm,15115,464,fixed,finite,6,12,ready_with_json_contract,6,data,transformed,none,,yes,yes,,1.69
+laufogh__fe-large-displacement/constitutive/hypoplasticity-staubach/HPP_Staubach_implicit.f,hypoplasticity-staubach,64916,1577,fixed,small strain,6,81,ready_with_json_contract,6,io_write;module_use;save,blocked,module_names_unresolved,"MAP2D appears as MAP2D(...) on the stress path but is not declared anywhere in this source, which USEs TOOLS without defining it. The transformer cannot read that module, so it cannot tell whether MAP2D is an array to promote or a call into it.; MAP2STRAN appears as MAP2STRAN(...) on the stress path",,,,1.42
+lbrassart__chemo-vp-efftemp/UMAT.for,lbrassart__chemo-vp-efftemp,51823,1517,fixed,finite,6,97,ready_with_json_contract,10,io_open;io_read;io_write,source_does_not_compile,source_does_not_compile,"as shipped: <work>/lbrassart__chemo-vp-efftemp/UMAT/baseline/UMAT.for:609:10:
+
+  609 |  7   + LAMBDANEQ
+      |          1
+Warning: Extension: Unary operator following arithmetic operator (use parentheses) at (1)
+<work>",no,no,"umat_oti_helpers.f90:106:36:
+
+  106 |     EQDEVTAU = ONE / VpkBT * DASINH(ETA/C1)
+      |                                    1
+Error: ‘x’ argument of ‘dasinh’ intrinsic at (1) must be REAL
+",4.25
 learnitmyway__Paperboard/Fortran/umat.f90,Fortran,15871,462,free,small strain,6,33,ready_with_json_contract,4,,generated_not_compiled,compile_failed,"umat_oti.f90:164:21:
 
   164 |   DO OTI_I = 1, NTENS
@@ -523,6 +627,7 @@ marioruiarruda__Hashin_2D_UMAT/umat_hashin_f90.f90,marioruiarruda__Hashin_2D_UMA
 marioruiarruda__Hashin_3D_UMAT/umat_hashin3D_f90.f90,marioruiarruda__Hashin_3D_UMAT,45822,1156,free,small strain,,129,,14,,transform_crashed,scanner_error,HelperLiftingError: PARAMETER entry missing '=': '&',,,,3.36
 marioruiarruda__Mazars_UMAT/umat_mazars_f90.f90,marioruiarruda__Mazars_UMAT,27579,750,free,small strain,6,43,ready_with_json_contract,13,,semantic_checks_failed,other,"Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call CALC_ALPHA_E at lines [190], rewriting ['ALPHAC', 'ALPHAT', 'EIJCBP', 'EIJTBP'], but helper lifting is not yet safe here: Helper lifting requires source definitions for ['SPRINC', 'SPRIND']. The com",,,,0.27
 marioruiarruda__Tsai-Wu_2D_UMAT/umat_tsaiwu_f90.f90,marioruiarruda__Tsai-Wu_2D_UMAT,24592,640,free,small strain,6,94,ready_with_json_contract,9,,blocked,shape_unknown,Promoted variable SIJE is indexed in a stress region but has no confirmed shape.,,,,0.21
+materialsguy__Predict_Nanoindentation_Tip_Wear/Codes/Abaqus_Indentation/2D/UMATPlasticity.f,2D,4261,135,fixed,small strain,6,14,ready_with_json_contract,1,,semantic_checks_failed,other,"STATEV_OTI is passed to ROTSIG, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply ROTSIG's source",,,,0.31
 matmodlab__matmodlab2/matmodlab2/umat/uhyper_wrap.f90,umat,16053,424,free,small strain,6,2,ready_with_json_contract,5,io_write;module_use,semantic_checks_failed,other,"Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call HYPEREL at lines [370, 371], rewriting ['PK2', 'STATEV'], but helper lifting is not yet safe here: Helper lifting requires source definitions for ['STDB_ABQERR']. The completed JSON rewrites those c",,,,0.16
 matmodlab__matmodlab2/matmodlab2/umat/umats/umat_neohooke.f90,umats,4904,125,free,finite,6,9,ready_with_json_contract,1,,generated_not_compiled,compile_failed,"umat_neohooke_oti.f90:141:19:
 
@@ -693,6 +798,9 @@ tengzhang48__abaqus_ufl/examples/neo_hookean_umat/neo_hookean_umat.for,neo_hooke
 tengzhang48__abaqus_ufl/examples/ogden_umat/ogden_umat.for,ogden_umat,54635,1720,fixed,finite,6,86,ready_with_json_contract,32,data,blocked,complex_arithmetic,"A11 is declared DOUBLE COMPLEX and is on the stress path. The OTI type is built over the reals, so there is no complex shadow to promote A11 to, and a real shadow would drop the imaginary part silently. Complex arithmetic on the stress path is not supported.; A12 is declared DOUBLE COMPLEX and is on",,,,0.41
 tengzhang48__abaqus_ufl/examples/small_strain_j2_umat/small_strain_j2.for,small_strain_j2_umat,64605,2093,fixed,small strain,6,25,ready_with_json_contract,38,data,blocked,complex_arithmetic,"BEST_NSQ is declared DOUBLE COMPLEX and is on the stress path. The OTI type is built over the reals, so there is no complex shadow to promote BEST_NSQ to, and a real shadow would drop the imaginary part silently. Complex arithmetic on the stress path is not supported.; CUTBACK_Z is declared DOUBLE C",,,,0.53
 tengzhang48__abaqus_ufl/examples/small_strain_viscoelastic_umat/small_strain_viscoelastic.for,small_strain_viscoelastic_umat,65045,2098,fixed,small strain,6,24,ready_with_json_contract,38,data,blocked,complex_arithmetic,"BEST_NSQ is declared DOUBLE COMPLEX and is on the stress path. The OTI type is built over the reals, so there is no complex shadow to promote BEST_NSQ to, and a real shadow would drop the imaginary part silently. Complex arithmetic on the stress path is not supported.; CUTBACK_Z is declared DOUBLE C",,,,0.5
+thatliuyang__Abaqus-subroutine-for-composites-progressive-failure-analysis-/UMAT_comp_failure.for,thatliuyang__Abaqus-subroutine-for-composites-progressive-failure-analysis-,48202,1475,fixed,small strain,6,99,ready_with_json_contract,1,io_write,blocked,other,"Helper lifting failed: Helper lifting requires source definitions for ['DAMAGE_CALC']. The completed JSON rewrites those calls, so pass-through is unsafe. (DAMAGE_CALC is first called at line 346.) What to do: put the file that defines DAMAGE_CALC beside the UMAT or name its directory in dependency_",,,,0.74
+theCoMMaNDlab__Crohns_motility/simulation-files/sub1.f,simulation-files,15427,585,fixed,finite,6,30,ready_with_json_contract,7,,transformed,none,,yes,yes,,2.91
+theCoMMaNDlab__Crohns_motility/simulation-files/sub2.f,simulation-files,17547,594,fixed,finite,6,30,ready_with_json_contract,3,,transformed,none,,yes,yes,,2.85
 thealanjason__umat_finite_viscoelasticity/UMAT/VISC_OGDEN_1EL.for,UMAT,38484,1003,fixed,finite,6,41,ready_with_json_contract,3,io_write,generated_not_compiled,compile_failed,"VISC_OGDEN_1EL_oti.for:678:9:
 
   678 |       END DO
@@ -849,6 +957,8 @@ toruinaba__manforge/fortran/yu_kinematic_3d.f90,fortran,65928,1772,free,small st
 toruinaba__manforge/fortran/yu_kinematic_ps.f90,fortran,59102,1570,free,small strain,6,121,ready_with_json_contract,32,io_write,semantic_checks_failed,other,"Helper subroutine pass-through used despite lifting limitation: Completed JSON transforms helper call ROTSIG at lines [1460], rewriting ['THETA_N', 'THETA_ROT'], but helper lifting is not yet safe here: Helper lifting requires source definitions for ['ROTSIG']. The completed JSON rewrites those call",,,,0.48
 victorlefevre__UMAT_Lefevre_Sozio_Lopez-Pamies/Examples/C3D8H/UT kappa_mu=1/UMAT_KLP_RK5_hybrid.f,UT kappa_mu=1,45274,1269,fixed,finite,6,7,ready_with_json_contract,22,io_write,transformed,none,,yes,yes,,1.67
 vishalsubbiah__Abaqus-Multi-scale-modelling/Abaqus/umatcode3.f,Abaqus,4851,177,fixed,small strain,6,1,ready_with_json_contract,3,io_open;io_read,blocked,missing_ddsdde_extraction_point,"DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(1,1)=C_sam(1,1,1,1); DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(1,2)=C_sam(1,1,2,2); DDSDDE assignment is not covered by an old tangent replacement region: DDSDDE(1,3)=C_sam(1,1,3,3); DDS",,,,0.1
+williammora1984__UMAT_GTN/3_UMAT/UMAT_GTN_W.f,3_UMAT,102737,2439,fixed,small strain,6,189,ready_with_json_contract,31,data;io_open;io_read;io_write,blocked,other,Helper lifting failed: Helper lifting for KGTN reached external or undefined callee DTIME (called at line 400). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines DTIME beside the UMAT or name its directory in dependency_roots so the ,,,,2.02
+williammora1984__UMAT_GTN/3_UMAT/UMAT_Rousse.f,3_UMAT,57725,1588,fixed,small strain,6,84,ready_with_json_contract,27,data;io_open;io_read;io_write,transformed,none,,yes,yes,,4.91
 zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/Adapters/UMAT_Adapter.f90,Adapters,2945,56,free,small strain,6,1,needs_json_completion,1,,anchors_not_located,missing_ddsdde_extraction_point,missing_ddsdde_extraction_point; missing_real_output_extraction_point; missing_stress_update_region; missing_stress_update_regions,,,,0.01
 zning8251-jpg__ufc-fem-kernel/docs/02_Developer_Guide/Legacy_Adapters_Reference/Adapters/Material/UMAT_Adapter.f90,Material,11618,290,free,finite,6,1,needs_json_completion,1,module_use,anchors_not_located,selected_routine_is_not_an_abaqus_umat,selected_routine_is_not_an_abaqus_umat,,,,0.06
 zning8251-jpg__ufc-fem-kernel/tests/TEST_PH_Mat_UMAT.f90,tests,19294,492,free,,,,,9,io_write;module_use,not_a_umat,not_a_umat,the scanner finds no UMAT subroutine in this file,,,,0.03

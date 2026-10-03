@@ -42,6 +42,16 @@ def _root(flag: str | None, env: str, default: Path) -> Path:
     return Path(flag or os.environ.get(env) or default).resolve()
 
 
+#: Acquisition manifests whose licence source the rows quote: the two corpus
+#: waves plus every discovery round tools/ingest_discovery_round.py added to
+#: the inventory. The same list as tools/build_corpus_registry.py's
+#: DEFAULT_ACQUISITION (a test holds them equal). Set here, not in the package
+#: default, so the harness fingerprint does not move for a data path.
+ACQUISITION_MANIFESTS = ("paper_results/corpus/companions.json",
+                         "paper_results/corpus/companions_wave2.json",
+                         "paper_results/discovery/family_round_2026-10-02/companions.json")
+
+
 def main(argv=None) -> int:
     ws = REPO.parent
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -100,6 +110,7 @@ def main(argv=None) -> int:
         earlier_registry_rev=args.earlier_registry_rev or None,
         campaign=campaign,
         ra_repo=_root(args.ra_repo, "UMAT_OTI_RA_REPO", ws / "final-ra"),
+        companions=ACQUISITION_MANIFESTS,
     )
     for label, p in (("discovery cache", inp.discovery_cache),
                      ("corpus_run", inp.corpus_run), ("families", inp.families),

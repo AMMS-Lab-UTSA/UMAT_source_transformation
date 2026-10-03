@@ -271,7 +271,12 @@ DEFAULT_INVENTORY = REPO / "paper_results/discovery/discovery_triage.csv"
 #: from that commit, which is why ``url_provenance`` says so on every record
 #: rather than letting a derived URL pass for a recorded one.
 DEFAULT_ACQUISITION = (REPO / "paper_results/corpus/companions.json",
-                       REPO / "paper_results/corpus/companions_wave2.json")
+                       REPO / "paper_results/corpus/companions_wave2.json",
+                       # tools/ingest_discovery_round.py added this round's
+                       # accepted sources to the inventory; its acquisition
+                       # manifest pins their commits and licences.
+                       REPO / "paper_results/discovery/family_round_2026-10-02/"
+                              "companions.json")
 
 #: The offline evidence about what each refused source is. Written by
 #: ``--refusal-audit``; read back on every later build so the registry can be
