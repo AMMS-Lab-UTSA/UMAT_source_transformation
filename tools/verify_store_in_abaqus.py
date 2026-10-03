@@ -4939,7 +4939,17 @@ def _judge_state_at(manifest: VerificationManifest, original: Path, record: dict
         qbuild = build_replay(Path(original), quad_dir, name=manifest.name,
                               flags=replay_flags(form, quad_dir), timeout=timeout, quad=True)
         note: dict[str, Any] = {"status": "unavailable", "reason": qbuild.reason}
-        if qbuild.ok:
+        # Vera B10 condition A: every staged include must be the promoted
+        # copy, else the reference is mixed-precision and is refused.
+        mixed = [r["include"] for r in qbuild.includes
+                 if r.get("found") and r.get("staged_as") != "converted copy"]
+        if qbuild.includes:
+            note["includes"] = qbuild.includes
+        if qbuild.ok and mixed:
+            note.update(status="refused", reason=(
+                "mixed-precision quad reference: include(s) "
+                + ", ".join(mixed) + " staged unpromoted"))
+        elif qbuild.ok:
             qsweep = difference_tangent(qbuild, quad_dir, manifest.ntens, ladder, scale=scale,
                                         transformed_source=transformed,
                                         near_zero_fraction=manifest.near_zero_fraction,
@@ -4956,7 +4966,8 @@ def _judge_state_at(manifest: VerificationManifest, original: Path, record: dict
             same_steps = sorted(qsweep.matrices) == sorted(sweep.matrices)
             note = {"double_one_ulp_floor": floor, "bound": bound, "primal_gap": gap,
                     "units": "eps x K, K = max |DDSDDE of the original| (D-15 ulpK)",
-                    "same_terminations": same_steps}
+                    "same_terminations": same_steps,
+                    **({"includes": qbuild.includes} if qbuild.includes else {})}
             if qsweep.ok and same_steps and gap <= bound:
                 note["status"] = "used"
                 quad = gate.judge_state(

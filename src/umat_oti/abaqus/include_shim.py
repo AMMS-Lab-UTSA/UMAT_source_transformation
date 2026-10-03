@@ -26,7 +26,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Sequence
+from typing import Callable, Optional, Sequence
 
 # Where Abaqus keeps the headers a user subroutine may include. Both are real
 # directories in a 2021 installation and they do not hold the same files, so a
@@ -168,7 +168,30 @@ def _find(name: str, directory: Path) -> tuple[Path | None, str]:
     return None, "ambiguous" if matches else ""
 
 
-def stage_includes(text: str, search: Sequence[Path], shim: Path) -> list[dict]:
+#: The Abaqus parameter header, in every casing: never staged from beside a
+#: source -- the build installs the installation's (or the quad stub), and a
+#: link here would let that write go through to the author's file.
+_ABAQUS_HEADER = "aba_param.inc"
+
+
+def _refusal(name: str) -> str:
+    """Why an INCLUDE name is not staged, or "" when it may be."""
+    spelled = Path(name)
+    if spelled.is_absolute() or name.startswith("~"):
+        return "absolute include path: names a file outside the source tree, not staged"
+    if ".." in spelled.parts:
+        return "include path climbs out of its directory (..), not staged"
+    return ""
+
+
+def _sha256(data: bytes) -> str:
+    import hashlib
+    return hashlib.sha256(data).hexdigest()
+
+
+def stage_includes(text: str, search: Sequence[Path], shim: Path, *,
+                   convert: Optional[Callable[[str], str]] = None,
+                   conversion: str = "") -> list[dict]:
     """Make every file the source INCLUDEs resolvable from the job.
 
     Abaqus compiles the user file in a scratch directory of its own, so an
@@ -179,27 +202,61 @@ def stage_includes(text: str, search: Sequence[Path], shim: Path) -> list[dict]:
     in ``search`` in order (the ORIGINAL source's directory first): exactly,
     then case-insensitively when one file matches; the file is linked into
     ``shim`` (already on the compiler's -I path) under the name as spelled.
-    Shipped Abaqus headers already in the shim are left alone. Each lookup
-    is recorded, including the ones that found nothing."""
-    staged = []
-    for name in included_names(text):
-        spelled = Path(name)
-        target = Path(shim) / (spelled.name if str(spelled.parent) in (".", "") else spelled)
-        if target.exists() or target.is_symlink():
+    Shipped Abaqus headers already in the shim are left alone, and so is
+    ``aba_param.inc`` (the build installs it). An absolute name or one with
+    ``..`` is refused (Vera B10 condition B). Files the staged files include
+    are staged too, looked up beside them first.
+
+    ``convert`` (Vera B10 condition A): a staged file is not linked but
+    written through ``convert`` -- the quad replay promotes an include as it
+    promotes the source, so the reference is not mixed-precision. Each
+    record carries the sha256 of the author's file and of what was staged.
+    """
+    staged: list[dict] = []
+    seen: set[str] = set()
+    pending = [(text, list(search))]
+    while pending:
+        current, directories = pending.pop(0)
+        for name in included_names(current):
+            if name in seen:
+                continue
+            seen.add(name)
+            spelled = Path(name)
+            if spelled.name.lower() == _ABAQUS_HEADER:
+                continue
+            refused = _refusal(name)
+            if refused:
+                staged.append({"include": name, "found": False, "refused": True,
+                               "reason": refused})
+                continue
+            target = Path(shim) / (spelled.name if str(spelled.parent) in (".", "")
+                                   else spelled)
             if target.is_symlink() and str(target.resolve()).startswith(tuple(
                     str(d) for d in header_directories())):
                 continue                                   # a shipped header
-        found, how = None, ""
-        for directory in search:
-            found, how = _find(name, Path(directory))
-            if found is not None:
-                break
-        if found is None:
-            staged.append({"include": name, "found": False, "reason": how or "not found"})
-            continue
-        target.parent.mkdir(parents=True, exist_ok=True)
-        if target.exists() or target.is_symlink():
-            target.unlink()
-        target.symlink_to(found.resolve())
-        staged.append({"include": name, "found": True, "from": str(found), "match": how})
+            found, how = None, ""
+            for directory in directories:
+                found, how = _find(name, Path(directory))
+                if found is not None:
+                    break
+            if found is None:
+                staged.append({"include": name, "found": False, "reason": how or "not found"})
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if target.exists() or target.is_symlink():
+                target.unlink()
+            data = found.read_bytes()
+            record = {"include": name, "found": True, "from": str(found), "match": how,
+                      "sha256": _sha256(data)}
+            if convert is not None:
+                converted = convert(data.decode("utf-8", errors="replace"))
+                target.write_text(converted, encoding="utf-8")
+                record.update(staged_as="converted copy", conversion=conversion or "converted",
+                              staged_sha256=_sha256(converted.encode("utf-8")))
+            else:
+                target.symlink_to(found.resolve())
+                record.update(staged_as="link", staged_sha256=record["sha256"])
+            staged.append(record)
+            pending.append((data.decode("utf-8", errors="replace"),
+                            [found.parent, *directories]))
     return staged
