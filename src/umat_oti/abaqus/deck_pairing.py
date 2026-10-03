@@ -65,6 +65,31 @@ _VARIABLE = re.compile(
     re.IGNORECASE)
 #: Names that are the array's own extent rather than an index into it.
 _EXTENTS = {"NPROPS", "NSTATV", "NSTATEV", "NSTAT_VAR", "NSTATVS"}
+#: The opening of any subscript, so an EXPRESSION subscript is seen too:
+#: ``props((N_BASIC_PROPS - 1) + 2 * i)`` (ahartloper UVC) reads PROPS(8:)
+#: through a loop whose bound is NPROPS, and neither pattern above matches it.
+_OPEN = re.compile(r"\b(PROPS|STATEV|STATE_VAR|STAT_VAR)\s*\(", re.IGNORECASE)
+#: A DO loop with a literal upper bound: ``DO I=8,11`` / ``DO 10 I = 8, 11``.
+_DO_LITERAL = re.compile(
+    r"^\s*(?:\d+\s+)?DO\s+(?:\d+\s*,?\s*)?([A-Za-z_]\w*)\s*=\s*[^,]+,\s*(\d+)\s*(?:,|$)",
+    re.IGNORECASE)
+_DO_ANY = re.compile(r"^\s*(?:\d+\s+)?DO\b(?!\s*WHILE)", re.IGNORECASE)
+_DO_END = re.compile(r"^\s*(?:\d+\s+)?(?:END\s*DO|ENDDO|CONTINUE)\b", re.IGNORECASE)
+
+
+def _subscripts(line: str) -> Iterable[tuple[str, str]]:
+    """(array, subscript text) for every PROPS/STATEV subscript on a line,
+    balanced over nested parentheses."""
+    for found in _OPEN.finditer(line):
+        depth, start = 1, found.end()
+        for index in range(start, len(line)):
+            if line[index] == "(":
+                depth += 1
+            elif line[index] == ")":
+                depth -= 1
+                if depth == 0:
+                    yield found.group(1), line[start:index].strip()
+                    break
 
 _KEYWORD = re.compile(r"^\s*\*(?!\*)\s*([^,\n]+)(.*)$")
 _PARAMETER = re.compile(r"([A-Za-z][\w \-]*)\s*=\s*([^,]+)")
@@ -192,7 +217,15 @@ def demanded(source_text: str) -> Demand:
     highest = {"PROPS": 0, "STATEV": 0}
     variable = {"PROPS": set(), "STATEV": set()}
     evidence: list[str] = []
+    loops: list[tuple[str, int]] = []
     for line in _code_lines(source_text):
+        opened = _DO_LITERAL.match(line)
+        if opened:
+            loops.append((opened.group(1).upper(), int(opened.group(2))))
+        elif _DO_ANY.match(line):
+            loops.append(("", 0))
+        elif _DO_END.match(line) and loops:
+            loops.pop()
         for name, number in _LITERAL.findall(line):
             key = "PROPS" if name.upper() == "PROPS" else "STATEV"
             value = int(number)
@@ -204,6 +237,24 @@ def demanded(source_text: str) -> Demand:
             if subscript.upper() in _EXTENTS:
                 continue
             variable[key].add(subscript.upper())
+            # A loop with a literal bound names the constants it reads:
+            # ``DO I=8,11 ... PROPS(I)`` reads PROPS(8:11).
+            bound = max((top for index, top in loops
+                         if index == subscript.upper()), default=0)
+            if bound > highest[key]:
+                highest[key] = bound
+                evidence.append(f"{key}({bound}) through the loop bound at "
+                                f"{line.strip()[:60]!r}")
+        for name, subscript in _subscripts(line):
+            key = "PROPS" if name.upper() == "PROPS" else "STATEV"
+            text = re.sub(r"\s+", "", subscript).upper()
+            if (not text or text.isdigit() or text in _EXTENTS or text == "*"
+                    or ":" in text or "," in text
+                    or re.fullmatch(r"[A-Z_]\w*", text)):
+                continue
+            # An index EXPRESSION: the routine reads PROPS at positions its
+            # own literal subscripts do not name.
+            variable[key].add(text)
     return Demand(
         nprops=highest["PROPS"], nstatv=highest["STATEV"],
         props_exact=bool(highest["PROPS"]) and not variable["PROPS"],
