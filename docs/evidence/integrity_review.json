@@ -1622,6 +1622,16 @@
   "broad_except:src/umat_oti/corpus_features/binary32_scope.py:static_paths:except Exception:d3411aa2": {
    "verdict": "justified",
    "reason": "A source the Fortran parser cannot read gives no static table; the error is recorded in the table and static_for then returns True, so the dynamic condition decides alone. It never widens a verdict by itself: the dynamic test still has to show the original and its double variant differ beyond the double envelope."
+  },
+  "skip:tests/test_corpus_cases_holdout.py:test_the_hold_out_rows_and_plans:call:skip:4846f178": {
+   "verdict": "justified",
+   "reason": "Skips only after every row and plan assertion has run, and only where the campaign workspace's corpus_campaign/material_data/rederive_harvest.py and harvest_row.schema.json are absent (a clone outside the workspace, e.g. GitHub CI); the harvest re-derivation check runs wherever they exist.",
+   "evidence": [
+    {
+     "in": "tests/test_corpus_cases_holdout.py",
+     "text": "if module is not None:"
+    }
+   ]
   }
  }
 }
