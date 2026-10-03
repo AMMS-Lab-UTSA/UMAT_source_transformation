@@ -126,8 +126,16 @@ def test_a_negative_zero_value_actual_keeps_its_sign(tmp_path):
     assert code == 0, summary
     out = tmp_path / "out"
     emitted = next(out.glob("*_oti.f90")).read_text()
-    wrap = "(-0.0d0) - 0.0D0*OTI_E1"
-    assert wrap in emitted
+    # The first actual of the emitted call, exactly as the emitter wrote it
+    # (Vera, B8 re-review: a hard-coded copy would test the test).
+    import re
+
+    from umat_oti.fortran.parser import split_top_level
+
+    call = re.search(r"call\s+SCALE_OTI\s*\((.*)\)\s*$", emitted, re.IGNORECASE | re.MULTILINE)
+    assert call, emitted
+    wrap = split_top_level(call.group(1))[0].strip()
+    assert "-0.0d0" in wrap and "OTI_E1" in wrap
     (out / "ABA_PARAM.INC").write_text("      implicit real*8(a-h,o-z)\n")
     subprocess.run(["bash", "compile_hint.sh"], cwd=out, check=True, capture_output=True, text=True)
     (out / "zero.f90").write_text(
