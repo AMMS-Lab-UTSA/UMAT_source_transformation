@@ -447,6 +447,61 @@ class Record:
     #: Which control ran, and the number it measured. A verdict that rests on
     #: a control is only as good as the control being visible.
     primal_control: str = ""
+    #: WHERE THE MATERIAL DATA AND THE EXPERIMENT CAME FROM (D-19, D-21,
+    #: D-19a rev 2). ``material_data_origin`` is one of
+    #: :data:`MATERIAL_DATA_ORIGINS` (``author_deck``,
+    #: ``author_published_outside_deck``, ``council_chosen``) and
+    #: ``experiment_origin`` one of :data:`EXPERIMENT_ORIGINS` (``author``,
+    #: ``council``); empty where no material data exists for the source at
+    #: all. ``material_data_ref`` names the harvest or D-21 row the constants
+    #: came from, ``council_deck_ref`` the council plan, ``council_fingerprint``
+    #: that plan's fingerprint (make_council_deck: tool + harness + row).
+    material_data_origin: str = ""
+    experiment_origin: str = ""
+    material_data_ref: str = ""
+    council_deck_ref: str = ""
+    council_fingerprint: str = ""
+    #: The pairing's refusal (D-19a R0): no_deck_in_repository,
+    #: no_deck_names_this_source, author_block_rejected or
+    #: author_deck_unresolved; empty when a deck paired.
+    refusal_kind: str = ""
+    #: The WORST confidence over the row's constants (:data:`CONFIDENCE_ORDER`),
+    #: and how many of them are ``interpreted`` (counted, but flagged: D-19a R5).
+    harvest_confidence: str = ""
+    interpreted_constants: Optional[int] = None
+    #: The council's parameter sets, ``;``-joined (D-21: >= 2, and the source
+    #: counts only if every one passes).
+    council_sets: str = ""
+    #: Vera's acceptance of the template and of this instance (R6.5). Both
+    #: must be True before a council row counts.
+    vera_accepted_template: Optional[bool] = None
+    vera_accepted_instance: Optional[bool] = None
+    #: The layout branch exercised (D-21c), as JSON, and the documented-domain
+    #: entries stated only in words and so not enforced (Vera G review C2). A
+    #: row with any of the latter does not count.
+    branch_coverage: str = ""
+    domain_not_enforced: str = ""
+    #: The council plan was refused because an author deck now pairs this
+    #: source (R6.2): the row is re-routed, never counted as a council row.
+    pairing_changed: Optional[bool] = None
+    #: Any other refusal of the council plan, ``code: text``.
+    council_refusal: str = ""
+    #: D-21a licence hold (default excluded until Santiago decides).
+    licence_hold: str = ""
+    #: The D-2 redistribution decision (permitted / not_permitted / unknown).
+    #: Recorded for every row that has an origin; a council row counts only
+    #: once it is recorded ("D-2 handled"), and a row that is not
+    #: ``permitted`` is counted locally and never pushed as a case.
+    redistribution: str = ""
+    #: Which tier's denominator this source belongs to (:data:`TIERS`), and
+    #: the evidence. ``adequately_specified`` above stays the DECK-ONLY D2, so
+    #: the deck-only figures stay reportable on their own (D-19).
+    adequacy_tier: str = ""
+    adequacy_tier_basis: str = ""
+    #: Whether a council-experiment row passes every R6 condition, and if not,
+    #: every condition it fails. None for author-experiment rows.
+    counted_in_tier: Optional[bool] = None
+    not_counted_in_tier_reason: str = ""
 
     def as_dict(self) -> dict:
         return dict(self.__dict__)
@@ -1333,6 +1388,15 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
         record.nstatv = row.get("nstatv")
         formulation = row.get("formulation") or {}
         record.formulation = str(formulation.get("family") or "")
+        # D-19a R1: constants the author published outside the deck, run on
+        # the author's experiment. The row says so; nothing is inferred here.
+        if row.get("material_data_origin"):
+            record.material_data_origin = str(row["material_data_origin"])
+            record.experiment_origin = experiment_origin_of(
+                row.get("experiment_origin") or "author")
+        pairing = row.get("pairing") if isinstance(row.get("pairing"), dict) else {}
+        record.refusal_kind = str(row.get("refusal_kind")
+                                  or pairing.get("refusal_kind") or "")
         discovery = row.get("discovery") or {}
         record.activation_amplitude = discovery.get("chosen_amplitude")
         record.activated = (discovery.get("outcome") == "activated"
@@ -1470,6 +1534,13 @@ def _adequacy(record: Record) -> tuple:
     counts against us -- that is the whole point of separating the two
     denominators rather than quoting one number. The assertion is
     ``tests/test_the_two_denominators_stay_apart.py``.
+
+    D-19/D-21: this is the DECK-ONLY D2, and it stays so, because D-19 keeps
+    the deck-only figures reportable on their own. Constants the author
+    published outside a deck (D-19) or the council chose (D-21) do not move a
+    source into it; they put the source into its own tier's denominator
+    (``adequacy_tier``, set by :func:`apply_origins`), and every verified
+    count is split by tier (:func:`tier_summary`).
     """
     if not record.sha256:
         return (None, "the acquisition inventory names this source but the "
@@ -1596,6 +1667,438 @@ def _refused_sources(transform_report: Optional[Path]) -> list:
     refused += [str(row.get("source") or "") for row in payload.get("rows") or []
                 if str(row.get("outcome") or "") not in ("transformed", "cached")]
     return sorted({name for name in refused if name})
+
+
+# ---------------------------------------------------------------------------
+# Origins, tiers and council counting (D-19, D-21, D-19a rev 2 R0/R6)
+# ---------------------------------------------------------------------------
+
+AUTHOR_DECK = "author_deck"
+AUTHOR_PUBLISHED_OUTSIDE_DECK = "author_published_outside_deck"
+COUNCIL_CHOSEN = "council_chosen"
+MATERIAL_DATA_ORIGINS = (AUTHOR_DECK, AUTHOR_PUBLISHED_OUTSIDE_DECK, COUNCIL_CHOSEN)
+EXPERIMENT_ORIGINS = ("author", "council")
+
+#: The four tiers every verified count is split by (D-19, D-21 condition 6).
+TIER_AUTHOR_DECK = "author_deck"
+TIER_PUBLISHED_AUTHOR = "author_published_outside_deck+author_experiment"
+TIER_PUBLISHED_COUNCIL = "author_published_outside_deck+council_experiment"
+TIER_COUNCIL_CHOSEN = "council_chosen"
+TIERS = (TIER_AUTHOR_DECK, TIER_PUBLISHED_AUTHOR, TIER_PUBLISHED_COUNCIL,
+         TIER_COUNCIL_CHOSEN)
+
+#: ``deck_pairing.Pairing.refusal_kind`` (R0), and the two that route to a
+#: council experiment.
+NO_DECK_IN_REPOSITORY = "no_deck_in_repository"
+NO_DECK_NAMES_THIS_SOURCE = "no_deck_names_this_source"
+AUTHOR_BLOCK_REJECTED = "author_block_rejected"
+AUTHOR_DECK_UNRESOLVED = "author_deck_unresolved"
+REFUSAL_KINDS = (NO_DECK_IN_REPOSITORY, NO_DECK_NAMES_THIS_SOURCE,
+                 AUTHOR_BLOCK_REJECTED, AUTHOR_DECK_UNRESOLVED)
+COUNCIL_ROUTES = (NO_DECK_IN_REPOSITORY, NO_DECK_NAMES_THIS_SOURCE)
+
+#: Constant confidences, best first. The harvest's own three (exact,
+#: interpreted, uncertain: D-19a R5) and the D-21 labels (R-3) on one scale;
+#: a label nobody listed ranks worst, so an unknown word can never improve a
+#: row.
+CONFIDENCE_ORDER = ("exact", "author-kept", "interpreted", "author-other-context",
+                    "looked-up", "class-typical", "chosen", "uncertain")
+
+#: The two routine-level features a source needs (D-8), and the Abaqus
+#: stages whose primal gate passed (count_target.py).
+ROUTINE_FEATURES = ("primal_stress_state", "ddsdde")
+PRIMAL_GATE_PASSED = ("fully_verified", "tangent_not_verified",
+                      "derivative_truncated")
+
+Q4_STATEMENT = (
+    "Q4: the instrument is independent; the inputs are not. Both the council "
+    "count and its comparison with the author-deck count share the council's "
+    "choices (constants, experiment). Only the blind hold-out (R6.3) and "
+    "Vera's review (R6.5) validate those choices.")
+
+
+def experiment_origin_of(value) -> str:
+    """``author`` or ``council`` from what a plan or a row wrote."""
+    text = str(value or "")
+    if text in ("council", "council_deck"):
+        return "council"
+    if text in ("author", "author_deck", "author_deck_with_council_parameters"):
+        return "author"
+    if not text:
+        return ""
+    raise ValueError(f"unknown experiment origin {text!r}")
+
+
+def tier_of(material_data_origin: str, experiment_origin: str) -> str:
+    return {(AUTHOR_DECK, "author"): TIER_AUTHOR_DECK,
+            (AUTHOR_PUBLISHED_OUTSIDE_DECK, "author"): TIER_PUBLISHED_AUTHOR,
+            (AUTHOR_PUBLISHED_OUTSIDE_DECK, "council"): TIER_PUBLISHED_COUNCIL,
+            (COUNCIL_CHOSEN, "council"): TIER_COUNCIL_CHOSEN,
+            # D-21b (b): the author's LHS design points, run on the author's
+            # own deck, are still council-chosen constants
+            (COUNCIL_CHOSEN, "author"): TIER_COUNCIL_CHOSEN,
+            }.get((material_data_origin, experiment_origin), "")
+
+
+def worst_confidence(constants) -> tuple:
+    """``(worst label, number of interpreted constants)`` over a row's
+    constants. A constant carrying a never-count reason is ``uncertain``."""
+    rank = {label: i for i, label in enumerate(CONFIDENCE_ORDER)}
+    worst, interpreted = "", 0
+    for constant in constants or ():
+        label = str(constant.get("confidence") or "uncertain")
+        if constant.get("never_count_reason"):
+            label = "uncertain"
+        interpreted += label == "interpreted"
+        if not worst or rank.get(label, len(rank)) > rank.get(worst, len(rank)):
+            worst = label
+    return worst, interpreted
+
+
+def _read_rows(path: Optional[Path]) -> list:
+    """JSON lines, or a JSON document holding ``rows``."""
+    if not path or not Path(path).is_file():
+        return []
+    text = Path(path).read_text(encoding="utf-8")
+    try:
+        document = json.loads(text)
+    except ValueError:
+        return [json.loads(line) for line in text.splitlines() if line.strip()]
+    if isinstance(document, list):
+        return document
+    return list(document["rows"]) if "rows" in document else [document]
+
+
+def origin_inputs(harvest: Optional[Path] = None, council: Optional[Path] = None,
+                  plans: Optional[Path] = None,
+                  acceptance: Optional[Path] = None) -> dict:
+    """Everything :func:`apply_origins` reads, keyed for lookup.
+
+    ``harvest`` is the D-19 harvest (d19_harvest.jsonl), ``council`` the
+    D-21 council constants, ``plans`` the make_council_deck output
+    directory (``<key>/council_plan.json``), ``acceptance`` Vera's
+    acceptances (rows of key or source_id with vera_accepted_template /
+    vera_accepted_instance), which override what a row says of itself."""
+    out = {"harvest": {}, "council": {}, "plans": {}, "plans_by_source": {},
+           "acceptance": {}, "refs": {}}
+    for name, path in (("harvest", harvest), ("council", council)):
+        out["refs"][name] = _relative_to_repo(path) if path else ""
+        for row in _read_rows(path):
+            out[name][str(row.get("source_id"))] = row
+    out["refs"]["plans"] = _relative_to_repo(plans) if plans else ""
+    if plans and Path(plans).is_dir():
+        for plan_path in sorted(Path(plans).glob("*/council_plan.json")):
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            key = str(plan.get("row_key") or plan_path.parent.name)
+            plan["_ref"] = f"{out['refs']['plans']}/{plan_path.parent.name}/council_plan.json"
+            out["plans"][key] = plan
+            source = str(plan.get("source") or "")
+            source = source.split("$DISCOVERY_CACHE/", 1)[-1]
+            if source:
+                out["plans_by_source"][source] = plan
+    out["refs"]["acceptance"] = _relative_to_repo(acceptance) if acceptance else ""
+    for row in _read_rows(acceptance):
+        for name in (row.get("key"), row.get("source_id")):
+            if name:
+                out["acceptance"][str(name)] = row
+    return out
+
+
+def _redistribution(record: Record, cache: Optional[Path]) -> str:
+    try:
+        from umat_oti.corpus_features.manifest import (_licence_file,
+                                                       redistribution_policy)
+    except Exception:                              # noqa: BLE001 - advisory
+        return ""
+    licence = (_licence_file(Path(cache), record.source_id.split("/", 1)[0])
+               if cache and Path(cache).is_dir() else None)
+    return str(redistribution_policy(record.license_spdx, licence)
+               .get("redistribution") or "")
+
+
+def apply_origins(records: list, inputs: dict, *, cache: Optional[Path] = None) -> list:
+    """Both origins, the refs, the R6 facts and the tier of every record.
+
+    The deck-only D2 (``adequately_specified``) is NOT changed: it stays the
+    denominator of the deck-only figures (D-19: "so the deck-only figures stay
+    reportable"). A source outside it only for want of constants
+    (``missing_material_data``) joins a tier's denominator when D-19 or D-21
+    supplies them:
+
+    * an ELIGIBLE harvest row whose constants the author published outside a
+      deck -> ``author_published_outside_deck``, with the experiment of the
+      route: the author's for ``author_deck_unresolved`` (R1), the council's
+      for the two council routes (R2). ``author_block_rejected`` stays
+      refused even with an eligible row (D-19a R0: czmHealing);
+    * else a D-21 row that counts in its tier and is not a duplicate ->
+      ``council_chosen``; a licence hold keeps it out (D-21a).
+    """
+    harvest, council = inputs.get("harvest") or {}, inputs.get("council") or {}
+    plans, by_source = inputs.get("plans") or {}, inputs.get("plans_by_source") or {}
+    acceptance, refs = inputs.get("acceptance") or {}, inputs.get("refs") or {}
+    for record in records:
+        sid = record.source_id
+        h, c = harvest.get(sid), council.get(sid)
+        key = record.key or str((h or {}).get("key") or (c or {}).get("harvest_key") or "")
+        plan = plans.get(key) or by_source.get(sid)
+        if plan:
+            code = str(plan.get("refusal_code") or "")
+            record.pairing_changed = code == "pairing_changed"
+            if code and code != "pairing_changed":
+                record.council_refusal = f"{code}: {plan.get('refusal') or ''}"[:400]
+            record.refusal_kind = record.refusal_kind or str(plan.get("route") or "")
+
+        why_not = ""
+        if not record.material_data_origin:
+            if record.adequately_specified:
+                record.material_data_origin, record.experiment_origin = AUTHOR_DECK, "author"
+            elif (record.terminal_state == "missing_material_data"
+                  and not record.duplicate_of and record.is_umat is not False):
+                usable = bool(h and h.get("eligible") and not h.get("duplicate_of")
+                              and h.get("material_data_origin")
+                              == AUTHOR_PUBLISHED_OUTSIDE_DECK)
+                if h and h.get("eligible") and record.refusal_kind == AUTHOR_BLOCK_REJECTED:
+                    usable = False
+                    why_not = (f"the harvest row {h.get('key')} is eligible, but the "
+                               f"pairing refusal is {AUTHOR_BLOCK_REJECTED}: the "
+                               f"author's own block does not fit, so the source stays "
+                               f"refused (D-19a R0) and the row is routed out")
+                elif h and h.get("eligible") and not usable:
+                    why_not = (f"the harvest row {h.get('key')} records an author deck "
+                               f"the pairing missed (material_data_origin "
+                               f"{h.get('material_data_origin')}): a pairing fix, "
+                               f"not published-outside-deck data")
+                if usable:
+                    record.material_data_origin = AUTHOR_PUBLISHED_OUTSIDE_DECK
+                    record.experiment_origin = (
+                        "author" if record.refusal_kind == AUTHOR_DECK_UNRESOLVED
+                        else "council" if record.refusal_kind in COUNCIL_ROUTES else "")
+                    record.material_data_ref = f"{refs.get('harvest', '')}#key={h.get('key')}"
+                    (record.harvest_confidence,
+                     record.interpreted_constants) = worst_confidence(h.get("constants"))
+                elif c and c.get("counts_in_tier") and not c.get("duplicate_of"):
+                    record.material_data_origin = COUNCIL_CHOSEN
+                    record.experiment_origin = experiment_origin_of(
+                        c.get("experiment_origin") or "council")
+                    record.material_data_ref = (f"{refs.get('council', '')}"
+                                                f"#key={c.get('harvest_key')}")
+                    record.council_sets = ";".join(str(s.get("set_id"))
+                                                   for s in c.get("sets") or ())
+                    (record.harvest_confidence, record.interpreted_constants) = \
+                        worst_confidence([k for s in c.get("sets") or ()
+                                          for k in s.get("constants") or ()])
+                    record.licence_hold = str(c.get("licence_hold") or "")
+                    record.vera_accepted_template = c.get("vera_accepted_template")
+                    record.vera_accepted_instance = c.get("vera_accepted_instance")
+
+        if record.experiment_origin == "council" and plan:
+            record.council_deck_ref = str(plan.get("_ref") or "")
+            record.council_fingerprint = str(plan.get("council_fingerprint") or "")
+            if plan.get("branch_coverage"):
+                record.branch_coverage = json.dumps(plan["branch_coverage"],
+                                                    sort_keys=True)
+            record.domain_not_enforced = "; ".join(
+                str(x) for x in plan.get("domain_not_enforced") or ())
+            planned = [str(s.get("set_id")) for s in plan.get("sets") or ()]
+            if planned:
+                record.council_sets = ";".join(planned)
+        accepted = acceptance.get(key) or acceptance.get(sid)
+        if accepted is not None and is_council_row(record):
+            record.vera_accepted_template = accepted.get("vera_accepted_template")
+            record.vera_accepted_instance = accepted.get("vera_accepted_instance")
+        if record.material_data_origin:
+            record.redistribution = _redistribution(record, cache)
+
+        tier = tier_of(record.material_data_origin, record.experiment_origin)
+        if record.adequately_specified:
+            record.adequacy_tier = tier
+            record.adequacy_tier_basis = (
+                f"in the deck-only D2; material data {record.material_data_origin}, "
+                f"experiment {record.experiment_origin}")
+        elif record.licence_hold:
+            record.adequacy_tier_basis = f"licence hold (D-21a): {record.licence_hold}"[:400]
+        elif tier:
+            record.adequacy_tier = tier
+            record.adequacy_tier_basis = (
+                f"{record.terminal_state} for its deck; constants "
+                f"{record.material_data_origin} ({record.material_data_ref}, worst "
+                f"confidence {record.harvest_confidence}); experiment "
+                f"{record.experiment_origin} (pairing refusal "
+                f"{record.refusal_kind or 'unrecorded'}) -- D-19/D-21")[:600]
+        elif record.material_data_origin:
+            record.adequacy_tier_basis = (
+                f"constants {record.material_data_origin}, but the pairing refusal "
+                f"{record.refusal_kind or 'is unrecorded'} names no experiment route")
+        elif why_not:
+            record.adequacy_tier_basis = why_not[:600]
+    return records
+
+
+def is_council_row(record: Record) -> bool:
+    """A row whose constants or experiment the council chose (R6 applies)."""
+    return (record.experiment_origin == "council"
+            or record.material_data_origin == COUNCIL_CHOSEN)
+
+
+def council_counted(record: Record, set_cells, *,
+                    author_rerun_harness: str = "") -> tuple:
+    """``(counts, [(code, text) for every R6 condition it fails])`` for a
+    council row (:func:`is_council_row`); ``(None, [])`` for any other.
+
+    Counts only if: both Vera acceptances (R6.5); the pairing has not changed
+    (R6.2); for a council experiment, a council plan that was not refused and
+    leaves no documented-domain entry unenforced (Vera G review C2); no
+    licence hold (D-21a); a D-2 redistribution decision is recorded; the
+    author-deck rows were re-run at the harness the council cells came from
+    (R6.6, ``author_rerun_harness``); >= 2 sets for council-chosen constants
+    (D-21.3); and EVERY planned set's primal_stress_state and ddsdde cells
+    are verified with STRESS and DDSDDE defined throughout, combined by
+    ``cells.combine_council_sets`` (D-21.3, Vera G review C6). A cell with
+    no council set is refused for a council row: it cannot say which
+    experiment it judged.
+    """
+    if not is_council_row(record):
+        return None, []
+    from umat_oti.corpus_features.cells import combine_council_sets
+
+    why = []
+    if not author_rerun_harness:
+        why.append(("R6.6", "the author-deck rows have not been re-run at the "
+                            "council harness fingerprint"))
+    if record.vera_accepted_template is not True:
+        why.append(("R6.5_template", "Vera has not accepted the template"))
+    if record.vera_accepted_instance is not True:
+        why.append(("R6.5_instance", "Vera has not accepted this instance"))
+    if record.pairing_changed:
+        why.append(("R6.2_pairing_changed", "an author deck now pairs this "
+                    "source; re-routed, not attempted as a council row"))
+    if record.experiment_origin == "council":
+        if record.council_refusal:
+            why.append(("council_plan_refused", record.council_refusal[:300]))
+        if not record.council_deck_ref:
+            why.append(("no_council_plan", "no council plan for this source"))
+        if record.domain_not_enforced:
+            why.append(("domain_not_enforced", record.domain_not_enforced[:300]))
+    if record.licence_hold:
+        why.append(("licence_hold", "D-21a licence hold"))
+    if not record.redistribution:
+        why.append(("D-2", "no redistribution decision recorded"))
+    planned = [s for s in record.council_sets.split(";") if s]
+    if record.material_data_origin == COUNCIL_CHOSEN and len(planned) < 2:
+        why.append(("D-21.3_sets", "fewer than two parameter sets"))
+    cells = [c for c in set_cells or ()
+             if c.get("source_id") == record.source_id
+             and c.get("feature") in ROUTINE_FEATURES]
+    if any(not c.get("council_set") for c in cells):
+        why.append(("C6_bare_cell", "a cell without a council set cannot say "
+                    "which experiment it judged"))
+    cells = [dict(c, council_sets=planned or c.get("council_sets"))
+             for c in cells if c.get("council_set")]
+    combined = {c["feature"]: c for c in combine_council_sets(cells)}
+    for feature in ROUTINE_FEATURES:
+        cell = combined.get(feature)
+        if cell is None:
+            why.append((feature, "no cell for any set"))
+        elif cell.get("status") != "verified":
+            why.append((feature, f"{cell.get('status')}: {cell.get('reason', '')}"[:300]))
+    undefined = sorted({c.get("council_set") for c in cells
+                        if c.get("stress_and_ddsdde_fully_defined") is False})
+    if undefined:
+        why.append(("undefined_outputs",
+                    f"STRESS/DDSDDE not fully defined in set(s) {undefined}"))
+    return not why, why
+
+
+def _cells_by_source(cells) -> dict:
+    """Author-experiment routine cells: ``{source_id: {feature: cell}}``."""
+    out: dict = defaultdict(dict)
+    for cell in cells or ():
+        if not cell.get("council_set"):
+            out[cell["source_id"]][cell["feature"]] = cell
+    return out
+
+
+def routine_verified(record: Record, by_source: dict) -> bool:
+    """D-8 routine-level count of an author-experiment row (count_target.py):
+    the Abaqus primal gate passed, and primal_stress_state and ddsdde are
+    verified with STRESS and DDSDDE defined throughout."""
+    cells = by_source.get(record.source_id) or {}
+    primal, ddsdde = (cells.get(f) or {} for f in ROUTINE_FEATURES)
+    return (record.terminal_state in PRIMAL_GATE_PASSED
+            and primal.get("status") == "verified"
+            and ddsdde.get("status") == "verified"
+            and ddsdde.get("stress_and_ddsdde_fully_defined") is not False)
+
+
+def tier_summary(records: list, cells=None, *, council_cells=None,
+                 author_rerun_harness: str = "") -> dict:
+    """Every verified count split by tier, each with its ``interpreted``
+    subset (rows with at least one interpreted constant: counted, flagged).
+
+    ``verified_abaqus`` is the six-gate registry verdict; ``verified_routine``
+    the D-8 routine-level count, given the primal+ddsdde harness cells
+    (``None`` without them). A council-experiment row counts only under R6
+    (:func:`council_counted`); its Abaqus count is not established, because
+    the registry holds one Abaqus row per source and a council source needs
+    every set."""
+    by_source = _cells_by_source(cells)
+    council_cells = list(council_cells or ())
+    for record in records:
+        counted, why = council_counted(record, council_cells,
+                                       author_rerun_harness=author_rerun_harness)
+        record.counted_in_tier = counted
+        record.not_counted_in_tier_reason = " | ".join(
+            f"{code}: {text}" for code, text in why)[:1200]
+    tiers: dict = {}
+    for tier in TIERS:
+        members = [r for r in records if r.adequacy_tier == tier]
+        council_tier = tier in (TIER_PUBLISHED_COUNCIL, TIER_COUNCIL_CHOSEN)
+        if council_tier:
+            # every member is a council row: counted only under R6
+            abaqus = None
+            routine = [r for r in members if r.counted_in_tier]
+        else:
+            abaqus = [r for r in members if r.terminal_state == FULLY_VERIFIED]
+            routine = ([r for r in members if routine_verified(r, by_source)]
+                       if cells is not None else None)
+
+        def _n(rows):
+            return None if rows is None else len(rows)
+
+        def _interp(rows):
+            return None if rows is None else len(
+                [r for r in rows if r.interpreted_constants])
+        tiers[tier] = {
+            "eligible": len(members),
+            "eligible_interpreted": _interp(members),
+            "verified_abaqus": _n(abaqus),
+            "verified_abaqus_interpreted": _interp(abaqus),
+            "verified_routine": (None if routine is None and not council_tier
+                                 else _n(routine)),
+            "verified_routine_interpreted": _interp(routine),
+        }
+        if council_tier:
+            tiers[tier]["not_counted_by_condition"] = dict(sorted(Counter(
+                reason.split(":", 1)[0] for r in members
+                for reason in r.not_counted_in_tier_reason.split(" | ")
+                if reason).items()))
+    return {
+        "means": ("every verified count split by where the material data and the "
+                  "experiment came from (D-19, D-21 condition 6); author_deck is "
+                  "the deck-only D2 and its figures are the deck-only figures"),
+        "tiers": tiers,
+        "verified_abaqus_council_tiers": (
+            "not established: the registry holds one Abaqus row per source, and "
+            "a council source counts only when every parameter set passes"),
+        "routine_cells_given": cells is not None,
+        "council_counting": ("R6: both Vera acceptances, no pairing change, no "
+                             "council-plan refusal, no unenforced domain entry, no "
+                             "licence hold, a D-2 decision recorded, the author-deck "
+                             "re-run at the council harness (R6.6), and every set "
+                             "verified (cells.combine_council_sets)"),
+        "author_deck_rerun_harness": author_rerun_harness,
+        "q4": Q4_STATEMENT,
+    }
 
 
 def summarise(records: list) -> dict:
@@ -1805,7 +2308,12 @@ def refresh_retained(payload: dict) -> tuple:
             "internal": list(ALL_INTERNAL),
         },
         "summary": summary,
-        "records": [record.as_dict() for record in records],
+        # Only ``kind`` is refreshed. A retained record keeps exactly the
+        # fields it was written with: a field added to Record since (the
+        # D-19/D-21 origins) was never observed for it, and writing its
+        # default would read as an observation.
+        "records": [{**row, "kind": record.kind}
+                    for row, record in zip(payload["records"], records)],
     }
     return records, refreshed
 
@@ -2315,6 +2823,27 @@ def markdown(records: list, summary: dict) -> str:
         lines.append(f"| `{record.source_id}` | `{record.terminal_state}` | "
                      f"{kind} | {member} | {reason} |")
 
+    by_tier = summary.get("by_tier") or {}
+    if by_tier.get("tiers"):
+        lines += ["", "## Verified counts by tier (D-19, D-21)", "",
+                  by_tier["means"] + ". Each count is followed by its "
+                  "`interpreted` subset: sources with at least one constant "
+                  "read through a conversion or the author's own formula "
+                  "(counted, flagged).", "",
+                  "| tier | eligible | Abaqus six-gate | routine level (D-8) |",
+                  "| --- | ---: | ---: | ---: |"]
+
+        def _cell(n, i):
+            return "n/e" if n is None else f"{n} ({i} interpreted)"
+        for tier, row in by_tier["tiers"].items():
+            lines.append(
+                f"| `{tier}` | {_cell(row['eligible'], row['eligible_interpreted'])} | "
+                f"{_cell(row['verified_abaqus'], row['verified_abaqus_interpreted'])} | "
+                f"{_cell(row['verified_routine'], row['verified_routine_interpreted'])} |")
+        lines += ["", "n/e: not established. Council tiers: "
+                  + by_tier["verified_abaqus_council_tiers"] + ". "
+                  + by_tier["council_counting"] + ".", "", by_tier["q4"]]
+
     lines += ["", "## Every source that reached the `verified` rung", "",
               "`all six gates` says whether every evidence gate read true. "
               "Where it does not, the gate that did not is named: the entry "
@@ -2440,6 +2969,31 @@ def main(argv: Optional[list] = None) -> int:
                              "compile line, so a transform refusal on a file "
                              "that does not build is recorded as the file's "
                              "problem rather than as ours")
+    origins = parser.add_argument_group(
+        "origins and tiers (D-19, D-21, D-19a rev 2)",
+        "Without these the registry is the deck-only registry it always was; "
+        "with them every record carries both origins and its tier, and the "
+        "summary splits every verified count by tier.")
+    origins.add_argument("--harvest", type=Path, default=None,
+                         help="the D-19 harvest (d19_harvest.jsonl)")
+    origins.add_argument("--council-constants", type=Path, default=None,
+                         help="the D-21 council constants (d21_council_constants.jsonl)")
+    origins.add_argument("--council-plans", type=Path, default=None,
+                         help="make_council_deck output: <key>/council_plan.json")
+    origins.add_argument("--acceptance", type=Path, default=None,
+                         help="Vera's acceptances (JSON or JSON lines; key or "
+                              "source_id, vera_accepted_template, "
+                              "vera_accepted_instance)")
+    origins.add_argument("--routine-cells", type=Path, default=None,
+                         help="the primal+ddsdde harness manifest_cells.jsonl "
+                              "(D-18) for the routine-level count of author "
+                              "experiments")
+    origins.add_argument("--council-cells", type=Path, action="append", default=[],
+                         help="per-set manifest cells of council experiments; "
+                              "repeatable")
+    origins.add_argument("--author-deck-rerun", default="",
+                         help="the harness fingerprint the author-deck rows were "
+                              "re-run at (R6.6/R7). Empty: no council row counts")
     args = parser.parse_args(argv)
 
     if args.refresh_retained:
@@ -2487,7 +3041,19 @@ def main(argv: Optional[list] = None) -> int:
                     inventory_ids=inventory_ids, provenance=provenance,
                     audit=audit, store_fingerprint=fingerprint,
                     harness_fingerprint=args.harness_fingerprint)
+    inputs = origin_inputs(args.harvest, args.council_constants,
+                           args.council_plans, args.acceptance)
+    apply_origins(records, inputs, cache=args.cache_dir)
+    routine_cells = (_read_rows(args.routine_cells) if args.routine_cells else None)
+    council_cells = [cell for path in args.council_cells for cell in _read_rows(path)]
     summary = summarise(records)
+    summary["by_tier"] = tier_summary(
+        records, routine_cells, council_cells=council_cells,
+        author_rerun_harness=args.author_deck_rerun)
+    summary["by_tier"]["inputs"] = {
+        **inputs["refs"],
+        "routine_cells": _relative_to_repo(args.routine_cells) if args.routine_cells else "",
+        "council_cells": [_relative_to_repo(p) for p in args.council_cells]}
     summary["verification_file_reconciliation"] = verification_reconciliation(
         args.abaqus, fingerprint)
     summary["inputs"] = {
@@ -2544,6 +3110,10 @@ def main(argv: Optional[list] = None) -> int:
             print(f"    {name:<34} {count:>4}")
     for state, count in summary["by_terminal_state"].items():
         print(f"    {state:<34} {count:>4}  ({kind_of(state)})")
+    for tier, row in summary["by_tier"]["tiers"].items():
+        print(f"    tier {tier:<50} eligible {row['eligible']:>4}  abaqus "
+              f"{row['verified_abaqus']}  routine {row['verified_routine']}  "
+              f"(interpreted: eligible {row['eligible_interpreted']})")
     print(f"  wrote {args.json_path}")
     print(f"  wrote {args.csv_path}")
     print(f"  wrote {args.markdown}")
