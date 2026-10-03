@@ -146,6 +146,10 @@ def blocking_statements(source_text: str) -> tuple[str, ...]:
     return tuple(found)
 
 
+#: ``standard: symbol lookup error: .../libstandardU.so: undefined symbol: X``
+_LOADER_ERROR = re.compile(r"symbol lookup error: \S*libstandardU\S*: undefined symbol: (\S+)")
+
+
 def classify_job(
     directory: Path,
     job: str,
@@ -207,6 +211,15 @@ def classify_job(
             f"began ({detail})")
 
     checks["sta_present"] = bool(sta)
+    loader = _LOADER_ERROR.search(console or "")
+    checks["user_library_loaded"] = loader is None
+    if loader:
+        # The library built and Abaqus/Standard could not load it: a link
+        # against a runtime symbol the solver's own Fortran runtime lacks
+        # (ahartloper UVCplanestress: for_realloc_lhs). Named, because ".sta
+        # was not written" points at the analysis and there was none.
+        reasons.append(f"Abaqus/Standard could not load the user-subroutine library: "
+                       f"undefined symbol {loader.group(1)}")
     if not sta:
         reasons.append(f"{job}.sta was not written, so the analysis left no record")
 

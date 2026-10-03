@@ -97,7 +97,9 @@ def test_the_environment_file_keeps_the_shipped_flags_and_leaves_P_last(tmp_path
     assert got[-1] == "%P"
     assert "-I%I" in got
     assert f"-I{shim.resolve()}" in got
-    assert got.index(f"-I{shim.resolve()}") == len(got) - 2
+    # the shim's -I, then -assume norealloc_lhs (the Abaqus 2021 runtime has
+    # no for_realloc_lhs), then %P
+    assert got[-4:-1] == [f"-I{shim.resolve()}", "-assume", "norealloc_lhs"]
 
 
 def test_a_callers_own_environment_file_is_added_to_and_not_replaced(tmp_path):
