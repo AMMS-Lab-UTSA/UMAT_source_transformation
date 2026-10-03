@@ -7,7 +7,13 @@ plan_council (on a deckless copy of the repository, so the source takes the
 council route) and the council deck, and through the same gates as the author
 deck. Pinned here:
 
-* a selection that is not Vera's, not blind, or under five sources is not run;
+* a selection that is not Vera's, not blind, or empty is not run; 1-4 sources
+  give a falsification-only report (a disagreement withdraws, agreement
+  accepts nothing);
+* the author side is the CURRENT pass's records, and a selected key that moved
+  with the transform fingerprint is followed through the source it names;
+* TEMP / COORDS reads follow the reviewed standard of a council row (accepted
+  overrides included); an unreviewed name-scan hit leaves the run incomplete;
 * a source that is not a verified author-deck source is not run;
 * the hold-out rows carry the author deck's constants and an origin the harvest
   schema rejects (a hold-out row can never be merged into the harvest), and
@@ -98,6 +104,8 @@ def env(tmp_path, monkeypatch):
                         ("COUNCIL_PLANS", tmp_path / "live_plans"),
                         ("STORE", tmp_path / "no_store"), ("FAMILIES", tmp_path / "no.json")):
         monkeypatch.setattr(H, name, value)
+    monkeypatch.setattr(ho, "CURRENT_RECORDS", pass_file)
+    monkeypatch.setattr(ho, "REVIEWED_SCANS", ())
     return tmp_path
 
 
@@ -108,9 +116,13 @@ def selection(path: Path, keys=KEYS[:5], **over) -> Path:
     return path
 
 
-def test_only_a_blind_selection_by_vera_of_five_or_more_sources_is_run(tmp_path):
-    assert ho.load_selection(selection(tmp_path / "s.json"), "strain-driven")["keys"] == KEYS[:5]
-    for over in ({"keys": KEYS[:4]}, {"selected_by": "atlas"}, {"blind": False},
+def test_only_a_blind_selection_by_vera_is_run_and_under_five_is_falsification_only(tmp_path):
+    full = ho.load_selection(selection(tmp_path / "s.json"), "strain-driven")
+    assert full["keys"] == KEYS[:5] and full["mode"] == ho.HOLDOUT
+    for n in (1, 4):
+        small = ho.load_selection(selection(tmp_path / "s.json", keys=KEYS[:n]), "strain-driven")
+        assert small["mode"] == ho.FALSIFICATION_ONLY
+    for over in ({"keys": []}, {"selected_by": "atlas"}, {"blind": False},
                  {"keys": KEYS[:4] + KEYS[:1]}, {"template": "growth"}):
         with pytest.raises(ho.SelectionError):
             ho.load_selection(selection(tmp_path / "s.json", **over), "strain-driven")
@@ -208,3 +220,109 @@ def test_the_routine_gate_runs_both_sides_of_a_toy_and_they_agree(env):
     assert source["author"]["verdict"] == "verified", source
     assert source["council"]["verdict"] == "verified", source
     assert report["status"] == "held_for_vera_review"
+
+
+# ---------------------------------------------------------------------------
+# Vera's review before the first hold-out run (2026-10-03)
+# ---------------------------------------------------------------------------
+def test_the_author_side_is_the_current_pass_not_pass16(env, monkeypatch):
+    from umat_oti.corpus_features import harness as H
+    stale = env / "pass16.jsonl"
+    stale.write_text(json.dumps({"key": KEYS[0], "manifest": {"props": [1.0, 2.0]}}) + "\n")
+    monkeypatch.setattr(H, "PASS16", stale)
+    _record, manifest = ho.author_side(KEYS[0])
+    assert manifest["props"] == [1000.0, 0.2]          # CURRENT_RECORDS, not H.PASS16
+    _record, manifest = ho.author_side(KEYS[0], verification_records=stale)
+    assert manifest["props"] == [1.0, 2.0]             # an explicit pass wins
+    with pytest.raises(ho.SelectionError, match="no verification records"):
+        ho.author_side(KEYS[0], verification_records=env / "missing.jsonl")
+    assert ho.CURRENT_RECORDS.name == "store_verification.jsonl"
+    monkeypatch.undo()
+    assert "pass21" in str(ho.CURRENT_RECORDS)
+
+
+def test_a_selected_key_that_moved_is_followed_through_its_source(env):
+    old = "f" * 24
+    chosen = [{"key": old, "source_id": "o1__r/src/umat.f"}, {"key": KEYS[2],
+                                                              "source_id": "o2__r/src/umat.f"}]
+    picked = ho.load_selection(selection(env / "s.json", keys=[old, KEYS[2]], chosen=chosen),
+                               "strain-driven")
+    assert ho.current_keys(picked) == [(old, KEYS[1], "o1__r/src/umat.f"),
+                                       (KEYS[2], KEYS[2], "o2__r/src/umat.f")]
+    lost = ho.load_selection(selection(env / "s.json", keys=["e" * 24]), "strain-driven")
+    with pytest.raises(ho.SelectionError, match="not in the current registry"):
+        ho.current_keys(lost)
+
+
+READS = SOURCE.replace("      STATEV(1) = 0.D0\n",
+                       "      STATEV(1) = 0.D0\n      WRITE(6,*) NOEL, TEMP\n")
+
+
+def _reads_source(env):
+    for n in range(5):
+        (env / "cache" / f"o{n}__r/src/umat.f").write_text(READS)
+
+
+def test_an_unreviewed_name_scan_hit_leaves_the_run_incomplete(env):
+    _reads_source(env)
+    with pytest.raises(ho.SelectionError, match="needs a reviewed static scan for reads_temp, "
+                                                "reads_coords_or_noel"):
+        ho.prepare(KEYS[:5], env / "out")
+
+
+def test_the_reviewed_scan_decides_reads_as_for_a_council_row(env):
+    _reads_source(env)
+    review = env / "reviewed.jsonl"
+    rows = [{"source_id": f"o{n}__r/src/umat.f", "reads_temp": False,
+             "reads_coords_or_noel": False, "coords_note": "NOEL only in a WRITE"}
+            for n in range(5)]
+    review.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    prepared = ho.prepare(KEYS[:5], env / "out", reviewed_scans=[review])
+    assert prepared["regenerates"], prepared["printed"]
+    for row in map(json.loads, prepared["rows_file"].read_text().splitlines()):
+        assert row["reads_temp"] is False and row["reads_coords_or_noel"] is False
+        assert "reviewed static scan (reviewed.jsonl)" in row["notes"]
+        plan = json.loads((prepared["plans"] / row["key"] / "council_plan.json").read_text())
+        assert not plan["refusal"], plan["refusal"]
+    # a reviewed TEMP read is refused exactly as a council row's is
+    rows[0]["reads_temp"] = True
+    review.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    prepared = ho.prepare(KEYS[:5], env / "out2", reviewed_scans=[review])
+    plan = json.loads((prepared["plans"] / KEYS[0] / "council_plan.json").read_text())
+    assert plan["refusal_code"] == "needs_documented_temperature"
+
+
+def test_an_accepted_override_reaches_the_hold_out_plan(env):
+    _reads_source(env)
+    review = env / "reviewed.jsonl"
+    rows = [{"source_id": f"o{n}__r/src/umat.f", "reads_temp": True,
+             "reads_coords_or_noel": False,
+             "static_scan_overrides": [{"flag": "reads_temp", "proposed": False,
+                                        "status": "accepted by Vera (D-21a e)",
+                                        "static_evidence": "TEMP only in a WRITE"}]}
+            for n in range(5)]
+    review.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    prepared = ho.prepare(KEYS[:5], env / "out", reviewed_scans=[review])
+    plan = json.loads((prepared["plans"] / KEYS[0] / "council_plan.json").read_text())
+    assert not plan["refusal"], plan["refusal"]
+    assert plan["static_scan_overrides"][0]["flag"] == "reads_temp"
+
+
+def test_under_five_sources_a_disagreement_withdraws_and_agreement_accepts_nothing(env):
+    prepared = ho.prepare(KEYS[:3], env / "out")
+    quiet = ho.judge("strain-driven", KEYS[:3], prepared["plans"], _gate(),
+                     ho.FALSIFICATION_ONLY)
+    assert quiet["status"] == "not_withdrawn_falsification_only"
+    assert quiet["mode"] == ho.FALSIFICATION_ONLY and "does not accept" in quiet["rule"]
+    flipped = ho.judge("strain-driven", KEYS[:3], prepared["plans"], _gate(flip=KEYS[1]),
+                       ho.FALSIFICATION_ONLY)
+    assert flipped["status"] == "withdrawn" and flipped["disagreements"] == [KEYS[1]]
+    verdicts = env / "verdicts.jsonl"
+    lines = [{"key": k, "side": side, "set_id": "author" if side == "council" else "",
+              "verdict": "verified"} for k in KEYS[:3] for side in ("author", "council")]
+    verdicts.write_text("".join(json.dumps(l) + "\n" for l in lines))
+    rc = ho.main(["--template", "strain-driven", "--selection",
+                  str(selection(env / "vera3.json", keys=KEYS[:3])), "--out", str(env / "r"),
+                  "--gates", str(verdicts)])
+    report = json.loads((env / "r" / "holdout_report.json").read_text())
+    assert rc == 3 and report["status"] == "not_withdrawn_falsification_only"
