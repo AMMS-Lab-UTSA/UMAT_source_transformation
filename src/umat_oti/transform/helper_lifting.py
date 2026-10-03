@@ -3578,7 +3578,7 @@ def _continuation_stitch(lines: list[str], form: str) -> list[str]:
         if not clean.strip():
             continue
         if merged and len(raw) >= 6 and raw[5] not in {" ", "0"} and raw[0] not in {"C", "c", "*", "!"}:
-            merged[-1] = merged[-1].rstrip() + " " + clean[6:].strip()
+            merged[-1] = _joined_fixed_continuation(merged[-1], clean[6:])
             continue
         merged.append(clean)
     # Blanks are insignificant in fixed form, so ``double precision : : x``
@@ -3587,6 +3587,56 @@ def _continuation_stitch(lines: list[str], form: str) -> list[str]:
     # Outside character literals ``: :`` can only ever be ``::`` -- an array
     # section ``A(1: :2)`` is ``A(1::2)`` too -- so the collapse is exact.
     return [_colons_joined(line) for line in merged]
+
+
+#: Words after which a fixed-form continuation starts a new token. Joined
+#: without a blank, ``CALL`` + ``FOO(X)`` would come out ``CALLFOO(X)``, which
+#: free form -- the lifted helpers' form -- does not read as a CALL.
+_KEYWORDS_BEFORE_A_BREAK = frozenset({
+    "CALL", "GOTO", "GO", "TO", "DO", "IF", "THEN", "ELSE", "ELSEIF", "END",
+    "RETURN", "STOP", "PAUSE", "CONTINUE", "REAL", "DOUBLE", "PRECISION",
+    "INTEGER", "LOGICAL", "CHARACTER", "COMPLEX", "DIMENSION", "COMMON",
+    "DATA", "EXTERNAL", "INTRINSIC", "SAVE", "PARAMETER", "IMPLICIT", "NONE",
+    "READ", "WRITE", "PRINT", "FORMAT", "ENTRY", "INCLUDE", "TYPE", "USE",
+    "FUNCTION", "SUBROUTINE", "RESULT", "ALLOCATE", "DEALLOCATE", "WHERE",
+    "FORALL", "SELECT", "CASE", "INTENT", "OPTIONAL", "ALLOCATABLE", "CYCLE",
+    "EXIT", "WHILE", "AND", "OR", "NOT", "EQ", "NE", "LT", "LE", "GT", "GE",
+    "EQV", "NEQV", "TRUE", "FALSE", "PROCEDURE", "INTERFACE", "MODULE",
+})
+
+
+def _joined_fixed_continuation(left: str, right: str) -> str:
+    """One fixed-form statement from a line and its continuation, for free-form output.
+
+    Blanks are insignificant in fixed form, so a break can fall inside a
+    name or a number: Jeff97's shell sources end a line ``...G12*G23*G3`` and
+    continue ``1+G13*G21*G32...``, and the name is ``G31``. Joined with a
+    blank, the lifted (free-form) helper read ``G3 1+...``, and the Petal and
+    SeaShell provider builds failed on "G3 1.0D0" once the literal pass had
+    rewritten the 1 (Noether's B8 RA run). The emitter's own join
+    (source_transform._join_continuations) already omits the blank.
+
+    So: inside an open character literal the line is padded to column 72
+    and the continuation's columns 7-72 appended, as the compilers read it; a break between two name or number characters is closed up,
+    unless the word before it is a keyword (``CALL`` / ``FOO(X)``), where the
+    blank separates two tokens; everywhere else one blank is put, which no
+    free-form token boundary minds.
+    """
+    masked, _ = mask_character_literals(left)
+    if masked.count("'") % 2 or masked.count('"') % 2:
+        # Inside a character literal every column counts: the compilers pad
+        # a short line with blanks to column 72 and take the continuation
+        # from column 7, so the text is laid out on that grid.
+        width = 72 if len(left) <= 72 else 72 + 66 * -(-(len(left) - 72) // 66)
+        return left.ljust(width) + right[:66]
+    head, tail = left.rstrip(), right.strip()
+    if not head or not tail:
+        return (head + " " + tail).strip()
+    word = re.search(r"[A-Za-z0-9_]+$", head)
+    if (word and re.match(r"[A-Za-z0-9_]", tail)
+            and word.group(0).upper() not in _KEYWORDS_BEFORE_A_BREAK):
+        return head + tail
+    return head + " " + tail
 
 
 def _colons_joined(line: str) -> str:
