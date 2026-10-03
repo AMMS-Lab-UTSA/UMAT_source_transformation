@@ -106,6 +106,7 @@ def run_job(
     expected_increments: Optional[int] = None,
     timeout: int = 3600,
     double: str = "both",
+    include_dirs: Sequence[Path] = (),
 ) -> JobResult:
     """Write the deck, run it, and classify what happened.
 
@@ -126,12 +127,20 @@ def run_job(
         # which -fpp cannot resolve against the shipped lowercase filename.
         # The shim offers each header under both spellings; nothing is removed
         # from the search path and the author's source is untouched.
-        include_shim.install(work_dir)
+        shim = include_shim.install(work_dir)
         bundle = work_dir / f"{job}_user.f"
         text = Path(user_source).read_text(errors="replace")
         for extra in extra_sources:
             text += "\n" + Path(extra).read_text(errors="replace")
         bundle.write_text(text, encoding="utf-8")
+        if shim is not None and include_dirs:
+            # files the source INCLUDEs from beside itself, staged where the
+            # compiler looks (include_shim.stage_includes); recorded beside
+            # the job
+            staged = include_shim.stage_includes(text, include_dirs, shim)
+            if staged:
+                (work_dir / f"{job}_includes.json").write_text(
+                    json.dumps(staged, indent=1), encoding="utf-8")
         command.append(f"user={bundle.name}")
 
     # An absolute path, so the record lands where the caller looks for it

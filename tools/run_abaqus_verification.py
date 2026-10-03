@@ -158,7 +158,11 @@ def run_one(manifest: VerificationManifest, source: Path, job: str,
 
     result = run_job(work_dir, job, generate_deck(manifest), user_source=probed,
                      expected_increments=total_increments(manifest.loading),
-                     timeout=timeout)
+                     timeout=timeout,
+                     include_dirs=[Path(source).parent, *[Path(r) for r in data_roots]])
+    staged_includes = work_dir / f"{job}_includes.json"
+    if staged_includes.is_file():
+        report["includes"] = json.loads(staged_includes.read_text())
     records = converged_only(parse_probe(work_dir / f"{job}_probe.txt"))
     (work_dir / f"{job}_history.json").write_text(json.dumps(records), encoding="utf-8")
     report.update({
