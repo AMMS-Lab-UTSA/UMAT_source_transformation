@@ -1276,6 +1276,22 @@
   "skip:tests/test_a_council_experiment_reads_only_the_source_and_the_row.py:test_no_real_council_plan_cites_an_authors_deck:call:skip:a29654a2": {
    "verdict": "justified",
    "reason": "Needs the generated council plans beside the checkout (corpus_campaign/council_plans, written by tools/make_council_deck.py); the test runs wherever they exist."
+  },
+  "skip:tests/test_corpus_manifest_count_target.py:<module>:call:skip:e09a5718": {
+   "verdict": "justified",
+   "reason": "count_target.py lives in the campaign workspace beside the checkout (corpus_campaign/), not in this tree; the module runs wherever it exists."
+  },
+  "skip:tests/test_corpus_manifest_count_target.py:_families:call:skip:1fef32c2": {
+   "verdict": "justified",
+   "reason": "The family classifications count_target reads (corpus_run/material_families_checked_E.json, the B3 review) are campaign files outside this tree; the D-8 check runs wherever they exist."
+  },
+  "skip:tests/test_corpus_manifest_count_target.py:test_the_deck_only_column_is_the_d8_figure:call:skip:e860cd4f": {
+   "verdict": "justified",
+   "reason": "The routine-level 109 needs the pass20 harness cells (corpus_campaign/pass20_harness/run/manifest_cells.jsonl), which are outside this tree; the test runs wherever they exist."
+  },
+  "skip:tests/test_registry_fields_tiers.py:test_the_deck_only_figures_of_the_committed_pass20_registry_are_unchanged:call:skip:cee26f96": {
+   "verdict": "justified",
+   "reason": "238 and 67 are asserted from the committed registry before the skip; only the routine-level 109 needs the pass20 harness cells outside this tree, and that part runs wherever they exist."
   }
  }
 }

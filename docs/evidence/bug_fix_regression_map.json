@@ -586,6 +586,14 @@
   {
    "commit": "e65bced",
    "reason": "Feature (G9, D-19a rev 2 R6.1): tools/make_council_deck.py; 'exits 1' describes the --check outcome on a changed file, not a corrected behaviour. Tested by tests/test_a_council_deck_regenerates_byte_for_byte.py."
+  },
+  {
+   "commit": "f0ba475",
+   "reason": "Feature (S2, D-19a rev 2): registry origins, tiers and R6 council counting; 'refusal' appears only as the field name refusal_kind and the pairing refusal it records, it corrects no behaviour. Tested by tests/test_registry_fields_tiers.py."
+  },
+  {
+   "commit": "b55b7ee",
+   "reason": "Feature (S3, D-19a rev 2): manifest origin columns, enums and schema; 'refusal_kind(s)' is the enum's name and 'refuses' describes what the schema rejects, it corrects no behaviour. Tested by tests/test_corpus_manifest_origins.py and tests/test_corpus_manifest_count_target.py."
   }
  ],
  "changelog_fixed": {
