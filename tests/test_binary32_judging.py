@@ -27,17 +27,20 @@ def _column(values):
 
 
 KW = dict(magnitude=np.array([1e-6]), derivative_scale=2.0, euler=False)
+#: a double variant whose FD differs from the original's by 1e-5 (far above
+#: the double envelope atol_ref + rtol |D| ~ 2e-6): the entry is in scope
+APART = _column([2.0 + 1e-5])
 
 
 def test_b32_1_a_pass_under_the_binary32_noise_is_labelled_pass_b32():
     v = fd.judge_binary32(np.array([2.0 * (1 + 1e-9)]), _column([2.0]).estimates, USABLE, L,
-                          **KW)
+                          variant=APART, **KW)
     assert v.codes == [fd.PASS_B32] and v.passed == 1 and v.status == "verified"
 
 
 def test_b32_1_the_resolution_gate_stays():
     # a large output magnitude: the binary32 atol is above 1e-3 |D| -> unresolved
-    v = fd.judge_binary32(np.array([2.0]), _column([2.0]).estimates, USABLE, L,
+    v = fd.judge_binary32(np.array([2.0]), _column([2.0]).estimates, USABLE, L, variant=APART,
                           magnitude=np.array([1.0]), derivative_scale=2.0, euler=False)
     assert v.codes == [fd.UNRESOLVED_ROUNDOFF]
     assert fd.judge_column(np.array([2.0]), _column([2.0]).estimates, USABLE, L,
@@ -46,8 +49,9 @@ def test_b32_1_the_resolution_gate_stays():
 
 def test_b32_2_a_double_floor_failure_that_is_no_b32_pass_stays_fail():
     # the binary32 noise makes the entry unresolved; the double floor failed it
-    v = fd.judge_binary32(np.array([2.5]), _column([2.0]).estimates, USABLE, L,
+    v = fd.judge_binary32(np.array([2.5]), _column([2.0]).estimates, USABLE, L, variant=APART,
                           magnitude=np.array([1.0]), derivative_scale=2.0, euler=False)
+    assert v.b32_scope[0]["in_scope"]
     assert v.codes == [fd.FAIL] and v.failed == 1
     (_, value, ref, tol, _), = v.failed_entries
     assert abs(value - ref) / tol > 1.0
@@ -79,18 +83,63 @@ def test_b32_3_needs_the_references_to_differ_and_a_variant_at_all():
     assert none.codes == [fd.FAIL]                       # no variant: the failure stays
 
 
-def test_b32_0_scope_is_the_transform_map():
-    assert binary32_scope.scope(None, "x")["in_scope"] is None
-    assert binary32_scope.scope({"stores": []}, "x")["in_scope"] is False
+def test_scope_is_per_entry_static_and_dynamic():
+    wide_kw = dict(magnitude=np.array([1.0, 1.0]), derivative_scale=2.0, euler=False)
+    est = _column([2.0, 2.0]).estimates
+    oti = np.array([2.0, 2.0])
+    # entry 0: the variant differs; entry 1: identical -> out of scope dynamically
+    variant = _column([2.0 + 1e-5, 2.0])
+    v = fd.judge_binary32(oti, est, USABLE, L, variant=variant, **wide_kw)
+    assert [r["in_scope"] for r in v.b32_scope] == [True, False]
+    assert v.codes == [fd.UNRESOLVED_ROUNDOFF, fd.PASS]       # binary32 noise only where in scope
+    assert v.b32_scope[0]["max_fd_diff"] > v.b32_scope[0]["envelope"]
+    # no static path: the double model, whatever the variant says
+    v = fd.judge_binary32(oti, est, USABLE, L, variant=variant, static_path=False, **wide_kw)
+    assert v.codes == [fd.PASS, fd.PASS] and not any(r["in_scope"] for r in v.b32_scope)
+
+
+def test_no_double_variant_keeps_the_double_model_and_says_scope_unproven():
+    v = fd.judge_binary32(np.array([2.5]), _column([2.0]).estimates, USABLE, L, variant=None,
+                          magnitude=np.array([1.0]), derivative_scale=2.0, euler=False)
+    assert v.codes == [fd.FAIL]
+    assert v.b32_scope[0]["label"] == fd.B32_SCOPE_UNPROVEN and not v.b32_scope[0]["in_scope"]
+
+
+def test_the_scope_decided_on_the_double_pass_is_what_a_later_pass_uses():
+    est = _column([2.0]).estimates
+    v = fd.judge_binary32(np.array([2.0]), est, USABLE, L, variant=APART, scope=[None],
+                          magnitude=np.array([1.0]), derivative_scale=2.0, euler=False)
+    assert v.codes == [fd.PASS] and v.b32_scope[0]["label"] == fd.B32_SCOPE_UNPROVEN
+
+
+def test_the_static_condition_follows_data_flow_through_the_stores(tmp_path):
+    src = tmp_path / "u.f"
+    src.write_text("      SUBROUTINE UMAT(STRESS,STATEV,DSTRAN,PROPS)\n"
+                   "      REAL G\n"
+                   "      G = STATEV(1)*2.0\n"
+                   "      STRESS(1) = STRESS(1) + G*DSTRAN(1)\n"
+                   "      STATEV(2) = PROPS(1)\n"
+                   "      END\n")
+    table = binary32_scope.static_paths(src, ["G"])
+    assert table["stress|statev"]["static_path"] and table["stress|statev"]["stores"] == ["G"]
+    assert not table["stress|strain"]["static_path"]       # G does not depend on DSTRAN
+    assert not table["statev|props"]["static_path"]        # no store on that path
+    assert binary32_scope.static_for(table, "stress", "strain") is False
+    assert binary32_scope.static_for({"error": "x"}, "stress", "strain") is True
+
+
+def test_the_map_is_read_as_listing_stores_or_not():
+    assert binary32_scope.scope(None, "x")["lists_stores"] is None
+    assert binary32_scope.scope({"stores": []}, "x")["lists_stores"] is False
     s = binary32_scope.scope({"stores": [{"name": "G11"}], "rounded_operations": 3}, "x")
-    assert s["in_scope"] is True and s["stores"] == ["G11"]
+    assert s["lists_stores"] is True and s["stores"] == ["G11"]
 
 
-def test_b32_0_a_store_entry_map_is_read_from_its_transform_report(tmp_path):
+def test_a_store_entry_map_is_read_from_its_transform_report(tmp_path):
     (tmp_path / "transform_report.json").write_text(
         '{"binary32_stores": {"present": true, "stores": [{"name": "MMOD"}]}}')
     s = binary32_scope.store_scope(tmp_path, [], "")
-    assert s["in_scope"] is True and s["origin"].startswith("transform_report.json")
+    assert s["lists_stores"] is True and s["origin"].startswith("transform_report.json")
 
 
 def test_the_double_variant_widens_every_explicit_single_declaration_only():
@@ -155,7 +204,12 @@ def test_the_harness_applies_b32_to_a_build_in_scope(tmp_path, monkeypatch):
     (record,) = [r for r in records if r["feature"] == "stress_param_sens_local"]
     b32 = record["binary32"]
     assert b32["applied"] is True and b32["scope"]["stores"] == ["GMOD"]
+    assert b32["scope"]["static"]["stress|props"]["static_path"] is True
     assert "same perturbations" in b32["double_variant"], b32
+    counts = b32["b32_scope_counts"]
+    assert counts["entries"] >= counts["static_path"] >= counts["in_scope"]
+    assert all({"static_path", "max_fd_diff", "envelope", "in_scope"} <= set(r)
+               for r in b32["b32_scope"])
     # every pass in scope is a B32 pass
     assert not record["entries"].get(fd.PASS) and not record["entries"].get(fd.ZERO_PASS)
     assert b32["pass_b32"] == record["entries"].get(fd.PASS_B32, 0)

@@ -606,8 +606,12 @@ def build_all(entry: CorpusEntry, work: Path, *, want_store: bool = True,
     if want_lifted:
         builds.lifted, builds.lifted_ndir, builds.lifted_reason = _build_lifted(
             entry, work / "lifted", builds, supply_utilities=supply_utilities)
-    if any((sc or {}).get("in_scope") for sc in builds.binary32.values()):
-        # B32-3's secondary reference, compiled as the reference is (zero init)
+    if any((sc or {}).get("lists_stores") for sc in builds.binary32.values()):
+        # the static half of the per-entry scope (Vera's B32 ruling)
+        for sc in builds.binary32.values():
+            if sc and sc.get("lists_stores"):
+                sc["static"] = binary32_scope.static_paths(Path(prepared), sc["stores"])
+        # the dynamic half and B32-3's secondary reference, compiled as the reference is (zero init)
         (work / "original_double_variant").mkdir(parents=True, exist_ok=True)
         vtext, changes = binary32_scope.double_variant(text)
         vfile = work / "original_double_variant" / ("original_dbl_umat" + Path(prepared).suffix)
@@ -1365,12 +1369,20 @@ class FeatureTally:
     #: columns not judged because a perturbed run of the ORIGINAL ended
     #: (STOP/XIT) before writing the records they need: {reason: count}
     terminations: Counter = field(default_factory=Counter)
-    #: B32 (fd.B32_RULE): the build under test is in binary32 scope; then the
+    #: B32 (fd.B32_RULE): the build under test's binary32 map lists stores, so
+    #: each entry gets the per-entry scope test; the map with its static
+    #: table, the output kind of the block, the double variant's availability,
+    #: the dynamic scope decided on the double pass (shared with the quad
+    #: pass), and the per-entry scope record
     #: scope record and the double variant's availability, for the record
     b32: bool = False
     b32_scope: dict = field(default_factory=dict)
     b32_variant: str = ""
     b32_examples: list = field(default_factory=list)
+    b32_output: str = "stress"
+    b32_cache: dict = field(default_factory=dict)
+    b32_entries: list = field(default_factory=list)
+    b32_counts: Counter = field(default_factory=Counter)
 
     def terminated(self, inc: int, wrt: str, reason: str):
         """A column at this state is not judged: a perturbed run of the
@@ -1462,7 +1474,16 @@ class FeatureTally:
                 import copy
                 variant_column = copy.copy(variant_column)
                 variant_column.estimates = [np.asarray(e)[keep] for e in variant_column.estimates]
-            b32_kw = {"variant": variant_column}
+            input_kind = ("props" if wrt.startswith("PROPS(") else
+                          "statev" if wrt.startswith("STATEV_n(") else "strain")
+            key = (inc, wrt)
+            b32_kw = {"variant": variant_column,
+                      "static_path": binary32_scope.static_for(
+                          self.b32_scope.get("static"), self.b32_output, input_kind),
+                      # decided on the DOUBLE pass; the quad pass reuses it
+                      "scope": self.b32_cache.get(key) if self.eps < fd.EPS else None}
+            if self.eps < fd.EPS and key not in self.b32_cache:
+                b32_kw["scope"] = [None] * int(np.asarray(oti).size)
         verdict = judge(oti, column.estimates, column.usable, self.ladder,
                         steps=column.steps, magnitude=magnitude, rtol=self.rtol,
                         eps=self.eps, value_magnitude=value_magnitude,
@@ -1470,6 +1491,21 @@ class FeatureTally:
                         kinematic_input=kinematic_input,
                         block_derivative=block_derivative, double_zero=double_zero,
                         n_increments=n_increments, **b32_kw)
+        if self.b32:
+            if self.eps >= fd.EPS:
+                self.b32_cache[(inc, wrt)] = [
+                    None if r["max_fd_diff"] is None else (r["max_fd_diff"], r["envelope"])
+                    for r in verdict.b32_scope]
+            for e, r in enumerate(verdict.b32_scope):
+                self.b32_counts["entries"] += 1
+                self.b32_counts["static_path"] += r["static_path"]
+                self.b32_counts["in_scope"] += r["in_scope"]
+                self.b32_counts["scope_unproven"] += "label" in r
+                if r["static_path"] and len(self.b32_entries) < 4000:
+                    self.b32_entries.append(dict(r, increment=inc, wrt=wrt,
+                                                 output=output_names[e]))
+                elif r["static_path"]:
+                    self.b32_counts["static_path_entries_not_listed"] += 1
         for e, d_orig, d_var, value in verdict.binary32_entries:
             if len(self.b32_examples) < 20:
                 self.b32_examples.append({"increment": inc, "wrt": wrt,
@@ -1594,6 +1630,8 @@ class FeatureTally:
                 **({"binary32": {
                     "rule": fd.B32_RULE, "scope": self.b32_scope,
                     "applied": self.b32, "double_variant": self.b32_variant,
+                    "b32_scope_counts": dict(self.b32_counts),
+                    "b32_scope": self.b32_entries,
                     "pass_b32": self.entries.get(fd.PASS_B32, 0),
                     "zero_pass_b32": self.entries.get(fd.ZERO_PASS_B32, 0),
                     "unresolved_binary32": self.entries.get(fd.UNRESOLVED_BINARY32, 0),
@@ -1876,7 +1914,8 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
     # through the same perturbations (only for a build in binary32 scope)
     VARIANT: dict = {}
     b32_note = ""
-    if any((sc or {}).get("in_scope") for sc in builds.binary32.values()):
+    b32_caches: dict = {}
+    if any((sc or {}).get("lists_stores") for sc in builds.binary32.values()):
         vb = builds.original_double_variant
         if not vb.ok:
             b32_note = f"double variant unavailable: {vb.reason}"
@@ -1911,7 +1950,9 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
     def b32_tally(tally, build):
         scope = builds.binary32.get(build) or {}
         tally.b32_scope = scope
-        tally.b32 = bool(scope.get("in_scope"))
+        tally.b32 = bool(scope.get("lists_stores"))
+        tally.b32_output = "stress" if tally.euler is True else "statev"
+        tally.b32_cache = b32_caches.setdefault((tally.feature, build), {})
         tally.b32_variant = b32_note
         return tally
 

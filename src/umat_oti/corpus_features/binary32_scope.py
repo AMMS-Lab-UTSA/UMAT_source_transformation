@@ -1,8 +1,9 @@
 """Which builds the binary32 judging rule applies to, and the double variant
 of the original it needs (Vera B10, B32-0 and B32-3; :data:`fd.B32_RULE`).
 
-B32-0: a source is in scope only if the transform's binary32 map lists a
-store of an OTI-carrying value. The map is the transform's own record
+Scope is decided per derivative entry (fd.B32_RULE; Vera's ruling replacing
+B32-0). Its static half needs the transform's binary32 map: the stores of
+OTI-carrying values the generated code rounds. The map is the transform's own record
 (``umat_oti.transform.binary32.binary32_store_report``, field
 ``binary32_stores``: ``present`` and ``stores[*].name``), read from
 
@@ -40,12 +41,13 @@ def _report(generated_texts: Iterable[str], original_text: str) -> Optional[dict
 
 
 def scope(binary32_map: Optional[dict], origin: str) -> dict:
-    """B32-0 for one build: in scope iff the map lists a store."""
+    """The binary32 map of one build: whether it lists a store (the
+    precondition of the per-entry scope test, Vera's B32 ruling)."""
     if not isinstance(binary32_map, dict) or "stores" not in binary32_map:
-        return {"in_scope": None, "origin": origin,
+        return {"lists_stores": None, "origin": origin,
                 "reason": "no binary32 map for this build: the B32 rule is not applied"}
     names = [s.get("name") for s in binary32_map.get("stores") or []]
-    return {"in_scope": bool(names), "origin": origin, "stores": names,
+    return {"lists_stores": bool(names), "origin": origin, "stores": names,
             "rounded_operations": binary32_map.get("rounded_operations"),
             "schema": binary32_map.get("schema"),
             "reason": (f"the transform rounds {len(names)} binary32 value(s) on the derivative "
@@ -101,3 +103,50 @@ def double_variant(original_text: str) -> tuple[str, dict]:
     return text, {"widened": list(widened), "changes": list(changes),
                   "rule": "every explicit single-precision REAL declaration -> REAL*8 "
                           "(abaqus.precision.widen); no OTI; implicit single typing unchanged"}
+
+
+#: The routine's arguments each derivative input enters through.
+INPUT_NAMES = {"strain": ("DSTRAN", "STRAN", "DFGRD1", "DFGRD0"),
+               "props": ("PROPS",), "statev": ("STATEV",)}
+OUTPUT_NAMES = {"stress": ("STRESS",), "statev": ("STATEV",)}
+
+
+def static_paths(source: Path, stores: Iterable[str]) -> dict:
+    """Vera's static scope condition, per (output, input) kind: does the
+    output depend on a binary32 store of the map that itself depends on the
+    input? Read off the ORIGINAL's assignment and CALL-effect edges
+    (umat_oti.fortran.regions), flow-insensitive and at whole-variable
+    granularity: data dependence only, so a store reached only through a
+    branch condition is out of the static path (the stricter double model).
+
+    Returns ``{"stress|strain": {"static_path": bool, "stores": [...]}, ...,
+    "edges": n}`` or ``{"error": ...}``."""
+    from umat_oti.fortran import regions as R
+    from umat_oti.fortran.parser import parse_fortran_file
+
+    stores = [str(s).upper() for s in stores]
+    try:
+        parsed = parse_fortran_file(Path(source))
+        edges = R._assignments(parsed.logical_lines) + R._call_effect_assignments(
+            parsed.logical_lines, R._routine_effect_table(parsed))
+    except Exception as error:                                   # noqa: BLE001
+        return {"error": f"{type(error).__name__}: {error}"}
+    upstream = {s: R._upstream_dependencies_for(s, edges) for s in stores}
+    out: dict = {"edges": len(edges)}
+    for okind, onames in OUTPUT_NAMES.items():
+        feeding = set()
+        for name in onames:
+            feeding |= R._upstream_dependencies_for(name, edges)
+        for ikind, inames in INPUT_NAMES.items():
+            via = [s for s in stores if s in feeding and set(inames) & upstream[s]]
+            out[f"{okind}|{ikind}"] = {"static_path": bool(via), "stores": via}
+    return out
+
+
+def static_for(table: Optional[dict], output_kind: str, input_kind: str) -> bool:
+    """The static condition for one cell; True when it could not be read
+    (the dynamic condition then decides alone -- never laxer than having
+    no static test)."""
+    if not table or "error" in table:
+        return True
+    return bool((table.get(f"{output_kind}|{input_kind}") or {}).get("static_path"))
