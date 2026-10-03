@@ -1320,6 +1320,18 @@
   "skip:tests/test_transform_a_name_split_across_a_continuation_is_one_name.py:<module>:mark.skipif:8d891947": {
    "verdict": "justified",
    "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "reference_data:paper_results/discovery/discovery_triage.csv": {
+   "verdict": "justified",
+   "reason": "Corpus inventory extended, not an expected value of the code under test: tools/ingest_discovery_round.py copied the triage rows of the 14 sources the 2026-10-02 family discovery round accepted (paper_results/discovery/family_round_2026-10-02/acceptance.json) into the inventory, after checking each cached file against the accepted sha256. No existing row changed; tests/test_discovery_round_is_ingested.py pins the rows to the round's own triage.",
+   "quote": "The inventory goes from 391 to 405 rows",
+   "quote_source": "70a3700"
+  },
+  "reference_data:paper_results/discovery/discovery_triage.json": {
+   "verdict": "justified",
+   "reason": "Corpus inventory extended, not an expected value of the code under test: tools/ingest_discovery_round.py copied the triage rows of the 14 sources the 2026-10-02 family discovery round accepted (paper_results/discovery/family_round_2026-10-02/acceptance.json) into the inventory, after checking each cached file against the accepted sha256. No existing row changed; tests/test_discovery_round_is_ingested.py pins the rows to the round's own triage.",
+   "quote": "The inventory goes from 391 to 405 rows",
+   "quote_source": "70a3700"
   }
  }
 }

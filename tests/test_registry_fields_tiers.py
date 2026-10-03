@@ -1,7 +1,8 @@
 """Both origins, the tier split, and the R6 counting rule (D-19, D-21, D-19a rev 2 S2).
 
-* The deck-only figures on the committed pass20 registry do not move: 238
-  eligible, 67 Abaqus six-gate verified, 109 routine level (D-8).
+* The deck-only figures on the committed pass21 registry do not move: 245
+  eligible, 102 Abaqus verified under the D-4 gate (G10), 112 routine level
+  (D-8). (238 / 67 / 109 on the pass20 registry.)
 * A council row counts only under R6: both Vera acceptances, no pairing
   change, every parameter set verified (cells.combine_council_sets), no
   unenforced domain, no licence hold, a D-2 decision recorded, and the
@@ -22,7 +23,7 @@ import pytest
 REPO = Path(__file__).resolve().parents[1]
 WORKSPACE = REPO.parent
 REGISTRY = REPO / "paper_results/corpus/corpus_registry.json"
-PASS20_CELLS = WORKSPACE / "corpus_campaign/pass20_harness/run/manifest_cells.jsonl"
+PASS21_CELLS = WORKSPACE / "corpus_campaign/pass21_harness/run/manifest_cells.jsonl"
 
 sys.path.insert(0, str(REPO / "src"))
 _spec = importlib.util.spec_from_file_location(
@@ -69,18 +70,18 @@ def _counted(record, cells, rerun="h1"):
 # ---------------------------------------------------------------------------
 # the deck-only figures
 # ---------------------------------------------------------------------------
-def test_the_deck_only_figures_of_the_committed_pass20_registry_are_unchanged():
+def test_the_deck_only_figures_of_the_committed_pass21_registry_are_unchanged():
     records = reg.apply_origins(_committed(), reg.origin_inputs())
-    cells = (reg._read_rows(PASS20_CELLS) if PASS20_CELLS.is_file() else None)
+    cells = (reg._read_rows(PASS21_CELLS) if PASS21_CELLS.is_file() else None)
     tiers = reg.tier_summary(records, cells)["tiers"]
     deck = tiers[reg.TIER_AUTHOR_DECK]
-    assert deck["eligible"] == 238
-    assert deck["verified_abaqus"] == 67
+    assert deck["eligible"] == 245
+    assert deck["verified_abaqus"] == 102
     if cells is None:
-        pytest.skip("pass20 harness cells not on this machine; 238/67 checked")
-    assert deck["verified_routine"] == 109
+        pytest.skip("pass21 harness cells not on this machine; 245/102 checked")
+    assert deck["verified_routine"] == 112
     # the deck-only D2 itself is untouched
-    assert sum(1 for r in records if r.adequately_specified) == 238
+    assert sum(1 for r in records if r.adequately_specified) == 245
     assert {r.adequacy_tier for r in records if r.adequately_specified} == {"author_deck"}
 
 

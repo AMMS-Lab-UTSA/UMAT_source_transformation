@@ -234,32 +234,34 @@ def _inventory_ids():
 
 
 def test_the_registry_holds_every_one_of_the_391_discovered_sources():
-    """Measured on the built registry: the acquisition triage lists 391
-    discovered sources, ``corpus_registry.json`` carries 391 records, and the
+    """Measured on the built registry: the acquisition triage lists 405
+    discovered sources (391 until tools/ingest_discovery_round.py added the 14
+    the 2026-10-02 round accepted; the name keeps the old figure),
+    ``corpus_registry.json`` carries 405 records, and the
     two sets are equal -- no source in the inventory is missing a record, and
     no record names a source the inventory never discovered.
 
-    391 is also what the transform batch happens to carry, which is exactly
+    405 is also what the transform batch happens to carry, which is exactly
     why this has to be checked against the INVENTORY. A registry built from
     the batch agrees with the batch by construction, and would go on agreeing
     on the day a run stopped attempting a source."""
     discovered = _inventory_ids()
-    assert len(discovered) == 391, len(discovered)
+    assert len(discovered) == 405, len(discovered)
 
     payload = json.loads(REGISTRY.read_text(encoding="utf-8"))
     records = payload["records"]
-    assert len(records) == 391, len(records)
+    assert len(records) == 405, len(records)
 
     ids = [r["source_id"] for r in records]
-    assert len(set(ids)) == 391, "a source appears twice"
+    assert len(set(ids)) == 405, "a source appears twice"
     assert set(ids) == set(discovered), {
         "in the inventory, no record": sorted(set(discovered) - set(ids))[:5],
         "a record, not in the inventory": sorted(set(ids) - set(discovered))[:5],
     }
 
     reconciliation = payload["summary"]["inventory"]
-    assert reconciliation["discovered_sources"] == 391
-    assert reconciliation["in_the_registry"] == 391
+    assert reconciliation["discovered_sources"] == 405
+    assert reconciliation["in_the_registry"] == 405
     assert reconciliation["in_a_batch_but_not_the_inventory"] == []
     assert reconciliation["in_the_inventory_but_in_no_batch"] == []
 
