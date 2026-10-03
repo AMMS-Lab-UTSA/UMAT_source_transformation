@@ -528,6 +528,10 @@ def _splice_file_includes(lines: list, deck: Path,
     return out, missing
 
 
+#: Constants per ``*USER MATERIAL`` data line.
+_CARD = 8
+
+
 def materials_in(deck: Path, text: Optional[str] = None,
                  extra_parameters: Optional[dict] = None
                  ) -> tuple[DeckMaterial, ...]:
@@ -609,9 +613,12 @@ def materials_in(deck: Path, text: Optional[str] = None,
         if in_material and constants:
             kinds, where = attributions.get(
                 name.upper(), attributions.get("", ((), "")))
+            published = values[:constants]
+            if published and not unresolved and len(published) < constants:
+                published = published + [0.0] * (constants - len(published))
             found.append(DeckMaterial(
                 deck=Path(deck), name=name, constants=constants, depvar=depvar,
-                values=tuple(values[:constants]), unsymmetric=unsymm,
+                values=tuple(published), unsymmetric=unsymm,
                 elements=tuple(kinds), sections=(where,) if where else (),
                 explicit=where.startswith("line "),
                 substituted=tuple(dict.fromkeys(substituted)),
@@ -707,13 +714,29 @@ def materials_in(deck: Path, text: Optional[str] = None,
                 else:
                     unresolved.append(placeholder.group(0))
             resolved = _substituted(_BRACES.sub(r"<\1>", line), substitutions)
+            card: list[float] = []
+            standing = bool(_UNRESOLVED.search(resolved))
             for piece in resolved.split(","):
                 piece = piece.strip()
                 if not piece:
                     continue
                 number = _one_number(piece)
                 if number is not None:
-                    values.append(number)
+                    card.append(number)
+            # Each data line is a card of eight: Abaqus fills a short line
+            # with zeros, and a block that stops short of CONSTANTS= with
+            # zeros too. Measured (Abaqus/Standard 2021.HF5, a UMAT writing
+            # PROPS on its first call): harshaa765__UMATFile's 19 lines give
+            # NPROPS = 160 with c11, c12, c44 in PROPS(1:3) and the next line
+            # at PROPS(9); davidmorin's ``100.0, 1.0`` last line gives
+            # PROPS(17:18) and zeros to 24 (corpus_campaign/batches/B7/
+            # gauss_g1c/abaqus_props_probe/). Read packed, both lost their
+            # constants to the wrong slots.
+            # A line still holding a placeholder is not a card Abaqus could
+            # read; it is left as read (the block is not usable anyway).
+            if card and len(card) < _CARD and not standing:
+                card.extend([0.0] * (_CARD - len(card)))
+            values.extend(card)
     flush()
     # The step count and the *INITIAL CONDITIONS keyword belong to the deck
     # rather than to any one material, and both are only known once the whole
