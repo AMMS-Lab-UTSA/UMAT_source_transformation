@@ -1256,6 +1256,10 @@
   "skip:tests/test_a_harvest_row_completes_the_authors_own_deck.py:test_the_frozen_harvest_schema_is_the_one_read:call:skip:a9fd72b3": {
    "verdict": "justified",
    "reason": "Needs an external file (the campaign's frozen harvest schema beside the checkout, corpus_campaign/material_data/harvest_row.schema.json); the test runs wherever it exists and fails if the schema changed from the pinned sha256."
+  },
+  "skip:tests/test_transform_oti_sign_matches_the_intrinsic.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
   }
  }
 }
