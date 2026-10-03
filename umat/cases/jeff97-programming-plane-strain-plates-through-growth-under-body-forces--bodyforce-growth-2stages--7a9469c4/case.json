@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "286c85cc681cb5de093d17bd",
+  "registry_key": "9b38288a03c9c39f021b1c94",
   "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/BodyForce-Growth-2Stages.for",
   "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
   "commit": "17bf545d89abeef313a6bb7f7736c18d3b12eb43",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/blob/17bf545d89abeef313a6bb7f7736c18d3b12eb43/Examples-In-Section-3/HelixUp/Th001/BodyForce-Growth-2Stages.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/17bf545d89abeef313a6bb7f7736c18d3b12eb43/Examples-In-Section-3/HelixUp/Th001/BodyForce-Growth-2Stages.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass20/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass21/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json"
   },
   "sha256": "2bddf53d578f85b344f7d9c3daaefa4496d972a194fe14a364ac05a364f57866",
   "bytes": 22946,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--7a9469c4  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "ab32cce7bec15c93",
-  "harness_fingerprint": "d6f92d4704bee702",
-  "contract_transform_generation": "dbe9f928191e1d43"
+  "transform_fingerprint": "c121f4a7ca0ad160",
+  "harness_fingerprint": "b5ec344c5a001293",
+  "contract_transform_generation": "a4f0ea8c9d124f18"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:286c85cc681cb5de093d17bd",
+  "from": "transform_store:9b38288a03c9c39f021b1c94",
   "files": [
    {
     "path": "BodyForce-Growth-2Stages_oti.for",
@@ -65,8 +65,8 @@
    },
    {
     "path": "oti_intrinsics.f90",
-    "sha256": "38606c9c1fca85a9e5df4a32b86b77facae0e2cca3c57db0e1e1193de78dca5c",
-    "bytes": 14283
+    "sha256": "a7c2588cef146c624b76d0bcf8c7fdf3f2a74496a0bac0e03c3a733f227abf23",
+    "bytes": 14300
    },
    {
     "path": "otim6n1.f90",
@@ -84,7 +84,7 @@
     "bytes": 3237
    }
   ],
-  "compiled_source_sha256": "91ed5bd187de5e834f2af737ecf37e277c7b77b0cbb543c039e979296919a3c1"
+  "compiled_source_sha256": "0e883d80d8addf6f3d164550236bd32e3a21cda17e6547746a10a65136cffc0c"
  },
  "experiment": {
   "ntens": 6,
@@ -98,8 +98,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass20/results/store_verification.jsonl key=286c85cc681cb5de093d17bd",
+   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass21/results/store_verification.jsonl key=9b38288a03c9c39f021b1c94",
    "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/Beam-Gravity-Growth-C0-1MPa.inp: Beam-Gravity-Growth-C0-1MPa.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-Gravity-Growth-C0-1MPa.inp attaches neoHookean to C3D20H; th",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -116,8 +116,8 @@
      "elastic": "UNKNOWN material scale: amplitude_search.FIRST_AMPLITUDE=0.0001, chosen there as below essentially every transition",
      "inelastic": "UNKNOWN: no yield strain identifiable and no registry activation_amplitude; inelastic paths are a LADDER sweeping 0.0001..0.1 log-uniformly (the decades amplitude_search escalates through, factor 5, ceiling 1 clipped at 0.1); or call search_activation_amplitude() with a runner",
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
-     "model_domain": "total time <= 3 (author's deck: step periods 1, 1, 1 (total 3)); this path ends at 3",
-     "model_domain_witnesses": "3: author's deck: step periods 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
+     "model_domain": "total time <= 3 (periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3)); this path ends at 3",
+     "model_domain_witnesses": "3: periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
     },
     "config": "inputs/elastic_uniaxial.cfg",
     "config_sha256": "cb10eeadb068ef9bdea525be06677264e56881cb550c7b48ffaf6d584cb3e6d8",
@@ -149,8 +149,55 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.71e-06)",
-    "reference_precision": "double"
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "quad"
+   },
+   {
+    "name": "elastic_shear",
+    "regime": "elastic",
+    "kinematics": "finite",
+    "provenance": {
+     "period": "entry total_time 3 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "growth / morphoelasticity",
+     "elastic": "UNKNOWN material scale: amplitude_search.FIRST_AMPLITUDE=0.0001, chosen there as below essentially every transition",
+     "inelastic": "UNKNOWN: no yield strain identifiable and no registry activation_amplitude; inelastic paths are a LADDER sweeping 0.0001..0.1 log-uniformly (the decades amplitude_search escalates through, factor 5, ceiling 1 clipped at 0.1); or call search_activation_amplitude() with a runner",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "model_domain": "total time <= 3 (periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3)); this path ends at 3",
+     "model_domain_witnesses": "3: periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
+    },
+    "config": "inputs/elastic_shear.cfg",
+    "config_sha256": "d95ee646caccd11e948ac7da8583c910feccaa7906a81a07fd0cd7ce28de9ba1",
+    "n_increments": 20,
+    "judged_states": 20,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.64e-05)",
+    "reference_precision": "quad"
    },
    {
     "name": "growth_free",
@@ -164,8 +211,8 @@
      "inelastic": "UNKNOWN: no yield strain identifiable and no registry activation_amplitude; inelastic paths are a LADDER sweeping 0.0001..0.1 log-uniformly (the decades amplitude_search escalates through, factor 5, ceiling 1 clipped at 0.1); or call search_activation_amplitude() with a runner",
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "growth": "no deformation; the clock alone",
-     "model_domain": "total time <= 3 (author's deck: step periods 1, 1, 1 (total 3)); this path ends at 3",
-     "model_domain_witnesses": "3: author's deck: step periods 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
+     "model_domain": "total time <= 3 (periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3)); this path ends at 3",
+     "model_domain_witnesses": "3: periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
     },
     "config": "inputs/growth_free.cfg",
     "config_sha256": "eaa58bfc3b8530a82741e095a16d16b1ff0ece693acfd9ec161b750aea433085",
@@ -197,8 +244,8 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 7.38e-06)",
-    "reference_precision": "double"
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "quad"
    },
    {
     "name": "growth_held_stretch",
@@ -212,8 +259,8 @@
      "inelastic": "UNKNOWN: no yield strain identifiable and no registry activation_amplitude; inelastic paths are a LADDER sweeping 0.0001..0.1 log-uniformly (the decades amplitude_search escalates through, factor 5, ceiling 1 clipped at 0.1); or call search_activation_amplitude() with a runner",
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "stretch": "1 + finite amplitude 0.2: no critical stretch identifiable in the source",
-     "model_domain": "total time <= 3 (author's deck: step periods 1, 1, 1 (total 3)); this path ends at 3",
-     "model_domain_witnesses": "3: author's deck: step periods 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
+     "model_domain": "total time <= 3 (periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3)); this path ends at 3",
+     "model_domain_witnesses": "3: periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
     },
     "config": "inputs/growth_held_stretch.cfg",
     "config_sha256": "b1a7e548a632992371b20993c6db7cdbf852652500b5488054bc68356ff3f2f3",
@@ -255,7 +302,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "30/30 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "harness_reason": "30/30 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.04e-04)",
     "reference_precision": "double"
    },
    {
@@ -269,8 +316,8 @@
      "elastic": "UNKNOWN material scale: amplitude_search.FIRST_AMPLITUDE=0.0001, chosen there as below essentially every transition",
      "inelastic": "UNKNOWN: no yield strain identifiable and no registry activation_amplitude; inelastic paths are a LADDER sweeping 0.0001..0.1 log-uniformly (the decades amplitude_search escalates through, factor 5, ceiling 1 clipped at 0.1); or call search_activation_amplitude() with a runner",
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
-     "model_domain": "total time <= 3 (author's deck: step periods 1, 1, 1 (total 3)); this path ends at 3",
-     "model_domain_witnesses": "3: author's deck: step periods 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
+     "model_domain": "total time <= 3 (periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3)); this path ends at 3",
+     "model_domain_witnesses": "3: periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
     },
     "config": "inputs/finite_simple_shear.cfg",
     "config_sha256": "58c39ff38abf362f5f0bbe4a28fbae72fc3f2692053b703be8d840dd846ae936",
@@ -292,8 +339,8 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 6.41e-04)",
-    "reference_precision": "double"
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "quad"
    },
    {
     "name": "finite_uniaxial_stretch",
@@ -306,8 +353,8 @@
      "elastic": "UNKNOWN material scale: amplitude_search.FIRST_AMPLITUDE=0.0001, chosen there as below essentially every transition",
      "inelastic": "UNKNOWN: no yield strain identifiable and no registry activation_amplitude; inelastic paths are a LADDER sweeping 0.0001..0.1 log-uniformly (the decades amplitude_search escalates through, factor 5, ceiling 1 clipped at 0.1); or call search_activation_amplitude() with a runner",
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
-     "model_domain": "total time <= 3 (author's deck: step periods 1, 1, 1 (total 3)); this path ends at 3",
-     "model_domain_witnesses": "3: author's deck: step periods 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
+     "model_domain": "total time <= 3 (periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3)); this path ends at 3",
+     "model_domain_witnesses": "3: periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
     },
     "config": "inputs/finite_uniaxial_stretch.cfg",
     "config_sha256": "0b108c4806422e7e914ec02338548d2b4edbf0b977c005b4da4e4fe518adf0bb",
@@ -339,7 +386,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.04e-04)",
     "reference_precision": "double"
    },
    {
@@ -354,8 +401,8 @@
      "inelastic": "UNKNOWN: no yield strain identifiable and no registry activation_amplitude; inelastic paths are a LADDER sweeping 0.0001..0.1 log-uniformly (the decades amplitude_search escalates through, factor 5, ceiling 1 clipped at 0.1); or call search_activation_amplitude() with a runner",
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "objectivity": "Q(s) about (1.0, 2.0, 3.0), 0..90 deg linear in s",
-     "model_domain": "total time <= 3 (author's deck: step periods 1, 1, 1 (total 3)); this path ends at 3",
-     "model_domain_witnesses": "3: author's deck: step periods 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
+     "model_domain": "total time <= 3 (periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3)); this path ends at 3",
+     "model_domain_witnesses": "3: periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
     },
     "config": "inputs/objectivity_reference.cfg",
     "config_sha256": "cc80121aa3f2ba39bc5a3fa5e20094a2cd7b6045926f5250553c9ed71d6ea7a8",
@@ -377,7 +424,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.14e-06)",
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.01e-06)",
     "reference_precision": "quad"
    },
    {
@@ -392,8 +439,8 @@
      "inelastic": "UNKNOWN: no yield strain identifiable and no registry activation_amplitude; inelastic paths are a LADDER sweeping 0.0001..0.1 log-uniformly (the decades amplitude_search escalates through, factor 5, ceiling 1 clipped at 0.1); or call search_activation_amplitude() with a runner",
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "objectivity": "Q(s) about (1.0, 2.0, 3.0), 0..90 deg linear in s",
-     "model_domain": "total time <= 3 (author's deck: step periods 1, 1, 1 (total 3)); this path ends at 3",
-     "model_domain_witnesses": "3: author's deck: step periods 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
+     "model_domain": "total time <= 3 (periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3)); this path ends at 3",
+     "model_domain_witnesses": "3: periods of the generated experiment (the author's deck runs 1, 1): 1, 1, 1 (total 3); 3: source UMAT lines 283-290: G11 defined only for TIME(2)+DTIME <= 3 (IF/ELSE IF with no ELSE)"
     },
     "config": "inputs/objectivity_rotated.cfg",
     "config_sha256": "cfd4358105c250a0bf23cee60044a8df585940fc41b9a5f6a9350616ded43f50",
@@ -415,15 +462,11 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.21e-06)",
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.02e-06)",
     "reference_precision": "quad"
    }
   ],
   "paths_not_frozen": {
-   "elastic_shear": {
-    "primal_stress_state": "verified",
-    "ddsdde": "not_attempted"
-   },
    "objectivity_reference_fine": {
     "primal_stress_state": "inconclusive",
     "ddsdde": "not_attempted"
@@ -449,44 +492,48 @@
    "wrt": "DSTRAN_j (engineering shear) or, for a gradient-driven source, the strain direction j pushed forward as dF = eps_j . F (Kirchhoff term added)",
    "held_fixed": "incoming STRESS_n, STATEV_n, STRAN_n, PROPS, TIME, DFGRD0 (and DFGRD1 for a DSTRAN-driven source)",
    "scope": "local: one increment from the recorded incoming state",
-   "reference": "central FD of the ORIGINAL routine's STRESS_{n+1}, restored state",
+   "reference": "central FD of the ORIGINAL compiled in quad precision (REAL*8 -> REAL*16, binary32 and literals unchanged), restored state",
    "independent_of_oti": true,
    "compact": "reference.json.gz#paths[].judged"
   }
  ],
  "reference": {
   "file": "reference.json.gz",
-  "sha256": "42ba451b45d49c744f8dc2d457ca87d5c6d9dd17ae455a0a6760bc31f8f35ddf"
+  "sha256": "5498436321c4e79bb26ac98a2fa373334dc4eba8516018e9fc2f6662f3680651"
  },
  "tolerance_rule_id": "case-rule/1-df2f107a3c04",
  "error_summary": {
   "elastic_uniaxial": {
    "primal": 8.68406288044704e-06,
-   "tangent": 0.019731521341154436
+   "tangent": 8.171904128413551e-10
+  },
+  "elastic_shear": {
+   "primal": 7.149715615753483e-06,
+   "tangent": 5.308971153307325e-07
   },
   "growth_free": {
    "primal": 5.719772469729953e-06,
-   "tangent": 0.05500069007309369
+   "tangent": 8.172838043713109e-10
   },
   "growth_held_stretch": {
    "primal": 0.00010177766717737102,
-   "tangent": 0.0006119177662554949
+   "tangent": 0.00061144261859774
   },
   "finite_simple_shear": {
    "primal": 5.719770908150935e-06,
-   "tangent": 0.011070477286752435
+   "tangent": 2.035870499124286e-06
   },
   "finite_uniaxial_stretch": {
    "primal": 1.310849273690273e-05,
-   "tangent": 9.382123184833024e-06
+   "tangent": 9.375205230017269e-06
   },
   "objectivity_reference": {
    "primal": 8.656900997206248e-06,
-   "tangent": 4.177647811212456e-06
+   "tangent": 4.4811698073301775e-06
   },
   "objectivity_rotated": {
    "primal": 8.657230376352045e-06,
-   "tangent": 6.660313324124726e-05
+   "tangent": 7.108266341236158e-05
   }
  },
  "toolchain": {
@@ -496,8 +543,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T175152",
-  "seconds": 15.6,
+  "run_id": "20261003T121604",
+  "seconds": 15.4,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -509,10 +556,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "de71c3efda008289b49eac5a58cbdb67731b141df877f797a81aeaa850c4ff48",
+  "tree_sha256": "9ce08c4684c86262b456cb96ea784d556be3bdf35c72e1fcc168f22af2a33cb1",
   "location": "corpus_assets",
-  "files": 32,
-  "bytes": 915707
+  "files": 34,
+  "bytes": 956554
  },
  "tiers": {
   "ci": false,
@@ -521,7 +568,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--7a9469c4",
   "fetch": "python tools/corpus_cases.py fetch jeff97-programming-plane-strain-plates-through-growth-under-body-forces--bodyforce-growth-2stages--7a9469c4",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 286c85cc681cb5de093d17bd --verification-records <workspace>/corpus_run/pass20/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass20_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 9b38288a03c9c39f021b1c94 --verification-records <workspace>/corpus_run/pass21/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass21_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [
   "STATEV(8)"
@@ -532,60 +579,67 @@
   "undefined_in_original (D-12, a SOURCE defect): ['STATEV(8)']; those slots are never compared",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T17:52:08",
+ "date": "2026-10-03T12:16:20",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 6.3,
+    "seconds": 5.9,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
      "elastic_uniaxial": {
       "primal_error_over_tolerance": 8.68406288044704e-06,
-      "tangent_error_over_tolerance": 0.019731521341154436,
+      "tangent_error_over_tolerance": 8.171904128413551e-10,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "elastic_shear": {
+      "primal_error_over_tolerance": 7.149715615753483e-06,
+      "tangent_error_over_tolerance": 5.308971153307325e-07,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "growth_free": {
       "primal_error_over_tolerance": 5.719772469729953e-06,
-      "tangent_error_over_tolerance": 0.05500069007309369,
+      "tangent_error_over_tolerance": 8.172838043713109e-10,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "growth_held_stretch": {
       "primal_error_over_tolerance": 0.00010177766717737102,
-      "tangent_error_over_tolerance": 0.0006119177662554949,
+      "tangent_error_over_tolerance": 0.00061144261859774,
       "coverage": "30/30",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_simple_shear": {
       "primal_error_over_tolerance": 5.719770908150935e-06,
-      "tangent_error_over_tolerance": 0.011070477286752435,
+      "tangent_error_over_tolerance": 2.035870499124286e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_uniaxial_stretch": {
       "primal_error_over_tolerance": 1.310849273690273e-05,
-      "tangent_error_over_tolerance": 9.382123184833024e-06,
+      "tangent_error_over_tolerance": 9.375205230017269e-06,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference": {
       "primal_error_over_tolerance": 8.656900997206248e-06,
-      "tangent_error_over_tolerance": 4.177647811212456e-06,
+      "tangent_error_over_tolerance": 4.4811698073301775e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated": {
       "primal_error_over_tolerance": 8.657230376352045e-06,
-      "tangent_error_over_tolerance": 6.660313324124726e-05,
+      "tangent_error_over_tolerance": 7.108266341236158e-05,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
@@ -598,49 +652,56 @@
     "paths": {
      "elastic_uniaxial": {
       "primal_error_over_tolerance": 8.68406288044704e-06,
-      "tangent_error_over_tolerance": 0.019731521341154436,
+      "tangent_error_over_tolerance": 8.171904128413551e-10,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "elastic_shear": {
+      "primal_error_over_tolerance": 7.149715615753483e-06,
+      "tangent_error_over_tolerance": 5.308971153307325e-07,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "growth_free": {
       "primal_error_over_tolerance": 5.719772469729953e-06,
-      "tangent_error_over_tolerance": 0.05500069007309369,
+      "tangent_error_over_tolerance": 8.172838043713109e-10,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "growth_held_stretch": {
       "primal_error_over_tolerance": 0.00010177766717737102,
-      "tangent_error_over_tolerance": 0.0006119177662554949,
+      "tangent_error_over_tolerance": 0.00061144261859774,
       "coverage": "30/30",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_simple_shear": {
       "primal_error_over_tolerance": 5.719770908150935e-06,
-      "tangent_error_over_tolerance": 0.011070477286752435,
+      "tangent_error_over_tolerance": 2.035870499124286e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_uniaxial_stretch": {
       "primal_error_over_tolerance": 1.310849273690273e-05,
-      "tangent_error_over_tolerance": 9.382123184833024e-06,
+      "tangent_error_over_tolerance": 9.375205230017269e-06,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference": {
       "primal_error_over_tolerance": 8.656900997206248e-06,
-      "tangent_error_over_tolerance": 4.177647811212456e-06,
+      "tangent_error_over_tolerance": 4.4811698073301775e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated": {
       "primal_error_over_tolerance": 8.657230376352045e-06,
-      "tangent_error_over_tolerance": 6.660313324124726e-05,
+      "tangent_error_over_tolerance": 7.108266341236158e-05,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true

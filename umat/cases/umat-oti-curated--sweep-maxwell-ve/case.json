@@ -24,9 +24,9 @@
   "fetch": null
  },
  "fingerprints": {
-  "transform_fingerprint": "ab32cce7bec15c93",
-  "harness_fingerprint": "d6f92d4704bee702",
-  "contract_transform_generation": "dbe9f928191e1d43"
+  "transform_fingerprint": "c121f4a7ca0ad160",
+  "harness_fingerprint": "b5ec344c5a001293",
+  "contract_transform_generation": "a4f0ea8c9d124f18"
  },
  "transform": {
   "settings": {
@@ -53,8 +53,8 @@
    },
    {
     "path": "oti_intrinsics.f90",
-    "sha256": "38606c9c1fca85a9e5df4a32b86b77facae0e2cca3c57db0e1e1193de78dca5c",
-    "bytes": 14283
+    "sha256": "a7c2588cef146c624b76d0bcf8c7fdf3f2a74496a0bac0e03c3a733f227abf23",
+    "bytes": 14300
    },
    {
     "path": "otim6n1.f90",
@@ -72,7 +72,7 @@
     "bytes": 5186
    }
   ],
-  "compiled_source_sha256": "c74e589c3f658376ada2d0c38faff86387a99f506b143bde95d8a903b46e65bc"
+  "compiled_source_sha256": "d58e9d6dae8e29b5f130c0c6de3e0a0a7cfd842ea8f086a1ae3a2adc446051e7"
  },
  "experiment": {
   "ntens": 6,
@@ -733,33 +733,33 @@
  ],
  "reference": {
   "file": "reference.json.gz",
-  "sha256": "f33d14d276390799a786f7b1339fcb1ddb059e455fc34a4532596098a6fc9c9c"
+  "sha256": "9bf9f04fca7f808f637d178750c423a0f9b5f18270d1c1679eb579708c1a4f63"
  },
  "tolerance_rule_id": "case-rule/1-df2f107a3c04",
  "error_summary": {
   "elastic_uniaxial": {
    "primal": 3.0795345938527165e-05,
-   "tangent": 9.762803746683673e-07
+   "tangent": 9.761362751044352e-07
   },
   "elastic_shear": {
    "primal": 0.0,
-   "tangent": 3.0667305142763595e-07
+   "tangent": 3.066705020531123e-07
   },
   "isotropy_reference": {
    "primal": 0.0,
-   "tangent": 7.832719913243522e-07
+   "tangent": 7.831314899651006e-07
   },
   "isotropy_rotated": {
    "primal": 0.0,
-   "tangent": 5.532136547929923e-05
+   "tangent": 5.5316265991554436e-05
   },
   "plastic_ladder": {
    "primal": 2.0568197683663846e-06,
-   "tangent": 8.87858520873072e-08
+   "tangent": 8.87858059634043e-08
   },
   "unload_reload": {
    "primal": 4.399852580216734e-06,
-   "tangent": 1.999300166800585e-06
+   "tangent": 1.9992710295746063e-06
   },
   "cyclic": {
    "primal": 0.0004160833604133406,
@@ -767,19 +767,19 @@
   },
   "reverse_yield": {
    "primal": 0.00014098729637562125,
-   "tangent": 5.784889557590541e-05
+   "tangent": 5.78478175501362e-05
   },
   "relaxation": {
    "primal": 3.1727945489813424e-06,
-   "tangent": 1.0225693017972813e-05
+   "tangent": 1.0225625788106223e-05
   },
   "rate_slow": {
    "primal": 4.568717468880969e-06,
-   "tangent": 1.765207528423309e-06
+   "tangent": 1.7651014798319365e-06
   },
   "rate_fast": {
    "primal": 2.644668025965556e-06,
-   "tangent": 1.0803321837139844e-05
+   "tangent": 1.0801028171397388e-05
   }
  },
  "toolchain": {
@@ -789,8 +789,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T180708",
-  "seconds": 14.5,
+  "run_id": "20261003T122200",
+  "seconds": 13.6,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -802,10 +802,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "de8f0cd65b28f707c28c3ece70a6b4cf1ee8b38123510d0e47983f7ac800a03c",
+  "tree_sha256": "b64b5258d836625ac7776c799792a06f6323c3e9fc9ffe772fd481ced0a41592",
   "location": "corpus_assets",
   "files": 39,
-  "bytes": 932178
+  "bytes": 932314
  },
  "tiers": {
   "ci": true,
@@ -821,7 +821,7 @@
   "routine-level evidence (driver), not Abaqus",
   "loading paths are this pipeline's probes, not the author's example"
  ],
- "date": "2026-10-02T18:07:26",
+ "date": "2026-10-03T12:22:17",
  "freeze_check": {
   "ok": true,
   "modes": {
@@ -832,42 +832,42 @@
     "paths": {
      "elastic_uniaxial": {
       "primal_error_over_tolerance": 3.0795345938527165e-05,
-      "tangent_error_over_tolerance": 9.762803746683673e-07,
+      "tangent_error_over_tolerance": 9.761362751044352e-07,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "elastic_shear": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 3.0667305142763595e-07,
+      "tangent_error_over_tolerance": 3.066705020531123e-07,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_reference": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 7.832719913243522e-07,
+      "tangent_error_over_tolerance": 7.831314899651006e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_rotated": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 5.532136547929923e-05,
+      "tangent_error_over_tolerance": 5.5316265991554436e-05,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "plastic_ladder": {
       "primal_error_over_tolerance": 2.0568197683663846e-06,
-      "tangent_error_over_tolerance": 8.87858520873072e-08,
+      "tangent_error_over_tolerance": 8.87858059634043e-08,
       "coverage": "13/13",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "unload_reload": {
       "primal_error_over_tolerance": 4.399852580216734e-06,
-      "tangent_error_over_tolerance": 1.999300166800585e-06,
+      "tangent_error_over_tolerance": 1.9992710295746063e-06,
       "coverage": "41/41",
       "hidden_state_ok": true,
       "original_reproduced": true
@@ -881,28 +881,28 @@
      },
      "reverse_yield": {
       "primal_error_over_tolerance": 0.00014098729637562125,
-      "tangent_error_over_tolerance": 5.784889557590541e-05,
+      "tangent_error_over_tolerance": 5.78478175501362e-05,
       "coverage": "90/90",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "relaxation": {
       "primal_error_over_tolerance": 3.1727945489813424e-06,
-      "tangent_error_over_tolerance": 1.0225693017972813e-05,
+      "tangent_error_over_tolerance": 1.0225625788106223e-05,
       "coverage": "30/30",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "rate_slow": {
       "primal_error_over_tolerance": 4.568717468880969e-06,
-      "tangent_error_over_tolerance": 1.765207528423309e-06,
+      "tangent_error_over_tolerance": 1.7651014798319365e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "rate_fast": {
       "primal_error_over_tolerance": 2.644668025965556e-06,
-      "tangent_error_over_tolerance": 1.0803321837139844e-05,
+      "tangent_error_over_tolerance": 1.0801028171397388e-05,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
@@ -915,42 +915,42 @@
     "paths": {
      "elastic_uniaxial": {
       "primal_error_over_tolerance": 3.0795345938527165e-05,
-      "tangent_error_over_tolerance": 9.762803746683673e-07,
+      "tangent_error_over_tolerance": 9.761362751044352e-07,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "elastic_shear": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 3.0667305142763595e-07,
+      "tangent_error_over_tolerance": 3.066705020531123e-07,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_reference": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 7.832719913243522e-07,
+      "tangent_error_over_tolerance": 7.831314899651006e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_rotated": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 5.532136547929923e-05,
+      "tangent_error_over_tolerance": 5.5316265991554436e-05,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "plastic_ladder": {
       "primal_error_over_tolerance": 2.0568197683663846e-06,
-      "tangent_error_over_tolerance": 8.87858520873072e-08,
+      "tangent_error_over_tolerance": 8.87858059634043e-08,
       "coverage": "13/13",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "unload_reload": {
       "primal_error_over_tolerance": 4.399852580216734e-06,
-      "tangent_error_over_tolerance": 1.999300166800585e-06,
+      "tangent_error_over_tolerance": 1.9992710295746063e-06,
       "coverage": "41/41",
       "hidden_state_ok": true,
       "original_reproduced": true
@@ -964,28 +964,28 @@
      },
      "reverse_yield": {
       "primal_error_over_tolerance": 0.00014098729637562125,
-      "tangent_error_over_tolerance": 5.784889557590541e-05,
+      "tangent_error_over_tolerance": 5.78478175501362e-05,
       "coverage": "90/90",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "relaxation": {
       "primal_error_over_tolerance": 3.1727945489813424e-06,
-      "tangent_error_over_tolerance": 1.0225693017972813e-05,
+      "tangent_error_over_tolerance": 1.0225625788106223e-05,
       "coverage": "30/30",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "rate_slow": {
       "primal_error_over_tolerance": 4.568717468880969e-06,
-      "tangent_error_over_tolerance": 1.765207528423309e-06,
+      "tangent_error_over_tolerance": 1.7651014798319365e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "rate_fast": {
       "primal_error_over_tolerance": 2.644668025965556e-06,
-      "tangent_error_over_tolerance": 1.0803321837139844e-05,
+      "tangent_error_over_tolerance": 1.0801028171397388e-05,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true

@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "8053fa84b9b9667ac3a0926b",
+  "registry_key": "11c27c2fa1e099e6be87c039",
   "source_id": "Jeff97__growth-of-circular-plate/Bending/Growth-CASE1.for",
   "repository": "Jeff97/growth-of-circular-plate",
   "commit": "67e7e9afb06dd156f3ea4ad70ea2030b9e8048cc",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/growth-of-circular-plate/blob/67e7e9afb06dd156f3ea4ad70ea2030b9e8048cc/Bending/Growth-CASE1.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/growth-of-circular-plate/67e7e9afb06dd156f3ea4ad70ea2030b9e8048cc/Bending/Growth-CASE1.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass20/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass21/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json"
   },
   "sha256": "199ac9b622e4f94b8b9007c76f021d7a7d7990b4ca559a65c3ebef07b1603c0b",
   "bytes": 6130,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-growth-of-circular-plate--growth-case1--7c052969  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "ab32cce7bec15c93",
-  "harness_fingerprint": "d6f92d4704bee702",
-  "contract_transform_generation": "dbe9f928191e1d43"
+  "transform_fingerprint": "c121f4a7ca0ad160",
+  "harness_fingerprint": "b5ec344c5a001293",
+  "contract_transform_generation": "a4f0ea8c9d124f18"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:8053fa84b9b9667ac3a0926b",
+  "from": "transform_store:11c27c2fa1e099e6be87c039",
   "files": [
    {
     "path": "Growth-CASE1_oti.for",
@@ -65,8 +65,8 @@
    },
    {
     "path": "oti_intrinsics.f90",
-    "sha256": "38606c9c1fca85a9e5df4a32b86b77facae0e2cca3c57db0e1e1193de78dca5c",
-    "bytes": 14283
+    "sha256": "a7c2588cef146c624b76d0bcf8c7fdf3f2a74496a0bac0e03c3a733f227abf23",
+    "bytes": 14300
    },
    {
     "path": "otim6n1.f90",
@@ -79,7 +79,7 @@
     "bytes": 26834
    }
   ],
-  "compiled_source_sha256": "58faf1191606e6da3e01067500158ef53a03761b6bbc323f28a1045f25bd32f0"
+  "compiled_source_sha256": "ee88e26e31251b385d679c63c52de4c54c24fbb8d4bd265e6252404728542632"
  },
  "experiment": {
   "ntens": 6,
@@ -94,8 +94,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass20/results/store_verification.jsonl key=8053fa84b9b9667ac3a0926b",
+   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass21/results/store_verification.jsonl key=11c27c2fa1e099e6be87c039",
    "material_provenance": "Jeff97__growth-of-circular-plate/Bending/CASE1.inp: CASE1.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 4 -- a section in CASE1.inp attaches NeoHookean to CAX4H; the two names agree on case1, which is a value the author varied rather than a word every file of this kind carries; the deck sits in the",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -146,8 +146,8 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 3.19e-06)",
-    "reference_precision": "double"
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "quad"
    },
    {
     "name": "elastic_shear",
@@ -167,8 +167,12 @@
     "config": "inputs/elastic_shear.cfg",
     "config_sha256": "343dc3259278f87000b4a3f73dc540718f64b5268c46653ff9726ecfe80b7503",
     "n_increments": 20,
-    "judged_states": 15,
+    "judged_states": 20,
     "judged_increments": [
+     1,
+     2,
+     3,
+     4,
      5,
      6,
      7,
@@ -183,14 +187,15 @@
      16,
      17,
      18,
+     19,
      20
     ],
     "harness_status": {
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "15/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 7.63e-04)",
-    "reference_precision": "double"
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.50e-06)",
+    "reference_precision": "quad"
    },
    {
     "name": "growth_free",
@@ -238,8 +243,8 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 2.09e-05)",
-    "reference_precision": "double"
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "quad"
    },
    {
     "name": "growth_held_stretch",
@@ -297,7 +302,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "30/30 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "harness_reason": "30/30 states judged, every resolved entry within its tolerance (largest tau/|D| = 2.73e-06)",
     "reference_precision": "double"
    },
    {
@@ -335,7 +340,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.11e-05)",
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.20e-04)",
     "reference_precision": "double"
    },
    {
@@ -383,7 +388,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.96e-06)",
     "reference_precision": "double"
    },
    {
@@ -422,7 +427,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.66e-05)",
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 2.47e-04)",
     "reference_precision": "double"
    },
    {
@@ -599,7 +604,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "40/40 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.43e-06)",
+    "harness_reason": "40/40 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.06e-06)",
     "reference_precision": "quad"
    }
   ],
@@ -620,56 +625,56 @@
    "wrt": "DSTRAN_j (engineering shear) or, for a gradient-driven source, the strain direction j pushed forward as dF = eps_j . F (Kirchhoff term added)",
    "held_fixed": "incoming STRESS_n, STATEV_n, STRAN_n, PROPS, TIME, DFGRD0 (and DFGRD1 for a DSTRAN-driven source)",
    "scope": "local: one increment from the recorded incoming state",
-   "reference": "central FD of the ORIGINAL routine's STRESS_{n+1}, restored state",
+   "reference": "central FD of the ORIGINAL compiled in quad precision (REAL*8 -> REAL*16, binary32 and literals unchanged), restored state",
    "independent_of_oti": true,
    "compact": "reference.json.gz#paths[].judged"
   }
  ],
  "reference": {
   "file": "reference.json.gz",
-  "sha256": "dfc4ea5dcfed138eaba9f623f2b7d12de3bd3b81d5bcb8d3deb7501bebc13dda"
+  "sha256": "8e6e573035314b13c0aee8c3e2284e37c7c11aa5b24b3b56e89ecdbf3348bae1"
  },
  "tolerance_rule_id": "case-rule/1-df2f107a3c04",
  "error_summary": {
   "elastic_uniaxial": {
    "primal": 1.5886970967063052e-05,
-   "tangent": 0.03234016847363234
+   "tangent": 6.244606211708317e-10
   },
   "elastic_shear": {
    "primal": 1.2926596306060472e-06,
-   "tangent": 0.21495042199602898
+   "tangent": 5.268330524978869e-08
   },
   "growth_free": {
    "primal": 0.0,
-   "tangent": 0.05525614991310259
+   "tangent": 4.682232580478102e-10
   },
   "growth_held_stretch": {
    "primal": 0.0001783992871078167,
-   "tangent": 6.210666867134286e-05
+   "tangent": 6.205815071164272e-05
   },
   "finite_simple_shear": {
    "primal": 1.4418149301623483e-09,
-   "tangent": 0.23653640598313241
+   "tangent": 0.007642736879274581
   },
   "finite_uniaxial_stretch": {
    "primal": 1.0287348861803964e-05,
-   "tangent": 0.00015229673989917647
+   "tangent": 0.00015229611658009864
   },
   "objectivity_reference": {
    "primal": 1.2109371154743106e-09,
-   "tangent": 0.03749878666572999
+   "tangent": 0.004730927271431945
   },
   "objectivity_rotated": {
    "primal": 1.783054671291668e-05,
-   "tangent": 1.8240951767946294e-05
+   "tangent": 1.836070795757662e-05
   },
   "objectivity_reference_fine": {
    "primal": 1.3382274234851424e-05,
-   "tangent": 1.316143814229754e-07
+   "tangent": 1.3193976933984003e-07
   },
   "objectivity_rotated_fine": {
    "primal": 4.49998637856939e-05,
-   "tangent": 3.2068190747638305e-05
+   "tangent": 3.450121970506374e-05
   }
  },
  "toolchain": {
@@ -679,8 +684,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T175453",
-  "seconds": 13.2,
+  "run_id": "20261003T120757",
+  "seconds": 12.3,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -692,10 +697,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "3b194ea47032fabf857beb4a68b02d37968aed2a05afc76bff05dd990ae518df",
+  "tree_sha256": "09284f2f5744852f9bf6e05e8cd67bc15f63c5a9081bc77f73bd5dcf47af8bc9",
   "location": "corpus_assets",
   "files": 37,
-  "bytes": 942290
+  "bytes": 941741
  },
  "tiers": {
   "ci": false,
@@ -704,7 +709,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-growth-of-circular-plate--growth-case1--7c052969",
   "fetch": "python tools/corpus_cases.py fetch jeff97-growth-of-circular-plate--growth-case1--7c052969",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 8053fa84b9b9667ac3a0926b --verification-records <workspace>/corpus_run/pass20/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass20_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 11c27c2fa1e099e6be87c039 --verification-records <workspace>/corpus_run/pass21/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass21_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -712,81 +717,81 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T17:55:07",
+ "date": "2026-10-03T12:08:09",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.9,
+    "seconds": 3.7,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
      "elastic_uniaxial": {
       "primal_error_over_tolerance": 1.5886970967063052e-05,
-      "tangent_error_over_tolerance": 0.03234016847363234,
+      "tangent_error_over_tolerance": 6.244606211708317e-10,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "elastic_shear": {
       "primal_error_over_tolerance": 1.2926596306060472e-06,
-      "tangent_error_over_tolerance": 0.21495042199602898,
-      "coverage": "15/15",
+      "tangent_error_over_tolerance": 5.268330524978869e-08,
+      "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "growth_free": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.05525614991310259,
+      "tangent_error_over_tolerance": 4.682232580478102e-10,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "growth_held_stretch": {
       "primal_error_over_tolerance": 0.0001783992871078167,
-      "tangent_error_over_tolerance": 6.210666867134286e-05,
+      "tangent_error_over_tolerance": 6.205815071164272e-05,
       "coverage": "30/30",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_simple_shear": {
       "primal_error_over_tolerance": 1.4418149301623483e-09,
-      "tangent_error_over_tolerance": 0.23653640598313241,
+      "tangent_error_over_tolerance": 0.007642736879274581,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_uniaxial_stretch": {
       "primal_error_over_tolerance": 1.0287348861803964e-05,
-      "tangent_error_over_tolerance": 0.00015229673989917647,
+      "tangent_error_over_tolerance": 0.00015229611658009864,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference": {
       "primal_error_over_tolerance": 1.2109371154743106e-09,
-      "tangent_error_over_tolerance": 0.03749878666572999,
+      "tangent_error_over_tolerance": 0.004730927271431945,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated": {
       "primal_error_over_tolerance": 1.783054671291668e-05,
-      "tangent_error_over_tolerance": 1.8240951767946294e-05,
+      "tangent_error_over_tolerance": 1.836070795757662e-05,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference_fine": {
       "primal_error_over_tolerance": 1.3382274234851424e-05,
-      "tangent_error_over_tolerance": 1.316143814229754e-07,
+      "tangent_error_over_tolerance": 1.3193976933984003e-07,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated_fine": {
       "primal_error_over_tolerance": 4.49998637856939e-05,
-      "tangent_error_over_tolerance": 3.2068190747638305e-05,
+      "tangent_error_over_tolerance": 3.450121970506374e-05,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true
@@ -794,75 +799,75 @@
     }
    },
    "replay": {
-    "seconds": 1.8,
+    "seconds": 1.2,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
       "primal_error_over_tolerance": 1.5886970967063052e-05,
-      "tangent_error_over_tolerance": 0.03234016847363234,
+      "tangent_error_over_tolerance": 6.244606211708317e-10,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "elastic_shear": {
       "primal_error_over_tolerance": 1.2926596306060472e-06,
-      "tangent_error_over_tolerance": 0.21495042199602898,
-      "coverage": "15/15",
+      "tangent_error_over_tolerance": 5.268330524978869e-08,
+      "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "growth_free": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.05525614991310259,
+      "tangent_error_over_tolerance": 4.682232580478102e-10,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "growth_held_stretch": {
       "primal_error_over_tolerance": 0.0001783992871078167,
-      "tangent_error_over_tolerance": 6.210666867134286e-05,
+      "tangent_error_over_tolerance": 6.205815071164272e-05,
       "coverage": "30/30",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_simple_shear": {
       "primal_error_over_tolerance": 1.4418149301623483e-09,
-      "tangent_error_over_tolerance": 0.23653640598313241,
+      "tangent_error_over_tolerance": 0.007642736879274581,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_uniaxial_stretch": {
       "primal_error_over_tolerance": 1.0287348861803964e-05,
-      "tangent_error_over_tolerance": 0.00015229673989917647,
+      "tangent_error_over_tolerance": 0.00015229611658009864,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference": {
       "primal_error_over_tolerance": 1.2109371154743106e-09,
-      "tangent_error_over_tolerance": 0.03749878666572999,
+      "tangent_error_over_tolerance": 0.004730927271431945,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated": {
       "primal_error_over_tolerance": 1.783054671291668e-05,
-      "tangent_error_over_tolerance": 1.8240951767946294e-05,
+      "tangent_error_over_tolerance": 1.836070795757662e-05,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference_fine": {
       "primal_error_over_tolerance": 1.3382274234851424e-05,
-      "tangent_error_over_tolerance": 1.316143814229754e-07,
+      "tangent_error_over_tolerance": 1.3193976933984003e-07,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated_fine": {
       "primal_error_over_tolerance": 4.49998637856939e-05,
-      "tangent_error_over_tolerance": 3.2068190747638305e-05,
+      "tangent_error_over_tolerance": 3.450121970506374e-05,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true
