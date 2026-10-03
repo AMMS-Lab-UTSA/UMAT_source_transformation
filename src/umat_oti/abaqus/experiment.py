@@ -1279,6 +1279,9 @@ class CouncilPlan:
     refusal: str = ""
     refusal_code: str = ""
     notes: tuple = ()
+    #: the row's documented domain, so the routine-level paths can be held
+    #: inside it (loading_paths.model_domain)
+    documented_domain: Optional[dict] = None
 
     @property
     def found(self) -> bool:
@@ -1291,6 +1294,7 @@ class CouncilPlan:
                 "ceiling": self.ceiling, "ceiling_origin": list(self.ceiling_origin),
                 "refusal": self.refusal, "refusal_code": self.refusal_code,
                 "notes": list(self.notes),
+                "documented_domain": self.documented_domain,
                 "counts_only_if_every_set_passes": True,
                 "sets": [{"set_id": set_id, "plan": plan.as_dict()} for set_id, plan in self.sets]}
 
@@ -1491,6 +1495,7 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                                            "run")))
         plans.append((set_id, Plan(source, built, None, None)))
     return CouncilPlan(source, sets=tuple(plans), ceiling=ceiling,
+                       documented_domain=row.get("documented_domain") or None,
                        ceiling_origin=ceiling_origin,
                        refusal=next((p.experiment.refusal for _i, p in plans
                                      if p.experiment.refusal), ""),

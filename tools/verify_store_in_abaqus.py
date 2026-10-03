@@ -582,6 +582,10 @@ class ManifestPlan:
     #: generated experiment's own periods so that only these are ever cited as
     #: the author's deck (G0, D-19a rev 2).
     author_deck_periods: Optional[list] = None
+    #: Set off the author-deck tier only (D-19 R1: constants completed from a
+    #: harvest row); recorded so the routine-level entry carries it.
+    material_data_origin: str = ""
+    experiment_origin: str = ""
     kinematics_provenance: str = ""
     #: Set when the deck and the triage row disagree about finite strain. The
     #: deck wins; the disagreement is recorded rather than resolved silently.
@@ -794,6 +798,8 @@ def _from_experiment(plan: "ManifestPlan", answer, source_id: str,
         periods = getattr(material, "step_periods", None)
         plan.author_deck_periods = (
             [float(v) for v in periods] if periods is not None else None)
+        plan.material_data_origin = getattr(pairing, "material_data_origin", "") or ""
+        plan.experiment_origin = getattr(pairing, "experiment_origin", "") or ""
     if answer.settled is not None and hasattr(answer.settled, "as_dict"):
         # Scrubbed like everything else recorded: the formulation's provenance
         # names the deck it read, and it reads it by absolute path.
@@ -2913,6 +2919,9 @@ def _material_columns(plan: ManifestPlan) -> dict[str, Any]:
         # Where constants were looked for, when none were found. A refusal
         # that does not say where it searched is a claim, not a finding.
         "searched_for_material_data": plan.searched,
+        **({"material_data_origin": plan.material_data_origin,
+            "experiment_origin": plan.experiment_origin or "author"}
+           if plan.material_data_origin else {}),
     }
 
 

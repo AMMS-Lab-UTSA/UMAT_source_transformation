@@ -66,6 +66,13 @@ WORKSPACE = Path(os.environ.get("UMAT_OTI_WORKSPACE")
 REGISTRY = Path(__file__).resolve().parents[3] / "paper_results/corpus/corpus_registry.json"
 FAMILIES = WORKSPACE / "corpus_run/material_families_checked_E.json"
 PASS16 = WORKSPACE / "corpus_run/pass16/results/store_verification.jsonl"
+#: Council plans (D-19a rev 2 G8/G9): ``<dir>/<registry key>/council_plan.json``
+#: (``experiment.CouncilPlan.as_dict``). Read when the verification record of
+#: a key carries no manifest.
+COUNCIL_PLANS = WORKSPACE / "corpus_campaign/council_plans"
+COUNCIL_DRIVER_POINT = ("council plan: a single generated element at the origin; there is "
+                        "no author mesh, so COORDS = 0 and NOEL = NPT = 1 are the experiment's "
+                        "own (no position-dependent source is planned by the council)")
 STORE = WORKSPACE / "transform_store"
 #: Work directories of the Abaqus pass whose records are PASS16 (one
 #: ``<key>/original/`` per source); None = ``PASS16``'s ``../../work``.
@@ -315,8 +322,26 @@ def _pass16_record(key: str) -> Optional[dict]:
     return None
 
 
+def _council_manifest(key: str, set_id: str) -> tuple[dict, dict]:
+    """``(manifest dict, council plan dict)`` of one set of a council plan."""
+    path = Path(COUNCIL_PLANS) / key / "council_plan.json"
+    if not path.is_file():
+        return {}, {}
+    council = json.loads(path.read_text())
+    for entry in council.get("sets") or ():
+        if not set_id or str(entry.get("set_id")) == set_id:
+            return ((entry.get("plan") or {}).get("experiment") or {}).get("manifest") or {}, council
+    return {}, council
+
+
 def resolve_entry(key: str) -> CorpusEntry:
-    """A registry key -> everything the harness needs, with provenance."""
+    """A registry key -> everything the harness needs, with provenance.
+
+    ``key`` may carry a council parameter set, ``<registry key>#<set id>``
+    (D-21: each set is its own experiment). Without an Abaqus manifest for
+    the key, the council plan (:data:`COUNCIL_PLANS`) supplies it, and the
+    entry carries both origins (material data, experiment)."""
+    key, _hash, set_id = str(key).partition("#")
     registry = json.loads(REGISTRY.read_text())
     record = next((r for r in registry["records"] if r["key"] == key), None)
     if record is None:
@@ -331,11 +356,25 @@ def resolve_entry(key: str) -> CorpusEntry:
     # element/material. experiment.manifest is the fallback only.
     manifest = (verification.get("manifest")
                 or (verification.get("experiment") or {}).get("manifest") or {})
+    council: dict = {}
+    if set_id or not manifest:
+        council_manifest, council = _council_manifest(key, set_id)
+        if council_manifest:
+            manifest = council_manifest
+    origins = {}
+    if council:
+        origins = {"material_data_origin": council.get("material_data_origin", ""),
+                   "experiment_origin": council.get("experiment_origin", "council_deck"),
+                   "council_plan": str(Path(COUNCIL_PLANS) / key / "council_plan.json"),
+                   "council_set": set_id or str((council.get("sets") or [{}])[0].get("set_id"))}
+    elif verification.get("material_data_origin"):
+        origins = {"material_data_origin": verification["material_data_origin"],
+                   "experiment_origin": verification.get("experiment_origin", "author")}
     if not manifest:
         raise LookupError(f"{key}: no pass16 verification manifest; PROPS/NSTATV unknown")
     kin = str(manifest.get("kinematics") or record.get("kinematics") or "small")
     return CorpusEntry(
-        key=key, source_id=record["source_id"],
+        key=key + (f"#{set_id}" if set_id else ""), source_id=record["source_id"],
         original_source=CACHE / record["cache_path"],
         ntens=int(manifest["ntens"]), nstatv=int(manifest["nstatv"]),
         props=[float(p) for p in manifest.get("props") or []],
@@ -357,14 +396,17 @@ def resolve_entry(key: str) -> CorpusEntry:
                         if verification.get("author_deck_periods") is not None
                         else None),
                     "activation_amplitude": record.get("activation_amplitude"),
+                    **({"documented_domain": council["documented_domain"]}
+                       if council.get("documented_domain") else {}),
                     "source_text": (CACHE / record["cache_path"]).read_text(errors="replace")
                     if (CACHE / record["cache_path"]).is_file() else ""},
         provenance={"registry": str(REGISTRY), "manifest": f"{PASS16} key={key}",
                     "material_provenance": manifest.get("material_provenance", "")[:300],
                     "initial_state_from_user_subroutine":
                         bool(manifest.get("initial_state_from_user_subroutine")),
-                    "terminal_state": record.get("terminal_state")},
-        driver_point=experiment_driver_point(key))
+                    "terminal_state": record.get("terminal_state"), **origins},
+        driver_point=(dict(_ZERO_POINT, provenance=COUNCIL_DRIVER_POINT) if council
+                      else experiment_driver_point(key)))
 
 
 # ---------------------------------------------------------------------------
@@ -1480,6 +1522,11 @@ def _record(entry: CorpusEntry, feature: str, path, payload: dict, extra: dict) 
     record.update(DEFINITIONS.get(feature, {}))
     record.update(payload)
     record.update(extra)
+    # the three tiers (D-19/D-21): set only off the author-deck tier, so the
+    # author-deck records read as before
+    for name in ("material_data_origin", "experiment_origin", "council_set"):
+        if entry.provenance.get(name):
+            record[name] = entry.provenance[name]
     return record
 
 
