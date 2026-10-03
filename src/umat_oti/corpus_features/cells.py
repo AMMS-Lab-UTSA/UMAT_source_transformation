@@ -85,6 +85,9 @@ def fold(records: Iterable[Mapping], *, evidence: str, producer: str = "gauss/B2
         cell["stress_and_ddsdde_fully_defined"] = bool(first.get("stress_and_ddsdde_fully_defined", True))
         if first.get("driver_point"):
             cell["driver_point"] = first["driver_point"]
+        for name in ("material_data_origin", "experiment_origin", "council_set"):
+            if first.get(name):
+                cell[name] = first[name]
         outside = [r["path"] for r in recs if r.get("outside_model_domain")]
         if outside:
             cell["paths_outside_model_domain"] = outside
