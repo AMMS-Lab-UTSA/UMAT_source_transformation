@@ -52,6 +52,7 @@ from typing import Mapping, Optional, Sequence
 
 import numpy as np
 
+from umat_oti.corpus_features import binary32_scope
 from umat_oti.corpus_features import drivers as dv
 from umat_oti.corpus_features import fd
 from umat_oti.corpus_features.paths import kinematics_for, paths_for
@@ -524,6 +525,12 @@ class Builds:
     #: quad-precision reference build of the ORIGINAL (drivers.quadify), used
     #: only where the double ladder leaves entries unresolved
     original_quad: dv.Build = field(default_factory=dv.Build)
+    #: the double variant of the ORIGINAL (binary32 declarations -> REAL*8,
+    #: no OTI): the secondary reference of B32-3, built only when a build
+    #: under test is in binary32 scope (binary32_scope)
+    original_double_variant: dv.Build = field(default_factory=dv.Build)
+    #: B32-0 per build under test: {"store": scope, "lifted": scope}
+    binary32: dict = field(default_factory=dict)
     uninitialised_hints: list = field(default_factory=list)
     identity: dict = field(default_factory=dict)       # build -> identity dict
 
@@ -574,6 +581,7 @@ def build_all(entry: CorpusEntry, work: Path, *, want_store: bool = True,
         store_text = units[-1].read_text(errors="replace")
         builds.store = dv.build_real(work / "store", units, store_text, sdvini=False,
                                      unit_flags=unit_flags)
+        builds.binary32["store"] = binary32_scope.store_scope(store, units, text)
         store_entry = {}
         if (store / "entry.json").is_file():
             store_entry = json.loads((store / "entry.json").read_text())
@@ -598,6 +606,25 @@ def build_all(entry: CorpusEntry, work: Path, *, want_store: bool = True,
     if want_lifted:
         builds.lifted, builds.lifted_ndir, builds.lifted_reason = _build_lifted(
             entry, work / "lifted", builds, supply_utilities=supply_utilities)
+    if any((sc or {}).get("in_scope") for sc in builds.binary32.values()):
+        # B32-3's secondary reference, compiled as the reference is (zero init)
+        (work / "original_double_variant").mkdir(parents=True, exist_ok=True)
+        vtext, changes = binary32_scope.double_variant(text)
+        vfile = work / "original_double_variant" / ("original_dbl_umat" + Path(prepared).suffix)
+        vfile.write_text(vtext, encoding="utf-8")
+        if changes["changes"]:
+            builds.original_double_variant = dv.build_real(
+                work / "original_double_variant", [vfile], vtext, sdvini=builds.sdvini,
+                unit_flags=[flags], extra_flags=FINIT_ZERO)
+        else:
+            builds.original_double_variant = dv.Build(
+                reason="no explicit single-precision declaration to widen (binary32 by "
+                       "implicit typing only): no double variant")
+        builds.identity["original_double_variant"] = {
+            "build": "original_double_variant",
+            "role": "B32-3 secondary reference only (never verifies the author's function)",
+            "compiled_source": locator(vfile), "compiled_source_sha256": _sha256_file(vfile),
+            **changes}
     return builds
 
 
@@ -659,6 +686,7 @@ def _build_lifted(entry: CorpusEntry, work: Path, builds: Builds, *,
     build = dv.build_oti(work, work, layout.module_name, layout.type_name, ndir,
                          kstep_rank=dv.kstep_rank(layout.lifted_umat.read_text(errors="replace")))
     builds.identity["lifted"] = _lifted_identity(lift_input, Path(layout.lifted_umat))
+    builds.binary32["lifted"] = binary32_scope.lifted_scope(work, layout, builds.source_text)
     return build, ndir, "" if build.ok else "driver"
 
 
@@ -1337,6 +1365,12 @@ class FeatureTally:
     #: columns not judged because a perturbed run of the ORIGINAL ended
     #: (STOP/XIT) before writing the records they need: {reason: count}
     terminations: Counter = field(default_factory=Counter)
+    #: B32 (fd.B32_RULE): the build under test is in binary32 scope; then the
+    #: scope record and the double variant's availability, for the record
+    b32: bool = False
+    b32_scope: dict = field(default_factory=dict)
+    b32_variant: str = ""
+    b32_examples: list = field(default_factory=list)
 
     def terminated(self, inc: int, wrt: str, reason: str):
         """A column at this state is not judged: a perturbed run of the
@@ -1352,7 +1386,7 @@ class FeatureTally:
             output_names: Sequence[str], magnitude: np.ndarray, undefined=None,
             value_magnitude=None, derivative_scale: float = 0.0, probe: bool = False,
             kinematic_input: float = 0.0, block_derivative: float = 0.0, double_zero=None,
-            n_increments: int = 1):
+            n_increments: int = 1, variant_column=None):
         """Judge one column at one state (entries of the judged block only).
 
         ``derivative_scale``: the column's derivative scale over the PATH (the
@@ -1420,13 +1454,27 @@ class FeatureTally:
                 self.nonsmooth.append({"increment": inc, "wrt": wrt, "reason": column.reason,
                                        "one_sided": near})
             return
-        verdict = fd.judge_column(oti, column.estimates, column.usable, self.ladder,
-                                  steps=column.steps, magnitude=magnitude, rtol=self.rtol,
-                                  eps=self.eps, value_magnitude=value_magnitude,
-                                  euler=self.euler, derivative_scale=derivative_scale,
-                                  kinematic_input=kinematic_input,
-                                  block_derivative=block_derivative, double_zero=double_zero,
-                                  n_increments=n_increments)
+        judge = fd.judge_column
+        b32_kw = {}
+        if self.b32:
+            judge = fd.judge_binary32
+            if variant_column is not None and undefined is not None and np.any(undefined):
+                import copy
+                variant_column = copy.copy(variant_column)
+                variant_column.estimates = [np.asarray(e)[keep] for e in variant_column.estimates]
+            b32_kw = {"variant": variant_column}
+        verdict = judge(oti, column.estimates, column.usable, self.ladder,
+                        steps=column.steps, magnitude=magnitude, rtol=self.rtol,
+                        eps=self.eps, value_magnitude=value_magnitude,
+                        euler=self.euler, derivative_scale=derivative_scale,
+                        kinematic_input=kinematic_input,
+                        block_derivative=block_derivative, double_zero=double_zero,
+                        n_increments=n_increments, **b32_kw)
+        for e, d_orig, d_var, value in verdict.binary32_entries:
+            if len(self.b32_examples) < 20:
+                self.b32_examples.append({"increment": inc, "wrt": wrt,
+                                          "output": output_names[e], "oti": value,
+                                          "fd_original": d_orig, "fd_double_variant": d_var})
         self.column_status[verdict.status] += 1
         for code in verdict.codes:
             self.entries[code] += 1
@@ -1543,6 +1591,14 @@ class FeatureTally:
                 "signature_ignored_statev": self.signature_ignored_statev,
                 "nonsmooth_examples": self.nonsmooth, "failed_examples": self.failures,
                 "unresolved_examples": self.unresolved_examples, "notes": self.notes,
+                **({"binary32": {
+                    "rule": fd.B32_RULE, "scope": self.b32_scope,
+                    "applied": self.b32, "double_variant": self.b32_variant,
+                    "pass_b32": self.entries.get(fd.PASS_B32, 0),
+                    "zero_pass_b32": self.entries.get(fd.ZERO_PASS_B32, 0),
+                    "unresolved_binary32": self.entries.get(fd.UNRESOLVED_BINARY32, 0),
+                    "unresolved_binary32_entries": self.b32_examples}}
+                   if self.b32_scope else {}),
                 "terminated_under_perturbation": [
                     {"reason": r, "columns": n} for r, n in
                     sorted(self.terminations.items(), key=lambda kv: _increment_of(kv[0]))[:12]]}
@@ -1816,6 +1872,49 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
     REF = {"quad": False, "run": perturbed, "eps": fd.EPS, "base_stress": base_stress,
            "base_statev": base_statev, "stop": stops["original"], "name": "original"}
 
+    # B32-3's secondary reference: the double variant of the ORIGINAL, run
+    # through the same perturbations (only for a build in binary32 scope)
+    VARIANT: dict = {}
+    b32_note = ""
+    if any((sc or {}).get("in_scope") for sc in builds.binary32.values()):
+        vb = builds.original_double_variant
+        if not vb.ok:
+            b32_note = f"double variant unavailable: {vb.reason}"
+        else:
+            v_run, message = _run_real(vb, work / "original_double_variant_perturbed", config,
+                                       perts, entry, fresh=True)
+            if v_run is None or any(i not in v_run.base for i in range(1, n_inc + 1)):
+                b32_note = f"double variant run did not complete: {message[-300:]}"
+            else:
+                VARIANT.update(quad=False, run=v_run, eps=fd.EPS, name="original_double_variant",
+                               base_stress=_base_arrays(v_run.base, n_inc, "stress"),
+                               base_statev=_base_arrays(v_run.base, n_inc, "statev") if nx
+                               else np.zeros((n_inc, 0)),
+                               stop=first_missing_record(v_run, perts, n_inc))
+                b32_note = "double variant run through the same perturbations"
+
+    def on_variant(column_fn, *args):
+        """The same column differenced on the double variant (None if not
+        available there): the FD reference swapped for the call."""
+        if not VARIANT:          # (in the quad pass too: it is the DOUBLE variant)
+            return None
+        saved = dict(REF)
+        REF.update(VARIANT)
+        try:
+            return column_fn(*args)
+        except PerturbationTerminated:
+            return None
+        finally:
+            REF.clear()
+            REF.update(saved)
+
+    def b32_tally(tally, build):
+        scope = builds.binary32.get(build) or {}
+        tally.b32_scope = scope
+        tally.b32 = bool(scope.get("in_scope"))
+        tally.b32_variant = b32_note
+        return tally
+
     def _why_missing(ips, inc, total=False) -> str:
         """'' when every record the column needs was written by every run it
         depends on (the FD reference run and the init-variant runs that prove
@@ -2000,7 +2099,7 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
           double_zero_of: dict = {}
 
           def ddsdde_payload():
-              tally = FeatureTally("ddsdde", ladder, rtol, eps=REF["eps"])
+              tally = b32_tally(FeatureTally("ddsdde", ladder, rtol, eps=REF["eps"]), "store")
               tally.signature_ignored_statev = sorted(l + 1 for l in ignore_for_stress)
               if builds.gradient_driven:
                   tally.notes.append("gradient-driven source: reference = d sigma/d eps with "
@@ -2042,6 +2141,16 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
                       exact = _exact_zero(sub)
                       if not REF["quad"]:
                           double_zero_of[(inc, j)] = exact
+                      variant = None
+                      if tally.b32:
+                          variant = on_variant(local_column, "dfgrd1" if builds.gradient_driven
+                                               else "dstran", j, inc, ignore_for_stress)
+                          if variant is not None and builds.gradient_driven:
+                              shift = np.zeros(nt + nx)
+                              if j <= entry.ndi:
+                                  shift[:nt] = VARIANT["base_stress"][inc - 1]
+                              variant.estimates = [e + shift for e in variant.estimates]
+                          variant = _restrict(variant, S) if variant is not None else None
                       # an entry is compared only when both the ORIGINAL's STRESS(i)
                       # and its own DDSDDE(i,j) are defined (D-12)
                       tally.add(inc, f"strain_{j}", sub, oti_matrix[:, j - 1],
@@ -2051,7 +2160,7 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
                                 kinematic_input=kinematic_input,
                                 block_derivative=block_derivative,
                                 double_zero=double_zero_of.get((inc, j))
-                                if REF["quad"] else None)
+                                if REF["quad"] else None, variant_column=variant)
               payload = tally.as_dict()
               if direction_check:
                   payload["direction_check"] = {"all_match": True, "columns": len(direction_check)}
@@ -2137,6 +2246,7 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
     def _sens_tally(feature, column_fn, wrt_items, block, names, oti_of, out, ignore):
         tally = FeatureTally(feature, ladder, rtol, eps=REF["eps"],
                              euler=True if (block.start == 0 and block.stop == nt) else "bracket")
+        b32_tally(tally, "lifted")
         tally.signature_ignored_statev = sorted(l + 1 for l in ignore)
         # each input's derivative scale over the path (FD references only),
         # so a state where the response cancelled to ~0 is judged against the
@@ -2173,10 +2283,15 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
                     hist = np.concatenate([np.abs(REF["base_stress"][:inc]),
                                            np.abs(REF["base_statev"][:inc])], axis=1)
                     value_mag = inc * np.nanmax(np.nan_to_num(hist), axis=0)[block]
+                variant = None
+                if tally.b32:
+                    variant = on_variant(column_fn, idx, inc, ignore)
+                    variant = _restrict(variant, block) if variant is not None else None
                 tally.add(inc, label, _restrict(column, block), oti_of(out, inc, d),
                           names, magnitude_of(column, inc, block), undefined=block_undefined,
                           value_magnitude=value_mag, derivative_scale=path_scale[label],
-                          n_increments=inc if feature.endswith("_total") else 1)
+                          n_increments=inc if feature.endswith("_total") else 1,
+                          variant_column=variant)
         return tally.as_dict()
 
     def emit(feature, run_name, column_fn, wrt_items, block, names, oti_of, stress_block):

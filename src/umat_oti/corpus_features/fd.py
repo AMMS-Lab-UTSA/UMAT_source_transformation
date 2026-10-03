@@ -67,6 +67,10 @@ NOISE_FACTOR = 8.0
 EPS = float(np.finfo(float).eps)
 #: Unit round-off of IEEE binary128 (gfortran REAL(16)): the quad reference.
 EPS_QUAD = 2.0 ** -112
+#: Machine epsilon of IEEE binary32, on the same convention as EPS: the
+#: reference noise of a source whose derivative path stores binary32 values
+#: (Vera B10, B32-1).
+EPS_SINGLE = float(np.finfo(np.float32).eps)
 
 
 def step_scale(value: float, typical: float = 0.0, floor: float = 1e-8) -> float:
@@ -282,6 +286,9 @@ class ColumnVerdict:
     atol: Optional[np.ndarray] = None
     codes: list = field(default_factory=list)  # per-entry verdict code
     failed_entries: list = field(default_factory=list)   # (entry, oti, fd, tol, plateau)
+    #: judge_binary32 only: the entries B32-3 made unresolved_binary32, as
+    #: (entry, original FD, double-variant FD, oti)
+    binary32_entries: list = field(default_factory=list)
 
     @property
     def resolved(self) -> int:
@@ -575,6 +582,103 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
 
 UNRESOLVED_EULER = "unresolved_euler_window"
 _OK = (PASS, ZERO_PASS)
+
+#: Binary32 judging (Vera B10, B32-0..3): an entry that passes under the
+#: binary32 reference noise, and an entry B32-3 leaves unresolved.
+PASS_B32, ZERO_PASS_B32 = "pass_b32", "zero_pass_b32"
+UNRESOLVED_BINARY32 = "unresolved_binary32"
+B32_RULE = (
+    "B32 (Vera B10), for a source whose transform's binary32 map lists a store of an "
+    "OTI-carrying value: B32-1 the FD reference noise is NOISE eps_single F/h (double and "
+    "quad reference alike; the RESOLUTION gates stay), an entry passing so is pass_b32 / "
+    "zero_pass_b32; B32-2 an entry that FAILs under the double floor and is not a pass under "
+    "B32-1 stays FAIL; B32-3 a failing entry is unresolved_binary32 only when the original's "
+    "FD and the FD of the double variant of the ORIGINAL (binary32 declarations -> REAL*8, "
+    "no OTI) both resolve, differ by more than 1e-3 relative, and the value under test agrees "
+    "with the double variant within the normal tolerance; otherwise FAIL. The double variant "
+    "is a secondary reference only and never verifies the author's function.")
+
+
+def judge_binary32(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Sequence[int],
+                   ladder: Sequence[float], *, variant: Optional["ColumnFD"] = None,
+                   **kw) -> ColumnVerdict:
+    """:func:`judge_column` under B32-1..3 (:data:`B32_RULE`).
+
+    ``kw`` are judge_column's, ``eps`` that of the reference in use (EPS or
+    EPS_QUAD). ``variant`` is the same column differenced on the double
+    variant of the original (None: B32-3 cannot apply, a failure stays).
+    """
+    oti = np.asarray(oti, float).reshape(-1)
+    normal = judge_column(oti, estimates, usable, ladder, **kw)
+    wide_kw = dict(kw, eps=EPS_SINGLE, double_zero=None)
+    wide = judge_column(oti, estimates, usable, ladder, **wide_kw)
+    var = None
+    if variant is not None and variant.smooth:
+        var = judge_column(oti, variant.estimates, variant.usable, ladder,
+                           **dict(kw, eps=EPS, double_zero=None, steps=variant.steps))
+    n = oti.size
+    v = ColumnVerdict(compared=n)
+    ref, unc, tol, at = (np.full(n, np.nan) for _ in range(4))
+    plateaus = []
+    for e in range(n):
+        a, b = normal.codes[e], wide.codes[e]
+        source = wide
+        if b in _OK:
+            code = PASS_B32 if b == PASS else ZERO_PASS_B32
+        elif a == FAIL or b in (FAIL, OTI_NONFINITE) or a == OTI_NONFINITE:
+            code = FAIL if a != OTI_NONFINITE else OTI_NONFINITE
+            source = normal if a in (FAIL, OTI_NONFINITE) else wide
+            # the original's plateau: the one the failing verdict resolved
+            d_orig = float(source.reference[e]) if source.reference is not None else np.nan
+            d_var = (float(var.reference[e]) if var is not None and var.reference is not None
+                     else np.nan)
+            if (code == FAIL and np.isfinite(d_orig)
+                    and var is not None and var.codes[e] in _OK and np.isfinite(d_var)
+                    and abs(d_orig - d_var) > RESOLUTION * max(abs(d_orig), abs(d_var))):
+                code = UNRESOLVED_BINARY32
+                v.binary32_entries.append((e, d_orig, d_var, float(oti[e])))
+        else:
+            code = b                                  # unresolved under the binary32 noise
+        v.codes.append(code)
+        for arr, src in ((ref, source.reference), (unc, source.uncertainty),
+                         (tol, source.tolerance), (at, source.atol)):
+            if src is not None:
+                arr[e] = src[e]
+        if code.startswith("unresolved"):
+            v.unresolved += 1
+            tol[e] = np.nan
+            continue
+        d, t = float(ref[e]), float(tol[e])
+        if code == OTI_NONFINITE:
+            v.failed += 1
+            v.failed_entries.append((e, float(oti[e]), d, float("nan"), ()))
+            continue
+        zero_branch = code == ZERO_PASS_B32 or (np.isfinite(at[e]) and abs(d) <= at[e])
+        err = abs(oti[e]) if zero_branch else abs(oti[e] - d)
+        if code == PASS_B32:
+            v.passed += 1
+        elif code == ZERO_PASS_B32:
+            v.zero_passed += 1
+        else:
+            v.failed += 1
+            v.failed_entries.append((e, float(oti[e]), d, t, source.plateau_steps))
+        v.max_abs = max(v.max_abs, float(err))
+        ratio = float(err / t) if t > 0 else float("inf")
+        v.max_ratio = max(v.max_ratio, ratio)
+        if not zero_branch and d != 0:
+            v.max_rel = max(v.max_rel, float(err / abs(d)))
+            v.max_rel_tolerance = max(v.max_rel_tolerance, t / abs(d))
+        if ratio > v.worst_ratio:
+            v.worst_entry, v.worst_ratio = e, ratio
+            v.tolerance_at_worst, v.error_at_worst = t, float(err)
+            v.plateau_steps = source.plateau_steps
+        plateaus.append(source.min_plateau)
+    for code in v.codes:
+        if code.startswith("unresolved"):
+            v.unresolved_reasons[code] = v.unresolved_reasons.get(code, 0) + 1
+    v.min_plateau = min(p for p in plateaus if p) if any(plateaus) else 0
+    v.reference, v.uncertainty, v.tolerance, v.atol = ref, unc, tol, at
+    return v
 
 
 def _bracket(own: ColumnVerdict, wide: ColumnVerdict, oti: np.ndarray, ladder) -> ColumnVerdict:
