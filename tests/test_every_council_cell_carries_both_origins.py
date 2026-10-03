@@ -67,8 +67,34 @@ def test_each_council_set_is_its_own_entry_with_both_origins(workspace):
         assert entry.provenance["experiment_origin"] == "council_deck"
         assert entry.driver_point["provenance"].startswith("council plan")
         assert entry.path_hints["documented_domain"]["strain_max"]["value"] == 0.004
-    # a bare key without a manifest takes the first set
-    assert H.resolve_entry("c1").provenance["council_set"] == "A"
+    # a bare key is refused for a multi-set plan (Vera G review C6)
+    with pytest.raises(LookupError, match="name one"):
+        H.resolve_entry("c1")
+
+
+def test_a_refused_council_plan_is_not_resolved(workspace):
+    plan = dict(_council_plan(), refusal_code="needs_documented_geometry",
+                refusal="reads COORDS")
+    (workspace / "plans" / "c1" / "council_plan.json").write_text(json.dumps(plan))
+    with pytest.raises(LookupError, match="needs_documented_geometry"):
+        H.resolve_entry("c1#A")
+
+
+def test_sets_are_separate_cells_and_count_only_together(workspace):
+    from umat_oti.corpus_features.cells import combine_council_sets
+    records = []
+    for set_id, status in (("A", "verified"), ("B", "verified")):
+        entry = H.resolve_entry(f"c1#{set_id}")
+        records.append(H._record(entry, "ddsdde", _path(), {"status": status}, {}))
+    cells = fold(records, evidence="x")
+    assert sorted(c["council_set"] for c in cells) == ["A", "B"]
+    (combined,) = combine_council_sets(cells)
+    assert combined["status"] == "verified" and combined["council_sets"] == ["A", "B"]
+    cells[1]["status"] = "not_attempted"
+    assert combine_council_sets(cells)[0]["status"] == "not_attempted"
+    cells[1]["status"] = "failed"
+    assert combine_council_sets(cells)[0]["status"] == "failed"
+    assert combine_council_sets(cells[:1])[0]["status"] == "not_attempted"   # B missing
 
 
 def test_every_council_cell_carries_both_origins(workspace):
