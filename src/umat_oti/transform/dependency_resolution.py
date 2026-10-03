@@ -41,7 +41,7 @@ from typing import Iterable, Optional, Sequence
 
 from umat_oti.core.model import ParsedFortranSource, ParsedSubroutine
 from umat_oti.fortran.normalize import detect_source_form
-from umat_oti.fortran.parser import logical_lines_from_text, parse_subroutines
+from umat_oti.fortran.parser import expand_fixed_form_tabs, logical_lines_from_text, parse_subroutines
 
 __all__ = [
     "RoutineDefinition",
@@ -97,6 +97,10 @@ EXTERNAL_LIBRARY_ROUTINES: dict[str, str] = {
 
 ABAQUS_RUNTIME_ROUTINES = frozenset({
     "XIT", "STDB_ABQERR", "GETOUTDIR", "GETJOBNAME", "GETNUMCPUS",
+    # The MPI rank of the calling process (Abaqus User Subroutines Guide,
+    # "Obtaining parallel processes information"), beside GETNUMCPUS.
+    # ibf-RWTH's Umat_CP.for calls it to print from rank 0 only.
+    "GETRANK",
     "SPRINC", "SPRIND", "ROTSIG", "SINV", "GETPARTINFO", "GETVRM",
     # Compiler intrinsics some sources call as subroutines. They need no
     # definition from any file and must not be reported as missing.
@@ -331,6 +335,13 @@ def _definitions_in(path: Path) -> list[RoutineDefinition]:
     for index, raw in enumerate(lines, start=1):
         if fixed and raw[:1] in {"C", "c", "*", "!"}:
             continue
+        if fixed:
+            # A tab in the label field puts the statement in column 7 (ifort
+            # and gfortran both read it so). Unexpanded, "\tsubroutine inv3x3"
+            # has an 'o' in column 6 and was skipped as a continuation line:
+            # every routine of the OXFORD-UMAT crystal-plasticity modules is
+            # written that way, so the closure reported them missing.
+            raw = expand_fixed_form_tabs(raw)
         if fixed and len(raw) > 5 and raw[5] not in {" ", "0"}:
             continue  # continuation line
         match = _DEF_RE.match(raw)
@@ -386,6 +397,7 @@ def _include_targets(path: Path) -> list[str]:
         if fixed:
             if raw[:1] in {"C", "c", "*", "!"}:
                 continue
+            raw = expand_fixed_form_tabs(raw)
             if len(raw) > 5 and raw[5] not in {" ", "0"}:
                 continue
             raw = raw[:72]
@@ -484,7 +496,7 @@ def _statements_of(definition: RoutineDefinition) -> list[str]:
     for raw in body:
         if raw[:1] in {"C", "c", "*", "!"}:
             continue
-        out.append(raw[:72])
+        out.append(expand_fixed_form_tabs(raw)[:72])
     return out
 
 
