@@ -577,6 +577,11 @@ class ManifestPlan:
     refusals: tuple[str, ...] = ()
     deck: str = ""
     material_block: str = ""
+    #: The author's ``*STEP`` periods for the paired block (``step_periods``),
+    #: or None when the pairing did not read them. Recorded beside the
+    #: generated experiment's own periods so that only these are ever cited as
+    #: the author's deck (G0, D-19a rev 2).
+    author_deck_periods: Optional[list] = None
     kinematics_provenance: str = ""
     #: Set when the deck and the triage row disagree about finite strain. The
     #: deck wins; the disagreement is recorded rather than resolved silently.
@@ -786,6 +791,9 @@ def _from_experiment(plan: "ManifestPlan", answer, source_id: str,
             deck_relative = str(material.deck)
         plan.deck = deck_relative
         plan.material_block = material.name or "(unnamed)"
+        periods = getattr(material, "step_periods", None)
+        plan.author_deck_periods = (
+            [float(v) for v in periods] if periods is not None else None)
     if answer.settled is not None and hasattr(answer.settled, "as_dict"):
         # Scrubbed like everything else recorded: the formulation's provenance
         # names the deck it read, and it reads it by absolute path.
@@ -1002,6 +1010,9 @@ def build_manifest(
                        + (f" named {wanted}" if wanted else ""))
         return plan
     plan.material_block = material.name or "(unnamed)"
+    periods = getattr(material, "step_periods", None)
+    plan.author_deck_periods = (
+        [float(v) for v in periods] if periods is not None else None)
 
     deck_text = deck_path.read_text(encoding="utf-8", errors="replace")
 
@@ -2878,6 +2889,7 @@ def _material_columns(plan: ManifestPlan) -> dict[str, Any]:
     return {
         "deck": plan.deck,
         "material_block": plan.material_block,
+        "author_deck_periods": plan.author_deck_periods,
         "material_provenance": manifest.material_provenance if manifest else "",
         "props_count": len(manifest.props) if manifest else 0,
         "nstatv": manifest.nstatv if manifest else None,
