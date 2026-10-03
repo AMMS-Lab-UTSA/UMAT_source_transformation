@@ -810,6 +810,15 @@ def sibling_constants(source: Path, repository: Path,
               "those positions filled in, and nobody has published them")
 
 
+#: ``Pairing.refusal_kind`` values (D-19a rev 2, R0).
+NO_DECK_IN_REPOSITORY = "no_deck_in_repository"
+NO_DECK_NAMES_THIS_SOURCE = "no_deck_names_this_source"
+AUTHOR_BLOCK_REJECTED = "author_block_rejected"
+AUTHOR_DECK_UNRESOLVED = "author_deck_unresolved"
+REFUSAL_KINDS = (NO_DECK_IN_REPOSITORY, NO_DECK_NAMES_THIS_SOURCE,
+                 AUTHOR_BLOCK_REJECTED, AUTHOR_DECK_UNRESOLVED)
+
+
 @dataclass(frozen=True)
 class Pairing:
     """The deck a verification reads its material from, and why that one."""
@@ -826,6 +835,15 @@ class Pairing:
     #: ``where_we_looked()`` in the verification tool already sets -- so the
     #: scan is recorded rather than the negative asserted.
     searched: dict = field(default_factory=dict)
+    #: Which of the four refusals this is, for routing (D-19a rev 2, R0):
+    #: ``no_deck_in_repository`` -- no *USER MATERIAL block anywhere;
+    #: ``no_deck_names_this_source`` -- every block was rejected, and none of
+    #: them sits beside the source or is named for it by the repository;
+    #: ``author_block_rejected`` -- a block beside the source, or named for
+    #: it, was rejected (the author's own deck does not fit);
+    #: ``author_deck_unresolved`` -- the deck beside the source fits and
+    #: leaves its constants as placeholders. Empty when a material was found.
+    refusal_kind: str = ""
 
     @property
     def found(self) -> bool:
@@ -835,6 +853,7 @@ class Pairing:
         return {"material": self.material.as_dict() if self.material else None,
                 "demand": self.demand.as_dict(), "why": self.why,
                 "refusal": self.refusal,
+                "refusal_kind": self.refusal_kind,
                 "rejected": [list(pair) for pair in self.rejected],
                 "alternatives": list(self.alternatives),
                 "warnings": list(self.warnings),
@@ -955,6 +974,7 @@ def pair(source: Path, repository: Path,
     searched = _where_we_looked(Path(repository), decks, materials, demand)
     if not materials:
         return Pairing(demand=demand, searched=searched,
+                       refusal_kind=NO_DECK_IN_REPOSITORY,
                        refusal=(f"{Path(repository).name} publishes no deck "
                                 f"with a *USER MATERIAL block, so there is "
                                 f"nothing here that says what this routine is "
@@ -1128,11 +1148,19 @@ def pair(source: Path, repository: Path,
                        material, reasons))
 
     if not scored:
+        # The author's own block, rejected, is a finding about that deck and
+        # stays refused; a repository whose blocks all belong to other
+        # sources says nothing about this one.
+        authors = [material for material in materials
+                   if material.deck.parent == source.parent
+                   or material.deck.name.lower() in named]
         detail = "; ".join(f"{where}: {why}" for where, why in rejected[:6])
         counts = ", ".join(str(count) for count
                            in searched["constant_counts_published"]) or "none"
         return Pairing(
             demand=demand, rejected=tuple(rejected), searched=searched,
+            refusal_kind=(AUTHOR_BLOCK_REJECTED if authors
+                          else NO_DECK_NAMES_THIS_SOURCE),
             refusal=(f"no material published in {Path(repository).name} can "
                      f"feed this routine. It reads PROPS(1:{demand.nprops}) "
                      f"and writes STATEV(1:{demand.nstatv}). Searched: "
@@ -1167,6 +1195,7 @@ def pair(source: Path, repository: Path,
                                             for m in beside_it})[:600]
             return Pairing(
                 demand=demand, rejected=tuple(rejected), searched=searched,
+                refusal_kind=AUTHOR_BLOCK_REJECTED,
                 refusal=(f"the deck beside this source publishes a material "
                          f"this routine cannot be run with, and the only "
                          f"blocks that fit belong to other directories of "
@@ -1235,6 +1264,7 @@ def pair(source: Path, repository: Path,
                            for target in material.unresolved_includes})
         return Pairing(
             demand=demand, rejected=tuple(rejected), searched=searched,
+            refusal_kind=AUTHOR_DECK_UNRESOLVED,
             refusal=(
                 f"the deck beside this source declares {first.constants} "
                 f"constants and does not publish them: "
