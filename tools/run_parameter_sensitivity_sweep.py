@@ -349,9 +349,9 @@ def _execute_and_verify(model: str, contract: dict, out: Path, record: dict) -> 
             "status": "failed",
             "reason": "the transform produced no parameter-sensitivity driver"}
         return
-    # FC explicitly: GNU make predefines FC=f77, so the Makefile's
-    # "FC ?= gfortran" never applies, and f77 is not installed everywhere
-    # gfortran is.
+    # FC explicitly: GNU make predefines FC=f77, and the generated Makefiles
+    # keep any FC they are given (they replace only that built-in default),
+    # so an FC exported by the caller would otherwise reach the build.
     build = subprocess.run(["make", "FC=" + (shutil.which("gfortran") or "gfortran")],
                            cwd=ps_dir, capture_output=True, text=True)
     if build.returncode != 0 or not driver.exists():
