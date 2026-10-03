@@ -1279,6 +1279,9 @@ class CouncilPlan:
     refusal: str = ""
     refusal_code: str = ""
     notes: tuple = ()
+    #: Which layout branch of a routine that tests its own tensor layout the
+    #: experiment exercises, and which it does not (Vera, G8 condition).
+    branch_coverage: Optional[dict] = None
     #: the row's documented domain, so the routine-level paths can be held
     #: inside it (loading_paths.model_domain)
     documented_domain: Optional[dict] = None
@@ -1295,6 +1298,7 @@ class CouncilPlan:
                 "refusal": self.refusal, "refusal_code": self.refusal_code,
                 "notes": list(self.notes),
                 "documented_domain": self.documented_domain,
+                "branch_coverage": self.branch_coverage,
                 "counts_only_if_every_set_passes": True,
                 "sets": [{"set_id": set_id, "plan": plan.as_dict()} for set_id, plan in self.sets]}
 
@@ -1404,10 +1408,20 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                        "does not choose one", **common)
 
     found = from_source(text, str(source))
-    statement = str(row.get("formulation_statement") or row.get("formulation_3d_only") or "")
+    formulation = row.get("formulation") if isinstance(row.get("formulation"), dict) else {}
+    statement = str(formulation.get("statement") or row.get("formulation_statement")
+                    or row.get("formulation_3d_only") or "")
+    stated_element = str(formulation.get("element") or "").split(" ")[0].upper()
     if found.known:
         element = settle(text, str(source)).element
         element_origin = ("source", "; ".join(found.evidence[:2]))
+    elif stated_element and _known_element(stated_element):
+        # D-21 amendment 2: a formulation the council derived from the code,
+        # with its line evidence
+        element = stated_element
+        element_origin = (str(formulation.get("origin") or "council_choice"),
+                          f"{formulation.get('element')}: "
+                          + "; ".join(str(e) for e in formulation.get("evidence") or ())[:300])
     else:
         element = next((e for pattern, e in _STATED_FORMULATION if pattern.search(statement)), "")
         element_origin = ("author_published" if origin != "council_chosen" else "council_choice",
@@ -1494,6 +1508,16 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                                            "here that says how long an experiment has to "
                                            "run")))
         plans.append((set_id, Plan(source, built, None, None)))
+    geometry = geometry_for(element)
+    branches = _layout_branches(executable, geometry.ntens, geometry.ndi, geometry.nshr)
+    if branches:
+        common["branch_coverage"] = {
+            "exercised": f"NTENS={geometry.ntens} (NDI={geometry.ndi}, element {element})",
+            "not_exercised": branches,
+            "statement": (f"verified on the {'3D' if geometry.ntens == 6 else element} branch "
+                          f"(NTENS={geometry.ntens}); the other layout branch"
+                          f"{'es' if len(branches) > 1 else ''} ("
+                          + "; ".join(branches) + ") not exercised")}
     return CouncilPlan(source, sets=tuple(plans), ceiling=ceiling,
                        documented_domain=row.get("documented_domain") or None,
                        ceiling_origin=ceiling_origin,
@@ -1529,6 +1553,67 @@ def _council_initial_state(row: dict, text: str, nstatv: int, origin: str):
     return (), False, ("council_default", "zero" + (f" ({why})" if why else "")
                        + "; harmless only if the initial-state proof (R5, "
                          "harness.initial_state_proof) passes")
+
+
+_LAYOUT_TEST = re.compile(
+    r"\b(NTENS|NDI|NSHR|NSIGMA)\s*(\.EQ\.|==|\.NE\.|/=|\.LT\.|<=?|\.GT\.|>=?|\.LE\.|\.GE\.)"
+    r"\s*(\d+)", re.IGNORECASE)
+
+
+_COMPARE = {".EQ.": lambda a, b: a == b, "==": lambda a, b: a == b,
+            ".NE.": lambda a, b: a != b, "/=": lambda a, b: a != b,
+            ".LT.": lambda a, b: a < b, "<": lambda a, b: a < b,
+            ".LE.": lambda a, b: a <= b, "<=": lambda a, b: a <= b,
+            ".GT.": lambda a, b: a > b, ">": lambda a, b: a > b,
+            ".GE.": lambda a, b: a >= b, ">=": lambda a, b: a >= b}
+
+
+def _layout_branches(executable: str, ntens: int, ndi: int, nshr: int) -> list:
+    """The tests a routine makes on its own tensor layout (``NTENS == 4``,
+    ``ndi < 3``, ``nsigma == 4``; NSIGMA is taken as NTENS) that are FALSE
+    for the layout the experiment runs: the branches it does not exercise,
+    as written, in order of appearance."""
+    layout = {"NTENS": ntens, "NSIGMA": ntens, "NDI": ndi, "NSHR": nshr}
+    seen: list = []
+    body = _strip_header(executable)
+    for found in _LAYOUT_TEST.finditer(body):
+        name, op, value = found.group(1).upper(), found.group(2).upper(), int(found.group(3))
+        text = " ".join(found.group(0).split())
+        if _COMPARE[op](layout[name], value):
+            continue
+        if text not in seen:
+            seen.append(text)
+    # A TRUE test that opens an IF ... THEN with an ELSE leaves the ELSE
+    # branch unexercised (``if (ndi==3) then ! 3D ... else ! 2D``).
+    stack: list = []
+    for line in body.splitlines():
+        head = line.strip()
+        opened = re.match(r"^(?:\d+\s+)?IF\s*\((.*)\)\s*THEN$", head, re.IGNORECASE)
+        if opened:
+            stack.append(opened.group(1))
+            continue
+        if re.match(r"^(?:\d+\s+)?END\s*IF\b", head, re.IGNORECASE):
+            if stack:
+                stack.pop()
+            continue
+        if stack and re.match(r"^ELSE\b", head, re.IGNORECASE):
+            for found in _LAYOUT_TEST.finditer(stack[-1]):
+                name, op, value = (found.group(1).upper(), found.group(2).upper(),
+                                   int(found.group(3)))
+                if _COMPARE[op](layout[name], value):
+                    text = "ELSE of " + " ".join(found.group(0).split())
+                    if text not in seen:
+                        seen.append(text)
+            stack[-1] = ""      # the ELSE is counted once
+    return seen
+
+
+def _known_element(element: str) -> bool:
+    try:
+        geometry_for(element)
+    except Exception:                                  # noqa: BLE001
+        return False
+    return True
 
 
 def _strip_header(executable: str) -> str:
