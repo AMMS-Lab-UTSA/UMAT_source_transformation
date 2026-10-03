@@ -384,12 +384,15 @@ def test_the_resolution_ladder_respects_the_ceiling():
     """
     from pathlib import Path
 
-    from umat_oti.abaqus.amplitude_search import CEILING
+    from umat_oti.abaqus.amplitude_search import CEILING, capped
 
     tool = (Path(__file__).resolve().parents[1] / "tools"
             / "verify_store_in_abaqus.py").read_text(encoding="utf-8")
-    assert "wanted = min(amplitude * factor, CEILING)" in tool
+    # the council ceiling (D-19a G4) goes through the package's capped(),
+    # which is min(amplitude, CEILING) for an author deck
+    assert "wanted = capped(amplitude * factor, ceiling)" in tool
     assert "would pass " in tool and "the ceiling of" in tool
     assert CEILING == 1.0
     # 0.005 * 400 is 2.0; clamped it is the ceiling itself.
-    assert min(0.005 * 400.0, CEILING) == CEILING
+    assert capped(0.005 * 400.0) == CEILING
+    assert capped(0.005 * 400.0, 5.0) == CEILING

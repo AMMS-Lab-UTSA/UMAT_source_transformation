@@ -62,6 +62,19 @@ GROWTH = 5.0
 #: asked about a regime its author did not write.
 CEILING = 1.0
 
+
+def capped(amplitude: float, ceiling: float = CEILING) -> float:
+    """``amplitude`` held at or below ``ceiling``, and never above
+    :data:`CEILING`.
+
+    The ceiling of a council-designed experiment (D-19a rev 2, R3) is the
+    documented strain or stretch domain, or a default (0.02 small strain, 0.2
+    finite); it lives here, in the fingerprinted package, so that changing it
+    moves the harness fingerprint. With ``ceiling = CEILING`` -- every author
+    deck -- this is the ``min(amplitude, CEILING)`` the tool applied before.
+    """
+    return min(float(amplitude), float(ceiling), CEILING)
+
 #: How many COMPLETE INCREMENTS a run has to leave before the amplitude
 #: counts as one this model can be driven at.
 #:
@@ -158,6 +171,9 @@ class SearchResult:
     bracket: tuple[float, float] = (0.0, 0.0)
     attempts: list[Attempt] = field(default_factory=list)
     reason: str = ""
+    #: the ceiling this search ran under (CEILING unless a council experiment
+    #: set a lower one); not serialised, so author rows read as before
+    ceiling: float = CEILING
 
     @property
     def found(self) -> bool:
@@ -170,7 +186,7 @@ class SearchResult:
                     f"between {low:.3g} and {high:.3g}, found in "
                     f"{len(self.attempts)} runs of the original")
         if self.outcome == LINEAR_TO_THE_CEILING:
-            return (f"linear to {CEILING:.3g} strain over "
+            return (f"linear to {self.ceiling:.3g} strain over "
                     f"{len(self.attempts)} runs: nothing here to activate, "
                     f"which for a linear elastic material is the right answer "
                     f"and not a failure to try harder")
@@ -240,7 +256,8 @@ def search_amplitude(
     Never runs the converted build. A loading chosen with the conversion in
     view would be a loading chosen to agree.
     """
-    result = SearchResult()
+    ceiling = capped(ceiling)
+    result = SearchResult(ceiling=ceiling)
     amplitude = float(first)
     last_quiet = 0.0
     elastic_stress = 0.0
