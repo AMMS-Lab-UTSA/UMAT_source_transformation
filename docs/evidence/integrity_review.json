@@ -1570,6 +1570,18 @@
      "text": "assert len(rows) == 405"
     }
    ]
+  },
+  "mock:tests/test_corpus_cases_holdout.py:env:monkeypatch.setattr:6461434e": {
+   "verdict": "justified",
+   "reason": "The fixture points the runner's CURRENT_RECORDS at the toy pass file it writes, so the author side reads the fixture's records instead of the workspace's pass21; nothing under test is replaced."
+  },
+  "mock:tests/test_corpus_cases_holdout.py:env:monkeypatch.setattr:b19953be": {
+   "verdict": "justified",
+   "reason": "The fixture empties the runner's REVIEWED_SCANS so the workspace's harvest and council-constant files cannot leak into the toy sources; the reviewed-scan tests pass their own file explicitly."
+  },
+  "mock:tests/test_corpus_cases_holdout.py:test_the_author_side_is_the_current_pass_not_pass16:monkeypatch.setattr:86a38ab8": {
+   "verdict": "justified",
+   "reason": "Points the harness's PASS16 at a file with different constants to show the author side does not read it; the assertion is that the runner ignores that path."
   }
  }
 }
