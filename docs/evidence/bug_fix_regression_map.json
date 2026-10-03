@@ -487,6 +487,22 @@
    "tests": [
     "tests/test_corpus_cases_council.py::test_a_council_case_freezes_and_passes_its_check"
    ]
+  },
+  {
+   "commit": "33ac0cd",
+   "bug": "The Abaqus gate paired records across steps (increment restarts each step), fd.judge_column's value-under-test round-off divided |F|-sized terms by the increment so a 1e-4 defect passed under quad, and the A6 shrink rule could clear a kink (Vera G10 review B1, B2, A6).",
+   "tests": [
+    "tests/test_the_gate_chooses_states_from_the_original.py::test_states_pair_on_step_as_well_as_increment",
+    "tests/test_the_roundoff_model_uses_the_total_kinematic_input.py::test_a_1e_4_defect_fails_under_quad_whatever_the_block",
+    "tests/test_the_abaqus_tangent_gate_is_entrywise.py::test_a_kink_that_the_ladder_crosses_is_never_cleared"
+   ]
+  },
+  {
+   "commit": "b3210d8",
+   "bug": "The gate re-selected states on every run instead of using a row's frozen states, did not prefer an activating integration point, and failed a row whose seed map could not be read (Vera G10 review A5, A8).",
+   "tests": [
+    "tests/test_the_gate_on_a_replayed_toy.py"
+   ]
   }
  ],
  "excluded": [

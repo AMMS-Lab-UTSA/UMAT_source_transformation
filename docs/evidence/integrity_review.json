@@ -1296,6 +1296,26 @@
   "mock:tests/test_corpus_cases_holdout.py:env:monkeypatch.setattr:86b1af39": {
    "verdict": "justified",
    "reason": "Fixture points harness globals at a temporary registry, pass file, cache and plans directory so the hold-out test never touches live campaign data; the code under test is not mocked."
+  },
+  "skip:tests/test_a_static_scan_override_is_rechecked_every_pass.py:<module>:mark.skipif:0a70e71a": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs Fortran toys, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_the_gate_on_a_replayed_toy.py:<module>:mark.skipif:0a70e71a": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs Fortran toys, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "broad_except:tools/verify_store_in_abaqus.py:verify_tangent:except Exception:32fa29db": {
+   "verdict": "justified",
+   "reason": "Reading the seed map of a transformed source (seeded_kinematics) can fail on any malformed text; the failure is recorded in direction_check.error and the row is left UNRESOLVED (Vera G10 review A8: a map that cannot be read cannot show a wrong direction), never verified and never silently passed. Tested by tests/test_the_gate_on_a_replayed_toy.py."
+  },
+  "mock:tests/test_the_gate_on_a_replayed_toy.py:test_a_direction_mismatch_fails_and_an_unreadable_seed_map_is_unresolved:monkeypatch.setattr:07db5835": {
+   "verdict": "justified",
+   "reason": "Fault injection: replaces tangent_gate.direction_check with a reported mismatch, then with a parse failure, to show that verify_tangent fails the row on the first and leaves it unresolved on the second; the real replay, sweep and judgement are not replaced and nothing is made to pass."
+  },
+  "mock:tests/test_the_gate_on_a_replayed_toy.py:test_a_direction_mismatch_fails_and_an_unreadable_seed_map_is_unresolved:monkeypatch.setattr:b4a77d1f": {
+   "verdict": "justified",
+   "reason": "Fault injection: replaces tangent_gate.direction_check with a reported mismatch, then with a parse failure, to show that verify_tangent fails the row on the first and leaves it unresolved on the second; the real replay, sweep and judgement are not replaced and nothing is made to pass."
   }
  }
 }
