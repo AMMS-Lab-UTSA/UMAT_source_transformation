@@ -337,6 +337,13 @@
     "tests/test_registry_fields_stage_and_reason.py::test_nothing_is_compiled_that_was_not_transformed",
     "tests/test_registry_fields_stage_and_reason.py::test_a_file_that_is_not_a_umat_is_not_given_a_refusal_as_its_reason"
    ]
+  },
+  {
+   "commit": "8a9a0ea",
+   "bug": "The shared residual_fixture_v1 schema closed finite_history.evidence without listing primal_decided_by, which the verifier writes since 4d91f0c and the exporter carries verbatim, so every fixture frozen at the current generation was refused by its own producer's contract (contract 4.1.0 declares it).",
+   "tests": [
+    "tests/test_a_fixture_from_the_current_verifier_meets_the_contract.py"
+   ]
   }
  ],
  "excluded": [
