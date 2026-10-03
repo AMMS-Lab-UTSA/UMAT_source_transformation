@@ -559,6 +559,10 @@
   {
    "commit": "f6b3e9d",
    "reason": "Review record only: adds the integrity-review entry for the gfortran skipif of tests/test_transform_oti_sign_matches_the_intrinsic.py; 'fix' appears in 'fix-map entry', it corrects no behaviour."
+  },
+  {
+   "commit": "e65bced",
+   "reason": "Feature (G9, D-19a rev 2 R6.1): tools/make_council_deck.py; 'exits 1' describes the --check outcome on a changed file, not a corrected behaviour. Tested by tests/test_a_council_deck_regenerates_byte_for_byte.py."
   }
  ],
  "changelog_fixed": {
