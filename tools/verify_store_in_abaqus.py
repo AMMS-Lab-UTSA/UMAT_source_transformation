@@ -4680,7 +4680,8 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         transformed=Path(stored.entry_source),
         form=source_form,
         tolerance=tangent_tolerance, timeout=timeout,
-        original_history=compared_original)
+        original_history=compared_original,
+        frozen_states=(kept or {}).get("states") or None)
     if stopped_at >= 0:
         tangent["states_taken_from"] = (
             f"the {stopped_at} increments in which both builds produced "
@@ -4701,6 +4702,32 @@ GATE_STATES_EACH_SIDE = 2
 
 def _point_of(record: dict) -> tuple:
     return (record.get("element"), record.get("point"))
+
+
+def frozen_gate_states(original_history: Sequence[dict], transformed_history: Sequence[dict],
+                       frozen: Sequence[dict]) -> tuple[list, dict]:
+    """The states a row froze (A5), found again in this run's histories: the
+    original records at the frozen (step, increment, element, point) and the
+    matching transformed records. A frozen state not found stays in the
+    denominator and is named."""
+    transformed = {(r.get("step"), r.get("increment")) + _point_of(r): r
+                   for r in transformed_history if r.get("DDSDDE") and r.get("entry")}
+    chosen, missing = [], []
+    for state in frozen:
+        point = (state.get("element"), state.get("point"))
+        records = [r for r in original_history if _point_of(r) == point]
+        key = (state.get("step"), state.get("increment"))
+        position = next((i for i, r in enumerate(records)
+                         if (r.get("step"), r.get("increment")) == key), None)
+        if position is None:
+            missing.append(state)
+            continue
+        chosen.append((position, records, records[position], transformed.get(key + point)))
+    first = frozen[0] if frozen else {}
+    return chosen, {"selected_from": "frozen", "states": list(frozen),
+                    "point": {"element": first.get("element"), "point": first.get("point")},
+                    "not_found": missing,
+                    "rule": "the states frozen with this row, not re-selected"}
 
 
 def choose_gate_states(original_history: Sequence[dict],
@@ -4727,17 +4754,19 @@ def choose_gate_states(original_history: Sequence[dict],
         groups.setdefault(_point_of(record), []).append(record)
     transformed = {(r.get("step"), r.get("increment")) + _point_of(r): r for r in transformed_history
                    if r.get("DDSDDE") and r.get("entry")}
-    best = None
-    for point in sorted(groups, key=lambda key: tuple(str(k) for k in key)):
-        records = groups[point]
-        matched = sum(1 for r in records
-                      if (r.get("step"), r.get("increment")) + point in transformed)
-        if matched >= 2 * each_side:
-            best = point
-            break
-        if best is None or matched > sum(1 for r in groups[best]
-                                         if (r.get("step"), r.get("increment")) + best in transformed):
-            best = point
+    def matched(point):
+        return sum(1 for r in groups[point]
+                   if (r.get("step"), r.get("increment")) + point in transformed)
+
+    # An integration point that activates is preferred (Vera G10 review): the
+    # states either side of ITS activation are the evidence about the
+    # inelastic law; then the one with the most replayable states; then the
+    # first by label.
+    ordered = sorted(groups, key=lambda key: tuple(str(k) for k in key))
+    ranked = sorted(ordered, key=lambda point: (
+        not (matched(point) >= 2 * each_side and first_activated(groups[point]) is not None),
+        not matched(point) >= 2 * each_side, -matched(point)))
+    best = ranked[0] if ranked else None
     if best is None:
         return [], {"selected_from": "original", "reason": "no original records"}
     records = groups[best]
@@ -4936,7 +4965,8 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
                    form: str = "fixed", tolerance: float = TANGENT_TOLERANCE,
                    timeout: int = 900, states: int = 3,
                    transformed: Optional[Path] = None,
-                   original_history: Optional[Sequence[dict]] = None) -> dict:
+                   original_history: Optional[Sequence[dict]] = None,
+                   frozen_states: Optional[Sequence[dict]] = None) -> dict:
     """The OTI tangent against centred differences of the ORIGINAL, under D-4.
 
     The value under test is DDSDDE out of the transformed build's own probe
@@ -4958,8 +4988,17 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
 
     outcome: dict[str, Any] = {"verified": False, "reason": "", "gate": "D-4 entrywise/1"}
     if transformed is not None:
-        check = gate.direction_check(Path(transformed).read_text(errors="replace"),
-                                     manifest.ntens, manifest.ndi, manifest.nshr)
+        try:
+            check = gate.direction_check(Path(transformed).read_text(errors="replace"),
+                                         manifest.ntens, manifest.ndi, manifest.nshr)
+        except Exception as error:                      # noqa: BLE001 - a parse failure
+            # cannot show a wrong direction: unresolved, not failed (Vera G10)
+            outcome["direction_check"] = {"applies": None,
+                                          "error": f"{type(error).__name__}: {error}"}
+            outcome["reason"] = ("the seeded directions could not be read from the transformed "
+                                 "source, so which derivative its DDSDDE columns are is "
+                                 "unestablished: unresolved, not failed")
+            return outcome
         outcome["direction_check"] = check
         if check.get("applies") and not check.get("all_match"):
             outcome["reason"] = (f"the transform seeded column(s) {check['mismatched']} in a "
@@ -4969,7 +5008,15 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
             outcome["failed"] = True
             return outcome
     history = list(original_history if original_history is not None else transformed_history)
-    chosen, selection = choose_gate_states(history, list(transformed_history))
+    usable_frozen = [s for s in (frozen_states or ()) if isinstance(s, dict)
+                     and {"increment", "element", "point"} <= set(s)]
+    if usable_frozen:
+        chosen, selection = frozen_gate_states(history, list(transformed_history), usable_frozen)
+    else:
+        chosen, selection = choose_gate_states(history, list(transformed_history))
+        if frozen_states:
+            selection["reselected"] = ("the row's frozen states do not name (step, increment, "
+                                       "element, point); chosen again from the original")
     outcome["state_selection"] = selection
     outcome["chosen_states"] = selection.get("states", [])
     if not chosen:
