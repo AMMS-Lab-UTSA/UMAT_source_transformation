@@ -57,12 +57,18 @@ def test_mixed_unit_statev_block_exact_still_verifies():
 def test_a_cancelled_statev_slot_is_unresolved_not_failed():
     # measured (Lemaitre SDV6, fv44 B2c first run): quad reference ~1e-34, OTI
     # round-off 2.8e-17 from the large terms the slot is the difference of;
-    # on its own magnitude it "fails", on the Euler term it passes -> unresolved
+    # on its own magnitude it "failed", on the Euler term it passed ->
+    # unresolved. Since Vera's pass21 A3 floor a double value counts as nonzero
+    # only above NOISE eps max(S, |block|) = 1.8e-16 here, so 2.8e-17 is a
+    # zero on both judgements, and one 100x above it fails on both: the
+    # Euler window of this toy was exactly that floor.
     D, F = [1e-1, 0.0], [1e2, 1e-20]
     v = _judge([1e-1, 2.8e-17], D, 1.0, F, eps=fd.EPS_QUAD, euler="bracket",
                vmag=np.array([1e2, 1e-20]))
-    assert v.codes[1] == fd.UNRESOLVED_EULER, (v.codes, v.atol)
-    assert v.codes[0] == fd.PASS and v.status == "unresolved"
+    assert v.codes == [fd.PASS, fd.ZERO_PASS], (v.codes, v.atol)
+    v = _judge([1e-1, 1e-14], D, 1.0, F, eps=fd.EPS_QUAD, euler="bracket",
+               vmag=np.array([1e2, 1e-20]))
+    assert v.codes == [fd.PASS, fd.FAIL], (v.codes, v.atol)
 
 
 def test_harness_uses_euler_only_on_the_stress_block():
