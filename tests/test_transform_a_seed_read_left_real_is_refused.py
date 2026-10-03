@@ -22,3 +22,22 @@ def test_a_seed_read_left_real_ahead_of_the_seed_block_is_refused(tmp_path):
     summary, code = transform(tmp_path, HEAD % {"first": "2.0d0*g"}, ".f90")
     assert code != 0
     assert summary["semantic_checks"]["no_seed_read_into_a_real_copy_of_a_shadowed_name"] is False
+
+
+def _two_hop(first: str) -> str:
+    return (HEAD.replace("g = props(1)*(1.0d0 + dstran(2))", "t = dstran(2)\n  q = props(1)\n  g = props(1)*(1.0d0 + t)")
+            .replace("real(8) :: y(6), g", "real(8) :: y(6), g, t, q") % {"first": first})
+
+
+def test_a_two_hop_seed_read_left_real_is_refused(tmp_path):
+    """Vera's B8 R2 toy: T = DSTRAN(2); G = PROPS(1)*(1+T). Was 1000 against FD 1040.8."""
+    summary, code = transform(tmp_path, _two_hop("2.0d0*g"), ".f90")
+    assert code != 0
+    assert summary["semantic_checks"]["no_seed_read_into_a_real_copy_of_a_shadowed_name"] is False
+
+
+def test_a_seed_read_reaching_a_call_through_a_second_identifier_is_refused(tmp_path):
+    """Vera's B8 R2 toy: CALL SCALE(Q*G/PROPS(1), ...). Was 1000 against FD 1020.4."""
+    summary, code = transform(tmp_path, _two_hop("q*g/props(1)"), ".f90")
+    assert code != 0
+    assert summary["semantic_checks"]["no_seed_read_into_a_real_copy_of_a_shadowed_name"] is False

@@ -9666,13 +9666,72 @@ def _real_statements_reading_the_seed(
                 return True
         return False
 
+    # Transitive: a REAL statement reading the seed taints what it assigns,
+    # and a REAL statement reading a tainted name taints its target too --
+    # ``T = DSTRAN(2)`` then ``G = PROPS(1)*(1+T)`` loses dG/dDSTRAN just as
+    # surely as one statement would (Vera, B8 review R2). A REAL CALL that
+    # reads a tainted name taints every plain-name actual it is given.
+    # Shadows and the emitter's own OTI_ names are never REAL targets here.
+    def names_in(text: str) -> set[str]:
+        return {token.upper() for token in re.findall(
+            r"(?<![%\w])[A-Za-z_]\w*", _without_character_literals(text))}
+
+    def is_real_target(name: str) -> bool:
+        return not (name.endswith("_OTI") or name.startswith("OTI_"))
+
+    call = re.compile(r"^\s*(?:\d+\s+)?CALL\s+[A-Za-z_]\w*\s*\((.*)\)\s*$", re.IGNORECASE)
+    lines = transformed_source.splitlines()
+    seed_block = next((number for number in range(span[0], min(span[1], len(lines)) + 1)
+                       if re.match(r"^\s*[Cc*!]\s*OTIS seed initialization", lines[number - 1])),
+                      span[1] + 1)
+
+    def taint(rows: list[tuple[int, str]]) -> set[str]:
+        tainted = {seed.upper() for seed in seeds}
+        changed = True
+        while changed:
+            changed = False
+            for _, text in rows:
+                if "::" in text:
+                    continue
+                match = assignment.match(text)
+                if match:
+                    target = match.group(1).upper()
+                    if (is_real_target(target) and target not in tainted
+                            and names_in((match.group(2) or "") + " " + match.group(3)) & tainted):
+                        tainted.add(target)
+                        changed = True
+                    continue
+                called = call.match(text)
+                if called and names_in(called.group(1)) & tainted:
+                    for actual in split_top_level(called.group(1)):
+                        base = re.match(r"^\s*([A-Za-z_]\w*)\s*(?:\(.*\))?\s*$", actual)
+                        if base and is_real_target(base.group(1).upper()) and base.group(1).upper() not in tainted:
+                            tainted.add(base.group(1).upper())
+                            changed = True
+        return tainted
+
+    tainted = taint(statements)
+    tainted_before_seed = taint([row for row in statements if row[0] < seed_block])
+    tainted_reference = re.compile(
+        r"(?<![%\w])(?:" + "|".join(re.escape(name) for name in sorted(tainted)) + r")\b(?!_OTI)",
+        flags=re.IGNORECASE)
+
     found: list[tuple[int, str]] = []
     for number, text in statements:
         match = assignment.match(text)
-        if not match or f"{match.group(1).upper()}_OTI" not in shadows:
+        if not match:
             continue
-        if (pattern.search(_without_character_literals(match.group(3)))
-                and shadow_is_read(f"{match.group(1).upper()}_OTI")):
+        target = match.group(1).upper()
+        rhs = _without_character_literals(match.group(3))
+        # The seed block's copy-in of a tainted REAL value into its shadow.
+        if (target.endswith("_OTI") and target[:-4] in tainted_before_seed
+                and re.fullmatch(rf"\s*{re.escape(target[:-4])}\s*(?:\(.*\))?\s*", rhs, re.IGNORECASE)):
+            if shadow_is_read(target) and target[:-4] not in {seed.upper() for seed in seeds}:
+                found.append((number, text.strip()))
+            continue
+        if f"{target}_OTI" not in shadows:
+            continue
+        if tainted_reference.search(rhs) and shadow_is_read(f"{target}_OTI"):
             found.append((number, text.strip()))
     return found
 
