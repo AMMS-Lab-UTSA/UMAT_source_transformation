@@ -102,3 +102,13 @@ def test_temperature_and_stretch_witnesses_relabel_a_path():
     dom["temperature"] = (290.0, 405.0)
     (out,) = _within_domain([hot], dom)
     assert "TEMP 400..410 outside 290..405" in out.provenance["outside_model_domain"]
+
+
+def test_a_domain_stated_in_words_is_recorded_and_not_enforced():
+    words = "per the driver format: 500 increments of -0.001 (up to -0.5)"
+    entry = _entry(documented_domain={"strain_max": _stated(words), "stretch_max": None,
+                                      "temperature": _stated("room temperature")})
+    dom = model_domain(entry)
+    assert "strain_max" not in dom and "temperature" not in dom
+    assert sum("not a number, not enforced" in w for w in dom["witnesses"]) == 2
+    assert [p.purpose for p in paths_for(entry)] == [p.purpose for p in paths_for(_entry())]

@@ -1032,17 +1032,28 @@ def model_domain(entry: Mapping) -> dict:
             continue
         value = stated["value"]
         where = f"{stated.get('where', '')}: {stated.get('quote', '')}".strip(": ")
+        try:
+            if key == "temperature":
+                low, high = (
+                    (float(value[0]), float(value[1]))
+                    if isinstance(value, (list, tuple))
+                    else (float(value), float(value))
+                )
+            else:
+                number = float(value)
+        except (TypeError, ValueError, IndexError):
+            # a statement in words ("500 increments of -0.001, up to -0.5")
+            # is recorded and not enforced: reading a bound out of prose would
+            # be choosing it
+            domain["witnesses"].append(f"{key} not a number, not enforced: {str(value)[:120]}"
+                                       f" ({where})")
+            continue
         if key == "temperature":
-            low, high = (
-                (float(value[0]), float(value[1]))
-                if isinstance(value, (list, tuple))
-                else (float(value), float(value))
-            )
             domain["temperature"] = (low, high)
             text = f"{low:g}" if low == high else f"{low:g}..{high:g}"
         else:
-            domain[key] = float(value)
-            text = f"{float(value):g}"
+            domain[key] = number
+            text = f"{number:g}"
         domain[f"{key}_provenance"] = where
         domain["witnesses"].append(f"{key} {text}: {where}")
     return domain
