@@ -567,6 +567,40 @@ def register_yield_function(source_text: str, function: YieldFunction) -> str:
     return key
 
 
+#: ``STATEV(1+2*NTENS) = <name>``: the scalar stored after two NTENS blocks.
+_SLOT_ONE_PLUS_TWO_NTENS = re.compile(r"STATEV\(1\+2\*NTENS\)=([A-Z_][A-Z0-9_]*)")
+#: ``<flow stress> = <Sy> * (1e-4 + <p>) ** <n>``: power hardening of ``p``.
+_POWER_HARDENING_ARGUMENT = re.compile(
+    r"[A-Z_][A-Z0-9_]*=[A-Z_][A-Z0-9_]*\*\(0\.0001\+([A-Z_][A-Z0-9_]*)\)\*\*[A-Z_][A-Z0-9_]*"
+)
+_PROPS_ASSIGNED = re.compile(r"(?<![A-Z0-9_])([A-Z_][A-Z0-9_]*)=PROPS\((\d+)\)")
+#: ``STRESS(k) = <direction>(k) * <yield stress> + <hydrostatic>``.
+_RADIAL_RETURN = re.compile(
+    r"STRESS\(([A-Z_][A-Z0-9_]*)\)=[A-Z_][A-Z0-9_]*\(\1\)\*([A-Z_][A-Z0-9_]*)\+[A-Z_][A-Z0-9_]*"
+)
+
+
+def _stored_at_one_plus_two_ntens(compact: str) -> set[str]:
+    """Names stored in STATEV(1+2*NTENS) (blank-free upper-case source)."""
+    return set(_SLOT_ONE_PLUS_TWO_NTENS.findall(compact))
+
+
+def _radial_return_on_props3_props4(compact: str) -> bool:
+    """A radial return onto the yield stress read from PROPS(3), beside a
+    hardening modulus read from PROPS(4).
+
+    Structural: the returned stress is a direction times the PROPS(3)
+    variable plus a hydrostatic part, and some variable is read from
+    PROPS(4). The names are whatever the source calls them.
+    """
+    by_prop: dict[str, set[str]] = {}
+    for name, index in _PROPS_ASSIGNED.findall(compact):
+        by_prop.setdefault(index, set()).add(name)
+    if not by_prop.get("3") or not by_prop.get("4"):
+        return False
+    return any(y in by_prop["3"] for _, y in _RADIAL_RETURN.findall(compact))
+
+
 def yield_function_for(entry: Mapping) -> YieldFunction | None:
     """The identified yield function for this entry, if any.
 
@@ -599,9 +633,9 @@ def yield_function_for(entry: Mapping) -> YieldFunction | None:
             lambda ntens: 1,
             1e-6,
         )
-    if "SF=SY*(0.0001+EQPLAS)**XN" in upper.replace(
-        " ", ""
-    ) and "STATEV(1+2*NTENS)=EQPLAS" in upper.replace(" ", ""):
+    compact = upper.replace(" ", "")
+    stored = _stored_at_one_plus_two_ntens(compact)
+    if stored & set(_POWER_HARDENING_ARGUMENT.findall(compact)):
         return YieldFunction(
             "von Mises of undegraded stress, power hardening Sy(1e-4+p)^n",
             "lemaitreDamageNonLocal.f: Sf=Sy*(0.0001+eqplas)**xn; "
@@ -610,18 +644,13 @@ def yield_function_for(entry: Mapping) -> YieldFunction | None:
             lambda ntens: 1 + 2 * ntens,
             1e-5,
         )
-    compact = upper.replace(" ", "")
-    if (
-        "SYIELD=PROPS(3)" in compact
-        and "HARD=PROPS(4)" in compact
-        and "STRESS(K1)=FLOW(K1)*SYIELD+SHYDRO" in compact
-        and "STATEV(1+2*NTENS)=EQPLAS" in compact
-    ):
-        # jasonanewcoder umat_mises_plasticity_official.f: the header states
-        # "ISOTROPIC HARDENING - RADIAL RETURN", PROPS(3)=SYIELD, PROPS(4)=HARD
-        # (lines 27-32) and the Newton loop solves SMISES-3G dp = SYIELD+HARD dp
-        # (line 106). The documented surface is sigma_y = PROPS(3) +
-        # PROPS(4) * EQPLAS with EQPLAS = STATEV(1+2N).
+    if stored and _radial_return_on_props3_props4(compact):
+        # jasonanewcoder umat_mises_plasticity_official.f: the header documents
+        # isotropic hardening by radial return with PROPS(3) the yield stress
+        # and PROPS(4) the hardening modulus (lines 27-32), and the Newton loop
+        # solves for dp with yield stress PROPS(3) + PROPS(4) dp (line 106).
+        # The documented surface is sigma_y = PROPS(3) + PROPS(4) * p with p
+        # stored in STATEV(1+2N).
         return YieldFunction(
             "von Mises, linear isotropic hardening (as the header documents)",
             "umat_mises_plasticity_official.f:27-32 header; :79-80 SYIELD, HARD; "
