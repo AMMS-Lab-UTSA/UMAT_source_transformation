@@ -393,6 +393,20 @@
    "tests": [
     "tests/test_transform_a_data_local_of_another_routine_is_not_the_umats.py"
    ]
+  },
+  {
+   "commit": "7a3c53a",
+   "bug": "demanded() saw only literal and bare-identifier PROPS subscripts, so an index expression (UVC props((N_BASIC_PROPS - 1) + 2 * i)) left the demand exact at PROPS(1:7) and the author's 11-constant decks were rejected as another parameterisation; a literal-bounded DO loop over PROPS(I) was not counted.",
+   "tests": [
+    "tests/test_a_props_index_expression_is_not_a_literal_demand.py"
+   ]
+  },
+  {
+   "commit": "91206cf",
+   "bug": "When every block was rejected the reason quoted the first six rejections in scan order, so the author's own README-named block (mholla iso_Mandel: *DEPVAR 3 against STATEV(5)) could be left out of it.",
+   "tests": [
+    "tests/test_a_refusal_names_its_kind.py::test_the_authors_rejected_block_is_named_first_with_its_depvar"
+   ]
   }
  ],
  "excluded": [
