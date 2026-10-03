@@ -100,8 +100,28 @@ def test_an_eligible_harvest_row_wins_over_a_council_row(tool, tmp_path):
         "formulation_statement": "NTENS=6 only",
         "constants": [{"index": 1, "value": 1000.0, "confidence": "exact", "name": "E"},
                       {"index": 2, "value": 0.2, "confidence": "exact", "name": "nu"}]}) + "\n")
-    assert tool.main(["--rows", str(rows), "--rows", str(harvest), "--out", str(out),
-                      "--cache", str(cache)]) == 0
-    plan = json.loads((out / "k1" / "council_plan.json").read_text())
-    assert plan["material_data_origin"] == "author_published_outside_deck"
-    assert [s["set_id"] for s in plan["sets"]] == ["author"]
+    for order in ([rows, harvest], [harvest, rows]):
+        args = sum((["--rows", str(p)] for p in order), [])
+        assert tool.main(args + ["--out", str(out), "--cache", str(cache)]) == 0
+        plan = json.loads((out / "k1" / "council_plan.json").read_text())
+        assert plan["material_data_origin"] == "author_published_outside_deck"
+        assert [s["set_id"] for s in plan["sets"]] == ["author"]
+        assert sorted(r.split(" ")[0] for r in plan["rows_read"]) == ["harvest.jsonl",
+                                                                       "rows.jsonl"]
+    # an INELIGIBLE harvest row loses to the D-21 row, in either order
+    text = harvest.read_text().replace('"eligible": true', '"eligible": false')
+    harvest.write_text(text)
+    for order in ([rows, harvest], [harvest, rows]):
+        args = sum((["--rows", str(p)] for p in order), [])
+        assert tool.main(args + ["--out", str(out), "--cache", str(cache)]) == 0
+        plan = json.loads((out / "k1" / "council_plan.json").read_text())
+        assert plan["material_data_origin"] == "council_chosen"
+
+
+def test_check_reports_an_orphan_folder(tool, tmp_path, capsys):
+    cache, rows, out = _setup(tmp_path, _row())
+    common = ["--rows", str(rows), "--out", str(out), "--cache", str(cache)]
+    assert tool.main(common) == 0
+    (out / "stale_key").mkdir()
+    assert tool.main(common + ["--check"]) == 1
+    assert "stale_key" in capsys.readouterr().out
