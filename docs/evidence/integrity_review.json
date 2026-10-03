@@ -1172,6 +1172,34 @@
   "mock:tests/test_experiment_periods_are_not_the_authors_deck.py:test_resolve_entry_carries_both_and_never_calls_the_probe_the_deck:monkeypatch.setattr:c71100f6": {
    "verdict": "justified",
    "reason": "Points the harness's module-level paths (registry, verification records, cache, store, families, experiment work dir) at a temporary fixture tree so resolve_entry reads a record with and without author_deck_periods; the real resolve_entry and model_domain run and nothing numerical is replaced."
+  },
+  "skip:tests/test_transform_a_callee_ddsdde_write_bound_to_a_shadow.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_callee_ddsdde_write_bound_to_a_shadow.py:<module>:mark.skipif:8d891947#2": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_forall_symmetrising_the_old_tangent_is_part_of_it.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_shadow_takes_the_umats_own_extent.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_value_at_a_hypercomplex_dummy_is_passed_as_one.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_value_at_a_hypercomplex_dummy_is_passed_as_one.py:<module>:mark.skipif:8d891947#2": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_value_at_a_hypercomplex_dummy_is_passed_as_one.py:<module>:mark.skipif:8d891947#3": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
   }
  }
 }

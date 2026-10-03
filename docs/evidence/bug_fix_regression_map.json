@@ -344,6 +344,41 @@
    "tests": [
     "tests/test_a_fixture_from_the_current_verifier_meets_the_contract.py"
    ]
+  },
+  {
+   "commit": "bc074bc",
+   "bug": "A literal or REAL expression handed to a lifted helper's hypercomplex dummy compiled through the implicit interface and the callee read the derivative parts from beyond the temporary (czmHealing.f, UMAT_MohrCoulomb.f; a toy's DDSDDE(1,2) 312.09 against FD 312.00), and real_arguments_into_oti_helper_dummies skipped such actuals.",
+   "tests": [
+    "tests/test_transform_a_value_at_a_hypercomplex_dummy_is_passed_as_one.py"
+   ]
+  },
+  {
+   "commit": "66a5469",
+   "bug": "DDSDDE writes inside a lifted callee, which land in DDSDDE_OTI, were refused as uncovered old-tangent writes (seven corpus sources).",
+   "tests": [
+    "tests/test_transform_a_callee_ddsdde_write_bound_to_a_shadow.py"
+   ]
+  },
+  {
+   "commit": "222b7b7",
+   "bug": "A shadow's extent came from the file-wide scanner row, so a UMAT array named like a helper's scalar dummy was refused for having no shape; a keyword argument name was read as a use of the caller's variable.",
+   "tests": [
+    "tests/test_transform_a_shadow_takes_the_umats_own_extent.py"
+   ]
+  },
+  {
+   "commit": "7511a2b",
+   "bug": "A FORALL that only symmetrises the old tangent, directly after the output region, was refused as an uncovered DDSDDE write.",
+   "tests": [
+    "tests/test_transform_a_forall_symmetrising_the_old_tangent_is_part_of_it.py"
+   ]
+  },
+  {
+   "commit": "d874a98",
+   "bug": "A REAL statement reading the seed into a promoted variable could be left ahead of the seed block, losing that variable's derivative with a bitwise-correct stress (DDSDDE(1,2) 1000.0 against FD 1040.8); now refused by a semantic check.",
+   "tests": [
+    "tests/test_transform_a_seed_read_left_real_is_refused.py"
+   ]
   }
  ],
  "excluded": [
