@@ -2269,6 +2269,71 @@ def _exact_zero(column: fd.ColumnFD) -> np.ndarray:
     return np.all(stack == 0.0, axis=0)
 
 
+#: What the zero-started STATEV slots hold in the second run of the
+#: initial-state proof (D-19a rev 2, R5). Finite, so a routine that reads it
+#: computes with it, and not a value a routine plausibly starts at.
+INITIAL_STATE_SENTINEL = 7.3205080756887719e3
+
+
+def initial_state_proof(entry: CorpusEntry, build: dv.Build, work: Path,
+                        increments: list, statev0: Optional[Sequence[float]] = None) -> dict:
+    """Is starting the zero-started STATEV slots at 0 harmless? (R5)
+
+    The ORIGINAL is driven twice over ``increments``: with ``statev0`` (zeros
+    by default) and with :data:`INITIAL_STATE_SENTINEL` in every slot that
+    starts at zero. Bit-identical STRESS and DDSDDE at every increment, and
+    bit-identical STATEV in every slot the routine writes (a slot that holds
+    its starting value throughout in both runs is untouched and not
+    compared), prove the zero start harmless: the routine initialises what it
+    reads (``IF (KINC.EQ.1) STATEV(1) = ...``). Anything else is
+    ``needs_initial_state`` -- the source needs SDVINI or a documented
+    initial_statev -- and the first difference is named.
+    """
+    nx = int(entry.nstatv)
+    if nx == 0:
+        return {"status": "not_applicable", "reason": "NSTATV = 0"}
+    start = np.zeros(nx) if statev0 is None else np.asarray(statev0, float).copy()
+    zero = np.flatnonzero(start == 0.0)
+    if not zero.size:
+        return {"status": "not_applicable",
+                "reason": "every STATEV slot starts at a stated value"}
+    sentinel = start.copy()
+    sentinel[zero] = INITIAL_STATE_SENTINEL
+    runs = {}
+    for name, x0 in (("zero", start), ("sentinel", sentinel)):
+        out, message = _run_real(build, Path(work) / f"initial_state_{name}",
+                                 _config(entry, increments, x0, False), [], entry, fresh=True)
+        if out is None:
+            return {"status": "not_attempted", "reason": f"{name} run failed: {message[-300:]}"}
+        runs[name] = out.base
+    a, b = runs["zero"], runs["sentinel"]
+    record = {"slots_started_at_zero": [int(i) + 1 for i in zero],
+              "sentinel": INITIAL_STATE_SENTINEL, "increments": len(increments)}
+    if sorted(a) != sorted(b):
+        return dict(record, status="needs_initial_state",
+                    reason=f"the runs reached different increments ({len(a)} vs {len(b)})")
+    xa = np.array([np.asarray(a[i]["statev"], float) for i in sorted(a)])
+    xb = np.array([np.asarray(b[i]["statev"], float) for i in sorted(b)])
+    untouched = np.all(xa == start, axis=0) & np.all(xb == sentinel, axis=0)
+    for inc in sorted(a):
+        for field_name in ("stress", "ddsdde"):
+            if not _same(a[inc][field_name], b[inc][field_name]):
+                return dict(record, status="needs_initial_state", reason=(
+                    f"{field_name.upper()} at increment {inc} depends on what the zero-started "
+                    f"slots hold: the routine reads state it does not initialise"))
+        written = ~untouched
+        if not _same(np.asarray(a[inc]["statev"], float)[written],
+                     np.asarray(b[inc]["statev"], float)[written]):
+            slot = int(np.flatnonzero(written & (np.asarray(a[inc]["statev"], float)
+                                                 != np.asarray(b[inc]["statev"], float)))[0]) + 1
+            return dict(record, status="needs_initial_state", reason=(
+                f"STATEV({slot}) at increment {inc} carries the starting value forward"))
+    return dict(record, status="proven", untouched_slots=[int(i) + 1 for i in
+                                                          np.flatnonzero(untouched)],
+                reason=("STRESS, DDSDDE and every written STATEV are bit-identical with the "
+                        "zero-started slots at 0 and at the sentinel"))
+
+
 def _restrict(column: fd.ColumnFD, block: slice) -> fd.ColumnFD:
     """The column's FD ladder restricted to one output block (same usable steps)."""
     import copy
