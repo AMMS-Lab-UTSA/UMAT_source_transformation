@@ -1251,6 +1251,38 @@ COUNCIL_ROUTES = ("no_deck_in_repository", "no_deck_names_this_source")
 #: Amplitude ceilings when the domain is undocumented (R3).
 COUNCIL_SMALL_STRAIN_CEILING = 0.02
 COUNCIL_FINITE_CEILING = 0.2
+#: A clock that grows without bound: ``x = a + RATE*(TIME(2)+DTIME)``.
+_LINEAR_CLOCK = re.compile(
+    r"=\s*[^=\n]*[+-]\s*[A-Za-z_]\w*(?:\s*\(\s*\d+\s*\))?\s*\*\s*\(?\s*TIME\s*\(\s*[12]\s*\)[^\n]*",
+    re.IGNORECASE)
+#: ``IF (CMNAME(1:9) .EQ. 'SUBCORTEX')`` -- a routine choosing its law by name.
+_CMNAME_TEST = re.compile(
+    r"CMNAME\s*(?:\(\s*\d+\s*:\s*\d+\s*\))?\s*(?:\.EQ\.|==)\s*['\"]([^'\"]+)['\"]",
+    re.IGNORECASE)
+_STATED_CMNAME = re.compile(r"CMNAME\s*=?\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
+
+
+def _cmname_plan(executable: str, row: dict) -> tuple[list, list, str]:
+    """``(names to run, dispatch names not run, why)``. A routine that
+    dispatches on CMNAME runs one law per name; the names the row states
+    (``cmname_switch``, or "CMNAME 'X'" in its notes) are the experiments,
+    each its own set, and the others are branches not exercised. A
+    dispatching routine with no stated name is not planned."""
+    dispatch = list(dict.fromkeys(m.upper() for m in _CMNAME_TEST.findall(executable)))
+    if not dispatch:
+        return [], [], ""
+    notes = row.get("notes") or []
+    notes = [notes] if isinstance(notes, str) else list(notes)
+    stated_text = " ".join(str(v) for v in ([row.get("cmname_switch")] if row.get(
+        "cmname_switch") else []) + notes)
+    stated = [m.upper() for m in _STATED_CMNAME.findall(stated_text)]
+    stated += [m.upper() for m in re.findall(r"'([A-Z0-9_-]+)'", stated_text)
+               if m.upper() in dispatch]
+    names = [n for n in dispatch if n in stated]
+    return names, [n for n in dispatch if n not in names], (
+        f"the routine dispatches on CMNAME ({', '.join(dispatch)})")
+
+
 _TEMP_READ = re.compile(r"\b(TEMP|DTEMP)\b", re.IGNORECASE)
 _NOEL_READ = re.compile(r"\b(COORDS|NOEL|NPT)\b", re.IGNORECASE)
 #: A formulation stated in words, and the element it names.
@@ -1472,8 +1504,16 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
         ceiling = COUNCIL_FINITE_CEILING if finite else COUNCIL_SMALL_STRAIN_CEILING
         ceiling_origin = ("council_default", "undocumented domain: R3 default")
 
+    names, unexercised, dispatch = _cmname_plan(executable, row)
+    if dispatch and not names:
+        return refused("needs_cmname", f"{dispatch} and the row states none of them", **common)
+    if names:
+        sets = [(f"{set_id}-{name}" if set_id else name, values, name)
+                for set_id, values in sets for name in names]
+    else:
+        sets = [(set_id, values, "") for set_id, values in sets]
     plans = []
-    for set_id, values in sets:
+    for set_id, values, cmname in sets:
         nprops = max(values) if values else 0
         if sorted(values) != list(range(1, nprops + 1)):
             return refused("incomplete_set", f"set {set_id} does not give every PROPS index "
@@ -1481,7 +1521,7 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
         props = tuple(values[i][0] for i in range(1, nprops + 1))
         props_origin = "council_choice" if origin == "council_chosen" else "author_published"
         base = VerificationManifest(
-            name=(name or source.stem[:34]) + f"_{set_id}"[:6],
+            name=cmname or ((name or source.stem[:34]) + f"_{set_id}"[:6]),
             source=source, element_type=element, element_label=1,
             kinematics="finite" if finite else "small strain",
             props=props, nprops=nprops, nstatv=max(nstatv, 1),
@@ -1502,23 +1542,53 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                           family_of_element="cohesive" if geometry_for(element).kind == "cohesive"
                           else "", props=props, reads_coordinates=False, oriented=False,
                           path=source)
-        if family.name == "growth" and not time_scale.required_total_time(
-                text, props, ()).declared:
-            return refused("growth_needs_total_time", "a growth law driven by the clock, and "
-                           "nothing documents how long the clock runs (a council total time "
-                           "under D-21a (a) is not implemented here)", **common)
-        built = build(text, base, family=family, path=source, deck_periods=(),
+        documented_time = _numeric(domain.get("total_time"))
+        periods = (documented_time,) if documented_time and documented_time > 0 else ()
+        requirement = time_scale.required_total_time(text, props, periods)
+        tau = time_scale.exponential_time_constant(text, props)
+        if family.name == "growth" and not requirement.declared:
+            linear = _LINEAR_CLOCK.search(executable)
+            return refused(
+                "growth_needs_total_time",
+                ("a growth law driven by the clock, and nothing documents how long the clock "
+                 "runs. D-21a (a) allows a council total time only where time enters through "
+                 "time/tau with tau a PROPS constant AND the law is bounded for all t >= 0"
+                 + (f"; this one grows without bound ({linear.group(0).strip()[:60]})"
+                    if linear else "; no such law was recognised")), **common)
+        built = build(text, base, family=family, path=source, deck_periods=periods,
                       body_force=(), held=())
+        if periods and built.requirement is not None and \
+                built.requirement.total_time == documented_time:
+            where = (domain.get("total_time") or {}).get("where", "")
+            built = _reworded(built, f"the documented total time {documented_time:g} ({where})")
+            built = replace(built, manifest=replace(built.manifest, origins=tuple(
+                (name, stated_kind, f"documented total time {documented_time:g}: {where}")
+                if name == "loading" else (name, kind, why)
+                for name, kind, why in built.manifest.origins)))
+        if family.name == "growth" and tau and origin == "council_chosen" \
+                and built.requirement is not None and built.requirement.declared:
+            # D-21a (a): exp(-time/tau) is bounded and enters only through
+            # time/tau, and tau is a council-chosen PROPS constant, so the
+            # duration is a council choice: T/tau is recorded.
+            ratio = built.requirement.total_time / tau
+            built = _reworded(built, (
+                f"this routine's driver is exp(-time/tau) with tau = {tau:g}, a "
+                f"council-chosen constant; the council total time T = {ratio:g} tau "
+                f"= {built.requirement.total_time:g} develops "
+                f"{1 - math.exp(-ratio):.0%} of the excursion (D-21a (a))"))
+            built = replace(built, manifest=replace(built.manifest, origins=tuple(
+                (name, "council_choice", f"council total time T/tau = {ratio:g} (D-21a (a))")
+                if name == "loading" else (name, kind, why)
+                for name, kind, why in built.manifest.origins)))
         if built.requirement is not None and not built.requirement.declared:
             # time_scale's wording assumes an author's deck was read; none was
-            built = replace(built, requirement=replace(
-                built.requirement, reason=("this routine declares no time scale and nothing "
-                                           "documents a period for it, so there is nothing "
-                                           "here that says how long an experiment has to "
-                                           "run")))
+            built = _reworded(built, ("this routine declares no time scale and nothing "
+                                      "documents a period for it, so there is nothing here "
+                                      "that says how long an experiment has to run"))
         plans.append((set_id, Plan(source, built, None, None)))
     geometry = geometry_for(element)
     branches = _layout_branches(executable, geometry.ntens, geometry.ndi, geometry.nshr)
+    branches += [f"CMNAME = '{n}'" for n in unexercised]
     if branches:
         common["branch_coverage"] = {
             "exercised": f"NTENS={geometry.ntens} (NDI={geometry.ndi}, element {element})",
@@ -1539,6 +1609,20 @@ def plan_council(source: Path, repository: Path, row: dict, *, name: str = "",
                                      if p.experiment.refusal), ""),
                        refusal_code="" if all(p.found for _i, p in plans) else "build_refused",
                        **common)
+
+
+def _reworded(built: "Experiment", reason: str) -> "Experiment":
+    """The experiment with its requirement's reason replaced, everywhere it
+    is quoted (build() embeds it in the experiment's own reason)."""
+    old = built.requirement.reason
+    out = replace(built, requirement=replace(built.requirement, reason=reason),
+                  reason=built.reason.replace(old, reason) if old else built.reason)
+    if old and out.manifest is not None:
+        # a time-driven segment quotes the first 160 characters of it
+        out = replace(out, manifest=replace(out.manifest, loading=tuple(
+            replace(segment, description=segment.description.replace(old[:160], reason[:160]))
+            for segment in out.manifest.loading)))
+    return out
 
 
 def _council_initial_state(row: dict, text: str, nstatv: int, origin: str):

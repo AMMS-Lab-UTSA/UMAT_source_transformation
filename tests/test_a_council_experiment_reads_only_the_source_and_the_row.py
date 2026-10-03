@@ -283,3 +283,49 @@ def test_no_real_council_plan_cites_an_authors_deck():
         if re.search(r"author's deck|paired deck|\.inp\b", json.dumps(plan), re.I):
             bad.append(path.parent.name)
     assert not bad, bad
+
+
+GROWTH_EXP = HEADER + """\
+      TAU = PROPS(1)
+      G = 2.D0 - EXP(-TIME(2)/TAU)
+      STATEV(1) = G
+      RETURN
+      END
+"""
+
+
+def test_a_bounded_clock_in_time_over_tau_gets_a_council_total_time(tmp_path):
+    """G11, D-21a (a): exp(-time/tau), tau a council PROPS constant."""
+    cp = _plan(tmp_path, GROWTH_EXP, sets=[_set("A", 0.25, 0.3), _set("B", 0.5, 0.3)])
+    assert cp.found, cp.refusal
+    experiment = cp.sets[0][1].experiment
+    assert experiment.requirement.total_time == pytest.approx(0.75)    # 3 tau
+    loading = experiment.manifest.as_dict()["origins"]["loading"]
+    assert loading["origin"] == "council_choice" and "T/tau = 3" in loading["provenance"]
+
+
+def test_an_unbounded_clock_is_held_back_and_a_documented_time_is_used(tmp_path):
+    linear = HEADER + """\
+      G = 1.D0 + PROPS(1)*(TIME(2)+DTIME)
+      STATEV(1) = G
+      RETURN
+      END
+"""
+    cp = _plan(tmp_path / "a", linear)
+    assert cp.refusal_code == "growth_needs_total_time" and "without bound" in cp.refusal
+    domain = {"total_time": {"value": 4.0, "where": "script.py:38", "quote": "Totaltime = 4.0"}}
+    cp = _plan(tmp_path / "b", linear, documented_domain=domain)
+    assert cp.found, cp.refusal
+    experiment = cp.sets[0][1].experiment
+    assert experiment.requirement.total_time == 4.0
+    assert experiment.manifest.as_dict()["origins"]["loading"]["origin"] == "council_choice"
+
+
+def test_a_cmname_dispatch_runs_the_stated_names_and_names_the_others(tmp_path):
+    text = ELASTIC.replace("      E = PROPS(1)\n",
+                           "      IF (CMNAME(1:6) .EQ. 'CORTEX') E = PROPS(1)\n"
+                           "      IF (CMNAME .EQ. 'BEAM') E = 2*PROPS(1)\n")
+    assert not _plan(tmp_path / "a", text).found
+    cp = _plan(tmp_path / "b", text, notes="The harness must pass CMNAME 'CORTEX'.")
+    assert cp.found and [p.manifest.name for _s, p in cp.sets] == ["CORTEX", "CORTEX"]
+    assert "CMNAME = 'BEAM'" in cp.branch_coverage["not_exercised"]
