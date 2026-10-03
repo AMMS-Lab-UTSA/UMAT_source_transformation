@@ -3328,7 +3328,14 @@
    ],
    "still_missing": [],
    "skipped": [],
-   "error": ""
+   "error": "",
+   "license_by_path": [
+    {
+     "path_prefix": "constitutive/hypoplasticity-staubach",
+     "license_spdx": "GPL-3.0-or-later",
+     "license_source": "constitutive/hypoplasticity-staubach/LICENSE at da38fedd70f9413bf0d7f50ccb771299da07c2f5 (GPL-3.0 full text, blob f288702d2fa16d3cdf0035b15a9fcbc552cd88e7, 35149 bytes; GitHub contents API 2026-10-03) and constitutive/hypoplasticity-staubach/PROVENANCE.md at the same commit ('The LICENSE at the repository root (MIT) does not apply to this subdirectory'); '-or-later' from the file's own notice, HPP_Staubach_implicit.f:4 'either version 3 of the License, or (at your option) any later version'. Ruled by Vera, corpus_campaign/batches/B10/vera_pass21/REPORT.md (laufogh: GPL-3.0-or-later, from the subdirectory, not MIT)"
+    }
+   ]
   },
   {
    "repository": "lbrassart__chemo-vp-efftemp",
