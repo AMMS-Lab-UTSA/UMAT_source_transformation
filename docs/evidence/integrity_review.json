@@ -643,14 +643,6 @@
    "verdict": "justified",
    "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
   },
-  "skip:tests/test_formulation_ntens_shear_index.py:test_full_corpus_files:call:skip:cb8ae362": {
-   "verdict": "justified",
-   "reason": "Needs an external file (the corpus acquisition cache or the system licence texts under /usr/share/common-licenses); the test runs wherever it exists."
-  },
-  "skip:tests/test_formulation_ntens_shear_index.py:test_full_lemaitre_with_its_own_deck:call:skip:c4b7a297": {
-   "verdict": "justified",
-   "reason": "Needs an external file (the corpus acquisition cache or the system licence texts under /usr/share/common-licenses); the test runs wherever it exists."
-  },
   "skip:tests/test_helper_lifting_generality.py:test_lifting_preserves_specification_types_and_basis_collisions:call:skip:18c54a16": {
    "verdict": "justified",
    "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
@@ -1144,6 +1136,18 @@
      "text": "missing_material_data (no *USER MATERIAL deck published), which is external."
     }
    ]
+  },
+  "skip:tests/test_corpus_mechanics_domain.py:test_the_full_first_call_initialisation:call:skip:1cdd2d4e": {
+   "verdict": "justified",
+   "reason": "Needs an external file (the corpus acquisition cache or the system licence texts under /usr/share/common-licenses); the test runs wherever it exists."
+  },
+  "skip:tests/test_corpus_mechanics_plasticity.py:_cached:call:skip:b47cb132": {
+   "verdict": "justified",
+   "reason": "Needs an external file (the corpus acquisition cache or the system licence texts under /usr/share/common-licenses); the test runs wherever it exists."
+  },
+  "skip:tests/test_formulation_ntens_shear_index.py:_cached:call:skip:b47cb132": {
+   "verdict": "justified",
+   "reason": "Needs an external file (the corpus acquisition cache or the system licence texts under /usr/share/common-licenses); the test runs wherever it exists."
   }
  }
 }
