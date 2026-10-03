@@ -88,3 +88,21 @@ def test_a_current_row_beats_a_later_stale_one_for_the_same_source():
 @pytest.mark.unit
 def test_the_real_package_has_a_harness_fingerprint():
     assert len(harness_fingerprint(PACKAGE)) == 16
+
+
+def test_the_harness_fingerprint_covers_the_abaqus_gate_tool(tmp_path):
+    """Vera G10 review: the D-4 gate's decision code lives in
+    tools/verify_store_in_abaqus.py, so the harness identity covers it."""
+    import shutil
+    from pathlib import Path
+    from umat_oti.store.transform_store import harness_fingerprint
+    repo = Path(__file__).resolve().parents[1]
+    copy = tmp_path / "repo"
+    shutil.copytree(repo / "src" / "umat_oti", copy / "src" / "umat_oti",
+                    ignore=shutil.ignore_patterns("__pycache__"))
+    (copy / "tools").mkdir()
+    shutil.copy(repo / "tools" / "verify_store_in_abaqus.py", copy / "tools")
+    before = harness_fingerprint(copy / "src" / "umat_oti")
+    with open(copy / "tools" / "verify_store_in_abaqus.py", "a") as handle:
+        handle.write("\n# changed\n")
+    assert harness_fingerprint(copy / "src" / "umat_oti") != before

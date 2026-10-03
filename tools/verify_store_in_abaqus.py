@@ -5059,7 +5059,11 @@ def verify_tangent(manifest: VerificationManifest, original: Path,
     character, character_reason = response_character(history)
     outcome["response_character"] = character
     outcome["character_reason"] = character_reason
-    enough, coverage_reason = coverage(regimes, nonlinear=nonlinear, character=character)
+    turn = first_activated(chosen[0][1])
+    no_elastic = turn is not None and turn <= 1
+    outcome["no_elastic_branch"] = no_elastic
+    enough, coverage_reason = coverage(regimes, nonlinear=nonlinear, character=character,
+                                       no_elastic_branch=no_elastic)
     outcome["coverage"] = coverage_reason
     verified, reason = gate.row_verdict(judgements, len(chosen), coverage_ok=enough,
                                         coverage_reason=coverage_reason)

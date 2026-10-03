@@ -150,6 +150,10 @@ def transform_fingerprint(package_root: Optional[Path] = None) -> str:
 #: fully verified on a layout that put a shear in the sigma_33 slot, and nothing
 #: marked that verdict stale.
 HARNESS_CODE = ("abaqus", "corpus_features")
+#: Files outside the package that hold harness DECISION code, relative to the
+#: repository root: the Abaqus D-4 tangent gate's state choice, quad adoption
+#: and row verdict live in the verification tool (Vera G10 review).
+HARNESS_TOOLS = ("tools/verify_store_in_abaqus.py",)
 
 
 def harness_fingerprint(package_root: Optional[Path] = None) -> str:
@@ -158,9 +162,19 @@ def harness_fingerprint(package_root: Optional[Path] = None) -> str:
     A verification row records it beside the transform fingerprint; a row is
     current only when BOTH match what is checked out now.
     """
-    return _package_digest(
-        _package_root(package_root),
-        lambda parts: bool(parts) and parts[0] in HARNESS_CODE)
+    root = _package_root(package_root)
+    package = _package_digest(root, lambda parts: bool(parts) and parts[0] in HARNESS_CODE)
+    repository = root.parents[1]
+    tools = [repository / name for name in HARNESS_TOOLS]
+    if not any(path.is_file() for path in tools):
+        # an installed package without the repository's tools: the package
+        # alone (the Abaqus gate cannot run there anyway)
+        return package
+    digest = hashlib.sha256(package.encode("utf-8"))
+    for path in tools:
+        digest.update(b"\0" + str(path.relative_to(repository)).encode("utf-8") + b"\0")
+        digest.update(path.read_bytes() if path.is_file() else b"<absent>")
+    return digest.hexdigest()[:16]
 
 
 #: What the transform writes to say which units to build, and in what order.
