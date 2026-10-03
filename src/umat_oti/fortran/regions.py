@@ -262,7 +262,8 @@ def _call_effect_assignments(
         arguments = [argument.strip() for argument in split_top_level(match.group(2))]
         effect = TRANSFORMABLE_HELPER_EFFECTS.get(callee)
         if effect:
-            rhs_tokens = {_base_name(arguments[index]) for index in effect["inputs"] if int(index) < len(arguments)}
+            rhs_tokens = set().union(*(_tokens(arguments[index]) for index in effect["inputs"]
+                                        if int(index) < len(arguments)))
             rhs_tokens.discard("")
             output_indexes = effect["output"]
             if isinstance(output_indexes, int):
@@ -308,12 +309,18 @@ def _inferred_edges_for_call(
     if not effect:
         return []
     actuals = [_base_name(argument) for argument in arguments]
+    # Every identifier an input actual reads, not only its first. The first
+    # identifier of ``2.0D0*G`` is none and of ``Q*G/PROPS(1)`` is Q, so G's
+    # edge to the callee's output was lost, G's own assignment was left REAL
+    # outside the stress regions, and the tangent lost dG/dDSTRAN with a
+    # bitwise-correct stress (Vera, B8 review R2: 1000 against FD 1040.8 and
+    # 1020.4). The written actual is still the designated variable itself.
+    reads = [_tokens(argument) for argument in arguments]
     edges: list[tuple[str, set[str]]] = []
     for output_index, input_indexes in sorted(effect.items()):
         if output_index >= len(actuals) or not actuals[output_index]:
             continue
-        rhs = {actuals[index] for index in input_indexes
-               if index < len(actuals) and actuals[index]}
+        rhs = set().union(*(reads[index] for index in input_indexes if index < len(actuals)))
         rhs.discard(actuals[output_index])
         edges.append((actuals[output_index], rhs))
     return edges
