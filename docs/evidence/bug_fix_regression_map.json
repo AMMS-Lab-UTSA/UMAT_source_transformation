@@ -525,6 +525,20 @@
     "tests/test_the_roundoff_model_uses_the_total_kinematic_input.py",
     "tests/test_corpus_features_zero_scale.py"
    ]
+  },
+  {
+   "commit": "b14dcb8",
+   "bug": "A quad replay staged the author's double-precision INCLUDE files as links, so its reference was mixed-precision (davidmorin UMAT_MODEL.f, jpsferreira PARAM_UMAT.INC; Vera B10 condition A); an absolute or .. INCLUDE was staged from outside the source tree (condition B).",
+   "tests": [
+    "tests/test_staged_includes_are_guarded_and_promoted.py"
+   ]
+  },
+  {
+   "commit": "3d9aa7e",
+   "bug": "A zero-branch FAIL reported a tolerance larger than the one its decision used (err/t < 1 on a failed entry), and the worst entry was chosen in the nonzero branch only, so a column failing on a zero entry reported a passing worst (ShapeProgramming CASE4 5ea29ed7; Vera B10).",
+   "tests": [
+    "tests/test_the_roundoff_model_uses_the_total_kinematic_input.py"
+   ]
   }
  ],
  "excluded": [
