@@ -71,3 +71,23 @@ def test_a_chosen_state_without_a_replay_counts_against_the_row(tool):
     ok, why = G.row_verdict([good, good, None, None, None], 5, coverage_ok=True,
                             coverage_reason="")
     assert not ok and "2 of 5" in why
+
+
+def test_states_pair_on_step_as_well_as_increment(tool):
+    """Vera G10 review B1: Abaqus restarts the increment count each step."""
+    def two_steps(transformed=False):
+        out = []
+        for step in (1, 2):
+            for record in _history(points=(1,), increments=6, transformed=transformed):
+                record = dict(record, step=step)
+                record["STRESS"] = [float(10 * step + record["increment"])]
+                out.append(record)
+        return out
+    original = two_steps()
+    transformed = two_steps(transformed=True)
+    chosen, selection = tool.choose_gate_states(original, transformed)
+    for _pos, _records, orig, trans in chosen:
+        assert (trans["step"], trans["increment"]) == (orig["step"], orig["increment"])
+        assert trans["STRESS"] == orig["STRESS"]
+    keys = [(s["step"], s["increment"]) for s in selection["states"]]
+    assert len(keys) == len(set(keys)) and {k[0] for k in keys} == {1, 2}

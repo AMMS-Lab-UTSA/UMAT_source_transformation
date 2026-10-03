@@ -93,3 +93,43 @@ def test_a_zero_in_both_precisions_against_a_nonzero_tangent_fails():
     assert zeros[0, 2]
     s = G.judge_state(oti, sweep, LADDER, SCALE, eps=fd.EPS_QUAD, double_zero=zeros)
     assert s.failed and [1, 3] in [f["entry"] for f in s.failures]
+
+
+def test_a_kink_that_the_ladder_crosses_is_never_cleared():
+    """Vera G10 review A6 (her kinktest): a one-entry kink at distance d below
+    the state; wherever A6 flags it, the decay rule must keep it flagged."""
+    ladder = LADDER
+    for jump in (1.5e-3, 1e-2, 0.5):
+        for d in list(np.logspace(-9.5, -0.5, 61)) + list(np.linspace(0.8e-8, 1.0e-8, 11)):
+            def f(x, d=d, jump=jump):
+                return x if x >= -d else (1.0 - jump) * (x + d) - d
+            fwd = [np.array([(f(h) - f(0)) / h]) for h in ladder]
+            bwd = [np.array([(f(0) - f(-h)) / h]) for h in ladder]
+            cen = [np.array([(f(h) - f(-h)) / (2 * h)]) for h in ladder]
+            slack = G.DECAY_SLACK
+            try:
+                G.DECAY_SLACK = 1e-300                     # A6 alone
+                a6 = bool(G.entry_smoothness(fwd, bwd, cen, ladder, np.array([1.0]))[0])
+            finally:
+                G.DECAY_SLACK = slack
+            if a6:
+                assert G.entry_smoothness(fwd, bwd, cen, ladder, np.array([1.0]))[0], (jump, d)
+
+
+def test_an_even_smooth_entry_is_not_a_kink():
+    """sigma_12 as an even function of eps_22 at eps_22 = 0: centred 0, gap ~ h."""
+
+    s = G.judge_state(C, sweep_of(lambda x: C @ x + np.array([0.0, 0.0, 300.0 * x[1] ** 2])),
+                      LADDER, SCALE)
+    assert s.smooth and s.judged
+
+
+def test_a_curvature_gap_that_decays_like_h_is_not_a_kink_against_quad():
+    """Quad round-off is tiny, so an even entry's curvature gap (centred 0)
+    is above it and above 1e-3 |0| at every step: only the decay test
+    keeps it smooth."""
+    steps = [r * SCALE for r in LADDER]
+    fwd = [np.array([300.0 * h]) for h in steps]
+    bwd = [np.array([-300.0 * h]) for h in steps]
+    cen = [np.array([0.0]) for _ in steps]
+    assert not G.entry_smoothness(fwd, bwd, cen, steps, np.array([1.0]), fd.EPS_QUAD)[0]

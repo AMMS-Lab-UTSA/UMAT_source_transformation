@@ -43,9 +43,9 @@ MIN_JUDGED_STATES = 2
 #: An entry's one-sided gap counts as a kink only above this fraction of its
 #: centred value (A6), and above its own round-off bound.
 ENTRY_GAP = 1e-3
-#: An entry's one-sided gap is a kink only if, over the ladder, it does not
-#: fall below this fraction of its value at the largest step.
-SHRINK_FLOOR = 0.1
+#: A smooth entry's one-sided gap falls by the ladder ratio between steps;
+#: it counts as decaying when it falls by at least ratio / DECAY_SLACK.
+DECAY_SLACK = 3.0
 #: Round-off of a ONE-sided difference: 2 evaluations x 2 roundings x 2
 #: margin x 2 (one-sided, no averaging) = 16 eps F / h.
 ONE_SIDED_NOISE = 16.0
@@ -120,16 +120,23 @@ def entry_smoothness(forward: Sequence[np.ndarray], backward: Sequence[np.ndarra
         noise = ONE_SIDED_NOISE * eps * np.asarray(magnitude, float) / max(abs(h), 1e-300)
         here = (gap > noise) & (gap > ENTRY_GAP * np.abs(c))
         kink = here if kink is None else (kink & here)
-    # ... and the gap does not fall with the step. A smooth entry's one-sided
-    # gap is the curvature times h: over the ladder it falls by the ladder's
-    # ratio. A kink's is the jump between two branch slopes and stays. (An
-    # entry whose centred value is ~0 by symmetry -- an even function of the
-    # input -- has a curvature gap above 1e-3 |0| at every step; measured on
-    # the Jeff97 growth sources against the quad reference.)
-    order = np.argsort([abs(h) for h in steps])
-    smallest, largest = gaps[order[0]], gaps[order[-1]]
-    stays = smallest > SHRINK_FLOOR * largest
-    return kink & stays
+    # ... and the gap does not DECAY like h. A smooth entry's one-sided gap is
+    # its curvature times h: between consecutive steps it falls by about the
+    # ladder ratio. A kink's is the jump between two branch slopes, which
+    # does not fall while the step still crosses it. Judged step by step over
+    # the pairs where both gaps are above their round-off (Vera G10 review
+    # A6; an entry whose centred value is ~0 by symmetry -- an even function
+    # of the input -- has a curvature gap above 1e-3 |0| at every step and
+    # decays exactly like h).
+    order = sorted(range(len(steps)), key=lambda k: -abs(steps[k]))
+    decays = np.ones_like(kink, dtype=bool)
+    for a_, b_ in zip(order, order[1:]):
+        ratio = abs(steps[a_]) / max(abs(steps[b_]), 1e-300)
+        ga, gb = gaps[a_], gaps[b_]
+        noise_b = ONE_SIDED_NOISE * eps * np.asarray(magnitude, float) / max(abs(steps[b_]), 1e-300)
+        measured = gb > noise_b
+        decays &= ~measured | (ga >= gb * ratio / DECAY_SLACK)
+    return kink & ~decays
 
 
 def judge_state(oti, sweep, ladder: Sequence[float], scale: float, *,

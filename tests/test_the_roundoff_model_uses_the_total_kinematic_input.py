@@ -24,7 +24,7 @@ L = fd.DEFAULT_LADDER
 STEPS = [r * 1e-6 for r in L]          # strain step scale: the 1e-6 floor
 K, G = 1.0e4, 1.0                      # bulk term >> the column's shear term
 OWN = np.array([1e-12, 1e-6])          # the stress components themselves are tiny
-OTI = np.array([1e-9, 1.0])            # true: a small coupling and the shear modulus
+OTI = np.array([1e-6, 1.0])            # true: a small coupling and the shear modulus
 
 
 def _double_ladder():
@@ -33,7 +33,7 @@ def _double_ladder():
 
 
 def _quad_ladder():
-    return [np.array([1e-9, G]) for _ in L]
+    return [np.array([1e-6, G]) for _ in L]
 
 
 def test_puregravity_quantisation_failed_on_the_increment_model():
@@ -92,3 +92,17 @@ def test_the_harness_measures_the_total_input_and_the_block():
     z = fd.ColumnFD([np.array([0.0, 1.0]), np.array([0.0, 2.0])], [], [], [0, 1], [0, 1],
                     True, "", [])
     assert _exact_zero(z).tolist() == [True, False]
+
+
+def test_a_1e_4_defect_fails_under_quad_whatever_the_block(tmp_path=None):
+    """Vera G10 review B2: the value-under-test allowance divided |F|-sized
+    terms by the increment, so with a big block a 1e-4 defect passed quad."""
+    est = [np.array([1.0]) for _ in L]
+    v = fd.judge_column(np.array([1.0 + 1e-4]), est, list(range(len(L))), L, steps=STEPS,
+                        magnitude=np.array([1.0]), eps=fd.EPS_QUAD,
+                        kinematic_input=1.0, block_derivative=1e6)
+    assert v.codes == [fd.FAIL], (v.codes, v.atol)
+    good = fd.judge_column(np.array([1.0]), est, list(range(len(L))), L, steps=STEPS,
+                           magnitude=np.array([1.0]), eps=fd.EPS_QUAD,
+                           kinematic_input=1.0, block_derivative=1e6)
+    assert good.codes == [fd.PASS]
