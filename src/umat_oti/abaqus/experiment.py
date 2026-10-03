@@ -1609,9 +1609,10 @@ def _layout_branches(executable: str, ntens: int, ndi: int, nshr: int) -> list:
 
 
 def _known_element(element: str) -> bool:
+    from umat_oti.abaqus.elements import UnsupportedElement
     try:
         geometry_for(element)
-    except Exception:                                  # noqa: BLE001
+    except UnsupportedElement:
         return False
     return True
 
