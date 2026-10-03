@@ -1109,6 +1109,7 @@ def _lift_helper_routine(
     # is OTI**REAL, whose zero base is handled. See _literal_constant_locals
     # for what keeps a name out (arguments, arrays, shared storage, actual
     # arguments of any call).
+    stitched_lines = _initialised_reals_as_named_constants(stitched_lines, form, original_name)
     literal_constants = _literal_constant_locals(stitched_lines, form, routine.args, common_names)
     # A function's result is what its callers receive, typed OTI on their
     # side; it is never a constant local (HEAV = 0. / 1.0D0 is a step function).
@@ -2776,6 +2777,77 @@ _LITERAL_RHS = re.compile(
     r"^[+-]?\s*(?:\d+\.\d*|\.\d+|\d+)(?:[eEdD][+-]?\d+)?(?:_\w+)?$")
 
 
+def _initialised_reals_as_named_constants(stitched_lines, form: str, routine_name: str):
+    """A REAL local given its value in its declaration, and never written, becomes a PARAMETER.
+
+    ``DOUBLE PRECISION :: ZERO=0.D0, ONE=1.D0`` declares variables (with an
+    implied SAVE) that start from those values. Retyped to the OTI type it
+    came out as ``type(ONUMM6N1) :: ZERO=0.D0``, which gfortran rejects
+    ("Incompatible initialization between a derived type entity and an entity
+    with REAL(8) type"): MechMater's UMAT_visco_FGJD_2026.for and
+    UMAT_viscohybrid_FGJD_2026.for declare their constants that way in
+    DAMAGEVAR. A name that nothing in the routine writes -- no assignment, no
+    DO, READ or DATA, no CALL actual -- holds that value for the whole run,
+    so declaring it ``PARAMETER`` changes nothing it computes and keeps it
+    REAL, as every other named constant is kept. One that is written is
+    refused by name: its shadow would need the declared value carried in at
+    the first call only, which this lifter does not emit.
+    """
+    statements = [_statement_text(raw, form) for raw in stitched_lines[1:-1]]
+    written: set[str] = set()
+    for statement in statements:
+        text = re.sub(r"^\d+\s+", "", statement.strip())
+        upper = text.upper()
+        if "::" in text:
+            continue
+        if re.match(r"^(?:DATA|READ|EQUIVALENCE|NAMELIST)\b", upper):
+            written.update(re.findall(r"[A-Z_]\w*", upper))
+            continue
+        call = re.match(r"^(?:IF\s*\(.*\)\s*)?CALL\s+\w+\s*\((.*)\)\s*$", text, re.IGNORECASE)
+        if call:
+            written.update(name.upper() for name in re.findall(r"[A-Za-z_]\w*", call.group(1)))
+            continue
+        loop = re.match(r"^(?:\w+\s*:\s*)?DO\s+(?:\d+\s*,?\s*)?([A-Za-z_]\w*)\s*=", text, re.IGNORECASE)
+        if loop:
+            written.add(loop.group(1).upper())
+            continue
+        target = re.match(r"^(?:IF\s*\(.*\)\s*)?([A-Za-z_]\w*)\s*(?:\(.*?\))?\s*=(?!=)", text, re.IGNORECASE)
+        if target:
+            written.add(target.group(1).upper())
+    result = list(stitched_lines)
+    for index, raw in enumerate(stitched_lines[1:-1], start=1):
+        stripped = _statement_text(raw, form)
+        if "::" not in stripped:
+            continue
+        declaration = parse_declaration_line(stripped)
+        if (declaration is None or declaration.kind != "real"
+                or declaration.has_parameter_attribute
+                or any(not a.strip().lower().startswith(("dimension", "save"))
+                       for a in declaration.attributes)):
+            continue
+        initialised = [e for e in declaration.entities if e.initializer is not None]
+        if not initialised:
+            continue
+        clash = sorted(e.upper_name for e in initialised if e.upper_name in written)
+        if clash:
+            raise HelperLiftingError(
+                f"{routine_name} gives {', '.join(clash)} a value in its declaration "
+                f"({stripped!r}) and also writes it. That value is an implied "
+                f"SAVE initial value, set once before the first call; a "
+                f"hypercomplex shadow would need it carried in at the first "
+                f"call only, which this lifter does not emit. Not supported.")
+        plain = [e for e in declaration.entities if e.initializer is None]
+        attributes = [a.strip() for a in declaration.attributes
+                      if not a.strip().lower().startswith("save")]
+        prefix = ", ".join([declaration.raw_type, *attributes, "PARAMETER"])
+        lines = [f"      {prefix} :: {', '.join(e.render() for e in initialised)}"]
+        if plain:
+            plain_prefix = ", ".join([declaration.raw_type, *attributes])
+            lines.append(f"      {plain_prefix} :: {', '.join(e.render() for e in plain)}")
+        result[index] = "\n".join(lines)
+    return [line for chunk in result for line in str(chunk).split("\n")]
+
+
 def _literal_constant_locals(stitched_lines, form: str, args, common_names) -> set[str]:
     """Scalar locals whose every assignment is a numeric literal.
 
@@ -3490,4 +3562,16 @@ def _continuation_stitch(lines: list[str], form: str) -> list[str]:
             merged[-1] = merged[-1].rstrip() + " " + clean[6:].strip()
             continue
         merged.append(clean)
-    return merged
+    # Blanks are insignificant in fixed form, so ``double precision : : x``
+    # (MechMater's UMAT_viscohybrid_FGJD_2026.for) is ``::``. Emitted free
+    # form, where blanks matter, it came out ``type(ONUMM6N1) :: : : damping``.
+    # Outside character literals ``: :`` can only ever be ``::`` -- an array
+    # section ``A(1: :2)`` is ``A(1::2)`` too -- so the collapse is exact.
+    return [_colons_joined(line) for line in merged]
+
+
+def _colons_joined(line: str) -> str:
+    if ":" not in line or not re.search(r":\s+:", line):
+        return line
+    masked, store = mask_character_literals(line)
+    return unmask_character_literals(re.sub(r":\s+:", "::", masked), store)
