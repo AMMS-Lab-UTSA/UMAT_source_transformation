@@ -61,7 +61,7 @@ WINDOWS_PUBLISHED = """\
 WRITE_ONLY = """\
       SUBROUTINE UMAT(STRESS)
       DIMENSION STRESS(6)
-      OPEN(20,FILE='C:/Users/me/log.txt',STATUS='UNKNOWN')
+      OPEN(20,FILE='C:/Data/run/log.txt',STATUS='UNKNOWN')
       WRITE(20,*) STRESS(1)
       END
 """
@@ -101,7 +101,7 @@ DECOY = """\
 
 # ---------------------------------------------------------------- the scan
 @pytest.mark.parametrize("name,absolute", [
-    ("/work/a/b.txt", True), ("C:\\Users\\x\\E0.CSV", True),
+    ("/work/a/b.txt", True), ("C:\\Data\\x\\E0.CSV", True),
     ("F:/Master/run.csv", True), ("\\\\server\\share\\f.txt", True),
     ("~/data.txt", True), ("Lambda10.csv", False), ("data/run.txt", False),
     ("./run.txt", False), ("", False)])
