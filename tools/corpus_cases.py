@@ -292,10 +292,11 @@ def _install_capture():
         return verdict
 
     def add(self, inc, wrt, column, oti, output_names, magnitude, undefined=None,
-            value_magnitude=None, derivative_scale=0.0, probe=False):
+            probe=False, **keywords):
+        # every other keyword goes through unchanged, whatever FeatureTally.add
+        # takes now (G4/G10 added kinematic_input, block_derivative, double_zero)
         call = lambda: orig_add(self, inc, wrt, column, oti, output_names, magnitude,  # noqa: E731
-                                undefined=undefined, value_magnitude=value_magnitude,
-                                derivative_scale=derivative_scale, probe=probe)
+                                undefined=undefined, probe=probe, **keywords)
         if self.feature != "ddsdde" or probe:
             return call()
         names, values = list(output_names), np.asarray(oti, float)
