@@ -163,6 +163,9 @@ def run_one(manifest: VerificationManifest, source: Path, job: str,
     staged_includes = work_dir / f"{job}_includes.json"
     if staged_includes.is_file():
         report["includes"] = json.loads(staged_includes.read_text())
+    realloc = work_dir / f"{job}_realloc_lhs.json"
+    if realloc.is_file():
+        report["realloc_lhs"] = json.loads(realloc.read_text())
     records = converged_only(parse_probe(work_dir / f"{job}_probe.txt"))
     (work_dir / f"{job}_history.json").write_text(json.dumps(records), encoding="utf-8")
     report.update({

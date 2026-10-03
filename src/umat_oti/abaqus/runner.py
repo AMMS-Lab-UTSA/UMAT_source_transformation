@@ -142,6 +142,14 @@ def run_job(
                 (work_dir / f"{job}_includes.json").write_text(
                     json.dumps(staged, indent=1), encoding="utf-8")
         command.append(f"user={bundle.name}")
+        # Vera B10: per build, whether the object compiled WITHOUT -assume
+        # norealloc_lhs references for_realloc_lhs, i.e. whether the flag
+        # changed this build's code (abaqus.realloc_probe)
+        if shim is not None:
+            from umat_oti.abaqus import realloc_probe
+            (work_dir / f"{job}_realloc_lhs.json").write_text(json.dumps(
+                realloc_probe.probe(bundle, work_dir / f"{job}_realloc_probe", [shim]),
+                indent=1), encoding="utf-8")
 
     # An absolute path, so the record lands where the caller looks for it
     # whatever directory the solver chooses to run in.
