@@ -1200,6 +1200,22 @@
   "skip:tests/test_transform_a_value_at_a_hypercomplex_dummy_is_passed_as_one.py:<module>:mark.skipif:8d891947#3": {
    "verdict": "justified",
    "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_tab_led_companion_routine_is_found.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_data_local_of_another_routine_is_not_the_umats.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "mock:tests/test_transform_a_tab_led_companion_routine_is_found.py:test_a_umat_whose_helper_is_tab_led_in_a_sibling_file_transforms_and_agrees:monkeypatch.setattr:e8ad3af3": {
+   "verdict": "justified",
+   "reason": "Points DEFAULT_CACHE at a temporary directory holding the sibling file under test; no function is replaced."
+  },
+  "mock:tests/test_transform_a_tab_led_companion_routine_is_found.py:test_state_kept_in_a_module_variable_is_refused_by_name:monkeypatch.setattr:a0bc14ac": {
+   "verdict": "justified",
+   "reason": "Points DEFAULT_CACHE at a temporary directory holding the sibling file under test; no function is replaced."
   }
  }
 }
