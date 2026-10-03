@@ -1602,6 +1602,14 @@
   "skip:tests/test_staged_includes_are_guarded_and_promoted.py:<module>:mark.skipif:6824f295": {
    "verdict": "justified",
    "reason": "Only the quad replay build test needs gfortran; it is skipped without it. The guard, sha256 and conversion tests run everywhere."
+  },
+  "skip:tests/test_registry_fields_source_rulings.py:<module>:mark.skipif:51cc98a5": {
+   "verdict": "justified",
+   "reason": "Needs the external discovery cache (../discovery_cache, the acquired author files; not in the repository): the regression test reads the real vishalsubbiah, irfancn and Jeff97 Growth-Alex sources and is skipped only when the cache, or one of those files, is absent. The rules themselves (absolute-path inputs, visualisation UMAT, reviewed rulings, the informative gate, the subdirectory licence) are tested on inline fixtures that run everywhere."
+  },
+  "skip:tests/test_registry_fields_source_rulings.py:test_the_ruled_sources_are_reached_by_the_rules_in_the_real_cache:call:skip:5961a238": {
+   "verdict": "justified",
+   "reason": "Needs the external discovery cache (../discovery_cache, the acquired author files; not in the repository): the regression test reads the real vishalsubbiah, irfancn and Jeff97 Growth-Alex sources and is skipped only when the cache, or one of those files, is absent. The rules themselves (absolute-path inputs, visualisation UMAT, reviewed rulings, the informative gate, the subdirectory licence) are tested on inline fixtures that run everywhere."
   }
  }
 }
