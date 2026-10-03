@@ -8664,6 +8664,9 @@ def _semantic_checks(
             transformed_source, form, _selected_umat(config) if config else "UMAT"),
         "no_live_ddsdde_write_after_extraction": not _live_ddsdde_writes_after_extraction(
             transformed_source, form, _selected_umat(config) if config else "UMAT", ddsdde),
+        "no_seed_read_into_a_real_copy_of_a_shadowed_name": not _real_statements_reading_the_seed(
+            transformed_source, form, _selected_umat(config) if config else "UMAT",
+            roles["seed"], type_name),
         "fixed_form_line_lengths_ok": _fixed_form_line_lengths_ok(transformed_source, form),
         "integer_literals_normalized_in_oti_expressions": _integer_literals_normalized_in_oti_expressions(transformed_source, form),
         "no_identifier_split_by_insignificant_blanks": _no_identifier_split_by_blanks(
@@ -8745,6 +8748,17 @@ _SEMANTIC_CHECK_EXPLANATIONS: dict[str, tuple[str, str]] = {
         ("place the extraction after the block (transformation_anchors."
          "real_output_extraction / ddsdde_extraction), or give the routine a "
          "single exit")),
+    "no_seed_read_into_a_real_copy_of_a_shadowed_name": (
+        ("a statement left REAL reads the seed variable itself (not its "
+         "shadow) and assigns a variable that has a shadow, so that "
+         "variable's dependence on the seed is lost: its shadow is filled "
+         "from the REAL value with no derivative, and the tangent comes out "
+         "wrong beside a correct stress"),
+        ("this happens when the region classifier does not see the "
+         "statement on the stress path -- e.g. a variable that reaches a "
+         "helper call only inside an expression opening with a literal, "
+         "CALL F(2.0D0*G, ...). Write the actual argument as G*2.0D0, or "
+         "list the statement in a stress_update region of the contract")),
     "no_live_ddsdde_write_after_extraction": (
         ("a statement after the DDSDDE extraction still writes DDSDDE (a "
          "FORALL, WHERE, logical IF, READ or plain assignment) and would "
@@ -9492,6 +9506,66 @@ def _extractions_at_routine_level(transformed_source: str, form: str, selected_u
         return True
     blocks = block_spans(lines, form, span)
     return not any(enclosing_blocks(blocks, number) for number in markers)
+
+
+def _real_statements_reading_the_seed(
+    transformed_source: str, form: str, selected_umat: str, seeds: set[str], type_name: str,
+) -> list[tuple[int, str]]:
+    """Live assignments in the emitted UMAT that read a seed's REAL name into a shadowed variable.
+
+    A variable with a shadow carries its derivative in the shadow. A REAL
+    statement ``G = PROPS(1)*(1.0D0 + DSTRAN(2))`` left outside the rewritten
+    regions -- the classifier did not see G on the stress path, because G
+    reaches a helper only through ``CALL SCALE(2.0D0*G, ...)`` and the call's
+    dependency edge took the first identifier of each actual, of which a
+    literal has none -- is copied into G_OTI by the seed block with no
+    derivative, and the tangent loses dG/dDSTRAN while the stress agrees bit
+    for bit. Measured on such a toy: DDSDDE(1,2) 1000.0 against a
+    finite-difference 1040.8. No transformed corpus source has such a
+    statement (280 outputs scanned when this was added); this makes the next
+    one a refusal instead of a wrong tangent.
+
+    Returns ``(line, statement)`` pairs. The emitter's own copy-in
+    (``DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)``) assigns a shadow, which has no
+    shadow of its own, and is not reported.
+    """
+    if not seeds:
+        return []
+    span = _transformed_routine_span(transformed_source, form, selected_umat)
+    shadows = {name.upper() for name in _names_declared_with_type(transformed_source, type_name, form)}
+    pattern = re.compile(
+        r"(?<![%\w])(?:" + "|".join(re.escape(seed) for seed in sorted(seeds)) + r")\b(?!_OTI)",
+        flags=re.IGNORECASE)
+    assignment = re.compile(r"^\s*(?:\d+\s+)?([A-Za-z_]\w*)\s*(\(.*?\))?\s*=(?!=)(.*)$")
+    statements = [(line.line_numbers[0], line.text)
+                  for line in logical_lines_from_text(transformed_source, form)
+                  if span[0] <= line.line_numbers[0] <= span[1]]
+
+    def shadow_is_read(shadow: str) -> bool:
+        # Read anywhere other than as the target of its own assignment. A
+        # shadow nothing reads carries nothing to the stress, and its lost
+        # derivative changes no output.
+        reference = re.compile(rf"(?<![%\w]){re.escape(shadow)}\b", re.IGNORECASE)
+        for _, text in statements:
+            text = _without_character_literals(text)
+            if "::" in text or re.match(r"^\s*(?:TYPE\s*\(|DIMENSION\b|COMMON\b|SAVE\b)", text, re.IGNORECASE):
+                continue
+            match = assignment.match(text)
+            if match and match.group(1).upper() == shadow:
+                text = (match.group(2) or "") + " " + match.group(3)
+            if reference.search(text):
+                return True
+        return False
+
+    found: list[tuple[int, str]] = []
+    for number, text in statements:
+        match = assignment.match(text)
+        if not match or f"{match.group(1).upper()}_OTI" not in shadows:
+            continue
+        if (pattern.search(_without_character_literals(match.group(3)))
+                and shadow_is_read(f"{match.group(1).upper()}_OTI")):
+            found.append((number, text.strip()))
+    return found
 
 
 def _live_ddsdde_writes_after_extraction(transformed_source: str, form: str,
