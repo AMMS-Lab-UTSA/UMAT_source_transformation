@@ -551,6 +551,10 @@
   {
    "commit": "36e6cf6",
    "reason": "Comment only: corrects the docstring of _callee_ddsdde_writes_left_live; 'silently' describes Fortran's implicit interface, no behaviour changes."
+  },
+  {
+   "commit": "7193fd7",
+   "reason": "Feature (G3, D-19a rev 2 R2): plan_council; 'refusal'/'silent' describe the refusals it adds and the 3D default it declines, not a corrected behaviour. Tested by tests/test_a_council_experiment_reads_only_the_source_and_the_row.py."
   }
  ],
  "changelog_fixed": {
