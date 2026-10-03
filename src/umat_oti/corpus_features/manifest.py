@@ -218,6 +218,18 @@ CONSTANT_CONFIDENCES: tuple[str, ...] = (
 #: The registry's terminal states that the transform refusal / failure maps to.
 _EXTERNAL = "external"
 
+#: Registry terminal states that passed the Abaqus primal gate; the same set
+#: as tools/build_corpus_registry.PRIMAL_GATE_PASSED and count_target PRIMAL_OK.
+_PRIMAL_GATE_PASSED = ("fully_verified", "tangent_not_verified",
+                       "derivative_truncated")
+
+
+def _informative_gate_hidden(rec: Mapping) -> bool:
+    """A primal-gate-passed stage whose mechanically_informative gate does not
+    read "true": a later stage hiding the gate (Vera B10 pass21)."""
+    return (rec.get("terminal_state") in _PRIMAL_GATE_PASSED
+            and rec.get("gate_mechanically_informative") != "true")
+
 STAGE_DEFINITIONS: dict[str, str] = {
     "discovered": "the file is listed in the discovery inventory "
                   "(paper_results/discovery)",
@@ -549,6 +561,13 @@ class SourceScan:
     includes: list[str] = field(default_factory=list)
     preprocessor: list[str] = field(default_factory=list)
     data_files: list[str] = field(default_factory=list)
+    #: The OPENed names that are an absolute path on the author's machine
+    #: (``/work/...``, ``C:\\...``, a UNC share, ``~/``), read from the
+    #: literal the FILE= expression starts with. Such a file exists only where
+    #: the author ran; whether the repository publishes it beside the source
+    #: decides missing_material_data (Vera B10 ruling b, the registry's
+    #: ``unpublished_absolute_input`` rule).
+    data_files_absolute: list[str] = field(default_factory=list)
     reads_tokens: dict[str, bool] = field(default_factory=dict)
     props_max: int | None = None
     statev_max: int | None = None
@@ -565,6 +584,24 @@ class SourceScan:
 def _logical(text: str, form: str):
     from umat_oti.fortran.parser import logical_lines_from_text
     return logical_lines_from_text(text, "fixed" if form == "fixed" else "free")
+
+
+def _absolute_file_expr(expr: str) -> str:
+    """The literal part of a FILE= expression if it names an absolute path.
+
+    ``'/work/a/b.txt'`` and ``'C:\\dir\\'//name`` both start with an
+    absolute literal, so the file lives on the author's machine whatever the
+    rest concatenates; the joined literal prefix is returned, else ``""``.
+    """
+    from umat_oti.corpus.source_rulings import is_absolute_path
+    pieces = re.findall(r"\s*(?:'([^']*)'|\"([^\"]*)\"|([^/'\"]+))\s*(?://|$)",
+                        expr.strip())
+    prefix = ""
+    for single, double, other in pieces:
+        if other.strip():
+            break
+        prefix += single or double
+    return prefix if prefix and is_absolute_path(prefix) else ""
 
 
 def scan_sources(paths: Sequence[Path], forms: Sequence[str]) -> SourceScan:
@@ -650,6 +687,8 @@ def scan_sources(paths: Sequence[Path], forms: Sequence[str]) -> SourceScan:
                 scan.data_files.append(
                     f.group(1).strip() if f else "<OPEN without FILE=: unit "
                                                   "pre-connected or scratch>")
+                if f and _absolute_file_expr(f.group(1)):
+                    scan.data_files_absolute.append(_absolute_file_expr(f.group(1)))
             for name, rx in _INDEXED.items():
                 for hit in rx.finditer(text):
                     v = int(hit.group(1))
@@ -1387,6 +1426,9 @@ def _acquired_row(rec, inp, tri, b3, fam, fam2, lic_source, p, later, pass_file,
                          "initialisation; inferred)")
     if scan.data_files:
         state_req.append("source OPENs files at run time")
+    if scan.data_files_absolute:
+        state_req.append("source OPENs a file at the author's absolute path: "
+                         + "; ".join(sorted(set(scan.data_files_absolute))))
     props_count = rec.get("props_count")
     nstatv = rec.get("nstatv")
     if scan.props_max and props_count and scan.props_max > props_count:
@@ -1680,6 +1722,7 @@ def _acquired_row(rec, inp, tri, b3, fam, fam2, lic_source, p, later, pass_file,
                 "unresolved_by_resolver": resolver_missing,
                 "includes": includes,
                 "data_files": sorted(set(scan.data_files)),
+                "data_files_at_absolute_paths": sorted(set(scan.data_files_absolute)),
             },
             "external_routines": ext_list,
             "modules_used": modules,
@@ -1688,6 +1731,13 @@ def _acquired_row(rec, inp, tri, b3, fam, fam2, lic_source, p, later, pass_file,
         "interface": interface,
         "registry": {"terminal_state": ts, "kind": kind,
                      "stage": rec.get("stage", ""), "key": key,
+                     # The gate a later stage can hide (Vera B10 pass21):
+                     # routine-level counting requires it to read "true".
+                     "gate_mechanically_informative":
+                         rec.get("gate_mechanically_informative", ""),
+                     "informative_gate_hidden": _informative_gate_hidden(rec),
+                     "source_ruling": rec.get("source_ruling", ""),
+                     "source_ruling_evidence": rec.get("source_ruling_evidence", ""),
                      "verified_on_every_gate": rec.get("verified_on_every_gate"),
                      "tangent_verdict": tangent_verdict(pr.get("tangent"))
                      or str(rec.get("tangent_verdict") or ""),

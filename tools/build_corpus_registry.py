@@ -283,6 +283,10 @@ DEFAULT_ACQUISITION = (REPO / "paper_results/corpus/companions.json",
 #: rebuilt on a machine with no Fortran compiler and get the same answers.
 DEFAULT_AUDIT = REPO / "paper_results/corpus/transform_refusal_audit.json"
 
+#: Reviewed per-source rulings (Vera), keyed by source_id AND sha256: a ruling
+#: is about the text it read, so a file that changed since is not ruled.
+DEFAULT_SOURCE_RULINGS = REPO / "paper_results/corpus/reviewed_source_rulings.json"
+
 
 @dataclass
 class Record:
@@ -314,6 +318,16 @@ class Record:
     #: umat_oti.corpus.entry_routines.classify_refusal.
     refusal_class: str = ""
     refusal_class_confident: Optional[bool] = None
+    #: A verdict the source's own text decides before any run does
+    #: (umat_oti.corpus.source_rulings; Vera B10 pre-pass22 rulings b and c):
+    #: ``visualisation_umat`` (the UMAT only displays its UEL's state ->
+    #: not_a_umat), ``unpublished_absolute_input`` (it READs a file at the
+    #: author's absolute path that the repository does not publish ->
+    #: missing_material_data), or ``reviewed`` (a per-source ruling in
+    #: :data:`DEFAULT_SOURCE_RULINGS`). ``source_ruling_evidence`` carries the
+    #: lines and the ruling it rests on; empty where nothing ruled.
+    source_ruling: str = ""
+    source_ruling_evidence: str = ""
     duplicate_of: str = ""
     companion_files: str = ""
     #: Where the whole file was searched for the two outputs a UMAT exists to
@@ -884,8 +898,30 @@ def acquisition_provenance(paths=DEFAULT_ACQUISITION) -> dict:
                 "slug_provenance": ("recorded in an acquisition URL" if slug
                                     else "derived from the cache directory name"),
                 "license_spdx": str(entry.get("license_spdx") or ""),
+                "license_by_path": list(entry.get("license_by_path") or []),
             }
     return found
+
+
+def licence_for(source_id: str, entry: dict) -> str:
+    """The SPDX id that governs THIS file of the repository.
+
+    A subdirectory may carry its own licence that the root one does not
+    override: laufogh/fe-large-displacement is MIT at the root, but
+    ``constitutive/hypoplasticity-staubach/`` has its own GPL-3.0 LICENSE and
+    a PROVENANCE.md saying the root licence does not apply (Vera B10 pass21).
+    ``license_by_path`` entries (``path_prefix``, ``license_spdx``) in the
+    acquisition manifest decide by the longest matching prefix; otherwise the
+    repository's licence applies.
+    """
+    rest = source_id.split("/", 1)[1] if "/" in source_id else ""
+    best, spdx = -1, str((entry or {}).get("license_spdx") or "")
+    for scoped in (entry or {}).get("license_by_path") or []:
+        prefix = str(scoped.get("path_prefix") or "").strip("/")
+        if prefix and (rest == prefix or rest.startswith(prefix + "/")) \
+                and len(prefix) > best:
+            best, spdx = len(prefix), str(scoped.get("license_spdx") or spdx)
+    return spdx
 
 
 def _acquisition_url(source_id: str, provenance: dict) -> tuple:
@@ -1197,7 +1233,8 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
           cache: Optional[Path], *, compile_check: bool = False,
           inventory_ids=None, provenance: Optional[dict] = None,
           audit: Optional[dict] = None, store_fingerprint: str = "",
-          harness_fingerprint: str = "") -> list:
+          harness_fingerprint: str = "",
+          source_rulings: Optional[list] = None) -> list:
     """Every acquired artefact, its terminal state, and the evidence for it.
 
     ``inventory_ids`` is the denominator and is seeded first, so a source the
@@ -1219,7 +1256,7 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             if provenance:
                 entry = provenance.get(source_id.split("/", 1)[0]) or {}
                 record.commit = str(entry.get("commit") or "")
-                record.license_spdx = str(entry.get("license_spdx") or "")
+                record.license_spdx = licence_for(source_id, entry)
                 url, why = _acquisition_url(source_id, provenance)
                 record.acquisition_url, record.url_provenance = url, why
             records[source_id] = record
@@ -1509,6 +1546,8 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
                          else _is_a_umat(cache, record.source_id)))
         record.terminal_state, record.kind = verdict.state, verdict.kind
 
+    apply_source_rulings(records.values(), cache, source_rulings)
+
     for record in records.values():
         if record.verification_sha256 and record.sha256:
             record.verification_sha256_agrees = (
@@ -1518,6 +1557,108 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
         if record.terminal_state != FULLY_VERIFIED:
             record.not_verified_reason = _why_not_verified(record)
     return sorted(records.values(), key=lambda r: r.source_id)
+
+
+class SourceRulingConflict(RuntimeError):
+    """A reviewed per-source ruling and a source-text rule disagree."""
+
+
+def load_source_rulings(path: Optional[Path]) -> list:
+    """The reviewed per-source rulings (``rulings`` list), or none."""
+    if not path or not Path(path).is_file():
+        return []
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    return list(payload.get("rulings") or [])
+
+
+def _published_names(cache: Optional[Path], source_id: str) -> list:
+    """Every file name the acquisition holds for the source's repository."""
+    if not cache:
+        return []
+    repo = Path(cache) / source_id.split("/", 1)[0]
+    return [p.name for p in repo.rglob("*") if p.is_file()] if repo.is_dir() else []
+
+
+def apply_source_rulings(records, cache: Optional[Path],
+                         reviewed: Optional[list] = None) -> None:
+    """Verdicts the source's own text decides, and Vera's reviewed rulings.
+
+    Two general rules (umat_oti.corpus.source_rulings), applied to every
+    record whose file the cache holds:
+
+    * ``visualisation_umat`` -> ``not_a_umat``: the UMAT's STATEV are copies
+      of a COMMON block only the file's UEL fills, at an element number offset
+      from NOEL (B10 ruling c, irfancn UEL-elastic);
+    * ``unpublished_absolute_input`` -> ``missing_material_data``: the routine
+      READs a file named by the author's absolute path and no file of that
+      name is in the acquired repository (B10 ruling b, vishalsubbiah). Not
+      applied over a verdict that already puts the source outside the
+      adequately-specified set -- that verdict is external already and was
+      reached first.
+
+    A reviewed ruling (``paper_results/corpus/reviewed_source_rulings.json``)
+    applies only to the sha256 it read, supplies the reviewed wording, and
+    must agree with a rule that fired on the same file: two answers to "what
+    is this file?" stop the build. Both override the batch's rung, because
+    they are about what the file is; the rung is kept in the reason.
+    """
+    by_id = {str(r.get("source_id")): r for r in reviewed or ()}
+    from umat_oti.corpus.source_rulings import (missing_input_reason,
+                                                unpublished_absolute_inputs,
+                                                visualisation_umat)
+    for record in records:
+        rule, rule_state, rule_reason = "", "", ""
+        path = Path(cache) / record.source_id if cache else None
+        if path is not None and path.is_file() and record.sha256:
+            text = path.read_text(errors="replace")
+            form = record.source_form or ""
+            shown = (visualisation_umat(text, form=form, path=path)
+                     if record.is_umat is not False else None)
+            if shown is not None:
+                rule, rule_state, rule_reason = ("visualisation_umat",
+                                                 "not_a_umat", shown.reason())
+            elif (record.is_umat is not False
+                  and record.terminal_state not in NOT_ADEQUATELY_SPECIFIED_STATES
+                  and record.terminal_state != "not_a_umat"):
+                missing = unpublished_absolute_inputs(
+                    text, _published_names(cache, record.source_id),
+                    form=form, path=path)
+                if missing:
+                    rule, rule_state = ("unpublished_absolute_input",
+                                        "missing_material_data")
+                    rule_reason = missing_input_reason(missing)
+        ruling = by_id.get(record.source_id)
+        if ruling and str(ruling.get("sha256") or "") != record.sha256:
+            record.source_ruling_evidence = (
+                f"reviewed ruling for sha256 {ruling.get('sha256')} not "
+                f"applied: the cached file reads {record.sha256 or 'nothing'}")
+            ruling = None
+        if ruling and rule_state and ruling.get("terminal_state") != rule_state:
+            raise SourceRulingConflict(
+                f"{record.source_id}: the reviewed ruling says "
+                f"{ruling.get('terminal_state')!r} and the {rule} rule says "
+                f"{rule_state!r}; fix whichever is wrong")
+        state = str((ruling or {}).get("terminal_state") or rule_state)
+        if not state:
+            continue
+        reason = str((ruling or {}).get("reason") or rule_reason)
+        prior_state, prior_reason = record.terminal_state, record.reason
+        record.terminal_state, record.kind = state, kind_of(state)
+        if state == "not_a_umat":
+            record.is_umat = False
+            record.classification_basis = "; ".join(
+                p for p in (reason, record.classification_basis) if p)[:600]
+        if prior_state and prior_state not in ("not_attempted", state):
+            reason += (f" (the batch had settled it at `{prior_state}`"
+                       + (f": {prior_reason}" if prior_reason else "") + ")")
+        record.reason = reason[:500]
+        record.source_ruling = "reviewed" if ruling else rule
+        record.source_ruling_evidence = "; ".join(p for p in (
+            f"rule {rule}: {rule_reason}" if rule else "",
+            (f"reviewed by {ruling.get('ruled_by', '')} "
+             f"({ruling.get('ruling', '')}): "
+             + " | ".join(ruling.get("evidence") or [])) if ruling else "",
+        ) if p)[:900]
 
 
 #: The terminal states that say the source itself cannot be driven, because of
@@ -2034,13 +2175,33 @@ def _cells_by_source(cells) -> dict:
     return out
 
 
+def informative_gate_hidden(record) -> bool:
+    """A primal-gate-passed stage over a ``mechanically_informative`` gate
+    that does not read true.
+
+    The rungs after the primal gate (tangent_not_verified,
+    derivative_truncated) say nothing about informativeness, and
+    ``stage_supported_by_gates`` demotes a row that fails BOTH
+    derivatives_verified and mechanically_informative to
+    ``tangent_not_verified`` -- a later stage that hides the gate. pass20
+    counted three shell-growth sources at routine level whose informativeness
+    was never established (Vera B10 pass21). Accepts a Record or a registry
+    row dict."""
+    get = (record.get if isinstance(record, dict)
+           else lambda k, d=None: getattr(record, k, d))
+    return (get("terminal_state") in PRIMAL_GATE_PASSED
+            and get("gate_mechanically_informative") != GATE_TRUE)
+
+
 def routine_verified(record: Record, by_source: dict) -> bool:
     """D-8 routine-level count of an author-experiment row (count_target.py):
-    the Abaqus primal gate passed, and primal_stress_state and ddsdde are
-    verified with STRESS and DDSDDE defined throughout."""
+    the Abaqus primal gate passed with ``mechanically_informative`` reading
+    true (explicitly: a later stage must not hide it), and primal_stress_state
+    and ddsdde are verified with STRESS and DDSDDE defined throughout."""
     cells = by_source.get(record.source_id) or {}
     primal, ddsdde = (cells.get(f) or {} for f in ROUTINE_FEATURES)
     return (record.terminal_state in PRIMAL_GATE_PASSED
+            and record.gate_mechanically_informative == GATE_TRUE
             and primal.get("status") == "verified"
             and ddsdde.get("status") == "verified"
             and ddsdde.get("stress_and_ddsdde_fully_defined") is not False)
@@ -2246,6 +2407,15 @@ def summarise(records: list) -> dict:
                               for state, names in sorted(
                                   clusters.items(), key=lambda kv: -len(kv[1]))},
         "verified_sources": [r.source_id for r in verified],
+        # A primal-gate-passed stage over an informativeness gate that is not
+        # true: routine_verified never counts these (Vera B10 pass21).
+        "primal_gate_passed_informative_gate_not_true": sorted(
+            f"{r.source_id} ({r.terminal_state}; mechanically_informative="
+            f"{r.gate_mechanically_informative or 'unset'})"
+            for r in records if informative_gate_hidden(r)),
+        "source_rulings": sorted(
+            f"{r.source_id} -> {r.terminal_state} ({r.source_ruling})"
+            for r in records if r.source_ruling),
     }
 
 
@@ -2962,6 +3132,11 @@ def main(argv: Optional[list] = None) -> int:
     parser.add_argument("--refusal-audit", type=Path, default=DEFAULT_AUDIT,
                         help="offline evidence about what each refused source "
                              "is; read if present, rewritten by --audit-refusals")
+    parser.add_argument("--source-rulings", type=Path,
+                        default=DEFAULT_SOURCE_RULINGS,
+                        help="reviewed per-source rulings (source_id + "
+                             "sha256 -> terminal state, reason, evidence); "
+                             "read if present")
     parser.add_argument("--audit-refusals", action="store_true",
                         help="compile every refused source offline with "
                              "ifort -syntax-only and write the evidence to "
@@ -3056,7 +3231,8 @@ def main(argv: Optional[list] = None) -> int:
                     compile_check=args.compile_check,
                     inventory_ids=inventory_ids, provenance=provenance,
                     audit=audit, store_fingerprint=fingerprint,
-                    harness_fingerprint=args.harness_fingerprint)
+                    harness_fingerprint=args.harness_fingerprint,
+                    source_rulings=load_source_rulings(args.source_rulings))
     inputs = origin_inputs(args.harvest, args.council_constants,
                            args.council_plans, args.acceptance)
     apply_origins(records, inputs, cache=args.cache_dir)

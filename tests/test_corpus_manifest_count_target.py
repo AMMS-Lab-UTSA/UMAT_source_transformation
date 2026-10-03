@@ -90,3 +90,23 @@ def test_fisher_runs_only_when_both_arms_have_five_attempted():
     assert out["other"]["status"].startswith("not run")
     assert "p" not in out["other"]
     assert ct.fisher_by_family(None, tiers, attempted)["growth"]["status"].startswith("not run")
+
+
+@pytest.mark.parametrize("gate, counted", [
+    ("true", True), ("null", False), ("absent", False), ("false", False),
+    ("no_evidence_block", False), (None, False)])
+def test_routine_ok_requires_the_informative_gate_explicitly(gate, counted):
+    """Vera B10 pass21: pass20 counted 3 shell-growth sources whose
+    mechanically_informative gate was null at routine level; a later
+    terminal stage (tangent_not_verified) must not hide the gate."""
+    row = {"source_id": "x__y/u.f", "terminal_state": "tangent_not_verified"}
+    if gate is not None:
+        row["gate_mechanically_informative"] = gate
+    cells = {"x__y/u.f": {"primal_stress_state": {"status": "verified"},
+                          "ddsdde": {"status": "verified",
+                                     "stress_and_ddsdde_fully_defined": True}}}
+    assert ct.routine_ok(row, cells) is counted
+    # the registry's own count agrees with count_target on every case
+    record = reg.Record(source_id="x__y/u.f", terminal_state="tangent_not_verified",
+                        gate_mechanically_informative=gate or "")
+    assert reg.routine_verified(record, cells) is counted
