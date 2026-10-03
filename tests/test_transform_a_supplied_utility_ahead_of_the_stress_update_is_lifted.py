@@ -8,8 +8,11 @@ ROTSIG was not lifted and the leak check refused the source -- for a solver
 utility whose body this transform supplies. The supplied utilities are now
 offered the same way.
 
-Behavioural, against the separately compiled original (with the same ROTSIG
-body): primal bitwise, DDSDDE against central differences at three step sizes.
+The toy hands ROTSIG a 6-long array and a non-trivial rotation (a 36.87
+degree turn about 3), so the rotated strains are not zero and reach the
+stress (Vera, B8 re-review C2: STATEV(1) with NSTATV=2 read out of bounds,
+and the driver's DROT=0 zeroed the output). Behavioural, against the
+separately compiled original (with the same ROTSIG body): primal bitwise, DDSDDE against central differences at three step sizes.
 """
 import shutil
 
@@ -29,8 +32,22 @@ SOURCE = (
     "      DIMENSION STRESS(NTENS),STATEV(NSTATV),DDSDDE(NTENS,NTENS),\n"
     "     1 DDSDDT(NTENS),DRPLDE(NTENS),STRAN(NTENS),DSTRAN(NTENS),\n"
     "     2 TIME(2),PREDEF(1),DPRED(1),PROPS(NPROPS),COORDS(3),DROT(3,3),\n"
-    "     3 DFGRD0(3,3),DFGRD1(3,3),EELAS(6)\n"
-    "      CALL ROTSIG(STATEV(1),DROT,EELAS,2,NDI,NSHR)\n"
+    "     3 DFGRD0(3,3),DFGRD1(3,3),EELAS(6),SV(6),R(3,3)\n"
+    "      C=0.8D0\n"
+    "      S=0.6D0\n"
+    "      R(1,1)=C\n"
+    "      R(1,2)=-S\n"
+    "      R(1,3)=0.D0\n"
+    "      R(2,1)=S\n"
+    "      R(2,2)=C\n"
+    "      R(2,3)=0.D0\n"
+    "      R(3,1)=0.D0\n"
+    "      R(3,2)=0.D0\n"
+    "      R(3,3)=1.D0\n"
+    "      DO K=1,6\n"
+    "        SV(K)=STATEV(1)*0.01D0*K\n"
+    "      END DO\n"
+    "      CALL ROTSIG(SV,R,EELAS,2,NDI,NSHR)\n"
     "      DO K=1,NTENS\n"
     "        EELAS(K)=EELAS(K)+DSTRAN(K)\n"
     "        STRESS(K)=STRESS(K)+PROPS(1)*EELAS(K)*(1.D0+5.D0*EELAS(K))\n"
@@ -49,4 +66,4 @@ def test_rotsig_ahead_of_the_stress_update_is_lifted_and_agrees(tmp_path):
                                     [*RENAMES, ("      RETURN\n      END\n",
                                                 "      RETURN\n      END\n" + ROTSIG_DEFINITION.replace(
                                                     "ROTSIG(", "ROTSIGORIG("))], ["1000.0d0"])
-    assert "ROTSIG_OTI(STATEV_OTI(1)" in next(output.glob("*_oti.for")).read_text().upper().replace(" ", "")
+    assert "ROTSIG_OTI(SV" in next(output.glob("*_oti.for")).read_text().upper().replace(" ", "")
