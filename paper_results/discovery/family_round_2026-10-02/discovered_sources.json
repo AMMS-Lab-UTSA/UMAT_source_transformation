@@ -1,0 +1,889 @@
+{
+  "accepted": 14,
+  "accepted_by_slide_family": {
+    "concrete/geo": 2,
+    "damage/phase field": 3,
+    "growth": 2,
+    "other": 4,
+    "plasticity": 3
+  },
+  "accepted_with_deck": 8,
+  "accepted_with_partial_deck": 1,
+  "accepted_with_published_constants_outside_deck": [
+    "laufogh__fe-large-displacement/constitutive/hypoplasticity-staubach/HPP_Staubach_implicit.f",
+    "Computational-Mechanics-Materials-Lab__SinglePointSimulator/examples/MODIFIED_JC.f",
+    "materialsguy__Predict_Nanoindentation_Tip_Wear/Codes/Abaqus_Indentation/2D/UMATPlasticity.f",
+    "thatliuyang__Abaqus-subroutine-for-composites-progressive-failure-analysis-/UMAT_comp_failure.for"
+  ],
+  "candidates": 30,
+  "caveat": "Nothing here is verified, compiled against Abaqus, or counted toward the 206 target. Families are a provisional Scout code read; Vera reviews before any Abaqus verification is scheduled. 'deck' records whether a committed deck with *USER MATERIAL constants exists; D-19 leads are leads until the material-data harvest records provenance.",
+  "file_outcomes": {
+    "already_known": 178,
+    "candidate": 30,
+    "duplicate_within_search": 1,
+    "licence_absent": 356,
+    "licence_incompatible": 69,
+    "no_fortran": 122,
+    "no_umat_entry": 1257,
+    "not_examined": 61,
+    "unreadable": 1
+  },
+  "queries": {
+    "round1": [
+      {
+        "kind": "code",
+        "name": "subroutine_umat_fortran",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" language:Fortran",
+        "repositories": 103,
+        "repositories_first_seen_here": 103,
+        "total_reported_by_github": 2688
+      },
+      {
+        "kind": "code",
+        "name": "subroutine_umat_ddsdde",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" DDSDDE",
+        "repositories": 96,
+        "repositories_first_seen_here": 20,
+        "total_reported_by_github": 2608
+      },
+      {
+        "kind": "code",
+        "name": "aba_param_include",
+        "pages_read": 3,
+        "query": "\"ABA_PARAM.INC\"",
+        "repositories": 109,
+        "repositories_first_seen_here": 43,
+        "total_reported_by_github": 2912
+      },
+      {
+        "kind": "code",
+        "name": "ddsdde_statev_nprops",
+        "pages_read": 3,
+        "query": "DDSDDE STATEV NPROPS",
+        "repositories": 106,
+        "repositories_first_seen_here": 23,
+        "total_reported_by_github": 2912
+      },
+      {
+        "kind": "code",
+        "name": "umat_signature_ddsdde_sse",
+        "pages_read": 3,
+        "query": "\"UMAT(STRESS,STATEV,DDSDDE,SSE\"",
+        "repositories": 119,
+        "repositories_first_seen_here": 23,
+        "total_reported_by_github": 1948
+      },
+      {
+        "kind": "code",
+        "name": "umat_extension_for",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" extension:for",
+        "repositories": 76,
+        "repositories_first_seen_here": 21,
+        "total_reported_by_github": 1092
+      },
+      {
+        "kind": "code",
+        "name": "umat_extension_f",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" extension:f",
+        "repositories": 98,
+        "repositories_first_seen_here": 16,
+        "total_reported_by_github": 1628
+      },
+      {
+        "kind": "code",
+        "name": "umat_extension_f90",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" extension:f90",
+        "repositories": 65,
+        "repositories_first_seen_here": 34,
+        "total_reported_by_github": 327
+      },
+      {
+        "kind": "code",
+        "name": "umat_extension_inc",
+        "pages_read": 0,
+        "query": "\"SUBROUTINE UMAT\" extension:inc",
+        "repositories": 0,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 0
+      },
+      {
+        "kind": "code",
+        "name": "umat_extension_txt",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" extension:txt",
+        "repositories": 13,
+        "repositories_first_seen_here": 7,
+        "total_reported_by_github": 22
+      },
+      {
+        "kind": "code",
+        "name": "umat_ddsdde_ntens",
+        "pages_read": 3,
+        "query": "\"DDSDDE(NTENS,NTENS)\"",
+        "repositories": 120,
+        "repositories_first_seen_here": 5,
+        "total_reported_by_github": 2192
+      },
+      {
+        "kind": "code",
+        "name": "umat_props_dstran",
+        "pages_read": 3,
+        "query": "\"PROPS(NPROPS)\" \"DSTRAN(NTENS)\"",
+        "repositories": 106,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 2552
+      },
+      {
+        "kind": "code",
+        "name": "fam_plast_return_mapping",
+        "pages_read": 2,
+        "query": "\"SUBROUTINE UMAT\" \"return mapping\"",
+        "repositories": 40,
+        "repositories_first_seen_here": 12,
+        "total_reported_by_github": 154
+      },
+      {
+        "kind": "code",
+        "name": "fam_plast_von_mises",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" \"von Mises\"",
+        "repositories": 64,
+        "repositories_first_seen_here": 14,
+        "total_reported_by_github": 261
+      },
+      {
+        "kind": "code",
+        "name": "fam_plast_hardening",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" hardening yield",
+        "repositories": 90,
+        "repositories_first_seen_here": 12,
+        "total_reported_by_github": 563
+      },
+      {
+        "kind": "code",
+        "name": "fam_plast_chaboche",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" Chaboche",
+        "repositories": 11,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 80
+      },
+      {
+        "kind": "code",
+        "name": "fam_plast_johnson_cook",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" \"Johnson-Cook\"",
+        "repositories": 16,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 24
+      },
+      {
+        "kind": "code",
+        "name": "fam_plast_plastic_strain",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" \"plastic strain\"",
+        "repositories": 88,
+        "repositories_first_seen_here": 2,
+        "total_reported_by_github": 718
+      },
+      {
+        "kind": "code",
+        "name": "fam_plast_hill",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" Hill anisotropic plasticity",
+        "repositories": 10,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 15
+      },
+      {
+        "kind": "code",
+        "name": "fam_plast_gurson",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" Gurson",
+        "repositories": 5,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 6
+      },
+      {
+        "kind": "code",
+        "name": "fam_dmg_damage",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" damage",
+        "repositories": 83,
+        "repositories_first_seen_here": 20,
+        "total_reported_by_github": 431
+      },
+      {
+        "kind": "code",
+        "name": "fam_dmg_phase_field",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" \"phase field\"",
+        "repositories": 23,
+        "repositories_first_seen_here": 4,
+        "total_reported_by_github": 228
+      },
+      {
+        "kind": "code",
+        "name": "fam_dmg_lemaitre",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" Lemaitre",
+        "repositories": 2,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 3
+      },
+      {
+        "kind": "code",
+        "name": "fam_dmg_hashin",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" Hashin",
+        "repositories": 8,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 22
+      },
+      {
+        "kind": "code",
+        "name": "fam_geo_concrete",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" concrete",
+        "repositories": 22,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 29
+      },
+      {
+        "kind": "code",
+        "name": "fam_geo_drucker",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" Drucker",
+        "repositories": 17,
+        "repositories_first_seen_here": 2,
+        "total_reported_by_github": 45
+      },
+      {
+        "kind": "code",
+        "name": "fam_geo_mohr",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" Mohr Coulomb",
+        "repositories": 28,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 48
+      },
+      {
+        "kind": "code",
+        "name": "fam_geo_cam_clay",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" \"Cam clay\"",
+        "repositories": 3,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 4
+      },
+      {
+        "kind": "code",
+        "name": "fam_geo_soil",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" soil",
+        "repositories": 33,
+        "repositories_first_seen_here": 9,
+        "total_reported_by_github": 69
+      },
+      {
+        "kind": "code",
+        "name": "fam_geo_hypoplastic",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" hypoplastic",
+        "repositories": 15,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 38
+      },
+      {
+        "kind": "code",
+        "name": "fam_cp_slip",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" slip crystal",
+        "repositories": 63,
+        "repositories_first_seen_here": 4,
+        "total_reported_by_github": 334
+      },
+      {
+        "kind": "code",
+        "name": "fam_cp_schmid",
+        "pages_read": 2,
+        "query": "\"SUBROUTINE UMAT\" Schmid",
+        "repositories": 25,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 191
+      },
+      {
+        "kind": "code",
+        "name": "fam_ve_viscoelastic",
+        "pages_read": 2,
+        "query": "\"SUBROUTINE UMAT\" viscoelastic",
+        "repositories": 29,
+        "repositories_first_seen_here": 8,
+        "total_reported_by_github": 132
+      },
+      {
+        "kind": "code",
+        "name": "fam_ve_prony",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" Prony",
+        "repositories": 11,
+        "repositories_first_seen_here": 3,
+        "total_reported_by_github": 21
+      },
+      {
+        "kind": "code",
+        "name": "fam_ve_maxwell",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" Maxwell relaxation",
+        "repositories": 10,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 59
+      },
+      {
+        "kind": "code",
+        "name": "fam_le_orthotropic",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" orthotropic",
+        "repositories": 68,
+        "repositories_first_seen_here": 2,
+        "total_reported_by_github": 274
+      },
+      {
+        "kind": "code",
+        "name": "fam_le_transverse",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" \"transversely isotropic\"",
+        "repositories": 7,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 7
+      },
+      {
+        "kind": "code",
+        "name": "fam_le_isotropic_elastic",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" \"isotropic\" elastic Lame",
+        "repositories": 48,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 274
+      },
+      {
+        "kind": "code",
+        "name": "fam_oth_neo_hookean",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" \"neo-Hookean\"",
+        "repositories": 44,
+        "repositories_first_seen_here": 6,
+        "total_reported_by_github": 261
+      },
+      {
+        "kind": "code",
+        "name": "fam_oth_neohookean",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" neohookean",
+        "repositories": 24,
+        "repositories_first_seen_here": 2,
+        "total_reported_by_github": 92
+      },
+      {
+        "kind": "code",
+        "name": "fam_oth_mooney",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" Mooney",
+        "repositories": 10,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 27
+      },
+      {
+        "kind": "code",
+        "name": "fam_oth_ogden",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" Ogden",
+        "repositories": 8,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 27
+      },
+      {
+        "kind": "code",
+        "name": "fam_oth_holzapfel",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" Holzapfel",
+        "repositories": 10,
+        "repositories_first_seen_here": 2,
+        "total_reported_by_github": 21
+      },
+      {
+        "kind": "code",
+        "name": "fam_oth_hyperelastic",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" hyperelastic",
+        "repositories": 49,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 274
+      },
+      {
+        "kind": "code",
+        "name": "fam_oth_creep",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" creep",
+        "repositories": 91,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 403
+      },
+      {
+        "kind": "code",
+        "name": "fam_oth_shape_memory",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" \"shape memory\"",
+        "repositories": 6,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 16
+      },
+      {
+        "kind": "code",
+        "name": "fam_oth_swelling",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" swelling",
+        "repositories": 10,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 16
+      },
+      {
+        "kind": "code",
+        "name": "fam_oth_gent",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" Gent",
+        "repositories": 97,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 1640
+      },
+      {
+        "kind": "code",
+        "name": "fam_oth_arruda",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" Arruda",
+        "repositories": 3,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 4
+      },
+      {
+        "kind": "code",
+        "name": "fam_oth_jaumann",
+        "pages_read": 3,
+        "query": "\"SUBROUTINE UMAT\" Jaumann",
+        "repositories": 42,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 226
+      },
+      {
+        "kind": "repository",
+        "name": "repo_umat_abaqus",
+        "pages_read": 2,
+        "query": "UMAT abaqus",
+        "repositories": 139,
+        "repositories_first_seen_here": 89,
+        "total_reported_by_github": 139
+      },
+      {
+        "kind": "repository",
+        "name": "repo_umat_subroutine",
+        "pages_read": 1,
+        "query": "UMAT subroutine fortran",
+        "repositories": 16,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 16
+      },
+      {
+        "kind": "repository",
+        "name": "repo_abaqus_user_material",
+        "pages_read": 1,
+        "query": "abaqus user material subroutine",
+        "repositories": 9,
+        "repositories_first_seen_here": 3,
+        "total_reported_by_github": 9
+      },
+      {
+        "kind": "repository",
+        "name": "repo_topic_umat",
+        "pages_read": 1,
+        "query": "topic:umat",
+        "repositories": 41,
+        "repositories_first_seen_here": 9,
+        "total_reported_by_github": 41
+      },
+      {
+        "kind": "repository",
+        "name": "repo_topic_abaqus_fortran",
+        "pages_read": 1,
+        "query": "topic:abaqus language:Fortran",
+        "repositories": 57,
+        "repositories_first_seen_here": 23,
+        "total_reported_by_github": 57
+      },
+      {
+        "kind": "repository",
+        "name": "repo_constitutive_abaqus",
+        "pages_read": 1,
+        "query": "constitutive model abaqus umat",
+        "repositories": 9,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 9
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_umat_plasticity",
+        "pages_read": 1,
+        "query": "umat plasticity",
+        "repositories": 14,
+        "repositories_first_seen_here": 2,
+        "total_reported_by_github": 14
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_umat_damage",
+        "pages_read": 1,
+        "query": "umat damage",
+        "repositories": 28,
+        "repositories_first_seen_here": 8,
+        "total_reported_by_github": 28
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_umat_phase_field",
+        "pages_read": 1,
+        "query": "abaqus phase field umat",
+        "repositories": 5,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 5
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_umat_concrete",
+        "pages_read": 1,
+        "query": "umat concrete",
+        "repositories": 5,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 5
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_umat_soil",
+        "pages_read": 1,
+        "query": "umat soil",
+        "repositories": 4,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 4
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_umat_crystal",
+        "pages_read": 1,
+        "query": "umat crystal plasticity",
+        "repositories": 9,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 9
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_umat_viscoelastic",
+        "pages_read": 1,
+        "query": "umat viscoelastic",
+        "repositories": 18,
+        "repositories_first_seen_here": 5,
+        "total_reported_by_github": 18
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_umat_hyperelastic",
+        "pages_read": 1,
+        "query": "umat hyperelastic",
+        "repositories": 5,
+        "repositories_first_seen_here": 2,
+        "total_reported_by_github": 5
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_umat_creep",
+        "pages_read": 1,
+        "query": "umat creep",
+        "repositories": 1,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 1
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_umat_composite",
+        "pages_read": 1,
+        "query": "umat composite",
+        "repositories": 13,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 13
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_abaqus_subroutine",
+        "pages_read": 2,
+        "query": "abaqus subroutine",
+        "repositories": 189,
+        "repositories_first_seen_here": 88,
+        "total_reported_by_github": 189
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_abaqus_umat_vumat",
+        "pages_read": 1,
+        "query": "abaqus umat vumat",
+        "repositories": 6,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 6
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_user_material",
+        "pages_read": 1,
+        "query": "user material abaqus fortran",
+        "repositories": 4,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 4
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_topic_abaqus_umat",
+        "pages_read": 0,
+        "query": "topic:abaqus-umat",
+        "repositories": 0,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 0
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_topic_abaqus",
+        "pages_read": 2,
+        "query": "topic:abaqus",
+        "repositories": 200,
+        "repositories_first_seen_here": 136,
+        "total_reported_by_github": 294
+      },
+      {
+        "kind": "repository",
+        "name": "frepo_constitutive_fortran",
+        "pages_read": 1,
+        "query": "constitutive model fortran",
+        "repositories": 6,
+        "repositories_first_seen_here": 4,
+        "total_reported_by_github": 6
+      }
+    ],
+    "round1b": "one '\"SUBROUTINE UMAT\" repo:<name>' code search per repository a round had stopped reading at the 25-file cap",
+    "round2": [
+      {
+        "kind": "code",
+        "name": "size_<4000",
+        "pages_read": 6,
+        "query": "\"SUBROUTINE UMAT\" size:<4000",
+        "repositories": 160,
+        "repositories_first_seen_here": 160,
+        "total_reported_by_github": 524
+      },
+      {
+        "kind": "code",
+        "name": "size_4000..8000",
+        "pages_read": 6,
+        "query": "\"SUBROUTINE UMAT\" size:4000..8000",
+        "repositories": 148,
+        "repositories_first_seen_here": 62,
+        "total_reported_by_github": 591
+      },
+      {
+        "kind": "code",
+        "name": "size_8000..14000",
+        "pages_read": 8,
+        "query": "\"SUBROUTINE UMAT\" size:8000..14000",
+        "repositories": 134,
+        "repositories_first_seen_here": 50,
+        "total_reported_by_github": 708
+      },
+      {
+        "kind": "code",
+        "name": "size_14000..25000",
+        "pages_read": 8,
+        "query": "\"SUBROUTINE UMAT\" size:14000..25000",
+        "repositories": 132,
+        "repositories_first_seen_here": 50,
+        "total_reported_by_github": 767
+      },
+      {
+        "kind": "code",
+        "name": "size_25000..50000",
+        "pages_read": 5,
+        "query": "\"SUBROUTINE UMAT\" size:25000..50000",
+        "repositories": 119,
+        "repositories_first_seen_here": 41,
+        "total_reported_by_github": 452
+      },
+      {
+        "kind": "code",
+        "name": "size_>50000",
+        "pages_read": 7,
+        "query": "\"SUBROUTINE UMAT\" size:>50000",
+        "repositories": 154,
+        "repositories_first_seen_here": 62,
+        "total_reported_by_github": 625
+      },
+      {
+        "kind": "code",
+        "name": "ddsdde_size_<4000",
+        "pages_read": 4,
+        "query": "\"DDSDDE(NTENS,NTENS)\" size:<4000",
+        "repositories": 114,
+        "repositories_first_seen_here": 5,
+        "total_reported_by_github": 333
+      },
+      {
+        "kind": "code",
+        "name": "ddsdde_size_4000..8000",
+        "pages_read": 4,
+        "query": "\"DDSDDE(NTENS,NTENS)\" size:4000..8000",
+        "repositories": 114,
+        "repositories_first_seen_here": 3,
+        "total_reported_by_github": 323
+      },
+      {
+        "kind": "code",
+        "name": "ddsdde_size_8000..14000",
+        "pages_read": 4,
+        "query": "\"DDSDDE(NTENS,NTENS)\" size:8000..14000",
+        "repositories": 91,
+        "repositories_first_seen_here": 2,
+        "total_reported_by_github": 321
+      },
+      {
+        "kind": "code",
+        "name": "ddsdde_size_14000..25000",
+        "pages_read": 6,
+        "query": "\"DDSDDE(NTENS,NTENS)\" size:14000..25000",
+        "repositories": 90,
+        "repositories_first_seen_here": 2,
+        "total_reported_by_github": 531
+      },
+      {
+        "kind": "code",
+        "name": "ddsdde_size_25000..50000",
+        "pages_read": 3,
+        "query": "\"DDSDDE(NTENS,NTENS)\" size:25000..50000",
+        "repositories": 72,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 222
+      },
+      {
+        "kind": "code",
+        "name": "ddsdde_size_>50000",
+        "pages_read": 5,
+        "query": "\"DDSDDE(NTENS,NTENS)\" size:>50000",
+        "repositories": 103,
+        "repositories_first_seen_here": 1,
+        "total_reported_by_github": 439
+      },
+      {
+        "kind": "code",
+        "name": "deck_user_material",
+        "pages_read": 10,
+        "query": "\"*User Material\" extension:inp",
+        "repositories": 159,
+        "repositories_first_seen_here": 48,
+        "total_reported_by_github": 2220
+      },
+      {
+        "kind": "code",
+        "name": "deck_user_material_constants",
+        "pages_read": 10,
+        "query": "\"*USER MATERIAL, CONSTANTS\" extension:inp",
+        "repositories": 136,
+        "repositories_first_seen_here": 3,
+        "total_reported_by_github": 1948
+      },
+      {
+        "kind": "code",
+        "name": "deck_depvar_user_material",
+        "pages_read": 10,
+        "query": "\"*Depvar\" \"*User Material\" extension:inp",
+        "repositories": 127,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 2084
+      },
+      {
+        "kind": "code",
+        "name": "filename_umat_f",
+        "pages_read": 10,
+        "query": "filename:umat extension:f",
+        "repositories": 156,
+        "repositories_first_seen_here": 24,
+        "total_reported_by_github": 1520
+      },
+      {
+        "kind": "code",
+        "name": "filename_umat_for",
+        "pages_read": 6,
+        "query": "filename:umat extension:for",
+        "repositories": 125,
+        "repositories_first_seen_here": 24,
+        "total_reported_by_github": 530
+      },
+      {
+        "kind": "code",
+        "name": "filename_umat_f90",
+        "pages_read": 4,
+        "query": "filename:umat extension:f90",
+        "repositories": 123,
+        "repositories_first_seen_here": 65,
+        "total_reported_by_github": 316
+      },
+      {
+        "kind": "code",
+        "name": "umat_free_form",
+        "pages_read": 4,
+        "query": "\"SUBROUTINE UMAT\" language:\"Fortran Free Form\"",
+        "repositories": 66,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 317
+      },
+      {
+        "kind": "code",
+        "name": "umat_f95_f03",
+        "pages_read": 1,
+        "query": "\"SUBROUTINE UMAT\" extension:f95",
+        "repositories": 1,
+        "repositories_first_seen_here": 0,
+        "total_reported_by_github": 1
+      }
+    ]
+  },
+  "rejected_by_reason": {
+    "file_licence_gpl2": 2,
+    "licence_not_in_D2": 2,
+    "near_duplicate": 2,
+    "near_duplicate_derivative": 3,
+    "near_duplicate_within_search": 3,
+    "not_self_contained": 2,
+    "rehost_of_existing_model": 1,
+    "stub_and_file_licence": 1
+  },
+  "rejected_candidates": 16,
+  "repositories_seen": {
+    "round1": 781,
+    "round2": 602
+  },
+  "repositories_surveyed_new": 689,
+  "screens": {
+    "abaqus_manual": "same Jaccard against the 21 UMATs in the local Abaqus 2021 samples/verify archives (max over accepted: see abaqus_manual_max_jaccard); none above 0.18",
+    "d2": "licence FILE at the repository root at the pinned commit, fetched from raw.githubusercontent at that commit and text-classified; SPDX in the D-2 list (AGPL-3.0 held out pending a lead decision)",
+    "fork": "GitHub repository metadata 'fork'; none of the candidates is a fork",
+    "near_duplicate": "5-token shingle Jaccard of comment-stripped code against every UMAT in discovery_cache and against the other candidates; >=0.85 rejected, 1.00 = same code"
+  },
+  "what_this_is": "B9 Scout family-targeted discovery round (2026-10-02) through tools/discover_umat_sources.py's search, licence gate, tree walk, content-hash dedup and deck pairing, driven by corpus_campaign/batches/B9/scout_discovery/{run_family_discovery,run_capped_repos,run_round2,screen_candidates,build_records}.py. Repositories surveyed by any earlier round (paper_results/discovery/discovered_sources.csv, discovery_cache, corpus_registry) were skipped."
+}
