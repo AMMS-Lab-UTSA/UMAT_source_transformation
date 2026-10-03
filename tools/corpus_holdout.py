@@ -32,7 +32,26 @@ followed to its current key through the source the selection names.
 
 TEMP and COORDS/NOEL/NPT reads are set to the REVIEWED value, as a council
 row's are (D-21a (e), accepted overrides included): from a reviewed static
-scan (``REVIEWED_SCANS``, ``--reviewed-scan``) where one names the source.
+scan (``REVIEWED_SCANS``, ``--reviewed-scan``) where one names the source --
+matched by ``registry_key`` (the current pass's key), ``key`` (the selection's)
+or ``source_id`` -- and ONLY if Vera accepted that row (``vera_accepted: true``)
+and its ``source_sha256``, where given, is the cached file's. A matching row
+that is not accepted, or names other bytes, stops the run as incomplete
+(exit 2) naming the row.
+
+Picks that leave (decision D-22, recorded in the report's ``left``; the
+selection file is never edited):
+
+* R-H1: a pick whose source is not fully_verified at the pass the hold-out
+  runs on. A replacement is due only when fewer than 5 picks remain AND the
+  family's pool was stratified (``n_available`` > 5); the runner never picks
+  it -- it reports the run incomplete until Vera's seeded order supplies one.
+* R-H2: a pick whose council plan needs an input no template rule decides, or
+  one the template refuses (plan refusals ``R_H2_REFUSALS``) -- "not a
+  template test", never a disagreement. A COORDS/NOEL-reading pick with no
+  reviewed placement is placed by G12 in the author's documented geometry:
+  the box of the author deck's *NODE coordinates, clear of every zero
+  coordinate plane, with NOEL = NPT = 1 (within ReadDetF's 3000 x 27).
 Without one, a flag is false only where a name scan finds no executable use
 (a read must name the argument, so the scan cannot miss one); a name-scan hit
 with no review leaves the hold-out incomplete (exit 2), never a refused plan. Q4: the gates
@@ -91,7 +110,12 @@ REVIEWED_SCANS = (_WORKSPACE / "corpus_campaign/holdout/reviewed_scan.jsonl",
                   _WORKSPACE / "corpus_campaign/material_data/d19_harvest.jsonl",
                   _WORKSPACE / "corpus_campaign/material_data/d21_council_constants.jsonl")
 REVIEWED_FIELDS = ("reads_temp", "reads_coords_or_noel", "reads_temp_note", "coords_note",
-                   "static_scan_overrides", "placement")
+                   "static_scan_overrides", "placement", "undefined_outputs")
+#: council-plan refusals that mean the template refuses an input (D-22 R-H2)
+R_H2_REFUSALS = ("needs_documented_temperature", "needs_documented_geometry", "body_force")
+#: ReadDetF(3000, 27) in the Jeff97 growth sources (D-22 condition)
+NOEL_NPT_BOUNDS = (3000, 27)
+
 FEATURES = ("primal_stress_state", "ddsdde")
 VERIFIED = "verified"
 #: what a deckless copy keeps of a repository: the Fortran and its includes
@@ -101,6 +125,9 @@ FORTRAN = {".f", ".for", ".f90", ".f77", ".ftn", ".fpp", ".f95", ".f03", ".f08",
 
 class SelectionError(ValueError):
     """The selection is not a usable blind hold-out selection."""
+
+class NotVerifiedHere(SelectionError):
+    """The pick is not fully_verified at the run's pass (D-22 R-H1)."""
 
 
 # ---------------------------------------------------------------------------
@@ -181,8 +208,8 @@ def author_side(key: str, verification_records: Optional[Path] = None) -> tuple:
     if record is None:
         raise SelectionError(f"{key} is not in the registry")
     if record.get("terminal_state") != "fully_verified":
-        raise SelectionError(f"{key} is {record.get('terminal_state')}, not a verified "
-                             "author-deck source")
+        raise NotVerifiedHere(f"{key} is {record.get('terminal_state')}, not a verified "
+                              "author-deck source")
     if (Path(H.COUNCIL_PLANS) / key / "council_plan.json").is_file():
         raise SelectionError(f"{key} is a council row, not an author-deck source")
     verification = _records_by_key(records_file).get(key) or {}
@@ -216,7 +243,8 @@ def _statement(manifest: dict) -> str:
 
 
 def load_reviewed(paths=None) -> dict:
-    """Reviewed static scans by key and by source_id (first file, first row wins)."""
+    """Reviewed static scans by registry_key, key and source_id (first file, first
+    row wins). Every row is kept, accepted or not: ``reviewed_reads`` decides use."""
     out: dict = {}
     for path in (paths if paths is not None else REVIEWED_SCANS):
         if not Path(path).is_file():
@@ -227,18 +255,40 @@ def load_reviewed(paths=None) -> dict:
             row = json.loads(line)
             if row.get("reads_temp") is None and row.get("reads_coords_or_noel") is None:
                 continue
-            entry = dict({k: row.get(k) for k in REVIEWED_FIELDS}, file=str(path))
-            for ident in (row.get("key"), row.get("source_id")):
+            entry = dict({k: row.get(k) for k in REVIEWED_FIELDS}, file=str(path),
+                         vera_accepted=row.get("vera_accepted") is True,
+                         source_sha256=row.get("source_sha256"),
+                         ident=str(row.get("registry_key") or row.get("key")
+                                   or row.get("source_id")),
+                         source_id=row.get("source_id"))
+            for ident in (row.get("registry_key"), row.get("key"), row.get("source_id")):
                 if ident:
                     out.setdefault(str(ident), entry)
     return out
 
 
-def reviewed_reads(record: dict, body: str, reviewed: Optional[dict]) -> dict:
-    """The TEMP and COORDS/NOEL flags to the reviewed standard of a council row."""
+def reviewed_reads(record: dict, body: str, reviewed: Optional[dict],
+                   source_sha256: Optional[str] = None) -> dict:
+    """The TEMP and COORDS/NOEL flags to the reviewed standard of a council row.
+
+    Only a Vera-accepted row is used; a matching row that is not accepted, or
+    that reviewed other bytes, leaves both flags None and says which row."""
     from umat_oti.abaqus import experiment as X
     entry = (reviewed or {}).get(record.get("key")) or (reviewed or {}).get(record["source_id"])
     out: dict = {"basis": {}}
+    if entry is not None:
+        name = f"{Path(entry['file']).name} row {entry['ident']} ({entry.get('source_id')})"
+        why = ("is not accepted by Vera (vera_accepted is not true)"
+               if not entry["vera_accepted"] else
+               f"reviewed source_sha256 {str(entry['source_sha256'])[:12]}, not the cached "
+               f"file's {str(source_sha256)[:12]}"
+               if entry.get("source_sha256") and source_sha256
+               and entry["source_sha256"] != source_sha256 else "")
+        if why:
+            for flag in ("reads_temp", "reads_coords_or_noel"):
+                out[flag] = None
+                out["basis"][flag] = f"the reviewed static scan {name} {why}"
+            return out
     for flag, pattern in (("reads_temp", X._TEMP_READ), ("reads_coords_or_noel", X._NOEL_READ)):
         named = sorted({m.upper() for m in pattern.findall(body)})
         if entry is not None and entry.get(flag) is not None:
@@ -253,21 +303,22 @@ def reviewed_reads(record: dict, body: str, reviewed: Optional[dict]) -> dict:
             out["basis"][flag] = (f"the name scan finds {', '.join(named)} and no reviewed "
                                   "static scan names this source")
     if entry is not None:
-        for field in ("reads_temp_note", "coords_note", "static_scan_overrides", "placement"):
+        for field in ("reads_temp_note", "coords_note", "static_scan_overrides", "placement",
+                      "undefined_outputs"):
             if entry.get(field):
                 out[field] = entry[field]
     return out
 
 
 def holdout_row(record: dict, manifest: dict, source_text: str, family: str = "",
-                reviewed: Optional[dict] = None) -> dict:
+                reviewed: Optional[dict] = None, source_sha256: Optional[str] = None) -> dict:
     """The author deck's constants as a harvest-format row (origin holdout_from_author_deck).
 
     ``reads_temp`` / ``reads_coords_or_noel`` follow the reviewed standard of a
     council row (``reviewed_reads``); ``None`` where a name-scan hit has no review."""
     from umat_oti.abaqus import experiment as X
     body = X._strip_header(X._executable(source_text))
-    reads = reviewed_reads(record, body, reviewed)
+    reads = reviewed_reads(record, body, reviewed, source_sha256)
     where = ("verified author deck: "
              + str(manifest.get("material_provenance") or record.get("source_id"))[:300])
     constants = []
@@ -302,12 +353,45 @@ def holdout_row(record: dict, manifest: dict, source_text: str, family: str = ""
         "reads_coords_or_noel": reads["reads_coords_or_noel"],
         "reads_temp": reads["reads_temp"],
         **{k: reads[k] for k in ("reads_temp_note", "coords_note", "static_scan_overrides",
-                                 "placement") if k in reads},
+                                 "placement", "undefined_outputs") if k in reads},
         "reads_no_props": not constants, "mapping": None,
         "notes": (f"{ORIGIN}: R6.3 blind hold-out row; never counted. reads_temp: "
                   f"{reads['basis']['reads_temp']}; reads_coords_or_noel: "
                   f"{reads['basis']['reads_coords_or_noel']}."),
     }
+
+
+def author_mesh_placement(deck_text: str, deck_name: str) -> Optional[dict]:
+    """G12 placement in the author's documented geometry (D-22 R-H2): the box of
+    the deck's *NODE coordinates, avoiding every zero-coordinate plane inside it
+    (no placed node or integration point at a zero coordinate)."""
+    from umat_oti.abaqus.coordinate_domain import node_box
+    box = node_box(deck_text)
+    if len(box) != 3 or any(high <= low for low, high in box):
+        return None
+    avoid = {axis: 0.0 for axis, (low, high) in zip("xyz", box) if low <= 0.0 <= high}
+    return {"box": [[low for low, _ in box], [high for _, high in box]], "avoid": avoid,
+            "where": f"the author's mesh ({deck_name}): box of its *NODE coordinates "
+                     "(G12, D-22 R-H2)",
+            "origin": "author_published"}
+
+
+def placement_problems(plan: dict) -> list:
+    """D-22 conditions on a placed plan: no zero node coordinate, NOEL/NPT in bounds."""
+    placement = plan.get("placement") or {}
+    out = []
+    for council_set in plan.get("sets") or ():
+        manifest = ((council_set.get("plan") or {}).get("experiment") or {}).get("manifest") or {}
+        for node in manifest.get("node_coordinates") or ():
+            if any(float(c) == 0.0 for c in list(node)[1:]):
+                out.append(f"set {council_set.get('set_id')}: node {node[0]} has a zero "
+                           "coordinate")
+    point = placement.get("driver_point") or {}
+    if point and (int(point.get("noel", 1)) > NOEL_NPT_BOUNDS[0]
+                  or int(point.get("npt", 1)) > NOEL_NPT_BOUNDS[1]):
+        out.append(f"driver point NOEL/NPT {point.get('noel')}/{point.get('npt')} outside "
+                   f"{NOEL_NPT_BOUNDS}")
+    return out
 
 
 def deckless_copy(source_id: str, cache: Path, into: Path) -> Path:
@@ -333,21 +417,35 @@ def prepare(keys: list, out: Path, verification_records: Optional[Path] = None,
     if Path(H.FAMILIES).is_file():
         families = {r["source_id"]: r.get("family", "")
                     for r in json.loads(Path(H.FAMILIES).read_text())["rows"]}
+    import hashlib
     reviewed = load_reviewed(reviewed_scans)
-    rows, problems = [], []
+    records_file = Path(verification_records or CURRENT_RECORDS)
+    rows, problems, left = [], [], []
     for key in keys:
         try:
             record, manifest = author_side(key, verification_records)
+        except NotVerifiedHere as error:
+            left.append({"key": key, "rule": "R-H1", "why": str(error)})
+            continue
         except SelectionError as error:
             problems.append(str(error))
             continue
         source = Path(H.CACHE) / record["cache_path"]
         row = holdout_row(record, manifest, source.read_text(errors="replace"),
-                          families.get(record["source_id"], ""), reviewed)
+                          families.get(record["source_id"], ""), reviewed,
+                          hashlib.sha256(source.read_bytes()).hexdigest())
+        if row["reads_coords_or_noel"] and not row.get("placement"):
+            deck = str((_records_by_key(records_file).get(key) or {}).get("deck") or "")
+            deck_file = Path(H.CACHE) / deck
+            placement = (author_mesh_placement(deck_file.read_text(errors="replace"),
+                                               deck_file.name)
+                         if deck and deck_file.is_file() else None)
+            if placement:
+                row["placement"] = placement
         unanswered = [f for f in ("reads_temp", "reads_coords_or_noel") if row[f] is None]
         if unanswered:
-            problems.append(f"{key} ({record['source_id']}) needs a reviewed static scan for "
-                            f"{', '.join(unanswered)}: {row['notes']}")
+            problems.append(f"{key} ({record['source_id']}) needs a Vera-accepted reviewed "
+                            f"static scan for {', '.join(unanswered)}: {row['notes']}")
             continue
         rows.append(row)
         deckless_copy(record["cache_path"], Path(H.CACHE), out / "cache")
@@ -361,8 +459,24 @@ def prepare(keys: list, out: Path, verification_records: Optional[Path] = None,
     common = ["--rows", rows_file, "--out", plans, "--cache", out / "cache"]
     rc, printed = cc.run_make_council_deck(common)
     rc_check, checked = cc.run_make_council_deck(common + ["--check"])
+    kept = []
+    for row in rows:
+        plan_file = plans / row["key"] / "council_plan.json"
+        plan = json.loads(plan_file.read_text()) if plan_file.is_file() else {}
+        code = plan.get("refusal_code")
+        if code in R_H2_REFUSALS:
+            left.append({"key": row["key"], "rule": "R-H2", "why": "not a template test: the "
+                         f"council plan is refused {code} ({str(plan.get('refusal'))[:200]})"})
+            continue
+        bad = placement_problems(plan) if plan.get("placement") else []
+        if bad:
+            problems.append(f"{row['key']}: placement breaks the D-22 conditions: "
+                            + "; ".join(bad))
+        kept.append(row["key"])
+    if problems:
+        raise SelectionError("; ".join(problems))
     return {"rows_file": rows_file, "plans": plans, "printed": printed + checked,
-            "regenerates": rc == 0 and rc_check == 0}
+            "regenerates": rc == 0 and rc_check == 0, "kept": kept, "left": left}
 
 
 # ---------------------------------------------------------------------------
@@ -495,6 +609,17 @@ def main(argv=None) -> int:
         key_map = current_keys(selection)
         keys = [current for _selected, current, _source in key_map]
         prepared = prepare(keys, out, records_file, args.reviewed_scan)
+        kept = prepared["kept"]
+        if not kept:
+            raise SelectionError("every pick left the selection: " + "; ".join(
+                f"{x['key']} ({x['rule']})" for x in prepared["left"]))
+        pool = int(selection.get("n_available") or len(selection["keys"]))
+        if prepared["left"] and len(kept) < MIN_SOURCES and pool > MIN_SOURCES:
+            raise SelectionError(
+                f"{len(kept)} pick(s) remain of a stratified pool of {pool}: D-22 R-H1 asks "
+                "for a replacement from Vera's seeded order, which this runner never picks "
+                "(left: " + "; ".join(f"{x['key']} {x['rule']}" for x in prepared["left"])
+                + ")")
     except SelectionError as error:
         print(f"hold-out not run: {error}")
         return 2
@@ -504,7 +629,12 @@ def main(argv=None) -> int:
         return 2
     gate = (routine_gate(out / "work") if args.gates == "routine"
             else verdicts_gate(Path(args.gates)))
-    report = judge(args.template, keys, prepared["plans"], gate, selection["mode"])
+    mode = HOLDOUT if len(kept) >= MIN_SOURCES else FALSIFICATION_ONLY
+    report = judge(args.template, kept, prepared["plans"], gate, mode)
+    selected = {b: (a, c) for a, b, c in key_map}
+    report["left"] = [dict(x, selected=selected.get(x["key"], ("", ""))[0],
+                           source_id=selected.get(x["key"], ("", ""))[1])
+                      for x in prepared["left"]]
     report.update(selection={k: selection.get(k) for k in ("selected_by", "date", "blind")},
                   key_map=[{"selected": a, "current": b, "source_id": c}
                            for a, b, c in key_map],
