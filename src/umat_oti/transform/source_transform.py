@@ -347,7 +347,7 @@ def transform_umat_to_oti_from_config(
     shape_blockers = _shape_blockers(source_text, roles, regions, mappings,
                                      variable_shapes, parsed, selected_umat,
                                      module_texts=_module_source_texts(config, output_dir))
-    shape_blockers.extend(_data_initialised_shadow_blockers(source_text, roles))
+    shape_blockers.extend(_data_initialised_shadow_blockers(source_text, roles, parsed, selected_umat))
     # DOUBLE COMPLEX is shadowed with the complex OTI type (oti_complex);
     # only the constructs that type cannot carry are refused, by name.
     complex_plan = complex_support.plan_complex(
@@ -3149,7 +3149,8 @@ def _complex_type_blockers(config: dict[str, Any], roles: dict[str, set[str]]) -
 
 
 def _data_initialised_shadow_blockers(
-    source_text: str, roles: dict[str, set[str]]
+    source_text: str, roles: dict[str, set[str]],
+    parsed: ParsedFortranSource | None = None, selected_umat: str = "",
 ) -> list[str]:
     """Refuse to shadow a name whose starting value comes from a DATA statement.
 
@@ -3165,8 +3166,19 @@ def _data_initialised_shadow_blockers(
     Refused rather than emitted, because the alternative is a file that
     compiles, passes every semantic check, and returns a wrong stress.
 
+    The shadows this guards are the selected routine's, so the DATA
+    statements that matter are the ones that can give that routine's
+    variables a value: its own, any outside every routine (BLOCK DATA, a
+    module's specification part), and those of a routine that also has a
+    COMMON block, whose DATA can initialise shared storage. A DATA statement
+    local to some other routine initialises that routine's own variable,
+    which the lifter carries as an assignment. Read file-wide, damin225's
+    short-crack umat.f was refused because LimitRatioForDrag gives its local
+    FACTOR a DATA value while InitialGuessStress assigns an unrelated local
+    of the same name.
     """
-    initialised = data_initialised_names(source_text)
+    initialised = data_initialised_names(
+        _text_whose_data_reaches(source_text, parsed, selected_umat))
     if not initialised:
         return []
     return [
@@ -3179,6 +3191,38 @@ def _data_initialised_shadow_blockers(
         "executable part (or a PARAMETER if it is never reassigned)."
         for name in sorted((roles["seed"] | roles["promote"]) & initialised)
     ]
+
+
+def _text_whose_data_reaches(source_text: str, parsed: ParsedFortranSource | None,
+                             selected_umat: str) -> str:
+    """The lines whose DATA statements can initialise the selected routine's variables.
+
+    The whole text when the routines cannot be placed: a check that cannot be
+    narrowed is kept whole.
+    """
+    if parsed is None or not parsed.subroutines:
+        return source_text
+    wanted = (selected_umat or "UMAT").upper()
+    spans = {}
+    for routine in parsed.subroutines:
+        span = _selected_routine_span(parsed, routine.upper_name)
+        if span:
+            spans[routine.upper_name] = span
+    if wanted not in spans:
+        return source_text
+    lines = source_text.splitlines()
+    keep = [True] * len(lines)
+    for name, (start, end) in spans.items():
+        if name == wanted:
+            continue
+        body = lines[start - 1:end]
+        if any(re.match(r"^\s*(?:\d+\s+)?COMMON\b", line, re.IGNORECASE) for line in body):
+            continue
+        selected = spans[wanted]
+        for number in range(start, end + 1):
+            if not (selected[0] <= number <= selected[1]):
+                keep[number - 1] = False
+    return "\n".join(line for line, kept in zip(lines, keep) if kept)
 
 
 _ROUTINE_HEADER = re.compile(
