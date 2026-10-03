@@ -106,3 +106,15 @@ def test_the_harness_fingerprint_covers_the_abaqus_gate_tool(tmp_path):
     with open(copy / "tools" / "verify_store_in_abaqus.py", "a") as handle:
         handle.write("\n# changed\n")
     assert harness_fingerprint(copy / "src" / "umat_oti") != before
+
+
+def test_the_fingerprint_says_which_digest_it_is(tmp_path):
+    import shutil
+    from pathlib import Path
+    from umat_oti.store.transform_store import harness_fingerprint_basis
+    repo = Path(__file__).resolve().parents[1]
+    assert harness_fingerprint_basis(repo / "src" / "umat_oti") == "package+tools"
+    copy = tmp_path / "repo"
+    shutil.copytree(repo / "src" / "umat_oti", copy / "src" / "umat_oti",
+                    ignore=shutil.ignore_patterns("__pycache__"))
+    assert harness_fingerprint_basis(copy / "src" / "umat_oti") == "package-only"

@@ -116,3 +116,15 @@ def test_a_direction_mismatch_fails_and_an_unreadable_seed_map_is_unresolved(too
     monkeypatch.setattr(tangent_gate, "direction_check", broken)
     out = _run(tool, tmp_path / "b", LINEAR)
     assert not out["verified"] and not out.get("failed") and "unresolved" in out["reason"]
+
+
+def test_a_frozen_state_not_found_stays_in_the_denominator(tool, tmp_path):
+    """Two frozen states found and judged, two not found: 2 of 4 is 50%, and
+    the not-found ones count (A5). With three not found, 2 of 5 is under."""
+    states = _run(tool, tmp_path / "base", LINEAR)["chosen_states"]
+    gone = [dict(states[0], increment=99 + k) for k in range(3)]
+    ok = _run(tool, tmp_path / "a", LINEAR, frozen_states=states[:2] + gone[:2])
+    assert ok["states_chosen"] == 4 and ok["verified"], ok["reason"]
+    short = _run(tool, tmp_path / "b", LINEAR, frozen_states=states[:2] + gone)
+    assert short["states_chosen"] == 5 and not short["verified"]
+    assert "2 of 5" in short["reason"]
