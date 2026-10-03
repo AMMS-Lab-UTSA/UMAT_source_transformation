@@ -345,7 +345,8 @@ def transform_umat_to_oti_from_config(
         _variable_shapes(config, mappings, ntens), parsed, selected_umat)
     argument_variables = _argument_variables(config, selected_umat)
     shape_blockers = _shape_blockers(source_text, roles, regions, mappings,
-                                     variable_shapes, parsed, selected_umat)
+                                     variable_shapes, parsed, selected_umat,
+                                     module_texts=_module_source_texts(config, output_dir))
     shape_blockers.extend(_data_initialised_shadow_blockers(source_text, roles))
     # DOUBLE COMPLEX is shadowed with the complex OTI type (oti_complex);
     # only the constructs that type cannot carry are refused, by name.
@@ -2964,6 +2965,7 @@ def _shape_blockers(
     variable_shapes: dict[str, str],
     parsed: ParsedFortranSource | None = None,
     selected_umat: str = "",
+    module_texts: dict[str, str] | None = None,
 ) -> list[str]:
     blockers: list[str] = []
     region_text = _executable_text(_selected_region_text(source_text, regions["stress"]))
@@ -3039,6 +3041,19 @@ def _shape_blockers(
         # source does not contain, the name is a call into that module, and
         # saying "no confirmed shape" sends the reader to look for a DIMENSION
         # statement that was never going to be there.
+        owner = _module_declaring_variable(name, module_texts or {})
+        if used_modules and name.upper() not in declared and owner:
+            blockers.append(
+                f"{name} is a variable of module {owner[0]} ({owner[1]}), and the "
+                f"stress path reads it as {name}(...). This transform types and "
+                f"shadows only what the selected routine declares; a module "
+                f"variable is declared elsewhere, persists from call to call and "
+                f"is shared by every material point, so it gets no shadow, and "
+                f"where the routine or its callees also write it, it is state "
+                f"kept outside STATEV that neither the transform nor a "
+                f"verification against STATEV can see. Module variables on the "
+                f"stress path are not supported.")
+            continue
         if used_modules and name.upper() not in declared:
             blockers.append(
                 f"{name} appears as {name}(...) on the stress path but is not "
@@ -3055,6 +3070,49 @@ def _shape_blockers(
             f"or typed declaration), or give it in "
             f"transformation_settings.variable_shapes.")
     return blockers
+
+
+def _module_source_texts(config: dict[str, Any], output_dir: Path) -> dict[str, str]:
+    """The text of every module source the contract names, by file name."""
+    texts: dict[str, str] = {}
+    for entry in _dict(config.get("transformation_settings")).get("module_sources", []) or []:
+        for candidate in (Path(str(entry)), Path(output_dir) / str(entry)):
+            try:
+                if candidate.is_file():
+                    texts[candidate.name] = candidate.read_text(errors="replace")
+                    break
+            except OSError:
+                continue
+    return texts
+
+
+def _module_declaring_variable(name: str, module_texts: dict[str, str]) -> tuple[str, str] | None:
+    """(module, file) whose specification part declares ``name`` as a variable, or None.
+
+    Only the part of a MODULE before its CONTAINS is read, and only lines that
+    are declarations (a ``::``, or a DIMENSION / ALLOCATABLE / COMMON
+    statement), so a module procedure of that name is not taken for one.
+    """
+    wanted = re.compile(rf"(?<![%\w]){re.escape(name)}\b", re.IGNORECASE)
+    for file_name, text in module_texts.items():
+        form = "fixed" if Path(file_name).suffix.lower() in {".f", ".for", ".f77"} else "free"
+        current = ""
+        for line in logical_lines_from_text(text, form):
+            statement = line.text.strip()
+            opened = re.match(r"^MODULE\s+(?!PROCEDURE\b)([A-Za-z_]\w*)\s*$", statement, re.IGNORECASE)
+            if opened:
+                current = opened.group(1).upper()
+                continue
+            if not current:
+                continue
+            if re.match(r"^(?:CONTAINS\b|END\s*MODULE\b)", statement, re.IGNORECASE):
+                current = ""
+                continue
+            is_declaration = "::" in statement or re.match(
+                r"^(?:DIMENSION|ALLOCATABLE|COMMON)\b", statement, re.IGNORECASE)
+            if is_declaration and wanted.search(statement.split("::", 1)[-1]):
+                return current, file_name
+    return None
 
 
 def _complex_type_blockers(config: dict[str, Any], roles: dict[str, set[str]]) -> list[str]:
@@ -3106,6 +3164,7 @@ def _data_initialised_shadow_blockers(
 
     Refused rather than emitted, because the alternative is a file that
     compiles, passes every semantic check, and returns a wrong stress.
+
     """
     initialised = data_initialised_names(source_text)
     if not initialised:
