@@ -78,7 +78,14 @@ from typing import NamedTuple
 #:   UNMODIFIED source (decision D-12 of the corpus campaign). A 3.x reader has
 #:   no word for it and would fall through to an INTERNAL owner, booking a
 #:   defect in somebody's file against this project.
-CONTRACT_VERSION = "4.0.0"
+#: 4.1.0, MINOR: ``finite_history.evidence.primal_decided_by`` (optional, a
+#: closed enumeration) names which gate decided ``primal_agreed``. The verifier
+#: has written it since 4d91f0c and the exporter carries the verifier's
+#: evidence verbatim, so 4.0.0's closed ``evidence`` object refused every
+#: fixture frozen at the current generation. Additive: a 4.0 reader may ignore
+#: it without being misled (it explains ``primal_agreed``, it does not change
+#: it); a 4.1 reader treats its absence in a 4.0 fixture as NOT ESTABLISHED.
+CONTRACT_VERSION = "4.1.0"
 
 #: The name this repository answers to in a handshake message.
 SPEAKER = "UMAT_source_transformation"
