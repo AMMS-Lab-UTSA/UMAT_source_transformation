@@ -64,12 +64,14 @@ def test_the_double_exact_zero_exemption_is_gone():
     assert v.codes == [fd.UNRESOLVED_ZERO_SCALE]
 
 
-@pytest.mark.parametrize("oti, code", [(0.0, fd.ZERO_PASS), (1e-30, fd.FAIL), (1e-12, fd.FAIL)])
+@pytest.mark.parametrize("oti, code", [(0.0, fd.ZERO_PASS), (1.9e-27, fd.ZERO_PASS),
+                                        (1e-6, fd.FAIL), (1e-3, fd.FAIL)])
+# S here is the column's scale, 1 (derivative_scale): 1e-6 S fails, 1e-27 passes
 def test_a_zero_in_both_precisions_against_a_nonzero_value_fails(oti, code):
     est = [np.zeros(1) for _ in L]
     v = fd.judge_column(np.array([oti]), est, list(range(len(L))), L, steps=STEPS,
                         magnitude=np.array([1.0]), eps=fd.EPS_QUAD,
-                        double_zero=np.array([True]))
+                        double_zero=np.array([True]), derivative_scale=1.0)
     assert v.codes == [code]
 
 
@@ -106,3 +108,20 @@ def test_a_1e_4_defect_fails_under_quad_whatever_the_block(tmp_path=None):
                            magnitude=np.array([1.0]), eps=fd.EPS_QUAD,
                            kinematic_input=1.0, block_derivative=1e6)
     assert good.codes == [fd.PASS]
+
+
+def test_the_a3_floor_scales_with_the_block_and_the_increment_count():
+    """floor_v = NOISE eps max(S, |block|) x n, capped at 1e-3 S (Vera pass21)."""
+    est = [np.zeros(1) for _ in L]
+    kw = dict(magnitude=np.array([1.0]), eps=fd.EPS_QUAD, double_zero=np.array([True]),
+              derivative_scale=1.0, steps=STEPS)
+    small = 8 * fd.EPS * 1e6 * 0.5
+    assert fd.judge_column(np.array([small]), est, list(range(len(L))), L,
+                           block_derivative=1e6, **kw).codes == [fd.ZERO_PASS]
+    assert fd.judge_column(np.array([small]), est, list(range(len(L))), L,
+                           **kw).codes == [fd.FAIL]
+    assert fd.judge_column(np.array([3 * 8 * fd.EPS]), est, list(range(len(L))), L,
+                           n_increments=5, **kw).codes == [fd.ZERO_PASS]
+    # the cap: never above 1e-3 of the column scale, whatever the block
+    assert fd.judge_column(np.array([2e-3]), est, list(range(len(L))), L,
+                           block_derivative=1e20, **kw).codes == [fd.FAIL]

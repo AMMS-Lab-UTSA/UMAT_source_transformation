@@ -1351,7 +1351,8 @@ class FeatureTally:
     def add(self, inc: int, wrt: str, column: fd.ColumnFD, oti: np.ndarray,
             output_names: Sequence[str], magnitude: np.ndarray, undefined=None,
             value_magnitude=None, derivative_scale: float = 0.0, probe: bool = False,
-            kinematic_input: float = 0.0, block_derivative: float = 0.0, double_zero=None):
+            kinematic_input: float = 0.0, block_derivative: float = 0.0, double_zero=None,
+            n_increments: int = 1):
         """Judge one column at one state (entries of the judged block only).
 
         ``derivative_scale``: the column's derivative scale over the PATH (the
@@ -1424,7 +1425,8 @@ class FeatureTally:
                                   eps=self.eps, value_magnitude=value_magnitude,
                                   euler=self.euler, derivative_scale=derivative_scale,
                                   kinematic_input=kinematic_input,
-                                  block_derivative=block_derivative, double_zero=double_zero)
+                                  block_derivative=block_derivative, double_zero=double_zero,
+                                  n_increments=n_increments)
         self.column_status[verdict.status] += 1
         for code in verdict.codes:
             self.entries[code] += 1
@@ -2168,7 +2170,8 @@ def evaluate_path(entry: CorpusEntry, builds: Builds, path, work: Path, *,
                     value_mag = inc * np.nanmax(np.nan_to_num(hist), axis=0)[block]
                 tally.add(inc, label, _restrict(column, block), oti_of(out, inc, d),
                           names, magnitude_of(column, inc, block), undefined=block_undefined,
-                          value_magnitude=value_mag, derivative_scale=path_scale[label])
+                          value_magnitude=value_mag, derivative_scale=path_scale[label],
+                          n_increments=inc if feature.endswith("_total") else 1)
         return tally.as_dict()
 
     def emit(feature, run_name, column_fn, wrt_items, block, names, oti_of, stress_block):

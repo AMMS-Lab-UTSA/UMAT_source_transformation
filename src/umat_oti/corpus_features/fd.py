@@ -356,7 +356,8 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
                  derivative_scale: float = 0.0,
                  kinematic_input: float = 0.0,
                  block_derivative: float = 0.0,
-                 double_zero=None) -> ColumnVerdict:
+                 double_zero=None,
+                 n_increments: int = 1) -> ColumnVerdict:
     """Compare one column of derivatives against the FD ladder, entry by entry.
 
     The rule (B2; Vera B1/B, C):
@@ -419,7 +420,8 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
         kw = dict(steps=steps, magnitude=magnitude, rtol=rtol, atol_floor=atol_floor, eps=eps,
                   value_eps=value_eps, value_magnitude=value_magnitude,
                   derivative_scale=derivative_scale, kinematic_input=kinematic_input,
-                  block_derivative=block_derivative, double_zero=double_zero)
+                  block_derivative=block_derivative, double_zero=double_zero,
+                  n_increments=n_increments)
         own = judge_column(oti, estimates, usable, ladder, euler=False, **kw)
         wide = judge_column(oti, estimates, usable, ladder, euler=True, **kw)
         return _bracket(own, wide, np.asarray(oti, float).reshape(-1), ladder)
@@ -507,8 +509,22 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
                 verdict.codes.append(UNRESOLVED_ZERO_SCALE)
                 continue
             t = atol[e] + 2.0 * u
-            err = abs(oti[e])
-            ok = err == 0.0 if both_zero else err <= t
+            # The value under test is computed in DOUBLE, so it is "nonzero"
+            # only above floor_v = NOISE eps max(S, |block|) (x n for a total
+            # derivative), capped at RESOLUTION S (Vera pass21 review: Flat/
+            # Th01 BodyForce (1,5), OTI 1.9e-27 against a zero in both
+            # precisions, failed A3 with no floor).
+            floor_v = min(NOISE_FACTOR * EPS * max(scale, abs(float(block_derivative)))
+                          * max(int(n_increments), 1), RESOLUTION * scale)
+            if both_zero:
+                ok = abs(oti[e]) <= floor_v
+            else:
+                ok = abs(oti[e]) <= t or abs(oti[e]) <= floor_v
+            # reported: where quad resolves a small nonzero D (u <= 1e-3 |D|),
+            # the distance is to the nearer of 0 and D
+            err = (min(abs(oti[e]), abs(oti[e] - d))
+                   if quad and d != 0.0 and u <= RESOLUTION * abs(d) else abs(oti[e]))
+            t = max(t, floor_v)
             verdict.zero_passed += ok
             code = ZERO_PASS if ok else FAIL
         else:
