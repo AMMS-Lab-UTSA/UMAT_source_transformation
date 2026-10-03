@@ -267,8 +267,13 @@ class ColumnVerdict:
     max_rel: float = 0.0      # |oti - D| / |D| over resolved nonzero entries
     max_ratio: float = 0.0    # |oti - D| / tau over resolved entries
     max_rel_tolerance: float = 0.0   # tau / |D| over resolved nonzero entries
+    #: the entry with the largest err/t over BOTH branches (zero and nonzero
+    #: reference; Vera B10: it was taken over the nonzero branch only, so a
+    #: column failing on a zero entry reported a passing worst entry)
     worst_entry: int = -1
     tolerance_at_worst: float = 0.0
+    worst_ratio: float = -1.0
+    error_at_worst: float = 0.0
     min_plateau: int = 0      # shortest plateau run among resolved entries
     plateau_steps: tuple = ()
     reference: Optional[np.ndarray] = None     # D_e (nan where no plateau)
@@ -516,15 +521,15 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
             # precisions, failed A3 with no floor).
             floor_v = min(NOISE_FACTOR * EPS * max(scale, abs(float(block_derivative)))
                           * max(int(n_increments), 1), RESOLUTION * scale)
-            if both_zero:
-                ok = abs(oti[e]) <= floor_v
-            else:
-                ok = abs(oti[e]) <= t or abs(oti[e]) <= floor_v
+            # the threshold the decision actually used is the one reported
+            # (Vera B10: a FAIL never shows a ratio < 1)
+            t = floor_v if both_zero else max(t, floor_v)
+            ok = abs(oti[e]) <= t
             # reported: where quad resolves a small nonzero D (u <= 1e-3 |D|),
-            # the distance is to the nearer of 0 and D
+            # the distance on a PASS is to the nearer of 0 and D; a FAIL
+            # reports the quantity it was decided on, |oti|
             err = (min(abs(oti[e]), abs(oti[e] - d))
-                   if quad and d != 0.0 and u <= RESOLUTION * abs(d) else abs(oti[e]))
-            t = max(t, floor_v)
+                   if ok and quad and d != 0.0 and u <= RESOLUTION * abs(d) else abs(oti[e]))
             verdict.zero_passed += ok
             code = ZERO_PASS if ok else FAIL
         else:
@@ -545,11 +550,12 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
             code = PASS if ok else FAIL
             rel = err / abs(d)
             verdict.max_rel_tolerance = max(verdict.max_rel_tolerance, t / abs(d))
-            if verdict.worst_entry < 0 or rel > verdict.max_rel:
-                verdict.worst_entry = e
-                verdict.tolerance_at_worst = float(t)
-                verdict.plateau_steps = (ladder[first], ladder[last])
             verdict.max_rel = max(verdict.max_rel, rel)
+        ratio = float(err / t) if t > 0 else float("inf")
+        if ratio > verdict.worst_ratio:
+            verdict.worst_entry, verdict.worst_ratio = e, ratio
+            verdict.tolerance_at_worst, verdict.error_at_worst = float(t), float(err)
+            verdict.plateau_steps = (ladder[first], ladder[last])
         tau[e] = t
         verdict.codes.append(code)
         plateaus.append(run)
@@ -606,10 +612,12 @@ def _bracket(own: ColumnVerdict, wide: ColumnVerdict, oti: np.ndarray, ladder) -
         if code in (PASS, FAIL) and d != 0 and abs(d) > own.atol[e]:
             rel = err / abs(d)
             v.max_rel_tolerance = max(v.max_rel_tolerance, t / abs(d))
-            if v.worst_entry < 0 or rel > v.max_rel:
-                v.worst_entry, v.tolerance_at_worst = e, t
-                v.plateau_steps = own.plateau_steps
             v.max_rel = max(v.max_rel, rel)
+        ratio = float(err / t) if t > 0 else float("inf")
+        if ratio > v.worst_ratio:
+            v.worst_entry, v.worst_ratio = e, ratio
+            v.tolerance_at_worst, v.error_at_worst = t, float(err)
+            v.plateau_steps = own.plateau_steps
         plateaus.append(own.min_plateau)
     for code in v.codes:
         if code.startswith("unresolved"):
