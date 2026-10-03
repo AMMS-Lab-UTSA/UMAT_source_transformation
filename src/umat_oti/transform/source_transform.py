@@ -136,6 +136,9 @@ def transform_umat_to_oti_from_config(
     output_dir.mkdir(parents=True, exist_ok=True)
     if ntens <= 0:
         ntens = _as_int(_dict(config.get("transformation_settings")).get("ntens"))
+    # Joined first: it tells the rewrites apart from the scanner's own rows,
+    # which _with_every_ddsdde_write then merges them into.
+    config = _with_tangent_rewrites_joined_to_their_region(config, source_text)
     config = _with_every_ddsdde_write(config, source_text)
     roles = _roles_from_config(config)
     regions = _regions_from_config(config)
@@ -1223,6 +1226,105 @@ def _with_every_ddsdde_write(config: dict[str, Any], source_text: str) -> dict[s
     rows = sorted([*scanner_rows, *({"line_numbers": r["line_numbers"], "text": r["text"]} for r in extra)],
                   key=lambda row: min((int(n) for n in row.get("line_numbers", []) or [0]), default=0))
     return {**config, "analysis": {**analysis, "assignments_to_ddsdde": rows}}
+
+
+def _with_tangent_rewrites_joined_to_their_region(config: dict[str, Any], source_text: str) -> dict[str, Any]:
+    """``config`` with an old-tangent output region extended over a rewrite of the old tangent.
+
+    matmodlab's umat_neohooke.f90 writes its analytical tangent as the upper
+    triangle, DDSDDE(1,1) ... DDSDDE(6,6), and fills the lower one on the next
+    line with
+
+        forall(i=1:ntens,j=1:ntens,j<i) ddsdde(i,j) = ddsdde(j,i)
+
+    The region classifier sees only plain assignments, so the output region
+    ended a line short and the FORALL -- found by :func:`_with_every_ddsdde_write`
+    -- was refused as an uncovered write. It belongs to the old tangent: it
+    reads nothing but DDSDDE and its own indices, so it can only rearrange the
+    matrix the extraction replaces, and disabling it with the rest of the
+    region leaves the extracted tangent standing.
+
+    Joined only when ALL of these hold; otherwise the config is returned
+    unchanged and the write is judged as before (and refused if uncovered):
+
+    * it is a FORALL or one-line WHERE write the scanner did not record (a
+      plain assignment is the classifier's to place);
+    * only blank and comment lines separate it from the end of an output
+      region (role ``ddsdde_output_replace``);
+    * its right-hand side names nothing but DDSDDE and the FORALL's index
+      names, and a WHERE's mask names nothing but DDSDDE;
+    * the region summary establishes the stress update's reads of DDSDDE, and
+      none comes after the write.
+
+    The caller's dictionary is not modified.
+    """
+    from umat_oti.transform.ddsdde_writes import _strip_parenthesised_prefix, array_writes
+
+    anchors = _dict(config.get("transformation_anchors"))
+    old = _dict(anchors.get("old_tangent"))
+    output_regions = [r for r in (old.get("output_regions") or []) if isinstance(r, dict) and r]
+    if not source_text or not output_regions:
+        return config
+    analysis = _dict(config.get("analysis"))
+    summary = _dict(analysis.get("region_summary"))
+    if "ddsdde_stress_input_lines" not in summary:
+        return config
+    stress_reads = [_as_int(v) for v in summary.get("ddsdde_stress_input_lines") or []]
+    ddsdde = _mapping(config).get("ddsdde", "DDSDDE").upper()
+    form = detect_source_form(Path(_source_file(config) or "uploaded_umat.f"), source_text)
+    lines = source_text.splitlines()
+    scanner_lines = {_as_int(n) for row in analysis.get("assignments_to_ddsdde", []) or []
+                     if isinstance(row, dict) for n in row.get("line_numbers", []) or []}
+
+    def blank_or_comment(number: int) -> bool:
+        line = lines[number - 1] if 0 < number <= len(lines) else ""
+        if not line.strip():
+            return True
+        return _is_commented(line) if form == "fixed" else line.lstrip().startswith("!")
+
+    def names(text: str) -> set[str]:
+        return {t.upper() for t in re.findall(r"[A-Za-z_]\w*", _without_character_literals(text))}
+
+    extended = [dict(region) for region in output_regions]
+    changed = False
+    for row in array_writes(source_text, form, ddsdde):
+        if row["kind"] not in ("forall", "where"):
+            continue
+        numbers = [int(n) for n in row["line_numbers"]]
+        first, last = min(numbers), max(numbers)
+        if first in scanner_lines or any(line > first for line in stress_reads):
+            continue
+        statement = re.sub(r"^\d+\s+", "", row["text"].strip())
+        keyword = "FORALL" if row["kind"] == "forall" else "WHERE"
+        header = re.match(rf"^{keyword}\s*\((.*)\)", statement, re.IGNORECASE)
+        rest = _strip_parenthesised_prefix(statement, keyword)
+        if not header or rest is None or "=" not in rest:
+            continue
+        head = statement[:len(statement) - len(rest)]
+        allowed = {ddsdde}
+        if keyword == "FORALL":
+            allowed |= {m.upper() for m in re.findall(r"([A-Za-z_]\w*)\s*=", head)}
+        elif names(head) - {"WHERE", ddsdde}:
+            continue
+        rhs = rest.split("=", 1)[1]
+        if names(rhs) - allowed:
+            continue
+        for region in extended:
+            end = _as_int(region.get("end_line"))
+            if (region.get("role") == "ddsdde_output_replace" and 0 < end < first
+                    and all(blank_or_comment(n) for n in range(end + 1, first))):
+                region["end_line"] = last
+                changed = True
+                break
+    if not changed:
+        return config
+    new_old = {**old, "output_regions": extended}
+    single = _dict(old.get("output_region"))
+    if single:
+        match = next((r for r in extended if r.get("region_id") == single.get("region_id")), None)
+        if match:
+            new_old["output_region"] = match
+    return {**config, "transformation_anchors": {**anchors, "old_tangent": new_old}}
 
 
 def _binary32_stores_rounded(transformed_source: str, form: str, selected_umat: str,
