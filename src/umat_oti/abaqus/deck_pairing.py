@@ -1007,6 +1007,56 @@ def sibling_constants(source: Path, repository: Path,
               "those positions filled in, and nobody has published them")
 
 
+#: The harvest row schema this module reads (corpus_campaign/material_data/
+#: harvest_row.schema.json, schema_version 1, frozen by Scout).
+HARVEST_SCHEMA_SHA256 = "321cb44b41958e702b201f479e5229432074a49d1c87d84165e59c96dfd1059f"
+AUTHOR_PUBLISHED_OUTSIDE_DECK = "author_published_outside_deck"
+#: Harvest confidences that count (Q3); everything else never does.
+COUNTED_CONFIDENCE = ("exact", "interpreted")
+
+
+def harvest_table(block: "DeckMaterial", row: dict, source: Path):
+    """The placeholder values a harvest row states for ``block``, or None and why.
+
+    Each placeholder of the block is matched to a harvest constant by NAME
+    (case-insensitive); when every token of the data line is a placeholder,
+    the token's position is its PROPS index and a constant with that
+    ``index`` matches too. A placeholder counts only with confidence
+    ``exact`` or ``interpreted`` and no ``never_count_reason``; one that
+    does not, or has no match, leaves the block uncompleted (Q3). The row
+    must be for this source.
+    """
+    source_id = str(row.get("source_id") or "")
+    if not source_id or not str(Path(source).as_posix()).endswith(source_id):
+        return None, {"": f"the harvest row is for {source_id!r}, not this source"}
+    names = [re.sub(r"[<>{}\s]", "", token) for token in block.unresolved]
+    by_name = {str(c.get("name")).upper(): c for c in row.get("constants") or ()
+               if c.get("name") is not None}
+    by_index = {int(c["index"]): c for c in row.get("constants") or ()
+                if isinstance(c.get("index"), int)}
+    positional = len(names) == block.constants
+    table, how, missing = {}, {}, {}
+    for position, name in enumerate(names, start=1):
+        constant = by_name.get(name.upper()) or (by_index.get(position) if positional else None)
+        if constant is None:
+            missing[name] = "no harvest constant of that name"
+            continue
+        confidence = constant.get("confidence")
+        if confidence not in COUNTED_CONFIDENCE or constant.get("never_count_reason"):
+            missing[name] = (f"confidence {confidence!r}"
+                             + (f" ({constant['never_count_reason']})"
+                                if constant.get("never_count_reason") else "")
+                             + " does not count")
+            continue
+        table[name] = float(constant["value"])
+        how[name] = (f"{confidence}, {constant.get('where', '')}"
+                     + (f" {constant.get('line_or_page')}"
+                        if constant.get("line_or_page") is not None else ""))
+    if missing:
+        return None, missing
+    return table, how
+
+
 #: ``Pairing.refusal_kind`` values (D-19a rev 2, R0).
 NO_DECK_IN_REPOSITORY = "no_deck_in_repository"
 NO_DECK_NAMES_THIS_SOURCE = "no_deck_names_this_source"
@@ -1041,6 +1091,10 @@ class Pairing:
     #: ``author_deck_unresolved`` -- the deck beside the source fits and
     #: leaves its constants as placeholders. Empty when a material was found.
     refusal_kind: str = ""
+    #: Set when the constants came from outside the author's deck (R1): the
+    #: experiment stays the author's, the material data does not.
+    material_data_origin: str = ""
+    experiment_origin: str = ""
 
     @property
     def found(self) -> bool:
@@ -1051,6 +1105,9 @@ class Pairing:
                 "demand": self.demand.as_dict(), "why": self.why,
                 "refusal": self.refusal,
                 "refusal_kind": self.refusal_kind,
+                **({"material_data_origin": self.material_data_origin,
+                    "experiment_origin": self.experiment_origin}
+                   if self.material_data_origin else {}),
                 "rejected": [list(pair) for pair in self.rejected],
                 "alternatives": list(self.alternatives),
                 "warnings": list(self.warnings),
@@ -1147,8 +1204,17 @@ def candidates(source: Path, repository: Path,
 
 def pair(source: Path, repository: Path,
          source_text: Optional[str] = None,
-         pool: Optional[Sequence[DeckMaterial]] = None) -> Pairing:
+         pool: Optional[Sequence[DeckMaterial]] = None,
+         harvest: Optional[dict] = None) -> Pairing:
     """The deck that actually uses this UMAT, or a refusal saying why none does.
+
+    ``harvest`` (D-19a rev 2 R1): a harvest row (schema v1) for THIS source.
+    It is read only where the author's deck beside the source fits and leaves
+    its constants as placeholders (``author_deck_unresolved``), and it
+    completes that block only when every placeholder gets an ``exact`` or
+    ``interpreted`` value (:func:`harvest_table`). The experiment stays the
+    author's deck; the pairing records
+    ``material_data_origin = author_published_outside_deck``.
 
     The refusal matters as much as the pairing. Three mholla ``_Abaqus``
     growth routines were reported as "this harness generated no experiment
@@ -1472,6 +1538,28 @@ def pair(source: Path, repository: Path,
         first = unresolved_beside_it[0]
         deferred = sorted({target for material in unresolved_beside_it
                            for target in material.unresolved_includes})
+        harvest_note = ""
+        if harvest is not None:
+            table, why_not = harvest_table(first, harvest, source)
+            if table is not None:
+                completed = [material for material
+                             in materials_in(first.deck, extra_parameters=table)
+                             if material.name == first.name and material.usable]
+                if completed:
+                    return Pairing(
+                        material=completed[0], demand=demand, searched=searched,
+                        rejected=tuple(rejected[:12]),
+                        why=(f"{first.deck.name} is the author's deck beside this source "
+                             f"and leaves {', '.join(first.unresolved)} standing; harvest "
+                             f"row {harvest.get('key')} states them: " + "; ".join(
+                                 f"{name}={table[name]:g} ({how})"
+                                 for name, how in why_not.items())),
+                        material_data_origin=AUTHOR_PUBLISHED_OUTSIDE_DECK,
+                        experiment_origin="author")
+                why_not = {"": "the completed block is still not usable"}
+            harvest_note = (". The harvest row does not complete it: "
+                            + "; ".join(f"{k}: {v}" if k else v
+                                        for k, v in why_not.items()))
         return Pairing(
             demand=demand, rejected=tuple(rejected), searched=searched,
             refusal_kind=AUTHOR_DECK_UNRESOLVED,
@@ -1496,7 +1584,8 @@ def pair(source: Path, repository: Path,
                    f"experiments: using them would answer a question about "
                    f"this one with another one's material"
                    if any(material.usable for _key, material, _why in scored)
-                   else ". Nothing anywhere in the repository publishes them")))
+                   else ". Nothing anywhere in the repository publishes them")
+                + harvest_note))
 
     scored.sort(key=lambda item: item[0], reverse=True)
     best_key = scored[0][0]
