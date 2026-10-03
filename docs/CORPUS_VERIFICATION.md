@@ -124,6 +124,27 @@ other harness or store as not current. Routine-level cells carry their own
 `run_id` and transformer fingerprint. A regression case is current only at the
 fingerprints it records (D-6).
 
+**Harness `d6f92d4704bee702` -> `3648d174377c2280` (2026-10-02, licence
+clean-up before the push, Vera B7).** Two yield-function identifications in
+`corpus_features/mechanics_checks.py` matched literal statements of a
+republished Abaqus example. They now match the structure instead: the variable
+stored in `STATEV(1+2*NTENS)` is the argument of the `Sy*(0.0001+p)**n` power
+law (Lemaitre), or the returned stress is a direction times the `PROPS(3)`
+variable plus a hydrostatic part, with a `PROPS(4)` modulus beside it (radial
+return). The transform fingerprint is unchanged (`a4f0ea8c9d124f18`). Evidence
+of equivalence: old and new `yield_function_for` give identical results
+(description, evidence, plastic slot, tolerance, or none) on all 279 pass20
+sources and on all 1937 Fortran files in the acquisition cache, under two
+property sets each: 0 changed. The rules identify the same six cache files as
+before (five of them pass20 sources).
+Nothing else under `abaqus/` or `corpus_features/` changed, so every pass20 row
+and every routine-level cell has the verdict it had. The Abaqus rows are
+unaffected (D-17: nothing on the Abaqus verification path imports
+`corpus_features`; rechecked by import). The 113 regression cases remain the
+frozen evidence at `d6f92d4704bee702`, and `make case-ci` still passes them
+against the new code. The script and its output are in
+`corpus_campaign/batches/B7/gauss_prepush/` (`equivalence.py`, `equivalence.out`).
+
 ### Per-family figures (D-11)
 
 Family figures use the code-reviewed classification

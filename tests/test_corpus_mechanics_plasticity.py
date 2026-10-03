@@ -10,8 +10,11 @@ corpus_campaign/batches/B2/curie/plasticity/ (results.json).
 
 from __future__ import annotations
 
+import hashlib
+
 import numpy as np
 import pytest
+from _workspace import WORKSPACE
 
 from umat_oti.corpus_features.loading_paths import paths_for, total_strain
 from umat_oti.corpus_features.mechanics_checks import (
@@ -224,18 +227,19 @@ def test_dissipation_at_increment_one_is_inelastic():
 # ---------------------------------------------------------------------------
 # a layout the source cannot represent is unsupported, not failed
 # ---------------------------------------------------------------------------
-#: awhelanUCD__Lemaitre-damage-UMAT-Public/nonLocalLemaitre/
-#: lemaitreDamageNonLocal.f lines 56-64 (verbatim).
+#: Synthetic, standing for awhelanUCD .../lemaitreDamageNonLocal.f: an
+#: isotropic tangent written as a direct block over ``do k=1,3`` and a shear
+#: diagonal from index 4. No corpus text is copied.
 LEMAITRE = """\
       subroutine umat(stress,statev,ddsdde)
-      do i=1,3
-       do j=1,3
-        ddsdde(j,i)=elam
+      do k=1,3
+       do l=1,3
+        ddsdde(l,k)=alam
        end do
-       ddsdde(i,i)=2.d0*eg+elam
+       ddsdde(k,k)=alam+2.d0*gmod
       end do
-      do i=4,ntens
-       ddsdde(i,i)=eg
+      do k=4,ntens
+       ddsdde(k,k)=gmod
       end do
       end
 """
@@ -325,13 +329,18 @@ def test_a_degraded_unloading_modulus_passes_only_when_the_source_evolves_it():
 # ---------------------------------------------------------------------------
 # yield functions identified from corpus text
 # ---------------------------------------------------------------------------
-#: jasonanewcoder__abaqus_skills/.../umat_mises_plasticity_official.f
-#: lines 79-80, 115, 160 (verbatim statements).
+#: Synthetic, standing for jasonanewcoder .../umat_mises_plasticity_official.f
+#: (a republished Abaqus example, so none of its text is used): a yield stress
+#: read from PROPS(3) and a hardening modulus from PROPS(4), the stress
+#: returned radially onto the yield stress plus the hydrostatic part, and the
+#: equivalent plastic strain stored after the two NTENS blocks.
 JASON = """\
-        SYIELD=PROPS(3)
-        HARD=PROPS(4)
-            STRESS(K1)=FLOW(K1)*SYIELD+SHYDRO
-      STATEV(1+2*NTENS)=EQPLAS
+      SIG0=PROPS(3)
+      HMOD=PROPS(4)
+      DO I=1,NDI
+        STRESS(I)=DIRN(I)*SIG0+PHYD
+      END DO
+      STATEV(1+2*NTENS)=PEEQ
 """
 
 
@@ -378,3 +387,83 @@ def test_a_one_increment_overshoot_of_a_saturating_back_stress_is_admissible():
         rows[k]["statev"][1]
     ) * (1 if rows[k]["statev"][1] < rows[k - 1]["statev"][1] else -1)
     assert check_back_stress_sign(entry, path, rows).passed is True
+
+
+def test_the_official_example_needs_its_yield_stress_in_the_returned_stress():
+    # the radial return onto a variable that is NOT the PROPS(3) yield stress
+    other = JASON.replace("DIRN(I)*SIG0", "DIRN(I)*SEFF")
+    assert yield_function_for(_entry(source_text=other)) is None
+    # no PROPS(4) hardening modulus
+    no_modulus = JASON.replace("PROPS(4)", "PROPS(5)")
+    assert yield_function_for(_entry(source_text=no_modulus)) is None
+    # the plastic strain stored somewhere else
+    moved = JASON.replace("STATEV(1+2*NTENS)", "STATEV(1)")
+    assert yield_function_for(_entry(source_text=moved)) is None
+
+
+#: Synthetic, standing for the Lemaitre power-hardening law: the flow stress
+#: Sy * (1e-4 + p) ** n of the plastic strain stored after two NTENS blocks.
+LEMAITRE_HARDENING = """\
+      SFLOW=SYLD*(0.0001+PEEQ)**XEXP
+      STATEV(1+2*NTENS)=PEEQ
+"""
+
+
+def test_the_power_hardening_law_is_identified_on_its_stored_strain():
+    yf = yield_function_for(_entry(source_text=LEMAITRE_HARDENING))
+    assert yf is not None and yf.plastic_slot(6) == 13
+    assert "power hardening" in yf.description
+    # the hardening argument is not the strain the routine stores
+    other = LEMAITRE_HARDENING.replace("(0.0001+PEEQ)", "(0.0001+PTRIAL)")
+    assert yield_function_for(_entry(source_text=other)) is None
+
+
+_CACHE = WORKSPACE / "discovery_cache"
+
+
+def _cached(relative: str, sha256: str) -> str:
+    path = _CACHE / relative
+    if not path.is_file():
+        pytest.skip(f"acquisition cache not present: {relative}")
+    data = path.read_bytes()
+    assert hashlib.sha256(data).hexdigest() == sha256, f"cache changed: {relative}"
+    return data.decode("utf-8", "replace")
+
+
+@pytest.mark.parametrize(
+    "relative, sha256, description",
+    [
+        (
+            (
+                "jasonanewcoder__abaqus_skills/abaqus_subroutine_skills/"
+                "official_examples/umat/umat_mises_plasticity_official.f"
+            ),
+            "465001b5ec044aba04119d8013406f3f367c38d404d9b0026e8f5fc55155e24a",
+            "von Mises, linear isotropic hardening (as the header documents)",
+        ),
+        (
+            (
+                "awhelanUCD__Lemaitre-damage-UMAT-Public/nonLocalLemaitre/"
+                "lemaitreDamageNonLocal.f"
+            ),
+            "f841c77b3c7687f1ff8696a4758f9198aeb85dbd06c97d409c400baaa4f87a38",
+            "von Mises of undegraded stress, power hardening Sy(1e-4+p)^n",
+        ),
+    ],
+)
+def test_the_full_corpus_files_are_identified(relative, sha256, description):
+    yf = yield_function_for(_entry(source_text=_cached(relative, sha256)))
+    assert yf is not None and yf.description == description
+    assert yf.plastic_slot(6) == 13
+
+
+def test_the_full_lemaitre_file_needs_four_components():
+    text = _cached(
+        "awhelanUCD__Lemaitre-damage-UMAT-Public/nonLocalLemaitre/"
+        "lemaitreDamageNonLocal.f",
+        "f841c77b3c7687f1ff8696a4758f9198aeb85dbd06c97d409c400baaa4f87a38",
+    )
+    entry = _entry(family="damage / phase field", ntens=3, source_text=text)
+    assert "at least NTENS=4" in layout_unsupported(
+        entry, _path("elastic_uniaxial", ntens=3)
+    )
