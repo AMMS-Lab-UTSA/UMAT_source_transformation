@@ -588,6 +588,8 @@ def materials_in(deck: Path, text: Optional[str] = None,
     depvar = 0
     constants = 0
     values: list[float] = []
+    packed: list[float] = []
+    garbled = False
     substituted: list[str] = []
     unresolved: list[str] = []
     unsymm = False
@@ -613,8 +615,13 @@ def materials_in(deck: Path, text: Optional[str] = None,
         if in_material and constants:
             kinds, where = attributions.get(
                 name.upper(), attributions.get("", ((), "")))
-            published = values[:constants]
-            if published and not unresolved and len(published) < constants:
+            # A block with a token Abaqus could not read, or a line of more
+            # than eight numbers, is not a deck of cards to be zero-filled:
+            # read as written, it is short and not usable (Vera G review C1:
+            # williammora1984 GTN test_ht_vol.inp's "0.1. 0.3" would
+            # otherwise shift every later constant by one slot).
+            published = (packed if garbled else values)[:constants]
+            if published and not unresolved and not garbled and len(published) < constants:
                 published = published + [0.0] * (constants - len(published))
             found.append(DeckMaterial(
                 deck=Path(deck), name=name, constants=constants, depvar=depvar,
@@ -639,6 +646,7 @@ def materials_in(deck: Path, text: Optional[str] = None,
                 name = parameters.get("NAME", "")
                 in_material = True
                 depvar, constants, values, unsymm = 0, 0, [], False
+                packed, garbled = [], False
                 substituted, unresolved = [], []
                 mode = ""
             elif keyword == "DEPVAR":
@@ -723,6 +731,11 @@ def materials_in(deck: Path, text: Optional[str] = None,
                 number = _one_number(piece)
                 if number is not None:
                     card.append(number)
+                elif not _UNRESOLVED.search(piece):
+                    garbled = True
+            if len(card) > _CARD:
+                garbled = True
+            packed.extend(card)
             # Each data line is a card of eight: Abaqus fills a short line
             # with zeros, and a block that stops short of CONSTANTS= with
             # zeros too. Measured (Abaqus/Standard 2021.HF5, a UMAT writing
