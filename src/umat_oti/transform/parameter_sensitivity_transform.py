@@ -39,6 +39,7 @@ from __future__ import annotations
 
 from umat_oti.oti.oti_directions import member_name
 
+import json
 import re
 import shutil
 import subprocess
@@ -97,6 +98,9 @@ class GenericPSLayout:
     type_name: str
     n_param: int
     umat_and_helpers: tuple[str, ...]
+    #: :func:`umat_oti.transform.binary32.binary32_store_report` of the lifted
+    #: code (also written beside it as ``binary32_stores.json``).
+    binary32_stores: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -127,8 +131,18 @@ class NonDifferentiableParameterPathError(ValueError):
 def transform_umat_for_parameter_sensitivity(
     *, contract: GenericPSContract, output_dir: Path | str,
     extra_directions: int = 0,
+    binary32: str = "author",
 ) -> GenericPSLayout:
-    """Emit the OTI-lifted UMAT + driver + Makefile for a generic UMAT."""
+    """Emit the OTI-lifted UMAT + driver + Makefile for a generic UMAT.
+
+    ``binary32`` is the rule for binary32 variables that carry a derivative
+    (:data:`umat_oti.transform.binary32.BINARY32_RULES`): ``author`` (B-W, the
+    default) or ``widened`` (the OTI form of precision.widen's control).
+    """
+    from umat_oti.transform.binary32 import (
+        BINARY32_RULE_CONTEXT, BINARY32_RULES, BINARY32_WIDENED_SINK)
+    if binary32 not in BINARY32_RULES:
+        raise ValueError(f"binary32 must be one of {BINARY32_RULES}, not {binary32!r}")
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -150,6 +164,9 @@ def transform_umat_for_parameter_sensitivity(
     parsed, _ = supply_reachable_definitions(parsed, ["UMAT"])
     umat_and_helpers = _closure_including_umat(parsed)
 
+    widened_names: list = []
+    rule_token = BINARY32_RULE_CONTEXT.set(binary32)
+    sink_token = BINARY32_WIDENED_SINK.set(widened_names)
     try:
         lifted = lift_helper_set_source(
             parsed,
@@ -161,6 +178,9 @@ def transform_umat_for_parameter_sensitivity(
         raise RuntimeError(
             f"could not lift UMAT '{contract.umat_source_path.name}': {exc}"
         ) from exc
+    finally:
+        BINARY32_WIDENED_SINK.reset(sink_token)
+        BINARY32_RULE_CONTEXT.reset(rule_token)
 
     lifted_path = output_dir / "umat_oti_lifted.f90"
     lifted_path.write_text(
@@ -169,6 +189,13 @@ def transform_umat_for_parameter_sensitivity(
                                  n_param=n_param + extra_directions),
         encoding="utf-8",
     )
+
+    from umat_oti.transform.binary32 import binary32_store_report
+    binary32_stores = binary32_store_report(
+        lifted_path.read_text(encoding="utf-8"), source_text, rule=binary32,
+        widened=tuple(dict.fromkeys(widened_names)))
+    (output_dir / "binary32_stores.json").write_text(
+        json.dumps(binary32_stores, indent=2, sort_keys=True), encoding="utf-8")
 
     driver_path = output_dir / "ps_driver.f90"
     driver_path.write_text(
@@ -204,6 +231,7 @@ def transform_umat_for_parameter_sensitivity(
         type_name=module_result.type_name,
         n_param=n_param,
         umat_and_helpers=umat_and_helpers,
+        binary32_stores=binary32_stores,
     )
 
 

@@ -27,7 +27,11 @@ The manifest is a JSON document with the following schema
           "recovery_factors": {...}
       },
       "compiler":         {"name": "...", "version": "..."},
-      "warnings":         [...]
+      "warnings":         [...],
+      "binary32_stores":  {"schema": "umat-oti/binary32-stores/1", "present": bool,
+                           "stores": [{"name", "declaration_line", "declarations",
+                                       "typed_by", "rounded_stores", "rule"}, ...],
+                           "rounded_operations": int, "rule": str, "statement": str}
     }
 
 Nothing here is guessed at run time. Every field either comes from the input
@@ -83,6 +87,7 @@ def build_manifest(
     ntens_confidence: str = "",
     ntens_warning: str = "",
     execution_status: str = "not_executed",
+    binary32_stores: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """Assemble a manifest dict for a transformation run.
 
@@ -147,6 +152,11 @@ def build_manifest(
         "generated_sources": _generated_file_records(generated_files),
         "execution": {"status": execution_status},
         "warnings": list(warnings),
+        # The binary32 variables the generated code rounds on the derivative
+        # path (umat_oti.transform.binary32.binary32_store_report): sensitivities
+        # through them are the double idealisation of a binary32 original.
+        "binary32_stores": binary32_stores if binary32_stores is not None else {
+            "present": None, "stores": [], "statement": "not assessed for this run"},
     }
     return manifest
 

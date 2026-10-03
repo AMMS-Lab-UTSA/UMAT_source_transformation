@@ -605,6 +605,9 @@ def transform_umat_to_oti_from_config(
     }
     if complex_plan.declarations:
         report["complex_arithmetic"] = complex_plan.report()
+    from umat_oti.transform.binary32 import BINARY32_STORES_FIELD, binary32_store_report
+    report[BINARY32_STORES_FIELD] = binary32_store_report(
+        [transformed_source, lifted_helper_text or ""], source_text)
     report_path = _write_report(output_dir, report)
     generated_files.append(report_path)
     return TransformResult(
