@@ -167,6 +167,162 @@
        "null"
       ]
      },
+     "origins": {
+      "type": [
+       "object",
+       "null"
+      ],
+      "required": [
+       "material_data_origin",
+       "experiment_origin",
+       "refusal_kind",
+       "harvest_confidence",
+       "tier"
+      ],
+      "properties": {
+       "material_data_origin": {
+        "enum": [
+         "author_deck",
+         "author_published_outside_deck",
+         "council_chosen",
+         ""
+        ]
+       },
+       "experiment_origin": {
+        "enum": [
+         "author",
+         "council",
+         ""
+        ]
+       },
+       "material_data_ref": {
+        "type": "string"
+       },
+       "council_deck_ref": {
+        "type": "string"
+       },
+       "council_fingerprint": {
+        "type": "string"
+       },
+       "refusal_kind": {
+        "enum": [
+         "no_deck_in_repository",
+         "no_deck_names_this_source",
+         "author_block_rejected",
+         "author_deck_unresolved",
+         ""
+        ]
+       },
+       "harvest_confidence": {
+        "enum": [
+         "exact",
+         "author-kept",
+         "interpreted",
+         "author-other-context",
+         "looked-up",
+         "class-typical",
+         "chosen",
+         "uncertain",
+         ""
+        ]
+       },
+       "interpreted_constants": {
+        "type": [
+         "integer",
+         "null"
+        ],
+        "minimum": 0
+       },
+       "council_sets": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "vera_accepted_template": {
+        "type": [
+         "boolean",
+         "null"
+        ]
+       },
+       "vera_accepted_instance": {
+        "type": [
+         "boolean",
+         "null"
+        ]
+       },
+       "branch_coverage": {
+        "type": [
+         "object",
+         "null"
+        ]
+       },
+       "domain_not_enforced": {
+        "type": "string"
+       },
+       "pairing_changed": {
+        "type": [
+         "boolean",
+         "null"
+        ]
+       },
+       "licence_hold": {
+        "type": "string"
+       },
+       "tier": {
+        "enum": [
+         "author_deck",
+         "author_published_outside_deck+author_experiment",
+         "author_published_outside_deck+council_experiment",
+         "council_chosen",
+         ""
+        ]
+       },
+       "tier_basis": {
+        "type": "string"
+       },
+       "counted_in_tier": {
+        "type": [
+         "boolean",
+         "null"
+        ]
+       },
+       "not_counted_in_tier_reason": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false,
+      "allOf": [
+       {
+        "if": {
+         "properties": {
+          "counted_in_tier": {
+           "const": true
+          }
+         },
+         "required": [
+          "counted_in_tier"
+         ]
+        },
+        "then": {
+         "properties": {
+          "vera_accepted_template": {
+           "const": true
+          },
+          "vera_accepted_instance": {
+           "const": true
+          },
+          "pairing_changed": {
+           "enum": [
+            false,
+            null
+           ]
+          }
+         }
+        }
+       }
+      ]
+     },
      "pipeline": {
       "type": "object",
       "required": [

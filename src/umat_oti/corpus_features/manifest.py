@@ -65,11 +65,14 @@ from typing import Any
 
 __all__ = [
     "BUILDS",
+    "CONSTANT_CONFIDENCES",
     "DEFAULT_ROOTS",
+    "EXPERIMENT_ORIGINS",
     "FAMILY_CLASSIFICATION",
     "REPORTING_FAMILIES",
     "denominators_note",
     "merge_d18",
+    "origins_of",
     "primal_gate_verdict",
     "reported_family",
     "FEATURES",
@@ -78,7 +81,10 @@ __all__ = [
     "STAGES",
     "STATUSES",
     "TOLERANCE_RULES",
+    "MATERIAL_DATA_ORIGINS",
     "ManifestInputs",
+    "REFUSAL_KINDS",
+    "TIERS",
     "build_manifest",
     "flat_rows",
     "manifest_schema",
@@ -182,6 +188,27 @@ DERIVATIVE_FEATURES: frozenset[str] = frozenset(
 
 #: References independent of the OTI implementation.
 REFERENCE_TYPES: tuple[str, ...] = ("original", "analytical", "fd")
+
+#: Where a row's material constants came from (D-19, D-21) and whose
+#: experiment ran (D-19a rev 2); "" where no material data exists. The
+#: registry (tools/build_corpus_registry.py) decides them; the manifest
+#: carries them per row under ``origins``.
+MATERIAL_DATA_ORIGINS: tuple[str, ...] = (
+    "author_deck", "author_published_outside_deck", "council_chosen")
+EXPERIMENT_ORIGINS: tuple[str, ...] = ("author", "council")
+#: deck_pairing.Pairing.refusal_kind (D-19a rev 2 R0).
+REFUSAL_KINDS: tuple[str, ...] = (
+    "no_deck_in_repository", "no_deck_names_this_source",
+    "author_block_rejected", "author_deck_unresolved")
+#: The four tiers every verified count is split by (D-21 condition 6).
+TIERS: tuple[str, ...] = (
+    "author_deck", "author_published_outside_deck+author_experiment",
+    "author_published_outside_deck+council_experiment", "council_chosen")
+#: Constant confidences, best first: the harvest's (D-19a R5) and the D-21
+#: labels (R-3) on one scale; the worst over a row's constants is recorded.
+CONSTANT_CONFIDENCES: tuple[str, ...] = (
+    "exact", "author-kept", "interpreted", "author-other-context", "looked-up",
+    "class-typical", "chosen", "uncertain")
 
 #: The registry's terminal states that the transform refusal / failure maps to.
 _EXTERNAL = "external"
@@ -1120,6 +1147,46 @@ def build_manifest(inp: ManifestInputs) -> dict:
     return manifest
 
 
+def origins_of(rec: Mapping) -> dict:
+    """The registry's D-19/D-21 origin columns of one record, as the
+    manifest's ``origins`` block. A registry built before the columns
+    existed gives the empty values: no origin is inferred here."""
+    def _text(name: str) -> str:
+        return str(rec.get(name) or "")
+
+    def _flag(name: str):
+        value = rec.get(name)
+        return value if isinstance(value, bool) else None
+    coverage = rec.get("branch_coverage") or None
+    if isinstance(coverage, str):
+        try:
+            coverage = json.loads(coverage)
+        except ValueError:
+            coverage = {"stated": coverage}
+    interpreted = rec.get("interpreted_constants")
+    return {
+        "material_data_origin": _text("material_data_origin"),
+        "experiment_origin": _text("experiment_origin"),
+        "material_data_ref": _text("material_data_ref"),
+        "council_deck_ref": _text("council_deck_ref"),
+        "council_fingerprint": _text("council_fingerprint"),
+        "refusal_kind": _text("refusal_kind"),
+        "harvest_confidence": _text("harvest_confidence"),
+        "interpreted_constants": interpreted if isinstance(interpreted, int) else None,
+        "council_sets": [x for x in _text("council_sets").split(";") if x],
+        "vera_accepted_template": _flag("vera_accepted_template"),
+        "vera_accepted_instance": _flag("vera_accepted_instance"),
+        "branch_coverage": coverage,
+        "domain_not_enforced": _text("domain_not_enforced"),
+        "pairing_changed": _flag("pairing_changed"),
+        "licence_hold": _text("licence_hold"),
+        "tier": _text("adequacy_tier"),
+        "tier_basis": _text("adequacy_tier_basis"),
+        "counted_in_tier": _flag("counted_in_tier"),
+        "not_counted_in_tier_reason": _text("not_counted_in_tier_reason"),
+    }
+
+
 def _acquired_row(rec, inp, tri, b3, fam, fam2, lic_source, p, later, pass_file,
                   tangent_tol, ps_ids, ij_ids, content_identity) -> dict:
     sid = rec["source_id"]
@@ -1617,6 +1684,7 @@ def _acquired_row(rec, inp, tri, b3, fam, fam2, lic_source, p, later, pass_file,
                      "stage": rec.get("stage", ""), "key": key,
                      "verified_on_every_gate": rec.get("verified_on_every_gate"),
                      "verification_fingerprint": rec.get("verification_fingerprint", "")},
+        "origins": origins_of(rec),
         "pipeline": stages,
         "features": feats,
         "features_other_builds": {b: {} for b in OTHER_BUILDS},
@@ -2079,7 +2147,7 @@ def _discovered_rows(inp: ManifestInputs, acquired: set[str]) -> tuple[list, dic
                           "instructions": f"fetch {url}; only the normalised-content "
                                           f"sha256 {r.get('content_sha256')} is known"},
             "model": None, "interface": None,
-            "registry": None, "pipeline": stages, "features": feats,
+            "registry": None, "origins": None, "pipeline": stages, "features": feats,
             "features_other_builds": {b: {} for b in OTHER_BUILDS},
             "ddsdde_legacy_gate": {"gate": "not_run", "counts_as_verified": False,
                                    "rule": LEGACY_DDSDDE_RULE, "reason": reason,
@@ -2983,6 +3051,40 @@ def manifest_schema() -> dict:
     legacy = {"type": "object", "required": ["gate", "counts_as_verified", "rule"],
               "properties": {"gate": {"enum": ["passed", "failed", "not_run"]},
                              "counts_as_verified": {"const": False}}}
+    def _enum(values) -> dict:
+        return {"enum": [*values, ""]}
+    flag = {"type": ["boolean", "null"]}
+    origins = {
+        "type": ["object", "null"],
+        "required": ["material_data_origin", "experiment_origin", "refusal_kind",
+                     "harvest_confidence", "tier"],
+        "properties": {
+            "material_data_origin": _enum(MATERIAL_DATA_ORIGINS),
+            "experiment_origin": _enum(EXPERIMENT_ORIGINS),
+            "material_data_ref": {"type": "string"},
+            "council_deck_ref": {"type": "string"},
+            "council_fingerprint": {"type": "string"},
+            "refusal_kind": _enum(REFUSAL_KINDS),
+            "harvest_confidence": _enum(CONSTANT_CONFIDENCES),
+            "interpreted_constants": {"type": ["integer", "null"], "minimum": 0},
+            "council_sets": {"type": "array", "items": {"type": "string"}},
+            "vera_accepted_template": flag, "vera_accepted_instance": flag,
+            "branch_coverage": {"type": ["object", "null"]},
+            "domain_not_enforced": {"type": "string"},
+            "pairing_changed": flag,
+            "licence_hold": {"type": "string"},
+            "tier": _enum(TIERS),
+            "tier_basis": {"type": "string"},
+            "counted_in_tier": flag,
+            "not_counted_in_tier_reason": {"type": "string"}},
+        "additionalProperties": False,
+        # a council row counts only with both of Vera's acceptances (R6.5)
+        "allOf": [{"if": {"properties": {"counted_in_tier": {"const": True}},
+                          "required": ["counted_in_tier"]},
+                   "then": {"properties": {"vera_accepted_template": {"const": True},
+                                           "vera_accepted_instance": {"const": True},
+                                           "pairing_changed": {"enum": [False, None]}}}}],
+    }
     row = {
         "type": "object",
         "required": ["row_kind", "source_id", "repository", "url", "commit", "sha256",
@@ -3023,6 +3125,7 @@ def manifest_schema() -> dict:
                               "E": {"type": "object",
                                     "required": ["family", "label"]}}}}},
             "interface": {"type": ["object", "null"]},
+            "origins": origins,
             "pipeline": {"type": "object", "required": list(STAGES),
                          "properties": {s: stage_cell for s in STAGES},
                          "additionalProperties": False},
@@ -3093,6 +3196,27 @@ def flat_rows(manifest: Mapping) -> list[dict]:
             "props_count": (i.get("props") or {}).get("count"),
             "nstatv": (i.get("nstatv") or {}).get("count"),
         }
+        o = r.get("origins") or {}
+        flat.update({
+            "material_data_origin": o.get("material_data_origin", ""),
+            "experiment_origin": o.get("experiment_origin", ""),
+            "tier": o.get("tier", ""),
+            "material_data_ref": o.get("material_data_ref", ""),
+            "council_deck_ref": o.get("council_deck_ref", ""),
+            "council_fingerprint": o.get("council_fingerprint", ""),
+            "refusal_kind": o.get("refusal_kind", ""),
+            "harvest_confidence": o.get("harvest_confidence", ""),
+            "interpreted_constants": o.get("interpreted_constants"),
+            "council_sets": ";".join(o.get("council_sets") or []),
+            "vera_accepted_template": o.get("vera_accepted_template"),
+            "vera_accepted_instance": o.get("vera_accepted_instance"),
+            "branch_coverage": (json.dumps(o["branch_coverage"], sort_keys=True)
+                                if o.get("branch_coverage") else ""),
+            "domain_not_enforced": o.get("domain_not_enforced", ""),
+            "pairing_changed": o.get("pairing_changed"),
+            "licence_hold": o.get("licence_hold", ""),
+            "counted_in_tier": o.get("counted_in_tier"),
+        })
         for mode in ("three_d", "plane_strain", "plane_stress", "axisymmetric"):
             d = (i.get("dimensionality") or {}).get(mode) or {}
             flat[f"dim_{mode}"] = (f"{d.get('support')}/{d.get('basis')}"
