@@ -238,3 +238,48 @@ def test_a_branching_routine_names_the_branch_it_does_not_exercise(tmp_path):
     assert coverage["exercised"].startswith("NTENS=6")
     assert coverage["statement"].startswith("verified on the 3D branch (NTENS=6)")
     assert _plan(tmp_path / "plain").branch_coverage is None
+
+
+def test_identical_sets_are_not_independent(tmp_path):
+    cp = _plan(tmp_path, sets=[_set("A", 210000.0, 0.3), _set("B", 210000.0, 0.3)])
+    assert cp.refusal_code == "insufficient_material_data" and "identical" in cp.refusal
+
+
+def test_a_council_rows_kinematics_and_ceiling_are_council_choices(tmp_path):
+    domain = {"stretch_max": {"value": 1.1, "where": "council", "quote": "q"}}
+    cp = _plan(tmp_path, formulation_3d_only="NTENS=6, finite strain", documented_domain=domain)
+    origins = cp.sets[0][1].manifest.as_dict()["origins"]
+    assert origins["kinematics"]["origin"] == "council_choice"
+    assert cp.ceiling_origin[0] == "council_choice" and abs(cp.ceiling - 0.1) < 1e-12
+
+
+def test_a_domain_stated_only_in_words_is_carried_as_not_enforced(tmp_path):
+    domain = {"strain_max": {"value": "up to failure", "where": "README", "quote": "q"},
+              "temperature": {"value": [290, 300], "where": "README", "quote": "q"}}
+    cp = _plan(tmp_path, documented_domain=domain)
+    assert cp.found and cp.as_dict()["domain_not_enforced"] == ["strain_max"]
+
+
+PLANS = Path(__file__).resolve().parents[2] / "corpus_campaign" / "council_plans"
+
+
+def test_no_real_council_plan_cites_an_authors_deck():
+    """Vera's G review C4: the A1 string test on the generated plans, with the
+    verbatim row-provenance fields left out (constant provenance, origin
+    provenance, documented-domain quotes, notes)."""
+    files = sorted(PLANS.glob("*/council_plan.json"))
+    if not files:
+        pytest.skip("corpus_campaign/council_plans not present")
+    bad = []
+    for path in files:
+        plan = json.loads(path.read_text())
+        plan.pop("documented_domain", None)
+        plan.pop("notes", None)
+        for entry in plan.get("sets") or ():
+            manifest = entry["plan"]["experiment"]["manifest"] or {}
+            manifest.pop("material_provenance", None)
+            for origin in (manifest.get("origins") or {}).values():
+                origin.pop("provenance", None)
+        if re.search(r"author's deck|paired deck|\.inp\b", json.dumps(plan), re.I):
+            bad.append(path.parent.name)
+    assert not bad, bad

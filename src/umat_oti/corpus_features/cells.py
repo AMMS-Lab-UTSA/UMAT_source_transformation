@@ -89,7 +89,7 @@ def fold(records: Iterable[Mapping], *, evidence: str, producer: str = "gauss/B2
         if first.get("driver_point"):
             cell["driver_point"] = first["driver_point"]
         for name in ("material_data_origin", "experiment_origin", "council_set",
-                     "council_sets", "branch_coverage"):
+                     "council_sets", "branch_coverage", "domain_not_enforced"):
             if first.get(name):
                 cell[name] = first[name]
         outside = [r["path"] for r in recs if r.get("outside_model_domain")]
@@ -218,7 +218,8 @@ def combine_council_sets(cells: Iterable[Mapping]) -> list:
         failed = [s for s in planned if status.get(s) == "failed"]
         unverified = [s for s in planned if status.get(s) not in ("verified", None)]
         combined = {key: sets[0][key] for key in ("source_id", "feature", "material_data_origin",
-                                                  "experiment_origin", "branch_coverage")
+                                                  "experiment_origin", "branch_coverage",
+                                                  "domain_not_enforced")
                     if key in sets[0]}
         combined["council_sets"] = planned
         combined["per_set"] = status
