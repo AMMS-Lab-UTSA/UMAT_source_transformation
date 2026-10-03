@@ -426,6 +426,10 @@
   {
    "commit": "bd1a71b",
    "reason": "Adds a test only; 'fails' and 'exit 1' describe the mutation that proves the new test catches a removed supply step, not a corrected behaviour."
+  },
+  {
+   "commit": "cd6939e",
+   "reason": "Feature (G1, D-19a rev 2): adds Pairing.refusal_kind to route each pairing refusal; 'refusal' names the field, not a corrected behaviour. Tested by tests/test_a_refusal_names_its_kind.py."
   }
  ],
  "changelog_fixed": {
