@@ -503,6 +503,13 @@
    "tests": [
     "tests/test_the_gate_on_a_replayed_toy.py"
    ]
+  },
+  {
+   "commit": "1532ce9",
+   "bug": "The lifter stitched fixed-form continuations with a blank, splitting a name broken across lines (G3 / 1 read as G3 1) and the Jeff97 Petal and SeaShell provider builds failed; character literals across a break lost the compilers' column layout.",
+   "tests": [
+    "tests/test_transform_a_name_split_across_a_continuation_is_one_name.py"
+   ]
   }
  ],
  "excluded": [
