@@ -14,7 +14,7 @@ wrong. Measured on the toy below before the fix: DDSDDE(1,2) came out
 312.0898 against a finite-difference 312.0000.
 
 A value actual (anything that does not designate a variable) cannot be written
-by the callee, so the emitter now passes ``(value) + 0.0D0*OTI_E1``: the same
+by the callee, so the emitter now passes ``(value) - 0.0D0*OTI_E1``: the same
 real part, zero derivative parts. The leak check, which skipped such actuals,
 now reads them too, so one the emitter could not rewrite is refused by name.
 An expression that names a shadow is hypercomplex already and is left alone.
@@ -26,7 +26,7 @@ import shutil
 
 import pytest
 
-from _transform_vs_original import check_against_original
+from _transform_vs_original import check_against_original, transform
 
 HEAD = """subroutine umat(stress, statev, ddsdde, sse, spd, scd, rpl, ddsddt, drplde, drpldt, &
                 stran, dstran, time, dtime, temp, dtemp, predef, dpred, cmname, &
@@ -66,7 +66,7 @@ RENAMES = [("subroutine umat(", "subroutine umatorig("),
 def test_a_value_at_a_hypercomplex_dummy_is_passed_as_a_hypercomplex_value(tmp_path, actual):
     output = check_against_original(tmp_path, HEAD % {"first": actual}, ".f90", RENAMES, ["1000.0d0"])
     emitted = next(output.glob("*_oti.f90")).read_text()
-    assert f"({actual}) + 0.0D0*OTI_E1" in emitted
+    assert f"({actual}) - 0.0D0*OTI_E1" in emitted
 
 
 @pytest.mark.skipif(shutil.which("gfortran") is None, reason="gfortran required")
@@ -107,4 +107,34 @@ def test_a_literal_from_one_lifted_helper_to_another_is_passed_as_a_hypercomplex
     """Before: ``call INNER_OTI(a, 1.5d0, x, b)`` -- the tangent came out ~1e-307."""
     renames = RENAMES + [("inner(", "innerorig("), ("subroutine inner\n", "subroutine innerorig\n")]
     output = check_against_original(tmp_path, NESTED % {"first": "g*2.0d0"}, ".f90", renames, ["1000.0d0"])
-    assert "(1.5d0) + 0.0D0*E1" in (output / "umat_oti_helpers.f90").read_text()
+    assert "(1.5d0) - 0.0D0*E1" in (output / "umat_oti_helpers.f90").read_text()
+
+
+
+@pytest.mark.skipif(shutil.which("gfortran") is None, reason="gfortran required")
+def test_a_negative_zero_value_actual_keeps_its_sign(tmp_path):
+    """``(-0.0d0) + 0.0D0*E1`` has real part +0.0; the emitted wrap must keep -0.0 (Vera, B8 R1).
+
+    Checked on the emitted wrap itself, compiled against the generated OTI
+    module, because the sign of a zero is what changes and no arithmetic
+    downstream of a stress update shows it reliably (the OTI SIGN reads
+    B < 0, which is false for -0.0).
+    """
+    import subprocess
+
+    summary, code = transform(tmp_path, HEAD % {"first": "-0.0d0"}, ".f90")
+    assert code == 0, summary
+    out = tmp_path / "out"
+    emitted = next(out.glob("*_oti.f90")).read_text()
+    wrap = "(-0.0d0) - 0.0D0*OTI_E1"
+    assert wrap in emitted
+    (out / "ABA_PARAM.INC").write_text("      implicit real*8(a-h,o-z)\n")
+    subprocess.run(["bash", "compile_hint.sh"], cwd=out, check=True, capture_output=True, text=True)
+    (out / "zero.f90").write_text(
+        "program zero\n  use otim6n1, OTI_E1 => E1\n  type(ONUMM6N1) :: z\n"
+        f"  z = {wrap}\n  print *, sign(1.0d0, z%R), z%E1\nend program zero\n")
+    subprocess.run(["gfortran", "-I.", "zero.f90", "otim6n1.o", "master_parameters.o", "real_utils.o",
+                    "-o", "zero"], cwd=out, check=True, capture_output=True, text=True)
+    sign, derivative = map(float, subprocess.run(["./zero"], cwd=out, check=True, capture_output=True,
+                                                 text=True).stdout.split())
+    assert sign == -1.0 and derivative == 0.0
