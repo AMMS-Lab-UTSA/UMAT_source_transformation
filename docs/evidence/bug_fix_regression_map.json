@@ -407,6 +407,13 @@
    "tests": [
     "tests/test_a_refusal_names_its_kind.py::test_the_authors_rejected_block_is_named_first_with_its_depvar"
    ]
+  },
+  {
+   "commit": "be8a0b5",
+   "bug": "The seed-read semantic check caught one hop only; a seed read reaching a shadowed name through a REAL intermediate (T = DSTRAN(2); G = PROPS(1)*(1+T)) still transformed with a wrong DDSDDE.",
+   "tests": [
+    "tests/test_transform_a_seed_read_left_real_is_refused.py"
+   ]
   }
  ],
  "excluded": [
@@ -497,6 +504,10 @@
   {
    "commit": "6ea83e0",
    "reason": "Evidence only: maps bc074bc, 66a5469, 222b7b7, 7511a2b and d874a98 to their tests; 'fixes' names those commits, it corrects no behaviour."
+  },
+  {
+   "commit": "36e6cf6",
+   "reason": "Comment only: corrects the docstring of _callee_ddsdde_writes_left_live; 'silently' describes Fortran's implicit interface, no behaviour changes."
   }
  ],
  "changelog_fixed": {
