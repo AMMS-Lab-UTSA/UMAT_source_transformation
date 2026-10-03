@@ -1316,6 +1316,10 @@
   "mock:tests/test_the_gate_on_a_replayed_toy.py:test_a_direction_mismatch_fails_and_an_unreadable_seed_map_is_unresolved:monkeypatch.setattr:b4a77d1f": {
    "verdict": "justified",
    "reason": "Fault injection: replaces tangent_gate.direction_check with a reported mismatch, then with a parse failure, to show that verify_tangent fails the row on the first and leaves it unresolved on the second; the real replay, sweep and judgement are not replaced and nothing is made to pass."
+  },
+  "skip:tests/test_transform_a_name_split_across_a_continuation_is_one_name.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
   }
  }
 }
