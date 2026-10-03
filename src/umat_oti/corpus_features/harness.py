@@ -359,6 +359,14 @@ def resolve_entry(key: str) -> CorpusEntry:
     council: dict = {}
     if set_id or not manifest:
         council_manifest, council = _council_manifest(key, set_id)
+        if council and council.get("refusal_code"):
+            raise LookupError(f"{key}: the council plan is refused "
+                              f"({council['refusal_code']}): {council.get('refusal', '')[:200]}")
+        planned = [str(e.get("set_id")) for e in council.get("sets") or ()]
+        if council and not set_id and len(planned) > 1:
+            raise LookupError(f"{key}: the council plan has {len(planned)} parameter sets "
+                              f"({', '.join(planned)}); name one, {key}#<set>: each is its "
+                              f"own experiment (D-21)")
         if council_manifest:
             manifest = council_manifest
     origins = {}
@@ -367,6 +375,7 @@ def resolve_entry(key: str) -> CorpusEntry:
                    "experiment_origin": council.get("experiment_origin", "council_deck"),
                    "council_plan": str(Path(COUNCIL_PLANS) / key / "council_plan.json"),
                    "council_set": set_id or str((council.get("sets") or [{}])[0].get("set_id")),
+                   "council_sets": [str(e.get("set_id")) for e in council.get("sets") or ()],
                    **({"branch_coverage": council["branch_coverage"]}
                       if council.get("branch_coverage") else {})}
     elif verification.get("material_data_origin"):
@@ -1512,7 +1521,7 @@ def _record(entry: CorpusEntry, feature: str, path, payload: dict, extra: dict) 
     # the three tiers (D-19/D-21): set only off the author-deck tier, so the
     # author-deck records read as before
     for name in ("material_data_origin", "experiment_origin", "council_set",
-                 "branch_coverage"):
+                 "council_sets", "branch_coverage"):
         if entry.provenance.get(name):
             record[name] = entry.provenance[name]
     return record

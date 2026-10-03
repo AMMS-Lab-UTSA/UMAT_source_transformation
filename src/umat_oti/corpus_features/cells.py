@@ -62,9 +62,12 @@ def fold(records: Iterable[Mapping], *, evidence: str, producer: str = "gauss/B2
     records = apply_gate_notes([dict(r) for r in records])
     for record in records:
         if record.get("feature") in MANIFEST_FEATURES:
-            groups.setdefault((record["source_id"], record["feature"]), []).append(record)
+            # a D-21 parameter set is its own experiment: never merged with
+            # another set's records (Vera G review C6)
+            groups.setdefault((record["source_id"], record.get("council_set") or "",
+                               record["feature"]), []).append(record)
     cells = []
-    for (source_id, feature), recs in groups.items():
+    for (source_id, _set, feature), recs in groups.items():
         statuses = [r["status"] for r in recs]
         by = lambda s: [r["path"] for r in recs if r["status"] == s]   # noqa: E731
         first = recs[0]
@@ -86,7 +89,7 @@ def fold(records: Iterable[Mapping], *, evidence: str, producer: str = "gauss/B2
         if first.get("driver_point"):
             cell["driver_point"] = first["driver_point"]
         for name in ("material_data_origin", "experiment_origin", "council_set",
-                     "branch_coverage"):
+                     "council_sets", "branch_coverage"):
             if first.get(name):
                 cell[name] = first[name]
         outside = [r["path"] for r in recs if r.get("outside_model_domain")]
@@ -190,3 +193,46 @@ def fold(records: Iterable[Mapping], *, evidence: str, producer: str = "gauss/B2
             cell["reason"] = next((r.get("reason") for r in recs if r["status"] == status), "")
         cells.append(cell)
     return cells
+
+
+def combine_council_sets(cells: Iterable[Mapping]) -> list:
+    """One source-level cell per (source, feature) from its per-set cells (D-21:
+    a source counts only if EVERY planned parameter set passes).
+
+    verified iff every planned set (``council_sets``) has a verified cell;
+    failed if any set failed; otherwise not_attempted, naming the sets that
+    are missing or not verified. Cells without a council set pass through.
+    """
+    by: "OrderedDict[tuple, list]" = OrderedDict()
+    passthrough = []
+    for cell in cells:
+        if not cell.get("council_set"):
+            passthrough.append(dict(cell))
+            continue
+        by.setdefault((cell["source_id"], cell["feature"]), []).append(cell)
+    out = passthrough
+    for (source_id, feature), sets in by.items():
+        planned = sorted(set(sets[0].get("council_sets") or [c["council_set"] for c in sets]))
+        status = {c["council_set"]: c.get("status") for c in sets}
+        missing = [s for s in planned if s not in status]
+        failed = [s for s in planned if status.get(s) == "failed"]
+        unverified = [s for s in planned if status.get(s) not in ("verified", None)]
+        combined = {key: sets[0][key] for key in ("source_id", "feature", "material_data_origin",
+                                                  "experiment_origin", "branch_coverage")
+                    if key in sets[0]}
+        combined["council_sets"] = planned
+        combined["per_set"] = status
+        if failed:
+            combined["status"] = "failed"
+            combined["reason"] = f"parameter set(s) {failed} failed; a failure in any set stands"
+        elif not missing and not unverified:
+            combined["status"] = "verified"
+            combined["reason"] = f"every planned parameter set verified ({', '.join(planned)})"
+        else:
+            combined["status"] = "not_attempted"
+            combined["reason"] = ("not every planned parameter set is verified: "
+                                  + (f"missing {missing}; " if missing else "")
+                                  + (f"not verified {unverified}" if unverified else ""))
+        out.append(combined)
+    return out
+
