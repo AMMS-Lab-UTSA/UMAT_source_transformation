@@ -244,6 +244,9 @@ def test_the_committed_rulings_name_the_files_they_ruled():
         "Euler angles) is at the author's absolute path and not published")
     assert by_id["irfancn__Abaqus-UEL-elastic/uel_elastic.for"][
         "terminal_state"] == "not_a_umat"
+    hamza = by_id["hamza-djeloud__thesis_project/plate_with_notch.for"]
+    assert hamza["terminal_state"] == "not_a_umat"
+    assert any("1e-11" in line for line in hamza["evidence"])
     for r in rulings:
         assert len(r["sha256"]) == 64 and r["evidence"] and r["ruling"]
 
@@ -254,6 +257,7 @@ def test_the_ruled_sources_are_reached_by_the_rules_in_the_real_cache():
     hits = {}
     for sid in ("vishalsubbiah__Abaqus-Multi-scale-modelling/Abaqus/umatcode3.f",
                 "irfancn__Abaqus-UEL-elastic/uel_elastic.for",
+                "hamza-djeloud__thesis_project/plate_with_notch.for",
                 "Jeff97__General-shape-control-of-shell/Abaqus_Files/Alex_Shocked/"
                 "Growth-Alex.for"):
         path = CACHE / sid
@@ -266,6 +270,7 @@ def test_the_ruled_sources_are_reached_by_the_rules_in_the_real_cache():
         hits[sid.split("__")[0]] = (record.terminal_state, record.source_ruling)
     assert hits["vishalsubbiah"] == ("missing_material_data", "reviewed")
     assert hits["irfancn"] == ("not_a_umat", "reviewed")
+    assert hits["hamza-djeloud"] == ("not_a_umat", "reviewed")
     # Growth-Alex opens T:\... absolute paths, but publishes the files
     assert hits["Jeff97"] == ("original_job_failed", "")
 
