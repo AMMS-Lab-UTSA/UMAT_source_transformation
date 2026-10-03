@@ -457,6 +457,15 @@
     "tests/test_transform_a_supplied_utility_ahead_of_the_stress_update_is_lifted.py",
     "tests/test_transform_a_value_at_a_hypercomplex_dummy_is_passed_as_one.py"
    ]
+  },
+  {
+   "commit": "d4a3c85",
+   "bug": "The Abaqus tangent gate verified on best-relative-per-entry against a 1e-6 tolerance with 2-step plateaus, chose states from the transformed history and on the flattened point list, took the author's tangent and a one-sided branch difference as verdicts, and used the increment as the step scale (Curie B7 tangent_not_verified diagnosis, Vera A1-A8).",
+   "tests": [
+    "tests/test_the_abaqus_tangent_gate_is_entrywise.py",
+    "tests/test_the_gate_chooses_states_from_the_original.py",
+    "tests/test_a_quad_replay_resolves_what_double_quantises.py"
+   ]
   }
  ],
  "excluded": [
