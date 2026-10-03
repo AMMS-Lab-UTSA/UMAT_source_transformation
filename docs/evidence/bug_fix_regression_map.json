@@ -442,6 +442,21 @@
    "tests": [
     "tests/test_transform_a_real_argument_of_a_mixed_min_keeps_a_signed_zero.py"
    ]
+  },
+  {
+   "commit": "63b730d",
+   "bug": "The PARAMETER promotion of a declaration-initialised REAL missed a write through a function reference (X = BUMP(TEN)); the lifted helper then wrote a PARAMETER (SIGSEGV under gfortran).",
+   "tests": [
+    "tests/test_transform_a_real_initialised_in_its_declaration_is_a_constant.py"
+   ]
+  },
+  {
+   "commit": "ebab095",
+   "bug": "Two tests passed regardless of the behaviour they claimed to check: the ROTSIG test read STATEV out of bounds with a zero DROT, and the signed-zero test compiled a hard-coded wrap instead of the emitted one.",
+   "tests": [
+    "tests/test_transform_a_supplied_utility_ahead_of_the_stress_update_is_lifted.py",
+    "tests/test_transform_a_value_at_a_hypercomplex_dummy_is_passed_as_one.py"
+   ]
   }
  ],
  "excluded": [
