@@ -401,9 +401,13 @@ def coverage(regimes: Sequence[Regime], nonlinear: bool,
     is not evidence either.
     """
     verifiable = [r for r in regimes if r.verifiable]
-    elastic = [r for r in verifiable if r.regime == SMOOTH_ELASTIC]
+    # A smooth unloading state counts inside the activated regime only if the
+    # material had activated at that point by that increment (Vera B7 A7);
+    # before any activation, reversing the strain is still the elastic branch.
+    elastic = [r for r in verifiable if r.regime == SMOOTH_ELASTIC
+               or (r.regime == SMOOTH_UNLOADING and not r.activated_here)]
     inelastic = [r for r in verifiable if r.regime == SMOOTH_INELASTIC]
-    unloading = [r for r in verifiable if r.regime == SMOOTH_UNLOADING]
+    unloading = [r for r in verifiable if r.regime == SMOOTH_UNLOADING and r.activated_here]
     transitional = [r for r in regimes if not r.verifiable]
 
     # A smooth state on the way back down is a state INSIDE the activated
