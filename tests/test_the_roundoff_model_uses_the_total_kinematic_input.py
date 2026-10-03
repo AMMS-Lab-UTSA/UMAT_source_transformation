@@ -125,3 +125,26 @@ def test_the_a3_floor_scales_with_the_block_and_the_increment_count():
     # the cap: never above 1e-3 of the column scale, whatever the block
     assert fd.judge_column(np.array([2e-3]), est, list(range(len(L))), L,
                            block_derivative=1e20, **kw).codes == [fd.FAIL]
+
+
+def test_a_zero_branch_fail_reports_the_threshold_it_used_and_is_the_worst_entry():
+    """Vera B10: the reported tolerance is the one the decision used, so a FAIL
+    never shows err/t < 1; ``worst`` is the largest err/t over BOTH branches
+    (ShapeProgramming CASE4 5ea29ed7 reported a passing nonzero entry as worst
+    while a zero entry failed)."""
+    est = [np.array([2.0, 0.0]) for _ in L]
+    # nonzero entry passes; the zero entry (zero in both precisions) fails on
+    # floor_v ~ 3.6e-15 although atol + 2u ~ 1.8e-9 (the value-under-test
+    # round-off) is above it: the reported tolerance must be floor_v
+    oti = np.array([2.0 * (1 + 1e-9), 1e-10])
+    v = fd.judge_column(oti, est, list(range(len(L))), L, magnitude=np.array([1.0, 1.0]),
+                        eps=fd.EPS_QUAD, double_zero=np.array([False, True]),
+                        derivative_scale=2.0, steps=STEPS)
+    assert v.codes == [fd.PASS, fd.FAIL]
+    (entry, value, _, tol, _), = v.failed_entries
+    assert entry == 1 and value / tol > 1.0
+    assert v.tolerance[1] == tol
+    assert v.worst_entry == 1 and v.worst_ratio > 1.0
+    assert v.max_ratio == v.worst_ratio
+    assert v.error_at_worst == pytest.approx(1e-10)
+    assert v.atol[1] > 1e-10                       # the case the old report got wrong

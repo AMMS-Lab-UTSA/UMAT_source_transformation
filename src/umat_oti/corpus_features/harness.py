@@ -1454,15 +1454,20 @@ class FeatureTally:
         self.max_abs = max(self.max_abs, verdict.max_abs)
         self.max_ratio = max(self.max_ratio, verdict.max_ratio)
         self.max_rel_tolerance = max(self.max_rel_tolerance, verdict.max_rel_tolerance)
-        if verdict.worst_entry >= 0 and (not self.worst or verdict.max_rel >= self.max_rel):
+        # worst = the largest err/t over zero and nonzero entries alike
+        if verdict.worst_entry >= 0 and (
+                not self.worst or verdict.worst_ratio >= self.worst.get("ratio", -1.0)):
             e = verdict.worst_entry
             self.worst = {"increment": inc, "wrt": wrt, "output": output_names[e],
+                          "code": verdict.codes[e],
                           "oti": float(oti[e]), "fd": float(verdict.reference[e]),
                           "u": float(verdict.uncertainty[e]),
-                          "abs": float(abs(oti[e] - verdict.reference[e])),
-                          "rel": verdict.max_rel, "tolerance": verdict.tolerance_at_worst,
+                          "abs": verdict.error_at_worst, "ratio": verdict.worst_ratio,
+                          "rel": (verdict.error_at_worst / abs(float(verdict.reference[e]))
+                                  if verdict.reference[e] else None),
+                          "tolerance": verdict.tolerance_at_worst,
                           "plateau_relative_steps": list(verdict.plateau_steps)}
-            self.max_rel = max(self.max_rel, verdict.max_rel)
+        self.max_rel = max(self.max_rel, verdict.max_rel)
 
     def coverage(self) -> dict:
         n = len(self.states)
