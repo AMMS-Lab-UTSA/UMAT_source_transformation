@@ -8294,9 +8294,11 @@ def _value_actuals_made_hypercomplex(
 
     A value actual -- anything that does not designate a variable -- cannot be
     written by the callee, so it can be replaced by an equal hypercomplex value
-    without changing what the program means: ``(1.D-3) + 0.0D0*OTI_E1`` has
-    real part 1.D-3 exactly (x + 0.0 is x for every x but -0.0) and zero
-    derivative parts, and a value that was hypercomplex already keeps every
+    without changing what the program means: ``(1.D-3) - 0.0D0*OTI_E1`` has
+    real part 1.D-3 exactly and zero derivative parts. Subtracted, not added:
+    x - (+0.0) is x for every x including -0.0, where x + 0.0 would turn a
+    -0.0 into +0.0 and flip the sign a SIGN(1, x) downstream reads (Vera, B8
+    review R1), and a value that was hypercomplex already keeps every
     part. In the UMAT an expression that names a shadow is left as it is; in
     the lifted helpers, where most names are hypercomplex through IMPLICIT,
     every value actual is wrapped. The imaginary unit is the routine's own
@@ -8339,7 +8341,7 @@ def _value_actuals_made_hypercomplex(
                 r"[A-Za-z_]\w*", _without_character_literals(actual))}
             if not lifted and any(token.endswith("_OTI") or token.startswith("OTI_") for token in tokens):
                 continue
-            actuals[position] = f"({actual.strip()}) + 0.0D0*{unit}"
+            actuals[position] = f"({actual.strip()}) - 0.0D0*{unit}"
             changed = True
         if changed:
             lines[index] = (f"{match.group(1)}{match.group(2)}{match.group(3)}"
