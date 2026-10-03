@@ -1236,6 +1236,14 @@
   "skip:tests/test_transform_a_tab_inside_the_label_field_starts_a_statement.py:<module>:mark.skipif:8d891947": {
    "verdict": "justified",
    "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "removed_check:tests/test_a_transition_is_not_a_pass.py:test_the_resolution_ladder_respects_the_ceiling:341e71e2": {
+   "verdict": "justified",
+   "reason": "The two replaced asserts pinned the tool's ladder line 'wanted = min(amplitude * factor, CEILING)' and min(0.005*400, CEILING). G4 (02a3b08) routes the same clamp through amplitude_search.capped(amplitude, ceiling), which is min(amplitude, ceiling, CEILING); the test now asserts the new line and capped(0.005*400) == CEILING and capped(2.0, 5.0) == CEILING, so the bound it guards is unchanged and a council ceiling above CEILING is still clamped."
+  },
+  "removed_check:tests/test_a_transition_is_not_a_pass.py:test_the_resolution_ladder_respects_the_ceiling:f53423c1": {
+   "verdict": "justified",
+   "reason": "The two replaced asserts pinned the tool's ladder line 'wanted = min(amplitude * factor, CEILING)' and min(0.005*400, CEILING). G4 (02a3b08) routes the same clamp through amplitude_search.capped(amplitude, ceiling), which is min(amplitude, ceiling, CEILING); the test now asserts the new line and capped(0.005*400) == CEILING and capped(2.0, 5.0) == CEILING, so the bound it guards is unchanged and a council ceiling above CEILING is still clamped."
   }
  }
 }
