@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "c833abe02ea4d11a582ca891",
+  "registry_key": "544fccbe96fae10347c28f36",
   "source_id": "Worlthen__20220314-abqus-simulation/abaqus/simplified/simplified_curing.for",
   "repository": "Worlthen/20220314-abqus-simulation",
   "commit": "f16335015561428046ea4e21f71827382894b2e8",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Worlthen/20220314-abqus-simulation/blob/f16335015561428046ea4e21f71827382894b2e8/abaqus/simplified/simplified_curing.for",
   "raw_url": "https://raw.githubusercontent.com/Worlthen/20220314-abqus-simulation/f16335015561428046ea4e21f71827382894b2e8/abaqus/simplified/simplified_curing.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass20/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass21/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json"
   },
   "sha256": "58c0a242cad10028ec0addcfd8b28e3372bd1067acf00e3c60a2cb2cce9cdcbf",
   "bytes": 6831,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch worlthen-20220314-abqus-simulation--simplified-curing--4c3790d6  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "ab32cce7bec15c93",
-  "harness_fingerprint": "d6f92d4704bee702",
-  "contract_transform_generation": "dbe9f928191e1d43"
+  "transform_fingerprint": "c121f4a7ca0ad160",
+  "harness_fingerprint": "b5ec344c5a001293",
+  "contract_transform_generation": "a4f0ea8c9d124f18"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:c833abe02ea4d11a582ca891",
+  "from": "transform_store:544fccbe96fae10347c28f36",
   "files": [
    {
     "path": "compile_order.txt",
@@ -60,8 +60,8 @@
    },
    {
     "path": "oti_intrinsics.f90",
-    "sha256": "38606c9c1fca85a9e5df4a32b86b77facae0e2cca3c57db0e1e1193de78dca5c",
-    "bytes": 14283
+    "sha256": "a7c2588cef146c624b76d0bcf8c7fdf3f2a74496a0bac0e03c3a733f227abf23",
+    "bytes": 14300
    },
    {
     "path": "otim6n1.f90",
@@ -84,7 +84,7 @@
     "bytes": 871
    }
   ],
-  "compiled_source_sha256": "40ba15179ccb989f7a7b14f2249a624429e35983da22c861c6f831ed29a1db72"
+  "compiled_source_sha256": "8ec28bf15a7ec8678d963d343c4a7a0ef92179b726764b630c3b2818f4825c7c"
  },
  "experiment": {
   "ntens": 6,
@@ -105,9 +105,9 @@
   "family": "growth / morphoelasticity",
   "kinematics": "small",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass20/results/store_verification.jsonl key=c833abe02ea4d11a582ca891",
-   "material_provenance": "Worlthen__20220314-abqus-simulation/abaqus/simplified/simplified_job.inp: simplified_job.inp *MATERIAL RESIN_SIMPLE: 8 constants, *DEPVAR 4 -- simplified_job.inp declares exactly one element, so it is the author's own single-element test of this material; the deck's name 'simplified_job.inp' contain",
+   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass21/results/store_verification.jsonl key=544fccbe96fae10347c28f36",
+   "material_provenance": "Worlthen__20220314-abqus-simulation/abaqus/simplified/simplified_job.inp: simplified_job.inp *MATERIAL RESIN_SIMPLE: 8 constants, *DEPVAR 4 -- Worlthen__20220314-abqus-simulation's README states that simplified_job.inp runs with simplified_curing.for; simplified_job.inp declares exactly one element,",
    "initial_state_from_user_subroutine": true,
    "terminal_state": "fully_verified"
   },
@@ -124,8 +124,8 @@
      "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "moduli": "line 111: EMOD = PROPS(2); line 118: ENU = PROPS(3)",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/elastic_uniaxial.cfg",
     "config_sha256": "999394a56f494629f63d49a747f583c948cd47a4894fc286cac0c8cc8b474a4f",
@@ -172,8 +172,8 @@
      "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "moduli": "line 111: EMOD = PROPS(2); line 118: ENU = PROPS(3)",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/elastic_shear.cfg",
     "config_sha256": "a34bd5c667e25539ce7abca8c716765070292c5c95302201a8939b7c9a628090",
@@ -222,8 +222,8 @@
      "moduli": "line 111: EMOD = PROPS(2); line 118: ENU = PROPS(3)",
      "rate": "registry time_dependent=True (the Abaqus run saw the clock matter)",
      "hold": "ramp 1.3, hold 11.7",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/relaxation.cfg",
     "config_sha256": "1478016d891991c05fc969b11470907b230cbcf8db890908751c3f9e894075d8",
@@ -282,8 +282,8 @@
      "moduli": "line 111: EMOD = PROPS(2); line 118: ENU = PROPS(3)",
      "rate": "registry time_dependent=True (the Abaqus run saw the clock matter)",
      "ramp_time": "13",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_slow.cfg",
     "config_sha256": "6ce6544bac89717cad181bb04df35a806d51ea116f2b076f61ec62fbe654d7d1",
@@ -322,8 +322,8 @@
      "moduli": "line 111: EMOD = PROPS(2); line 118: ENU = PROPS(3)",
      "rate": "registry time_dependent=True (the Abaqus run saw the clock matter)",
      "ramp_time": "0.13",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 0.13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)); this path ends at 0.13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_fast.cfg",
     "config_sha256": "dd3a57baf341284c6b7c682ff605d3522ea04fc7d7083054a99986d466842b00",
@@ -361,8 +361,8 @@
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "moduli": "line 111: EMOD = PROPS(2); line 118: ENU = PROPS(3)",
      "growth": "no deformation; the clock alone",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/growth_free.cfg",
     "config_sha256": "56c0d9c3735ced396c88d962bab65f37041caeaa684bd56326f14b67cc097719",
@@ -410,8 +410,8 @@
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "moduli": "line 111: EMOD = PROPS(2); line 118: ENU = PROPS(3)",
      "stretch": "1 + finite amplitude 0.2: no critical stretch identifiable in the source",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 100): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/growth_held_stretch.cfg",
     "config_sha256": "41f11e283933c6a1a7e181fcede498f2af9287887041e63828ee8356f679a994",
@@ -481,7 +481,7 @@
  ],
  "reference": {
   "file": "reference.json.gz",
-  "sha256": "43af81cd1124a0b28a7ae626945232a2db38cb06ba21b3a1e1d7069e1f03f832"
+  "sha256": "77598b9689d6a074af88ae61cb66c019cb43250904b5d4a7a14ffd9b82a74d1c"
  },
  "tolerance_rule_id": "case-rule/1-df2f107a3c04",
  "error_summary": {
@@ -491,7 +491,7 @@
   },
   "elastic_shear": {
    "primal": 2.602854735044454e-06,
-   "tangent": 6.550012775600824e-06
+   "tangent": 6.5474156870603435e-06
   },
   "relaxation": {
    "primal": 8.67618245014818e-07,
@@ -521,8 +521,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T175617",
-  "seconds": 8.3,
+  "run_id": "20261003T121131",
+  "seconds": 6.3,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -534,10 +534,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "4de726cd5abb3634df37560c86ae3bde9227d38fd337f5dcd28bb88dcb1357ee",
+  "tree_sha256": "9af0d56d8559e7fc6e0c5c2990fd1b0d6e061cbd0d77eeb7aaab172c627e59fc",
   "location": "corpus_assets",
   "files": 32,
-  "bytes": 689062
+  "bytes": 690314
  },
  "tiers": {
   "ci": false,
@@ -546,7 +546,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only worlthen-20220314-abqus-simulation--simplified-curing--4c3790d6",
   "fetch": "python tools/corpus_cases.py fetch worlthen-20220314-abqus-simulation--simplified-curing--4c3790d6",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key c833abe02ea4d11a582ca891 --verification-records <workspace>/corpus_run/pass20/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass20_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 544fccbe96fae10347c28f36 --verification-records <workspace>/corpus_run/pass21/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass21_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -554,12 +554,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T17:56:26",
+ "date": "2026-10-03T12:11:37",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.0,
+    "seconds": 3.9,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -572,7 +572,7 @@
      },
      "elastic_shear": {
       "primal_error_over_tolerance": 2.602854735044454e-06,
-      "tangent_error_over_tolerance": 6.550012775600824e-06,
+      "tangent_error_over_tolerance": 6.5474156870603435e-06,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
@@ -615,7 +615,7 @@
     }
    },
    "replay": {
-    "seconds": 1.5,
+    "seconds": 1.2,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
@@ -627,7 +627,7 @@
      },
      "elastic_shear": {
       "primal_error_over_tolerance": 2.602854735044454e-06,
-      "tangent_error_over_tolerance": 6.550012775600824e-06,
+      "tangent_error_over_tolerance": 6.5474156870603435e-06,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true

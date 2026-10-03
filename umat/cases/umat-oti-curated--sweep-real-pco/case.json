@@ -24,9 +24,9 @@
   "fetch": null
  },
  "fingerprints": {
-  "transform_fingerprint": "ab32cce7bec15c93",
-  "harness_fingerprint": "d6f92d4704bee702",
-  "contract_transform_generation": "dbe9f928191e1d43"
+  "transform_fingerprint": "c121f4a7ca0ad160",
+  "harness_fingerprint": "b5ec344c5a001293",
+  "contract_transform_generation": "a4f0ea8c9d124f18"
  },
  "transform": {
   "settings": {
@@ -53,8 +53,8 @@
    },
    {
     "path": "oti_intrinsics.f90",
-    "sha256": "38606c9c1fca85a9e5df4a32b86b77facae0e2cca3c57db0e1e1193de78dca5c",
-    "bytes": 14283
+    "sha256": "a7c2588cef146c624b76d0bcf8c7fdf3f2a74496a0bac0e03c3a733f227abf23",
+    "bytes": 14300
    },
    {
     "path": "otim6n1.f90",
@@ -72,7 +72,7 @@
     "bytes": 7698
    }
   ],
-  "compiled_source_sha256": "2d53aa482b229533b799a6533821df06aefd505c6f6bc340379cc3a527b6881b"
+  "compiled_source_sha256": "579647c83bf21060f1b4332f6db6174295d4ac2a6d2f3d1070801693a10b2934"
  },
  "experiment": {
   "ntens": 6,
@@ -228,7 +228,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.10e-06)",
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.13e-06)",
     "reference_precision": "double"
    },
    {
@@ -268,7 +268,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.09e-06)",
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.10e-06)",
     "reference_precision": "double"
    },
    {
@@ -639,7 +639,7 @@
  ],
  "reference": {
   "file": "reference.json.gz",
-  "sha256": "66dff312d53e13e04411344863372440d1da7875d6ec4443ea7bc0f8972472d7"
+  "sha256": "3e1592de5117666944f11d40cfe46c03c10627fb584029b60238a3e3f9956a67"
  },
  "tolerance_rule_id": "case-rule/1-df2f107a3c04",
  "error_summary": {
@@ -649,35 +649,35 @@
   },
   "elastic_shear": {
    "primal": 0.0,
-   "tangent": 2.2718183196713978e-07
+   "tangent": 2.2716169703529146e-07
   },
   "isotropy_reference": {
    "primal": 6.061563011276329e-06,
-   "tangent": 0.020764582285504523
+   "tangent": 0.020633041391093537
   },
   "isotropy_rotated": {
    "primal": 4.884279293811284e-06,
-   "tangent": 0.0038673033505320317
+   "tangent": 0.003822590197310913
   },
   "plastic_uniaxial": {
    "primal": 2.0758536893018816e-06,
-   "tangent": 0.0001426004997245216
+   "tangent": 0.00014259108026288235
   },
   "plastic_compression": {
    "primal": 2.0758536893018816e-06,
-   "tangent": 0.0001426004997245216
+   "tangent": 0.00014259108026288235
   },
   "unload_reload": {
    "primal": 7.139593820887329e-06,
-   "tangent": 0.00023329074739830854
+   "tangent": 0.00023324876412080306
   },
   "cyclic": {
    "primal": 2.2034498269312745e-05,
-   "tangent": 0.00042380939912132137
+   "tangent": 0.0004237915865006207
   },
   "reverse_yield": {
    "primal": 5.987774913368648e-06,
-   "tangent": 0.000309505531989377
+   "tangent": 0.0003094713019901533
   }
  },
  "toolchain": {
@@ -687,8 +687,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T180734",
-  "seconds": 10.5,
+  "run_id": "20261003T122224",
+  "seconds": 10.2,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -700,10 +700,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "a9ca1cecef7ccf9c237425c4b5fe997aad093ad95072ac7e8dc3b066630c0224",
+  "tree_sha256": "28db2fec20090483b6eb6f640e002fafdeb6463148966e45370ec1ffa64564b5",
   "location": "corpus_assets",
   "files": 35,
-  "bytes": 846747
+  "bytes": 846888
  },
  "tiers": {
   "ci": true,
@@ -719,12 +719,12 @@
   "routine-level evidence (driver), not Abaqus",
   "loading paths are this pipeline's probes, not the author's example"
  ],
- "date": "2026-10-02T18:07:48",
+ "date": "2026-10-03T12:22:38",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.4,
+    "seconds": 4.3,
     "source_from": "case",
     "compiled_in_job_layout": true,
     "paths": {
@@ -737,56 +737,56 @@
      },
      "elastic_shear": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 2.2718183196713978e-07,
+      "tangent_error_over_tolerance": 2.2716169703529146e-07,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_reference": {
       "primal_error_over_tolerance": 6.061563011276329e-06,
-      "tangent_error_over_tolerance": 0.020764582285504523,
+      "tangent_error_over_tolerance": 0.020633041391093537,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_rotated": {
       "primal_error_over_tolerance": 4.884279293811284e-06,
-      "tangent_error_over_tolerance": 0.0038673033505320317,
+      "tangent_error_over_tolerance": 0.003822590197310913,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "plastic_uniaxial": {
       "primal_error_over_tolerance": 2.0758536893018816e-06,
-      "tangent_error_over_tolerance": 0.0001426004997245216,
+      "tangent_error_over_tolerance": 0.00014259108026288235,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "plastic_compression": {
       "primal_error_over_tolerance": 2.0758536893018816e-06,
-      "tangent_error_over_tolerance": 0.0001426004997245216,
+      "tangent_error_over_tolerance": 0.00014259108026288235,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "unload_reload": {
       "primal_error_over_tolerance": 7.139593820887329e-06,
-      "tangent_error_over_tolerance": 0.00023329074739830854,
+      "tangent_error_over_tolerance": 0.00023324876412080306,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "cyclic": {
       "primal_error_over_tolerance": 2.2034498269312745e-05,
-      "tangent_error_over_tolerance": 0.00042380939912132137,
+      "tangent_error_over_tolerance": 0.0004237915865006207,
       "coverage": "50/50",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "reverse_yield": {
       "primal_error_over_tolerance": 5.987774913368648e-06,
-      "tangent_error_over_tolerance": 0.000309505531989377,
+      "tangent_error_over_tolerance": 0.0003094713019901533,
       "coverage": "90/90",
       "hidden_state_ok": true,
       "original_reproduced": true
@@ -794,7 +794,7 @@
     }
    },
    "replay": {
-    "seconds": 1.9,
+    "seconds": 1.7,
     "units_from": "case",
     "paths": {
      "elastic_uniaxial": {
@@ -806,56 +806,56 @@
      },
      "elastic_shear": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 2.2718183196713978e-07,
+      "tangent_error_over_tolerance": 2.2716169703529146e-07,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_reference": {
       "primal_error_over_tolerance": 6.061563011276329e-06,
-      "tangent_error_over_tolerance": 0.020764582285504523,
+      "tangent_error_over_tolerance": 0.020633041391093537,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_rotated": {
       "primal_error_over_tolerance": 4.884279293811284e-06,
-      "tangent_error_over_tolerance": 0.0038673033505320317,
+      "tangent_error_over_tolerance": 0.003822590197310913,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "plastic_uniaxial": {
       "primal_error_over_tolerance": 2.0758536893018816e-06,
-      "tangent_error_over_tolerance": 0.0001426004997245216,
+      "tangent_error_over_tolerance": 0.00014259108026288235,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "plastic_compression": {
       "primal_error_over_tolerance": 2.0758536893018816e-06,
-      "tangent_error_over_tolerance": 0.0001426004997245216,
+      "tangent_error_over_tolerance": 0.00014259108026288235,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "unload_reload": {
       "primal_error_over_tolerance": 7.139593820887329e-06,
-      "tangent_error_over_tolerance": 0.00023329074739830854,
+      "tangent_error_over_tolerance": 0.00023324876412080306,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "cyclic": {
       "primal_error_over_tolerance": 2.2034498269312745e-05,
-      "tangent_error_over_tolerance": 0.00042380939912132137,
+      "tangent_error_over_tolerance": 0.0004237915865006207,
       "coverage": "50/50",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "reverse_yield": {
       "primal_error_over_tolerance": 5.987774913368648e-06,
-      "tangent_error_over_tolerance": 0.000309505531989377,
+      "tangent_error_over_tolerance": 0.0003094713019901533,
       "coverage": "90/90",
       "hidden_state_ok": true,
       "original_reproduced": true

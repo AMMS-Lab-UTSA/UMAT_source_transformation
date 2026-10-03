@@ -1,0 +1,733 @@
+{
+ "schema": "umat-oti/regression-case/1",
+ "case_id": "mholla-growth--umat-transverse--f34d96fb",
+ "status": "verified",
+ "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
+ "source": {
+  "kind": "corpus",
+  "registry_key": "5819d72ab4523e24ba05456e",
+  "source_id": "mholla__growth/umats/umat_transverse.f",
+  "repository": "mholla/growth",
+  "commit": "e82fb8b3e29bd6ee5106d454d54814779fd18768",
+  "path": "umats/umat_transverse.f",
+  "cache_path": "mholla__growth/umats/umat_transverse.f",
+  "url": "https://github.com/mholla/growth/blob/e82fb8b3e29bd6ee5106d454d54814779fd18768/umats/umat_transverse.f",
+  "raw_url": "https://raw.githubusercontent.com/mholla/growth/e82fb8b3e29bd6ee5106d454d54814779fd18768/umats/umat_transverse.f",
+  "resolved_with": {
+   "verification_records": "<workspace>/corpus_run/pass21/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json"
+  },
+  "sha256": "bda19ea00223fc72b3589a7496c0925fb88e36bc4a79b5c5c49c1dac09d27628",
+  "bytes": 12651,
+  "licence": {
+   "spdx": "GPL-3.0",
+   "scope": "repository",
+   "licence_file": null,
+   "basis": "LICENSE (SPDX GPL-3.0 via the GitHub licence API)",
+   "redistribution": "unknown",
+   "redistribution_basis": "licence file absent from the acquisition cache (the cache holds a partial tree, so this does not mean the repository has none); GPL-3.0 is known only from repository metadata (LICENSE (SPDX GPL-3.0 via the GitHub licence API)); not confirmed"
+  },
+  "in_case": null,
+  "fetch": "python tools/corpus_cases.py fetch mholla-growth--umat-transverse--f34d96fb  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
+ },
+ "fingerprints": {
+  "transform_fingerprint": "c121f4a7ca0ad160",
+  "harness_fingerprint": "b5ec344c5a001293",
+  "contract_transform_generation": "a4f0ea8c9d124f18"
+ },
+ "transform": {
+  "settings": {
+   "recipe": "tools/transform_all.transform_one (seed auto, STRESS/DDSDDE, job-layout gfortran compile)",
+   "ntens": 6,
+   "PYTHONHASHSEED": "0"
+  },
+  "from": "transform_store:5819d72ab4523e24ba05456e",
+  "files": [
+   {
+    "path": "compile_order.txt",
+    "sha256": "b0a2ad564f5e1718cd39711e475c596f67406f95dc3bcb894bf6ed45bf74e8e7",
+    "bytes": 90
+   },
+   {
+    "path": "dependencies/umat_transverse.f",
+    "sha256": "bda19ea00223fc72b3589a7496c0925fb88e36bc4a79b5c5c49c1dac09d27628",
+    "bytes": 12651
+   },
+   {
+    "path": "master_parameters.f90",
+    "sha256": "2baddb13f26a7b01e40692a31866bbbd84db97139e52016ca73058bfd4911781",
+    "bytes": 2552
+   },
+   {
+    "path": "oti_intrinsics.f90",
+    "sha256": "a7c2588cef146c624b76d0bcf8c7fdf3f2a74496a0bac0e03c3a733f227abf23",
+    "bytes": 14300
+   },
+   {
+    "path": "otim6n1.f90",
+    "sha256": "4ba635b11181241b426f50758413d9b87c480728f7706c310ee030abe866714f",
+    "bytes": 109682
+   },
+   {
+    "path": "real_utils.f90",
+    "sha256": "20ad619211d89d527f2b7368f16e415a8253e12eca1649164d842a74a34bb93b",
+    "bytes": 26834
+   },
+   {
+    "path": "umat_transverse_oti.f",
+    "sha256": "c4d991b2c6f4ac698f7d878f071190c9fd505d9569c1cf89917e587616034d3c",
+    "bytes": 21989
+   }
+  ],
+  "compiled_source_sha256": "f3f8c532601a31fa2784fed85c81c3153a7ddc1cbd4ae9088f7decc592f6585b"
+ },
+ "experiment": {
+  "ntens": 6,
+  "ndi": 3,
+  "nshr": 3,
+  "nstatv": 8,
+  "props": [
+   0.577,
+   0.385,
+   0.0,
+   0.0,
+   1.0,
+   0.2,
+   1.2,
+   1.2,
+   2.0,
+   2.0,
+   1.0
+  ],
+  "initial_statev": "first data rows of each config (after SDVINI if any)",
+  "family": "hyperelasticity",
+  "kinematics": "finite",
+  "material_provenance": {
+   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass21/results/store_verification.jsonl key=5819d72ab4523e24ba05456e",
+   "material_provenance": "mholla__growth/input_files/cube_1_C3D8_stretch_xyz_transverse.inp: cube_1_C3D8_stretch_xyz_transverse.inp *MATERIAL VOL: 11 constants, *DEPVAR 8 -- mholla__growth's README states that cube_1_C3D8_stretch_xyz_transverse.inp runs with umat_transverse.f; cube_1_C3D8_stretch_xyz_transverse.inp declares ",
+   "initial_state_from_user_subroutine": true,
+   "terminal_state": "fully_verified"
+  },
+  "paths": [
+   {
+    "name": "elastic_uniaxial",
+    "regime": "elastic",
+    "kinematics": "finite",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "hyperelasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 83: lambda  = props(1); line 84: mu      = props(2)",
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/elastic_uniaxial.cfg",
+    "config_sha256": "b64496548d2849f6f3a8b40af10a1eb0c7e1dcdfd50bd55da0a2159c7e47bdbd",
+    "n_increments": 20,
+    "judged_states": 20,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.62e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "relaxation",
+    "regime": "relaxation",
+    "kinematics": "finite",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "hyperelasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 83: lambda  = props(1); line 84: mu      = props(2)",
+     "rate": "registry time_dependent=True (the Abaqus run saw the clock matter)",
+     "hold": "ramp 1.3, hold 11.7",
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/relaxation.cfg",
+    "config_sha256": "095a96fe482ee243f0a5da04b596c96fa1614759eca0ca4228852728d8973344",
+    "n_increments": 30,
+    "judged_states": 30,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "30/30 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.03e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "rate_slow",
+    "regime": "relaxation",
+    "kinematics": "finite",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "hyperelasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 83: lambda  = props(1); line 84: mu      = props(2)",
+     "rate": "registry time_dependent=True (the Abaqus run saw the clock matter)",
+     "ramp_time": "13",
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/rate_slow.cfg",
+    "config_sha256": "743415cc39c5f48fbdf1b8979851737d25ba490b58bf0635cfb3415ea16b5125",
+    "n_increments": 10,
+    "judged_states": 10,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.03e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "rate_fast",
+    "regime": "relaxation",
+    "kinematics": "finite",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "hyperelasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 83: lambda  = props(1); line 84: mu      = props(2)",
+     "rate": "registry time_dependent=True (the Abaqus run saw the clock matter)",
+     "ramp_time": "0.13",
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)); this path ends at 0.13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/rate_fast.cfg",
+    "config_sha256": "eb410a2a8ecc69608d314c6bedd14fc79055293c727d5347e62e75648a9cc7a9",
+    "n_increments": 10,
+    "judged_states": 10,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.03e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "finite_uniaxial_stretch",
+    "regime": "elastic",
+    "kinematics": "finite",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "hyperelasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 83: lambda  = props(1); line 84: mu      = props(2)",
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/finite_uniaxial_stretch.cfg",
+    "config_sha256": "f22afdf6a7b87aabf7923af659610026cc922c8ba78670a69babb9db38a7c628",
+    "n_increments": 20,
+    "judged_states": 19,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "19/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "objectivity_reference_fine",
+    "regime": "elastic",
+    "kinematics": "finite",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "hyperelasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 83: lambda  = props(1); line 84: mu      = props(2)",
+     "objectivity": "Q(s) about (1.0, 2.0, 3.0), 0..90 deg linear in s",
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/objectivity_reference_fine.cfg",
+    "config_sha256": "07de7cefc1c7227bb99a33d11a3358362f16d88705e1f1ce098551ea39d021cf",
+    "n_increments": 40,
+    "judged_states": 40,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "40/40 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.11e-05)",
+    "reference_precision": "double"
+   },
+   {
+    "name": "objectivity_rotated_fine",
+    "regime": "elastic",
+    "kinematics": "finite",
+    "provenance": {
+     "period": "entry total_time 13 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "hyperelasticity",
+     "elastic": "one decade below the registry activation_amplitude 0.01 (Abaqus amplitude search on the original)",
+     "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 83: lambda  = props(1); line 84: mu      = props(2)",
+     "objectivity": "Q(s) about (1.0, 2.0, 3.0), 0..90 deg linear in s",
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 50): 1, 1, 1, 10 (total 13)"
+    },
+    "config": "inputs/objectivity_rotated_fine.cfg",
+    "config_sha256": "5a7c0d14a25127fb53e22af26a580f5a1814dfe2ee82da0ea2665d993fb1d556",
+    "n_increments": 40,
+    "judged_states": 40,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "40/40 states judged, every resolved entry within its tolerance (largest tau/|D| = 2.06e-04)",
+    "reference_precision": "double"
+   }
+  ],
+  "paths_not_frozen": {
+   "elastic_shear": {
+    "primal_stress_state": "verified",
+    "ddsdde": "not_attempted"
+   },
+   "finite_simple_shear": {
+    "primal_stress_state": "verified",
+    "ddsdde": "not_attempted"
+   },
+   "objectivity_reference": {
+    "primal_stress_state": "verified",
+    "ddsdde": "not_attempted"
+   },
+   "objectivity_rotated": {
+    "primal_stress_state": "verified",
+    "ddsdde": "not_attempted"
+   }
+  }
+ },
+ "references": [
+  {
+   "id": "primal_original",
+   "kind": "primal",
+   "producer": "ORIGINAL routine, harness real driver, gfortran zero-init build",
+   "independent_of_oti": true,
+   "compact": "reference.json.gz#paths[].original"
+  },
+  {
+   "id": "tangent_fd_original",
+   "kind": "derivative",
+   "quantity": "DDSDDE returned by the store OTI build",
+   "wrt": "DSTRAN_j (engineering shear) or, for a gradient-driven source, the strain direction j pushed forward as dF = eps_j . F (Kirchhoff term added)",
+   "held_fixed": "incoming STRESS_n, STATEV_n, STRAN_n, PROPS, TIME, DFGRD0 (and DFGRD1 for a DSTRAN-driven source)",
+   "scope": "local: one increment from the recorded incoming state",
+   "reference": "central FD of the ORIGINAL routine's STRESS_{n+1}, restored state",
+   "independent_of_oti": true,
+   "compact": "reference.json.gz#paths[].judged"
+  }
+ ],
+ "reference": {
+  "file": "reference.json.gz",
+  "sha256": "c293fe13051362d9fb9cb6ce195ea0ad586478221916e48b3a552e48571d5437"
+ },
+ "tolerance_rule_id": "case-rule/1-df2f107a3c04",
+ "error_summary": {
+  "elastic_uniaxial": {
+   "primal": 1.8426271028242164e-06,
+   "tangent": 0.000709133493685146
+  },
+  "relaxation": {
+   "primal": 1.8536538051721105e-06,
+   "tangent": 0.0006162497538272579
+  },
+  "rate_slow": {
+   "primal": 1.8536538051721105e-06,
+   "tangent": 0.0006162497538272579
+  },
+  "rate_fast": {
+   "primal": 1.8536538051721105e-06,
+   "tangent": 0.0006162497538272579
+  },
+  "finite_uniaxial_stretch": {
+   "primal": 1.8091112285561816e-06,
+   "tangent": 0.00048182477623629416
+  },
+  "objectivity_reference_fine": {
+   "primal": 2.0160352002127425e-06,
+   "tangent": 0.009749163491817871
+  },
+  "objectivity_rotated_fine": {
+   "primal": 2.1607657005997483e-06,
+   "tangent": 0.055111872792797945
+  }
+ },
+ "toolchain": {
+  "python": "3.11.7",
+  "numpy": "2.4.6",
+  "gfortran": "GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0",
+  "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
+ },
+ "harness": {
+  "run_id": "20261003T121207",
+  "seconds": 10.8,
+  "features": [
+   "primal_stress_state",
+   "ddsdde"
+  ],
+  "cells": {
+   "primal_stress_state": "verified",
+   "ddsdde": "verified"
+  },
+  "records": "corpus_assets tree: harness/corpus_features.jsonl"
+ },
+ "assets": {
+  "tree_sha256": "b0f078b454879480d28567d05bcf84bebacc2b5f14f9554ce1bbe4569052add8",
+  "location": "corpus_assets",
+  "files": 31,
+  "bytes": 962728
+ },
+ "tiers": {
+  "ci": false,
+  "offline": true
+ },
+ "reproduce": {
+  "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only mholla-growth--umat-transverse--f34d96fb",
+  "fetch": "python tools/corpus_cases.py fetch mholla-growth--umat-transverse--f34d96fb",
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 5819d72ab4523e24ba05456e --verification-records <workspace>/corpus_run/pass21/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass21_registry/corpus_registry.json --tier offline"
+ },
+ "undefined_in_original": [],
+ "limitations": [
+  "routine-level evidence (driver), not Abaqus",
+  "loading paths are this pipeline's probes, not the author's example",
+  "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
+ ],
+ "date": "2026-10-03T12:12:18",
+ "freeze_check": {
+  "ok": true,
+  "modes": {
+   "regenerate": {
+    "seconds": 4.4,
+    "source_from": "discovery_cache",
+    "compiled_in_job_layout": true,
+    "paths": {
+     "elastic_uniaxial": {
+      "primal_error_over_tolerance": 1.8426271028242164e-06,
+      "tangent_error_over_tolerance": 0.000709133493685146,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "relaxation": {
+      "primal_error_over_tolerance": 1.8536538051721105e-06,
+      "tangent_error_over_tolerance": 0.0006162497538272579,
+      "coverage": "30/30",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "rate_slow": {
+      "primal_error_over_tolerance": 1.8536538051721105e-06,
+      "tangent_error_over_tolerance": 0.0006162497538272579,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "rate_fast": {
+      "primal_error_over_tolerance": 1.8536538051721105e-06,
+      "tangent_error_over_tolerance": 0.0006162497538272579,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "finite_uniaxial_stretch": {
+      "primal_error_over_tolerance": 1.8091112285561816e-06,
+      "tangent_error_over_tolerance": 0.00048182477623629416,
+      "coverage": "19/19",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "objectivity_reference_fine": {
+      "primal_error_over_tolerance": 2.0160352002127425e-06,
+      "tangent_error_over_tolerance": 0.009749163491817871,
+      "coverage": "40/40",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "objectivity_rotated_fine": {
+      "primal_error_over_tolerance": 2.1607657005997483e-06,
+      "tangent_error_over_tolerance": 0.055111872792797945,
+      "coverage": "40/40",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     }
+    }
+   },
+   "replay": {
+    "seconds": 1.3,
+    "units_from": "corpus_assets",
+    "paths": {
+     "elastic_uniaxial": {
+      "primal_error_over_tolerance": 1.8426271028242164e-06,
+      "tangent_error_over_tolerance": 0.000709133493685146,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "relaxation": {
+      "primal_error_over_tolerance": 1.8536538051721105e-06,
+      "tangent_error_over_tolerance": 0.0006162497538272579,
+      "coverage": "30/30",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "rate_slow": {
+      "primal_error_over_tolerance": 1.8536538051721105e-06,
+      "tangent_error_over_tolerance": 0.0006162497538272579,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "rate_fast": {
+      "primal_error_over_tolerance": 1.8536538051721105e-06,
+      "tangent_error_over_tolerance": 0.0006162497538272579,
+      "coverage": "10/10",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "finite_uniaxial_stretch": {
+      "primal_error_over_tolerance": 1.8091112285561816e-06,
+      "tangent_error_over_tolerance": 0.00048182477623629416,
+      "coverage": "19/19",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "objectivity_reference_fine": {
+      "primal_error_over_tolerance": 2.0160352002127425e-06,
+      "tangent_error_over_tolerance": 0.009749163491817871,
+      "coverage": "40/40",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "objectivity_rotated_fine": {
+      "primal_error_over_tolerance": 2.1607657005997483e-06,
+      "tangent_error_over_tolerance": 0.055111872792797945,
+      "coverage": "40/40",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     }
+    }
+   }
+  },
+  "canaries": [
+   {
+    "canary": "tangent: DDSDDE column x (1+0.0001)",
+    "rejected": true
+   },
+   {
+    "canary": "tangent: smallest resolved nonzero entry dropped",
+    "rejected": true
+   },
+   {
+    "canary": "primal: STRESS x (1+1e-06)",
+    "rejected": true
+   }
+  ],
+  "failures": []
+ }
+}

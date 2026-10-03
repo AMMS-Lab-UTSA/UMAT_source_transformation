@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "f0ac3086a4ba85651af834bc",
+  "registry_key": "3893e4d4300e161d225f0ca5",
   "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/MMAFile/Example1/Growth-MinSur1.for",
   "repository": "Jeff97/Realization-of-planar-and-surface-conformal-mappings",
   "commit": "4be86fd5613a89641cbab182422cb6bbcc8c057c",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/Realization-of-planar-and-surface-conformal-mappings/blob/4be86fd5613a89641cbab182422cb6bbcc8c057c/Analytical_Example/3D/MMAFile/Example1/Growth-MinSur1.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/Realization-of-planar-and-surface-conformal-mappings/4be86fd5613a89641cbab182422cb6bbcc8c057c/Analytical_Example/3D/MMAFile/Example1/Growth-MinSur1.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass20/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass21/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json"
   },
   "sha256": "d4aa3608c859da43537826812c4ba86dcd4d8b52825ba69bce1203b749c09a94",
   "bytes": 7287,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur1--8ee88624  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "ab32cce7bec15c93",
-  "harness_fingerprint": "d6f92d4704bee702",
-  "contract_transform_generation": "dbe9f928191e1d43"
+  "transform_fingerprint": "c121f4a7ca0ad160",
+  "harness_fingerprint": "b5ec344c5a001293",
+  "contract_transform_generation": "a4f0ea8c9d124f18"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:f0ac3086a4ba85651af834bc",
+  "from": "transform_store:3893e4d4300e161d225f0ca5",
   "files": [
    {
     "path": "Growth-MinSur1_oti.for",
@@ -65,8 +65,8 @@
    },
    {
     "path": "oti_intrinsics.f90",
-    "sha256": "38606c9c1fca85a9e5df4a32b86b77facae0e2cca3c57db0e1e1193de78dca5c",
-    "bytes": 14283
+    "sha256": "a7c2588cef146c624b76d0bcf8c7fdf3f2a74496a0bac0e03c3a733f227abf23",
+    "bytes": 14300
    },
    {
     "path": "otim6n1.f90",
@@ -79,7 +79,7 @@
     "bytes": 26834
    }
   ],
-  "compiled_source_sha256": "2cd6070cccf1ad190280f9a2075ab99540080a52728134fdf8895e8f3811041e"
+  "compiled_source_sha256": "ecc0b9e6b462cde867e12775fbd0e9d201c75e12e606fe5852f4f381ee8655a7"
  },
  "experiment": {
   "ntens": 6,
@@ -94,13 +94,158 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass20/results/store_verification.jsonl key=f0ac3086a4ba85651af834bc",
+   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass21/results/store_verification.jsonl key=3893e4d4300e161d225f0ca5",
    "material_provenance": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/3D/InputFile/Growth-Min1.inp: Growth-Min1.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 9 -- a section in Growth-Min1.inp attaches NeoHookean to C3D20H; the two names share growth; the constants this routine hard-codes ",
    "initial_state_from_user_subroutine": false,
-   "terminal_state": "tangent_not_verified"
+   "terminal_state": "fully_verified"
   },
   "paths": [
+   {
+    "name": "elastic_uniaxial",
+    "regime": "elastic",
+    "kinematics": "finite",
+    "provenance": {
+     "period": "entry total_time 1 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "growth / morphoelasticity",
+     "elastic": "UNKNOWN material scale: amplitude_search.FIRST_AMPLITUDE=0.0001, chosen there as below essentially every transition",
+     "inelastic": "UNKNOWN: no yield strain identifiable and no registry activation_amplitude; inelastic paths are a LADDER sweeping 0.0001..0.1 log-uniformly (the decades amplitude_search escalates through, factor 5, ceiling 1 clipped at 0.1); or call search_activation_amplitude() with a runner",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 46: EMOD=PROPS(1); line 47: ENU=PROPS(2)",
+     "model_domain": "total time <= 1 (periods of the generated experiment (the author's deck runs 10): 1 (total 1)); this path ends at 1",
+     "model_domain_witnesses": "1: periods of the generated experiment (the author's deck runs 10): 1 (total 1)"
+    },
+    "config": "inputs/elastic_uniaxial.cfg",
+    "config_sha256": "f62226937af5893c444f70884d48374684c799ee41eefafd73ab1fe472470170",
+    "n_increments": 20,
+    "judged_states": 20,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 2.74e-06)",
+    "reference_precision": "quad"
+   },
+   {
+    "name": "elastic_shear",
+    "regime": "elastic",
+    "kinematics": "finite",
+    "provenance": {
+     "period": "entry total_time 1 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "growth / morphoelasticity",
+     "elastic": "UNKNOWN material scale: amplitude_search.FIRST_AMPLITUDE=0.0001, chosen there as below essentially every transition",
+     "inelastic": "UNKNOWN: no yield strain identifiable and no registry activation_amplitude; inelastic paths are a LADDER sweeping 0.0001..0.1 log-uniformly (the decades amplitude_search escalates through, factor 5, ceiling 1 clipped at 0.1); or call search_activation_amplitude() with a runner",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 46: EMOD=PROPS(1); line 47: ENU=PROPS(2)",
+     "model_domain": "total time <= 1 (periods of the generated experiment (the author's deck runs 10): 1 (total 1)); this path ends at 1",
+     "model_domain_witnesses": "1: periods of the generated experiment (the author's deck runs 10): 1 (total 1)"
+    },
+    "config": "inputs/elastic_shear.cfg",
+    "config_sha256": "dcd262dfa8b62028c33de1f0f777fa0de8eafd3fdc70327b1472a46d7a9bbbae",
+    "n_increments": 20,
+    "judged_states": 20,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.44e-06)",
+    "reference_precision": "quad"
+   },
+   {
+    "name": "growth_free",
+    "regime": "growth",
+    "kinematics": "finite",
+    "provenance": {
+     "period": "entry total_time 1 (manifest requirement)",
+     "temperature": "no temperature stated; TEMP=0 and DTEMP=0 (isothermal). A routine that reads TEMP as a field (e.g. non-local damage) sees zero",
+     "family": "growth / morphoelasticity",
+     "elastic": "UNKNOWN material scale: amplitude_search.FIRST_AMPLITUDE=0.0001, chosen there as below essentially every transition",
+     "inelastic": "UNKNOWN: no yield strain identifiable and no registry activation_amplitude; inelastic paths are a LADDER sweeping 0.0001..0.1 log-uniformly (the decades amplitude_search escalates through, factor 5, ceiling 1 clipped at 0.1); or call search_activation_amplitude() with a runner",
+     "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
+     "moduli": "line 46: EMOD=PROPS(1); line 47: ENU=PROPS(2)",
+     "growth": "no deformation; the clock alone",
+     "model_domain": "total time <= 1 (periods of the generated experiment (the author's deck runs 10): 1 (total 1)); this path ends at 1",
+     "model_domain_witnesses": "1: periods of the generated experiment (the author's deck runs 10): 1 (total 1)"
+    },
+    "config": "inputs/growth_free.cfg",
+    "config_sha256": "2fe03a28b41a1032651847fb592a00202e03efdfccd1e429d433433af9e84dc1",
+    "n_increments": 20,
+    "judged_states": 20,
+    "judged_increments": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20
+    ],
+    "harness_status": {
+     "primal_stress_state": "verified",
+     "ddsdde": "verified"
+    },
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 2.74e-06)",
+    "reference_precision": "quad"
+   },
    {
     "name": "growth_held_stretch",
     "regime": "growth",
@@ -114,8 +259,8 @@
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "moduli": "line 46: EMOD=PROPS(1); line 47: ENU=PROPS(2)",
      "stretch": "1 + finite amplitude 0.2: no critical stretch identifiable in the source",
-     "model_domain": "total time <= 1 (author's deck: step periods 1 (total 1)); this path ends at 1",
-     "model_domain_witnesses": "1: author's deck: step periods 1 (total 1)"
+     "model_domain": "total time <= 1 (periods of the generated experiment (the author's deck runs 10): 1 (total 1)); this path ends at 1",
+     "model_domain_witnesses": "1: periods of the generated experiment (the author's deck runs 10): 1 (total 1)"
     },
     "config": "inputs/growth_held_stretch.cfg",
     "config_sha256": "5517dda70a0f47dbd5b34458231b9ba38b9e7b4cc79401bed2db3ab866b4460b",
@@ -157,7 +302,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "30/30 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.57e-05)",
+    "harness_reason": "30/30 states judged, every resolved entry within its tolerance (largest tau/|D| = 9.68e-06)",
     "reference_precision": "quad"
    },
    {
@@ -172,8 +317,8 @@
      "inelastic": "UNKNOWN: no yield strain identifiable and no registry activation_amplitude; inelastic paths are a LADDER sweeping 0.0001..0.1 log-uniformly (the decades amplitude_search escalates through, factor 5, ceiling 1 clipped at 0.1); or call search_activation_amplitude() with a runner",
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "moduli": "line 46: EMOD=PROPS(1); line 47: ENU=PROPS(2)",
-     "model_domain": "total time <= 1 (author's deck: step periods 1 (total 1)); this path ends at 1",
-     "model_domain_witnesses": "1: author's deck: step periods 1 (total 1)"
+     "model_domain": "total time <= 1 (periods of the generated experiment (the author's deck runs 10): 1 (total 1)); this path ends at 1",
+     "model_domain_witnesses": "1: periods of the generated experiment (the author's deck runs 10): 1 (total 1)"
     },
     "config": "inputs/finite_simple_shear.cfg",
     "config_sha256": "38390ed74ec05b4e76c35a0442681839c07e7b8b5d397046b700db95fdb51ada",
@@ -195,7 +340,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 4.23e-05)",
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.64e-04)",
     "reference_precision": "double"
    },
    {
@@ -210,8 +355,8 @@
      "inelastic": "UNKNOWN: no yield strain identifiable and no registry activation_amplitude; inelastic paths are a LADDER sweeping 0.0001..0.1 log-uniformly (the decades amplitude_search escalates through, factor 5, ceiling 1 clipped at 0.1); or call search_activation_amplitude() with a runner",
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "moduli": "line 46: EMOD=PROPS(1); line 47: ENU=PROPS(2)",
-     "model_domain": "total time <= 1 (author's deck: step periods 1 (total 1)); this path ends at 1",
-     "model_domain_witnesses": "1: author's deck: step periods 1 (total 1)"
+     "model_domain": "total time <= 1 (periods of the generated experiment (the author's deck runs 10): 1 (total 1)); this path ends at 1",
+     "model_domain_witnesses": "1: periods of the generated experiment (the author's deck runs 10): 1 (total 1)"
     },
     "config": "inputs/finite_uniaxial_stretch.cfg",
     "config_sha256": "afc3f045faa9c0de7fab833e1610b1fb5d670e751055e1512757633960d24eb8",
@@ -243,7 +388,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 9.53e-06)",
+    "harness_reason": "20/20 states judged, every resolved entry within its tolerance (largest tau/|D| = 2.85e-06)",
     "reference_precision": "quad"
    },
    {
@@ -259,8 +404,8 @@
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "moduli": "line 46: EMOD=PROPS(1); line 47: ENU=PROPS(2)",
      "objectivity": "Q(s) about (1.0, 2.0, 3.0), 0..90 deg linear in s",
-     "model_domain": "total time <= 1 (author's deck: step periods 1 (total 1)); this path ends at 1",
-     "model_domain_witnesses": "1: author's deck: step periods 1 (total 1)"
+     "model_domain": "total time <= 1 (periods of the generated experiment (the author's deck runs 10): 1 (total 1)); this path ends at 1",
+     "model_domain_witnesses": "1: periods of the generated experiment (the author's deck runs 10): 1 (total 1)"
     },
     "config": "inputs/objectivity_reference.cfg",
     "config_sha256": "dbd4ac05cd238f68f33cea05c2f6544f0f69ea7e4ce4842b98b8026cfd9c4031",
@@ -282,7 +427,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.63e-04)",
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 4.59e-04)",
     "reference_precision": "double"
    },
    {
@@ -298,8 +443,8 @@
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "moduli": "line 46: EMOD=PROPS(1); line 47: ENU=PROPS(2)",
      "objectivity": "Q(s) about (1.0, 2.0, 3.0), 0..90 deg linear in s",
-     "model_domain": "total time <= 1 (author's deck: step periods 1 (total 1)); this path ends at 1",
-     "model_domain_witnesses": "1: author's deck: step periods 1 (total 1)"
+     "model_domain": "total time <= 1 (periods of the generated experiment (the author's deck runs 10): 1 (total 1)); this path ends at 1",
+     "model_domain_witnesses": "1: periods of the generated experiment (the author's deck runs 10): 1 (total 1)"
     },
     "config": "inputs/objectivity_rotated.cfg",
     "config_sha256": "c10b7e326cc4b4175e8ef974895c58261d4237bd3cb6eddf1c49635c225440a5",
@@ -321,7 +466,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.10e-06)",
+    "harness_reason": "10/10 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.04e-06)",
     "reference_precision": "quad"
    },
    {
@@ -337,8 +482,8 @@
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "moduli": "line 46: EMOD=PROPS(1); line 47: ENU=PROPS(2)",
      "objectivity": "Q(s) about (1.0, 2.0, 3.0), 0..90 deg linear in s",
-     "model_domain": "total time <= 1 (author's deck: step periods 1 (total 1)); this path ends at 1",
-     "model_domain_witnesses": "1: author's deck: step periods 1 (total 1)"
+     "model_domain": "total time <= 1 (periods of the generated experiment (the author's deck runs 10): 1 (total 1)); this path ends at 1",
+     "model_domain_witnesses": "1: periods of the generated experiment (the author's deck runs 10): 1 (total 1)"
     },
     "config": "inputs/objectivity_reference_fine.cfg",
     "config_sha256": "71385fe3c5eb871aeb116f0b970278667aa3f8d8d22f98cf3baa0cdfccd15c6d",
@@ -390,7 +535,7 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "40/40 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.05e-06)",
+    "harness_reason": "40/40 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.00e-06)",
     "reference_precision": "quad"
    },
    {
@@ -406,8 +551,8 @@
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "moduli": "line 46: EMOD=PROPS(1); line 47: ENU=PROPS(2)",
      "objectivity": "Q(s) about (1.0, 2.0, 3.0), 0..90 deg linear in s",
-     "model_domain": "total time <= 1 (author's deck: step periods 1 (total 1)); this path ends at 1",
-     "model_domain_witnesses": "1: author's deck: step periods 1 (total 1)"
+     "model_domain": "total time <= 1 (periods of the generated experiment (the author's deck runs 10): 1 (total 1)); this path ends at 1",
+     "model_domain_witnesses": "1: periods of the generated experiment (the author's deck runs 10): 1 (total 1)"
     },
     "config": "inputs/objectivity_rotated_fine.cfg",
     "config_sha256": "5d503a82511aa197be0044e806c8677ab045f7e0a557f267f0aaf440a9a143d6",
@@ -459,24 +604,11 @@
      "primal_stress_state": "verified",
      "ddsdde": "verified"
     },
-    "harness_reason": "40/40 states judged, every resolved entry within its tolerance (largest tau/|D| = 4.10e-06)",
+    "harness_reason": "40/40 states judged, every resolved entry within its tolerance (largest tau/|D| = 1.23e-06)",
     "reference_precision": "quad"
    }
   ],
-  "paths_not_frozen": {
-   "elastic_uniaxial": {
-    "primal_stress_state": "verified",
-    "ddsdde": "not_attempted"
-   },
-   "elastic_shear": {
-    "primal_stress_state": "verified",
-    "ddsdde": "not_attempted"
-   },
-   "growth_free": {
-    "primal_stress_state": "verified",
-    "ddsdde": "not_attempted"
-   }
-  }
+  "paths_not_frozen": {}
  },
  "references": [
   {
@@ -500,37 +632,49 @@
  ],
  "reference": {
   "file": "reference.json.gz",
-  "sha256": "4dcea8edd0a21981a933f5c26cc6f62a619eae05172a6abf1ebfc6b893bedf0a"
+  "sha256": "c20d2d22126543be5ab9ab225064496590e1723f1af995e04283b09c6d1e8b5c"
  },
  "tolerance_rule_id": "case-rule/1-df2f107a3c04",
  "error_summary": {
+  "elastic_uniaxial": {
+   "primal": 2.396170819064621e-05,
+   "tangent": 2.618979406922163e-09
+  },
+  "elastic_shear": {
+   "primal": 3.677623924269927e-05,
+   "tangent": 9.038688942243874e-08
+  },
+  "growth_free": {
+   "primal": 3.677623917812261e-05,
+   "tangent": 2.1577789618669957e-09
+  },
   "growth_held_stretch": {
    "primal": 8.508260809182238e-05,
-   "tangent": 2.432844822746811e-09
+   "tangent": 1.7780068694929404e-09
   },
   "finite_simple_shear": {
    "primal": 2.426548339781305e-05,
-   "tangent": 0.0236251841159596
+   "tangent": 0.005368660803336383
   },
   "finite_uniaxial_stretch": {
    "primal": 1.697662995544306e-05,
-   "tangent": 1.8658265543176496e-09
+   "tangent": 1.3558617006809163e-09
   },
   "objectivity_reference": {
    "primal": 2.873227967705136e-05,
-   "tangent": 0.14834305342567122
+   "tangent": 0.007912639432048424
   },
   "objectivity_rotated": {
    "primal": 1.8810672187722558e-05,
-   "tangent": 1.0056528472837267e-05
+   "tangent": 1.0675834450467127e-05
   },
   "objectivity_reference_fine": {
    "primal": 7.751408341869914e-05,
-   "tangent": 8.388511469194483e-07
+   "tangent": 8.707980845025148e-07
   },
   "objectivity_rotated_fine": {
    "primal": 0.0001189682257110734,
-   "tangent": 0.0002304668074230124
+   "tangent": 0.0007664695119942382
   }
  },
  "toolchain": {
@@ -540,8 +684,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T175424",
-  "seconds": 18.9,
+  "run_id": "20261003T120955",
+  "seconds": 14.1,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -553,10 +697,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "777301c29885201a291ce7d66aff37f2c174812ff5ed7cebdd332e02015f46f0",
+  "tree_sha256": "09e1fb6df362f3108950ba538991dd70b8a483293ac5cfcca693dcf3c5ff316e",
   "location": "corpus_assets",
-  "files": 31,
-  "bytes": 948840
+  "files": 37,
+  "bytes": 1046749
  },
  "tiers": {
   "ci": false,
@@ -565,7 +709,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur1--8ee88624",
   "fetch": "python tools/corpus_cases.py fetch jeff97-realization-of-planar-and-surface-conformal-mappings--growth-minsur1--8ee88624",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key f0ac3086a4ba85651af834bc --verification-records <workspace>/corpus_run/pass20/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass20_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 3893e4d4300e161d225f0ca5 --verification-records <workspace>/corpus_run/pass21/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass21_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -573,60 +717,81 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T17:54:43",
+ "date": "2026-10-03T12:10:10",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.3,
+    "seconds": 4.4,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
+     "elastic_uniaxial": {
+      "primal_error_over_tolerance": 2.396170819064621e-05,
+      "tangent_error_over_tolerance": 2.618979406922163e-09,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "elastic_shear": {
+      "primal_error_over_tolerance": 3.677623924269927e-05,
+      "tangent_error_over_tolerance": 9.038688942243874e-08,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "growth_free": {
+      "primal_error_over_tolerance": 3.677623917812261e-05,
+      "tangent_error_over_tolerance": 2.1577789618669957e-09,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
      "growth_held_stretch": {
       "primal_error_over_tolerance": 8.508260809182238e-05,
-      "tangent_error_over_tolerance": 2.432844822746811e-09,
+      "tangent_error_over_tolerance": 1.7780068694929404e-09,
       "coverage": "30/30",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_simple_shear": {
       "primal_error_over_tolerance": 2.426548339781305e-05,
-      "tangent_error_over_tolerance": 0.0236251841159596,
+      "tangent_error_over_tolerance": 0.005368660803336383,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_uniaxial_stretch": {
       "primal_error_over_tolerance": 1.697662995544306e-05,
-      "tangent_error_over_tolerance": 1.8658265543176496e-09,
+      "tangent_error_over_tolerance": 1.3558617006809163e-09,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference": {
       "primal_error_over_tolerance": 2.873227967705136e-05,
-      "tangent_error_over_tolerance": 0.14834305342567122,
+      "tangent_error_over_tolerance": 0.007912639432048424,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated": {
       "primal_error_over_tolerance": 1.8810672187722558e-05,
-      "tangent_error_over_tolerance": 1.0056528472837267e-05,
+      "tangent_error_over_tolerance": 1.0675834450467127e-05,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference_fine": {
       "primal_error_over_tolerance": 7.751408341869914e-05,
-      "tangent_error_over_tolerance": 8.388511469194483e-07,
+      "tangent_error_over_tolerance": 8.707980845025148e-07,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated_fine": {
       "primal_error_over_tolerance": 0.0001189682257110734,
-      "tangent_error_over_tolerance": 0.0002304668074230124,
+      "tangent_error_over_tolerance": 0.0007664695119942382,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true
@@ -634,54 +799,75 @@
     }
    },
    "replay": {
-    "seconds": 1.7,
+    "seconds": 1.3,
     "units_from": "corpus_assets",
     "paths": {
+     "elastic_uniaxial": {
+      "primal_error_over_tolerance": 2.396170819064621e-05,
+      "tangent_error_over_tolerance": 2.618979406922163e-09,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "elastic_shear": {
+      "primal_error_over_tolerance": 3.677623924269927e-05,
+      "tangent_error_over_tolerance": 9.038688942243874e-08,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
+     "growth_free": {
+      "primal_error_over_tolerance": 3.677623917812261e-05,
+      "tangent_error_over_tolerance": 2.1577789618669957e-09,
+      "coverage": "20/20",
+      "hidden_state_ok": true,
+      "original_reproduced": true
+     },
      "growth_held_stretch": {
       "primal_error_over_tolerance": 8.508260809182238e-05,
-      "tangent_error_over_tolerance": 2.432844822746811e-09,
+      "tangent_error_over_tolerance": 1.7780068694929404e-09,
       "coverage": "30/30",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_simple_shear": {
       "primal_error_over_tolerance": 2.426548339781305e-05,
-      "tangent_error_over_tolerance": 0.0236251841159596,
+      "tangent_error_over_tolerance": 0.005368660803336383,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_uniaxial_stretch": {
       "primal_error_over_tolerance": 1.697662995544306e-05,
-      "tangent_error_over_tolerance": 1.8658265543176496e-09,
+      "tangent_error_over_tolerance": 1.3558617006809163e-09,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference": {
       "primal_error_over_tolerance": 2.873227967705136e-05,
-      "tangent_error_over_tolerance": 0.14834305342567122,
+      "tangent_error_over_tolerance": 0.007912639432048424,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated": {
       "primal_error_over_tolerance": 1.8810672187722558e-05,
-      "tangent_error_over_tolerance": 1.0056528472837267e-05,
+      "tangent_error_over_tolerance": 1.0675834450467127e-05,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference_fine": {
       "primal_error_over_tolerance": 7.751408341869914e-05,
-      "tangent_error_over_tolerance": 8.388511469194483e-07,
+      "tangent_error_over_tolerance": 8.707980845025148e-07,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated_fine": {
       "primal_error_over_tolerance": 0.0001189682257110734,
-      "tangent_error_over_tolerance": 0.0002304668074230124,
+      "tangent_error_over_tolerance": 0.0007664695119942382,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true

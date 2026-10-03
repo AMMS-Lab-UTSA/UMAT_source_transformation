@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "730f410056e6784d80a2d282",
+  "registry_key": "e2330459ea601f5ca601fd69",
   "source_id": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/ISOTROPIC-ELASTICITY.for",
   "repository": "CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine",
   "commit": "fe69305788fbb37185a0be38aed5ea00000aaab4",
@@ -14,8 +14,8 @@
   "url": "https://github.com/CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/blob/fe69305788fbb37185a0be38aed5ea00000aaab4/ISOTROPIC-ELASTICITY.for",
   "raw_url": "https://raw.githubusercontent.com/CAEAssistant-Group/UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/fe69305788fbb37185a0be38aed5ea00000aaab4/ISOTROPIC-ELASTICITY.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass20/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass21/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json"
   },
   "sha256": "27cda337a45be53431149436fbad42bd19da0bb5ec2a68f6370c17b608326a86",
   "bytes": 2632,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "ab32cce7bec15c93",
-  "harness_fingerprint": "d6f92d4704bee702",
-  "contract_transform_generation": "dbe9f928191e1d43"
+  "transform_fingerprint": "c121f4a7ca0ad160",
+  "harness_fingerprint": "b5ec344c5a001293",
+  "contract_transform_generation": "a4f0ea8c9d124f18"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:730f410056e6784d80a2d282",
+  "from": "transform_store:e2330459ea601f5ca601fd69",
   "files": [
    {
     "path": "ISOTROPIC-ELASTICITY_oti.for",
@@ -65,8 +65,8 @@
    },
    {
     "path": "oti_intrinsics.f90",
-    "sha256": "38606c9c1fca85a9e5df4a32b86b77facae0e2cca3c57db0e1e1193de78dca5c",
-    "bytes": 14283
+    "sha256": "a7c2588cef146c624b76d0bcf8c7fdf3f2a74496a0bac0e03c3a733f227abf23",
+    "bytes": 14300
    },
    {
     "path": "otim6n1.f90",
@@ -79,7 +79,7 @@
     "bytes": 26834
    }
   ],
-  "compiled_source_sha256": "f83f20dddd703db30a418b4cf7a7b00a9a723ad6812bdd6e0b4e2d578f5f8317"
+  "compiled_source_sha256": "b193780c1e137a1aaec005ca9c47822e5ce346f1fc7142e3afbc465729e0a638"
  },
  "experiment": {
   "ntens": 6,
@@ -94,8 +94,8 @@
   "family": "elasticity",
   "kinematics": "small",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass20_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass20/results/store_verification.jsonl key=730f410056e6784d80a2d282",
+   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass21/results/store_verification.jsonl key=e2330459ea601f5ca601fd69",
    "material_provenance": "CAEAssistant-Group__UMAT-Abaqus-Isotropic-Elasticity-Isothermal-Suboutine/UMATmodel.inp: UMATmodel.inp *MATERIAL Steel: 2 constants, *DEPVAR 0 -- a section in UMATmodel.inp attaches Steel to C3D8; the deck sits in the source's own directory",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -113,8 +113,8 @@
      "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/elastic_uniaxial.cfg",
     "config_sha256": "6607402e294529f5903d81732746809376c99ad04985ab02ddc63fbfab2f7381",
@@ -161,8 +161,8 @@
      "inelastic": "2 x registry activation_amplitude 0.01; note the registry value is the amplitude the search settled on, which for a model that never activates is its probe amplitude, not a transition",
      "finite": "0.2: kinematic requirement (>= 2% per experiment.MEANINGFUL_ACTIVATION['finite strain'], x10 so geometric terms exceed check tolerances)",
      "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/elastic_shear.cfg",
     "config_sha256": "63eb668232399495d0fe146e9887e36a4995d634d173571d413d4270ab9297db",
@@ -211,8 +211,8 @@
      "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
      "isotropy": "family 'elasticity' is isotropic by default and no anisotropy marker was found in the file path or code",
      "rotation": "35 deg about (1.0, 2.0, 3.0) (layout-preserving for NTENS=6)",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/isotropy_reference.cfg",
     "config_sha256": "c08cdc67770fc2a6bdc50e6b90f94e4e590a18f7970cbbcf21ecdf2e9e2beb64",
@@ -251,8 +251,8 @@
      "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
      "isotropy": "family 'elasticity' is isotropic by default and no anisotropy marker was found in the file path or code",
      "rotation": "35 deg about (1.0, 2.0, 3.0) (layout-preserving for NTENS=6)",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/isotropy_rotated.cfg",
     "config_sha256": "c46a1d26b2e6530c90fffc4aa00e4833fc1352d267af06741d3b32e5443dd65d",
@@ -291,8 +291,8 @@
      "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
      "rate": "registry time_dependent=True (the Abaqus run saw the clock matter)",
      "hold": "ramp 1.3, hold 11.7",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/relaxation.cfg",
     "config_sha256": "bd93116b712b5ec139a191c9d22a96da81a7ca2e74212576b566aa16702d9fba",
@@ -351,8 +351,8 @@
      "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
      "rate": "registry time_dependent=True (the Abaqus run saw the clock matter)",
      "ramp_time": "13",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)); this path ends at 13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_slow.cfg",
     "config_sha256": "f29284b632fbc5310c0feec423ea45c2b69016cfb021be03a88e461644752f9a",
@@ -391,8 +391,8 @@
      "moduli": "line 49: EMOD=PROPS(1); line 50: ENU=PROPS(2)",
      "rate": "registry time_dependent=True (the Abaqus run saw the clock matter)",
      "ramp_time": "0.13",
-     "model_domain": "total time <= 13 (author's deck: step periods 1, 1, 1, 10 (total 13)); this path ends at 0.13",
-     "model_domain_witnesses": "13: author's deck: step periods 1, 1, 1, 10 (total 13)"
+     "model_domain": "total time <= 13 (periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)); this path ends at 0.13",
+     "model_domain_witnesses": "13: periods of the generated experiment (the author's deck runs 1): 1, 1, 1, 10 (total 13)"
     },
     "config": "inputs/rate_fast.cfg",
     "config_sha256": "25b3d37159e8e16a4bd586ef899ca90c4f339fa856960226a7d01fdc00ae0559",
@@ -442,7 +442,7 @@
  ],
  "reference": {
   "file": "reference.json.gz",
-  "sha256": "834acff57e7d75b76d70662f2990ba9f8c89683bc95377c627b4300c9be77caa"
+  "sha256": "e34dc1fb2d589fd7606ef5e8972e9052ab21171bf71dfde5067c41c41d29cbee"
  },
  "tolerance_rule_id": "case-rule/1-df2f107a3c04",
  "error_summary": {
@@ -452,15 +452,15 @@
   },
   "elastic_shear": {
    "primal": 0.0,
-   "tangent": 3.0064724112366753e-07
+   "tangent": 3.005271999785012e-07
   },
   "isotropy_reference": {
    "primal": 0.0,
-   "tangent": 3.8501432252089846e-07
+   "tangent": 3.850102880649667e-07
   },
   "isotropy_rotated": {
    "primal": 0.0,
-   "tangent": 4.497924753908835e-07
+   "tangent": 4.495929329048169e-07
   },
   "relaxation": {
    "primal": 0.0,
@@ -482,8 +482,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261002T174901",
-  "seconds": 7.0,
+  "run_id": "20261003T122002",
+  "seconds": 6.9,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -495,10 +495,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "df9e7318e43b7f90f99b5612b62b19dc134e16adfa353131699d249ee87f47e5",
+  "tree_sha256": "a7b0ed936dd67b01d17b462bcf11e7219b12d61d157eca7d83b0c2b42b1a4012",
   "location": "corpus_assets",
   "files": 31,
-  "bytes": 603520
+  "bytes": 604702
  },
  "tiers": {
   "ci": false,
@@ -507,7 +507,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037",
   "fetch": "python tools/corpus_cases.py fetch caeassistant-group-umat-abaqus-isotropic-elasticity-isothermal-suboutine--isotropic-elasticity--f7eb9037",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 730f410056e6784d80a2d282 --verification-records <workspace>/corpus_run/pass20/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass20_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key e2330459ea601f5ca601fd69 --verification-records <workspace>/corpus_run/pass21/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass21_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -515,12 +515,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-02T17:49:08",
+ "date": "2026-10-03T12:20:10",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.5,
+    "seconds": 4.2,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -533,21 +533,21 @@
      },
      "elastic_shear": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 3.0064724112366753e-07,
+      "tangent_error_over_tolerance": 3.005271999785012e-07,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_reference": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 3.8501432252089846e-07,
+      "tangent_error_over_tolerance": 3.850102880649667e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_rotated": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 4.497924753908835e-07,
+      "tangent_error_over_tolerance": 4.495929329048169e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
@@ -576,7 +576,7 @@
     }
    },
    "replay": {
-    "seconds": 1.4,
+    "seconds": 1.6,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
@@ -588,21 +588,21 @@
      },
      "elastic_shear": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 3.0064724112366753e-07,
+      "tangent_error_over_tolerance": 3.005271999785012e-07,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_reference": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 3.8501432252089846e-07,
+      "tangent_error_over_tolerance": 3.850102880649667e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_rotated": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 4.497924753908835e-07,
+      "tangent_error_over_tolerance": 4.495929329048169e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true

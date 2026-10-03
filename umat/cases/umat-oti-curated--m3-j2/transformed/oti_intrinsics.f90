@@ -317,33 +317,31 @@ CONTAINS
     IMPLICIT NONE
     TYPE(ONUMM6N1), INTENT(IN) :: A, B
     TYPE(ONUMM6N1) :: RES
-    IF (B%R < 0.0_DP) THEN
+    IF (SIGN(1.0_DP, B%R) < 0.0_DP) THEN
       RES = -ABS(A)
     ELSE
       RES = ABS(A)
     END IF
+    RES%R = SIGN(A%R, B%R)
   END FUNCTION oti_sign_oo
   ELEMENTAL FUNCTION oti_sign_or(A, B) RESULT(RES)
     IMPLICIT NONE
     TYPE(ONUMM6N1), INTENT(IN) :: A
     REAL(DP), INTENT(IN) :: B
     TYPE(ONUMM6N1) :: RES
-    IF (B < 0.0_DP) THEN
+    IF (SIGN(1.0_DP, B) < 0.0_DP) THEN
       RES = -ABS(A)
     ELSE
       RES = ABS(A)
     END IF
+    RES%R = SIGN(A%R, B)
   END FUNCTION oti_sign_or
   ELEMENTAL FUNCTION oti_sign_ro(A, B) RESULT(RES)
     IMPLICIT NONE
     REAL(DP), INTENT(IN) :: A
     TYPE(ONUMM6N1), INTENT(IN) :: B
     REAL(DP) :: RES
-    IF (B%R < 0.0_DP) THEN
-      RES = -ABS(A)
-    ELSE
-      RES = ABS(A)
-    END IF
+    RES = SIGN(A, B%R)
   END FUNCTION oti_sign_ro
   FUNCTION oti_log10(A) RESULT(RES)
     IMPLICIT NONE
