@@ -16,6 +16,7 @@ transform and of the harness that produced the evidence. See
     python tools/corpus_cases.py fetch <id>          # source of a non-redistributable case
     python tools/corpus_cases.py verify-assets       # re-hash every CAS object a case lists
     PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key <key>#<set>   # a council set (A-1)
+    PYTHONHASHSEED=0 python tools/corpus_cases.py holdout --template T --selection VERA.json
 
 Checks (numbers only; generated Fortran is never text-diffed):
 
@@ -1927,6 +1928,11 @@ def cmd_fetch(args) -> int:
 
 
 def main(argv=None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv[:1] == ["holdout"]:
+        # tier holdout (D-19a rev 2 R6.3, A-2): tools/corpus_holdout.py
+        import corpus_holdout
+        return corpus_holdout.main(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = parser.add_subparsers(dest="command", required=True)
     f = sub.add_parser("freeze", help="freeze one verified case")
@@ -1963,6 +1969,8 @@ def main(argv=None) -> int:
     fe.add_argument("--allow-network", action="store_true")
     sub.add_parser("verify-assets", help="re-hash every CAS object the cases list")
     sub.add_parser("index", help="rebuild umat/cases/index.json")
+    sub.add_parser("holdout", help="tier holdout: a template's blind hold-out on Vera's "
+                                   "selection (tools/corpus_holdout.py --help)")
     args = parser.parse_args(argv)
     if args.command == "freeze":
         return cmd_freeze(args)
