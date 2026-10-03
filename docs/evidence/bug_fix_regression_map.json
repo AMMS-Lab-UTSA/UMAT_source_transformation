@@ -510,6 +510,13 @@
    "tests": [
     "tests/test_transform_a_name_split_across_a_continuation_is_one_name.py"
    ]
+  },
+  {
+   "commit": "a578c57",
+   "bug": "ddsdde_legacy_gate labelled every non-verified Abaqus tangent 'failed' (an unresolved row such as 26606e08 read as a measured disagreement), the registry did not read the D-4 gate's tangent.failed, the corpus page and plain language said 'could not pin the tangent down' / 'did not settle' over rows whose gate measured a disagreement, and a council row with no council_sets could count (Vera's final review before pass21).",
+   "tests": [
+    "tests/test_registry_fields_tangent_verdict.py"
+   ]
   }
  ],
  "excluded": [
