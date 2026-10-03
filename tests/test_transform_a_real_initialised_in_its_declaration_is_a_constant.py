@@ -68,3 +68,27 @@ def test_an_initialised_real_that_is_written_is_refused_by_name(tmp_path):
         assert code != 0
         text = str(summary)
     assert "gives TEN a value in its declaration" in text
+
+
+FUNCTION_WRITE = SOURCE.replace("      S=S+E*DE*(ONE+TEN*DE*DE)*DAMPING\n",
+                                "      DAMPING = DAMPING*BUMP(TEN)\n"
+                                "      S=S+E*DE*(ONE+TEN*DE*DE)*DAMPING\n") + (
+    "      DOUBLE PRECISION FUNCTION BUMP(X)\n"
+    "      DOUBLE PRECISION X\n"
+    "      X = X + 1.D0\n"
+    "      BUMP = 1.D0\n"
+    "      END\n")
+
+
+def test_an_initialised_real_written_through_a_function_reference_is_refused(tmp_path):
+    """Vera's B8 re-review C1: X = BUMP(TEN), BUMP writing its argument."""
+    from umat_oti.transform.helper_lifting import HelperLiftingError
+
+    try:
+        summary, code = transform(tmp_path, FUNCTION_WRITE % {"write": ""}, ".for")
+    except HelperLiftingError as refusal:
+        text = str(refusal)
+    else:
+        assert code != 0
+        text = str(summary)
+    assert "gives TEN a value in its declaration" in text

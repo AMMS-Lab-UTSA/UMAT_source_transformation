@@ -2794,6 +2794,7 @@ def _initialised_reals_as_named_constants(stitched_lines, form: str, routine_nam
     the first call only, which this lifter does not emit.
     """
     statements = [_statement_text(raw, form) for raw in stitched_lines[1:-1]]
+    arrays = _routine_array_names(stitched_lines, form)
     written: set[str] = set()
     for statement in statements:
         text = re.sub(r"^\d+\s+", "", statement.strip())
@@ -2814,6 +2815,24 @@ def _initialised_reals_as_named_constants(stitched_lines, form: str, routine_nam
         target = re.match(r"^(?:IF\s*\(.*\)\s*)?([A-Za-z_]\w*)\s*(?:\(.*?\))?\s*=(?!=)", text, re.IGNORECASE)
         if target:
             written.add(target.group(1).upper())
+        # A name handed to a function reference can be written through it
+        # (``X = BUMP(TEN)`` with BUMP assigning its argument): as a PARAMETER
+        # that write crashes under gfortran and may vanish under ifort (Vera,
+        # B8 re-review C1). Every identifier inside the argument list of a
+        # reference that is neither an intrinsic nor one of this routine's
+        # arrays counts as written, as in _literal_constant_locals.
+        for match in re.finditer(r"([A-Za-z_]\w*)\s*\(", text):
+            if match.group(1).upper() in _INTRINSIC_NAMES or match.group(1).upper() in arrays:
+                continue
+            depth, start = 0, match.end() - 1
+            for position in range(start, len(text)):
+                if text[position] == "(":
+                    depth += 1
+                elif text[position] == ")":
+                    depth -= 1
+                    if depth == 0:
+                        written.update(n.upper() for n in re.findall(r"[A-Za-z_]\w*", text[start:position]))
+                        break
     result = list(stitched_lines)
     for index, raw in enumerate(stitched_lines[1:-1], start=1):
         stripped = _statement_text(raw, form)
