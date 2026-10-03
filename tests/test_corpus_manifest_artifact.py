@@ -247,15 +247,32 @@ def test_family_figures_come_from_the_reviewed_classification(manifest):
     assert fc["reporting_file"].endswith("families_reviewed_B3.json")
     assert fc["fallback_file"].endswith("material_families_checked_E.json")
     assert manifest["summary"]["families"]["classification"] == FAMILY_CLASSIFICATION
+    # A source a later discovery round added (tools/ingest_discovery_round.py)
+    # has no reviewed family until Scout reviews it: its review reads
+    # "missing" and its family is empty -- never a provisional label passed
+    # off as reviewed. Only those sources may be missing.
+    triage = json.loads((REPO / "paper_results/discovery/discovery_triage.json")
+                        .read_text(encoding="utf-8"))
+    ingested = set()
+    for entry in triage["summary"].get("rounds_ingested", []):
+        acceptance = REPO / entry["round"] / "acceptance.json"
+        ingested |= {a["source"] for a in json.loads(
+            acceptance.read_text(encoding="utf-8"))["accepted"]}
+    missing = set()
     for row in manifest["rows"]:
         if row["row_kind"] == "acquired":
             fam = row["model"]["family"]
             assert fam["classification"] == "D-11 S1"
+            if fam["review"] == "missing":
+                missing.add(row["source_id"])
+                assert fam["family"] == "" and fam["reporting_family"] == "", row["source_id"]
+                continue
             assert fam["review"] in ("agent_reviewed_code_evidence", "keyword_only")
             assert fam["human_reviewed"] is False
             assert fam["E"]["label"].startswith("secondary")
             if fam["identity_growth_scaffold"]:
                 assert fam["family"] == "growth" and fam["b3_family"] != "growth"
+    assert missing <= ingested, sorted(missing - ingested)
 
 
 def test_the_summary_states_its_eligible_set_and_the_rows_dropped_from_the_earlier(
@@ -279,13 +296,13 @@ def test_the_csv_view_has_one_line_per_row(manifest):
 def test_d18_ddsdde_count_and_the_ritiol_cells_come_from_the_primal_ddsdde_run(manifest):
     src = manifest.get("feature_sources") or {}
     assert src.get("decision") == "D-18"
-    assert src["primal_ddsdde_run"] == "campaign:pass20_harness/run/manifest_cells.jsonl"
-    assert src["full_feature_run"] == "campaign:pass20_harness_full/combined_cells.jsonl"
+    assert src["primal_ddsdde_run"] == "campaign:pass21_harness/run/manifest_cells.jsonl"
+    assert src["full_feature_run"] == "campaign:pass21_harness_full/combined_cells.jsonl"
     d2 = manifest["summary"]["features"]["D2_eligible"]["ddsdde"]
-    assert d2["verified"] == 109
+    assert d2["verified"] == 112
     ritiol = [r for r in manifest["rows"] if r["source_id"].startswith("RitioL__")
               and r["features"]["ddsdde"]["status"] == "verified"]
     assert len(ritiol) == 3
     for r in ritiol:
         assert r["features"]["ddsdde"]["evidence"].startswith(
-            "campaign:pass20_harness/run/"), r["source_id"]
+            "campaign:pass21_harness/run/"), r["source_id"]

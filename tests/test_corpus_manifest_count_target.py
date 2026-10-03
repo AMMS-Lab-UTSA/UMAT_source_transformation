@@ -1,8 +1,9 @@
 """count_target.py (corpus_campaign): tier columns and the R6.4 Fisher test (S3).
 
-* The deck-only column is the D-8 figure: 238 eligible, 67 Abaqus, 109
-  routine level on the pass20 registry and harness cells, whether or not the
-  registry carries the D-19/D-21 tier columns.
+* The deck-only column is the D-8 figure: 245 eligible, 102 Abaqus (D-4
+  gate, G10), 112 routine level on the pass21 registry and harness cells,
+  whether or not a council row is added beside them (238 / 67 / 109 at
+  pass20, before the D-4 Abaqus gate and the 2026-10-02 discovery round).
 * The Fisher exact test is two-sided, matches reference values, and runs only
   when both arms have n >= 5 attempted.
 
@@ -22,7 +23,7 @@ import pytest
 REPO = Path(__file__).resolve().parents[1]
 CAMPAIGN = REPO.parent / "corpus_campaign"
 COUNT_TARGET = CAMPAIGN / "count_target.py"
-CELLS = CAMPAIGN / "pass20_harness/run/manifest_cells.jsonl"
+CELLS = CAMPAIGN / "pass21_harness/run/manifest_cells.jsonl"
 REGISTRY = REPO / "paper_results/corpus/corpus_registry.json"
 
 if not COUNT_TARGET.is_file():
@@ -54,24 +55,28 @@ def test_the_fisher_test_is_two_sided_and_exact(table, p):
 
 def test_the_deck_only_column_is_the_d8_figure():
     if not CELLS.is_file():
-        pytest.skip("pass20 harness cells not on this machine")
+        pytest.skip("pass21 harness cells not on this machine")
     fam = _families()
     records = json.loads(REGISTRY.read_text(encoding="utf-8"))["records"]
     denom, abaqus, routine = ct.deck_counts(records, fam, CELLS)
-    assert (sum(denom.values()), sum(abaqus.values()), sum(routine.values())) == (238, 67, 109)
+    assert (sum(denom.values()), sum(abaqus.values()), sum(routine.values())) == (245, 102, 112)
     # the same figure from a registry that carries the tier columns, with a
     # council row added beside it: the deck column does not move
     tiered = [r.as_dict() for r in reg.apply_origins(
         [reg.Record(**r) for r in records], reg.origin_inputs())]
+    council_before = sum(c["eligible"] for c in
+                         ct.tier_counts(tiered, fam, CELLS)["council_chosen"].values())
     tiered.append(reg.Record(source_id="o__r/council.f", terminal_state="missing_material_data",
                              adequately_specified=False, material_data_origin="council_chosen",
                              experiment_origin="council",
                              adequacy_tier="council_chosen").as_dict())
     again = ct.deck_counts(tiered, fam, CELLS)
     assert (sum(again[0].values()), sum(again[1].values()), sum(again[2].values())) == \
-        (238, 67, 109)
+        (245, 102, 112)
     tiers = ct.tier_counts(tiered, fam, CELLS)
-    assert sum(c["eligible"] for c in tiers["council_chosen"].values()) == 1
+    # the committed registry is built with the S2 options, so it carries its
+    # own council_chosen rows (30 at pass21); the added row is one more
+    assert sum(c["eligible"] for c in tiers["council_chosen"].values()) == council_before + 1
     assert sum(c["routine"] for c in tiers["council_chosen"].values()) == 0
 
 

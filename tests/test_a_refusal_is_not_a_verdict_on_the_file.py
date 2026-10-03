@@ -109,13 +109,13 @@ def test_the_same_refusal_text_classifies_two_files_differently():
 
 
 def test_a_refused_umat_that_builds_stays_this_project_s_problem():
-    """63 of the 112 are whole UMATs whose published text ifort accepts,
+    """60 of the 109 are whole UMATs whose published text ifort accepts,
     whose companions are all in the repository, and which do compute a stress
     or a tangent somewhere in the file. They stay ``transform_refused`` and
     ``internal``: there is nothing wrong with those files, and the work is
     ours."""
     ours = [r for r in refusals() if r["refusal_class"] == GENUINE_UMAT]
-    assert len(ours) == 63, len(ours)
+    assert len(ours) == 60, len(ours)
     for record in ours:
         assert record["terminal_state"] == "transform_refused"
         assert record["kind"] == "internal"
@@ -129,8 +129,14 @@ def test_the_refusal_classes_partition_every_refusal():
 
     The rule is the partition, not the totals: the totals move every time the
     transformer improves, and they should. They are asserted beside it as the
-    measurement of the day (112 refusals at corpus pass19/pass20, fingerprints
-    52e0a8c4289fce43 and ab32cce7bec15c93, down from 151 at pass16: 40 genuine
+    measurement of the day (109 refusals at corpus pass21, transform
+    fingerprint c121f4a7ca0ad160: six genuine UMATs of pass20's 112 now
+    transform -- bessagroup veni_mix_model, longbiscuit Duncan-Chang, the two
+    marioruiarruda Hashin/Tsai-Wu files, matmodlab umat_neohooke, vishalsubbiah
+    umatcode3 -- and three sources of the 2026-10-02 discovery round are
+    refused, all genuine UMATs: laufogh HPP_Staubach_implicit, thatliuyang
+    UMAT_comp_failure, williammora1984 UMAT_GTN_W. 112 at pass19/pass20,
+    fingerprints 52e0a8c4289fce43 and ab32cce7bec15c93, down from 151 at pass16: 40 genuine
     UMATs and one duplicate of one now transform -- SUM and NORM2 over the
     type, continued CALLs, contained procedures and interfaces -- and go on to
     a later stage; two that used to transform are now refused by the
@@ -148,7 +154,7 @@ def test_the_refusal_classes_partition_every_refusal():
             record["refusal_class"], 0) + 1
     assert sum(counts.values()) == len(rows), (counts, len(rows))
     assert counts == {
-        GENUINE_UMAT: 63,
+        GENUINE_UMAT: 60,
         MISSING_EXTERNAL_DEPENDENCY: 16,
         HELPER_OR_MODULE_ONLY: 14,
         INCOMPLETE_OR_CORRUPT: 11,
@@ -156,7 +162,7 @@ def test_the_refusal_classes_partition_every_refusal():
         OTHER_ABAQUS_ROUTINE: 2,
         PUBLISHED_STUB: 2,
     }, counts
-    assert sum(counts.values()) == 112
+    assert sum(counts.values()) == 109
 
 
 def test_every_refused_source_quotes_the_line_it_was_classified_from():
@@ -259,19 +265,23 @@ def test_a_file_too_damaged_to_parse_is_not_filed_as_a_helper():
 
 
 def test_a_compile_that_settles_nothing_leaves_the_work_ours():
-    """Nine refused sources fail the offline compile with diagnostics an
+    """Twelve refused sources fail the offline compile with diagnostics an
     unresolved USE would also produce -- an undeclared name, a kind parameter
     that is not constant. None of those is evidence the file is broken, so
     the verdict stays genuine_umat with ``refusal_class_confident`` false:
     this project's unfinished work, overstated rather than the corpus's
     completeness. (Eleven before pass14: the two jpsferreira umat_general.for
     copies had no offline audit then; ifort -syntax-only now accepts them, so
-    their refusal is ours with confidence.)"""
+    their refusal is ours with confidence. Nine until pass21: the three
+    refused sources of the 2026-10-02 discovery round -- laufogh
+    HPP_Staubach_implicit, thatliuyang UMAT_comp_failure, williammora1984
+    UMAT_GTN_W -- have no offline audit entry yet, so their compile has
+    settled nothing.)"""
     unsure = [r for r in refusals()
               if r["refusal_class_confident"] is False]
-    assert len(unsure) == 9, [r["source_id"] for r in unsure]
+    assert len(unsure) == 12, [r["source_id"] for r in unsure]
     for record in unsure:
-        # One of the nine is a second copy of another of them. A duplicate
+        # One of the twelve is a second copy of another of them. A duplicate
         # keeps the underlying answer -- "as a file it is genuine_umat" is
         # written into its basis -- so an unsettled compile leaves that one
         # ours too, which is the same safe direction.
@@ -323,14 +333,14 @@ def test_the_duplicate_digest_does_not_collapse_fortran_columns(tmp_path):
 # provenance: a classification nobody can trace back is an assertion
 # ---------------------------------------------------------------------------
 def test_every_record_names_where_the_file_came_from():
-    """All 391 records carry the repository, the path inside the acquisition
+    """All 405 records (391 until the 2026-10-02 discovery round was ingested) carry the repository, the path inside the acquisition
     cache, the 40-character commit the acquisition pinned, the licence it was
     read under, the sha256 of the bytes, and an acquisition URL -- with
     ``url_provenance`` saying the URL was reconstructed from that commit
     rather than recorded, because a derived URL presented as a recorded one is
     a difference a reader cannot detect."""
     records = registry()["records"]
-    assert len(records) == 391
+    assert len(records) == 405
     for record in records:
         assert record["repository"], record["source_id"]
         assert record["cache_path"] == record["source_id"]

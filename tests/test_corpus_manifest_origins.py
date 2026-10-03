@@ -78,8 +78,20 @@ def test_a_row_with_council_origins_validates():
     assert row["origins"]["branch_coverage"] == {"exercised": "NTENS=6"}
 
 
+#: The registry columns origins_of reads (D-19a rev 2 S2). The committed
+#: registry is built with them since pass21, so the test removes them.
+ORIGIN_COLUMNS = ("material_data_origin", "experiment_origin", "material_data_ref",
+                  "council_deck_ref", "council_fingerprint", "refusal_kind",
+                  "harvest_confidence", "interpreted_constants", "council_sets",
+                  "vera_accepted_template", "vera_accepted_instance", "branch_coverage",
+                  "domain_not_enforced", "pairing_changed", "licence_hold", "adequacy_tier",
+                  "adequacy_tier_basis", "counted_in_tier", "not_counted_in_tier_reason")
+
+
 def test_a_registry_without_the_columns_gives_empty_origins_that_validate():
-    record = json.loads(REGISTRY.read_text(encoding="utf-8"))["records"][0]
+    record = {k: v for k, v in
+              json.loads(REGISTRY.read_text(encoding="utf-8"))["records"][0].items()
+              if k not in ORIGIN_COLUMNS}
     origins = mf.origins_of(record)
     row = _a_row()
     row["origins"] = origins

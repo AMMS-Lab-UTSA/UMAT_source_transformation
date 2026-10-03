@@ -9,12 +9,12 @@ historical `umat/<id>/` directories are untouched (decision D-7). Design:
 
 ## Listing the cases
 
-`umat/cases/index.json` lists every case (113 at this commit: 4 curated CI
-cases, and 109 corpus cases in the offline tier -- one for every source in the
-routine-level D-8 count at pass20, all frozen at transform `ab32cce7bec15c93`,
-harness `d6f92d4704bee702`; the superseded pass18 and pass19 cases are kept in
-`$UMAT_CASE_ASSETS/history/`, not here). `make case-offline` checks all 113 in
-about 70 s with 12 jobs (measured 2026-10-02). One line per case:
+`umat/cases/index.json` lists every case (116 at this commit: 4 curated CI
+cases, and 112 corpus cases in the offline tier -- one for every source in the
+routine-level D-8 count at pass21, all frozen at transform `c121f4a7ca0ad160`,
+harness `b5ec344c5a001293`; the superseded pass18, pass19 and pass20 cases are
+kept in `$UMAT_CASE_ASSETS/history/`, not here). `make case-offline` checks all
+116 in about 72 s with 12 jobs (measured 2026-10-03). One line per case:
 
 ```bash
 python -c "import json; [print(c['case_id'], c['redistribution'], 'ci' if c['tiers']['ci'] else 'offline') for c in json.load(open('umat/cases/index.json'))['cases']]"
@@ -86,8 +86,8 @@ tier accepts only `permitted` cases; `freeze --tier ci` refuses the others.
 ## Freezing a case
 
     PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key <registry/store key> --tier offline \
-        --verification-records $UMAT_OTI_WORKSPACE/corpus_run/pass20/results/store_verification.jsonl \
-        --registry $UMAT_OTI_WORKSPACE/corpus_campaign/pass20_registry/corpus_registry.json
+        --verification-records $UMAT_OTI_WORKSPACE/corpus_run/pass21/results/store_verification.jsonl \
+        --registry $UMAT_OTI_WORKSPACE/corpus_campaign/pass21_registry/corpus_registry.json
     PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --model parameter_sensitivity/models/m3_j2 \
         --family plasticity --activation 1.2e-3 --tier ci
 
@@ -103,24 +103,36 @@ the new case passes its own check (R and P, all canaries rejected). A case is
 current only at the fingerprints it records (D-6): after a transform or harness
 change, re-run `check`, and re-freeze only through a recorded decision.
 
-**Harness fingerprint.** The 113 cases at this commit were re-frozen at pass20
-(commit `4123acc`) and record the fingerprints that run recorded: transform
-`ab32cce7bec15c93`, harness `d6f92d4704bee702`, the same values as the pass20
-registry rows (the pass19 cases recorded `10909a549e28f9d7` taken at `b4eecc6`,
-which differed from the registry's start value; at pass20 nothing under `src/`
-changed during the run, so the two agree). The re-freeze left every
-`reference.json.gz`, every `inputs/*.cfg` and every preserved transformed file
-byte-identical to pass19 (1063 paths, 23368 judged states); only the
-`case.json` provenance (registry key, fingerprints, run ids, asset tree) moved.
+**Harness fingerprint.** The 116 cases at this commit were frozen at pass21
+(commit `70a3700`) and record the fingerprints that run recorded: transform
+`c121f4a7ca0ad160`, harness `b5ec344c5a001293`, the same values as the pass21
+registry rows. Against the pass20 cases (kept in
+`$UMAT_CASE_ASSETS/history/pass20_cases_ab32cce7bec15c93/`): 106 corpus cases
+were re-frozen, 6 were added for sources newly in the D-8 count
+(ahartloper UVCmultiaxial, harshaa765 UMAT, mholla BMMB24
+umat_transverseIsotropicStretch, mholla umat_area_morph, umat_iso_morph,
+umat_transverse), and the 3 Jeff97 growth-of-shell cases (SweetMelon,
+MorningGlory, CereusForbesiiSpiralis) were withheld: at pass21 their Abaqus
+tangent verifies, which moves their terminal state to
+`informativeness_not_established` (their informativeness was not established
+at pass20 either), so they leave the D-8 count until that is decided. No input
+file of a retained case changed; 61 inputs were added (paths that now verify
+both features), and the `reference.json.gz` of every retained case (106
+corpus, 4 curated) moved: the tolerances `tau_e` under the
+round-off model of P0/G10 B2, and newly judged states (1144 paths, 25415
+judged states, from 1063 and 23368). Of the preserved transformed files only
+the curated cases' `oti_intrinsics.f90` changed (the transform fingerprint
+moved).
 Any later change to
 `src/umat_oti/abaqus/` or `src/umat_oti/corpus_features/` changes the live
 fingerprint, and the cases then no longer match it. Under D-6 that means: the
-cases remain the frozen evidence of the pass20 count at `d6f92d4704bee702`;
+cases remain the frozen evidence of the pass21 count at `b5ec344c5a001293`;
 `check` still runs them against the changed code (it compares numbers, not
 fingerprints), and a pass shows the change did not move any frozen result. It
 does not turn them into evidence at the new fingerprint -- that needs a re-freeze
-through a recorded decision. The Abaqus rows are unaffected (D-17: nothing on
-the Abaqus verification path imports `corpus_features`).
+through a recorded decision. Since G10 the Abaqus tangent gate imports
+`corpus_features.fd`, so the harness fingerprint governs the Abaqus rows too
+(D-17 superseded, 2026-10-03).
 
 **Limit: the index is an anchor, not a lock.** Someone who edits a reference,
 edits `case.json` to agree (counts, judged increments, sha256) and then re-runs
