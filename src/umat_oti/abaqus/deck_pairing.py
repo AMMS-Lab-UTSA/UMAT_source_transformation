@@ -649,35 +649,120 @@ def materials_in(deck: Path, text: Optional[str] = None,
 # ---------------------------------------------------------------------------
 # what the README says
 # ---------------------------------------------------------------------------
-def stated_pairs(repository: Path) -> dict[str, set[str]]:
-    """Deck-to-source pairs the repository states in a table of its own.
+#: A deck or a source file named in running text.
+_DECK_NAME = re.compile(r"[\w.\-]+\.inp\b", re.IGNORECASE)
+_SOURCE_NAME = re.compile(r"[\w.\-]+\.(?:f|for|f90|f77)\b", re.IGNORECASE)
+#: Documentation is read wherever it sits, up to this many files.
+_DOCS_LIMIT = 400
 
-    ``mholla__growth``'s README carries a two-column table headed "Input files"
-    and "UMAT files" whose seventeen rows say exactly which deck runs with
-    which subroutine. That is the strongest evidence available and it costs one
-    regular expression to read.
-    """
-    pairs: dict[str, set[str]] = {}
-    for readme in sorted(Path(repository).glob("*")):
-        if not readme.is_file() or readme.suffix.lower() not in (
-                ".md", ".rst", ".txt"):
+
+def _name_tokens(name: str) -> frozenset:
+    return frozenset(t for t in re.split(r"[^a-z0-9]+", Path(name).stem.lower()) if t)
+
+
+def _documents(repository: Path) -> list[Path]:
+    found = []
+    for path in sorted(Path(repository).rglob("*")):
+        if ".git" in path.parts or not path.is_file():
             continue
+        if path.suffix.lower() in (".md", ".rst", ".txt"):
+            found.append(path)
+            if len(found) >= _DOCS_LIMIT:              # pragma: no cover - bound
+                break
+    return found
+
+
+def stated_pairings(repository: Path) -> tuple[dict[str, set[str]], dict[str, str]]:
+    """Deck-to-source pairs the repository's own documentation states, and how
+    each misnamed deck was resolved.
+
+    Two forms are read, in every .md, .rst and .txt file of the repository:
+
+    * a table row naming a deck and a source -- ``mholla__growth``'s README
+      carries a two-column table headed "Input files" and "UMAT files" whose
+      rows say which deck runs with which subroutine;
+    * a line naming exactly ONE deck and exactly ONE source --
+      ``ahartloper__UVC_MatMod/Abaqus/testing/readme.md``:
+      ``- Cube_Cyclic_Disp_UMAT.inp = UVCmultiaxial.for``. A line naming more
+      of either is not read: which goes with which is not stated.
+
+    A stated deck that is not in the repository is resolved only when exactly
+    one deck can be meant, never by guessing: the candidates are the decks
+    whose name tokens are all in the stated name, the ones sharing the most
+    tokens are kept, and decks that another statement names exactly, or
+    resolves uniquely, are excluded. ``mholla__growth``'s README writes
+    ``cube_1_C3D8_stretch_xyz_iso_Mandel.inp``; the repository holds
+    ``..._xyz_Mandel.inp`` and ``..._xyz_iso.inp``, and the second is the
+    README's ``..._xyz_iso_stretch.inp`` row. The second item maps each
+    resolved deck name to the sentence saying so.
+    """
+    decks = {deck.name.lower(): deck.name
+             for deck in Path(repository).rglob("*")
+             if deck.is_file() and deck.suffix in _DECK_SUFFIXES
+             and ".git" not in deck.parts}
+    statements: list[tuple[str, str, str]] = []      # (source, deck, where)
+    for readme in _documents(repository):
         try:
             text = readme.read_text(errors="replace")
         except OSError:                            # pragma: no cover
             continue
+        where = str(readme.relative_to(repository))
         for raw in text.splitlines():
             row = _TABLE_ROW.match(raw)
-            if not row:
+            if row:
+                cells = [cell.strip().strip("`*") for cell in row.group(1).split("|")]
+                named_decks = [cell for cell in cells if cell.lower().endswith(".inp")]
+                sources = [cell for cell in cells
+                           if any(cell.endswith(s) for s in _SOURCE_SUFFIXES)]
+                for source in sources:
+                    for deck in named_decks:
+                        statements.append((Path(source).name.lower(),
+                                           Path(deck).name.lower(), where))
                 continue
-            cells = [cell.strip().strip("`*") for cell in row.group(1).split("|")]
-            decks = [cell for cell in cells if cell.lower().endswith(".inp")]
-            sources = [cell for cell in cells
-                       if any(cell.endswith(s) for s in _SOURCE_SUFFIXES)]
-            for source in sources:
-                pairs.setdefault(Path(source).name.lower(), set()).update(
-                    Path(deck).name.lower() for deck in decks)
-    return pairs
+            named_decks = {Path(m).name.lower() for m in _DECK_NAME.findall(raw)}
+            sources = {Path(m).name.lower() for m in _SOURCE_NAME.findall(raw)}
+            if len(named_decks) == 1 and len(sources) == 1:
+                statements.append((sources.pop(), named_decks.pop(), where))
+
+    exact = {deck for _source, deck, _where in statements if deck in decks}
+    missing = sorted({deck for _source, deck, _where in statements
+                      if deck not in decks})
+    resolved: dict[str, str] = {}
+    changed = True
+    while changed:
+        changed = False
+        taken = exact | set(resolved.values())
+        for stated in missing:
+            if stated in resolved:
+                continue
+            tokens = _name_tokens(stated)
+            fits = [(len(_name_tokens(name) & tokens), name) for name in decks
+                    if name not in taken and _name_tokens(name) <= tokens]
+            if not fits:
+                continue
+            best = max(score for score, _name in fits)
+            top = [name for score, name in fits if score == best]
+            if len(top) == 1:
+                resolved[stated] = top[0]
+                changed = True
+
+    pairs: dict[str, set[str]] = {}
+    notes: dict[str, str] = {}
+    for source, deck, where in statements:
+        if deck in resolved:
+            notes[resolved[deck]] = (
+                f"{where} names {deck}, which is not in the repository; "
+                f"{decks[resolved[deck]]} is the only deck it can mean (its name "
+                f"tokens are all in the stated name, and no other statement "
+                f"names it)")
+            deck = resolved[deck]
+        pairs.setdefault(source, set()).add(deck)
+    return pairs, notes
+
+
+def stated_pairs(repository: Path) -> dict[str, set[str]]:
+    """Deck-to-source pairs the repository states (see :func:`stated_pairings`)."""
+    return stated_pairings(repository)[0]
 
 
 # ---------------------------------------------------------------------------
@@ -982,7 +1067,7 @@ def pair(source: Path, repository: Path,
                                 f"in {repository}, and every .md, .rst and "
                                 f".txt in it for a table naming this source"))
 
-    stated = stated_pairs(repository)
+    stated, resolved_names = stated_pairings(repository)
     named = stated.get(source.name.lower(), set())
 
     # A routine that reads COORDS is a routine whose answer depends on the
@@ -1039,7 +1124,10 @@ def pair(source: Path, repository: Path,
         by_readme = 1 if material.deck.name.lower() in named else 0
         if by_readme:
             reasons.append(f"{Path(repository).name}'s README states that "
-                           f"{material.deck.name} runs with {source.name}")
+                           f"{material.deck.name} runs with {source.name}"
+                           + (f" ({resolved_names[material.deck.name.lower()]})"
+                              if material.deck.name.lower() in resolved_names
+                              else ""))
         # A routine that reads past the end of the block is admitted only
         # where something NAMES the block as its own, and ranked below
         # anything that supplies enough. Without that it is a different
