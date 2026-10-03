@@ -718,6 +718,9 @@ class ReplayBuild:
     #: Which aba_param.inc the build used: the installation's, or a stub. It is
     #: recorded because it changes what the reference means.
     header: str = ""
+    #: What the units INCLUDE, staged into the build directory
+    #: (include_shim.stage_includes records: sha256, link or converted copy).
+    includes: list = field(default_factory=list)
 
 
 #: A PROGRAM unit an author shipped beside the UMAT -- a standalone driver
@@ -908,9 +911,19 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     # header the solver actually compiled against.
     # files the units INCLUDE from beside the author's source, staged into
     # the build directory (on -I) so a cleaned copy compiled here finds them
+    # A quad build stages each include PROMOTED as the source is (Vera B10
+    # condition A): a linked double include would make the reference
+    # mixed-precision.
     from umat_oti.abaqus.include_shim import stage_includes
+    staged_includes: list[dict] = []
     for original_unit, unit in zip([Path(path) for path in (*extra, source)], units):
-        stage_includes(_text_of(unit), [original_unit.parent], work_dir)
+        if quad:
+            from umat_oti.corpus_features.drivers import quadify
+            staged_includes += stage_includes(
+                _text_of(unit), [original_unit.parent], work_dir, convert=quadify,
+                conversion="drivers.quadify (REAL*8 -> REAL*16, as the source)")
+        else:
+            staged_includes += stage_includes(_text_of(unit), [original_unit.parent], work_dir)
     if quad:
         for header in _HEADER_NAMES:
             (work_dir / header).write_text("      implicit real*16(a-h,o-z)\n"
@@ -939,11 +952,11 @@ def build_replay(source: Path, work_dir: Path, *, compiler: str = "gfortran",
     except (OSError, subprocess.SubprocessError) as error:
         return ReplayBuild(reason=f"{type(error).__name__}: {error}")
     if done.returncode != 0 or not program.is_file():
-        return ReplayBuild(compiler=compiler, header=used,
+        return ReplayBuild(compiler=compiler, header=used, includes=staged_includes,
                            reason=f"the replay driver did not link against "
                                   f"{Path(source).name} (exit {done.returncode})",
                            log=(done.stdout + done.stderr)[-6000:])
-    return ReplayBuild(program=program, compiler=compiler, ok=True,
+    return ReplayBuild(program=program, compiler=compiler, ok=True, includes=staged_includes,
                        header=used, log=(done.stdout + done.stderr)[-2000:])
 
 
