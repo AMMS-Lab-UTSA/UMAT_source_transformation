@@ -414,6 +414,27 @@
    "tests": [
     "tests/test_transform_a_seed_read_left_real_is_refused.py"
    ]
+  },
+  {
+   "commit": "dc86bcc",
+   "bug": "A tab inside the fixed-form label field but not in column 1 was read as a continuation line by the emitter and the lifter, gluing two statements together (MODIFIED_JC.f, UMAT_visco_FGJD_2026.for, wellbore.f did not compile).",
+   "tests": [
+    "tests/test_transform_a_tab_inside_the_label_field_starts_a_statement.py"
+   ]
+  },
+  {
+   "commit": "d89a374",
+   "bug": "A REAL initialised in its declaration was retyped to the OTI type with a REAL initializer, and a fixed-form ': :' was emitted literally; both stopped the build (UMAT_visco/viscohybrid_FGJD_2026.for).",
+   "tests": [
+    "tests/test_transform_a_real_initialised_in_its_declaration_is_a_constant.py"
+   ]
+  },
+  {
+   "commit": "fb1f659",
+   "bug": "A supplied solver utility (ROTSIG) called outside the stress interval with a shadowed argument was not lifted, and the source was refused by the leak check (UMATPlasticity.f).",
+   "tests": [
+    "tests/test_transform_a_supplied_utility_ahead_of_the_stress_update_is_lifted.py"
+   ]
   }
  ],
  "excluded": [
