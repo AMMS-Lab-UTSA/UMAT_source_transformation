@@ -212,10 +212,19 @@ def stage_supported_by_gates(row: dict) -> str:
         return "primal_mismatch_explained"
     if "primal_agreed" in failing:
         return "primal_disagreed"
+    # An experiment that is not mechanically informative cannot show a tangent
+    # either way: its failure is the stage, not a later one that hides it
+    # (Scout, the shell-growth trio: tangent_not_verified hid the gate).
+    # Rows where informative is true keep their stage.
+    # The same order as the runner's ladder (verify_store_in_abaqus): a gate
+    # read False is "not informative", one never measured is "not
+    # established" -- never the same word.
+    if "mechanically_informative" in failing:
+        return ("experiment_not_informative"
+                if measured.get("mechanically_informative") is False
+                else "informativeness_not_established")
     if "derivatives_verified" in failing:
         return "tangent_not_verified"
-    if "mechanically_informative" in failing:
-        return "experiment_not_informative"
     return "primal_disagreed"
 
 
