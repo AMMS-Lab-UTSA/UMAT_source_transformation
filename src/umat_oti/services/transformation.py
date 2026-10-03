@@ -259,6 +259,7 @@ def _run_config_transform(config_path: Path, out_dir: Path, *, compile_generated
             ntens_confidence=str(settings.get("ntens_confidence", "")),
             ntens_warning=str(settings.get("ntens_warning", "")),
             execution_status=str(compile_result["status"] if compile_generated else "generated_not_compiled"),
+            binary32_stores=_binary32_stores(result, out_dir, transform_source_path),
         )
         if compile_generated:
             manifest["execution"].update(compile_result)
@@ -608,3 +609,27 @@ def _classify_outcome(result: Any) -> str:
         # approximate on that path. Surface it rather than reporting clean success.
         return "succeeded_with_warnings"
     return "succeeded"
+
+
+def _binary32_stores(result: Any, out_dir: Path, source_path: Path) -> dict[str, Any]:
+    """The manifest's ``binary32_stores``, read off the generated Fortran itself.
+
+    Every Fortran file the tangent transform generated (its transformed source
+    and any lifted helpers) and, when a parameter-sensitivity build was made,
+    its lifted file -- each read once.
+    """
+    from umat_oti.transform.binary32 import binary32_store_report
+
+    paths = [Path(p) for p in (getattr(result, "generated_files", None) or [])]
+    paths.append(out_dir / "parameter_sensitivity" / "umat_oti_lifted.f90")
+    texts, seen = [], set()
+    for path in paths:
+        if path.suffix.lower() not in (".f90", ".f", ".for") or not path.is_file():
+            continue
+        key = path.resolve()
+        if key not in seen:
+            seen.add(key)
+            texts.append(path.read_text(encoding="utf-8", errors="replace"))
+    original = Path(source_path).read_text(encoding="utf-8", errors="replace") \
+        if source_path and Path(source_path).is_file() else ""
+    return binary32_store_report(texts, original)

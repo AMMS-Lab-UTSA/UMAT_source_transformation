@@ -1517,11 +1517,20 @@ def _lift_helper_routine(
             saved_names.update(_declared_names(attribute_save.group(1)))
     lines.extend(_data_initialisation_once(data_assignments, saved_names, save_everything,
                                            common_names | common_declared_names))
-    from umat_oti.transform.binary32 import BINARY32_CONTEXT
+    from umat_oti.transform.binary32 import (
+        BINARY32_CONTEXT, BINARY32_RULE_CONTEXT, BINARY32_WIDENED_SINK)
     binary32_names = frozenset(name for name in oti_names
                                if routine_types.is_single_precision(name)
                                and not (name == result_name and declared_result_type
                                         and not _declared_result_is_binary32(declared_result_type)))
+    if BINARY32_RULE_CONTEXT.get() == "widened":
+        # The binary32 variables that carry a derivative are carried in plain
+        # double: the OTI form of precision.widen's control (binary32 rule
+        # 'widened'). Recorded, since they leave no rounding to read off.
+        sink = BINARY32_WIDENED_SINK.get()
+        if sink is not None:
+            sink.extend(sorted(binary32_names))
+        binary32_names = frozenset()
     # A literal-constant local the source declares binary32 is declared
     # real(8) here (an OTI operator takes REAL(8) operands only). Its value is
     # still the binary32 one, but every operation on it is now formed in

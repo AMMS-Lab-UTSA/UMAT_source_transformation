@@ -647,8 +647,161 @@ BINARY32_CONTEXT: ContextVar[tuple[frozenset, str, frozenset]] = ContextVar(
     "binary32_context", default=(frozenset(), "_OTI", frozenset()))
 
 
+#: Which rule a lifted build applies to binary32 variables that carry an OTI
+#: value (see :data:`BINARY32_RULES`). Set by the caller around a lift.
+BINARY32_RULE_CONTEXT: ContextVar[str] = ContextVar("binary32_rule", default="author")
+
+#: ``author`` -- B-W, the default: the primal reproduces the author's binary32
+#: values, the derivative is carried in double at those rounded values.
+#: ``widened`` -- no B-W store rounding and no OTI_R4 on such a variable: the
+#: build is the OTI form of the ORIGINAL with exactly those declarations
+#: widened (umat_oti.abaqus.precision.widen), so its derivatives are that
+#: control's derivatives and its primal is that control's primal, not the
+#: author's. Binary32 variables that carry no OTI value, and binary32
+#: literals and named constants, are treated the same in both.
+BINARY32_RULES = ("author", "widened")
+
+#: Filled by the lifter, when given a list, with the binary32 OTI variables a
+#: ``widened`` lift left unrounded (they leave no trace in the code to read).
+BINARY32_WIDENED_SINK: ContextVar[Optional[list]] = ContextVar("binary32_widened", default=None)
+
+
 def round_binary32_operations_in_context(statement: str) -> str:
     names, suffix, oti_names = BINARY32_CONTEXT.get()
     if not names:
         return statement
     return round_binary32_operations(statement, names, suffix=suffix, oti_names=oti_names)
+
+
+# ---------------------------------------------------------------------------
+# What the generated code did to binary32 variables, for the manifest/report
+# ---------------------------------------------------------------------------
+
+#: The field under which a manifest, a transform report and a lifted build's
+#: layout carry :func:`binary32_store_report`. Machine-readable; a consumer
+#: (e.g. an FD judge) keys on ``stores[*].name``.
+BINARY32_STORES_FIELD = "binary32_stores"
+BINARY32_STORES_SCHEMA = "umat-oti/binary32-stores/1"
+
+#: The rule each listed store gets, stated once.
+BINARY32_RULE = (
+    "B-W (umat_oti.transform.binary32.round_binary32_stores): after every store to the "
+    "variable's OTI value its REAL PART is rounded to binary32 "
+    "(X%R = REAL(REAL(X%R, 4), 8)); its derivative parts stay double and the rounding "
+    "is differentiated as the identity. Operations whose operands are all binary32 "
+    "are wrapped in OTI_R4(...), which does the same to one result.")
+
+BINARY32_STATEMENT = (
+    "Sensitivities through these variables are the double idealisation of a binary32 "
+    "original: the primal reproduces the author's binary32 values, but the derivative "
+    "is that of the same expressions without the author's rounding. The author's own "
+    "routine is piecewise constant in each such variable at its binary32 resolution, so "
+    "where a listed variable varies by only a few binary32 ulps over an input, a finite "
+    "difference of the original (and the original's true local derivative) can differ "
+    "from this value by any amount, and where it varies by many ulps a finite difference "
+    "of the original carries noise of about ulp/h.")
+
+BINARY32_WIDENED_RULE = (
+    "widened (binary32 rule 'widened'): the listed variables carry an OTI value and "
+    "are NOT rounded -- no B-W store rounding, no OTI_R4 on them. The build is the OTI "
+    "form of the original with exactly these declarations widened to double "
+    "(umat_oti.abaqus.precision.widen).")
+
+BINARY32_WIDENED_STATEMENT = (
+    "Sensitivities through these variables are exactly those of the double idealisation: "
+    "the original with exactly the listed declarations widened to double, which a finite "
+    "difference of that control verifies. The primal is that control's, not the author's "
+    "binary32 one; the two differ by the author's own rounding (about 1e-7 relative, more "
+    "where the model amplifies it).")
+
+_STORE = re.compile(r"^\s*([A-Za-z_]\w*)%R\s*=\s*REAL\(\s*REAL\(\s*\1%R\s*,\s*4\s*\)\s*,\s*8\s*\)",
+                    re.IGNORECASE | re.MULTILINE)
+_OPERATION = re.compile(r"\bOTI_R4\(", re.IGNORECASE)
+
+
+def _binary32_declarations(original_text: str, wanted: set) -> dict[str, list]:
+    """Explicit binary32 REAL declarations of ``wanted`` names, by first source line.
+
+    Read with the transform's own typing rules (routine_typing) over logical
+    statements, so a declaration continued across lines is one declaration.
+    """
+    from pathlib import Path
+
+    from umat_oti.fortran.normalize import detect_source_form
+    from umat_oti.fortran.parser import logical_lines_from_text
+    from umat_oti.transform.routine_typing import _declared_single
+
+    found: dict[str, list] = {}
+    if not wanted or not original_text:
+        return found
+    form = detect_source_form(Path("source.for"), original_text)
+    physical = original_text.splitlines()
+    for logical in logical_lines_from_text(original_text, form):
+        names = _declared_single([logical.text]) & wanted
+        if not names or not logical.line_numbers:
+            continue
+        first = logical.line_numbers[0]
+        text = physical[first - 1].strip() if 0 < first <= len(physical) else logical.text.strip()
+        for name in sorted(names):
+            found.setdefault(name, []).append({"line": first, "text": text})
+    return found
+
+
+def binary32_store_report(generated_texts, original_text: str, *,
+                          suffix: str = "_OTI", rule: str = "author",
+                          widened: tuple = ()) -> dict:
+    """The binary32 variables the generated code rounds on the derivative path.
+
+    Read off the generated Fortran itself -- the B-W stores the transform
+    emitted (``X%R = REAL(REAL(X%R, 4), 8)``, ``X`` an OTI value, so on the
+    derivative path) and its ``OTI_R4`` operations -- so the list cannot
+    disagree with the code. Each name is matched to its explicit single-precision
+    declaration(s) in ``original_text``; a name typed binary32 only by implicit
+    rules has none. Nothing is generated or changed here.
+    """
+    if isinstance(generated_texts, str):
+        generated_texts = [generated_texts]
+    counts: dict[str, int] = {}
+    spelling: dict[str, str] = {}
+    operations = 0
+    for name in widened:
+        counts.setdefault(str(name).upper(), 0)
+        spelling.setdefault(str(name).upper(), str(name))
+    for text in generated_texts:
+        for match in _STORE.finditer(text or ""):
+            shadow = match.group(1)
+            name = shadow[:-len(suffix)] if suffix and shadow.upper().endswith(suffix.upper()) else shadow
+            counts[name.upper()] = counts.get(name.upper(), 0) + 1
+            spelling.setdefault(name.upper(), name)
+        operations += len(_OPERATION.findall(text or ""))
+    declarations = _binary32_declarations(original_text or "", set(counts))
+    stores = [{
+        "name": spelling[key],
+        "declarations": declarations.get(key, []),
+        "declaration_line": (declarations[key][0]["line"] if declarations.get(key) else None),
+        "typed_by": "explicit declaration" if declarations.get(key) else "implicit typing",
+        "rounded_stores": counts[key],
+        "rule": "B-W" if rule == "author" else "widened",
+    } for key in sorted(counts)]
+    if rule == "widened":
+        return {
+            "schema": BINARY32_STORES_SCHEMA,
+            "present": bool(stores or operations),
+            "binary32_rule": "widened",
+            "stores": stores,
+            "rounded_operations": operations,
+            "rule": BINARY32_WIDENED_RULE,
+            "statement": BINARY32_WIDENED_STATEMENT if stores else
+            "No binary32 variable carries a derivative here; nothing was widened.",
+        }
+    return {
+        "schema": BINARY32_STORES_SCHEMA,
+        "present": bool(stores or operations),
+        "binary32_rule": "author",
+        "stores": stores,
+        "rounded_operations": operations,
+        "rule": BINARY32_RULE,
+        "statement": BINARY32_STATEMENT if (stores or operations) else
+        "No binary32 value is rounded on the derivative path: every sensitivity is of "
+        "the author's own double-precision arithmetic.",
+    }
