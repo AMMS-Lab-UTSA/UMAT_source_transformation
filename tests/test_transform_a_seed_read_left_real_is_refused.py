@@ -1,43 +1,58 @@
 """A REAL statement that reads the seed into a shadowed variable is refused.
 
-``G = PROPS(1)*(1.0D0 + DSTRAN(2))`` reaches the stress only through
-``CALL SCALE(2.0D0*G, ...)``. The region classifier's dependency edge for a
-call takes the first identifier of each actual, and ``2.0D0*G`` has none, so
-the statement was left REAL ahead of the seed block, G_OTI was filled from G
-with no derivative, and the transform returned a stress that agrees with the
-author's bit for bit beside a tangent missing dG/dDSTRAN (DDSDDE(1,2) 1000.0
-against a finite-difference 1040.8). The classifier is not changed here; the
-emitted text is checked (``no_seed_read_into_a_real_copy_of_a_shadowed_name``)
-so the construct is refused by name instead of emitted wrong.
+``G = PROPS(1)*(1.0D0 + DSTRAN(2))`` reaching the stress only through
+``CALL SCALE(2.0D0*G, ...)`` used to be left REAL ahead of the seed block (the
+region classifier's call edge took only the first identifier of each actual),
+G_OTI was filled from G with no derivative, and the tangent lost dG/dDSTRAN
+beside a bitwise-correct stress. The classifier now reads every identifier
+(tests/test_transform_a_call_reads_every_identifier_of_its_actuals.py); this
+semantic check, ``no_seed_read_into_a_real_copy_of_a_shadowed_name``, stays as
+the backstop on the emitted text, and since Vera's B8 review (R2) it follows
+the seed transitively through REAL statements and CALLs.
 
-The same routine with the actual written ``G*2.0D0`` transforms and agrees
-(tests/test_transform_a_value_at_a_hypercomplex_dummy_is_passed_as_one.py).
+Checked on emitted text written out here, because the transform no longer
+produces it.
 """
-from _transform_vs_original import transform
+from umat_oti.transform.source_transform import _real_statements_reading_the_seed
 
-from test_transform_a_value_at_a_hypercomplex_dummy_is_passed_as_one import HEAD
+HEADER = """subroutine umat(stress, dstran, props, ntens)
+  use otim6n1, OTI_E1 => E1
+  integer :: ntens, i
+  real(8) :: stress(ntens), dstran(ntens), props(1), g, t, q, y(6)
+  TYPE(ONUMM6N1) :: DSTRAN_OTI(ntens), STRESS_OTI(ntens), G_OTI, Y_OTI(6)
+"""
+TAIL = """! OTIS seed initialization from GUI configuration
+  DO OTI_I = 1, ntens
+     DSTRAN_OTI(OTI_I) = DSTRAN(OTI_I)
+  END DO
+  G_OTI = G
+  DSTRAN_OTI(1) = DSTRAN_OTI(1) + OTI_E1
+  do i = 1, ntens
+    call SCALE_OTI(2.0d0*G_OTI, DSTRAN_OTI(i), Y_OTI(i))
+    STRESS_OTI(i) = STRESS_OTI(i) + Y_OTI(i)
+  end do
+end subroutine umat
+"""
 
 
-def test_a_seed_read_left_real_ahead_of_the_seed_block_is_refused(tmp_path):
-    summary, code = transform(tmp_path, HEAD % {"first": "2.0d0*g"}, ".f90")
-    assert code != 0
-    assert summary["semantic_checks"]["no_seed_read_into_a_real_copy_of_a_shadowed_name"] is False
+def _check(prelude: str):
+    return _real_statements_reading_the_seed(HEADER + prelude + TAIL, "free", "UMAT",
+                                             {"DSTRAN"}, "ONUMM6N1")
 
 
-def _two_hop(first: str) -> str:
-    return (HEAD.replace("g = props(1)*(1.0d0 + dstran(2))", "t = dstran(2)\n  q = props(1)\n  g = props(1)*(1.0d0 + t)")
-            .replace("real(8) :: y(6), g", "real(8) :: y(6), g, t, q") % {"first": first})
+def test_one_hop_is_refused():
+    assert _check("  g = props(1)*(1.0d0 + dstran(2))\n")
 
 
-def test_a_two_hop_seed_read_left_real_is_refused(tmp_path):
-    """Vera's B8 R2 toy: T = DSTRAN(2); G = PROPS(1)*(1+T). Was 1000 against FD 1040.8."""
-    summary, code = transform(tmp_path, _two_hop("2.0d0*g"), ".f90")
-    assert code != 0
-    assert summary["semantic_checks"]["no_seed_read_into_a_real_copy_of_a_shadowed_name"] is False
+def test_two_hops_are_refused():
+    """Vera's toy: T = DSTRAN(2); G = PROPS(1)*(1+T). Was 1000 against FD 1040.8."""
+    found = _check("  t = dstran(2)\n  g = props(1)*(1.0d0 + t)\n")
+    assert any("G = PROPS(1)" in text.upper() or "G_OTI = G" in text.upper() for _, text in found)
 
 
-def test_a_seed_read_reaching_a_call_through_a_second_identifier_is_refused(tmp_path):
-    """Vera's B8 R2 toy: CALL SCALE(Q*G/PROPS(1), ...). Was 1000 against FD 1020.4."""
-    summary, code = transform(tmp_path, _two_hop("q*g/props(1)"), ".f90")
-    assert code != 0
-    assert summary["semantic_checks"]["no_seed_read_into_a_real_copy_of_a_shadowed_name"] is False
+def test_a_real_call_carries_the_taint():
+    assert _check("  call copy(dstran(2), t)\n  g = props(1)*t\n")
+
+
+def test_a_value_not_reached_by_the_seed_is_not_refused():
+    assert not _check("  q = props(1)\n  g = 2.0d0*q\n")
