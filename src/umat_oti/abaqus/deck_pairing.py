@@ -1332,6 +1332,16 @@ def pair(source: Path, repository: Path,
                    if material.deck.parent == source.parent
                    or material.deck.name.lower() in named]
         detail = "; ".join(f"{where}: {why}" for where, why in rejected[:6])
+        if authors:
+            # Name the author's own block first, whatever its place in the
+            # scan: ``umat_iso_Mandel.f`` writes STATEV(5) and the deck its
+            # README names declares *DEPVAR 3, and that was the seventh
+            # rejection listed -- past the six the reason quoted.
+            own = {f"{material.deck.name}:{material.name}" for material in authors}
+            detail = ("the author's own block: "
+                      + "; ".join(f"{where}: {why}" for where, why in rejected
+                                  if where in own)[:600]
+                      + ". Others: " + detail)
         counts = ", ".join(str(count) for count
                            in searched["constant_counts_published"]) or "none"
         return Pairing(
@@ -1345,8 +1355,8 @@ def pair(source: Path, repository: Path,
                      f"{repository}, carrying {searched['material_blocks_found']}"
                      f" *USER MATERIAL block(s) whose constant counts are "
                      f"{counts}; and every .md, .rst and .txt in the "
-                     f"repository for a table naming this source beside an "
-                     f"input file. Every block was rejected: {detail}"
+                     f"repository for a statement naming this source beside "
+                     f"an input file. Every block was rejected: {detail}"
                      + sibling_constants(source, Path(repository), source_text)
                      + ". Supplying constants from anywhere else would be "
                        "inventing them"))
