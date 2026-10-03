@@ -329,3 +329,52 @@ def detect_activation(records: Sequence[dict],
             "instrumented, not its output read)",
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# informativeness of a council-designed experiment (D-19a rev 2, R4)
+# ---------------------------------------------------------------------------
+#: Reviewed-family words that make a source inelastic (R4): plasticity,
+#: damage, crystal plasticity, viscous (visco-elastic/-plastic), concrete.
+INELASTIC_FAMILY_WORDS = ("plastic", "damage", "crystal", "visco", "concrete")
+
+
+def council_informative(activation: Activation, *, family: str,
+                        demanded_nstatv: int, finite: bool) -> dict:
+    """Whether a council experiment exercised an inelastic source (R4).
+
+    *Inelastic* means the reviewed family is plasticity, damage, crystal,
+    viscous or concrete, OR the routine writes state (``demanded(text).nstatv
+    > 0``); a disagreement between the two resolves to inelastic and is
+    recorded. An inelastic row is informative only if
+    ``residual_after_reversal`` fired, or ``tangent_change`` fired under small
+    strain: under NLGEOM the tangent moves with the geometry alone, so there
+    it does not count. ``departure_from_linearity`` and ``state_change``
+    never count on their own. A source that is neither is not held to an
+    inelastic event.
+    """
+    by_family = any(word in str(family or "").lower() for word in INELASTIC_FAMILY_WORDS)
+    by_state = int(demanded_nstatv or 0) > 0
+    inelastic = by_family or by_state
+    record = {"inelastic": inelastic, "by_family": by_family, "by_state": by_state,
+              "disagreement": "" if by_family == by_state else (
+                  f"the reviewed family {family!r} says "
+                  f"{'inelastic' if by_family else 'elastic'} and the routine "
+                  f"{'writes' if by_state else 'writes no'} STATEV; resolved to inelastic"),
+              "fired": activation.fired}
+    if not inelastic:
+        record.update(informative=True,
+                      reason="not an inelastic source: no inelastic event is required")
+        return record
+    counting = ["residual_after_reversal"] + ([] if finite else ["tangent_change"])
+    hit = [name for name in activation.fired if name in counting]
+    record["counting"] = counting
+    if hit:
+        record.update(informative=True, reason=f"inelastic, and {', '.join(hit)} fired")
+    else:
+        record.update(informative=False, reason=(
+            "inelastic, and none of " + ", ".join(counting) + " fired"
+            + (" (tangent_change does not count under finite kinematics)" if finite else "")
+            + (f"; {', '.join(activation.fired)} alone never count"
+               if activation.fired else "")))
+    return record
