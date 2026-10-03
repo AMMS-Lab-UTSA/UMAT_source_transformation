@@ -1,0 +1,111 @@
+source,repository,bytes,lines,form,kinematics,ntens,nstatv_hint,anchor_status,helper_routines,declared_unsupported,stage,blocker_kind,blocker,original_compiles,compiled,compile_error,seconds
+Computational-Mechanics-Materials-Lab__SinglePointSimulator/examples/MODIFIED_JC.f,examples,40937,1252,fixed,finite,6,94,ready_with_json_contract,16,data;io_write,generated_not_compiled,compile_failed,"umat_oti_helpers.f90:134:4:
+
+  134 |     temp = tempsv (noel.eq.1) then
+      |    1
+Error: Unclassifiable statement at (1)
+umat_oti_helpers.f90:136:7:
+
+  136 |     endif
+      |       1
+Error: Expecting END SUBROUTINE statement at (1)
+umat_oti_helpers.f90:227:112:
+
+  227 |     call CALC_DMG_OTI(dti",yes,no,"umat_oti_helpers.f90:134:4:
+
+  134 |     temp = tempsv (noel.eq.1) then
+      |    1
+Error: Unclassifiable statement at (1)
+umat_oti_helpers.f90:136:7:
+
+  136 |     endif
+      |       1
+Error: Expecting END SUBROUTINE statement at (1)
+umat_oti_helpers.f90:227:112:
+
+  227 |     call CALC_DMG_OTI(dti",4.62
+MechMater-project__UMAT_finitestrain_viscoelasticity_withdamage/UMAT_visco_FGJD_2026.for,MechMater-project__UMAT_finitestrain_viscoelasticity_withdamage,77497,1772,fixed,finite,6,85,ready_with_json_contract,4,io_write,generated_not_compiled,compile_failed,"umat_oti_helpers.f90:138:31:
+
+  138 |     type(ONUMM6N1) :: ZERO=0.D0, ONE=1.D0, TWO=2.D0, THREE=3.D0, FOUR=4.D0
+      |                               1
+Error: Incompatible initialization between a derived type entity and an entity with ‘REAL(8)’ type at (1)
+umat_oti_helpers.f90:139:31:
+
+  139 |    ",yes,no,"umat_oti_helpers.f90:138:31:
+
+  138 |     type(ONUMM6N1) :: ZERO=0.D0, ONE=1.D0, TWO=2.D0, THREE=3.D0, FOUR=4.D0
+      |                               1
+Error: Incompatible initialization between a derived type entity and an entity with ‘REAL(8)’ type at (1)
+umat_oti_helpers.f90:139:31:
+
+  139 |    ",4.9
+MechMater-project__UMAT_finitestrain_viscoelasticity_withdamage/UMAT_viscohybrid_FGJD_2026.for,MechMater-project__UMAT_finitestrain_viscoelasticity_withdamage,82257,1891,fixed,finite,6,104,ready_with_json_contract,5,io_write,generated_not_compiled,compile_failed,"umat_oti_helpers.f90:41:23:
+
+   41 |     type(ONUMM6N1) :: : : damping
+      |                       1
+Error: Invalid character in name at (1)
+umat_oti_helpers.f90:166:31:
+
+  166 |     type(ONUMM6N1) :: ZERO=0.D0, ONE=1.D0, TWO=2.D0, THREE=3.D0, FOUR=4.D0
+      |                               1
+Erro",yes,no,"umat_oti_helpers.f90:41:23:
+
+   41 |     type(ONUMM6N1) :: : : damping
+      |                       1
+Error: Invalid character in name at (1)
+umat_oti_helpers.f90:166:31:
+
+  166 |     type(ONUMM6N1) :: ZERO=0.D0, ONE=1.D0, TWO=2.D0, THREE=3.D0, FOUR=4.D0
+      |                               1
+Erro",5.17
+abuganza__NN_aniso_UMAT/UMAT/NN_UMAT_Vahid.f,UMAT,20540,578,fixed,finite,6,33,ready_with_json_contract,5,,source_does_not_compile,source_does_not_compile,"as shipped: <work>/UMAT/NN_UMAT_Vahid/baseline/NN_UMAT_Vahid.f:90:25:
+
+   90 |       integer activtypes(props(1)-1)
+      |                         1
+Error: Expression at (1) must be of INTEGER type, found REAL
+<work>",no,no,"NN_UMAT_Vahid_oti.f:95:25:
+
+   95 |       integer activtypes(props(1)-1)
+      |                         1
+Error: Expression at (1) must be of INTEGER type, found REAL
+NN_UMAT_Vahid_oti.f:95:25:
+
+   95 |       integer activtypes(props(1)-1)
+      |                         1
+Error: Expression at (1) ",2.95
+cbgeo-archives__hpc-scripts/abaqus/wellbore.f,abaqus,32006,1077,fixed,small strain,6,91,ready_with_json_contract,8,common_block,generated_not_compiled,compile_failed,"wellbore_oti.f:905:37:
+
+  905 |       S=REAL((1.0D0+VOID_OTI)/sik*pc0=3.0D0*BKS_OTI/2.0D0*(1.0D0-2.0D0*
+      |                                     1
+Error: Syntax error in argument list at (1)
+wellbore_oti.f:1178:35:
+
+ 1178 |       DEP5_OTI=DLAMDA_OTI*DFDS_OTI(5,1)
+      |                          ",yes,no,"wellbore_oti.f:905:37:
+
+  905 |       S=REAL((1.0D0+VOID_OTI)/sik*pc0=3.0D0*BKS_OTI/2.0D0*(1.0D0-2.0D0*
+      |                                     1
+Error: Syntax error in argument list at (1)
+wellbore_oti.f:1178:35:
+
+ 1178 |       DEP5_OTI=DLAMDA_OTI*DFDS_OTI(5,1)
+      |                          ",4.22
+keisuke58__Tmcmc202601/FEM/umat_biofilm_visco.f,FEM,13533,412,fixed,finite,6,22,ready_with_json_contract,5,,transformed,none,,yes,yes,,2.77
+laufogh__fe-large-displacement/constitutive/hypoplasticity-staubach/HPP_Staubach_implicit.f,hypoplasticity-staubach,64916,1577,fixed,small strain,6,81,ready_with_json_contract,6,io_write;module_use;save,blocked,module_names_unresolved,"MAP2D appears as MAP2D(...) on the stress path but is not declared anywhere in this source, which USEs TOOLS without defining it. The transformer cannot read that module, so it cannot tell whether MAP2D is an array to promote or a call into it.; MAP2STRAN appears as MAP2STRAN(...) on the stress path",,,,1.42
+lbrassart__chemo-vp-efftemp/UMAT.for,lbrassart__chemo-vp-efftemp,51823,1517,fixed,finite,6,97,ready_with_json_contract,10,io_open;io_read;io_write,source_does_not_compile,source_does_not_compile,"as shipped: <work>/lbrassart__chemo-vp-efftemp/UMAT/baseline/UMAT.for:609:10:
+
+  609 |  7   + LAMBDANEQ
+      |          1
+Warning: Extension: Unary operator following arithmetic operator (use parentheses) at (1)
+<work>",no,no,"umat_oti_helpers.f90:106:36:
+
+  106 |     EQDEVTAU = ONE / VpkBT * DASINH(ETA/C1)
+      |                                    1
+Error: ‘x’ argument of ‘dasinh’ intrinsic at (1) must be REAL
+",4.25
+materialsguy__Predict_Nanoindentation_Tip_Wear/Codes/Abaqus_Indentation/2D/UMATPlasticity.f,2D,4261,135,fixed,small strain,6,14,ready_with_json_contract,1,,semantic_checks_failed,other,"STATEV_OTI is passed to ROTSIG, which was neither lifted, inlined, nor transformed with this file. Fortran's implicit interface makes that compile and the callee then reads a hypercomplex element as a single REAL, so the result is wrong with nothing to show for it. What to do: supply ROTSIG's source",,,,0.31
+thatliuyang__Abaqus-subroutine-for-composites-progressive-failure-analysis-/UMAT_comp_failure.for,thatliuyang__Abaqus-subroutine-for-composites-progressive-failure-analysis-,48202,1475,fixed,small strain,6,99,ready_with_json_contract,1,io_write,blocked,other,"Helper lifting failed: Helper lifting requires source definitions for ['DAMAGE_CALC']. The completed JSON rewrites those calls, so pass-through is unsafe. (DAMAGE_CALC is first called at line 346.) What to do: put the file that defines DAMAGE_CALC beside the UMAT or name its directory in dependency_",,,,0.74
+theCoMMaNDlab__Crohns_motility/simulation-files/sub1.f,simulation-files,15427,585,fixed,finite,6,30,ready_with_json_contract,7,,transformed,none,,yes,yes,,2.91
+theCoMMaNDlab__Crohns_motility/simulation-files/sub2.f,simulation-files,17547,594,fixed,finite,6,30,ready_with_json_contract,3,,transformed,none,,yes,yes,,2.85
+williammora1984__UMAT_GTN/3_UMAT/UMAT_GTN_W.f,3_UMAT,102737,2439,fixed,small strain,6,189,ready_with_json_contract,31,data;io_open;io_read;io_write,blocked,other,Helper lifting failed: Helper lifting for KGTN reached external or undefined callee DTIME (called at line 400). Add lifting support for that dependency before rewriting the call through OTI. What to do: put the file that defines DTIME beside the UMAT or name its directory in dependency_roots so the ,,,,2.02
+williammora1984__UMAT_GTN/3_UMAT/UMAT_Rousse.f,3_UMAT,57725,1588,fixed,small strain,6,84,ready_with_json_contract,27,data;io_open;io_read;io_write,transformed,none,,yes,yes,,4.91

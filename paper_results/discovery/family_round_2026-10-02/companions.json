@@ -1,0 +1,3969 @@
+{
+ "what_this_is": "a second acquisition pass over the same repositories, for the files a UMAT needs beside it and the files an author may have published material constants in. Every row names the repository, the commit it was read at, the path, and the digest of the bytes.",
+ "retrieved_at": "2026-10-03T03:13:07+00:00",
+ "auth": "gh auth token",
+ "requests_made": 44,
+ "cache_root_name": "staging_accepted",
+ "repositories": [
+  {
+   "repository": "Computational-Mechanics-Materials-Lab__SinglePointSimulator",
+   "commit": "f0c0a76b953124ca7c9e983d7da91a5931508c99",
+   "license_spdx": "MIT",
+   "license_source": "LICENSE (SPDX MIT via the GitHub licence API)",
+   "tree_files": 37,
+   "wanted_modules": [],
+   "wanted_includes": [],
+   "fetched": [
+    {
+     "path": "README.md",
+     "size": 1895,
+     "why": "may publish material constants",
+     "sha256": "55bf764a7bb146e5796b269522b11f3fb6610f38bb489c1825aface532c80792",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/README.md"
+    },
+    {
+     "path": "broken_arbitrary_dfgrd/arbitrary_gradient.py",
+     "size": 7523,
+     "why": "may publish material constants",
+     "sha256": "3e9364288495a6387147fbca5d49da05c7e041cc2db5cf09b92474ad8adcb03f",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/broken_arbitrary_dfgrd/arbitrary_gradient.py"
+    },
+    {
+     "path": "requirements.txt",
+     "size": 29,
+     "why": "may publish material constants",
+     "sha256": "27e252f1577d625d0bbf9fe1081b1524fe65c11b010463a4741e86656b94f2e6",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/requirements.txt"
+    },
+    {
+     "path": "src/singlepointsim/__init__.py",
+     "size": 121,
+     "why": "may publish material constants",
+     "sha256": "acc2af0c558af11ee76ab6e478869f2adcb9d780a39f9a70322ab16573f8d62a",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/__init__.py"
+    },
+    {
+     "path": "src/singlepointsim/__main__.py",
+     "size": 95,
+     "why": "may publish material constants",
+     "sha256": "acbd4f16595722343569cf317ff9580d9c0c9d0cea58ba9e1de7b51b3b16c99c",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/__main__.py"
+    },
+    {
+     "path": "src/singlepointsim/compile_umat.py",
+     "size": 3653,
+     "why": "may publish material constants",
+     "sha256": "cb9824d1c339cfd2e3a2c56310ed3b491bb86da90e26e33a39e44b862cb44b27",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/compile_umat.py"
+    },
+    {
+     "path": "src/singlepointsim/driver.py",
+     "size": 1098,
+     "why": "may publish material constants",
+     "sha256": "e8e091fcca2e1571f4078d51f2c4b71e988a1a7ca954d1ab9fb904744e53c0e1",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/driver.py"
+    },
+    {
+     "path": "src/singlepointsim/loading_scenarios/__init__.py",
+     "size": 537,
+     "why": "may publish material constants",
+     "sha256": "082b4263b44168b12a8d657621c47935893c7a8b547d099609ebcfd2cc895264",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/loading_scenarios/__init__.py"
+    },
+    {
+     "path": "src/singlepointsim/loading_scenarios/base.py",
+     "size": 12439,
+     "why": "may publish material constants",
+     "sha256": "f2334a682172246d4a37a5eaf03a1a5ed94516886d08f1aa736bcf26b60feda8",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/loading_scenarios/base.py"
+    },
+    {
+     "path": "src/singlepointsim/loading_scenarios/biaxial_tension.py",
+     "size": 1543,
+     "why": "may publish material constants",
+     "sha256": "913d8b04f86249a7e210c15a7e0dc865f36bca825e029a187797f08261abf63b",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/loading_scenarios/biaxial_tension.py"
+    },
+    {
+     "path": "src/singlepointsim/loading_scenarios/compression_torsion.py",
+     "size": 2596,
+     "why": "may publish material constants",
+     "sha256": "866e8a5dc89cdc57eda9b18bc830b6cc939fa35e611d686d9ec13a7345bf7960",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/loading_scenarios/compression_torsion.py"
+    },
+    {
+     "path": "src/singlepointsim/loading_scenarios/plane_strain.py",
+     "size": 1238,
+     "why": "may publish material constants",
+     "sha256": "b4abe3687312c066f3aa04e5fd5da7f1e07a030705b8acf85d236e4c312c2a28",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/loading_scenarios/plane_strain.py"
+    },
+    {
+     "path": "src/singlepointsim/loading_scenarios/tension_compression.py",
+     "size": 2012,
+     "why": "may publish material constants",
+     "sha256": "b97c03314f7d6024e7b7bb6cf785580fe8fdc6d8a9eac14881150b7459d54ae3",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/loading_scenarios/tension_compression.py"
+    },
+    {
+     "path": "src/singlepointsim/loading_scenarios/torsion.py",
+     "size": 1267,
+     "why": "may publish material constants",
+     "sha256": "8ef02f8570e8ec5e7a6475bb6a8252a0c153207d5a2660538570a7aff32f998a",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/loading_scenarios/torsion.py"
+    },
+    {
+     "path": "src/singlepointsim/parse_sps_input.py",
+     "size": 2170,
+     "why": "may publish material constants",
+     "sha256": "866f979b8678ed85a998dd4be5e4379ada56f146f43794f54871519484f393de",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/parse_sps_input.py"
+    },
+    {
+     "path": "src/singlepointsim/sps_input.py",
+     "size": 651,
+     "why": "may publish material constants",
+     "sha256": "47863ba20cfeca744bbf01935b91f8eaddf7f0063808ad87483d02f351e27e9e",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/sps_input.py"
+    },
+    {
+     "path": "src/singlepointsim/sps_outputs.py",
+     "size": 792,
+     "why": "may publish material constants",
+     "sha256": "f13c834be291acfbc71bb68d79211ba1f1b2b2414a91eb4fe80d87c1a09ab32e",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/sps_outputs.py"
+    },
+    {
+     "path": "src/singlepointsim/sps_step.py",
+     "size": 2784,
+     "why": "may publish material constants",
+     "sha256": "f4db9c153dcb1d09ea5d2122975f64fdf30af8d16b6440cd348137b7bc07f8a9",
+     "written": true,
+     "url": "https://github.com/Computational-Mechanics-Materials-Lab/SinglePointSimulator/blob/f0c0a76b953124ca7c9e983d7da91a5931508c99/src/singlepointsim/sps_step.py"
+    }
+   ],
+   "still_missing": [],
+   "skipped": [],
+   "error": ""
+  },
+  {
+   "repository": "MechMater-project__UMAT_finitestrain_viscoelasticity_withdamage",
+   "commit": "877284c74b8f190884d917c3a7841f97f6c32e56",
+   "license_spdx": "GPL-3.0",
+   "license_source": "LICENSE (SPDX GPL-3.0 via the GitHub licence API)",
+   "tree_files": 14,
+   "wanted_modules": [],
+   "wanted_includes": [],
+   "fetched": [
+    {
+     "path": "README.md",
+     "size": 1876,
+     "why": "may publish material constants",
+     "sha256": "a133d481b9933e81ca1fd2fdbb91cb6b4a3bdbacab6532e582e3491683fa0b46",
+     "written": true,
+     "url": "https://github.com/MechMater-project/UMAT_finitestrain_viscoelasticity_withdamage/blob/877284c74b8f190884d917c3a7841f97f6c32e56/README.md"
+    }
+   ],
+   "still_missing": [],
+   "skipped": [],
+   "error": ""
+  },
+  {
+   "repository": "abuganza__NN_aniso_UMAT",
+   "commit": "19229f264aff2763a8ff0e109f160c91210d8ba4",
+   "license_spdx": "GPL-3.0",
+   "license_source": "LICENSE (SPDX GPL-3.0 via the GitHub licence API)",
+   "tree_files": 267,
+   "wanted_modules": [],
+   "wanted_includes": [],
+   "fetched": [
+    {
+     "path": "NNMAT.py",
+     "size": 22042,
+     "why": "may publish material constants",
+     "sha256": "4d36b7e3486003efae410b642ba14d4235043319d10fe556acab67ab0b5698ac",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/NNMAT.py"
+    },
+    {
+     "path": "README.md",
+     "size": 106,
+     "why": "may publish material constants",
+     "sha256": "b4b95ad827c29524c375ae309c755a940fb6e997f4688efa224c845ca5ec6aa9",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/README.md"
+    },
+    {
+     "path": "UMAT/S111S1_GOH_all.cae",
+     "size": 233472,
+     "why": "may publish material constants",
+     "sha256": "d485f4b73dd6ef7745b30b8e37a7e4444eaab61ee0e06aaf1e84daa4ab62a0a1",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/UMAT/S111S1_GOH_all.cae"
+    },
+    {
+     "path": "UMAT/expansion_S111S1_xys.dat",
+     "size": 1652614,
+     "why": "may publish material constants",
+     "sha256": "0a3c1c96ca9f7f4e95cf3264a0b5fc9fc7e9e615d99b55dd86a97f04bb384f63",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/UMAT/expansion_S111S1_xys.dat"
+    },
+    {
+     "path": "UMAT/inputs_S111S1_xys.txt",
+     "size": 1371,
+     "why": "may publish material constants",
+     "sha256": "91f29efde0ad8b982132bc884dde816cba83f71062759b487f4fa9fec95be985",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/UMAT/inputs_S111S1_xys.txt"
+    },
+    {
+     "path": "UMAT/inputs_test.txt",
+     "size": 1357,
+     "why": "may publish material constants",
+     "sha256": "952065a136aa3d7c211a8d3bf7caf7ea58c85a7d30d88c0eabf79879a2426b88",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/UMAT/inputs_test.txt"
+    },
+    {
+     "path": "UMAT/shear_S111S1_GOH.dat",
+     "size": 10418,
+     "why": "may publish material constants",
+     "sha256": "bcb2a0dfd6372aa09b5fb64fa1e5509ad87ca68ae20f442d41d8ea54e07db003",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/UMAT/shear_S111S1_GOH.dat"
+    },
+    {
+     "path": "UMAT/shear_S111S1_xys.dat",
+     "size": 10240,
+     "why": "may publish material constants",
+     "sha256": "039ea0af85cf2d1fcdb21cb8c1a51bfbd9051421c326bf349efc3ecffe5e68a9",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/UMAT/shear_S111S1_xys.dat"
+    },
+    {
+     "path": "UMAT/square_expander.cae",
+     "size": 1048576,
+     "why": "may publish material constants",
+     "sha256": "c1e81a4633d39b06ffb59780bb3f81d28af66c99467742f1c3bbd16940153d38",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/UMAT/square_expander.cae"
+    },
+    {
+     "path": "UMAT/square_expander.dat",
+     "size": 292832,
+     "why": "may publish material constants",
+     "sha256": "cb85fb1a4f1854b269611f947d16db92a8d12bad9a6d7676710a67cb30cd4275",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/UMAT/square_expander.dat"
+    },
+    {
+     "path": "UMAT/torsion_S111S1_GOH.dat",
+     "size": 11585,
+     "why": "may publish material constants",
+     "sha256": "38bb25c6da59f7baedfe1e51fe6412c7edace63cd8a526579e42f4e7594b3a32",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/UMAT/torsion_S111S1_GOH.dat"
+    },
+    {
+     "path": "UMAT/torsion_S111S1_xys.dat",
+     "size": 11455,
+     "why": "may publish material constants",
+     "sha256": "87420813a64424b1c80d358bb5ca875f7a8eabe8b49882375ff282d938c82407",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/UMAT/torsion_S111S1_xys.dat"
+    },
+    {
+     "path": "UMAT/uniaxial_S111S1_xys.dat",
+     "size": 10059,
+     "why": "may publish material constants",
+     "sha256": "4d100122aaac8147a73f996d908e1b79fe2d3fd84ccef13890799252bda2f433",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/UMAT/uniaxial_S111S1_xys.dat"
+    },
+    {
+     "path": "UMAT/wb_P1C1_s.txt",
+     "size": 1228,
+     "why": "may publish material constants",
+     "sha256": "df8ffb6ef54abac8837ef905e36045bfda8ef6893d60f1b3878b47012a9f6bd3",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/UMAT/wb_P1C1_s.txt"
+    },
+    {
+     "path": "csv_to_npy_P12.py",
+     "size": 12445,
+     "why": "may publish material constants",
+     "sha256": "7e715de699caeae1b258c09232ae6e5db2092c03f143baf4c2f67a96308867cd",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/csv_to_npy_P12.py"
+    },
+    {
+     "path": "csv_to_npy_murine.py",
+     "size": 3163,
+     "why": "may publish material constants",
+     "sha256": "f7afeff5a90b18b40e8c961a57128b220cb65653a57cd70542f47d9f6d24cbde",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/csv_to_npy_murine.py"
+    },
+    {
+     "path": "csv_to_npy_porcine.py",
+     "size": 3142,
+     "why": "may publish material constants",
+     "sha256": "86e4ed08d5e736f2184025640c4d9a5faa1ab68648bed792063b5e7c1246b4f9",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/csv_to_npy_porcine.py"
+    },
+    {
+     "path": "estimate_CC.py",
+     "size": 4931,
+     "why": "may publish material constants",
+     "sha256": "4a57837c4c88ba5b7dcfbaf2ac50a726b15e8827aca924ff7b208a68bb028684",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/estimate_CC.py"
+    },
+    {
+     "path": "helper_modules/compare_convexity.py",
+     "size": 1736,
+     "why": "may publish material constants",
+     "sha256": "20d7edf594a45020814c2de8e5f9fde7f6a498d181babaf1135482e0c1364924",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/helper_modules/compare_convexity.py"
+    },
+    {
+     "path": "helper_modules/print_nn_values.py",
+     "size": 1890,
+     "why": "may publish material constants",
+     "sha256": "6ee9112f16f35b9173ac46641756bd18d4b07642f69fce954110911c862e4d72",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/helper_modules/print_nn_values.py"
+    },
+    {
+     "path": "material_models.py",
+     "size": 10181,
+     "why": "may publish material constants",
+     "sha256": "5b53de39279adc5acaf4b802c42dfe6614d2bd4fde9d5e6bc4901c9891718219",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/material_models.py"
+    },
+    {
+     "path": "savednet/P12AC1_bsxsys.json",
+     "size": 1593,
+     "why": "may publish material constants",
+     "sha256": "4782c39efa225549e3c5403d9e894f740254d65d5a742f2d45beea4a9fe221ee",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P12AC1_bsxsys.json"
+    },
+    {
+     "path": "savednet/P12AC1_sxsys.json",
+     "size": 1593,
+     "why": "may publish material constants",
+     "sha256": "38fad7c461a016161c04c9990fa27bd9ce8e9cb115ec02eefbfe741d6f308a7f",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P12AC1_sxsys.json"
+    },
+    {
+     "path": "savednet/P12AC1_xybs.json",
+     "size": 1583,
+     "why": "may publish material constants",
+     "sha256": "9983f2d91cfca47d6473dba88599018351114588e3b39a554597be9c22a2c433",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P12AC1_xybs.json"
+    },
+    {
+     "path": "savednet/P12AC1_xys.json",
+     "size": 1593,
+     "why": "may publish material constants",
+     "sha256": "819f40babf7d3e04c526323e5f732d5925751350c7baea048003e85d4d523798",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P12AC1_xys.json"
+    },
+    {
+     "path": "savednet/P12AC1_xysxsys.json",
+     "size": 1583,
+     "why": "may publish material constants",
+     "sha256": "9983f2d91cfca47d6473dba88599018351114588e3b39a554597be9c22a2c433",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P12AC1_xysxsys.json"
+    },
+    {
+     "path": "savednet/P12BC2_bsxsys.json",
+     "size": 1583,
+     "why": "may publish material constants",
+     "sha256": "9983f2d91cfca47d6473dba88599018351114588e3b39a554597be9c22a2c433",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P12BC2_bsxsys.json"
+    },
+    {
+     "path": "savednet/P12BC2_sxsys.json",
+     "size": 1583,
+     "why": "may publish material constants",
+     "sha256": "9983f2d91cfca47d6473dba88599018351114588e3b39a554597be9c22a2c433",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P12BC2_sxsys.json"
+    },
+    {
+     "path": "savednet/P12BC2_xybs.json",
+     "size": 1583,
+     "why": "may publish material constants",
+     "sha256": "9983f2d91cfca47d6473dba88599018351114588e3b39a554597be9c22a2c433",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P12BC2_xybs.json"
+    },
+    {
+     "path": "savednet/P12BC2_xys.json",
+     "size": 1593,
+     "why": "may publish material constants",
+     "sha256": "0d65ec07430a24ab6d6226de4a8019442411809d08270866ca71db2254bde289",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P12BC2_xys.json"
+    },
+    {
+     "path": "savednet/P12BC2_xysxsys.json",
+     "size": 1589,
+     "why": "may publish material constants",
+     "sha256": "3c53c0fd0feab5f4ed3264f7315f8d4acf2916f62879e3ca136cbf01a5672bef",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P12BC2_xysxsys.json"
+    },
+    {
+     "path": "savednet/P1C1_s.json",
+     "size": 1594,
+     "why": "may publish material constants",
+     "sha256": "6e9ffce2cbd13c88706e1eb9e2be36f856206d37930cbc48a5e27dc5ceb2ba7c",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P1C1_s.json"
+    },
+    {
+     "path": "savednet/P1C1_s_nonconv.json",
+     "size": 1591,
+     "why": "may publish material constants",
+     "sha256": "9c5d90d3be296643d4ff1a4dd1b8132c28eb92254c6f9b775d623b7cd0269920",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P1C1_s_nonconv.json"
+    },
+    {
+     "path": "savednet/P1C1_xy.json",
+     "size": 1594,
+     "why": "may publish material constants",
+     "sha256": "d5b98e46aa83bd4640695ac4174eaa3847b95df6b10db869911c7b4b20070689",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P1C1_xy.json"
+    },
+    {
+     "path": "savednet/P1C1_xy_nonconv.json",
+     "size": 1589,
+     "why": "may publish material constants",
+     "sha256": "324ca22e69a22cf500b8a0248ea6fb609e82f162eb6e8985cb5e60e7d1eb3abe",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P1C1_xy_nonconv.json"
+    },
+    {
+     "path": "savednet/P1C1_xyb.json",
+     "size": 1583,
+     "why": "may publish material constants",
+     "sha256": "9983f2d91cfca47d6473dba88599018351114588e3b39a554597be9c22a2c433",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P1C1_xyb.json"
+    },
+    {
+     "path": "savednet/P1C1_xybs.json",
+     "size": 1594,
+     "why": "may publish material constants",
+     "sha256": "b6c0dea4bfabe1635e49de19b193bf45e073ad8373598821836c1bd2734cf0dc",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P1C1_xybs.json"
+    },
+    {
+     "path": "savednet/P1C1_xys.json",
+     "size": 1594,
+     "why": "may publish material constants",
+     "sha256": "3241426f5b289f9bcf48e70e688f198dce6881e5a5d55b84b4e9b56b1b5dcee4",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P1C1_xys.json"
+    },
+    {
+     "path": "savednet/P2C1_xy.json",
+     "size": 1591,
+     "why": "may publish material constants",
+     "sha256": "9c5d90d3be296643d4ff1a4dd1b8132c28eb92254c6f9b775d623b7cd0269920",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/P2C1_xy.json"
+    },
+    {
+     "path": "savednet/S111S1_xy.json",
+     "size": 1589,
+     "why": "may publish material constants",
+     "sha256": "324ca22e69a22cf500b8a0248ea6fb609e82f162eb6e8985cb5e60e7d1eb3abe",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/S111S1_xy.json"
+    },
+    {
+     "path": "savednet/S111S1_xy_nonconv.json",
+     "size": 1583,
+     "why": "may publish material constants",
+     "sha256": "9983f2d91cfca47d6473dba88599018351114588e3b39a554597be9c22a2c433",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/S111S1_xy_nonconv.json"
+    },
+    {
+     "path": "savednet/S111S1_xyb.json",
+     "size": 1583,
+     "why": "may publish material constants",
+     "sha256": "9983f2d91cfca47d6473dba88599018351114588e3b39a554597be9c22a2c433",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/S111S1_xyb.json"
+    },
+    {
+     "path": "savednet/S111S1_xybs.json",
+     "size": 1594,
+     "why": "may publish material constants",
+     "sha256": "31af577b3dee81bf1559aae86c46101cc02d08e6ebcb707ee848b030253515f8",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/S111S1_xybs.json"
+    },
+    {
+     "path": "savednet/S111S1_xys.json",
+     "size": 1583,
+     "why": "may publish material constants",
+     "sha256": "9983f2d91cfca47d6473dba88599018351114588e3b39a554597be9c22a2c433",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/S111S1_xys.json"
+    },
+    {
+     "path": "savednet/S111S1_xys_nonconv.json",
+     "size": 1589,
+     "why": "may publish material constants",
+     "sha256": "3c53c0fd0feab5f4ed3264f7315f8d4acf2916f62879e3ca136cbf01a5672bef",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/S111S1_xys_nonconv.json"
+    },
+    {
+     "path": "savednet/test.json",
+     "size": 1594,
+     "why": "may publish material constants",
+     "sha256": "f4bc95fa13cea271f8e2e17caf2d6780656832bbcdfeb365a469f2e203970476",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/test.json"
+    },
+    {
+     "path": "savednet/test_P1C1_xy.json",
+     "size": 1583,
+     "why": "may publish material constants",
+     "sha256": "9983f2d91cfca47d6473dba88599018351114588e3b39a554597be9c22a2c433",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/test_P1C1_xy.json"
+    },
+    {
+     "path": "savednet/test_S111S1_xy.json",
+     "size": 1589,
+     "why": "may publish material constants",
+     "sha256": "324ca22e69a22cf500b8a0248ea6fb609e82f162eb6e8985cb5e60e7d1eb3abe",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/test_S111S1_xy.json"
+    },
+    {
+     "path": "savednet/test_S111S1pre_xy.json",
+     "size": 1589,
+     "why": "may publish material constants",
+     "sha256": "3c53c0fd0feab5f4ed3264f7315f8d4acf2916f62879e3ca136cbf01a5672bef",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/savednet/test_S111S1pre_xy.json"
+    },
+    {
+     "path": "training_data/murine_subject111_invitropreloaded/Subject111_GOH_params.txt",
+     "size": 173,
+     "why": "may publish material constants",
+     "sha256": "37a6fa490e43e1dabd6ef2ef418d3a7f4f924f6b0fa53f22fd209fc9fbf687ad",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitropreloaded/Subject111_GOH_params.txt"
+    },
+    {
+     "path": "training_data/murine_subject111_invitropreloaded/Subject111_Sample1_YoungDorsal_Equibiaxial.csv",
+     "size": 6645,
+     "why": "may publish material constants",
+     "sha256": "d417489558d0b16f50044fc2f8d1ae495a8549dc0e3190198db82ab765514d70",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitropreloaded/Subject111_Sample1_YoungDorsal_Equibiaxial.csv"
+    },
+    {
+     "path": "training_data/murine_subject111_invitropreloaded/Subject111_Sample1_YoungDorsal_OffbiaxialX.csv",
+     "size": 6652,
+     "why": "may publish material constants",
+     "sha256": "57867d774ac43fa7d504d5195fccf342bfea6246c43f8b60aa401b2d21024127",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitropreloaded/Subject111_Sample1_YoungDorsal_OffbiaxialX.csv"
+    },
+    {
+     "path": "training_data/murine_subject111_invitropreloaded/Subject111_Sample1_YoungDorsal_OffbiaxialY.csv",
+     "size": 6648,
+     "why": "may publish material constants",
+     "sha256": "7dc43a5a205aac8847d36d4e424743230fe071fff4c3aa33a71395877c331906",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitropreloaded/Subject111_Sample1_YoungDorsal_OffbiaxialY.csv"
+    },
+    {
+     "path": "training_data/murine_subject111_invitropreloaded/Subject111_Sample4_YoungDorsal_Equibiaxial.csv",
+     "size": 6658,
+     "why": "may publish material constants",
+     "sha256": "c75cc3f758b3b1dcacb8fc4821dbcd40b4da9147285ee7db6440b83b50b9e1a1",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitropreloaded/Subject111_Sample4_YoungDorsal_Equibiaxial.csv"
+    },
+    {
+     "path": "training_data/murine_subject111_invitropreloaded/Subject111_Sample4_YoungDorsal_OffbiaxialX.csv",
+     "size": 6685,
+     "why": "may publish material constants",
+     "sha256": "17e70f3184c117bbd22908b9af09dd4eee8e811e30896371b328ba3c0dc1b6a2",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitropreloaded/Subject111_Sample4_YoungDorsal_OffbiaxialX.csv"
+    },
+    {
+     "path": "training_data/murine_subject111_invitropreloaded/Subject111_Sample4_YoungDorsal_OffbiaxialY.csv",
+     "size": 6667,
+     "why": "may publish material constants",
+     "sha256": "ad29f0e8d87c1f380f094ca55d1f8758cd25025be66269cf6ca11019190fb62b",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitropreloaded/Subject111_Sample4_YoungDorsal_OffbiaxialY.csv"
+    },
+    {
+     "path": "training_data/murine_subject111_invitrounloaded/Subject111_GOH_params.txt",
+     "size": 285,
+     "why": "may publish material constants",
+     "sha256": "283968f5ec26444baa44529552831f37c70462c39c65420ef3ea635aa82218f3",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitrounloaded/Subject111_GOH_params.txt"
+    },
+    {
+     "path": "training_data/murine_subject111_invitrounloaded/Subject111_Sample1_YoungDorsal_Equibiaxial.csv",
+     "size": 6679,
+     "why": "may publish material constants",
+     "sha256": "c18b63b8cc1251dc7575f1713c0e5cdaa9ca0cc4d7ae2c73b3cd2c8dd00b1e19",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitrounloaded/Subject111_Sample1_YoungDorsal_Equibiaxial.csv"
+    },
+    {
+     "path": "training_data/murine_subject111_invitrounloaded/Subject111_Sample1_YoungDorsal_OffbiaxialX.csv",
+     "size": 6652,
+     "why": "may publish material constants",
+     "sha256": "e77b4b3670ee65d9027bf8d4cae7c4fa27ba092faf77b82c3c5f85a283f08714",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitrounloaded/Subject111_Sample1_YoungDorsal_OffbiaxialX.csv"
+    },
+    {
+     "path": "training_data/murine_subject111_invitrounloaded/Subject111_Sample1_YoungDorsal_OffbiaxialY.csv",
+     "size": 6672,
+     "why": "may publish material constants",
+     "sha256": "f3e1af4c279d4601aa3b67ca0865b848698bf2b3255bf8a04a0fcf3442e15673",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitrounloaded/Subject111_Sample1_YoungDorsal_OffbiaxialY.csv"
+    },
+    {
+     "path": "training_data/murine_subject111_invitrounloaded/Subject111_Sample4_YoungDorsal_Equibiaxial.csv",
+     "size": 6679,
+     "why": "may publish material constants",
+     "sha256": "4fcc336f5ab116bf42dcc58c551084b01cdfcb4ef23e2fe0a55c54c034f8ea9f",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitrounloaded/Subject111_Sample4_YoungDorsal_Equibiaxial.csv"
+    },
+    {
+     "path": "training_data/murine_subject111_invitrounloaded/Subject111_Sample4_YoungDorsal_OffbiaxialX.csv",
+     "size": 6691,
+     "why": "may publish material constants",
+     "sha256": "59578458fd8147c4aa2387318ee25f141a0eba0142b81f31966ae7e364a8883d",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitrounloaded/Subject111_Sample4_YoungDorsal_OffbiaxialX.csv"
+    },
+    {
+     "path": "training_data/murine_subject111_invitrounloaded/Subject111_Sample4_YoungDorsal_OffbiaxialY.csv",
+     "size": 6653,
+     "why": "may publish material constants",
+     "sha256": "7a9566dce197c4f6f72005503c5bdcf9d9ee5ffc4f865627e0ba5a57ed4ecd55",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/murine_subject111_invitrounloaded/Subject111_Sample4_YoungDorsal_OffbiaxialY.csv"
+    },
+    {
+     "path": "training_data/porcine_P12AC1/P12AC1S1_Equibiaxial.csv",
+     "size": 10122,
+     "why": "may publish material constants",
+     "sha256": "7b72ddefe1a7b49d5cb31ae3082464290a2150e0d679ea4ed4f26f0aa8d65b60",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P12AC1/P12AC1S1_Equibiaxial.csv"
+    },
+    {
+     "path": "training_data/porcine_P12AC1/P12AC1S1_OffX.csv",
+     "size": 7523,
+     "why": "may publish material constants",
+     "sha256": "f0d1abef3b3b2ef551d468092556def1c7c813a1c11210483a41d2df8726bad0",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P12AC1/P12AC1S1_OffX.csv"
+    },
+    {
+     "path": "training_data/porcine_P12AC1/P12AC1S1_OffY.csv",
+     "size": 7621,
+     "why": "may publish material constants",
+     "sha256": "369eff61c95a49f026ba48ebaecb335a9a3f59a95a4cec3b71adbb2e4e8b6b12",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P12AC1/P12AC1S1_OffY.csv"
+    },
+    {
+     "path": "training_data/porcine_P12AC1/P12AC1S1_StripX.csv",
+     "size": 10123,
+     "why": "may publish material constants",
+     "sha256": "a871b7319a1fd46491f1fb9d8fa464948f5f9a8048af194bc7c5769f0cc9314d",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P12AC1/P12AC1S1_StripX.csv"
+    },
+    {
+     "path": "training_data/porcine_P12AC1/P12AC1S1_StripY.csv",
+     "size": 10119,
+     "why": "may publish material constants",
+     "sha256": "b5f8b3d8454cfa3c7461dfe2ec3391c3051d603ec8101e1aee90dd44d7a1d812",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P12AC1/P12AC1S1_StripY.csv"
+    },
+    {
+     "path": "training_data/porcine_P12BC2/P12BC2S1_Equibiaxial.csv",
+     "size": 10119,
+     "why": "may publish material constants",
+     "sha256": "0ba9796a234eea894364c29e4c8e673053d4ea9ed191e2756425a6a7d74d4a9e",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P12BC2/P12BC2S1_Equibiaxial.csv"
+    },
+    {
+     "path": "training_data/porcine_P12BC2/P12BC2S1_OffX.csv",
+     "size": 7619,
+     "why": "may publish material constants",
+     "sha256": "d49f73786b252341e5ca51d9b045b18e9816df156e32442b726341b3d74fd5ac",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P12BC2/P12BC2S1_OffX.csv"
+    },
+    {
+     "path": "training_data/porcine_P12BC2/P12BC2S1_OffY.csv",
+     "size": 7621,
+     "why": "may publish material constants",
+     "sha256": "f085c2e54ac9f1a9997d603c6ea9676d93ae7cf274a88d3e3ceaef4592bfbc8b",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P12BC2/P12BC2S1_OffY.csv"
+    },
+    {
+     "path": "training_data/porcine_P12BC2/P12BC2S1_StripX.csv",
+     "size": 10118,
+     "why": "may publish material constants",
+     "sha256": "5002d9063aa49f329c04213283c759c23fee8450230990edf3353f20058cdc19",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P12BC2/P12BC2S1_StripX.csv"
+    },
+    {
+     "path": "training_data/porcine_P12BC2/P12BC2S1_StripY.csv",
+     "size": 10118,
+     "why": "may publish material constants",
+     "sha256": "c86002bf4c0c45052a954ae32c5f2ae07532b6e1fcdf26abc220a39e5c5ea988",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P12BC2/P12BC2S1_StripY.csv"
+    },
+    {
+     "path": "training_data/porcine_P1C1/P1C1S1_OffX.csv",
+     "size": 6133,
+     "why": "may publish material constants",
+     "sha256": "d7149c514da0246ba1c6a2a5b962e4a924a66174a7ea45156bb0b828250552c4",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P1C1/P1C1S1_OffX.csv"
+    },
+    {
+     "path": "training_data/porcine_P1C1/P1C1S1_OffY.csv",
+     "size": 6141,
+     "why": "may publish material constants",
+     "sha256": "8311bf5662053c90264ef4bfbc8fa72ac004cc6850aca6931cc83ec1dd8c5fa8",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P1C1/P1C1S1_OffY.csv"
+    },
+    {
+     "path": "training_data/porcine_P1C1/P1C1_GOH_params.txt",
+     "size": 80,
+     "why": "may publish material constants",
+     "sha256": "7ae845e9c892396a7212e2f63df57eb06f5e4b7028e7522a185fa11609d98eb4",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P1C1/P1C1_GOH_params.txt"
+    },
+    {
+     "path": "training_data/porcine_P2C1/P2C1S1_Equibiaxial.csv",
+     "size": 7653,
+     "why": "may publish material constants",
+     "sha256": "473346c097f7b31eb5b040e716b046c043332e839ed66d743026f9bb25611b0b",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P2C1/P2C1S1_Equibiaxial.csv"
+    },
+    {
+     "path": "training_data/porcine_P2C1/P2C1S1_OffX.csv",
+     "size": 6142,
+     "why": "may publish material constants",
+     "sha256": "28e4cd6907ba73ac569c897df5cd261e2396779b7d8836df4304ac4fc539b12e",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P2C1/P2C1S1_OffX.csv"
+    },
+    {
+     "path": "training_data/porcine_P2C1/P2C1S1_OffY.csv",
+     "size": 6154,
+     "why": "may publish material constants",
+     "sha256": "8a1f2bac01223bb1c3e713939856649b14543d11c32a2066010c5a53cf68cb75",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P2C1/P2C1S1_OffY.csv"
+    },
+    {
+     "path": "training_data/porcine_P2C1/P2C1_GOH_params.txt",
+     "size": 76,
+     "why": "may publish material constants",
+     "sha256": "4d2acc7531293bca7b4388e96e5d0caa20cbe7de89818f2dd659a6dda19ad2c0",
+     "written": true,
+     "url": "https://github.com/abuganza/NN_aniso_UMAT/blob/19229f264aff2763a8ff0e109f160c91210d8ba4/training_data/porcine_P2C1/P2C1_GOH_params.txt"
+    }
+   ],
+   "still_missing": [],
+   "skipped": [],
+   "error": ""
+  },
+  {
+   "repository": "cbgeo-archives__hpc-scripts",
+   "commit": "7c93308b0d67e6b5bbd4a0118edadffd01d771d7",
+   "license_spdx": "MIT",
+   "license_source": "LICENSE (SPDX MIT via the GitHub licence API)",
+   "tree_files": 14,
+   "wanted_modules": [],
+   "wanted_includes": [],
+   "fetched": [
+    {
+     "path": "README.md",
+     "size": 98,
+     "why": "may publish material constants",
+     "sha256": "3c48bb893ddd7eacc8da38f35aa76325fb94ba1f551469d457da38232e510131",
+     "written": true,
+     "url": "https://github.com/cbgeo-archives/hpc-scripts/blob/7c93308b0d67e6b5bbd4a0118edadffd01d771d7/README.md"
+    },
+    {
+     "path": "abaqus/README.md",
+     "size": 2389,
+     "why": "may publish material constants",
+     "sha256": "5e99a205d367d02ce6dfff45cdc674c007fa8983c04046a19442295dbc47b8a9",
+     "written": true,
+     "url": "https://github.com/cbgeo-archives/hpc-scripts/blob/7c93308b0d67e6b5bbd4a0118edadffd01d771d7/abaqus/README.md"
+    },
+    {
+     "path": "comsol.txt",
+     "size": 5288,
+     "why": "may publish material constants",
+     "sha256": "31020a4e8a68e61e790edc8d0c3157b7cbdad533544054dff7eeb90063a6ec6e",
+     "written": true,
+     "url": "https://github.com/cbgeo-archives/hpc-scripts/blob/7c93308b0d67e6b5bbd4a0118edadffd01d771d7/comsol.txt"
+    },
+    {
+     "path": "darwin.txt",
+     "size": 4988,
+     "why": "may publish material constants",
+     "sha256": "b22655115dc8578420ea3dfe4164d60fcd737d3c4091308da81bdff2be72528a",
+     "written": true,
+     "url": "https://github.com/cbgeo-archives/hpc-scripts/blob/7c93308b0d67e6b5bbd4a0118edadffd01d771d7/darwin.txt"
+    },
+    {
+     "path": "tesla.txt",
+     "size": 5131,
+     "why": "may publish material constants",
+     "sha256": "430f5aa39cb264fade27572f0960b057f190edb758daea3fb8228b323551463b",
+     "written": true,
+     "url": "https://github.com/cbgeo-archives/hpc-scripts/blob/7c93308b0d67e6b5bbd4a0118edadffd01d771d7/tesla.txt"
+    }
+   ],
+   "still_missing": [],
+   "skipped": [],
+   "error": ""
+  },
+  {
+   "repository": "keisuke58__Tmcmc202601",
+   "commit": "40ec73b98b576d08b5c437a53017d984920939d1",
+   "license_spdx": "MIT",
+   "license_source": "LICENSE (SPDX MIT via the GitHub licence API)",
+   "tree_files": 3608,
+   "wanted_modules": [],
+   "wanted_includes": [],
+   "fetched": [
+    {
+     "path": ".github/FUNDING.yml",
+     "size": 18,
+     "why": "may publish material constants",
+     "sha256": "06c0e712fc93853a3d066693b2e16ad69512b2184a37d600876557e351f2b814",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/FUNDING.yml"
+    },
+    {
+     "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+     "size": 601,
+     "why": "may publish material constants",
+     "sha256": "f6b492fb4820c01d8c836d0146b5d0953f11220e762bdf0d88b83b89d537edee",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/ISSUE_TEMPLATE/bug_report.md"
+    },
+    {
+     "path": ".github/ISSUE_TEMPLATE/code_verification.md",
+     "size": 534,
+     "why": "may publish material constants",
+     "sha256": "2a76d2b3df9603f0626f76730945d726c535c98aac427f2ac330ac66e462d778",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/ISSUE_TEMPLATE/code_verification.md"
+    },
+    {
+     "path": ".github/ISSUE_TEMPLATE/config.yml",
+     "size": 363,
+     "why": "may publish material constants",
+     "sha256": "b2023cf2cfdc524b949000f659450b5797b6ad552f40bd23bc5a2aed011081ee",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/ISSUE_TEMPLATE/config.yml"
+    },
+    {
+     "path": ".github/ISSUE_TEMPLATE/experimental_verification_DI.md",
+     "size": 1541,
+     "why": "may publish material constants",
+     "sha256": "f5c8b82d8215c248b686d209e9e589c1d6040f54f5d936d83fad09e8d917df34",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/ISSUE_TEMPLATE/experimental_verification_DI.md"
+    },
+    {
+     "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+     "size": 461,
+     "why": "may publish material constants",
+     "sha256": "b46f32510b385777bd6f43828c397e521c77dfec2949875746e1745a8094fb20",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/ISSUE_TEMPLATE/feature_request.md"
+    },
+    {
+     "path": ".github/ISSUE_TEMPLATE/paper_discussion.md",
+     "size": 574,
+     "why": "may publish material constants",
+     "sha256": "a2256eb374eeea75d21296cecdd50f733589d27ab40290f04043ad078cb59a6d",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/ISSUE_TEMPLATE/paper_discussion.md"
+    },
+    {
+     "path": ".github/PULL_REQUEST_TEMPLATE.md",
+     "size": 637,
+     "why": "may publish material constants",
+     "sha256": "20ef361da72e999a03ad786c157d0ae64c6a52ae5a549d6f12f55479b9eb3f63",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/PULL_REQUEST_TEMPLATE.md"
+    },
+    {
+     "path": ".github/WORKFLOWS.md",
+     "size": 1550,
+     "why": "may publish material constants",
+     "sha256": "b10b589d532f3b6e3ffa026ed79ace3222c7d01ffa3c9d58c90e3bade73d4ea5",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/WORKFLOWS.md"
+    },
+    {
+     "path": ".github/baselines/README.md",
+     "size": 557,
+     "why": "may publish material constants",
+     "sha256": "6103637635719b0b2fe7cc31a5e817e54540814fe48367efdf52226e911a470f",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/baselines/README.md"
+    },
+    {
+     "path": ".github/dependabot.yml",
+     "size": 623,
+     "why": "may publish material constants",
+     "sha256": "79d11d59c8ba01b0dde8d24f26e7f4e66426cf1e1d540769ba84ec8647aea476",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/dependabot.yml"
+    },
+    {
+     "path": ".github/release-drafter.yml",
+     "size": 743,
+     "why": "may publish material constants",
+     "sha256": "9f4b7e51b14e1380fae7c65c8786e0456c7b63a46d0dd03b76abc9d5b45727c3",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/release-drafter.yml"
+    },
+    {
+     "path": ".github/workflows/auto-label.yml",
+     "size": 1534,
+     "why": "may publish material constants",
+     "sha256": "f4012d3c1ccbeb3e337879e5baff7105d2abc7a03de34a34f49132d53532f25b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/auto-label.yml"
+    },
+    {
+     "path": ".github/workflows/benchmark.yml",
+     "size": 1728,
+     "why": "may publish material constants",
+     "sha256": "f766aa94fbb1b3e4e89ebae3a11426db6064da5b3d8b18cde5b36e55ddf807eb",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/benchmark.yml"
+    },
+    {
+     "path": ".github/workflows/codeql.yml",
+     "size": 868,
+     "why": "may publish material constants",
+     "sha256": "69927c7e7e0a5155fcde5018fc284cbf42e0136275c3d2c240c6c475e19af7ff",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/codeql.yml"
+    },
+    {
+     "path": ".github/workflows/commitlint.yml",
+     "size": 1107,
+     "why": "may publish material constants",
+     "sha256": "4b6b4fa4f2a26856fe99f2609fcb82b7b91f3f54fab9852fd7ff806e365f7c62",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/commitlint.yml"
+    },
+    {
+     "path": ".github/workflows/figure-regression.yml",
+     "size": 2265,
+     "why": "may publish material constants",
+     "sha256": "55491b14187d252f5be55d52345c9a9c367b2541e981245e3b9d045d4b5a21a0",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/figure-regression.yml"
+    },
+    {
+     "path": ".github/workflows/latex-build.yml",
+     "size": 1816,
+     "why": "may publish material constants",
+     "sha256": "baf3cbfddde68302c251a9f25ff6c163f623d2a9fab7e542898168ad7a7fed36",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/latex-build.yml"
+    },
+    {
+     "path": ".github/workflows/lint.yml",
+     "size": 1620,
+     "why": "may publish material constants",
+     "sha256": "0bb0fdbbeb562db618b98872966330d06ce25d66f5380300d9d018465d37710f",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/lint.yml"
+    },
+    {
+     "path": ".github/workflows/python-check.yml",
+     "size": 957,
+     "why": "may publish material constants",
+     "sha256": "aefe0ab199d96896f7704bf4ea984300e817cb603047eeb44982ca1189e8ff3b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/python-check.yml"
+    },
+    {
+     "path": ".github/workflows/release-drafter.yml",
+     "size": 488,
+     "why": "may publish material constants",
+     "sha256": "33335cdb53290e944de06b5ff8fbe4c9400b9275db38fef3fc54b78961e3de4a",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/release-drafter.yml"
+    },
+    {
+     "path": ".github/workflows/release-on-tag.yml",
+     "size": 1432,
+     "why": "may publish material constants",
+     "sha256": "dc7befb2abf44bba8dc9a3cfb9955798c78d35df28c1cfa2b91c1026b4422c58",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/release-on-tag.yml"
+    },
+    {
+     "path": ".github/workflows/reproducibility.yml",
+     "size": 1544,
+     "why": "may publish material constants",
+     "sha256": "7c8b070856b7dabe4bcf911556ef27765c1cfdf310fd9ccc2d5ac1a864eabc2d",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/reproducibility.yml"
+    },
+    {
+     "path": ".github/workflows/security.yml",
+     "size": 1306,
+     "why": "may publish material constants",
+     "sha256": "f635dd2c74f36eb22862de03f64d5d0bb04f79ec70e110a569f3126ec2b3a362",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/security.yml"
+    },
+    {
+     "path": ".github/workflows/stale.yml",
+     "size": 1481,
+     "why": "may publish material constants",
+     "sha256": "bf4eded10bd26446c660fe54b7eaf3bf0e5313683a560618b62f49ac98138acf",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/stale.yml"
+    },
+    {
+     "path": ".github/workflows/test.yml",
+     "size": 1722,
+     "why": "may publish material constants",
+     "sha256": "956cd335825a3fb5c4d92f874064877bd3de2b269e090a6b732f1cfb5ffb02d0",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/test.yml"
+    },
+    {
+     "path": ".github/workflows/welcome.yml",
+     "size": 1057,
+     "why": "may publish material constants",
+     "sha256": "88d77a36f242cda99a452633b98946c4bb5379670ebdf998f12af3384d847142",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.github/workflows/welcome.yml"
+    },
+    {
+     "path": ".pre-commit-config.yaml",
+     "size": 806,
+     "why": "may publish material constants",
+     "sha256": "b7b3d81dbc63ab17f8324ff81b18a7693ab9f5a7fa69c7a0fe6ecc2e3828e525",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/.pre-commit-config.yaml"
+    },
+    {
+     "path": "ARCHITECTURE.md",
+     "size": 6459,
+     "why": "may publish material constants",
+     "sha256": "4c7781ee52f1816020f324d8c4b9a67e2ed2b2c102bee86e2d0538f2bd0d0e28",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/ARCHITECTURE.md"
+    },
+    {
+     "path": "CHANGELOG.md",
+     "size": 8332,
+     "why": "may publish material constants",
+     "sha256": "51e19023365d772651dcf70570d76174f72b54a120fef362bc5d956456cfc343",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/CHANGELOG.md"
+    },
+    {
+     "path": "CODE_OF_CONDUCT.md",
+     "size": 1443,
+     "why": "may publish material constants",
+     "sha256": "fb3f643946a000783174a065df86980d73976c78c98f2d3fd742e2a33849bdea",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/CODE_OF_CONDUCT.md"
+    },
+    {
+     "path": "CONTRIBUTING.md",
+     "size": 1826,
+     "why": "may publish material constants",
+     "sha256": "5d91359e1789c9147ad40bbb8b962d17fcf23dde3d41a93b21e041ba757ac6e9",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/CONTRIBUTING.md"
+    },
+    {
+     "path": "FEM/DI_Eeff_sensitivity.md",
+     "size": 7129,
+     "why": "may publish material constants",
+     "sha256": "b8635fd693b1c3db1935ea8388b1672579d66da4b7e3eea499c4d8b27121fe5b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/DI_Eeff_sensitivity.md"
+    },
+    {
+     "path": "FEM/FEM/_stress_2d_results/summary_demo_phi_pg.json",
+     "size": 410,
+     "why": "may publish material constants",
+     "sha256": "064c4fdcb9511bae6dc9cc95d6862c2ae3c22057f05a6e8ddaa2abc6ed89f6a3",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/FEM/_stress_2d_results/summary_demo_phi_pg.json"
+    },
+    {
+     "path": "FEM/FEM_FILE_MANAGEMENT.md",
+     "size": 7688,
+     "why": "may publish material constants",
+     "sha256": "2c0c1ec75393d4067ad42010fbe57204cf911a61a5e493a2775f4edbbf6144eb",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/FEM_FILE_MANAGEMENT.md"
+    },
+    {
+     "path": "FEM/FEM_PLAN.md",
+     "size": 16466,
+     "why": "may publish material constants",
+     "sha256": "93b7d0f85e4224b97b9a2aade5f978a5636b22b8f217741efb3737e6da4f2848",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/FEM_PLAN.md"
+    },
+    {
+     "path": "FEM/FEM_README.md",
+     "size": 12952,
+     "why": "may publish material constants",
+     "sha256": "714a392e2edde0bee1fb78f5fb50b2ea7fe33cf47319d3879834f6ad17b09744",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/FEM_README.md"
+    },
+    {
+     "path": "FEM/JAXFEM/__init__.py",
+     "size": 0,
+     "why": "may publish material constants",
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/__init__.py"
+    },
+    {
+     "path": "FEM/JAXFEM/compare_fem_vem.py",
+     "size": 9349,
+     "why": "may publish material constants",
+     "sha256": "a6cf4180c472ded6e2d15c6770eeaa35bb9bf95e2b09150e2a860f868921ac33",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/compare_fem_vem.py"
+    },
+    {
+     "path": "FEM/JAXFEM/core_hamilton_1d.py",
+     "size": 8110,
+     "why": "may publish material constants",
+     "sha256": "f56c8fa3786d1d485c4aad70887ffd2b68e3fb362406ea4abe1c90633ab865b4",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/core_hamilton_1d.py"
+    },
+    {
+     "path": "FEM/JAXFEM/core_hamilton_1d_nutrient.py",
+     "size": 11020,
+     "why": "may publish material constants",
+     "sha256": "39ab829e97c18befe6ffda8763e8160bdda08e7cf2f11f12520cc39e8882b16e",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/core_hamilton_1d_nutrient.py"
+    },
+    {
+     "path": "FEM/JAXFEM/core_hamilton_2d.py",
+     "size": 2579,
+     "why": "may publish material constants",
+     "sha256": "6fe58e29f3b829ffb7ab56980ca8b2b7a7e3ef6215e0405d2893ec2c35a582fb",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/core_hamilton_2d.py"
+    },
+    {
+     "path": "FEM/JAXFEM/core_hamilton_2d_nutrient.py",
+     "size": 37785,
+     "why": "may publish material constants",
+     "sha256": "8f04b0e07802912d8c0cffd60b028ad9c6ad9f3d9b23ba731746ad2d729eb644",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/core_hamilton_2d_nutrient.py"
+    },
+    {
+     "path": "FEM/JAXFEM/core_rd.py",
+     "size": 4121,
+     "why": "may publish material constants",
+     "sha256": "9ec4a5176a5e3ad8f3e1ba3f208287697710fb47177adaaf08401b50dd66bbf7",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/core_rd.py"
+    },
+    {
+     "path": "FEM/JAXFEM/demo_compare_nd.py",
+     "size": 693,
+     "why": "may publish material constants",
+     "sha256": "b8d9ae10533aa73a71195a1eb24ff3b004543656d4cacdf0197129b4cd9766a2",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/demo_compare_nd.py"
+    },
+    {
+     "path": "FEM/JAXFEM/demo_hamilton_1d.py",
+     "size": 679,
+     "why": "may publish material constants",
+     "sha256": "046aba9c971d57aeab70f914b05e738b4eccca2bf067f68d4da8f31bed3a3c3c",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/demo_hamilton_1d.py"
+    },
+    {
+     "path": "FEM/JAXFEM/demo_hamilton_2d.py",
+     "size": 782,
+     "why": "may publish material constants",
+     "sha256": "9fbdc67767a8f0b47d827099d15d328b857c1b1835e78372f8f407e54e0b245f",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/demo_hamilton_2d.py"
+    },
+    {
+     "path": "FEM/JAXFEM/extract_alpha_field_1d.py",
+     "size": 13967,
+     "why": "may publish material constants",
+     "sha256": "52170646e184ec8b055cf3749c0a4dc4b7af3751c3d09f95912388e96a205221",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/extract_alpha_field_1d.py"
+    },
+    {
+     "path": "FEM/JAXFEM/make_datasets.py",
+     "size": 2101,
+     "why": "may publish material constants",
+     "sha256": "ac9f898315cd947fd599629f4486d1d9c94ed72ebdb4e611371afbe847e3381b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/make_datasets.py"
+    },
+    {
+     "path": "FEM/JAXFEM/param_estimation_1d.py",
+     "size": 1768,
+     "why": "may publish material constants",
+     "sha256": "a271230f24d67aebcfd81f2ef4a2a65c203fd02d61e72d62e9faabd7f704c201",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/param_estimation_1d.py"
+    },
+    {
+     "path": "FEM/JAXFEM/param_estimation_2d.py",
+     "size": 1752,
+     "why": "may publish material constants",
+     "sha256": "d737405abf8f03ec7b52b20a7b6097244c0f6a590814012fabc0f7e288884390",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/param_estimation_2d.py"
+    },
+    {
+     "path": "FEM/JAXFEM/param_estimation_hamilton_1d.py",
+     "size": 2420,
+     "why": "may publish material constants",
+     "sha256": "e4bf59dd333b515be7973af45e1a3b29fc05f174cecabf1e25c15c9914c76de8",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/param_estimation_hamilton_1d.py"
+    },
+    {
+     "path": "FEM/JAXFEM/pinn_1d_demo.py",
+     "size": 3637,
+     "why": "may publish material constants",
+     "sha256": "b02552fe18dbf164a6a1002193568450a27050a5ef5721fed3518e4bcfeb67da",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/pinn_1d_demo.py"
+    },
+    {
+     "path": "FEM/JAXFEM/run_coupled_staggered.py",
+     "size": 35089,
+     "why": "may publish material constants",
+     "sha256": "66cbcfffd135cfafbaba0eb4e14a313f3d6923ed318fce16fd45fd28c9173e3f",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/run_coupled_staggered.py"
+    },
+    {
+     "path": "FEM/JAXFEM/run_validation_study.py",
+     "size": 18730,
+     "why": "may publish material constants",
+     "sha256": "5fffb41a513a291089749fe0815da12425450ab041a5d2e86aaec9e3658089fd",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/run_validation_study.py"
+    },
+    {
+     "path": "FEM/JAXFEM/solve_stress_2d.py",
+     "size": 38956,
+     "why": "may publish material constants",
+     "sha256": "ad41c88d1ba06339a25c23cc866b372125d8d5318eee2dda5a86393452043a3a",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/solve_stress_2d.py"
+    },
+    {
+     "path": "FEM/JAXFEM/solve_stress_2d_vem.py",
+     "size": 31423,
+     "why": "may publish material constants",
+     "sha256": "5400863af2b854bc0ec8933c33fdf2147a23e5c1e4cd678ea61aaec5dcc599b3",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/JAXFEM/solve_stress_2d_vem.py"
+    },
+    {
+     "path": "FEM/P23_Comm_NH_depth.csv",
+     "size": 685,
+     "why": "may publish material constants",
+     "sha256": "c38025b47f694154158e7ebd7a01cda90fe309fe232c4a864dcedbb3484bfede",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/P23_Comm_NH_depth.csv"
+    },
+    {
+     "path": "FEM/_3model_bayes_factor/3model_metrics.json",
+     "size": 3771,
+     "why": "may publish material constants",
+     "sha256": "7b2e0a3fb5f9f96aef623b8116f3a60bdf6deee6717f824b8c07d62e4fda23a7",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_3model_bayes_factor/3model_metrics.json"
+    },
+    {
+     "path": "FEM/_3model_comparison/3model_summary.json",
+     "size": 3051,
+     "why": "may publish material constants",
+     "sha256": "9d813d06ee2236649c01d7ad58ef73f34f97104464ac12c8d19c1339317653c6",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_3model_comparison/3model_summary.json"
+    },
+    {
+     "path": "FEM/_3model_comparison/commensal_static_phi_pg/_extract.py",
+     "size": 1046,
+     "why": "may publish material constants",
+     "sha256": "1307dbb40daac8f6b7a5355ac21f2656f2ef0c6567979292fefec78cc830586a",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_3model_comparison/commensal_static_phi_pg/_extract.py"
+    },
+    {
+     "path": "FEM/_3model_comparison/commensal_static_phi_pg/two_layer_T23_commensal_static_phi_pg_stress.json",
+     "size": 193,
+     "why": "may publish material constants",
+     "sha256": "d0666fb742f019ff101c2bacaa322a2fb58059cebbe376d57458f71b933e4e5b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_3model_comparison/commensal_static_phi_pg/two_layer_T23_commensal_static_phi_pg_stress.json"
+    },
+    {
+     "path": "FEM/_3model_comparison/commensal_static_virulence/_extract.py",
+     "size": 1045,
+     "why": "may publish material constants",
+     "sha256": "7e29413bb065685668033378692b95e95c5ea5ee6183ffcfb0db484849d83934",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_3model_comparison/commensal_static_virulence/_extract.py"
+    },
+    {
+     "path": "FEM/_3model_comparison/commensal_static_virulence/two_layer_T23_commensal_static_virulence_stress.json",
+     "size": 198,
+     "why": "may publish material constants",
+     "sha256": "f0f10d8cd18c9454421f6ffb2ac83024ca74cfbef02f44363996255346eecb2d",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_3model_comparison/commensal_static_virulence/two_layer_T23_commensal_static_virulence_stress.json"
+    },
+    {
+     "path": "FEM/_3model_comparison/dysbiotic_static_phi_pg/_extract.py",
+     "size": 1046,
+     "why": "may publish material constants",
+     "sha256": "1307dbb40daac8f6b7a5355ac21f2656f2ef0c6567979292fefec78cc830586a",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_3model_comparison/dysbiotic_static_phi_pg/_extract.py"
+    },
+    {
+     "path": "FEM/_3model_comparison/dysbiotic_static_phi_pg/two_layer_T23_dysbiotic_static_phi_pg_stress.json",
+     "size": 196,
+     "why": "may publish material constants",
+     "sha256": "32c6c2834f66d582b218c4cacecee046da0166cf968b87fe94c1a6243866b8cc",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_3model_comparison/dysbiotic_static_phi_pg/two_layer_T23_dysbiotic_static_phi_pg_stress.json"
+    },
+    {
+     "path": "FEM/_3model_comparison/dysbiotic_static_virulence/_extract.py",
+     "size": 1045,
+     "why": "may publish material constants",
+     "sha256": "7e29413bb065685668033378692b95e95c5ea5ee6183ffcfb0db484849d83934",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_3model_comparison/dysbiotic_static_virulence/_extract.py"
+    },
+    {
+     "path": "FEM/_3model_comparison/dysbiotic_static_virulence/two_layer_T23_dysbiotic_static_virulence_stress.json",
+     "size": 196,
+     "why": "may publish material constants",
+     "sha256": "1c327a2e4b20b3c1813480d5a2b3d6b9c67d97d2e8070318b0a69ad6efdb07fc",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_3model_comparison/dysbiotic_static_virulence/two_layer_T23_dysbiotic_static_virulence_stress.json"
+    },
+    {
+     "path": "FEM/_4model_bayes_factor/3model_metrics.json",
+     "size": 9276,
+     "why": "may publish material constants",
+     "sha256": "9180554e3928d950121582e930875f54f4cdc81d548389788be615a15a0a9d97",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_4model_bayes_factor/3model_metrics.json"
+    },
+    {
+     "path": "FEM/_abaqus_1kpa_jobs/1kpa_summary.json",
+     "size": 1181,
+     "why": "may publish material constants",
+     "sha256": "a90e105ef5dbd3e9b19095a81b76b0200beabfa277c5660ceedd38a2389dfdc5",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_1kpa_jobs/1kpa_summary.json"
+    },
+    {
+     "path": "FEM/_abaqus_fields/standard_3d/abaqus_field_Commensal_HOBIC_late.csv",
+     "size": 270095,
+     "why": "may publish material constants",
+     "sha256": "633b6d8863ed9782524f1f8f8f573c75d00c34a5a4d2e59dc497ec85c0952632",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_fields/standard_3d/abaqus_field_Commensal_HOBIC_late.csv"
+    },
+    {
+     "path": "FEM/_abaqus_fields/standard_3d/abaqus_field_Commensal_HOBIC_snap20.csv",
+     "size": 405094,
+     "why": "may publish material constants",
+     "sha256": "7efdb5fcb5c8e51f77b84fbd2de58d3073a6093aeb84c0653b2ac47932910e38",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_fields/standard_3d/abaqus_field_Commensal_HOBIC_snap20.csv"
+    },
+    {
+     "path": "FEM/_abaqus_fields/standard_3d/abaqus_field_Commensal_Static_snap20.csv",
+     "size": 405095,
+     "why": "may publish material constants",
+     "sha256": "d2fed1a1b8c41ffc1ec26df562571b3120c963ef26724040e6706e2831282dd4",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_fields/standard_3d/abaqus_field_Commensal_Static_snap20.csv"
+    },
+    {
+     "path": "FEM/_abaqus_fields/standard_3d/abaqus_field_Dysbiotic_HOBIC_snap20.csv",
+     "size": 405094,
+     "why": "may publish material constants",
+     "sha256": "701e071316ba05e13013894d99d1ab0d528837fa2c1b557e7d39e3c3e6b76def",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_fields/standard_3d/abaqus_field_Dysbiotic_HOBIC_snap20.csv"
+    },
+    {
+     "path": "FEM/_abaqus_fields/standard_3d/abaqus_field_Dysbiotic_Static_late.csv",
+     "size": 270096,
+     "why": "may publish material constants",
+     "sha256": "76dc743bfcbaf041f442401be78743b102571e2b1f4aca9e5de948dff4c00202",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_fields/standard_3d/abaqus_field_Dysbiotic_Static_late.csv"
+    },
+    {
+     "path": "FEM/_abaqus_fields/standard_3d/abaqus_field_Dysbiotic_Static_snap20.csv",
+     "size": 405095,
+     "why": "may publish material constants",
+     "sha256": "f595c0836289f46a336d27c60d3216949021a424da14e0026268a84890d31418",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_fields/standard_3d/abaqus_field_Dysbiotic_Static_snap20.csv"
+    },
+    {
+     "path": "FEM/_abaqus_fields/standard_3d/abaqus_field_commensal_static_late.csv",
+     "size": 270096,
+     "why": "may publish material constants",
+     "sha256": "9466aa6f77c7150c1da2e350b0b7ca2a9a83d9fe84b23820f4f09e6a47c61164",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_fields/standard_3d/abaqus_field_commensal_static_late.csv"
+    },
+    {
+     "path": "FEM/_abaqus_fields/standard_3d/abaqus_field_commensal_static_snap20.csv",
+     "size": 405095,
+     "why": "may publish material constants",
+     "sha256": "45be50f4c273babfd764d41a725b85b15961ac03fc0900f8abf400eae9971ce4",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_fields/standard_3d/abaqus_field_commensal_static_snap20.csv"
+    },
+    {
+     "path": "FEM/_abaqus_fields/standard_3d/abaqus_field_dh_3d.csv",
+     "size": 405067,
+     "why": "may publish material constants",
+     "sha256": "9df3764a69a7e5a1600ba5cca40fc722aa77aa42381b2a924c3233ec5567881e",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_fields/standard_3d/abaqus_field_dh_3d.csv"
+    },
+    {
+     "path": "FEM/_abaqus_fields/standard_3d/abaqus_field_dh_baseline_late.csv",
+     "size": 270091,
+     "why": "may publish material constants",
+     "sha256": "020473e4024ba53a2940da1b46770aad68b5f9a90c7c6b1925041a2fcf8af832",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_fields/standard_3d/abaqus_field_dh_baseline_late.csv"
+    },
+    {
+     "path": "FEM/_abaqus_fields/standard_3d/abaqus_field_dh_baseline_snap20.csv",
+     "size": 405090,
+     "why": "may publish material constants",
+     "sha256": "f434fb1f9c77a1893f3931a7af027dad55154f06b36f96d9ab550a30e448940d",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_fields/standard_3d/abaqus_field_dh_baseline_snap20.csv"
+    },
+    {
+     "path": "FEM/_abaqus_input/eigenstrain_field_commensal_hobic.csv",
+     "size": 3143,
+     "why": "may publish material constants",
+     "sha256": "ffafd1af60614ee19630fb3f6f4013b43523a953f1680a1ca953b5b5bc6ed1fe",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_input/eigenstrain_field_commensal_hobic.csv"
+    },
+    {
+     "path": "FEM/_abaqus_input/eigenstrain_field_commensal_static.csv",
+     "size": 3142,
+     "why": "may publish material constants",
+     "sha256": "fc3c455bcf0a4498c4bcbdc550a8309954911a0712f28540cd46922c86fff2a6",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_input/eigenstrain_field_commensal_static.csv"
+    },
+    {
+     "path": "FEM/_abaqus_input/eigenstrain_field_dysbiotic_hobic.csv",
+     "size": 3139,
+     "why": "may publish material constants",
+     "sha256": "717d8a8b7efb3bece99381f994a40f23efc5fe8045704637d92b5c760314f8cb",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_input/eigenstrain_field_dysbiotic_hobic.csv"
+    },
+    {
+     "path": "FEM/_abaqus_input/eigenstrain_field_dysbiotic_static.csv",
+     "size": 3096,
+     "why": "may publish material constants",
+     "sha256": "30a05061b9e663d90c313376e66f255c593c94ceb8f7a227c3c17715b4cc9afd",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_input/eigenstrain_field_dysbiotic_static.csv"
+    },
+    {
+     "path": "FEM/_abaqus_input/sigma_max_summary.txt",
+     "size": 999,
+     "why": "may publish material constants",
+     "sha256": "8db78745b735034da31334a6000e7af13f71e2047ff4a5e68b82eb890b5ea30b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_abaqus_input/sigma_max_summary.txt"
+    },
+    {
+     "path": "FEM/_adjoint_poc/adjoint_poc_result.json",
+     "size": 1563,
+     "why": "may publish material constants",
+     "sha256": "18cce772a2464850a2c2e8e1d764a48878f8f6ae0441a0cb1b44a61e86633fe4",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_adjoint_poc/adjoint_poc_result.json"
+    },
+    {
+     "path": "FEM/_alpha_field_results/alpha_field_1d.csv",
+     "size": 4557,
+     "why": "may publish material constants",
+     "sha256": "a7cf5443de613830694319a85a740174802bd5d9a613b8397772183a46d0c39d",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_alpha_field_results/alpha_field_1d.csv"
+    },
+    {
+     "path": "FEM/_alpha_field_results/exp1_T0.1/alpha_field_1d.csv",
+     "size": 4557,
+     "why": "may publish material constants",
+     "sha256": "21decbebe7d184075c451e23a612eff5b4042429fc195e85d7db03c58268e090",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_alpha_field_results/exp1_T0.1/alpha_field_1d.csv"
+    },
+    {
+     "path": "FEM/_alpha_field_results/exp2_T0.25/alpha_field_1d.csv",
+     "size": 4557,
+     "why": "may publish material constants",
+     "sha256": "886853267c85eb6f14b66c8299f10219d5df2752a398bd09ef38e3139238922a",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_alpha_field_results/exp2_T0.25/alpha_field_1d.csv"
+    },
+    {
+     "path": "FEM/_alpha_field_results/exp3_monod/alpha_field_1d.csv",
+     "size": 4569,
+     "why": "may publish material constants",
+     "sha256": "0f2342573a25a11c80e95f85c66974ed90a60fcdb5e70fc99e5002ac05fe6daf",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_alpha_field_results/exp3_monod/alpha_field_1d.csv"
+    },
+    {
+     "path": "FEM/_ci_0d_results/commensal_hobic/samples_0d.json",
+     "size": 10227,
+     "why": "may publish material constants",
+     "sha256": "3eae331a0a741036db2bba244b0bad0bac5c746cd11fee12227a7ff299fa0be4",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_ci_0d_results/commensal_hobic/samples_0d.json"
+    },
+    {
+     "path": "FEM/_ci_0d_results/commensal_hobic/summary_0d.json",
+     "size": 983,
+     "why": "may publish material constants",
+     "sha256": "1a0a2706de56fe88aaef45f0e6ea3f05b433de0b4df654ba83ce4e1a033e8083",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_ci_0d_results/commensal_hobic/summary_0d.json"
+    },
+    {
+     "path": "FEM/_ci_0d_results/commensal_static/samples_0d.json",
+     "size": 923,
+     "why": "may publish material constants",
+     "sha256": "57e1880a28ae5ff066d167a52ae4911e23d9174e7fdeb39bbc7a9c09ce7b8652",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_ci_0d_results/commensal_static/samples_0d.json"
+    },
+    {
+     "path": "FEM/_ci_0d_results/commensal_static/summary_0d.json",
+     "size": 972,
+     "why": "may publish material constants",
+     "sha256": "52041ba45af732fc3af4a4d3e42c3e38ec9a2bcf19adf129e1d5718062c5c3a8",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_ci_0d_results/commensal_static/summary_0d.json"
+    },
+    {
+     "path": "FEM/_ci_0d_results/dh_baseline/samples_0d.json",
+     "size": 23212,
+     "why": "may publish material constants",
+     "sha256": "9e0fda05b8f78ef8b66b7652b7a49c702dfe1ed34cc320c0361fc36f1fa84634",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_ci_0d_results/dh_baseline/samples_0d.json"
+    },
+    {
+     "path": "FEM/_ci_0d_results/dh_baseline/summary_0d.json",
+     "size": 959,
+     "why": "may publish material constants",
+     "sha256": "d72c94663d3f0783a38d67376e19d4b0821a197ca5de4e0f204c5ed8b70c4615",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_ci_0d_results/dh_baseline/summary_0d.json"
+    },
+    {
+     "path": "FEM/_ci_0d_results/dysbiotic_static/samples_0d.json",
+     "size": 23722,
+     "why": "may publish material constants",
+     "sha256": "7bce9fd0cfb6be08cc1aa16c2d126052710023972dbc1aa8ff0bd3c4b75ef65e",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_ci_0d_results/dysbiotic_static/samples_0d.json"
+    },
+    {
+     "path": "FEM/_ci_0d_results/dysbiotic_static/summary_0d.json",
+     "size": 983,
+     "why": "may publish material constants",
+     "sha256": "2d0d60fd8ef8366105aafeed5bf72b0e67ee0328ded5d5b2785fe548fb74d684",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_ci_0d_results/dysbiotic_static/summary_0d.json"
+    },
+    {
+     "path": "FEM/_ci_0d_results/master_summary_0d.json",
+     "size": 4290,
+     "why": "may publish material constants",
+     "sha256": "e38d3bc77bda5e1d3eed59a22f0b31817261e9ae38f7749668e52e9a6396f6ac",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_ci_0d_results/master_summary_0d.json"
+    },
+    {
+     "path": "FEM/_di_alternatives_comparison/README.md",
+     "size": 1920,
+     "why": "may publish material constants",
+     "sha256": "6e4480b6103c2dc70d821f90646764ebfa4f859bbed6f1ae2d3a9e32b98f090e",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_di_alternatives_comparison/README.md"
+    },
+    {
+     "path": "FEM/_di_alternatives_comparison/comparison_results.json",
+     "size": 2882,
+     "why": "may publish material constants",
+     "sha256": "c7b80a09ae4f2546a41632a765e3afa560535ffdc332d925554720d793d3c8a2",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_di_alternatives_comparison/comparison_results.json"
+    },
+    {
+     "path": "FEM/_di_credible/dh_baseline/p05_field.csv",
+     "size": 253141,
+     "why": "may publish material constants",
+     "sha256": "61e8ee11f49a5597bba0321872b1db06a170ac087402dee043e960109d13f703",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_di_credible/dh_baseline/p05_field.csv"
+    },
+    {
+     "path": "FEM/_di_credible/dh_baseline/p50_field.csv",
+     "size": 253141,
+     "why": "may publish material constants",
+     "sha256": "12375147fc7a3225b9f667532d2889ba02bea73dff4aa7dc83ff5c27b1f1deee",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_di_credible/dh_baseline/p50_field.csv"
+    },
+    {
+     "path": "FEM/_di_credible/dh_baseline/p95_field.csv",
+     "size": 253141,
+     "why": "may publish material constants",
+     "sha256": "b26fdb41d54c2c24ce302048f7d4348edc5abeb736024c01e0ca8f913cd1a79f",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_di_credible/dh_baseline/p95_field.csv"
+    },
+    {
+     "path": "FEM/_extract_3d_fields.py",
+     "size": 2787,
+     "why": "may publish material constants",
+     "sha256": "24278fc7e91290a9a58677f7d9044341bca9c276704870ee9dec054d81b8e4c3",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_extract_3d_fields.py"
+    },
+    {
+     "path": "FEM/_growth_job_runs/extract_growth_stress.py",
+     "size": 7303,
+     "why": "may publish material constants",
+     "sha256": "0b0ed5d98459684e63bd8ac8ec415a46ecffc9a52b73214d8bcd75862d015b61",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_growth_job_runs/extract_growth_stress.py"
+    },
+    {
+     "path": "FEM/_growth_job_runs/plot_3tooth_comparison.py",
+     "size": 4112,
+     "why": "may publish material constants",
+     "sha256": "6485f35b0621e41edbb5df4a81e2c05332c62389cbb9779af3d9d9c213cd9549",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_growth_job_runs/plot_3tooth_comparison.py"
+    },
+    {
+     "path": "FEM/_growth_job_runs/plot_growth_stress.py",
+     "size": 11854,
+     "why": "may publish material constants",
+     "sha256": "b2e272ced8bca7b72f02755a177bb1bb98edd81fee8a6de3473b2ee56bf83f96",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_growth_job_runs/plot_growth_stress.py"
+    },
+    {
+     "path": "FEM/_growth_job_runs_t30/extract_growth_stress.py",
+     "size": 7303,
+     "why": "may publish material constants",
+     "sha256": "c60e94faf858225fc12b4076ec5d74644e8150ba4540e770bb29f723f3369909",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_growth_job_runs_t30/extract_growth_stress.py"
+    },
+    {
+     "path": "FEM/_growth_job_runs_t31/extract_growth_stress.py",
+     "size": 7303,
+     "why": "may publish material constants",
+     "sha256": "6a3d54e0d14fbb98773cd2efaea5fb0a7420d588b2450b5ed7220a237a021bc9",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_growth_job_runs_t31/extract_growth_stress.py"
+    },
+    {
+     "path": "FEM/_klempt_benchmark/benchmark_results.json",
+     "size": 1785,
+     "why": "may publish material constants",
+     "sha256": "d9362be227df99b343cd4a6c7bd2d9a539b8a83096ba33cddffc154bbe08b3ac",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_klempt_benchmark/benchmark_results.json"
+    },
+    {
+     "path": "FEM/_multiscale_2d_results/2d_summary.json",
+     "size": 1414,
+     "why": "may publish material constants",
+     "sha256": "a2c072e1a09d49916630829aa4384e8f1eacb755c5b5553dfd4d09262a932936",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_2d_results/2d_summary.json"
+    },
+    {
+     "path": "FEM/_multiscale_2d_results/ref_0d_commensal_hobic.json",
+     "size": 186,
+     "why": "may publish material constants",
+     "sha256": "3171086272fd45b7b68a291d0c73149723ddd159de4f8b8f7c4bd840ac11f65e",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_2d_results/ref_0d_commensal_hobic.json"
+    },
+    {
+     "path": "FEM/_multiscale_2d_results/ref_0d_commensal_static.json",
+     "size": 184,
+     "why": "may publish material constants",
+     "sha256": "d05d2cf8f75ffa3231535c5bb05db8aac69012e1970ec8fa262a739f68eef701",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_2d_results/ref_0d_commensal_static.json"
+    },
+    {
+     "path": "FEM/_multiscale_2d_results/ref_0d_dysbiotic_hobic.json",
+     "size": 184,
+     "why": "may publish material constants",
+     "sha256": "b54b96045d917a7beceac48931bd609955d05e97d8be6308fe69b8a5996cfa25",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_2d_results/ref_0d_dysbiotic_hobic.json"
+    },
+    {
+     "path": "FEM/_multiscale_2d_results/ref_0d_dysbiotic_static.json",
+     "size": 181,
+     "why": "may publish material constants",
+     "sha256": "b30c784f22bc08c25543b7f5e43a939321ff91ae4b551c0bebe2eef0587d9b3b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_2d_results/ref_0d_dysbiotic_static.json"
+    },
+    {
+     "path": "FEM/_multiscale_2d_results/stats_commensal_hobic.json",
+     "size": 313,
+     "why": "may publish material constants",
+     "sha256": "19b430d6ceb74f4167501b2a891ecd630910344e76a007ac0092d1869532761d",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_2d_results/stats_commensal_hobic.json"
+    },
+    {
+     "path": "FEM/_multiscale_2d_results/stats_commensal_static.json",
+     "size": 316,
+     "why": "may publish material constants",
+     "sha256": "29bce9014c086a7a079a5f87bd4ed87f6fef82b0f45a8ccb1cafebb7332e85f4",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_2d_results/stats_commensal_static.json"
+    },
+    {
+     "path": "FEM/_multiscale_2d_results/stats_dysbiotic_hobic.json",
+     "size": 313,
+     "why": "may publish material constants",
+     "sha256": "28df4e5faa5e81c2e54e81014535f9daf737a9e5f69947ecb3aa55f73cd0c3e7",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_2d_results/stats_dysbiotic_hobic.json"
+    },
+    {
+     "path": "FEM/_multiscale_2d_results/stats_dysbiotic_static.json",
+     "size": 313,
+     "why": "may publish material constants",
+     "sha256": "3a01307fe594a10a567397b33c7ce97298b155718637a4d3c735e503dd9934d0",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_2d_results/stats_dysbiotic_static.json"
+    },
+    {
+     "path": "FEM/_multiscale_results/macro_eigenstrain_commensal_hobic.csv",
+     "size": 7663,
+     "why": "may publish material constants",
+     "sha256": "09d47f91f088273e0b94a7510b9c699aeea04d0742ca9db8f96dad45b0e7d8fe",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_results/macro_eigenstrain_commensal_hobic.csv"
+    },
+    {
+     "path": "FEM/_multiscale_results/macro_eigenstrain_commensal_hobic_hybrid.csv",
+     "size": 7727,
+     "why": "may publish material constants",
+     "sha256": "83438a8662c96aab1089837458a02763962740cccb688139122a60f77448f75b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_results/macro_eigenstrain_commensal_hobic_hybrid.csv"
+    },
+    {
+     "path": "FEM/_multiscale_results/macro_eigenstrain_commensal_static.csv",
+     "size": 7664,
+     "why": "may publish material constants",
+     "sha256": "d19370d79593d80ae885d79f48aa83bdcb19f532af82d8355ac4e70fda9b8561",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_results/macro_eigenstrain_commensal_static.csv"
+    },
+    {
+     "path": "FEM/_multiscale_results/macro_eigenstrain_commensal_static_hybrid.csv",
+     "size": 7728,
+     "why": "may publish material constants",
+     "sha256": "bb7940226f5497d870f84ecde9fd169a9941fd95e436b7eaf7e6d5b2bd84aa88",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_results/macro_eigenstrain_commensal_static_hybrid.csv"
+    },
+    {
+     "path": "FEM/_multiscale_results/macro_eigenstrain_dysbiotic_hobic.csv",
+     "size": 7663,
+     "why": "may publish material constants",
+     "sha256": "3ae51cba078ea54effbe571dd805848a96dfc0feae7f8c8c79113c83f1438388",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_results/macro_eigenstrain_dysbiotic_hobic.csv"
+    },
+    {
+     "path": "FEM/_multiscale_results/macro_eigenstrain_dysbiotic_hobic_hybrid.csv",
+     "size": 7727,
+     "why": "may publish material constants",
+     "sha256": "5a1c8c1dccae042b4b96d85b4cd486b19d86f7303867405aac9b1d11119cfd48",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_results/macro_eigenstrain_dysbiotic_hobic_hybrid.csv"
+    },
+    {
+     "path": "FEM/_multiscale_results/macro_eigenstrain_dysbiotic_static.csv",
+     "size": 7664,
+     "why": "may publish material constants",
+     "sha256": "bd31f68212ddc6ca71791d2d5d35e7dfd0b67eed7f2f508abc180be3d5a674b6",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_results/macro_eigenstrain_dysbiotic_static.csv"
+    },
+    {
+     "path": "FEM/_multiscale_results/macro_eigenstrain_dysbiotic_static_hybrid.csv",
+     "size": 7729,
+     "why": "may publish material constants",
+     "sha256": "24c615f7c27dc955408987a272fc43c996d401faf2c50bf898a6500e35de5bd6",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_multiscale_results/macro_eigenstrain_dysbiotic_static_hybrid.csv"
+    },
+    {
+     "path": "FEM/_neohookean_comparison/comparison_config.json",
+     "size": 1434,
+     "why": "may publish material constants",
+     "sha256": "4c4d85851d1c09f3655a0521d7e6b92634e07269009e64aeb3f880052b0beed1",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_neohookean_comparison/comparison_config.json"
+    },
+    {
+     "path": "FEM/_results_2d/convergence/convergence_report.md",
+     "size": 2249,
+     "why": "may publish material constants",
+     "sha256": "61ec0c88ebf39d90f3936edc7e2dcace30a6244b01d6a9cb78fcc26bbfc38a41",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_results_2d/convergence/convergence_report.md"
+    },
+    {
+     "path": "FEM/_results_2d_nutrient/quick_test/abaqus_field_2d.csv",
+     "size": 10531,
+     "why": "may publish material constants",
+     "sha256": "29552a2fc1593a5bf0d5c469f67d1920f365c88f90b648b71a68d0d15109bbb6",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_results_2d_nutrient/quick_test/abaqus_field_2d.csv"
+    },
+    {
+     "path": "FEM/_results_2d_nutrient/quick_test/macro_eigenstrain_2d.csv",
+     "size": 9090,
+     "why": "may publish material constants",
+     "sha256": "8da7fdfab30c13d14af4588665dc155ddb93bb022b4823126fad32c0a6204da6",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_results_2d_nutrient/quick_test/macro_eigenstrain_2d.csv"
+    },
+    {
+     "path": "FEM/_results_2d_nutrient/quick_test/run_config.json",
+     "size": 257,
+     "why": "may publish material constants",
+     "sha256": "2dc1f2614c834536ff1bccbfbb4067a9e434ac0a21d510df0583fc282341af45",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_results_2d_nutrient/quick_test/run_config.json"
+    },
+    {
+     "path": "FEM/_stress_2d_hybrid/summary_di.json",
+     "size": 1101,
+     "why": "may publish material constants",
+     "sha256": "35744641de7b2d988e2fa20b4c737ffb54e19f1067232164c29e4e24356d7a70",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_stress_2d_hybrid/summary_di.json"
+    },
+    {
+     "path": "FEM/_stress_2d_hybrid/summary_phi_pg.json",
+     "size": 1123,
+     "why": "may publish material constants",
+     "sha256": "3ba9326d8f64859457ed21a03135daf21e03070e6df8485fd5b5902ff3153377",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_stress_2d_hybrid/summary_phi_pg.json"
+    },
+    {
+     "path": "FEM/_stress_2d_hybrid/summary_virulence.json",
+     "size": 1137,
+     "why": "may publish material constants",
+     "sha256": "a09ebafd313bb7e2294a68ea14b975dea32c6b238d375b640a74c293aa37e47f",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_stress_2d_hybrid/summary_virulence.json"
+    },
+    {
+     "path": "FEM/_stress_2d_results/all_conditions_summary.json",
+     "size": 1282,
+     "why": "may publish material constants",
+     "sha256": "77469c09fa1aa296cd894488d686592f8bf49e4b40617d7e17fc54e7c2b1ce25",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_stress_2d_results/all_conditions_summary.json"
+    },
+    {
+     "path": "FEM/_uncertainty_propagation/commensal_hobic/summary.json",
+     "size": 370,
+     "why": "may publish material constants",
+     "sha256": "60c4e4e0c6baa8eccb5a355a6d2c0faf5f8d935f599706bcad6a4505c4bc4d3e",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_uncertainty_propagation/commensal_hobic/summary.json"
+    },
+    {
+     "path": "FEM/_uncertainty_propagation/commensal_static/aggregated/sensitivity_indices.json",
+     "size": 3768,
+     "why": "may publish material constants",
+     "sha256": "33bdb65f2898c08432649a01d9a3db6639239347a99014fe3a64cc90871b01dc",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_uncertainty_propagation/commensal_static/aggregated/sensitivity_indices.json"
+    },
+    {
+     "path": "FEM/_uncertainty_propagation/commensal_static/summary.json",
+     "size": 368,
+     "why": "may publish material constants",
+     "sha256": "08324f92609261dd590f22764286c6553433e0ec571b2018a59a9ab2e03fdf6a",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_uncertainty_propagation/commensal_static/summary.json"
+    },
+    {
+     "path": "FEM/_uncertainty_propagation/dh_baseline/aggregated/sensitivity_indices.json",
+     "size": 3770,
+     "why": "may publish material constants",
+     "sha256": "7f0eec550397e00b29b16d673647f3b53ee44a09c09cd3653d79b706ace47041",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_uncertainty_propagation/dh_baseline/aggregated/sensitivity_indices.json"
+    },
+    {
+     "path": "FEM/_uncertainty_propagation/dh_baseline/summary.json",
+     "size": 359,
+     "why": "may publish material constants",
+     "sha256": "0ae7531d66ff912985cef24f7490501e58586fd36845f9c5a7fc8906978544fa",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_uncertainty_propagation/dh_baseline/summary.json"
+    },
+    {
+     "path": "FEM/_uncertainty_propagation/dysbiotic_hobic/aggregated/sensitivity_indices.json",
+     "size": 3778,
+     "why": "may publish material constants",
+     "sha256": "1f90b49921bd3c963aa6a94d6c5a1b750941668850ae37934923a7635d5f5174",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_uncertainty_propagation/dysbiotic_hobic/aggregated/sensitivity_indices.json"
+    },
+    {
+     "path": "FEM/_uncertainty_propagation/dysbiotic_hobic/summary.json",
+     "size": 366,
+     "why": "may publish material constants",
+     "sha256": "906294a734aa774d63ae31aa087cec54161b9c3ab695282ec88bade69530e28f",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_uncertainty_propagation/dysbiotic_hobic/summary.json"
+    },
+    {
+     "path": "FEM/_uncertainty_propagation/dysbiotic_static/summary.json",
+     "size": 371,
+     "why": "may publish material constants",
+     "sha256": "69d07ce35de81234a85bd8bf242c73ac75ab8c92ef63bed550155cc4aca02e80",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_uncertainty_propagation/dysbiotic_static/summary.json"
+    },
+    {
+     "path": "FEM/_uncertainty_propagation/master_summary.json",
+     "size": 2065,
+     "why": "may publish material constants",
+     "sha256": "de56ec9038df42ab5e640f1ba9bff1bec1125a650e9b0e0ff9257bf14cb610a9",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_uncertainty_propagation/master_summary.json"
+    },
+    {
+     "path": "FEM/_viscoelastic_results/viscoelastic_comparison_summary.json",
+     "size": 3516,
+     "why": "may publish material constants",
+     "sha256": "6640de167bba420414f6c23f65c3375c2e1e328a3e4950845d4777391a564c5c",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/_viscoelastic_results/viscoelastic_comparison_summary.json"
+    },
+    {
+     "path": "FEM/a35_sweep_sensitivity.py",
+     "size": 10501,
+     "why": "may publish material constants",
+     "sha256": "353fae6acf4e0894e267582c15f73a5255e5689c65427f4a48db4781c7712e8a",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/a35_sweep_sensitivity.py"
+    },
+    {
+     "path": "FEM/abaqus_biofilm_aniso_3d.py",
+     "size": 17386,
+     "why": "may publish material constants",
+     "sha256": "375c0d41958a5893e8d592eafdd37dcbaaf90b265e26f69aae0205266a3bb986",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_biofilm_aniso_3d.py"
+    },
+    {
+     "path": "FEM/abaqus_biofilm_aniso_3d_real.py",
+     "size": 16388,
+     "why": "may publish material constants",
+     "sha256": "85332d35ceb24847b93e4b20e1ad49ff100a57a485e1a21a5fc1837f29504629",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_biofilm_aniso_3d_real.py"
+    },
+    {
+     "path": "FEM/abaqus_biofilm_cohesive.py",
+     "size": 8966,
+     "why": "may publish material constants",
+     "sha256": "dbaa61579499c8c77b481545ad4934b52d3a59f90a84ea349547aacc8a27a677",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_biofilm_cohesive.py"
+    },
+    {
+     "path": "FEM/abaqus_biofilm_cohesive_3d.py",
+     "size": 19472,
+     "why": "may publish material constants",
+     "sha256": "d65f05a22ac56d7ba92bbb5939da872650549fe3973df6d654d35d7329766654",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_biofilm_cohesive_3d.py"
+    },
+    {
+     "path": "FEM/abaqus_biofilm_demo.py",
+     "size": 14135,
+     "why": "may publish material constants",
+     "sha256": "ab024f4b6244035b77de799a5e823e600e6cfb06797be63367654add053a834b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_biofilm_demo.py"
+    },
+    {
+     "path": "FEM/abaqus_biofilm_demo_3d.py",
+     "size": 15904,
+     "why": "may publish material constants",
+     "sha256": "6a29ec5f3245d568bda29ba018e2f4eddd5753a686a46ec8ac3d84ce87f00b59",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_biofilm_demo_3d.py"
+    },
+    {
+     "path": "FEM/abaqus_biofilm_thread.py",
+     "size": 5649,
+     "why": "may publish material constants",
+     "sha256": "1b93867b5c00c8517fcd0969aa40453f2df01851b9478b8d9a030d0f967af971",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_biofilm_thread.py"
+    },
+    {
+     "path": "FEM/abaqus_inp/oj_t30_b030.inp",
+     "size": 2397665,
+     "why": "may publish material constants",
+     "sha256": "0f547e33d63b3e5eb8d96c61e65af6b07ebb606dd0b6d414bf186a37d3c493d7",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_inp/oj_t30_b030.inp"
+    },
+    {
+     "path": "FEM/abaqus_inp/oj_t30_b050.inp",
+     "size": 2397665,
+     "why": "may publish material constants",
+     "sha256": "58fecbf3538e3bc916c36aa93b45879304c84e5e3864b4a0056e8e8e0c7b2bbf",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_inp/oj_t30_b050.inp"
+    },
+    {
+     "path": "FEM/abaqus_inp/oj_t30_b070.inp",
+     "size": 2397665,
+     "why": "may publish material constants",
+     "sha256": "044d244fffb82c66894a78af8397da7394f619508bc89789c06583b36af510e6",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_inp/oj_t30_b070.inp"
+    },
+    {
+     "path": "FEM/abaqus_inp/oj_t30_b100.inp",
+     "size": 2397665,
+     "why": "may publish material constants",
+     "sha256": "c51bd11f91da5155ed8ef6f84ab25d9c2081a5a471ad8dbcd31148aed2ad4a9c",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_inp/oj_t30_b100.inp"
+    },
+    {
+     "path": "FEM/abaqus_inp/oj_t31_b030.inp",
+     "size": 2243327,
+     "why": "may publish material constants",
+     "sha256": "54797ec0a0027feff4856da8759bd8bda62ace37eeebecaf1f8ecf7366adc8d5",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_inp/oj_t31_b030.inp"
+    },
+    {
+     "path": "FEM/abaqus_inp/oj_t31_b050.inp",
+     "size": 2243327,
+     "why": "may publish material constants",
+     "sha256": "d05ab1c885692b2c4b9f07e1b81fc58abb6cbe3a6275557315c2d68201fc24f9",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_inp/oj_t31_b050.inp"
+    },
+    {
+     "path": "FEM/abaqus_inp/oj_t31_b070.inp",
+     "size": 2243327,
+     "why": "may publish material constants",
+     "sha256": "c6eadc1314515caa58ded1c656834b0c079112869d93d4aa1873f27264c50a00",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_inp/oj_t31_b070.inp"
+    },
+    {
+     "path": "FEM/abaqus_inp/oj_t31_b100.inp",
+     "size": 2243327,
+     "why": "may publish material constants",
+     "sha256": "4431a83cbbc015c32be8cedc90e47f3a3641ab09102766c3bb29cf1fc796659e",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/abaqus_inp/oj_t31_b100.inp"
+    },
+    {
+     "path": "FEM/aggregate_di_credible.py",
+     "size": 24261,
+     "why": "may publish material constants",
+     "sha256": "0a973d934457f9542ad443a08b3a50be9386c79389a68a41215840c839386907",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/aggregate_di_credible.py"
+    },
+    {
+     "path": "FEM/analyze_abaqus_profiles.py",
+     "size": 4437,
+     "why": "may publish material constants",
+     "sha256": "232c79b03ca81f17e2f200c2d389c6c60ea1683b620fd7e1294529fcdb4dcb8b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/analyze_abaqus_profiles.py"
+    },
+    {
+     "path": "FEM/analyze_biofilm_odb.py",
+     "size": 3475,
+     "why": "may publish material constants",
+     "sha256": "8a83224fe0c89cfe3619c3aae97029c629e42dbd929fd5689b3681c163cde592",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/analyze_biofilm_odb.py"
+    },
+    {
+     "path": "FEM/biofilm_3tooth_assembly.py",
+     "size": 30396,
+     "why": "may publish material constants",
+     "sha256": "2353692fa7470bea284b5757b28d8a5ff20599718e4a0d66e75481e5e7b16855",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/biofilm_3tooth_assembly.py"
+    },
+    {
+     "path": "FEM/biofilm_conformal_tet.py",
+     "size": 60912,
+     "why": "may publish material constants",
+     "sha256": "b2be04e152085fdee6c608e57502aa13dc3dc4ffaf8ab65fbf350084f402bbe3",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/biofilm_conformal_tet.py"
+    },
+    {
+     "path": "FEM/biofilm_tooth_tie_assembly.py",
+     "size": 21109,
+     "why": "may publish material constants",
+     "sha256": "8ba44ae28c559a6c238eb2487acf8afff4ee5ad235be5d7a995571850ccd7c19",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/biofilm_tooth_tie_assembly.py"
+    },
+    {
+     "path": "FEM/compare_biofilm_abaqus.py",
+     "size": 16268,
+     "why": "may publish material constants",
+     "sha256": "0c926e8571e03e4a6730e363bea06cb142e041c4676d29eefe90526e28129d62",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/compare_biofilm_abaqus.py"
+    },
+    {
+     "path": "FEM/compare_conditions_fem.py",
+     "size": 25660,
+     "why": "may publish material constants",
+     "sha256": "831ecac3404f6b7542af5c61bfd4164aaf5ddff05f6410dc4b3658e351e70163",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/compare_conditions_fem.py"
+    },
+    {
+     "path": "FEM/compare_conditions_late.py",
+     "size": 15169,
+     "why": "may publish material constants",
+     "sha256": "5bf8330900a6f83d8857722bf064bae2ce7f651bae29ad37d9394477b15933a6",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/compare_conditions_late.py"
+    },
+    {
+     "path": "FEM/compare_di_alternatives.py",
+     "size": 13220,
+     "why": "may publish material constants",
+     "sha256": "fb0033716e12f5583beee74d60547df64577632372935971180024774fa8d18f",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/compare_di_alternatives.py"
+    },
+    {
+     "path": "FEM/compute_3model_bayes_factor.py",
+     "size": 17847,
+     "why": "may publish material constants",
+     "sha256": "ce90497376c86ea7818fb79075449a7a6aa5c36d28979fbdee19da76650e56bb",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/compute_3model_bayes_factor.py"
+    },
+    {
+     "path": "FEM/compute_alpha_eigenstrain.py",
+     "size": 11626,
+     "why": "may publish material constants",
+     "sha256": "ce0fe1bc65a827543b10484f98978959b01201da029029235da2e4d8d7785fef",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/compute_alpha_eigenstrain.py"
+    },
+    {
+     "path": "FEM/eeff_sensitivity_results.md",
+     "size": 3760,
+     "why": "may publish material constants",
+     "sha256": "7e5e8d084f24672b3ab5ededb838ca8af872913b601c5ccc920d52149a560772",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/eeff_sensitivity_results.md"
+    },
+    {
+     "path": "FEM/eigenstrain_theory_roadmap.md",
+     "size": 10597,
+     "why": "may publish material constants",
+     "sha256": "e0c5538db0090d885ec91a4a08a1e7ec56ec0154cf384ab1a9b3ac824a01e8a6",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/eigenstrain_theory_roadmap.md"
+    },
+    {
+     "path": "FEM/export_for_abaqus.py",
+     "size": 7883,
+     "why": "may publish material constants",
+     "sha256": "799489c30abe44179a28f35d5ad9e73e6098c49f15a73441c7abe67071976a01",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/export_for_abaqus.py"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/README.md",
+     "size": 9496,
+     "why": "may publish material constants",
+     "sha256": "bed3226d703a24fb1cb104f320b132eaa3ef8c79cf8b83441c84f4dfd18aaded",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/README.md"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/dataset/README.md",
+     "size": 3006,
+     "why": "may publish material constants",
+     "sha256": "b5ba3c5ec1808ae96c1629ebd1fb7b9bb80d800cd85919585c70befa814b6f35",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/dataset/README.md"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/docs/polyfem_config_file.json",
+     "size": 409,
+     "why": "may publish material constants",
+     "sha256": "bbc174e8fc323c686b9aea6ae2fa1b84d1f00b7b59000023ebd0c598fc56c558",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/docs/polyfem_config_file.json"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/images/README.md",
+     "size": 5634,
+     "why": "may publish material constants",
+     "sha256": "95a9466eb7690796793c3465cfafb2956bd13a0cae17a2e5b57482c294892007",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/images/README.md"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/__init__.py",
+     "size": 281,
+     "why": "may publish material constants",
+     "sha256": "f9ff00421ef5b3294cc6f3c42715d4876baab21384ea3b2253bee2a72953036a",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/__init__.py"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/other_libs/README.md",
+     "size": 519,
+     "why": "may publish material constants",
+     "sha256": "041ef509a5f79c351eca2f0b0ea5b138b73cf602d9917c2b7ef22a6dbc64123e",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/other_libs/README.md"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/other_libs/cargen/__init__.py",
+     "size": 73,
+     "why": "may publish material constants",
+     "sha256": "032b6fae5494eb313c525cafe0ff90c97bba35ac43398f41719b18be618ac631",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/other_libs/cargen/__init__.py"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/other_libs/cargen/pdl_function.py",
+     "size": 15278,
+     "why": "may publish material constants",
+     "sha256": "98561d193c737d0aded02c6ee4da00816028604ac33dce4c5f156cf71b32a801",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/other_libs/cargen/pdl_function.py"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/other_libs/cargen/utils.py",
+     "size": 29506,
+     "why": "may publish material constants",
+     "sha256": "7ccaa8c022aa38fd6d1851db0ef98cb25600db3fe11191eba8738dba3acbecca",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/other_libs/cargen/utils.py"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/step1_preprocessing.py",
+     "size": 3327,
+     "why": "may publish material constants",
+     "sha256": "480e2d83b3815ea56f222068e3113d07166630cba85044da311ef1ef5badaf13",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/step1_preprocessing.py"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/step2_gap_generation.py",
+     "size": 5013,
+     "why": "may publish material constants",
+     "sha256": "6649dd21863e28b267480c6a0c255ae2890f3c94c8adde4dbd8ef52398e52f73",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/step2_gap_generation.py"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/step3_pdl_rim_generation.py",
+     "size": 4125,
+     "why": "may publish material constants",
+     "sha256": "415c2ec0dc31868e9e07e4eb81eecd76db03649b547ca09630290025896fec60",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/step3_pdl_rim_generation.py"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/step4_volumetric_mesh_generation.py",
+     "size": 2085,
+     "why": "may publish material constants",
+     "sha256": "a279d2b5fd2deaab8b40dee7f37c7fc70c6ecc64cf5c24e0d46af6e695346ff9",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/step4_volumetric_mesh_generation.py"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/step5_tet_filtering.py",
+     "size": 5372,
+     "why": "may publish material constants",
+     "sha256": "b6b1c5b34b48361d65a83905ddb5c8ad713413221ea4fb66a110b5212bfeb86b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/step5_tet_filtering.py"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/step6_feb_generation.py",
+     "size": 32,
+     "why": "may publish material constants",
+     "sha256": "fa35b7cd060d11312b8cd94347e876300a81933a0e3069ccf831f6f5d4319c96",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/step6_feb_generation.py"
+    },
+    {
+     "path": "FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/utils.py",
+     "size": 33640,
+     "why": "may publish material constants",
+     "sha256": "7f370927898632f28052ee2925dec973d42eb64b0275a266598fafc81b01cca2",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/external_tooth_models/Open-Full-Jaw-main/src/OpenFullJaw/utils.py"
+    },
+    {
+     "path": "FEM/fem_2d_extension.py",
+     "size": 23082,
+     "why": "may publish material constants",
+     "sha256": "3cc84139df664b792b38685bb9fd7bb9f9f7f40d420155d9e5eda664cb857573",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/fem_2d_extension.py"
+    },
+    {
+     "path": "FEM/fem_2d_visualize.py",
+     "size": 12799,
+     "why": "may publish material constants",
+     "sha256": "4d49528aed3f0655968fc4be52146504f34df41043771181f5a3b999716c724a",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/fem_2d_visualize.py"
+    },
+    {
+     "path": "FEM/fem_3d_extension.py",
+     "size": 28636,
+     "why": "may publish material constants",
+     "sha256": "770721c62abac97998de3cb023306d6af19cbd13d3f049e86fda45a146fd1faf",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/fem_3d_extension.py"
+    },
+    {
+     "path": "FEM/fem_3d_panels.py",
+     "size": 1718,
+     "why": "may publish material constants",
+     "sha256": "917787dcec97fdfc4e02cc4a065c6af6daffbbce426aae02fda10f1689f206e7",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/fem_3d_panels.py"
+    },
+    {
+     "path": "FEM/fem_3d_visualize.py",
+     "size": 15717,
+     "why": "may publish material constants",
+     "sha256": "73999858e1a13c64eee6b54d3d0a3ccc0a8fdc9b6e8a465eb0986849c2a6a0f2",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/fem_3d_visualize.py"
+    },
+    {
+     "path": "FEM/fem_aniso_analysis.py",
+     "size": 15204,
+     "why": "may publish material constants",
+     "sha256": "ed2cca2e603fa10be8c67856d750621b8aae1469c4957edbe81789b306ae7adf",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/fem_aniso_analysis.py"
+    },
+    {
+     "path": "FEM/fem_convergence.py",
+     "size": 16898,
+     "why": "may publish material constants",
+     "sha256": "953f44db45bc7f77a89686c01825a44d8f331295486de32be006e3bf39da25e2",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/fem_convergence.py"
+    },
+    {
+     "path": "FEM/fem_spatial_extension.py",
+     "size": 31057,
+     "why": "may publish material constants",
+     "sha256": "ccc8411e083349d4a1ae746bb4d304fe1d633da718daed26400f55a713a8304b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/fem_spatial_extension.py"
+    },
+    {
+     "path": "FEM/fem_visualize.py",
+     "size": 23287,
+     "why": "may publish material constants",
+     "sha256": "bee2dd08120c5c74ce4e47658f2da1af0a5d798f7712c052066f7e03a1182e03",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/fem_visualize.py"
+    },
+    {
+     "path": "FEM/figures/compare_glv_hamilton.py",
+     "size": 12866,
+     "why": "may publish material constants",
+     "sha256": "e4d0c2def3ce100d777ed54787e9ea657a21d095d0f7a37a73eb4952ff13530e",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/figures/compare_glv_hamilton.py"
+    },
+    {
+     "path": "FEM/figures/compare_nutrient_coupling.py",
+     "size": 9355,
+     "why": "may publish material constants",
+     "sha256": "dcfc61d09698672b7c6d4526fdb678a4e7e22da541901bc4645c93367dabde7b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/figures/compare_nutrient_coupling.py"
+    },
+    {
+     "path": "FEM/figures/compute_fim_identifiability.py",
+     "size": 12007,
+     "why": "may publish material constants",
+     "sha256": "988730a531d9cbd60bbfd0b62bb78704fc188b8220952bbc02643d60d6dabdcf",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/figures/compute_fim_identifiability.py"
+    },
+    {
+     "path": "FEM/figures/compute_posterior_predictive.py",
+     "size": 8522,
+     "why": "may publish material constants",
+     "sha256": "05aaf304ad1412a243d73787cc07d4367e5faecddfbd4df483d8dedc4cbbec97",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/figures/compute_posterior_predictive.py"
+    },
+    {
+     "path": "FEM/figures/validation_study/validation_summary.json",
+     "size": 740,
+     "why": "may publish material constants",
+     "sha256": "337894dfb20095869f6b0677e0d2e0a1cc67fa3d6289095abe2703c8af9dcda9",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/figures/validation_study/validation_summary.json"
+    },
+    {
+     "path": "FEM/generate_1kpa_inp.py",
+     "size": 2593,
+     "why": "may publish material constants",
+     "sha256": "15adf7836172b457a07e0c8720e15c0eec00ddc5091c09c789c9fb535031c835",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/generate_1kpa_inp.py"
+    },
+    {
+     "path": "FEM/generate_3d_conformal_auto.py",
+     "size": 13902,
+     "why": "may publish material constants",
+     "sha256": "907756bedc849d7d2472e74fe69b840489198660f26dfb3990864978200b458d",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/generate_3d_conformal_auto.py"
+    },
+    {
+     "path": "FEM/generate_3model_inp.py",
+     "size": 14476,
+     "why": "may publish material constants",
+     "sha256": "28ceec3aa7cde617751ab70e9b9b6e2c2b33c3bc7382b1591615d80627538c3e",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/generate_3model_inp.py"
+    },
+    {
+     "path": "FEM/generate_abaqus_eigenstrain.py",
+     "size": 18384,
+     "why": "may publish material constants",
+     "sha256": "4d473acb12937a265a6a75738eea7122a946d8188afc5115f8d65c2596287b9c",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/generate_abaqus_eigenstrain.py"
+    },
+    {
+     "path": "FEM/generate_corner_plot_paper.py",
+     "size": 4673,
+     "why": "may publish material constants",
+     "sha256": "7a31ca65956906ee1c5b8652db928ea2db035044f21e98b1679cc0e5d0455393",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/generate_corner_plot_paper.py"
+    },
+    {
+     "path": "FEM/generate_fig24_n_sensitivity.py",
+     "size": 28747,
+     "why": "may publish material constants",
+     "sha256": "91888c99e41ab4f0dc3264c0ac101c5c9c5469a9b99007f3b382508dd838f8fb",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/generate_fig24_n_sensitivity.py"
+    },
+    {
+     "path": "FEM/generate_fig25_stress_relaxation.py",
+     "size": 4097,
+     "why": "may publish material constants",
+     "sha256": "7b0e13658c93d923e1125a15803588af14bb83e194bfa07e4e3578897fe4292b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/generate_fig25_stress_relaxation.py"
+    },
+    {
+     "path": "FEM/generate_fig26_creep.py",
+     "size": 4145,
+     "why": "may publish material constants",
+     "sha256": "81b0192b33cc4f3b3fb7550d47f63154a47d70c56663899f7d1705e395c14711",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/generate_fig26_creep.py"
+    },
+    {
+     "path": "FEM/generate_fig27_elastic_vs_visco.py",
+     "size": 4074,
+     "why": "may publish material constants",
+     "sha256": "36c83775ef649cd089b538dc3af7b6eca87e1d708b0df4b4d70a3a972e7c5e65",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/generate_fig27_elastic_vs_visco.py"
+    },
+    {
+     "path": "FEM/generate_fig28_ve_params.py",
+     "size": 9044,
+     "why": "may publish material constants",
+     "sha256": "5f7cddcc7450a1673563e1d991c642b63c01f72039a4b6d01e3580ea393bcf66",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/generate_fig28_ve_params.py"
+    },
+    {
+     "path": "FEM/generate_hybrid_macro_csv.py",
+     "size": 24964,
+     "why": "may publish material constants",
+     "sha256": "f0f3fd1d2eff9ccd3223d9a790965fa88466cca6c9ca1b0078bbbc8a8d7b7ba9",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/generate_hybrid_macro_csv.py"
+    },
+    {
+     "path": "FEM/generate_paper_figures.py",
+     "size": 24976,
+     "why": "may publish material constants",
+     "sha256": "c0840914f5df9878e204347cc8d00ca60a926f614fad30b288c154b6e23ccddf",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/generate_paper_figures.py"
+    },
+    {
+     "path": "FEM/generate_pipeline_summary.py",
+     "size": 16140,
+     "why": "may publish material constants",
+     "sha256": "f5523e3817dd6256f37aee0e4426c4db9064e041afc971af569664891e31a30b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/generate_pipeline_summary.py"
+    },
+    {
+     "path": "FEM/growth_analysis_doc.md",
+     "size": 10438,
+     "why": "may publish material constants",
+     "sha256": "2734507d350e5a912f964f009e34dd98c8fa72896384ec767b03b8dd7c723c8a",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/growth_analysis_doc.md"
+    },
+    {
+     "path": "FEM/hamilton_pde_jaxfem.py",
+     "size": 27538,
+     "why": "may publish material constants",
+     "sha256": "5387e4eaf507d5e8a59b1e4cccceb49dcd9e43bbf9d3127e38e5ae285a683dd4",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/hamilton_pde_jaxfem.py"
+    },
+    {
+     "path": "FEM/jax_fem_reaction_diffusion_demo.py",
+     "size": 2940,
+     "why": "may publish material constants",
+     "sha256": "2c4d5565bbb5c931593dd6fbf696ba40ce3dadf3ecb918855d45ee331d0801fe",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/jax_fem_reaction_diffusion_demo.py"
+    },
+    {
+     "path": "FEM/jax_hamilton_0d_5species_demo.py",
+     "size": 7212,
+     "why": "may publish material constants",
+     "sha256": "2076df99cd1845eac9491cfd69475beefd0619a4954c162849ee3acc998d6418",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/jax_hamilton_0d_5species_demo.py"
+    },
+    {
+     "path": "FEM/jax_hamilton_1d_5species_demo.py",
+     "size": 8383,
+     "why": "may publish material constants",
+     "sha256": "9e1712f936b47dd8a441321fdc519a2247c34a6771cf49d0fb305f2d8b37439f",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/jax_hamilton_1d_5species_demo.py"
+    },
+    {
+     "path": "FEM/jax_hamilton_to_rd_1d_pipeline.py",
+     "size": 22348,
+     "why": "may publish material constants",
+     "sha256": "f8f361de08c07ad0175eddbf6fbb7af2401f220e988affc40f992183fbb4e5f4",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/jax_hamilton_to_rd_1d_pipeline.py"
+    },
+    {
+     "path": "FEM/jax_hamilton_to_rd_2d_pipeline.py",
+     "size": 24765,
+     "why": "may publish material constants",
+     "sha256": "35bbe9b50275402ee127811856f0c5bf23f760d7ea728968a0ad36e572168ef6",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/jax_hamilton_to_rd_2d_pipeline.py"
+    },
+    {
+     "path": "FEM/jax_pinn_1d_reaction_diffusion_demo.py",
+     "size": 4108,
+     "why": "may publish material constants",
+     "sha256": "424a18b678fa1b3cdef7390c544b64fb66cf2c43c0298a5ab3d8682094e7090b",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/jax_pinn_1d_reaction_diffusion_demo.py"
+    },
+    {
+     "path": "FEM/jax_pure_reaction_diffusion_demo.py",
+     "size": 1591,
+     "why": "may publish material constants",
+     "sha256": "39d31a8195c79ff86287055da14124b426fe077b2cd1d2aefbc62b71af9ee716",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/jax_pure_reaction_diffusion_demo.py"
+    },
+    {
+     "path": "FEM/jax_rd_1d_param_estimation.py",
+     "size": 1549,
+     "why": "may publish material constants",
+     "sha256": "7bded36fdb678d90e6e4214f3b22978a3f7147f9d2e05defe7a5fd2af175ec74",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/jax_rd_1d_param_estimation.py"
+    },
+    {
+     "path": "FEM/jax_rd_dataset.py",
+     "size": 2134,
+     "why": "may publish material constants",
+     "sha256": "bb9c992e127109d215503f4e7109920b247f6acae1a5a56bc376ca4b1abf782c",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/jax_rd_dataset.py"
+    },
+    {
+     "path": "FEM/jax_rd_nd_demo.py",
+     "size": 4610,
+     "why": "may publish material constants",
+     "sha256": "f193f491147be885fcf3b7ea2b090afdb099366e87ccdf9c430ee4eaa5d438f6",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/jax_rd_nd_demo.py"
+    },
+    {
+     "path": "FEM/jaxfem_adjoint_poc.py",
+     "size": 16508,
+     "why": "may publish material constants",
+     "sha256": "6989207153ce387d39e2f0403562e2ba9b6fadf0fe9fc5095e8492b21131c7ce",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/jaxfem_adjoint_poc.py"
+    },
+    {
+     "path": "FEM/klempt2024_gap_analysis.md",
+     "size": 17887,
+     "why": "may publish material constants",
+     "sha256": "2211a87ae6fd5dd4730781ba43255d9006c92445b59ee1ad8bfc7b173cfc0815",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/klempt2024_gap_analysis.md"
+    },
+    {
+     "path": "FEM/klempt2024_paper_figure.py",
+     "size": 10888,
+     "why": "may publish material constants",
+     "sha256": "8010ece75897a51b9d51ec709efcc2a43aefcf913cf8c2af35769c477e1188a1",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/klempt2024_paper_figure.py"
+    },
+    {
+     "path": "FEM/klempt2024_results/a35_sweep/a35_sweep_results.csv",
+     "size": 3299,
+     "why": "may publish material constants",
+     "sha256": "420df3d0547295cb81cc54f3d9e1e7e79fc78adc87f3bb097b6fc0b5999a7970",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/klempt2024_results/a35_sweep/a35_sweep_results.csv"
+    },
+    {
+     "path": "FEM/klempt2024_results/posterior_uncertainty/uncertainty_summary.json",
+     "size": 776,
+     "why": "may publish material constants",
+     "sha256": "c0c97bb4d197b0a47f61a7f3399d0289c729d518e0248f283af8927e97979cbd",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/klempt2024_results/posterior_uncertainty/uncertainty_summary.json"
+    },
+    {
+     "path": "FEM/klempt_benchmark.py",
+     "size": 17706,
+     "why": "may publish material constants",
+     "sha256": "b71c71920f9105f70cedc5ffe80c97295b706c26e509d4b3bb91b550e7b33625",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/klempt_benchmark.py"
+    },
+    {
+     "path": "FEM/make_poster_new.py",
+     "size": 5457,
+     "why": "may publish material constants",
+     "sha256": "0243faa6e418610c6ae2f3139a5afa63b3e7f66922698e82b1bc8ca44a99b21e",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/make_poster_new.py"
+    },
+    {
+     "path": "FEM/material_models.py",
+     "size": 35972,
+     "why": "may publish material constants",
+     "sha256": "725b559c44ab139425f7c995c795c6d5d48f0bae01cd5a0bfc91790f4ac96a32",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/material_models.py"
+    },
+    {
+     "path": "FEM/methods_supplement_fem.md",
+     "size": 10665,
+     "why": "may publish material constants",
+     "sha256": "eea2a61383ed9b9425710786d172235c560850ecbca10b159fdd1b38576e487a",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/methods_supplement_fem.md"
+    },
+    {
+     "path": "FEM/multiscale_coupling_1d.py",
+     "size": 32549,
+     "why": "may publish material constants",
+     "sha256": "a6bc703f875d4ccb828d808c2507de56cc20f49547e92ba7663e1ab3eea49255",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/multiscale_coupling_1d.py"
+    },
+    {
+     "path": "FEM/multiscale_coupling_2d.py",
+     "size": 37152,
+     "why": "may publish material constants",
+     "sha256": "a28516bcd0c4ff559731e78308f722fc13e13dbee608107b4cc93814f68f3651",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/multiscale_coupling_2d.py"
+    },
+    {
+     "path": "FEM/odb_extract.py",
+     "size": 9000,
+     "why": "may publish material constants",
+     "sha256": "905ce91a32b9a3abc5f5a20c98ac6125fea38b4567bc85023801beb3b64e1a80",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/odb_extract.py"
+    },
+    {
+     "path": "FEM/odb_visualize.py",
+     "size": 31692,
+     "why": "may publish material constants",
+     "sha256": "dcfcedcb7a2ab0418e6867d68170c2c1165b6febbdc574639959dd0a115aba6e",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/odb_visualize.py"
+    },
+    {
+     "path": "FEM/openjaw_p1_all_lower_import.py",
+     "size": 17782,
+     "why": "may publish material constants",
+     "sha256": "ff5f4cab81ab6415e1682a147b2c0cecc59910901f4586ca1798fa264cb154bf",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/openjaw_p1_all_lower_import.py"
+    },
+    {
+     "path": "FEM/openjaw_p1_auto_import.py",
+     "size": 21006,
+     "why": "may publish material constants",
+     "sha256": "0a83cbf753d92836d78d4489e582a1d0212aff51d33836831f98ae8b8f523b84",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/openjaw_p1_auto_import.py"
+    },
+    {
+     "path": "FEM/openjaw_p1_biofilm_solid.py",
+     "size": 22222,
+     "why": "may publish material constants",
+     "sha256": "e785448d1318b7b20852f26ce0d02109aefeced7b99c87bca8cd6f365269af5e",
+     "written": true,
+     "url": "https://github.com/keisuke58/Tmcmc202601/blob/40ec73b98b576d08b5c437a53017d984920939d1/FEM/openjaw_p1_biofilm_solid.py"
+    }
+   ],
+   "still_missing": [],
+   "skipped": [
+    {
+     "path": "FEM/openjaw_p1_full_assembly.py",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/overview2602.md",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/overview2602_en.md",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/overview_tmcmc_fem_en.md",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p0b_long_sim_runner.py",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p10_bc_sensitivity.py",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p1_tooth_bbox.json",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p1_tooth_bbox_all_lower_from_cae.json",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p1_tooth_bbox_from_cae.json",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p23_biofilm_conformal_validation.txt",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p23_biofilm_dh_baseline_validation.txt",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p23_growth_commensal_hobic.inp",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p23_growth_commensal_hobic_validation.txt",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p23_growth_commensal_static.inp",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p23_growth_commensal_static_validation.txt",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p23_growth_dh_baseline.inp",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p23_growth_dh_baseline_validation.txt",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p23_growth_dysbiotic_static.inp",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p23_growth_dysbiotic_static_validation.txt",
+     "why": "per-repository budget"
+    },
+    {
+     "path": "FEM/p30_growth_commensal_hobic_validation.txt",
+     "why": "per-repository budget"
+    }
+   ],
+   "error": ""
+  },
+  {
+   "repository": "laufogh__fe-large-displacement",
+   "commit": "da38fedd70f9413bf0d7f50ccb771299da07c2f5",
+   "license_spdx": "MIT",
+   "license_source": "LICENSE (SPDX MIT via the GitHub licence API)",
+   "tree_files": 81,
+   "wanted_modules": [],
+   "wanted_includes": [],
+   "fetched": [
+    {
+     "path": "NOTICE.md",
+     "size": 5047,
+     "why": "may publish material constants",
+     "sha256": "1ccd971f51b13e09b5c290d611af36a9c0a76a0824557cd02246e18d76822826",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/NOTICE.md"
+    },
+    {
+     "path": "README.md",
+     "size": 2443,
+     "why": "may publish material constants",
+     "sha256": "51298471c378a20c52656ecbf0787e022613e029b8d3c21d9d611e3fac7ad0b8",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/README.md"
+    },
+    {
+     "path": "constitutive/README.md",
+     "size": 3397,
+     "why": "may publish material constants",
+     "sha256": "d0747f1e31493940418132a3f1f5d5ffee69050f5a5bdecd94f833f7a8175a8d",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/constitutive/README.md"
+    },
+    {
+     "path": "constitutive/hypoplasticity-staubach/PROVENANCE.md",
+     "size": 5141,
+     "why": "may publish material constants",
+     "sha256": "cc022bef14aaa033b4a92f1fff3aad949ee870f664b5e0d3f4615d8b9268e4a7",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/constitutive/hypoplasticity-staubach/PROVENANCE.md"
+    },
+    {
+     "path": "constitutive/hypoplasticity-staubach/README.md",
+     "size": 1761,
+     "why": "may publish material constants",
+     "sha256": "0e95477c001c5a58738f08858eb65e4ccd039e5905d2c32a97d12f1cb888512f",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/constitutive/hypoplasticity-staubach/README.md"
+    },
+    {
+     "path": "constitutive/hypoplasticity-staubach/constants.txt",
+     "size": 2125,
+     "why": "may publish material constants",
+     "sha256": "c3ea7209893149b7e7c2f88216e385bd85e287c791a4cd3a4a08e4560a6999a0",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/constitutive/hypoplasticity-staubach/constants.txt"
+    },
+    {
+     "path": "constitutive/mohr-coulomb-clausen/PORT-REPORT.md",
+     "size": 13561,
+     "why": "may publish material constants",
+     "sha256": "4fbd578d7a694149f42375403e98faed3951f1a38011e0fb6c44d37e5790988e",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/constitutive/mohr-coulomb-clausen/PORT-REPORT.md"
+    },
+    {
+     "path": "constitutive/mohr-coulomb-clausen/PROVENANCE.md",
+     "size": 3827,
+     "why": "may publish material constants",
+     "sha256": "33712b85624f07015f9a58b9406a633493b8b3b788b47253d635a92b0f7aff38",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/constitutive/mohr-coulomb-clausen/PROVENANCE.md"
+    },
+    {
+     "path": "constitutive/mohr-coulomb-clausen/README.md",
+     "size": 3606,
+     "why": "may publish material constants",
+     "sha256": "571784ae6ad0e6780f664e297096c0c1eb0fd7f90a00f7c7142560ff610e3b92",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/constitutive/mohr-coulomb-clausen/README.md"
+    },
+    {
+     "path": "constitutive/mohr-coulomb-clausen/constants.txt",
+     "size": 162,
+     "why": "may publish material constants",
+     "sha256": "80fe972da7455275e6ab52b5878afdc2a93bf54fe4bbe7f23f60828b7c3e249d",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/constitutive/mohr-coulomb-clausen/constants.txt"
+    },
+    {
+     "path": "examples/common/__init__.py",
+     "size": 154,
+     "why": "may publish material constants",
+     "sha256": "4b8cc05b3e5008de76ec5f1f042553a59f0af72bc9cdbd825470e2f5ffdf44ca",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/examples/common/__init__.py"
+    },
+    {
+     "path": "examples/common/runner.py",
+     "size": 5607,
+     "why": "may publish material constants",
+     "sha256": "915a844ec3dc85e5dd1dc5bd7c1218ad32195e5deae244d975adfe0ebecac901",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/examples/common/runner.py"
+    },
+    {
+     "path": "examples/explicit.py",
+     "size": 8276,
+     "why": "may publish material constants",
+     "sha256": "a86cda77a4820e9933c000705e85e76b8a9241cfeb9fd6c4b568b2ed0c9443c9",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/examples/explicit.py"
+    },
+    {
+     "path": "examples/explicit_ale.py",
+     "size": 9449,
+     "why": "may publish material constants",
+     "sha256": "3ee8d09cc09b690597398e1d5f10cc873f7fb9743eb28ca0dae252c3e312edde",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/examples/explicit_ale.py"
+    },
+    {
+     "path": "examples/explicit_cel.py",
+     "size": 9223,
+     "why": "may publish material constants",
+     "sha256": "70d25d9acc57742b3a8a420db27c8d1af9fa7e163ac9b2b7465cf4eb58e6e716",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/examples/explicit_cel.py"
+    },
+    {
+     "path": "examples/implicit.py",
+     "size": 7984,
+     "why": "may publish material constants",
+     "sha256": "7ef27b1a5540259bf11dc30f1d76a9889c8cef16894f7e425dd505ddb7840914",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/examples/implicit.py"
+    },
+    {
+     "path": "examples/implicit_ale.py",
+     "size": 9352,
+     "why": "may publish material constants",
+     "sha256": "317606293653970cff69d7ce76ce02a5e3651692d85a506ccba155f984495133",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/examples/implicit_ale.py"
+    },
+    {
+     "path": "examples/suction_caisson.md",
+     "size": 2664,
+     "why": "may publish material constants",
+     "sha256": "316cddaed4c14b2ce21e17ce6114da375a84f4eaeec0924a532021daef13ff9d",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/examples/suction_caisson.md"
+    },
+    {
+     "path": "examples/suction_caisson.py",
+     "size": 30354,
+     "why": "may publish material constants",
+     "sha256": "b0598b8238a8933312e400393da063650231c2e8bd9142ae2fda34299e2f45d4",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/examples/suction_caisson.py"
+    },
+    {
+     "path": "lib/fldlib/__init__.py",
+     "size": 2820,
+     "why": "may publish material constants",
+     "sha256": "95b020c271e035a9d901fb36bdfa169d2b961fa5748d8b418c5398464ce6a2c0",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/fldlib/__init__.py"
+    },
+    {
+     "path": "lib/fldlib/ale.py",
+     "size": 14391,
+     "why": "may publish material constants",
+     "sha256": "407e1d55c8374249a5d454b393f61a1f23ae7b32a1cd156d3289c0948b0f889b",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/fldlib/ale.py"
+    },
+    {
+     "path": "lib/fldlib/cel.py",
+     "size": 7396,
+     "why": "may publish material constants",
+     "sha256": "171bead79868d022ec719221813c2ebdaac87d8ee1841ade875b18eef88be158",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/fldlib/cel.py"
+    },
+    {
+     "path": "lib/fldlib/config.py",
+     "size": 8547,
+     "why": "may publish material constants",
+     "sha256": "535562405556936d10befce3b0d0ec3b39d0089da80e32601e97034202590dfc",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/fldlib/config.py"
+    },
+    {
+     "path": "lib/fldlib/contact.py",
+     "size": 6195,
+     "why": "may publish material constants",
+     "sha256": "3a5819371e7e64b6238af5a0e0bec910b918417b5191b080bc89aeb2da48d294",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/fldlib/contact.py"
+    },
+    {
+     "path": "lib/fldlib/inpedit.py",
+     "size": 11894,
+     "why": "may publish material constants",
+     "sha256": "5e9e825bb6d06b97b88fd35c85c50acf6a87e84396263afe3b75f2e8aea348cd",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/fldlib/inpedit.py"
+    },
+    {
+     "path": "lib/fldlib/jobs.py",
+     "size": 8526,
+     "why": "may publish material constants",
+     "sha256": "ad8cbffa4f0b69eb8b3b74f174bd897db6a58bd9817ada261dfc94cda1913106",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/fldlib/jobs.py"
+    },
+    {
+     "path": "lib/fldlib/materials.py",
+     "size": 11260,
+     "why": "may publish material constants",
+     "sha256": "2546b778fae017fe971500e46ab673eda3e64134223226ac38f6d5ca6d8a7c2b",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/fldlib/materials.py"
+    },
+    {
+     "path": "lib/fldlib/report.py",
+     "size": 6107,
+     "why": "may publish material constants",
+     "sha256": "5973cadd1b083f5e95cb2e650f3ce59fddbf67c5e230767d7f8b720f85d4a43e",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/fldlib/report.py"
+    },
+    {
+     "path": "lib/fldlib/steps.py",
+     "size": 9694,
+     "why": "may publish material constants",
+     "sha256": "014f18146632317bf452977b8f2695362daaf49f4182941ff6acdc8ed276ca4f",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/fldlib/steps.py"
+    },
+    {
+     "path": "lib/fldlib/subroutines.py",
+     "size": 5702,
+     "why": "may publish material constants",
+     "sha256": "ecabc3df0fb77d81e919bbaa4d4f86d98b03a42006b664254e3e4f94f3045c72",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/fldlib/subroutines.py"
+    },
+    {
+     "path": "lib/postproc/__init__.py",
+     "size": 499,
+     "why": "may publish material constants",
+     "sha256": "3b8a78eea58b2636da6154ede97daf11a71b5a4c5a1c048bfc59b51ea0a2871b",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/postproc/__init__.py"
+    },
+    {
+     "path": "lib/postproc/animate.py",
+     "size": 6147,
+     "why": "may publish material constants",
+     "sha256": "3b7102d3d5df6e6ebd60598127f995dab45305e6a2c1bac38ec87fab7bc260ab",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/postproc/animate.py"
+    },
+    {
+     "path": "lib/postproc/energy.py",
+     "size": 7605,
+     "why": "may publish material constants",
+     "sha256": "2d5253959153e7f18dcaa0e24702076880f29551f49170dd3967237952dd65a4",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/postproc/energy.py"
+    },
+    {
+     "path": "lib/postproc/history.py",
+     "size": 6021,
+     "why": "may publish material constants",
+     "sha256": "d1bb843576b72a0fd53fdd170e2ebdbfb8a4b0f6fe46aa5535f0aac28bf5956f",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/lib/postproc/history.py"
+    },
+    {
+     "path": "media/explicit.csv",
+     "size": 25148,
+     "why": "may publish material constants",
+     "sha256": "4c92d3a2a6e961ae8ebd2d3fdd88a20be22529f55d82f514a4fc119946ef219e",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/media/explicit.csv"
+    },
+    {
+     "path": "media/explicit_ale.csv",
+     "size": 25134,
+     "why": "may publish material constants",
+     "sha256": "6a8a00648bd304fa56666751c9fc077accc4240d6a6bcffb7a5f0dbab902495e",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/media/explicit_ale.csv"
+    },
+    {
+     "path": "media/explicit_cel.csv",
+     "size": 25132,
+     "why": "may publish material constants",
+     "sha256": "a7ffeb24b75363f001189d8f50bf665445f2d95a425ee7259e6eb77745611ff3",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/media/explicit_cel.csv"
+    },
+    {
+     "path": "media/implicit.csv",
+     "size": 5347,
+     "why": "may publish material constants",
+     "sha256": "4692403e42d078de05a6d7429b6b4d07a843e01a2d80145c31db405e2b143223",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/media/implicit.csv"
+    },
+    {
+     "path": "media/implicit_ale.csv",
+     "size": 2445,
+     "why": "may publish material constants",
+     "sha256": "c88743f1271323733047cbe840b549058d43eb24244e371beeebd54123a5c47e",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/media/implicit_ale.csv"
+    },
+    {
+     "path": "media/make_gif.py",
+     "size": 1220,
+     "why": "may publish material constants",
+     "sha256": "49e98c44e8f3a308bae15348d4e0b28337aced86201edc709e058dde7936370f",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/media/make_gif.py"
+    },
+    {
+     "path": "media/plot_indenter.py",
+     "size": 2226,
+     "why": "may publish material constants",
+     "sha256": "50a256f10646ab4a8e8c3ad33006f8a882089273f1390f869c742298130a3c0b",
+     "written": true,
+     "url": "https://github.com/laufogh/fe-large-displacement/blob/da38fedd70f9413bf0d7f50ccb771299da07c2f5/media/plot_indenter.py"
+    }
+   ],
+   "still_missing": [],
+   "skipped": [],
+   "error": ""
+  },
+  {
+   "repository": "lbrassart__chemo-vp-efftemp",
+   "commit": "71f81d939b12e39461de7b79f6252ab0ac3cd33c",
+   "license_spdx": "MIT",
+   "license_source": "LICENSE (SPDX MIT via the GitHub licence API)",
+   "tree_files": 9,
+   "wanted_modules": [],
+   "wanted_includes": [],
+   "fetched": [
+    {
+     "path": "Extract_mn_w.py",
+     "size": 773,
+     "why": "may publish material constants",
+     "sha256": "9f431e6cb83bde8e092e8d8ffbcf148f232918d2c3ed8a543e3ec86a8611ae4a",
+     "written": true,
+     "url": "https://github.com/lbrassart/chemo-vp-efftemp/blob/71f81d939b12e39461de7b79f6252ab0ac3cd33c/Extract_mn_w.py"
+    },
+    {
+     "path": "README.md",
+     "size": 1222,
+     "why": "may publish material constants",
+     "sha256": "9d0faff115d58aa3ed157c4e29e11ab3dba4399d687701e6c638f3f2f1125163",
+     "written": true,
+     "url": "https://github.com/lbrassart/chemo-vp-efftemp/blob/71f81d939b12e39461de7b79f6252ab0ac3cd33c/README.md"
+    }
+   ],
+   "still_missing": [],
+   "skipped": [],
+   "error": ""
+  },
+  {
+   "repository": "materialsguy__Predict_Nanoindentation_Tip_Wear",
+   "commit": "469b0b1fc99fec4669b10e85f06c6369354b8761",
+   "license_spdx": "MIT",
+   "license_source": "LICENSE (SPDX MIT inferred from the licence text; GitHub's API reported no identifier for this file)",
+   "tree_files": 37,
+   "wanted_modules": [],
+   "wanted_includes": [],
+   "fetched": [
+    {
+     "path": "Codes/Abaqus_Indentation/2D/README.md",
+     "size": 2174,
+     "why": "may publish material constants",
+     "sha256": "de5628e7b91d6a7bb6f4d37c44a21f44e3b37e908b6d8efb7373d9a81ef9d2f2",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/README.md"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/2D/input_data_2D.csv",
+     "size": 399,
+     "why": "may publish material constants",
+     "sha256": "661dd37f60f54384cf6b188d9a563549cb0936e3dd3b876720e39f9a208964fa",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/input_data_2D.csv"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/2D/scripts_2D/contact_prop.py",
+     "size": 1087,
+     "why": "may publish material constants",
+     "sha256": "1c10be18bf45186324d41a552268e6b8c710bf1ef4e04cb34624bf46e08f131c",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/scripts_2D/contact_prop.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/2D/scripts_2D/geom_specimen.py",
+     "size": 2044,
+     "why": "may publish material constants",
+     "sha256": "9e3ed65a09c417993aa469c3e0c04a2f1b66c0b12329601331a6634858347407",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/scripts_2D/geom_specimen.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/2D/scripts_2D/geom_tip_ball.py",
+     "size": 1179,
+     "why": "may publish material constants",
+     "sha256": "0805b9e05914ecd38f42aa4f1f20c51febe60522992999e3ebbd76be7e378c33",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/scripts_2D/geom_tip_ball.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/2D/scripts_2D/geom_tip_cone.py",
+     "size": 2104,
+     "why": "may publish material constants",
+     "sha256": "f0e785616eaf5df95943816302ed5136496efc0d3fafc7f00569c5e8cfc3f8c5",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/scripts_2D/geom_tip_cone.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/2D/scripts_2D/geom_tip_flat.py",
+     "size": 1021,
+     "why": "may publish material constants",
+     "sha256": "066ad96320a0e3902cd279ada436b530ec80844abf30ff00587576f4bf3e0ca6",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/scripts_2D/geom_tip_flat.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/2D/scripts_2D/load.py",
+     "size": 1390,
+     "why": "may publish material constants",
+     "sha256": "00f18543c9bfe88bb88f0cb2376fc6226a1cc99ed50f308dcf386da7780a5f26",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/scripts_2D/load.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/2D/scripts_2D/materials.py",
+     "size": 2245,
+     "why": "may publish material constants",
+     "sha256": "bbf674c19dc11dde9fb228a3496455ed6c52c9f2054913ad272fa2b9df3b6ade",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/scripts_2D/materials.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/2D/scripts_2D/msh.py",
+     "size": 3401,
+     "why": "may publish material constants",
+     "sha256": "b954b6de16615f12b61bd0dea35eb4e2ab608d01aae81bc7edd5bcf15f09f25d",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/scripts_2D/msh.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/2D/scripts_2D/results.py",
+     "size": 1310,
+     "why": "may publish material constants",
+     "sha256": "c6138a733aedb73d48b6f316e3e78cb31f08560d74a6e450f9a2251f8b07a31f",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/scripts_2D/results.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/2D/scripts_2D/run.py",
+     "size": 2755,
+     "why": "may publish material constants",
+     "sha256": "de20283d4e7b67a423c6c149e2c6352cc731d142c58bf8578c2f41ce868dbf8b",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/scripts_2D/run.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/2D/scripts_2D/sim_check.py",
+     "size": 282,
+     "why": "may publish material constants",
+     "sha256": "acc9dd6ea91b3c7c9f0bf666f8581dcefcab895ccc79dd9f0421b2c633b8e4c9",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/scripts_2D/sim_check.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/2D/start_2D_model.py",
+     "size": 3866,
+     "why": "may publish material constants",
+     "sha256": "1165ed7e30e6f6b25af6c72c9c24d16f827fd73162c05a4f8dcce45c35bb3570",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/2D/start_2D_model.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/3D/README.md",
+     "size": 2138,
+     "why": "may publish material constants",
+     "sha256": "150a6c5e44162d26ae5b09743856eb8ba5320100f4448560c8e32a4106fb217f",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/3D/README.md"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/3D/input_data_3D.csv",
+     "size": 257,
+     "why": "may publish material constants",
+     "sha256": "e2ee728adb121a68ce550bc77ef20c554b8a101130f152fba7a8daea42161270",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/3D/input_data_3D.csv"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/3D/scripts_3D/contact_prop.py",
+     "size": 1320,
+     "why": "may publish material constants",
+     "sha256": "38b3afe0c8c59f7ca42326099cdc9c90b6d9023334de092cdbe72285ab7c1ab6",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/3D/scripts_3D/contact_prop.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/3D/scripts_3D/geom_specimen.py",
+     "size": 2802,
+     "why": "may publish material constants",
+     "sha256": "215683548699e69a9d817d80477fc3eed8e4f013ba4c8b6d34c58ac404e933be",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/3D/scripts_3D/geom_specimen.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/3D/scripts_3D/geom_tip.py",
+     "size": 3107,
+     "why": "may publish material constants",
+     "sha256": "e9b1de8e260fb2dba08ab9f70ca649917fe13161e5ed6f0c6edfd55a15178f9b",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/3D/scripts_3D/geom_tip.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/3D/scripts_3D/load.py",
+     "size": 2642,
+     "why": "may publish material constants",
+     "sha256": "d81d633c58d923d3810e87ce2d76135de6c5cd56def5e8ca6420bd9c9b4c7117",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/3D/scripts_3D/load.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/3D/scripts_3D/materials.py",
+     "size": 2563,
+     "why": "may publish material constants",
+     "sha256": "e4227aef06e951823f5d79343cb9ff59cebac067da76e73c8710508a18655419",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/3D/scripts_3D/materials.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/3D/scripts_3D/msh.py",
+     "size": 7099,
+     "why": "may publish material constants",
+     "sha256": "12ca6b79de31aa40981ea45d81c7e16f477f7c9eb4d2fc800f95d665c3563939",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/3D/scripts_3D/msh.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/3D/scripts_3D/results.py",
+     "size": 1572,
+     "why": "may publish material constants",
+     "sha256": "f7f36562cab7ae8be438d2137ef90dba2c706875149a54b226793b6d2bd9e9be",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/3D/scripts_3D/results.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/3D/scripts_3D/run.py",
+     "size": 2968,
+     "why": "may publish material constants",
+     "sha256": "70c701c202a9e74297a44a1f6423337e922d5d65e686997d07b5aad562a3f421",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/3D/scripts_3D/run.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/3D/scripts_3D/sim_check.py",
+     "size": 282,
+     "why": "may publish material constants",
+     "sha256": "f136199a4e698a8b9efb4fc03444fbb4ceaa7de4a169215218df2df02fc8edb9",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/3D/scripts_3D/sim_check.py"
+    },
+    {
+     "path": "Codes/Abaqus_Indentation/3D/start_3D_model.py",
+     "size": 3540,
+     "why": "may publish material constants",
+     "sha256": "f74983fe78b701f1dee0562559eaaefb74f966278d279243a10f7344c712fd83",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Codes/Abaqus_Indentation/3D/start_3D_model.py"
+    },
+    {
+     "path": "Data/Evaluated_Curves/README.md",
+     "size": 200,
+     "why": "may publish material constants",
+     "sha256": "99ee60db9744571387f85d37d3b4ccada75ad72da536caaf66db7a0d4e45b281",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Data/Evaluated_Curves/README.md"
+    },
+    {
+     "path": "Data/Evaluated_Curves/high_data_211018.csv",
+     "size": 41902,
+     "why": "may publish material constants",
+     "sha256": "20793ddcb727d2f0253984d6f14e301e0fa81e17e68a337429dee88b7b1c3031",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Data/Evaluated_Curves/high_data_211018.csv"
+    },
+    {
+     "path": "Data/Evaluated_Curves/low_data_211018.csv",
+     "size": 220705,
+     "why": "may publish material constants",
+     "sha256": "679848f0f7fc69d423228d00bb97fb1dd374bcb478350fd769a7ec44997d8b18",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Data/Evaluated_Curves/low_data_211018.csv"
+    },
+    {
+     "path": "Data/Evaluated_Curves/test_set_211103.csv",
+     "size": 23303,
+     "why": "may publish material constants",
+     "sha256": "33ce070b0be10060c7dfaf52537b83614c3ba8a220ac7124e589f54e18f9a4ab",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Data/Evaluated_Curves/test_set_211103.csv"
+    },
+    {
+     "path": "Data/Evaluated_Curves/train_validation_211103.csv",
+     "size": 164796,
+     "why": "may publish material constants",
+     "sha256": "528ada80cd9ad049594232f633937293818f050bb04086f219da49229d2248f3",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/Data/Evaluated_Curves/train_validation_211103.csv"
+    },
+    {
+     "path": "README.md",
+     "size": 1366,
+     "why": "may publish material constants",
+     "sha256": "533ab6fcb207ca16086d8209991eccaef909f7a84971c6c00845b2ca8ae3156c",
+     "written": true,
+     "url": "https://github.com/materialsguy/Predict_Nanoindentation_Tip_Wear/blob/469b0b1fc99fec4669b10e85f06c6369354b8761/README.md"
+    }
+   ],
+   "still_missing": [],
+   "skipped": [],
+   "error": ""
+  },
+  {
+   "repository": "thatliuyang__Abaqus-subroutine-for-composites-progressive-failure-analysis-",
+   "commit": "bb81bec7991026f84cffb6db0b9da6b857b65be6",
+   "license_spdx": "MIT",
+   "license_source": "LICENSE (SPDX MIT via the GitHub licence API)",
+   "tree_files": 12,
+   "wanted_modules": [],
+   "wanted_includes": [],
+   "fetched": [
+    {
+     "path": "README.md",
+     "size": 5471,
+     "why": "may publish material constants",
+     "sha256": "7069a1f649057ff29c7f8255d19cdcff923d847353e4d6a8ee24da7510599427",
+     "written": true,
+     "url": "https://github.com/thatliuyang/Abaqus-subroutine-for-composites-progressive-failure-analysis-/blob/bb81bec7991026f84cffb6db0b9da6b857b65be6/README.md"
+    },
+    {
+     "path": "Test suite/click_bat_file_to_run.txt",
+     "size": 0,
+     "why": "may publish material constants",
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "written": true,
+     "url": "https://github.com/thatliuyang/Abaqus-subroutine-for-composites-progressive-failure-analysis-/blob/bb81bec7991026f84cffb6db0b9da6b857b65be6/Test suite/click_bat_file_to_run.txt"
+    }
+   ],
+   "still_missing": [],
+   "skipped": [],
+   "error": ""
+  },
+  {
+   "repository": "theCoMMaNDlab__Crohns_motility",
+   "commit": "c70a58eec74084143f19a5a84d6d92a619b8187e",
+   "license_spdx": "GPL-3.0",
+   "license_source": "LICENSE (SPDX GPL-3.0 via the GitHub licence API)",
+   "tree_files": 21,
+   "wanted_modules": [],
+   "wanted_includes": [],
+   "fetched": [
+    {
+     "path": ".github/PULL_REQUEST_TEMPLATE.md",
+     "size": 812,
+     "why": "may publish material constants",
+     "sha256": "e23643d4a570494c59c9929c36be5245cc08afe8527b8e7dffdf5752277d2524",
+     "written": true,
+     "url": "https://github.com/theCoMMaNDlab/Crohns_motility/blob/c70a58eec74084143f19a5a84d6d92a619b8187e/.github/PULL_REQUEST_TEMPLATE.md"
+    },
+    {
+     "path": "README.md",
+     "size": 8958,
+     "why": "may publish material constants",
+     "sha256": "41301dd2f219f18a8c099beef1abd307672cb8ac5931b79e92249724678ff513",
+     "written": true,
+     "url": "https://github.com/theCoMMaNDlab/Crohns_motility/blob/c70a58eec74084143f19a5a84d6d92a619b8187e/README.md"
+    },
+    {
+     "path": "passive-calibration/circum_stretch_stress.txt",
+     "size": 736,
+     "why": "may publish material constants",
+     "sha256": "8d10184e08006f8d3acc46bfd987e34e96150d1a2daf89f76a69b4717be3c7e2",
+     "written": true,
+     "url": "https://github.com/theCoMMaNDlab/Crohns_motility/blob/c70a58eec74084143f19a5a84d6d92a619b8187e/passive-calibration/circum_stretch_stress.txt"
+    },
+    {
+     "path": "passive-calibration/long_stretch_stress.txt",
+     "size": 396,
+     "why": "may publish material constants",
+     "sha256": "c4664d264e739fd428356127e794dbfd1651bc82014a4b483dbc8bb2e77755fb",
+     "written": true,
+     "url": "https://github.com/theCoMMaNDlab/Crohns_motility/blob/c70a58eec74084143f19a5a84d6d92a619b8187e/passive-calibration/long_stretch_stress.txt"
+    },
+    {
+     "path": "passive-calibration/tune_fiber_stiffness.py",
+     "size": 30159,
+     "why": "may publish material constants",
+     "sha256": "6fe5b2393a9233aacdfc5e3c9cce1bd21069d9b5ca1dfa3809781bcfdc55cd31",
+     "written": true,
+     "url": "https://github.com/theCoMMaNDlab/Crohns_motility/blob/c70a58eec74084143f19a5a84d6d92a619b8187e/passive-calibration/tune_fiber_stiffness.py"
+    },
+    {
+     "path": "postprocessing-files/DOE_MM_results.txt",
+     "size": 1852,
+     "why": "may publish material constants",
+     "sha256": "542d5045461c0d815f7d98a96ab3fa53346164eaabe4a2b9c2d7023d191cd014",
+     "written": true,
+     "url": "https://github.com/theCoMMaNDlab/Crohns_motility/blob/c70a58eec74084143f19a5a84d6d92a619b8187e/postprocessing-files/DOE_MM_results.txt"
+    },
+    {
+     "path": "postprocessing-files/regression_analysis.py",
+     "size": 21406,
+     "why": "may publish material constants",
+     "sha256": "ed6616dd04c4b7f8330d0b0da0a0719501e1ece7b8713c505bfb4b0e27f8d3ff",
+     "written": true,
+     "url": "https://github.com/theCoMMaNDlab/Crohns_motility/blob/c70a58eec74084143f19a5a84d6d92a619b8187e/postprocessing-files/regression_analysis.py"
+    },
+    {
+     "path": "requirements.txt",
+     "size": 645,
+     "why": "may publish material constants",
+     "sha256": "2638bd897aef56a8f29c8a41dda8bc8b7e75df09b7d8d023766118e0500e1b60",
+     "written": true,
+     "url": "https://github.com/theCoMMaNDlab/Crohns_motility/blob/c70a58eec74084143f19a5a84d6d92a619b8187e/requirements.txt"
+    },
+    {
+     "path": "simulation-files/export_triad_fields.py",
+     "size": 11245,
+     "why": "may publish material constants",
+     "sha256": "1d256ade81d989bb7d1f5a0b52ca11614b9ab99f534aca905fe9dff57d72c223",
+     "written": true,
+     "url": "https://github.com/theCoMMaNDlab/Crohns_motility/blob/c70a58eec74084143f19a5a84d6d92a619b8187e/simulation-files/export_triad_fields.py"
+    },
+    {
+     "path": "simulation-files/generate_doe.py",
+     "size": 5960,
+     "why": "may publish material constants",
+     "sha256": "7ca01d5b960d7be7e04bb3d5d9f8ca5b8ac0fea0c7ae6d313e00692cc33dcfa2",
+     "written": true,
+     "url": "https://github.com/theCoMMaNDlab/Crohns_motility/blob/c70a58eec74084143f19a5a84d6d92a619b8187e/simulation-files/generate_doe.py"
+    },
+    {
+     "path": "simulation-files/motility_from_cross_sections.py",
+     "size": 14098,
+     "why": "may publish material constants",
+     "sha256": "abea873cdeaac1fac74b05b9fd24726df5685f97cf33c7b4360185b36aed984f",
+     "written": true,
+     "url": "https://github.com/theCoMMaNDlab/Crohns_motility/blob/c70a58eec74084143f19a5a84d6d92a619b8187e/simulation-files/motility_from_cross_sections.py"
+    },
+    {
+     "path": "simulation-files/motility_metric.py",
+     "size": 5987,
+     "why": "may publish material constants",
+     "sha256": "67936b5f58a9897e9ec032b03c63ecce6c086b52cc34e70d8942fc938f15d692",
+     "written": true,
+     "url": "https://github.com/theCoMMaNDlab/Crohns_motility/blob/c70a58eec74084143f19a5a84d6d92a619b8187e/simulation-files/motility_metric.py"
+    },
+    {
+     "path": "simulation-files/run_doe.py",
+     "size": 29692,
+     "why": "may publish material constants",
+     "sha256": "79bde15df1257ecd2124c0e50c557e36f038834c1635fcba77159d0294c9d6a5",
+     "written": true,
+     "url": "https://github.com/theCoMMaNDlab/Crohns_motility/blob/c70a58eec74084143f19a5a84d6d92a619b8187e/simulation-files/run_doe.py"
+    }
+   ],
+   "still_missing": [],
+   "skipped": [],
+   "error": ""
+  },
+  {
+   "repository": "williammora1984__UMAT_GTN",
+   "commit": "69a73295afdebb5e8003c058d9666375faf2fe38",
+   "license_spdx": "MIT",
+   "license_source": "LICENSE (SPDX MIT via the GitHub licence API)",
+   "tree_files": 59,
+   "wanted_modules": [],
+   "wanted_includes": [],
+   "fetched": [
+    {
+     "path": "1_Test_tensor_op/CMakeLists.txt",
+     "size": 1153,
+     "why": "may publish material constants",
+     "sha256": "a4b41a2d5811e3b8dd41e8a6f776f1525cf793848bcdd23bac4a56511aa85f93",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/1_Test_tensor_op/CMakeLists.txt"
+    },
+    {
+     "path": "1_Test_tensor_op/data_TT01.csv",
+     "size": 70,
+     "why": "may publish material constants",
+     "sha256": "b4e68b0cba643e90e464ecf1de6a0c3118682b777da8815d014436a65f6e2ace",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/1_Test_tensor_op/data_TT01.csv"
+    },
+    {
+     "path": "1_Test_tensor_op/data_TT02.csv",
+     "size": 7940,
+     "why": "may publish material constants",
+     "sha256": "0bf9776a1de832344e2ce61b19a78c95c824326af7df7ddc2661fe6fcacaf2f9",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/1_Test_tensor_op/data_TT02.csv"
+    },
+    {
+     "path": "1_Test_tensor_op/data_TT03.csv",
+     "size": 1062,
+     "why": "may publish material constants",
+     "sha256": "fa0449da346455745207f8de91608c9a10b8efd3c5eedc6b4a42402a451afba0",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/1_Test_tensor_op/data_TT03.csv"
+    },
+    {
+     "path": "1_Test_tensor_op/data_TT04.csv",
+     "size": 98,
+     "why": "may publish material constants",
+     "sha256": "c67e8543e310ea57ab576bd18eb5ff52e93fdb3520ac862217f48f7b4fb390dd",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/1_Test_tensor_op/data_TT04.csv"
+    },
+    {
+     "path": "1_Test_tensor_op/data_TT05.csv",
+     "size": 307,
+     "why": "may publish material constants",
+     "sha256": "0402d571ff916abdc0bcb08bb67221e2586c69f4b1f780109e35ca4dc930aa43",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/1_Test_tensor_op/data_TT05.csv"
+    },
+    {
+     "path": "1_Test_tensor_op/data_TT06.csv",
+     "size": 1023,
+     "why": "may publish material constants",
+     "sha256": "ff5bff83989c3c3441406a55f5f43c7840dbebf79e440efce98e2924b3940956",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/1_Test_tensor_op/data_TT06.csv"
+    },
+    {
+     "path": "1_Test_tensor_op/data_TT07.csv",
+     "size": 4284,
+     "why": "may publish material constants",
+     "sha256": "c5e9d6a28dd1dd34c8887a8edaf814250bebe63e9f0eec600add185328f31f1a",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/1_Test_tensor_op/data_TT07.csv"
+    },
+    {
+     "path": "1_Test_tensor_op/data_TT08.csv",
+     "size": 11994,
+     "why": "may publish material constants",
+     "sha256": "a7f2f1427a674a75b6478858fa78af6bc03ee96414b11857d81533bcd9c5c07d",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/1_Test_tensor_op/data_TT08.csv"
+    },
+    {
+     "path": "1_Test_tensor_op/generate_values_test.py",
+     "size": 2854,
+     "why": "may publish material constants",
+     "sha256": "611f08ee0af39fb4df69be05734134026e48e6eb1404fc09cb05eacf53500b62",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/1_Test_tensor_op/generate_values_test.py"
+    },
+    {
+     "path": "2_Test_Abaqus_input_files/Reference_data/data_test_ht_vol.csv",
+     "size": 3045,
+     "why": "may publish material constants",
+     "sha256": "ba0ede28b754eb5a17a062142e7869ad2774e30da664a56bd76d24f3e8299bad",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/2_Test_Abaqus_input_files/Reference_data/data_test_ht_vol.csv"
+    },
+    {
+     "path": "2_Test_Abaqus_input_files/Reference_data/data_test_ut_ps.csv",
+     "size": 9660,
+     "why": "may publish material constants",
+     "sha256": "2d8765e059439a50152a929b7d530325e610749ce6c8e6f1f8838de2bc54b7a8",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/2_Test_Abaqus_input_files/Reference_data/data_test_ut_ps.csv"
+    },
+    {
+     "path": "2_Test_Abaqus_input_files/fi_R_testR_ht_vol.py",
+     "size": 6626,
+     "why": "may publish material constants",
+     "sha256": "3b5d72ec3b4e3a8f0b8bd0178d63ba68143c38fd7f6bf610a2a575f0478de0a0",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/2_Test_Abaqus_input_files/fi_R_testR_ht_vol.py"
+    },
+    {
+     "path": "4_Test_lin_elas0/Ana_test_lin_elas0.py",
+     "size": 2714,
+     "why": "may publish material constants",
+     "sha256": "a147d1075be7116ca00ef59d4df4ff9f5f282737f80fce3ed151af6acdcac3c8",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/4_Test_lin_elas0/Ana_test_lin_elas0.py"
+    },
+    {
+     "path": "4_Test_lin_elas0/Ana_test_lin_elas1.py",
+     "size": 2714,
+     "why": "may publish material constants",
+     "sha256": "ab9a911e26580d8d3c4e4b585be00fe67ccc5fa4b5014ab72c9d517220180402",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/4_Test_lin_elas0/Ana_test_lin_elas1.py"
+    },
+    {
+     "path": "4_Test_lin_elas0/dat_LE_01.csv",
+     "size": 334,
+     "why": "may publish material constants",
+     "sha256": "6f82beec423ef2c1ebdfe24d3e2a7d4d63d657fac861b4144d1c5bd551c7d484",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/4_Test_lin_elas0/dat_LE_01.csv"
+    },
+    {
+     "path": "4_Test_lin_elas0/dat_LE_02.csv",
+     "size": 335,
+     "why": "may publish material constants",
+     "sha256": "c35e6d4baa212ad9bfe5480e57d6c800030198a33fd75492832c7d38db4618db",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/4_Test_lin_elas0/dat_LE_02.csv"
+    },
+    {
+     "path": "5_Isochoric_test/fi_test_MatLaw3D.py",
+     "size": 2912,
+     "why": "may publish material constants",
+     "sha256": "ac76757db3aa7eafe9fe0ef4885b92c8b42edca3f41fcd6b67f001f3ac96c899",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/5_Isochoric_test/fi_test_MatLaw3D.py"
+    },
+    {
+     "path": "5_Isochoric_test/fi_test_MatLawPS.py",
+     "size": 2921,
+     "why": "may publish material constants",
+     "sha256": "c2e6835c69b1c3fd7d8a1e0b57cd251af2f1af47d09c693492a760c30e9b1eb8",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/5_Isochoric_test/fi_test_MatLawPS.py"
+    },
+    {
+     "path": "6_1D_Stra_dri/fi_test_strain_drive.py",
+     "size": 3342,
+     "why": "may publish material constants",
+     "sha256": "efe767dd1c4d24e37a7ee6aa9d17038c4ea89ee463bbffdbd94dd95e00458733",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/6_1D_Stra_dri/fi_test_strain_drive.py"
+    },
+    {
+     "path": "README.md",
+     "size": 2639,
+     "why": "may publish material constants",
+     "sha256": "4ec95785ee144fd19a53bde7644321bec6ae3b96861221c277053a6ed97f4d97",
+     "written": true,
+     "url": "https://github.com/williammora1984/UMAT_GTN/blob/69a73295afdebb5e8003c058d9666375faf2fe38/README.md"
+    }
+   ],
+   "still_missing": [],
+   "skipped": [],
+   "error": ""
+  }
+ ],
+ "counts": {
+  "ok": 11
+ },
+ "files_fetched": 465,
+ "still_missing": 0
+}
