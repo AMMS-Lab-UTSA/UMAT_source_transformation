@@ -379,6 +379,20 @@
    "tests": [
     "tests/test_transform_a_seed_read_left_real_is_refused.py"
    ]
+  },
+  {
+   "commit": "69a890e",
+   "bug": "The dependency resolver skipped fixed-form definitions written after a tab in the label field as continuation lines, so the companion search reported routines missing from the files that define them (all five OXFORD-UMAT copies); GETRANK was not known as an Abaqus runtime routine; module variables on the stress path were refused as an unreadable module.",
+   "tests": [
+    "tests/test_transform_a_tab_led_companion_routine_is_found.py"
+   ]
+  },
+  {
+   "commit": "c5756d0",
+   "bug": "The DATA-shadow guard read DATA statements of every routine, refusing a UMAT whose promoted local shares a name with a DATA-initialised local of another routine (damin225 FACTOR, ReachOptimum A1).",
+   "tests": [
+    "tests/test_transform_a_data_local_of_another_routine_is_not_the_umats.py"
+   ]
   }
  ],
  "excluded": [
@@ -465,6 +479,10 @@
   {
    "commit": "cd6939e",
    "reason": "Feature (G1, D-19a rev 2): adds Pairing.refusal_kind to route each pairing refusal; 'refusal' names the field, not a corrected behaviour. Tested by tests/test_a_refusal_names_its_kind.py."
+  },
+  {
+   "commit": "6ea83e0",
+   "reason": "Evidence only: maps bc074bc, 66a5469, 222b7b7, 7511a2b and d874a98 to their tests; 'fixes' names those commits, it corrects no behaviour."
   }
  ],
  "changelog_fixed": {
