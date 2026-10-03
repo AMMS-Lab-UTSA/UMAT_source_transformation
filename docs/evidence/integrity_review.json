@@ -1264,6 +1264,14 @@
   "mock:tests/test_every_council_cell_carries_both_origins.py:workspace:monkeypatch.setattr:eeb6e20d": {
    "verdict": "justified",
    "reason": "Points the harness's module-level paths (registry, verification records, cache, store, families, experiment work dir, council plans) at a temporary fixture tree so resolve_entry reads a council plan and an author-deck record; the real resolve_entry, _record and cells.fold run and nothing numerical is replaced."
+  },
+  "skip:tests/test_a_quad_replay_resolves_what_double_quantises.py:<module>:mark.skipif:0a70e71a": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs a Fortran replay toy, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "removed_check:tests/test_a_transition_is_not_a_pass.py:test_a_path_dependent_material_needs_an_unloading_state:4095dd7c": {
+   "verdict": "justified",
+   "reason": "The assert on coverage with an unloading state was rewritten, not removed: Vera B7 A7 counts a smooth unloading state as activated only if the material had activated by then, so the test now passes activated=True for the state that completes coverage and adds the opposite assert (an unloading state before any activation does not complete it)."
   }
  }
 }
