@@ -21,7 +21,7 @@ from umat_oti.fortran.literals import (
 )
 from umat_oti.fortran.normalize import detect_source_form, strip_inline_comment
 from umat_oti.fortran.parser import (
-    logical_lines_from_text, parse_declaration_line, parse_entity, parse_subroutines, split_top_level,
+    expand_fixed_form_tabs, logical_lines_from_text, parse_declaration_line, parse_entity, parse_subroutines, split_top_level,
 )
 from umat_oti.fortran.regions import (
     INTRINSIC_TOKEN_NAMES, _is_executable_line, _routine_effect_table)
@@ -6120,12 +6120,15 @@ def _base_argument_name(argument: str) -> str:
 
 
 def _fixed_form_physical_line(line: str) -> str:
-    if not line.startswith("\t"):
-        return line
-    remainder = line[1:]
-    if remainder[:1] in "123456789":
-        return "     " + remainder
-    return "      " + remainder
+    """The line with a tab in its label field expanded, as the compilers read it.
+
+    Only a tab in column 1 was expanded. MechMater's UMAT_visco_FGJD_2026.for
+    writes ``<5 blanks><TAB>  SIGMAEQH(K,J) = ...`` -- a tab in column 6,
+    which ifort and gfortran read as "statement starts in column 7" -- and the
+    rewrite took it for a continuation and glued it onto the statement above
+    (``.../DETSIGMAEQH(K,J)= ...``). The parser's rule is the compilers'.
+    """
+    return expand_fixed_form_tabs(line)
 
 
 def _logical_line_prefix(line: str, form: str) -> str:
