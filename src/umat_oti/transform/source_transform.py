@@ -1084,7 +1084,16 @@ def _liftable_helper_roots(
 
     if not widen:
         return tuple(roots)
-    defined_here = _names_defined_in_this_file(analysis)
+    # A solver utility this transform can supply a body for (ROTSIG, SPRINC,
+    # the LAPACK subset) is as liftable as a routine the file defines: the
+    # body is appended before lifting (supply_reachable_definitions). Left out,
+    # a ``CALL ROTSIG(STATEV(1), DROT, EELAS, ...)`` ahead of the stress update
+    # -- materialsguy's UMATPlasticity.f rotates its stored strains there --
+    # was handed STATEV_OTI and EELAS_OTI and refused by the leak check, for a
+    # callee whose OTI copy the transform has.
+    from umat_oti.transform.abaqus_utility_definitions import UTILITY_DEFINITIONS
+
+    defined_here = _names_defined_in_this_file(analysis) | set(UTILITY_DEFINITIONS)
     if not defined_here:
         return tuple(roots)
     span = _selected_routine_span_from_analysis(analysis, selected_umat)
