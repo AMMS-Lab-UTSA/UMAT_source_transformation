@@ -49,3 +49,30 @@ def test_the_counting_indicators_make_it_informative():
 def test_an_elastic_source_is_not_held_to_an_inelastic_event():
     r = council_informative(_act(), family="linear elastic", demanded_nstatv=0, finite=False)
     assert not r["inelastic"] and r["informative"]
+
+
+WRITE_ONLY = """\
+      SUBROUTINE UMAT(STRESS,STATEV,DDSDDE,NTENS,NSTATV,PROPS,DSTRAN)
+      DIMENSION STRESS(NTENS),STATEV(NSTATV)
+      STRESS(1) = STRESS(1) + PROPS(1)*DSTRAN(1)
+      STATEV(1) = STRESS(1)
+      STATEV(2) = PROPS(1)*DSTRAN(1)
+      END
+"""
+
+
+def test_write_only_statev_is_elastic_with_output_state_only_with_both_witnesses():
+    from umat_oti.abaqus.activation import statev_is_write_only
+    assert statev_is_write_only(WRITE_ONLY)[0]
+    reads = WRITE_ONLY.replace("STATEV(2) = PROPS(1)*DSTRAN(1)", "STATEV(2) = STATEV(2) + 1.0")
+    assert not statev_is_write_only(reads)[0]
+    in_condition = WRITE_ONLY.replace("STATEV(1) = STRESS(1)",
+                                      "IF (STATEV(1) .GT. 0) STRESS(1) = 0.0")
+    assert not statev_is_write_only(in_condition)[0]
+    both = council_informative(_act(), family="linear elastic", demanded_nstatv=2, finite=False,
+                               statev_write_only_static=True, statev_write_only_dynamic=True)
+    assert not both["inelastic"] and both["informative"]
+    assert "elastic with output state" in both["statev"]
+    one = council_informative(_act(), family="linear elastic", demanded_nstatv=2, finite=False,
+                              statev_write_only_static=True)
+    assert one["inelastic"] and not one["informative"]

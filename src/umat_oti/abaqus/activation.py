@@ -26,6 +26,7 @@ Their absence is never reported as "no activation" -- only as not measured.
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass, field
 from typing import Any, Optional, Sequence
 
@@ -339,14 +340,43 @@ def detect_activation(records: Sequence[dict],
 INELASTIC_FAMILY_WORDS = ("plastic", "damage", "crystal", "visco", "concrete")
 
 
+_STATEV_WRITE = re.compile(r"^\s*(?:\d+\s+)?STATEV\s*\(([^=]*)\)\s*=(?!=)(.*)$", re.IGNORECASE)
+_STATEV_ANY = re.compile(r"\bSTATEV\b", re.IGNORECASE)
+
+
+def statev_is_write_only(source_text: str) -> tuple[bool, str]:
+    """Static half of D-21a(d): does the routine only ever WRITE STATEV?
+
+    Every executable mention of STATEV has to be the target of an
+    assignment whose right-hand side does not mention it; a read on a
+    right-hand side, in a condition or in a CALL argument list (where the
+    callee may read it) is a read. Declarations and the interface are not
+    executable and do not count."""
+    from umat_oti.abaqus.experiment import _executable, _strip_header
+    for line in _strip_header(_executable(source_text)).splitlines():
+        if not _STATEV_ANY.search(line):
+            continue
+        write = _STATEV_WRITE.match(line)
+        if write and not _STATEV_ANY.search(write.group(1)) and \
+                not _STATEV_ANY.search(write.group(2)):
+            continue
+        return False, f"STATEV is read: {line.strip()[:80]}"
+    return True, "every executable STATEV mention is the target of an assignment"
+
+
 def council_informative(activation: Activation, *, family: str,
-                        demanded_nstatv: int, finite: bool) -> dict:
+                        demanded_nstatv: int, finite: bool,
+                        statev_write_only_static: bool = False,
+                        statev_write_only_dynamic: bool = False) -> dict:
     """Whether a council experiment exercised an inelastic source (R4).
 
     *Inelastic* means the reviewed family is plasticity, damage, crystal,
     viscous or concrete, OR the routine writes state (``demanded(text).nstatv
     > 0``); a disagreement between the two resolves to inelastic and is
-    recorded. An inelastic row is informative only if
+    recorded. A routine whose STATEV is write-only -- shown statically
+    (:func:`statev_is_write_only`) AND dynamically (the initial-state proof:
+    the outputs do not depend on what STATEV starts at) -- is "elastic with
+    output state" (D-21a (d)), not inelastic by state. An inelastic row is informative only if
     ``residual_after_reversal`` fired, or ``tangent_change`` fired under small
     strain: under NLGEOM the tangent moves with the geometry alone, so there
     it does not count. ``departure_from_linearity`` and ``state_change``
@@ -354,14 +384,19 @@ def council_informative(activation: Activation, *, family: str,
     inelastic event.
     """
     by_family = any(word in str(family or "").lower() for word in INELASTIC_FAMILY_WORDS)
-    by_state = int(demanded_nstatv or 0) > 0
+    output_state = bool(statev_write_only_static and statev_write_only_dynamic)
+    by_state = int(demanded_nstatv or 0) > 0 and not output_state
     inelastic = by_family or by_state
     record = {"inelastic": inelastic, "by_family": by_family, "by_state": by_state,
               "disagreement": "" if by_family == by_state else (
                   f"the reviewed family {family!r} says "
                   f"{'inelastic' if by_family else 'elastic'} and the routine "
                   f"{'writes' if by_state else 'writes no'} STATEV; resolved to inelastic"),
-              "fired": activation.fired}
+              "fired": activation.fired,
+              "statev": ("write-only (static and dynamic): elastic with output state"
+                         if output_state else
+                         "write-only by one witness only; both are needed"
+                         if (statev_write_only_static or statev_write_only_dynamic) else "")}
     if not inelastic:
         record.update(informative=True,
                       reason="not an inelastic source: no inelastic event is required")
