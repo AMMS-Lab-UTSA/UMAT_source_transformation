@@ -102,3 +102,15 @@ def test_the_abaqus_pass_records_a_harvest_completed_origin(monkeypatch):
         material_data_origin="author_published_outside_deck", experiment_origin="author"))
     assert harvested["material_data_origin"] == "author_published_outside_deck"
     assert harvested["experiment_origin"] == "author"
+
+
+def test_a_branch_coverage_reaches_every_cell(workspace):
+    plan = _council_plan()
+    plan["branch_coverage"] = {"exercised": "NTENS=6", "not_exercised": ["NTENS == 4"],
+                               "statement": "verified on the 3D branch (NTENS=6); ..."}
+    (workspace / "plans" / "c1" / "council_plan.json").write_text(json.dumps(plan))
+    entry = H.resolve_entry("c1#A")
+    records = [H._record(entry, f, _path(), {"status": "verified"}, {})
+               for f in ("primal_stress_state", "ddsdde")]
+    for cell in fold(records, evidence="x"):
+        assert cell["branch_coverage"]["not_exercised"] == ["NTENS == 4"]

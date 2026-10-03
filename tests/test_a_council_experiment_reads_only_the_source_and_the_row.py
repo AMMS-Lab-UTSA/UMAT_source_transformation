@@ -195,3 +195,46 @@ def test_a_harvest_row_is_one_author_published_set(tmp_path):
     row["constants"][1]["confidence"] = "uncertain"
     assert plan_council(repo / "src" / "umat.f", repo, row).refusal_code == \
         "insufficient_material_data"
+
+
+BRANCHING = HEADER + """\
+      E = PROPS(1)
+      ENU = PROPS(2)
+      IF (NDI == 3) THEN
+        DO I = 1, NTENS
+          DO J = 1, NTENS
+            DDSDDE(I,J) = 0.D0
+          END DO
+          DDSDDE(I,I) = E/(1.D0+ENU)
+        END DO
+      ELSE
+        DDSDDE(1,1) = E
+      END IF
+      IF (NTENS == 4) THEN
+        STRESS(4) = 0.D0
+      END IF
+      STATEV(1) = 0.D0
+      RETURN
+      END
+"""
+
+
+def test_the_d21_formulation_field_decides_the_element(tmp_path):
+    formulation = {"statement": "3D", "element": "C3D8 (NDI=3, NTENS=6)",
+                   "evidence": ["umat.f:12 if (ndi==3) then ! 3D"], "origin": "council_choice"}
+    cp = _plan(tmp_path, BRANCHING, formulation_3d_only=None, formulation=formulation)
+    assert cp.found, cp.refusal
+    manifest = cp.sets[0][1].manifest
+    assert manifest.element_type == "C3D8"
+    origin = manifest.as_dict()["origins"]["element_type"]
+    assert origin["origin"] == "council_choice" and "umat.f:12" in origin["provenance"]
+
+
+def test_a_branching_routine_names_the_branch_it_does_not_exercise(tmp_path):
+    formulation = {"statement": "3D", "element": "C3D8", "evidence": [], "origin": "council_choice"}
+    cp = _plan(tmp_path, BRANCHING, formulation_3d_only=None, formulation=formulation)
+    coverage = cp.as_dict()["branch_coverage"]
+    assert sorted(coverage["not_exercised"]) == ["ELSE of NDI == 3", "NTENS == 4"]
+    assert coverage["exercised"].startswith("NTENS=6")
+    assert coverage["statement"].startswith("verified on the 3D branch (NTENS=6)")
+    assert _plan(tmp_path / "plain").branch_coverage is None
