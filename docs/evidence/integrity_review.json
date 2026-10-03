@@ -1216,6 +1216,14 @@
   "mock:tests/test_transform_a_tab_led_companion_routine_is_found.py:test_state_kept_in_a_module_variable_is_refused_by_name:monkeypatch.setattr:a0bc14ac": {
    "verdict": "justified",
    "reason": "Points DEFAULT_CACHE at a temporary directory holding the sibling file under test; no function is replaced."
+  },
+  "skip:tests/test_transform_a_call_reads_every_identifier_of_its_actuals.py:<module>:mark.skipif:8d891947": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
+  },
+  "skip:tests/test_transform_a_value_at_a_hypercomplex_dummy_is_passed_as_one.py:<module>:mark.skipif:8d891947#4": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the test compiles and runs generated Fortran, which needs gfortran. CI installs gfortran (.github/workflows/ci.yml, step 'Install gfortran'), so the test runs there."
   }
  }
 }
