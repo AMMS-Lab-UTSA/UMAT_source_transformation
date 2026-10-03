@@ -91,12 +91,15 @@ def env(tmp_path, monkeypatch):
                         else "fully_verified",
                         "kinematics": "small", "time_dependent": False,
                         "activation_amplitude": None})
-        verification.append({"key": key, "manifest": {
+        verification.append({"key": key, "fingerprint": "t" * 16, "harness_fingerprint": "h" * 16,
+                             "manifest": {
             "props": [1000.0 + n, 0.2], "nprops": 2, "nstatv": 1, "ntens": 6, "ndi": 3,
             "nshr": 3, "element_type": "C3D8", "kinematics": "small strain", "name": "MAT",
             "material_provenance": f"o{n}__r/run.inp *USER MATERIAL MAT"}})
     registry = tmp_path / "registry.json"
-    registry.write_text(json.dumps({"records": records}))
+    registry.write_text(json.dumps({"records": records, "summary": {"inputs": {
+        "verification_results": "store_verification.jsonl", "store_fingerprint": "t" * 16,
+        "harness_fingerprint": "h" * 16}}}))
     pass_file = tmp_path / "store_verification.jsonl"
     pass_file.write_text("".join(json.dumps(v) + "\n" for v in verification))
     (tmp_path / "live_plans").mkdir()
@@ -487,3 +490,31 @@ def test_a_coords_reading_pick_is_placed_in_the_authors_mesh_off_every_zero_plan
     # the D-22 condition check itself rejects a zero coordinate
     plan["sets"][0]["plan"]["experiment"]["manifest"]["node_coordinates"][0][1] = 0.0
     assert "zero coordinate" in ho.placement_problems(plan)[0]
+
+
+def test_the_registry_and_the_records_must_come_from_the_same_pass(env):
+    from umat_oti.corpus_features import harness as H
+    ho.same_pass(H.REGISTRY, ho.CURRENT_RECORDS)
+    other = env / "pass20" / "store_verification_other.jsonl"
+    other.parent.mkdir()
+    other.write_text(ho.CURRENT_RECORDS.read_text())
+    with pytest.raises(ho.SelectionError, match="not from the same pass: the registry was built"):
+        ho.prepare(KEYS[:5], env / "out", verification_records=other)
+    lines = [json.loads(l) for l in ho.CURRENT_RECORDS.read_text().splitlines()]
+    lines[3]["harness_fingerprint"] = "x" * 16
+    ho.CURRENT_RECORDS.write_text("".join(json.dumps(l) + "\n" for l in lines))
+    with pytest.raises(ho.SelectionError, match=f"records carry {'t' * 16}/{'x' * 16}"):
+        ho.prepare(KEYS[:5], env / "out2")
+
+
+def test_a_growth_source_needing_a_total_time_leaves_under_r_h2(env):
+    prepared = ho.prepare(KEYS[:5], env / "out")
+    path = prepared["plans"] / KEYS[0] / "council_plan.json"
+    assert "growth_needs_total_time" in ho.R_H2_REFUSALS
+    plan = json.loads(path.read_text())
+    assert not plan["refusal"]
+    assert ho.r_h2_leaves(plan) == ""
+    refused = dict(plan, refusal="no total time", refusal_code="growth_needs_total_time")
+    assert "not a template test" in ho.r_h2_leaves(refused)
+    # any other refusal stays a disagreement for judge()
+    assert ho.r_h2_leaves(dict(plan, refusal="x", refusal_code="needs_nstatv")) == ""

@@ -112,7 +112,10 @@ REVIEWED_SCANS = (_WORKSPACE / "corpus_campaign/holdout/reviewed_scan.jsonl",
 REVIEWED_FIELDS = ("reads_temp", "reads_coords_or_noel", "reads_temp_note", "coords_note",
                    "static_scan_overrides", "placement", "undefined_outputs")
 #: council-plan refusals that mean the template refuses an input (D-22 R-H2)
-R_H2_REFUSALS = ("needs_documented_temperature", "needs_documented_geometry", "body_force")
+R_H2_REFUSALS = ("needs_documented_temperature", "needs_documented_geometry", "body_force",
+                 # Vera, D-22: a growth source whose clock needs a total time no
+                 # template rule decides (mholla umat_iso_morph)
+                 "growth_needs_total_time")
 #: ReadDetF(3000, 27) in the Jeff97 growth sources (D-22 condition)
 NOEL_NPT_BOUNDS = (3000, 27)
 
@@ -194,6 +197,31 @@ def _records_by_key(path: Path) -> dict:
                 if row.get("key"):
                     out[str(row["key"])] = row
     return out
+
+
+def same_pass(registry: Path, verification_records: Path) -> None:
+    """Refuse unless the registry (R-H1's terminal states) and the verification
+    records (the author side) come from the same pass: the registry's recorded
+    ``verification_results`` is the records file, and every record carries the
+    registry's store and harness fingerprints."""
+    inputs = (json.loads(Path(registry).read_text()).get("summary") or {}).get("inputs") or {}
+    named = str(inputs.get("verification_results") or "")
+    path = Path(verification_records).resolve().as_posix()
+    problems = []
+    if not named or not path.endswith("/" + named.lstrip("/")):
+        problems.append(f"the registry was built from {named or 'no recorded records file'}, "
+                        f"not {verification_records}")
+    want = (str(inputs.get("store_fingerprint") or ""), str(inputs.get("harness_fingerprint") or ""))
+    seen = set()
+    for row in _records_by_key(verification_records).values():
+        seen.add((str(row.get("fingerprint") or ""), str(row.get("harness_fingerprint") or "")))
+    other = sorted(f for f in seen if f != want)
+    if not all(want) or other:
+        problems.append(f"the registry records store/harness {want[0] or '?'}/{want[1] or '?'} "
+                        f"and the records carry {', '.join('/'.join(f) for f in other) or 'none'}")
+    if problems:
+        raise SelectionError("the registry and the verification records are not from the same "
+                             "pass: " + "; ".join(problems))
 
 
 def author_side(key: str, verification_records: Optional[Path] = None) -> tuple:
@@ -376,6 +404,15 @@ def author_mesh_placement(deck_text: str, deck_name: str) -> Optional[dict]:
             "origin": "author_published"}
 
 
+def r_h2_leaves(plan: dict) -> str:
+    """Why a council plan makes its pick "not a template test" (D-22 R-H2), or ''."""
+    code = plan.get("refusal_code")
+    if code in R_H2_REFUSALS:
+        return (f"not a template test: the council plan is refused {code} "
+                f"({str(plan.get('refusal'))[:200]})")
+    return ""
+
+
 def placement_problems(plan: dict) -> list:
     """D-22 conditions on a placed plan: no zero node coordinate, NOEL/NPT in bounds."""
     placement = plan.get("placement") or {}
@@ -420,6 +457,9 @@ def prepare(keys: list, out: Path, verification_records: Optional[Path] = None,
     import hashlib
     reviewed = load_reviewed(reviewed_scans)
     records_file = Path(verification_records or CURRENT_RECORDS)
+    if not records_file.is_file():
+        raise SelectionError(f"no verification records at {records_file}")
+    same_pass(Path(H.REGISTRY), records_file)
     rows, problems, left = [], [], []
     for key in keys:
         try:
@@ -463,10 +503,9 @@ def prepare(keys: list, out: Path, verification_records: Optional[Path] = None,
     for row in rows:
         plan_file = plans / row["key"] / "council_plan.json"
         plan = json.loads(plan_file.read_text()) if plan_file.is_file() else {}
-        code = plan.get("refusal_code")
-        if code in R_H2_REFUSALS:
-            left.append({"key": row["key"], "rule": "R-H2", "why": "not a template test: the "
-                         f"council plan is refused {code} ({str(plan.get('refusal'))[:200]})"})
+        why = r_h2_leaves(plan)
+        if why:
+            left.append({"key": row["key"], "rule": "R-H2", "why": why})
             continue
         bad = placement_problems(plan) if plan.get("placement") else []
         if bad:
