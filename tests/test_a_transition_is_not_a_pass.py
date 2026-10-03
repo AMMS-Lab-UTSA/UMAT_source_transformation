@@ -403,3 +403,11 @@ def test_the_resolution_ladder_respects_the_ceiling():
     # 0.005 * 400 is 2.0; clamped it is the ceiling itself.
     assert capped(0.005 * 400.0) == CEILING
     assert capped(0.005 * 400.0, 5.0) == CEILING
+
+
+def test_no_elastic_branch_is_decided_by_the_history_when_given():
+    """Vera G10 review A7: a material that activates later has an elastic
+    branch even if no elastic state happened to be judged."""
+    states = [_regime(SMOOTH_INELASTIC, 7), _regime(SMOOTH_INELASTIC, 9)]
+    assert coverage(states, nonlinear=True, no_elastic_branch=True)[0]
+    assert not coverage(states, nonlinear=True, no_elastic_branch=False)[0]

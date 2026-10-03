@@ -388,7 +388,8 @@ def response_character(records: Sequence[dict]) -> tuple[str, str]:
 
 def coverage(regimes: Sequence[Regime], nonlinear: bool,
              path_dependent: bool = False,
-             character: str = UNKNOWN_STATE_SEMANTICS) -> tuple[bool, str]:
+             character: str = UNKNOWN_STATE_SEMANTICS,
+             no_elastic_branch: Optional[bool] = None) -> tuple[bool, str]:
     """Is this enough smooth evidence to call a material's tangent verified?
 
     For a linear model the elastic branch is the whole material and smooth
@@ -441,8 +442,12 @@ def coverage(regimes: Sequence[Regime], nonlinear: bool,
     # they do not have. The requirement then falls to the one that CAN be met
     # -- two smooth states inside the activated regime -- which is not a
     # weaker test of the same thing but the same test of what is there.
-    no_elastic_branch = not elastic and any(
-        regime.activated_here for regime in regimes)
+    # Decided from the HISTORY when the caller knows it (Vera G10 review A7:
+    # the material activates at or before the second record of the point),
+    # not from which states happened to be judged.
+    if no_elastic_branch is None:
+        no_elastic_branch = not elastic and any(
+            regime.activated_here for regime in regimes)
     needs_both_sides = character != NONLINEAR_REVERSIBLE and not no_elastic_branch
     if needs_both_sides and len(elastic) < 2:
         return False, (f"{len(elastic)} smooth state(s) before activation, and "
