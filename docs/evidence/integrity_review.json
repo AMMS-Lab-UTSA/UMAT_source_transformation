@@ -1285,14 +1285,6 @@
    "verdict": "justified",
    "reason": "The family classifications count_target reads (corpus_run/material_families_checked_E.json, the B3 review) are campaign files outside this tree; the D-8 check runs wherever they exist."
   },
-  "skip:tests/test_corpus_manifest_count_target.py:test_the_deck_only_column_is_the_d8_figure:call:skip:e860cd4f": {
-   "verdict": "justified",
-   "reason": "The routine-level 109 needs the pass20 harness cells (corpus_campaign/pass20_harness/run/manifest_cells.jsonl), which are outside this tree; the test runs wherever they exist."
-  },
-  "skip:tests/test_registry_fields_tiers.py:test_the_deck_only_figures_of_the_committed_pass20_registry_are_unchanged:call:skip:cee26f96": {
-   "verdict": "justified",
-   "reason": "238 and 67 are asserted from the committed registry before the skip; only the routine-level 109 needs the pass20 harness cells outside this tree, and that part runs wherever they exist."
-  },
   "mock:tests/test_corpus_cases_holdout.py:env:monkeypatch.setattr:86b1af39": {
    "verdict": "justified",
    "reason": "Fixture points harness globals at a temporary registry, pass file, cache and plans directory so the hold-out test never touches live campaign data; the code under test is not mocked."
@@ -1332,6 +1324,252 @@
    "reason": "Corpus inventory extended, not an expected value of the code under test: tools/ingest_discovery_round.py copied the triage rows of the 14 sources the 2026-10-02 family discovery round accepted (paper_results/discovery/family_round_2026-10-02/acceptance.json) into the inventory, after checking each cached file against the accepted sha256. No existing row changed; tests/test_discovery_round_is_ingested.py pins the rows to the round's own triage.",
    "quote": "The inventory goes from 391 to 405 rows",
    "quote_source": "70a3700"
+  },
+  "skip:tests/test_corpus_manifest_count_target.py:test_the_deck_only_column_is_the_d8_figure:call:skip:7b99b6ef": {
+   "verdict": "justified",
+   "reason": "The routine-level 112 needs the pass21 harness cells (corpus_campaign/pass21_harness/run/manifest_cells.jsonl), which are outside this tree; the test runs wherever they exist. Same skip as at pass20, with the pass21 cells named."
+  },
+  "skip:tests/test_registry_fields_tiers.py:test_the_deck_only_figures_of_the_committed_pass21_registry_are_unchanged:call:skip:a6139f2b": {
+   "verdict": "justified",
+   "reason": "245 and 102 are asserted from the committed registry before the skip; only the routine-level 112 needs the pass21 harness cells outside this tree, and that part runs wherever they exist. The test was renamed from ..._committed_pass20_registry_... with the freeze it checks."
+  },
+  "removed_check:tests/test_a_census_sums_to_its_own_denominator.py:test_every_census_the_registry_publishes_states_and_sums_to_a_denominator:b8291ba0": {
+   "verdict": "justified",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "evidence": [
+    {
+     "in": "tests/test_a_census_sums_to_its_own_denominator.py",
+     "text": "assert censuses[name][\"denominator\"] == d1 == 405, name"
+    }
+   ]
+  },
+  "removed_check:tests/test_a_refusal_is_not_a_verdict_on_the_file.py:test_every_record_names_where_the_file_came_from:73850f7f": {
+   "verdict": "justified",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "evidence": [
+    {
+     "in": "tests/test_a_refusal_is_not_a_verdict_on_the_file.py",
+     "text": "assert len(records) == 405"
+    }
+   ]
+  },
+  "removed_check:tests/test_the_registry_is_the_denominator.py:test_the_registry_holds_every_one_of_the_391_discovered_sources:07fa1a05": {
+   "verdict": "justified",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "evidence": [
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(discovered) == 405, len(discovered)"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(records) == 405, len(records)"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(set(ids)) == 405, \"a source appears twice\""
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert reconciliation[\"discovered_sources\"] == 405"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert reconciliation[\"in_the_registry\"] == 405"
+    }
+   ]
+  },
+  "removed_check:tests/test_the_registry_is_the_denominator.py:test_the_registry_holds_every_one_of_the_391_discovered_sources:144720e2": {
+   "verdict": "justified",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "evidence": [
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(discovered) == 405, len(discovered)"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(records) == 405, len(records)"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(set(ids)) == 405, \"a source appears twice\""
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert reconciliation[\"discovered_sources\"] == 405"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert reconciliation[\"in_the_registry\"] == 405"
+    }
+   ]
+  },
+  "removed_check:tests/test_the_registry_is_the_denominator.py:test_the_registry_holds_every_one_of_the_391_discovered_sources:4066e53b": {
+   "verdict": "justified",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "evidence": [
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(discovered) == 405, len(discovered)"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(records) == 405, len(records)"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(set(ids)) == 405, \"a source appears twice\""
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert reconciliation[\"discovered_sources\"] == 405"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert reconciliation[\"in_the_registry\"] == 405"
+    }
+   ]
+  },
+  "removed_check:tests/test_the_registry_is_the_denominator.py:test_the_registry_holds_every_one_of_the_391_discovered_sources:65f0d4f4": {
+   "verdict": "justified",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "evidence": [
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(discovered) == 405, len(discovered)"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(records) == 405, len(records)"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(set(ids)) == 405, \"a source appears twice\""
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert reconciliation[\"discovered_sources\"] == 405"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert reconciliation[\"in_the_registry\"] == 405"
+    }
+   ]
+  },
+  "removed_check:tests/test_the_registry_is_the_denominator.py:test_the_registry_holds_every_one_of_the_391_discovered_sources:73850f7f": {
+   "verdict": "justified",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "evidence": [
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(discovered) == 405, len(discovered)"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(records) == 405, len(records)"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert len(set(ids)) == 405, \"a source appears twice\""
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert reconciliation[\"discovered_sources\"] == 405"
+    },
+    {
+     "in": "tests/test_the_registry_is_the_denominator.py",
+     "text": "assert reconciliation[\"in_the_registry\"] == 405"
+    }
+   ]
+  },
+  "removed_check:tests/test_the_two_denominators_stay_apart.py:test_retained_refresh_preserves_observations_and_retires_currency:0ee32f2b": {
+   "verdict": "justified",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "evidence": [
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert d1 == len(records) == 405, d1"
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert len(records) == len(refreshed[\"records\"]) == 405"
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert len(list(csv.DictReader(table.open()))) == 405"
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert len(rows) == 405"
+    }
+   ]
+  },
+  "removed_check:tests/test_the_two_denominators_stay_apart.py:test_retained_refresh_preserves_observations_and_retires_currency:ed8fd61c": {
+   "verdict": "justified",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "evidence": [
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert d1 == len(records) == 405, d1"
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert len(records) == len(refreshed[\"records\"]) == 405"
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert len(list(csv.DictReader(table.open()))) == 405"
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert len(rows) == 405"
+    }
+   ]
+  },
+  "removed_check:tests/test_the_two_denominators_stay_apart.py:test_the_csv_carries_the_same_391_rows_as_the_json:bfe2365d": {
+   "verdict": "justified",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "evidence": [
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert d1 == len(records) == 405, d1"
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert len(records) == len(refreshed[\"records\"]) == 405"
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert len(list(csv.DictReader(table.open()))) == 405"
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert len(rows) == 405"
+    }
+   ]
+  },
+  "removed_check:tests/test_the_two_denominators_stay_apart.py:test_the_two_denominators_are_both_published_and_d2_is_inside_d1:8b961895": {
+   "verdict": "justified",
+   "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
+   "evidence": [
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert d1 == len(records) == 405, d1"
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert len(records) == len(refreshed[\"records\"]) == 405"
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert len(list(csv.DictReader(table.open()))) == 405"
+    },
+    {
+     "in": "tests/test_the_two_denominators_stay_apart.py",
+     "text": "assert len(rows) == 405"
+    }
+   ]
   }
  }
 }
