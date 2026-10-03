@@ -466,6 +466,20 @@
     "tests/test_the_gate_chooses_states_from_the_original.py",
     "tests/test_a_quad_replay_resolves_what_double_quantises.py"
    ]
+  },
+  {
+   "commit": "f53c0b5",
+   "bug": "cells.fold merged the cells of different D-21 parameter sets of one source, and resolve_entry resolved a bare key of a multi-set plan to its first set and resolved refused plans (Vera's G review C6).",
+   "tests": [
+    "tests/test_every_council_cell_carries_both_origins.py"
+   ]
+  },
+  {
+   "commit": "6378078",
+   "bug": "A council row's kinematics and ceiling were recorded as author_published, identical parameter sets were accepted as independent, and a documented domain stated in words was dropped without a mark (Vera's G review C2, C4, C5).",
+   "tests": [
+    "tests/test_a_council_experiment_reads_only_the_source_and_the_row.py"
+   ]
   }
  ],
  "excluded": [
