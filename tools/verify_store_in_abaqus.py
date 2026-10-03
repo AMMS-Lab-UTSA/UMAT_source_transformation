@@ -4725,24 +4725,24 @@ def choose_gate_states(original_history: Sequence[dict],
     groups: dict = {}
     for record in original_history:
         groups.setdefault(_point_of(record), []).append(record)
-    transformed = {(r.get("increment"),) + _point_of(r): r for r in transformed_history
+    transformed = {(r.get("step"), r.get("increment")) + _point_of(r): r for r in transformed_history
                    if r.get("DDSDDE") and r.get("entry")}
     best = None
     for point in sorted(groups, key=lambda key: tuple(str(k) for k in key)):
         records = groups[point]
         matched = sum(1 for r in records
-                      if (r.get("increment"),) + point in transformed)
+                      if (r.get("step"), r.get("increment")) + point in transformed)
         if matched >= 2 * each_side:
             best = point
             break
         if best is None or matched > sum(1 for r in groups[best]
-                                         if (r.get("increment"),) + best in transformed):
+                                         if (r.get("step"), r.get("increment")) + best in transformed):
             best = point
     if best is None:
         return [], {"selected_from": "original", "reason": "no original records"}
     records = groups[best]
     replayable = [(position, record) for position, record in enumerate(records)
-                  if (record.get("increment"),) + best in transformed]
+                  if (record.get("step"), record.get("increment")) + best in transformed]
     turn = first_activated(records)
 
     def spread(pairs, count):
@@ -4764,12 +4764,14 @@ def choose_gate_states(original_history: Sequence[dict],
         picked = sorted(spread(before, take_before) + spread(after, take_after),
                         key=lambda pair: pair[0])
     chosen = [(position, records, record,
-               transformed.get((record.get("increment"),) + best))
+               transformed.get((record.get("step"), record.get("increment")) + best))
               for position, record in picked]
     selection = {
         "selected_from": "original", "point": {"element": best[0], "point": best[1]},
         "activation_increment": (records[turn].get("increment") if turn is not None else None),
-        "states": [{"increment": record.get("increment"), "element": best[0],
+        "activation_step": (records[turn].get("step") if turn is not None else None),
+        "states": [{"step": record.get("step"), "increment": record.get("increment"),
+                    "element": best[0],
                     "point": best[1], "position": position}
                    for position, _r, record, _t in chosen],
         "rule": (f"{each_side} states either side of this point's activation, one "

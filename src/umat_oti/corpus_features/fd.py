@@ -460,7 +460,12 @@ def judge_column(oti: np.ndarray, estimates: Sequence[np.ndarray], usable: Seque
     vmag = mag if value_magnitude is None else np.maximum(
         mag, np.broadcast_to(np.asarray(value_magnitude, float).reshape(-1), mag.shape))
     atol_ref = roundoff_atol(mag, steps, floor=atol_floor, eps=eps)
-    value_term = NOISE_FACTOR * value_eps * vmag / max(input_scale, 1e-300)
+    # the value under test's own round-off: its terms are ~F/|x| with x the
+    # same kinematic scale the Euler term uses (A1), not the increment alone
+    # (Vera G10 review B2: with |F| in vmag and the increment here the
+    # allowance was |F|/|dx| too large, and a 1e-4 defect passed under quad)
+    value_term = NOISE_FACTOR * value_eps * vmag / max(input_scale, abs(float(kinematic_input)),
+                                                       1e-300)
     # pass 1: every entry's FD-only plateau (admissibility from the
     # REFERENCE's round-off only), and the column's derivative scale from them
     series_all, found_all = [], []
