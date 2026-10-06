@@ -22,7 +22,7 @@ from merged D-4 evidence: the pass16 gate `derivatives_verified` is shown in
 counted apart. Since pass21 `ddsdde_legacy_gate` carries the Abaqus D-4
 gate's verdict (G10: verified / failed / unresolved, `tangent_verdict`); it is
 still shown per row and never decides the `ddsdde` cell. At the published
-build (pass21) `summary.features.D2_eligible.ddsdde.verified` is 112, from the
+build (pass22) `summary.features.D2_eligible.ddsdde.verified` is 113, from the
 merged routine-level cells. Routine-level results (`tools/run_corpus_features.py`)
 enter only through `--merge`. The full rules are under "How statuses are
 decided" and "the merge contract" below; the corpus-level meaning of verified
@@ -33,16 +33,16 @@ is in [CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md#what-verified-means).
 The build needs the workspace layout described in
 [CORPUS_VERIFICATION.md](CORPUS_VERIFICATION.md#workspace-layout-the-corpus-tools-assume)
 (the repository beside `discovery_cache/`, `transform_store/`, `corpus_run/`,
-`corpus_campaign/`, `final-ra/`). The published files are built from pass21
+`corpus_campaign/`, `final-ra/`). The published files are built from pass22
 with no later pass, the two routine-level harness runs merged by decision
 D-18, and the Residual Assembler records of batch **B2**. This exact command
 reproduces them:
 
 ```bash
 PYTHONPATH=src python tools/build_corpus_manifest.py \
-    --current-pass pass21 --later-pass "" \
-    --primal-ddsdde-cells ../corpus_campaign/pass21_harness/run/manifest_cells.jsonl \
-    --feature-cells ../corpus_campaign/pass21_harness_full/combined_cells.jsonl \
+    --current-pass pass22 --later-pass "" \
+    --primal-ddsdde-cells ../corpus_campaign/pass22_harness/run/manifest_cells.jsonl \
+    --feature-cells ../corpus_campaign/pass22_harness_full/combined_cells.jsonl \
     --merge-ra ../corpus_campaign/batches/B2/noether/records.jsonl   # ~15 s, offline
 PYTHONPATH=src python -m pytest -q tests/test_corpus_manifest_*.py    # 164 passed, ~4 s
 # UMAT_OTI_MANIFEST_DIR=<dir> points the artifact tests at a scratch build
@@ -61,18 +61,19 @@ flags:
   records for these two features are not merged.
 - Every other feature (parameter and state sensitivities, internal Jacobian)
   comes only from `--feature-cells` (the full-feature run; at pass19 it needed a rerun of three RitioL keys,
-  rerun3c; at pass20 and pass21 the run completed every key itself and
+  rerun3c; at pass20 to pass22 the run completed every key itself and
   `combined_cells.jsonl` is that run's `manifest_cells.jsonl`).
 - Guard: a primal or ddsdde cell that is verified in the primal+ddsdde run is
   merged as `inconclusive` (`d18_guard`, with the claim kept in
   `d18_withheld_verified`) when the full-feature run reports `failed` or
   `conflict` for that cell, or a hidden-state trip for that cell or source.
   The header's `feature_sources` records both inputs, the feature-to-run map
-  and every guarded cell. At pass21 (as at pass19 and pass20) the guard withholds none. The three
+  and every guarded cell. At pass22 (as at pass19 to pass21) the guard withholds none. The three
   RitioL ddsdde cells are verified from the primal+ddsdde run; in the full
   run they are `not_attempted` because the original terminated under
-  perturbation. At pass21 the same holds for harshaa765__UMATFile/UMAT.for (crystal
-  plasticity). Merging the full run alone would give 108 instead of 112.
+  perturbation. At pass21 and pass22 the same holds for harshaa765__UMATFile/UMAT.for
+  (crystal plasticity). Merging the full run alone would give 109 instead of
+  113.
 
 On merge, a cell that decides nothing (not verified, failed or
 inconclusive) and whose `build` has a `null` fingerprint or sha256 gets
