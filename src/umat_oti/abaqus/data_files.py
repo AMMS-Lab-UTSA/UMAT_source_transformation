@@ -271,12 +271,22 @@ def redirect(text: str, directory: Path, *, staged: Sequence[str] = (),
         replaced = False
         if pieces:
             last = pieces[-1]
-            for index, line in enumerate(lines):
+            # EVERY statement that opens this name, not the first: a file is
+            # often opened in more than one place, and the Jacobian-matched
+            # bundle holds two copies of the whole routine. The first match
+            # only left the second copy opening 'C:\Users\...\E0.CSV' in
+            # the solver's scratch directory (pass22: Hunman_face, Alex x2,
+            # TendrilOfPumpkin; forrtl severe (29) in the element loop).
+            index = 0
+            while index < len(lines):
+                line = lines[index]
                 quoted = [f"'{last}'", f'"{last}"']
                 hit = next((q for q in quoted if q in line), None)
                 if hit is None:
+                    index += 1
                     continue
-                lines[index:index + 1] = _rewrite_line(line, hit, target, form)
+                rewritten = _rewrite_line(line, hit, target, form)
+                lines[index:index + 1] = rewritten
                 # Every earlier piece is now redundant. Emptying rather than
                 # deleting keeps the // operators and the line structure
                 # exactly as the author wrote them.
@@ -292,7 +302,7 @@ def redirect(text: str, directory: Path, *, staged: Sequence[str] = (),
                             continue
                         break
                 replaced = True
-                break
+                index += len(rewritten)
         if replaced:
             pointed[opened.name] = target
     return "\n".join(lines) + ("\n" if text.endswith("\n") else ""), pointed
