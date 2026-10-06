@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "03c299b3f7f451796a332d87",
+  "registry_key": "85c6cf29f1a1b9e7a2fe8f9d",
   "source_id": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/PureGrowth.for",
   "repository": "Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces",
   "commit": "17bf545d89abeef313a6bb7f7736c18d3b12eb43",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/blob/17bf545d89abeef313a6bb7f7736c18d3b12eb43/Examples-In-Section-3/ArcDown/Th01/PureGrowth.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/17bf545d89abeef313a6bb7f7736c18d3b12eb43/Examples-In-Section-3/ArcDown/Th01/PureGrowth.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass21/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass22/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json"
   },
   "sha256": "c5b21e39d4b10ebac1d3ea8ae592ff3df0dd4fc556f61b349ffcf43a97890cb8",
   "bytes": 18498,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--25bd9a49  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "c121f4a7ca0ad160",
-  "harness_fingerprint": "b5ec344c5a001293",
-  "contract_transform_generation": "a4f0ea8c9d124f18"
+  "transform_fingerprint": "830e5ee95ce99cd2",
+  "harness_fingerprint": "fb9b8017dc0fd59c",
+  "contract_transform_generation": "830e5ee95ce99cd2"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:03c299b3f7f451796a332d87",
+  "from": "transform_store:85c6cf29f1a1b9e7a2fe8f9d",
   "files": [
    {
     "path": "PureGrowth_oti.for",
@@ -98,8 +98,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass21/results/store_verification.jsonl key=03c299b3f7f451796a332d87",
+   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass22/results/store_verification.jsonl key=85c6cf29f1a1b9e7a2fe8f9d",
    "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/ArcDown/Th01/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck's name 'Beam-PureGrowth.inp' c",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -626,7 +626,7 @@
  ],
  "reference": {
   "file": "reference.json.gz",
-  "sha256": "1fa49df0089c36af4f0093c9d84027009c5f04b5cc8b834181eed9ce9b0cb6bf"
+  "sha256": "84140ceb5d1be0d217234251486819fe4bb70053561f5dabc5b354c47b734bb8"
  },
  "tolerance_rule_id": "case-rule/1-df2f107a3c04",
  "error_summary": {
@@ -678,8 +678,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261003T120730",
-  "seconds": 17.4,
+  "run_id": "20261006T083157",
+  "seconds": 20.7,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -691,10 +691,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "9e436c1b088bc32a33765d2ac2515aa61bca0184a40ab3e3c73c2152b9b00187",
+  "tree_sha256": "57d49162560fea9d49348b4f8def7df795a0e4789a734c672a3f8e1ef8807ec5",
   "location": "corpus_assets",
   "files": 38,
-  "bytes": 1137683
+  "bytes": 1155312
  },
  "tiers": {
   "ci": false,
@@ -703,7 +703,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--25bd9a49",
   "fetch": "python tools/corpus_cases.py fetch jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregrowth--25bd9a49",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 03c299b3f7f451796a332d87 --verification-records <workspace>/corpus_run/pass21/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass21_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 85c6cf29f1a1b9e7a2fe8f9d --verification-records <workspace>/corpus_run/pass22/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass22_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [
   "STATEV(7)"
@@ -714,12 +714,12 @@
   "undefined_in_original (D-12, a SOURCE defect): ['STATEV(7)']; those slots are never compared",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-03T12:07:47",
+ "date": "2026-10-06T08:32:19",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.9,
+    "seconds": 6.0,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -796,7 +796,7 @@
     }
    },
    "replay": {
-    "seconds": 1.3,
+    "seconds": 1.9,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
