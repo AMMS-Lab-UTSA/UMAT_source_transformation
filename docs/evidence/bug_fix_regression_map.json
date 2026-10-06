@@ -754,6 +754,10 @@
   {
    "commit": "5d51353",
    "reason": "Audit-record commit: adds the fix entries for 7ede3fa, beae90e, c5ac2e0, 34f2362, 8f1efaf and c45392f; its message names the map, not a corrected behaviour."
+  },
+  {
+   "commit": "d6d8473",
+   "reason": "Audit-record commit: adds the fix entries for 4492958, c9179ca and e9bfe26 and reviews their test substitutions; its message names the map ('regression' is the map's own name), not a corrected behaviour."
   }
  ],
  "changelog_fixed": {
