@@ -4240,6 +4240,11 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         seen["support_ok"] = built.ok
         record["support"].update(ok=built.ok, reason=built.reason,
                                  objects=len(built.objects))
+        if built.silenced:
+            # console writes removed from the support units, as from the
+            # author's source: statement text, per unit
+            record["support"]["console_writes_silenced"] = {
+                name: list(lines) for name, lines in built.silenced.items()}
         if not built.ok:
             return settle(built.reason or "the support did not build",
                           support_log=(built.log or "")[-2000:])
