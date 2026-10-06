@@ -86,7 +86,8 @@ _FALLBACK_STAGES: tuple[dict, ...] = (
     {"key": "compare_histories", "label": "Comparing mechanical histories",
      "explains": "checking that converting the material did not change what "
                  "it computes",
-     "internal": ("primal", "primal_disagreed", "compare",
+     "internal": ("primal", "primal_disagreed", "primal_control_not_decided",
+                  "compare",
                   "both_builds_non_finite",
                   "arguments_diverged_before_the_routine",
                   "disagreement_not_in_any_recorded_call")},

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/santiagarcia/UMAT_source_transformation/schemas/residual_fixture_v1.schema.json",
   "title": "Frozen stress/state/tangent history, and the Residual Assembler's inputs (v1)",
-  "x-contract-version": "4.1.0",
+  "x-contract-version": "5.0.0",
   "x-what-this-is": "The ingredients one verified corpus case produced, frozen so the Residual Assembler can be driven from what the pipeline actually emits rather than from a reference model written to make the assembler pass. It holds numbers the pipeline computed and the identity of the file they came from, never the file.",
   "x-three-state-rule": "Every field typed [boolean, null] has three answers and null is never a pass. A fixture frozen before a check existed does not carry that check's key; refusing it would treat 'frozen before the check' as 'failed the check', and passing it silently would treat it as 'passed'. So claims_checked and claims_not_carried name which is which.",
   "type": "object",
@@ -217,9 +217,10 @@
                 "routine_level+jacobian_matched",
                 "undefined_in_original_check",
                 "routine_level",
-                "jacobian_matched"
+                "jacobian_matched",
+                "jacobian_matched_not_decided"
               ],
-              "description": "Contract 4.1.0 (optional; a 4.0 reader may ignore it, and a 4.1 reader treats its absence as NOT ESTABLISHED). Which gate decided primal_agreed, as written by tools/verify_store_in_abaqus.py: 'routine_level+jacobian_matched' when every check agreed (routine-level replay of the original's converged calls and the Jacobian-matched Abaqus control, with the undefined-in-original check established); otherwise the first check that did not hold: 'undefined_in_original_check', 'routine_level' or 'jacobian_matched'. Never the FE comparison of the two plain runs, which is informational."
+              "description": "Contract 4.1.0 (optional; a 4.0 reader may ignore it, and a 4.1 reader treats its absence as NOT ESTABLISHED). Which gate decided primal_agreed, as written by tools/verify_store_in_abaqus.py: 'routine_level+jacobian_matched' when every check agreed (routine-level replay of the original's converged calls and the Jacobian-matched Abaqus control, with the undefined-in-original check established); otherwise the first check that did not hold: 'undefined_in_original_check', 'routine_level' or 'jacobian_matched'. Never the FE comparison of the two plain runs, which is informational. Contract 5.0.0 adds 'jacobian_matched_not_decided': the routine-level replay agreed and the Jacobian-matched control produced no comparison, so primal_agreed is null."
             }
           }
         },

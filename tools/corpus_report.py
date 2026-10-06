@@ -79,6 +79,9 @@ FROM_ABAQUS_STAGE: dict[str, str] = {
     "tangent_not_verified": "primal_parity_passed",
     "both_builds_non_finite": "abaqus_transformed_passed",
     "primal_disagreed": "abaqus_transformed_passed",
+    # Both builds ran and the routine-level replay agreed; the Jacobian-matched
+    # control produced no comparison. The same rung primal_disagreed reports.
+    "primal_control_not_decided": "abaqus_transformed_passed",
     "transformed_job_failed": "abaqus_original_passed",
     "original_job_failed": "compiled",
     "support_build_failed": "transformed",

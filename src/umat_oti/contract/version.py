@@ -85,7 +85,23 @@ from typing import NamedTuple
 #: fixture frozen at the current generation. Additive: a 4.0 reader may ignore
 #: it without being misled (it explains ``primal_agreed``, it does not change
 #: it); a 4.1 reader treats its absence in a 4.0 fixture as NOT ESTABLISHED.
-CONTRACT_VERSION = "4.1.0"
+#: 5.0.0, MAJOR, for two changes an older reader would MISREAD rather than fail
+#: on:
+#:
+#: * ``terminalState.state`` gained ``primal_control_not_decided`` (INTERNAL).
+#:   The routine-level replay agreed with the converted routine and the
+#:   Jacobian-matched Abaqus control -- the second half of the primal gate --
+#:   produced no comparison (its job did not complete, its bundle did not
+#:   build, or the two runs walked other increments). Nine pass22 rows
+#:   carried that as ``primal_disagreed``, a measured disagreement that was
+#:   never measured. A 4.x reader has no word for the state and would fall
+#:   through.
+#: * ``finite_history.evidence.primal_decided_by`` gained
+#:   ``jacobian_matched_not_decided``, and ``primal_agreed`` is NOT
+#:   ESTABLISHED (null) beside it, with ``routine_level_agrees`` kept in
+#:   ``primal_gate``. A 4.1 reader switching on the closed enumeration would
+#:   not know the value.
+CONTRACT_VERSION = "5.0.0"
 
 #: The name this repository answers to in a handshake message.
 SPEAKER = "UMAT_source_transformation"

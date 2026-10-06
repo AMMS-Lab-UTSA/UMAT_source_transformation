@@ -297,10 +297,24 @@ needs was never published beside it.
 Everything else is unfinished work on this project's side, named as precisely
 as the evidence allows -- `transform_refused`, `unsupported_formulation`,
 `support_build_failed`, `original_job_failed`, `transformed_job_failed`,
-`primal_disagreed`, `derivative_truncated`, `tangent_not_verified` -- because
+`primal_control_not_decided`, `primal_disagreed`, `derivative_truncated`,
+`tangent_not_verified` -- because
 the cluster a failure belongs to is what decides which fix is worth making,
 and because calling any of them terminal would be relabelling this project's own
 limitation as somebody else's.
+
+`primal_control_not_decided` (contract 5.0.0) is the state of a source whose
+routine-level replay agreed with the converted routine and whose Jacobian-matched
+Abaqus control -- the second half of the primal gate -- produced no comparison:
+its job did not complete (a data file opened by an unredirected path; a bundle
+that declared a module or a main program twice) or it walked other
+increments than the transformed run and agreed on the records they share. Nothing was
+measured to disagree and nothing agreed in Abaqus, so it is neither
+`primal_disagreed` nor verified: `primal_agreed` is NOT ESTABLISHED (null),
+`primal_decided_by` is `jacobian_matched_not_decided`, and `routine_level_agrees`
+stays in `primal_gate`. Where the two runs walked other increments and the shared
+records DISAGREE, the disagreement stands (Growth-CASE3, 1.2e-2 relative at
+t=92.7 after agreeing to 1e-14 for the 87 before it).
 
 The registry counts them separately for that reason. A completion figure that
 pooled them would be a claim about the corpus made out of facts about the

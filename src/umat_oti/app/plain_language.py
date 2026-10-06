@@ -282,6 +282,16 @@ PLAIN: dict[str, dict[str, Any]] = {
         "provide": "",
         "retry": True,
     },
+    "primal_control_not_decided": {
+        "headline": "The two versions were not compared in the full test",
+        "means": "A step-by-step check of the converted routine against the "
+                 "original agreed. The second check, running both through the "
+                 "full analysis together, did not run to a comparison, so "
+                 "nothing is known to differ and nothing is verified yet.",
+        "whose move": "this program",
+        "provide": "",
+        "retry": True,
+    },
     "primal_disagreed": {
         "headline": "The two versions computed different stresses",
         "means": "The original and the converted version were given the same "
