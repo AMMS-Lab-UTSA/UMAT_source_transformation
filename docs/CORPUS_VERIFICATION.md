@@ -8,45 +8,48 @@ tools yourself.
 
 ## Current result
 
-The whole corpus of 405 acquired sources (391, plus the 14 the 2026-10-02
-discovery round accepted, added to the inventory by
-`tools/ingest_discovery_round.py`) was re-transformed and re-verified on
-2026-10-03 (pass21: commit 70a3700, transform fingerprint `c121f4a7ca0ad160`,
-harness fingerprint `b5ec344c5a001293`). pass21 is the first pass with the D-4
-Abaqus tangent gate (G10) and the author-deck re-run of D-19a rev 2 (R7 step 2);
-no council experiment counts yet. 296 sources transform and 276 compile in the
-job layout; 245 are adequately specified genuine UMATs with an author's deck
-(the eligible denominator, D2). Two counts are reported, never pooled:
+The whole corpus of 405 acquired sources was re-transformed and re-verified on
+2026-10-03 (pass22: commit 417cfc4, transform fingerprint `830e5ee95ce99cd2`,
+harness fingerprint `fb9b8017dc0fd59c`). pass22 is the author-deck acceptance
+run of D-19a rev 2 (R7 step 2, with step 3's flow tables): no council
+experiment counts yet. 245 sources at pass21 were adequately specified genuine
+UMATs with an author's deck; 242 are at pass22 (the eligible denominator, D2).
+Three left it, all by reviewed ruling or a newly read deck: hamza-djeloud
+plate_with_notch and irfancn uel_elastic are the visualisation UMATs of a UEL
+(`not_a_umat`), and vishalsubbiah umatcode3 needs an orientation file the author
+did not publish (`missing_material_data`). Two counts are reported, never
+pooled:
 
 - **Abaqus, D-4 gate** (both builds run in Abaqus, primal gate by routine
   replay plus the Jacobian-matched control, DDSDDE judged entry by entry
   against a finite difference of the original with an FD-only plateau of at
   least 3 steps and a quad reference where double cannot resolve, mechanically
-  informative): **102 of 245**. The pass20 figure, 67 of 238, came from the
-  legacy tangent gate, which D-4 supersedes; it is not comparable and is not
-  reported as a count.
-- **Routine level (decision D-8)**: Abaqus primal gate passed, and the routine-level
-  harness verifies primal and DDSDDE against FD of the original (FD-only plateau
-  of at least 3 steps, entrywise tolerance, quad-precision reference where double
-  cannot resolve), with STRESS and DDSDDE fully defined in the original:
-  **112 of 245** (109 of 238 at pass20).
+  informative): **105 of 242** (102 of 245 at pass21, the first D-4 pass; 67 of
+  238 at pass20 came from the legacy tangent gate, which D-4 supersedes, and is
+  not comparable). Of the 242, 4 are `tangent_not_verified`, all unresolved at their
+  chosen states; none carries a measured disagreement.
+- **Routine level (decision D-8)**: Abaqus primal gate passed, the
+  mechanically informative gate read true, and the routine-level harness
+  verifies primal and DDSDDE against FD of the original (FD-only plateau of at
+  least 3 steps, entrywise tolerance, quad-precision reference where double
+  cannot resolve, binary32 stores judged under rule B32), with STRESS and
+  DDSDDE fully defined in the original: **113 of 242** (112 of 245 at pass21,
+  109 of 238 at pass20).
 
 Per material family (code-reviewed classification, decision D-11; "eligible" is the
-family's share of D2). The 14 sources of the 2026-10-02 round have no reviewed
-family yet; until Scout reviews them they are counted under "other" (9 of them
-are eligible, none is verified):
+family's share of D2):
 
 | family | eligible | Abaqus D-4 gate | routine level |
 |---|---|---|---|
-| growth / morphoelastic | 133 | 95 | 100 |
-| rate-independent plasticity | 20 | 0 | 1 |
-| damage / phase field | 12 | 0 | 0 |
+| growth / morphoelastic | 134 | 97 | 100 |
+| rate-independent plasticity | 21 | 1 | 2 |
+| damage / phase field | 13 | 0 | 0 |
 | crystal plasticity | 12 | 0 | 4 |
-| linear elastic | 12 | 3 | 3 |
-| viscoelastic | 8 | 1 | 1 |
-| concrete / geomaterial | 11 | 0 | 0 |
-| other (incl. hyperelastic, and the unreviewed new sources) | 37 | 3 | 3 |
-| **total** | **245** | **102** | **112** |
+| linear elastic | 9 | 3 | 3 |
+| viscoelastic | 10 | 1 | 1 |
+| concrete / geomaterial | 13 | 0 | 0 |
+| other (incl. hyperelastic) | 30 | 3 | 3 |
+| **total** | **242** | **105** | **113** |
 
 The growth figures include sources whose growth tensor is fixed to the identity
 (neo-Hookean response), and 105 of the growth sources come from one author
@@ -59,7 +62,7 @@ registry. The pass20 -> pass21 change of every source, with its cause, is in
 
 Reproduce the counts: `python3 $UMAT_OTI_WORKSPACE/corpus_campaign/count_target.py
 paper_results/corpus/corpus_registry.json <harness manifest_cells.jsonl>`, or read
-`summary.features` in the manifest (DDSDDE verified, D2 = 112).
+`summary.features` in the manifest (DDSDDE verified, D2 = 113).
 
 The paragraph below is the 2026-09-18 census (Abaqus six-gate count only);
 it predates the routine-level count and the reviewed classification.

@@ -296,13 +296,13 @@ def test_the_csv_view_has_one_line_per_row(manifest):
 def test_d18_ddsdde_count_and_the_ritiol_cells_come_from_the_primal_ddsdde_run(manifest):
     src = manifest.get("feature_sources") or {}
     assert src.get("decision") == "D-18"
-    assert src["primal_ddsdde_run"] == "campaign:pass21_harness/run/manifest_cells.jsonl"
-    assert src["full_feature_run"] == "campaign:pass21_harness_full/combined_cells.jsonl"
+    assert src["primal_ddsdde_run"] == "campaign:pass22_harness/run/manifest_cells.jsonl"
+    assert src["full_feature_run"] == "campaign:pass22_harness_full/combined_cells.jsonl"
     d2 = manifest["summary"]["features"]["D2_eligible"]["ddsdde"]
-    assert d2["verified"] == 112
+    assert d2["verified"] == 113
     ritiol = [r for r in manifest["rows"] if r["source_id"].startswith("RitioL__")
               and r["features"]["ddsdde"]["status"] == "verified"]
     assert len(ritiol) == 3
     for r in ritiol:
         assert r["features"]["ddsdde"]["evidence"].startswith(
-            "campaign:pass21_harness/run/"), r["source_id"]
+            "campaign:pass22_harness/run/"), r["source_id"]
