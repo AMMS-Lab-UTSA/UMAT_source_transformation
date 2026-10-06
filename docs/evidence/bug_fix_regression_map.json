@@ -569,28 +569,32 @@
    "bug": "redirect pointed only the first statement that opens a staged data file, so the second copy of the routine in the Jacobian-matched bundle opened the author's Windows path in the solver's scratch directory and aborted (Hunman_face, Alex x2, TendrilOfPumpkin at pass22).",
    "tests": [
     "tests/test_every_open_of_a_staged_file_is_redirected.py"
-   ]
+   ],
+   "selected_by": "manual"
   },
   {
    "commit": "34f2362",
    "bug": "The Jacobian-matched bundle held a module (NeoHookean_umat NumKind) and a main program (abuganza UMAT_Tissue_*, a bare END closing an implicit main) twice, so it did not compile and the row was recorded as a primal disagreement.",
    "tests": [
     "tests/test_the_jacobian_matched_bundle_declares_each_unit_once.py"
-   ]
+   ],
+   "selected_by": "manual"
   },
   {
    "commit": "8f1efaf",
    "bug": "Nine pass22 rows were primal_disagreed although the Jacobian-matched control produced no comparison and the routine-level replay agreed; the gate is now not decided (primal_control_not_decided, contract 5.0.0).",
    "tests": [
     "tests/test_a_control_that_did_not_compare_is_not_a_disagreement.py"
-   ]
+   ],
+   "selected_by": "manual"
   },
   {
    "commit": "c45392f",
    "bug": "A Jacobian-matched run that walked other increments gave no comparison even where the records both runs share disagree (Growth-CASE3: 1.2e-2 at t=92.7); a disagreement on shared records now stands.",
    "tests": [
     "tests/test_a_control_that_walked_other_increments_is_judged_on_what_it_shares.py"
-   ]
+   ],
+   "selected_by": "manual"
   }
  ],
  "excluded": [
@@ -721,6 +725,10 @@
   {
    "commit": "c8df129",
    "reason": "Documentation commit: states rule B32 and the CASE3 unresolved_binary32 margin; 'fixed' in its message refers to the margin being fixed in advance, not a corrected behaviour."
+  },
+  {
+   "commit": "5d51353",
+   "reason": "Audit-record commit: adds the fix entries for 7ede3fa, beae90e, c5ac2e0, 34f2362, 8f1efaf and c45392f; its message names the map, not a corrected behaviour."
   }
  ],
  "changelog_fixed": {
