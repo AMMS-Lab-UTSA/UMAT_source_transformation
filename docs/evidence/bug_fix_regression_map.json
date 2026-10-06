@@ -539,6 +539,16 @@
    "tests": [
     "tests/test_the_roundoff_model_uses_the_total_kinematic_input.py"
    ]
+  },
+  {
+   "commit": "87f4afd",
+   "bug": "The regression-case capture kept the last judge_column call, but judge_binary32 judges a column three times and returns a fourth verdict, so a binary32 source froze D, tau and codes of the double-variant call (17 pass22 sources could not freeze, irfancn umat_viscoelastic froze with looser tolerances). freeze also removed the existing case before reading its capture, so a stop deleted the case it was to replace, and the glob over case directories matched a hidden staging directory.",
+   "tests": [
+    "tests/test_corpus_cases_comparators.py::test_the_capture_takes_the_verdict_judge_binary32_returns_not_its_last_inner_call",
+    "tests/test_corpus_cases_comparators.py::test_a_stray_staging_directory_is_never_read_as_a_case",
+    "tests/test_corpus_cases_council.py::test_a_freeze_that_cannot_hold_its_capture_leaves_the_existing_case",
+    "tests/test_corpus_cases_council.py::test_a_freeze_whose_case_fails_its_own_check_leaves_the_existing_case"
+   ]
   }
  ],
  "excluded": [
