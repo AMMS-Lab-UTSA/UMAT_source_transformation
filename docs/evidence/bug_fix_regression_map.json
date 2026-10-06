@@ -675,6 +675,10 @@
   {
    "commit": "3a1dd15",
    "reason": "Lead's audit-record commit: adds an exclusion entry for 734231a; its message names the map, not a corrected behaviour."
+  },
+  {
+   "commit": "c8df129",
+   "reason": "Documentation commit: states rule B32 and the CASE3 unresolved_binary32 margin; 'fixed' in its message refers to the margin being fixed in advance, not a corrected behaviour."
   }
  ],
  "changelog_fixed": {
