@@ -1625,14 +1625,6 @@
     }
    ]
   },
-  "skip:tests/test_corpus_manifest_count_target.py:test_the_deck_only_column_is_the_d8_figure:call:skip:01c4c9e2": {
-   "verdict": "justified",
-   "reason": "The routine-level 113 needs the pass22 harness cells (corpus_campaign/pass22_harness/run/manifest_cells.jsonl), which are outside this tree; the test runs wherever they exist. Same skip as before, naming the pass22 cells."
-  },
-  "skip:tests/test_registry_fields_tiers.py:test_the_deck_only_figures_of_the_committed_pass22_registry_are_unchanged:call:skip:31d6a905": {
-   "verdict": "justified",
-   "reason": "242 and 105 are asserted from the committed registry before the skip; only the routine-level 113 needs the pass22 harness cells outside this tree, and that part runs wherever they exist."
-  },
   "mock:tests/test_corpus_cases_comparators.py:test_a_stray_staging_directory_is_never_read_as_a_case:monkeypatch.setattr:4f57e409": {
    "verdict": "justified",
    "reason": "Points the case tree at a scratch directory holding one real case and one dot-named staging directory, so the test can show which of them the listing reads; no code under test is replaced."
@@ -1660,6 +1652,14 @@
   "mock:tests/test_verify_one_runs_a_recorded_row_to_the_tangent_stage.py:test_a_recorded_row_reaches_the_tangent_stage_without_a_harness_error:monkeypatch.setattr:986346ae": {
    "verdict": "justified",
    "reason": "Replaces the two things verify_one cannot do in a test: the Abaqus job (run_one, returning pass22's recorded output) and the finite-difference tangent (verify_tangent). Everything between them -- init builds, routine-level replay, Jacobian-matched comparison, record -- is real; the test fails with the UnboundLocalError when the shadowing is put back."
+  },
+  "skip:tests/test_corpus_manifest_count_target.py:test_the_deck_only_column_is_the_d8_figure:call:skip:d08484b4": {
+   "verdict": "justified",
+   "reason": "The routine-level 114 needs the pass23 harness cells (corpus_campaign/pass23_harness/run/manifest_cells.jsonl), which are outside this tree; the test runs wherever they exist. Same skip as before, naming the pass23 cells."
+  },
+  "skip:tests/test_registry_fields_tiers.py:test_the_deck_only_figures_of_the_committed_pass23_registry_are_unchanged:call:skip:1c16fb83": {
+   "verdict": "justified",
+   "reason": "242 and 106 are asserted from the committed registry before the skip; only the routine-level 114 needs the pass23 harness cells outside this tree, and that part runs wherever they exist."
   }
  }
 }
