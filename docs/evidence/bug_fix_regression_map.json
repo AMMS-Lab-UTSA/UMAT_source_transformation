@@ -549,6 +549,48 @@
     "tests/test_corpus_cases_council.py::test_a_freeze_that_cannot_hold_its_capture_leaves_the_existing_case",
     "tests/test_corpus_cases_council.py::test_a_freeze_whose_case_fails_its_own_check_leaves_the_existing_case"
    ]
+  },
+  {
+   "commit": "7ede3fa",
+   "bug": "The support units the transform emits carry a copy of the author's helpers, console writes included (thealanjason's lifted DSYEVJ3 keeps PRINT *, \"No convergence.\"), and were compiled unsilenced, so Abaqus aborted the converted job at increment 1 where the silenced original did not (VISC_OGDEN_2EL / 3EL at pass22).",
+   "tests": [
+    "tests/test_support_units_are_compiled_without_console_writes.py"
+   ]
+  },
+  {
+   "commit": "beae90e",
+   "bug": "diagnose_transformed compiled the converted source without the support modules and so reported 'the transform emitted Fortran the compiler will not accept' for a missing module file, on every transformed_job_failed row (pass22); the solver's crash report was not kept.",
+   "tests": [
+    "tests/test_a_failed_transformed_job_is_diagnosed_with_its_own_modules.py"
+   ]
+  },
+  {
+   "commit": "c5ac2e0",
+   "bug": "redirect pointed only the first statement that opens a staged data file, so the second copy of the routine in the Jacobian-matched bundle opened the author's Windows path in the solver's scratch directory and aborted (Hunman_face, Alex x2, TendrilOfPumpkin at pass22).",
+   "tests": [
+    "tests/test_every_open_of_a_staged_file_is_redirected.py"
+   ]
+  },
+  {
+   "commit": "34f2362",
+   "bug": "The Jacobian-matched bundle held a module (NeoHookean_umat NumKind) and a main program (abuganza UMAT_Tissue_*, a bare END closing an implicit main) twice, so it did not compile and the row was recorded as a primal disagreement.",
+   "tests": [
+    "tests/test_the_jacobian_matched_bundle_declares_each_unit_once.py"
+   ]
+  },
+  {
+   "commit": "8f1efaf",
+   "bug": "Nine pass22 rows were primal_disagreed although the Jacobian-matched control produced no comparison and the routine-level replay agreed; the gate is now not decided (primal_control_not_decided, contract 5.0.0).",
+   "tests": [
+    "tests/test_a_control_that_did_not_compare_is_not_a_disagreement.py"
+   ]
+  },
+  {
+   "commit": "c45392f",
+   "bug": "A Jacobian-matched run that walked other increments gave no comparison even where the records both runs share disagree (Growth-CASE3: 1.2e-2 at t=92.7); a disagreement on shared records now stands.",
+   "tests": [
+    "tests/test_a_control_that_walked_other_increments_is_judged_on_what_it_shares.py"
+   ]
   }
  ],
  "excluded": [
