@@ -1632,6 +1632,14 @@
   "skip:tests/test_registry_fields_tiers.py:test_the_deck_only_figures_of_the_committed_pass22_registry_are_unchanged:call:skip:31d6a905": {
    "verdict": "justified",
    "reason": "242 and 105 are asserted from the committed registry before the skip; only the routine-level 113 needs the pass22 harness cells outside this tree, and that part runs wherever they exist."
+  },
+  "mock:tests/test_corpus_cases_comparators.py:test_a_stray_staging_directory_is_never_read_as_a_case:monkeypatch.setattr:4f57e409": {
+   "verdict": "justified",
+   "reason": "Points the case tree at a scratch directory holding one real case and one dot-named staging directory, so the test can show which of them the listing reads; no code under test is replaced."
+  },
+  "mock:tests/test_corpus_cases_council.py:test_a_swap_that_cannot_complete_puts_the_old_case_back:monkeypatch.setattr:3debf80a": {
+   "verdict": "justified",
+   "reason": "Makes os.replace raise to show that _swap_in puts the old case back; the second half of the test undoes it and runs the real swap, asserting the new case in place and the old one kept aside."
   }
  }
 }
