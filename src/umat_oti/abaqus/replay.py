@@ -1784,6 +1784,55 @@ def _normal(lines: Sequence[str], free: bool) -> list:
     return out
 
 
+_TYPE_DECLARATION = re.compile(
+    r"^(?:integer|real|double\s+precision|logical|complex|character|type\s*\()", re.IGNORECASE)
+
+
+def _statements(lines: Sequence[str], free: bool) -> list:
+    """The statements of a block, continuation lines joined, comments gone."""
+    out: list = []
+    pending = ""
+    for line in lines:
+        if _is_comment(line, free):
+            continue
+        body = line.split("!")[0] if free else line
+        if free:
+            joined = pending + body.strip()
+            if joined.endswith("&"):
+                pending = joined[:-1].rstrip() + " "
+                continue
+            pending = ""
+            out.append(joined.strip())
+        else:
+            if len(body) > 5 and body[5] not in " 0" and out and not pending:
+                out[-1] += " " + body[6:].strip()
+            else:
+                out.append(body[6:].strip() if len(body) > 6 else body.strip())
+    return [" ".join(x.split()) for x in out if x.strip()]
+
+
+def module_holds_only_constants(lines: Sequence[str], free: bool) -> bool:
+    """A module whose every declaration is a PARAMETER (or a type, implicit,
+    use, public or private statement) and which assigns nothing and holds no
+    procedures: a second copy of it cannot carry a different state, so the
+    first copy can serve both. A module with a variable, an assignment or a
+    CONTAINS is shared STATE or behaviour, and is never dropped."""
+    for statement in _statements(lines, free):
+        low = statement.lower()
+        if re.match(r"^(module\s+\w+|end\s*module\b.*|implicit\s+none|use\s+.*|"
+                    r"public\b.*|private\b.*)$", low):
+            continue
+        if re.match(r"^parameter\s*\(", low):
+            continue
+        if _TYPE_DECLARATION.match(low):
+            head = low.split("::")[0] if "::" in low else low.split("=")[0]
+            if re.search(r"\bparameter\b", head):
+                continue
+            return False
+        return False                                # an assignment, CONTAINS, SAVE, ...
+    return True
+
+
 def drop_shared_modules(original_text: str, transformed_text: str,
                         free: bool) -> tuple[str, dict]:
     """The transformed copy without the modules the original copy defines.
@@ -1803,7 +1852,7 @@ def drop_shared_modules(original_text: str, transformed_text: str,
     lines = transformed_text.splitlines()
     original_lines = original_text.splitlines()
     marker = "!" if free else "C"
-    dropped, differing = [], []
+    dropped, differing, stateful = [], [], []
     for name, (first, last) in sorted(other.items(), key=lambda kv: -kv[1][0]):
         if name not in own:
             continue
@@ -1812,13 +1861,20 @@ def drop_shared_modules(original_text: str, transformed_text: str,
                 _normal(lines[first:last + 1], free):
             differing.append(name)
             continue
+        if not module_holds_only_constants(lines[first:last + 1], free):
+            # identical text, but it holds state or procedures: two copies in one
+            # compilation is a conflict that cannot be resolved by dropping one
+            stateful.append(name)
+            continue
         for index in range(first, last + 1):
             lines[index] = f"{marker}     OTIS-REMOVED (module {name} is the original copy's): " \
                            + lines[index].strip()
         dropped.append(name)
     text = "\n".join(lines) + ("\n" if transformed_text.endswith("\n") else "")
     return text, {"modules_dropped_from_the_transformed_copy": sorted(dropped),
-                  "modules_that_differ": sorted(differing)}
+                  "modules_that_differ": sorted(differing),
+                  "modules_kept_because_not_constants_only": sorted(stateful),
+                  "modules_dropped_hold_only_constants": True}
 
 
 def jacobian_matched_source(original_text: str, transformed_text: str,

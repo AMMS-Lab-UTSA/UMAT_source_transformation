@@ -84,3 +84,41 @@ def test_a_source_with_neither_is_unchanged_in_structure():
     bundle, note = jacobian_matched_source(plain, plain, "fixed")
     assert not note["modules_dropped_from_the_transformed_copy"] and not note["main_programs_dropped_from_the_transformed_copy"]
     assert "OTIS-REMOVED" not in bundle
+
+
+STATEFUL = """\
+module Counter
+  implicit none
+  integer :: calls = 0
+end module Counter
+
+subroutine umat(stress, statev)
+  use Counter
+  real(8) :: stress(*), statev(*)
+  calls = calls + 1
+end subroutine umat
+"""
+
+
+def test_a_module_that_holds_state_is_never_dropped_even_when_identical():
+    bundle, note = jacobian_matched_source(STATEFUL, STATEFUL, "free")
+    assert note["modules_dropped_from_the_transformed_copy"] == []
+    assert note["modules_kept_because_not_constants_only"] == ["COUNTER"]
+    assert len(re.findall(r"(?m)^\s*module Counter\s*$", bundle)) == 2   # the bundle then fails to build, and says why
+
+
+def test_only_parameters_and_types_make_a_module_constants_only():
+    from umat_oti.abaqus.replay import module_holds_only_constants as constants
+    only = ["module k", "  implicit none", "  integer, parameter :: dp = kind(1.0d0)",
+            "  real(dp), parameter :: pi = 3.14_dp", "  parameter (ntens = 6)", "end module k"]
+    assert constants(only, True) is True
+    assert constants(["module k", "  integer :: n", "end module k"], True) is False
+    assert constants(["module k", "  integer, parameter :: n = 1", "  n2 = n", "end module k"], True) is False
+    assert constants(["module k", "  integer, parameter :: n = 1", "contains",
+                      "  subroutine s", "  end subroutine", "end module k"], True) is False
+    assert constants(["module k", "  integer, parameter :: n = &", "     1", "end module k"], True) is True
+
+
+def test_the_construction_note_says_the_dropped_modules_hold_only_constants():
+    _, note = jacobian_matched_source(FREE, FREE_T, "free")
+    assert note["modules_dropped_hold_only_constants"] is True
