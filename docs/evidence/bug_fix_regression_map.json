@@ -595,6 +595,31 @@
     "tests/test_a_control_that_walked_other_increments_is_judged_on_what_it_shares.py"
    ],
    "selected_by": "manual"
+  },
+  {
+   "commit": "4492958",
+   "bug": "beae90e bound a local named frames inside verify_one, so frames.points_for(...) -- the imported module -- raised UnboundLocalError on every row that reached it and every real pass23-prep run was a harness_error (Vera, pass23-prep blocker).",
+   "tests": [
+    "tests/test_no_function_shadows_a_module_it_uses.py",
+    "tests/test_verify_one_runs_a_recorded_row_to_the_tangent_stage.py"
+   ]
+  },
+  {
+   "commit": "c9179ca",
+   "bug": "A module defined identically in both copies of the Jacobian-matched bundle was dropped from the second even when it held variables, assignments or procedures, i.e. shared state (Vera, pass23-prep).",
+   "tests": [
+    "tests/test_the_jacobian_matched_bundle_declares_each_unit_once.py"
+   ],
+   "selected_by": "manual"
+  },
+  {
+   "commit": "e9bfe26",
+   "bug": "A comparison of 0 calls was read as a primal disagreement (biofilm_visco, template_umat, neo_hookean_umat), and a disagreement on shared records that first appears after the paths part was indistinguishable from one before it (Vera, pass23-prep).",
+   "tests": [
+    "tests/test_a_control_that_walked_other_increments_is_judged_on_what_it_shares.py",
+    "tests/test_a_control_that_did_not_compare_is_not_a_disagreement.py"
+   ],
+   "selected_by": "manual"
   }
  ],
  "excluded": [

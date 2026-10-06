@@ -1640,6 +1640,26 @@
   "mock:tests/test_corpus_cases_council.py:test_a_swap_that_cannot_complete_puts_the_old_case_back:monkeypatch.setattr:3debf80a": {
    "verdict": "justified",
    "reason": "Makes os.replace raise to show that _swap_in puts the old case back; the second half of the test undoes it and runs the real swap, asserting the new case in place and the old one kept aside."
+  },
+  "skip:tests/test_verify_one_runs_a_recorded_row_to_the_tangent_stage.py:<module>:mark.skipif:2824d142": {
+   "verdict": "justified",
+   "reason": "The test replays pass22's recorded Abaqus jobs and builds the init variants with gfortran and ifort; it skips only where those recordings, the source cache or the compilers are absent, and runs on the machine that produces the pass. The shadowing it guards is also covered by the AST check, which needs none of them."
+  },
+  "broad_except:tests/test_no_function_shadows_a_module_it_uses.py:_module_imports:except Exception:f58259f8": {
+   "verdict": "justified",
+   "reason": "A module-level import that cannot be imported on this machine is not judged (it is skipped, not passed): the check asks only which imported names are modules, and a package that cannot load here has no uses to check."
+  },
+  "mock:tests/test_no_function_shadows_a_module_it_uses.py:test_the_check_sees_the_pass23_prep_defect:monkeypatch.setitem:a5051a45": {
+   "verdict": "justified",
+   "reason": "Points the test module's ROOT at a temporary directory so the check's own self-test reads a synthetic tool; the check itself is unmodified."
+  },
+  "mock:tests/test_verify_one_runs_a_recorded_row_to_the_tangent_stage.py:test_a_recorded_row_reaches_the_tangent_stage_without_a_harness_error:monkeypatch.setattr:5ea798f1": {
+   "verdict": "justified",
+   "reason": "Replaces the two things verify_one cannot do in a test: the Abaqus job (run_one, returning pass22's recorded output) and the finite-difference tangent (verify_tangent). Everything between them -- init builds, routine-level replay, Jacobian-matched comparison, record -- is real; the test fails with the UnboundLocalError when the shadowing is put back."
+  },
+  "mock:tests/test_verify_one_runs_a_recorded_row_to_the_tangent_stage.py:test_a_recorded_row_reaches_the_tangent_stage_without_a_harness_error:monkeypatch.setattr:986346ae": {
+   "verdict": "justified",
+   "reason": "Replaces the two things verify_one cannot do in a test: the Abaqus job (run_one, returning pass22's recorded output) and the finite-difference tangent (verify_tangent). Everything between them -- init builds, routine-level replay, Jacobian-matched comparison, record -- is real; the test fails with the UnboundLocalError when the shadowing is put back."
   }
  }
 }
