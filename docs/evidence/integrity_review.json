@@ -1660,6 +1660,18 @@
   "skip:tests/test_registry_fields_tiers.py:test_the_deck_only_figures_of_the_committed_pass23_registry_are_unchanged:call:skip:1c16fb83": {
    "verdict": "justified",
    "reason": "242 and 106 are asserted from the committed registry before the skip; only the routine-level 114 needs the pass23 harness cells outside this tree, and that part runs wherever they exist."
+  },
+  "mock:tests/test_run_corpus_features_council_plans.py:test_the_flag_sets_the_plans_folder_the_council_key_is_resolved_from:monkeypatch.setattr:8dc36cca": {
+   "verdict": "justified",
+   "reason": "Replaces resolve_entry (or restores the harness constant) so the test sees which council plans folder the runner set before any key is resolved; the runner's own argument handling is what is asserted, and the run stops at the first key by design."
+  },
+  "mock:tests/test_run_corpus_features_council_plans.py:test_the_flag_sets_the_plans_folder_the_council_key_is_resolved_from:monkeypatch.setattr:a9aa9512": {
+   "verdict": "justified",
+   "reason": "Replaces resolve_entry (or restores the harness constant) so the test sees which council plans folder the runner set before any key is resolved; the runner's own argument handling is what is asserted, and the run stops at the first key by design."
+  },
+  "mock:tests/test_run_corpus_features_council_plans.py:test_without_the_flag_the_harness_default_is_kept:monkeypatch.setattr:6a83019d": {
+   "verdict": "justified",
+   "reason": "Replaces resolve_entry (or restores the harness constant) so the test sees which council plans folder the runner set before any key is resolved; the runner's own argument handling is what is asserted, and the run stops at the first key by design."
   }
  }
 }
