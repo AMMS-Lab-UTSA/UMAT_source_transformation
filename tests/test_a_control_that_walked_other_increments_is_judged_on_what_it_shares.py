@@ -63,6 +63,46 @@ def test_other_increments_with_a_disagreement_on_the_shared_records_still_disagr
     assert not V.control_is_undecided({"established": True}, {"agrees": True}, out)
 
 
+def test_a_disagreement_names_when_the_paths_first_part_and_when_it_first_appears():
+    V = _tool()
+    transformed = _history(TIMES + [4.5], lambda t: 10.0 + t + (0.12 if t == 3.0 else 0.0))
+    out = V.jacobian_matched_verdict(_history(TIMES, lambda t: 10.0 + t), transformed,
+                                     tolerance=1e-10, reference_stiffness=100.0)
+    shared = out["shared_records"]
+    assert shared["first_parting_time"] == 4.5 and shared["first_disagreement_time"] == 3.0
+    assert "before the paths part at t=4.5" in out["reason"] and "from t=3" in out["reason"]
+
+
+def test_a_disagreement_that_first_appears_after_the_paths_part_is_not_attributed():
+    V = _tool()
+    jm = _history([0.0, 1.0, 2.0, 3.0, 4.0], lambda t: 10.0 + t)
+    # the transformed run takes a cutback at 1.5, and the shared record at 4.0 differs afterwards
+    transformed = _history([0.0, 1.0, 1.5, 2.0, 3.0, 4.0],
+                           lambda t: 10.0 + t + (0.12 if t == 4.0 else 0.0))
+    out = V.jacobian_matched_verdict(jm, transformed, tolerance=1e-10, reference_stiffness=100.0)
+    assert "comparison" not in out and "agrees" not in out
+    assert out["shared_records"]["disagreement_after_the_paths_parted"] is True
+    assert out["shared_records"]["first_parting_time"] == 1.5
+    assert out["shared_records"]["first_disagreement_time"] == 4.0
+    assert "after the paths parted at t=1.5" in out["reason"]
+    assert V.control_is_undecided({"established": True}, {"agrees": True}, out)
+
+
+def test_a_comparison_of_no_calls_is_not_a_disagreement():
+    """biofilm_visco, template_umat, neo_hookean_umat (pass22): the transformed run
+    recorded no history, and "0 reference calls against 0" was read as a failure."""
+    V = _tool()
+    out = V.jacobian_matched_verdict(_history(TIMES, lambda t: 10.0 + t), [],
+                                     tolerance=1e-10, reference_stiffness=100.0)
+    assert "agrees" not in out and "comparison" not in out
+    assert V.control_is_undecided({"established": True}, {"agrees": True}, out)
+    # and an old record that carries the empty comparison is read the same way
+    old = {"ran": True, "completed": True, "agrees": False,
+           "comparison": {"agrees": False, "calls": 0,
+                          "reason": "0 reference calls against 0: not the same calls"}}
+    assert V.control_is_undecided({"established": True}, {"agrees": True}, old)
+
+
 def test_nothing_shared_decides_nothing():
     V = _tool()
     out = V.jacobian_matched_verdict(_history([0.0, 1.0], lambda t: 1.0),
