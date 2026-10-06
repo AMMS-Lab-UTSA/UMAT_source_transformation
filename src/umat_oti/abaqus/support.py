@@ -55,12 +55,17 @@ class SupportBuild:
     #: ``dependencies/`` tree, which the entry source's rewritten INCLUDEs
     #: name relative to wherever it is compiled.
     transform_dir: Optional[Path] = None
+    #: Console writes removed from a unit before it was compiled, by unit
+    #: name: the text of every statement (``probe.silence_console_writes``).
+    #: A unit with none is absent.
+    silenced: dict = field(default_factory=dict)
 
     def as_dict(self) -> dict:
         return {"objects": [str(o) for o in self.objects],
                 "include_dir": str(self.include_dir) if self.include_dir else None,
                 "transform_dir": str(self.transform_dir) if self.transform_dir else None,
-                "compiler": self.compiler, "ok": self.ok, "reason": self.reason}
+                "compiler": self.compiler, "ok": self.ok, "reason": self.reason,
+                "console_writes_silenced": {k: list(v) for k, v in self.silenced.items()}}
 
 
 def abaqus_settings(abaqus: str = "abaqus", timeout: int = 300) -> dict[str, str]:
@@ -71,6 +76,37 @@ def abaqus_settings(abaqus: str = "abaqus", timeout: int = 300) -> dict[str, str
     except (OSError, subprocess.SubprocessError):
         return {}
     return {name: value for name, value in _SETTING.findall(done.stdout)}
+
+
+def silenced_copy(unit: Path, into: Path) -> tuple[Path, list]:
+    """The unit with its console writes commented out, and which they were.
+
+    Abaqus/Standard 2021.HF5 aborts in the element loop when a user
+    subroutine writes to standard output (``probe.silence_console_writes``
+    has the measurement). The author's source gets that treatment; the
+    support units the transform emits carry a COPY of the author's helpers --
+    a ``PRINT *, "DSYEVJ3: No convergence."`` among them -- and did not, so
+    the converted build aborted where the original, silenced, did not
+    (thealanjason VISC_OGDEN_2EL / 3EL at pass22). The same rule, the same
+    statements, applied to the same kind of text, and reported.
+
+    A unit with nothing to silence is returned as it is. A silenced copy is
+    written under ``into / "_silenced"`` with the removed text beside it.
+    """
+    from umat_oti.abaqus.probe import silence_console_writes
+
+    unit = Path(unit)
+    form = "free" if unit.suffix.lower() in (".f90", ".f95", ".f03") else "fixed"
+    text, removed = silence_console_writes(unit.read_text(errors="replace"), form)
+    if not removed:
+        return unit, []
+    folder = Path(into) / "_silenced"
+    folder.mkdir(parents=True, exist_ok=True)
+    copy = folder / unit.name
+    copy.write_text(text, encoding="utf-8")
+    (folder / f"{unit.name}.removed.txt").write_text("\n".join(removed) + "\n",
+                                                    encoding="utf-8")
+    return copy, removed
 
 
 def _compile_command(template: str, source: Path, include: Path) -> list[str]:
@@ -230,8 +266,16 @@ def build_support(
     objects: list[Path] = []
     transcript: list[str] = []
     for unit in units:
+        original_unit = Path(unit)
+        unit, removed = silenced_copy(original_unit, work_dir)
+        if removed:
+            build.silenced[original_unit.name] = removed
         command = _compile_command(template, Path(unit), work_dir)
         command[1:1] = extra_includes
+        if unit != original_unit:
+            # a copy compiled elsewhere still resolves the unit's own relative
+            # INCLUDEs, which name paths beside the file it was written to
+            command[1:1] = [f"-I{original_unit.parent}"]
         try:
             done = subprocess.run(command, cwd=str(work_dir), capture_output=True,
                                   text=True, timeout=timeout)
