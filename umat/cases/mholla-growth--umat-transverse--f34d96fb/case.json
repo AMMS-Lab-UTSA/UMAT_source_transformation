@@ -14,8 +14,8 @@
   "url": "https://github.com/mholla/growth/blob/e82fb8b3e29bd6ee5106d454d54814779fd18768/umats/umat_transverse.f",
   "raw_url": "https://raw.githubusercontent.com/mholla/growth/e82fb8b3e29bd6ee5106d454d54814779fd18768/umats/umat_transverse.f",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass22/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass23/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json"
   },
   "sha256": "bda19ea00223fc72b3589a7496c0925fb88e36bc4a79b5c5c49c1dac09d27628",
   "bytes": 12651,
@@ -32,7 +32,7 @@
  },
  "fingerprints": {
   "transform_fingerprint": "830e5ee95ce99cd2",
-  "harness_fingerprint": "fb9b8017dc0fd59c",
+  "harness_fingerprint": "ec609ab41bb45a02",
   "contract_transform_generation": "830e5ee95ce99cd2"
  },
  "transform": {
@@ -103,8 +103,8 @@
   "family": "hyperelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass22/results/store_verification.jsonl key=35975f0f69106db563f93f63",
+   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass23/results/store_verification.jsonl key=35975f0f69106db563f93f63",
    "material_provenance": "mholla__growth/input_files/cube_1_C3D8_stretch_xyz_transverse.inp: cube_1_C3D8_stretch_xyz_transverse.inp *MATERIAL VOL: 11 constants, *DEPVAR 8 -- mholla__growth's README states that cube_1_C3D8_stretch_xyz_transverse.inp runs with umat_transverse.f; cube_1_C3D8_stretch_xyz_transverse.inp declares ",
    "initial_state_from_user_subroutine": true,
    "terminal_state": "fully_verified"
@@ -565,8 +565,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261006T082842",
-  "seconds": 12.1,
+  "run_id": "20261006T134935",
+  "seconds": 11.9,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -578,7 +578,7 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "150ef22f279dbf0b95ac9aebf3d1014ca37a8211f8fc3f6c07b1d4f7dd937aff",
+  "tree_sha256": "6f2051be7dbb17a92b502988eca21a6f4fbfc48f5ae5d37218250dd241a9dfe1",
   "location": "corpus_assets",
   "files": 31,
   "bytes": 981972
@@ -590,7 +590,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only mholla-growth--umat-transverse--f34d96fb",
   "fetch": "python tools/corpus_cases.py fetch mholla-growth--umat-transverse--f34d96fb",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 35975f0f69106db563f93f63 --verification-records <workspace>/corpus_run/pass22/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass22_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 35975f0f69106db563f93f63 --verification-records <workspace>/corpus_run/pass23/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass23_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -598,12 +598,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-06T08:28:54",
+ "date": "2026-10-06T13:49:47",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.9,
+    "seconds": 4.8,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -659,7 +659,7 @@
     }
    },
    "replay": {
-    "seconds": 1.4,
+    "seconds": 1.3,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

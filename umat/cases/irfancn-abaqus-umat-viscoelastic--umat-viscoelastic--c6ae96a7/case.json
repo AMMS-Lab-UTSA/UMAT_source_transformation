@@ -14,8 +14,8 @@
   "url": "https://github.com/irfancn/Abaqus-UMAT-viscoelastic/blob/95fdcc7d82e6837649d2bfae2e1fa4065a994f61/umat_viscoelastic.for",
   "raw_url": "https://raw.githubusercontent.com/irfancn/Abaqus-UMAT-viscoelastic/95fdcc7d82e6837649d2bfae2e1fa4065a994f61/umat_viscoelastic.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass22/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass23/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json"
   },
   "sha256": "794840d3b3bc26679277fc9588d1bb2e8a942e03ccd6d1ec048119bdf4452c85",
   "bytes": 2774,
@@ -32,7 +32,7 @@
  },
  "fingerprints": {
   "transform_fingerprint": "830e5ee95ce99cd2",
-  "harness_fingerprint": "fb9b8017dc0fd59c",
+  "harness_fingerprint": "ec609ab41bb45a02",
   "contract_transform_generation": "830e5ee95ce99cd2"
  },
  "transform": {
@@ -95,8 +95,8 @@
   "family": "viscoelasticity / rate dependent",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass22/results/store_verification.jsonl key=368a0883d2fa70561464027f",
+   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass23/results/store_verification.jsonl key=368a0883d2fa70561464027f",
    "material_provenance": "irfancn__Abaqus-UMAT-viscoelastic/viscoelastic_input.inp: viscoelastic_input.inp *MATERIAL user_mat: 3 constants, *DEPVAR 0 -- a section in viscoelastic_input.inp attaches user_mat to C3D8; the two names share viscoelastic; the deck sits in the source's own directory",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -1173,8 +1173,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261006T093653",
-  "seconds": 22.7,
+  "run_id": "20261006T134938",
+  "seconds": 19.8,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -1186,7 +1186,7 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "c79e3e0d6d268a7a88dfdfbacd73a2e2c3e08e2007535dbc1185c46b5a4ec7e3",
+  "tree_sha256": "7a9ac786f11a76165f389a5e349bc198c251ef52d73aa5731514ec33adf28c4a",
   "location": "corpus_assets",
   "files": 53,
   "bytes": 3720716
@@ -1198,7 +1198,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only irfancn-abaqus-umat-viscoelastic--umat-viscoelastic--c6ae96a7",
   "fetch": "python tools/corpus_cases.py fetch irfancn-abaqus-umat-viscoelastic--umat-viscoelastic--c6ae96a7",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 368a0883d2fa70561464027f --verification-records <workspace>/corpus_run/pass22/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass22_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 368a0883d2fa70561464027f --verification-records <workspace>/corpus_run/pass23/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass23_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -1206,12 +1206,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-06T09:37:16",
+ "date": "2026-10-06T13:49:58",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.1,
+    "seconds": 3.9,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -1344,7 +1344,7 @@
     }
    },
    "replay": {
-    "seconds": 1.9,
+    "seconds": 1.4,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
