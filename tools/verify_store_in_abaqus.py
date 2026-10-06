@@ -4435,11 +4435,11 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         crash = exception_summary(Path(transformed_call["work_dir"]))
         if crash:
             diagnosis["solver_exception"] = crash
-            frames = [f["symbol"] for f in crash["top_frames"][:10]]
+            top_symbols = [f["symbol"] for f in crash["top_frames"][:10]]
             diagnosis["reason"] += (
                 f"; the solver aborted (signal {crash['signal']}"
                 f"{', ' + crash['context'] if crash['context'] else ''}): "
-                + " < ".join(frames))
+                + " < ".join(top_symbols))
         record["transformed_diagnosis"] = diagnosis
         return settle("; ".join(transformed_job.reasons)
                       + "; " + diagnosis["reason"]
