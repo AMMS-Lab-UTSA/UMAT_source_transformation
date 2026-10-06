@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "c91af6eb1c050a14aa3eac58",
+  "registry_key": "9399930d17c8c8d07e293d34",
   "source_id": "BristolCompositesInstitute__abaci/test/data/umat.f",
   "repository": "BristolCompositesInstitute/abaci",
   "commit": "ddd99abcf5db1ad8981659cfef68b28f2d360e42",
@@ -14,8 +14,8 @@
   "url": "https://github.com/BristolCompositesInstitute/abaci/blob/ddd99abcf5db1ad8981659cfef68b28f2d360e42/test/data/umat.f",
   "raw_url": "https://raw.githubusercontent.com/BristolCompositesInstitute/abaci/ddd99abcf5db1ad8981659cfef68b28f2d360e42/test/data/umat.f",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass21/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass22/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json"
   },
   "sha256": "fde9e0e60814d4bcc1dd6e08bedefa6dad90ce367160e293c8648d3ab915f2d4",
   "bytes": 13629,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch bristolcompositesinstitute-abaci--umat--b8fa3835  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "c121f4a7ca0ad160",
-  "harness_fingerprint": "b5ec344c5a001293",
-  "contract_transform_generation": "a4f0ea8c9d124f18"
+  "transform_fingerprint": "830e5ee95ce99cd2",
+  "harness_fingerprint": "fb9b8017dc0fd59c",
+  "contract_transform_generation": "830e5ee95ce99cd2"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:c91af6eb1c050a14aa3eac58",
+  "from": "transform_store:9399930d17c8c8d07e293d34",
   "files": [
    {
     "path": "compile_order.txt",
@@ -94,8 +94,8 @@
   "family": "damage / phase field",
   "kinematics": "small",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass21/results/store_verification.jsonl key=c91af6eb1c050a14aa3eac58",
+   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass22/results/store_verification.jsonl key=9399930d17c8c8d07e293d34",
    "material_provenance": "BristolCompositesInstitute__abaci/example/jobs/test-job.inp: test-job.inp *MATERIAL umat_elastic: 2 constants, *DEPVAR 1 -- BristolCompositesInstitute__abaci's README states that test-job.inp runs with umat.f; test-job.inp declares exactly one element, so it is the author's own single-element test o",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -846,7 +846,7 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261003T121901",
+  "run_id": "20261006T083227",
   "seconds": 11.5,
   "features": [
    "primal_stress_state",
@@ -859,10 +859,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "1818b91b69eb6797ab605058addd984161ec6ef2958a2aad51157ac3ae98b56f",
+  "tree_sha256": "1445f770ac4d564918f899b3842a0fb81c270fde38f1ff2c8b0d2ed5c5a785e1",
   "location": "corpus_assets",
   "files": 41,
-  "bytes": 956837
+  "bytes": 977696
  },
  "tiers": {
   "ci": false,
@@ -871,7 +871,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only bristolcompositesinstitute-abaci--umat--b8fa3835",
   "fetch": "python tools/corpus_cases.py fetch bristolcompositesinstitute-abaci--umat--b8fa3835",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key c91af6eb1c050a14aa3eac58 --verification-records <workspace>/corpus_run/pass21/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass21_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 9399930d17c8c8d07e293d34 --verification-records <workspace>/corpus_run/pass22/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass22_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -879,7 +879,7 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-03T12:19:13",
+ "date": "2026-10-06T08:32:39",
  "freeze_check": {
   "ok": true,
   "modes": {
@@ -975,7 +975,7 @@
     }
    },
    "replay": {
-    "seconds": 1.6,
+    "seconds": 1.7,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "0c8640a37ac2c19d1ba05336",
+  "registry_key": "b99c2f34f906d4d830a1b64a",
   "source_id": "RitioL__PolyFatigueCrackSim/workplace/subroutines3_revised.for",
   "repository": "RitioL/PolyFatigueCrackSim",
   "commit": "bc97ef8a685e5ebff738a0386e3e7a3a3957a6f2",
@@ -14,8 +14,8 @@
   "url": "https://github.com/RitioL/PolyFatigueCrackSim/blob/bc97ef8a685e5ebff738a0386e3e7a3a3957a6f2/workplace/subroutines3_revised.for",
   "raw_url": "https://raw.githubusercontent.com/RitioL/PolyFatigueCrackSim/bc97ef8a685e5ebff738a0386e3e7a3a3957a6f2/workplace/subroutines3_revised.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass21/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass22/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json"
   },
   "sha256": "2d8c0c89e3306cdfee4158794b96b8c9e9683b5bb388e8d6cc4558fe5ba89193",
   "bytes": 96747,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch ritiol-polyfatiguecracksim--subroutines3-revised--603ef702  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "c121f4a7ca0ad160",
-  "harness_fingerprint": "b5ec344c5a001293",
-  "contract_transform_generation": "a4f0ea8c9d124f18"
+  "transform_fingerprint": "830e5ee95ce99cd2",
+  "harness_fingerprint": "fb9b8017dc0fd59c",
+  "contract_transform_generation": "830e5ee95ce99cd2"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 4,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:0c8640a37ac2c19d1ba05336",
+  "from": "transform_store:b99c2f34f906d4d830a1b64a",
   "files": [
    {
     "path": "compile_order.txt",
@@ -265,8 +265,8 @@
   "family": "crystal plasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass21/results/store_verification.jsonl key=0c8640a37ac2c19d1ba05336",
+   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass22/results/store_verification.jsonl key=b99c2f34f906d4d830a1b64a",
    "material_provenance": "RitioL__PolyFatigueCrackSim/CPFEM-val/workplace/Job-1-copy.inp: Job-1-copy.inp *MATERIAL MATERIAL-1: 168 constants, *DEPVAR 150 -- a section in Job-1-copy.inp attaches MATERIAL-1 to CPE4; the constants this routine hard-codes account for this mesh: none of this mesh's extents (0.9, 0.5, 0) is a cons",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "derivative_truncated"
@@ -1079,8 +1079,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261003T120754",
-  "seconds": 621.4,
+  "run_id": "20261006T083400",
+  "seconds": 602.6,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -1092,10 +1092,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "8922219286fa3755ce3704a437e8ed018e5bc43bfafe52934cefb3e4aa150787",
+  "tree_sha256": "7af946729886c304977e046737bb547eea018f7d62a9afa86377baafec153476",
   "location": "corpus_assets",
   "files": 42,
-  "bytes": 3664176
+  "bytes": 3685045
  },
  "tiers": {
   "ci": false,
@@ -1104,7 +1104,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only ritiol-polyfatiguecracksim--subroutines3-revised--603ef702",
   "fetch": "python tools/corpus_cases.py fetch ritiol-polyfatiguecracksim--subroutines3-revised--603ef702",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 0c8640a37ac2c19d1ba05336 --verification-records <workspace>/corpus_run/pass21/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass21_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key b99c2f34f906d4d830a1b64a --verification-records <workspace>/corpus_run/pass22/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass22_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -1112,12 +1112,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-03T12:18:16",
+ "date": "2026-10-06T08:44:03",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 11.9,
+    "seconds": 12.0,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -1208,7 +1208,7 @@
     }
    },
    "replay": {
-    "seconds": 6.0,
+    "seconds": 5.9,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

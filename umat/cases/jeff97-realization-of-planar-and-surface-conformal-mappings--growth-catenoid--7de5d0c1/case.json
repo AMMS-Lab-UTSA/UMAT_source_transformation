@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "d42e3ecaa1e8815707ef28a6",
+  "registry_key": "72fa949218d5fa4c7cb958a7",
   "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Catenoid/10/Growth-Catenoid.for",
   "repository": "Jeff97/Realization-of-planar-and-surface-conformal-mappings",
   "commit": "4be86fd5613a89641cbab182422cb6bbcc8c057c",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/Realization-of-planar-and-surface-conformal-mappings/blob/4be86fd5613a89641cbab182422cb6bbcc8c057c/Mesh_Convergence_test/3D/Catenoid/10/Growth-Catenoid.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/Realization-of-planar-and-surface-conformal-mappings/4be86fd5613a89641cbab182422cb6bbcc8c057c/Mesh_Convergence_test/3D/Catenoid/10/Growth-Catenoid.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass21/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass22/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json"
   },
   "sha256": "5fd130740935fb59106d4a271d6d20e3093f9c7b1659029ecc6390f2269c0d9c",
   "bytes": 7397,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-realization-of-planar-and-surface-conformal-mappings--growth-catenoid--7de5d0c1  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "c121f4a7ca0ad160",
-  "harness_fingerprint": "b5ec344c5a001293",
-  "contract_transform_generation": "a4f0ea8c9d124f18"
+  "transform_fingerprint": "830e5ee95ce99cd2",
+  "harness_fingerprint": "fb9b8017dc0fd59c",
+  "contract_transform_generation": "830e5ee95ce99cd2"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:d42e3ecaa1e8815707ef28a6",
+  "from": "transform_store:72fa949218d5fa4c7cb958a7",
   "files": [
    {
     "path": "Growth-Catenoid_oti.for",
@@ -94,8 +94,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass21/results/store_verification.jsonl key=d42e3ecaa1e8815707ef28a6",
+   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass22/results/store_verification.jsonl key=72fa949218d5fa4c7cb958a7",
    "material_provenance": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Mesh_Convergence_test/3D/Catenoid/10/C3D20H-Catenoid-10.inp: C3D20H-Catenoid-10.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 9 -- a section in C3D20H-Catenoid-10.inp attaches NeoHookean to C3D20H; the deck's name 'C3D20H-Catenoid-10.inp'",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -632,7 +632,7 @@
  ],
  "reference": {
   "file": "reference.json.gz",
-  "sha256": "45183e6401b5d0180877acb10945f00d0ac079d9582fbe0672d567552d0f05ad"
+  "sha256": "a62fcedbc03dae089cc4a23f3669229f8816811f78d6666fbe2758d275e696a1"
  },
  "tolerance_rule_id": "case-rule/1-df2f107a3c04",
  "error_summary": {
@@ -684,8 +684,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261003T121941",
-  "seconds": 18.5,
+  "run_id": "20261006T083038",
+  "seconds": 15.7,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -697,10 +697,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "e4f117eb2e805509a71f5be020abccc1e10cf795e9609893c17ecb9a8b434fa8",
+  "tree_sha256": "cecfcc28e276902c1f41c3fe0bbcbcfb3027a7599adb8f3ff09308a8c6f0c29e",
   "location": "corpus_assets",
   "files": 37,
-  "bytes": 1048198
+  "bytes": 1065828
  },
  "tiers": {
   "ci": false,
@@ -709,7 +709,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-realization-of-planar-and-surface-conformal-mappings--growth-catenoid--7de5d0c1",
   "fetch": "python tools/corpus_cases.py fetch jeff97-realization-of-planar-and-surface-conformal-mappings--growth-catenoid--7de5d0c1",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key d42e3ecaa1e8815707ef28a6 --verification-records <workspace>/corpus_run/pass21/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass21_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 72fa949218d5fa4c7cb958a7 --verification-records <workspace>/corpus_run/pass22/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass22_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -717,12 +717,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-03T12:20:00",
+ "date": "2026-10-06T08:30:54",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.1,
+    "seconds": 4.4,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -799,7 +799,7 @@
     }
    },
    "replay": {
-    "seconds": 1.9,
+    "seconds": 1.5,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
