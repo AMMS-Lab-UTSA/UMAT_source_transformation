@@ -109,7 +109,7 @@ from umat_oti.abaqus.manifest import (                                  # noqa: 
     under_body_force)
 from umat_oti.abaqus.rate_search import (                               # noqa: E402
     HOLD_PERIODS, RATE_FACTOR, probe_time)
-from umat_oti.abaqus.job_status import blocking_statements
+from umat_oti.abaqus.job_status import blocking_statements, exception_summary
 from umat_oti.abaqus.probe import CORRUPT, converged_only, parse_probe           # noqa: E402
 from umat_oti.abaqus.replay import (                                    # noqa: E402
     STATE_FILE, build_replay, defines_sdvini, difference_tangent, write_state)
@@ -3482,7 +3482,8 @@ def diagnose_original(source: Path, cache_root: Path, work_dir: Path, *,
 
 
 def diagnose_transformed(stored, work_dir: Path, *, form: str = "",
-                         timeout: int = 900) -> dict:
+                         timeout: int = 900,
+                         module_dirs: Sequence[Path] = ()) -> dict:
     """Why the CONVERTED build did not run, from the compiler.
 
     The same question as for the original and a different answer: here a
@@ -3491,6 +3492,16 @@ def diagnose_transformed(stored, work_dir: Path, *, form: str = "",
     .odb -- which reads as "the converted build did not run" whether it failed
     to compile or failed to converge. Those need different work, and the
     compiler can tell them apart in seconds.
+
+    ``module_dirs`` are the directories holding the support modules the job
+    was built with (``install_support`` writes the ``.mod`` files into the
+    job directory). The converted source ``use``s them; compiled without
+    them it fails with "error in opening the compiled module file", which is
+    about what is missing beside the file and says nothing about the file
+    (pass22: all three ``transformed_job_failed`` rows read "the transform
+    emitted Fortran the compiler will not accept" for that reason alone).
+    When a dependency is still missing the answer is "not established", never
+    a defect of the transform.
     """
     from umat_oti.abaqus.support import compile_one
 
@@ -3500,7 +3511,8 @@ def diagnose_transformed(stored, work_dir: Path, *, form: str = "",
     # does not compile" here blamed the author for the transform's defect.
     check = compile_one(entry, Path(work_dir) / "compile", form=form,
                         timeout=timeout,
-                        include_dirs=[Path(stored.directory)],
+                        include_dirs=[Path(stored.directory),
+                                      *[Path(d) for d in module_dirs]],
                         subject="the converted source")
     compiled = check.as_dict()
     for name in ("reason", "log"):
@@ -3513,6 +3525,11 @@ def diagnose_transformed(stored, work_dir: Path, *, form: str = "",
         outcome["reason"] = ("the converted source compiles with Abaqus's own "
                              "compile line, so what failed was the run and not "
                              "the build")
+    elif check.missing_dependencies:
+        outcome["reason"] = (
+            f"not established whether the converted source compiles: this "
+            f"compile still lacks something beside the file "
+            f"({compiled['reason']}), which says nothing about the file itself")
     else:
         outcome["reason"] = (
             f"the transform emitted Fortran the compiler will not accept: "
@@ -4340,8 +4357,19 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         # Ask the compiler, as for the original. Here the answer is ours
         # either way, and "it does not compile" and "it does not converge"
         # need different work.
-        diagnosis = diagnose_transformed(stored, work / "transformed_diagnosis",
-                                         form=source_form, timeout=timeout)
+        diagnosis = diagnose_transformed(
+            stored, work / "transformed_diagnosis", form=source_form,
+            timeout=timeout, module_dirs=[Path(transformed_call["work_dir"])])
+        # The solver's own crash report names the failing routine; the
+        # console tail does not.
+        crash = exception_summary(Path(transformed_call["work_dir"]))
+        if crash:
+            diagnosis["solver_exception"] = crash
+            frames = [f["symbol"] for f in crash["top_frames"][:10]]
+            diagnosis["reason"] += (
+                f"; the solver aborted (signal {crash['signal']}"
+                f"{', ' + crash['context'] if crash['context'] else ''}): "
+                + " < ".join(frames))
         record["transformed_diagnosis"] = diagnosis
         return settle("; ".join(transformed_job.reasons)
                       + "; " + diagnosis["reason"]

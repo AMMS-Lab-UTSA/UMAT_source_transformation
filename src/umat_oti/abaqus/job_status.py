@@ -121,6 +121,39 @@ def _read(path: Path) -> str:
         return ""
 
 
+_FRAME = re.compile(r"^\s*(\d+)\)\s+(\S+)\s+(\S+)\s+!\s+(\S+)")
+
+
+def exception_summary(job_dir: Path, frames: int = 12) -> dict:
+    """What the solver's own crash report says: signal, phase, top frames.
+
+    Abaqus writes ``<job>.<rank>.<pid>.exception`` when the solver dies. It is
+    the only place the failing routine is named: a record that kept the
+    console tail alone said "did not complete" for a job that aborted in a
+    Fortran runtime call made from a helper (thealanjason VISC_OGDEN_3EL,
+    pass22). Empty when there is no such file.
+    """
+    files = sorted(Path(job_dir).glob("*.exception"),
+                   key=lambda f: f.stat().st_mtime, reverse=True)
+    if not files:
+        return {}
+    text = _read(files[0])
+    signal = re.search(r"received signal (\d+) \(([^)]*)\)", text)
+    context = re.search(r"<Context>\s*(.*?)\s*</Context>", text, re.DOTALL)
+    top = []
+    for line in text.splitlines():
+        found = _FRAME.match(line)
+        if found:
+            top.append({"frame": int(found.group(1)), "library": found.group(2),
+                        "symbol": found.group(4)})
+            if len(top) >= frames:
+                break
+    return {"file": files[0].name,
+            "signal": f"{signal.group(1)} ({signal.group(2)})" if signal else "",
+            "context": " ".join(context.group(1).split()) if context else "",
+            "top_frames": top}
+
+
 #: Fortran statements that wait for terminal input. A source containing one
 #: can hang a solver indefinitely rather than failing, so a run of it is worth
 #: labelling even when it completes: the statement may simply not have been
