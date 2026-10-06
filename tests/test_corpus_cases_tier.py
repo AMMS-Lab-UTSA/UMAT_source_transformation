@@ -22,7 +22,7 @@ spec = importlib.util.spec_from_file_location("corpus_cases", REPO / "tools" / "
 cc = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(cc)
 
-CASE_DIRS = sorted(p.parent for p in cc.CASES.glob("*/case.json"))
+CASE_DIRS = sorted(p.parent for p in cc.case_jsons())
 CI_CASES = [d for d in CASE_DIRS if json.loads((d / "case.json").read_text())["tiers"]["ci"]]
 
 

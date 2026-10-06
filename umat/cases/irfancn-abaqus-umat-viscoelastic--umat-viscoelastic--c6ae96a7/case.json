@@ -1089,81 +1089,81 @@
  ],
  "reference": {
   "file": "reference.json.gz",
-  "sha256": "e09caa2ed5d88697c5c7bd5720e003317d09e8b37807d18ea917a3691cf5ec6e"
+  "sha256": "c39ac6e8ab19a1704c4d0274ee1dffc115fddfd9cdd05e1a01bd0b3fd9e41fe5"
  },
  "tolerance_rule_id": "case-rule/1-df2f107a3c04",
  "error_summary": {
   "elastic_uniaxial": {
    "primal": 0.0,
-   "tangent": 0.06931866983380905
+   "tangent": 1.0639458334253501e-06
   },
   "elastic_shear": {
    "primal": 0.0,
-   "tangent": 0.06931866983380905
+   "tangent": 8.209578566473771e-07
   },
   "isotropy_reference": {
    "primal": 0.0,
-   "tangent": 0.06932205524716895
+   "tangent": 7.347224946445054e-07
   },
   "isotropy_rotated": {
    "primal": 0.0,
-   "tangent": 0.06932194638682175
+   "tangent": 8.578007775924135e-07
   },
   "plastic_uniaxial": {
    "primal": 0.0,
-   "tangent": 0.0693219582593707
+   "tangent": 1.0604924927183493e-06
   },
   "plastic_compression": {
    "primal": 0.0,
-   "tangent": 0.06932192181488007
+   "tangent": 8.620031714561358e-07
   },
   "unload_reload": {
    "primal": 0.0,
-   "tangent": 0.06931174625772168
+   "tangent": 1.5357063085552462e-06
   },
   "cyclic": {
    "primal": 0.0,
-   "tangent": 0.06930879026057857
+   "tangent": 8.606613162120401e-07
   },
   "reverse_yield": {
    "primal": 0.0,
-   "tangent": 0.06929559405039296
+   "tangent": 1.0605932258963126e-06
   },
   "relaxation": {
    "primal": 0.0,
-   "tangent": 0.06929225903854293
+   "tangent": 1.0604924927183493e-06
   },
   "rate_slow": {
    "primal": 0.0,
-   "tangent": 0.0693219582593707
+   "tangent": 1.0604924927183493e-06
   },
   "rate_fast": {
    "primal": 0.0,
-   "tangent": 0.06899553119757243
+   "tangent": 1.0604924927183493e-06
   },
   "finite_simple_shear": {
    "primal": 0.0,
-   "tangent": 0.069321966391141
+   "tangent": 1.1278709082436363e-06
   },
   "finite_uniaxial_stretch": {
    "primal": 0.0,
-   "tangent": 0.06931866983380905
+   "tangent": 1.0887854484789925e-06
   },
   "objectivity_reference": {
    "primal": 0.0,
-   "tangent": 0.0693219594108769
+   "tangent": 1.0886452545637547e-06
   },
   "objectivity_rotated": {
    "primal": 0.0,
-   "tangent": 0.0693219952575195
+   "tangent": 8.654936432874948e-07
   },
   "objectivity_reference_fine": {
    "primal": 0.0,
-   "tangent": 0.06931206813603519
+   "tangent": 9.58829358886455e-06
   },
   "objectivity_rotated_fine": {
    "primal": 0.0,
-   "tangent": 0.06931209578464247
+   "tangent": 7.94396627530291e-06
   }
  },
  "toolchain": {
@@ -1173,8 +1173,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261006T082845",
-  "seconds": 21.2,
+  "run_id": "20261006T093653",
+  "seconds": 22.7,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -1186,7 +1186,7 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "0c4963e7a4b6bda0b9867c15f936b68c635bdae317487b1548e59875946e8114",
+  "tree_sha256": "c79e3e0d6d268a7a88dfdfbacd73a2e2c3e08e2007535dbc1185c46b5a4ec7e3",
   "location": "corpus_assets",
   "files": 53,
   "bytes": 3720716
@@ -1206,137 +1206,137 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-06T08:29:07",
+ "date": "2026-10-06T09:37:16",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.2,
+    "seconds": 5.1,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
      "elastic_uniaxial": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06931866983380905,
+      "tangent_error_over_tolerance": 1.0639458334253501e-06,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "elastic_shear": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06931866983380905,
+      "tangent_error_over_tolerance": 8.209578566473771e-07,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_reference": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06932205524716895,
+      "tangent_error_over_tolerance": 7.347224946445054e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_rotated": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06932194638682175,
+      "tangent_error_over_tolerance": 8.578007775924135e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "plastic_uniaxial": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.0693219582593707,
+      "tangent_error_over_tolerance": 1.0604924927183493e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "plastic_compression": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06932192181488007,
+      "tangent_error_over_tolerance": 8.620031714561358e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "unload_reload": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06931174625772168,
+      "tangent_error_over_tolerance": 1.5357063085552462e-06,
       "coverage": "41/41",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "cyclic": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06930879026057857,
+      "tangent_error_over_tolerance": 8.606613162120401e-07,
       "coverage": "50/50",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "reverse_yield": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06929559405039296,
+      "tangent_error_over_tolerance": 1.0605932258963126e-06,
       "coverage": "90/90",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "relaxation": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06929225903854293,
+      "tangent_error_over_tolerance": 1.0604924927183493e-06,
       "coverage": "30/30",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "rate_slow": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.0693219582593707,
+      "tangent_error_over_tolerance": 1.0604924927183493e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "rate_fast": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06899553119757243,
+      "tangent_error_over_tolerance": 1.0604924927183493e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_simple_shear": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.069321966391141,
+      "tangent_error_over_tolerance": 1.1278709082436363e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_uniaxial_stretch": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06931866983380905,
+      "tangent_error_over_tolerance": 1.0887854484789925e-06,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.0693219594108769,
+      "tangent_error_over_tolerance": 1.0886452545637547e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.0693219952575195,
+      "tangent_error_over_tolerance": 8.654936432874948e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference_fine": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06931206813603519,
+      "tangent_error_over_tolerance": 9.58829358886455e-06,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated_fine": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06931209578464247,
+      "tangent_error_over_tolerance": 7.94396627530291e-06,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true
@@ -1344,131 +1344,131 @@
     }
    },
    "replay": {
-    "seconds": 1.4,
+    "seconds": 1.9,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06931866983380905,
+      "tangent_error_over_tolerance": 1.0639458334253501e-06,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "elastic_shear": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06931866983380905,
+      "tangent_error_over_tolerance": 8.209578566473771e-07,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_reference": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06932205524716895,
+      "tangent_error_over_tolerance": 7.347224946445054e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "isotropy_rotated": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06932194638682175,
+      "tangent_error_over_tolerance": 8.578007775924135e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "plastic_uniaxial": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.0693219582593707,
+      "tangent_error_over_tolerance": 1.0604924927183493e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "plastic_compression": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06932192181488007,
+      "tangent_error_over_tolerance": 8.620031714561358e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "unload_reload": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06931174625772168,
+      "tangent_error_over_tolerance": 1.5357063085552462e-06,
       "coverage": "41/41",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "cyclic": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06930879026057857,
+      "tangent_error_over_tolerance": 8.606613162120401e-07,
       "coverage": "50/50",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "reverse_yield": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06929559405039296,
+      "tangent_error_over_tolerance": 1.0605932258963126e-06,
       "coverage": "90/90",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "relaxation": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06929225903854293,
+      "tangent_error_over_tolerance": 1.0604924927183493e-06,
       "coverage": "30/30",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "rate_slow": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.0693219582593707,
+      "tangent_error_over_tolerance": 1.0604924927183493e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "rate_fast": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06899553119757243,
+      "tangent_error_over_tolerance": 1.0604924927183493e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_simple_shear": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.069321966391141,
+      "tangent_error_over_tolerance": 1.1278709082436363e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "finite_uniaxial_stretch": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06931866983380905,
+      "tangent_error_over_tolerance": 1.0887854484789925e-06,
       "coverage": "20/20",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.0693219594108769,
+      "tangent_error_over_tolerance": 1.0886452545637547e-06,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.0693219952575195,
+      "tangent_error_over_tolerance": 8.654936432874948e-07,
       "coverage": "10/10",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_reference_fine": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06931206813603519,
+      "tangent_error_over_tolerance": 9.58829358886455e-06,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true
      },
      "objectivity_rotated_fine": {
       "primal_error_over_tolerance": 0.0,
-      "tangent_error_over_tolerance": 0.06931209578464247,
+      "tangent_error_over_tolerance": 7.94396627530291e-06,
       "coverage": "40/40",
       "hidden_state_ok": true,
       "original_reproduced": true
