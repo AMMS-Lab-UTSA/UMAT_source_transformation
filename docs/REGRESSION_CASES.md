@@ -9,13 +9,12 @@ historical `umat/<id>/` directories are untouched (decision D-7). Design:
 
 ## Listing the cases
 
-`umat/cases/index.json` lists every case (117 at this commit: 4 curated CI
-cases, and 113 corpus cases in the offline tier -- one for every source in the
-routine-level D-8 count at pass22), all frozen at pass22: transform
-`830e5ee95ce99cd2`, harness `fb9b8017dc0fd59c`. The superseded pass18 to pass21
-cases, and the pass22 cases as first frozen, are kept in
-`$UMAT_CASE_ASSETS/history/`, not here. `make case-offline` checks all 117 in
-about 70 s with 12 jobs (measured 2026-10-06). One line per case:
+`umat/cases/index.json` lists every case (118 at this commit: 4 curated CI
+cases, and 114 corpus cases in the offline tier -- one for every source in the
+routine-level D-8 count at pass23), all frozen at pass23: transform
+`830e5ee95ce99cd2`, harness `ec609ab41bb45a02`. The superseded pass18 to pass22
+cases are kept in `$UMAT_CASE_ASSETS/history/`, not here. `make case-offline`
+checks all 118 in about 75 s with 12 jobs (measured 2026-10-06). One line per case:
 
 ```bash
 python -c "import json; [print(c['case_id'], c['redistribution'], 'ci' if c['tiers']['ci'] else 'offline') for c in json.load(open('umat/cases/index.json'))['cases']]"
@@ -87,8 +86,8 @@ tier accepts only `permitted` cases; `freeze --tier ci` refuses the others.
 ## Freezing a case
 
     PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key <registry/store key> --tier offline \
-        --verification-records $UMAT_OTI_WORKSPACE/corpus_run/pass22/results/store_verification.jsonl \
-        --registry $UMAT_OTI_WORKSPACE/corpus_campaign/pass22_registry/corpus_registry.json
+        --verification-records $UMAT_OTI_WORKSPACE/corpus_run/pass23/results/store_verification.jsonl \
+        --registry $UMAT_OTI_WORKSPACE/corpus_campaign/pass23_registry/corpus_registry.json
     PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --model parameter_sensitivity/models/m3_j2 \
         --family plasticity --activation 1.2e-3 --tier ci
 
@@ -104,25 +103,20 @@ the new case passes its own check (R and P, all canaries rejected). A case is
 current only at the fingerprints it records (D-6): after a transform or harness
 change, re-run `check`, and re-freeze only through a recorded decision.
 
-**Harness fingerprint.** The 117 cases at this commit record the fingerprints
-the pass22 run recorded: transform `830e5ee95ce99cd2`, harness
-`fb9b8017dc0fd59c`, the same values as the pass22 registry rows. 18 of the 113
-corpus cases were frozen a second time (kept first in
-`$UMAT_CASE_ASSETS/history/pass22_cases_before_capture_fix/`): the 17 sources
-with binary32 stores, whose first freeze stopped, and irfancn
-umat_viscoelastic, which had frozen with a looser D and tau. In every one a tool
-had captured the wrong verdict: `judge_binary32` judges a column three times
-(normal, wide with eps = EPS_SINGLE, double variant) and returns a fourth,
-per-entry verdict, and the capture kept the last inner call instead of the
-verdict the harness used. The capture now records the returned verdict, and a
-case holds the entry codes `pass`, `zero_pass`, `pass_b32` and `zero_pass_b32`
-(B32-1: D and tau of the binary32 pass; none of the 117 cases holds one yet:
-every frozen entry is a plain `pass` or `zero_pass`) and nothing unresolved or
-failed. A
-`freeze` that stops, anywhere, leaves the existing case alone: the capture is
-read before anything on disk changes, the new case is staged in a hidden
-`.freeze-*` directory (never read as a case) and swapped in once it has passed
-its own check, and the old case is kept aside under the freeze work area.
+**Harness fingerprint.** The 118 cases at this commit record the fingerprints
+the pass23 run recorded: transform `830e5ee95ce99cd2`, harness
+`ec609ab41bb45a02`, the same values as the pass23 registry rows; every case was
+frozen again from pass23, and the pass22 cases are archived under
+`$UMAT_CASE_ASSETS/history/pass22_cases_830e5ee95ce99cd2/`. The case capture
+records the verdict the harness used: `judge_binary32` judges a column three
+times (normal, wide with eps = EPS_SINGLE, double variant) and returns a
+fourth, per-entry verdict, and a case holds the returned verdict's codes
+`pass`, `zero_pass`, `pass_b32` and `zero_pass_b32` (B32-1) and nothing
+unresolved or failed (none of the cases holds a b32 code yet). A `freeze` that
+stops, anywhere, leaves the existing case alone: the capture is read before
+anything on disk changes, the new case is staged in a hidden `.freeze-*`
+directory (never read as a case) and swapped in once it has passed its own
+check.
 Any later change to
 `src/umat_oti/abaqus/` or `src/umat_oti/corpus_features/` changes the live
 fingerprint, and the cases then no longer match it. Under D-6 that means: the
