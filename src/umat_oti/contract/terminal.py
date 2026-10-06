@@ -117,6 +117,9 @@ PUBLISHED_OWNERS: dict = {
     "support_build_failed": "INTERNAL",
     "original_job_failed": "INTERNAL",
     "transformed_job_failed": "INTERNAL",
+    # The routine-level replay agreed and the Jacobian-matched Abaqus control
+    # produced no comparison. Not a disagreement, not verified (contract 5.0.0).
+    "primal_control_not_decided": "INTERNAL",
     "primal_disagreed": "INTERNAL",
     # The two builds disagree and a control measured WHY. Never verified: an
     # explanation for a disagreement is not agreement. Thirteen entries were

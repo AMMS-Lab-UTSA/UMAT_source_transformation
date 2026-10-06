@@ -17,6 +17,8 @@ The ladder of outcomes is named, ordered, and reported per entry:
     support_build_failed the transform's own modules did not compile
     original_job_failed  the untransformed source did not run
     transformed_job_failed  the transformed source did not run
+    primal_control_not_decided  the routine-level replay agreed and the
+                         Jacobian-matched Abaqus control could not compare
     primal_disagreed     the two builds do not compute the same stress
     tangent_not_verified the difference could not pin the tangent down
     verified             every one of the above passed
@@ -153,6 +155,18 @@ ARGUMENTS_DIVERGED = "arguments_diverged_before_the_routine"
 #: the gate stays false and the entry stays ours until the difference is gone.
 PRIMAL_MISMATCH_EXPLAINED = "primal_mismatch_explained"
 
+#: INTERNAL, and about this harness. The routine-level replay of the original's
+#: converged calls agreed with the converted routine, and the second half of the
+#: primal gate -- the Jacobian-matched Abaqus control -- produced no comparison:
+#: its job did not complete (a data file opened by an unredirected path, a
+#: bundle that declared a module or a main program twice), or it completed and
+#: walked other increments than the transformed run, so the paired histories
+#: cannot be compared without the solver's own Newton noise in them. Nothing
+#: was measured to disagree, so it is not ``primal_disagreed``; nothing agreed
+#: in Abaqus, so it is not verified. Nine pass22 rows were filed as a primal
+#: disagreement on this alone.
+PRIMAL_CONTROL_NOT_DECIDED = "primal_control_not_decided"
+
 #: INTERNAL, and about this harness. Every paired call in the probe record
 #: returned bit-identical outputs and the history comparison reported a
 #: difference anyway. Twelve entries in pass10 are in this shape. Whatever
@@ -169,6 +183,7 @@ STAGES: tuple[str, ...] = (
     "support_build_failed",
     "original_job_failed",
     "transformed_job_failed",
+    PRIMAL_CONTROL_NOT_DECIDED,
     "primal_disagreed",
     PRIMAL_MISMATCH_EXPLAINED,
     ARGUMENTS_DIVERGED,
@@ -319,6 +334,12 @@ class StageEvidence:
     #: there is nothing here for a finite difference to confirm or deny.
     derivative_truncated: bool = False
     tangent_verified: Optional[bool] = None
+    #: The routine-level replay agreed and the Jacobian-matched Abaqus control
+    #: -- the second half of the primal gate -- produced no comparison: its job
+    #: did not complete, its bundle did not build, or the two runs did not walk
+    #: the same increments. Nothing was measured to disagree. (pass22: nine
+    #: rows were filed as primal_disagreed on this.)
+    primal_control_undecided: bool = False
     #: Did the experiment this verdict rests on exercise anything? A repair
     #: that made a history finite by removing the behaviour under test has
     #: not produced a verification OF that behaviour, and a run that agreed
@@ -350,6 +371,8 @@ def classify_stage(evidence: StageEvidence) -> str:
         return "original_job_failed"
     if not evidence.transformed_completed:
         return "transformed_job_failed"
+    if evidence.primal_control_undecided:
+        return PRIMAL_CONTROL_NOT_DECIDED
     if evidence.primal_agrees is not True:
         # "The two builds do not compute the same stress" is a claim about the
         # ROUTINE, and the recorded calls are what can support it. Where they
@@ -3342,6 +3365,16 @@ def jacobian_matched_primal(manifest: VerificationManifest, original_text: str,
     return outcome
 
 
+def control_is_undecided(init_check: dict, routine: dict, jacobian: dict) -> bool:
+    """The Jacobian-matched control produced no comparison, after the
+    routine-level replay agreed: its job did not complete, its bundle did not
+    build, or the two runs walked other increments. A control that DID compare
+    and disagreed is not undecided -- that is a measured disagreement -- and
+    neither is a row whose routine-level replay already disagreed."""
+    return bool(init_check.get("established") and routine.get("agrees")
+                and not jacobian.get("comparison"))
+
+
 def routine_precision_control(original_dir: Path, transformed_dir: Path,
                               transformed_text: str, original_history, transformed_history,
                               work_dir: Path, *, ntens: int, tolerance: float,
@@ -4617,7 +4650,14 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
     record["jacobian_matched_primal"] = jacobian
     gate = bool(init_check.get("established") and routine.get("agrees")
                 and jacobian.get("agrees"))
-    decided_by = ("routine_level+jacobian_matched" if gate else
+    # The control is UNDECIDED, not failed, when the routine-level replay agreed
+    # and the Jacobian-matched job produced no comparison at all (it did not
+    # complete, its bundle did not build, or the runs walked other increments).
+    undecided = control_is_undecided(init_check, routine, jacobian)
+    if undecided:
+        gate = None
+    decided_by = ("jacobian_matched_not_decided" if undecided else
+                  "routine_level+jacobian_matched" if gate else
                   "undefined_in_original_check" if not init_check.get("established")
                   else "routine_level" if not routine.get("agrees")
                   else "jacobian_matched")
@@ -4627,7 +4667,7 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         "init_variants_established": bool(init_check.get("established")),
         "undefined_outputs_excluded": record["undefined_outputs"],
         "routine_level_agrees": bool(routine.get("agrees")),
-        "jacobian_matched_agrees": bool(jacobian.get("agrees")),
+        "jacobian_matched_agrees": None if undecided else bool(jacobian.get("agrees")),
         "fe_comparison_agrees_informational": bool(primal.agrees),
         "bound": ("|dSTRESS_i| <= tol*max|STRESS| + U*eps*K_i, K_i = min(max|DDSDDE_i| of "
                   "both builds, max|DDSDDE| of the ORIGINAL's history), U = the row's floor "
@@ -4637,8 +4677,15 @@ def verify_one(stored, row: Optional[dict], proposal: Optional[dict],
         "bound_over_max_sigma": routine.get("bound_over_max_sigma"),
     }
     seen["primal_agrees"] = gate
+    seen["primal_control_undecided"] = undecided
     record["evidence"]["primal_agreed"] = gate
     record["evidence"]["primal_decided_by"] = decided_by
+    if undecided:
+        # routine_level_agrees stays true in primal_gate; the control that was
+        # to settle the Abaqus half did not run to a comparison
+        return settle("the Jacobian-matched control did not decide the primal gate "
+                      "(routine-level replay agreed): " + str(jacobian.get("reason") or
+                                                              "no reason recorded"))
     if not gate:
         failing = (init_check.get("reason") if not init_check.get("established")
                    else routine.get("reason") if not routine.get("agrees")

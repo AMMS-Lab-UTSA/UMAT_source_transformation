@@ -51,6 +51,8 @@ GLOSS = {
     "original_job_failed": "the original did not run -- ours until proven "
                            "otherwise",
     "transformed_job_failed": "the converted build did not run -- ours",
+    "primal_control_not_decided": "the routine-level replay agreed and the "
+                                  "Abaqus control produced no comparison -- ours",
     "primal_disagreed": "the two builds compute different stress -- ours",
     "derivative_truncated": "the converted source drops a derivative on the "
                             "way to the stress -- ours",

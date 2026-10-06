@@ -92,6 +92,9 @@ CODES: dict = {
     "internal.job_failed": "an Abaqus job this project generated did not run",
     "internal.derivative_not_verified":
         "the generated derivative was not checked, or did not agree",
+    "internal.primal_control_not_decided":
+        "the routine-level replay agreed and the Jacobian-matched Abaqus "
+        "control produced no comparison, so the primal gate is not decided",
     "internal.disagreement_not_in_any_recorded_call":
         "the two histories differ and no call this project recorded accounts "
         "for the difference, which is a gap in what was recorded rather than "
@@ -159,6 +162,8 @@ class ContractError:
                 if state.state == "arguments_diverged_before_the_routine"
                 else "internal.disagreement_not_in_any_recorded_call"
                 if state.state == "disagreement_not_in_any_recorded_call"
+                else "internal.primal_control_not_decided"
+                if state.state == "primal_control_not_decided"
                 else "internal.derivative_not_verified"
                 if state.state in ("tangent_not_verified", "derivative_truncated")
                 else "internal.job_failed"

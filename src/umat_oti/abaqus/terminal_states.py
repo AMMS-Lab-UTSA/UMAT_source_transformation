@@ -68,6 +68,12 @@ INTERNAL: tuple[str, ...] = (
     "support_build_failed",
     "original_job_failed",
     "transformed_job_failed",
+    #: The routine-level replay agreed with the converted routine and the
+    #: second half of the primal gate -- the Jacobian-matched Abaqus control --
+    #: produced no comparison (its job did not complete, its bundle did not
+    #: build, or the runs walked other increments). Nothing was measured to
+    #: disagree and nothing agreed in Abaqus: ours, and not a disagreement.
+    "primal_control_not_decided",
     "primal_disagreed",
     #: The two builds' histories differ and the recorded CALLS say the
     #: arguments had already parted before the call whose outputs differ.
@@ -124,6 +130,7 @@ FROM_STAGE: dict[str, str] = {
     "support_build_failed": "support_build_failed",
     "original_job_failed": "original_job_failed",
     "transformed_job_failed": "transformed_job_failed",
+    "primal_control_not_decided": "primal_control_not_decided",
     "both_builds_non_finite": "primal_disagreed",
     "primal_disagreed": "primal_disagreed",
     "primal_mismatch_explained": "primal_mismatch_explained",
@@ -163,7 +170,12 @@ MEANING: dict[str, str] = {
         "no stress, no tangent, and calls nothing",
     "primal_mismatch_explained":
         "the two builds compute different stress and a control measured why -- "
-        "which says where to look, and is not agreement",    "undefined_in_original":
+        "which says where to look, and is not agreement",
+    "primal_control_not_decided":
+        "the routine-level replay agreed and the Abaqus control that was to "
+        "settle the rest produced no comparison -- nothing was measured to "
+        "disagree, and nothing agreed in Abaqus",
+    "undefined_in_original":
         "the published routine reads a value it never sets, and its stress or "
         "tangent changes with how memory happens to be initialised -- there is "
         "no single answer to verify against",
