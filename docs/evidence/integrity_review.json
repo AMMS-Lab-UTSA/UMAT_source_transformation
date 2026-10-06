@@ -1325,14 +1325,6 @@
    "quote": "The inventory goes from 391 to 405 rows",
    "quote_source": "70a3700"
   },
-  "skip:tests/test_corpus_manifest_count_target.py:test_the_deck_only_column_is_the_d8_figure:call:skip:7b99b6ef": {
-   "verdict": "justified",
-   "reason": "The routine-level 112 needs the pass21 harness cells (corpus_campaign/pass21_harness/run/manifest_cells.jsonl), which are outside this tree; the test runs wherever they exist. Same skip as at pass20, with the pass21 cells named."
-  },
-  "skip:tests/test_registry_fields_tiers.py:test_the_deck_only_figures_of_the_committed_pass21_registry_are_unchanged:call:skip:a6139f2b": {
-   "verdict": "justified",
-   "reason": "245 and 102 are asserted from the committed registry before the skip; only the routine-level 112 needs the pass21 harness cells outside this tree, and that part runs wherever they exist. The test was renamed from ..._committed_pass20_registry_... with the freeze it checks."
-  },
   "removed_check:tests/test_a_census_sums_to_its_own_denominator.py:test_every_census_the_registry_publishes_states_and_sums_to_a_denominator:b8291ba0": {
    "verdict": "justified",
    "reason": "The pinned count moved with the pass21 freeze (bb1cf79), not the check: the inventory and the registry grew from 391 to 405 sources when tools/ingest_discovery_round.py added the 14 the 2026-10-02 discovery round accepted (70a3700). The assertion is the same equality with the new figure; nothing is loosened.",
@@ -1632,6 +1624,14 @@
      "text": "if module is not None:"
     }
    ]
+  },
+  "skip:tests/test_corpus_manifest_count_target.py:test_the_deck_only_column_is_the_d8_figure:call:skip:01c4c9e2": {
+   "verdict": "justified",
+   "reason": "The routine-level 113 needs the pass22 harness cells (corpus_campaign/pass22_harness/run/manifest_cells.jsonl), which are outside this tree; the test runs wherever they exist. Same skip as before, naming the pass22 cells."
+  },
+  "skip:tests/test_registry_fields_tiers.py:test_the_deck_only_figures_of_the_committed_pass22_registry_are_unchanged:call:skip:31d6a905": {
+   "verdict": "justified",
+   "reason": "242 and 105 are asserted from the committed registry before the skip; only the routine-level 113 needs the pass22 harness cells outside this tree, and that part runs wherever they exist."
   }
  }
 }
