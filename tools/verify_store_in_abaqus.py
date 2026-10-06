@@ -3387,13 +3387,40 @@ def jacobian_matched_verdict(history: Sequence[dict],
                                      "transformed": len(transformed_history),
                                      "comparison": comparison.as_dict()}
         if comparison.calls and not comparison.agrees:
+            parted = _first_parting_time(history, transformed_history)
+            first = _first_disagreement_time(left, right, reference_stiffness,
+                                             tolerance, ulps, undefined)
+            outcome["shared_records"]["first_parting_time"] = parted
+            outcome["shared_records"]["first_disagreement_time"] = first
+            if parted is not None and first is not None and first > parted:
+                # the paths had already parted when the records first differ:
+                # the difference cannot be told from the solver's own
+                # Newton-path divergence, so it decides nothing either way
+                outcome["shared_records"]["disagreement_after_the_paths_parted"] = True
+                outcome["reason"] = (f"{shortfall}; the shared records first differ at "
+                                     f"t={first:g}, after the paths parted at "
+                                     f"t={parted:g}, so the difference is not attributed")
+                return outcome
             outcome["comparison"] = comparison.as_dict()
             outcome["bound_over_max_sigma"] = comparison.bound_over_max_sigma
             outcome["agrees"] = False
             outcome["reason"] = (f"{shortfall}; over the {len(left)} they share the "
-                                 f"histories disagree: {comparison.reason}")
+                                 f"histories disagree"
+                                 + (f" from t={first:g}, before the paths part at "
+                                    f"t={parted:g}" if first is not None and parted is not None
+                                    else "")
+                                 + f": {comparison.reason}")
         else:
             outcome["reason"] = shortfall
+        return outcome
+    if not comparison.calls:
+        # nothing was compared (an empty history on one side): not an
+        # agreement and not a disagreement -- biofilm_visco, template_umat and
+        # neo_hookean_umat read "0 reference calls against 0" as a failure
+        outcome["shared_records"] = {"paired": 0, "transformed": len(transformed_history),
+                                     "comparison": comparison.as_dict()}
+        outcome["reason"] = (f"no record of the two runs could be compared "
+                             f"({comparison.reason})")
         return outcome
     outcome["comparison"] = comparison.as_dict()
     outcome["bound_over_max_sigma"] = comparison.bound_over_max_sigma
@@ -3402,14 +3429,50 @@ def jacobian_matched_verdict(history: Sequence[dict],
     return outcome
 
 
+def _record_key(record: dict) -> tuple:
+    from umat_oti.abaqus.compare import SAME_TIME
+    return (int(record.get("step") or 0), int(record.get("element") or 0),
+            int(record.get("point") or 0),
+            round(float(record.get("time") or 0.0) / SAME_TIME))
+
+
+def _first_parting_time(history: Sequence[dict],
+                        transformed_history: Sequence[dict]) -> Optional[float]:
+    """The earliest time at which one run has a record the other lacks: where
+    the two runs stop walking the same increments."""
+    a = {_record_key(r): float(r.get("time") or 0.0) for r in history}
+    b = {_record_key(r): float(r.get("time") or 0.0) for r in transformed_history}
+    apart = [t for k, t in a.items() if k not in b] + [t for k, t in b.items() if k not in a]
+    return min(apart) if apart else None
+
+
+def _first_disagreement_time(left: Sequence[dict], right: Sequence[dict],
+                             stiffness: float, tolerance: float,
+                             ulps: Optional[float], undefined: Optional[dict]
+                             ) -> Optional[float]:
+    """The time of the first paired record at which the comparison (the same
+    bound as the whole) stops agreeing: the shortest prefix that disagrees."""
+    from umat_oti.abaqus.compare import STIFFNESS_ULPS, compare_calls
+    for count in range(1, len(left) + 1):
+        prefix = compare_calls(left[:count], right[:count], stiffness=stiffness,
+                               tolerance=tolerance,
+                               ulps=STIFFNESS_ULPS if ulps is None else ulps,
+                               excluded={k: v for k, v in (undefined or {}).items()
+                                         if k in ("STRESS", "STATEV")})
+        if prefix.calls and not prefix.agrees:
+            return float(left[count - 1].get("time") or 0.0)
+    return None
+
+
 def control_is_undecided(init_check: dict, routine: dict, jacobian: dict) -> bool:
     """The Jacobian-matched control produced no comparison, after the
     routine-level replay agreed: its job did not complete, its bundle did not
     build, or the two runs walked other increments. A control that DID compare
     and disagreed is not undecided -- that is a measured disagreement -- and
     neither is a row whose routine-level replay already disagreed."""
+    made = (jacobian.get("comparison") or {}).get("calls")
     return bool(init_check.get("established") and routine.get("agrees")
-                and not jacobian.get("comparison"))
+                and not made)
 
 
 def routine_precision_control(original_dir: Path, transformed_dir: Path,

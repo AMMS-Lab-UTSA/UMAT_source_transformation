@@ -56,8 +56,8 @@ def test_an_undecided_control_is_its_own_stage_not_a_disagreement():
     ({"ran": True, "completed": True, "agrees": False,
       "reason": "share 184 of 208 records"}, True),
     ({"ran": False, "agrees": False, "reason": "the UMAT entry could not be renamed"}, True),
-    ({"ran": True, "completed": True, "agrees": False, "comparison": {"agrees": False}}, False),
-    ({"ran": True, "completed": True, "agrees": True, "comparison": {"agrees": True}}, False),
+    ({"ran": True, "completed": True, "agrees": False, "comparison": {"agrees": False, "calls": 12}}, False),
+    ({"ran": True, "completed": True, "agrees": True, "comparison": {"agrees": True, "calls": 12}}, False),
 ])
 def test_only_a_control_that_made_no_comparison_is_undecided(jacobian, expected):
     V = _tool()
@@ -104,3 +104,52 @@ def test_the_record_validates_at_contract_5_and_the_gate_reads_not_established()
 def test_a_reader_is_told_what_the_state_means_in_plain_words():
     assert STATE in PLAIN and PLAIN[STATE]["whose move"] == "this program"
     assert STATE not in unmapped_stages([STATE])
+
+
+def test_a_comparison_of_no_calls_is_undecided_too():
+    V = _tool()
+    empty = {"ran": True, "completed": True, "agrees": False,
+             "comparison": {"agrees": False, "calls": 0}}
+    assert V.control_is_undecided({"established": True}, {"agrees": True}, empty) is True
+
+
+def test_no_fully_verified_row_can_carry_an_undecided_gate():
+    """A source in primal_control_not_decided can never count as verified: the
+    verifier's stage cannot be ``verified`` while the control is undecided, and
+    the contract reads a null primal gate as NOT ESTABLISHED -- never settled,
+    so a record that said fully_verified beside it could not be driven from."""
+    V = _tool()
+    everything_else = dict(material_found=True, original_completed=True,
+                           transformed_completed=True, primal_agrees=None,
+                           tangent_verified=True, mechanically_informative=True,
+                           primal_control_undecided=True)
+    assert V.classify_stage(V.StageEvidence(**everything_else)) == STATE
+    from umat_oti.contract.gates import read_gates
+    gates = read_gates({"evidence": {
+        "abaqus_job_completed": True, "all_requested_outputs_present": True,
+        "complete_history_finite": True, "primal_agreed": None,
+        "derivatives_verified": True, "mechanically_informative": True}})
+    assert gates.settled().is_not_established() and not gates.settled().is_true()
+    assert gates.primal_settled().is_not_established()
+
+
+def test_in_the_recorded_rows_an_undecided_gate_is_never_a_verified_stage():
+    """Over every row of the newest pass this machine holds: a row whose
+    primal_decided_by names the undecided control is not at stage verified, and
+    its primal gate is null."""
+    import json
+    from _workspace import WORKSPACE
+    found = 0
+    for path in sorted((WORKSPACE / "corpus_run").glob("pass2*/results/store_verification.jsonl")):
+        for line in path.read_text().splitlines():
+            row = json.loads(line)
+            evidence = row.get("evidence") or {}
+            if evidence.get("primal_decided_by") == "jacobian_matched_not_decided":
+                found += 1
+                assert row["stage"] != "verified" and evidence.get("primal_agreed") is None
+            if row["stage"] == "verified":
+                assert evidence.get("primal_decided_by") != "jacobian_matched_not_decided"
+                assert (row.get("primal_gate") or {}).get("agrees") is not None
+    # nothing recorded yet carries it (pass22 predates the stage): the loop is
+    # the guard for the pass that does
+    assert found >= 0
