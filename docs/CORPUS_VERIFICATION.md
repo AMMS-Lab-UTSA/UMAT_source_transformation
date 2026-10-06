@@ -33,10 +33,11 @@ vishalsubbiah umatcode3 needs an orientation file the author did not publish
   least 3 steps, entrywise tolerance, quad-precision reference where double
   cannot resolve, binary32 stores judged under rule B32), with STRESS and
   DDSDDE fully defined in the original: **114 of 242** (113 of 242 at pass22,
-  112 of 245 at pass21, 109 of 238 at pass20). Of the 114, 8 are not
-  `fully_verified` in Abaqus (4 `tangent_not_verified`, all unresolved at the
-  chosen states and none with a measured disagreement; 4 `derivative_truncated`,
-  whose footnote stays: the converted source drops a derivative it then uses).
+  112 of 245 at pass21, 109 of 238 at pass20). Of the 114, 105 are
+  `fully_verified` and 9 are not: 4 `tangent_not_verified`, all unresolved at the
+  chosen states and none with a measured disagreement; 5 `derivative_truncated`
+  (the three RitioL sources, ahartloper UVCmultiaxial and harshaa765 UMAT), whose
+  footnote stays: the converted source drops a derivative it then uses.
 
 Per material family (code-reviewed classification, decision D-11; "eligible" is the
 family's share of D2):
