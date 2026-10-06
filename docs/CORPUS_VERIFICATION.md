@@ -158,6 +158,30 @@ frozen evidence at `d6f92d4704bee702`, and `make case-ci` still passes them
 against the new code. The script and its output are in
 `corpus_campaign/batches/B7/gauss_prepush/` (`equivalence.py`, `equivalence.out`).
 
+### Binary32 stores (rule B32)
+
+A source that stores a derivative-carrying value in a `REAL` (binary32) variable
+is judged against a finite difference of the original that carries binary32
+noise. The scope is decided per derivative entry (output, input, state) from
+the original's two builds only, before any value under test is read: the output
+depends on a store of the transform's binary32 map and that store depends on the
+input (static), and the FD of the original and of its double variant (binary32
+declarations widened to `REAL*8`, no OTI) differ at one or more steps by more
+than the entry's double noise envelope (dynamic). In scope, the FD noise is
+`eps_single F / h` and a pass is counted as `pass_b32`. An entry that fails and is
+not a B32 pass stays FAIL. It becomes `unresolved_binary32` only when the original
+and the double variant both resolve, differ by more than 1e-3 relative, and the
+value under test agrees with the double variant. The double variant is a
+secondary reference and never verifies the author's function.
+
+The 1e-3 bar was fixed in advance. One source sits close to it:
+`Growth-CASE3.for` (Jeff97, `growth_held_stretch` path, `state_state_sens_local`)
+has 210 `unresolved_binary32` entries in 10 records, all with the same
+original-to-variant gap of 1.013e-3 (each of the 163 listed examples reads
+1.01300e-3), so they clear the bar by 1.3 percent and not by a wide margin.
+Read them as properly scoped but marginal: a bar of 1.02e-3 would have made them
+FAIL. They are not counted as verified, and the bar was not tuned to them.
+
 ### Per-family figures (D-11)
 
 Family figures use the code-reviewed classification
