@@ -56,6 +56,11 @@ def main(argv=None) -> int:
     parser.add_argument("--registry", type=Path, default=None,
                         help="corpus registry that maps keys to sources (default: the "
                              "committed paper_results/corpus/corpus_registry.json)")
+    parser.add_argument("--council-plans", type=Path, default=None,
+                        help="the council plans folder (<key>/council_plan.json) a "
+                             "council key <registry key>#<set> is resolved from (default: "
+                             "the harness's corpus_campaign/council_plans); give the folder "
+                             "written at the harness fingerprint being run")
     parser.add_argument("--supply-utilities", action="store_true",
                         help="OPT-IN workaround: append abaqus_utility_definitions (ROTSIG, ...) "
                              "to the LIFT input; recorded in build.workarounds")
@@ -74,6 +79,8 @@ def main(argv=None) -> int:
         _harness.PASS16 = args.verification_records.resolve()
     if args.registry is not None:
         _harness.REGISTRY = args.registry.resolve()
+    if args.council_plans is not None:
+        _harness.COUNCIL_PLANS = args.council_plans.resolve()
 
     keys = list(args.key)
     if args.fully_verified:
