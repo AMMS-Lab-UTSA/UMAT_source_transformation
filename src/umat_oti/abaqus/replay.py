@@ -1746,6 +1746,81 @@ def _defined_units(text: str) -> set:
     return names
 
 
+_MODULE_HEADER = re.compile(r"^[ \t]*(?:\d+[ \t]+)?MODULE[ \t]+(?!PROCEDURE\b)(\w+)[ \t]*$",
+                           re.IGNORECASE)
+_MODULE_END = re.compile(r"^[ \t]*(?:\d+[ \t]+)?END[ \t]*MODULE\b.*$", re.IGNORECASE)
+
+
+def _module_blocks(text: str, free: bool) -> dict:
+    """Each ``MODULE name`` ... ``END MODULE`` block: {NAME: (first, last)}
+    line indices (0-based, inclusive). Comments are skipped; a module is not
+    nested, so the first END MODULE closes it."""
+    blocks: dict = {}
+    start = None
+    name = ""
+    for index, line in enumerate(text.splitlines()):
+        stripped = line.rstrip()
+        if _is_comment(stripped, free):
+            continue
+        if start is None:
+            found = _MODULE_HEADER.match(stripped)
+            if found:
+                start, name = index, found.group(1).upper()
+        elif _MODULE_END.match(stripped):
+            blocks[name] = (start, index)
+            start = None
+    return blocks
+
+
+def _normal(lines: Sequence[str], free: bool) -> list:
+    """The statements of a block with comments, blanks and case removed."""
+    out = []
+    for line in lines:
+        if _is_comment(line, free):
+            continue
+        body = " ".join(line.split()).lower()
+        if body:
+            out.append(body)
+    return out
+
+
+def drop_shared_modules(original_text: str, transformed_text: str,
+                        free: bool) -> tuple[str, dict]:
+    """The transformed copy without the modules the original copy defines.
+
+    The Jacobian-matched bundle holds both copies of the author's file in one
+    compilation, and a module defined in both is "Declaration of module
+    'NUMKIND' conflicts with a previous declaration" -- the bundle does not
+    compile, and the row was recorded as a primal disagreement
+    (AlexanderJFDR NeoHookean_umat, pass22). The original's module comes first
+    in the file, so the transformed routines still find it. A module is dropped
+    only when its statements are the same text, comments aside; one that
+    differs is kept and named, because dropping it would change what the
+    transformed copy computes -- the bundle then fails to build, and says why.
+    """
+    own = _module_blocks(original_text, free)
+    other = _module_blocks(transformed_text, free)
+    lines = transformed_text.splitlines()
+    original_lines = original_text.splitlines()
+    marker = "!" if free else "C"
+    dropped, differing = [], []
+    for name, (first, last) in sorted(other.items(), key=lambda kv: -kv[1][0]):
+        if name not in own:
+            continue
+        mine = own[name]
+        if _normal(original_lines[mine[0]:mine[1] + 1], free) != \
+                _normal(lines[first:last + 1], free):
+            differing.append(name)
+            continue
+        for index in range(first, last + 1):
+            lines[index] = f"{marker}     OTIS-REMOVED (module {name} is the original copy's): " \
+                           + lines[index].strip()
+        dropped.append(name)
+    text = "\n".join(lines) + ("\n" if transformed_text.endswith("\n") else "")
+    return text, {"modules_dropped_from_the_transformed_copy": sorted(dropped),
+                  "modules_that_differ": sorted(differing)}
+
+
 def jacobian_matched_source(original_text: str, transformed_text: str,
                             form: str = "fixed") -> tuple[str, dict]:
     """One source Abaqus can compile: the original as UMATO, the transformed
@@ -1780,7 +1855,13 @@ def jacobian_matched_source(original_text: str, transformed_text: str,
     shared = (_defined_units(original) & _defined_units(transformed)) - {"UMATO", "UMATT"}
     for name in sorted(shared):
         transformed = re.sub(rf"(?i)\b{re.escape(name)}\b", name + "_T", transformed)
+    # Two copies of one file in one compilation: a module defined in both, and
+    # a main program (PROGRAM, or the bare END that closes an implicit one) in
+    # both, are conflicting declarations. The transformed copy gives way.
+    transformed, modules = drop_shared_modules(original, transformed, free)
+    transformed, mains = without_the_authors_program(transformed, "free" if free else "fixed")
     wrapper = _free_form(_JM_FIXED) if free else _JM_FIXED
     note = {"renamed_in_transformed": sorted(f"{n}->{n}_T" for n in shared),
-            "entry_renamed": renamed, "form": "free" if free else "fixed"}
+            "entry_renamed": renamed, "form": "free" if free else "fixed",
+            **modules, "main_programs_dropped_from_the_transformed_copy": list(mains)}
     return original.rstrip("\n") + "\n\n" + transformed.rstrip("\n") + "\n" + wrapper, note
