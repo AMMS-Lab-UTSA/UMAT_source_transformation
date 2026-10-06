@@ -182,7 +182,7 @@ def test_the_committed_author_deck_cases_keep_their_index_anchors():
     index = json.loads((cc.CASES / "index.json").read_text())
     assert len(index["cases"]) >= 113
     assert cc.index_rows() == index["cases"]
-    for case_json in cc.CASES.glob("*/case.json"):
+    for case_json in cc.case_jsons():
         assert "council" not in json.loads(case_json.read_text())
 
 
@@ -324,3 +324,114 @@ def test_an_origin_ref_or_fingerprint_unlike_the_registry_row_fails(frozen):
     case["council"]["branch_coverage"] = {"exercised": "NTENS=3"}
     assert "branch_coverage" in {f.get("field") for f in
                                  cc.council_consistency_failures(case, env["record"], plan)}
+
+
+# ---------------------------------------------------------------------------
+# freeze order: a freeze that stops never removes a case
+# ---------------------------------------------------------------------------
+
+def _snapshot(case_dir: Path) -> dict:
+    import hashlib
+    return {p.relative_to(case_dir).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in sorted(case_dir.rglob("*")) if p.is_file()}
+
+
+def _staging(root: Path) -> list:
+    return sorted(p.name for p in (root / "cases").glob(".freeze-*"))
+
+
+@pytest.fixture()
+def refreezable(tmp_path):
+    if shutil.which("gfortran") is None:
+        pytest.fail("gfortran is required (a missing compiler is a failure, not a skip)")
+    mp = pytest.MonkeyPatch()
+    try:
+        env = build_workspace(tmp_path, mp)
+        argv = ["freeze", "--key", f"{KEY}#{env['set_id']}", "--tier", "offline",
+                "--council-rows", str(env["rows"])]
+        assert cc.main(argv) == 0
+        case_dir = next((tmp_path / "cases").glob("*--council-*"))
+        yield env, argv, case_dir, tmp_path, mp
+    finally:
+        mp.undo()
+
+
+@pytest.mark.fortran
+@pytest.mark.slow
+def test_a_freeze_that_cannot_hold_its_capture_leaves_the_existing_case(refreezable):
+    """The unresolved-entry stop (frozen_states_from_capture raising) used to
+    come after the old case directory had been removed."""
+    env, argv, case_dir, root, mp = refreezable
+    before, index = _snapshot(case_dir), (root / "cases" / "index.json").read_bytes()
+
+    def cannot(_capture):
+        raise ValueError("judged state 1: entry DDSDDE(1,4) has code unresolved_zero_scale")
+    mp.setattr(cc, "frozen_states_from_capture", cannot)
+    assert cc.main(argv) == 3
+    assert _snapshot(case_dir) == before
+    assert (root / "cases" / "index.json").read_bytes() == index
+    assert _staging(root) == []
+
+
+@pytest.mark.fortran
+@pytest.mark.slow
+def test_a_freeze_whose_case_fails_its_own_check_leaves_the_existing_case(refreezable):
+    env, argv, case_dir, root, mp = refreezable
+    before = _snapshot(case_dir)
+    real = cc.check_case
+
+    def failing(*args, **kwargs):
+        return dict(real(*args, **kwargs), ok=False, failures=[{"kind": "injected"}])
+    mp.setattr(cc, "check_case", failing)
+    assert cc.main(argv) == 3
+    assert _snapshot(case_dir) == before
+    assert _staging(root) == []
+
+
+@pytest.mark.fortran
+@pytest.mark.slow
+def test_a_freeze_that_crashes_leaves_the_existing_case_and_no_staging(refreezable):
+    env, argv, case_dir, root, mp = refreezable
+    before = _snapshot(case_dir)
+
+    def crash(*_a, **_k):
+        raise RuntimeError("injected crash after the staging directory exists")
+    mp.setattr(cc, "cas_tree", crash)
+    with pytest.raises(RuntimeError):
+        cc.main(argv)
+    assert _snapshot(case_dir) == before
+    assert _staging(root) == []
+
+
+@pytest.mark.fortran
+@pytest.mark.slow
+def test_a_successful_refreeze_swaps_the_case_in_and_keeps_the_old_one_aside(refreezable):
+    env, argv, case_dir, root, mp = refreezable
+    old = json.loads((case_dir / "case.json").read_text())
+    assert cc.main(argv) == 0
+    new = json.loads((case_dir / "case.json").read_text())
+    assert new["case_id"] == old["case_id"] and new["reference"] == old["reference"]
+    assert _staging(root) == []
+    assert len(json.loads((root / "cases" / "index.json").read_text())["cases"]) == 1
+    kept = list((root / "assets" / "work" / "freeze").rglob("replaced_case/case.json"))
+    assert len(kept) == 1 and json.loads(kept[0].read_text())["case_id"] == old["case_id"]
+
+
+def test_a_swap_that_cannot_complete_puts_the_old_case_back(tmp_path, monkeypatch):
+    final, staged, aside = tmp_path / "cases" / "c", tmp_path / "cases" / ".freeze-c-1", \
+        tmp_path / "work" / "replaced_case"
+    final.mkdir(parents=True)
+    (final / "case.json").write_text("old")
+    staged.mkdir()
+    (staged / "case.json").write_text("new")
+
+    def cannot(*_a, **_k):
+        raise OSError("injected: the swap cannot complete")
+    monkeypatch.setattr(cc.os, "replace", cannot)
+    with pytest.raises(OSError):
+        cc._swap_in(staged, final, aside)
+    assert (final / "case.json").read_text() == "old" and not aside.exists()
+    monkeypatch.undo()
+    cc._swap_in(staged, final, aside)
+    assert (final / "case.json").read_text() == "new"
+    assert (aside / "case.json").read_text() == "old"

@@ -5,7 +5,7 @@
  "status_basis": "routine-level (driver) verification: primal_stress_state and ddsdde cells verified by umat_oti.corpus_features at the fingerprints below; NOT the Abaqus six-gate verification",
  "source": {
   "kind": "corpus",
-  "registry_key": "9f486601cfc6dcc4bd0ab599",
+  "registry_key": "5ed31c009ffb22ddbf0d39c6",
   "source_id": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-frac.for",
   "repository": "Jeff97/Realization-of-planar-and-surface-conformal-mappings",
   "commit": "4be86fd5613a89641cbab182422cb6bbcc8c057c",
@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/Realization-of-planar-and-surface-conformal-mappings/blob/4be86fd5613a89641cbab182422cb6bbcc8c057c/Analytical_Example/2D/inputFile/Growth-frac.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/Realization-of-planar-and-surface-conformal-mappings/4be86fd5613a89641cbab182422cb6bbcc8c057c/Analytical_Example/2D/inputFile/Growth-frac.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass21/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass22/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json"
   },
   "sha256": "c7065fddae032ab8fc3982c0903386057daf01459d6b0504f739cfa4fdc9c3b5",
   "bytes": 6460,
@@ -31,9 +31,9 @@
   "fetch": "python tools/corpus_cases.py fetch jeff97-realization-of-planar-and-surface-conformal-mappings--growth-frac--9f285f97  (discovery_cache by sha256, else corpus_assets, else --allow-network: raw_url at the pinned commit)"
  },
  "fingerprints": {
-  "transform_fingerprint": "c121f4a7ca0ad160",
-  "harness_fingerprint": "b5ec344c5a001293",
-  "contract_transform_generation": "a4f0ea8c9d124f18"
+  "transform_fingerprint": "830e5ee95ce99cd2",
+  "harness_fingerprint": "fb9b8017dc0fd59c",
+  "contract_transform_generation": "830e5ee95ce99cd2"
  },
  "transform": {
   "settings": {
@@ -41,7 +41,7 @@
    "ntens": 6,
    "PYTHONHASHSEED": "0"
   },
-  "from": "transform_store:9f486601cfc6dcc4bd0ab599",
+  "from": "transform_store:5ed31c009ffb22ddbf0d39c6",
   "files": [
    {
     "path": "Growth-frac_oti.for",
@@ -94,8 +94,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass21_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass21/results/store_verification.jsonl key=9f486601cfc6dcc4bd0ab599",
+   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass22/results/store_verification.jsonl key=5ed31c009ffb22ddbf0d39c6",
    "material_provenance": "Jeff97__Realization-of-planar-and-surface-conformal-mappings/Analytical_Example/2D/inputFile/Growth-frac.inp: Growth-frac.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 5 -- a section in Growth-frac.inp attaches NeoHookean to C3D20H; the deck's name 'Growth-frac.inp' contains the whole of the source",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -601,7 +601,7 @@
  ],
  "reference": {
   "file": "reference.json.gz",
-  "sha256": "c04b93c4d3b99aff9269dfdd022785ae99243e03050f3717f20cb28d401c4ed2"
+  "sha256": "84ac569dbcc23eccf05613a15e1782aa0f8e76d5ee761e57ede6f3d131126518"
  },
  "tolerance_rule_id": "case-rule/1-df2f107a3c04",
  "error_summary": {
@@ -653,8 +653,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261003T121619",
-  "seconds": 15.7,
+  "run_id": "20261006T093622",
+  "seconds": 22.1,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -666,10 +666,10 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "c632493a7958a024df2d9c7cda156a53deb86263806d4d3e1842f69f30fc0a61",
+  "tree_sha256": "deff72a691b884e536bfc31bfb173a53625ffb8ec5061aa7e81a9bf82b4a9dca",
   "location": "corpus_assets",
   "files": 37,
-  "bytes": 1007807
+  "bytes": 1037865
  },
  "tiers": {
   "ci": false,
@@ -678,7 +678,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-realization-of-planar-and-surface-conformal-mappings--growth-frac--9f285f97",
   "fetch": "python tools/corpus_cases.py fetch jeff97-realization-of-planar-and-surface-conformal-mappings--growth-frac--9f285f97",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 9f486601cfc6dcc4bd0ab599 --verification-records <workspace>/corpus_run/pass21/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass21_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 5ed31c009ffb22ddbf0d39c6 --verification-records <workspace>/corpus_run/pass22/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass22_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -686,12 +686,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-03T12:16:35",
+ "date": "2026-10-06T09:36:45",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 4.9,
+    "seconds": 5.1,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {

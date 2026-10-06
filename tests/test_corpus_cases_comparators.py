@@ -129,3 +129,101 @@ def test_the_frozen_capture_refuses_a_state_with_an_unresolved_entry():
 def test_the_rule_id_is_stable_and_names_its_version():
     assert cc.rule_id() == cc.rule_id()
     assert cc.rule_id().startswith("case-rule/1-")
+
+
+# ---------------------------------------------------------------------------
+# the capture records the verdict the harness used (judge_binary32 judges a
+# column three times and returns a fourth)
+# ---------------------------------------------------------------------------
+class _V:
+    """A ColumnVerdict stand-in: the three fields the capture reads."""
+
+    def __init__(self, tag, codes, reference, tolerance):
+        self.tag, self.codes = tag, list(codes)
+        self.reference, self.tolerance = np.asarray(reference, float), np.asarray(tolerance, float)
+
+
+def _binary32_stand_in(stack):
+    """judge_binary32 as fd defines it: three calls through the (wrapped)
+    module-level judge_column, then the per-entry verdict it returns."""
+    holder = {}
+
+    def judge_column(*_a, **_k):
+        calls = holder["calls"]
+        holder["calls"] = calls + 1
+        return (_V("normal", ["pass"], [2.0], [1e-9]),
+                _V("wide", ["unresolved_spread"], [2.5], [1e-1]),     # unresolved under the noise
+                _V("variant", ["pass"], [2.0], [1e-9]))[calls]
+
+    def judge_binary32(*args, **kwargs):
+        for _ in range(3):
+            holder["wrapped"](*args, **kwargs)
+        return _V("returned", ["pass_b32"], [2.0], [3e-4])
+    judge, judge_b32 = cc._capturing_judges(judge_column, judge_binary32, stack)
+    holder["wrapped"], holder["calls"] = judge, 0
+    return judge, judge_b32
+
+
+def test_the_capture_takes_the_verdict_judge_binary32_returns_not_its_last_inner_call():
+    stack = [[]]
+    _judge, judge_b32 = _binary32_stand_in(stack)
+    returned = judge_b32("column")
+    assert [v.tag for v in stack[0]] == ["returned"] and stack[0][0] is returned
+    assert stack[0][0].codes == ["pass_b32"]
+
+
+def test_a_plain_column_is_recorded_once_and_outside_a_judgement_nothing_is():
+    stack = [[]]
+    judge, _ = cc._capturing_judges(lambda *a, **k: _V("plain", ["pass"], [1.0], [1e-9]),
+                                    lambda *a, **k: None, stack)
+    judge("column")
+    assert [v.tag for v in stack[0]] == ["plain"]
+    empty: list = []
+    judge2, _ = cc._capturing_judges(lambda *a, **k: _V("plain", ["pass"], [1.0], [1e-9]),
+                                     lambda *a, **k: None, empty)
+    judge2("column")
+    assert empty == []
+
+
+def test_the_capture_of_the_old_wrapper_would_have_kept_the_unresolved_wide_call():
+    """What the old capture (judge_column only, last call kept) recorded."""
+    stack = [[]]
+    judge, _ = cc._capturing_judges(
+        lambda *a, **k: _V("wide", ["unresolved_spread"], [2.5], [1e-1]),
+        lambda *a, **k: None, stack)
+    judge("column")
+    capture = {"judged": [1], "states": {"1": {"strain_1": {
+        "names": ["DDSDDE(1,1)"], "D": [2.5], "tau": [1e-1], "codes": ["unresolved_spread"],
+        "oti": [2.0]}}}}
+    with pytest.raises(ValueError):
+        cc.frozen_states_from_capture(capture)
+
+
+def test_a_binary32_pass_freezes_with_its_own_tolerance_and_is_judged_like_a_pass():
+    capture = {"judged": [1], "states": {"1": {"strain_1": {
+        "names": ["DDSDDE(1,1)", "DDSDDE(2,1)"], "D": [2.0, 0.0], "tau": [3e-4, 1e-9],
+        "codes": ["pass_b32", "zero_pass_b32"], "oti": [2.0, 0.0]}}}}
+    (state,) = cc.frozen_states_from_capture(capture)
+    assert state["entries"] == [[1, 1, 2.0, 3e-4, "pass_b32"], [2, 1, 0.0, 1e-9, "zero_pass_b32"]]
+    good = cc.compare_tangent({1: np.array([[2.0, 0.0], [0.0, 0.0]])}, [state])
+    assert good["agrees"]
+    off = cc.compare_tangent({1: np.array([[2.0 + 1e-3, 0.0], [0.0, 0.0]])}, [state])
+    assert not off["agrees"]                              # outside tau
+    moved = cc.compare_tangent({1: np.array([[2.0, 0.0], [1e-3, 0.0]])}, [state])
+    assert not moved["agrees"]                            # a frozen zero moved off zero
+    for code in ("unresolved_binary32", "fail", "unresolved_zero_scale"):
+        bad = {"judged": [1], "states": {"1": {"s": {"names": ["DDSDDE(1,1)"], "D": [1.0],
+                                                    "tau": [1e-6], "codes": [code], "oti": [1.0]}}}}
+        with pytest.raises(ValueError):
+            cc.frozen_states_from_capture(bad)
+
+
+def test_a_stray_staging_directory_is_never_read_as_a_case(tmp_path, monkeypatch):
+    (tmp_path / "real").mkdir()
+    (tmp_path / "real" / "case.json").write_text("{}")
+    (tmp_path / ".freeze-real-4242").mkdir()
+    (tmp_path / ".freeze-real-4242" / "case.json").write_text("{}")
+    monkeypatch.setattr(cc, "CASES", tmp_path)
+    assert [p.parent.name for p in cc.case_jsons()] == ["real"]
+    loaded = cc.load_cases(None, ())
+    assert [d.name for d, _case in loaded] == ["real"]

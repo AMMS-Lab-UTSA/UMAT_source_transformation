@@ -60,6 +60,13 @@ sys.path.insert(0, str(REPO / "tools"))
 
 CASES = REPO / "umat" / "cases"
 CANARY_DIR = CASES / "_canaries"
+
+
+def case_jsons() -> list:
+    """Every case's case.json, sorted. A directory whose name starts with "."
+    is never a case (a freeze stages its new case in ``.freeze-*``; pathlib's
+    ``*`` matches dot-directories, so the glob alone would read a stray one)."""
+    return sorted(p for p in CASES.glob("*/case.json") if not p.parent.name.startswith("."))
 WORKSPACE = Path(os.environ.get("UMAT_OTI_WORKSPACE", str(Path.home() / "softwarex_work")))
 ASSETS = Path(os.environ.get("UMAT_CASE_ASSETS", str(WORKSPACE / "corpus_assets")))
 DISCOVERY_CACHE = WORKSPACE / "discovery_cache"
@@ -210,7 +217,7 @@ def cas_tree(case_id: str, fingerprint: str, files: list, root: Path = None) -> 
 def verify_assets(root: Path = None) -> list:
     root = ASSETS if root is None else root
     problems = []
-    for case_json in sorted(CASES.glob("*/case.json")):
+    for case_json in case_jsons():
         case = json.loads(case_json.read_text())
         tree_sha = (case.get("assets") or {}).get("tree_sha256")
         if not tree_sha:
@@ -275,6 +282,33 @@ def corpus_licence(source_id: str) -> dict:
 # harness capture (freeze only): the per-entry FD reference the harness used
 # ---------------------------------------------------------------------------
 
+def _capturing_judges(orig_judge, orig_b32, stack):
+    """``(judge_column, judge_binary32)`` wrappers that record the verdict the
+    harness USED into ``stack[-1]``. judge_binary32 judges the column three
+    times (normal, wide eps = EPS_SINGLE, double variant) through the module's
+    ``judge_column`` and returns a fourth, per-entry verdict whose D, tau and
+    codes come from whichever call decided each entry; only that returned
+    verdict is recorded, never one of the inner calls."""
+    inside = [0]
+
+    def judge(*args, **kwargs):
+        verdict = orig_judge(*args, **kwargs)
+        if stack and not inside[0]:
+            stack[-1].append(verdict)
+        return verdict
+
+    def judge_b32(*args, **kwargs):
+        inside[0] += 1
+        try:
+            verdict = orig_b32(*args, **kwargs)
+        finally:
+            inside[0] -= 1
+        if stack and not inside[0]:
+            stack[-1].append(verdict)
+        return verdict
+    return judge, judge_b32
+
+
 def _install_capture():
     """Wrap FeatureTally.add/as_dict and fd.judge_column so that every ddsdde
     record carries ``_case_capture``: per state and input column, the output
@@ -285,13 +319,9 @@ def _install_capture():
     if getattr(H.FeatureTally, "_case_capture_installed", False):
         return
     orig_add, orig_as_dict, orig_judge = H.FeatureTally.add, H.FeatureTally.as_dict, fd.judge_column
+    orig_b32 = fd.judge_binary32
     stack: list = []
-
-    def judge(*args, **kwargs):
-        verdict = orig_judge(*args, **kwargs)
-        if stack:
-            stack[-1].append(verdict)
-        return verdict
+    judge, judge_b32 = _capturing_judges(orig_judge, orig_b32, stack)
 
     def add(self, inc, wrt, column, oti, output_names, magnitude, undefined=None,
             probe=False, **keywords):
@@ -332,11 +362,17 @@ def _install_capture():
         return payload
 
     H.FeatureTally.add, H.FeatureTally.as_dict = add, as_dict
-    fd.judge_column = judge
+    fd.judge_column, fd.judge_binary32 = judge, judge_b32
     H.FeatureTally._case_capture_installed = True
 
 
 _NAME = re.compile(r"DDSDDE\((\d+),(\d+)\)")
+
+
+#: entry codes a case can hold: resolved and agreeing, with the binary32 forms
+#: (B32-1: judged under the binary32 reference noise, D and tau of that pass)
+CASE_ENTRY_CODES = ("pass", "zero_pass", "pass_b32", "zero_pass_b32")
+ZERO_CODES = ("zero_pass", "zero_pass_b32")
 
 
 def frozen_states_from_capture(capture: dict) -> list:
@@ -348,7 +384,7 @@ def frozen_states_from_capture(capture: dict) -> list:
             if col.get("nonsmooth"):
                 raise ValueError(f"judged state {inc} has a nonsmooth column {wrt}")
             for name, d, tau, code in zip(col["names"], col["D"], col["tau"], col["codes"]):
-                if code not in ("pass", "zero_pass"):
+                if code not in CASE_ENTRY_CODES:
                     raise ValueError(f"judged state {inc}: entry {name} has code {code}")
                 i, j = map(int, _NAME.match(name).groups())
                 entries.append([i, j, d, tau, code])
@@ -425,7 +461,7 @@ def compare_tangent(ddsdde: dict, states: list) -> dict:
                 breaches.append({"inc": inc, "entry": f"DDSDDE({i},{j})", "value": None,
                                  "reference": d, "tolerance": tau, "why": "non-finite"})
                 continue
-            if code == "zero_pass":
+            if code in ZERO_CODES:
                 # a structural zero: the value under test must be within tau of zero AND the
                 # stored FD reference must itself still be a zero within tau -- a frozen D_e
                 # moved off zero is a reference breach, never silently ignored
@@ -567,7 +603,7 @@ def data_canaries(ref: dict, runs: dict) -> list:
     rejected = []
     for p in paths:
         small = min(((abs(e[2]), e[0], e[1]) for s in p["judged"] for e in s["entries"]
-                     if e[4] == "pass" and e[2] != 0.0), default=None)
+                     if e[4] in ("pass", "pass_b32") and e[2] != 0.0), default=None)
         if small is None:
             continue
         _, i, j = small
@@ -706,7 +742,7 @@ def transformed_files(out_dir: Path, *, everything: bool = False) -> list:
 
 def load_cases(tier: Optional[str] = None, only: tuple = ()) -> list:
     out = []
-    for case_json in sorted(CASES.glob("*/case.json")):
+    for case_json in case_jsons():
         case = json.loads(case_json.read_text())
         if only and case["case_id"] not in only:
             continue
@@ -811,7 +847,7 @@ def index_rows() -> list:
     """The rows of index.json. An author-deck case's row is exactly what it was
     before council cases existed; a council case's row adds ``council``."""
     rows = []
-    for case_json in sorted(CASES.glob("*/case.json")):
+    for case_json in case_jsons():
         try:                      # a parallel freeze may be rewriting a case right now
             c = json.loads(case_json.read_text())
         except (OSError, ValueError):
@@ -1560,7 +1596,38 @@ def curated_entry(model_dir: Path, family: str, activation: Optional[float]):
     return entry, rel
 
 
+def _swap_in(staged: Path, final: Path, keep_old: Path) -> None:
+    """Replace ``final`` by ``staged``. The old case moves aside first and
+    comes back if the new one cannot be put in place; it is kept at
+    ``keep_old`` (evidence outside the repository) once the swap succeeded."""
+    moved = False
+    if final.exists():
+        if keep_old.exists():
+            shutil.rmtree(keep_old)
+        keep_old.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(final), str(keep_old))
+        moved = True
+    done = False
+    try:
+        os.replace(staged, final)
+        done = True
+    finally:
+        if moved and not done:
+            shutil.move(str(keep_old), str(final))
+
+
 def cmd_freeze(args) -> int:
+    """Freeze one case. Whatever happens, no staging directory of this process
+    is left in the case tree, and an existing case is replaced only by a case
+    that passed its own check."""
+    try:
+        return _freeze(args)
+    finally:
+        for leftover in CASES.glob(f".freeze-*-{os.getpid()}"):
+            shutil.rmtree(leftover, ignore_errors=True)
+
+
+def _freeze(args) -> int:
     from umat_oti.corpus_features import harness as H
     from umat_oti.corpus_features.cells import fold
     from umat_oti.store import TransformStore
@@ -1697,7 +1764,23 @@ def cmd_freeze(args) -> int:
         print("refused: " + "; ".join(problems))
         return 3
 
-    case_dir = CASES / case_id
+    # Read and validate every frozen path's capture BEFORE anything on disk
+    # changes: a capture the case cannot hold (an entry that is neither a pass
+    # nor a zero_pass) refuses the freeze and leaves the existing case alone.
+    judged_by_path = {}
+    for name in frozen_paths:
+        try:
+            judged_by_path[name] = frozen_states_from_capture(
+                by_path[name]["ddsdde"]["_case_capture"])
+        except ValueError as error:
+            print(f"refused: {name}: {error}")
+            return 3
+    # The new case is written beside the existing one, in a hidden directory
+    # the index and the checks do not see, and swapped in only once it has
+    # passed its own check. A freeze that stops anywhere before that leaves
+    # the existing case exactly as it was.
+    final_dir = CASES / case_id
+    case_dir = CASES / f".freeze-{case_id}-{os.getpid()}"
     if case_dir.exists():
         shutil.rmtree(case_dir)
     (case_dir / "inputs").mkdir(parents=True)
@@ -1710,8 +1793,7 @@ def cmd_freeze(args) -> int:
         history = json.loads((harness_dir / safe / "history.json").read_text())
         cfg_text = cfg_src.read_text()
         (case_dir / "inputs" / f"{safe}.cfg").write_text(cfg_text)
-        capture = rec["ddsdde"]["_case_capture"]
-        judged = frozen_states_from_capture(capture)
+        judged = judged_by_path[name]
         n_inc = len(history["original"])
         keep = [l for l in range(1, entry.nstatv + 1) if l not in undefined_statev]
         original = {"stress": [h["stress"] for h in history["original"]],
@@ -1895,8 +1977,8 @@ def cmd_freeze(args) -> int:
               f"{json.dumps(result['failures'][:3], default=str)[:800]}")
         shutil.move(str(case_dir), str(work_root / "refused_case"))   # evidence, not the repo
         print(f"refused case kept at {work_root / 'refused_case'}")
-        write_index()
         return 3
+    _swap_in(case_dir, final_dir, work_root / "replaced_case")
     write_index()
     print(f"frozen {case_id}: {len(ref_paths)} path(s), "
           f"{sum(len(p['judged']) for p in ref_paths)} judged states, tree {tree[:12]}")
