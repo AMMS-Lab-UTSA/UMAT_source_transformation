@@ -3339,25 +3339,62 @@ def jacobian_matched_primal(manifest: VerificationManifest, original_text: str,
                              + ("; ".join(evidence.reasons) or "no reason recorded"))
         return outcome
     history = history_of(work_dir, job)
+    outcome.update(jacobian_matched_verdict(
+        history, transformed_history, tolerance=tolerance,
+        reference_stiffness=reference_stiffness, ulps=ulps, undefined=undefined))
+    return outcome
+
+
+def jacobian_matched_verdict(history: Sequence[dict],
+                             transformed_history: Sequence[dict], *,
+                             tolerance: float, reference_stiffness: float = 0.0,
+                             ulps: Optional[float] = None,
+                             undefined: Optional[dict] = None) -> dict:
+    """The Jacobian-matched run's history against the transformed run's.
+
+    When the two runs walked the same increments the histories are compared
+    record for record. When they did not -- one took cutbacks the other did
+    not -- agreement on the records they share proves nothing, because the
+    paths had parted and the solver's own Newton tolerance sits between them:
+    no comparison, and the gate is not decided. A DISAGREEMENT on the shared
+    records stands, though, because it was found at times both runs reached
+    from identical earlier increments, not manufactured by the paths parting
+    (Growth-CASE3 at pass22: the shared records agree to 1e-14 until t=87.7
+    and differ by 1.2e-2 at t=92.7, the increment before the transformed run
+    takes three cutbacks the Jacobian-matched run does not).
+    """
+    from umat_oti.abaqus.compare import STIFFNESS_ULPS, compare_calls
+
     left, right, alignment = align_by_time(list(history), list(transformed_history))
+    outcome: dict[str, Any] = {}
     if alignment:
         outcome["alignment"] = alignment
-    if len(left) != len(transformed_history):
-        outcome["reason"] = (f"the Jacobian-matched run and the transformed run "
-                             f"share {len(left)} of {len(transformed_history)} "
-                             f"records: the solver did not walk the same increments")
-        return outcome
     # stiffness capped by the ORIGINAL's history maximum (reference_stiffness)
     # and per call the smaller build; the row's measured floor (ulps) from the
     # routine-level part. Both runs here carry the OTI DDSDDE, so without the
     # cap the build under test would set its own bound.
-    from umat_oti.abaqus.compare import STIFFNESS_ULPS
     comparison = compare_calls(left, right,
                                stiffness=reference_stiffness,
                                tolerance=tolerance,
                                ulps=STIFFNESS_ULPS if ulps is None else ulps,
                                excluded={k: v for k, v in (undefined or {}).items()
                                          if k in ("STRESS", "STATEV")})
+    if len(left) != len(transformed_history):
+        shortfall = (f"the Jacobian-matched run and the transformed run "
+                     f"share {len(left)} of {len(transformed_history)} "
+                     f"records: the solver did not walk the same increments")
+        outcome["shared_records"] = {"paired": len(left),
+                                     "transformed": len(transformed_history),
+                                     "comparison": comparison.as_dict()}
+        if comparison.calls and not comparison.agrees:
+            outcome["comparison"] = comparison.as_dict()
+            outcome["bound_over_max_sigma"] = comparison.bound_over_max_sigma
+            outcome["agrees"] = False
+            outcome["reason"] = (f"{shortfall}; over the {len(left)} they share the "
+                                 f"histories disagree: {comparison.reason}")
+        else:
+            outcome["reason"] = shortfall
+        return outcome
     outcome["comparison"] = comparison.as_dict()
     outcome["bound_over_max_sigma"] = comparison.bound_over_max_sigma
     outcome["agrees"] = comparison.agrees
