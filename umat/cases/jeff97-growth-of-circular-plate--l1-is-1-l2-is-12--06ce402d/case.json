@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/growth-of-circular-plate/blob/67e7e9afb06dd156f3ea4ad70ea2030b9e8048cc/Wrinkle/l1-is-1--l2-is-12.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/growth-of-circular-plate/67e7e9afb06dd156f3ea4ad70ea2030b9e8048cc/Wrinkle/l1-is-1--l2-is-12.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass22/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass23/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json"
   },
   "sha256": "30b5d4d98cd7c657173a67b003eb3d19cbc1adaf8753f13138c2d1cedeb7a2fa",
   "bytes": 6803,
@@ -32,7 +32,7 @@
  },
  "fingerprints": {
   "transform_fingerprint": "830e5ee95ce99cd2",
-  "harness_fingerprint": "fb9b8017dc0fd59c",
+  "harness_fingerprint": "ec609ab41bb45a02",
   "contract_transform_generation": "830e5ee95ce99cd2"
  },
  "transform": {
@@ -94,8 +94,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass22/results/store_verification.jsonl key=af99a765220545453d961e50",
+   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass23/results/store_verification.jsonl key=af99a765220545453d961e50",
    "material_provenance": "Jeff97__growth-of-circular-plate/Wrinkle/l1-is-1--l2-is-12-H0001.inp: l1-is-1--l2-is-12-H0001.inp *MATERIAL NeoHookean: 2 constants, *DEPVAR 10 -- a section in l1-is-1--l2-is-12-H0001.inp attaches NeoHookean to C3D6H, C3D8H; the deck's name 'l1-is-1--l2-is-12-H0001.inp' contains the whole of the sou",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -684,8 +684,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261006T093648",
-  "seconds": 24.6,
+  "run_id": "20261006T135423",
+  "seconds": 22.0,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -697,7 +697,7 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "6d732a7f16b5f2ef446b7243ebbbaf9a7501eb0c4b5866ac8fa02e9a5746b91c",
+  "tree_sha256": "1712b29eccb20d2a5607abb906a72a57be62b967d10b4fa0577e26f0a8cf6080",
   "location": "corpus_assets",
   "files": 37,
   "bytes": 1060087
@@ -709,7 +709,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-growth-of-circular-plate--l1-is-1-l2-is-12--06ce402d",
   "fetch": "python tools/corpus_cases.py fetch jeff97-growth-of-circular-plate--l1-is-1-l2-is-12--06ce402d",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key af99a765220545453d961e50 --verification-records <workspace>/corpus_run/pass22/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass22_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key af99a765220545453d961e50 --verification-records <workspace>/corpus_run/pass23/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass23_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [],
  "limitations": [
@@ -717,12 +717,12 @@
   "loading paths are this pipeline's probes, not the author's example",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-06T09:37:13",
+ "date": "2026-10-06T13:54:45",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.3,
+    "seconds": 4.3,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -799,7 +799,7 @@
     }
    },
    "replay": {
-    "seconds": 1.8,
+    "seconds": 1.7,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {

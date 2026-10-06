@@ -14,8 +14,8 @@
   "url": "https://github.com/Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/blob/17bf545d89abeef313a6bb7f7736c18d3b12eb43/Examples-In-Section-3/HelixUp/Th001/PureGravity.for",
   "raw_url": "https://raw.githubusercontent.com/Jeff97/Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/17bf545d89abeef313a6bb7f7736c18d3b12eb43/Examples-In-Section-3/HelixUp/Th001/PureGravity.for",
   "resolved_with": {
-   "verification_records": "<workspace>/corpus_run/pass22/results/store_verification.jsonl",
-   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json"
+   "verification_records": "<workspace>/corpus_run/pass23/results/store_verification.jsonl",
+   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json"
   },
   "sha256": "bc7db9a017bfb97096846e632bd803cb445c6a416646231ece099448429ffce6",
   "bytes": 18690,
@@ -32,7 +32,7 @@
  },
  "fingerprints": {
   "transform_fingerprint": "830e5ee95ce99cd2",
-  "harness_fingerprint": "fb9b8017dc0fd59c",
+  "harness_fingerprint": "ec609ab41bb45a02",
   "contract_transform_generation": "830e5ee95ce99cd2"
  },
  "transform": {
@@ -98,8 +98,8 @@
   "family": "growth / morphoelasticity",
   "kinematics": "finite",
   "material_provenance": {
-   "registry": "<workspace>/corpus_campaign/pass22_registry/corpus_registry.json",
-   "manifest": "<workspace>/corpus_run/pass22/results/store_verification.jsonl key=6961fcd660b8d5c567406d58",
+   "registry": "<workspace>/corpus_campaign/pass23_registry/corpus_registry.json",
+   "manifest": "<workspace>/corpus_run/pass23/results/store_verification.jsonl key=6961fcd660b8d5c567406d58",
    "material_provenance": "Jeff97__Programming-Plane-Strain-Plates-through-Growth-Under-Body-Forces/Examples-In-Section-3/HelixUp/Th001/Beam-PureGrowth.inp: Beam-PureGrowth.inp *MATERIAL neoHookean: 1 constants, *DEPVAR 9 -- a section in Beam-PureGrowth.inp attaches neoHookean to C3D20H; the deck sits in the source's own dire",
    "initial_state_from_user_subroutine": false,
    "terminal_state": "fully_verified"
@@ -678,8 +678,8 @@
   "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31"
  },
  "harness": {
-  "run_id": "20261006T083011",
-  "seconds": 18.5,
+  "run_id": "20261006T135114",
+  "seconds": 17.7,
   "features": [
    "primal_stress_state",
    "ddsdde"
@@ -691,7 +691,7 @@
   "records": "corpus_assets tree: harness/corpus_features.jsonl"
  },
  "assets": {
-  "tree_sha256": "2941833c7f255472fc1d1d7c2c461e44a155922050b4fa670f273168eeaa47a3",
+  "tree_sha256": "ebd0f9a6c61107cbee19cbdd3a88e262ecdcae5fdf908f0426147eefb56067dc",
   "location": "corpus_assets",
   "files": 38,
   "bytes": 1160874
@@ -703,7 +703,7 @@
  "reproduce": {
   "check": "PYTHONHASHSEED=0 python tools/corpus_cases.py check --only jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--4711f8fc",
   "fetch": "python tools/corpus_cases.py fetch jeff97-programming-plane-strain-plates-through-growth-under-body-forces--puregravity--4711f8fc",
-  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 6961fcd660b8d5c567406d58 --verification-records <workspace>/corpus_run/pass22/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass22_registry/corpus_registry.json --tier offline"
+  "freeze": "PYTHONHASHSEED=0 python tools/corpus_cases.py freeze --key 6961fcd660b8d5c567406d58 --verification-records <workspace>/corpus_run/pass23/results/store_verification.jsonl --registry <workspace>/corpus_campaign/pass23_registry/corpus_registry.json --tier offline"
  },
  "undefined_in_original": [
   "STATEV(7)"
@@ -714,12 +714,12 @@
   "undefined_in_original (D-12, a SOURCE defect): ['STATEV(7)']; those slots are never compared",
   "source not redistributable (D-2): CI cannot run R or P for this case; offline tier only"
  ],
- "date": "2026-10-06T08:30:30",
+ "date": "2026-10-06T13:51:32",
  "freeze_check": {
   "ok": true,
   "modes": {
    "regenerate": {
-    "seconds": 5.1,
+    "seconds": 4.8,
     "source_from": "discovery_cache",
     "compiled_in_job_layout": true,
     "paths": {
@@ -796,7 +796,7 @@
     }
    },
    "replay": {
-    "seconds": 1.5,
+    "seconds": 1.4,
     "units_from": "corpus_assets",
     "paths": {
      "elastic_uniaxial": {
