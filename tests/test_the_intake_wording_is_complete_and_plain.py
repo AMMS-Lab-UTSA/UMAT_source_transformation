@@ -60,3 +60,8 @@ def test_constants_are_never_defaulted_and_the_flags_are_real():
             assert f'"{flag}"' in cli, flag
     assert set(FLAGS_USED) <= {f for e in NEEDS.values()
                                for f in re.findall(r"--[a-z][a-z-]+", e["default"])} | set(FLAGS_USED)
+
+
+def test_no_default_begins_with_the_none_prefix_that_used_to_be_stripped():
+    for key, entry in NEEDS.items():
+        assert not re.match(r"\s*none\b", entry["default"], re.I), key

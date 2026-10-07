@@ -54,6 +54,10 @@ _COLOUR_WORD = {"green": "GREEN: VERIFIED",
                 "red": "RED: CANNOT BE VERIFIED"}
 
 
+def _n(x) -> int:
+    return len(x) if isinstance(x, (list, tuple, set)) else int(x or 0)
+
+
 def _find(obj: Any, key: str) -> Any:
     """The first value stored under ``key`` anywhere in nested dicts/lists."""
     if isinstance(obj, dict):
@@ -118,6 +122,11 @@ def verdict_for(record: Any) -> dict:
     reason = _reason_of(record)
     pipeline_word = str(_find(record, "verdict") or "")
     caution = []
+    # The pipeline's own numerical check passed and none of the six Abaqus
+    # gates was ever measured: its own state, amber, never green.
+    derivative_only = (pipeline_word.lower() == "verified"
+                       and summary["gates that hold"] in (0, [], ())
+                       and _n(summary["gates never established"]) == 6)
 
     if may_say_verified(flat):
         colour, whose = "green", "nobody"
@@ -135,15 +144,21 @@ def verdict_for(record: Any) -> dict:
             # No refusal: a result with gates missing, or the pipeline's own
             # word "verified" with no six-gate evidence behind it. Never green.
             colour, whose = "amber", "you"
-            why = summary["why not"] or "the six checks were not all measured"
-            sentence = ("A result was produced, but it cannot be called "
-                        f"verified: {why}")
-            if pipeline_word.lower() == "verified":
-                sentence += (" The numerical check of the derivatives "
-                             "passed; the full six-check run was not done.")
-            action = ("Run the full check (with Abaqus) before quoting this "
-                      "as verified; until then call it 'derivatives checked "
-                      "numerically'.")
+            if derivative_only:
+                state = "derivative_check_passed_abaqus_not_run"
+                sentence = ("The numerical derivative check passed; the "
+                            "Abaqus checks were not run.")
+                action = ("Run the Abaqus check to verify the translated "
+                          "routine against your original. Until then call "
+                          "this 'derivatives checked numerically', not "
+                          "'verified'.")
+            else:
+                why = summary["why not"] or "the six checks were not all measured"
+                sentence = ("A result was produced, but it cannot be called "
+                            f"verified: {why}")
+                action = ("Run the full check (with Abaqus) before quoting "
+                          "this as verified; until then call it "
+                          "'derivatives checked numerically'.")
         else:
             sentence, whose, action = (card.sentence, card.whose_move,
                                        card.next_action)
@@ -157,7 +172,9 @@ def verdict_for(record: Any) -> dict:
     assert colour != "green" or may_say_verified(flat)
     return {
         "colour": colour,
-        "headline": _COLOUR_WORD[colour],
+        "headline": ("AMBER: DERIVATIVES CHECKED, ABAQUS NOT RUN"
+                     if state == "derivative_check_passed_abaqus_not_run"
+                     else _COLOUR_WORD[colour]),
         "sentence": sentence,
         "whose move": whose,
         "next action": action,
@@ -170,10 +187,6 @@ def verdict_for(record: Any) -> dict:
     }
 
 
-def _n(x) -> int:
-    return len(x) if isinstance(x, (list, tuple, set)) else int(x or 0)
-
-
 def render_verdict(record: Any) -> str:
     """The one-page verdict as plain text."""
     v = verdict_for(record)
@@ -183,6 +196,10 @@ def render_verdict(record: Any) -> str:
     if v["colour"] != "green":
         out.append(f"Whose move: {v['whose move']}.")
     out.append(f"Next: {v['next action']}")
+    if v["terminal state"] == "derivative_check_passed_abaqus_not_run":
+        out.append("Abaqus checks: not run.")
+        out.append('"Verified" needs all six Abaqus checks: ' + VERIFIED_SENTENCE)
+        return "\n".join(out)
     out.append(f"Checks that held: {_n(v['gates that hold'])} of 6"
                + (f"; did not hold: {_n(v['gates that did not hold'])}"
                   if v["gates that did not hold"] else "")
