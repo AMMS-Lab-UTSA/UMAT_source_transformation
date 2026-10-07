@@ -368,6 +368,133 @@ def _deck_element_line(deck_text: str, elements) -> tuple:
     return 0, ""
 
 
+#: Abaqus reads a *USER MATERIAL data line as a card of eight values.
+CARD = 8
+
+
+def substituted_text(deck_text: str) -> str:
+    """The deck with its own ``*PARAMETER`` names put in, as Abaqus does first.
+
+    Uses the pipeline's own table and substitution (``umat_oti.corpus.
+    abaqus_deck``), applied to every line, so a block written in terms of
+    ``<bulk>`` is read with the number the author defined; a name the deck does
+    not define stays standing and is reported by :func:`read_constants`.
+    """
+    from umat_oti.abaqus.deck_pairing import _BRACES
+    from umat_oti.corpus.abaqus_deck import _parameter_table, _substituted
+
+    lines = deck_text.splitlines()
+    table = _parameter_table(lines)
+    if not table:
+        return deck_text
+    return "\n".join(_substituted(_BRACES.sub(r"<\1>", line), table) for line in lines)
+
+
+def read_constants(deck_text: str, material_name: str, constants: int) -> dict:
+    """The constants a deck WRITES, slot by slot, by the rules Abaqus applies.
+
+    Measured on Abaqus/Standard 2021.HF5 with a UMAT that prints PROPS
+    (corpus_campaign/batches/B8/ada/props_card_probe): each data line is one
+    card of eight values; a line with fewer is zero-filled to eight BY THE
+    SOLVER (a trailing comma does not continue the line: ``1.,2.,3.,4.,`` then
+    ``5.,6.`` gives PROPS 1-4, zeros, then 5 and 6 at slots 9 and 10); a ``**``
+    comment line between data lines is skipped; a block with fewer lines than
+    CONSTANTS needs is accepted and the solver zero-fills the rest
+    (harshaa765: 19 lines for CONSTANTS=160); a ninth value on a line is
+    ignored. Two things are fatal input errors in Abaqus and give no values: a
+    BLANK line between data lines, and a second data line when CONSTANTS fits
+    on one.
+
+    Returns ``slots`` (a value for each slot the deck writes, None for one it
+    does not -- never 0), ``zero_filled`` (slot numbers the solver would fill
+    with zero), ``problems`` (why the block cannot be read as written) and
+    ``lines`` (line number and text of each data line). This reads the deck's
+    own text and nothing else; pass it :func:`substituted_text` to put in
+    ``*PARAMETER`` names first.
+    """
+    lines = deck_text.splitlines()
+    wanted = (material_name or "").strip().upper()
+    start = -1
+    seen = False
+    for n, raw in enumerate(lines):
+        s = raw.strip()
+        up = s.upper()
+        if up.startswith("*MATERIAL") and "NAME" in up:
+            name = re.search(r"NAME\s*=\s*([^,\s]+)", s, re.IGNORECASE)
+            seen = bool(name and (not wanted or name.group(1).strip().upper() == wanted))
+        elif up.startswith("*USER MATERIAL") and (seen or not wanted):
+            start = n
+            break
+    out = {"slots": [None] * constants, "zero_filled": [], "problems": [],
+           "lines": []}
+    if start < 0 or constants <= 0:
+        out["problems"].append("no *USER MATERIAL data was found for this material")
+        return out
+    cards: list = []
+    blank_inside = False
+    pending_blank = False
+    for n in range(start + 1, len(lines)):
+        s = lines[n].strip()
+        if s.startswith("**"):
+            continue
+        if s.startswith("*"):
+            break
+        if not s:
+            pending_blank = bool(cards)
+            continue
+        if pending_blank:
+            blank_inside = True
+            pending_blank = False
+        tokens = [t.strip() for t in s.split(",")]
+        if tokens and tokens[-1] == "":
+            tokens = tokens[:-1]
+        values: list = []
+        for t in tokens:
+            if t == "":
+                values.append(None)
+                continue
+            try:
+                values.append(float(t.replace("D", "E").replace("d", "e")))
+            except ValueError:
+                out["problems"].append(
+                    f"line {n + 1}: '{t}' is not a number (a name left standing, "
+                    f"or a unit)")
+                values.append(None)
+        if len(values) > CARD:
+            out["problems"].append(
+                f"line {n + 1}: {len(values)} values on a line; Abaqus reads the "
+                f"first {CARD} and ignores the rest")
+            values = values[:CARD]
+        cards.append(values)
+        out["lines"].append((n + 1, s))
+    need = -(-constants // CARD)
+    if blank_inside:
+        out["problems"].append("a blank line sits between data lines, which Abaqus "
+                               "rejects as invalid data")
+    if len(cards) > need:
+        out["problems"].append(
+            f"CONSTANTS={constants} fits on {need} data line(s) and the deck has "
+            f"{len(cards)}: Abaqus rejects this block as invalid data, so no "
+            f"value can be taken from it")
+    for c, values in enumerate(cards[:need]):
+        for k in range(CARD):
+            slot = c * CARD + k
+            if slot >= constants:
+                break
+            if k < len(values):
+                out["slots"][slot] = values[k]
+            else:
+                out["zero_filled"].append(slot + 1)
+    # a block with fewer data lines than it needs (harshaa765's 19 lines for
+    # CONSTANTS=160, measured) is accepted by Abaqus; the slots of the missing
+    # lines are zero-filled by the solver and are not written in the deck
+    for slot in range(len(cards) * CARD, constants):
+        out["zero_filled"].append(slot + 1)
+    if any("not a number" in p for p in out["problems"]):
+        out["zero_filled"] = []
+    return out
+
+
 # ---------------------------------------------------------------------------
 # the scan
 # ---------------------------------------------------------------------------
@@ -579,28 +706,68 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
         add(Item("props_names", "Constants (names)", DEFAULT, slots,
                  note="the routine does not write NAME = PROPS(k) for its constants"))
 
-    values_ok = bool(material is not None and material.usable)
-    if values_ok:
-        ev = [_quote(deck_name, *d) for d in dl.get("user_data", [])][:3]
-        add(Item("props_values", "Constant values", FOUND, list(material.values), ev,
-                 note=("read through *PARAMETER: " + ", ".join(material.substituted)
-                       if material.substituted else "")))
-    else:
+    parsed = (read_constants(substituted_text(deck_text), material.name, material.constants)
+              if material is not None and material.constants else None)
+    pipeline_values = list(material.values) if material is not None and material.usable else None
+    values_ok = False
+    slots_written: Optional[list] = None
+    if (parsed is not None and pipeline_values is not None and parsed["lines"] == []
+            and parsed["problems"] == ["no *USER MATERIAL data was found for this material"]):
+        # the block sits in a file the deck INCLUDEs, which the pipeline splices
+        # and this reader does not: take its numbers, say they were not re-read
+        add(Item("props_values", "Constant values", FOUND, list(pipeline_values),
+                 note="the numbers sit in a file the deck includes; read by the "
+                      "pipeline's own reader, not card by card here"))
+        values_ok, slots_written, parsed = True, list(pipeline_values), None
+    if parsed is not None and pipeline_values is not None and not parsed["problems"]:
+        slots_written = parsed["slots"]
+        if all(v is not None for v in slots_written):
+            values_ok = True
+            add(Item("props_values", "Constant values", FOUND, list(slots_written),
+                     [_quote(deck_name, ln, tx) for ln, tx in parsed["lines"]][:3],
+                     note=("read through *PARAMETER: " + ", ".join(material.substituted)
+                           if material.substituted else "")))
+        else:
+            unwritten = [i + 1 for i, v in enumerate(slots_written) if v is None]
+            add(Item("props_values", "Constant values", INFERRED, list(slots_written),
+                     [_quote(deck_name, ln, tx) for ln, tx in parsed["lines"]][:3],
+                     note=(f"slots {_ranges(unwritten)} are not written in the deck; the "
+                           f"solver fills the rest of a short data line with 0 (measured), "
+                           f"and they are shown here as not written, not as 0")))
+    if not values_ok and not (parsed is not None and slots_written is not None):
         slots = (f"PROPS(1) to PROPS({props_count})" if props_count > 1
                  else "PROPS(1)" if props_count else "its constants")
         if names:
             slots += " (" + ", ".join(f"{n}" for _i, (n, _l, _t) in sorted(names.items())) + ")"
         why = ""
-        if material is not None and material.unresolved:
+        if parsed is not None and parsed["problems"]:
+            why = "; ".join(parsed["problems"])[:300]
+        elif material is not None and material.unresolved:
             why = ("the deck leaves placeholders standing: "
                    + ", ".join(material.unresolved))
         elif material is not None and material.unresolved_includes:
             why = ("the deck defers its numbers to a file that is not there: "
                    + ", ".join(material.unresolved_includes))
         p = plain("props_values")
+        shown = ([v for v in parsed["slots"]] if parsed is not None and parsed["problems"]
+                 and any(v is not None for v in parsed["slots"]) else None)
         add(Item("props_values", "Constant values", MISSING, None, note=why,
-                 needs_user=True, ask=p["ask"].format(slots=slots),
+                 needs_user=True,
+                 ask=p["ask"].format(slots=slots) + (f" ({why})" if why else ""),
                  default=p["default"], whose=p["whose"]))
+    agrees = None
+    if parsed is not None and pipeline_values is not None and not parsed["problems"]:
+        written = [0.0 if v is None else v for v in parsed["slots"]]
+        agrees = written == pipeline_values
+        if not agrees:
+            intake.item("props_values").note += (
+                " (the pipeline's own reader gives different numbers for this "
+                "block: " + ", ".join(f"{v:g}" for v in pipeline_values) + ")")
+    elif parsed is not None and parsed["problems"] and pipeline_values is not None:
+        agrees = False
+        intake.item("props_values").note += (
+            " (the pipeline's own reader returns " + ", ".join(
+                f"{v:g}" for v in pipeline_values) + " for it)")
 
     # ---- loading -----------------------------------------------------------
     if material is not None and material.steps:
@@ -681,15 +848,17 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
         "family": settled.formulation.family or None, "nstatv": nstatv,
         "props_count": props_count or None,
         "kinematics": "finite" if finite else "small strain",
-        "props_values_found": values_ok}
+        "props_values_found": values_ok,
+        "props_values_agree_with_pipeline": agrees}
 
     # ---- hand-over to the pipeline ----------------------------------------
-    config, complete, missing = _material_config(finite, ntens, nstatv, material, values_ok)
+    config, complete, missing = _material_config(
+        finite, ntens, nstatv, slots_written if values_ok else None)
     intake.material_config = config
     intake.pipeline_inputs = {
         "umat": name, "deck": deck_name or None,
         "dependency_roots": sorted({str(_rel(Path(r), base)) for r in roots}),
-        "material_config_needed": not (material is not None and material.usable),
+        "material_config_needed": not (material is not None and material.usable and values_ok),
         "material_config_complete": complete, "material_config_missing": missing}
     return intake
 
@@ -877,23 +1046,37 @@ def _helpers(intake: Intake, umat: Path, text: str, name: str, repository: Path,
         add(Item("modules", "Modules it USEs", FOUND, used if used else "none needed"))
 
 
-def _material_config(finite: bool, ntens, nstatv, material, values_ok: bool):
+def _ranges(slots) -> str:
+    out, i = [], 0
+    slots = sorted(slots)
+    while i < len(slots):
+        j = i
+        while j + 1 < len(slots) and slots[j + 1] == slots[j] + 1:
+            j += 1
+        out.append(str(slots[i]) if i == j else f"{slots[i]} to {slots[j]}")
+        i = j + 1
+    return ", ".join(out)
+
+
+def _material_config(finite: bool, ntens, nstatv, values):
     """The existing ``--material-config`` form, as far as the files fill it.
 
     That form accepts small strain with ntens 6 only, and an explicit
     check_path; when the deck supplies the material the pipeline needs no such
-    file at all (it reads the deck itself), and this says so.
+    file at all (it reads the deck itself), and this says so. ``props_values``
+    is given only when every slot is WRITTEN: a slot the deck does not write
+    is never filled with 0 here.
     """
     config = {"kinematics": "finite_strain" if finite else "small_strain",
               "ntens": ntens, "nstatev": nstatv,
-              "props_values": list(material.values) if values_ok else None,
+              "props_values": list(values) if values else None,
               "check_path": None}
     missing = []
     if finite:
         missing.append("this input form supports small strain only")
     if ntens != 6:
         missing.append("this input form supports ntens=6 only")
-    if not values_ok:
+    if not values:
         missing.append("props_values")
     missing.append("check_path (the pipeline generates one when it reads a deck)")
     complete = not [m for m in missing if not m.startswith("check_path")]
