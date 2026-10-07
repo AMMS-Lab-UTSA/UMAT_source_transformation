@@ -235,6 +235,7 @@ ALL_INTERNAL = tuple(INTERNAL) + tuple(
 #: interface cannot drift into describing the same state two different ways,
 #: and because a table of state names is not a human-readable report.
 from umat_oti.app.corpus_tab import GLOSS as _SHARED_GLOSS  # noqa: E402
+from umat_oti.abaqus.repository_lookup import lookup as lookup_dependencies  # noqa: E402
 from umat_oti.corpus_features.manifest import tangent_verdict  # noqa: E402
 
 #: Glosses for the states the shared page does not carry one for. A state
@@ -1356,11 +1357,17 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
             record.companion_files = companion_files_text(resolution.order,
                                                           cache)
             evidence = (audit or {}).get(record.source_id) or {}
-            missing = evidence.get("missing_externals")
-            if missing is None:
-                missing = ([f"module {n}" for n in resolution.missing_modules
-                            if n.lower() not in INTRINSIC_MODULES]
-                           + [f"include {n}" for n in resolution.missing_includes])
+            # B17 G3a. The rule: a callee that is not in the repository and not
+            # an Abaqus utility is external; one that is in the repository is
+            # resolved. It is applied to EVERY acquired source, by what the
+            # repository's files declare (umat_oti.abaqus.repository_lookup),
+            # and it replaces the earlier USE/INCLUDE-only list that was read
+            # from the stored refusal audit: that list missed external CALLs
+            # and named includes that sit in comments or in the Abaqus
+            # include directory.
+            looked = lookup_dependencies(source, cache, reason=record.reason)
+            missing = [name for name in looked.unpublished
+                       if name.split(" ", 1)[-1].lower() not in INTRINSIC_MODULES]
             record.missing_companions = missing_companions_text(missing)
 
             verdict = classify_refusal(
@@ -1561,6 +1568,7 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
         record.terminal_state, record.kind = verdict.state, verdict.kind
 
     apply_source_rulings(records.values(), cache, source_rulings)
+    apply_dependency_rule(records.values())
 
     for record in records.values():
         if record.verification_sha256 and record.sha256:
@@ -1575,6 +1583,45 @@ def build(transform_report: Optional[Path], abaqus_report: Optional[Path],
 
 class SourceRulingConflict(RuntimeError):
     """A reviewed per-source ruling and a source-text rule disagree."""
+
+
+#: States the B17 G3a rule may move to ``external_dependency_unavailable``. They
+#: are the states a source reaches WITHOUT an Abaqus run, so an unpublished
+#: dependency is the reason it cannot have one. A source with a run behind it
+#: has by construction linked against everything it needs, so an unpublished
+#: name found for it is a defect of the lookup and is reported, not acted on.
+DEPENDENCY_RULE_MOVES = ("transform_refused", "unsupported_formulation")
+
+
+def apply_dependency_rule(records) -> list:
+    """The B17 G3a rule, for the states ``from_transform_failure`` does not reach.
+
+    A refused source gets the rule through ``classify_refusal`` (its
+    ``missing_externals`` are the lookup's). A source that transformed but is
+    not runnable for a reason of its own (``unsupported_formulation``) never
+    went through that path, so the rule is applied to it here: if the lookup
+    says a name it needs is neither in its repository nor an Abaqus utility,
+    it is ``external_dependency_unavailable``. Returns the sources for which an
+    unpublished name was found but the state was not moved.
+    """
+    conflicts = []
+    for record in records:
+        if not record.missing_companions or record.terminal_state == FULLY_VERIFIED:
+            continue
+        if record.kind != "internal":
+            continue
+        if record.terminal_state in DEPENDENCY_RULE_MOVES:
+            prior_state, prior_reason = record.terminal_state, record.reason
+            record.terminal_state = "external_dependency_unavailable"
+            record.kind = kind_of(record.terminal_state)
+            record.reason = (
+                f"not in the repository and not an Abaqus utility: "
+                f"{record.missing_companions}"
+                + (f" (the batch had settled it at `{prior_state}`"
+                   + (f": {prior_reason}" if prior_reason else "") + ")"))[:500]
+        else:
+            conflicts.append(record.source_id)
+    return conflicts
 
 
 def load_source_rulings(path: Optional[Path]) -> list:
