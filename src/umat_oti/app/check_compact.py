@@ -44,7 +44,7 @@ def _number(x) -> str:
 
 
 def _labels(found: Any, count: int) -> list:
-    """The name of each constant by its slot number; PROPS(k) where the routine names none."""
+    """The name of each constant by its slot number; "constant k" where the routine names none."""
     names = _item(found, "props_names")
     by_slot = {}
     if names is not None and isinstance(names.value, dict):
@@ -52,7 +52,7 @@ def _labels(found: Any, count: int) -> list:
             slot = key[6:-1]
             if slot.isdigit():
                 by_slot[int(slot)] = str(name)
-    return [by_slot.get(i + 1, f"PROPS({i + 1})") for i in range(count)]
+    return [by_slot.get(i + 1, f"constant {i + 1}") for i in range(count)]
 
 
 def _unwritten(found: Any) -> list:

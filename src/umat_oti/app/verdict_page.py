@@ -30,8 +30,8 @@ import sys
 from pathlib import Path
 from typing import Any, Optional
 
-from umat_oti.app.plain_language import (_verdict, may_say_verified,
-                                         verified_summary)
+from umat_oti.app.plain_language import (GATE_PLAIN, _verdict, may_say_verified,
+                                         plain_sentence, verified_summary)
 from umat_oti.app.refusal_cards import card_for, state_after_reading
 
 __all__ = ["verdict_for", "render_verdict", "VERIFIED_SENTENCE", "main"]
@@ -47,6 +47,10 @@ AMBER_STATES = frozenset({
     "experiment_not_informative", "informativeness_not_established",
     "primal_mismatch_explained",
 })
+
+#: States whose card speaks about a numerical check that ran without Abaqus.
+NUMERICAL_CHECK_STATES = frozenset({"tangent_not_verified", "primal_control_not_decided",
+                                    "primal_mismatch_explained", "derivative_truncated"})
 
 _COLOUR_WORD = {"green": "GREEN: VERIFIED",
                 "amber": "AMBER: PARTLY CHECKED",
@@ -204,13 +208,23 @@ def render_verdict(record: Any) -> str:
         out.append("Abaqus checks: not run.")
         out.append('"Verified" needs all six Abaqus checks: ' + VERIFIED_SENTENCE)
         return "\n".join(out)
-    out.append(f"Checks that held: {_n(v['gates that hold'])} of 6"
-               + (f"; did not hold: {_n(v['gates that did not hold'])}"
-                  if v["gates that did not hold"] else "")
-               + (f"; never measured: {_n(v['gates never established'])}"
-                  if v["gates never established"] else "") + ".")
+    def names(items) -> str:
+        return "; ".join(GATE_PLAIN.get(x, str(x).replace("_", " ")) for x in items)
+
+    six = list(GATE_PLAIN)
+    held, broke, never = v["gates that hold"], v["gates that did not hold"], v["gates never established"]
+    if _n(never) == 6 and not _n(held) and not _n(broke):
+        out.append("None of the six checks that 'verified' needs was run here (they need Abaqus): "
+                   + names(six) + "."
+                   + (" What is said above about the stresses and the derivatives comes from the numerical "
+                      "check made without Abaqus, so it does not contradict this line."
+                      if v["terminal state"] in NUMERICAL_CHECK_STATES else ""))
+    else:
+        out.append(f"Checks that held: {_n(held)} of 6" + (f" ({names(held)})" if _n(held) else "")
+                   + (f"; did not hold: {_n(broke)} ({names(broke)})" if _n(broke) else "")
+                   + (f"; never measured: {_n(never)} ({names(never)})" if _n(never) else "") + ".")
     if v["reason recorded"] and v["colour"] != "green":
-        out.append("What the run recorded: " + v["reason recorded"][:400])
+        out.append("What the run recorded: " + plain_sentence(v["reason recorded"])[:400])
     out.append('"Verified" means: ' + VERIFIED_SENTENCE)
     return "\n".join(out)
 

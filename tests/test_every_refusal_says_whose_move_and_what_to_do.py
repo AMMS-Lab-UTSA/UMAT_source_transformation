@@ -110,7 +110,7 @@ CONCRETE = {
     "primal_control_not_decided": ("this program", "tools/verify_store_in_abaqus.py"),
     "tangent_not_verified": ("you", "--peak"),
     "undefined_in_original": ("the author of this UMAT", "`gfortran -g -fbacktrace -finit-real=snan -ffpe-trap=invalid`"),
-    "published_stub_no_constitutive_content": ("the author of this UMAT", "STRESS and DDSDDE"),
+    "published_stub_no_constitutive_content": ("the author of this UMAT", "the stress and the stiffness"),
 }
 
 

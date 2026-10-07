@@ -37,7 +37,7 @@ TEXT = {
     "needs_you": "I NEED ONE THING FROM YOU",
     "template_written": "I wrote a template for the numbers I could not find: {path}",
     "template_next": "Fill it in (the comments say how), then run:  umat-oti check {source} --material-config {path}",
-    "placeholder": "The material file {path} still has blanks (null) in props_values. Fill in the numbers.",
+    "placeholder": "The material file {path} still has blanks (null) in its list of constant values (props_values). Fill in the numbers.",
     "working": "Working: converting, compiling, running both versions and comparing (about 1 to 3 minutes) ...",
     "where": "Everything the run recorded is in {path}",
 }
@@ -150,7 +150,7 @@ def resolve_deck(source: Path, target: Optional[Path], deck_flag: Optional[Path]
 def _describe_source(facts: intake.SourceFacts, source: Path) -> list:
     lines = [f"  UMAT          {source.name}, subroutine UMAT at line {facts.umat_line}  [found]"]
     if facts.props_max:
-        names = ", ".join(f"{facts.props_names[k].value}" if k in facts.props_names else f"PROPS({k})"
+        names = ", ".join(f"{facts.props_names[k].value}" if k in facts.props_names else f"constant {k}"
                           for k in range(1, facts.props_max + 1))
         lines.append(f"  Constants     the routine reads {facts.props_max}: {names}  [found in the source]")
     return lines
@@ -164,7 +164,7 @@ def _describe_deck(deck: Path, facts: intake.DeckFacts) -> list:
         lines.append(f"  Constants     {len(constants.value)} values from {constants.where()} "
                      f"(*USER MATERIAL" + (f", material {name}" if name else "") + ")  [found]")
         if depvar is not None:
-            lines.append(f"  State vars    {depvar.value} from {depvar.where()} (*DEPVAR)  [found]")
+            lines.append(f"  State vars    {depvar.value} (the material's memory between increments) from {depvar.where()} (*DEPVAR)  [found]")
     elif materials:
         lines.append(f"  Constants     {len(materials)} materials with *USER MATERIAL in {deck.name}; "
                      "the one that matches the UMAT is chosen by the pipeline  [found]")

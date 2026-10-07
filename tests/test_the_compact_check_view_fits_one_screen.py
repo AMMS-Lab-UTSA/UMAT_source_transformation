@@ -142,7 +142,7 @@ def test_no_amber_note_when_the_readers_agree(tmp_path):
 
 
 def test_a_constant_is_named_by_its_slot_not_by_its_position_in_the_list_of_named_ones(tmp_path):
-    """The routine names PROPS(1), PROPS(2) and PROPS(4) but not PROPS(3): slot 4 is H, slot 3 is PROPS(3)."""
+    """The routine names PROPS(1), PROPS(2) and PROPS(4) but not PROPS(3): slot 4 is H, slot 3 is constant 3."""
     found = _scan_with(tmp_path, 4, "200000., 0.3, 250., 2000.\n")
     text = compact_intake(found)
-    assert "EMOD=200000, ENU=0.3, PROPS(3)=250, H=2000" in text
+    assert "EMOD=200000, ENU=0.3, constant 3=250, H=2000" in text
