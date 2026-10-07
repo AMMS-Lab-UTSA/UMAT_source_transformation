@@ -1692,6 +1692,10 @@
   "skip:tests/test_check_reads_what_it_can_and_asks_for_the_rest.py:test_typed_constants_and_a_peak_run_the_pipeline_and_the_json_goes_to_a_file:call:skip:e4725413": {
    "verdict": "justified",
    "reason": "The test runs the whole pipeline (conversion, gfortran compile, original and converted runs, finite-difference check) and is skipped only where gfortran is absent; the guard, reading, card and table behaviour it sits beside is tested without a compiler."
+  },
+  "mock:tests/test_check_reads_what_it_can_and_asks_for_the_rest.py:test_the_template_is_the_fallback_when_the_scanner_is_not_there:monkeypatch.setattr:ca00f4f3": {
+   "verdict": "justified",
+   "reason": "Makes check's loader report that tools/intake_scan.py is absent (an installed copy has no tools/ folder), to test the fallback that reads the files itself; everything else in the run is real."
   }
  }
 }

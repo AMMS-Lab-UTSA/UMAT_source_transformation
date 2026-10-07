@@ -620,6 +620,13 @@
     "tests/test_a_control_that_did_not_compare_is_not_a_disagreement.py"
    ],
    "selected_by": "manual"
+  },
+  {
+   "commit": "4dc62eb",
+   "bug": "For a UMAT that USEs a module nobody supplied, the preflight reported the symptom ('anchors not located') and a card asking for a bug report, instead of naming the module to fetch (mrkearden UMAT.F90: USE Types).",
+   "tests": [
+    "tests/test_check_asks_about_the_routine_before_the_material.py::test_unlocated_anchors_with_an_unread_module_name_the_module_not_the_symptom"
+   ]
   }
  ],
  "excluded": [
@@ -782,6 +789,10 @@
   {
    "commit": "1babc6c",
    "reason": "Documentation: the README's first command; 'refusal' names the cards."
+  },
+  {
+   "commit": "0c2705f",
+   "reason": "New behaviour: check reads the files with Ada's intake scanner first and stops at the first blocking item; 'exits 3' and 'refusal' in its message describe the new exit code and the cards, not a corrected result."
   }
  ],
  "changelog_fixed": {
