@@ -24,7 +24,10 @@ Rule:
    zero build is still run twice (a difference there is hidden state, never
    "undefined").
 3. If the primary probe cannot be built or run, the gfortran set decides (as it
-   decided before), and the record says so.
+   decided before), and the record says so. "Cannot be built or run" includes: a
+   build failed, the zero build did not replay, a poisoned build stopped (a trapped
+   value establishes nothing about which output it reaches), the zero build was
+   not deterministic. In every such case the gfortran set decides.
 4. The gfortran set is still run and recorded as the secondary probe. A disagreement
    between the two is REPORTED per source and does not decide.
 5. Applies to every row that reaches D-12; the result is reported as a separate line
