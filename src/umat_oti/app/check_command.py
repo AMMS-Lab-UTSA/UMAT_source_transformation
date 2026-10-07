@@ -70,6 +70,7 @@ def build_parser() -> PlainParser:
     parser.add_argument("--dependency-root", type=Path, action="append", default=[])
     parser.add_argument("--out", type=Path)
     parser.add_argument("--template", action="store_true")
+    parser.add_argument("--details", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
     return parser
 
@@ -88,6 +89,7 @@ umat-oti check UMAT.for [DECK.inp | FOLDER] [options]
   --dependency-root DIR  a folder with helper routines the UMAT calls
   --out DIR              where results go (default: <umat name>_check)
   --template             write a commented material file to fill in, when the constants are missing
+  --details              print every item the files gave, with the lines quoted (always in intake.md)
 """
 
 
@@ -253,8 +255,7 @@ def print_need(item, *, extra: str = "") -> None:
     print(f"\n{bar}\n{header}\n{bar}")
     print(item.ask)
     print(f"Whose move: {item.whose or 'you'}.")
-    # the scanner states "If you say nothing: None. <what to do>"; here it is just what to do
-    default = re.sub(r"^\s*none[.:]\s*", "", str(item.default), flags=re.IGNORECASE)
+    default = str(item.default)
     if extra and extra in default:
         extra = ""
     print(f"Next: {default}" + (f" {extra}" if extra else ""))
@@ -301,7 +302,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     found = None
     if scanner is not None:
         found = scanner.scan(source, deck, roots=roots)
-        sys.stdout.write(found.to_text())
+        if args.details:
+            sys.stdout.write(found.to_text())
+        else:
+            from umat_oti.app.check_compact import compact_intake
+
+            sys.stdout.write(compact_intake(found))
         found.write(inputs)
         print(f"(The same, with the lines quoted: {inputs / 'intake.md'}, {inputs / 'intake.json'})")
         stop = blocking_items(found, constants_supplied=bool(args.props or args.material_config))

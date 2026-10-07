@@ -145,7 +145,7 @@ def test_a_whole_run_ends_with_a_verdict_a_table_and_no_json_on_the_screen(tmp_p
     assert check.main([str(folder / "j2_props.f"), "--props", "E=210000 xnu=0.3 SIGY0=250 H=2000",
                        "--peak", "0.02"]) == 0
     out = capsys.readouterr().out
-    assert "AMBER" in out and "GREEN" not in out and '"stages"' not in out
+    assert "AMBER: DERIVATIVES CHECKED, ABAQUS NOT RUN" in out and "GREEN" not in out and '"stages"' not in out
     assert "Loading reached the nonlinear range: yes" in out
     table = (folder / "j2_props_check" / "results_table.txt").read_text()
     assert "SIGY0" in table and "stress 11" in table

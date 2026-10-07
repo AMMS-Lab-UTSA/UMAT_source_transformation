@@ -148,7 +148,7 @@ def test_with_no_deck_and_no_constants_it_stops_with_the_scanners_ask_and_runs_n
     monkeypatch.chdir(j2.parent)
     assert check.main([str(j2)]) == 3
     out = capsys.readouterr().out
-    assert "MISSING  Constant values" in out and "I NEED ONE THING FROM YOU" in out
+    assert "Constants: not found" in out and "I NEED ONE THING FROM YOU" in out and "Files: j2_props.f  (no deck)" in out
     assert "the values of PROPS(1) to PROPS(4) (E, XNU, SIGY0, H)" in out
     assert 'umat-oti check j2_props.f --props "E=<value> XNU=<value> SIGY0=<value> H=<value>"' in out
     assert "usage:" not in out.lower() and "trial_deck" not in out
@@ -245,7 +245,8 @@ def test_typed_constants_and_a_peak_run_the_pipeline_and_the_json_goes_to_a_file
     assert config["props_values"] == [210000.0, 0.3, 250.0, 2000.0] and config["nstatev"] == 1
     assert len(config["check_path"]["increments"]) == 40
     # the intake was printed first, with the lines quoted, and kept beside the output
-    assert out.index("FOUND    Material routine") < out.index("Working:")
+    assert out.index("Files: j2_props.f") < out.index("Working:")
+    assert "FOUND    Material routine" not in out and "--details" in out    # the short view, the long one on request
     record = json.loads((j2.parent / "j2_props_check_input" / "intake.json").read_text())
     assert record["facts"]["props_count"] == 4 and record["facts"]["nstatv"] == 1
     assert (j2.parent / "j2_props_check_input" / "intake.md").is_file()
@@ -258,21 +259,21 @@ def test_a_deck_in_another_folder_gives_the_constants_and_says_where_from(j2, tm
         pytest.skip("gfortran not on PATH")
     deck = tmp_path / "elsewhere" / "block.inp"
     deck.parent.mkdir()
-    deck.write_text(DECK.replace("NLGEOM=YES", "NLGEOM=NO").replace("2.0d3", "2000.0").replace(
+    deck.write_text(DECK.replace("NLGEOM=YES", "NLGEOM=NO").replace("210000.0, 0.3,\n250.0, 2.0d3", "210000.0, 0.3, 250.0, 2000.0").replace(
         "*ELEMENT, TYPE=C3D8, ELSET=BLOCK\n1, 1, 2, 3, 4, 5, 6, 7, 8\n", ""))
     monkeypatch.chdir(j2.parent)
     code = check.main([str(j2), "--deck", str(deck)])
     out = capsys.readouterr().out
-    assert re.search(r"block\.inp:\d+: \*USER MATERIAL", out) and "*DEPVAR" in out
+    assert re.search(r"Constants \(4\): E=210000, XNU=0\.3, SIGY0=250, H=2000 \(block\.inp:\d+\)", out), out
     assert "Working:" in out                      # it got as far as running the pipeline
     assert code in (0, 1, 2)                      # what the pipeline concludes about a deck without nodes is its own
 
 
-def test_a_need_is_printed_with_its_ask_whose_move_and_what_to_do_without_the_none_prefix(capsys):
+def test_a_need_is_printed_with_its_ask_whose_move_and_what_to_do(capsys):
     class Item:
         key, whose = "helpers", "you"
         ask = "Your routine calls SHEARMOD, which is not in the files you gave me."
-        default = "None. Put the file that defines SHEARMOD beside your UMAT."
+        default = "Put the file that defines SHEARMOD beside your UMAT."
 
     check.print_need(Item(), extra="(Give the folder with --dependency-root FOLDER.)")
     out = capsys.readouterr().out
@@ -281,3 +282,21 @@ def test_a_need_is_printed_with_its_ask_whose_move_and_what_to_do_without_the_no
     Item.whose = "this program"
     check.print_need(Item())
     assert "REFUSED" in capsys.readouterr().out
+
+
+def test_details_prints_every_item_with_its_lines_and_the_default_is_the_short_view(j2, tmp_path, monkeypatch, capsys):
+    deck = tmp_path / "d" / "block.inp"
+    deck.parent.mkdir()
+    deck.write_text(DECK.replace("NLGEOM=YES", "NLGEOM=NO"))
+    monkeypatch.chdir(j2.parent)
+    monkeypatch.setattr(check, "preflight_stub", None, raising=False)
+    for flags, long in (([], False), (["--details"], True)):
+        # stop right after the intake: the helper is missing in this copy
+        source = j2.parent / f"u{len(flags)}.f"
+        source.write_text(J2.read_text().replace("      EMU   = E / (TWO * (ONE + XNU))",
+                                                 "      CALL SHEARMOD(E, XNU, EMU)"))
+        assert check.main([str(source), "--deck", str(deck), *flags]) == 3
+        out = capsys.readouterr().out
+        assert ("FOUND    Material routine" in out) is long
+        assert ("Files: " in out) is (not long)
+        assert (j2.parent / f"u{len(flags)}_check_input" / "intake.md").is_file()      # always written
