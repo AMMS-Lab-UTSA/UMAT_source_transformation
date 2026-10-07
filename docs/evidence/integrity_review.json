@@ -1676,6 +1676,10 @@
   "mock:tests/test_the_front_door_names_the_code_that_runs.py:test_doctor_says_so_when_no_command_is_installed:monkeypatch.setattr:4580c99e": {
    "verdict": "justified",
    "reason": "The machine running the test may or may not have a umat-oti on PATH; the test replaces only the lookup of that command (to say none) and checks the doctor's sentence about it. The stale-install, current-install and exit-code tests use real fake scripts on PATH instead."
+  },
+  "skip:tests/test_intake_scan.py:<module>:mark.skipif:15e7f1ff": {
+   "verdict": "justified",
+   "reason": "Genuine missing external resource: the golden and agreement tests read corpus sources from the discovery cache (UMAT_OTI_DISCOVERY_CACHE, default ../discovery_cache), which is acquired data that is not committed and is not on a clean clone. Every other corpus test skips the same way; the toy tests in the same file need no cache and always run."
   }
  }
 }

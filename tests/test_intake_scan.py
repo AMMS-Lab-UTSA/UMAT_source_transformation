@@ -23,7 +23,6 @@ import json
 import os
 import random
 import sys
-import types
 from pathlib import Path
 
 import pytest
@@ -286,14 +285,14 @@ def test_command_line_prints_and_writes_intake_json_and_md(tmp_path, capsys):
     assert intake_scan.main([str(tmp_path / "nothere.for")]) == 3
 
 
-def test_the_plain_language_table_can_be_replaced_key_by_key(tmp_path, monkeypatch):
-    fake = types.ModuleType("umat_oti.app.intake_text")
-    fake.NEEDS = {"props_values": {"ask": "FROM IRIS {slots}", "default": "iris default"}}
-    monkeypatch.setitem(sys.modules, "umat_oti.app.intake_text", fake)
-    r = intake_scan.scan(toy(tmp_path))
+def test_the_plain_language_table_can_be_replaced_key_by_key(tmp_path):
+    texts = {"props_values": {"ask": "FROM IRIS {slots}", "default": "iris default"}}
+    r = intake_scan.scan(toy(tmp_path), texts=texts)
     v = item(r, "props_values")
     assert v.ask.startswith("FROM IRIS PROPS(1) to PROPS(2)") and v.default == "iris default"
     assert v.whose == "you", "keys Iris does not give keep their text"
+    assert intake_scan.scan(toy(tmp_path)).item("props_values").ask.startswith(
+        "I could not find the numbers")
 
 
 def test_it_uses_the_existing_inference_and_changes_none_of_it():
