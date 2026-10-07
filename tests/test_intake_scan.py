@@ -244,6 +244,117 @@ def test_a_file_that_is_not_a_umat_says_so_and_names_whose_move_it_is(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# toys: how the constants are read (rules measured on Abaqus 2021.HF5)
+# ---------------------------------------------------------------------------
+def deck_with(constants: int, data: str) -> str:
+    return DECK.replace("*USER MATERIAL, CONSTANTS=2\n210000., 0.3\n",
+                        f"*USER MATERIAL, CONSTANTS={constants}\n{data}")
+
+
+def values_of(tmp_path, constants: int, data: str):
+    toy(tmp_path, deck=deck_with(constants, data))
+    return intake_scan.scan(tmp_path / "toy.for")
+
+
+def test_constants_over_two_lines_with_a_trailing_comma_are_read_in_order(tmp_path):
+    r = values_of(tmp_path, 10, "1., 2., 3., 4., 5., 6., 7., 8.,\n9., 10.\n")
+    v = item(r, "props_values")
+    assert (v.status, v.value) == ("FOUND", [float(i) for i in range(1, 11)])
+    assert r.facts["props_values_agree_with_pipeline"] is True
+    assert r.material_config["props_values"] == v.value
+
+
+def test_a_comment_line_between_the_data_lines_is_skipped(tmp_path):
+    r = values_of(tmp_path, 10, "1., 2., 3., 4., 5., 6., 7., 8.,\n** a comment\n9., 10.\n")
+    assert item(r, "props_values").value == [float(i) for i in range(1, 11)]
+    assert item(r, "props_values").status == "FOUND"
+
+
+def test_a_blank_line_between_the_data_lines_is_not_readable(tmp_path):
+    """Abaqus rejects the deck (measured); no value is taken from it."""
+    r = values_of(tmp_path, 10, "1., 2., 3., 4., 5., 6., 7., 8.,\n\n9., 10.\n")
+    v = item(r, "props_values")
+    assert v.status == "MISSING" and v.needs_user and v.value is None
+    assert "blank line" in v.note
+    assert r.material_config["props_values"] is None
+
+
+def test_two_short_lines_for_a_block_that_fits_on_one_are_never_read_as_zeros(tmp_path):
+    """CONSTANTS=4 over two lines: Abaqus rejects it, and the second line's
+    numbers used to come back as 0 (SIGY0=0, H=0). They are MISSING."""
+    for data in ("200000., 0.3,\n250., 2000.\n", "200000., 0.3\n250., 2000.\n",
+                 "200000., 0.3,\n** note\n250., 2000.\n"):
+        r = values_of(tmp_path, 4, data)
+        v = item(r, "props_values")
+        assert v.status == "MISSING" and v.needs_user and v.value is None, data
+        assert "fits on 1 data line" in v.note
+        assert 0.0 not in (r.material_config["props_values"] or [])
+        assert r.facts["props_values_agree_with_pipeline"] is False, (
+            "the pipeline's reader takes the first line and zero-fills the rest")
+        assert "the pipeline's own reader" in v.note
+
+
+def test_a_short_line_leaves_the_slots_it_does_not_write_unwritten_not_zero(tmp_path):
+    r = values_of(tmp_path, 4, "200000., 0.3,\n")
+    v = item(r, "props_values")
+    assert v.status == "INFERRED" and not v.needs_user
+    assert v.value == [200000.0, 0.3, None, None]
+    assert "slots 3 to 4 are not written" in v.note and "fills the rest of a short" in v.note
+    assert r.facts["props_values_found"] is False
+    assert r.material_config["props_values"] is None
+    assert r.facts["props_values_agree_with_pipeline"] is True
+
+
+def test_a_short_first_line_keeps_the_second_line_in_its_own_card(tmp_path):
+    """Measured: ``1.,2.,3.,4.,`` then ``5.,6.,...`` is PROPS 1-4, zeros, 5, 6
+    at slots 9 and 10 -- a trailing comma does not continue the line."""
+    r = values_of(tmp_path, 10, "1., 2., 3., 4.,\n5., 6., 7., 8., 9., 10.\n")
+    v = item(r, "props_values")
+    assert v.value == [1.0, 2.0, 3.0, 4.0, None, None, None, None, 5.0, 6.0]
+    assert r.facts["props_values_agree_with_pipeline"] is True
+
+
+def test_a_name_standing_in_the_data_is_reported_not_zeroed(tmp_path):
+    r = values_of(tmp_path, 2, "210000., <nu>\n")
+    v = item(r, "props_values")
+    assert v.status == "MISSING" and v.value is None
+
+
+def test_fewer_data_lines_than_the_constants_need_leave_the_slots_unwritten(tmp_path):
+    """Abaqus accepts a block with fewer lines than CONSTANTS needs (harshaa765:
+    19 lines for 160) and zero-fills the rest; the scanner shows them as not
+    written."""
+    r = values_of(tmp_path, 10, "1., 2., 3., 4., 5., 6., 7., 8.\n")
+    v = item(r, "props_values")
+    assert v.status == "INFERRED" and v.value[8:] == [None, None]
+    assert "slots 9 to 10 are not written" in v.note
+    assert r.facts["props_values_agree_with_pipeline"] is True
+
+
+def test_a_parameter_name_the_deck_defines_is_put_in_as_abaqus_does(tmp_path):
+    deck = DECK.replace("*HEADING\n", "*HEADING\n*PARAMETER\nbulk = 5000.\n", 1).replace(
+        "210000., 0.3\n", "210000., <bulk>\n")
+    toy(tmp_path, deck=deck)
+    r = intake_scan.scan(tmp_path / "toy.for")
+    v = item(r, "props_values")
+    assert (v.status, v.value) == ("FOUND", [210000.0, 5000.0])
+    assert "bulk" in v.note.lower()
+
+
+def test_the_card_reader_alone_on_the_measured_cases():
+    read = intake_scan.read_constants
+    deck = lambda data, n: "*MATERIAL, NAME=M\n*USER MATERIAL, CONSTANTS=%d\n%s*STEP\n" % (n, data)
+    got = read(deck("1., 2., 3., 4., 5., 6., 7., 8., 9.\n", 8), "M", 8)
+    assert got["slots"] == [1, 2, 3, 4, 5, 6, 7, 8] and len(got["problems"]) == 1
+    got = read(deck("1., 2.,\n", 4), "M", 4)
+    assert got["zero_filled"] == [3, 4] and got["problems"] == []
+    got = read(deck("1., 2.\n3.\n", 3), "M", 3)
+    assert "fits on 1 data line" in got["problems"][0]
+    got = read(deck("1., 2., 3., 4., 5., 6., 7., 8.,\n", 12), "M", 12)
+    assert got["zero_filled"] == [9, 10, 11, 12] and got["problems"] == []
+
+
+# ---------------------------------------------------------------------------
 # toys: properties of the tool
 # ---------------------------------------------------------------------------
 def test_the_scan_is_deterministic_and_changes_nothing_on_disk(tmp_path):
