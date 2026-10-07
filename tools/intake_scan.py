@@ -113,14 +113,15 @@ NEEDS: dict[str, dict[str, str]] = {
 }
 
 
-def _plain(key: str) -> dict[str, str]:
+def _plain(key: str, texts: Optional[dict] = None) -> dict[str, str]:
+    """The text for ``key``: the caller's ``texts``, then Iris's module, then ours."""
+    if texts and key in texts:
+        return {**NEEDS[key], **texts[key]}
     try:
-        from umat_oti.app.intake_text import NEEDS as OVERRIDE  # type: ignore
-        if key in OVERRIDE:
-            return {**NEEDS[key], **OVERRIDE[key]}
-    except Exception:                                       # module not there yet
-        pass
-    return NEEDS[key]
+        from umat_oti.app import intake_text
+    except ImportError:                                     # the module is not there yet
+        return NEEDS[key]
+    return {**NEEDS[key], **getattr(intake_text, "NEEDS", {}).get(key, {})}
 
 
 # ---------------------------------------------------------------------------
@@ -370,8 +371,12 @@ def _deck_element_line(deck_text: str, elements) -> tuple:
 # ---------------------------------------------------------------------------
 # the scan
 # ---------------------------------------------------------------------------
-def scan(umat, deck=None, *, repository=None, roots: Sequence = ()) -> Intake:
-    """Scan ``umat`` (and a deck file or folder, if given). Read-only."""
+def scan(umat, deck=None, *, repository=None, roots: Sequence = (),
+         texts: Optional[dict] = None) -> Intake:
+    """Scan ``umat`` (and a deck file or folder, if given). Read-only.
+
+    ``texts`` replaces plain-language entries of ``NEEDS`` key by key.
+    """
     from umat_oti.abaqus import deck_pairing
     from umat_oti.abaqus.coordinate_domain import reads_coordinates
     from umat_oti.abaqus.elements import UnsupportedElement, geometry_for
@@ -394,6 +399,9 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = ()) -> Intake:
                     repository=repository.name)
     add = intake.items.append
 
+    def plain(key):
+        return _plain(key, texts)
+
     # ---- the routine -------------------------------------------------------
     cls = entry_routines.classify(text, path=umat)
     if cls.is_umat:
@@ -402,8 +410,7 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = ()) -> Intake:
                  [_quote(name, cls.entry_line, cls.entry_text)]))
     else:
         why = cls.reason or f"it presents {cls.kind}"
-        n = NEEDS["routine"]
-        p = _plain("routine")
+        p = plain("routine")
         add(Item("routine", "Material routine", MISSING, f"not a UMAT ({cls.kind})",
                  [_quote(name, cls.entry_line, cls.entry_text)] if cls.entry_line else [],
                  note=why[:200], needs_user=True, ask=p["ask"].format(why=why[:160]),
@@ -464,7 +471,7 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = ()) -> Intake:
         unsupported = settled.formulation.reason
     src = settled.source
     if unsupported:
-        p = _plain("element")
+        p = plain("element")
         add(Item("ntens", "Stress components (NTENS)", MISSING, None, note=unsupported[:200],
                  needs_user=True, ask=p["ask"].format(why=unsupported[:160]),
                  default=p["default"], whose=p["whose"]))
@@ -590,7 +597,7 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = ()) -> Intake:
         elif material is not None and material.unresolved_includes:
             why = ("the deck defers its numbers to a file that is not there: "
                    + ", ".join(material.unresolved_includes))
-        p = _plain("props_values")
+        p = plain("props_values")
         add(Item("props_values", "Constant values", MISSING, None, note=why,
                  needs_user=True, ask=p["ask"].format(slots=slots),
                  default=p["default"], whose=p["whose"]))
@@ -617,7 +624,7 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = ()) -> Intake:
             add(Item("temperature", "Reads temperature (TEMP/DTEMP)", FOUND,
                      f"yes; the deck states {stated_t:g}", [_quote(name, ln, tx)]))
         else:
-            p = _plain("temperature")
+            p = plain("temperature")
             add(Item("temperature", "Reads temperature (TEMP/DTEMP)", DEFAULT,
                      f"yes; using {DEFAULT_TEMPERATURE} (isothermal)", [_quote(name, ln, tx)],
                      needs_user=True, ask=p["ask"], default=p["default"], whose=p["whose"]))
@@ -629,7 +636,7 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = ()) -> Intake:
             add(Item("coordinates", "Reads position (COORDS)", FOUND,
                      "yes; the deck's mesh supplies it", [_quote(name, ln, tx)]))
         else:
-            p = _plain("coordinates")
+            p = plain("coordinates")
             add(Item("coordinates", "Reads position (COORDS)", DEFAULT,
                      "yes; using the origin", [_quote(name, ln, tx)], needs_user=True,
                      ask=p["ask"], default=p["default"], whose=p["whose"]))
@@ -646,7 +653,7 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = ()) -> Intake:
         add(Item("element_number", "Reads element number (NOEL)", FOUND, "no"))
     if flags["fields"]:
         ln, tx = flags["fields"]
-        p = _plain("fields")
+        p = plain("fields")
         add(Item("fields", "Reads field variables (PREDEF/DPRED)", DEFAULT,
                  "yes; using zeros", [_quote(name, ln, tx)], needs_user=material is None,
                  ask=p["ask"] if material is None else "", default=p["default"],
@@ -655,7 +662,7 @@ def scan(umat, deck=None, *, repository=None, roots: Sequence = ()) -> Intake:
         add(Item("fields", "Reads field variables (PREDEF/DPRED)", FOUND, "no"))
 
     # ---- helpers, includes and modules ------------------------------------
-    _helpers(intake, umat, text, name, repository, roots, add)
+    _helpers(intake, umat, text, name, repository, roots, add, plain)
 
     # ---- what will be differentiated --------------------------------------
     if props_count:
@@ -765,7 +772,7 @@ def _reads(text: str, executable: str, reads_coordinates) -> dict:
 
 
 def _helpers(intake: Intake, umat: Path, text: str, name: str, repository: Path,
-             roots: Sequence, add) -> None:
+             roots: Sequence, add, plain) -> None:
     from umat_oti.corpus import entry_routines  # noqa: F401  (kept for symmetry)
     from umat_oti.fortran.normalize import detect_source_form
     from umat_oti.fortran.parser import logical_lines_from_text
@@ -793,7 +800,7 @@ def _helpers(intake: Intake, umat: Path, text: str, name: str, repository: Path,
             ln, tx = _find_line(text, rf"\bCALL\s+{re.escape(m.symbol)}\b")
             if ln:
                 ev.append(_quote(name, ln, tx))
-        p = _plain("helpers")
+        p = plain("helpers")
         add(Item("helpers", "Helper routines it calls", MISSING,
                  {"present": resolved, "missing": names}, ev,
                  note=("; ".join(f"{m.symbol}: did you mean {', '.join(m.near_misses)}?"
@@ -818,7 +825,7 @@ def _helpers(intake: Intake, umat: Path, text: str, name: str, repository: Path,
         if not hit:
             missing_inc.append(inc)
     if missing_inc:
-        p = _plain("includes")
+        p = plain("includes")
         ev = []
         for inc in missing_inc[:3]:
             ln, tx = _find_line(text, rf"INCLUDE\s*['\"]{re.escape(inc)}")
@@ -855,7 +862,7 @@ def _helpers(intake: Intake, umat: Path, text: str, name: str, repository: Path,
             used.append(m.group(1).upper())
     unresolved = [u for u in used if u not in INTRINSIC_MODULES and u not in defined]
     if unresolved:
-        p = _plain("modules")
+        p = plain("modules")
         ev = []
         for u in unresolved[:3]:
             ln, tx = _find_line(text, rf"^\s*USE\s+{re.escape(u)}\b")
