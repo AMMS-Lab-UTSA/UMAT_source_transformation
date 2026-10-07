@@ -193,6 +193,12 @@ def _discover_workflow(source: Path, deck_dir: Path, work: Path) -> tuple:
     return json.loads(path.read_text(encoding="utf-8")), ""
 
 
+def clean_reason(text: str) -> str:
+    """The pipeline's error text without an internal script's usage block
+    (``usage: trial_deck.py [-h] ... trial_deck.py: error: <the message>``)."""
+    return re.sub(r"usage:\s*\w+\.py.*?\w+\.py: error:\s*", "", str(text or ""), flags=re.S).strip()
+
+
 def failure_state(summary: dict) -> tuple:
     """(terminal state, reason text) the pipeline's refusal stands for."""
     stage = str(summary.get("failed_stage") or "")
@@ -201,7 +207,7 @@ def failure_state(summary: dict) -> tuple:
         for stage_name, body in (summary.get("stages") or {}).items():
             if isinstance(body, dict) and body.get("blockers"):
                 reason = "; ".join(map(str, body["blockers"]))
-    return _STATE_OF_STAGE.get(stage, "transform_refused"), reason
+    return _STATE_OF_STAGE.get(stage, "transform_refused"), clean_reason(reason)
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -333,15 +339,23 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
 
 def finish(summary: dict, out: Path) -> int:
-    """What a person is told when the pipeline has finished (refined by the summary module)."""
-    path = out / "workflow_summary.json"
+    """What a person is told when the pipeline has finished: the one-page verdict,
+    the headline numbers, and where the readable table and the full record are."""
+    from umat_oti.app import check_summary
+
     code = int(summary.get("exit_code", 1))
     if code == 0:
-        print("\nThe derivatives were checked against a numerical check of your original routine.")
+        text = check_summary.render(summary, out)
     else:
         state, reason = failure_state(summary)
-        print_card(state, reason, header="REFUSED" if state != "tangent_not_verified" else "FAILED")
-    print(TEXT["where"].format(path=path))
+        text = check_summary.render({k: v for k, v in summary.items() if k not in ("error", "stages")},
+                                    out, state=state, reason=reason,
+                                    stage=str(summary.get("failed_stage") or ""))
+    print("\n" + text)
+    try:
+        (Path(out) / "check_summary.txt").write_text(text + "\n", encoding="utf-8")
+    except OSError:
+        pass
     return code
 
 
